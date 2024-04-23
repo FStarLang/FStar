@@ -108,7 +108,6 @@ type st = { st_ctr:sid_t; st_tbl:ht_t; }
 
 module G = FStar.Ghost
 module PP = PulseCore.Preorder
-// module FP = Pulse.Lib.PCM.FractionalPreorder
 module PM = Pulse.Lib.PCMMap
 module T = DPE.Trace
 module PCM = FStar.PCM
@@ -125,15 +124,15 @@ let singleton (sid:sid_t) (p:perm) (t:T.trace) : pcm_t =
 let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
-let session_state_tag_related (s:session_state) (gs:T.g_session_state) : prop =
+let session_state_tag_related (s:session_state) (gs:T.g_session_state) : GTot bool =
   let open T in
   match s, gs with
   | SessionStart, G_SessionStart
   | InUse, G_InUse _
   | SessionClosed, G_SessionClosed _
   | SessionError, G_SessionError _
-  | Available _, G_Available _ -> True
-  | _ -> False
+  | Available _, G_Available _ -> true
+  | _ -> false
 
 let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
   let open T in
@@ -146,7 +145,7 @@ let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
   | Available _, G_Available repr -> context_perm (ctxt_of s) repr
 
   | _ -> pure False
-  
+
 let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) =
   exists* (s:session_state) (t:T.trace). pure (PHT.lookup pht sid == Some s) **
                                          sid_pts_to r sid t **
@@ -525,7 +524,13 @@ fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:T.trace)
   ensures ghost_pcm_pts_to r (singleton sid 1.0R t0) **
           pure (t0 == t1)
 {
-  admit ()
+  unfold sid_pts_to;
+  unfold sid_pts_to;
+  gather_ r (singleton sid 0.5R t0) (singleton sid 0.5R t1);
+  with v. assert (ghost_pcm_pts_to r v);
+  assert (pure (Map.equal v (singleton sid 1.0R t0)));
+  rewrite (ghost_pcm_pts_to r v) as
+          (ghost_pcm_pts_to r (singleton sid 1.0R t0))
 }
 ```
 
@@ -536,7 +541,11 @@ fn share_sid_pts_to (r:gref) (sid:sid_t) (#t:T.trace)
   ensures sid_pts_to r sid t **
           sid_pts_to r sid t
 {
-  admit ()
+  share_ r (singleton sid 1.0R t)
+           (singleton sid 0.5R t)
+           (singleton sid 0.5R t);
+  fold sid_pts_to;
+  fold sid_pts_to
 }
 ```
 
@@ -713,44 +722,6 @@ fn init_engine_ctxt
 
 assume val prng () : stt ctxt_hndl_t emp (fun _ -> emp)
 
-(*
-  InitializeContext: Part of DPE API 
-  Create a context in the initial state (engine context) and store the context
-  in the current session's context table. Return the context handle upon
-  success and None upon failure. 
-*)
-
-// ```pulse
-// ghost
-// fn elim_session_state_related_inuse (s:session_state) (t:T.trace)
-//   requires session_state_related s (T.current_state t) **
-//            pure (T.G_InUse? (T.current_state t))
-//   ensures pure (s == InUse)
-// {
-//   match s {
-//     SessionStart -> {
-//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
-//       unreachable ()
-//     }
-//     Available _ -> {
-//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
-//       unreachable ()
-//     }
-//     InUse -> {
-//       with _x _y. rewrite (session_state_related _x _y) as emp
-//     }
-//     SessionClosed -> {
-//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
-//       unreachable ()
-//     }
-//     SessionError -> {
-//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
-//       unreachable ()
-//     }
-//   }
-// }
-// ```
-
 ```pulse
 ghost
 fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
@@ -758,7 +729,14 @@ fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
   ensures session_state_related s gs **
           pure (session_state_tag_related s gs)
 {
-  admit ()
+  let b = session_state_tag_related s gs;
+  if b {
+    ()
+  } else {
+    rewrite (session_state_related s gs) as
+            (pure False);
+    unreachable ()
+  }
 }
 ```
 
@@ -1000,66 +978,6 @@ let maybe_context_perm (oc:context_t) (c:option context_t) =
   | Some c ->
     pure (next_context oc c) ** (exists* repr. context_perm c repr)
   | None -> emp
-
-```pulse
-ghost
-fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == Engine_context ec)
-  returns uds:G.erased (Seq.seq U8.t)
-  ensures engine_context_perm ec uds ** pure (r == Engine_context_repr uds)
-{
-  admit ()
-}
-```
-
-```pulse
-ghost
-fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
-  requires record_perm r p repr **
-           pure (r == Engine_record er)
-  returns erepr:G.erased engine_record_repr
-  ensures engine_record_perm er p erepr ** pure (repr == Engine_repr erepr)
-{
-  admit ()
-}
-```
-
-```pulse
-ghost
-fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == L0_context lc)
-  returns lrepr:G.erased l0_context_repr_t
-  ensures l0_context_perm lc lrepr ** pure (r == L0_context_repr lrepr)
-{
-  admit ()
-}
-```
-
-```pulse
-ghost
-fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == L1_context lc)
-  returns lrepr:G.erased l1_context_repr_t
-  ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
-{
-  admit ()
-}
-```
-
-```pulse
-ghost
-fn rewrite_record_perm_l0 (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
-  requires record_perm r p repr **
-           pure (r == L0_record lr)
-  returns lrepr:G.erased l0_record_repr_t
-  ensures l0_record_perm lr p lrepr ** pure (repr == L0_repr lrepr)
-{
-  admit ()
-}
-```
 
 let valid_context_and_record_for_derive_child (c:context_t) (r:record_t) : prop =
   match c, r with
@@ -1309,23 +1227,6 @@ let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (c:option ctxt_hn
   | Some _ ->
     exists* t1. sid_pts_to r sid t1 **
                 pure (derive_child_pre_post_traces t0 t1)
-
-let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : prop =
-  match c, r with
-  | Engine_context _, Engine_context_repr _
-  | L0_context _, L0_context_repr _
-  | L1_context _, L1_context_repr _ -> True
-  | _ -> False
-
-```pulse
-ghost
-fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
-  requires context_perm c r
-  ensures context_perm c r ** pure (context_and_repr_tag_related c r)
-{
-  admit ()
-}
-```
 
 (*
   DeriveChild: Part of DPE API 
