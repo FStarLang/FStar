@@ -85,18 +85,8 @@ let ctxt_of (s:session_state { Available? s })
   = let Available {context} = s in
     context
 
-noextract
-let hndl_of (s:session_state { Available? s })
-  : ctxt_hndl_t
-  = let Available { handle } = s in handle
-
-let mk_available (hndl:ctxt_hndl_t) (ctxt:context_t)
-  : session_state
-  = Available { handle = hndl; context = ctxt }
-
 // Marking this noextract since this spec only
 // What will krml do?
-
 noextract
 type ht_t = ht_t sid_t session_state
 
@@ -134,7 +124,7 @@ let session_state_tag_related (s:session_state) (gs:T.g_session_state) : GTot bo
   | Available _, G_Available _ -> true
   | _ -> false
 
-let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
+let session_state_related (s:session_state) (gs:T.g_session_state) : v:vprop { is_small v } =
   let open T in
   match s, gs with
   | SessionStart, G_SessionStart
@@ -146,7 +136,7 @@ let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
 
   | _ -> pure False
 
-let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) =
+let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:vprop { is_small v } =
   exists* (s:session_state) (t:T.trace). pure (PHT.lookup pht sid == Some s) **
                                          sid_pts_to r sid t **
                                          session_state_related s (T.current_state t)
@@ -173,6 +163,10 @@ let inv (r:gref) (s:option st) : vprop =
     
     (exists* pht. models s.st_tbl pht **
                   on_range (session_perm r pht) 0 (U32.v s.st_ctr))
+
+let inv_is_small (r:gref) (s:option st)
+  : Lemma (is_small (inv r s))
+          [SMTPat (is_small (inv r s))] = ()
 
 type dpe_t = gref & mutex (option st)
 
@@ -289,7 +283,6 @@ fn initialize_global_state ()
   with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
                    (ghost_pcm_pts_to r _v);
   fold (inv r None);
-  assume_ (pure (forall s. is_big (inv r s)));
   let m = new_mutex (inv r) None;
   let s = ((r, m) <: dpe_t);
   rewrite each r as fst s;

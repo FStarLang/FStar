@@ -63,7 +63,11 @@ let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
 let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
   V.pts_to ht.contents pht.repr.seq
   **
-  pure ( related ht pht /\ V.is_full_vec ht.contents)
+  pure (related ht pht /\ V.is_full_vec ht.contents)
+
+let models_is_small #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+  : Lemma (is_small (models ht pht))
+          [SMTPat (is_small (models ht pht))] = ()
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
