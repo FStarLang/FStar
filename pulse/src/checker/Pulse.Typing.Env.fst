@@ -375,8 +375,9 @@ let rec separate_map (sep: document) (f : 'a -> T.Tac document) (l : list 'a) : 
 let env_to_doc (e:env) : T.Tac document =
   let pp1 : ((var & typ) & ppname) -> T.Tac document =
     fun ((n, t), x) ->
-      doc_of_string (T.unseal x.name) ^^ doc_of_string "#" ^^ doc_of_string (string_of_int n)
-        ^^ doc_of_string " : " ^^ Pulse.Syntax.Printer.term_to_doc t
+      infix 2 1 colon
+        (doc_of_string (T.unseal x.name ^ "#" ^ string_of_int n))
+        (align (Pulse.Syntax.Printer.term_to_doc t))
   in
   brackets (separate_map comma pp1 (T.zip e.bs e.names))
 

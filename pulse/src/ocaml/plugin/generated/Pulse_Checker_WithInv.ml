@@ -221,7 +221,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (15)))))
                                                                    (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     (add_iname
                                                                     (remove_iname
                                                                     inames i)
@@ -278,7 +278,7 @@ let (add_remove_inverse :
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     inames))
                                                                     (fun
                                                                     uu___2 ->
@@ -820,7 +820,7 @@ let (check :
                                                                     (Prims.of_int (75)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     i1))
                                                                     (fun
                                                                     uu___3 ->
@@ -875,7 +875,7 @@ let (check :
                                                                     (Prims.of_int (58)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     pre))
                                                                     (fun
                                                                     uu___4 ->
@@ -1094,7 +1094,7 @@ let (check :
                                                                     (Prims.of_int (60)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     post))
                                                                     (fun
                                                                     uu___7 ->
@@ -1555,7 +1555,7 @@ let (check :
                                                                     (Prims.of_int (75)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     i1))
                                                                     (fun
                                                                     uu___5 ->
@@ -1610,7 +1610,7 @@ let (check :
                                                                     (Prims.of_int (70)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     post_hint1.Pulse_Typing.post))
                                                                     (fun
                                                                     uu___6 ->
