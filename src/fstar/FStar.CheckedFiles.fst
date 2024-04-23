@@ -29,13 +29,12 @@ module SMT     = FStar.SMTEncoding.Solver
 module BU      = FStar.Compiler.Util
 module Dep     = FStar.Parser.Dep
 
-
 (*
  * We write this version number to the cache files, and
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 65
+let cache_version_number = 66
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)
