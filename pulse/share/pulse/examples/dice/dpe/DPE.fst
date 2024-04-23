@@ -94,50 +94,6 @@ let mk_available (hndl:ctxt_hndl_t) (ctxt:context_t)
   : session_state
   = Available { handle = hndl; context = ctxt }
 
-// let session_state_perm (s:session_state) =
-//   match s with
-//   | SessionStart
-//   | InUse
-//   | SessionClosed
-//   | SessionError -> emp
-//   | Available _ ->
-//     exists* repr. context_perm (ctxt_of s) repr
-
-// let mk_available_payload handle context = { handle; context }
-
-// ```pulse
-// fn intro_session_state_perm_available 
-//       (ctxt:context_t)
-//       (hndl:ctxt_hndl_t)
-//   requires context_perm ctxt 'repr
-//   returns s:session_state
-//   ensures session_state_perm s
-// {
-//   rewrite (context_perm ctxt 'repr)
-//        as (context_perm (ctxt_of (Available (mk_available_payload hndl ctxt))) 'repr);
-//   fold (session_state_perm (Available (mk_available_payload hndl ctxt)));
-//   Available (mk_available_payload hndl ctxt)
-// }
-// ```
-
-// ```pulse
-// ghost
-// fn elim_session_state_perm_available (s:(s:session_state { Available? s }))
-//   requires session_state_perm s 
-//   ensures exists* r. context_perm (ctxt_of s) r 
-// {
-//   match s
-//   {
-//     Available ctxt ->
-//     {
-//       rewrite (session_state_perm s) as (session_state_perm (Available ctxt));
-//       unfold (session_state_perm (Available ctxt));
-//       with x y. rewrite (context_perm x y) as (context_perm (ctxt_of s) y);
-//     }
-//   }
-// }
-// ```
-
 // Marking this noextract since this spec only
 // What will krml do?
 
@@ -169,8 +125,15 @@ let singleton (sid:sid_t) (p:perm) (t:T.trace) : pcm_t =
 let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
-// let context_repr_and_trace_related (repr:context_repr_t) (tr:PP.hist DT.trace_preorder) : prop =
-//   True  // TODO: functional correctness
+let session_state_tag_related (s:session_state) (gs:T.g_session_state) : prop =
+  let open T in
+  match s, gs with
+  | SessionStart, G_SessionStart
+  | InUse, G_InUse _
+  | SessionClosed, G_SessionClosed _
+  | SessionError, G_SessionError _
+  | Available _, G_Available _ -> True
+  | _ -> False
 
 let session_state_related (s:session_state) (gs:T.g_session_state) : vprop =
   let open T in
@@ -342,54 +305,6 @@ let global_state : dpe_t = run_stt (initialize_global_state ())
 assume val safe_add (i j:U32.t)
   : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
 
-        // ghost_write r
-        //   (singleton ctr 1.0R session_unavailable emp_trace)
-        //   (singleton ctr 1.0R session_idle emp_trace)
-        //   (PM.lift_frame_preserving_upd (singleton ctr 1.0R session_unavailable emp_trace) (singleton ctr 1.0R session_idle emp_trace)
-        //      (DT.mk_frame_preserving_upd_b DT.trace_preorder emp_trace session_unavailable session_idle)
-        //      (singleton ctr 1.0R session_unavailable emp_trace) ctr);
-
-
-// ```pulse
-// ghost
-// fn upd_singleton (r:gref) (ctr:sid_t)
-//   (#p0:perm) (#b0:bool) (#tr0:PP.hist DT.trace_preorder)
-//   (#p1:perm) (#b1:bool) (#tr1:PP.hist DT.trace_preorder)
-//   (fp_upd:PCM.frame_preserving_upd (DT.pcm DT.trace_preorder) (Some (p0, b0), tr0) (Some (p1, b1), tr1))
-
-//   requires ghost_pcm_pts_to r (singleton ctr p0 b0 tr0)
-//   ensures ghost_pcm_pts_to r (singleton ctr p1 b1 tr1)
-// {
-//   assert (pure (Map.equal (Map.upd (singleton ctr p0 b0 tr0) ctr (Some (p1, b1), tr1))
-//                           (singleton ctr p1 b1 tr1)));
-
-//   ghost_write r
-//     (singleton ctr p0 b0 tr0)
-//     (singleton ctr p1 b1 tr1)
-//     (PM.lift_frame_preserving_upd #_ #_ #(DT.pcm DT.trace_preorder)  // Why can't we infer the implicits here?
-//        (Some (p0, b0), tr0)
-//        (Some (p1, b1), tr1)
-//        fp_upd
-//        (singleton ctr p0 b0 tr0) ctr)
-
-// }
-// ```
-
-// ```pulse
-// ghost
-// fn share_ (r:gref) (v0:pcm_t)
-//   (v1:pcm_t) (v2:pcm_t { PM.composable_maps (DT.pcm DT.trace_preorder) v1 v2 })
-//   requires ghost_pcm_pts_to r v0 **
-//            pure (Map.equal v0 (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2))
-//   ensures ghost_pcm_pts_to r v1 **
-//           ghost_pcm_pts_to r v2
-// {
-//   rewrite (ghost_pcm_pts_to r v0) as
-//           (ghost_pcm_pts_to r (PM.compose_maps (DT.pcm DT.trace_preorder) v1 v2));
-//   ghost_share r v1 v2  
-// }
-// ```
-
 (* Utilities to work with on_range (session_perm stm) *)
 (* <utilities on on_range> *)
 noextract  // TODO: why do we extract this at all, it is a prop
@@ -440,25 +355,6 @@ fn frame_session_perm_on_range
     (session_perm r pht1)
     i j
     (frame_session_perm_at_sid r pht0 pht1 i j ())
-}
-```
-
-```pulse
-ghost
-fn rewrite_inv_predicates (r:gref)
-  (ctr0 ctr1:sid_t)
-  (tbl0 tbl1:_)
-  (pht:_)
-  requires ghost_pcm_pts_to r (sids_above_unused ctr0) **
-           models tbl0 pht **
-           on_range (session_perm r pht) 0 (U32.v ctr0) **
-           pure (ctr0 == ctr1 /\ tbl0 == tbl1)
-  ensures ghost_pcm_pts_to r (sids_above_unused ctr1) **
-          models tbl1 pht **
-          on_range (session_perm r pht) 0 (U32.v ctr1)
-{
-  rewrite each ctr0 as ctr1;
-  rewrite each tbl0 as tbl1;
 }
 ```
 
@@ -623,28 +519,6 @@ fn open_session (r:gref) (m:mutex (option st))
 
 ```pulse
 ghost
-fn sid_pts_to_contra (r:gref) (sid:sid_t)
-  (t0:_)
-  (t1:_)
-  requires sid_pts_to r sid t0 **
-           sid_pts_to r sid t1 **
-           pure (t0 =!= t1)
-  ensures pure False
-{
-  unfold sid_pts_to;
-  unfold sid_pts_to;
-  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R t0)) as
-          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid 0.5R t0))));
-  rewrite (ghost_pcm_pts_to r (singleton sid 0.5R t1)) as
-          (ghost_pcm_pts_to r (G.reveal (G.hide (singleton sid 0.5R t1))));
-  ghost_gather r (singleton sid 0.5R t0)
-                 (singleton sid 0.5R t1);
-  unreachable ()
-}
-```
-
-```pulse
-ghost
 fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:T.trace)
   requires sid_pts_to r sid t0 **
            sid_pts_to r sid t1
@@ -789,6 +663,9 @@ fn replace_session
             }
           }
         } else {
+          //
+          // AR: TODO: would be nice if we can prove this can't happen
+          //           i.e. if sid is in pht, then its lookup should succeed
           admit ()
         }
       } else {
@@ -834,7 +711,7 @@ fn init_engine_ctxt
 }
 ```
 
-assume val prng () : ctxt_hndl_t
+assume val prng () : stt ctxt_hndl_t emp (fun _ -> emp)
 
 (*
   InitializeContext: Part of DPE API 
@@ -843,34 +720,45 @@ assume val prng () : ctxt_hndl_t
   success and None upon failure. 
 *)
 
+// ```pulse
+// ghost
+// fn elim_session_state_related_inuse (s:session_state) (t:T.trace)
+//   requires session_state_related s (T.current_state t) **
+//            pure (T.G_InUse? (T.current_state t))
+//   ensures pure (s == InUse)
+// {
+//   match s {
+//     SessionStart -> {
+//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
+//       unreachable ()
+//     }
+//     Available _ -> {
+//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
+//       unreachable ()
+//     }
+//     InUse -> {
+//       with _x _y. rewrite (session_state_related _x _y) as emp
+//     }
+//     SessionClosed -> {
+//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
+//       unreachable ()
+//     }
+//     SessionError -> {
+//       with _x _y. rewrite (session_state_related _x _y) as (pure False);
+//       unreachable ()
+//     }
+//   }
+// }
+// ```
+
 ```pulse
 ghost
-fn elim_session_state_related_inuse (s:session_state) (t:T.trace)
-  requires session_state_related s (T.current_state t) **
-           pure (T.G_InUse? (T.current_state t))
-  ensures pure (s == InUse)
+fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
+  requires session_state_related s gs
+  ensures session_state_related s gs **
+          pure (session_state_tag_related s gs)
 {
-  match s {
-    SessionStart -> {
-      with _x _y. rewrite (session_state_related _x _y) as (pure False);
-      unreachable ()
-    }
-    Available _ -> {
-      with _x _y. rewrite (session_state_related _x _y) as (pure False);
-      unreachable ()
-    }
-    InUse -> {
-      with _x _y. rewrite (session_state_related _x _y) as emp
-    }
-    SessionClosed -> {
-      with _x _y. rewrite (session_state_related _x _y) as (pure False);
-      unreachable ()
-    }
-    SessionError -> {
-      with _x _y. rewrite (session_state_related _x _y) as (pure False);
-      unreachable ()
-    }
-  }
+  admit ()
 }
 ```
 
@@ -881,7 +769,7 @@ let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
   exists* t. sid_pts_to r sid t **
              pure (T.current_state t == T.G_Available (Engine_context_repr uds))
 
-#push-options "--fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn initialize_context (r:gref) (m:mutex (option st))
   (sid:sid_t) 
@@ -919,7 +807,8 @@ fn initialize_context (r:gref) (m:mutex (option st))
       rewrite (context_perm context (Engine_context_repr uds_bytes)) as
               (session_state_related s (T.G_Available (Engine_context_repr uds_bytes)));
       let ret = replace_session r m sid t1 s (T.G_Available (Engine_context_repr uds_bytes));
-      elim_session_state_related_inuse (snd ret) t1;
+      intro_session_state_tag_related (snd ret) (T.current_state t1);
+      with _x _y. rewrite (session_state_related _x _y) as emp;
       let m = fst ret;
       rewrite each
         fst ret as m,
@@ -962,15 +851,13 @@ fn init_l0_ctxt
   (#engine_repr:erased engine_record_repr)
   (#s:erased (Seq.seq U8.t))
   (#uds_bytes:erased (Seq.seq U8.t))
-  (_:squash(cdi_functional_correctness s uds_bytes engine_repr /\
-            l0_is_authentic engine_repr))
+  (_:squash (cdi_functional_correctness s uds_bytes engine_repr /\
+             l0_is_authentic engine_repr))
   requires A.pts_to cdi s
-  returns ctxt:context_t
+  returns ctxt:l0_context_t
   ensures
     A.pts_to cdi s **
-    (exists* repr.
-     context_perm ctxt repr **
-     pure (repr == L0_context_repr (mk_l0_context_repr_t uds_bytes s engine_repr)))
+    l0_context_perm ctxt (mk_l0_context_repr_t uds_bytes s engine_repr)
 {
   let cdi_buf = V.alloc 0uy dice_digest_len;
   A.pts_to_len cdi;
@@ -980,20 +867,11 @@ fn init_l0_ctxt
   A.memcpy dice_digest_len cdi (V.vec_to_array cdi_buf);
   V.to_vec_pts_to cdi_buf;
   
-  // A.zeroize dice_digest_len cdi;
-  // V.free cdi;  // Not sure if we should free it ...
-
   let l0_context = mk_l0_context_t cdi_buf;
   let l0_context_repr = hide (mk_l0_context_repr_t uds_bytes s engine_repr);
   rewrite each cdi_buf as (l0_context.cdi);
   fold (l0_context_perm l0_context l0_context_repr);
-
-  let ctxt = mk_context_t_l0 l0_context;
-  let repr = mk_context_repr_t_l0 l0_context_repr;
-  rewrite (l0_context_perm l0_context l0_context_repr) 
-    as (context_perm ctxt repr);
-
-  ctxt
+  l0_context
 }
 ```
 
@@ -1031,7 +909,7 @@ fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t)
                             deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
                             aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0
            )
-  returns ctxt:context_t
+  returns ctxt:l1_context_t
   ensures 
     A.pts_to deviceID_priv deviceID_priv0 ** 
     A.pts_to deviceID_pub deviceID_pub0 **
@@ -1039,15 +917,10 @@ fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t)
     A.pts_to aliasKey_pub aliasKey_pub0 ** 
     A.pts_to deviceIDCSR deviceIDCSR0 **
     A.pts_to aliasKeyCRT aliasKeyCRT0 **
-    (exists* l1repr. 
-      context_perm ctxt l1repr **
-      pure (l1repr ==
-            L1_context_repr (mk_l1_context_repr_t 
-                              deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-                              aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-                              deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients))
-    )
-
+    l1_context_perm ctxt (mk_l1_context_repr_t 
+                            deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
+                            aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
+                            deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients)
 {
   let deviceID_pub_buf = V.alloc 0uy v32us;
   let deviceID_priv_buf = V.alloc 0uy v32us;
@@ -1091,11 +964,7 @@ fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t)
           aliasKeyCRT_buf   as l1_context.aliasKeyCRT;
 
   fold (l1_context_perm l1_context l1_context_repr);
-
-  let ctxt = mk_context_t_l1 l1_context;
-  let repr = mk_context_repr_t_l1 l1_context_repr;
-  rewrite (l1_context_perm l1_context l1_context_repr) as (context_perm ctxt repr);
-  ctxt  
+  l1_context
 }
 ```
 
@@ -1104,10 +973,10 @@ ghost
 fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
   requires l0_record_perm r1 p repr **
            pure (r1.fwid == r2.fwid /\
-                  r1.deviceID_label_len == r2.deviceID_label_len /\
-                  r1.deviceID_label == r2.deviceID_label /\
-                  r1.aliasKey_label_len == r2.aliasKey_label_len /\
-                  r1.aliasKey_label == r2.aliasKey_label)
+                 r1.deviceID_label_len == r2.deviceID_label_len /\
+                 r1.deviceID_label == r2.deviceID_label /\
+                 r1.aliasKey_label_len == r2.aliasKey_label_len /\
+                 r1.aliasKey_label == r2.aliasKey_label)
   ensures l0_record_perm r2 p repr
 {
   unfold (l0_record_perm r1 p repr);
@@ -1120,17 +989,21 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
 }
 ```
 
+let next_context (oc:context_t) (c:context_t) : prop =
+  match oc, c with
+  | Engine_context _, L0_context _
+  | L0_context _, L1_context _ -> True
+  | _ -> False
+
 let maybe_context_perm (oc:context_t) (c:option context_t) =
   match c with
   | Some c ->
-    pure ((Engine_context? oc ==> L0_context? c) /\
-          (L0_context? oc ==> L1_context? c)) **
-    (exists* repr. context_perm c repr)
+    pure (next_context oc c) ** (exists* repr. context_perm c repr)
   | None -> emp
 
 ```pulse
 ghost
-fn rewrite_engine_context_perm (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
+fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
   requires context_perm c r **
            pure (c == Engine_context ec)
   returns uds:G.erased (Seq.seq U8.t)
@@ -1142,7 +1015,7 @@ fn rewrite_engine_context_perm (c:context_t) (ec:engine_context_t) (#r:context_r
 
 ```pulse
 ghost
-fn rewrite_engine_record_perm (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
+fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm r p repr **
            pure (r == Engine_record er)
   returns erepr:G.erased engine_record_repr
@@ -1154,7 +1027,7 @@ fn rewrite_engine_record_perm (r:record_t) (er:engine_record_t) (#p:perm) (#repr
 
 ```pulse
 ghost
-fn rewrite_l0_context_perm (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
+fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
   requires context_perm c r **
            pure (c == L0_context lc)
   returns lrepr:G.erased l0_context_repr_t
@@ -1166,7 +1039,19 @@ fn rewrite_l0_context_perm (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
 
 ```pulse
 ghost
-fn rewrite_l0_record_perm (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
+fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == L1_context lc)
+  returns lrepr:G.erased l1_context_repr_t
+  ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
+{
+  admit ()
+}
+```
+
+```pulse
+ghost
+fn rewrite_record_perm_l0 (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm r p repr **
            pure (r == L0_record lr)
   returns lrepr:G.erased l0_record_repr_t
@@ -1176,6 +1061,11 @@ fn rewrite_l0_record_perm (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
 }
 ```
 
+let valid_context_and_record_for_derive_child (c:context_t) (r:record_t) : prop =
+  match c, r with
+  | Engine_context _, Engine_record _ -> True
+  | L0_context _, L0_record _ -> True
+  | _ -> False
 
 ```pulse
 fn derive_child_from_context
@@ -1184,9 +1074,7 @@ fn derive_child_from_context
     p
     (#record_repr: erased repr_t)
     (#context_repr:erased (context_repr_t))
-    (_:squash ((Engine_context? context \/ L0_context? context) /\
-               (Engine_context? context ==> Engine_record? record) /\
-               (L0_context? context ==> L0_record? record)))
+    (_:squash (valid_context_and_record_for_derive_child context record))
 
   requires
     context_perm context context_repr **
@@ -1199,13 +1087,12 @@ fn derive_child_from_context
 {
   match context {
     Engine_context c -> {
-      admit ();
       match record {
         Engine_record r -> {
-          let uds_bytes = rewrite_engine_context_perm context c;
+          let uds_bytes = rewrite_context_perm_engine context c;
           unfold (engine_context_perm c uds_bytes);
 
-          let engine_record_repr = rewrite_engine_record_perm record r;
+          let engine_record_repr = rewrite_record_perm_engine record r;
 
           let mut cdi = [| 0uy; dice_digest_len |];
 
@@ -1227,12 +1114,14 @@ fn derive_child_from_context
           match snd ret {
             DICE_SUCCESS -> {
               let l0_ctxt = init_l0_ctxt cdi #engine_record_repr #s #uds_bytes ();
-              fold (maybe_context_perm context (Some l0_ctxt));
-              let ret = (Engine_context c, Engine_record r, Some l0_ctxt);
+              with l0_ctxt_repr. assert (l0_context_perm l0_ctxt l0_ctxt_repr);
+              fold (context_perm (L0_context l0_ctxt) (L0_context_repr l0_ctxt_repr));
+              fold (maybe_context_perm context (Some (L0_context l0_ctxt)));
+              let ret = (Engine_context c, Engine_record r, Some (L0_context l0_ctxt));
               rewrite each
                 Engine_context c as tfst ret,
                 Engine_record r as tsnd ret,
-                Some l0_ctxt as tthd ret;  
+                Some (L0_context l0_ctxt) as tthd ret;
               ret
             }
 
@@ -1256,11 +1145,11 @@ fn derive_child_from_context
     L0_context c -> {
       match record {
         L0_record r -> {
-          let cr = rewrite_l0_context_perm context c;
+          let cr = rewrite_context_perm_l0 context c;
           unfold (l0_context_perm c cr);
           with s. assert (V.pts_to c.cdi s);
 
-          let r0 = rewrite_l0_record_perm record r;
+          let r0 = rewrite_record_perm_l0 record r;
 
           let deviceIDCRI_len_and_ing = len_of_deviceIDCRI r.deviceIDCSR_ingredients;
           let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
@@ -1314,19 +1203,20 @@ fn derive_child_from_context
                       aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
                       (hide r2.deviceID_label_len)
                       (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients);
+          with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
+          fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
 
-          assume_ (pure (L1_context? l1_context));
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
           V.free deviceIDCSR;
           V.free aliasKeyCRT;
 
-          fold (maybe_context_perm context (Some (l1_context)));
-          let ret = (L0_context c, L0_record r2, Some l1_context);
+          fold (maybe_context_perm context (Some (L1_context l1_context)));
+          let ret = (L0_context c, L0_record r2, Some (L1_context l1_context));
           rewrite each
             L0_context c as tfst ret,
             L0_record r2 as tsnd ret,
-            Some l1_context as tthd ret;
+            Some (L1_context l1_context) as tthd ret;
 
           ret
         }
@@ -1343,11 +1233,65 @@ fn derive_child_from_context
 }
 ```
 
+```pulse
+ghost
+fn rewrite_session_state_related_available
+  handle
+  context
+  (s:session_state { s == Available { handle; context } })
+  (t:T.trace)
+  requires session_state_related s (T.current_state t)
+  returns r:G.erased context_repr_t
+  ensures context_perm context r ** pure (T.current_state t == T.G_Available r)
+{
+  let cur = T.current_state t;
+  intro_session_state_tag_related s (T.current_state t);
+  let repr = T.G_Available?.repr cur;
+  rewrite (session_state_related s (T.current_state t)) as
+          (context_perm context repr);
+  hide repr
+}
+```
+
+```pulse 
+fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
+  requires context_perm ctxt repr
+  ensures emp
+{
+  match ctxt
+  {
+    Engine_context c ->
+    {
+      let uds = rewrite_context_perm_engine ctxt c;
+      unfold (engine_context_perm c uds);
+      V.free c.uds;
+    }
+    L0_context c ->
+    {
+      let r = rewrite_context_perm_l0 ctxt c;
+      unfold (l0_context_perm c r);
+      V.free c.cdi;
+    }
+    L1_context c ->
+    {
+      let r = rewrite_context_perm_l1 ctxt c;
+      unfold (l1_context_perm c r);
+      V.free c.deviceID_priv;
+      V.free c.deviceID_pub;
+      V.free c.aliasKey_priv;
+      V.free c.aliasKey_pub;
+      V.free c.aliasKeyCRT;
+      V.free c.deviceIDCSR;
+    }
+  }
+}
+```
+
 let trace_and_record_valid_for_derive_child (t:T.trace) (r:record_t) : prop =
   let open T in
-  match current_state t with
-  | G_Available (Engine_context_repr _) -> Engine_record? r
-  | G_Available (L0_context_repr _) -> L0_record? r
+  match current_state t, r with
+  | G_Available (Engine_context_repr _), Engine_record _
+  | G_Available (L0_context_repr _), L0_record _ -> True
   | _ -> False
 
 let derive_child_pre_post_traces (t0:T.trace) (t1:T.trace) =
@@ -1366,78 +1310,22 @@ let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (c:option ctxt_hn
     exists* t1. sid_pts_to r sid t1 **
                 pure (derive_child_pre_post_traces t0 t1)
 
-let repr_of_gavailable (gs:T.g_session_state { T.G_Available? gs }) : GTot context_repr_t =
-  match gs with
-  | T.G_Available r -> r
+let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : prop =
+  match c, r with
+  | Engine_context _, Engine_context_repr _
+  | L0_context _, L0_context_repr _
+  | L1_context _, L1_context_repr _ -> True
+  | _ -> False
 
 ```pulse
 ghost
-fn rewrite_available_session_state_related
-  handle
-  context
-  (s:session_state { s == Available { handle; context } })
-  (t:T.trace { T.G_Available? (T.current_state t) })
-  requires session_state_related s (T.current_state t)
-  returns r:G.erased context_repr_t
-  ensures context_perm context r ** pure (r == repr_of_gavailable (T.current_state t))
+fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
+  requires context_perm c r
+  ensures context_perm c r ** pure (context_and_repr_tag_related c r)
 {
-  let cur = T.current_state t;
-  let is_available = T.G_Available? cur;
-  if is_available {
-    let ret = repr_of_gavailable cur;
-    rewrite (session_state_related s (T.current_state t)) as
-            (context_perm context ret);
-    G.hide ret
-  } else {
-    unreachable ()
-  }
+  admit ()
 }
 ```
-
-```pulse 
-fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
-  requires context_perm ctxt repr
-  ensures emp
-{
-  match ctxt
-  {
-    Engine_context c ->
-    {
-      rewrite each ctxt as (Engine_context c);
-      let uds = get_engine_context_perm c repr;
-      unfold (engine_context_perm c uds);
-      // A.zeroize uds_len c.uds;
-      V.free c.uds;
-    }
-    L0_context c ->
-    {
-      rewrite each ctxt as (L0_context c);
-      let r = get_l0_context_perm c repr;
-      unfold (l0_context_perm c r);
-      // A.zeroize dice_digest_len c.cdi;
-      V.free c.cdi;
-    }
-    L1_context c ->
-    {
-      rewrite each ctxt as (L1_context c);
-      let r = get_l1_context_perm c repr;
-      unfold (l1_context_perm c r);
-      V.free c.deviceID_priv;
-      V.free c.deviceID_pub;
-      V.free c.aliasKey_priv;
-      V.free c.aliasKey_pub;
-      V.free c.aliasKeyCRT;
-      V.free c.deviceIDCSR;
-    }
-  }
-}
-```
-
-let is_engine_or_l0_context (c:context_t) : bool =
-  match c with
-  | Engine_context _
-  | L0_context _ -> true
-  | _ -> false
 
 (*
   DeriveChild: Part of DPE API 
@@ -1475,16 +1363,14 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
     Available hc -> {
       match hc.context {
         L1_context _ -> {
-          admit ();
           rewrite (session_state_related s (T.current_state t)) as
                   (pure False);
           unreachable ()
         }
         _ -> {
           assume_ (pure (~ (L1_context? hc.context)));
-          let repr = rewrite_available_session_state_related hc.handle hc.context s t;
-          assume_ (pure ((Engine_context? hc.context ==> Engine_context_repr? repr) /\
-                         (L0_context? hc.context ==> L0_context_repr? repr)));
+          let repr = rewrite_session_state_related_available hc.handle hc.context s t;
+          intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record p ();
 
           let octxt = tfst ret;
@@ -1500,14 +1386,13 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
             Some nctxt -> {
               unfold (maybe_context_perm hc.context (Some nctxt));
               with nrepr. assert (context_perm nctxt nrepr);
+              intro_context_and_repr_tag_related nctxt nrepr;
               let handle = prng ();
               let s = Available { handle; context = nctxt };
               rewrite (context_perm nctxt nrepr) as
                       (session_state_related s (T.G_Available nrepr));
-              assume_ (pure ((L0_context? nctxt ==> L0_context_repr? nrepr) /\
-                             (L1_context? nctxt ==> L1_context_repr? nrepr)));
               let ret = replace_session r m sid t1 s (T.G_Available nrepr);
-              elim_session_state_related_inuse (snd ret) t1;
+              intro_session_state_tag_related (snd ret) (T.current_state t1);
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1517,13 +1402,14 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
                 m as tfst ret,
                 record as tsnd ret;
               fold (derive_child_client_perm r sid t (Some handle));
+              with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
             }
             None -> {
               let s = SessionError;
               rewrite emp as (session_state_related s (T.G_SessionError (T.current_state t1)));
               let ret = replace_session r m sid t1 s (T.G_SessionError (T.current_state t1));
-              elim_session_state_related_inuse (snd ret) t1;
+              intro_session_state_tag_related (snd ret) (T.current_state t1);
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1534,6 +1420,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
                 record as tsnd ret;
               rewrite (maybe_context_perm hc.context nctxt) as emp;
               fold (derive_child_client_perm r sid t None);
+              with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
             }
           }

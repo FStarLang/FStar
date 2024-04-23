@@ -36,7 +36,7 @@ noeq
 type g_session_state : Type u#1 =
   | G_UnInitialized : g_session_state
   | G_SessionStart : g_session_state
-  | G_Available : context_repr_t -> g_session_state
+  | G_Available : repr:context_repr_t -> g_session_state
   | G_InUse : g_session_state -> g_session_state
   | G_SessionClosed : g_session_state -> g_session_state
   | G_SessionError : g_session_state -> g_session_state

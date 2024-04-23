@@ -275,92 +275,31 @@ let mk_context_repr_t_l1 (r:erased l1_context_repr_t)
 : erased context_repr_t = L1_context_repr r
 
 let context_perm (context:context_t) (repr:context_repr_t): vprop = 
-  match context with
-  | Engine_context c -> (
-    match repr with
-    | Engine_context_repr uds -> engine_context_perm c uds
-    | _ -> pure False
-  )
-  | L0_context c -> (
-    match repr with 
-    | L0_context_repr r -> l0_context_perm c r
-    | _ -> pure False
-  )
-  | L1_context c -> (
-    match repr with
-    | L1_context_repr r -> l1_context_perm c r
-    | _ -> pure False
-  )
+  match context, repr with
+  | Engine_context c, Engine_context_repr uds -> engine_context_perm c uds
+  | L0_context c, L0_context_repr r -> l0_context_perm c r
+  | L1_context c, L1_context_repr r -> l1_context_perm c r
+  | _ -> pure False
 
 ```pulse
 ghost
-fn elim_false (#a:Type0) (p: (a -> vprop))
-    requires pure False
-    returns x:a
-    ensures p x
-{
-    let x = false_elim #a ();
-    rewrite emp as (p x);
-    x
-}
-```
-
-```pulse
-ghost
-fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
-  requires context_perm (Engine_context c) repr
+fn rewrite_context_perm_engine (c:engine_context_t) (r:context_repr_t)
+  requires context_perm (Engine_context c) r
   returns uds:Ghost.erased (Seq.seq U8.t)
-  ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
+  ensures engine_context_perm c uds ** pure (r == Engine_context_repr uds)
 {
-  let repr = reveal repr;
-  match repr {
+  match r {
     Engine_context_repr uds -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (engine_context_perm c uds);
+      rewrite (context_perm (Engine_context c) r) as
+              (engine_context_perm c uds);
       hide uds
-    } 
-    L0_context_repr r0 -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (pure False);
-      let x = elim_false (engine_context_perm c);
-      hide x
     }
-    L1_context_repr _ -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (pure False);
-      let x = elim_false (engine_context_perm c);
-      hide x
-    }
-  }
-}
-```
+    _ -> {
+      assume_ (pure (~ (Engine_context_repr? r)));
+      rewrite (context_perm (Engine_context c) r) as
+              (pure False);
+      unreachable ()
 
-
-```pulse
-ghost
-fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
-  requires context_perm (L0_context r) repr'
-  returns r0:erased l0_context_repr_t
-  ensures l0_context_perm r r0 ** pure (reveal repr' == L0_context_repr r0)
-{
-  let repr = reveal repr';
-  match repr {
-    Engine_context_repr uds -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (pure False);
-      let x = elim_false (l0_context_perm r);
-      hide x
-    }
-    L0_context_repr r0 -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (l0_context_perm r r0);
-      hide r0
-    }
-    L1_context_repr _ -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (pure False);
-      let x = elim_false (l0_context_perm r);
-      hide x
     }
   }
 }
@@ -368,29 +307,45 @@ fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
 
 ```pulse
 ghost
-fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
-  requires context_perm (L1_context r) repr'
-  returns r0:erased l1_context_repr_t
-  ensures l1_context_perm r r0 ** pure (reveal repr' == L1_context_repr r0)
+fn rewrite_context_perm_l0 (c:l0_context_t) (r:context_repr_t)
+  requires context_perm (L0_context c) r
+  returns r1:Ghost.erased l0_context_repr_t
+  ensures l0_context_perm c r1 ** pure (r == L0_context_repr r1)
 {
-  let repr = reveal repr';
-  match repr {
-    Engine_context_repr uds -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (pure False);
-      let x = elim_false (l1_context_perm r);
-      hide x
+  match r {
+    L0_context_repr r1 -> {
+      rewrite (context_perm (L0_context c) r) as
+              (l0_context_perm c r1);
+      hide r1
     }
-    L0_context_repr _ -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (pure False);
-      let x = elim_false (l1_context_perm r);
-      hide x
+    _ -> {
+      assume_ (pure (~ (L0_context_repr? r)));
+      rewrite (context_perm (L0_context c) r) as
+              (pure False);
+      unreachable ()
     }
-    L1_context_repr r0 -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (l1_context_perm r r0);
-      hide r0
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_context_perm_l1 (c:l1_context_t) (r:context_repr_t)
+  requires context_perm (L1_context c) r
+  returns r1:Ghost.erased l1_context_repr_t
+  ensures l1_context_perm c r1 ** pure (r == L1_context_repr r1)
+{
+  match r {
+    L1_context_repr r1 -> {
+      rewrite (context_perm (L1_context c) r) as
+              (l1_context_perm c r1);
+      hide r1
+    }
+    _ -> {
+      assume_ (pure (~ (L1_context_repr? r)));
+      rewrite (context_perm (L1_context c) r) as
+              (pure False);
+      unreachable ()
     }
   }
 }
@@ -415,38 +370,29 @@ type repr_t =
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
 let record_perm (record:record_t) (p:perm) (repr:repr_t)  : vprop = 
-  match record with
-  | Engine_record r -> (
-    match repr with 
-    | Engine_repr r0 -> engine_record_perm r p r0
-    | _ -> pure False
-  )
-  | L0_record r -> (
-    match repr with
-    | L0_repr r0 -> l0_record_perm r p r0
-    | _ -> pure False
-  )
+  match record, repr with
+  | Engine_record r, Engine_repr r0 -> engine_record_perm r p r0
+  | L0_record r, L0_repr r0 -> l0_record_perm r p r0
+  | _ -> pure False
 
 
 ```pulse
 ghost
-fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (Engine_record r) p repr'
-  returns r0:erased engine_record_repr
-  ensures engine_record_perm r p r0 ** pure (reveal repr' == Engine_repr r0)
+fn rewrite_record_perm_engine (r:engine_record_t) (p:perm) (repr:repr_t)
+  requires record_perm (Engine_record r) p repr
+  returns r0:Ghost.erased engine_record_repr
+  ensures engine_record_perm r p r0 ** pure (repr == Engine_repr r0)
 {
-  let repr = reveal repr';
   match repr {
     Engine_repr r0 -> {
-      rewrite (record_perm (Engine_record r) p (reveal repr))
+      rewrite (record_perm (Engine_record r) p repr)
           as  (engine_record_perm r p r0);
       hide r0
     }
     L0_repr _ -> {
       rewrite (record_perm (Engine_record r) p repr)
           as  (pure False);
-      let x = elim_false #engine_record_repr (engine_record_perm r p);
-      hide x
+      unreachable ()
     }
   }
 }
@@ -454,24 +400,22 @@ fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
 
 ```pulse
 ghost
-fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (L0_record r) p repr'
-  returns r0:erased l0_record_repr_t
-  ensures l0_record_perm r p r0 ** pure (reveal repr' == L0_repr r0)
+fn rewrite_record_perm_l0 (r:l0_record_t) (p:perm) (repr:repr_t)
+  requires record_perm (L0_record r) p repr
+  returns r0:Ghost.erased l0_record_repr_t
+  ensures l0_record_perm r p r0 ** pure (repr == L0_repr r0)
 {
-  let repr = reveal repr';
   match repr {
-    Engine_repr rr -> {
+    Engine_repr _ -> {
       rewrite (record_perm (L0_record r) p repr)
           as  (pure False);
-      let x = elim_false #l0_record_repr_t (l0_record_perm r p);
-      hide x
+      unreachable ()
     }
     L0_repr r0 -> {
       rewrite (record_perm (L0_record r) p repr)
           as  (l0_record_perm r p r0);
       hide r0
-   }
+    }
   }
 }
 ```
