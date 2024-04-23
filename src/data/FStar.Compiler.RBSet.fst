@@ -78,8 +78,12 @@ let rec remove {| ord 'a |} (x:'a) (t:rbset 'a) : rbset 'a =
     if x <? y then balance c (remove x l) y r
     else if x >? y then balance c l y (remove x r)
     else
-      let (r', y') = extract_min r in
-      balance c l y' r'
+      if L? r
+      then
+        l
+      else
+        let (r', y') = extract_min r in
+        balance c l y' r'
 
 let rec mem {| ord 'a |} (x:'a) (s:rbset 'a) : bool =
   match s with
