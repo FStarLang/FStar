@@ -72,7 +72,7 @@ instance printable_list (a:Type) (_ : printable a) : printable (list a) = {
   pp = (fun l -> brackets (separate_map comma pp l))
 }
 
-instance printable_term     : printable term = from_show
+instance printable_term     : printable term = { pp = term_to_doc; }
 instance printable_st_term  : printable st_term = from_show
 instance printable_universe : printable universe = from_show
 instance printable_comp     : printable comp = from_show
@@ -96,11 +96,6 @@ instance printable_post_hint_t : printable post_hint_t = {
                     ; "ret_ty", pp h.ret_ty
                     ; "u", pp h.u
                     ; "post", pp h.post ]);
-}
-
-// FIXME: use term_to_doc when available
-instance printable_fstar_term : printable Reflection.V2.term = {
-  pp = (fun t -> doc_of_string (Tactics.V2.term_to_string t))
 }
 
 instance printable_tuple2 (a b:Type)

@@ -47,7 +47,7 @@ test-c: verify
 # files. If so, then this %.ast rule will be generic and can move to
 # share/pulse/Makefile.include-base.
 %.ast:
-	$(FSTAR) --admit_smt_queries true --warn_error -241 --codegen Extension $(subst .ast,, $(notdir $@)) --extract_module $(basename $(subst .ast,, $(notdir $@)))
+	$(FSTAR) $(OTHERFLAGS) --admit_smt_queries true --warn_error -241 --codegen Extension $(subst .ast,, $(notdir $@)) --extract_module $(basename $(subst .ast,, $(notdir $@)))
 
 DPE_FILES = EngineTypes.fst \
   EngineCore.fst \

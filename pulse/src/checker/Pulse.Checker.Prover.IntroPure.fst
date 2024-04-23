@@ -25,6 +25,7 @@ open Pulse.Checker.VPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Base
 open Pulse.Checker.Prover.Util
+open Pulse.PP
 module RU = Pulse.RuntimeUtils
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
@@ -235,8 +236,8 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
     then ()
     else 
       fail_doc pst.pg (Some (Pulse.RuntimeUtils.range_of_term t_ss))
-        [Pulse.PP.text "Could not resolve all free variables in the proposition: ";
-         P.term_to_doc t_ss;]
+        [prefix 2 1 (text "Could not resolve all free variables in the proposition:")
+                    (pp t_ss);]
   in
   let d = core_check_tot_term pst.pg t_ss tm_prop in
   let d_valid = check_prop_validity pst.pg t_ss d in

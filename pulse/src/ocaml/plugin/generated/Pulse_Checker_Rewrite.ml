@@ -21,7 +21,7 @@ let (check_vprop_equiv_ext :
                      (Prims.of_int (30)) Prims.int_one (Prims.of_int (39))
                      (Prims.of_int (22)))))
             (Obj.magic
-               (FStar_Tactics_V2_Builtins.check_equiv
+               (FStar_Tactics_V2_Derived.check_equiv
                   (Pulse_Typing.elab_env g) p q))
             (fun uu___ ->
                (fun uu___ ->
@@ -104,7 +104,7 @@ let (check_vprop_equiv_ext :
                                                                   (Prims.of_int (17)))))
                                                          (Obj.magic
                                                             (Pulse_PP.pp
-                                                               Pulse_PP.printable_fstar_term
+                                                               Pulse_PP.printable_term
                                                                p))
                                                          (fun uu___2 ->
                                                             (fun uu___2 ->
@@ -149,7 +149,7 @@ let (check_vprop_equiv_ext :
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
-                                                                    Pulse_PP.printable_fstar_term
+                                                                    Pulse_PP.printable_term
                                                                     q))
                                                                     (fun
                                                                     uu___3 ->

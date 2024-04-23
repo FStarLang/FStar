@@ -21,9 +21,18 @@ module T = FStar.Tactics.V2
 module RU = Pulse.RuntimeUtils
 (* Call check_equiv under a SMTSync guard policy *)
 let check_equiv_now tcenv t0 t1 =
-  RU.disable_admit_smt_queries (fun _ -> 
+  RU.disable_admit_smt_queries (fun _ ->
     T.with_policy SMTSync (fun () ->
       T.check_equiv tcenv t0 t1))
+
+(* Call check_equiv without allowing
+it to generate guards nor unfold. It's a very
+simple use of the core checker + unifier.
+The Force guard_policy is probably unneeded, as no
+guards should appear. *)
+let check_equiv_now_nosmt tcenv t0 t1 =
+  RU.disable_admit_smt_queries (fun _ ->
+      T.check_equiv_nosmt tcenv t0 t1)
 
 let universe_of_now g e =
   T.with_policy SMTSync (fun () ->
