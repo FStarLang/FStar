@@ -127,3 +127,22 @@ val mk_tac_step_4 :
   ('t1 -> 't2 -> 't3 -> 't4 -> tac 'res) ->
   ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> tac 'nres) ->
   PO.primitive_step
+
+val mk_tac_step_5 :
+  univ_arity:int ->
+  string ->
+  {| embedding 't1 |} ->
+  {| embedding 't2 |} ->
+  {| embedding 't3 |} ->
+  {| embedding 't4 |} ->
+  {| embedding 't5 |} ->
+  {| embedding 'res |} ->
+  {| NBET.embedding 'nt1 |} ->
+  {| NBET.embedding 'nt2 |} ->
+  {| NBET.embedding 'nt3 |} ->
+  {| NBET.embedding 'nt4 |} ->
+  {| NBET.embedding 'nt5 |} ->
+  {| NBET.embedding 'nres |} ->
+  ('t1 -> 't2 -> 't3 -> 't4 -> 't5 -> tac 'res) ->
+  ('nt1 -> 'nt2 -> 'nt3 -> 'nt4 -> 'nt5 -> tac 'nres) ->
+  PO.primitive_step

@@ -120,3 +120,8 @@ let rec string_of_list #a (f : a -> Tac string) (l : list a) : Tac string =
   match l with
   | [] -> ""
   | x::xs -> f x ^ ";" ^ string_of_list f xs
+
+let string_of_option #a (f : a -> Tac string) (o : option a) : Tac string =
+  match o with
+  | Some x -> "Some " ^ f x
+  | None -> "None"

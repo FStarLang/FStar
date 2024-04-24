@@ -155,6 +155,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_range r -> C_Range r
     | FStar.Const.Const_reify _ -> C_Reify
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
+    | FStar.Const.Const_real s -> C_Real s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let inspect_universe u =
@@ -361,6 +362,7 @@ let pack_const (c:vconst) : sconst =
     | C_Range  r     -> C.Const_range r
     | C_Reify        -> C.Const_reify None
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
+    | C_Real r       -> C.Const_real r
 
 let rec pack_pat p : S.pat =
   let wrap v = {v=v;p=Range.dummyRange} in
@@ -446,14 +448,16 @@ let compare_namedv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
+let lookup_attr_ses (attr:term) (env:Env.env) : list sigelt =
+  match (SS.compress_subst attr).n with
+  | Tm_fvar fv -> Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv))
+  | _ -> []
+
 let lookup_attr (attr:term) (env:Env.env) : list fv =
-    match (SS.compress_subst attr).n with
-    | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
-        List.concatMap (fun se -> match U.lid_of_sigelt se with
-                                  | None -> []
-                                  | Some l -> [S.lid_as_fv l None]) ses
-    | _ -> []
+  let ses = lookup_attr_ses attr env in
+  List.concatMap (fun se -> match U.lid_of_sigelt se with
+                            | None -> []
+                            | Some l -> [S.lid_as_fv l None]) ses
 
 let all_defs_in_env (env:Env.env) : list fv =
     List.map (fun l -> S.lid_as_fv l None) (Env.lidents env) // |> take 10

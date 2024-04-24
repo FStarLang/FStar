@@ -5341,3 +5341,25 @@ let (smt_sync' :
                          Obj.magic
                            (FStar_Tactics_V2_Builtins.t_smt_sync vcfg'))
                         uu___))) uu___)
+let (check_equiv :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.typ ->
+      FStar_Reflection_Types.typ ->
+        (((unit, unit, unit) FStar_Tactics_Types.equiv_token
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+          unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 -> FStar_Tactics_V2_Builtins.t_check_equiv true true g t0 t1
+let (check_equiv_nosmt :
+  FStar_Reflection_Types.env ->
+    FStar_Reflection_Types.typ ->
+      FStar_Reflection_Types.typ ->
+        (((unit, unit, unit) FStar_Tactics_Types.equiv_token
+           FStar_Pervasives_Native.option * FStar_Issue.issue Prims.list),
+          unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun g ->
+    fun t0 ->
+      fun t1 -> FStar_Tactics_V2_Builtins.t_check_equiv false false g t0 t1

@@ -244,7 +244,9 @@ let (dump_all : Prims.bool -> Prims.string -> unit FStar_Tactics_Monad.tac) =
                  (ps.FStar_Tactics_Types.tac_verb_dbg);
                FStar_Tactics_Types.local_state =
                  (ps.FStar_Tactics_Types.local_state);
-               FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+               FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+               FStar_Tactics_Types.dump_on_failure =
+                 (ps.FStar_Tactics_Types.dump_on_failure)
              } in
            do_dump_ps msg ps'; FStar_Tactics_Result.Success ((), ps))
 let (dump_uvars_of :
@@ -287,7 +289,9 @@ let (dump_uvars_of :
                  (ps.FStar_Tactics_Types.tac_verb_dbg);
                FStar_Tactics_Types.local_state =
                  (ps.FStar_Tactics_Types.local_state);
-               FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+               FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+               FStar_Tactics_Types.dump_on_failure =
+                 (ps.FStar_Tactics_Types.dump_on_failure)
              } in
            do_dump_ps msg ps'; FStar_Tactics_Result.Success ((), ps))
 let fail1 :
@@ -424,7 +428,9 @@ let (set_guard_policy :
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let with_policy :
   'a .
@@ -1417,7 +1423,9 @@ let (fresh : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            } in
          let uu___2 = FStar_Tactics_Monad.set ps1 in
          let uu___3 = bind () in
@@ -2282,7 +2290,9 @@ let divide :
                           FStar_Tactics_Types.local_state =
                             (p.FStar_Tactics_Types.local_state);
                           FStar_Tactics_Types.urgency =
-                            (p.FStar_Tactics_Types.urgency)
+                            (p.FStar_Tactics_Types.urgency);
+                          FStar_Tactics_Types.dump_on_failure =
+                            (p.FStar_Tactics_Types.dump_on_failure)
                         } in
                       let uu___4 = FStar_Tactics_Monad.set lp in
                       let uu___5 = bind () in
@@ -2319,7 +2329,10 @@ let divide :
                                          FStar_Tactics_Types.local_state =
                                            (lp'.FStar_Tactics_Types.local_state);
                                          FStar_Tactics_Types.urgency =
-                                           (lp'.FStar_Tactics_Types.urgency)
+                                           (lp'.FStar_Tactics_Types.urgency);
+                                         FStar_Tactics_Types.dump_on_failure
+                                           =
+                                           (lp'.FStar_Tactics_Types.dump_on_failure)
                                        } in
                                      let uu___9 = FStar_Tactics_Monad.set rp in
                                      let uu___10 = bind () in
@@ -2378,7 +2391,10 @@ let divide :
                                                           (rp'.FStar_Tactics_Types.local_state);
                                                         FStar_Tactics_Types.urgency
                                                           =
-                                                          (rp'.FStar_Tactics_Types.urgency)
+                                                          (rp'.FStar_Tactics_Types.urgency);
+                                                        FStar_Tactics_Types.dump_on_failure
+                                                          =
+                                                          (rp'.FStar_Tactics_Types.dump_on_failure)
                                                       } in
                                                     let uu___14 =
                                                       FStar_Tactics_Monad.set
@@ -5418,7 +5434,7 @@ let (_t_trefl :
                                 | FStar_Pervasives.Inl (uu___13, t_ty) ->
                                     let uu___14 =
                                       FStar_TypeChecker_Core.check_term_subtyping
-                                        env1 ty t_ty in
+                                        true true env1 ty t_ty in
                                     (match uu___14 with
                                      | FStar_Pervasives.Inl
                                          (FStar_Pervasives_Native.None) ->
@@ -6081,7 +6097,9 @@ let (join : unit -> unit FStar_Tactics_Monad.tac) =
                       FStar_Tactics_Types.local_state =
                         (ps.FStar_Tactics_Types.local_state);
                       FStar_Tactics_Types.urgency =
-                        (ps.FStar_Tactics_Types.urgency)
+                        (ps.FStar_Tactics_Types.urgency);
+                      FStar_Tactics_Types.dump_on_failure =
+                        (ps.FStar_Tactics_Types.dump_on_failure)
                     } in
                 Obj.magic
                   (FStar_Class_Monad.op_let_Bang
@@ -8811,7 +8829,9 @@ let (lset :
                         (ps.FStar_Tactics_Types.tac_verb_dbg);
                       FStar_Tactics_Types.local_state = uu___1;
                       FStar_Tactics_Types.urgency =
-                        (ps.FStar_Tactics_Types.urgency)
+                        (ps.FStar_Tactics_Types.urgency);
+                      FStar_Tactics_Types.dump_on_failure =
+                        (ps.FStar_Tactics_Types.dump_on_failure)
                     } in
                   Obj.magic (FStar_Tactics_Monad.set ps1)) uu___1) in
         FStar_Tactics_Monad.wrap_err "lset" uu___
@@ -8845,7 +8865,9 @@ let (set_urgency : FStar_BigInt.t -> unit FStar_Tactics_Monad.tac) =
                   (ps.FStar_Tactics_Types.tac_verb_dbg);
                 FStar_Tactics_Types.local_state =
                   (ps.FStar_Tactics_Types.local_state);
-                FStar_Tactics_Types.urgency = uu___
+                FStar_Tactics_Types.urgency = uu___;
+                FStar_Tactics_Types.dump_on_failure =
+                  (ps.FStar_Tactics_Types.dump_on_failure)
               } in
             Obj.magic (FStar_Tactics_Monad.set ps1)) uu___)
 let (t_commute_applied_match : unit -> unit FStar_Tactics_Monad.tac) =

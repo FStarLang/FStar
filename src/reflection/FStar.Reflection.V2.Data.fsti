@@ -54,6 +54,7 @@ type vconst =
     | C_Range of Range.range
     | C_Reify
     | C_Reflect of name
+    | C_Real of string (* Real literals are represented as a string e.g. "1.2" *)
 
 type universes = list universe
 
