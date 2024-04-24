@@ -3,9 +3,16 @@ open Pulse.Lib.Pervasives
 module CM = FStar.Algebra.CommMonoid
 module M = Pulse.Lib.PCM.MonoidShares
 module U32 = FStar.UInt32
+#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
 
-assume
-val big_ghost_read_simple
+let identity_frame_compatible
+      #a (p:FStar.PCM.pcm a)
+      (x:a)
+      (v:a{FStar.PCM.compatible p x v})
+: y:a { FStar.PCM.compatible p y v /\ FStar.PCM.frame_compatible p x v y }
+= x
+
+let big_ghost_read_simple
     (#a:Type)
     (#p:FStar.PCM.pcm a)
     (r:ghost_pcm_ref p)
@@ -14,48 +21,43 @@ val big_ghost_read_simple
     emp_inames
     (big_ghost_pcm_pts_to r x)
     (fun v -> big_ghost_pcm_pts_to r x)
+= big_ghost_read #a #p r x (identity_frame_compatible p x)
 
-let storable = p:vprop { is_small p }
 
-assume
-val small_star (p q:small_vprop) : small_vprop
-assume
-val small_emp : small_vprop
-let up2_small_emp : squash (up2 small_emp == emp) = admit()
+let small_star = cm_small_vprop.mult
+let small_emp : small_vprop = cm_small_vprop.unit
 let small_emp_unit (x:small_vprop)
 : Lemma (small_star small_emp x == x)
         [SMTPat (small_star small_emp x == x)]
-= admit()
+= cm_small_vprop.identity x
 let small_star_assoc (x y z:small_vprop)
 : Lemma (small_star x (small_star y z) == small_star (small_star x y) z)
-= admit()
+= cm_small_vprop.associativity x y z
 let small_star_comm (x y:small_vprop)
 : Lemma (small_star x y == small_star y x)
         [SMTPat (small_star x y)]
-= admit()
+= cm_small_vprop.commutativity x y
 
+let up2_small_emp : squash (up2 small_emp == emp) = up2_emp()
 
 let down2_star (p q:storable)
 : Lemma (down2 (p ** q) == down2 p `small_star` down2 q)
-= admit()
+= down2_star p q
 
 let small_star_inj (p q r0 r1:small_vprop)
 : Lemma 
   (p == q `small_star` r0 /\
    p == q `small_star` r1 ==> r0 == r1)
-= admit()
+= admit() //!! not true !!!
+
+let up2_is_small (p:small_vprop)
+  : Lemma (is_small (up2 p))
+          [SMTPat (up2 p)]
+  = up2_is_small p
 
 let up2_small_star (p q:small_vprop)
 : Lemma (up2 (p `small_star` q) == (up2 p ** up2 q))
-= admit()
-
-let small_vprop_cm
-: CM.cm small_vprop
-= CM.CM small_emp small_star
-    small_emp_unit
-    small_star_assoc
-    small_star_comm
-
+= up2_star p q
 
 noeq
 type barrier_t_core = {
@@ -68,10 +70,10 @@ noeq type barrier_t = {
   i: iref
 }
 
-let pcm_of (p:storable) = M.pcm_of small_vprop_cm (down2 p)
+let pcm_of (p:storable) = M.pcm_of cm_small_vprop (down2 p)
 
 let barrier_inv (b: barrier_t_core) (p:storable)
-: vprop
+: w:vprop { is_big w }
 = exists* v r q.
     Box.pts_to b.r #0.5R v **
     big_ghost_pcm_pts_to #_ #(pcm_of p) b.gref q **
@@ -82,11 +84,6 @@ let barrier_inv (b: barrier_t_core) (p:storable)
      else down2 p == small_star q r
     )
 
-let barrier_inv_i_big (b:barrier_t_core) (p:storable)
-: Lemma (is_big (barrier_inv b p))
-        [SMTPat (is_big (barrier_inv b p))]
-= admit()
-
 let barrier (b: barrier_t) (p:storable)
 : vprop
 = inv b.i (barrier_inv b.core p)
@@ -96,17 +93,18 @@ let send (b: barrier_t) (p:storable)
 = barrier b p **
   Box.pts_to b.core.r #0.5R 0ul
 
-let recv (b:barrier_t) (p q:storable)
+let recv (b:barrier_t) (q:storable)
 : vprop
-= barrier b p **
-  big_ghost_pcm_pts_to #_ #(pcm_of p) b.core.gref (down2 q)
+= exists* p.
+    barrier b p **
+    big_ghost_pcm_pts_to #_ #(pcm_of p) b.core.gref (down2 q)
 
 
 ```pulse
 fn new_barrier (p:storable)
 requires emp
 returns b:barrier_t
-ensures send b p ** recv b p p
+ensures send b p ** recv b p
 {
   let r = Box.alloc 0ul;
   let gref = big_ghost_alloc #_ #(pcm_of p) (down2 p);
@@ -125,7 +123,7 @@ ensures send b p ** recv b p p
   fold (barrier bb p);
   fold (send bb p);
   fold (barrier bb p);
-  fold (recv bb p p);
+  fold (recv bb p);
   bb
 }
 ```
@@ -161,7 +159,6 @@ ensures emp
 let pcm_refine (#p:storable) (x:small_vprop)
   : Lemma ((pcm_of p).refine x ==> x == down2 p)
   = ()
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
 
 let extract_frame 
       (p:storable) (claim:storable) (q:small_vprop)
@@ -181,11 +178,11 @@ let extract_frame
   frame
 
 ```pulse
-fn rec wait (b:barrier_t) (p claim:storable)
-requires recv b p claim
+fn rec wait_alt (b:barrier_t) (p claim:storable)
+requires barrier b p **
+         big_ghost_pcm_pts_to #_ #(pcm_of p) b.core.gref (down2 claim)
 ensures claim
 {
-  unfold recv;
   unfold barrier;
   let res : bool =
     with_invariants b.i
@@ -214,6 +211,8 @@ ensures claim
         assert pure (x == down2 p);
         assert pure (FStar.PCM.compatible (pcm_of p) (small_star (down2 claim) q) (down2 p));
         let frame = extract_frame p claim q ();
+        //p == q ** r
+        //p == q ** (frame ** claim)
         small_star_inj (down2 p) q (small_star frame (down2 claim)) r;
         rewrite (up2 r) as (up2 (small_star frame (down2 claim)));
         up2_small_star frame (down2 claim);
@@ -235,9 +234,18 @@ ensures claim
   {
     elim_cond_false _ _ _;
     fold (barrier b p);
-    fold (recv b p claim);
-    wait b p claim;
+    wait_alt b p claim;
   }
+}
+```
+
+```pulse
+fn wait (b:barrier_t) (claim:storable)
+requires recv b claim
+ensures claim
+{
+  unfold recv;
+  wait_alt b _ claim
 }
 ```
 
@@ -256,17 +264,18 @@ ensures barrier b p ** barrier b p
 
 ```pulse
 ghost
-fn split (b:barrier_t) (#p #q r s:storable)
-requires recv b p q ** pure (q == r ** s)
-ensures recv b p r ** recv b p s
+fn split (b:barrier_t) (#q r s:storable)
+requires recv b q ** pure (q == r ** s)
+ensures recv b r ** recv b s
 {
   unfold recv;
+  with p. assert (barrier b p);
   rewrite each q as (r ** s);
   down2_star r s;
   rewrite each (down2 (r ** s)) as (down2 r `small_star` down2 s);
   big_ghost_share #_ #(pcm_of p) b.core.gref (down2 r) (down2 s);
   dup_barrier b;
-  fold (recv b p r);
-  fold (recv b p s)
+  fold (recv b r);
+  fold (recv b s)
 }
 ```

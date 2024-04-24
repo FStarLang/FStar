@@ -19,10 +19,9 @@ open FStar.Ghost
 open FStar.PCM
 module PP = PulseCore.Preorder
 module PST = PulseCore.PreorderStateMonad
-// module MSTTotal = PulseCore.MonotonicStateMonad
 module U = FStar.Universe
 module S = FStar.Set
-
+module CM = FStar.Algebra.CommMonoid
 /// This module adds memory invariants to the heap to expose the
 /// final interface for Pulse's PCM-based memory model.
 
@@ -54,6 +53,7 @@ val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]
 val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val cm_big_slprop : CM.cm big_slprop
 val down (s:slprop u#a) : big_slprop u#a
 val up (s:big_slprop u#a) : slprop u#a
 let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
@@ -64,6 +64,7 @@ val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
 [@@erasable]
 val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
 //e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
+val cm_small_slprop : CM.cm small_slprop
 val down2 (s:slprop u#a) : small_slprop u#a
 val up2 (s:small_slprop u#a) : slprop u#a
 let is_small (s:slprop u#a) = s == up2 (down2 s)
@@ -171,6 +172,25 @@ val h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
     (requires (forall x. p x `equiv` q x))
     (ensures (h_exists p == h_exists q))
+
+
+val up_emp_big ()
+: Lemma (up cm_big_slprop.unit == emp)
+val down_emp_big ()
+: Lemma (down emp == cm_big_slprop.unit)
+val up_star_big (p q:big_slprop)
+: Lemma (up (p `cm_big_slprop.mult` q) == up p `star` up q)
+val down_star_big (p q:big_vprop)
+: Lemma (down (p `star` q) == down p `cm_big_slprop.mult` down q)
+
+val up2_emp ()
+: Lemma (up2 cm_small_slprop.unit == emp)
+val down2_emp ()
+: Lemma (down2 emp == cm_small_slprop.unit)
+val up2_star (p q:small_slprop)
+: Lemma (up2 (p `cm_small_slprop.mult` q) == up2 p `star` up2 q)
+val down2_star (p q:vprop)
+: Lemma (down2 (p `star` q) == down2 p `cm_small_slprop.mult` down2 q)
 
 (**** Memory invariants *)
 

@@ -75,11 +75,13 @@ let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
 
 let big_slprop = big_slprop
+let cm_big_slprop = cm_big_slprop
 let down = down
 let up = up
 let up_big_is_big = up_big_is_big
 
 let small_slprop = small_slprop
+let cm_small_slprop = cm_small_slprop
 let down2 = down2
 let up2 = up2
 let up2_small_is_small = up2_small_is_small
@@ -96,6 +98,16 @@ let big_star p q = big_star_congruence p q
 let big_exists #a p = big_exists_congruence #a (F.on_dom a p)
 let small_star p q = small_star_congruence p q
 let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
+
+let up_emp = up_emp_big
+let down_emp = down_emp_big
+let up_star = up_star_big
+let down_star = down_star_big
+
+let up2_emp = up2_emp
+let down2_emp = down2_emp
+let up2_star = up2_star
+let down2_star = down2_star
 
 let iref = iref
 let inv i p = inv i p

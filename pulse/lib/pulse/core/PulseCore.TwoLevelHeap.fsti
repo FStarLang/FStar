@@ -165,12 +165,12 @@ val slprop_extensionality (p q:slprop)
 
 [@@erasable]
 val small_slprop : Type u#(a + 1)
+val cm_small_slprop : FStar.Algebra.CommMonoid.cm small_slprop
 val down (s:slprop u#a) : small_slprop u#a
 val up (s:small_slprop u#a) : slprop u#a
 let is_small (s:slprop u#a) = s == up (down s)
 let vprop = s:slprop { is_small s }
 val up_small_is_small (s:small_slprop) : Lemma (is_small (up s))
-
 
 (** [emp] is the empty [slprop], valid on all heaps. It acts as the unit element *)
 val emp : vprop
@@ -267,6 +267,14 @@ val vprop_exists_alt (a:Type) (p:a -> slprop)
 val vprop_exists (a:Type) (p:a -> vprop)
   : Lemma (is_small (h_exists p))
 
+val up_emp ()
+: Lemma (up cm_small_slprop.unit == emp)
+val down_emp ()
+: Lemma (down emp == cm_small_slprop.unit)
+val up_star (p q:small_slprop)
+: Lemma (up (p `cm_small_slprop.mult` q) == up p `star` up q)
+val down_star (p q:vprop)
+: Lemma (down (p `star` q) == down p `cm_small_slprop.mult` down q)
 
 (** We can define a [stronger] relation on [slprops], defined by interpretation implication *)
 let stronger (p q:slprop) =
