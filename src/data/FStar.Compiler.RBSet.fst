@@ -62,8 +62,7 @@ let add {| ord 'a |} (x:'a) (s:rbset 'a) : rbset 'a =
 
 let rec extract_min #a {| ord a |} (t : rbset a{N? t}) : rbset a & a =
   match t with
-  | N (_, L, x, L) -> L, x
-  | N (c, N (_, L, x, L), y, L) -> N (B, L, x, L), y
+  | N (_, L, x, r) -> r, x
   | N (c, a, x, b) ->
     let (a', y) = extract_min a in
     balance c a' x b, y
