@@ -36,7 +36,7 @@ type step =
   | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
-  | HNF             //Only produce a head normal form
+  | HNF             //Only produce a head normal form: Do not descend into function arguments or into binder types
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining

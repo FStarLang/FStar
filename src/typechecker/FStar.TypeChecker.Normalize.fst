@@ -1534,7 +1534,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
-                 let t = arrow (norm_binders cfg env bs) c in
+                 let bs = if cfg.steps.hnf then (close_binders cfg env bs)._1 else norm_binders cfg env bs in
+                 let t = arrow bs c in
                  rebuild cfg env stack t
 
           | Tm_ascribed {tm=t1; eff_opt=l} when cfg.steps.unascribe ->
