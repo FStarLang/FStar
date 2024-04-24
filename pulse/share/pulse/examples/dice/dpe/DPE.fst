@@ -34,6 +34,7 @@ module PM = Pulse.Lib.PCMMap
 module FP = Pulse.Lib.PCM.FractionalPreorder
 module M = Pulse.Lib.Mutex
 module A = Pulse.Lib.Array
+module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
@@ -260,42 +261,41 @@ let snapshot_duplicable (x:trace_pcm_t)
 let full_perm_empty_history_compatible ()
   : Lemma (FStar.PCM.compatible trace_pcm (Some 1.0R, []) (Some 1.0R, [])) = ()
 
-
 noextract
-type pht_t = PHT.pht_t sid_t session_state
+type pcm_t : Type u#1 = PM.map sid_t trace_pcm_t
 
+//
+// The PCM for the DPE state is a map pcm with sid_t keys
+//   and pointwise trace_pcm
 noextract
-type pcm_t : Type u#1 = PM.map sid_t (T.pcm_t)
-
-noextract
-let pcm : PCM.pcm pcm_t = PM.pointwise sid_t T.pcm
+let pcm : PCM.pcm pcm_t = PM.pointwise sid_t trace_pcm
 
 [@@ erasable]
 type gref = ghost_pcm_ref pcm
 
 noextract
-let emp_trace : T.trace = []
+let emp_trace : trace = []
 
 noextract
-let singleton (sid:sid_t) (p:perm) (t:T.trace) : GTot pcm_t =
+let singleton (sid:sid_t) (p:perm) (t:trace) : GTot pcm_t =
   Map.upd (Map.const (None, emp_trace)) sid (Some p, t)
 
+//
+// The main permission we provide to the client,
+//   to capture the session history for a sid
+//
 noextract
-let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
+let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : vprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
-let session_state_tag_related (s:session_state) (gs:T.g_session_state) : GTot bool =
-  let open T in
-  match s, gs with
-  | SessionStart, G_SessionStart
-  | InUse, G_InUse _
-  | SessionClosed, G_SessionClosed _
-  | SessionError, G_SessionError _
-  | Available _, G_Available _ -> true
-  | _ -> false
+noextract
+type pht_t = PHT.pht_t sid_t session_state
 
-let session_state_related (s:session_state) (gs:T.g_session_state) : v:vprop { is_small v } =
-  let open T in
+//
+// Towards the global state invariant
+//
+
+let session_state_related (s:session_state) (gs:g_session_state) : v:vprop { is_small v } =
   match s, gs with
   | SessionStart, G_SessionStart
   | InUse, G_InUse _
@@ -306,18 +306,27 @@ let session_state_related (s:session_state) (gs:T.g_session_state) : v:vprop { i
 
   | _ -> pure False
 
+//
+// Invariant for sessions that have been started
+//
 let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:vprop { is_small v } =
-  exists* (s:session_state) (t:T.trace). pure (PHT.lookup pht sid == Some s) **
-                                         sid_pts_to r sid t **
-                                         session_state_related s (T.current_state t)
+  exists* (s:session_state) (t:trace).
+    pure (PHT.lookup pht sid == Some s) **
+    sid_pts_to r sid t **
+    session_state_related s (current_state t)
 
+//
+// We have to do this UInt.fits since the OnRange is defined for nat keys,
+//   if we parameterized it over a typeclass, we can directly use u32 keys
+//   and this should go away
+//
 let session_perm (r:gref) (pht:pht_t) (sid:nat) =
   if UInt.fits sid 32
   then session_state_perm r pht (U32.uint_to_t sid)
   else emp
 
 noextract
-let map_literal (f:sid_t -> T.pcm_t) = Map.map_literal f
+let map_literal (f:sid_t -> trace_pcm_t) : pcm_t = Map.map_literal f
 
 noextract
 let all_sids_unused : pcm_t = map_literal (fun _ -> Some 1.0R, emp_trace)
@@ -326,13 +335,29 @@ let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
   if U32.lt sid s then None, emp_trace
   else Some 1.0R, emp_trace)
 
+//
+// Main invariant
+//
 let inv (r:gref) (s:option st) : vprop =
   match s with
+  //
+  // Global state is not initialized,
+  //   all the sessions are unused
+  //
   | None -> ghost_pcm_pts_to r all_sids_unused
   
+  //
+  // Global state has been initialized
+  //
   | Some s ->
+    //
+    // sids above counter are unused
+    //
     ghost_pcm_pts_to r (sids_above_unused s.st_ctr) **
     
+    //
+    // For sids below counter, we have the session state perm
+    //
     (exists* pht. models s.st_tbl pht **
                   on_range (session_perm r pht) 0 (U32.v s.st_ctr))
 
@@ -340,10 +365,149 @@ let inv_is_small (r:gref) (s:option st)
   : Lemma (is_small (inv r s))
           [SMTPat (is_small (inv r s))] = ()
 
-type dpe_t = gref & mutex (option st)
 
-let dpe_inv (s:dpe_t) = mutex_live (snd s) (inv (fst s))
+//
+// The DPE API
+//
 
+let open_session_client_perm (r:gref) (s:option sid_t) : vprop =
+  match s with
+  | None -> emp
+  | Some s ->
+    exists* t. sid_pts_to r s t ** pure (current_state t == G_SessionStart)
+
+val open_session (r:gref) (m:mutex (option st))
+  : stt (mutex (option st) & option sid_t)
+        (requires mutex_live m (inv r))
+        (ensures fun b ->
+           mutex_live (fst b) (inv r) **
+           open_session_client_perm r (snd b) **
+           pure (fst b == m))
+
+noextract
+let trace_valid_for_initialize_context (t:trace) : prop =
+  current_state t == G_SessionStart
+
+let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
+  exists* t. sid_pts_to r sid t **
+             pure (current_state t == G_Available (Engine_context_repr uds))
+
+val initialize_context (r:gref) (m:mutex (option st))
+  (sid:sid_t) 
+  (t:G.erased trace { trace_valid_for_initialize_context t })
+  (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
+  (uds:A.larray U8.t (SZ.v uds_len)) 
+  : stt (mutex (option st) & ctxt_hndl_t)
+        (requires
+           mutex_live m (inv r) **
+           A.pts_to uds #p uds_bytes **
+           sid_pts_to r sid t)
+        (ensures fun b ->
+           mutex_live (fst b) (inv r) **
+           A.pts_to uds #p uds_bytes **
+           initialize_context_client_perm r sid uds_bytes)
+
+noextract
+let trace_and_record_valid_for_derive_child (t:trace) (r:repr_t) : prop =
+  match current_state t, r with
+  | G_Available (Engine_context_repr _), Engine_repr _
+  | G_Available (L0_context_repr _), L0_repr _ -> True
+  | _ -> False
+
+noextract
+let derive_child_post_trace (r:repr_t) (t:trace) =
+  match r, current_state t with
+  | Engine_repr r, G_Available (L0_context_repr lrepr)
+  | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
+  | _ -> False
+
+let derive_child_client_perm (r:gref) (sid:sid_t) (t0:trace) (repr:repr_t) (c:option ctxt_hndl_t)
+  : vprop =
+  match c with
+  | None ->
+    exists* t1. sid_pts_to r sid t1 **
+                pure (current_state t1 == G_SessionError (G_InUse (current_state t0)))
+  | Some _ ->
+    exists* t1. sid_pts_to r sid t1 **
+                pure (derive_child_post_trace repr t1)
+
+val derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (t:G.erased trace)
+  (record:record_t)
+  (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
+  (#p:perm)
+  : stt (mutex (option st) & record_t & option ctxt_hndl_t)
+        (requires
+           mutex_live m (inv r) **
+           record_perm record p rrepr **
+           sid_pts_to r sid t)
+        (ensures fun b ->
+           mutex_live (tfst b) (inv r) **
+           record_perm (tsnd b) p rrepr **
+           derive_child_client_perm r sid t rrepr (tthd b))
+
+
+noextract
+let trace_valid_for_close (t:trace) : prop =
+  match current_state t with
+  | G_UnInitialized
+  | G_SessionClosed _
+  | G_InUse _ -> False
+  | _ -> True
+
+let session_closed_client_perm (r:gref) (sid:sid_t) (t0:trace) =
+  exists* t1. sid_pts_to r sid t1 **
+              pure (current_state t1 == G_SessionClosed (G_InUse (current_state t0)))
+
+val close_session
+  (r:gref)
+  (m:mutex (option st))
+  (sid:sid_t)
+  (t:G.erased trace { trace_valid_for_close t })
+  : stt (mutex (option st))
+        (requires
+           mutex_live m (inv r) **
+           sid_pts_to r sid t)
+        (ensures fun m ->
+           mutex_live m (inv r) **
+           session_closed_client_perm r sid t)
+
+assume val sid_hash : sid_t -> SZ.t
+
+[@@ Rust_const_fn]
+```pulse
+fn initialize_global_state ()
+  requires emp
+  returns b:(gref & mutex (option st))
+  ensures mutex_live (snd b) (inv (fst b))
+{
+  let r = ghost_alloc #_ #pcm all_sids_unused;
+  with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
+                   (ghost_pcm_pts_to r _v);
+  fold (inv r None);
+  let m = new_mutex (inv r) None;
+  let s = ((r, m) <: gref & mutex (option st));
+  rewrite each
+    r as fst s,
+    m as snd s;
+  s
+}
+```
+
+let global_state : gref & mutex (option st) = run_stt (initialize_global_state ())
+
+//
+// DPE API implementation
+//
+
+//
+// A wrapper over ghost_gather
+//
+// ghost_gather takes erased arguments,
+//   sometimes that leads to unnecessary reveals and hides
+//
+// This version works much better
+//
 ```pulse
 ghost
 fn gather_ (r:gref)
@@ -359,6 +523,13 @@ fn gather_ (r:gref)
 }
 ```
 
+//
+// A gather to work with map pcm
+//
+// The caller provides v and the proof that
+//   v is `Map.equal` to op of v0 and v1
+//
+// 
 ```pulse
 ghost
 fn gather_v (r:gref)
@@ -375,6 +546,9 @@ fn gather_v (r:gref)
 }
 ```
 
+//
+// Corresponding share, with a Map.equal proof in the precondition
+//
 ```pulse
 ghost
 fn share_ (r:gref)
@@ -392,22 +566,22 @@ fn share_ (r:gref)
 ```
 
 noextract
-let full (t0:T.trace) = Some #perm 1.0R, t0
+let full (t0:trace) = Some #perm 1.0R, t0
 
 noextract
-let half (t0:T.trace) = Some #perm 0.5R, t0
+let half (t0:trace) = Some #perm 0.5R, t0
 
 ```pulse
 ghost
 fn upd_sid_pts_to
   (r:gref) (sid:sid_t)
-  (#t0 #t1:T.trace)
-  (s:T.g_session_state { T.valid_transition t0 s })
+  (#t0 #t1:trace)
+  (s:g_session_state { valid_transition t0 s })
 
   requires sid_pts_to r sid t0 **
            sid_pts_to r sid t1
-  ensures sid_pts_to r sid (T.next_trace t0 s) **
-          sid_pts_to r sid (T.next_trace t0 s) **
+  ensures sid_pts_to r sid (next_trace t0 s) **
+          sid_pts_to r sid (next_trace t0 s) **
           pure (t0 == t1)
 {
   unfold sid_pts_to;
@@ -417,63 +591,37 @@ fn upd_sid_pts_to
              (singleton sid 0.5R t1)
              (singleton sid 1.0R t0);
 
-  let fp : PCM.frame_preserving_upd T.pcm (full t0) (full (T.next_trace t0 s)) =
-    T.mk_frame_preserving_upd t0 s;
+  let fp : PCM.frame_preserving_upd trace_pcm (full t0) (full (next_trace t0 s)) =
+    mk_frame_preserving_upd t0 s;
 
-  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t0) sid (full (T.next_trace t0 s)))
-                          (singleton sid 1.0R (T.next_trace t0 s))));
+  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t0) sid (full (next_trace t0 s)))
+                          (singleton sid 1.0R (next_trace t0 s))));
 
-  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t0) (singleton sid 1.0R (T.next_trace t0 s)) =
-    PM.lift_frame_preserving_upd #_ #_ #T.pcm
+  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t0) (singleton sid 1.0R (next_trace t0 s)) =
+    PM.lift_frame_preserving_upd #_ #_ #trace_pcm
       (full t0)
-      (full (T.next_trace t0 s))
+      (full (next_trace t0 s))
       fp
       (singleton sid 1.0R t0) sid;
 
   ghost_write r
     (singleton sid 1.0R t0)
-    (singleton sid 1.0R (T.next_trace t0 s))
+    (singleton sid 1.0R (next_trace t0 s))
     fp;
 
-  share_ r (singleton sid 1.0R (T.next_trace t0 s))
-           (singleton sid 0.5R (T.next_trace t0 s))
-           (singleton sid 0.5R (T.next_trace t0 s));
+  share_ r (singleton sid 1.0R (next_trace t0 s))
+           (singleton sid 0.5R (next_trace t0 s))
+           (singleton sid 0.5R (next_trace t0 s));
 
-  fold (sid_pts_to r sid (T.next_trace t0 s));
-  fold (sid_pts_to r sid (T.next_trace t0 s));
+  fold (sid_pts_to r sid (next_trace t0 s));
+  fold (sid_pts_to r sid (next_trace t0 s));
 }
 ```
-
-assume val sid_hash : sid_t -> SZ.t
-
-[@@ Rust_const_fn]
-```pulse
-fn initialize_global_state ()
-  requires emp
-  returns s:dpe_t
-  ensures dpe_inv s
-{
-  let r = ghost_alloc #_ #pcm all_sids_unused;
-  with _v. rewrite (ghost_pcm_pts_to r (G.reveal (G.hide _v))) as
-                   (ghost_pcm_pts_to r _v);
-  fold (inv r None);
-  let m = new_mutex (inv r) None;
-  let s = ((r, m) <: dpe_t);
-  rewrite each r as fst s;
-  rewrite each m as snd s;
-  fold (dpe_inv s);
-  s
-}
-```
-
-let global_state : dpe_t = run_stt (initialize_global_state ())
 
 assume val safe_add (i j:U32.t)
   : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
 
-(* Utilities to work with on_range (session_perm stm) *)
-(* <utilities on on_range> *)
-noextract  // TODO: why do we extract this at all, it is a prop
+noextract
 let session_table_eq_on_range
   (pht0 pht1:pht_t)
   (i j:nat)
@@ -524,15 +672,7 @@ fn frame_session_perm_on_range
 }
 ```
 
-(* </utilities on on_range> *)
-
-let open_session_client_perm (r:gref) (s:option sid_t) : vprop =
-  match s with
-  | None -> emp
-  | Some s ->
-    exists* t. sid_pts_to r s t ** pure (T.current_state t == T.G_SessionStart)
-
-let emp_to_start_valid () : Lemma (T.valid_transition emp_trace T.G_SessionStart) = ()
+let emp_to_start_valid () : Lemma (valid_transition emp_trace G_SessionStart) = ()
 
 #push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
 ```pulse
@@ -585,8 +725,8 @@ fn __open_session (r:gref) (s:st)
         fold (sid_pts_to r ctr emp_trace);
         fold (sid_pts_to r ctr emp_trace);
         emp_to_start_valid ();
-        upd_sid_pts_to r ctr #emp_trace #emp_trace T.G_SessionStart;
-        rewrite emp as (session_state_related SessionStart T.G_SessionStart);
+        upd_sid_pts_to r ctr #emp_trace #emp_trace G_SessionStart;
+        rewrite emp as (session_state_related SessionStart G_SessionStart);
         fold (session_state_perm r pht1 ctr);
         rewrite (session_state_perm r pht1 ctr) as
                 (session_perm r pht1 (U32.v ctr));
@@ -685,7 +825,7 @@ fn open_session (r:gref) (m:mutex (option st))
 
 ```pulse
 ghost
-fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:T.trace)
+fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:trace)
   requires sid_pts_to r sid t0 **
            sid_pts_to r sid t1
   ensures ghost_pcm_pts_to r (singleton sid 1.0R t0) **
@@ -703,7 +843,7 @@ fn gather_sid_pts_to (r:gref) (sid:sid_t) (#t0 #t1:T.trace)
 
 ```pulse
 ghost
-fn share_sid_pts_to (r:gref) (sid:sid_t) (#t:T.trace)
+fn share_sid_pts_to (r:gref) (sid:sid_t) (#t:trace)
   requires ghost_pcm_pts_to r (singleton sid 1.0R t)
   ensures sid_pts_to r sid t **
           sid_pts_to r sid t
@@ -720,27 +860,27 @@ fn share_sid_pts_to (r:gref) (sid:sid_t) (#t:T.trace)
 ghost
 fn upd_singleton
   (r:gref) (sid:sid_t)
-  (#t:T.trace)
-  (s:T.g_session_state { T.valid_transition t s })
+  (#t:trace)
+  (s:g_session_state { valid_transition t s })
   requires ghost_pcm_pts_to r (singleton sid 1.0R t)
-  ensures ghost_pcm_pts_to r (singleton sid 1.0R (T.next_trace t s))
+  ensures ghost_pcm_pts_to r (singleton sid 1.0R (next_trace t s))
 {
-  let fp : PCM.frame_preserving_upd T.pcm (full t) (full (T.next_trace t s)) =
-    T.mk_frame_preserving_upd t s;
+  let fp : PCM.frame_preserving_upd trace_pcm (full t) (full (next_trace t s)) =
+    mk_frame_preserving_upd t s;
 
-  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t) sid (full (T.next_trace t s)))
-                          (singleton sid 1.0R (T.next_trace t s))));
+  assert (pure (Map.equal (Map.upd (singleton sid 1.0R t) sid (full (next_trace t s)))
+                          (singleton sid 1.0R (next_trace t s))));
 
-  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t) (singleton sid 1.0R (T.next_trace t s)) =
-    PM.lift_frame_preserving_upd #_ #_ #T.pcm
+  let fp : PCM.frame_preserving_upd pcm (singleton sid 1.0R t) (singleton sid 1.0R (next_trace t s)) =
+    PM.lift_frame_preserving_upd #_ #_ #trace_pcm
       (full t)
-      (full (T.next_trace t s))
+      (full (next_trace t s))
       fp
       (singleton sid 1.0R t) sid;
 
   ghost_write r
     (singleton sid 1.0R t)
-    (singleton sid 1.0R (T.next_trace t s))
+    (singleton sid 1.0R (next_trace t s))
     fp;
 }
 ```
@@ -751,9 +891,9 @@ fn replace_session
   (r:gref)
   (m:mutex (option st))
   (sid:sid_t)
-  (t:G.erased T.trace)
+  (t:G.erased trace)
   (sst:session_state)
-  (gsst:T.g_session_state { T.valid_transition t gsst})
+  (gsst:g_session_state { valid_transition t gsst})
 
   requires mutex_live m (inv r) **
            sid_pts_to r sid t **
@@ -762,8 +902,8 @@ fn replace_session
   returns b:(mutex (option st) & session_state)
 
   ensures mutex_live (fst b) (inv r) **
-          session_state_related (snd b) (T.current_state t) **
-          sid_pts_to r sid (T.next_trace t gsst)
+          session_state_related (snd b) (current_state t) **
+          sid_pts_to r sid (next_trace t gsst)
 {
   let mg = lock m;
   let sopt = M.replace mg None;
@@ -808,13 +948,13 @@ fn replace_session
               rewrite each
                 fst ret as tbl,
                 snd ret as st;
-              with _s. rewrite (session_state_related _s (T.current_state t1)) as
-                               (session_state_related st (T.current_state t1));
+              with _s. rewrite (session_state_related _s (current_state t1)) as
+                               (session_state_related st (current_state t1));
               with pht. assert (models tbl pht);
               upd_singleton r sid #t1 gsst;
               share_sid_pts_to r sid;
               rewrite (session_state_related sst gsst) as
-                      (session_state_related sst (T.current_state (T.next_trace t1 gsst)));
+                      (session_state_related sst (current_state (next_trace t1 gsst)));
               fold (session_state_perm r pht sid);
               rewrite (session_state_perm r pht sid) as
                       (session_perm r pht (U32.v sid));
@@ -856,8 +996,6 @@ fn replace_session
 ```
 #pop-options
 
-module V = Pulse.Lib.Vec
-
 ```pulse
 fn init_engine_ctxt
   (uds:A.array U8.t { A.length uds == SZ.v uds_len })
@@ -890,9 +1028,19 @@ fn init_engine_ctxt
 
 assume val prng () : stt ctxt_hndl_t emp (fun _ -> emp)
 
+let session_state_tag_related (s:session_state) (gs:g_session_state) : GTot bool =
+  match s, gs with
+  | SessionStart, G_SessionStart
+  | InUse, G_InUse _
+  | SessionClosed, G_SessionClosed _
+  | SessionError, G_SessionError _
+  | Available _, G_Available _ -> true
+  | _ -> false
+
+
 ```pulse
 ghost
-fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
+fn intro_session_state_tag_related (s:session_state) (gs:g_session_state)
   requires session_state_related s gs
   ensures session_state_related s gs **
           pure (session_state_tag_related s gs)
@@ -908,19 +1056,11 @@ fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
 }
 ```
 
-noextract
-let trace_valid_for_initialize_context (t:T.trace) =
-  T.current_state t == T.G_SessionStart
-
-let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
-  exists* t. sid_pts_to r sid t **
-             pure (T.current_state t == T.G_Available (Engine_context_repr uds))
-
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn initialize_context (r:gref) (m:mutex (option st))
   (sid:sid_t) 
-  (t:G.erased T.trace { trace_valid_for_initialize_context t })
+  (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
                        
@@ -934,8 +1074,8 @@ fn initialize_context (r:gref) (m:mutex (option st))
           A.pts_to uds #p uds_bytes **
           initialize_context_client_perm r sid uds_bytes
 {
-  rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
-  let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let ret = replace_session r m sid t InUse (G_InUse (current_state t));
   with t1. assert (sid_pts_to r sid t1);
 
   let m = fst ret;
@@ -947,14 +1087,14 @@ fn initialize_context (r:gref) (m:mutex (option st))
   
   match s {
     SessionStart -> {
-      rewrite (session_state_related s (T.current_state t)) as emp;
+      rewrite (session_state_related s (current_state t)) as emp;
       let context = init_engine_ctxt uds;
       let handle = prng ();
       let s = Available { handle; context };
       rewrite (context_perm context (Engine_context_repr uds_bytes)) as
-              (session_state_related s (T.G_Available (Engine_context_repr uds_bytes)));
-      let ret = replace_session r m sid t1 s (T.G_Available (Engine_context_repr uds_bytes));
-      intro_session_state_tag_related (snd ret) (T.current_state t1);
+              (session_state_related s (G_Available (Engine_context_repr uds_bytes)));
+      let ret = replace_session r m sid t1 s (G_Available (Engine_context_repr uds_bytes));
+      intro_session_state_tag_related (snd ret) (current_state t1);
       with _x _y. rewrite (session_state_related _x _y) as emp;
       let m = fst ret;
       rewrite each
@@ -968,22 +1108,22 @@ fn initialize_context (r:gref) (m:mutex (option st))
       ret
     }
     InUse -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     Available _ -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
@@ -1148,7 +1288,7 @@ let maybe_context_perm (r:context_repr_t) (rrepr:repr_t) (c:option context_t) =
   match c with
   | Some c ->
     exists* repr. context_perm c repr **
-                  pure (T.next_repr r repr /\ context_derives_from_input repr rrepr)
+                  pure (next_repr r repr /\ context_derives_from_input repr rrepr)
   | None -> emp
 
 noextract
@@ -1344,15 +1484,15 @@ fn rewrite_session_state_related_available
   handle
   context
   (s:session_state { s == Available { handle; context } })
-  (t:T.trace)
-  requires session_state_related s (T.current_state t)
+  (t:trace)
+  requires session_state_related s (current_state t)
   returns r:G.erased context_repr_t
-  ensures context_perm context r ** pure (T.current_state t == T.G_Available r)
+  ensures context_perm context r ** pure (current_state t == G_Available r)
 {
-  let cur = T.current_state t;
-  intro_session_state_tag_related s (T.current_state t);
-  let repr = T.G_Available?.repr cur;
-  rewrite (session_state_related s (T.current_state t)) as
+  let cur = current_state t;
+  intro_session_state_tag_related s cur;
+  let repr = G_Available?.repr cur;
+  rewrite (session_state_related s cur) as
           (context_perm context repr);
   hide repr
 }
@@ -1392,43 +1532,10 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
-noextract
-let trace_and_record_valid_for_derive_child (t:T.trace) (r:repr_t) : prop =
-  let open T in
-  match current_state t, r with
-  | G_Available (Engine_context_repr _), Engine_repr _
-  | G_Available (L0_context_repr _), L0_repr _ -> True
-  | _ -> False
-
-noextract
-let derive_child_post_trace (r:repr_t) (t:T.trace) =
-  let open T in
-  match r, current_state t with
-  | Engine_repr r, G_Available (L0_context_repr lrepr)
-  | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
-  | _ -> False
-
-let derive_child_client_perm (r:gref) (sid:sid_t) (t0:T.trace) (repr:repr_t) (c:option ctxt_hndl_t)
-  : vprop =
-  match c with
-  | None ->
-    exists* t1. sid_pts_to r sid t1 **
-                pure (T.current_state t1 == T.G_SessionError (T.G_InUse (T.current_state t0)))
-  | Some _ ->
-    exists* t1. sid_pts_to r sid t1 **
-                pure (derive_child_post_trace repr t1)
-
-(*
-  DeriveChild: Part of DPE API 
-  Execute the DICE layer associated with the current context and produce a 
-  new context. Destroy the current context in the current session's context table 
-  and store the new context in the table. Return the new context handle upon
-  success and None upon failure. 
-*)
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
-  (t:G.erased T.trace)
+  (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
   (#p:perm)
@@ -1442,8 +1549,8 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
 {
   intro_record_and_repr_tag_related record p rrepr;
 
-  rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
-  let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let ret = replace_session r m sid t InUse (G_InUse (current_state t));
   with t1. assert (sid_pts_to r sid t1);
 
   let m = fst ret;
@@ -1457,7 +1564,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
     Available hc -> {
       match hc.context {
         L1_context _ -> {
-          rewrite (session_state_related s (T.current_state t)) as
+          rewrite (session_state_related s (current_state t)) as
                   (pure False);
           unreachable ()
         }
@@ -1484,9 +1591,9 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
               let handle = prng ();
               let s = Available { handle; context = nctxt };
               rewrite (context_perm nctxt nrepr) as
-                      (session_state_related s (T.G_Available nrepr));
-              let ret = replace_session r m sid t1 s (T.G_Available nrepr);
-              intro_session_state_tag_related (snd ret) (T.current_state t1);
+                      (session_state_related s (G_Available nrepr));
+              let ret = replace_session r m sid t1 s (G_Available nrepr);
+              intro_session_state_tag_related (snd ret) (current_state t1);
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1501,9 +1608,9 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
             }
             None -> {
               let s = SessionError;
-              rewrite emp as (session_state_related s (T.G_SessionError (T.current_state t1)));
-              let ret = replace_session r m sid t1 s (T.G_SessionError (T.current_state t1));
-              intro_session_state_tag_related (snd ret) (T.current_state t1);
+              rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
+              let ret = replace_session r m sid t1 s (G_SessionError (current_state t1));
+              intro_session_state_tag_related (snd ret) (current_state t1);
               let m = fst ret;
               rewrite each
                 fst ret as m,
@@ -1522,22 +1629,22 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
       }
     }
     SessionStart -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     InUse -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionClosed -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
     SessionError -> {
-      rewrite (session_state_related s (T.current_state t)) as
+      rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
@@ -1545,32 +1652,12 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
 }
 ```
 
-noextract
-let trace_valid_for_close (t:T.trace) : prop =
-  let open T in
-  match current_state t with
-  | G_UnInitialized
-  | G_SessionClosed _
-  | G_InUse _ -> False
-  | _ -> True
-
-(* 
-  CloseSession: Part of DPE API 
-  Destroy the context table for the session and remove the reference
-  to it from the session table. Return boolean indicating success. 
-  NOTE: Current implementation disregards session protocol 
-*)
-
-let session_closed_client_perm (r:gref) (sid:sid_t) (t0:T.trace) =
-  exists* t1. sid_pts_to r sid t1 **
-              pure (T.current_state t1 == T.G_SessionClosed (T.G_InUse (T.current_state t0)))
-
 ```pulse
-fn destroy_session_state (s:session_state) (t:G.erased T.trace)
-  requires session_state_related s (T.current_state t)
+fn destroy_session_state (s:session_state) (t:G.erased trace)
+  requires session_state_related s (current_state t)
   ensures emp
 {
-  intro_session_state_tag_related s (T.current_state t);
+  intro_session_state_tag_related s (current_state t);
   match s {
     Available hc -> {
       rewrite_session_state_related_available hc.handle hc.context s t;
@@ -1586,15 +1673,15 @@ fn destroy_session_state (s:session_state) (t:G.erased T.trace)
 
 ```pulse
 fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
-  (t:G.erased T.trace { trace_valid_for_close t })
+  (t:G.erased trace { trace_valid_for_close t })
   requires mutex_live m (inv r) **
            sid_pts_to r sid t
   returns m:mutex (option st)
   ensures mutex_live m (inv r) **
           session_closed_client_perm r sid t
 {
-  rewrite emp as (session_state_related InUse (T.G_InUse (T.current_state t)));
-  let ret = replace_session r m sid t InUse (T.G_InUse (T.current_state t));
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let ret = replace_session r m sid t InUse (G_InUse (current_state t));
   with t1. assert (sid_pts_to r sid t1);
 
   let m = fst ret;
@@ -1603,13 +1690,13 @@ fn close_session (r:gref) (m:mutex (option st)) (sid:sid_t)
     fst ret as m,
     snd ret as s;
 
-  intro_session_state_tag_related s (T.current_state t);
+  intro_session_state_tag_related s (current_state t);
 
   destroy_session_state s t;
 
-  rewrite emp as (session_state_related SessionClosed (T.G_SessionClosed (T.current_state t1)));
-  let ret = replace_session r m sid t1 SessionClosed (T.G_SessionClosed (T.current_state t1));
-  intro_session_state_tag_related (snd ret) (T.current_state t1);
+  rewrite emp as (session_state_related SessionClosed (G_SessionClosed (current_state t1)));
+  let ret = replace_session r m sid t1 SessionClosed (G_SessionClosed (current_state t1));
+  intro_session_state_tag_related (snd ret) (current_state t1);
   let m = fst ret;
   rewrite each
     fst ret as m,
@@ -1702,4 +1789,3 @@ fn get_profile ()
     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
 }
 ```
-// let get_profile = get_profile'

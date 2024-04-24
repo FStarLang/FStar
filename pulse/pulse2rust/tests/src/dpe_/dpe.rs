@@ -31,16 +31,17 @@ pub struct st {
     pub st_tbl: super::dpe::ht_t,
 }
 pub type gref = ();
-pub type dpe_t = ((), std::sync::Mutex<std::option::Option<super::dpe::st>>);
 pub fn sid_hash(uu___: super::dpe::sid_t) -> usize {
     panic!()
 }
-pub const fn initialize_global_state(uu___: ()) -> super::dpe::dpe_t {
+pub const fn initialize_global_state(
+    uu___: (),
+) -> ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) {
     let m = std::sync::Mutex::new(None);
     let s = ((), m);
     s
 }
-pub static global_state: super::dpe::dpe_t = super::dpe::initialize_global_state(());
+pub static global_state: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
 pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
     panic!()
 }
