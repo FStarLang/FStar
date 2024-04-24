@@ -85,7 +85,7 @@ let (uu___is_NoCache : use_cache_t -> Prims.bool) =
 let (uu___is_Full : use_cache_t -> Prims.bool) =
   fun projectee -> match projectee with | Full -> true | uu___ -> false
 type free_vars_and_fvars =
-  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.set)
+  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_RBSet.t)
 let rec snoc :
   'a . 'a FStar_Class_Deq.deq -> 'a Prims.list -> 'a -> 'a Prims.list =
   fun uu___ ->
@@ -107,30 +107,39 @@ let op_At_At :
       fun ys ->
         FStar_Compiler_List.fold_left (fun xs1 -> fun y -> snoc uu___ xs1 y)
           xs ys
-let (no_free_vars :
-  (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
-  =
-  let uu___ = FStar_Syntax_Syntax.new_fv_set () in
+let (no_free_vars : free_vars_and_fvars) =
+  let uu___ =
+    Obj.magic
+      (FStar_Class_Setlike.empty ()
+         (Obj.magic
+            (FStar_Compiler_RBSet.setlike_rbset FStar_Syntax_Syntax.ord_fv))
+         ()) in
   ({
      FStar_Syntax_Syntax.free_names = [];
      FStar_Syntax_Syntax.free_uvars = [];
      FStar_Syntax_Syntax.free_univs = [];
      FStar_Syntax_Syntax.free_univ_names = []
    }, uu___)
-let (singleton_fvar :
-  FStar_Syntax_Syntax.fv ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Set.set))
-  =
+let (singleton_fvar : FStar_Syntax_Syntax.fv -> free_vars_and_fvars) =
   fun fv ->
     let uu___ =
-      let uu___1 = FStar_Syntax_Syntax.new_fv_set () in
-      FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_fv
-        (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v uu___1 in
+      let uu___1 =
+        Obj.magic
+          (FStar_Class_Setlike.empty ()
+             (Obj.magic
+                (FStar_Compiler_RBSet.setlike_rbset
+                   FStar_Syntax_Syntax.ord_fv)) ()) in
+      Obj.magic
+        (FStar_Class_Setlike.add ()
+           (Obj.magic
+              (FStar_Compiler_RBSet.setlike_rbset FStar_Syntax_Syntax.ord_fv))
+           (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v
+           (Obj.magic uu___1)) in
     ((FStar_Pervasives_Native.fst no_free_vars), uu___)
 let (singleton_bv :
   FStar_Syntax_Syntax.bv ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
+      FStar_Compiler_RBSet.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -145,7 +154,8 @@ let (singleton_bv :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_uv :
   FStar_Syntax_Syntax.ctx_uvar ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
+      FStar_Compiler_RBSet.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -160,7 +170,8 @@ let (singleton_uv :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_univ :
   FStar_Syntax_Syntax.universe_uvar ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
+      FStar_Compiler_RBSet.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -175,7 +186,8 @@ let (singleton_univ :
       }), (FStar_Pervasives_Native.snd no_free_vars))
 let (singleton_univ_name :
   FStar_Syntax_Syntax.univ_name ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident FStar_Compiler_Set.t))
+    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
+      FStar_Compiler_RBSet.t))
   =
   fun x ->
     ((let uu___ = FStar_Pervasives_Native.fst no_free_vars in
@@ -192,7 +204,7 @@ let (union :
   free_vars_and_fvars ->
     free_vars_and_fvars ->
       (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-        FStar_Compiler_Set.set))
+        FStar_Compiler_RBSet.t))
   =
   fun f1 ->
     fun f2 ->
@@ -220,8 +232,13 @@ let (union :
           FStar_Syntax_Syntax.free_univ_names = uu___4
         } in
       let uu___1 =
-        FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_fv
-          (FStar_Pervasives_Native.snd f1) (FStar_Pervasives_Native.snd f2) in
+        Obj.magic
+          (FStar_Class_Setlike.union ()
+             (Obj.magic
+                (FStar_Compiler_RBSet.setlike_rbset
+                   FStar_Syntax_Syntax.ord_fv))
+             (Obj.magic (FStar_Pervasives_Native.snd f1))
+             (Obj.magic (FStar_Pervasives_Native.snd f2))) in
       (uu___, uu___1)
 let rec (free_univs : FStar_Syntax_Syntax.universe -> free_vars_and_fvars) =
   fun u ->
@@ -436,7 +453,13 @@ and (free_names_and_uvars :
       | FStar_Pervasives_Native.Some n when
           let uu___1 = should_invalidate_cache n use_cache in
           Prims.op_Negation uu___1 ->
-          let uu___1 = FStar_Syntax_Syntax.new_fv_set () in (n, uu___1)
+          let uu___1 =
+            Obj.magic
+              (FStar_Class_Setlike.empty ()
+                 (Obj.magic
+                    (FStar_Compiler_RBSet.setlike_rbset
+                       FStar_Syntax_Syntax.ord_fv)) ()) in
+          (n, uu___1)
       | uu___1 ->
           (FStar_Compiler_Effect.op_Colon_Equals t1.FStar_Syntax_Syntax.vars
              FStar_Pervasives_Native.None;
@@ -451,12 +474,7 @@ and (free_names_and_uvars :
 and (free_names_and_uvars_args :
   (FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax *
     FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
-    Prims.list ->
-    (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-      FStar_Compiler_Set.set) ->
-      use_cache_t ->
-        (FStar_Syntax_Syntax.free_vars * FStar_Ident.lident
-          FStar_Compiler_Set.set))
+    Prims.list -> free_vars_and_fvars -> use_cache_t -> free_vars_and_fvars)
   =
   fun args ->
     fun acc ->
@@ -484,7 +502,13 @@ and (free_names_and_uvars_comp :
                FStar_Pervasives_Native.None;
              free_names_and_uvars_comp c use_cache)
           else
-            (let uu___3 = FStar_Syntax_Syntax.new_fv_set () in (n, uu___3))
+            (let uu___3 =
+               Obj.magic
+                 (FStar_Class_Setlike.empty ()
+                    (Obj.magic
+                       (FStar_Compiler_RBSet.setlike_rbset
+                          FStar_Syntax_Syntax.ord_fv)) ()) in
+             (n, uu___3))
       | uu___1 ->
           let n =
             match c.FStar_Syntax_Syntax.n with
@@ -555,102 +579,132 @@ and (should_invalidate_cache :
               | FStar_Pervasives_Native.Some uu___1 -> true
               | FStar_Pervasives_Native.None -> false)
            n.FStar_Syntax_Syntax.free_univs)
-let (new_uv_set : unit -> FStar_Syntax_Syntax.uvars) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_ctx_uvar ()
-let (new_universe_uvar_set :
-  unit -> FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_univ_uvar ()
-let (empty : FStar_Syntax_Syntax.bv FStar_Compiler_Set.set) =
-  FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
 let (names :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
+  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_names in
-    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_names in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set
+                  FStar_Syntax_Syntax.ord_bv)) uu___)) uu___
 let (uvars :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Set.from_list ord_ctx_uvar uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_uvars in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_ctx_uvar))
+            uu___)) uu___
 let (univs :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.universe_uvar FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.universe_uvar FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_univs in
-    FStar_Compiler_Set.from_list ord_univ_uvar uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_univs in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set ord_univ_uvar)) uu___))
+      uu___
 let (univnames :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.univ_name FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_univ_names in
-    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_ident uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_univ_names in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set
+                  FStar_Syntax_Syntax.ord_ident)) uu___)) uu___
 let (univnames_comp :
   FStar_Syntax_Syntax.comp ->
-    FStar_Syntax_Syntax.univ_name FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.univ_name FStar_Compiler_FlatSet.t)
   =
-  fun c ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars_comp c Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_univ_names in
-    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_ident uu___
+  fun uu___ ->
+    (fun c ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars_comp c Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_univ_names in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set
+                  FStar_Syntax_Syntax.ord_ident)) uu___)) uu___
 let (fvars :
-  FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Compiler_Set.set) =
+  FStar_Syntax_Syntax.term -> FStar_Ident.lident FStar_Compiler_RBSet.t) =
   fun t ->
     let uu___ = free_names_and_uvars t NoCache in
     FStar_Pervasives_Native.snd uu___
 let (names_of_binders :
   FStar_Syntax_Syntax.binders ->
-    FStar_Syntax_Syntax.bv FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   =
-  fun bs ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars_binders bs Def in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_names in
-    FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv uu___
+  fun uu___ ->
+    (fun bs ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars_binders bs Def in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_names in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set
+                  FStar_Syntax_Syntax.ord_bv)) uu___)) uu___
 let (uvars_uncached :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t NoCache in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Set.from_list ord_ctx_uvar uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t NoCache in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_uvars in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_ctx_uvar))
+            uu___)) uu___
 let (uvars_full :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.set)
+    FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_FlatSet.t)
   =
-  fun t ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 = free_names_and_uvars t Full in
-        FStar_Pervasives_Native.fst uu___2 in
-      uu___1.FStar_Syntax_Syntax.free_uvars in
-    FStar_Compiler_Set.from_list ord_ctx_uvar uu___
+  fun uu___ ->
+    (fun t ->
+       let uu___ =
+         let uu___1 =
+           let uu___2 = free_names_and_uvars t Full in
+           FStar_Pervasives_Native.fst uu___2 in
+         uu___1.FStar_Syntax_Syntax.free_uvars in
+       Obj.magic
+         (FStar_Class_Setlike.from_list ()
+            (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_ctx_uvar))
+            uu___)) uu___

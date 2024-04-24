@@ -1616,7 +1616,10 @@ and (star_type' :
           let debug t2 s =
             let string_of_set f s1 =
               let elts =
-                FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv s1 in
+                FStar_Class_Setlike.elems ()
+                  (Obj.magic
+                     (FStar_Compiler_FlatSet.setlike_flat_set
+                        FStar_Syntax_Syntax.ord_bv)) (Obj.magic s1) in
               match elts with
               | [] -> "{}"
               | x::xs ->
@@ -1662,12 +1665,19 @@ and (star_type' :
                             let non_dependent_or_raise s ty1 =
                               let sinter =
                                 let uu___4 = FStar_Syntax_Free.names ty1 in
-                                FStar_Compiler_Set.inter
-                                  FStar_Syntax_Syntax.ord_bv uu___4 s in
+                                Obj.magic
+                                  (FStar_Class_Setlike.inter ()
+                                     (Obj.magic
+                                        (FStar_Compiler_FlatSet.setlike_flat_set
+                                           FStar_Syntax_Syntax.ord_bv))
+                                     (Obj.magic uu___4) (Obj.magic s)) in
                               let uu___4 =
                                 let uu___5 =
-                                  FStar_Compiler_Set.is_empty
-                                    FStar_Syntax_Syntax.ord_bv sinter in
+                                  FStar_Class_Setlike.is_empty ()
+                                    (Obj.magic
+                                       (FStar_Compiler_FlatSet.setlike_flat_set
+                                          FStar_Syntax_Syntax.ord_bv))
+                                    (Obj.magic sinter) in
                                 Prims.op_Negation uu___5 in
                               if uu___4
                               then
@@ -1679,26 +1689,39 @@ and (star_type' :
                             (match uu___4 with
                              | (binders1, c1) ->
                                  let s =
+                                   let uu___5 =
+                                     Obj.magic
+                                       (FStar_Class_Setlike.empty ()
+                                          (Obj.magic
+                                             (FStar_Compiler_FlatSet.setlike_flat_set
+                                                FStar_Syntax_Syntax.ord_bv))
+                                          ()) in
                                    FStar_Compiler_List.fold_left
-                                     (fun s1 ->
-                                        fun uu___5 ->
-                                          match uu___5 with
-                                          | {
-                                              FStar_Syntax_Syntax.binder_bv =
-                                                bv;
-                                              FStar_Syntax_Syntax.binder_qual
-                                                = uu___6;
-                                              FStar_Syntax_Syntax.binder_positivity
-                                                = uu___7;
-                                              FStar_Syntax_Syntax.binder_attrs
-                                                = uu___8;_}
-                                              ->
-                                              (non_dependent_or_raise s1
-                                                 bv.FStar_Syntax_Syntax.sort;
-                                               FStar_Compiler_Set.add
-                                                 FStar_Syntax_Syntax.ord_bv
-                                                 bv s1))
-                                     FStar_Syntax_Syntax.no_names binders1 in
+                                     (fun uu___7 ->
+                                        fun uu___6 ->
+                                          (fun s1 ->
+                                             fun uu___6 ->
+                                               match uu___6 with
+                                               | {
+                                                   FStar_Syntax_Syntax.binder_bv
+                                                     = bv;
+                                                   FStar_Syntax_Syntax.binder_qual
+                                                     = uu___7;
+                                                   FStar_Syntax_Syntax.binder_positivity
+                                                     = uu___8;
+                                                   FStar_Syntax_Syntax.binder_attrs
+                                                     = uu___9;_}
+                                                   ->
+                                                   (non_dependent_or_raise s1
+                                                      bv.FStar_Syntax_Syntax.sort;
+                                                    Obj.magic
+                                                      (FStar_Class_Setlike.add
+                                                         ()
+                                                         (Obj.magic
+                                                            (FStar_Compiler_FlatSet.setlike_flat_set
+                                                               FStar_Syntax_Syntax.ord_bv))
+                                                         bv (Obj.magic s1))))
+                                            uu___7 uu___6) uu___5 binders1 in
                                  let ct = FStar_Syntax_Util.comp_result c1 in
                                  (non_dependent_or_raise s ct;
                                   (let k =
@@ -4896,10 +4919,14 @@ let (cps_and_elaborate :
                                                                     =
                                                                     FStar_Syntax_Free.names
                                                                     bv.FStar_Syntax_Syntax.sort in
-                                                                    FStar_Compiler_Set.mem
-                                                                    FStar_Syntax_Syntax.ord_bv
+                                                                    FStar_Class_Setlike.mem
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    (FStar_Compiler_FlatSet.setlike_flat_set
+                                                                    FStar_Syntax_Syntax.ord_bv))
                                                                     type_param1.FStar_Syntax_Syntax.binder_bv
-                                                                    uu___28 in
+                                                                    (Obj.magic
+                                                                    uu___28) in
                                                                     Prims.op_Negation
                                                                     uu___27)
                                                                     wp_binders1 in

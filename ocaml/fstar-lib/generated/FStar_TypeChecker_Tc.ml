@@ -1852,9 +1852,11 @@ let (tc_sig_let :
                                                  let uu___11 =
                                                    FStar_Syntax_Free.fvars
                                                      lb.FStar_Syntax_Syntax.lbtyp in
-                                                 FStar_Compiler_Set.elems
-                                                   FStar_Syntax_Syntax.ord_fv
-                                                   uu___11 in
+                                                 FStar_Class_Setlike.elems ()
+                                                   (Obj.magic
+                                                      (FStar_Compiler_RBSet.setlike_rbset
+                                                         FStar_Syntax_Syntax.ord_fv))
+                                                   (Obj.magic uu___11) in
                                                FStar_Compiler_List.tryFind
                                                  (fun lid ->
                                                     let uu___11 =
