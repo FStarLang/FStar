@@ -1432,10 +1432,12 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
       begin match check_disjoint bvss with
       | None -> ()
       | Some id ->
-          raise_error (Errors.Fatal_NonLinearPatternNotPermitted,
-                       BU.format1
-                         "Non-linear patterns are not permitted: `%s` appears more than once in this function definition." (string_of_id id))
-                      (range_of_id id)
+          let open FStar.Pprint in
+          let open FStar.Class.PP in
+          raise_error_doc (Errors.Fatal_NonLinearPatternNotPermitted, [
+            text "Non-linear patterns are not permitted.";
+            text "The variable " ^/^ squotes (pp id) ^/^ text " appears more than once in this function definition."
+          ]) (range_of_id id)
       end;
 
       let binders = binders |> List.map replace_unit_pattern in
