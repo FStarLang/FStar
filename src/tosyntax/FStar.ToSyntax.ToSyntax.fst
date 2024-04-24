@@ -3802,15 +3802,10 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     let mkclass lid =
       let r = range_of_lid lid in
       let body =
-      if U.has_attribute d_attrs C.meta_projectors_attr then
         (* new meta projectors *)
         U.mk_app (S.tabbrev C.mk_projs_lid)
-                 [S.as_arg (U.exp_bool true);
+                [S.as_arg (U.exp_bool true);
                   S.as_arg (U.exp_string (string_of_lid lid))]
-      else
-        (* old mk_class *)
-        U.mk_app (S.tabbrev C.mk_class_lid)
-                 [S.as_arg (U.exp_string (string_of_lid lid))]
       in
       U.abs [S.mk_binder (S.new_bv (Some r) (tun_r r))] body None
     in
@@ -3886,14 +3881,14 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
                  let ses = List.map add_class_attr ses in
                  { se with sigel = Sig_bundle {ses; lids}
                          ; sigattrs = U.deduplicate_terms
-                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid None
-                                      :: se.sigattrs) }
+                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid None ::
+                                     S.fvar_with_dd FStar.Parser.Const.meta_projectors_attr None :: se.sigattrs) }
 
                | Sig_inductive_typ _ ->
                  { se 
                   with sigattrs = U.deduplicate_terms
-                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid None
-                                      :: se.sigattrs) }
+                                    (S.fvar_with_dd FStar.Parser.Const.tcclass_lid None ::
+                                     S.fvar_with_dd FStar.Parser.Const.meta_projectors_attr None :: se.sigattrs) }
 
                | _ -> se
              in
