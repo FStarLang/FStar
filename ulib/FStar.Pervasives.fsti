@@ -167,7 +167,7 @@ val simplify : norm_step
 (** Weak reduction: Do not reduce under binders *)
 val weak : norm_step
 
-(** Head normal form *)
+(** Head normal form: Do not reduce in function arguments or in binder types *)
 val hnf : norm_step
 
 (** Reduce primitive operators, e.g., [1 + 1 ~> 2] *)
