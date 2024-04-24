@@ -118,6 +118,7 @@ let (inspect_const :
     | FStar_Const.Const_reflect l ->
         let uu___ = FStar_Ident.path_of_lid l in
         FStar_Reflection_V2_Data.C_Reflect uu___
+    | FStar_Const.Const_real s -> FStar_Reflection_V2_Data.C_Real s
     | uu___ ->
         let uu___1 =
           let uu___2 = FStar_Syntax_Print.const_to_string c in
@@ -443,6 +444,7 @@ let (pack_const :
         let uu___ =
           FStar_Ident.lid_of_path ns FStar_Compiler_Range_Type.dummyRange in
         FStar_Const.Const_reflect uu___
+    | FStar_Reflection_V2_Data.C_Real r -> FStar_Const.Const_real r
 let rec (pack_pat :
   FStar_Reflection_V2_Data.pattern -> FStar_Syntax_Syntax.pat) =
   fun p ->
@@ -602,9 +604,9 @@ let (compare_namedv :
       if n < Prims.int_zero
       then FStar_Order.Lt
       else if n = Prims.int_zero then FStar_Order.Eq else FStar_Order.Gt
-let (lookup_attr :
+let (lookup_attr_ses :
   FStar_Syntax_Syntax.term ->
-    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list)
+    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt Prims.list)
   =
   fun attr ->
     fun env ->
@@ -613,22 +615,27 @@ let (lookup_attr :
         uu___1.FStar_Syntax_Syntax.n in
       match uu___ with
       | FStar_Syntax_Syntax.Tm_fvar fv ->
-          let ses =
-            let uu___1 =
-              let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in
-              FStar_Ident.string_of_lid uu___2 in
-            FStar_TypeChecker_Env.lookup_attr env uu___1 in
-          FStar_Compiler_List.concatMap
-            (fun se ->
-               let uu___1 = FStar_Syntax_Util.lid_of_sigelt se in
-               match uu___1 with
-               | FStar_Pervasives_Native.None -> []
-               | FStar_Pervasives_Native.Some l ->
-                   let uu___2 =
-                     FStar_Syntax_Syntax.lid_as_fv l
-                       FStar_Pervasives_Native.None in
-                   [uu___2]) ses
+          let uu___1 =
+            let uu___2 = FStar_Syntax_Syntax.lid_of_fv fv in
+            FStar_Ident.string_of_lid uu___2 in
+          FStar_TypeChecker_Env.lookup_attr env uu___1
       | uu___1 -> []
+let (lookup_attr :
+  FStar_Syntax_Syntax.term ->
+    FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list)
+  =
+  fun attr ->
+    fun env ->
+      let ses = lookup_attr_ses attr env in
+      FStar_Compiler_List.concatMap
+        (fun se ->
+           let uu___ = FStar_Syntax_Util.lid_of_sigelt se in
+           match uu___ with
+           | FStar_Pervasives_Native.None -> []
+           | FStar_Pervasives_Native.Some l ->
+               let uu___1 =
+                 FStar_Syntax_Syntax.lid_as_fv l FStar_Pervasives_Native.None in
+               [uu___1]) ses
 let (all_defs_in_env :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.fv Prims.list) =
   fun env ->

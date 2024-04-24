@@ -163,11 +163,17 @@ let context_term_to_string (c:context_term) =
 
 type context = {
   no_guard : bool;
+  unfolding_ok : bool;
   error_context: list (string & option context_term)
 }
 
+(* The instance prints some brief info on the error_context. `print_context`
+below is a full printer. *)
 instance showable_context : showable context = {
-  show = (fun _ -> "<ctx>");
+  show = (fun context -> BU.format3 "{no_guard=%s; unfolding_ok=%s; error_context=%s}"
+                                    (show context.no_guard)
+                                    (show context.unfolding_ok)
+                                    (show (List.map fst context.error_context)));
 }
 
 let print_context (ctx:context)
@@ -196,7 +202,17 @@ let print_error (err:error) =
 
 let print_error_short (err:error) = snd err
 
-let result a = context -> either (success a) error
+type __result a =
+  | Success of a
+  | Error of error
+
+instance showable_result #a (_ : showable a) : Tot (showable (__result a)) = {
+  show = (function
+          | Success a -> "Success " ^ show a
+          | Error e ->   "Error " ^ print_error_short e);
+}
+
+let result a = context -> __result (success a)
 
 type hash_entry = {
    he_term:term;
@@ -232,7 +248,7 @@ let insert (g:env) (e:term) (res:success (tot_or_ghost & typ)) =
     THT.insert e entry table
 
 inline_for_extraction
-let return (#a:Type) (x:a) : result a = fun _ -> Inl (x, None)
+let return (#a:Type) (x:a) : result a = fun _ -> Success (x, None)
 
 let and_pre (p1 p2:precondition) =
   match p1, p2 with
@@ -246,11 +262,11 @@ let (let!) (#a:Type) (#b:Type) (x:result a) (y:a -> result b)
   : result b
   = fun ctx0 ->
       match x ctx0 with
-      | Inl (x, g1) ->
+      | Success (x, g1) ->
         (match y x ctx0 with
-         | Inl (y, g2) -> Inl (y, and_pre g1 g2)
+         | Success (y, g2) -> Success (y, and_pre g1 g2)
          | err -> err)
-      | Inr err -> Inr err
+      | Error err -> Error err
 
 inline_for_extraction
 let (and!) (#a:Type) (#b:Type) (x:result a) (y:result b)
@@ -265,7 +281,7 @@ let (let?) (#a:Type) (#b:Type) (x:option a) (f: a -> option b)
     | None -> None
     | Some x -> f x
 
-let fail #a msg : result a = fun ctx -> Inr (ctx, msg)
+let fail #a msg : result a = fun ctx -> Error (ctx, msg)
 
 let dump_context
   : result unit
@@ -278,7 +294,7 @@ let handle_with (#a:Type) (x:result a) (h: unit -> result a)
   : result a
   = fun ctx ->
       match x ctx with
-      | Inr _ -> h () ctx
+      | Error _ -> h () ctx
       | res -> res
 
 inline_for_extraction
@@ -461,19 +477,19 @@ let with_binders (#a:Type) (xs:binders) (us:universes) (f:result a)
   : result a
   = fun ctx ->
       match f ctx with
-      | Inl (t, g) -> Inl (t, close_guard xs us g)
+      | Success (t, g) -> Success (t, close_guard xs us g)
       | err -> err
 
 let with_definition (#a:Type) (x:binder) (u:universe) (t:term) (f:result a)
   : result a
   = fun ctx ->
       match f ctx with
-      | Inl (a, g) -> Inl (a, close_guard_with_definition x u t g)
+      | Success (a, g) -> Success (a, close_guard_with_definition x u t g)
       | err -> err
 
 let guard (t:typ)
   : result unit
-  = fun _ -> Inl ((), Some t)
+  = fun _ -> Success ((), Some t)
 
 let abs (a:typ) (f: binder -> term) : term =
   let x = S.new_bv None a in
@@ -493,7 +509,7 @@ let strengthen_subtyping_guard (p:term)
 let weaken (p:term) (g:result 'a)
   = fun ctx ->
       match g ctx with
-      | Inl (x, q) -> Inl (x, weaken_subtyping_guard p q)
+      | Success (x, q) -> Success (x, weaken_subtyping_guard p q)
       | err -> err
 
 let weaken_with_guard_formula (p:FStar.TypeChecker.Common.guard_formula) (g:result 'a)
@@ -509,15 +525,15 @@ let push_hypothesis (g:env) (h:term) =
 let strengthen (p:term) (g:result 'a)
   = fun ctx ->
       match g ctx with
-      | Inl (x, q) -> Inl (x, strengthen_subtyping_guard p q)
+      | Success (x, q) -> Success (x, strengthen_subtyping_guard p q)
       | err -> err
 
 let no_guard (g:result 'a)
   : result 'a
   = fun ctx ->
       match g ({ ctx with no_guard = true}) with
-      | Inl (x, None) -> Inl (x, None)
-      | Inl (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (P.term_to_string g)) ctx
+      | Success (x, None) -> Success (x, None)
+      | Success (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (P.term_to_string g)) ctx
       | err -> err
 
 let equatable g t =
@@ -579,7 +595,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
        //   (P.term_to_string e)
        //   (P.term_to_string (snd (fst he.he_res)))
        //   (show he.he_gamma);
-       fun _ -> Inl he.he_res
+       fun _ -> Success he.he_res
      )
      else (
        // record_cache_miss();
@@ -675,18 +691,11 @@ let join_eff_l es = List.Tot.fold_right join_eff es E_Total
 
 let guard_not_allowed
   : result bool
-  = fun ctx -> Inl (ctx.no_guard, None)
+  = fun ctx -> Success (ctx.no_guard, None)
 
-let default_norm_steps : Env.steps =
-  let open Env in
-  [ Primops;
-    Weak;
-    HNF;
-    UnfoldUntil delta_constant;
-    Unascribe;
-    Eager_unfolding;
-    Iota;
-    Exclude Zeta ]
+let unfolding_ok
+  : result bool
+  = fun ctx -> Success (ctx.unfolding_ok, None)
 
 let debug g f =
   if Env.debug g.tcenv (Options.Other "Core")
@@ -827,11 +836,13 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         "FStar.TypeChecker.Core.maybe_unfold_side"
     in
     let maybe_unfold t0 t1
-      : option (term & term)
-      = maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1
+      : result (option (term & term))
+      = if! unfolding_ok
+        then return (maybe_unfold_side (which_side_to_unfold t0 t1) t0 t1)
+        else return None
     in
     let emit_guard t0 t1 =
-       let! _, t_typ = do_check g t0 in
+       let! _, t_typ = with_context "checking lhs while emitting guard" None (fun _ -> do_check g t0) in
        let! u = universe_of g t_typ in
        guard (U.mk_eq2 u t_typ t0 t1)
     in
@@ -844,29 +855,22 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       else err ()
     in
     let maybe_unfold_side_and_retry side t0 t1 =
-      match maybe_unfold_side side t0 t1 with
-      | None -> fallback t0 t1
-      | Some (t0, t1) -> check_relation g rel t0 t1
+      if! unfolding_ok then
+        match maybe_unfold_side side t0 t1 with
+        | None -> fallback t0 t1
+        | Some (t0, t1) -> check_relation g rel t0 t1
+      else
+        fallback t0 t1
     in
     let maybe_unfold_and_retry t0 t1 =
       maybe_unfold_side_and_retry (which_side_to_unfold t0 t1) t0 t1
     in
     let beta_iota_reduce t =
         let t = Subst.compress t in
+        let t = N.normalize [Env.HNF; Env.Weak; Env.Beta; Env.Iota; Env.Primops] g.tcenv t in
         match t.n with
-        | Tm_app _ ->
-          let head = U.leftmost_head t in
-          (match (Subst.compress head).n with
-           | Tm_abs _ -> N.normalize [Env.Beta; Env.Iota; Env.Primops] g.tcenv t
-           | _ -> t)
-
-        | Tm_let _
-        | Tm_match _ ->
-          N.normalize [Env.Beta;Env.Iota;Env.Primops] g.tcenv t
-
         | Tm_refine _ ->
           U.flatten_refinement t
-
         | _ -> t
     in
     let beta_iota_reduce t =
@@ -875,8 +879,8 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
           None
           "FStar.TypeChecker.Core.beta_iota_reduce"
     in
-    let t0 = Subst.compress (beta_iota_reduce t0) in
-    let t1 = Subst.compress (beta_iota_reduce t1) in
+    let t0 = Subst.compress (beta_iota_reduce t0) |> U.unlazy_emb in
+    let t1 = Subst.compress (beta_iota_reduce t1) |> U.unlazy_emb in
     let check_relation g rel t0 t1 =
       with_context "check_relation" (Some (CtxRel t0 rel t1))
         (fun _ -> check_relation g rel t0 t1)
@@ -945,8 +949,11 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                  guard (U.mk_forall u b.binder_bv (U.mk_imp f0 f1)))
         )
         else (
-          match maybe_unfold x0.sort x1.sort with
-          | None -> fallback t0 t1
+          match! maybe_unfold x0.sort x1.sort with
+          | None ->
+            if Env.debug g.tcenv (Options.Other "Core") then
+              BU.print2 "Cannot match ref heads %s and %s\n" (show x0.sort) (show x1.sort);
+            fallback t0 t1
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
             let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in
@@ -957,7 +964,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         if head_matches x0.sort t1
         then check_relation g rel x0.sort t1
         else (
-          match maybe_unfold x0.sort t1 with
+          match! maybe_unfold x0.sort t1 with
           | None -> fallback t0 t1
           | Some (t0, t1) ->
             let lhs = S.mk (Tm_refine {b={x0 with sort = t0}; phi=f0}) t0.pos in
@@ -991,7 +998,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                  guard (U.mk_forall u1 b1.binder_bv f1)
         )
         else (
-          match maybe_unfold t0 x1.sort with
+          match! maybe_unfold t0 x1.sort with
           | None -> fallback t0 t1
           | Some (t0, t1) ->
             let rhs = S.mk (Tm_refine {b={x1 with sort = t1}; phi=f1}) t1.pos in
@@ -1101,7 +1108,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
                   let bs0 = List.map S.mk_binder bvs0 in
                   // We need universes for the binders
                   let! us = check_binders g bs0 in
-                  with_binders bs0 us (check_relation g' rel body0 body1)
+                  with_context "relate_branch" None (fun _ -> with_binders bs0 us (check_relation g' rel body0 body1))
              | _ -> fail "raw_pat_as_exp failed in check_equality match rule"
              end
             | _ -> fail "Core does not support branches with when"
@@ -1184,17 +1191,17 @@ and memo_check (g:env) (e:term)
   = let check_then_memo g e ctx =
       let r = do_check_and_promote g e ctx in
       match r with
-      | Inl (res, None) ->
+      | Success (res, None) ->
         insert g e (res, None);
         r
 
-      | Inl (res, Some guard) ->
+      | Success (res, Some guard) ->
         (match g.guard_handler with
          | None -> insert g e (res, Some guard); r
          | Some gh ->
            if gh g.tcenv guard
            then let r = (res, None) in
-                insert g e r; Inl r
+                insert g e r; Success r
            else fail "guard handler failed" ctx)
 
       | _ -> r
@@ -1204,15 +1211,15 @@ and memo_check (g:env) (e:term)
       then check_then_memo g e ctx
       else (
         match lookup g e ctx with
-        | Inr _ -> //cache miss; check and insert
+        | Error _ -> //cache miss; check and insert
           check_then_memo g e ctx
 
-        | Inl (et, None) -> //cache hit with no guard; great, just return
-          Inl (et, None)
+        | Success (et, None) -> //cache hit with no guard; great, just return
+          Success (et, None)
 
-        | Inl (et, Some pre) -> //cache hit with a guard
+        | Success (et, Some pre) -> //cache hit with a guard
           match g.guard_handler with
-          | None -> Inl (et, Some pre) //if there's no guard handler, then just return
+          | None -> Success (et, Some pre) //if there's no guard handler, then just return
           | Some _ ->
             //otherwise check then memo, since this can
             //repopulate the cache with a "better" entry that has no guard
@@ -1371,7 +1378,7 @@ and do_check (g:env) (e:term)
       let! eff, te = check "ascription head" g e in
       let! _ = with_context "ascription comp" None (fun _ -> check_comp g c) in
       let c_e = as_comp g (eff, te) in
-      check_relation_comp g (SUBTYPING (Some e)) c_e c;!
+      with_context "ascription subtyping (comp)" None (fun _ -> check_relation_comp g (SUBTYPING (Some e)) c_e c);!
       let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
@@ -1380,12 +1387,12 @@ and do_check (g:env) (e:term)
   | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
     let g', x, body = open_term g (S.mk_binder x) body in
-    if I.lid_equals lb.lbeff PC.effect_Tot_lid
+    if U.is_pure_or_ghost_effect lb.lbeff
     then (
       let! eff_def, tdef = check "let definition" g lb.lbdef in
       let! _, ttyp = check "let type" g lb.lbtyp in
       let! u = is_type g ttyp in
-      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef ttyp) ;!
+      with_context "let subtyping" None (fun _ -> check_subtype g (Some lb.lbdef) tdef lb.lbtyp) ;!
       with_definition x u lb.lbdef (
         let! eff_body, t = check "let body" g' body in
         check_no_escape [x] t;!
@@ -1520,7 +1527,7 @@ and do_check (g:env) (e:term)
                     then EQUALITY
                     else SUBTYPING (Some b)
                   in
-                  check_relation g' rel tbr expect_tbr;!
+                  with_context "branch check relation" None (fun _ -> check_relation g' rel tbr expect_tbr);!
                   return (join_eff eff_br acc_eff, expect_tbr))) in
           match p.v with
           | Pat_var _ ->
@@ -1612,7 +1619,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
       | _ ->
         mk (Tm_constant c) p.p in
     let! _, t_const = check "pat_const" g e in
-    let! _ = check_subtype g (Some e) t_const (unrefine_tsc t_sc) in
+    let! _ = with_context "check_pat constant" None (fun () -> check_subtype g (Some e) t_const (unrefine_tsc t_sc)) in
     return ([], [])
 
   | Pat_var bv ->
@@ -1646,7 +1653,7 @@ and check_pat (g:env) (p:pat) (t_sc:typ) : result (binders & universes) =
         | _ -> fail "check_pat in core has unset dot pattern" in
 
       let! _, p_t = check "pat dot term" g pat_dot_t in
-      let!_ = check_subtype g (Some pat_dot_t) p_t expected_t in
+      let!_ = with_context "check_pat cons" None (fun _ -> check_subtype g (Some pat_dot_t) p_t expected_t) in
 
       return (ss@[NT (f, pat_dot_t)])) [] dot_formals dot_pats in
 
@@ -1839,7 +1846,7 @@ let simplify_steps =
 
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
-  : either ((tot_or_ghost & S.typ) & precondition) error
+  : __result ((tot_or_ghost & S.typ) & precondition)
   = if Env.debug g (Options.Other "CoreEq")
     then BU.print1 "(%s) Entering core ... \n"
                    (BU.string_of_int (get_goal_ctr()));
@@ -1852,20 +1859,20 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
                    (match topt with None -> "" | Some t -> P.term_to_string t);
     THT.reset_counters table;
     reset_cache_stats();
-    let ctx = { no_guard = false; error_context = [("Top", None)] } in
+    let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
     let res =
       Profiling.profile
         (fun () ->
           match check_term_top g e topt must_tot gh ctx with
-          | Inl (et, g) -> Inl (et, g)
-          | Inr err -> Inr err)
+          | Success (et, g) -> Success (et, g)
+          | Error err -> Error err)
         None
         "FStar.TypeChecker.Core.check_term_top"
     in
     (
     let res =
       match res with
-      | Inl (et, Some guard0) ->
+      | Success (et, Some guard0) ->
         // Options.push();
         // Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
@@ -1887,16 +1894,16 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
             BU.print1 "WARNING: %s is free in the core generated guard\n" (P.term_to_string (S.bv_to_name bv))
           | _ -> ()
         end;
-        Inl (et, Some guard)
+        Success (et, Some guard)
 
-      | Inl _ ->
+      | Success _ ->
         if Env.debug g (Options.Other "Core")
         ||  Env.debug g (Options.Other "CoreTop")
         then BU.print1 "(%s) Exiting core (ok)\n"
                     (BU.string_of_int (get_goal_ctr()));
         res
 
-      | Inr _ ->
+      | Error _ ->
         if Env.debug g (Options.Other "Core")
         ||  Env.debug g (Options.Other "CoreTop")
         then BU.print1 "(%s) Exiting core (failed)\n"
@@ -1916,22 +1923,22 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
 
 let check_term g e t must_tot =
   match check_term_top_gh g e (Some t) must_tot None with
-  | Inl (_, g) -> Inl g
-  | Inr err -> Inr err
+  | Success (_, g) -> Inl g
+  | Error err -> Inr err
 
 let check_term_at_type g e t =
   let must_tot = false in
   match check_term_top_gh g e (Some t) must_tot None with
-  | Inl ((eff, _), g) -> Inl (eff, g)
-  | Inr err -> Inr err
+  | Success ((eff, _), g) -> Inl (eff, g)
+  | Error err -> Inr err
 
 let compute_term_type_handle_guards g e gh =
   let e = FStar.Syntax.Compress.deep_compress true true e in
   let must_tot = false in
   match check_term_top_gh g e None must_tot (Some gh) with
-  | Inl (r, None) -> Inl r
-  | Inl (_, Some _) -> failwith "Impossible: All guards should have been handled already"
-  | Inr err -> Inr err
+  | Success (r, None) -> Inl r
+  | Success (_, Some _) -> failwith "Impossible: All guards should have been handled already"
+  | Error err -> Inr err
 
 let open_binders_in_term (env:Env.env) (bs:binders) (t:term) =
   let g = initial_env env None in
@@ -1943,23 +1950,25 @@ let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
   let g', bs, c = open_comp_binders g bs c in
   g'.tcenv, bs, c
 
-let check_term_equality g t0 t1
+let check_term_equality guard_ok unfolding_ok g t0 t1
   = let g = initial_env g None in
     if Env.debug g.tcenv (Options.Other "CoreTop") then
-       BU.print2 "Entering check_term_equality with %s and %s {\n" (show t0) (show t1);
-    let ctx = { no_guard = false; error_context = [("Eq", None)] } in
-    let r =
-      match check_relation g EQUALITY t0 t1 ctx with
-      | Inl (_, g) -> Inl g
-      | Inr err -> Inr err
-    in
+       BU.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
+         (show t0) (show t1) (show guard_ok) (show unfolding_ok);
+    let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
+    let r = check_relation g EQUALITY t0 t1 ctx in
     if Env.debug g.tcenv (Options.Other "CoreTop") then
        BU.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
+    let r =
+      match r with
+      | Success (_, g) -> Inl g
+      | Error err -> Inr err
+    in
     r
 
-let check_term_subtyping g t0 t1
+let check_term_subtyping guard_ok unfolding_ok g t0 t1
   = let g = initial_env g None in
-    let ctx = { no_guard = false; error_context = [("Subtyping", None)] } in
+    let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Subtyping", None)] } in
     match check_relation g (SUBTYPING None) t0 t1 ctx with
-    | Inl (_, g) -> Inl g
-    | Inr err -> Inr err
+    | Success (_, g) -> Inl g
+    | Error err -> Inr err

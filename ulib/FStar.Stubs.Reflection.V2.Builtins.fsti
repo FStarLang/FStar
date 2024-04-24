@@ -134,8 +134,18 @@ val vars_of_env           : env -> list binding
 (** Returns the current module of an environment. *)
 val moduleof              : env -> name
 
-(** Returns all top-level names marked with a given attribute.
-Used e.g. to find all typeclass instances. *)
+(** Returns all top-level sigelts marked with a given attribute. The
+criterion used is that the [attr] attribute MUST be a top-level name
+(Tv_FVar) and any sigelt that has an attribute with [attr] (possibly
+applied) is returned. The sigelt can then be inspect to find the
+arguments to the attribute, if needed.
+
+Used e.g. to find all typeclass instances, and read their functional
+dependencies. *)
+val lookup_attr_ses       : attr:term -> env -> list sigelt
+
+(** As [lookup_attr_ses], but just returns the name associated
+to the sigelts. *)
 val lookup_attr           : term -> env -> list fv
 
 (** Returns all top-level names in an environment. *)

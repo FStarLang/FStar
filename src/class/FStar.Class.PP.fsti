@@ -59,3 +59,5 @@ instance val pp_tuple6
    (_ : pretty 'e)
    (_ : pretty 'f)
 : Tot (pretty ('a & 'b & 'c & 'd & 'e & 'f))
+
+val from_showable (a:Type) {| _ : Class.Show.showable a |} : Tot (pretty a)

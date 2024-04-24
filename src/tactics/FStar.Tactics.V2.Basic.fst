@@ -1426,7 +1426,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
             with
             | Inr _ -> false
             | Inl (_, t_ty) -> (  // ignoring effect, ghost is ok
-              match Core.check_term_subtyping env ty t_ty with
+              match Core.check_term_subtyping true true env ty t_ty with
               | Inl None -> //unconditional subtype
                 mark_uvar_as_already_checked u;
                 true
@@ -1960,6 +1960,11 @@ let set_urgency (u:Z.t) : tac unit =
     let ps = { ps with urgency = Z.to_int_fs u } in
     set ps
 
+let set_dump_on_failure (b:bool) : tac unit =
+    let! ps = get in
+    let ps = { ps with dump_on_failure = b } in
+    set ps
+
 let t_commute_applied_match () : tac unit = wrap_err "t_commute_applied_match" <| (
   let! g = cur_goal in
   match destruct_eq (goal_env g) (goal_type g) with
@@ -2268,7 +2273,7 @@ let refl_is_non_informative (g:env) (t:typ) : tac (option unit & issues) =
     return (None, [unexpected_uvars_issue (Env.get_range g)])
   )
 
-let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
+let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : tac (option unit * issues) =
 
   if no_uvars_in_g g &&
@@ -2285,7 +2290,7 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
            if rel = Subtyping
            then Core.check_term_subtyping
            else Core.check_term_equality in
-         match f g t0 t1 with
+         match f smt_ok unfolding_ok g t0 t1 with
          | Inl None ->
            dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
            ((), [])
@@ -2301,10 +2306,9 @@ let refl_check_relation (g:env) (t0 t1:typ) (rel:relation)
   )
 
 let refl_check_subtyping (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Subtyping
+  refl_check_relation Subtyping true true g t0 t1
 
-let refl_check_equiv (g:env) (t0 t1:typ) : tac (option unit & issues) =
-  refl_check_relation g t0 t1 Equality
+let t_refl_check_equiv = refl_check_relation Equality
 
 let to_must_tot (eff:Core.tot_or_ghost) : bool =
   match eff with
@@ -2787,6 +2791,7 @@ let proofstate_of_goals rng env goals imps =
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
         urgency = 1;
+        dump_on_failure = true;
     }
     in
     ps
@@ -2816,6 +2821,7 @@ let proofstate_of_all_implicits rng env imps =
         tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
         local_state = BU.psmap_empty ();
         urgency = 1;
+        dump_on_failure = true;
     }
     in
     (ps, w)
@@ -2852,6 +2858,7 @@ let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (opti
   return ();! // thunk
   let rng = Env.get_range g in
   let ps, w = proofstate_of_goal_ty rng g goal_ty in
+  let ps = { ps with dump_on_failure = false } in // subtacs can fail gracefully, do not dump the failed proofstate.
   match Errors.catch_errors_and_ignore_rest (fun () ->
           run_unembedded_tactic_on_ps_and_solve_remaining rng rng false () (fun () -> f) ps)
   with

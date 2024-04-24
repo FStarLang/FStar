@@ -223,6 +223,7 @@ let const_cmp c1 c2 =
   | C_Range r1, C_Range r2 -> range_cmp r1 r2
   | C_Reify, C_Reify -> Eq
   | C_Reflect n1, C_Reflect n2 -> eq_cmp n1 n2
+  | C_Real s1, C_Real s2 -> eq_cmp s1 s2
   | _ -> Neq
 
 (* TODO. Or seal...? *)
@@ -452,14 +453,21 @@ and univ_faithful_lemma_list #b (u1 u2 : b) (us1 : list universe{us1 << u1}) (us
     ;
     defined_list_dec u1 u2 univ_cmp us1 us2
 
+(* Just a placeholder for now *)
+val faithful_const : vconst -> Type0
+let faithful_const c = True
+
 val faithful : term -> Type0
 let rec faithful t =
   match inspect_ln t with
   | Tv_Var _
   | Tv_BVar _
   | Tv_FVar _
-  | Tv_Unknown
-  | Tv_Const _ -> True
+  | Tv_Unknown ->
+    True
+
+  | Tv_Const c ->
+    faithful_const c
 
   | Tv_UInst f us ->
     allP t faithful_univ us
@@ -519,7 +527,7 @@ and faithful_branch (b : branch) : Type0 =
 
 and faithful_pattern (p : pattern) : Type0 =
   match p with
-  | Pat_Constant _ -> True
+  | Pat_Constant c -> faithful_const c
   | Pat_Cons head univs subpats ->
     optP p (allP p faithful_univ) univs
      /\ allP p faithful_pattern_arg subpats
