@@ -46,7 +46,7 @@ val ( ! ) (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
 val ( := ) (#a:Type) (r:ref a) (x:a) (#n:erased a)
   : stt unit
         (pts_to r n) 
-        (fun _ -> pts_to r (hide x))
+        (fun _ -> pts_to r x)
 
 [@@deprecated "Reference.free is unsound; use Box.free instead"]
 val free (#a:Type) (r:ref a) (#n:erased a)
