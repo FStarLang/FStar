@@ -36,7 +36,11 @@ let rec all_mem (n:int) {| setlike int 'set |} (s : 'set) =
   if n = 0 then true
   else mem n s && all_mem (n-1) s
 
-let nn = 50000
+let rec all_remove (n:int) {| setlike int 'set |} (s : 'set) =
+  if n = 0 then s
+  else all_remove (n-1) (remove n s)
+
+let nn = 10000
 
 let run_all () =
   BU.print_string "data tests\n";
@@ -44,11 +48,19 @@ let run_all () =
   BU.print1 "FlatSet insert: %s\n" (show ms);
   let (f_ok, ms) = BU.record_time (fun () -> all_mem nn f) in
   BU.print1 "FlatSet all_mem: %s\n" (show ms);
+  let (f, ms) = BU.record_time (fun () -> all_remove nn f) in
+  BU.print1 "FlatSet all_remove: %s\n" (show ms);
+
   if not f_ok then failwith "FlatSet all_mem failed";
+  if not (is_empty f) then failwith "FlatSet all_remove failed";
 
   let (rb, ms) = BU.record_time (fun () -> insert nn (empty () <: RBSet.t int)) in
   BU.print1 "RBSet insert: %s\n" (show ms);
   let (rb_ok, ms) = BU.record_time (fun () -> all_mem nn rb) in
   BU.print1 "RBSet all_mem: %s\n" (show ms);
+  let (rb, ms) = BU.record_time (fun () -> all_remove nn rb) in
+  BU.print1 "RBSet all_remove: %s\n" (show ms);
+
   if not rb_ok then failwith "RBSet all_mem failed";
+  if not (is_empty rb) then failwith "RBSet all_remove failed";
   ()
