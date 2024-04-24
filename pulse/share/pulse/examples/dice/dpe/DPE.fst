@@ -24,7 +24,7 @@ open EngineCore
 open L0Types
 open L0Core
 
-module L = Pulse.Lib.SpinLock
+module M = Pulse.Lib.Mutex
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
@@ -498,8 +498,8 @@ fn open_session (r:gref) (m:mutex (option st))
           open_session_client_perm r (snd b) **
           pure (fst b == m)
 {
-  let mr = lock m;
-  let sopt = R.replace mr None;
+  let mg = lock m;
+  let sopt = M.replace mg None;
 
   let s = maybe_mk_session_tbl r sopt;
   let ret = __open_session r s;
@@ -508,8 +508,8 @@ fn open_session (r:gref) (m:mutex (option st))
   rewrite each
     fst ret as s,
     snd ret as sid_opt;
-  mr := Some s;
-  unlock m mr;
+  mg := Some s;
+  unlock m mg;
 
   let ret = (m, sid_opt);
 
@@ -602,8 +602,8 @@ fn replace_session
           session_state_related (snd b) (T.current_state t) **
           sid_pts_to r sid (T.next_trace t gsst)
 {
-  let mr = lock m;
-  let sopt = R.replace mr None;
+  let mg = lock m;
+  let sopt = M.replace mg None;
   match sopt {
     None -> {
       unfold (inv r None);
@@ -663,8 +663,8 @@ fn replace_session
                 ctr as s.st_ctr,
                 tbl as s.st_tbl;
               fold (inv r (Some s));
-              mr := Some s;
-              unlock m mr;
+              mg := Some s;
+              unlock m mg;
               let ret = (m, st);
               rewrite each
                 m as fst ret,
