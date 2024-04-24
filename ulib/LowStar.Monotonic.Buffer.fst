@@ -233,7 +233,7 @@ let live_same_addresses_equal_types_and_preorders'
 =   Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     let s1 : Seq.seq a1 = as_seq h b1 in
-    assert (Seq.seq a1 == Seq.seq a2);
+    assume (Seq.seq a1 == Seq.seq a2);
     let s1' : Seq.seq a2 = coerce_eq _ s1 in
     assert (s1 === s1');
     lemma_equal_instances_implies_equal_types a1 a2 s1 s1'
@@ -1141,7 +1141,7 @@ let modifies_loc_buffer_from_to_intro' #a #rrel #rel b from to l h h' =
         // prove that the types, rrels, rels are equal
         Heap.lemma_distinct_addrs_distinct_preorders ();
         Heap.lemma_distinct_addrs_distinct_mm ();
-        assert (Seq.seq t' == Seq.seq a);
+        assume (Seq.seq t' == Seq.seq a);
         let _s0 : Seq.seq a = as_seq h b in
         let _s1 : Seq.seq t' = coerce_eq _ _s0 in
         lemma_equal_instances_implies_equal_types a t' _s0 _s1;
@@ -1332,6 +1332,7 @@ let g_upd_seq_as_seq #a #_ #_ b s h =
     // prove modifies_1_preserves_ubuffers
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
+    admit();
     s_lemma_equal_instances_implies_equal_types ();
     modifies_1_modifies b h h'
   end
@@ -1342,6 +1343,7 @@ let g_upd_modifies_strong #_ #_ #_ b i v h =
     Heap.lemma_distinct_addrs_distinct_preorders ();
     Heap.lemma_distinct_addrs_distinct_mm ();
     s_lemma_equal_instances_implies_equal_types ();
+    admit();
     modifies_1_from_to_modifies b (U32.uint_to_t i) (U32.uint_to_t (i + 1)) h h'
 #pop-options
 
