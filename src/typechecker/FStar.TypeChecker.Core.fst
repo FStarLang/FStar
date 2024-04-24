@@ -17,6 +17,7 @@ module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 let goal_ctr = BU.mk_ref 0
 let get_goal_ctr () = !goal_ctr
@@ -604,7 +605,7 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
 
 let check_no_escape (bs:binders) t =
     let xs = FStar.Syntax.Free.names t in
-    if BU.for_all (fun b -> not (Set.mem b.binder_bv xs)) bs
+    if BU.for_all (fun b -> not (mem b.binder_bv xs)) bs
     then return ()
     else fail "Name escapes its scope"
 
@@ -1885,7 +1886,7 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
             (BU.string_of_int (get_goal_ctr()))
             (P.term_to_string guard0)
             (P.term_to_string guard);
-          let guard_names = Syntax.Free.names guard |> Set.elems in
+          let guard_names = Syntax.Free.names guard |> elems in
           match List.tryFind (fun bv -> List.for_all (fun binding_env ->
             match binding_env with
             | Binding_var bv_env -> not (S.bv_eq bv_env bv)

@@ -41,6 +41,8 @@ module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
 
+open FStar.Class.Setlike
+
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
 // Takes care of creating the [fv], generating the top-level let-binding, and
@@ -582,7 +584,7 @@ and star_type' env t =
       // (st a)* every time.
       let debug t s =
         let string_of_set f s =
-            let elts = Set.elems s in
+            let elts = elems s in
             match elts with
             | [] -> "{}"
             | x::xs ->
@@ -606,15 +608,15 @@ and star_type' env t =
                 else
                     try
                         let non_dependent_or_raise s ty =
-                            let sinter = Set.inter (Free.names ty) s in
-                            if  not (Set.is_empty sinter)
+                            let sinter = inter (Free.names ty) s in
+                            if  not (is_empty sinter)
                             then (debug ty sinter ; raise Not_found)
                         in
                         let binders, c = SS.open_comp binders c in
                         let s = List.fold_left (fun s ({binder_bv=bv}) ->
                             non_dependent_or_raise s bv.sort ;
-                            Set.add bv s
-                        ) S.no_names binders in
+                            add bv s
+                        ) (Class.Setlike.empty ())  binders in
                         let ct = U.comp_result c in
                         non_dependent_or_raise s ct ;
                         let k = n - List.length binders in
@@ -1652,7 +1654,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
             let wp_binders, c = SS.open_comp wp_binders c in
             let pre_args, post_args =
                 List.partition (fun ({binder_bv=bv}) ->
-                  Free.names bv.sort |> Set.mem type_param.binder_bv |> not
+                  Free.names bv.sort |> mem type_param.binder_bv |> not
                 ) wp_binders
             in
             let post = match post_args with

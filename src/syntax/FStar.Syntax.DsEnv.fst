@@ -27,7 +27,9 @@ open FStar.Syntax.Util
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
+
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
 let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
@@ -49,7 +51,7 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
-type string_set = Set.t string
+type string_set = RBSet.t string
 
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
@@ -110,7 +112,7 @@ let transitive_exported_ids env lid =
     let module_name = Ident.string_of_lid lid in
     match BU.smap_try_find env.trans_exported_ids module_name with
     | None -> []
-    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> Set.elems
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> elems
 let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev) =
     List.collect
        (function
@@ -258,7 +260,7 @@ let find_in_module_with_includes
     | None -> true
     | Some mex ->
       let mexports = !(mex eikind) in
-      Set.mem idstr mexports
+      mem idstr mexports
     in
     let mincludes = match BU.smap_try_find env.includes mname with
     | None -> []
@@ -878,13 +880,13 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match s
                     match get_exported_id_set e modul with
                     | Some my_ex ->
                       let my_exported_ids = my_ex Exported_id_field in
-                      let () = my_exported_ids := Set.add (string_of_id id) !my_exported_ids in
+                      let () = my_exported_ids := add (string_of_id id) !my_exported_ids in
                       (* also add the projector name *)
                       let projname = mk_field_projector_name_from_ident constrname id
                                      |> ident_of_lid
                                      |> string_of_id
                       in
-                      let () = my_exported_ids := Set.add projname !my_exported_ids in
+                      let () = my_exported_ids := add projname !my_exported_ids in
                       ()
                     | None -> () (* current module was not prepared? should not happen *)
                   in
@@ -956,7 +958,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (ns_of_lid r.typename @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () : ref (Set.t string) = BU.mk_ref (Set.empty ())
+let string_set_ref_new () : ref string_set = BU.mk_ref (empty ())
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -1038,7 +1040,7 @@ let push_sigelt' fail_on_dup env s =
       let () = match get_exported_id_set env modul with
       | Some f ->
         let my_exported_ids = f Exported_id_term_type in
-        my_exported_ids := Set.add (string_of_id (ident_of_lid lid)) !my_exported_ids
+        my_exported_ids := add (string_of_id (ident_of_lid lid)) !my_exported_ids
       | None -> () (* current module was not prepared? should not happen *)
       in
       let is_iface = env.iface && not env.admitted_iface in
@@ -1102,9 +1104,9 @@ let push_include env ns =
           let update_exports (k: exported_id_kind) =
             let ns_ex = ! (ns_trans_exports k) in
             let ex = cur_exports k in
-            let () = ex := Set.diff (!ex) ns_ex in
+            let () = ex := diff (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
-            let () = trans_ex := Set.union (!trans_ex) ns_ex in
+            let () = trans_ex := union (!trans_ex) ns_ex in
             ()
           in
           List.iter update_exports all_exported_id_kinds
@@ -1193,7 +1195,7 @@ let finish env modul =
       let update_exports eikind =
         let cur_ex_set = ! (cur_ex eikind) in
         let cur_trans_ex_set_ref = cur_trans_ex eikind in
-        cur_trans_ex_set_ref := Set.union cur_ex_set (!cur_trans_ex_set_ref)
+        cur_trans_ex_set_ref := union cur_ex_set (!cur_trans_ex_set_ref)
        in
        List.iter update_exports all_exported_id_kinds
     | _ -> ()
@@ -1255,12 +1257,12 @@ let finish_module_or_interface env modul =
   finish env modul, modul
 
 type exported_ids = {
-    exported_id_terms:list string;
-    exported_id_fields:list string
+    exported_id_terms : string_set;
+    exported_id_fields: string_set;
 }
 let as_exported_ids (e:exported_id_set) =
-    let terms  = Set.elems (!(e Exported_id_term_type)) in
-    let fields = Set.elems (!(e Exported_id_field)) in
+    let terms  = (!(e Exported_id_term_type)) in
+    let fields = (!(e Exported_id_field)) in
     {exported_id_terms=terms;
      exported_id_fields=fields}
 
@@ -1269,9 +1271,9 @@ let as_exported_id_set (e:option exported_ids) =
     | None -> exported_id_set_new ()
     | Some e ->
       let terms =
-          BU.mk_ref (Set.from_list e.exported_id_terms) in
+          BU.mk_ref (e.exported_id_terms) in
       let fields =
-          BU.mk_ref (Set.from_list e.exported_id_fields) in
+          BU.mk_ref (e.exported_id_fields) in
       function
         | Exported_id_term_type -> terms
         | Exported_id_field -> fields

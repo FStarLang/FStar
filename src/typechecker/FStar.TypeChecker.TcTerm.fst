@@ -36,6 +36,7 @@ open FStar.Compiler.Dyn
 open FStar.TypeChecker.Rel
 
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
@@ -93,7 +94,7 @@ let check_no_escape (head_opt : option term)
     let rec aux try_norm t =
       let t = if try_norm then norm env t else t in
       let fvs' = Free.names t in
-      match List.tryFind (fun x -> Set.mem x fvs') fvs with
+      match List.tryFind (fun x -> mem x fvs') fvs with
       | None -> t, Env.trivial_guard
       | Some x ->
         (* some variable x seems to escape, try normalizing if we haven't *)
@@ -387,14 +388,14 @@ let print_expected_ty env = BU.print1 "%s\n" (print_expected_ty_str env)
 
 (* andlist: whether we're inside an SMTPatOr and we should take the
  * intersection of the sub-variables instead of the union. *)
-let rec get_pat_vars' all (andlist : bool) (pats:term) : Set.t bv =
+let rec get_pat_vars' all (andlist : bool) (pats:term) : FlatSet.t bv =
   let pats = unmeta pats in
   let head, args = head_and_args pats in
   match (un_uinst head).n, args with
   | Tm_fvar fv, _ when fv_eq_lid fv Const.nil_lid ->
       if andlist
-      then Set.from_list all
-      else Set.empty ()
+      then from_list all
+      else empty ()
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (hd, None); (tl, None)] when fv_eq_lid fv Const.cons_lid ->
       (* The head is not under the scope of the SMTPatOr, consider
@@ -404,8 +405,8 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) : Set.t bv =
       let tlvs = get_pat_vars' all andlist tl in
 
       if andlist
-      then Set.inter hdvs tlvs
-      else Set.union hdvs tlvs
+      then inter hdvs tlvs
+      else union hdvs tlvs
 
   | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); (pat, None)] when fv_eq_lid fv Const.smtpat_lid ->
       Free.names pat
@@ -413,13 +414,13 @@ let rec get_pat_vars' all (andlist : bool) (pats:term) : Set.t bv =
   | Tm_fvar fv, [(subpats, None)] when fv_eq_lid fv Const.smtpatOr_lid ->
       get_pat_vars' all true subpats
 
-  | _ -> Set.empty ()
+  | _ -> empty ()
 
 let get_pat_vars all pats = get_pat_vars' all false pats
 
 let check_pat_fvs rng env pats bs =
     let pat_vars = get_pat_vars (List.map (fun b -> b.binder_bv) bs) (N.normalize [Env.Beta] env pats) in
-    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not(Set.mem b pat_vars)) with
+    begin match bs |> BU.find_opt (fun ({binder_bv=b}) -> not (mem b pat_vars)) with
         | None -> ()
         | Some ({binder_bv=x}) ->
           Errors.log_issue rng
@@ -2441,7 +2442,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     let n_args = List.length args in
     let r = Env.get_range env in
     let thead = U.comp_result chead in
-    if debug env Options.High then BU.print2 "(%s) Type of head is %s\n" (Range.string_of_range head.pos) (Print.term_to_string thead);
+    if debug env Options.High then
+      BU.print3 "(%s) Type of head is %s\nArgs = %s\n" (show head.pos) (show thead) (show args);
 
     (* given |- head : chead | ghead
            where head is a computation returning a function of type (bs0@bs -> cres)
@@ -2462,7 +2464,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     let monadic_application
       (head, chead, ghead, cres)                        (* the head of the application, its lcomp chead, and guard ghead, returning a bs -> cres *)
       subst                                             (* substituting actuals for formals seen so far, when actual is pure *)
-      (arg_comps_rev:list (arg * option bv * lcomp))  (* type-checked actual arguments, so far; in reverse order *)
+      (arg_comps_rev:list (arg * option bv * lcomp))    (* type-checked actual arguments, so far; in reverse order *)
       arg_rets_rev                                      (* The results of each argument at the logic level, in reverse order *)
       guard                                             (* conjoined guard formula for all the actuals *)
       fvs                                               (* unsubstituted formals, to check that they do not occur free elsewhere in the type of f *)
@@ -2672,7 +2674,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                    if warn_effectful_args then
                      Errors.log_issue e.pos (Errors.Warning_EffectfulArgumentToErasedFunction,
                                              (format3 "Effectful argument %s (%s) to erased function %s, consider let binding it"
-                                                      (Print.term_to_string e) (string_of_lid c.eff_name) (Print.term_to_string head)));
+                                                        (show e) (show c.eff_name) (show head)));
                    if Env.debug env Options.Extreme then
                        BU.print_string "... lifting!\n";
                    let x = S.new_bv None c.res_typ in
@@ -2707,7 +2709,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
       // let comp, g = comp, guard in
       let comp, g = TcUtil.strengthen_precondition None env app comp guard in
       if Env.debug env Options.Extreme then BU.print2 "(d) Monadic app: type of app\n\t(%s)\n\t: %s\n"
-        (Print.term_to_string app)
+        (show app)
         (TcComm.lcomp_to_string comp);
       app, comp, g
     in
@@ -2816,11 +2818,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let x = {x with sort=targ} in
             if debug env Options.Extreme
             then BU.print5 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
-                           (Print.bv_to_string x)
-                           (Print.term_to_string x.sort)
-                           (Print.term_to_string e)
-                           (Print.subst_to_string subst)
-                           (Print.term_to_string targ);
+                             (show x) (show x.sort) (show e) (show subst) (show targ);
             let targ, g_ex = check_no_escape (Some head) env fvs targ in
             let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if debug env Options.High
@@ -4149,14 +4147,14 @@ and check_inner_let_rec env top =
           let cres =
             if cres.eff_name |> Env.norm_eff_name env
                              |> Env.is_layered_effect env
-            then let bvss = Set.from_list bvs in
+            then let bvss = from_list bvs in
                  TcComm.apply_lcomp
                    (fun c ->
                     if (c |> U.comp_effect_args
                           |> List.existsb (fun (t, _) ->
                               t |> Free.names
-                                |> Set.inter bvss
-                                |> Set.is_empty
+                                |> inter bvss
+                                |> is_empty
                                 |> not))
                     then raise_error (Errors.Fatal_EscapedBoundVar,
                            "One of the inner let recs escapes in the \

@@ -2444,7 +2444,7 @@ type search_candidate =
       FStar_Compiler_Effect.ref
     ;
   sc_fvars:
-    FStar_Ident.lid FStar_Compiler_Set.t FStar_Pervasives_Native.option
+    FStar_Ident.lid FStar_Compiler_RBSet.t FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref
     }
 let (__proj__Mksearch_candidate__item__sc_lid :
@@ -2460,7 +2460,7 @@ let (__proj__Mksearch_candidate__item__sc_typ :
     match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_typ
 let (__proj__Mksearch_candidate__item__sc_fvars :
   search_candidate ->
-    FStar_Ident.lid FStar_Compiler_Set.t FStar_Pervasives_Native.option
+    FStar_Ident.lid FStar_Compiler_RBSet.t FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref)
   =
   fun projectee ->
@@ -2490,7 +2490,7 @@ let (sc_typ :
            typ)
 let (sc_fvars :
   FStar_TypeChecker_Env.env ->
-    search_candidate -> FStar_Ident.lident FStar_Compiler_Set.set)
+    search_candidate -> FStar_Ident.lident FStar_Compiler_RBSet.t)
   =
   fun tcenv ->
     fun sc ->
@@ -2539,7 +2539,6 @@ let run_search :
   fun st ->
     fun search_str ->
       let tcenv = st.FStar_Interactive_Ide_Types.repl_env in
-      let empty_fv_set = FStar_Syntax_Syntax.new_fv_set () in
       let st_matches candidate term =
         let found =
           match term.st_term with
@@ -2548,7 +2547,10 @@ let run_search :
               FStar_Compiler_Util.contains uu___ str
           | TypeContainsLid lid ->
               let uu___ = sc_fvars tcenv candidate in
-              FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_fv lid uu___ in
+              FStar_Class_Setlike.mem ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Syntax_Syntax.ord_fv)) lid (Obj.magic uu___) in
         found <> term.st_negate in
       let parse search_str1 =
         let parse_one term =

@@ -1999,7 +1999,7 @@ and (resugar_bv_as_pat' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.bv ->
       FStar_Parser_AST.arg_qualifier FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.bv FStar_Compiler_Set.set ->
+        FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t ->
           FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
             FStar_Pervasives_Native.option -> FStar_Parser_AST.pattern)
   =
@@ -2012,7 +2012,10 @@ and (resugar_bv_as_pat' :
               let uu___ = FStar_Syntax_Syntax.range_of_bv v in
               FStar_Parser_AST.mk_pattern a uu___ in
             let used =
-              FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv v body_bv in
+              FStar_Class_Setlike.mem ()
+                (Obj.magic
+                   (FStar_Compiler_FlatSet.setlike_flat_set
+                      FStar_Syntax_Syntax.ord_bv)) v (Obj.magic body_bv) in
             let pat =
               let uu___ =
                 if used
@@ -2047,7 +2050,7 @@ and (resugar_bv_as_pat :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.bv ->
       FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
-        FStar_Syntax_Syntax.bv FStar_Compiler_Set.set ->
+        FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t ->
           FStar_Parser_AST.pattern FStar_Pervasives_Native.option)
   =
   fun env ->
@@ -2065,7 +2068,8 @@ and (resugar_bv_as_pat :
 and (resugar_pat' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.pat ->
-      FStar_Syntax_Syntax.bv FStar_Compiler_Set.t -> FStar_Parser_AST.pattern)
+      FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t ->
+        FStar_Parser_AST.pattern)
   =
   fun env ->
     fun p ->
@@ -2088,8 +2092,11 @@ and (resugar_pat' :
                         let might_be_used =
                           match pattern.FStar_Syntax_Syntax.v with
                           | FStar_Syntax_Syntax.Pat_var bv ->
-                              FStar_Compiler_Set.mem
-                                FStar_Syntax_Syntax.ord_bv bv branch_bv
+                              FStar_Class_Setlike.mem ()
+                                (Obj.magic
+                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                      FStar_Syntax_Syntax.ord_bv)) bv
+                                (Obj.magic branch_bv)
                           | uu___2 -> true in
                         is_implicit && might_be_used) args in
              Prims.op_Negation uu___) in
@@ -3088,7 +3095,8 @@ let (resugar_comp : FStar_Syntax_Syntax.comp -> FStar_Parser_AST.term) =
   fun c -> let uu___ = noenv resugar_comp' in uu___ c
 let (resugar_pat :
   FStar_Syntax_Syntax.pat ->
-    FStar_Syntax_Syntax.bv FStar_Compiler_Set.t -> FStar_Parser_AST.pattern)
+    FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t ->
+      FStar_Parser_AST.pattern)
   =
   fun p ->
     fun branch_bv -> let uu___ = noenv resugar_pat' in uu___ p branch_bv

@@ -96,7 +96,7 @@ let (uu___is_Record_or_dc : scope_mod -> Prims.bool) =
     match projectee with | Record_or_dc _0 -> true | uu___ -> false
 let (__proj__Record_or_dc__item___0 : scope_mod -> record_or_dc) =
   fun projectee -> match projectee with | Record_or_dc _0 -> _0
-type string_set = Prims.string FStar_Compiler_Set.t
+type string_set = Prims.string FStar_Compiler_RBSet.t
 type exported_id_kind =
   | Exported_id_term_type 
   | Exported_id_field 
@@ -400,7 +400,10 @@ let (transitive_exported_ids :
           let uu___1 =
             let uu___2 = exported_id_set1 Exported_id_term_type in
             FStar_Compiler_Effect.op_Bang uu___2 in
-          FStar_Compiler_Set.elems FStar_Class_Ord.ord_string uu___1
+          FStar_Class_Setlike.elems ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic uu___1)
 let (opens_and_abbrevs :
   env ->
     (FStar_Syntax_Syntax.open_module_or_namespace,
@@ -784,8 +787,11 @@ let find_in_module_with_includes :
                           let mexports =
                             let uu___2 = mex eikind in
                             FStar_Compiler_Effect.op_Bang uu___2 in
-                          FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
-                            idstr mexports in
+                          FStar_Class_Setlike.mem ()
+                            (Obj.magic
+                               (FStar_Compiler_RBSet.setlike_rbset
+                                  FStar_Class_Ord.ord_string)) idstr
+                            (Obj.magic mexports) in
                     let mincludes =
                       let uu___1 =
                         FStar_Compiler_Util.smap_try_find env1.includes mname in
@@ -2185,9 +2191,15 @@ let (extract_record :
                                                            let uu___31 =
                                                              FStar_Compiler_Effect.op_Bang
                                                                my_exported_ids in
-                                                           FStar_Compiler_Set.add
-                                                             FStar_Class_Ord.ord_string
-                                                             uu___30 uu___31 in
+                                                           Obj.magic
+                                                             (FStar_Class_Setlike.add
+                                                                ()
+                                                                (Obj.magic
+                                                                   (FStar_Compiler_RBSet.setlike_rbset
+                                                                    FStar_Class_Ord.ord_string))
+                                                                uu___30
+                                                                (Obj.magic
+                                                                   uu___31)) in
                                                          FStar_Compiler_Effect.op_Colon_Equals
                                                            my_exported_ids
                                                            uu___29);
@@ -2208,10 +2220,17 @@ let (extract_record :
                                                                let uu___31 =
                                                                  FStar_Compiler_Effect.op_Bang
                                                                    my_exported_ids in
-                                                               FStar_Compiler_Set.add
-                                                                 FStar_Class_Ord.ord_string
-                                                                 projname
-                                                                 uu___31 in
+                                                               Obj.magic
+                                                                 (FStar_Class_Setlike.add
+                                                                    ()
+                                                                    (
+                                                                    Obj.magic
+                                                                    (FStar_Compiler_RBSet.setlike_rbset
+                                                                    FStar_Class_Ord.ord_string))
+                                                                    projname
+                                                                    (
+                                                                    Obj.magic
+                                                                    uu___31)) in
                                                              FStar_Compiler_Effect.op_Colon_Equals
                                                                my_exported_ids
                                                                uu___30))
@@ -2322,16 +2341,17 @@ let (try_lookup_dc_by_field_name :
             (uu___2, (r.is_record)) in
           FStar_Pervasives_Native.Some uu___1
       | uu___1 -> FStar_Pervasives_Native.None
-let (string_set_ref_new :
-  unit -> Prims.string FStar_Compiler_Set.t FStar_Compiler_Effect.ref) =
+let (string_set_ref_new : unit -> string_set FStar_Compiler_Effect.ref) =
   fun uu___ ->
-    let uu___1 = FStar_Compiler_Set.empty FStar_Class_Ord.ord_string () in
+    let uu___1 =
+      Obj.magic
+        (FStar_Class_Setlike.empty ()
+           (Obj.magic
+              (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+           ()) in
     FStar_Compiler_Util.mk_ref uu___1
 let (exported_id_set_new :
-  unit ->
-    exported_id_kind ->
-      Prims.string FStar_Compiler_Set.t FStar_Compiler_Effect.ref)
-  =
+  unit -> exported_id_kind -> string_set FStar_Compiler_Effect.ref) =
   fun uu___ ->
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -2590,9 +2610,12 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
                                         let uu___8 =
                                           FStar_Compiler_Effect.op_Bang
                                             my_exported_ids in
-                                        FStar_Compiler_Set.add
-                                          FStar_Class_Ord.ord_string uu___7
-                                          uu___8 in
+                                        Obj.magic
+                                          (FStar_Class_Setlike.add ()
+                                             (Obj.magic
+                                                (FStar_Compiler_RBSet.setlike_rbset
+                                                   FStar_Class_Ord.ord_string))
+                                             uu___7 (Obj.magic uu___8)) in
                                       FStar_Compiler_Effect.op_Colon_Equals
                                         my_exported_ids uu___6
                                   | FStar_Pervasives_Native.None -> ());
@@ -2724,8 +2747,12 @@ let (push_include : env -> FStar_Ident.lident -> env) =
                               (let uu___7 =
                                  let uu___8 =
                                    FStar_Compiler_Effect.op_Bang ex in
-                                 FStar_Compiler_Set.diff
-                                   FStar_Class_Ord.ord_string uu___8 ns_ex in
+                                 Obj.magic
+                                   (FStar_Class_Setlike.diff ()
+                                      (Obj.magic
+                                         (FStar_Compiler_RBSet.setlike_rbset
+                                            FStar_Class_Ord.ord_string))
+                                      (Obj.magic uu___8) (Obj.magic ns_ex)) in
                                FStar_Compiler_Effect.op_Colon_Equals ex
                                  uu___7);
                               (match () with
@@ -2734,9 +2761,13 @@ let (push_include : env -> FStar_Ident.lident -> env) =
                                    let uu___8 =
                                      let uu___9 =
                                        FStar_Compiler_Effect.op_Bang trans_ex in
-                                     FStar_Compiler_Set.union
-                                       FStar_Class_Ord.ord_string uu___9
-                                       ns_ex in
+                                     Obj.magic
+                                       (FStar_Class_Setlike.union ()
+                                          (Obj.magic
+                                             (FStar_Compiler_RBSet.setlike_rbset
+                                                FStar_Class_Ord.ord_string))
+                                          (Obj.magic uu___9)
+                                          (Obj.magic ns_ex)) in
                                    FStar_Compiler_Effect.op_Colon_Equals
                                      trans_ex uu___8) in
                             FStar_Compiler_List.iter update_exports
@@ -3032,8 +3063,12 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
               let uu___3 =
                 let uu___4 =
                   FStar_Compiler_Effect.op_Bang cur_trans_ex_set_ref in
-                FStar_Compiler_Set.union FStar_Class_Ord.ord_string
-                  cur_ex_set uu___4 in
+                Obj.magic
+                  (FStar_Class_Setlike.union ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Class_Ord.ord_string))
+                     (Obj.magic cur_ex_set) (Obj.magic uu___4)) in
               FStar_Compiler_Effect.op_Colon_Equals cur_trans_ex_set_ref
                 uu___3 in
             FStar_Compiler_List.iter update_exports all_exported_id_kinds
@@ -3169,50 +3204,36 @@ let (finish_module_or_interface :
       let uu___ = finish env1 modul1 in (uu___, modul1)
 type exported_ids =
   {
-  exported_id_terms: Prims.string Prims.list ;
-  exported_id_fields: Prims.string Prims.list }
+  exported_id_terms: string_set ;
+  exported_id_fields: string_set }
 let (__proj__Mkexported_ids__item__exported_id_terms :
-  exported_ids -> Prims.string Prims.list) =
+  exported_ids -> string_set) =
   fun projectee ->
     match projectee with
     | { exported_id_terms; exported_id_fields;_} -> exported_id_terms
 let (__proj__Mkexported_ids__item__exported_id_fields :
-  exported_ids -> Prims.string Prims.list) =
+  exported_ids -> string_set) =
   fun projectee ->
     match projectee with
     | { exported_id_terms; exported_id_fields;_} -> exported_id_fields
 let (as_exported_ids : exported_id_set -> exported_ids) =
   fun e ->
     let terms =
-      let uu___ =
-        let uu___1 = e Exported_id_term_type in
-        FStar_Compiler_Effect.op_Bang uu___1 in
-      FStar_Compiler_Set.elems FStar_Class_Ord.ord_string uu___ in
+      let uu___ = e Exported_id_term_type in
+      FStar_Compiler_Effect.op_Bang uu___ in
     let fields =
-      let uu___ =
-        let uu___1 = e Exported_id_field in
-        FStar_Compiler_Effect.op_Bang uu___1 in
-      FStar_Compiler_Set.elems FStar_Class_Ord.ord_string uu___ in
+      let uu___ = e Exported_id_field in FStar_Compiler_Effect.op_Bang uu___ in
     { exported_id_terms = terms; exported_id_fields = fields }
 let (as_exported_id_set :
   exported_ids FStar_Pervasives_Native.option ->
-    exported_id_kind ->
-      Prims.string FStar_Compiler_Set.t FStar_Compiler_Effect.ref)
+    exported_id_kind -> string_set FStar_Compiler_Effect.ref)
   =
   fun e ->
     match e with
     | FStar_Pervasives_Native.None -> exported_id_set_new ()
     | FStar_Pervasives_Native.Some e1 ->
-        let terms =
-          let uu___ =
-            FStar_Compiler_Set.from_list FStar_Class_Ord.ord_string
-              e1.exported_id_terms in
-          FStar_Compiler_Util.mk_ref uu___ in
-        let fields =
-          let uu___ =
-            FStar_Compiler_Set.from_list FStar_Class_Ord.ord_string
-              e1.exported_id_fields in
-          FStar_Compiler_Util.mk_ref uu___ in
+        let terms = FStar_Compiler_Util.mk_ref e1.exported_id_terms in
+        let fields = FStar_Compiler_Util.mk_ref e1.exported_id_fields in
         (fun uu___ ->
            match uu___ with
            | Exported_id_term_type -> terms

@@ -107,7 +107,10 @@ let (check_uvars :
       let uvs = FStar_Syntax_Free.uvars t in
       let uu___ =
         let uu___1 =
-          FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar uvs in
+          FStar_Class_Setlike.is_empty ()
+            (Obj.magic
+               (FStar_Compiler_FlatSet.setlike_flat_set
+                  FStar_Syntax_Free.ord_ctx_uvar)) (Obj.magic uvs) in
         Prims.op_Negation uu___1 in
       if uu___
       then
@@ -118,7 +121,7 @@ let (check_uvars :
             let uu___6 =
               let uu___7 =
                 FStar_Class_Show.show
-                  (FStar_Compiler_Set.showable_set
+                  (FStar_Compiler_FlatSet.showable_set
                      FStar_Syntax_Free.ord_ctx_uvar
                      FStar_Syntax_Print.showable_ctxu) uvs in
               let uu___8 =
@@ -5168,8 +5171,11 @@ let rec (check_erased :
                                     let uu___11 =
                                       let uu___12 =
                                         FStar_Syntax_Free.names br_body in
-                                      FStar_Compiler_Set.elems
-                                        FStar_Syntax_Syntax.ord_bv uu___12 in
+                                      FStar_Class_Setlike.elems ()
+                                        (Obj.magic
+                                           (FStar_Compiler_FlatSet.setlike_flat_set
+                                              FStar_Syntax_Syntax.ord_bv))
+                                        (Obj.magic uu___12) in
                                     FStar_TypeChecker_Env.push_bvs env
                                       uu___11 in
                                   check_erased uu___10 br_body in
@@ -6460,14 +6466,18 @@ let (maybe_instantiate :
           ((let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
             if uu___2
             then
-              let uu___3 = FStar_Syntax_Print.term_to_string e in
-              let uu___4 = FStar_Syntax_Print.term_to_string t in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
+              let uu___4 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
               let uu___5 =
                 let uu___6 = FStar_TypeChecker_Env.expected_typ env in
-                match uu___6 with
-                | FStar_Pervasives_Native.None -> "None"
-                | FStar_Pervasives_Native.Some (t1, uu___7) ->
-                    FStar_Syntax_Print.term_to_string t1 in
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_option
+                     (FStar_Class_Show.show_tuple2
+                        FStar_Syntax_Print.showable_term
+                        (FStar_Class_Show.printableshow
+                           FStar_Class_Printable.printable_bool))) uu___6 in
               FStar_Compiler_Util.print3
                 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
                 uu___3 uu___4 uu___5
@@ -6599,7 +6609,8 @@ let (maybe_instantiate :
                                   if uu___9
                                   then
                                     let uu___10 =
-                                      FStar_Syntax_Print.term_to_string v in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term v in
                                     FStar_Compiler_Util.print1
                                       "maybe_instantiate: Instantiating implicit with %s\n"
                                       uu___10
@@ -6660,7 +6671,8 @@ let (maybe_instantiate :
                                   if uu___8
                                   then
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string v in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term v in
                                     FStar_Compiler_Util.print1
                                       "maybe_instantiate: Instantiating meta argument with %s\n"
                                       uu___9

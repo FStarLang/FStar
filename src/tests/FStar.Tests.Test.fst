@@ -42,6 +42,7 @@ let main argv =
           Pars.parse_incremental_decls();
           Norm.run_all ();
           if Unif.run_all () then () else exit 1;
+          Data.run_all ();
           exit 0
     with 
       | Error(err, msg, r, _ctx) when not <| O.trace_error() ->

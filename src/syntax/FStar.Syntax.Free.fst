@@ -22,7 +22,6 @@ open FStar.Compiler.List
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Compiler.Set
 open FStar.Syntax
 open FStar.Syntax.Syntax
 module Util = FStar.Compiler.Util
@@ -30,6 +29,7 @@ module UF = FStar.Syntax.Unionfind
 
 open FStar.Class.Ord
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 let compare_uv uv1 uv2 = UF.uvar_id uv1.ctx_uvar_head - UF.uvar_id uv2.ctx_uvar_head
 let compare_universe_uvar x y = UF.univ_uvar_id x - UF.univ_uvar_id y
@@ -62,7 +62,9 @@ type use_cache_t =
   | NoCache
   | Full
 
-type free_vars_and_fvars = free_vars * set Ident.lident
+(* We use an RBSet for the fvars, as order definitely does not matter here
+and it's faster. *)
+type free_vars_and_fvars = free_vars * RBSet.t Ident.lident
 
 (* Snoc without duplicates *)
 val snoc : #a:Type -> {| deq a |} -> list a -> a -> list a
@@ -76,16 +78,16 @@ let rec snoc xx y =
 val (@@) : #a:Type -> {| deq a |} -> list a -> list a -> list a
 let (@@) xs ys = List.fold_left (fun xs y -> snoc xs y) xs ys
 
-let no_free_vars = {
+let no_free_vars : free_vars_and_fvars = {
     free_names=[];
     free_uvars=[];
     free_univs=[];
     free_univ_names=[];
-}, new_fv_set ()
+}, empty ()
 
-let singleton_fvar fv =
+let singleton_fvar fv : free_vars_and_fvars =
     fst no_free_vars,
-    Set.add fv.fv_name.v (new_fv_set ())
+    add fv.fv_name.v (empty ())
 
 let singleton_bv x   = {fst no_free_vars with free_names=[x]}, snd no_free_vars
 let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
@@ -98,7 +100,7 @@ let union (f1 : free_vars_and_fvars) (f2 : free_vars_and_fvars) = {
     free_univs=(fst f1).free_univs @@ (fst f2).free_univs;
     free_univ_names=(fst f1).free_univ_names @@ (fst f2).free_univ_names; //THE ORDER HERE IS IMPORTANT!
     //We expect the free_univ_names list to be in fifo order to get the right order of universe generalization
-}, Set.union (snd f1) (snd f2)
+}, union (snd f1) (snd f2)
 
 let rec free_univs u = match Subst.compress_univ u with
   | U_zero
@@ -233,14 +235,14 @@ and free_names_and_uvars_ascription asc use_cache =
 and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
   match !t.vars with
-  | Some n when not (should_invalidate_cache n use_cache) -> n, new_fv_set ()
+  | Some n when not (should_invalidate_cache n use_cache) -> n, empty ()
   | _ ->
       t.vars := None;
       let n = free_names_and_uvs' t use_cache in
       if use_cache <> Full then t.vars := Some (fst n);
       n
 
-and free_names_and_uvars_args args (acc:free_vars * set Ident.lident) use_cache =
+and free_names_and_uvars_args args (acc : free_vars_and_fvars) use_cache =
         args |> List.fold_left (fun n (x, _) -> union n (free_names_and_uvars x use_cache)) acc
 
 and free_names_and_uvars_comp c use_cache =
@@ -248,7 +250,7 @@ and free_names_and_uvars_comp c use_cache =
         | Some n ->
           if should_invalidate_cache n use_cache
           then (c.vars := None; free_names_and_uvars_comp c use_cache)
-          else n, new_fv_set ()
+          else n, empty ()
         | _ ->
          let n = match c.n with
             | GTotal t
@@ -294,20 +296,17 @@ and should_invalidate_cache n use_cache =
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
-let new_uv_set () : uvars = Set.empty ()
-let new_universe_uvar_set () : set universe_uvar = Set.empty ()
-let empty = Set.empty ()
 
-let names t = Set.from_list (fst (free_names_and_uvars t Def)).free_names
-let uvars t = Set.from_list (fst (free_names_and_uvars t Def)).free_uvars
-let univs t = Set.from_list (fst (free_names_and_uvars t Def)).free_univs
+let names t = from_list (fst (free_names_and_uvars t Def)).free_names
+let uvars t = from_list (fst (free_names_and_uvars t Def)).free_uvars
+let univs t = from_list (fst (free_names_and_uvars t Def)).free_univs
 
-let univnames t = Set.from_list (fst (free_names_and_uvars t Def)).free_univ_names
-let univnames_comp c = Set.from_list (fst (free_names_and_uvars_comp c Def)).free_univ_names
+let univnames t = from_list (fst (free_names_and_uvars t Def)).free_univ_names
+let univnames_comp c = from_list (fst (free_names_and_uvars_comp c Def)).free_univ_names
 
 let fvars t = snd (free_names_and_uvars t NoCache)
 let names_of_binders (bs:binders) =
-  Set.from_list ((fst (free_names_and_uvars_binders bs Def)).free_names)
+  from_list ((fst (free_names_and_uvars_binders bs Def)).free_names)
 
-let uvars_uncached t = Set.from_list (fst (free_names_and_uvars t NoCache)).free_uvars
-let uvars_full t = Set.from_list (fst (free_names_and_uvars t Full)).free_uvars
+let uvars_uncached t = from_list (fst (free_names_and_uvars t NoCache)).free_uvars
+let uvars_full t = from_list (fst (free_names_and_uvars t Full)).free_uvars

@@ -264,8 +264,11 @@ let (check_no_escape :
                      let uu___2 =
                        FStar_Compiler_List.tryFind
                          (fun x ->
-                            FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
-                              x fvs') fvs in
+                            FStar_Class_Setlike.mem ()
+                              (Obj.magic
+                                 (FStar_Compiler_FlatSet.setlike_flat_set
+                                    FStar_Syntax_Syntax.ord_bv)) x
+                              (Obj.magic fvs')) fvs in
                      match uu___2 with
                      | FStar_Pervasives_Native.None ->
                          (t1, FStar_TypeChecker_Env.trivial_guard)
@@ -872,65 +875,95 @@ let (print_expected_ty : FStar_TypeChecker_Env.env -> unit) =
 let rec (get_pat_vars' :
   FStar_Syntax_Syntax.bv Prims.list ->
     Prims.bool ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   =
-  fun all ->
-    fun andlist ->
-      fun pats ->
-        let pats1 = FStar_Syntax_Util.unmeta pats in
-        let uu___ = FStar_Syntax_Util.head_and_args pats1 in
-        match uu___ with
-        | (head, args) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Util.un_uinst head in
-                uu___3.FStar_Syntax_Syntax.n in
-              (uu___2, args) in
-            (match uu___1 with
-             | (FStar_Syntax_Syntax.Tm_fvar fv, uu___2) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.nil_lid
-                 ->
-                 if andlist
-                 then
-                   FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv
-                     all
-                 else FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (uu___2, FStar_Pervasives_Native.Some
-                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                   FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
-                (hd, FStar_Pervasives_Native.None)::(tl,
-                                                     FStar_Pervasives_Native.None)::[])
-                 when
-                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
-                 ->
-                 let hdvs = get_pat_vars' all false hd in
-                 let tlvs = get_pat_vars' all andlist tl in
-                 if andlist
-                 then
-                   FStar_Compiler_Set.inter FStar_Syntax_Syntax.ord_bv hdvs
-                     tlvs
-                 else
-                   FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv hdvs
-                     tlvs
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (uu___2, FStar_Pervasives_Native.Some
-                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                   FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
-                (pat, FStar_Pervasives_Native.None)::[]) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.smtpat_lid
-                 -> FStar_Syntax_Free.names pat
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (subpats, FStar_Pervasives_Native.None)::[]) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.smtpatOr_lid
-                 -> get_pat_vars' all true subpats
-             | uu___2 ->
-                 FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ())
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun all ->
+           fun andlist ->
+             fun pats ->
+               let pats1 = FStar_Syntax_Util.unmeta pats in
+               let uu___ = FStar_Syntax_Util.head_and_args pats1 in
+               match uu___ with
+               | (head, args) ->
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 = FStar_Syntax_Util.un_uinst head in
+                       uu___3.FStar_Syntax_Syntax.n in
+                     (uu___2, args) in
+                   (match uu___1 with
+                    | (FStar_Syntax_Syntax.Tm_fvar fv, uu___2) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.nil_lid
+                        ->
+                        Obj.magic
+                          (Obj.repr
+                             (if andlist
+                              then
+                                FStar_Class_Setlike.from_list ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv)) all
+                              else
+                                FStar_Class_Setlike.empty ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv)) ()))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (uu___2, FStar_Pervasives_Native.Some
+                        { FStar_Syntax_Syntax.aqual_implicit = true;
+                          FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
+                       (hd, FStar_Pervasives_Native.None)::(tl,
+                                                            FStar_Pervasives_Native.None)::[])
+                        when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.cons_lid
+                        ->
+                        Obj.magic
+                          (Obj.repr
+                             (let hdvs = get_pat_vars' all false hd in
+                              let tlvs = get_pat_vars' all andlist tl in
+                              if andlist
+                              then
+                                FStar_Class_Setlike.inter ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv))
+                                  (Obj.magic hdvs) (Obj.magic tlvs)
+                              else
+                                FStar_Class_Setlike.union ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv))
+                                  (Obj.magic hdvs) (Obj.magic tlvs)))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (uu___2, FStar_Pervasives_Native.Some
+                        { FStar_Syntax_Syntax.aqual_implicit = true;
+                          FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
+                       (pat, FStar_Pervasives_Native.None)::[]) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.smtpat_lid
+                        -> Obj.magic (Obj.repr (FStar_Syntax_Free.names pat))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (subpats, FStar_Pervasives_Native.None)::[]) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.smtpatOr_lid
+                        ->
+                        Obj.magic (Obj.repr (get_pat_vars' all true subpats))
+                    | uu___2 ->
+                        Obj.magic
+                          (Obj.repr
+                             (FStar_Class_Setlike.empty ()
+                                (Obj.magic
+                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                      FStar_Syntax_Syntax.ord_bv)) ()))))
+          uu___2 uu___1 uu___
 let (get_pat_vars :
   FStar_Syntax_Syntax.bv Prims.list ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   = fun all -> fun pats -> get_pat_vars' all false pats
 let (check_pat_fvs :
   FStar_Compiler_Range_Type.range ->
@@ -959,8 +992,11 @@ let (check_pat_fvs :
                      FStar_Syntax_Syntax.binder_positivity = uu___3;
                      FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
                      let uu___5 =
-                       FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv b
-                         pat_vars in
+                       FStar_Class_Setlike.mem ()
+                         (Obj.magic
+                            (FStar_Compiler_FlatSet.setlike_flat_set
+                               FStar_Syntax_Syntax.ord_bv)) b
+                         (Obj.magic pat_vars) in
                      Prims.op_Negation uu___5) bs in
           match uu___ with
           | FStar_Pervasives_Native.None -> ()
@@ -6661,11 +6697,17 @@ and (check_application_args :
                if uu___1
                then
                  let uu___2 =
-                   FStar_Compiler_Range_Ops.string_of_range
+                   FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range
                      head.FStar_Syntax_Syntax.pos in
-                 let uu___3 = FStar_Syntax_Print.term_to_string thead in
-                 FStar_Compiler_Util.print2 "(%s) Type of head is %s\n"
-                   uu___2 uu___3
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                     thead in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_args
+                     args in
+                 FStar_Compiler_Util.print3
+                   "(%s) Type of head is %s\nArgs = %s\n" uu___2 uu___3
+                   uu___4
                else ());
               (let monadic_application uu___1 subst arg_comps_rev
                  arg_rets_rev guard fvs bs =
@@ -7091,15 +7133,18 @@ and (check_application_args :
                                                                     =
                                                                     let uu___18
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     e in
                                                                     let uu___19
                                                                     =
-                                                                    FStar_Ident.string_of_lid
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_lident
                                                                     c.FStar_TypeChecker_Common.eff_name in
                                                                     let uu___20
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     head1 in
                                                                     FStar_Compiler_Util.format3
                                                                     "Effectful argument %s (%s) to erased function %s, consider let binding it"
@@ -7268,7 +7313,8 @@ and (check_application_args :
                                                       if uu___10
                                                       then
                                                         let uu___11 =
-                                                          FStar_Syntax_Print.term_to_string
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
                                                             app in
                                                         let uu___12 =
                                                           FStar_TypeChecker_Common.lcomp_to_string
@@ -7517,16 +7563,24 @@ and (check_application_args :
                                 FStar_Options.Extreme in
                             if uu___4
                             then
-                              let uu___5 = FStar_Syntax_Print.bv_to_string x1 in
+                              let uu___5 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_bv x1 in
                               let uu___6 =
-                                FStar_Syntax_Print.term_to_string
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term
                                   x1.FStar_Syntax_Syntax.sort in
                               let uu___7 =
-                                FStar_Syntax_Print.term_to_string e in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term e in
                               let uu___8 =
-                                FStar_Syntax_Print.subst_to_string subst in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.show_list
+                                     FStar_Syntax_Print.showable_subst_elt)
+                                  subst in
                               let uu___9 =
-                                FStar_Syntax_Print.term_to_string targ in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term targ in
                               FStar_Compiler_Util.print5
                                 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
                                 uu___5 uu___6 uu___7 uu___8 uu___9
@@ -11039,9 +11093,13 @@ and (check_inner_let_rec :
                                           if uu___6
                                           then
                                             let bvss =
-                                              FStar_Compiler_Set.from_list
-                                                FStar_Syntax_Syntax.ord_bv
-                                                bvs in
+                                              Obj.magic
+                                                (FStar_Class_Setlike.from_list
+                                                   ()
+                                                   (Obj.magic
+                                                      (FStar_Compiler_FlatSet.setlike_flat_set
+                                                         FStar_Syntax_Syntax.ord_bv))
+                                                   bvs) in
                                             FStar_TypeChecker_Common.apply_lcomp
                                               (fun c ->
                                                  let uu___7 =
@@ -11057,13 +11115,23 @@ and (check_inner_let_rec :
                                                                 let uu___13 =
                                                                   FStar_Syntax_Free.names
                                                                     t in
-                                                                FStar_Compiler_Set.inter
-                                                                  FStar_Syntax_Syntax.ord_bv
-                                                                  bvss
-                                                                  uu___13 in
-                                                              FStar_Compiler_Set.is_empty
-                                                                FStar_Syntax_Syntax.ord_bv
-                                                                uu___12 in
+                                                                Obj.magic
+                                                                  (FStar_Class_Setlike.inter
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    (FStar_Compiler_FlatSet.setlike_flat_set
+                                                                    FStar_Syntax_Syntax.ord_bv))
+                                                                    (Obj.magic
+                                                                    bvss)
+                                                                    (Obj.magic
+                                                                    uu___13)) in
+                                                              FStar_Class_Setlike.is_empty
+                                                                ()
+                                                                (Obj.magic
+                                                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                                                    FStar_Syntax_Syntax.ord_bv))
+                                                                (Obj.magic
+                                                                   uu___12) in
                                                             Prims.op_Negation
                                                               uu___11) uu___8 in
                                                  if uu___7

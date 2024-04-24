@@ -88,7 +88,10 @@ let (ty_occurs_in :
   fun ty_lid ->
     fun t ->
       let uu___ = FStar_Syntax_Free.fvars t in
-      FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_fv ty_lid uu___
+      FStar_Class_Setlike.mem ()
+        (Obj.magic
+           (FStar_Compiler_RBSet.setlike_rbset FStar_Syntax_Syntax.ord_fv))
+        ty_lid (Obj.magic uu___)
 let rec (term_as_fv_or_name :
   FStar_Syntax_Syntax.term ->
     ((FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universes),

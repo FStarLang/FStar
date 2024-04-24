@@ -1128,7 +1128,7 @@ type term = term' syntax
 type uvar =
   ((term' syntax FStar_Pervasives_Native.option * uvar_decoration)
     FStar_Unionfind.p_uvar * version * FStar_Compiler_Range_Type.range)
-type uvars = ctx_uvar FStar_Compiler_Set.t
+type uvars = ctx_uvar FStar_Compiler_FlatSet.t
 type comp = comp' syntax
 type ascription =
   ((term' syntax, comp' syntax) FStar_Pervasives.either * term' syntax
@@ -1149,7 +1149,7 @@ type args =
 type binders = binder Prims.list
 type lbname = (bv, fv) FStar_Pervasives.either
 type letbindings = (Prims.bool * letbinding Prims.list)
-type freenames = bv FStar_Compiler_Set.t
+type freenames = bv FStar_Compiler_FlatSet.t
 type attribute = term' syntax
 type tscheme = (univ_name Prims.list * term' syntax)
 type gamma = binding Prims.list
@@ -2278,6 +2278,8 @@ let (lookup_aq : bv -> antiquotations -> term) =
                     + (FStar_Pervasives_Native.fst aq))) ()
       with
       | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
+type path = Prims.string Prims.list
+type subst_t = subst_elt Prims.list
 let deq_instance_from_cmp :
   'uuuuu .
     ('uuuuu -> 'uuuuu -> FStar_Compiler_Order.order) ->
@@ -2360,24 +2362,11 @@ let mk_uvs :
   'uuuuu .
     unit -> 'uuuuu FStar_Pervasives_Native.option FStar_Compiler_Effect.ref
   = fun uu___ -> FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
-let (new_bv_set : unit -> bv FStar_Compiler_Set.t) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_bv ()
-let (new_id_set : unit -> FStar_Ident.ident FStar_Compiler_Set.t) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_ident ()
-let (new_fv_set : unit -> FStar_Ident.lident FStar_Compiler_Set.t) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_fv ()
-let (new_universe_names_set : unit -> univ_name FStar_Compiler_Set.t) =
-  fun uu___ -> FStar_Compiler_Set.empty ord_ident ()
-type path = Prims.string Prims.list
-type subst_t = subst_elt Prims.list
-let (no_names : freenames) = new_bv_set ()
-let (no_fvars : FStar_Ident.lident FStar_Compiler_Set.t) = new_fv_set ()
-let (no_universe_names : univ_name FStar_Compiler_Set.t) =
-  new_universe_names_set ()
-let (freenames_of_list : bv Prims.list -> freenames) =
-  fun l -> FStar_Compiler_Set.addn ord_bv l no_names
 let (list_of_freenames : freenames -> bv Prims.list) =
-  fun fvs -> FStar_Compiler_Set.elems ord_bv fvs
+  fun fvs ->
+    FStar_Class_Setlike.elems ()
+      (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_bv))
+      (Obj.magic fvs)
 let mk : 'a . 'a -> FStar_Compiler_Range_Type.range -> 'a syntax =
   fun t ->
     fun r ->
@@ -2582,14 +2571,29 @@ let (is_top_level : letbinding Prims.list -> Prims.bool) =
     | uu___1 -> false
 let (freenames_of_binders : binders -> freenames) =
   fun bs ->
+    let uu___ =
+      Obj.magic
+        (FStar_Class_Setlike.empty ()
+           (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_bv)) ()) in
     FStar_Compiler_List.fold_right
-      (fun b -> fun out -> FStar_Compiler_Set.add ord_bv b.binder_bv out) bs
-      no_names
+      (fun uu___2 ->
+         fun uu___1 ->
+           (fun b ->
+              fun out ->
+                Obj.magic
+                  (FStar_Class_Setlike.add ()
+                     (Obj.magic
+                        (FStar_Compiler_FlatSet.setlike_flat_set ord_bv))
+                     b.binder_bv (Obj.magic out))) uu___2 uu___1) bs uu___
 let (binders_of_list : bv Prims.list -> binders) =
   fun fvs -> FStar_Compiler_List.map (fun t -> mk_binder t) fvs
 let (binders_of_freenames : freenames -> binders) =
   fun fvs ->
-    let uu___ = FStar_Compiler_Set.elems ord_bv fvs in binders_of_list uu___
+    let uu___ =
+      FStar_Class_Setlike.elems ()
+        (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set ord_bv))
+        (Obj.magic fvs) in
+    binders_of_list uu___
 let (is_bqual_implicit : bqual -> Prims.bool) =
   fun uu___ ->
     match uu___ with

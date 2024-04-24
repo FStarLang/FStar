@@ -892,40 +892,70 @@ let rec (destruct_app_pattern :
             ((FStar_Pervasives.Inl id), args, FStar_Pervasives_Native.None)
         | uu___ -> FStar_Compiler_Effect.failwith "Not an app pattern"
 let rec (gather_pattern_bound_vars_maybe_top :
-  FStar_Ident.ident FStar_Compiler_Set.set ->
-    FStar_Parser_AST.pattern -> FStar_Ident.ident FStar_Compiler_Set.set)
+  FStar_Ident.ident FStar_Compiler_FlatSet.t ->
+    FStar_Parser_AST.pattern -> FStar_Ident.ident FStar_Compiler_FlatSet.t)
   =
-  fun acc ->
-    fun p ->
-      let gather_pattern_bound_vars_from_list =
-        FStar_Compiler_List.fold_left gather_pattern_bound_vars_maybe_top acc in
-      match p.FStar_Parser_AST.pat with
-      | FStar_Parser_AST.PatWild uu___ -> acc
-      | FStar_Parser_AST.PatConst uu___ -> acc
-      | FStar_Parser_AST.PatVQuote uu___ -> acc
-      | FStar_Parser_AST.PatName uu___ -> acc
-      | FStar_Parser_AST.PatOp uu___ -> acc
-      | FStar_Parser_AST.PatApp (phead, pats) ->
-          gather_pattern_bound_vars_from_list (phead :: pats)
-      | FStar_Parser_AST.PatTvar (x, uu___, uu___1) ->
-          FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_ident x acc
-      | FStar_Parser_AST.PatVar (x, uu___, uu___1) ->
-          FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_ident x acc
-      | FStar_Parser_AST.PatList pats ->
-          gather_pattern_bound_vars_from_list pats
-      | FStar_Parser_AST.PatTuple (pats, uu___) ->
-          gather_pattern_bound_vars_from_list pats
-      | FStar_Parser_AST.PatOr pats ->
-          gather_pattern_bound_vars_from_list pats
-      | FStar_Parser_AST.PatRecord guarded_pats ->
-          let uu___ =
-            FStar_Compiler_List.map FStar_Pervasives_Native.snd guarded_pats in
-          gather_pattern_bound_vars_from_list uu___
-      | FStar_Parser_AST.PatAscribed (pat, uu___) ->
-          gather_pattern_bound_vars_maybe_top acc pat
+  fun uu___1 ->
+    fun uu___ ->
+      (fun acc ->
+         fun p ->
+           let gather_pattern_bound_vars_from_list =
+             FStar_Compiler_List.fold_left
+               gather_pattern_bound_vars_maybe_top acc in
+           match p.FStar_Parser_AST.pat with
+           | FStar_Parser_AST.PatWild uu___ -> Obj.magic (Obj.repr acc)
+           | FStar_Parser_AST.PatConst uu___ -> Obj.magic (Obj.repr acc)
+           | FStar_Parser_AST.PatVQuote uu___ -> Obj.magic (Obj.repr acc)
+           | FStar_Parser_AST.PatName uu___ -> Obj.magic (Obj.repr acc)
+           | FStar_Parser_AST.PatOp uu___ -> Obj.magic (Obj.repr acc)
+           | FStar_Parser_AST.PatApp (phead, pats) ->
+               Obj.magic
+                 (Obj.repr
+                    (gather_pattern_bound_vars_from_list (phead :: pats)))
+           | FStar_Parser_AST.PatTvar (x, uu___, uu___1) ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Class_Setlike.add ()
+                       (Obj.magic
+                          (FStar_Compiler_FlatSet.setlike_flat_set
+                             FStar_Syntax_Syntax.ord_ident)) x
+                       (Obj.magic acc)))
+           | FStar_Parser_AST.PatVar (x, uu___, uu___1) ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Class_Setlike.add ()
+                       (Obj.magic
+                          (FStar_Compiler_FlatSet.setlike_flat_set
+                             FStar_Syntax_Syntax.ord_ident)) x
+                       (Obj.magic acc)))
+           | FStar_Parser_AST.PatList pats ->
+               Obj.magic
+                 (Obj.repr (gather_pattern_bound_vars_from_list pats))
+           | FStar_Parser_AST.PatTuple (pats, uu___) ->
+               Obj.magic
+                 (Obj.repr (gather_pattern_bound_vars_from_list pats))
+           | FStar_Parser_AST.PatOr pats ->
+               Obj.magic
+                 (Obj.repr (gather_pattern_bound_vars_from_list pats))
+           | FStar_Parser_AST.PatRecord guarded_pats ->
+               Obj.magic
+                 (Obj.repr
+                    (let uu___ =
+                       FStar_Compiler_List.map FStar_Pervasives_Native.snd
+                         guarded_pats in
+                     gather_pattern_bound_vars_from_list uu___))
+           | FStar_Parser_AST.PatAscribed (pat, uu___) ->
+               Obj.magic
+                 (Obj.repr (gather_pattern_bound_vars_maybe_top acc pat)))
+        uu___1 uu___
 let (gather_pattern_bound_vars :
-  FStar_Parser_AST.pattern -> FStar_Ident.ident FStar_Compiler_Set.set) =
-  let acc = FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_ident () in
+  FStar_Parser_AST.pattern -> FStar_Ident.ident FStar_Compiler_FlatSet.t) =
+  let acc =
+    Obj.magic
+      (FStar_Class_Setlike.empty ()
+         (Obj.magic
+            (FStar_Compiler_FlatSet.setlike_flat_set
+               FStar_Syntax_Syntax.ord_ident)) ()) in
   fun p -> gather_pattern_bound_vars_maybe_top acc p
 type bnd =
   | LocalBinder of (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.bqual *
@@ -1073,19 +1103,31 @@ let rec (generalize_annotated_univs :
   fun s ->
     let vars = FStar_Compiler_Util.mk_ref [] in
     let seen =
-      let uu___ = FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_ident () in
+      let uu___ =
+        Obj.magic
+          (FStar_Class_Setlike.empty ()
+             (Obj.magic
+                (FStar_Compiler_RBSet.setlike_rbset
+                   FStar_Syntax_Syntax.ord_ident)) ()) in
       FStar_Compiler_Util.mk_ref uu___ in
     let reg u =
       let uu___ =
         let uu___1 =
           let uu___2 = FStar_Compiler_Effect.op_Bang seen in
-          FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_ident u uu___2 in
+          FStar_Class_Setlike.mem ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset
+                  FStar_Syntax_Syntax.ord_ident)) u (Obj.magic uu___2) in
         Prims.op_Negation uu___1 in
       if uu___
       then
         ((let uu___2 =
             let uu___3 = FStar_Compiler_Effect.op_Bang seen in
-            FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_ident u uu___3 in
+            Obj.magic
+              (FStar_Class_Setlike.add ()
+                 (Obj.magic
+                    (FStar_Compiler_RBSet.setlike_rbset
+                       FStar_Syntax_Syntax.ord_ident)) u (Obj.magic uu___3)) in
           FStar_Compiler_Effect.op_Colon_Equals seen uu___2);
          (let uu___2 =
             let uu___3 = FStar_Compiler_Effect.op_Bang vars in u :: uu___3 in
@@ -1370,7 +1412,10 @@ let rec (generalize_annotated_univs :
           | FStar_Syntax_Syntax.Layered_eff_sig (n, (uu___1, t)) ->
               let uvs =
                 let uu___2 = FStar_Syntax_Free.univnames t in
-                FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_ident uu___2 in
+                FStar_Class_Setlike.elems ()
+                  (Obj.magic
+                     (FStar_Compiler_FlatSet.setlike_flat_set
+                        FStar_Syntax_Syntax.ord_ident)) (Obj.magic uu___2) in
               let usubst = FStar_Syntax_Subst.univ_var_closing uvs in
               let uu___2 =
                 let uu___3 =
@@ -1381,7 +1426,10 @@ let rec (generalize_annotated_univs :
           | FStar_Syntax_Syntax.WP_eff_sig (uu___1, t) ->
               let uvs =
                 let uu___2 = FStar_Syntax_Free.univnames t in
-                FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_ident uu___2 in
+                FStar_Class_Setlike.elems ()
+                  (Obj.magic
+                     (FStar_Compiler_FlatSet.setlike_flat_set
+                        FStar_Syntax_Syntax.ord_ident)) (Obj.magic uu___2) in
               let usubst = FStar_Syntax_Subst.univ_var_closing uvs in
               let uu___2 =
                 let uu___3 = FStar_Syntax_Subst.subst usubst t in
@@ -1603,56 +1651,103 @@ let (check_linear_pattern_variables :
   =
   fun pats ->
     fun r ->
-      let rec pat_vars p =
-        match p.FStar_Syntax_Syntax.v with
-        | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
-            FStar_Syntax_Syntax.no_names
-        | FStar_Syntax_Syntax.Pat_constant uu___ ->
-            FStar_Syntax_Syntax.no_names
-        | FStar_Syntax_Syntax.Pat_var x ->
-            let uu___ =
-              let uu___1 =
-                FStar_Ident.string_of_id x.FStar_Syntax_Syntax.ppname in
-              uu___1 = FStar_Ident.reserved_prefix in
-            if uu___
-            then FStar_Syntax_Syntax.no_names
-            else
-              FStar_Compiler_Set.add FStar_Syntax_Syntax.ord_bv x
-                FStar_Syntax_Syntax.no_names
-        | FStar_Syntax_Syntax.Pat_cons (uu___, uu___1, pats1) ->
-            let aux out uu___2 =
-              match uu___2 with
-              | (p1, uu___3) ->
-                  let p_vars = pat_vars p1 in
-                  let intersection =
-                    FStar_Compiler_Set.inter FStar_Syntax_Syntax.ord_bv
-                      p_vars out in
-                  let uu___4 =
-                    FStar_Compiler_Set.is_empty FStar_Syntax_Syntax.ord_bv
-                      intersection in
-                  if uu___4
-                  then
-                    FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv out
-                      p_vars
-                  else
-                    (let duplicate_bv =
-                       let uu___6 =
-                         FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv
-                           intersection in
-                       FStar_Compiler_List.hd uu___6 in
-                     let uu___6 =
-                       let uu___7 =
-                         let uu___8 =
-                           FStar_Ident.string_of_id
-                             duplicate_bv.FStar_Syntax_Syntax.ppname in
-                         FStar_Compiler_Util.format1
-                           "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
-                           uu___8 in
-                       (FStar_Errors_Codes.Fatal_NonLinearPatternNotPermitted,
-                         uu___7) in
-                     FStar_Errors.raise_error uu___6 r) in
-            FStar_Compiler_List.fold_left aux FStar_Syntax_Syntax.no_names
-              pats1 in
+      let rec pat_vars uu___ =
+        (fun p ->
+           match p.FStar_Syntax_Syntax.v with
+           | FStar_Syntax_Syntax.Pat_dot_term uu___ ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Class_Setlike.empty ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Syntax_Syntax.ord_bv)) ()))
+           | FStar_Syntax_Syntax.Pat_constant uu___ ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Class_Setlike.empty ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Syntax_Syntax.ord_bv)) ()))
+           | FStar_Syntax_Syntax.Pat_var x ->
+               Obj.magic
+                 (Obj.repr
+                    (let uu___ =
+                       let uu___1 =
+                         FStar_Ident.string_of_id
+                           x.FStar_Syntax_Syntax.ppname in
+                       uu___1 = FStar_Ident.reserved_prefix in
+                     if uu___
+                     then
+                       FStar_Class_Setlike.empty ()
+                         (Obj.magic
+                            (FStar_Compiler_RBSet.setlike_rbset
+                               FStar_Syntax_Syntax.ord_bv)) ()
+                     else
+                       FStar_Class_Setlike.singleton ()
+                         (Obj.magic
+                            (FStar_Compiler_RBSet.setlike_rbset
+                               FStar_Syntax_Syntax.ord_bv)) x))
+           | FStar_Syntax_Syntax.Pat_cons (uu___, uu___1, pats1) ->
+               Obj.magic
+                 (Obj.repr
+                    (let aux uu___3 uu___2 =
+                       (fun out ->
+                          fun uu___2 ->
+                            match uu___2 with
+                            | (p1, uu___3) ->
+                                let p_vars = pat_vars p1 in
+                                let intersection =
+                                  Obj.magic
+                                    (FStar_Class_Setlike.inter ()
+                                       (Obj.magic
+                                          (FStar_Compiler_RBSet.setlike_rbset
+                                             FStar_Syntax_Syntax.ord_bv))
+                                       (Obj.magic p_vars) (Obj.magic out)) in
+                                let uu___4 =
+                                  FStar_Class_Setlike.is_empty ()
+                                    (Obj.magic
+                                       (FStar_Compiler_RBSet.setlike_rbset
+                                          FStar_Syntax_Syntax.ord_bv))
+                                    (Obj.magic intersection) in
+                                if uu___4
+                                then
+                                  Obj.magic
+                                    (Obj.repr
+                                       (FStar_Class_Setlike.union ()
+                                          (Obj.magic
+                                             (FStar_Compiler_RBSet.setlike_rbset
+                                                FStar_Syntax_Syntax.ord_bv))
+                                          (Obj.magic out) (Obj.magic p_vars)))
+                                else
+                                  Obj.magic
+                                    (Obj.repr
+                                       (let duplicate_bv =
+                                          let uu___6 =
+                                            FStar_Class_Setlike.elems ()
+                                              (Obj.magic
+                                                 (FStar_Compiler_RBSet.setlike_rbset
+                                                    FStar_Syntax_Syntax.ord_bv))
+                                              (Obj.magic intersection) in
+                                          FStar_Compiler_List.hd uu___6 in
+                                        let uu___6 =
+                                          let uu___7 =
+                                            let uu___8 =
+                                              FStar_Ident.string_of_id
+                                                duplicate_bv.FStar_Syntax_Syntax.ppname in
+                                            FStar_Compiler_Util.format1
+                                              "Non-linear patterns are not permitted: `%s` appears more than once in this pattern."
+                                              uu___8 in
+                                          (FStar_Errors_Codes.Fatal_NonLinearPatternNotPermitted,
+                                            uu___7) in
+                                        FStar_Errors.raise_error uu___6 r)))
+                         uu___3 uu___2 in
+                     let uu___2 =
+                       Obj.magic
+                         (FStar_Class_Setlike.empty ()
+                            (Obj.magic
+                               (FStar_Compiler_RBSet.setlike_rbset
+                                  FStar_Syntax_Syntax.ord_bv)) ()) in
+                     FStar_Compiler_List.fold_left aux uu___2 pats1))) uu___ in
       match pats with
       | [] -> ()
       | p::[] -> let uu___ = pat_vars p in ()
@@ -1661,24 +1756,47 @@ let (check_linear_pattern_variables :
           let aux p1 =
             let uu___ =
               let uu___1 = pat_vars p1 in
-              FStar_Compiler_Set.equal FStar_Syntax_Syntax.ord_bv pvars
-                uu___1 in
+              FStar_Class_Setlike.equal ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Syntax_Syntax.ord_bv)) (Obj.magic pvars)
+                (Obj.magic uu___1) in
             if uu___
             then ()
             else
-              (let symdiff s1 s2 =
-                 let uu___2 =
-                   FStar_Compiler_Set.diff FStar_Syntax_Syntax.ord_bv s1 s2 in
-                 let uu___3 =
-                   FStar_Compiler_Set.diff FStar_Syntax_Syntax.ord_bv s2 s1 in
-                 FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv uu___2
-                   uu___3 in
+              (let symdiff uu___3 uu___2 =
+                 (fun s1 ->
+                    fun s2 ->
+                      let uu___2 =
+                        Obj.magic
+                          (FStar_Class_Setlike.diff ()
+                             (Obj.magic
+                                (FStar_Compiler_RBSet.setlike_rbset
+                                   FStar_Syntax_Syntax.ord_bv))
+                             (Obj.magic s1) (Obj.magic s2)) in
+                      let uu___3 =
+                        Obj.magic
+                          (FStar_Class_Setlike.diff ()
+                             (Obj.magic
+                                (FStar_Compiler_RBSet.setlike_rbset
+                                   FStar_Syntax_Syntax.ord_bv))
+                             (Obj.magic s2) (Obj.magic s1)) in
+                      Obj.magic
+                        (FStar_Class_Setlike.union ()
+                           (Obj.magic
+                              (FStar_Compiler_RBSet.setlike_rbset
+                                 FStar_Syntax_Syntax.ord_bv))
+                           (Obj.magic uu___2) (Obj.magic uu___3))) uu___3
+                   uu___2 in
                let nonlinear_vars =
                  let uu___2 = pat_vars p1 in symdiff pvars uu___2 in
                let first_nonlinear_var =
                  let uu___2 =
-                   FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv
-                     nonlinear_vars in
+                   FStar_Class_Setlike.elems ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Syntax_Syntax.ord_bv))
+                     (Obj.magic nonlinear_vars) in
                  FStar_Compiler_List.hd uu___2 in
                let uu___2 =
                  let uu___3 =
@@ -3072,25 +3190,43 @@ and (desugar_term_maybe_top :
                 | [] -> FStar_Pervasives_Native.None
                 | set::sets2 ->
                     let i =
-                      FStar_Compiler_Set.inter FStar_Syntax_Syntax.ord_ident
-                        acc set in
+                      Obj.magic
+                        (FStar_Class_Setlike.inter ()
+                           (Obj.magic
+                              (FStar_Compiler_FlatSet.setlike_flat_set
+                                 FStar_Syntax_Syntax.ord_ident))
+                           (Obj.magic acc) (Obj.magic set)) in
                     let uu___1 =
-                      FStar_Compiler_Set.is_empty
-                        FStar_Syntax_Syntax.ord_ident i in
+                      FStar_Class_Setlike.is_empty ()
+                        (Obj.magic
+                           (FStar_Compiler_FlatSet.setlike_flat_set
+                              FStar_Syntax_Syntax.ord_ident)) (Obj.magic i) in
                     if uu___1
                     then
                       let uu___2 =
-                        FStar_Compiler_Set.union
-                          FStar_Syntax_Syntax.ord_ident acc set in
+                        Obj.magic
+                          (FStar_Class_Setlike.union ()
+                             (Obj.magic
+                                (FStar_Compiler_FlatSet.setlike_flat_set
+                                   FStar_Syntax_Syntax.ord_ident))
+                             (Obj.magic acc) (Obj.magic set)) in
                       aux uu___2 sets2
                     else
                       (let uu___3 =
                          let uu___4 =
-                           FStar_Compiler_Set.elems
-                             FStar_Syntax_Syntax.ord_ident i in
+                           FStar_Class_Setlike.elems ()
+                             (Obj.magic
+                                (FStar_Compiler_FlatSet.setlike_flat_set
+                                   FStar_Syntax_Syntax.ord_ident))
+                             (Obj.magic i) in
                          FStar_Compiler_List.hd uu___4 in
                        FStar_Pervasives_Native.Some uu___3) in
-              let uu___1 = FStar_Syntax_Syntax.new_id_set () in
+              let uu___1 =
+                Obj.magic
+                  (FStar_Class_Setlike.empty ()
+                     (Obj.magic
+                        (FStar_Compiler_FlatSet.setlike_flat_set
+                           FStar_Syntax_Syntax.ord_ident)) ()) in
               aux uu___1 sets in
             ((let uu___2 = check_disjoint bvss in
               match uu___2 with
@@ -3098,14 +3234,28 @@ and (desugar_term_maybe_top :
               | FStar_Pervasives_Native.Some id ->
                   let uu___3 =
                     let uu___4 =
-                      let uu___5 = FStar_Ident.string_of_id id in
-                      FStar_Compiler_Util.format1
-                        "Non-linear patterns are not permitted: `%s` appears more than once in this function definition."
-                        uu___5 in
+                      let uu___5 =
+                        FStar_Errors_Msg.text
+                          "Non-linear patterns are not permitted." in
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 = FStar_Errors_Msg.text "The variable " in
+                          let uu___9 =
+                            let uu___10 =
+                              let uu___11 =
+                                FStar_Class_PP.pp FStar_Ident.pretty_ident id in
+                              FStar_Pprint.squotes uu___11 in
+                            let uu___11 =
+                              FStar_Errors_Msg.text
+                                " appears more than once in this function definition." in
+                            FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                          FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                        [uu___7] in
+                      uu___5 :: uu___6 in
                     (FStar_Errors_Codes.Fatal_NonLinearPatternNotPermitted,
                       uu___4) in
                   let uu___4 = FStar_Ident.range_of_id id in
-                  FStar_Errors.raise_error uu___3 uu___4);
+                  FStar_Errors.raise_error_doc uu___3 uu___4);
              (let binders1 =
                 FStar_Compiler_List.map replace_unit_pattern binders in
               let uu___2 =
@@ -4415,8 +4565,10 @@ and (desugar_term_maybe_top :
                  ((let fvs = FStar_Syntax_Free.names tm1 in
                    let uu___3 =
                      let uu___4 =
-                       FStar_Compiler_Set.is_empty FStar_Syntax_Syntax.ord_bv
-                         fvs in
+                       FStar_Class_Setlike.is_empty ()
+                         (Obj.magic
+                            (FStar_Compiler_FlatSet.setlike_flat_set
+                               FStar_Syntax_Syntax.ord_bv)) (Obj.magic fvs) in
                      Prims.op_Negation uu___4 in
                    if uu___3
                    then
@@ -4424,7 +4576,7 @@ and (desugar_term_maybe_top :
                        let uu___5 =
                          let uu___6 =
                            FStar_Class_Show.show
-                             (FStar_Compiler_Set.showable_set
+                             (FStar_Compiler_FlatSet.showable_set
                                 FStar_Syntax_Syntax.ord_bv
                                 FStar_Syntax_Print.showable_bv) fvs in
                          FStar_Compiler_Util.format1
@@ -9608,8 +9760,11 @@ and (desugar_decl_core :
                            FStar_Pervasives_Native.None in
                    let bvs =
                      let uu___2 = gather_pattern_bound_vars pat in
-                     FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_ident
-                       uu___2 in
+                     FStar_Class_Setlike.elems ()
+                       (Obj.magic
+                          (FStar_Compiler_FlatSet.setlike_flat_set
+                             FStar_Syntax_Syntax.ord_ident))
+                       (Obj.magic uu___2) in
                    let uu___2 =
                      (FStar_Compiler_List.isEmpty bvs) &&
                        (let uu___3 = is_var_pattern pat in

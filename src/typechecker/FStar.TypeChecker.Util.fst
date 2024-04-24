@@ -47,6 +47,8 @@ module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 module UF = FStar.Syntax.Unionfind
 
+open FStar.Class.Setlike
+
 //Reporting errors
 let report env errs =
     Errors.log_issue (Env.get_range env)
@@ -80,7 +82,7 @@ let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t 
 
 let check_uvars r t =
   let uvs = Free.uvars t in
-  if not (Set.is_empty uvs) then begin
+  if not (is_empty uvs) then begin
     (* ignoring the hide_uvar_nums and print_implicits flags here *)
     Options.push();
     Options.set_option "hide_uvar_nums" (Options.Bool false);
@@ -2392,7 +2394,7 @@ let rec check_erased (env:Env.env) (t:term) : isErased =
             |> check_erased
                 (br_body
                  |> Free.names
-                 |> Set.elems // GGG: bad, order-depending
+                 |> elems // GGG: bad, order-depending
                  |> Env.push_bvs env) with
           | No -> No
           | _ -> Maybe) No
@@ -2828,10 +2830,7 @@ let maybe_instantiate (env:Env.env) e t =
   else begin
        if Env.debug env Options.High then
          BU.print3 "maybe_instantiate: starting check for (%s) of type (%s), expected type is %s\n"
-                 (Print.term_to_string e) (Print.term_to_string t)
-                 (match Env.expected_typ env with
-                  | None -> "None"
-                  | Some (t, _) -> Print.term_to_string t);
+                 (show e) (show t) (show (Env.expected_typ env));
        (* Similar to U.arrow_formals, but makes sure to unfold
         * recursively to catch all the binders across type
         * definitions. TODO: Move to library? Revise other uses
@@ -2885,8 +2884,7 @@ let maybe_instantiate (env:Env.env) e t =
                       let t = SS.subst subst x.sort in
                       let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
                       if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n"
-                                (Print.term_to_string v);
+                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n" (show v);
                       let subst = NT(x, v)::subst in
                       let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
@@ -2915,8 +2913,7 @@ let maybe_instantiate (env:Env.env) e t =
                                                              e.pos env t Strict
                                                              (Some meta_t) in
                       if Env.debug env Options.High then
-                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n"
-                                (Print.term_to_string v);
+                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n" (show v);
                       let subst = NT(x, v)::subst in
                       let aq = U.aqual_of_binder (List.hd bs) in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in

@@ -196,7 +196,7 @@ and uvar_decoration = {
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
-and uvars = Set.t ctx_uvar
+and uvars = FlatSet.t ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
 and ascription = either term comp * option term * bool        (* e <: t [by tac] or e <: C [by tac] *)
@@ -356,7 +356,7 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
-and freenames = Set.t bv
+and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
     pos:Range.range;
@@ -751,10 +751,6 @@ val lookup_aq : bv -> antiquotations -> term
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
-val new_bv_set: unit -> Set.t bv
-val new_id_set: unit -> Set.t ident
-val new_fv_set: unit -> Set.t lident
-val new_universe_names_set: unit -> Set.t univ_name
 
 val mod_name: modul -> lident
 
@@ -804,13 +800,7 @@ val teff:     term
 val is_teff:  term -> bool
 val is_type:  term -> bool
 
-val no_names:          freenames
-val no_universe_names: Set.t univ_name
-val no_fvars:          Set.t lident
-
-val freenames_of_list:    list bv -> freenames
 val freenames_of_binders: binders -> freenames
-val list_of_freenames:    freenames -> list bv
 val binders_of_freenames: freenames -> binders
 val binders_of_list:      list bv -> binders
 

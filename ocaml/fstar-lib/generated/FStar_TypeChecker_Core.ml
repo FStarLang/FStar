@@ -1338,8 +1338,11 @@ let (check_no_escape :
         FStar_Compiler_Util.for_all
           (fun b ->
              let uu___1 =
-               FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
-                 b.FStar_Syntax_Syntax.binder_bv xs in
+               FStar_Class_Setlike.mem ()
+                 (Obj.magic
+                    (FStar_Compiler_FlatSet.setlike_flat_set
+                       FStar_Syntax_Syntax.ord_bv))
+                 b.FStar_Syntax_Syntax.binder_bv (Obj.magic xs) in
              Prims.op_Negation uu___1) bs in
       if uu___
       then fun uu___1 -> Success ((), FStar_Pervasives_Native.None)
@@ -7851,8 +7854,11 @@ let (check_term_top_gh :
                            uu___7 uu___8 uu___9);
                         (let guard_names =
                            let uu___7 = FStar_Syntax_Free.names guard1 in
-                           FStar_Compiler_Set.elems
-                             FStar_Syntax_Syntax.ord_bv uu___7 in
+                           FStar_Class_Setlike.elems ()
+                             (Obj.magic
+                                (FStar_Compiler_FlatSet.setlike_flat_set
+                                   FStar_Syntax_Syntax.ord_bv))
+                             (Obj.magic uu___7) in
                          let uu___7 =
                            FStar_Compiler_List.tryFind
                              (fun bv ->
