@@ -345,11 +345,12 @@ val mk_expr_field (base:expr) (f:string) : expr
 val mk_expr_field_unnamed (base:expr) (i:int) : expr
 val mk_expr_struct (path:list string) (fields:list (string & expr)) : expr
 val mk_expr_tuple (l:list expr) : expr
-val mk_mem_replace (e:expr) (new_v:expr) : expr
+val mk_mem_replace (t:typ) (e:expr) (new_v:expr) : expr
 val mk_method_call (receiver:expr) (name:string) (args:list expr) : expr
 
 val mk_new_mutex (e:expr) : expr
 val mk_lock_mutex (e:expr) : expr
+val mk_unlock_mutex (e:expr) : expr
 
 val mk_local_stmt (name:option string) (t:option typ) (is_mut:bool) (init:expr) : stmt
 val mk_scalar_fn_arg (name:string) (is_mut:bool) (t:typ) : fn_arg

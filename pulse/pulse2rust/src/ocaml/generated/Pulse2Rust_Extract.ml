@@ -621,10 +621,13 @@ let rec (lb_init_and_def :
                   FStar_Extraction_ML_Syntax.loc = uu___5;_},
                 uu___6)
                ->
-               (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                uu___7 = "Pulse.Lib.Vec.alloc") ||
+               ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                 uu___7 = "Pulse.Lib.Vec.alloc") ||
+                  (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                   uu___7 = "Pulse.Lib.Box.alloc"))
+                 ||
                  (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                  uu___7 = "Pulse.Lib.Box.alloc")
+                  uu___7 = "Pulse.Lib.Mutex.lock")
            | uu___1 -> false in
          let uu___1 =
            let uu___2 =
@@ -758,17 +761,23 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::uu___5::[])
           when
-          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Box.op_Colon_Equals"))
+            ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Box.op_Colon_Equals")
+             uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
           let b = type_of g e11 in
-          if b
-          then Pulse2Rust_Rust_Syntax.mk_assign e11 e21
-          else Pulse2Rust_Rust_Syntax.mk_ref_assign e11 e21
+          let is_mutex_guard =
+            let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals" in
+          if is_mutex_guard || (Prims.op_Negation b)
+          then Pulse2Rust_Rust_Syntax.mk_ref_assign e11 e21
+          else Pulse2Rust_Rust_Syntax.mk_assign e11 e21
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -783,14 +792,22 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::uu___5::uu___6::[])
           when
-          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___7 = "Pulse.Lib.Reference.op_Bang") ||
+          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___7 = "Pulse.Lib.Reference.op_Bang") ||
+             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___7 = "Pulse.Lib.Box.op_Bang"))
+            ||
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Box.op_Bang")
+             uu___7 = "Pulse.Lib.Mutex.op_Bang")
           ->
           let e2 = extract_mlexpr g e1 in
           let b = type_of g e2 in
-          if b then e2 else Pulse2Rust_Rust_Syntax.mk_ref_read e2
+          let is_mutex_guard =
+            let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___7 = "Pulse.Lib.Mutex.op_Colon_Equals" in
+          if is_mutex_guard || (Prims.op_Negation b)
+          then Pulse2Rust_Rust_Syntax.mk_ref_read e2
+          else e2
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -911,24 +928,25 @@ and (extract_mlexpr :
                     FStar_Extraction_ML_Syntax.MLE_Name p;
                   FStar_Extraction_ML_Syntax.mlty = uu___;
                   FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___3;
-             FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e_v::e_i::e_x::uu___5)
+                a::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           e_v::e_i::e_x::uu___4)
           when
-          (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Vec.replace_i") ||
-            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Vec.replace_i_ref")
+          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___5 = "Pulse.Lib.Vec.replace_i") ||
+            (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.Vec.replace_i_ref")
           ->
           let e_v1 = extract_mlexpr g e_v in
           let e_i1 = extract_mlexpr g e_i in
           let e_x1 = extract_mlexpr g e_x in
           let is_mut = true in
+          let uu___5 = extract_mlty g a in
           let uu___6 =
             let uu___7 = Pulse2Rust_Rust_Syntax.mk_expr_index e_v1 e_i1 in
             Pulse2Rust_Rust_Syntax.mk_reference_expr is_mut uu___7 in
-          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___6 e_x1
+          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___5 uu___6 e_x1
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -938,16 +956,17 @@ and (extract_mlexpr :
                     FStar_Extraction_ML_Syntax.MLE_Name p;
                   FStar_Extraction_ML_Syntax.mlty = uu___;
                   FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                uu___2::[]);
-             FStar_Extraction_ML_Syntax.mlty = uu___3;
-             FStar_Extraction_ML_Syntax.loc = uu___4;_},
-           e_r::e_x::uu___5)
+                a::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           e_r::e_x::uu___4)
           when
-          let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___6 = "Pulse.Lib.Reference.replace" ->
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Reference.replace" ->
+          let uu___5 = extract_mlty g a in
           let uu___6 = extract_mlexpr g e_r in
           let uu___7 = extract_mlexpr g e_x in
-          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___6 uu___7
+          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___5 uu___6 uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -1067,6 +1086,47 @@ and (extract_mlexpr :
           uu___8 = "Pulse.Lib.Mutex.lock" ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::uu___6::uu___7::e1::uu___8)
+          when
+          let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___9 = "Pulse.Lib.Mutex.unlock" ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_unlock_mutex e2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                a::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___2;
+             FStar_Extraction_ML_Syntax.loc = uu___3;_},
+           e_mg::e_x::uu___4)
+          when
+          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___5 = "Pulse.Lib.Mutex.replace" ->
+          let is_mut = true in
+          let uu___5 = extract_mlty g a in
+          let uu___6 =
+            let uu___7 = extract_mlexpr g e_mg in
+            Pulse2Rust_Rust_Syntax.mk_reference_expr is_mut uu___7 in
+          let uu___7 = extract_mlexpr g e_x in
+          Pulse2Rust_Rust_Syntax.mk_mem_replace uu___5 uu___6 uu___7
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =
@@ -1356,69 +1416,27 @@ and (extract_mlexpr_to_stmts :
           -> extract_mlexpr_to_stmts g e1
       | FStar_Extraction_ML_Syntax.MLE_Let
           ((FStar_Extraction_ML_Syntax.NonRec, lb::[]), e1) ->
-          (match (lb.FStar_Extraction_ML_Syntax.mllb_def).FStar_Extraction_ML_Syntax.expr
-           with
-           | FStar_Extraction_ML_Syntax.MLE_App
-               ({
-                  FStar_Extraction_ML_Syntax.expr =
-                    FStar_Extraction_ML_Syntax.MLE_TApp
-                    ({
-                       FStar_Extraction_ML_Syntax.expr =
-                         FStar_Extraction_ML_Syntax.MLE_Name p;
-                       FStar_Extraction_ML_Syntax.mlty = uu___;
-                       FStar_Extraction_ML_Syntax.loc = uu___1;_},
-                     uu___2);
-                  FStar_Extraction_ML_Syntax.mlty = uu___3;
-                  FStar_Extraction_ML_Syntax.loc = uu___4;_},
-                uu___5)
-               when
-               (FStar_Extraction_ML_Syntax.mlpath_to_string p) =
-                 "Pulse.Lib.Mutex.unlock"
-               -> extract_mlexpr_to_stmts g e1
-           | uu___ ->
-               let uu___1 = lb_init_and_def g lb in
-               (match uu___1 with
-                | (is_mut, ty, init) ->
-                    let topt =
-                      match (lb.FStar_Extraction_ML_Syntax.mllb_def).FStar_Extraction_ML_Syntax.expr
-                      with
-                      | FStar_Extraction_ML_Syntax.MLE_App
-                          ({
-                             FStar_Extraction_ML_Syntax.expr =
-                               FStar_Extraction_ML_Syntax.MLE_TApp
-                               ({
-                                  FStar_Extraction_ML_Syntax.expr =
-                                    FStar_Extraction_ML_Syntax.MLE_Name p;
-                                  FStar_Extraction_ML_Syntax.mlty = uu___2;
-                                  FStar_Extraction_ML_Syntax.loc = uu___3;_},
-                                uu___4::[]);
-                             FStar_Extraction_ML_Syntax.mlty = uu___5;
-                             FStar_Extraction_ML_Syntax.loc = uu___6;_},
-                           uu___7::e2::uu___8)
-                          when
-                          let uu___9 =
-                            FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                          uu___9 = "Pulse.Lib.Mutex.lock" ->
-                          FStar_Pervasives_Native.Some ty
-                      | uu___2 -> FStar_Pervasives_Native.None in
-                    let s =
-                      let uu___2 =
-                        match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
-                        | FStar_Pervasives_Native.Some
-                            (uu___3, FStar_Extraction_ML_Syntax.MLTY_Erased)
-                            -> FStar_Pervasives_Native.None
-                        | uu___3 ->
-                            let uu___4 =
-                              varname lb.FStar_Extraction_ML_Syntax.mllb_name in
-                            FStar_Pervasives_Native.Some uu___4 in
-                      Pulse2Rust_Rust_Syntax.mk_local_stmt uu___2 topt is_mut
-                        init in
-                    let uu___2 =
-                      let uu___3 =
-                        Pulse2Rust_Env.push_local g
-                          lb.FStar_Extraction_ML_Syntax.mllb_name ty is_mut in
-                      extract_mlexpr_to_stmts uu___3 e1 in
-                    s :: uu___2))
+          let uu___ = lb_init_and_def g lb in
+          (match uu___ with
+           | (is_mut, ty, init) ->
+               let topt = FStar_Pervasives_Native.None in
+               let s =
+                 let uu___1 =
+                   match lb.FStar_Extraction_ML_Syntax.mllb_tysc with
+                   | FStar_Pervasives_Native.Some
+                       (uu___2, FStar_Extraction_ML_Syntax.MLTY_Erased) ->
+                       FStar_Pervasives_Native.None
+                   | uu___2 ->
+                       let uu___3 =
+                         varname lb.FStar_Extraction_ML_Syntax.mllb_name in
+                       FStar_Pervasives_Native.Some uu___3 in
+                 Pulse2Rust_Rust_Syntax.mk_local_stmt uu___1 topt is_mut init in
+               let uu___1 =
+                 let uu___2 =
+                   Pulse2Rust_Env.push_local g
+                     lb.FStar_Extraction_ML_Syntax.mllb_name ty is_mut in
+                 extract_mlexpr_to_stmts uu___2 e1 in
+               s :: uu___1)
       | FStar_Extraction_ML_Syntax.MLE_App
           ({
              FStar_Extraction_ML_Syntax.expr =

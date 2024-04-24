@@ -727,7 +727,24 @@ fn to_syn_path(s: &Vec<PathSegment>) -> syn::Path {
     s.iter().for_each(|s| {
         segs.push(syn::PathSegment {
             ident: Ident::new(&s.path_segment_name, Span::call_site()),
-            arguments: PathArguments::None,
+            arguments: if s.path_segment_generic_args.len() == 0 {
+                PathArguments::None
+            } else {
+                let mut args: Punctuated<syn::GenericArgument, Comma> = Punctuated::new();
+                s.path_segment_generic_args
+                    .iter()
+                    .for_each(|a| args.push(syn::GenericArgument::Type(to_syn_typ(a))));
+                PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
+                    colon2_token: None,
+                    lt_token: syn::token::Lt {
+                        spans: [Span::call_site()],
+                    },
+                    args,
+                    gt_token: syn::token::Gt {
+                        spans: [Span::call_site()],
+                    },
+                })
+            },
         })
     });
     Path {
@@ -2328,3 +2345,13 @@ ocaml_export! {
   //   z.to_string().to_owned().to_ocaml(cr)
   // }
 }
+
+// use std::sync::Mutex;
+
+// fn test(m: Mutex<i32>) -> Mutex<i32 {
+//     let mut data = m.lock().unwrap();
+//     *data = 5;
+//     let x = std::mem::replace::<i32>(&mut data, 6);
+//     let y = *data;
+//     drop(data);
+// }

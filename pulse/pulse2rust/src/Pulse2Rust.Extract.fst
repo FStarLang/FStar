@@ -418,7 +418,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       match lb.mllb_def.expr with
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
         S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ||
-        S.string_of_mlpath p = "Pulse.Lib.Box.alloc"
+        S.string_of_mlpath p = "Pulse.Lib.Box.alloc" ||
+        S.string_of_mlpath p = "Pulse.Lib.Mutex.lock"
       | _ -> false in
     is_mut,
     lb.mllb_tysc |> must |> snd |> extract_mlty g,
@@ -473,20 +474,25 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
-         S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
+         S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ||
+         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let b = type_of g e1 in
-    if b
-    then mk_assign e1 e2
-    else mk_ref_assign e1 e2
+    let is_mutex_guard = S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" in
+    if is_mutex_guard || not b
+    then mk_ref_assign e1 e2
+    else mk_assign e1 e2
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ||
-         S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
+         S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ||
+         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Bang" ->
     let e = extract_mlexpr g e in
     let b = type_of g e in
-    if b then e
-    else mk_ref_read e
+    let is_mutex_guard = S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" in
+    if is_mutex_guard || not b
+    then mk_ref_read e
+    else e
   
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.ref_apply" ->
@@ -528,7 +534,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e3 = extract_mlexpr g e3 in
     mk_assign (mk_expr_index e1 e2) e3
 
-  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_v::e_i::e_x::_)
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [a])}, e_v::e_i::e_x::_)
     when S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i" ||
          S.string_of_mlpath p = "Pulse.Lib.Vec.replace_i_ref" ->
 
@@ -536,12 +542,16 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let e_i = extract_mlexpr g e_i in
     let e_x = extract_mlexpr g e_x in
     let is_mut = true in
-    mk_mem_replace (mk_reference_expr is_mut (mk_expr_index e_v e_i)) e_x
+    mk_mem_replace (extract_mlty g a)
+                   (mk_reference_expr is_mut (mk_expr_index e_v e_i)) e_x
 
-  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, e_r::e_x::_)
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [a])}, e_r::e_x::_)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.replace" ->
-   
-    mk_mem_replace (extract_mlexpr g e_r) (extract_mlexpr g e_x)
+
+    mk_mem_replace (extract_mlty g a)
+                   (extract_mlexpr g e_r)
+                   (extract_mlexpr g e_x)
+
 
     //
     // vec_as_array e extracted to &mut e
@@ -580,6 +590,18 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
     let e = extract_mlexpr g e in
     mk_lock_mutex e
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::_::_::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.unlock" ->
+    let e = extract_mlexpr g e in
+    mk_unlock_mutex e
+  | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [a])}, e_mg::e_x::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.replace" ->
+
+    let is_mut = true in
+    mk_mem_replace (extract_mlty g a)
+                   (mk_reference_expr is_mut (extract_mlexpr g e_mg))
+                   (extract_mlexpr g e_x)
+
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2])
     when S.string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
@@ -681,17 +703,17 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     begin
       match lb.mllb_def.expr with
-      | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-        when S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
-        extract_mlexpr_to_stmts g e
+      // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
+      //   when S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
+      //   extract_mlexpr_to_stmts g e
       | _ ->
         let is_mut, ty, init = lb_init_and_def g lb in
-        let topt =
-          match lb.mllb_def.expr with
-          | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
-            when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
-            Some ty
-          | _ -> None in 
+        let topt = None in
+          // match lb.mllb_def.expr with
+          // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+          //   when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+          //   Some ty
+          // | _ -> None in 
         let s = mk_local_stmt
           (match lb.mllb_tysc with
            | Some (_, S.MLTY_Erased) -> None
@@ -701,7 +723,6 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
           init in
         s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
     end
-
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
     when S.string_of_mlpath p = "failwith" ->
