@@ -138,7 +138,13 @@ let (pat_to_string : FStar_Syntax_Syntax.pat -> Prims.string) =
     FStar_GenSym.with_frozen_gensym
       (fun uu___ ->
          let e =
-           FStar_Syntax_Resugar.resugar_pat p FStar_Syntax_Syntax.no_names in
+           let uu___1 =
+             Obj.magic
+               (FStar_Class_Setlike.empty ()
+                  (Obj.magic
+                     (FStar_Compiler_FlatSet.setlike_flat_set
+                        FStar_Syntax_Syntax.ord_bv)) ()) in
+           FStar_Syntax_Resugar.resugar_pat p uu___1 in
          let d = FStar_Parser_ToDocument.pat_to_document e in pp d)
 let (binder_to_string' :
   Prims.bool -> FStar_Syntax_Syntax.binder -> Prims.string) =

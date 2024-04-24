@@ -19,24 +19,20 @@ open Prims
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
-open FStar.Compiler.Set
+open FStar.Compiler.FlatSet
 open FStar.Syntax
 open FStar.Syntax.Syntax
 
-val new_uv_set : unit -> uvars
-val new_universe_uvar_set : unit -> set universe_uvar
+val names: term -> FlatSet.t bv
+val uvars: term -> FlatSet.t ctx_uvar
+val univs: term -> FlatSet.t universe_uvar
+val univnames: term -> FlatSet.t univ_name
+val univnames_comp: comp -> FlatSet.t univ_name
+val fvars: term -> RBSet.t Ident.lident
+val names_of_binders: binders -> FlatSet.t bv
 
-val empty: set bv
-val names: term -> set bv
-val uvars: term -> set ctx_uvar
-val univs: term -> set universe_uvar
-val univnames: term -> set univ_name
-val univnames_comp: comp -> set univ_name
-val fvars: term -> set Ident.lident
-val names_of_binders: binders -> set bv
-
-val uvars_uncached: term -> set ctx_uvar
-val uvars_full: term -> set ctx_uvar
+val uvars_uncached: term -> FlatSet.t ctx_uvar
+val uvars_full: term -> FlatSet.t ctx_uvar
 
 (* Bad place for these instances. But they cannot be instance
 Syntax.Syntax since they reference the UF graph. *)

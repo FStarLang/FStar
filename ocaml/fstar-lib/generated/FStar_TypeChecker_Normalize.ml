@@ -3651,9 +3651,15 @@ let rec (norm :
                             (fun env2 -> fun uu___5 -> dummy :: env2) env1
                             bs1 in
                         norm_comp cfg uu___4 c1 in
-                      let t2 =
-                        let uu___4 = norm_binders cfg env1 bs1 in
-                        FStar_Syntax_Util.arrow uu___4 c2 in
+                      let bs2 =
+                        if
+                          (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.hnf
+                        then
+                          let uu___4 = close_binders cfg env1 bs1 in
+                          FStar_Pervasives_Native.__proj__Mktuple2__item___1
+                            uu___4
+                        else norm_binders cfg env1 bs1 in
+                      let t2 = FStar_Syntax_Util.arrow bs2 c2 in
                       rebuild cfg env1 stack2 t2)
            | FStar_Syntax_Syntax.Tm_ascribed
                { FStar_Syntax_Syntax.tm = t11;
@@ -9627,7 +9633,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3790 : unit) =
+let (uu___3792 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

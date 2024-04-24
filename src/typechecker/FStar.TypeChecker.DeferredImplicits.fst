@@ -36,6 +36,8 @@ module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
 
+open FStar.Class.Setlike
+
 let is_flex t =
   let head, _args = U.head_and_args_full t in
   match (SS.compress head).n with
@@ -53,31 +55,6 @@ type goal_type =
   | FlexFlex of ctx_uvar * ctx_uvar
   | Can_be_split_into of term * term * ctx_uvar
   | Imp of ctx_uvar
-
-type goal_dep =
-  {
-    goal_dep_id    : int;             // Assign each goal an id, for cycle detection
-    goal_type      : goal_type;       // What sort of goal ...
-    goal_imp       : implicit;        // The entire implicit from which this was generated
-    assignees      : Set.t ctx_uvar;  // The set of uvars assigned by the goal
-    goal_dep_uvars : Set.t ctx_uvar;  // The set of uvars this goal depends on
-    dependences    : ref goal_deps;   // NB: mutable; the goals that must precede this one in the order
-    visited        : ref int          // NB: mutable; a field to mark visited goals during the sort
-  }
-and goal_deps = list goal_dep
-
-let print_uvar_set (s:Set.t ctx_uvar) =
-    (Set.elems s
-     |> List.map (fun u -> "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head))
-     |> String.concat "; ")
-
-let print_goal_dep gd =
-  BU.format4 "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n"
-    (BU.string_of_int gd.goal_dep_id)
-    (print_uvar_set gd.assignees)
-    (List.map (fun gd -> string_of_int gd.goal_dep_id) (!gd.dependences)
-     |> String.concat "; ")
-    (Print.ctx_uvar_to_string gd.goal_imp.imp_uvar)
 
 (*
   If [u] is tagged with attribute [a]

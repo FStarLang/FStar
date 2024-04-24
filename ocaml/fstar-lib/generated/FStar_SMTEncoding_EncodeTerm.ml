@@ -385,10 +385,17 @@ let check_pattern_vars :
             let pat_vars =
               let uu___ = FStar_Syntax_Free.names hd in
               FStar_Compiler_List.fold_left
-                (fun out ->
-                   fun x ->
-                     let uu___1 = FStar_Syntax_Free.names x in
-                     FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv out
+                (fun uu___2 ->
+                   fun uu___1 ->
+                     (fun out ->
+                        fun x ->
+                          let uu___1 = FStar_Syntax_Free.names x in
+                          Obj.magic
+                            (FStar_Class_Setlike.union ()
+                               (Obj.magic
+                                  (FStar_Compiler_FlatSet.setlike_flat_set
+                                     FStar_Syntax_Syntax.ord_bv))
+                               (Obj.magic out) (Obj.magic uu___1))) uu___2
                        uu___1) uu___ tl in
             let uu___ =
               FStar_Compiler_Util.find_opt
@@ -399,8 +406,11 @@ let check_pattern_vars :
                        FStar_Syntax_Syntax.binder_positivity = uu___3;
                        FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
                        let uu___5 =
-                         FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv b
-                           pat_vars in
+                         FStar_Class_Setlike.mem ()
+                           (Obj.magic
+                              (FStar_Compiler_FlatSet.setlike_flat_set
+                                 FStar_Syntax_Syntax.ord_bv)) b
+                           (Obj.magic pat_vars) in
                        Prims.op_Negation uu___5) vars in
             (match uu___ with
              | FStar_Pervasives_Native.None -> ()
@@ -1854,8 +1864,11 @@ and (encode_term :
                     let uu___5 =
                       let fvs =
                         let uu___6 = FStar_Syntax_Free.names t0 in
-                        FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv
-                          uu___6 in
+                        FStar_Class_Setlike.elems ()
+                          (Obj.magic
+                             (FStar_Compiler_FlatSet.setlike_flat_set
+                                FStar_Syntax_Syntax.ord_bv))
+                          (Obj.magic uu___6) in
                       let getfreeV t2 =
                         match t2.FStar_SMTEncoding_Term.tm with
                         | FStar_SMTEncoding_Term.FreeV fv -> fv
@@ -2650,8 +2663,11 @@ and (encode_term :
                    let uu___4 =
                      let fvs =
                        let uu___5 = FStar_Syntax_Free.names t0 in
-                       FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv
-                         uu___5 in
+                       FStar_Class_Setlike.elems ()
+                         (Obj.magic
+                            (FStar_Compiler_FlatSet.setlike_flat_set
+                               FStar_Syntax_Syntax.ord_bv))
+                         (Obj.magic uu___5) in
                      let tms =
                        FStar_Compiler_List.map
                          (FStar_SMTEncoding_Env.lookup_term_var env) fvs in

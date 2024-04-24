@@ -33,6 +33,8 @@ module N = FStar.TypeChecker.Normalize
 module L = FStar.Compiler.List
 module C = FStar.Parser.Const
 
+open FStar.Class.Setlike
+
 (**
 
   This module implements the strict positivity check on inductive type
@@ -184,7 +186,7 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
 let ty_occurs_in (ty_lid:lident)
                  (t:term)
   : bool
-  = Set.mem ty_lid (Free.fvars t)
+  = mem ty_lid (Free.fvars t)
 
 (* Checks if `t` is a name or fv and returns it, if so. *)
 let rec term_as_fv_or_name (t:term) 

@@ -36,7 +36,7 @@ type step =
   | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
-  | HNF             //Only produce a head normal form
+  | HNF             //Only produce a head normal form: Do not descend into function arguments or into binder types
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -405,8 +405,8 @@ val bound_vars   : env -> list bv
 val all_binders  : env -> binders
 val modules      : env -> list modul
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> Set.set universe_uvar
-val univnames    : env -> Set.set univ_name
+val univ_vars    : env -> FlatSet.t universe_uvar
+val univnames    : env -> FlatSet.t univ_name
 val lidents      : env -> list lident
 
 (* operations on monads *)
@@ -456,7 +456,7 @@ val set_proof_ns    : proof_namespace -> env -> env
 val string_of_proof_ns : env -> string
 
 (* Check that all free variables of the term are defined in the environment *)
-val unbound_vars    : env -> term -> Set.set bv
+val unbound_vars    : env -> term -> FlatSet.t bv
 val closed          : env -> term -> bool
 val closed'         : term -> bool
 

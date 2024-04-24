@@ -211,13 +211,6 @@ let (binders_of_tks :
                  (FStar_Pervasives_Native.Some (t.FStar_Syntax_Syntax.pos)) t in
              FStar_Syntax_Syntax.mk_binder_with_attrs uu___1 imp
                FStar_Pervasives_Native.None []) tks
-let (binders_of_freevars :
-  FStar_Syntax_Syntax.bv FStar_Compiler_Set.set ->
-    FStar_Syntax_Syntax.binder Prims.list)
-  =
-  fun fvs ->
-    let uu___ = FStar_Compiler_Set.elems FStar_Syntax_Syntax.ord_bv fvs in
-    FStar_Compiler_List.map FStar_Syntax_Syntax.mk_binder uu___
 let mk_subst : 'uuuuu . 'uuuuu -> 'uuuuu Prims.list = fun s -> [s]
 let (subst_of_list :
   FStar_Syntax_Syntax.binders ->
@@ -2006,26 +1999,47 @@ let (let_rec_arity :
                let d_bvs =
                  match d with
                  | FStar_Syntax_Syntax.Decreases_lex l ->
-                     let uu___2 =
-                       FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv () in
-                     FStar_Compiler_List.fold_left
-                       (fun s ->
-                          fun t ->
-                            let uu___3 = FStar_Syntax_Free.names t in
-                            FStar_Compiler_Set.union
-                              FStar_Syntax_Syntax.ord_bv s uu___3) uu___2 l
+                     Obj.magic
+                       (Obj.repr
+                          (let uu___2 =
+                             Obj.magic
+                               (FStar_Class_Setlike.empty ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv)) ()) in
+                           FStar_Compiler_List.fold_left
+                             (fun uu___4 ->
+                                fun uu___3 ->
+                                  (fun s ->
+                                     fun t ->
+                                       let uu___3 = FStar_Syntax_Free.names t in
+                                       Obj.magic
+                                         (FStar_Class_Setlike.union ()
+                                            (Obj.magic
+                                               (FStar_Compiler_FlatSet.setlike_flat_set
+                                                  FStar_Syntax_Syntax.ord_bv))
+                                            (Obj.magic s) (Obj.magic uu___3)))
+                                    uu___4 uu___3) uu___2 l))
                  | FStar_Syntax_Syntax.Decreases_wf (rel, e) ->
-                     let uu___2 = FStar_Syntax_Free.names rel in
-                     let uu___3 = FStar_Syntax_Free.names e in
-                     FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv
-                       uu___2 uu___3 in
+                     Obj.magic
+                       (Obj.repr
+                          (let uu___2 = FStar_Syntax_Free.names rel in
+                           let uu___3 = FStar_Syntax_Free.names e in
+                           FStar_Class_Setlike.union ()
+                             (Obj.magic
+                                (FStar_Compiler_FlatSet.setlike_flat_set
+                                   FStar_Syntax_Syntax.ord_bv))
+                             (Obj.magic uu___2) (Obj.magic uu___3))) in
                let uu___2 =
                  FStar_Common.tabulate n_univs (fun uu___3 -> false) in
                let uu___3 =
                  FStar_Compiler_List.map
                    (fun b ->
-                      FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
-                        b.FStar_Syntax_Syntax.binder_bv d_bvs) bs in
+                      FStar_Class_Setlike.mem ()
+                        (Obj.magic
+                           (FStar_Compiler_FlatSet.setlike_flat_set
+                              FStar_Syntax_Syntax.ord_bv))
+                        b.FStar_Syntax_Syntax.binder_bv (Obj.magic d_bvs)) bs in
                FStar_Compiler_List.op_At uu___2 uu___3) in
         ((n_univs + (FStar_Compiler_List.length bs)), uu___1)
 let (abs_formals_maybe_unascribe_body :
@@ -3041,8 +3055,12 @@ let (un_squash :
                              FStar_Compiler_Effect.failwith "impossible" in
                        let uu___3 =
                          let uu___4 = FStar_Syntax_Free.names p1 in
-                         FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
-                           b1.FStar_Syntax_Syntax.binder_bv uu___4 in
+                         FStar_Class_Setlike.mem ()
+                           (Obj.magic
+                              (FStar_Compiler_FlatSet.setlike_flat_set
+                                 FStar_Syntax_Syntax.ord_bv))
+                           b1.FStar_Syntax_Syntax.binder_bv
+                           (Obj.magic uu___4) in
                        if uu___3
                        then FStar_Pervasives_Native.None
                        else FStar_Pervasives_Native.Some p1)
@@ -3212,7 +3230,10 @@ let (is_free_in :
   fun bv ->
     fun t ->
       let uu___ = FStar_Syntax_Free.names t in
-      FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv bv uu___
+      FStar_Class_Setlike.mem ()
+        (Obj.magic
+           (FStar_Compiler_FlatSet.setlike_flat_set
+              FStar_Syntax_Syntax.ord_bv)) bv (Obj.magic uu___)
 let (action_as_lb :
   FStar_Ident.lident ->
     FStar_Syntax_Syntax.action ->

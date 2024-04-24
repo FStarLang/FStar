@@ -20,8 +20,10 @@ let (is_goal_safe_as_well_typed : FStar_Tactics_Types.goal -> Prims.bool) =
            match uu___1 with
            | FStar_Pervasives_Native.Some t ->
                let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar
-                 uu___2
+               FStar_Class_Setlike.is_empty ()
+                 (Obj.magic
+                    (FStar_Compiler_FlatSet.setlike_flat_set
+                       FStar_Syntax_Free.ord_ctx_uvar)) (Obj.magic uu___2)
            | uu___2 -> false) uu___ in
     all_deps_resolved
 let (register_goal : FStar_Tactics_Types.goal -> unit) =
