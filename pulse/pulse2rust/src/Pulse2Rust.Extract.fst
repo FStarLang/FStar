@@ -91,8 +91,6 @@ let type_of (g:env) (e:expr) : bool =  // is_mut
   
   | _ -> false
 
-  // | _ -> fail_nyi (format1 "type_of %s" (expr_to_string e))
-
 //
 // rust functions are uncurried
 //
@@ -702,26 +700,16 @@ and extract_mlexpr_to_stmts (g:env) (e:S.mlexpr) : list stmt =
 
   | S.MLE_Let ((S.NonRec, [lb]), e) ->
     begin
-      match lb.mllb_def.expr with
-      // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, _)
-      //   when S.mlpath_to_string p = "Pulse.Lib.Mutex.unlock" ->
-      //   extract_mlexpr_to_stmts g e
-      | _ ->
-        let is_mut, ty, init = lb_init_and_def g lb in
-        let topt = None in
-          // match lb.mllb_def.expr with
-          // | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
-          //   when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
-          //   Some ty
-          // | _ -> None in 
-        let s = mk_local_stmt
-          (match lb.mllb_tysc with
-           | Some (_, S.MLTY_Erased) -> None
-           | _ -> Some (varname lb.mllb_name))
-          topt
-          is_mut
-          init in
-        s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
+      let is_mut, ty, init = lb_init_and_def g lb in
+      let topt = None in
+      let s = mk_local_stmt
+        (match lb.mllb_tysc with
+         | Some (_, S.MLTY_Erased) -> None
+         | _ -> Some (varname lb.mllb_name))
+        topt
+        is_mut
+        init in
+      s::(extract_mlexpr_to_stmts (push_local g lb.mllb_name ty is_mut) e)
     end
 
   | S.MLE_App ({ expr=S.MLE_TApp ({ expr=S.MLE_Name p }, _) }, _)
