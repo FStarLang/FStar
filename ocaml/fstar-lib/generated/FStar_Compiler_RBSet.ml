@@ -60,8 +60,7 @@ let rec extract_min :
   fun uu___ ->
     fun t1 ->
       match t1 with
-      | N (uu___1, L, x, L) -> (L, x)
-      | N (c, N (uu___1, L, x, L), y, L) -> ((N (B, L, x, L)), y)
+      | N (uu___1, L, x, r) -> (r, x)
       | N (c, a1, x, b) ->
           let uu___1 = extract_min uu___ a1 in
           (match uu___1 with | (a', y) -> ((balance c a' x b), y))
