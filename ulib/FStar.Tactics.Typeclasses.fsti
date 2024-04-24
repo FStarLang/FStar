@@ -40,10 +40,8 @@ val no_method : unit
 run this tactics without having to know its definition in the .fst *)
 val tcresolve : unit -> Tac unit
 
-(* The metaprogram to generate class methods. Also a plugin. This
-is inserted automatically by the desugaring phase for any `class`
-declaration. *)
-val mk_class (nm:string) : Tac decls
+(* NB: The generation of methods for a class is implemented in
+FStar.Tactics.MkProjectors.fst *)
 
 (* Helper to solve an explicit argument by typeclass resolution *)
 [@@tcnorm]
