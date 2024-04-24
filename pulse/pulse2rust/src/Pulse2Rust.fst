@@ -28,6 +28,8 @@ open Pulse2Rust.Extract
 
 open RustBindings
 
+open FStar.Class.Setlike
+
 module S = FStar.Extraction.ML.Syntax
 module EUtil = FStar.Extraction.ML.Util
 
@@ -57,7 +59,7 @@ let extract_one
   let items, env = List.fold_left (fun (items, g) d ->
     // print1 "Decl: %s\n" (S.mlmodule1_to_string d);
     // print1 "Decl deps: %s\n"
-    //   (String.concat "\n" (reachable_defs_mlmodule1 d |> Set.elems));
+    //   (String.concat "\n" (reachable_defs_mlmodule1 d |> elems));
     if not (decl_reachable g.reachable_defs mname d)
     then begin
       // print1 "decl %s is not reachable\n" (String.concat ";" (mlmodule1_name d));
@@ -129,23 +131,23 @@ let rec collect_reachable_defs_aux
   (worklist:reachable_defs)
   (reachable_defs:reachable_defs) =
 
-  if Set.is_empty worklist
+  if is_empty worklist
   then reachable_defs
-  else let hd::_ = Set.elems worklist in
-       let worklist = Set.remove hd worklist in
+  else let hd::_ = elems worklist in
+       let worklist = remove hd worklist in
       //  print1 "Adding %s to reachable_defs\n" hd;
-       let reachable_defs = Set.add hd reachable_defs in
+       let reachable_defs = add hd reachable_defs in
        let worklist =
          let hd_decl = smap_try_find dd hd in
          match hd_decl with
          | None -> worklist
          | Some hd_decl ->
            let hd_reachable_defs = reachable_defs_mlmodule1 hd_decl in
-           hd_reachable_defs |> Set.elems |> List.fold_left (fun worklist def ->
-             if Set.mem def reachable_defs ||
-                Set.mem def worklist
+           hd_reachable_defs |> elems |> List.fold_left (fun worklist def ->
+             if mem def reachable_defs ||
+                mem def worklist
              then worklist
-             else Set.add def worklist
+             else add def worklist
            ) worklist in
        collect_reachable_defs_aux dd worklist reachable_defs
 
@@ -153,7 +155,7 @@ let collect_reachable_defs (d:dict) (root_module:string) : reachable_defs =
   let dd = build_decls_dict d in
   let root_decls = smap_try_find d root_module |> must |> (fun (_, _, decls) -> decls) in
   let worklist = List.fold_left (fun worklist decl ->
-    Set.addn
+    addn
       (decl |> mlmodule1_name |> List.map (fun s -> root_module ^ "." ^ s))
       worklist
   ) empty_defs root_decls in
