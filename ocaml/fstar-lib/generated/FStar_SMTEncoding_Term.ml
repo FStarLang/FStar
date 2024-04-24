@@ -542,12 +542,17 @@ let (fv_eq : fv -> fv -> Prims.bool) =
 let (fvs_subset_of : fvs -> fvs -> Prims.bool) =
   fun x ->
     fun y ->
-      let cmp_fv x1 y1 =
-        let uu___ = fv_name x1 in
-        let uu___1 = fv_name y1 in FStar_Compiler_Util.compare uu___ uu___1 in
-      let uu___ = FStar_Compiler_Set.from_list ord_fv x in
-      let uu___1 = FStar_Compiler_Set.from_list ord_fv y in
-      FStar_Compiler_Set.subset ord_fv uu___ uu___1
+      let uu___ =
+        Obj.magic
+          (FStar_Class_Setlike.from_list ()
+             (Obj.magic (FStar_Compiler_RBSet.setlike_rbset ord_fv)) x) in
+      let uu___1 =
+        Obj.magic
+          (FStar_Class_Setlike.from_list ()
+             (Obj.magic (FStar_Compiler_RBSet.setlike_rbset ord_fv)) y) in
+      FStar_Class_Setlike.subset ()
+        (Obj.magic (FStar_Compiler_RBSet.setlike_rbset ord_fv))
+        (Obj.magic uu___) (Obj.magic uu___1)
 let (freevar_eq : term -> term -> Prims.bool) =
   fun x ->
     fun y ->

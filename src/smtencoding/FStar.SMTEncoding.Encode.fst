@@ -175,7 +175,8 @@ let pretype_axiom rng env tapp vars =
     let tapp_hash = Term.hash_of_term tapp in
     let module_name = env.current_module_name in
     Util.mkAssume(mkForall rng ([[xx_has_type]], mk_fv (xxsym, Term_sort)::mk_fv (ffsym, Fuel_sort)::vars,
-                                mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))),
+                                mkImp(xx_has_type, mkEq(mkApp ("Term_constr_id", [tapp]), 
+                                                        mkApp ("Term_constr_id", [mkApp("PreType", [xx])])))),
                          Some "pretyping",
                          (varops.mk_unique (module_name ^ "_pretyping_" ^ (BU.digest_of_string tapp_hash))))
 

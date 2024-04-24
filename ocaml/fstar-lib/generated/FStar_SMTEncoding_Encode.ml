@@ -746,8 +746,17 @@ let (pretype_axiom :
                                let uu___9 =
                                  let uu___10 =
                                    FStar_SMTEncoding_Util.mkApp
-                                     ("PreType", [xx]) in
-                                 (tapp, uu___10) in
+                                     ("Term_constr_id", [tapp]) in
+                                 let uu___11 =
+                                   let uu___12 =
+                                     let uu___13 =
+                                       let uu___14 =
+                                         FStar_SMTEncoding_Util.mkApp
+                                           ("PreType", [xx]) in
+                                       [uu___14] in
+                                     ("Term_constr_id", uu___13) in
+                                   FStar_SMTEncoding_Util.mkApp uu___12 in
+                                 (uu___10, uu___11) in
                                FStar_SMTEncoding_Util.mkEq uu___9 in
                              (xx_has_type, uu___8) in
                            FStar_SMTEncoding_Util.mkImp uu___7 in
