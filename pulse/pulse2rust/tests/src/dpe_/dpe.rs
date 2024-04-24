@@ -22,355 +22,155 @@ pub enum session_state {
     SessionClosed,
     SessionError,
 }
-pub fn mk_available(
-    hndl: super::dpe::ctxt_hndl_t,
-    ctxt: super::dpetypes::context_t,
-) -> super::dpe::session_state {
-    super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-        handle: hndl,
-        context: ctxt,
-    })
+pub type ht_t = super::pulse_lib_hashtable_type::ht_t<
+    super::dpe::sid_t,
+    super::dpe::session_state,
+>;
+pub struct st {
+    pub st_ctr: super::dpe::sid_t,
+    pub st_tbl: super::dpe::ht_t,
 }
-pub fn mk_available_payload(
-    handle: super::dpe::ctxt_hndl_t,
-    context: super::dpetypes::context_t,
-) -> super::dpe::session_state__Available__payload {
-    super::dpe::session_state__Available__payload {
-        handle: handle,
-        context: context,
-    }
-}
-pub fn intro_session_state_perm_available(
-    ctxt: super::dpetypes::context_t,
-    hndl: super::dpe::ctxt_hndl_t,
-    __repr: (),
-) -> super::dpe::session_state {
-    super::dpe::session_state::Available(super::dpe::mk_available_payload(hndl, ctxt))
-}
-pub struct global_state_t {
-    pub session_id_counter: super::dpe::sid_t,
-    pub session_table: super::pulse_lib_hashtable_type::ht_t<
-        super::dpe::sid_t,
-        super::dpe::session_state,
-    >,
-}
+pub type gref = ();
+pub type dpe_t = ((), std::sync::Mutex<std::option::Option<super::dpe::st>>);
 pub fn sid_hash(uu___: super::dpe::sid_t) -> usize {
     panic!()
 }
-pub const fn initialize_global_state(
-    uu___: (),
-) -> std::sync::Mutex<std::option::Option<super::dpe::global_state_t>> {
-    let res = None;
-    std::sync::Mutex::new(res)
+pub const fn initialize_global_state(uu___: ()) -> super::dpe::dpe_t {
+    let m = std::sync::Mutex::new(None);
+    let s = ((), m);
+    s
 }
-pub static global_state: std::sync::Mutex<
-    std::option::Option<super::dpe::global_state_t>,
-> = super::dpe::initialize_global_state(());
-pub fn mk_global_state(uu___: ()) -> super::dpe::global_state_t {
-    let session_table = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
-    let st = super::dpe::global_state_t {
-        session_id_counter: 0,
-        session_table: session_table,
-    };
-    st
-}
-pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
-    super::dpetypes::mk_profile_descriptor(
-        "".to_string(),
-        1,
-        0,
-        false,
-        false,
-        false,
-        false,
-        0,
-        "".to_string(),
-        false,
-        "".to_string(),
-        "".to_string(),
-        false,
-        true,
-        1,
-        16,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        false,
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        false,
-        false,
-        false,
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        false,
-        0,
-        0,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        "".to_string(),
-        false,
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        false,
-        "".to_string(),
-        "".to_string(),
-        false,
-        false,
-        false,
-        "".to_string(),
-    )
-}
-pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
-    ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
-    k: KT,
-    v: VT,
-    pht: (),
-) -> (super::pulse_lib_hashtable_type::ht_t<KT, VT>, bool) {
-    let b = super::pulse_lib_hashtable::not_full(ht, ());
-    if b.1 {
-        super::pulse_lib_hashtable::insert(b.0, k, v, ())
-    } else {
-        let res = (b.0, false);
-        res
-    }
-}
+pub static global_state: super::dpe::dpe_t = super::dpe::initialize_global_state(());
 pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
     panic!()
 }
-pub fn open_session_aux(
-    st: super::dpe::global_state_t,
-) -> (super::dpe::global_state_t, std::option::Option<super::dpe::sid_t>) {
-    let ctr = st.session_id_counter;
-    let tbl = st.session_table;
-    let opt_inc = super::dpe::safe_add(ctr, 1);
-    match opt_inc {
+pub fn __open_session(
+    r: (),
+    s: super::dpe::st,
+) -> (super::dpe::st, std::option::Option<super::dpe::sid_t>) {
+    let ctr = s.st_ctr;
+    let tbl = s.st_tbl;
+    let copt = super::dpe::safe_add(ctr, 1);
+    match copt {
         None => {
-            let st1 = super::dpe::global_state_t {
-                session_id_counter: ctr,
-                session_table: tbl,
+            let s1 = super::dpe::st {
+                st_ctr: ctr,
+                st_tbl: tbl,
             };
-            let res = (st1, None);
-            res
+            let ret = (s1, None);
+            ret
         }
-        Some(mut next_sid) => {
-            let res = super::dpe::insert_if_not_full(
+        Some(mut ctr1) => {
+            let ret = super::pulse_lib_hashtable::insert_if_not_full(
                 tbl,
                 ctr,
                 super::dpe::session_state::SessionStart,
                 (),
             );
-            if res.1 {
-                let st1 = super::dpe::global_state_t {
-                    session_id_counter: next_sid,
-                    session_table: res.0,
+            let tbl1 = ret.0;
+            let b = ret.1;
+            if b {
+                let s1 = super::dpe::st {
+                    st_ctr: ctr1,
+                    st_tbl: tbl1,
                 };
-                let res1 = (st1, Some(next_sid));
-                res1
+                let ret1 = (s1, Some(ctr));
+                ret1
             } else {
-                let st1 = super::dpe::global_state_t {
-                    session_id_counter: ctr,
-                    session_table: res.0,
+                let s1 = super::dpe::st {
+                    st_ctr: ctr,
+                    st_tbl: tbl1,
                 };
-                let res1 = (st1, None);
-                res1
+                let ret1 = (s1, None);
+                ret1
             }
         }
     }
 }
-pub fn open_session(uu___: ()) -> std::option::Option<super::dpe::sid_t> {
-    let mut r = super::dpe::global_state.lock().unwrap();
-    let st_opt = std::mem::replace::<
-        std::option::Option<super::dpe::global_state_t>,
-    >(&mut r, None);
-    match st_opt {
+pub fn maybe_mk_session_tbl(
+    r: (),
+    sopt: std::option::Option<super::dpe::st>,
+) -> super::dpe::st {
+    match sopt {
         None => {
-            let st = super::dpe::mk_global_state(());
-            let res = super::dpe::open_session_aux(st);
-            *r = Some(res.0);
-            std::mem::drop(r);
-            res.1
+            let tbl = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
+            let s = super::dpe::st {
+                st_ctr: 0,
+                st_tbl: tbl,
+            };
+            s
         }
-        Some(mut st) => {
-            let res = super::dpe::open_session_aux(st);
-            *r = Some(res.0);
-            std::mem::drop(r);
-            res.1
-        }
+        Some(mut s) => s,
     }
 }
-pub fn destroy_ctxt(ctxt: super::dpetypes::context_t, repr: ()) -> () {
-    match ctxt {
-        super::dpetypes::context_t::Engine_context(mut c) => drop(c.uds),
-        super::dpetypes::context_t::L0_context(mut c) => drop(c.cdi),
-        super::dpetypes::context_t::L1_context(mut c) => {
-            drop(c.deviceID_priv);
-            drop(c.deviceID_pub);
-            drop(c.aliasKey_priv);
-            drop(c.aliasKey_pub);
-            drop(c.aliasKeyCRT);
-            drop(c.deviceIDCSR)
-        }
-    }
+pub fn open_session(
+    r: (),
+    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
+) -> (
+    std::sync::Mutex<std::option::Option<super::dpe::st>>,
+    std::option::Option<super::dpe::sid_t>,
+) {
+    let mut mg = m.lock().unwrap();
+    let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
+    let s = super::dpe::maybe_mk_session_tbl((), sopt);
+    let ret = super::dpe::__open_session((), s);
+    let s1 = ret.0;
+    let sid_opt = ret.1;
+    *mg = Some(s1);
+    std::mem::drop(mg);
+    let ret1 = (m, sid_opt);
+    ret1
 }
-pub fn return_none<A>(p: ()) -> std::option::Option<A> {
-    None
-}
-pub fn dflt<A>(x: std::option::Option<A>, y: A) -> A {
-    match x {
-        Some(mut v) => v,
-        _ => y,
-    }
-}
-pub fn take_session_state(
+pub fn replace_session(
+    r: (),
+    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
     sid: super::dpe::sid_t,
-    replace_with: super::dpe::session_state,
-) -> std::option::Option<super::dpe::session_state> {
-    let mut r = super::dpe::global_state.lock().unwrap();
-    let st_opt = std::mem::replace::<
-        std::option::Option<super::dpe::global_state_t>,
-    >(&mut r, None);
-    match st_opt {
-        None => {
-            std::mem::drop(r);
-            None
-        }
-        Some(mut st) => {
-            let ctr = st.session_id_counter;
-            let tbl = st.session_table;
+    t: (),
+    sst: super::dpe::session_state,
+    gsst: (),
+) -> (std::sync::Mutex<std::option::Option<super::dpe::st>>, super::dpe::session_state) {
+    let mut mg = m.lock().unwrap();
+    let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
+    match sopt {
+        None => panic!(),
+        Some(mut s) => {
+            let ctr = s.st_ctr;
+            let tbl = s.st_tbl;
             if sid < ctr {
-                let ss = super::pulse_lib_hashtable::lookup((), tbl, sid);
-                if ss.1 {
-                    match ss.2 {
-                        Some(mut idx) => {
-                            let ok = super::pulse_lib_hashtable::replace(
+                let ret = super::pulse_lib_hashtable::lookup((), tbl, sid);
+                let tbl1 = ret.0;
+                let b = ret.1;
+                let idx = ret.2;
+                if b {
+                    match idx {
+                        Some(mut idx1) => {
+                            let ret1 = super::pulse_lib_hashtable::replace(
                                 (),
-                                ss.0,
-                                idx,
+                                tbl1,
+                                idx1,
                                 sid,
-                                replace_with,
+                                sst,
                                 (),
                             );
-                            let st1 = super::dpe::global_state_t {
-                                session_id_counter: ctr,
-                                session_table: ok.0,
+                            let tbl2 = ret1.0;
+                            let st1 = ret1.1;
+                            let s1 = super::dpe::st {
+                                st_ctr: ctr,
+                                st_tbl: tbl2,
                             };
-                            *r = Some(st1);
-                            std::mem::drop(r);
-                            Some(ok.1)
+                            *mg = Some(s1);
+                            std::mem::drop(mg);
+                            let ret2 = (m, st1);
+                            ret2
                         }
-                        None => {
-                            let st1 = super::dpe::global_state_t {
-                                session_id_counter: ctr,
-                                session_table: ss.0,
-                            };
-                            *r = Some(st1);
-                            std::mem::drop(r);
-                            None
-                        }
+                        None => panic!(),
                     }
                 } else {
-                    let st1 = super::dpe::global_state_t {
-                        session_id_counter: ctr,
-                        session_table: ss.0,
-                    };
-                    *r = Some(st1);
-                    std::mem::drop(r);
-                    None
+                    panic!()
                 }
             } else {
-                let st1 = super::dpe::global_state_t {
-                    session_id_counter: ctr,
-                    session_table: tbl,
-                };
-                *r = Some(st1);
-                std::mem::drop(r);
-                None
+                panic!()
             }
-        }
-    }
-}
-pub fn destroy_context(
-    sid: super::dpe::sid_t,
-    ctxt_hndl: super::dpe::ctxt_hndl_t,
-) -> bool {
-    let st = super::dpe::take_session_state(sid, super::dpe::session_state::InUse);
-    match st {
-        None => false,
-        Some(mut st1) => {
-            match st1 {
-                super::dpe::session_state::Available(mut st11) => {
-                    if ctxt_hndl == st11.handle {
-                        super::dpe::destroy_ctxt(st11.context, ());
-                        let st_ = super::dpe::take_session_state(
-                            sid,
-                            super::dpe::session_state::SessionStart,
-                        );
-                        true
-                    } else {
-                        let st_ = super::dpe::take_session_state(
-                            sid,
-                            super::dpe::session_state::Available(st11),
-                        );
-                        false
-                    }
-                }
-                _ => {
-                    let st_ = super::dpe::take_session_state(
-                        sid,
-                        super::dpe::session_state::SessionError,
-                    );
-                    false
-                }
-            }
-        }
-    }
-}
-pub fn destroy_session_state(st: super::dpe::session_state) -> () {
-    match st {
-        super::dpe::session_state::Available(mut st1) => {
-            super::dpe::destroy_ctxt(st1.context, ())
-        }
-        _ => {}
-    }
-}
-pub fn close_session(sid: super::dpe::sid_t) -> bool {
-    let st = super::dpe::take_session_state(sid, super::dpe::session_state::InUse);
-    match st {
-        None => false,
-        Some(mut st1) => {
-            super::dpe::destroy_session_state(st1);
-            let st_ = super::dpe::take_session_state(
-                sid,
-                super::dpe::session_state::SessionClosed,
-            );
-            true
         }
     }
 }
@@ -392,18 +192,58 @@ pub fn init_engine_ctxt(
     let ctxt = super::dpetypes::mk_context_t_engine(engine_context);
     ctxt
 }
+pub fn prng(uu___: ()) -> super::dpe::ctxt_hndl_t {
+    panic!()
+}
+pub fn initialize_context(
+    r: (),
+    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
+    sid: super::dpe::sid_t,
+    t: (),
+    p: (),
+    uds_bytes: (),
+    uds: &mut [u8],
+) -> (std::sync::Mutex<std::option::Option<super::dpe::st>>, super::dpe::ctxt_hndl_t) {
+    let ret = super::dpe::replace_session(
+        (),
+        m,
+        sid,
+        (),
+        super::dpe::session_state::InUse,
+        (),
+    );
+    let m1 = ret.0;
+    let s = ret.1;
+    match s {
+        super::dpe::session_state::SessionStart => {
+            let context = super::dpe::init_engine_ctxt(uds, (), ());
+            let handle = super::dpe::prng(());
+            let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                handle: handle,
+                context: context,
+            });
+            let ret1 = super::dpe::replace_session((), m1, sid, (), s1, ());
+            let m2 = ret1.0;
+            let ret2 = (m2, handle);
+            ret2
+        }
+        super::dpe::session_state::InUse => panic!(),
+        super::dpe::session_state::SessionClosed => panic!(),
+        super::dpe::session_state::SessionError => panic!(),
+        super::dpe::session_state::Available(_) => panic!(),
+    }
+}
 pub fn init_l0_ctxt(
     cdi: &mut [u8],
     engine_repr: (),
     s: (),
     uds_bytes: (),
     uu___: (),
-) -> super::dpetypes::context_t {
+) -> super::dpetypes::l0_context_t {
     let mut cdi_buf = vec![0; 32];
     super::pulse_lib_array::memcpy(32, cdi, &mut cdi_buf, (), (), ());
     let l0_context = super::dpetypes::mk_l0_context_t(cdi_buf);
-    let ctxt = super::dpetypes::mk_context_t_l0(l0_context);
-    ctxt
+    l0_context
 }
 pub fn init_l1_ctxt(
     deviceIDCSR_len: usize,
@@ -426,7 +266,8 @@ pub fn init_l1_ctxt(
     aliasKey_pub0: (),
     deviceIDCSR0: (),
     aliasKeyCRT0: (),
-) -> super::dpetypes::context_t {
+    uu___: (),
+) -> super::dpetypes::l1_context_t {
     let mut deviceID_pub_buf = vec![0; 32];
     let mut deviceID_priv_buf = vec![0; 32];
     let mut aliasKey_priv_buf = vec![0; 32];
@@ -475,82 +316,7 @@ pub fn init_l1_ctxt(
         aliasKeyCRT_buf,
         deviceIDCSR_buf,
     );
-    let ctxt = super::dpetypes::mk_context_t_l1(l1_context);
-    ctxt
-}
-pub fn prng(uu___: ()) -> u32 {
-    panic!()
-}
-pub fn initialize_context(
-    p: (),
-    uds_bytes: (),
-    sid: super::dpe::sid_t,
-    uds: &mut [u8],
-) -> std::option::Option<super::dpe::ctxt_hndl_t> {
-    let st = super::dpe::take_session_state(sid, super::dpe::session_state::InUse);
-    match st {
-        None => None,
-        Some(mut st1) => {
-            match st1 {
-                super::dpe::session_state::SessionStart => {
-                    let ctxt = super::dpe::init_engine_ctxt(uds, (), ());
-                    let ctxt_hndl = super::dpe::prng(());
-                    let st_ = super::dpe::intro_session_state_perm_available(
-                        ctxt,
-                        ctxt_hndl,
-                        (),
-                    );
-                    let st__ = super::dpe::take_session_state(sid, st_);
-                    Some(ctxt_hndl)
-                }
-                _ => {
-                    super::dpe::destroy_session_state(st1);
-                    let st_ = super::dpe::take_session_state(
-                        sid,
-                        super::dpe::session_state::SessionError,
-                    );
-                    None
-                }
-            }
-        }
-    }
-}
-pub fn rotate_context_handle(
-    sid: super::dpe::sid_t,
-    ctxt_hndl: super::dpe::ctxt_hndl_t,
-) -> std::option::Option<super::dpe::ctxt_hndl_t> {
-    let st = super::dpe::take_session_state(sid, super::dpe::session_state::InUse);
-    match st {
-        None => None,
-        Some(mut st1) => {
-            match st1 {
-                super::dpe::session_state::InUse => None,
-                super::dpe::session_state::Available(mut st11) => {
-                    let new_ctxt_hndl = super::dpe::prng(());
-                    let st_ = super::dpe::intro_session_state_perm_available(
-                        st11.context,
-                        new_ctxt_hndl,
-                        (),
-                    );
-                    let st__ = super::dpe::take_session_state(sid, st_);
-                    Some(new_ctxt_hndl)
-                }
-                _ => {
-                    let st_ = super::dpe::take_session_state(
-                        sid,
-                        super::dpe::session_state::SessionError,
-                    );
-                    None
-                }
-            }
-        }
-    }
-}
-pub fn intro_maybe_context_perm(
-    c: super::dpetypes::context_t,
-    __repr: (),
-) -> std::option::Option<super::dpetypes::context_t> {
-    Some(c)
+    l1_context
 }
 pub fn derive_child_from_context(
     context: super::dpetypes::context_t,
@@ -558,6 +324,7 @@ pub fn derive_child_from_context(
     p: (),
     record_repr: (),
     context_repr: (),
+    uu___: (),
 ) -> (
     super::dpetypes::context_t,
     super::dpetypes::record_t,
@@ -578,41 +345,31 @@ pub fn derive_child_from_context(
                         (),
                         (),
                     );
+                    let r1 = ret.0;
                     let _bind_c = match ret.1 {
                         super::enginetypes::dice_return_code::DICE_SUCCESS => {
                             let l0_ctxt = super::dpe::init_l0_ctxt(cdi, (), (), (), ());
-                            let l0_ctxt_opt = super::dpe::intro_maybe_context_perm(
-                                l0_ctxt,
-                                (),
-                            );
-                            let res = (
+                            let ret1 = (
                                 super::dpetypes::context_t::Engine_context(c),
-                                super::dpetypes::record_t::Engine_record(ret.0),
-                                l0_ctxt_opt,
+                                super::dpetypes::record_t::Engine_record(r1),
+                                Some(super::dpetypes::context_t::L0_context(l0_ctxt)),
                             );
-                            res
+                            ret1
                         }
                         super::enginetypes::dice_return_code::DICE_ERROR => {
                             super::pulse_lib_array::zeroize(32, cdi, ());
-                            let res = (
+                            let ret1 = (
                                 super::dpetypes::context_t::Engine_context(c),
-                                super::dpetypes::record_t::Engine_record(ret.0),
+                                super::dpetypes::record_t::Engine_record(r1),
                                 None,
                             );
-                            res
+                            ret1
                         }
                     };
                     let cdi1 = _bind_c;
                     cdi1
                 }
-                _ => {
-                    let res = (
-                        super::dpetypes::context_t::Engine_context(c),
-                        record,
-                        None,
-                    );
-                    res
-                }
+                super::dpetypes::record_t::L0_record(_) => panic!(),
             }
         }
         super::dpetypes::context_t::L0_context(mut c) => {
@@ -694,96 +451,232 @@ pub fn derive_child_from_context(
                         (),
                         (),
                         (),
+                        (),
                     );
                     drop(deviceIDCSR);
                     drop(aliasKeyCRT);
-                    let l1_context_opt = super::dpe::intro_maybe_context_perm(
-                        l1_context,
-                        (),
-                    );
-                    let res = (
+                    let ret = (
                         super::dpetypes::context_t::L0_context(c),
                         super::dpetypes::record_t::L0_record(r2),
-                        l1_context_opt,
+                        Some(super::dpetypes::context_t::L1_context(l1_context)),
                     );
-                    let aliasKey_priv1 = res;
+                    let aliasKey_priv1 = ret;
                     let aliasKey_pub1 = aliasKey_priv1;
                     let deviceID_priv1 = aliasKey_pub1;
                     let deviceID_pub1 = deviceID_priv1;
                     deviceID_pub1
                 }
-                _ => {
-                    let res = (super::dpetypes::context_t::L0_context(c), record, None);
-                    res
-                }
+                super::dpetypes::record_t::Engine_record(_) => panic!(),
             }
         }
+        super::dpetypes::context_t::L1_context(_) => panic!(),
+    }
+}
+pub fn destroy_ctxt(ctxt: super::dpetypes::context_t, repr: ()) -> () {
+    match ctxt {
+        super::dpetypes::context_t::Engine_context(mut c) => drop(c.uds),
+        super::dpetypes::context_t::L0_context(mut c) => drop(c.cdi),
         super::dpetypes::context_t::L1_context(mut c) => {
-            let res = (super::dpetypes::context_t::L1_context(c), record, None);
-            res
+            drop(c.deviceID_priv);
+            drop(c.deviceID_pub);
+            drop(c.aliasKey_priv);
+            drop(c.aliasKey_pub);
+            drop(c.aliasKeyCRT);
+            drop(c.deviceIDCSR)
         }
     }
 }
 pub fn derive_child(
+    r: (),
+    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
     sid: super::dpe::sid_t,
     ctxt_hndl: super::dpe::ctxt_hndl_t,
+    t: (),
     record: super::dpetypes::record_t,
-    repr: (),
+    rrepr: (),
     p: (),
-) -> (super::dpetypes::record_t, std::option::Option<super::dpe::ctxt_hndl_t>) {
-    let st = super::dpe::take_session_state(sid, super::dpe::session_state::InUse);
-    match st {
-        None => {
-            let res = (record, None);
-            res
-        }
-        Some(mut st1) => {
-            match st1 {
-                super::dpe::session_state::InUse => {
-                    let res = (record, None);
-                    res
-                }
-                super::dpe::session_state::Available(mut st11) => {
-                    let next_ctxt = super::dpe::derive_child_from_context(
-                        st11.context,
+) -> (
+    std::sync::Mutex<std::option::Option<super::dpe::st>>,
+    super::dpetypes::record_t,
+    std::option::Option<super::dpe::ctxt_hndl_t>,
+) {
+    let ret = super::dpe::replace_session(
+        (),
+        m,
+        sid,
+        (),
+        super::dpe::session_state::InUse,
+        (),
+    );
+    let m1 = ret.0;
+    let s = ret.1;
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(_) => panic!(),
+                _ => {
+                    let ret1 = super::dpe::derive_child_from_context(
+                        hc.context,
                         record,
                         (),
                         (),
                         (),
+                        (),
                     );
-                    super::dpe::destroy_ctxt(next_ctxt.0, ());
-                    match next_ctxt.2 {
-                        None => {
-                            let st_ = super::dpe::take_session_state(
+                    let octxt = ret1.0;
+                    let record1 = ret1.1;
+                    let nctxt = ret1.2;
+                    super::dpe::destroy_ctxt(octxt, ());
+                    match nctxt {
+                        Some(mut nctxt1) => {
+                            let handle = super::dpe::prng(());
+                            let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                                handle: handle,
+                                context: nctxt1,
+                            });
+                            let ret2 = super::dpe::replace_session(
+                                (),
+                                m1,
                                 sid,
-                                super::dpe::session_state::SessionError,
-                            );
-                            let res = (next_ctxt.1, None);
-                            res
-                        }
-                        Some(mut next_ctxt1) => {
-                            let next_ctxt_hndl = super::dpe::prng(());
-                            let st_ = super::dpe::intro_session_state_perm_available(
-                                next_ctxt1,
-                                next_ctxt_hndl,
+                                (),
+                                s1,
                                 (),
                             );
-                            let st__ = super::dpe::take_session_state(sid, st_);
-                            let res = (next_ctxt.1, Some(next_ctxt_hndl));
-                            res
+                            let m2 = ret2.0;
+                            let ret3 = (m2, record1, Some(handle));
+                            ret3
+                        }
+                        None => {
+                            let s1 = super::dpe::session_state::SessionError;
+                            let ret2 = super::dpe::replace_session(
+                                (),
+                                m1,
+                                sid,
+                                (),
+                                s1,
+                                (),
+                            );
+                            let m2 = ret2.0;
+                            let ret3 = (m2, record1, None);
+                            ret3
                         }
                     }
                 }
-                _ => {
-                    let st_ = super::dpe::take_session_state(
-                        sid,
-                        super::dpe::session_state::SessionError,
-                    );
-                    let res = (record, None);
-                    res
-                }
             }
         }
+        super::dpe::session_state::SessionStart => panic!(),
+        super::dpe::session_state::InUse => panic!(),
+        super::dpe::session_state::SessionClosed => panic!(),
+        super::dpe::session_state::SessionError => panic!(),
     }
+}
+pub fn destroy_session_state(s: super::dpe::session_state, t: ()) -> () {
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            super::dpe::destroy_ctxt(hc.context, ())
+        }
+        _ => {}
+    }
+}
+pub fn close_session(
+    r: (),
+    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
+    sid: super::dpe::sid_t,
+    t: (),
+) -> std::sync::Mutex<std::option::Option<super::dpe::st>> {
+    let ret = super::dpe::replace_session(
+        (),
+        m,
+        sid,
+        (),
+        super::dpe::session_state::InUse,
+        (),
+    );
+    let m1 = ret.0;
+    let s = ret.1;
+    super::dpe::destroy_session_state(s, ());
+    let ret1 = super::dpe::replace_session(
+        (),
+        m1,
+        sid,
+        (),
+        super::dpe::session_state::SessionClosed,
+        (),
+    );
+    let m2 = ret1.0;
+    m2
+}
+pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
+    super::dpetypes::mk_profile_descriptor(
+        "".to_string(),
+        1,
+        0,
+        false,
+        false,
+        false,
+        false,
+        0,
+        "".to_string(),
+        false,
+        "".to_string(),
+        "".to_string(),
+        false,
+        true,
+        1,
+        16,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        false,
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        false,
+        false,
+        false,
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        false,
+        0,
+        0,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        "".to_string(),
+        false,
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        false,
+        "".to_string(),
+        "".to_string(),
+        false,
+        false,
+        false,
+        "".to_string(),
+    )
 }
 
