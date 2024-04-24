@@ -24,48 +24,42 @@ open EngineCore
 open L0Types
 open L0Core
 
-module M = Pulse.Lib.Mutex
-module A = Pulse.Lib.Array
-module R = Pulse.Lib.Reference
+module G = FStar.Ghost
+module PCM = FStar.PCM
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
+module PP = PulseCore.Preorder
+module PM = Pulse.Lib.PCMMap
+module FP = Pulse.Lib.PCM.FractionalPreorder
+module M = Pulse.Lib.Mutex
+module A = Pulse.Lib.Array
+module R = Pulse.Lib.Reference
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
 
-// open Pulse.Lib.BoundedIntegers
+open PulseCore.Preorder
 open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.Mutex
 
-// noeq
-// type cell (a:Type0) = {
-//   v : a;
-//   next : ref (cell a);
-//   lock : L.lock;
-// }
-
-// let rec llist (#a:Type) (cref:ref (cell a)) (repr:list a) : Tot vprop (decreases repr) =
-//   match repr with
-//   | [] -> emp
-//   | hd::tl ->
-//     exists* c.
-//     pts_to cref #0.5R c **
-//     pure (hd == c.v) **
-//     L.lock_alive c.lock (exists* cnext. pts_to c.next cnext) **
-//     llist c.next tl
-
-
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 
-(* Global State *)
+//
+// Concrete state setup
+//
 
-let ctxt_hndl_t = U32.t
+type ctxt_hndl_t = U32.t
 
 type sid_t : eqtype = U32.t
 
+//
+// A session may be in one of the following states
+//
+// InUse is never returned to the client
+//
 [@@ Rust_derive "Clone"]
 noeq
 type session_state =
@@ -73,33 +67,202 @@ type session_state =
   | Available { handle:ctxt_hndl_t; context:context_t }
   | InUse
   | SessionClosed
-  | SessionError //error description
+  | SessionError
 
-//
-// These two definitions extract to non-exhaustive patterns in Rust
-//   which fails to typecheck
-//
-noextract
-let ctxt_of (s:session_state { Available? s })
-  : context_t
-  = let Available {context} = s in
-    context
-
-// Marking this noextract since this spec only
-// What will krml do?
 type ht_t = ht_t sid_t session_state
 
-noextract
-type pht_t = PHT.pht_t sid_t session_state
-
+//
+// DPE state
+// A counter for next sid
+//   and a hashtable mapping sids to session state
+//
 noeq
 type st = { st_ctr:sid_t; st_tbl:ht_t; }
 
-module G = FStar.Ghost
-module PP = PulseCore.Preorder
-module PM = Pulse.Lib.PCMMap
-module T = DPE.Trace
-module PCM = FStar.PCM
+
+//
+// Ghost state set up
+//
+
+//
+// Ghost session state
+//
+// Has a 1-1 correspondence with the concrete session state
+//   except it has an G_UnInitialized
+//
+[@@ erasable]
+noeq
+type g_session_state : Type u#1 =
+  | G_UnInitialized : g_session_state
+  | G_SessionStart : g_session_state
+  | G_Available : repr:context_repr_t -> g_session_state
+  | G_InUse : g_session_state -> g_session_state
+  | G_SessionClosed : g_session_state -> g_session_state
+  | G_SessionError : g_session_state -> g_session_state
+
+//
+// A relation between context reprs that follow each other
+//
+// L0 repr should use the same UDS as the engine repr,
+//   and L1 repr should use the same CDI as the L0 repr
+//
+noextract
+let next_repr (r1 r2:context_repr_t) : prop =
+  match r1, r2 with
+  | Engine_context_repr uds, L0_context_repr l0_repr ->
+    uds == l0_repr.uds
+  | L0_context_repr l0_repr, L1_context_repr l1_repr ->
+    l0_repr.cdi == l1_repr.cdi
+  | _ -> False
+
+//
+// State machine
+//
+noextract
+let rec next (s0 s1:g_session_state) : prop =
+  match s0, s1 with
+  //
+  // UnInitialized may only go to SessionStart
+  // No other incoming/outgoing edges to/from it
+  //
+  | G_UnInitialized, G_SessionStart -> True
+  | G_UnInitialized, _
+  | _, G_UnInitialized -> False
+
+  //
+  // SessionStart may go to Available with engine repr
+  //
+  | G_SessionStart, G_Available (Engine_context_repr _) -> True
+
+  //
+  // Available r0 may go to Available r1,
+  //   as long as repr r1 follows repr r0
+  //
+  | G_Available r0, G_Available r1 -> next_repr r0 r1
+
+  //
+  // SessionClosed is a terminal state
+  //
+  | G_SessionClosed _, _ -> False
+
+  //
+  // From any state we can go to InUse, SessionClosed, or SessionError
+  //
+  // These states capture the previous state
+  //
+  | _, G_InUse s -> s == s0
+  | _, G_SessionClosed s
+  | _, G_SessionError s -> s == s0
+
+  //
+  // From InUse s we can go to s1, as long as s can go to s1
+  //
+  | G_InUse s, s1 -> next s s1
+
+  | _ -> False
+
+
+//
+// Defining traces
+//
+
+noextract
+let rec well_formed_trace (l:list g_session_state) : prop =
+  match l with
+  | []
+  | [G_SessionStart] -> True
+  | s1::s0::tl -> next s0 s1 /\ well_formed_trace (s0::tl)
+  | _ -> False
+
+noextract
+type trace_elt : Type u#1 = l:list g_session_state { well_formed_trace l }
+
+noextract
+let trace_extension (t0 t1:trace_elt) : prop =
+  Cons? t1 /\ t0 == List.Tot.tail t1
+
+noextract
+let trace_preorder : FStar.Preorder.preorder trace_elt =
+  FStar.ReflexiveTransitiveClosure.closure trace_extension
+
+noextract
+type trace = hist trace_preorder
+
+noextract
+type trace_pcm_t : Type u#1 = FP.pcm_carrier trace_preorder
+
+//
+// Trace PCM is fractional preorder PCM,
+//   with trace preorder
+//
+noextract
+let trace_pcm : FStar.PCM.pcm trace_pcm_t = FP.fp_pcm trace_preorder
+
+//
+// Current state of a trace
+//
+// We use UnInitialized as the current state of empty trace
+//
+noextract
+let current_state (t:trace) : g_session_state =
+  match t with
+  | [] -> G_UnInitialized
+  | hd::_ ->
+    match hd with
+    | [] -> G_UnInitialized
+    | s::_ -> s
+
+//
+// Given a trace t, valid_transition t s means that
+//   current state of t may go to s in the state machine
+//
+noextract
+let valid_transition (t:trace) (s:g_session_state) : prop =
+  next (current_state t) s
+
+//
+// The next trace after a transition
+//
+noextract
+let next_trace (t:trace) (s:g_session_state { valid_transition t s }) : trace =
+  match t with
+  | [] -> [[s]]
+  | hd::tl ->
+    match hd with
+    | [] -> [s]::t
+    | l -> (s::l)::t
+
+//
+// A frame preserving update in the trace PCM,
+//   given a valid transition
+//
+noextract
+let mk_frame_preserving_upd
+  (t:hist trace_preorder)
+  (s:g_session_state { valid_transition t s })
+  : FStar.PCM.frame_preserving_upd trace_pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
+  fun _ -> Some 1.0R, next_trace t s
+
+//
+// A snapshot of the trace PCM is the trace with no permission
+//
+noextract
+let snapshot (x:trace_pcm_t) : trace_pcm_t = None, snd x
+
+let snapshot_idempotent (x:trace_pcm_t)
+  : Lemma (snapshot x == snapshot (snapshot x)) = ()
+
+let snapshot_duplicable (x:trace_pcm_t)
+  : Lemma
+      (requires True)
+      (ensures x `FStar.PCM.composable trace_pcm` snapshot x) = ()
+
+let full_perm_empty_history_compatible ()
+  : Lemma (FStar.PCM.compatible trace_pcm (Some 1.0R, []) (Some 1.0R, [])) = ()
+
+
+noextract
+type pht_t = PHT.pht_t sid_t session_state
 
 noextract
 type pcm_t : Type u#1 = PM.map sid_t (T.pcm_t)
@@ -139,7 +302,7 @@ let session_state_related (s:session_state) (gs:T.g_session_state) : v:vprop { i
   | SessionClosed, G_SessionClosed _
   | SessionError, G_SessionError _ -> emp
 
-  | Available _, G_Available repr -> context_perm (ctxt_of s) repr
+  | Available {context}, G_Available repr -> context_perm context repr
 
   | _ -> pure False
 

@@ -25,10 +25,6 @@ module SZ = FStar.SizeT
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 
-let bytes = Seq.seq U8.t
-let lbytes (n:nat) = b:bytes { Seq.length b == n }
-let uds_t = lbytes (SZ.v uds_len)
-
 type ctxt_hndl_t : Type0 = U32.t
 
 [@@ erasable]
