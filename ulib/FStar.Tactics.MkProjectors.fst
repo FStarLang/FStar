@@ -152,19 +152,20 @@ let mk_proj_decl (is_method:bool)
     in
     (* The method is just defined based on the projector. *)
     let lb_def =
-      (`(_ by (mk_one_method
-                 (`#(embed_string (implode_qn nm)))
-                 (`#(embed_int np)))))
-      (* NB: if we wanted a 'direct' definition of the method,
-      using a match instead of calling the projector, the following
-      will do. The same mk_one_projector tactic should handle it
-      well.
-
-      (`(_ by (mk_one_projector
-                 (`#unfold_names_tm)
-                 (`#(embed_int np))
-                 (`#(embed_int idx)))))
-      *)
+      if true
+      then
+        (* This generates a method defined to be equal to the projector
+             i.e.  method {| c |} = c.method *)
+        (`(_ by (mk_one_method
+                   (`#(embed_string (implode_qn nm)))
+                   (`#(embed_int np)))))
+      else
+        (* This defines the method in the same way as the projector
+             i.e.  method {| c |} = match c with | Mk ... method ... -> method *)
+        (`(_ by (mk_one_projector
+                   (`#unfold_names_tm)
+                   (`#(embed_int np))
+                   (`#(embed_int idx)))))
     in
     (* dump ("returning se with name " ^ unseal field.ppname); *)
     (* dump ("def = " ^ term_to_string lb_def); *)
@@ -198,7 +199,7 @@ let mk_proj_decl (is_method:bool)
 
 [@@plugin]
 let mk_projs (is_class:bool) (tyname:string) : Tac decls =
-  print ("!! mk_projs tactic called on: " ^ tyname);
+  debug (fun () -> "!! mk_projs tactic called on: " ^ tyname);
   let tyqn = explode_qn tyname in
   match lookup_typ (top_env ()) tyqn with
   | None ->
