@@ -91,8 +91,10 @@ module FP = Pulse.Lib.PCM.FractionalPreorder
 
 type trace = hist trace_preorder
 
+noextract
 type pcm_t : Type u#1 = FP.pcm_carrier trace_preorder
 
+noextract
 let pcm : FStar.PCM.pcm pcm_t = FP.fp_pcm trace_preorder
 
 let current_state (t:trace) : g_session_state =
@@ -119,6 +121,7 @@ let mk_frame_preserving_upd
   : FStar.PCM.frame_preserving_upd pcm (Some 1.0R, t) (Some 1.0R, next_trace t s) =
   fun _ -> Some 1.0R, next_trace t s
 
+noextract
 let snapshot (x:pcm_t) : pcm_t = None, snd x
 
 let snapshot_idempotent (x:pcm_t)

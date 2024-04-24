@@ -87,7 +87,6 @@ let ctxt_of (s:session_state { Available? s })
 
 // Marking this noextract since this spec only
 // What will krml do?
-noextract
 type ht_t = ht_t sid_t session_state
 
 noextract
@@ -102,16 +101,23 @@ module PM = Pulse.Lib.PCMMap
 module T = DPE.Trace
 module PCM = FStar.PCM
 
+noextract
 type pcm_t : Type u#1 = PM.map sid_t (T.pcm_t)
+
+noextract
 let pcm : PCM.pcm pcm_t = PM.pointwise sid_t T.pcm
+
+[@@ erasable]
 type gref = ghost_pcm_ref pcm
 
 noextract
 let emp_trace : T.trace = []
 
+noextract
 let singleton (sid:sid_t) (p:perm) (t:T.trace) : GTot pcm_t =
   Map.upd (Map.const (None, emp_trace)) sid (Some p, t)
 
+noextract
 let sid_pts_to (r:gref) (sid:sid_t) (t:T.trace) : vprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
@@ -406,17 +412,7 @@ fn __open_session (r:gref) (s:st)
       let b = snd ret;
       rewrite each fst ret as tbl1;
       with pht1. assert (models tbl1 pht1);
-      if not b {
-        let s = { st_ctr = ctr; st_tbl = tbl1 };
-        let ret = s, None #sid_t;
-        rewrite each
-          tbl1 as (fst ret).st_tbl,
-          pht1 as pht,
-          ctr as (fst ret).st_ctr;
-        fold (inv r (Some (fst ret)));
-        rewrite emp as (open_session_client_perm r (snd ret));
-        ret        
-      } else {
+      if b {
         share_ r (sids_above_unused ctr)
                  (sids_above_unused ctr1)
                  (singleton ctr 1.0R emp_trace);
@@ -440,6 +436,16 @@ fn __open_session (r:gref) (s:st)
           tbl1 as (fst ret).st_tbl;
         fold (inv r (Some (fst ret)));
         fold (open_session_client_perm r (Some ctr));
+        ret
+      } else {
+        let s = { st_ctr = ctr; st_tbl = tbl1 };
+        let ret = s, None #sid_t;
+        rewrite each
+          tbl1 as (fst ret).st_tbl,
+          pht1 as pht,
+          ctr as (fst ret).st_ctr;
+        fold (inv r (Some (fst ret)));
+        rewrite emp as (open_session_client_perm r (snd ret));
         ret
       }
     }
@@ -673,7 +679,8 @@ fn replace_session
           //
           // AR: TODO: would be nice if we can prove this can't happen
           //           i.e. if sid is in pht, then its lookup should succeed
-          admit ()
+          assume_ (pure False);
+          unreachable ()
         }
       } else {
         unfold sid_pts_to;
@@ -738,6 +745,7 @@ fn intro_session_state_tag_related (s:session_state) (gs:T.g_session_state)
 }
 ```
 
+noextract
 let trace_valid_for_initialize_context (t:T.trace) =
   T.current_state t == T.G_SessionStart
 
@@ -964,6 +972,7 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
 }
 ```
 
+noextract
 let context_derives_from_input (r:context_repr_t) (rrepr:repr_t) : prop =
   match r, rrepr with
   | L0_context_repr l0_repr, Engine_repr erepr ->
@@ -979,6 +988,7 @@ let maybe_context_perm (r:context_repr_t) (rrepr:repr_t) (c:option context_t) =
                   pure (T.next_repr r repr /\ context_derives_from_input repr rrepr)
   | None -> emp
 
+noextract
 let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : prop =
   match c, r with
   | Engine_context_repr _, Engine_repr _ -> True
@@ -1022,7 +1032,6 @@ fn derive_child_from_context
           V.to_vec_pts_to c.uds;
 
           let r = fst ret;
-          let succ = snd ret;
           rewrite each fst ret as r;
 
           with s. assert (A.pts_to cdi s);
@@ -1220,6 +1229,7 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
+noextract
 let trace_and_record_valid_for_derive_child (t:T.trace) (r:repr_t) : prop =
   let open T in
   match current_state t, r with
@@ -1227,6 +1237,7 @@ let trace_and_record_valid_for_derive_child (t:T.trace) (r:repr_t) : prop =
   | G_Available (L0_context_repr _), L0_repr _ -> True
   | _ -> False
 
+noextract
 let derive_child_post_trace (r:repr_t) (t:T.trace) =
   let open T in
   match r, current_state t with
@@ -1371,6 +1382,7 @@ fn derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_
 }
 ```
 
+noextract
 let trace_valid_for_close (t:T.trace) : prop =
   let open T in
   match current_state t with
