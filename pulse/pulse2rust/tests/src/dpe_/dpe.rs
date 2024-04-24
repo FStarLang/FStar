@@ -205,20 +205,22 @@ pub fn open_session_aux(
     }
 }
 pub fn open_session(uu___: ()) -> std::option::Option<super::dpe::sid_t> {
-    let r: &mut std::option::Option<super::dpe::global_state_t> = &mut super::dpe::global_state
-        .lock()
-        .unwrap();
-    let st_opt = std::mem::replace(r, None);
+    let mut r = super::dpe::global_state.lock().unwrap();
+    let st_opt = std::mem::replace::<
+        std::option::Option<super::dpe::global_state_t>,
+    >(&mut r, None);
     match st_opt {
         None => {
             let st = super::dpe::mk_global_state(());
             let res = super::dpe::open_session_aux(st);
             *r = Some(res.0);
+            std::mem::drop(r);
             res.1
         }
         Some(mut st) => {
             let res = super::dpe::open_session_aux(st);
             *r = Some(res.0);
+            std::mem::drop(r);
             res.1
         }
     }
@@ -250,12 +252,15 @@ pub fn take_session_state(
     sid: super::dpe::sid_t,
     replace_with: super::dpe::session_state,
 ) -> std::option::Option<super::dpe::session_state> {
-    let r: &mut std::option::Option<super::dpe::global_state_t> = &mut super::dpe::global_state
-        .lock()
-        .unwrap();
-    let st_opt = std::mem::replace(r, None);
+    let mut r = super::dpe::global_state.lock().unwrap();
+    let st_opt = std::mem::replace::<
+        std::option::Option<super::dpe::global_state_t>,
+    >(&mut r, None);
     match st_opt {
-        None => None,
+        None => {
+            std::mem::drop(r);
+            None
+        }
         Some(mut st) => {
             let ctr = st.session_id_counter;
             let tbl = st.session_table;
@@ -277,6 +282,7 @@ pub fn take_session_state(
                                 session_table: ok.0,
                             };
                             *r = Some(st1);
+                            std::mem::drop(r);
                             Some(ok.1)
                         }
                         None => {
@@ -285,6 +291,7 @@ pub fn take_session_state(
                                 session_table: ss.0,
                             };
                             *r = Some(st1);
+                            std::mem::drop(r);
                             None
                         }
                     }
@@ -294,6 +301,7 @@ pub fn take_session_state(
                         session_table: ss.0,
                     };
                     *r = Some(st1);
+                    std::mem::drop(r);
                     None
                 }
             } else {
@@ -302,6 +310,7 @@ pub fn take_session_state(
                     session_table: tbl,
                 };
                 *r = Some(st1);
+                std::mem::drop(r);
                 None
             }
         }

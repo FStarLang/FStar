@@ -169,9 +169,11 @@ let mk_expr_struct (path:list string) (fields:list (string & expr)) : expr =
 
 let mk_expr_tuple (l:list expr) : expr = Expr_tuple l
 
-let mk_mem_replace (e:expr) (new_v:expr) : expr =
+let mk_mem_replace (t:typ) (e:expr) (new_v:expr) : expr =
   mk_call
-    (mk_expr_path ["std"; "mem"; "replace"])
+    (Expr_path [{ path_segment_name = "std"; path_segment_generic_args = [] };
+                { path_segment_name = "mem"; path_segment_generic_args = [] };
+                { path_segment_name = "replace"; path_segment_generic_args = [t] }])
     [e; new_v]
 
 let mk_method_call (receiver:expr) (name:string) (args:list expr) : expr =
@@ -188,9 +190,14 @@ let mk_new_mutex (e:expr) =
 
 let mk_lock_mutex (e:expr) : expr =
   let e_lock = mk_method_call e "lock" [] in
-  let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
-  let is_mut = true in
-  mk_reference_expr is_mut e_lock_unwrap
+  mk_method_call e_lock "unwrap" []
+  // let is_mut = true in
+  // mk_reference_expr is_mut e_lock_unwrap
+
+let mk_unlock_mutex (e:expr) : expr =
+  mk_call
+    (mk_expr_path ["std"; "mem"; "drop"])
+    [e]
 
 let mk_scalar_fn_arg (name:string) (is_mut:bool) (t:typ) =
   Fn_arg_pat {

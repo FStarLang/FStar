@@ -20,6 +20,7 @@ open Pulse.Lib.Core
 open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
 
+module R = Pulse.Lib.Reference
 module B = Pulse.Lib.Box
 
 open Pulse.Main
@@ -30,11 +31,19 @@ type mutex (a:Type0) : Type0 = {
   l:lock;
 }
 
+let mutex_guard a = R.ref a
+
 let lock_inv (#a:Type0) (r:B.box a) (v:a -> vprop)
   : (w:vprop { (forall x. is_big (v x)) ==> is_big w }) =
   exists* x. B.pts_to r x ** v x
 
 let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
+
+let pts_to mg #p x = R.pts_to mg #p x
+
+let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p
+let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
+let replace #a r y #x = R.replace #a r y #x
 
 ```pulse
 fn new_mutex' (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
@@ -55,21 +64,23 @@ fn new_mutex' (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
 
 let new_mutex = new_mutex'
 
-let belongs_to_mutex (#a:Type0) (r:ref a) (m:mutex a) : vprop =
+let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : vprop =
   pure (r == B.box_to_ref m.r) ** lock_acquired m.l
 
 ```pulse
 fn lock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
-  returns r:ref a
-  ensures mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x)
+  returns r:mutex_guard a
+  ensures mutex_live m #p v ** r `belongs_to` m ** (exists* x. pts_to r x ** v x)
 {
   unfold (mutex_live m#p v);
   acquire m.l;
   unfold lock_inv;
-  fold (belongs_to_mutex (B.box_to_ref m.r) m);
+  fold (belongs_to (B.box_to_ref m.r) m);
   fold (mutex_live m #p v);
   B.to_ref_pts_to m.r;
+  with _x. rewrite (R.pts_to (B.box_to_ref m.r) _x) as
+                   (pts_to (B.box_to_ref m.r) _x);
   B.box_to_ref m.r
 } 
 ```
@@ -77,13 +88,13 @@ fn lock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 let lock = lock'
 
 ```pulse
-fn unlock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (r:ref a)
-  requires mutex_live m #p v ** r `belongs_to_mutex` m ** (exists* x. pts_to r x ** v x)
+fn unlock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
+  requires mutex_live m #p v ** mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures mutex_live m #p v
 {
   unfold (mutex_live m #p v);
-  unfold (r `belongs_to_mutex` m);
-  with x. rewrite (pts_to r x) as (pts_to (B.box_to_ref m.r) x);
+  unfold (mg `belongs_to` m);
+  with x. rewrite (pts_to mg x) as (R.pts_to (B.box_to_ref m.r) x);
   B.to_box_pts_to m.r;
   fold lock_inv;
   release m.l;

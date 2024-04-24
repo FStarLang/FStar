@@ -1037,11 +1037,16 @@ let (mk_expr_struct :
         { expr_struct_path = path; expr_struct_fields = uu___1 } in
       Expr_struct uu___
 let (mk_expr_tuple : expr Prims.list -> expr) = fun l -> Expr_tuple l
-let (mk_mem_replace : expr -> expr -> expr) =
-  fun e ->
-    fun new_v ->
-      let uu___ = mk_expr_path ["std"; "mem"; "replace"] in
-      mk_call uu___ [e; new_v]
+let (mk_mem_replace : typ -> expr -> expr -> expr) =
+  fun t ->
+    fun e ->
+      fun new_v ->
+        mk_call
+          (Expr_path
+             [{ path_segment_name = "std"; path_segment_generic_args = [] };
+             { path_segment_name = "mem"; path_segment_generic_args = [] };
+             { path_segment_name = "replace"; path_segment_generic_args = [t]
+             }]) [e; new_v]
 let (mk_method_call : expr -> Prims.string -> expr Prims.list -> expr) =
   fun receiver ->
     fun name ->
@@ -1059,8 +1064,10 @@ let (mk_new_mutex : expr -> expr) =
 let (mk_lock_mutex : expr -> expr) =
   fun e ->
     let e_lock = mk_method_call e "lock" [] in
-    let e_lock_unwrap = mk_method_call e_lock "unwrap" [] in
-    let is_mut = true in mk_reference_expr is_mut e_lock_unwrap
+    mk_method_call e_lock "unwrap" []
+let (mk_unlock_mutex : expr -> expr) =
+  fun e ->
+    let uu___ = mk_expr_path ["std"; "mem"; "drop"] in mk_call uu___ [e]
 let (mk_scalar_fn_arg : Prims.string -> Prims.bool -> typ -> fn_arg) =
   fun name ->
     fun is_mut ->
