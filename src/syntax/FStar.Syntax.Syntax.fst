@@ -160,17 +160,9 @@ instance ord_fv : ord lident =
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : FlatSet.t bv     = empty ()
-let new_id_set () : FlatSet.t ident  = empty ()
-let new_fv_set () : RBSet.t lident   = empty ()
-let new_universe_names_set () : FlatSet.t univ_name = empty ()
 
-let no_names  = new_bv_set()
-let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
-let freenames_of_list l = addn l no_names
 let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
@@ -295,7 +287,7 @@ let is_top_level = function
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun b out -> add b.binder_bv out) bs no_names
+    List.fold_right (fun b out -> add b.binder_bv out) bs (empty ())
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
 let binders_of_freenames (fvs:freenames) = elems fvs |> binders_of_list

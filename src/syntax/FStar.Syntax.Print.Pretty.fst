@@ -125,7 +125,7 @@ let tscheme_to_string (ts:tscheme) : string = GenSym.with_frozen_gensym (fun () 
 )
 
 let pat_to_string (p:pat) : string = GenSym.with_frozen_gensym (fun () ->
-  let e = Resugar.resugar_pat p Syntax.no_names in
+  let e = Resugar.resugar_pat p (Class.Setlike.empty ()) in
   let d = ToDocument.pat_to_document e in
   pp d
 )

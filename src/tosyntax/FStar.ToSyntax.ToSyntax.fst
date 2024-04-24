@@ -774,15 +774,16 @@ let check_no_aq (aq : antiquotations_temp) : unit =
 
 let check_linear_pattern_variables pats r =
   // returns the set of pattern variables
-  let rec pat_vars p = match p.v with
+  let rec pat_vars p : RBSet.t bv =
+    match p.v with
     | Pat_dot_term _
-    | Pat_constant _ -> S.no_names
+    | Pat_constant _ -> empty ()
     | Pat_var x ->
       (* Only consider variables that actually have names,
       not wildcards. *)
       if string_of_id x.ppname = Ident.reserved_prefix
-      then S.no_names
-      else add x S.no_names
+      then empty ()
+      else singleton x
     | Pat_cons(_, _, pats) ->
       let aux out (p, _) =
           let p_vars = pat_vars p in
@@ -798,7 +799,7 @@ let check_linear_pattern_variables pats r =
 
                         r
       in
-      List.fold_left aux S.no_names pats
+      List.fold_left aux (empty ()) pats
   in
 
   // check that the same variables are bound in each pattern
@@ -1427,7 +1428,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                 then aux (union acc set) sets
                 else Some (List.hd (elems i))
         in
-        aux (new_id_set ()) sets
+        aux (empty ()) sets
       in
       begin match check_disjoint bvss with
       | None -> ()

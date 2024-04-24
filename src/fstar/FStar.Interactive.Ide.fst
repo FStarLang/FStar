@@ -997,7 +997,6 @@ exception InvalidSearch of string
 
 let run_search st search_str =
   let tcenv = st.repl_env in
-  let empty_fv_set = SS.new_fv_set () in
 
   let st_matches candidate term =
     let found =

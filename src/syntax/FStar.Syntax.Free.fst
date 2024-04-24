@@ -78,16 +78,16 @@ let rec snoc xx y =
 val (@@) : #a:Type -> {| deq a |} -> list a -> list a -> list a
 let (@@) xs ys = List.fold_left (fun xs y -> snoc xs y) xs ys
 
-let no_free_vars = {
+let no_free_vars : free_vars_and_fvars = {
     free_names=[];
     free_uvars=[];
     free_univs=[];
     free_univ_names=[];
-}, new_fv_set ()
+}, empty ()
 
-let singleton_fvar fv =
+let singleton_fvar fv : free_vars_and_fvars =
     fst no_free_vars,
-    add fv.fv_name.v (new_fv_set ())
+    add fv.fv_name.v (empty ())
 
 let singleton_bv x   = {fst no_free_vars with free_names=[x]}, snd no_free_vars
 let singleton_uv x   = {fst no_free_vars with free_uvars=[x]}, snd no_free_vars
@@ -235,7 +235,7 @@ and free_names_and_uvars_ascription asc use_cache =
 and free_names_and_uvars t use_cache =
   let t = Subst.compress t in
   match !t.vars with
-  | Some n when not (should_invalidate_cache n use_cache) -> n, new_fv_set ()
+  | Some n when not (should_invalidate_cache n use_cache) -> n, empty ()
   | _ ->
       t.vars := None;
       let n = free_names_and_uvs' t use_cache in
@@ -250,7 +250,7 @@ and free_names_and_uvars_comp c use_cache =
         | Some n ->
           if should_invalidate_cache n use_cache
           then (c.vars := None; free_names_and_uvars_comp c use_cache)
-          else n, new_fv_set ()
+          else n, empty ()
         | _ ->
          let n = match c.n with
             | GTotal t
@@ -296,9 +296,6 @@ and should_invalidate_cache n use_cache =
 
 //note use_cache is set false ONLY for fvars, which is not maintained at each AST node
 //see the comment above
-let new_uv_set () : uvars = empty ()
-let new_universe_uvar_set () : flat_set universe_uvar = empty ()
-let empty = empty ()
 
 let names t = from_list (fst (free_names_and_uvars t Def)).free_names
 let uvars t = from_list (fst (free_names_and_uvars t Def)).free_uvars

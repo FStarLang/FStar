@@ -1176,12 +1176,13 @@ let restrict_all_uvars env (tgt:ctx_uvar) (bs:binders) (sources:list ctx_uvar) w
     List.fold_right (restrict_ctx env tgt bs) sources wl
 
 let intersect_binders (g:gamma) (v1:binders) (v2:binders) : binders =
-    let as_set v =
-        v |> List.fold_left (fun out x -> add x.binder_bv out) S.no_names in
+    let as_set (v:binders) : RBSet.t bv =
+      v |> List.fold_left (fun out x -> add x.binder_bv out) (empty ())
+    in
     let v1_set = as_set v1 in
     let ctx_binders =
         List.fold_left (fun out b -> match b with Binding_var x -> add x out | _ -> out)
-                        S.no_names
+                        (empty ())
                         g
     in
     let isect, _ =

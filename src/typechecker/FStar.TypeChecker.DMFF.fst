@@ -616,7 +616,7 @@ and star_type' env t =
                         let s = List.fold_left (fun s ({binder_bv=bv}) ->
                             non_dependent_or_raise s bv.sort ;
                             add bv s
-                        ) S.no_names binders in
+                        ) (Class.Setlike.empty ())  binders in
                         let ct = U.comp_result c in
                         non_dependent_or_raise s ct ;
                         let k = n - List.length binders in

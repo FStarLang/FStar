@@ -1747,7 +1747,7 @@ let finish_module =
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
-  let no_uvs = Free.new_uv_set () in
+  let no_uvs = empty () in
   let rec aux out g = match g with
     | [] -> out
     | Binding_univ _ :: tl -> aux out tl
@@ -1757,7 +1757,7 @@ let uvars_in_env env =
   aux no_uvs env.gamma
 
 let univ_vars env =
-    let no_univs = Free.new_universe_uvar_set () in
+    let no_univs = empty () in
     let rec aux out g = match g with
       | [] -> out
       | Binding_univ _ :: tl -> aux out tl
@@ -1767,7 +1767,7 @@ let univ_vars env =
     aux no_univs env.gamma
 
 let univnames env =
-    let no_univ_names = Syntax.no_universe_names in
+    let no_univ_names = empty () in
     let rec aux out g = match g with
         | [] -> out
         | Binding_univ uname :: tl -> aux (add uname out) tl

@@ -382,7 +382,7 @@ let __do_unify_wflags
 
     let all_uvars =
       (match check_side with
-       | Check_none -> Free.new_uv_set ()
+       | Check_none -> empty ()
        | Check_left_only -> Free.uvars t1
        | Check_right_only -> Free.uvars t2
        | Check_both -> union (Free.uvars t1) (Free.uvars t2))
@@ -988,7 +988,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
       List.fold_right
         (fun (_, _, uv) s -> union s (SF.uvars (U.ctx_uvar_typ uv)))
         uvs
-        (SF.new_uv_set ())
+        (empty ())
     in
     let free_in_some_goal uv = mem uv uvset in
     solve' goal w ;!
