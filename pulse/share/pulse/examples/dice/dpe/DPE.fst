@@ -24,7 +24,7 @@ open EngineCore
 open L0Types
 open L0Core
 
-module L = Pulse.Lib.SpinLock
+module M = Pulse.Lib.Mutex
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
@@ -443,7 +443,7 @@ fn open_session ()
   ensures mutex_live global_state global_state_mutex_pred
 {
   let r = lock global_state;
-  let st_opt = R.replace r None;
+  let st_opt = M.replace r None;
 
   match st_opt {
     None -> {
@@ -554,7 +554,7 @@ fn take_session_state (sid:sid_t) (replace_with:session_state)
            session_state_perm (dflt r replace_with)
   {
     let r = lock global_state;
-    let st_opt = R.replace r None;
+    let st_opt = M.replace r None;
 
     match st_opt {
       None -> {
