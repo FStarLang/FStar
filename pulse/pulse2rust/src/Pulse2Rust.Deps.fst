@@ -27,16 +27,18 @@ open Pulse2Rust.Extract
 
 open RustBindings
 
+open FStar.Class.Setlike
+
 module S = FStar.Extraction.ML.Syntax
 module EUtil = FStar.Extraction.ML.Util
 
 module UEnv = FStar.Extraction.ML.UEnv
 
-let empty_defs : reachable_defs = Set.empty ()
-let singleton (p:S.mlpath) : reachable_defs = Set.singleton (S.string_of_mlpath p)
+let empty_defs : reachable_defs = RBSet.empty ()
+let singleton (p:S.mlpath) : reachable_defs = singleton (S.string_of_mlpath p)
 
 let reachable_defs_list (#a:Type) (f:a -> reachable_defs) (l:list a) : reachable_defs =
-  List.fold_left (fun defs x -> Set.union defs (f x)) (Set.empty ()) l
+  List.fold_left (fun defs x -> union defs (f x)) (empty ()) l
 
 let reachable_defs_option (#a:Type) (f:a -> reachable_defs) (o:option a) : reachable_defs =
   match o with
@@ -47,9 +49,9 @@ let rec reachable_defs_mlty (t:S.mlty) : reachable_defs =
   let open S in
   match t with
   | MLTY_Var _ -> empty_defs
-  | MLTY_Fun (t1, _, t2) -> Set.union (reachable_defs_mlty t1) (reachable_defs_mlty t2)
+  | MLTY_Fun (t1, _, t2) -> union (reachable_defs_mlty t1) (reachable_defs_mlty t2)
   | MLTY_Named (tps, p) ->
-    Set.union (reachable_defs_list reachable_defs_mlty tps) (singleton p)
+    union (reachable_defs_list reachable_defs_mlty tps) (singleton p)
   | MLTY_Tuple ts -> reachable_defs_list reachable_defs_mlty ts
   | MLTY_Top
   | MLTY_Erased -> empty_defs
@@ -64,11 +66,11 @@ let rec reachable_defs_mlpattern (p:S.mlpattern) : reachable_defs =
   | MLP_Const _
   | MLP_Var _ -> empty_defs
   | MLP_CTor (c, ps) ->
-    Set.union (singleton c) (reachable_defs_list reachable_defs_mlpattern ps)
+    union (singleton c) (reachable_defs_list reachable_defs_mlpattern ps)
   | MLP_Branch ps -> reachable_defs_list reachable_defs_mlpattern ps
   | MLP_Record (syms, fs) ->
-    Set.union (Set.singleton (String.concat "." syms))
-              (reachable_defs_list (fun (_, p) -> reachable_defs_mlpattern p) fs)
+    union (Class.Setlike.singleton (String.concat "." syms))
+          (reachable_defs_list (fun (_, p) -> reachable_defs_mlpattern p) fs)
   | MLP_Tuple ps -> reachable_defs_list reachable_defs_mlpattern ps
 
 let rec reachable_defs_expr' (e:S.mlexpr') : reachable_defs =
@@ -77,51 +79,51 @@ let rec reachable_defs_expr' (e:S.mlexpr') : reachable_defs =
   | MLE_Const _
   | MLE_Var _ -> empty_defs
   | MLE_Name p -> singleton p
-  | MLE_Let (lb, e) -> Set.union (reachable_defs_mlletbinding lb) (reachable_defs_expr e)
+  | MLE_Let (lb, e) -> union (reachable_defs_mlletbinding lb) (reachable_defs_expr e)
   | MLE_App (e, es) ->
-    Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_expr es)
+    union (reachable_defs_expr e) (reachable_defs_list reachable_defs_expr es)
   | MLE_TApp (e, ts) ->
-    Set.union (reachable_defs_expr e) (reachable_defs_list reachable_defs_mlty ts)
+    union (reachable_defs_expr e) (reachable_defs_list reachable_defs_mlty ts)
   | MLE_Fun (args, e) ->
-    Set.union (reachable_defs_list (fun b -> reachable_defs_mlty b.S.mlbinder_ty) args)
-              (reachable_defs_expr e)
+    union (reachable_defs_list (fun b -> reachable_defs_mlty b.S.mlbinder_ty) args)
+          (reachable_defs_expr e)
   | MLE_Match (e, bs) ->
-    Set.union (reachable_defs_expr e)
-              (reachable_defs_list reachable_defs_mlbranch bs)
+    union (reachable_defs_expr e)
+          (reachable_defs_list reachable_defs_mlbranch bs)
   | MLE_Coerce (e, t1, t2) ->
-    Set.union (reachable_defs_expr e)
-              (Set.union (reachable_defs_mlty t1) (reachable_defs_mlty t2))
+    union (reachable_defs_expr e)
+          (union (reachable_defs_mlty t1) (reachable_defs_mlty t2))
   | MLE_CTor (p, es) ->
-    Set.union (singleton p)
-               (reachable_defs_list reachable_defs_expr es)
+    union (singleton p)
+          (reachable_defs_list reachable_defs_expr es)
   | MLE_Seq es
   | MLE_Tuple es -> reachable_defs_list reachable_defs_expr es
   | MLE_Record (p, n, fs) ->
-    Set.union (Set.singleton (String.concat "." (p@[n])))
-              (reachable_defs_list (fun (_, e) -> reachable_defs_expr e) fs)
+    union (Class.Setlike.singleton (String.concat "." (p@[n])))
+          (reachable_defs_list (fun (_, e) -> reachable_defs_expr e) fs)
   | MLE_Proj (e, _) -> reachable_defs_expr e
   | MLE_If (e1, e2, e3_opt) ->
-    Set.union (reachable_defs_expr e1)
-              (Set.union (reachable_defs_expr e2)
-                         (reachable_defs_option reachable_defs_expr e3_opt))
+    union (reachable_defs_expr e1)
+          (union (reachable_defs_expr e2)
+                 (reachable_defs_option reachable_defs_expr e3_opt))
   | MLE_Raise (p, es) ->
-    Set.union (singleton p)
-              (reachable_defs_list reachable_defs_expr es)
-  | MLE_Try (e, bs) -> Set.union (reachable_defs_expr e)
-                                 (reachable_defs_list reachable_defs_mlbranch bs)
+    union (singleton p)
+          (reachable_defs_list reachable_defs_expr es)
+  | MLE_Try (e, bs) -> union (reachable_defs_expr e)
+                             (reachable_defs_list reachable_defs_mlbranch bs)
 
 and reachable_defs_expr (e:S.mlexpr) : reachable_defs =
-  Set.union (reachable_defs_expr' e.expr)
-            (reachable_defs_mlty e.mlty)
+  union (reachable_defs_expr' e.expr)
+        (reachable_defs_mlty e.mlty)
 
 and reachable_defs_mlbranch ((p, wopt, e):S.mlbranch) : reachable_defs =
-  Set.union (reachable_defs_mlpattern p)
-            (Set.union (reachable_defs_option reachable_defs_expr wopt)
-                       (reachable_defs_expr e))
+  union (reachable_defs_mlpattern p)
+        (union (reachable_defs_option reachable_defs_expr wopt)
+               (reachable_defs_expr e))
 
 and reachable_defs_mllb (lb:S.mllb) : reachable_defs =
-  Set.union (reachable_defs_option reachable_defs_mltyscheme lb.mllb_tysc)
-            (reachable_defs_expr lb.mllb_def)
+  union (reachable_defs_option reachable_defs_mltyscheme lb.mllb_tysc)
+        (reachable_defs_expr lb.mllb_def)
 
 and reachable_defs_mlletbinding ((_, lbs):S.mlletbinding) : reachable_defs =
   reachable_defs_list reachable_defs_mllb lbs
@@ -163,9 +165,9 @@ let decl_reachable (reachable_defs:reachable_defs) (mname:string) (d:S.mlmodule1
   let open S in
   match d.mlmodule1_m with
   | MLM_Ty t ->
-    List.existsb (fun ty_decl ->Set.mem (mname ^ "." ^ ty_decl.tydecl_name) reachable_defs) t
+    List.existsb (fun ty_decl -> mem (mname ^ "." ^ ty_decl.tydecl_name) reachable_defs) t
   | MLM_Let (_, lbs) ->
-    List.existsb (fun lb -> Set.mem (mname ^ "." ^ lb.mllb_name) reachable_defs) lbs
+    List.existsb (fun lb -> mem (mname ^ "." ^ lb.mllb_name) reachable_defs) lbs
   | MLM_Exn (p, _) -> false
   | MLM_Top _ -> false
   | MLM_Loc _ -> false

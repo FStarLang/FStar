@@ -147,20 +147,34 @@ let rec (collect_reachable_defs_aux :
     fun worklist ->
       fun reachable_defs ->
         let uu___ =
-          FStar_Compiler_Set.is_empty FStar_Class_Ord.ord_string worklist in
+          FStar_Class_Setlike.is_empty ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic worklist) in
         if uu___
         then reachable_defs
         else
           (let uu___2 =
-             FStar_Compiler_Set.elems FStar_Class_Ord.ord_string worklist in
+             FStar_Class_Setlike.elems ()
+               (Obj.magic
+                  (FStar_Compiler_RBSet.setlike_rbset
+                     FStar_Class_Ord.ord_string)) (Obj.magic worklist) in
            match uu___2 with
            | hd::uu___3 ->
                let worklist1 =
-                 FStar_Compiler_Set.remove FStar_Class_Ord.ord_string hd
-                   worklist in
+                 Obj.magic
+                   (FStar_Class_Setlike.remove ()
+                      (Obj.magic
+                         (FStar_Compiler_RBSet.setlike_rbset
+                            FStar_Class_Ord.ord_string)) hd
+                      (Obj.magic worklist)) in
                let reachable_defs1 =
-                 FStar_Compiler_Set.add FStar_Class_Ord.ord_string hd
-                   reachable_defs in
+                 Obj.magic
+                   (FStar_Class_Setlike.add ()
+                      (Obj.magic
+                         (FStar_Compiler_RBSet.setlike_rbset
+                            FStar_Class_Ord.ord_string)) hd
+                      (Obj.magic reachable_defs)) in
                let worklist2 =
                  let hd_decl = FStar_Compiler_Util.smap_try_find dd hd in
                  match hd_decl with
@@ -169,24 +183,39 @@ let rec (collect_reachable_defs_aux :
                      let hd_reachable_defs =
                        Pulse2Rust_Deps.reachable_defs_mlmodule1 hd_decl1 in
                      let uu___4 =
-                       FStar_Compiler_Set.elems FStar_Class_Ord.ord_string
-                         hd_reachable_defs in
+                       FStar_Class_Setlike.elems ()
+                         (Obj.magic
+                            (FStar_Compiler_RBSet.setlike_rbset
+                               FStar_Class_Ord.ord_string))
+                         (Obj.magic hd_reachable_defs) in
                      FStar_Compiler_List.fold_left
-                       (fun worklist3 ->
-                          fun def ->
-                            let uu___5 =
-                              (FStar_Compiler_Set.mem
-                                 FStar_Class_Ord.ord_string def
-                                 reachable_defs1)
-                                ||
-                                (FStar_Compiler_Set.mem
-                                   FStar_Class_Ord.ord_string def worklist3) in
-                            if uu___5
-                            then worklist3
-                            else
-                              FStar_Compiler_Set.add
-                                FStar_Class_Ord.ord_string def worklist3)
-                       worklist1 uu___4 in
+                       (fun uu___6 ->
+                          fun uu___5 ->
+                            (fun worklist3 ->
+                               fun def ->
+                                 let uu___5 =
+                                   (FStar_Class_Setlike.mem ()
+                                      (Obj.magic
+                                         (FStar_Compiler_RBSet.setlike_rbset
+                                            FStar_Class_Ord.ord_string)) def
+                                      (Obj.magic reachable_defs1))
+                                     ||
+                                     (FStar_Class_Setlike.mem ()
+                                        (Obj.magic
+                                           (FStar_Compiler_RBSet.setlike_rbset
+                                              FStar_Class_Ord.ord_string))
+                                        def (Obj.magic worklist3)) in
+                                 if uu___5
+                                 then Obj.magic (Obj.repr worklist3)
+                                 else
+                                   Obj.magic
+                                     (Obj.repr
+                                        (FStar_Class_Setlike.add ()
+                                           (Obj.magic
+                                              (FStar_Compiler_RBSet.setlike_rbset
+                                                 FStar_Class_Ord.ord_string))
+                                           def (Obj.magic worklist3))))
+                              uu___6 uu___5) worklist1 uu___4 in
                collect_reachable_defs_aux dd worklist2 reachable_defs1)
 let (collect_reachable_defs :
   Pulse2Rust_Env.dict -> Prims.string -> Pulse2Rust_Env.reachable_defs) =
@@ -200,15 +229,23 @@ let (collect_reachable_defs :
         match uu___ with | (uu___1, uu___2, decls) -> decls in
       let worklist =
         FStar_Compiler_List.fold_left
-          (fun worklist1 ->
-             fun decl ->
-               let uu___ =
-                 let uu___1 = mlmodule1_name decl in
-                 FStar_Compiler_List.map
-                   (fun s -> Prims.strcat root_module (Prims.strcat "." s))
-                   uu___1 in
-               FStar_Compiler_Set.addn FStar_Class_Ord.ord_string uu___
-                 worklist1) Pulse2Rust_Deps.empty_defs root_decls in
+          (fun uu___1 ->
+             fun uu___ ->
+               (fun worklist1 ->
+                  fun decl ->
+                    let uu___ =
+                      let uu___1 = mlmodule1_name decl in
+                      FStar_Compiler_List.map
+                        (fun s ->
+                           Prims.strcat root_module (Prims.strcat "." s))
+                        uu___1 in
+                    Obj.magic
+                      (FStar_Class_Setlike.addn ()
+                         (Obj.magic
+                            (FStar_Compiler_RBSet.setlike_rbset
+                               FStar_Class_Ord.ord_string)) uu___
+                         (Obj.magic worklist1))) uu___1 uu___)
+          Pulse2Rust_Deps.empty_defs root_decls in
       collect_reachable_defs_aux dd worklist Pulse2Rust_Deps.empty_defs
 let (rust_file_name : Prims.string -> Prims.string) =
   fun mname ->
