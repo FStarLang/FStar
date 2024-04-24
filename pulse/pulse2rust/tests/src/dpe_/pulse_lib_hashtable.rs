@@ -305,4 +305,18 @@ pub fn not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
     let contents1 = i1;
     contents1
 }
+pub fn insert_if_not_full<KT: Copy + PartialEq + Clone, VT: Clone>(
+    ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
+    k: KT,
+    v: VT,
+    pht: (),
+) -> (super::pulse_lib_hashtable_type::ht_t<KT, VT>, bool) {
+    let b = super::pulse_lib_hashtable::not_full(ht, ());
+    if b.1 {
+        super::pulse_lib_hashtable::insert(b.0, k, v, ())
+    } else {
+        let res = (b.0, false);
+        res
+    }
+}
 

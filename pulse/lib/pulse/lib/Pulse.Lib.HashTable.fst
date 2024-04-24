@@ -63,7 +63,11 @@ let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
 let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
   V.pts_to ht.contents pht.repr.seq
   **
-  pure ( related ht pht /\ V.is_full_vec ht.contents)
+  pure (related ht pht /\ V.is_full_vec ht.contents)
+
+let models_is_small #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+  : Lemma (is_small (models ht pht))
+          [SMTPat (is_small (models ht pht))] = ()
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
@@ -698,6 +702,37 @@ fn not_full
   let b = ((ht <: ht_t kt vt), (res <: bool));
   rewrite (models ht pht) as (models (fst b) pht);
   b
+}
+```
+
+```pulse
+fn insert_if_not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (ht:ht_t kt vt) (k:kt) (v:vt)
+  (#pht:erased (PHT.pht_t kt vt))
+  requires models ht pht
+  returns b:(ht_t kt vt & bool)
+  ensures
+    exists* pht'.
+      models (fst b) pht' **
+      pure (same_sz_and_hashf (fst b) ht /\
+            (if snd b
+             then (PHT.not_full (reveal pht).repr /\
+                   pht'==PHT.insert pht k v)
+             else pht'==pht))
+{
+  let b = not_full ht;
+  if snd b
+  {
+    Pulse.Lib.HashTable.insert (fst b) k v
+  }
+  else
+  {
+    let res = (fst b, false);
+    rewrite (models (fst b) pht) as (models (fst res) pht);
+    res
+  }
 }
 ```
 

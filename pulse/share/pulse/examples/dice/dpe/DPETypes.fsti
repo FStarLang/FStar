@@ -152,21 +152,23 @@ let mk_l0_context_t cdi : l0_context_t = {cdi}
 type l0_context_repr_t = {
   uds:Seq.seq U8.t;
   cdi:Seq.seq U8.t;
-  repr:engine_record_repr;
+  repr:(repr:engine_record_repr {
+    cdi_functional_correctness cdi uds repr /\
+    l0_is_authentic repr });
 }
 
 let mk_l0_context_repr_t
   (uds:Seq.seq U8.t)
   (cdi:Seq.seq U8.t)
-  (repr:engine_record_repr) 
+  (repr:engine_record_repr {
+    cdi_functional_correctness cdi uds repr /\
+    l0_is_authentic repr })
 : GTot l0_context_repr_t 
 = {uds; cdi; repr}
 
 let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
   = V.pts_to c.cdi r.cdi **
-    pure (V.is_full_vec c.cdi
-       /\ cdi_functional_correctness r.cdi r.uds r.repr
-       /\ l0_is_authentic r.repr)
+    pure (V.is_full_vec c.cdi)
 
 (* L1 Context *)
 [@@ Rust_derive "Clone"]
@@ -197,7 +199,21 @@ type l1_context_repr_t = {
   cdi:Seq.seq U8.t; // dice_digest_len;
   repr:l0_record_repr_t;
   deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
-  aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
+  aliasKeyCRT_ingredients: (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t {
+    valid_hkdf_ikm_len dice_digest_len /\
+    aliasKey_functional_correctness
+      dice_hash_alg dice_digest_len cdi repr.fwid
+      aliasKey_label_len repr.aliasKey_label 
+      aliasKey_pub aliasKey_priv /\
+    deviceIDCSR_functional_correctness
+      dice_hash_alg dice_digest_len cdi
+      deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
+      deviceIDCSR_len deviceIDCSR /\
+    aliasKeyCRT_functional_correctness
+      dice_hash_alg dice_digest_len cdi repr.fwid
+      deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
+      aliasKeyCRT_len aliasKeyCRT aliasKey_pub
+  });
 }
 
 let mk_l1_context_repr_t 
@@ -214,7 +230,20 @@ let mk_l1_context_repr_t
   (cdi:Seq.seq U8.t)
   (repr:l0_record_repr_t)
   (deviceIDCSR_ingredients:deviceIDCSR_ingredients_t)
-  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
+  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t {
+    valid_hkdf_ikm_len dice_digest_len /\
+    aliasKey_functional_correctness
+      dice_hash_alg dice_digest_len cdi repr.fwid
+      aliasKey_label_len repr.aliasKey_label 
+      aliasKey_pub aliasKey_priv /\
+    deviceIDCSR_functional_correctness
+      dice_hash_alg dice_digest_len cdi
+      deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
+      deviceIDCSR_len deviceIDCSR /\
+    aliasKeyCRT_functional_correctness
+      dice_hash_alg dice_digest_len cdi repr.fwid
+      deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
+      aliasKeyCRT_len aliasKeyCRT aliasKey_pub})
 : GTot l1_context_repr_t 
 = {deviceID_label_len; aliasKey_label_len; deviceID_priv; deviceID_pub; aliasKey_priv;
   aliasKey_pub; aliasKeyCRT_len; aliasKeyCRT; deviceIDCSR_len; deviceIDCSR;
@@ -228,30 +257,13 @@ let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
     V.pts_to c.aliasKey_pub r.aliasKey_pub **
     V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
     V.pts_to c.deviceIDCSR r.deviceIDCSR **
-    pure (valid_hkdf_ikm_len dice_digest_len
-       /\ aliasKey_functional_correctness
-            dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-            r.aliasKey_label_len r.repr.aliasKey_label 
-            r.aliasKey_pub r.aliasKey_priv
-       /\ deviceIDCSR_functional_correctness 
-            dice_hash_alg dice_digest_len r.cdi
-            r.deviceID_label_len r.repr.deviceID_label r.deviceIDCSR_ingredients 
-            r.deviceIDCSR_len r.deviceIDCSR       
-       /\ aliasKeyCRT_functional_correctness 
-            dice_hash_alg dice_digest_len r.cdi r.repr.fwid
-            r.deviceID_label_len r.repr.deviceID_label r.aliasKeyCRT_ingredients 
-            r.aliasKeyCRT_len r.aliasKeyCRT r.aliasKey_pub
-       /\ V.is_full_vec c.deviceID_priv
+    pure (V.is_full_vec c.deviceID_priv
        /\ V.is_full_vec c.deviceID_pub
        /\ V.is_full_vec c.aliasKey_priv
        /\ V.is_full_vec c.aliasKey_pub
        /\ V.is_full_vec c.aliasKeyCRT
        /\ V.is_full_vec c.deviceIDCSR)  
 
-(* Generic Context *)
-// unlike record_t (below), we require full permission on the resources inside
-// the context because we will eventually free the resources when we destroy
-// the context
 [@@ Rust_derive "Clone"]
 noeq
 type context_t = 
@@ -275,92 +287,55 @@ let mk_context_repr_t_l1 (r:erased l1_context_repr_t)
 : erased context_repr_t = L1_context_repr r
 
 let context_perm (context:context_t) (repr:context_repr_t): vprop = 
-  match context with
-  | Engine_context c -> (
-    match repr with
-    | Engine_context_repr uds -> engine_context_perm c uds
-    | _ -> pure False
-  )
-  | L0_context c -> (
-    match repr with 
-    | L0_context_repr r -> l0_context_perm c r
-    | _ -> pure False
-  )
-  | L1_context c -> (
-    match repr with
-    | L1_context_repr r -> l1_context_perm c r
-    | _ -> pure False
-  )
+  match context, repr with
+  | Engine_context c, Engine_context_repr uds -> engine_context_perm c uds
+  | L0_context c, L0_context_repr r -> l0_context_perm c r
+  | L1_context c, L1_context_repr r -> l1_context_perm c r
+  | _ -> pure False
+
+let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : bool =
+  match c, r with
+  | Engine_context _, Engine_context_repr _
+  | L0_context _, L0_context_repr _
+  | L1_context _, L1_context_repr _ -> true
+  | _ -> false
 
 ```pulse
 ghost
-fn elim_false (#a:Type0) (p: (a -> vprop))
-    requires pure False
-    returns x:a
-    ensures p x
+fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
+  requires context_perm c r
+  ensures context_perm c r ** pure (context_and_repr_tag_related c r)
 {
-    let x = false_elim #a ();
-    rewrite emp as (p x);
-    x
+  let b = context_and_repr_tag_related c r;
+  if b {
+    ()
+  } else {
+    rewrite (context_perm c r) as (pure False);
+    unreachable ()
+  }
 }
 ```
 
 ```pulse
 ghost
-fn get_engine_context_perm (c:engine_context_t) (repr:erased context_repr_t)
-  requires context_perm (Engine_context c) repr
+fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == Engine_context ec)
   returns uds:Ghost.erased (Seq.seq U8.t)
-  ensures engine_context_perm c uds ** pure (repr == Engine_context_repr uds)
+  ensures engine_context_perm ec uds ** pure (r == Engine_context_repr uds)
 {
-  let repr = reveal repr;
-  match repr {
+  match r {
     Engine_context_repr uds -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (engine_context_perm c uds);
+      rewrite (context_perm c r) as
+              (engine_context_perm ec uds);
       hide uds
-    } 
-    L0_context_repr r0 -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (pure False);
-      let x = elim_false (engine_context_perm c);
-      hide x
     }
-    L1_context_repr _ -> {
-      rewrite (context_perm (Engine_context c) repr)
-          as  (pure False);
-      let x = elim_false (engine_context_perm c);
-      hide x
-    }
-  }
-}
-```
+    _ -> {
+      assume_ (pure (~ (Engine_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
 
-
-```pulse
-ghost
-fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
-  requires context_perm (L0_context r) repr'
-  returns r0:erased l0_context_repr_t
-  ensures l0_context_perm r r0 ** pure (reveal repr' == L0_context_repr r0)
-{
-  let repr = reveal repr';
-  match repr {
-    Engine_context_repr uds -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (pure False);
-      let x = elim_false (l0_context_perm r);
-      hide x
-    }
-    L0_context_repr r0 -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (l0_context_perm r r0);
-      hide r0
-    }
-    L1_context_repr _ -> {
-      rewrite (context_perm (L0_context r) repr)
-          as  (pure False);
-      let x = elim_false (l0_context_perm r);
-      hide x
     }
   }
 }
@@ -368,85 +343,109 @@ fn get_l0_context_perm (r:l0_context_t) (repr':erased context_repr_t)
 
 ```pulse
 ghost
-fn get_l1_context_perm (r:l1_context_t) (repr':erased context_repr_t)
-  requires context_perm (L1_context r) repr'
-  returns r0:erased l1_context_repr_t
-  ensures l1_context_perm r r0 ** pure (reveal repr' == L1_context_repr r0)
+fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == L0_context lc)
+  returns lrepr:Ghost.erased l0_context_repr_t
+  ensures l0_context_perm lc lrepr ** pure (r == L0_context_repr lrepr)
 {
-  let repr = reveal repr';
-  match repr {
-    Engine_context_repr uds -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (pure False);
-      let x = elim_false (l1_context_perm r);
-      hide x
+  match r {
+    L0_context_repr lrepr -> {
+      rewrite (context_perm c r) as
+              (l0_context_perm lc lrepr);
+      hide lrepr
     }
-    L0_context_repr _ -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (pure False);
-      let x = elim_false (l1_context_perm r);
-      hide x
-    }
-    L1_context_repr r0 -> {
-      rewrite (context_perm (L1_context r) repr)
-          as  (l1_context_perm r r0);
-      hide r0
+    _ -> {
+      assume_ (pure (~ (L0_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
     }
   }
 }
 ```
 
-// In the implmentation, we store contexts as values in a global hash table
-// so we need a way to store and retrieve permission on the context. We do this
-// by keeping a tuple of the context along with a lock on the context permission
-// let locked_context_t = c:context_t 
-//                      & r:erased context_repr_t 
-//                      & L.lock (context_perm c r)
+```pulse
+ghost
+fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == L1_context lc)
+  returns lrepr:Ghost.erased l1_context_repr_t
+  ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
+{
+  match r {
+    L1_context_repr lrepr -> {
+      rewrite (context_perm c r) as
+              (l1_context_perm lc lrepr);
+      hide lrepr
+    }
+    _ -> {
+      assume_ (pure (~ (L1_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
 
-(* Record *)
 noeq
 type record_t =
   | Engine_record : r:engine_record_t -> record_t
   | L0_record     : r:l0_record_t -> record_t
 
 noeq
-type repr_t = 
+type repr_t =
   | Engine_repr : r:engine_record_repr -> repr_t
   | L0_repr     : r:l0_record_repr_t -> repr_t
 
 let record_perm (record:record_t) (p:perm) (repr:repr_t)  : vprop = 
-  match record with
-  | Engine_record r -> (
-    match repr with 
-    | Engine_repr r0 -> engine_record_perm r p r0
-    | _ -> pure False
-  )
-  | L0_record r -> (
-    match repr with
-    | L0_repr r0 -> l0_record_perm r p r0
-    | _ -> pure False
-  )
+  match record, repr with
+  | Engine_record r, Engine_repr r0 -> engine_record_perm r p r0
+  | L0_record r, L0_repr r0 -> l0_record_perm r p r0
+  | _ -> pure False
 
+let record_perm_and_repr_tag_related (r:record_t) (repr:repr_t) : bool =
+  match r, repr with
+  | Engine_record _, Engine_repr _
+  | L0_record _, L0_repr _ -> true
+  | _ -> false
 
 ```pulse
 ghost
-fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (Engine_record r) p repr'
-  returns r0:erased engine_record_repr
-  ensures engine_record_perm r p r0 ** pure (reveal repr' == Engine_repr r0)
+fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
+  requires record_perm r p repr
+  ensures record_perm r p repr **
+          pure (record_perm_and_repr_tag_related r repr)
 {
-  let repr = reveal repr';
+  let b = record_perm_and_repr_tag_related r repr;
+  if b {
+    ()
+  } else {
+    rewrite (record_perm r p repr) as (pure False);
+    unreachable ()
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm r p repr **
+           pure (r == Engine_record er)
+  returns erepr:Ghost.erased engine_record_repr
+  ensures engine_record_perm er p erepr ** pure (repr == Engine_repr erepr)
+{
   match repr {
-    Engine_repr r0 -> {
-      rewrite (record_perm (Engine_record r) p (reveal repr))
-          as  (engine_record_perm r p r0);
-      hide r0
+    Engine_repr erepr -> {
+      rewrite (record_perm r p repr)
+          as  (engine_record_perm er p erepr);
+      hide erepr
     }
     L0_repr _ -> {
-      rewrite (record_perm (Engine_record r) p repr)
+      rewrite (record_perm r p repr)
           as  (pure False);
-      let x = elim_false #engine_record_repr (engine_record_perm r p);
-      hide x
+      unreachable ()
     }
   }
 }
@@ -454,24 +453,23 @@ fn get_engine_record_perm (r:engine_record_t) (repr':erased repr_t) (p:perm)
 
 ```pulse
 ghost
-fn get_l0_record_perm (r:l0_record_t) (repr':erased repr_t) (p:perm)
-  requires record_perm (L0_record r) p repr'
-  returns r0:erased l0_record_repr_t
-  ensures l0_record_perm r p r0 ** pure (reveal repr' == L0_repr r0)
+fn rewrite_record_perm_l0 (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm r p repr **
+           pure (r == L0_record lr)
+  returns r0:Ghost.erased l0_record_repr_t
+  ensures l0_record_perm lr p r0 ** pure (repr == L0_repr r0)
 {
-  let repr = reveal repr';
   match repr {
-    Engine_repr rr -> {
-      rewrite (record_perm (L0_record r) p repr)
+    Engine_repr _ -> {
+      rewrite (record_perm r p repr)
           as  (pure False);
-      let x = elim_false #l0_record_repr_t (l0_record_perm r p);
-      hide x
+      unreachable ()
     }
     L0_repr r0 -> {
-      rewrite (record_perm (L0_record r) p repr)
-          as  (l0_record_perm r p r0);
+      rewrite (record_perm r p repr)
+          as  (l0_record_perm lr p r0);
       hide r0
-   }
+    }
   }
 }
 ```
