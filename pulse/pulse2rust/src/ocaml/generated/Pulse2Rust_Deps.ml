@@ -1,11 +1,19 @@
 open Prims
 let (empty_defs : Pulse2Rust_Env.reachable_defs) =
-  FStar_Compiler_Set.empty FStar_Class_Ord.ord_string ()
+  Obj.magic
+    (FStar_Class_Setlike.empty ()
+       (Obj.magic
+          (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string)) ())
 let (singleton :
   FStar_Extraction_ML_Syntax.mlpath -> Pulse2Rust_Env.reachable_defs) =
-  fun p ->
-    let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-    FStar_Compiler_Set.singleton FStar_Class_Ord.ord_string uu___
+  fun uu___ ->
+    (fun p ->
+       let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+       Obj.magic
+         (FStar_Class_Setlike.singleton ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            uu___)) uu___
 let reachable_defs_list :
   'a .
     ('a -> Pulse2Rust_Env.reachable_defs) ->
@@ -13,13 +21,24 @@ let reachable_defs_list :
   =
   fun f ->
     fun l ->
-      let uu___ = FStar_Compiler_Set.empty FStar_Class_Ord.ord_string () in
+      let uu___ =
+        Obj.magic
+          (FStar_Class_Setlike.empty ()
+             (Obj.magic
+                (FStar_Compiler_RBSet.setlike_rbset
+                   FStar_Class_Ord.ord_string)) ()) in
       FStar_Compiler_List.fold_left
-        (fun defs ->
-           fun x ->
-             let uu___1 = f x in
-             FStar_Compiler_Set.union FStar_Class_Ord.ord_string defs uu___1)
-        uu___ l
+        (fun uu___2 ->
+           fun uu___1 ->
+             (fun defs ->
+                fun x ->
+                  let uu___1 = f x in
+                  Obj.magic
+                    (FStar_Class_Setlike.union ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Class_Ord.ord_string)) (Obj.magic defs)
+                       (Obj.magic uu___1))) uu___2 uu___1) uu___ l
 let reachable_defs_option :
   'a .
     ('a -> Pulse2Rust_Env.reachable_defs) ->
@@ -32,147 +51,294 @@ let reachable_defs_option :
       | FStar_Pervasives_Native.Some x -> f x
 let rec (reachable_defs_mlty :
   FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Env.reachable_defs) =
-  fun t ->
-    match t with
-    | FStar_Extraction_ML_Syntax.MLTY_Var uu___ -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu___, t2) ->
-        let uu___1 = reachable_defs_mlty t1 in
-        let uu___2 = reachable_defs_mlty t2 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___1 uu___2
-    | FStar_Extraction_ML_Syntax.MLTY_Named (tps, p) ->
-        let uu___ = reachable_defs_list reachable_defs_mlty tps in
-        let uu___1 = singleton p in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
-        reachable_defs_list reachable_defs_mlty ts
-    | FStar_Extraction_ML_Syntax.MLTY_Top -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLTY_Erased -> empty_defs
+  fun uu___ ->
+    (fun t ->
+       match t with
+       | FStar_Extraction_ML_Syntax.MLTY_Var uu___ ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLTY_Fun (t1, uu___, t2) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___1 = reachable_defs_mlty t1 in
+                 let uu___2 = reachable_defs_mlty t2 in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___1)
+                   (Obj.magic uu___2)))
+       | FStar_Extraction_ML_Syntax.MLTY_Named (tps, p) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_list reachable_defs_mlty tps in
+                 let uu___1 = singleton p in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLTY_Tuple ts ->
+           Obj.magic (Obj.repr (reachable_defs_list reachable_defs_mlty ts))
+       | FStar_Extraction_ML_Syntax.MLTY_Top ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLTY_Erased ->
+           Obj.magic (Obj.repr empty_defs)) uu___
 let (reachable_defs_mltyscheme :
   FStar_Extraction_ML_Syntax.mltyscheme -> Pulse2Rust_Env.reachable_defs) =
   fun uu___ -> match uu___ with | (uu___1, t) -> reachable_defs_mlty t
 let rec (reachable_defs_mlpattern :
   FStar_Extraction_ML_Syntax.mlpattern -> Pulse2Rust_Env.reachable_defs) =
-  fun p ->
-    match p with
-    | FStar_Extraction_ML_Syntax.MLP_Wild -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLP_Const uu___ -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLP_Var uu___ -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLP_CTor (c, ps) ->
-        let uu___ = singleton c in
-        let uu___1 = reachable_defs_list reachable_defs_mlpattern ps in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLP_Branch ps ->
-        reachable_defs_list reachable_defs_mlpattern ps
-    | FStar_Extraction_ML_Syntax.MLP_Record (syms, fs) ->
-        let uu___ =
-          FStar_Compiler_Set.singleton FStar_Class_Ord.ord_string
-            (FStar_Compiler_String.concat "." syms) in
-        let uu___1 =
-          reachable_defs_list
-            (fun uu___2 ->
-               match uu___2 with
-               | (uu___3, p1) -> reachable_defs_mlpattern p1) fs in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
-        reachable_defs_list reachable_defs_mlpattern ps
+  fun uu___ ->
+    (fun p ->
+       match p with
+       | FStar_Extraction_ML_Syntax.MLP_Wild ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLP_Const uu___ ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLP_Var uu___ ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLP_CTor (c, ps) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = singleton c in
+                 let uu___1 = reachable_defs_list reachable_defs_mlpattern ps in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLP_Branch ps ->
+           Obj.magic
+             (Obj.repr (reachable_defs_list reachable_defs_mlpattern ps))
+       | FStar_Extraction_ML_Syntax.MLP_Record (syms, fs) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ =
+                   Obj.magic
+                     (FStar_Class_Setlike.singleton ()
+                        (Obj.magic
+                           (FStar_Compiler_RBSet.setlike_rbset
+                              FStar_Class_Ord.ord_string))
+                        (FStar_Compiler_String.concat "." syms)) in
+                 let uu___1 =
+                   reachable_defs_list
+                     (fun uu___2 ->
+                        match uu___2 with
+                        | (uu___3, p1) -> reachable_defs_mlpattern p1) fs in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLP_Tuple ps ->
+           Obj.magic
+             (Obj.repr (reachable_defs_list reachable_defs_mlpattern ps)))
+      uu___
 let rec (reachable_defs_expr' :
   FStar_Extraction_ML_Syntax.mlexpr' -> Pulse2Rust_Env.reachable_defs) =
-  fun e ->
-    match e with
-    | FStar_Extraction_ML_Syntax.MLE_Const uu___ -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLE_Var uu___ -> empty_defs
-    | FStar_Extraction_ML_Syntax.MLE_Name p -> singleton p
-    | FStar_Extraction_ML_Syntax.MLE_Let (lb, e1) ->
-        let uu___ = reachable_defs_mlletbinding lb in
-        let uu___1 = reachable_defs_expr e1 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_App (e1, es) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 = reachable_defs_list reachable_defs_expr es in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_TApp (e1, ts) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 = reachable_defs_list reachable_defs_mlty ts in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Fun (args, e1) ->
-        let uu___ =
-          reachable_defs_list
-            (fun b ->
-               reachable_defs_mlty b.FStar_Extraction_ML_Syntax.mlbinder_ty)
-            args in
-        let uu___1 = reachable_defs_expr e1 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Match (e1, bs) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 = reachable_defs_list reachable_defs_mlbranch bs in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Coerce (e1, t1, t2) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 =
-          let uu___2 = reachable_defs_mlty t1 in
-          let uu___3 = reachable_defs_mlty t2 in
-          FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___2 uu___3 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_CTor (p, es) ->
-        let uu___ = singleton p in
-        let uu___1 = reachable_defs_list reachable_defs_expr es in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Seq es ->
-        reachable_defs_list reachable_defs_expr es
-    | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
-        reachable_defs_list reachable_defs_expr es
-    | FStar_Extraction_ML_Syntax.MLE_Record (p, n, fs) ->
-        let uu___ =
-          FStar_Compiler_Set.singleton FStar_Class_Ord.ord_string
-            (FStar_Compiler_String.concat "."
-               (FStar_Compiler_List.op_At p [n])) in
-        let uu___1 =
-          reachable_defs_list
-            (fun uu___2 ->
-               match uu___2 with | (uu___3, e1) -> reachable_defs_expr e1) fs in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Proj (e1, uu___) ->
-        reachable_defs_expr e1
-    | FStar_Extraction_ML_Syntax.MLE_If (e1, e2, e3_opt) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 =
-          let uu___2 = reachable_defs_expr e2 in
-          let uu___3 = reachable_defs_option reachable_defs_expr e3_opt in
-          FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___2 uu___3 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Raise (p, es) ->
-        let uu___ = singleton p in
-        let uu___1 = reachable_defs_list reachable_defs_expr es in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
-    | FStar_Extraction_ML_Syntax.MLE_Try (e1, bs) ->
-        let uu___ = reachable_defs_expr e1 in
-        let uu___1 = reachable_defs_list reachable_defs_mlbranch bs in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
+  fun uu___ ->
+    (fun e ->
+       match e with
+       | FStar_Extraction_ML_Syntax.MLE_Const uu___ ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLE_Var uu___ ->
+           Obj.magic (Obj.repr empty_defs)
+       | FStar_Extraction_ML_Syntax.MLE_Name p ->
+           Obj.magic (Obj.repr (singleton p))
+       | FStar_Extraction_ML_Syntax.MLE_Let (lb, e1) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_mlletbinding lb in
+                 let uu___1 = reachable_defs_expr e1 in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_App (e1, es) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 = reachable_defs_list reachable_defs_expr es in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_TApp (e1, ts) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 = reachable_defs_list reachable_defs_mlty ts in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Fun (args, e1) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ =
+                   reachable_defs_list
+                     (fun b ->
+                        reachable_defs_mlty
+                          b.FStar_Extraction_ML_Syntax.mlbinder_ty) args in
+                 let uu___1 = reachable_defs_expr e1 in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Match (e1, bs) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 = reachable_defs_list reachable_defs_mlbranch bs in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Coerce (e1, t1, t2) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 =
+                   let uu___2 = reachable_defs_mlty t1 in
+                   let uu___3 = reachable_defs_mlty t2 in
+                   Obj.magic
+                     (FStar_Class_Setlike.union ()
+                        (Obj.magic
+                           (FStar_Compiler_RBSet.setlike_rbset
+                              FStar_Class_Ord.ord_string)) (Obj.magic uu___2)
+                        (Obj.magic uu___3)) in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_CTor (p, es) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = singleton p in
+                 let uu___1 = reachable_defs_list reachable_defs_expr es in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Seq es ->
+           Obj.magic (Obj.repr (reachable_defs_list reachable_defs_expr es))
+       | FStar_Extraction_ML_Syntax.MLE_Tuple es ->
+           Obj.magic (Obj.repr (reachable_defs_list reachable_defs_expr es))
+       | FStar_Extraction_ML_Syntax.MLE_Record (p, n, fs) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ =
+                   Obj.magic
+                     (FStar_Class_Setlike.singleton ()
+                        (Obj.magic
+                           (FStar_Compiler_RBSet.setlike_rbset
+                              FStar_Class_Ord.ord_string))
+                        (FStar_Compiler_String.concat "."
+                           (FStar_Compiler_List.op_At p [n]))) in
+                 let uu___1 =
+                   reachable_defs_list
+                     (fun uu___2 ->
+                        match uu___2 with
+                        | (uu___3, e1) -> reachable_defs_expr e1) fs in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Proj (e1, uu___) ->
+           Obj.magic (Obj.repr (reachable_defs_expr e1))
+       | FStar_Extraction_ML_Syntax.MLE_If (e1, e2, e3_opt) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 =
+                   let uu___2 = reachable_defs_expr e2 in
+                   let uu___3 =
+                     reachable_defs_option reachable_defs_expr e3_opt in
+                   Obj.magic
+                     (FStar_Class_Setlike.union ()
+                        (Obj.magic
+                           (FStar_Compiler_RBSet.setlike_rbset
+                              FStar_Class_Ord.ord_string)) (Obj.magic uu___2)
+                        (Obj.magic uu___3)) in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Raise (p, es) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = singleton p in
+                 let uu___1 = reachable_defs_list reachable_defs_expr es in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))
+       | FStar_Extraction_ML_Syntax.MLE_Try (e1, bs) ->
+           Obj.magic
+             (Obj.repr
+                (let uu___ = reachable_defs_expr e1 in
+                 let uu___1 = reachable_defs_list reachable_defs_mlbranch bs in
+                 FStar_Class_Setlike.union ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string)) (Obj.magic uu___)
+                   (Obj.magic uu___1)))) uu___
 and (reachable_defs_expr :
   FStar_Extraction_ML_Syntax.mlexpr -> Pulse2Rust_Env.reachable_defs) =
-  fun e ->
-    let uu___ = reachable_defs_expr' e.FStar_Extraction_ML_Syntax.expr in
-    let uu___1 = reachable_defs_mlty e.FStar_Extraction_ML_Syntax.mlty in
-    FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
+  fun uu___ ->
+    (fun e ->
+       let uu___ = reachable_defs_expr' e.FStar_Extraction_ML_Syntax.expr in
+       let uu___1 = reachable_defs_mlty e.FStar_Extraction_ML_Syntax.mlty in
+       Obj.magic
+         (FStar_Class_Setlike.union ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic uu___) (Obj.magic uu___1))) uu___
 and (reachable_defs_mlbranch :
   FStar_Extraction_ML_Syntax.mlbranch -> Pulse2Rust_Env.reachable_defs) =
   fun uu___ ->
-    match uu___ with
-    | (p, wopt, e) ->
-        let uu___1 = reachable_defs_mlpattern p in
-        let uu___2 =
-          let uu___3 = reachable_defs_option reachable_defs_expr wopt in
-          let uu___4 = reachable_defs_expr e in
-          FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___3 uu___4 in
-        FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___1 uu___2
+    (fun uu___ ->
+       match uu___ with
+       | (p, wopt, e) ->
+           let uu___1 = reachable_defs_mlpattern p in
+           let uu___2 =
+             let uu___3 = reachable_defs_option reachable_defs_expr wopt in
+             let uu___4 = reachable_defs_expr e in
+             Obj.magic
+               (FStar_Class_Setlike.union ()
+                  (Obj.magic
+                     (FStar_Compiler_RBSet.setlike_rbset
+                        FStar_Class_Ord.ord_string)) (Obj.magic uu___3)
+                  (Obj.magic uu___4)) in
+           Obj.magic
+             (FStar_Class_Setlike.union ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Class_Ord.ord_string)) (Obj.magic uu___1)
+                (Obj.magic uu___2))) uu___
 and (reachable_defs_mllb :
   FStar_Extraction_ML_Syntax.mllb -> Pulse2Rust_Env.reachable_defs) =
-  fun lb ->
-    let uu___ =
-      reachable_defs_option reachable_defs_mltyscheme
-        lb.FStar_Extraction_ML_Syntax.mllb_tysc in
-    let uu___1 = reachable_defs_expr lb.FStar_Extraction_ML_Syntax.mllb_def in
-    FStar_Compiler_Set.union FStar_Class_Ord.ord_string uu___ uu___1
+  fun uu___ ->
+    (fun lb ->
+       let uu___ =
+         reachable_defs_option reachable_defs_mltyscheme
+           lb.FStar_Extraction_ML_Syntax.mllb_tysc in
+       let uu___1 =
+         reachable_defs_expr lb.FStar_Extraction_ML_Syntax.mllb_def in
+       Obj.magic
+         (FStar_Class_Setlike.union ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic uu___) (Obj.magic uu___1))) uu___
 and (reachable_defs_mlletbinding :
   FStar_Extraction_ML_Syntax.mlletbinding -> Pulse2Rust_Env.reachable_defs) =
   fun uu___ ->
@@ -233,19 +399,25 @@ let (decl_reachable :
         | FStar_Extraction_ML_Syntax.MLM_Ty t ->
             FStar_Compiler_List.existsb
               (fun ty_decl ->
-                 FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
+                 FStar_Class_Setlike.mem ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string))
                    (Prims.strcat mname
                       (Prims.strcat "."
                          ty_decl.FStar_Extraction_ML_Syntax.tydecl_name))
-                   reachable_defs) t
+                   (Obj.magic reachable_defs)) t
         | FStar_Extraction_ML_Syntax.MLM_Let (uu___, lbs) ->
             FStar_Compiler_List.existsb
               (fun lb ->
-                 FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
+                 FStar_Class_Setlike.mem ()
+                   (Obj.magic
+                      (FStar_Compiler_RBSet.setlike_rbset
+                         FStar_Class_Ord.ord_string))
                    (Prims.strcat mname
                       (Prims.strcat "."
                          lb.FStar_Extraction_ML_Syntax.mllb_name))
-                   reachable_defs) lbs
+                   (Obj.magic reachable_defs)) lbs
         | FStar_Extraction_ML_Syntax.MLM_Exn (p, uu___) -> false
         | FStar_Extraction_ML_Syntax.MLM_Top uu___ -> false
         | FStar_Extraction_ML_Syntax.MLM_Loc uu___ -> false

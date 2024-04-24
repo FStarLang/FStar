@@ -12,11 +12,15 @@ let fail_nyi : 'a . Prims.string -> 'a =
     FStar_Compiler_Effect.failwith uu___
 type var = Prims.string
 type binding = (var * Pulse2Rust_Rust_Syntax.typ * Prims.bool)
-type reachable_defs = Prims.string FStar_Compiler_Set.set
+type reachable_defs = Prims.string FStar_Compiler_RBSet.t
 let (reachable_defs_to_string : reachable_defs -> Prims.string) =
   fun d ->
     let uu___ =
-      let uu___1 = FStar_Compiler_Set.elems FStar_Class_Ord.ord_string d in
+      let uu___1 =
+        FStar_Class_Setlike.elems ()
+          (Obj.magic
+             (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+          (Obj.magic d) in
       FStar_Compiler_String.concat ";" uu___1 in
     FStar_Compiler_Util.format1 "[%s]" uu___
 type dict =
