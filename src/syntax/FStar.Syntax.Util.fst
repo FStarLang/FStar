@@ -108,9 +108,6 @@ let null_binders_of_tks (tks:list (typ * bqual)) : binders =
 let binders_of_tks (tks:list (typ * bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
 
-let binders_of_freevars (fvs : FlatSet.t bv) =
-  Class.Setlike.elems fvs |> List.map mk_binder
-
 let mk_subst s = [s]
 
 let subst_of_list (formals:binders) (actuals:args) : subst_t =

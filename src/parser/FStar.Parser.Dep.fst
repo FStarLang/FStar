@@ -39,8 +39,6 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
-module FlatSet = FStar.Compiler.FlatSet
-
 let profile f c = Profiling.profile f None c
 
 (* Meant to write to a file as an out_channel. If an exception is raised,
