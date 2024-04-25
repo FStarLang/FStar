@@ -500,6 +500,158 @@ let global_state : gref & mutex (option st) = run_stt (initialize_global_state (
 // DPE API implementation
 //
 
+```pulse
+ghost
+fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
+  requires context_perm c r
+  ensures context_perm c r ** pure (context_and_repr_tag_related c r)
+{
+  let b = context_and_repr_tag_related c r;
+  if b {
+    ()
+  } else {
+    rewrite (context_perm c r) as (pure False);
+    unreachable ()
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == Engine_context ec)
+  returns uds:Ghost.erased (Seq.seq U8.t)
+  ensures engine_context_perm ec uds ** pure (r == Engine_context_repr uds)
+{
+  match r {
+    Engine_context_repr uds -> {
+      rewrite (context_perm c r) as
+              (engine_context_perm ec uds);
+      hide uds
+    }
+    _ -> {
+      assume_ (pure (~ (Engine_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
+
+    }
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == L0_context lc)
+  returns lrepr:Ghost.erased l0_context_repr_t
+  ensures l0_context_perm lc lrepr ** pure (r == L0_context_repr lrepr)
+{
+  match r {
+    L0_context_repr lrepr -> {
+      rewrite (context_perm c r) as
+              (l0_context_perm lc lrepr);
+      hide lrepr
+    }
+    _ -> {
+      assume_ (pure (~ (L0_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
+  requires context_perm c r **
+           pure (c == L1_context lc)
+  returns lrepr:Ghost.erased l1_context_repr_t
+  ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
+{
+  match r {
+    L1_context_repr lrepr -> {
+      rewrite (context_perm c r) as
+              (l1_context_perm lc lrepr);
+      hide lrepr
+    }
+    _ -> {
+      assume_ (pure (~ (L1_context_repr? r)));
+      rewrite (context_perm c r) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+
+```pulse
+ghost
+fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
+  requires record_perm r p repr
+  ensures record_perm r p repr **
+          pure (record_perm_and_repr_tag_related r repr)
+{
+  let b = record_perm_and_repr_tag_related r repr;
+  if b {
+    ()
+  } else {
+    rewrite (record_perm r p repr) as (pure False);
+    unreachable ()
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm r p repr **
+           pure (r == Engine_record er)
+  returns erepr:Ghost.erased engine_record_repr
+  ensures engine_record_perm er p erepr ** pure (repr == Engine_repr erepr)
+{
+  match repr {
+    Engine_repr erepr -> {
+      rewrite (record_perm r p repr)
+          as  (engine_record_perm er p erepr);
+      hide erepr
+    }
+    L0_repr _ -> {
+      rewrite (record_perm r p repr)
+          as  (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+
+```pulse
+ghost
+fn rewrite_record_perm_l0 (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm r p repr **
+           pure (r == L0_record lr)
+  returns r0:Ghost.erased l0_record_repr_t
+  ensures l0_record_perm lr p r0 ** pure (repr == L0_repr r0)
+{
+  match repr {
+    Engine_repr _ -> {
+      rewrite (record_perm r p repr)
+          as  (pure False);
+      unreachable ()
+    }
+    L0_repr r0 -> {
+      rewrite (record_perm r p repr)
+          as  (l0_record_perm lr p r0);
+      hide r0
+    }
+  }
+}
+```
+
 //
 // A wrapper over ghost_gather
 //
