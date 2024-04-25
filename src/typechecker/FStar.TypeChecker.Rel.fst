@@ -1252,45 +1252,6 @@ let head_match = function
     | HeadMatch true -> HeadMatch true
     | _ -> HeadMatch false
 
-let fv_delta_depth env fv =
-    let d = Env.delta_depth_of_fv env fv in
-    match d with
-    | Delta_abstract d ->
-      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
-                                                                     //    a better way would be create new fvs with appripriate delta_depth at extraction time
-      then d //we're in the defining module
-      else delta_constant
-    | Delta_constant_at_level i when i > 0 ->
-      begin match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
-            | None -> delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
-            | _ -> d
-      end
-    | d ->
-      d
-
-let rec delta_depth_of_term env t =
-    let t = U.unmeta t in
-    match t.n with
-    | Tm_meta _
-    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
-    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
-    | Tm_unknown
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_uvar _
-    | Tm_let _
-    | Tm_match _ -> None
-    | Tm_uinst(t, _)
-    | Tm_ascribed {tm=t}
-    | Tm_app {hd=t}
-    | Tm_refine {b={sort=t}} -> delta_depth_of_term env t
-    | Tm_constant _
-    | Tm_type _
-    | Tm_arrow _
-    | Tm_quoted _
-    | Tm_abs _ -> Some delta_constant
-    | Tm_fvar fv -> Some (fv_delta_depth env fv)
-
 let universe_has_max env u =
   let u = N.normalize_universe env u in
   match u with
@@ -1340,7 +1301,21 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_quoted _, Tm_quoted _
     | Tm_abs _, Tm_abs _ -> HeadMatch true
 
-    | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
+    | _ ->
+      (* GM: I am retaining this logic here. I think it is meant to disable
+      unfolding of possibly-equational terms. This probably deserves a rework now
+      with the .logical field. *)
+      let maybe_dd (t:term) : option delta_depth =
+        match (SS.compress t).n with
+        | Tm_unknown
+        | Tm_bvar _
+        | Tm_name _
+        | Tm_uvar _
+        | Tm_let _
+        | Tm_match _ -> None
+        | _ -> Some (delta_depth_of_term env t)
+      in
+      MisMatch (maybe_dd t1, maybe_dd t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option (typ&typ)) =
@@ -3552,11 +3527,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                    | _ ->
                      solve_sub_probs env wl //fallback to trying to solve with SMT on
               in
-              let d =
-                match delta_depth_of_term env head1 with
-                | None -> None
-                | Some d -> decr_delta_depth d
-              in
+              let d = decr_delta_depth <| delta_depth_of_term env head1 in
               let treat_as_injective =
                 match (U.un_uinst head1).n with
                 | Tm_fvar fv ->
@@ -3873,14 +3844,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     solve (solve_prob orig (Some guard) [] wl)
                 else giveup wl (mklstr (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (show head1)
-                                                  (BU.dflt ""
-                                                    (BU.bind_opt (delta_depth_of_term wl.tcenv head1)
-                                                                 (fun x -> Some (show x))))
+                                                  (show (delta_depth_of_term wl.tcenv head1))
                                                   (show head2)
-                                                  (BU.dflt ""
-                                                    (BU.bind_opt (delta_depth_of_term wl.tcenv head2)
-                                                                (fun x -> Some (show x))))
-                                                  )) orig
+                                                  (show (delta_depth_of_term wl.tcenv head2)))) orig
             end
 
         | (HeadMatch true, _) when problem.relation <> EQ ->

@@ -376,7 +376,6 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
@@ -836,10 +835,10 @@ val gen_bv           : string -> option Range.range -> typ -> bv
 val gen_bv'          : ident -> option Range.range -> typ -> bv
 val new_bv           : option range -> typ -> bv
 val new_univ_name    : option range -> univ_name
-val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_and_dd_as_fv : lident -> option fv_qual -> fv
 val lid_as_fv        : lident -> option fv_qual -> fv
 val fv_to_tm         : fv -> term
-val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar_with_dd     : lident -> option fv_qual -> term
 val fvar             : lident -> option fv_qual -> term
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool

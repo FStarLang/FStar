@@ -1282,17 +1282,17 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) dummyRange
 
-let fvar_const l = fvar_with_dd l delta_constant None
+let fvar_const l = fvar_with_dd l None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar_with_dd PC.imp_lid (Delta_constant_at_level 1) None //NS delta: wrong? level 2
-let tiff    = fvar_with_dd PC.iff_lid (Delta_constant_at_level 2) None //NS delta: wrong? level 3
+let timp    = fvar_with_dd PC.imp_lid None
+let tiff    = fvar_with_dd PC.iff_lid None
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
 // These are `True` and `False`, not the booleans
-let t_false = fvar_const PC.false_lid //NS delta: wrong? should be Delta_constant_at_level 2
-let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constant_at_level 2
+let t_false = fvar_const PC.false_lid
+let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
@@ -1312,7 +1312,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app {hd=op_t; args=[as_arg phi1; as_arg phi
 let mk_neg phi = mk (Tm_app {hd=t_not; args=[as_arg phi]}) phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar_with_dd PC.true_lid delta_constant None //NS delta: wrong, see a t_true
+    | [] -> fvar_with_dd PC.true_lid None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1357,9 +1357,9 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app {hd=t_has_type; args=[iarg t; as_arg x; as_arg t']}) dummyRange
 
-let tforall  = fvar_with_dd PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let texists  = fvar_with_dd PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let t_haseq   = fvar_with_dd PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
+let tforall  = fvar_with_dd PC.forall_lid None
+let texists  = fvar_with_dd PC.exists_lid None
+let t_haseq   = fvar_with_dd PC.haseq_lid None
 
 let decidable_eq = fvar_const PC.op_Eq
 let mk_decidable_eq t e1 e2 =
@@ -1433,11 +1433,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar_with_dd PC.squash_lid (Delta_constant_at_level 1) None in //NS delta: ok
+    let sq = fvar_with_dd PC.squash_lid None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar_with_dd PC.auto_squash_lid (Delta_constant_at_level 2) None in //NS delta: ok
+    let sq = fvar_with_dd PC.auto_squash_lid None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1534,7 +1534,7 @@ let is_free_in (bv:bv) (t:term) : bool =
 let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
-      (Inr (lid_and_dd_as_fv a.action_name delta_equational None))
+      (Inr (lid_and_dd_as_fv a.action_name None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1563,39 +1563,11 @@ let mk_reflect t =
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct (e.g. dmff). *)
 
-let rec delta_qualifier t =
-    let t = Subst.compress t in
-    match t.n with
-        | Tm_delayed _ -> failwith "Impossible"
-        | Tm_lazy i -> delta_qualifier (unfold_lazy i)
-        | Tm_fvar fv -> (match fv.fv_delta with
-                         | Some d -> d
-                         | None -> delta_constant)
-        | Tm_bvar _
-        | Tm_name _
-        | Tm_match _
-        | Tm_uvar _
-        | Tm_unknown -> delta_equational
-        | Tm_type _
-        | Tm_quoted _
-        | Tm_constant _
-        | Tm_arrow _ -> delta_constant
-        | Tm_uinst(t, _)
-        | Tm_refine {b={sort=t}}
-        | Tm_meta {tm=t}
-        | Tm_ascribed {tm=t}
-        | Tm_app {hd=t}
-        | Tm_abs {body=t}
-        | Tm_let {body=t} -> delta_qualifier t
-
 let rec incr_delta_depth d =
     match d with
     | Delta_constant_at_level i   -> Delta_constant_at_level (i + 1)
     | Delta_equational_at_level i -> Delta_equational_at_level (i + 1)
     | Delta_abstract d            -> incr_delta_depth d
-
-let incr_delta_qualifier t =
-    incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
 

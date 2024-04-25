@@ -1008,6 +1008,31 @@ let tc_decls env ses =
     // Compress all checked sigelts. Uvars and names are not OK after a full typecheck
     let ses' = ses' |> List.map (Compress.deep_compress_se false false) in
 
+    // Make sure to update all the delta_depths of the definitions we will add to the
+    // environment. These can change if the body of the letbinding is transformed by any means,
+    // such as by resolving an `_ by ...`, or a pre/post process hook.
+    // let fixup_dd_lb (lb:letbinding) : letbinding =
+    //   (* The delta depth of the fv is 1 + the dd of its body *)
+    //   let Inr fv = lb.lbname in
+    //   // BU.print2_error "Checking depth of %s = %s\n" (show lb.lbname) (show fv.fv_delta);
+    //   // let dd = incr_delta_depth <| delta_qualifier lb.lbdef in
+    //   let dd = incr_delta_depth <| delta_depth_of_term env lb.lbdef in
+    //   // if Some dd <> fv.fv_delta then (
+    //   //   BU.print3_error "Fixing up delta depth of %s from %s to %s\n" (Print.lbname_to_string lb.lbname) (show fv.fv_delta) (show dd)
+    //   // );
+    //   // BU.print1_error "Definition = (%s)\n\n" (show lb.lbdef);
+    //   let fv = { fv with fv_delta = Some dd } in
+    //   { lb with lbname = Inr fv }
+    // in
+    // let fixup_delta_depth (se:sigelt) : sigelt =
+    //   match se.sigel with
+    //   | Sig_let {lbs; lids} ->
+    //     let lbs = fst lbs, List.map fixup_dd_lb (snd lbs) in
+    //     { se with sigel = Sig_let {lbs; lids} }
+    //   | _ -> se
+    // in
+    // let ses' = ses' |> List.map fixup_delta_depth in
+
     // Add to the environment
     let env = ses' |> List.fold_left (fun env se -> add_sigelt_to_env env se false) env in
     UF.reset();

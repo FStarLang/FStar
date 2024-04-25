@@ -54,7 +54,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
     BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
-  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
+  let fv = S.lid_and_dd_as_fv lident None in
   let lbname: lbname = Inr fv in
   let lb: letbindings =
     // the effect label will be recomputed correctly
@@ -299,7 +299,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar_with_dd PC.ite_lid (S.Delta_constant_at_level 2) None in
+      let l_ite = fvar_with_dd PC.ite_lid None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -400,7 +400,7 @@ let gen_wps_for_free
         | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
+            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -438,7 +438,7 @@ let gen_wps_for_free
         match destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
             mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
@@ -1535,7 +1535,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     match (SS.compress bind_wp).n with
     | Tm_abs {bs=binders; body; rc_opt=what} ->
         // TODO: figure out how to deal with ranges
-        //let r = S.lid_and_dd_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        //let r = S.lid_and_dd_as_fv PC.range_lid None in
         U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -1561,8 +1561,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | Some (_us,_t) -> begin
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-      // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
+      fv_to_tm (lid_and_dd_as_fv l' None)
       end
     | None ->
       let sigelt, fv = mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
