@@ -98,53 +98,105 @@ let check_fndecl
   let blob = "pulse", refl_e in
   soundness_lemma g body c t_typing;
 
-  let (| refl_t, _ |) :
-    refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
-    squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) =
+  let elab_derivation = T.ext_getv "pulse:elab_derivation" <> "" in
+  let cur_module = T.cur_module () in
 
-    match expected_t with
-    | None -> (| refl_t, FStar.Squash.get_proof _ |)
-
-    | Some t ->
-      if eq_tm t refl_t
-      then (| refl_t, FStar.Squash.get_proof _ |)
-      else
-        fail g (Some rng)
-          (FStar.Printf.sprintf "Computed type %s is not equal to val type %s (subtyping not supported yet)"
-             (T.term_to_string refl_t)
-             (T.term_to_string t))
-
-  in
-
-  let main_decl =
+  let mk_main_decl
+    (refl_t:typ)
+    (_:squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t)) =
     let nm = fst (inspect_ident id) in
-    if T.ext_getv "pulse:elab_derivation" <> ""
-    then RT.mk_checked_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
-    else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
+    if elab_derivation
+    then RT.mk_checked_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
+    else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) cur_module nm (elab_st_typing t_typing) refl_t
   in
-  (* Set the blob *)
-  let main_decl =
+
+  if fn_d.isrec
+  then begin
+    let main_decl = mk_main_decl refl_t () in
+    let main_decl : RT.sigelt_for (elab_env g) None = main_decl in
     let (chk, se, _) = main_decl in
-    let se =
-      if fn_d.isrec
-      then (
-        let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
-        let attribute = `("pulse.recursive", `#(nm)) in
-        let se = RU.add_attribute se (`(noextract_to "krml")) in
-        let se = RU.add_noextract_qual se in
-        let se : T.sigelt = RU.add_attribute se attribute in
-        se
-      )
-      else se
+    let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
+    let attribute = `("pulse.recursive", `#(nm)) in
+    let se = RU.add_attribute se (`(noextract_to "krml")) in
+    let se = RU.add_noextract_qual se in
+    let se : T.sigelt = RU.add_attribute se attribute in
+    let main_decl = chk, se, Some blob in
+    let recursive_decl : RT.sigelt_for (elab_env g) expected_t =
+      Rec.tie_knot g rng nm_orig nm_aux refl_t blob in
+    [main_decl], recursive_decl, []
+  end
+  else begin
+    let (| refl_t, _ |) :
+      refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
+      squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) =
+
+      match expected_t with
+      | None -> (| refl_t, FStar.Squash.get_proof _ |)
+
+      | Some t ->
+        if eq_tm t refl_t
+        then (| refl_t, FStar.Squash.get_proof _ |)
+        else
+          fail g (Some rng)
+            (FStar.Printf.sprintf "Computed type %s is not equal to val type %s (subtyping not supported yet)"
+               (T.term_to_string refl_t)
+               (T.term_to_string t))
+
     in
-    (chk, se, Some blob)
-  in
-  let recursive_decls =
-    if fn_d.isrec
-    then Rec.tie_knot g rng nm_orig nm_aux d refl_t blob
-    else []
-  in
-  main_decl, recursive_decls
+
+    let main_decl = mk_main_decl refl_t () in
+    let chk, se, _ = main_decl in
+    let main_decl = chk, se, Some blob in
+    [], main_decl, []
+  end
+
+  // let (| refl_t, _ |) :
+  //   refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
+  //   squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) =
+
+  //   match expected_t with
+  //   | None -> (| refl_t, FStar.Squash.get_proof _ |)
+
+  //   | Some t ->
+  //     if eq_tm t refl_t
+  //     then (| refl_t, FStar.Squash.get_proof _ |)
+  //     else
+  //       fail g (Some rng)
+  //         (FStar.Printf.sprintf "Computed type %s is not equal to val type %s (subtyping not supported yet)"
+  //            (T.term_to_string refl_t)
+  //            (T.term_to_string t))
+
+  // in
+
+  // let main_decl =
+  //   let nm = fst (inspect_ident id) in
+  //   if T.ext_getv "pulse:elab_derivation" <> ""
+  //   then RT.mk_checked_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
+  // else Pulse.Reflection.Util.mk_opaque_let (fstar_env g) nm (elab_st_typing t_typing) refl_t
+  // in
+  // (* Set the blob *)
+  // let main_decl =
+  //   let (chk, se, _) = main_decl in
+  //   let se =
+  //     if fn_d.isrec
+  //     then (
+  //       let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
+  //       let attribute = `("pulse.recursive", `#(nm)) in
+  //       let se = RU.add_attribute se (`(noextract_to "krml")) in
+  //       let se = RU.add_noextract_qual se in
+  //       let se : T.sigelt = RU.add_attribute se attribute in
+  //       se
+  //     )
+  //     else se
+  //   in
+  //   (chk, se, Some blob)
+  // in
+  // let recursive_decls =
+  //   if fn_d.isrec
+  //   then Rec.tie_knot g rng nm_orig nm_aux d refl_t blob
+  //   else []
+  // in
+  // [], main_decl, recursive_decls
 
 let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
