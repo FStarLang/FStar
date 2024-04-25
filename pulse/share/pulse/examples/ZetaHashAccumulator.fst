@@ -184,11 +184,11 @@ ghost
 fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
   requires
    A.pts_to h.acc acc **
-   pts_to h.ctr n
+   pts_to h.ctr 'n
   ensures
-   ha_val_core h (acc, U32.v n)
+   ha_val_core h (acc, U32.v 'n)
 {
-  fold (ha_val_core h (acc, U32.v n));
+  fold (ha_val_core h (acc, U32.v 'n));
 }
 ```
 
@@ -239,14 +239,14 @@ ghost
 fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
   requires
    A.pts_to h.core.acc acc **
-   pts_to h.core.ctr n **
+   pts_to h.core.ctr 'n **
    A.pts_to h.tmp s **
    A.pts_to h.dummy (Seq.create 1 0uy)
   ensures
-   ha_val h (acc, U32.v n)
+   ha_val h (acc, U32.v 'n)
 {
     fold_ha_val_core h.core; //fails with ill-typed subst, in case of missing implicit arg
-    fold (ha_val h (acc, U32.v n))
+    fold (ha_val h (acc, U32.v 'n))
 }
 ```
 
@@ -429,6 +429,7 @@ fn compare (b1 b2:ha)
 ```pulse
 fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_length}))
        (#s:(s:erased bytes {Seq.length s == SZ.v l}))
+       (#p:perm)
   requires
     ha_val ha 'h **
     A.pts_to input #p s

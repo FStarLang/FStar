@@ -106,17 +106,17 @@ let can_update (x:GR.ref int) =
 ```pulse //make_can_update$
 ghost
 fn make_can_update (x:GR.ref int)
-requires pts_to x w
-ensures pts_to x #0.5R w ** can_update x
+requires pts_to x 'w
+ensures pts_to x #0.5R 'w ** can_update x
 {
   ghost
   fn aux (u:int)
-  requires pts_to x #0.5R w
+  requires pts_to x #0.5R 'w
   ensures forall* v. pts_to x #0.5R u @==> pts_to x v
   {
     ghost
     fn aux (v:int)
-    requires pts_to x #0.5R w ** pts_to x #0.5R u
+    requires pts_to x #0.5R 'w ** pts_to x #0.5R u
     ensures pts_to x v
     {
       gather x;

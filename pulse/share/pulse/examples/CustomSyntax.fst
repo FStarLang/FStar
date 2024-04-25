@@ -46,7 +46,7 @@ fn test_write_10 (x:ref U32.t)
 ```
 
 ```pulse
-fn test_read (r:ref U32.t)
+fn test_read (r:ref U32.t) (#pm:perm)
    requires pts_to r #pm 'n
    returns x : U32.t
    ensures pts_to r #pm x

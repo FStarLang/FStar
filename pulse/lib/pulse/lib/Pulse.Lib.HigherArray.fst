@@ -660,6 +660,7 @@ fn split_l_slice #elt
      (a : array elt)
      (i m j: nat)
      (#s:Seq.seq elt)
+     (#p:perm)
      (_:squash (i <= m /\ m <= j /\ j <= length a))
 requires pts_to (split_l (array_slice a i j) (m - i)) #p s
 ensures  pts_to (array_slice a i m) #p s
@@ -675,6 +676,7 @@ fn split_r_slice #elt
      (a:array elt)
      (i m j: nat)
      (#s:Seq.seq elt)
+     (#p:perm)
      (_:squash (i <= m /\ m <= j /\ j <= length a))
 requires pts_to (split_r (array_slice a i j) (m - i)) #p s
 ensures pts_to (array_slice a m j) #p s
