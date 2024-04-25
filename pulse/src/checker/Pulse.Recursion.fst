@@ -206,7 +206,7 @@ let add_knot (g : env) (rng : R.range)
 let tie_knot (g : env)  (rng : R.range)
              (nm_orig nm_aux : string)
              (d : decl) (r_typ : R.typ) (blob:RT.blob)
-: Tac (list (RT.sigelt_for (fstar_env g)))
+: Tac (list (RT.sigelt_for (fstar_env g) None))
 =
   let knot_r_typ =
     (* Remove the last arguments from r_typ, as that is the recursive knot.

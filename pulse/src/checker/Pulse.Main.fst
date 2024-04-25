@@ -54,11 +54,13 @@ let rec mk_abs (g:env) (qbs:list (option qualifier & binder & bv)) (body:st_term
     let body = close_st_term body bv.bv_index in
     with_range (Pulse.Syntax.Builder.tm_abs b q empty_ascription body) body.range
 
+#push-options "--z3rlimit_factor 4"
 let check_fndecl
     (d : decl{FnDecl? d.d})
     (g : Soundness.Common.stt_env{bindings g == []})
+    (expected_t : option term)
     (pre : term) (pre_typing : tot_typing g pre tm_vprop)
-  : T.Tac (RT.dsl_tac_result_t (fstar_env g))
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
 
   (* Maybe add a recursive knot before starting *)
@@ -91,9 +93,29 @@ let check_fndecl
               (Pulse.Typing.Printer.print_st_typing t_typing));
 
   let refl_t = elab_comp c in
+  
   let refl_e = Pulse.RuntimeUtils.embed_st_term_for_extraction #st_term body (Some rng) in
   let blob = "pulse", refl_e in
   soundness_lemma g body c t_typing;
+
+  let (| refl_t, _ |) :
+    refl_t:term { Some? expected_t ==> Some refl_t == expected_t } &
+    squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) =
+
+    match expected_t with
+    | None -> (| refl_t, FStar.Squash.get_proof _ |)
+
+    | Some t ->
+      if eq_tm t refl_t
+      then (| refl_t, FStar.Squash.get_proof _ |)
+      else
+        fail g (Some rng)
+          (FStar.Printf.sprintf "Computed type %s is not equal to val type %s (subtyping not supported yet)"
+             (T.term_to_string refl_t)
+             (T.term_to_string t))
+
+  in
+
   let main_decl =
     let nm = fst (inspect_ident id) in
     if T.ext_getv "pulse:elab_derivation" <> ""
@@ -103,7 +125,7 @@ let check_fndecl
   (* Set the blob *)
   let main_decl =
     let (chk, se, _) = main_decl in
-    let se = 
+    let se =
       if fn_d.isrec
       then (
         let nm = R.pack_ln (R.Tv_Const (R.C_String nm_orig)) in
@@ -122,10 +144,10 @@ let check_fndecl
     then Rec.tie_knot g rng nm_orig nm_aux d refl_t blob
     else []
   in
-  main_decl :: recursive_decls
+  main_decl, recursive_decls
 
-let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env)
-  : T.Tac (RT.dsl_tac_result_t g)
+let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
+  : T.Tac (RT.dsl_tac_result_t g expected_t)
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
     | Some g ->
@@ -137,7 +159,7 @@ let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env)
       let pre_typing : tot_typing g pre tm_vprop = pre_typing in
       match d.d with
       | FnDecl _ ->
-        check_fndecl d g pre pre_typing
+        check_fndecl d g expected_t pre pre_typing
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in
@@ -167,7 +189,7 @@ let join_smt_goals () : Tac unit =
 
   ()
 
-let main nm t pre : RT.dsl_tac_t = fun g ->
+let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   (* We use the SMT policy by default, to collect goals in the
   proofstate and discharge them all at the end, potentially joining
   them (see below). But it can be overriden to SMTSync by `--ext
@@ -177,7 +199,7 @@ let main nm t pre : RT.dsl_tac_t = fun g ->
   else
     set_guard_policy SMT;
 
-  let res = main' nm t pre g in
+  let res = main' nm t pre g expected_t in
 
   if ext_getv "pulse:join" = "1"
      (* || ext_getv "pulse:join" <> "" *)
@@ -194,12 +216,12 @@ let check_pulse (namespaces:list string)
                 (line col:int)
                 (nm:string)
   : RT.dsl_tac_t
-  = fun env ->
+  = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then
         set_dump_on_failure false;
       match PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
       | Inl decl ->
-        main nm decl tm_emp env
+        main nm decl tm_emp (env, expected_t)
 
       | Inr None ->
         T.fail "Pulse parser failed"
