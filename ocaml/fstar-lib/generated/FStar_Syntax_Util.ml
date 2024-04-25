@@ -2382,18 +2382,14 @@ let (exp_string : Prims.string -> FStar_Syntax_Syntax.term) =
          (FStar_Const.Const_string (s, FStar_Compiler_Range_Type.dummyRange)))
       FStar_Compiler_Range_Type.dummyRange
 let (fvar_const : FStar_Ident.lident -> FStar_Syntax_Syntax.term) =
-  fun l ->
-    FStar_Syntax_Syntax.fvar_with_dd l FStar_Syntax_Syntax.delta_constant
-      FStar_Pervasives_Native.None
+  fun l -> FStar_Syntax_Syntax.fvar_with_dd l FStar_Pervasives_Native.None
 let (tand : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.and_lid
 let (tor : FStar_Syntax_Syntax.term) = fvar_const FStar_Parser_Const.or_lid
 let (timp : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.imp_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (tiff : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.iff_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
     FStar_Pervasives_Native.None
 let (t_bool : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.bool_lid
@@ -2500,7 +2496,7 @@ let (mk_conj_l :
     match phi with
     | [] ->
         FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.true_lid
-          FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
+          FStar_Pervasives_Native.None
     | hd::tl -> FStar_Compiler_List.fold_right mk_conj tl hd
 let (mk_disj :
   FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -2705,15 +2701,13 @@ let (mk_has_type :
         FStar_Syntax_Syntax.mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tforall : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.forall_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (texists : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.exists_lid
-    (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
     FStar_Pervasives_Native.None
 let (t_haseq : FStar_Syntax_Syntax.term) =
   FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.haseq_lid
-    FStar_Syntax_Syntax.delta_constant FStar_Pervasives_Native.None
+    FStar_Pervasives_Native.None
 let (decidable_eq : FStar_Syntax_Syntax.term) =
   fvar_const FStar_Parser_Const.op_Eq
 let (mk_decidable_eq :
@@ -2994,7 +2988,6 @@ let (mk_squash :
     fun p ->
       let sq =
         FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.squash_lid
-          (FStar_Syntax_Syntax.Delta_constant_at_level Prims.int_one)
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
       let uu___1 = let uu___2 = FStar_Syntax_Syntax.as_arg p in [uu___2] in
@@ -3008,7 +3001,6 @@ let (mk_auto_squash :
     fun p ->
       let sq =
         FStar_Syntax_Syntax.fvar_with_dd FStar_Parser_Const.auto_squash_lid
-          (FStar_Syntax_Syntax.Delta_constant_at_level (Prims.of_int (2)))
           FStar_Pervasives_Native.None in
       let uu___ = FStar_Syntax_Syntax.mk_Tm_uinst sq [u] in
       let uu___1 = let uu___2 = FStar_Syntax_Syntax.as_arg p in [uu___2] in
@@ -3247,7 +3239,6 @@ let (action_as_lb :
             let uu___1 =
               FStar_Syntax_Syntax.lid_and_dd_as_fv
                 a.FStar_Syntax_Syntax.action_name
-                FStar_Syntax_Syntax.delta_equational
                 FStar_Pervasives_Native.None in
             FStar_Pervasives.Inr uu___1 in
           let uu___1 =
@@ -3319,61 +3310,6 @@ let (mk_reflect :
         } in
       FStar_Syntax_Syntax.Tm_app uu___1 in
     FStar_Syntax_Syntax.mk uu___ t.FStar_Syntax_Syntax.pos
-let rec (delta_qualifier :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth) =
-  fun t ->
-    let t1 = FStar_Syntax_Subst.compress t in
-    match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_delayed uu___ ->
-        FStar_Compiler_Effect.failwith "Impossible"
-    | FStar_Syntax_Syntax.Tm_lazy i ->
-        let uu___ = unfold_lazy i in delta_qualifier uu___
-    | FStar_Syntax_Syntax.Tm_fvar fv ->
-        (match fv.FStar_Syntax_Syntax.fv_delta with
-         | FStar_Pervasives_Native.Some d -> d
-         | FStar_Pervasives_Native.None -> FStar_Syntax_Syntax.delta_constant)
-    | FStar_Syntax_Syntax.Tm_bvar uu___ ->
-        FStar_Syntax_Syntax.delta_equational
-    | FStar_Syntax_Syntax.Tm_name uu___ ->
-        FStar_Syntax_Syntax.delta_equational
-    | FStar_Syntax_Syntax.Tm_match uu___ ->
-        FStar_Syntax_Syntax.delta_equational
-    | FStar_Syntax_Syntax.Tm_uvar uu___ ->
-        FStar_Syntax_Syntax.delta_equational
-    | FStar_Syntax_Syntax.Tm_unknown -> FStar_Syntax_Syntax.delta_equational
-    | FStar_Syntax_Syntax.Tm_type uu___ -> FStar_Syntax_Syntax.delta_constant
-    | FStar_Syntax_Syntax.Tm_quoted uu___ ->
-        FStar_Syntax_Syntax.delta_constant
-    | FStar_Syntax_Syntax.Tm_constant uu___ ->
-        FStar_Syntax_Syntax.delta_constant
-    | FStar_Syntax_Syntax.Tm_arrow uu___ ->
-        FStar_Syntax_Syntax.delta_constant
-    | FStar_Syntax_Syntax.Tm_uinst (t2, uu___) -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_refine
-        {
-          FStar_Syntax_Syntax.b =
-            { FStar_Syntax_Syntax.ppname = uu___;
-              FStar_Syntax_Syntax.index = uu___1;
-              FStar_Syntax_Syntax.sort = t2;_};
-          FStar_Syntax_Syntax.phi = uu___2;_}
-        -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_meta
-        { FStar_Syntax_Syntax.tm2 = t2; FStar_Syntax_Syntax.meta = uu___;_}
-        -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_ascribed
-        { FStar_Syntax_Syntax.tm = t2; FStar_Syntax_Syntax.asc = uu___;
-          FStar_Syntax_Syntax.eff_opt = uu___1;_}
-        -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_app
-        { FStar_Syntax_Syntax.hd = t2; FStar_Syntax_Syntax.args = uu___;_} ->
-        delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_abs
-        { FStar_Syntax_Syntax.bs = uu___; FStar_Syntax_Syntax.body = t2;
-          FStar_Syntax_Syntax.rc_opt = uu___1;_}
-        -> delta_qualifier t2
-    | FStar_Syntax_Syntax.Tm_let
-        { FStar_Syntax_Syntax.lbs = uu___; FStar_Syntax_Syntax.body1 = t2;_}
-        -> delta_qualifier t2
 let rec (incr_delta_depth :
   FStar_Syntax_Syntax.delta_depth -> FStar_Syntax_Syntax.delta_depth) =
   fun d ->
@@ -3383,9 +3319,6 @@ let rec (incr_delta_depth :
     | FStar_Syntax_Syntax.Delta_equational_at_level i ->
         FStar_Syntax_Syntax.Delta_equational_at_level (i + Prims.int_one)
     | FStar_Syntax_Syntax.Delta_abstract d1 -> incr_delta_depth d1
-let (incr_delta_qualifier :
-  FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.delta_depth) =
-  fun t -> let uu___ = delta_qualifier t in incr_delta_depth uu___
 let (is_unknown : FStar_Syntax_Syntax.term -> Prims.bool) =
   fun t ->
     let uu___ =

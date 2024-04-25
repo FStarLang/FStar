@@ -51,9 +51,7 @@ let (ugly_sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
     uu___ se
 type local_binding =
   (FStar_Ident.ident * FStar_Syntax_Syntax.bv * used_marker)
-type rec_binding =
-  (FStar_Ident.ident * FStar_Ident.lid * FStar_Syntax_Syntax.delta_depth *
-    used_marker)
+type rec_binding = (FStar_Ident.ident * FStar_Ident.lid * used_marker)
 type scope_mod =
   | Local_binding of local_binding 
   | Rec_binding of rec_binding 
@@ -642,13 +640,12 @@ let (bv_to_name :
     fun r ->
       let uu___ = set_bv_range bv r in FStar_Syntax_Syntax.bv_to_name uu___
 let (unmangleMap :
-  (Prims.string * Prims.string * FStar_Syntax_Syntax.delta_depth *
-    FStar_Syntax_Syntax.fv_qual FStar_Pervasives_Native.option) Prims.list)
+  (Prims.string * Prims.string * FStar_Syntax_Syntax.fv_qual
+    FStar_Pervasives_Native.option) Prims.list)
   =
-  [("op_ColonColon", "Cons", FStar_Syntax_Syntax.delta_constant,
+  [("op_ColonColon", "Cons",
      (FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor));
-  ("not", "op_Negation", FStar_Syntax_Syntax.delta_equational,
-    FStar_Pervasives_Native.None)]
+  ("not", "op_Negation", FStar_Pervasives_Native.None)]
 let (unmangleOpName :
   FStar_Ident.ident ->
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
@@ -657,7 +654,7 @@ let (unmangleOpName :
     FStar_Compiler_Util.find_map unmangleMap
       (fun uu___ ->
          match uu___ with
-         | (x, y, dd, dq) ->
+         | (x, y, dq) ->
              let uu___1 =
                let uu___2 = FStar_Ident.string_of_id id in uu___2 = x in
              if uu___1
@@ -666,7 +663,7 @@ let (unmangleOpName :
                  let uu___3 =
                    let uu___4 = FStar_Ident.range_of_id id in
                    FStar_Ident.lid_of_path ["Prims"; y] uu___4 in
-                 FStar_Syntax_Syntax.fvar_with_dd uu___3 dd dq in
+                 FStar_Syntax_Syntax.fvar_with_dd uu___3 dq in
                FStar_Pervasives_Native.Some uu___2
              else FStar_Pervasives_Native.None)
 type 'a cont_t =
@@ -837,10 +834,10 @@ let try_lookup_id'' :
                         uu___3 = uu___4 in
                   let check_rec_binding_id uu___ =
                     match uu___ with
-                    | (id', uu___1, uu___2, uu___3) ->
-                        let uu___4 = FStar_Ident.string_of_id id' in
-                        let uu___5 = FStar_Ident.string_of_id id in
-                        uu___4 = uu___5 in
+                    | (id', uu___1, uu___2) ->
+                        let uu___3 = FStar_Ident.string_of_id id' in
+                        let uu___4 = FStar_Ident.string_of_id id in
+                        uu___3 = uu___4 in
                   let curmod_ns =
                     let uu___ = current_module env1 in
                     FStar_Ident.ids_of_lid uu___ in
@@ -856,7 +853,7 @@ let try_lookup_id'' :
                     | Rec_binding r when check_rec_binding_id r ->
                         let uu___1 = r in
                         (match uu___1 with
-                         | (uu___2, uu___3, uu___4, used_marker1) ->
+                         | (uu___2, uu___3, used_marker1) ->
                              (FStar_Compiler_Effect.op_Colon_Equals
                                 used_marker1 true;
                               k_rec_binding r))
@@ -1226,40 +1223,6 @@ let (ns_of_lid_equals :
            let uu___1 = FStar_Ident.ns_of_lid lid in
            FStar_Ident.lid_of_ids uu___1 in
          FStar_Ident.lid_equals uu___ ns)
-let (delta_depth_of_declaration :
-  FStar_Ident.lident ->
-    FStar_Syntax_Syntax.qualifier Prims.list ->
-      FStar_Syntax_Syntax.delta_depth)
-  =
-  fun lid ->
-    fun quals ->
-      let dd =
-        let uu___ =
-          (FStar_Syntax_Util.is_primop_lid lid) ||
-            (FStar_Compiler_Util.for_some
-               (fun uu___1 ->
-                  match uu___1 with
-                  | FStar_Syntax_Syntax.Projector uu___2 -> true
-                  | FStar_Syntax_Syntax.Discriminator uu___2 -> true
-                  | uu___2 -> false) quals) in
-        if uu___
-        then FStar_Syntax_Syntax.delta_equational
-        else FStar_Syntax_Syntax.delta_constant in
-      let uu___ =
-        (FStar_Compiler_Util.for_some
-           (fun uu___1 ->
-              match uu___1 with
-              | FStar_Syntax_Syntax.Assumption -> true
-              | uu___2 -> false) quals)
-          &&
-          (let uu___1 =
-             FStar_Compiler_Util.for_some
-               (fun uu___2 ->
-                  match uu___2 with
-                  | FStar_Syntax_Syntax.New -> true
-                  | uu___3 -> false) quals in
-           Prims.op_Negation uu___1) in
-      if uu___ then FStar_Syntax_Syntax.Delta_abstract dd else dd
 let (try_lookup_name :
   Prims.bool ->
     Prims.bool ->
@@ -1281,7 +1244,6 @@ let (try_lookup_name :
                        let uu___4 =
                          let uu___5 =
                            FStar_Syntax_Syntax.fvar_with_dd source_lid
-                             FStar_Syntax_Syntax.delta_constant
                              FStar_Pervasives_Native.None in
                          (uu___5, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___4 in
@@ -1291,8 +1253,7 @@ let (try_lookup_name :
                        let uu___4 =
                          let uu___5 =
                            let uu___6 = fv_qual_of_se se in
-                           FStar_Syntax_Syntax.fvar_with_dd source_lid
-                             FStar_Syntax_Syntax.delta_constant uu___6 in
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid uu___6 in
                          (uu___5, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___4 in
                      FStar_Pervasives_Native.Some uu___3
@@ -1304,10 +1265,7 @@ let (try_lookup_name :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           let uu___7 =
-                             FStar_Compiler_Util.must
-                               fv.FStar_Syntax_Syntax.fv_delta in
-                           FStar_Syntax_Syntax.fvar_with_dd source_lid uu___7
+                           FStar_Syntax_Syntax.fvar_with_dd source_lid
                              fv.FStar_Syntax_Syntax.fv_qual in
                          (uu___6, (se.FStar_Syntax_Syntax.sigattrs)) in
                        Term_name uu___5 in
@@ -1330,7 +1288,6 @@ let (try_lookup_name :
                        let lid2 =
                          let uu___5 = FStar_Ident.range_of_lid source_lid in
                          FStar_Ident.set_lid_range lid1 uu___5 in
-                       let dd = delta_depth_of_declaration lid2 quals in
                        let uu___5 =
                          FStar_Compiler_Util.find_map quals
                            (fun uu___6 ->
@@ -1354,7 +1311,7 @@ let (try_lookup_name :
                               let uu___8 =
                                 let uu___9 =
                                   let uu___10 = fv_qual_of_se se in
-                                  FStar_Syntax_Syntax.fvar_with_dd lid2 dd
+                                  FStar_Syntax_Syntax.fvar_with_dd lid2
                                     uu___10 in
                                 (uu___9, (se.FStar_Syntax_Syntax.sigattrs)) in
                               Term_name uu___8 in
@@ -1381,8 +1338,7 @@ let (try_lookup_name :
                        let uu___4 =
                          let uu___5 =
                            FStar_Syntax_Syntax.fvar_with_dd source_lid
-                             (FStar_Syntax_Syntax.Delta_constant_at_level
-                                Prims.int_one) FStar_Pervasives_Native.None in
+                             FStar_Pervasives_Native.None in
                          (uu___5, []) in
                        Term_name uu___4 in
                      FStar_Pervasives_Native.Some uu___3
@@ -1394,7 +1350,7 @@ let (try_lookup_name :
             FStar_Pervasives_Native.Some (Term_name (t, [])) in
           let k_rec_binding uu___ =
             match uu___ with
-            | (id, l, dd, used_marker1) ->
+            | (id, l, used_marker1) ->
                 (FStar_Compiler_Effect.op_Colon_Equals used_marker1 true;
                  (let uu___2 =
                     let uu___3 =
@@ -1402,7 +1358,7 @@ let (try_lookup_name :
                         let uu___5 =
                           let uu___6 = FStar_Ident.range_of_lid lid in
                           FStar_Ident.set_lid_range l uu___6 in
-                        FStar_Syntax_Syntax.fvar_with_dd uu___5 dd
+                        FStar_Syntax_Syntax.fvar_with_dd uu___5
                           FStar_Pervasives_Native.None in
                       (uu___4, []) in
                     Term_name uu___3 in
@@ -1646,9 +1602,7 @@ let (try_lookup_let :
            uu___9) ->
             let fv = lb_fv lbs lid1 in
             let uu___10 =
-              let uu___11 =
-                FStar_Compiler_Util.must fv.FStar_Syntax_Syntax.fv_delta in
-              FStar_Syntax_Syntax.fvar_with_dd lid1 uu___11
+              FStar_Syntax_Syntax.fvar_with_dd lid1
                 fv.FStar_Syntax_Syntax.fv_qual in
             FStar_Pervasives_Native.Some uu___10
         | uu___1 -> FStar_Pervasives_Native.None in
@@ -1894,7 +1848,6 @@ let (try_lookup_datacon :
             then
               let uu___8 =
                 FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
-                  FStar_Syntax_Syntax.delta_constant
                   FStar_Pervasives_Native.None in
               FStar_Pervasives_Native.Some uu___8
             else FStar_Pervasives_Native.None
@@ -1908,9 +1861,7 @@ let (try_lookup_datacon :
              FStar_Syntax_Syntax.sigopts = uu___6;_},
            uu___7) ->
             let qual1 = fv_qual_of_se (FStar_Pervasives_Native.fst se) in
-            let uu___8 =
-              FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
-                FStar_Syntax_Syntax.delta_constant qual1 in
+            let uu___8 = FStar_Syntax_Syntax.lid_and_dd_as_fv lid1 qual1 in
             FStar_Pervasives_Native.Some uu___8
         | ({
              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
@@ -1923,9 +1874,7 @@ let (try_lookup_datacon :
              FStar_Syntax_Syntax.sigopts = uu___6;_},
            uu___7) ->
             let qual1 = fv_qual_of_se (FStar_Pervasives_Native.fst se) in
-            let uu___8 =
-              FStar_Syntax_Syntax.lid_and_dd_as_fv lid1
-                FStar_Syntax_Syntax.delta_constant qual1 in
+            let uu___8 = FStar_Syntax_Syntax.lid_and_dd_as_fv lid1 qual1 in
             FStar_Pervasives_Native.Some uu___8
         | uu___ -> FStar_Pervasives_Native.None in
       resolve_in_open_namespaces' env1 lid
@@ -2439,30 +2388,25 @@ let (push_bv : env -> FStar_Ident.ident -> (env * FStar_Syntax_Syntax.bv)) =
       let uu___ = push_bv' env1 x in
       match uu___ with | (env2, bv, uu___1) -> (env2, bv)
 let (push_top_level_rec_binding :
-  env ->
-    FStar_Ident.ident ->
-      FStar_Syntax_Syntax.delta_depth ->
-        (env * Prims.bool FStar_Compiler_Effect.ref))
-  =
+  env -> FStar_Ident.ident -> (env * Prims.bool FStar_Compiler_Effect.ref)) =
   fun env0 ->
     fun x ->
-      fun dd ->
-        let l = qualify env0 x in
-        let uu___ =
-          (unique false true env0 l) || (FStar_Options.interactive ()) in
-        if uu___
-        then
-          let used_marker1 = FStar_Compiler_Util.mk_ref false in
-          ((push_scope_mod env0 (Rec_binding (x, l, dd, used_marker1))),
-            used_marker1)
-        else
-          (let uu___2 =
-             let uu___3 =
-               let uu___4 = FStar_Ident.string_of_lid l in
-               Prims.strcat "Duplicate top-level names " uu___4 in
-             (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___3) in
-           let uu___3 = FStar_Ident.range_of_lid l in
-           FStar_Errors.raise_error uu___2 uu___3)
+      let l = qualify env0 x in
+      let uu___ =
+        (unique false true env0 l) || (FStar_Options.interactive ()) in
+      if uu___
+      then
+        let used_marker1 = FStar_Compiler_Util.mk_ref false in
+        ((push_scope_mod env0 (Rec_binding (x, l, used_marker1))),
+          used_marker1)
+      else
+        (let uu___2 =
+           let uu___3 =
+             let uu___4 = FStar_Ident.string_of_lid l in
+             Prims.strcat "Duplicate top-level names " uu___4 in
+           (FStar_Errors_Codes.Fatal_DuplicateTopLevelNames, uu___3) in
+         let uu___3 = FStar_Ident.range_of_lid l in
+         FStar_Errors.raise_error uu___2 uu___3)
 let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
   fun fail_on_dup ->
     fun env1 ->
@@ -3605,11 +3549,9 @@ let (resolve_name :
                FStar_Pervasives_Native.Some (FStar_Pervasives.Inr fv)
            | uu___2 -> FStar_Pervasives_Native.None)
       | FStar_Pervasives_Native.Some (Eff_name (se, l)) ->
-          let uu___1 = delta_depth_of_declaration in
-          let uu___2 =
-            let uu___3 =
+          let uu___1 =
+            let uu___2 =
               FStar_Syntax_Syntax.lid_and_dd_as_fv l
-                FStar_Syntax_Syntax.delta_constant
                 FStar_Pervasives_Native.None in
-            FStar_Pervasives.Inr uu___3 in
-          FStar_Pervasives_Native.Some uu___2
+            FStar_Pervasives.Inr uu___2 in
+          FStar_Pervasives_Native.Some uu___1

@@ -1666,39 +1666,14 @@ let (maybe_relate_after_unfolding :
   fun g ->
     fun t0 ->
       fun t1 ->
-        let rec delta_depth_of_head t =
-          let head = FStar_Syntax_Util.leftmost_head t in
-          let uu___ =
-            let uu___1 = FStar_Syntax_Util.un_uinst head in
-            uu___1.FStar_Syntax_Syntax.n in
-          match uu___ with
-          | FStar_Syntax_Syntax.Tm_fvar fv ->
-              let uu___1 = FStar_TypeChecker_Env.delta_depth_of_fv g fv in
-              FStar_Pervasives_Native.Some uu___1
-          | FStar_Syntax_Syntax.Tm_match
-              { FStar_Syntax_Syntax.scrutinee = t2;
-                FStar_Syntax_Syntax.ret_opt = uu___1;
-                FStar_Syntax_Syntax.brs = uu___2;
-                FStar_Syntax_Syntax.rc_opt1 = uu___3;_}
-              -> delta_depth_of_head t2
-          | uu___1 -> FStar_Pervasives_Native.None in
-        let dd0 = delta_depth_of_head t0 in
-        let dd1 = delta_depth_of_head t1 in
-        match (dd0, dd1) with
-        | (FStar_Pervasives_Native.Some uu___, FStar_Pervasives_Native.None)
-            -> Left
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some uu___)
-            -> Right
-        | (FStar_Pervasives_Native.Some dd01, FStar_Pervasives_Native.Some
-           dd11) ->
-            if dd01 = dd11
-            then Both
-            else
-              (let uu___1 =
-                 FStar_TypeChecker_Common.delta_depth_greater_than dd01 dd11 in
-               if uu___1 then Left else Right)
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
-            Neither
+        let dd0 = FStar_TypeChecker_Env.delta_depth_of_term g t0 in
+        let dd1 = FStar_TypeChecker_Env.delta_depth_of_term g t1 in
+        if dd0 = dd1
+        then Both
+        else
+          (let uu___1 =
+             FStar_TypeChecker_Common.delta_depth_greater_than dd0 dd1 in
+           if uu___1 then Left else Right)
 let rec (check_relation :
   env ->
     relation ->

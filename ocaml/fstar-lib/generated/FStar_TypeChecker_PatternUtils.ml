@@ -17,10 +17,9 @@ let rec (elaborate_pat :
       match p.FStar_Syntax_Syntax.v with
       | FStar_Syntax_Syntax.Pat_cons
           ({ FStar_Syntax_Syntax.fv_name = uu___;
-             FStar_Syntax_Syntax.fv_delta = uu___1;
              FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Unresolved_constructor uu___2);_},
-           uu___3, uu___4)
+               (FStar_Syntax_Syntax.Unresolved_constructor uu___1);_},
+           uu___2, uu___3)
           -> p
       | FStar_Syntax_Syntax.Pat_cons (fv, us_opt, pats) ->
           let pats1 =
