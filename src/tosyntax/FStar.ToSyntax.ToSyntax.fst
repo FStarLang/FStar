@@ -564,24 +564,6 @@ let mk_lb (attrs, n, t, e, pos) = {
 }
 let no_annot_abs bs t = U.abs bs t None
 
-let mk_ref_read tm =
-  let tm' = Tm_app ({
-    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.sread_lid delta_constant None);
-    args=[ tm, S.as_aqual_implicit false ]}) in
-  S.mk tm' tm.pos
-
-let mk_ref_alloc tm =
-  let tm' = Tm_app ({
-    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.salloc_lid delta_constant None);
-    args=[ tm, S.as_aqual_implicit false ]}) in
-  S.mk tm' tm.pos
-
-let mk_ref_assign t1 t2 pos =
-  let tm = Tm_app ({
-    hd=S.fv_to_tm (S.lid_and_dd_as_fv C.swrite_lid delta_constant None);
-    args=[ t1, S.as_aqual_implicit false; t2, S.as_aqual_implicit false ]}) in
-  S.mk tm pos
-
 (*
  * Collect the explicitly annotated universes in the sigelt, close the sigelt with them, and stash them appropriately in the sigelt
  *)
