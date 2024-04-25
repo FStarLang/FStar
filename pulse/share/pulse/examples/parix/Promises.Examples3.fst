@@ -96,7 +96,7 @@ let cheat_proof (i:iref)
 
 ```pulse
 fn setup (_:unit)
-   requires pts_to done v_done ** pts_to res v_res ** GR.pts_to claimed v_claimed
+   requires pts_to done 'v_done ** pts_to res 'v_res ** GR.pts_to claimed 'v_claimed
    returns i:iref
    ensures pts_to done #0.5R false **
            pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal

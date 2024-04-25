@@ -55,6 +55,7 @@ fn elim_implies () (#p #q:vprop)
 
 ```pulse
 fn finish (c:cbor_read_t)
+          (input:_)
           (#p:perm)
           (#v:erased (raw_data_item))
           (#s:erased (Seq.seq U8.t))
@@ -64,14 +65,14 @@ fn finish (c:cbor_read_t)
               A.pts_to input #p s) **
             raw_data_item_match 1.0R c.cbor_read_payload v **
             A.pts_to c.cbor_read_remainder #p rem **
-            uds_is_enabled
+            'uds_is_enabled
   returns _:option ctxt_hndl_t
   ensures A.pts_to input #p s
 {
    elim_implies ()  #(raw_data_item_match 1.0R c.cbor_read_payload v **
                             A.pts_to c.cbor_read_remainder #p rem)
                             #(A.pts_to input #p s);
-    drop uds_is_enabled;
+    drop 'uds_is_enabled;
     None #ctxt_hndl_t
 }
 ```
