@@ -107,10 +107,16 @@ type maybe_set_use_range =
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
-  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
-  | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
-
+  | Delta_constant_at_level of int
+  // ^ A symbol that can be unfolded n times to a term whose head is a
+  // constant, e.g., nat is (Delta_constant_at_level 1) to int, level 0
+  // is a literal constant.
+  | Delta_equational_at_level of int
+  // ^ Level 0 is a symbol that may be equated to another by
+  // extensional reasoning, n > 0 can be unfolded n times to a
+  // Delta_equational_at_level 0 term.
+  | Delta_abstract of delta_depth
+  // ^ A symbol marked abstract whose depth is the argument d.
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
