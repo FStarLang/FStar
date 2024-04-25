@@ -701,79 +701,90 @@ let (prims : prims_t) =
                        | (l', uu___4) -> FStar_Ident.lid_equals l l') prims1 in
                 { mk; is }))
 let (pretype_axiom :
-  FStar_Compiler_Range_Type.range ->
-    FStar_SMTEncoding_Env.env_t ->
-      FStar_SMTEncoding_Term.term ->
-        FStar_SMTEncoding_Term.fv Prims.list -> FStar_SMTEncoding_Term.decl)
+  Prims.bool ->
+    FStar_Compiler_Range_Type.range ->
+      FStar_SMTEncoding_Env.env_t ->
+        FStar_SMTEncoding_Term.term ->
+          FStar_SMTEncoding_Term.fv Prims.list -> FStar_SMTEncoding_Term.decl)
   =
-  fun rng ->
-    fun env ->
-      fun tapp ->
-        fun vars ->
-          let uu___ =
-            FStar_SMTEncoding_Env.fresh_fvar
-              env.FStar_SMTEncoding_Env.current_module_name "x"
-              FStar_SMTEncoding_Term.Term_sort in
-          match uu___ with
-          | (xxsym, xx) ->
-              let uu___1 =
-                FStar_SMTEncoding_Env.fresh_fvar
-                  env.FStar_SMTEncoding_Env.current_module_name "f"
-                  FStar_SMTEncoding_Term.Fuel_sort in
-              (match uu___1 with
-               | (ffsym, ff) ->
-                   let xx_has_type =
-                     FStar_SMTEncoding_Term.mk_HasTypeFuel ff xx tapp in
-                   let tapp_hash = FStar_SMTEncoding_Term.hash_of_term tapp in
-                   let module_name =
-                     env.FStar_SMTEncoding_Env.current_module_name in
-                   let uu___2 =
-                     let uu___3 =
+  fun term_constr_eq ->
+    fun rng ->
+      fun env ->
+        fun tapp ->
+          fun vars ->
+            let uu___ =
+              FStar_SMTEncoding_Env.fresh_fvar
+                env.FStar_SMTEncoding_Env.current_module_name "x"
+                FStar_SMTEncoding_Term.Term_sort in
+            match uu___ with
+            | (xxsym, xx) ->
+                let uu___1 =
+                  FStar_SMTEncoding_Env.fresh_fvar
+                    env.FStar_SMTEncoding_Env.current_module_name "f"
+                    FStar_SMTEncoding_Term.Fuel_sort in
+                (match uu___1 with
+                 | (ffsym, ff) ->
+                     let xx_has_type =
+                       FStar_SMTEncoding_Term.mk_HasTypeFuel ff xx tapp in
+                     let tapp_hash = FStar_SMTEncoding_Term.hash_of_term tapp in
+                     let module_name =
+                       env.FStar_SMTEncoding_Env.current_module_name in
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 =
+                               FStar_SMTEncoding_Term.mk_fv
+                                 (xxsym, FStar_SMTEncoding_Term.Term_sort) in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_SMTEncoding_Term.mk_fv
+                                   (ffsym, FStar_SMTEncoding_Term.Fuel_sort) in
+                               uu___8 :: vars in
+                             uu___6 :: uu___7 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 =
+                                 if term_constr_eq
+                                 then
+                                   let uu___9 =
+                                     let uu___10 =
+                                       FStar_SMTEncoding_Util.mkApp
+                                         ("Term_constr_id", [tapp]) in
+                                     let uu___11 =
+                                       let uu___12 =
+                                         let uu___13 =
+                                           let uu___14 =
+                                             FStar_SMTEncoding_Util.mkApp
+                                               ("PreType", [xx]) in
+                                           [uu___14] in
+                                         ("Term_constr_id", uu___13) in
+                                       FStar_SMTEncoding_Util.mkApp uu___12 in
+                                     (uu___10, uu___11) in
+                                   FStar_SMTEncoding_Util.mkEq uu___9
+                                 else
+                                   (let uu___10 =
+                                      let uu___11 =
+                                        FStar_SMTEncoding_Util.mkApp
+                                          ("PreType", [xx]) in
+                                      (tapp, uu___11) in
+                                    FStar_SMTEncoding_Util.mkEq uu___10) in
+                               (xx_has_type, uu___8) in
+                             FStar_SMTEncoding_Util.mkImp uu___7 in
+                           ([[xx_has_type]], uu___5, uu___6) in
+                         FStar_SMTEncoding_Term.mkForall rng uu___4 in
                        let uu___4 =
                          let uu___5 =
                            let uu___6 =
-                             FStar_SMTEncoding_Term.mk_fv
-                               (xxsym, FStar_SMTEncoding_Term.Term_sort) in
-                           let uu___7 =
-                             let uu___8 =
-                               FStar_SMTEncoding_Term.mk_fv
-                                 (ffsym, FStar_SMTEncoding_Term.Fuel_sort) in
-                             uu___8 :: vars in
-                           uu___6 :: uu___7 in
-                         let uu___6 =
-                           let uu___7 =
-                             let uu___8 =
-                               let uu___9 =
-                                 let uu___10 =
-                                   FStar_SMTEncoding_Util.mkApp
-                                     ("Term_constr_id", [tapp]) in
-                                 let uu___11 =
-                                   let uu___12 =
-                                     let uu___13 =
-                                       let uu___14 =
-                                         FStar_SMTEncoding_Util.mkApp
-                                           ("PreType", [xx]) in
-                                       [uu___14] in
-                                     ("Term_constr_id", uu___13) in
-                                   FStar_SMTEncoding_Util.mkApp uu___12 in
-                                 (uu___10, uu___11) in
-                               FStar_SMTEncoding_Util.mkEq uu___9 in
-                             (xx_has_type, uu___8) in
-                           FStar_SMTEncoding_Util.mkImp uu___7 in
-                         ([[xx_has_type]], uu___5, uu___6) in
-                       FStar_SMTEncoding_Term.mkForall rng uu___4 in
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 =
-                             FStar_Compiler_Util.digest_of_string tapp_hash in
-                           Prims.strcat "_pretyping_" uu___7 in
-                         Prims.strcat module_name uu___6 in
-                       FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
-                         uu___5 in
-                     (uu___3, (FStar_Pervasives_Native.Some "pretyping"),
-                       uu___4) in
-                   FStar_SMTEncoding_Util.mkAssume uu___2)
+                             let uu___7 =
+                               FStar_Compiler_Util.digest_of_string tapp_hash in
+                             Prims.strcat "_pretyping_" uu___7 in
+                           Prims.strcat module_name uu___6 in
+                         FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.mk_unique
+                           uu___5 in
+                       (uu___3, (FStar_Pervasives_Native.Some "pretyping"),
+                         uu___4) in
+                     FStar_SMTEncoding_Util.mkAssume uu___2)
 let (primitive_type_axioms :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -2109,8 +2120,9 @@ let (encode_free_var :
                                                                 FStar_Syntax_Syntax.range_of_fv
                                                                   fv in
                                                               pretype_axiom
-                                                                uu___15 env2
-                                                                vapp vars1 in
+                                                                false uu___15
+                                                                env2 vapp
+                                                                vars1 in
                                                             [uu___14] in
                                                           uu___12 :: uu___13
                                                         else [] in
@@ -4427,8 +4439,10 @@ let (encode_sig_inductive :
                                         let uu___12 =
                                           let uu___13 =
                                             FStar_Ident.range_of_lid t in
-                                          pretype_axiom uu___13 env2 tapp
-                                            vars in
+                                          pretype_axiom
+                                            (Prims.op_Negation
+                                               is_injective_on_params)
+                                            uu___13 env2 tapp vars in
                                         [uu___12] in
                                       FStar_SMTEncoding_Term.mk_decls_trivial
                                         uu___11 in

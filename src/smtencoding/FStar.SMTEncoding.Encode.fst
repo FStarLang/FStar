@@ -168,15 +168,19 @@ let prims =
     {mk=mk;
      is=is}
 
-let pretype_axiom rng env tapp vars =
+let pretype_axiom term_constr_eq rng env tapp vars =
     let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
     let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     let tapp_hash = Term.hash_of_term tapp in
     let module_name = env.current_module_name in
     Util.mkAssume(mkForall rng ([[xx_has_type]], mk_fv (xxsym, Term_sort)::mk_fv (ffsym, Fuel_sort)::vars,
-                                mkImp(xx_has_type, mkEq(mkApp ("Term_constr_id", [tapp]), 
-                                                        mkApp ("Term_constr_id", [mkApp("PreType", [xx])])))),
+                                mkImp(xx_has_type, 
+                                     (if term_constr_eq
+                                      then mkEq(mkApp ("Term_constr_id", [tapp]), 
+                                                mkApp ("Term_constr_id", [mkApp("PreType", [xx])]))
+                                      else mkEq(tapp, 
+                                                mkApp("PreType", [xx]))))),
                          Some "pretyping",
                          (varops.mk_unique (module_name ^ "_pretyping_" ^ (BU.digest_of_string tapp_hash))))
 
@@ -534,7 +538,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let freshness =
                 if quals |> List.contains New
                 then [Term.fresh_constructor (S.range_of_fv fv) (vname, vars |> List.map fv_sort, Term_sort, varops.next_id());
-                      pretype_axiom (S.range_of_fv fv) env vapp vars]
+                      pretype_axiom false (S.range_of_fv fv) env vapp vars]
                 else [] in
               let g = decls1@decls2@decls3@(freshness@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars
                                             |> mk_decls_trivial) in
@@ -1211,7 +1215,7 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
   let aux =
     kindingAx
     @(inversion_axioms env tapp vars)
-    @([pretype_axiom (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
+    @([pretype_axiom (not is_injective_on_params) (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
   in
   (decls |> mk_decls_trivial)@binder_decls@aux, env
 
