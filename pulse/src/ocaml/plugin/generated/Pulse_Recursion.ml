@@ -881,210 +881,224 @@ let (tie_knot :
     FStar_Range.range ->
       Prims.string ->
         Prims.string ->
-          Pulse_Syntax_Base.decl ->
-            FStar_Reflection_Types.term ->
-              FStar_Reflection_Typing.blob ->
-                ((unit, unit) FStar_Reflection_Typing.sigelt_for Prims.list,
-                  unit) FStar_Tactics_Effect.tac_repr)
+          FStar_Reflection_Types.term ->
+            FStar_Reflection_Typing.blob ->
+              ((Prims.bool * FStar_Reflection_Types.sigelt *
+                 FStar_Reflection_Typing.blob FStar_Pervasives_Native.option),
+                unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun rng ->
       fun nm_orig ->
         fun nm_aux ->
-          fun d ->
-            fun r_typ ->
-              fun blob ->
-                FStar_Tactics_Effect.tac_bind
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "Pulse.Recursion.fst"
-                           (Prims.of_int (211)) (Prims.of_int (18))
-                           (Prims.of_int (218)) (Prims.of_int (15)))))
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "Pulse.Recursion.fst"
-                           (Prims.of_int (219)) (Prims.of_int (4))
-                           (Prims.of_int (225)) (Prims.of_int (22)))))
-                  (Obj.magic
-                     (FStar_Tactics_Effect.tac_bind
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                 (Prims.of_int (214)) (Prims.of_int (16))
-                                 (Prims.of_int (214)) (Prims.of_int (36)))))
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range "Pulse.Recursion.fst"
-                                 (Prims.of_int (211)) (Prims.of_int (18))
-                                 (Prims.of_int (218)) (Prims.of_int (15)))))
-                        (Obj.magic
-                           (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
-                              r_typ))
-                        (fun uu___ ->
-                           (fun uu___ ->
-                              match uu___ with
-                              | (bs, c) ->
-                                  Obj.magic
-                                    (FStar_Tactics_Effect.tac_bind
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "Pulse.Recursion.fst"
-                                                (Prims.of_int (215))
-                                                (Prims.of_int (4))
-                                                (Prims.of_int (215))
-                                                (Prims.of_int (64)))))
-                                       (FStar_Sealed.seal
-                                          (Obj.magic
-                                             (FStar_Range.mk_range
-                                                "Pulse.Recursion.fst"
-                                                (Prims.of_int (215))
-                                                (Prims.of_int (65))
-                                                (Prims.of_int (218))
-                                                (Prims.of_int (15)))))
-                                       (if Prims.uu___is_Nil bs
-                                        then
-                                          Obj.magic
-                                            (Obj.repr
-                                               (Pulse_Typing_Env.fail g
-                                                  (FStar_Pervasives_Native.Some
-                                                     rng)
-                                                  "tie_knot: impossible (1)"))
-                                        else
-                                          Obj.magic
-                                            (Obj.repr
-                                               (FStar_Tactics_Effect.lift_div_tac
-                                                  (fun uu___2 -> ()))))
-                                       (fun uu___1 ->
-                                          (fun uu___1 ->
-                                             Obj.magic
-                                               (FStar_Tactics_Effect.tac_bind
-                                                  (FStar_Sealed.seal
-                                                     (Obj.magic
-                                                        (FStar_Range.mk_range
-                                                           "Pulse.Recursion.fst"
-                                                           (Prims.of_int (216))
-                                                           (Prims.of_int (13))
-                                                           (Prims.of_int (216))
-                                                           (Prims.of_int (20)))))
-                                                  (FStar_Sealed.seal
-                                                     (Obj.magic
-                                                        (FStar_Range.mk_range
-                                                           "Pulse.Recursion.fst"
-                                                           (Prims.of_int (217))
-                                                           (Prims.of_int (4))
-                                                           (Prims.of_int (218))
-                                                           (Prims.of_int (15)))))
-                                                  (FStar_Tactics_Effect.lift_div_tac
-                                                     (fun uu___2 ->
-                                                        FStar_List_Tot_Base.init
-                                                          bs))
-                                                  (fun uu___2 ->
-                                                     (fun bs1 ->
-                                                        Obj.magic
-                                                          (FStar_Tactics_Effect.tac_bind
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+          fun r_typ ->
+            fun blob ->
+              FStar_Tactics_Effect.tac_bind
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Recursion.fst"
+                         (Prims.of_int (212)) (Prims.of_int (18))
+                         (Prims.of_int (219)) (Prims.of_int (15)))))
+                (FStar_Sealed.seal
+                   (Obj.magic
+                      (FStar_Range.mk_range "Pulse.Recursion.fst"
+                         (Prims.of_int (220)) (Prims.of_int (4))
+                         (Prims.of_int (226)) (Prims.of_int (22)))))
+                (Obj.magic
+                   (FStar_Tactics_Effect.tac_bind
+                      (FStar_Sealed.seal
+                         (Obj.magic
+                            (FStar_Range.mk_range "Pulse.Recursion.fst"
+                               (Prims.of_int (215)) (Prims.of_int (16))
+                               (Prims.of_int (215)) (Prims.of_int (36)))))
+                      (FStar_Sealed.seal
+                         (Obj.magic
+                            (FStar_Range.mk_range "Pulse.Recursion.fst"
+                               (Prims.of_int (212)) (Prims.of_int (18))
+                               (Prims.of_int (219)) (Prims.of_int (15)))))
+                      (Obj.magic
+                         (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs r_typ))
+                      (fun uu___ ->
+                         (fun uu___ ->
+                            match uu___ with
+                            | (bs, c) ->
+                                Obj.magic
+                                  (FStar_Tactics_Effect.tac_bind
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "Pulse.Recursion.fst"
+                                              (Prims.of_int (216))
+                                              (Prims.of_int (4))
+                                              (Prims.of_int (216))
+                                              (Prims.of_int (64)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "Pulse.Recursion.fst"
+                                              (Prims.of_int (216))
+                                              (Prims.of_int (65))
+                                              (Prims.of_int (219))
+                                              (Prims.of_int (15)))))
+                                     (if Prims.uu___is_Nil bs
+                                      then
+                                        Obj.magic
+                                          (Obj.repr
+                                             (Pulse_Typing_Env.fail g
+                                                (FStar_Pervasives_Native.Some
+                                                   rng)
+                                                "tie_knot: impossible (1)"))
+                                      else
+                                        Obj.magic
+                                          (Obj.repr
+                                             (FStar_Tactics_Effect.lift_div_tac
+                                                (fun uu___2 -> ()))))
+                                     (fun uu___1 ->
+                                        (fun uu___1 ->
+                                           Obj.magic
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Recursion.fst"
+                                                         (Prims.of_int (217))
+                                                         (Prims.of_int (13))
+                                                         (Prims.of_int (217))
+                                                         (Prims.of_int (20)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "Pulse.Recursion.fst"
+                                                         (Prims.of_int (218))
+                                                         (Prims.of_int (4))
+                                                         (Prims.of_int (219))
+                                                         (Prims.of_int (15)))))
+                                                (FStar_Tactics_Effect.lift_div_tac
+                                                   (fun uu___2 ->
+                                                      FStar_List_Tot_Base.init
+                                                        bs))
+                                                (fun uu___2 ->
+                                                   (fun bs1 ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (218))
                                                                     (Prims.of_int (64)))))
-                                                             (FStar_Sealed.seal
-                                                                (Obj.magic
-                                                                   (FStar_Range.mk_range
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
                                                                     "Pulse.Recursion.fst"
-                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (219))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (219))
                                                                     (Prims.of_int (15)))))
-                                                             (if
-                                                                Prims.uu___is_Nil
-                                                                  bs1
-                                                              then
-                                                                Obj.magic
-                                                                  (Obj.repr
-                                                                    (Pulse_Typing_Env.fail
+                                                           (if
+                                                              Prims.uu___is_Nil
+                                                                bs1
+                                                            then
+                                                              Obj.magic
+                                                                (Obj.repr
+                                                                   (Pulse_Typing_Env.fail
                                                                     g
                                                                     (FStar_Pervasives_Native.Some
                                                                     rng)
                                                                     "tie_knot: impossible (2)"))
-                                                              else
-                                                                Obj.magic
-                                                                  (Obj.repr
-                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                            else
+                                                              Obj.magic
+                                                                (Obj.repr
+                                                                   (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
                                                                     ()))))
-                                                             (fun uu___2 ->
-                                                                (fun uu___2
-                                                                   ->
-                                                                   Obj.magic
-                                                                    (FStar_Tactics_V2_SyntaxHelpers.mk_arr
+                                                           (fun uu___2 ->
+                                                              (fun uu___2 ->
+                                                                 Obj.magic
+                                                                   (FStar_Tactics_V2_SyntaxHelpers.mk_arr
                                                                     bs1 c))
-                                                                  uu___2)))
-                                                       uu___2))) uu___1)))
-                             uu___)))
-                  (fun uu___ ->
-                     (fun knot_r_typ ->
-                        Obj.magic
-                          (FStar_Tactics_Effect.tac_bind
-                             (FStar_Sealed.seal
-                                (Obj.magic
-                                   (FStar_Range.mk_range
-                                      "Pulse.Recursion.fst"
-                                      (Prims.of_int (222))
-                                      (Prims.of_int (21))
-                                      (Prims.of_int (222))
-                                      (Prims.of_int (86)))))
-                             (FStar_Sealed.seal
-                                (Obj.magic
-                                   (FStar_Range.mk_range
-                                      "Pulse.Recursion.fst"
-                                      (Prims.of_int (219)) (Prims.of_int (4))
-                                      (Prims.of_int (225))
-                                      (Prims.of_int (22)))))
-                             (Obj.magic
-                                (FStar_Reflection_Typing.mk_unchecked_let
-                                   (Pulse_Typing_Env.fstar_env g) nm_orig
-                                   (FStar_Reflection_V2_Builtins.pack_ln
-                                      (FStar_Reflection_V2_Data.Tv_App
-                                         ((FStar_Reflection_V2_Builtins.pack_ln
-                                             (FStar_Reflection_V2_Data.Tv_FVar
-                                                (FStar_Reflection_V2_Builtins.pack_fv
-                                                   ["Prims"; "magic"]))),
-                                           ((FStar_Reflection_V2_Builtins.pack_ln
-                                               (FStar_Reflection_V2_Data.Tv_Const
-                                                  FStar_Reflection_V2_Data.C_Unit)),
-                                             FStar_Reflection_V2_Data.Q_Explicit))))
-                                   knot_r_typ))
-                             (fun uu___ ->
-                                FStar_Tactics_Effect.lift_div_tac
-                                  (fun uu___1 ->
-                                     match uu___ with
-                                     | (flag, sig1, uu___2) ->
-                                         [(flag,
-                                            (Pulse_RuntimeUtils.add_attribute
-                                               sig1
-                                               (FStar_Reflection_V2_Builtins.pack_ln
-                                                  (FStar_Reflection_V2_Data.Tv_App
-                                                     ((FStar_Reflection_V2_Builtins.pack_ln
-                                                         (FStar_Reflection_V2_Data.Tv_App
-                                                            ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                (FStar_Reflection_V2_Data.Tv_FVar
-                                                                   (FStar_Reflection_V2_Builtins.pack_fv
-                                                                    ["FStar";
-                                                                    "Pervasives";
-                                                                    "Native";
-                                                                    "Mktuple2"]))),
-                                                              ((FStar_Reflection_V2_Builtins.pack_ln
-                                                                  (FStar_Reflection_V2_Data.Tv_Const
-                                                                    (FStar_Reflection_V2_Data.C_String
+                                                                uu___2)))
+                                                     uu___2))) uu___1)))
+                           uu___)))
+                (fun uu___ ->
+                   (fun knot_r_typ ->
+                      Obj.magic
+                        (FStar_Tactics_Effect.tac_bind
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range "Pulse.Recursion.fst"
+                                    (Prims.of_int (223)) (Prims.of_int (21))
+                                    (Prims.of_int (223)) (Prims.of_int (104)))))
+                           (FStar_Sealed.seal
+                              (Obj.magic
+                                 (FStar_Range.mk_range "Pulse.Recursion.fst"
+                                    (Prims.of_int (220)) (Prims.of_int (4))
+                                    (Prims.of_int (226)) (Prims.of_int (22)))))
+                           (Obj.magic
+                              (FStar_Tactics_Effect.tac_bind
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "Pulse.Recursion.fst"
+                                          (Prims.of_int (223))
+                                          (Prims.of_int (55))
+                                          (Prims.of_int (223))
+                                          (Prims.of_int (72)))))
+                                 (FStar_Sealed.seal
+                                    (Obj.magic
+                                       (FStar_Range.mk_range
+                                          "Pulse.Recursion.fst"
+                                          (Prims.of_int (223))
+                                          (Prims.of_int (21))
+                                          (Prims.of_int (223))
+                                          (Prims.of_int (104)))))
+                                 (Obj.magic
+                                    (FStar_Tactics_V2_Derived.cur_module ()))
+                                 (fun uu___ ->
+                                    FStar_Tactics_Effect.lift_div_tac
+                                      (fun uu___1 ->
+                                         FStar_Reflection_Typing.mk_unchecked_let
+                                           (Pulse_Typing_Env.fstar_env g)
+                                           uu___ nm_orig
+                                           (FStar_Reflection_V2_Builtins.pack_ln
+                                              (FStar_Reflection_V2_Data.Tv_App
+                                                 ((FStar_Reflection_V2_Builtins.pack_ln
+                                                     (FStar_Reflection_V2_Data.Tv_FVar
+                                                        (FStar_Reflection_V2_Builtins.pack_fv
+                                                           ["Prims"; "magic"]))),
+                                                   ((FStar_Reflection_V2_Builtins.pack_ln
+                                                       (FStar_Reflection_V2_Data.Tv_Const
+                                                          FStar_Reflection_V2_Data.C_Unit)),
+                                                     FStar_Reflection_V2_Data.Q_Explicit))))
+                                           knot_r_typ))))
+                           (fun uu___ ->
+                              FStar_Tactics_Effect.lift_div_tac
+                                (fun uu___1 ->
+                                   match uu___ with
+                                   | (flag, sig1, uu___2) ->
+                                       (flag,
+                                         (Pulse_RuntimeUtils.add_attribute
+                                            sig1
+                                            (FStar_Reflection_V2_Builtins.pack_ln
+                                               (FStar_Reflection_V2_Data.Tv_App
+                                                  ((FStar_Reflection_V2_Builtins.pack_ln
+                                                      (FStar_Reflection_V2_Data.Tv_App
+                                                         ((FStar_Reflection_V2_Builtins.pack_ln
+                                                             (FStar_Reflection_V2_Data.Tv_FVar
+                                                                (FStar_Reflection_V2_Builtins.pack_fv
+                                                                   ["FStar";
+                                                                   "Pervasives";
+                                                                   "Native";
+                                                                   "Mktuple2"]))),
+                                                           ((FStar_Reflection_V2_Builtins.pack_ln
+                                                               (FStar_Reflection_V2_Data.Tv_Const
+                                                                  (FStar_Reflection_V2_Data.C_String
                                                                     "pulse.recursive.knot"))),
-                                                                FStar_Reflection_V2_Data.Q_Explicit)))),
-                                                       ((string_as_term
-                                                           nm_aux),
-                                                         FStar_Reflection_V2_Data.Q_Explicit))))),
-                                            (FStar_Pervasives_Native.Some
-                                               blob))])))) uu___)
+                                                             FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                    ((string_as_term nm_aux),
+                                                      FStar_Reflection_V2_Data.Q_Explicit))))),
+                                         (FStar_Pervasives_Native.Some blob))))))
+                     uu___)
