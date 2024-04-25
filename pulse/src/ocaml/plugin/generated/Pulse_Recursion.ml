@@ -884,7 +884,7 @@ let (tie_knot :
           Pulse_Syntax_Base.decl ->
             FStar_Reflection_Types.term ->
               FStar_Reflection_Typing.blob ->
-                (unit FStar_Reflection_Typing.sigelt_for Prims.list, 
+                ((unit, unit) FStar_Reflection_Typing.sigelt_for Prims.list,
                   unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
