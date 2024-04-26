@@ -50,6 +50,7 @@ module UF = FStar.Syntax.Unionfind
 module PC = FStar.Parser.Const
 module FC = FStar.Const
 module TcComm = FStar.TypeChecker.Common
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 instance showable_implicit_checking_status : showable implicit_checking_status = {
   show = (function
@@ -1367,7 +1368,7 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
                    //should we always disable Zeta here?
             in
             let t' = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.1" steps env t in
-            if U.eq_tm t t' = U.Equal //if we didn't inline anything
+            if TEQ.eq_tm env t t' = TEQ.Equal //if we didn't inline anything
             then None
             else let _ = if Env.debug env <| Options.Other "RelDelta"
                          then BU.print2 "Inlined %s to %s\n"
@@ -1390,7 +1391,7 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
      *)
     let made_progress t t' =
       let head, head' = U.head_and_args t |> fst, U.head_and_args t' |> fst in
-      not (U.eq_tm head head' = U.Equal) in
+      not (TEQ.eq_tm env head head' = TEQ.Equal) in
 
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in
@@ -2687,7 +2688,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
    let eq_bqual a1 a2 =
        match a1, a2 with
        | Some (Implicit b1), Some (Implicit b2) ->
-         U.Equal //we don't care about comparing the dot qualifier in this context
+         true //we don't care about comparing the dot qualifier in this context
        | _ ->
          U.eq_bqual a1 a2
    in
@@ -2723,7 +2724,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
           Inl ([rhs_prob], formula), wl
 
         | x::xs, y::ys 
-          when (eq_bqual x.binder_qual y.binder_qual = U.Equal &&
+          when (eq_bqual x.binder_qual y.binder_qual &&
                 compat_positivity_qualifiers x.binder_positivity y.binder_positivity) ->
            let hd1, imp = x.binder_bv, x.binder_qual in
            let hd2, imp' = y.binder_bv, y.binder_qual in
@@ -2858,7 +2859,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
             | None, None -> true
             | Some (Implicit _), Some a ->
               a.aqual_implicit &&
-              U.eqlist (fun x y -> U.eq_tm x y = U.Equal)
+              U.eqlist (fun x y -> TEQ.eq_tm env x y = TEQ.Equal)
                        b.binder_attrs
                        a.aqual_attributes
             | _ -> false
@@ -3175,7 +3176,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
                 UF.rollback tx;
                 inapplicable "Subprobs failed: " (Some lstring)
           in
-          if U.eq_tm t_head (U.ctx_uvar_typ ctx_uv) = U.Equal
+          if TEQ.eq_tm env t_head (U.ctx_uvar_typ ctx_uv) = TEQ.Equal
           then
             //
             // eq_tm doesn't unify, so uvars_head computed remains consistent
@@ -3443,7 +3444,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                                      (show head1) (show args1) (show head2) (show args2)))
                     orig
         else
-        if nargs=0 || U.eq_args args1 args2=U.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
+        if nargs=0 || TEQ.eq_args env args1 args2=TEQ.Equal //special case: for easily proving things like nat <: nat, or greater_than i <: greater_than i etc.
         then if need_unif
              then solve_t ({problem with lhs=head1; rhs=head2}) wl
              else solve_head_then wl (fun ok wl ->
@@ -3515,8 +3516,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                      let head1', _ = U.head_and_args t1' in
                      let head2', _ = U.head_and_args t2' in
                      begin
-                     match U.eq_tm head1' head1, U.eq_tm head2' head2 with
-                     | U.Equal, U.Equal -> //unfolding didn't make progress
+                     match TEQ.eq_tm env head1' head1, TEQ.eq_tm env head2' head2 with
+                     | TEQ.Equal, TEQ.Equal -> //unfolding didn't make progress
                        if debug wl <| Options.Other "Rel"
                        then BU.print4
                             "Unfolding didn't make progress ... got %s ~> %s;\nand %s ~> %s\n"
@@ -4240,21 +4241,21 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          let equal t1 t2 : bool =
           (* Try comparing the terms as they are. If we get Equal or NotEqual,
              we are done. If we get an Unknown, attempt some normalization. *)
-           let r = U.eq_tm t1 t2 in
+           let env = p_env wl orig in
+           let r = TEQ.eq_tm env t1 t2 in
            match r with
-           | U.Equal -> true
-           | U.NotEqual -> false
-           | U.Unknown ->
+           | TEQ.Equal -> true
+           | TEQ.NotEqual -> false
+           | TEQ.Unknown ->
              let steps = [
                Env.UnfoldUntil delta_constant;
                Env.Primops;
                Env.Beta;
                Env.Eager_unfolding;
                Env.Iota ] in
-             let env = p_env wl orig in
              let t1 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.2" steps env t1 in
              let t2 = norm_with_steps "FStar.TypeChecker.Rel.norm_with_steps.3" steps env t2 in
-             U.eq_tm t1 t2 = U.Equal
+             TEQ.eq_tm env t1 t2 = TEQ.Equal
          in
          if (Env.is_interpreted wl.tcenv head1 || Env.is_interpreted wl.tcenv head2) //we have something like (+ x1 x2) =?= (- y1 y2)
            && problem.relation = EQ

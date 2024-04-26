@@ -6,7 +6,7 @@ open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Syntax.Syntax
-
+module Env = FStar.TypeChecker.Env
 module EMB = FStar.Syntax.Embeddings
 module NBE = FStar.TypeChecker.NBETerm
 

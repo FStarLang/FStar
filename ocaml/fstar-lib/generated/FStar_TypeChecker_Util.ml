@@ -5908,8 +5908,11 @@ let (weaken_result_typ :
                             let set_result_typ c1 =
                               FStar_Syntax_Util.set_result_typ c1 t in
                             let uu___4 =
-                              let uu___5 = FStar_Syntax_Util.eq_tm t res_t in
-                              uu___5 = FStar_Syntax_Util.Equal in
+                              let uu___5 =
+                                FStar_TypeChecker_TermEqAndSimplify.eq_tm env
+                                  t res_t in
+                              uu___5 =
+                                FStar_TypeChecker_TermEqAndSimplify.Equal in
                             if uu___4
                             then
                               ((let uu___6 =
@@ -6507,11 +6510,9 @@ let (maybe_instantiate :
                            FStar_Syntax_Syntax.binder_positivity = uu___5;
                            FStar_Syntax_Syntax.binder_attrs = uu___6;_} ->
                            (FStar_Compiler_Option.isNone imp) ||
-                             (let uu___7 =
-                                FStar_Syntax_Util.eq_bqual imp
-                                  (FStar_Pervasives_Native.Some
-                                     FStar_Syntax_Syntax.Equality) in
-                              uu___7 = FStar_Syntax_Util.Equal)) formals in
+                             (FStar_Syntax_Util.eq_bqual imp
+                                (FStar_Pervasives_Native.Some
+                                   FStar_Syntax_Syntax.Equality))) formals in
                 match uu___2 with
                 | FStar_Pervasives_Native.None ->
                     FStar_Compiler_List.length formals

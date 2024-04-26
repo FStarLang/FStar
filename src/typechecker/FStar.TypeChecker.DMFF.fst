@@ -40,6 +40,7 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
 
@@ -1298,7 +1299,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app {hd=head; args=List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_aqual_implicit q then "implicit" else "explicit" in
-        if eq_aqual q q' <> Equal
+        if not (eq_aqual q q')
         then Errors.log_issue
                     head.pos
                     (Errors.Warning_IncoherentImplicitQualifier,

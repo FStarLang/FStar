@@ -16,6 +16,8 @@ module BU = FStar.Compiler.Util
 module TcUtil = FStar.TypeChecker.Util
 module Hash = FStar.Syntax.Hash
 module Subst = FStar.Syntax.Subst
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
+
 open FStar.Class.Show
 open FStar.Class.Setlike
 
@@ -1143,7 +1145,7 @@ and check_relation_comp (g:env) rel (c0 c1:comp)
     match destruct_comp c0, destruct_comp c1 with
     | None, _
     | _, None ->
-      if U.eq_comp c0 c1 = U.Equal
+      if TEQ.eq_comp g.tcenv c0 c1 = TEQ.Equal
       then return ()
       else (
         let ct_eq res0 args0 res1 args1 =

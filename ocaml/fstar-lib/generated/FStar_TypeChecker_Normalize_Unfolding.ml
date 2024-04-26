@@ -694,7 +694,8 @@ let (should_unfold :
                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
                        &&
                        (FStar_Compiler_Util.for_some
-                          (FStar_Syntax_Util.attr_eq
+                          (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                             cfg.FStar_TypeChecker_Cfg.tcenv
                              FStar_Syntax_Util.tac_opaque_attr) attrs)
                      ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg

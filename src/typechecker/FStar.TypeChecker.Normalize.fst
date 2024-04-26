@@ -48,7 +48,7 @@ module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
-
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 module PO = FStar.TypeChecker.Primops
 open FStar.TypeChecker.Normalize.Unfolding
 
@@ -749,7 +749,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops}) tm
+                              primitive_steps=equality_ops cfg.tcenv}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -1977,7 +1977,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
                   let maybe_range_arg =
-                    if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                    if BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
                     then [as_arg (PO.embed_simple lb.lbpos lb.lbpos);
                           as_arg (PO.embed_simple body.pos body.pos)]
                     else []

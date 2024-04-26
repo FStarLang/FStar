@@ -5170,17 +5170,18 @@ let (encode_datacon :
                                                                     ->
                                                                     let uu___37
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env1.FStar_SMTEncoding_Env.tcenv
                                                                     head1
                                                                     head' in
                                                                     (match uu___37
                                                                     with
                                                                     | 
-                                                                    FStar_Syntax_Util.Equal
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal
                                                                     ->
                                                                     FStar_Pervasives_Native.None
                                                                     | 
-                                                                    FStar_Syntax_Util.NotEqual
+                                                                    FStar_TypeChecker_TermEqAndSimplify.NotEqual
                                                                     ->
                                                                     binder_and_codomain_type
                                                                     t'
@@ -5913,17 +5914,18 @@ let (encode_datacon :
                                                                     ->
                                                                     let uu___33
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env1.FStar_SMTEncoding_Env.tcenv
                                                                     head1
                                                                     head' in
                                                                     (match uu___33
                                                                     with
                                                                     | 
-                                                                    FStar_Syntax_Util.Equal
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal
                                                                     ->
                                                                     FStar_Pervasives_Native.None
                                                                     | 
-                                                                    FStar_Syntax_Util.NotEqual
+                                                                    FStar_TypeChecker_TermEqAndSimplify.NotEqual
                                                                     ->
                                                                     binder_and_codomain_type
                                                                     t'

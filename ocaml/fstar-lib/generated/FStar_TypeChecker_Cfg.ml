@@ -2190,9 +2190,17 @@ let (prim_from_list :
 let (built_in_primitive_steps :
   FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap) =
   prim_from_list FStar_TypeChecker_Primops.built_in_primitive_steps_list
+let (env_dependent_ops : FStar_TypeChecker_Env.env_t -> prim_step_set) =
+  fun env ->
+    let uu___ = FStar_TypeChecker_Primops.env_dependent_ops env in
+    prim_from_list uu___
 let (equality_ops :
-  FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap) =
-  prim_from_list FStar_TypeChecker_Primops.equality_ops_list
+  FStar_TypeChecker_Env.env_t ->
+    FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap)
+  =
+  fun env ->
+    let uu___ = FStar_TypeChecker_Primops.equality_ops_list env in
+    prim_from_list uu___
 let (showable_cfg : cfg FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
@@ -2414,7 +2422,11 @@ let (config' :
         let d1 =
           match d with | [] -> [FStar_TypeChecker_Env.NoDelta] | uu___ -> d in
         let steps = let uu___ = to_fsteps s in add_nbe uu___ in
-        let psteps1 = let uu___ = cached_steps () in add_steps uu___ psteps in
+        let psteps1 =
+          let uu___ =
+            let uu___1 = cached_steps () in
+            let uu___2 = env_dependent_ops e in merge_steps uu___1 uu___2 in
+          add_steps uu___ psteps in
         let dbg_flag =
           FStar_Compiler_List.contains FStar_TypeChecker_Env.NormDebug s in
         let uu___ =

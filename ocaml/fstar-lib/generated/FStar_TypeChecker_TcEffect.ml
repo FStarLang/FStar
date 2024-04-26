@@ -692,11 +692,12 @@ let (bind_combinator_kind :
                                                                     =
                                                                     let uu___14
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env
                                                                     g_sig_b_arrow_t
                                                                     (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                                     uu___14 =
-                                                                    FStar_Syntax_Util.Equal in
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                                     if
                                                                     uu___13
                                                                     then
@@ -706,11 +707,12 @@ let (bind_combinator_kind :
                                                                     =
                                                                     let uu___16
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env
                                                                     g_sig_b_sort
                                                                     (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                                                     uu___16 =
-                                                                    FStar_Syntax_Util.Equal in
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                                     if
                                                                     uu___15
                                                                     then
@@ -963,11 +965,12 @@ let (bind_combinator_kind :
                                                                     =
                                                                     let uu___15
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env
                                                                     (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                                     expected_f_b_sort in
                                                                     uu___15 =
-                                                                    FStar_Syntax_Util.Equal in
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                                     if
                                                                     uu___14
                                                                     then
@@ -1190,11 +1193,12 @@ let (bind_combinator_kind :
                                                                     =
                                                                     let uu___16
                                                                     =
-                                                                    FStar_Syntax_Util.eq_tm
+                                                                    FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                    env
                                                                     (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                                     expected_g_b_sort in
                                                                     uu___16 =
-                                                                    FStar_Syntax_Util.Equal in
+                                                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                                     if
                                                                     uu___15
                                                                     then
@@ -1923,11 +1927,12 @@ let (subcomp_combinator_kind :
                                                                uu___8 uu___9 in
                                                        let uu___8 =
                                                          let uu___9 =
-                                                           FStar_Syntax_Util.eq_tm
+                                                           FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                             env
                                                              (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                              expected_f_b_sort in
                                                          uu___9 =
-                                                           FStar_Syntax_Util.Equal in
+                                                           FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                        if uu___8
                                                        then
                                                          FStar_Pervasives_Native.Some
@@ -2052,12 +2057,13 @@ let (subcomp_combinator_kind :
                                                                     uu___9 in
                                                             let uu___8 =
                                                               let uu___9 =
-                                                                FStar_Syntax_Util.eq_tm
+                                                                FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                                  env
                                                                   (FStar_Syntax_Util.comp_result
                                                                     k_c)
                                                                   expected_t in
                                                               uu___9 =
-                                                                FStar_Syntax_Util.Equal in
+                                                                FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                             if uu___8
                                                             then
                                                               FStar_Pervasives_Native.Some
@@ -2668,11 +2674,12 @@ let (ite_combinator_kind :
                                                          FStar_Compiler_Range_Type.dummyRange in
                                                  let uu___10 =
                                                    let uu___11 =
-                                                     FStar_Syntax_Util.eq_tm
+                                                     FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                       env
                                                        (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                        expected_f_b_sort in
                                                    uu___11 =
-                                                     FStar_Syntax_Util.Equal in
+                                                     FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                  if uu___10
                                                  then
                                                    FStar_Pervasives_Native.Some
@@ -2731,11 +2738,12 @@ let (ite_combinator_kind :
                                                               FStar_Compiler_Range_Type.dummyRange in
                                                       let uu___10 =
                                                         let uu___11 =
-                                                          FStar_Syntax_Util.eq_tm
+                                                          FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                            env
                                                             (g_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                                             expected_g_b_sort in
                                                         uu___11 =
-                                                          FStar_Syntax_Util.Equal in
+                                                          FStar_TypeChecker_TermEqAndSimplify.Equal in
                                                       if uu___10
                                                       then
                                                         FStar_Pervasives_Native.Some
@@ -3465,10 +3473,12 @@ let (lift_combinator_kind :
                                               uu___8 in
                                       let uu___7 =
                                         let uu___8 =
-                                          FStar_Syntax_Util.eq_tm
+                                          FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                            env
                                             (f_b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                                             expected_f_b_sort in
-                                        uu___8 = FStar_Syntax_Util.Equal in
+                                        uu___8 =
+                                          FStar_TypeChecker_TermEqAndSimplify.Equal in
                                       if uu___7
                                       then FStar_Pervasives_Native.Some ()
                                       else FStar_Pervasives_Native.None in
@@ -7530,7 +7540,8 @@ let (tc_non_layered_eff_decl :
                                                              =
                                                              let uu___21 =
                                                                FStar_Compiler_Util.for_some
-                                                                 (FStar_Syntax_Util.attr_eq
+                                                                 (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                                                                    env
                                                                     FStar_Syntax_Util.dm4f_bind_range_attr)
                                                                  ed2.FStar_Syntax_Syntax.eff_attrs in
                                                              if uu___21

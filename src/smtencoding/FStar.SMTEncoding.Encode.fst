@@ -42,6 +42,7 @@ module SS     = FStar.Syntax.Subst
 module TcUtil = FStar.TypeChecker.Util
 module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
+module TEQ    = FStar.TypeChecker.TermEqAndSimplify
 
 let norm_before_encoding env t =
     let steps = [Env.Eager_unfolding;
@@ -1408,9 +1409,9 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
                         let head, _ = U.head_and_args t in
                         let t' = norm t in
                         let head', _ = U.head_and_args t' in
-                        match U.eq_tm head head' with
-                        | U.Equal -> None //no progress after whnf
-                        | U.NotEqual -> binder_and_codomain_type t'
+                        match TEQ.eq_tm env.tcenv head head' with
+                        | TEQ.Equal -> None //no progress after whnf
+                        | TEQ.NotEqual -> binder_and_codomain_type t'
                         | _ ->
                           //Did we actually make progress? Be conservative to avoid an infinite loop
                           match (SS.compress head).n with

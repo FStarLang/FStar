@@ -1341,8 +1341,10 @@ let (guard_letrecs :
                     FStar_Syntax_Util.unrefine uu___ in
                   let rec warn t11 t21 =
                     let uu___ =
-                      let uu___1 = FStar_Syntax_Util.eq_tm t11 t21 in
-                      uu___1 = FStar_Syntax_Util.Equal in
+                      let uu___1 =
+                        FStar_TypeChecker_TermEqAndSimplify.eq_tm env2 t11
+                          t21 in
+                      uu___1 = FStar_TypeChecker_TermEqAndSimplify.Equal in
                     if uu___
                     then false
                     else
@@ -1531,8 +1533,10 @@ let (guard_letrecs :
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app rel uu___ r in
                   let uu___ =
-                    let uu___1 = FStar_Syntax_Util.eq_tm rel rel_prev in
-                    uu___1 = FStar_Syntax_Util.Equal in
+                    let uu___1 =
+                      FStar_TypeChecker_TermEqAndSimplify.eq_tm env2 rel
+                        rel_prev in
+                    uu___1 = FStar_TypeChecker_TermEqAndSimplify.Equal in
                   if uu___
                   then rel_guard
                   else
@@ -5996,7 +6000,7 @@ and (tc_abs_check_binders :
                        let uu___2 =
                          (Prims.op_Negation (special imp imp')) &&
                            (let uu___3 = FStar_Syntax_Util.eq_bqual imp imp' in
-                            uu___3 <> FStar_Syntax_Util.Equal) in
+                            Prims.op_Negation uu___3) in
                        if uu___2
                        then
                          let uu___3 =
@@ -6128,9 +6132,10 @@ and (tc_abs_check_binders :
                                        FStar_Compiler_List.existsb
                                          (fun attr ->
                                             let uu___5 =
-                                              FStar_Syntax_Util.eq_tm attr
-                                                attr' in
-                                            uu___5 = FStar_Syntax_Util.Equal)
+                                              FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                env1 attr attr' in
+                                            uu___5 =
+                                              FStar_TypeChecker_TermEqAndSimplify.Equal)
                                          attrs1 in
                                      Prims.op_Negation uu___4) attrs'1 in
                               FStar_Compiler_List.op_At attrs1 diff in

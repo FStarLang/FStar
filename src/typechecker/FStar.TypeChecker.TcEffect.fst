@@ -38,6 +38,7 @@ module Env = FStar.TypeChecker.Env
 module N = FStar.TypeChecker.Normalize
 module TcUtil = FStar.TypeChecker.Util
 module Gen = FStar.TypeChecker.Generalize
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 module BU = FStar.Compiler.Util
 open FStar.Class.Show
@@ -254,9 +255,9 @@ let bind_combinator_kind (env:env)
           U.arrow [S.mk_binder x_bv]
                   (mk_Total g_sig_b_sort) in
         let g_b_kind =
-          if U.eq_tm g_sig_b_arrow_t g_b.binder_bv.sort = U.Equal
+          if TEQ.eq_tm env g_sig_b_arrow_t g_b.binder_bv.sort = TEQ.Equal
           then Substitutive_binder
-          else if U.eq_tm g_sig_b_sort g_b.binder_bv.sort = U.Equal
+          else if TEQ.eq_tm env g_sig_b_sort g_b.binder_bv.sort = TEQ.Equal
           then BindCont_no_abstraction_binder
           else Ad_hoc_binder in
         let ss = ss@[NT (g_sig_b.binder_bv, g_b.binder_bv |> S.bv_to_name)] in
@@ -301,7 +302,7 @@ let bind_combinator_kind (env:env)
                    result_typ = a_b.binder_bv |> S.bv_to_name;
                    effect_args = repr_app_bs |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
                    flags = []})) in
-    if U.eq_tm f_b.binder_bv.sort expected_f_b_sort = U.Equal
+    if TEQ.eq_tm env f_b.binder_bv.sort expected_f_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -335,7 +336,7 @@ let bind_combinator_kind (env:env)
              effect_args = repr_args;
              flags = []})) in
         U.arrow [x_bv |> S.mk_binder] (mk_Total thunk_t) in
-    if U.eq_tm g_b.binder_bv.sort expected_g_b_sort = U.Equal
+    if TEQ.eq_tm env g_b.binder_bv.sort expected_g_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -579,7 +580,7 @@ let subcomp_combinator_kind (env:env)
              result_typ = a_b.binder_bv |> S.bv_to_name;
              effect_args = (eff_params_bs@f_bs) |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
              flags = []})) in
-    if U.eq_tm f_b.binder_bv.sort expected_f_b_sort = U.Equal
+    if TEQ.eq_tm env f_b.binder_bv.sort expected_f_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -600,7 +601,7 @@ let subcomp_combinator_kind (env:env)
              result_typ = a_b.binder_bv |> S.bv_to_name;
              effect_args = (eff_params_bs@f_or_g_bs) |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
              flags = []})) in
-    if U.eq_tm (U.comp_result k_c) expected_t = U.Equal
+    if TEQ.eq_tm env (U.comp_result k_c) expected_t = TEQ.Equal
     then Some ()
     else None in
 
@@ -810,7 +811,7 @@ let ite_combinator_kind (env:env)
         ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
          (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@f_bs)))
         Range.dummyRange in
-    if U.eq_tm f_b.binder_bv.sort expected_f_b_sort = U.Equal
+    if TEQ.eq_tm env f_b.binder_bv.sort expected_f_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -821,7 +822,7 @@ let ite_combinator_kind (env:env)
         ((a_b.binder_bv |> S.bv_to_name |> S.as_arg)::
          (List.map (fun {binder_bv=b} -> b |> S.bv_to_name |> S.as_arg) (eff_params_bs@f_or_g_bs)))
         Range.dummyRange in
-    if U.eq_tm g_b.binder_bv.sort expected_g_b_sort = U.Equal
+    if TEQ.eq_tm env g_b.binder_bv.sort expected_g_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -1078,7 +1079,7 @@ let lift_combinator_kind (env:env)
              result_typ = a_b.binder_bv |> S.bv_to_name;
              effect_args = f_bs |> List.map (fun b -> b.binder_bv |> S.bv_to_name |> S.as_arg);
              flags = []})) in
-    if U.eq_tm f_b.binder_bv.sort expected_f_b_sort = U.Equal
+    if TEQ.eq_tm env f_b.binder_bv.sort expected_f_b_sort = TEQ.Equal
     then Some ()
     else None in
 
@@ -2221,7 +2222,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           mk_repr b wp in
 
         let maybe_range_arg =
-          if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+          if BU.for_some (TEQ.eq_tm_bool env U.dm4f_bind_range_attr) ed.eff_attrs
           then [S.null_binder S.t_range; S.null_binder S.t_range]
           else [] in
        

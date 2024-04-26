@@ -46,6 +46,7 @@ module TcComm = FStar.TypeChecker.Common
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 module UF = FStar.Syntax.Unionfind
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
 
@@ -2654,7 +2655,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lco
 
             let set_result_typ (c:comp) :comp = Util.set_result_typ c t in
 
-            if Util.eq_tm t res_t = Util.Equal then begin  //if the two types res_t and t are same, then just set the result type
+            if TEQ.eq_tm env t res_t = TEQ.Equal then begin  //if the two types res_t and t are same, then just set the result type
               if Env.debug env <| Options.Extreme
               then BU.print2 "weaken_result_type::strengthen_trivial: res_t:%s is same as t:%s\n"
                              (Print.term_to_string res_t) (Print.term_to_string t);
@@ -2848,7 +2849,7 @@ let maybe_instantiate (env:Env.env) e t =
        let number_of_implicits t =
             let formals = unfolded_arrow_formals env t in
             let n_implicits =
-            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality) = U.Equal) with
+            match formals |> BU.prefix_until (fun ({binder_qual=imp}) -> Option.isNone imp || U.eq_bqual imp (Some Equality)) with
                 | None -> List.length formals
                 | Some (implicits, _first_explicit, _rest) -> List.length implicits in
             n_implicits
