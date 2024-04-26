@@ -134,14 +134,18 @@ let check_fndecl
       | None -> (| refl_t, FStar.Squash.get_proof _ |)
 
       | Some t ->
-        if eq_tm t refl_t
-        then (| refl_t, FStar.Squash.get_proof _ |)
-        else
-          fail g (Some rng)
-            (FStar.Printf.sprintf "Computed type %s is not equal to val type %s (subtyping not supported yet)"
-               (T.term_to_string refl_t)
-               (T.term_to_string t))
+        let tok = Pulse.Checker.Pure.check_subtyping g refl_t t in
+        let refl_t_typing
+          : squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) refl_t) = () in
+        let sq : squash (RT.tot_typing (elab_env g) (elab_st_typing t_typing) t) =
+          FStar.Squash.bind_squash refl_t_typing (fun refl_t_typing ->
+            FStar.Squash.return_squash (
+              RT.T_Sub _ _ _ _
+                refl_t_typing
+                (RT.Relc_typ _ _ _ _ RT.R_Sub
+                   (RT.Rel_subtyping_token _ _ _ (FStar.Squash.return_squash tok))))) in
 
+        (| t, sq |)
     in
 
     let main_decl = mk_main_decl refl_t () in
