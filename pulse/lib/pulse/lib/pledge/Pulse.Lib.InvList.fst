@@ -21,7 +21,7 @@ module T0 = Pulse.Lib.Priv.Trade0
 
 ```pulse
 ghost
-fn rec dup_invlist_inv_aux (is:invlist)
+fn rec dup_invlist_inv (is:invlist)
   requires invlist_inv is
   ensures invlist_inv is ** invlist_inv is
   decreases is
@@ -34,7 +34,7 @@ fn rec dup_invlist_inv_aux (is:invlist)
     }
     Cons h t -> {
       rewrite invlist_inv is as inv (snd h) (fst h) ** invlist_inv t;
-      dup_invlist_inv_aux t;
+      dup_invlist_inv t;
       dup_inv (snd h) (fst h);
       rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
       rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is
@@ -43,11 +43,9 @@ fn rec dup_invlist_inv_aux (is:invlist)
 }
 ```
 
-let dup_invlist_inv = dup_invlist_inv_aux
-
 ```pulse
 ghost
-fn __shift_invlist_one
+fn shift_invlist_one
   (#a:Type0)
   (p : vprop)
   (i : iref)
@@ -76,11 +74,9 @@ fn __shift_invlist_one
 }
 ```
 
-let shift_invlist_one = __shift_invlist_one
-
 ```pulse
 ghost
-fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
+fn rec with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
   requires invlist_inv is ** pre
@@ -105,7 +101,7 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
-        let v = __with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
+        let v = with_invlist #a #((fst h) ** pre) #(fun v -> (fst h) ** post v) t fw;
         v
       };
       rewrite (inv (snd h) (fst h) ** invlist_inv t) as invlist_inv is;
@@ -114,7 +110,6 @@ fn rec __with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
   }
 }
 ```
-let with_invlist = __with_invlist
 
 let invlist_reveal = admit()
 
@@ -184,7 +179,7 @@ fn __invlist_sub_split
 
 ```pulse
 ghost
-fn __invlist_sub_split_wrap
+fn invlist_sub_split
   (is1 is2 : invlist)
   requires pure (invlist_sub is1 is2) ** invlist_v is2
   ensures  invlist_v is1 ** Pulse.Lib.Priv.Trade0.stick (invlist_v is1) (invlist_v is2)
@@ -192,6 +187,6 @@ fn __invlist_sub_split_wrap
   __invlist_sub_split is1 is2 ()
 }
 ```
-let invlist_sub_split = __invlist_sub_split_wrap
+
 
 let invlist_sub_inv = admit ()

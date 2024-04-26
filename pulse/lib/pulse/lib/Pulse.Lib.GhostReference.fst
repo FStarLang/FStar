@@ -36,7 +36,7 @@ let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
 
 ```pulse
 ghost
-fn alloc' (#a:Type u#0) (v:a)
+fn alloc (#a:Type u#0) (v:a)
 requires emp
 returns r:ref a
 ensures pts_to r v
@@ -46,11 +46,10 @@ ensures pts_to r v
   r
 }
 ```
-let alloc = alloc'
 
 ```pulse
 ghost
-fn read' (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
+fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
 requires pts_to r #p n
 returns x:erased a
 ensures pts_to r #p n ** pure (n == x)
@@ -61,12 +60,11 @@ ensures pts_to r #p n ** pure (n == x)
   hide (U.downgrade_val (reveal k))
 }
 ```
-let read = read'
 let ( ! ) #a = read #a
 
 ```pulse
 ghost
-fn write' (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
+fn op_Colon_Equals (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
 requires pts_to r #1.0R n
 ensures pts_to r #1.0R x
 {
@@ -75,11 +73,10 @@ ensures pts_to r #1.0R x
   fold (pts_to r #1.0R x)
 }
 ```
-let ( := ) #a r x #n = write' #a r x #n
 
 ```pulse
 ghost
-fn free' #a (r:ref a) (#n:erased a)
+fn free #a (r:ref a) (#n:erased a)
 requires pts_to r #1.0R n
 ensures emp
 {
@@ -87,11 +84,10 @@ ensures emp
   H.free r;
 }
 ```
-let free = free'
 
 ```pulse
 ghost
-fn share' (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
 ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
@@ -101,7 +97,6 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
   fold pts_to r #(p /. 2.0R) v
 }
 ```
-let share = share'
 
 ```pulse
 ghost
@@ -116,7 +111,7 @@ ensures pure (x0 == x1)
 
 ```pulse
 ghost
-fn gather' (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
 ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 {
@@ -127,7 +122,6 @@ ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
   raise_inj a x0 x1;
 }
 ```
-let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a) = share #a r #v
 
@@ -136,7 +130,7 @@ let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r
 
 ```pulse
 ghost
-fn pts_to_injective_eq'
+fn pts_to_injective_eq
   (#a:Type0)
   (#p #q:perm)
   (#v0 #v1:a)
@@ -154,11 +148,10 @@ ensures
   raise_inj _ v0 v1;
 }
 ```
-let pts_to_injective_eq = pts_to_injective_eq'
 
 ```pulse
 ghost
-fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
 ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
@@ -167,4 +160,3 @@ ensures pts_to r #p v ** pure (p <=. 1.0R)
   fold pts_to r #p v;
 }
 ```
-let pts_to_perm_bound = pts_to_perm_bound'
