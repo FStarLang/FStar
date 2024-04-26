@@ -818,7 +818,13 @@ let handle_smt_goal env goal =
     (* No such tactic was available in the current context *)
     | None -> [env, goal]
 
-let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rng:Range.range) : list sigelt =
+let splice
+  (env:Env.env)
+  (is_typed:bool)
+  (lids:list Ident.lident)
+  (tau:term)
+  (rng:Range.range) : list sigelt =
+  
   Errors.with_ctx "While running splice with a tactic" (fun () ->
     if env.nosynth then [] else begin
     tacdbg := Env.debug env (O.Other "Tac");
@@ -836,27 +842,54 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     let gs, sigelts =
       if is_typed then
       begin
-        let e_blob = e_option (e_tuple2 e_string RE.e_term) in
-        let gs, sig_blobs = run_tactic_on_ps tau.pos tau.pos false
-          RE.e_env
-          {env with gamma=[]}
-          (e_list (e_tuple3 e_bool RE.e_sigelt e_blob))
-          tau
-          tactic_already_typed
-          ps 
-        in
-        let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
-          { se with
-              sigmeta = { se.sigmeta with
-                sigmeta_extension_data =
-                      (match blob_opt with
-                       | Some (s, blob) -> [s, Dyn.mkdyn blob]
-                       | None -> []);
-                sigmeta_already_checked = checked; }
-          }
-        )
-        in
-        gs, sigelts
+        if List.length lids > 1
+        then let s = lids |> List.map Ident.string_of_lid |> BU.concat_l ", " in
+             Err.raise_error
+              (Errors.Error_BadSplice,
+               BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
+              rng
+        else begin
+          let val_t =
+            if List.length lids = 0
+            then None
+            else
+              match Env.try_lookup_val_decl env (List.hd lids) with
+              | None -> None
+              | Some ((uvs, tval), _) ->
+                if List.length uvs <> 0
+                then
+                  Err.raise_error
+                    (Errors.Error_BadSplice,
+                     BU.format1 "Typed splice: val declaration for %s is universe polymorphic in %s universes, expected 0"
+                       (string_of_int (List.length uvs)))
+                    rng
+                else Some tval in
+          let e_blob = e_option (e_tuple2 e_string RE.e_term) in
+          let gs, (sig_blobs_before, sig_blob, sig_blobs_after) = run_tactic_on_ps tau.pos tau.pos false
+            (e_tuple2 RE.e_env (e_option RE.e_term))
+            ({env with gamma=[]}, val_t)
+            (e_tuple3
+              (e_list (e_tuple3 e_bool RE.e_sigelt e_blob))
+              (e_tuple3 e_bool RE.e_sigelt e_blob)
+              (e_list (e_tuple3 e_bool RE.e_sigelt e_blob)))
+            tau
+            tactic_already_typed
+            ps 
+          in
+          let sig_blobs = sig_blobs_before@(sig_blob::sig_blobs_after) in
+          let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
+            { se with
+                sigmeta = { se.sigmeta with
+                  sigmeta_extension_data =
+                        (match blob_opt with
+                         | Some (s, blob) -> [s, Dyn.mkdyn blob]
+                         | None -> []);
+                  sigmeta_already_checked = checked; }
+            }
+          )
+          in
+          gs, sigelts
+        end
       end
       else run_tactic_on_ps tau.pos tau.pos false
              e_unit ()
