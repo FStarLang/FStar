@@ -785,6 +785,10 @@ let collect_one
         then pd := elt::!pd
       in
 
+      let add_module m =
+        add_to_parsing_data (P_dep (false, (Ident.lid_of_str m)))
+      in
+
       let rec collect_module = function
         | Module (lid, decls)
         | Interface (lid, decls, _) ->
@@ -863,7 +867,7 @@ let collect_one
                       | VpOfNotation t | VpArbitrary t -> collect_term t
                       | VpRecord (record, t) -> collect_tycon_record record;
                                                iter_opt t collect_term
-                      ) (List.filter_map Mktuple3?._2 identterms)
+                      ) (List.filter_map Tuple3.Mktuple3?._2 identterms)
 
       and collect_tycon_record r = 
         List.iter (fun (_, aq, attrs, t) ->
@@ -898,6 +902,15 @@ let collect_one
         | _ -> ()
 
       and collect_term t =
+        let rec tdepth (t:term) : int =
+          match t.tm with
+          | Op (id, [_; r]) when string_of_id id = "*" || string_of_id id = "&" ->
+            1 + tdepth r
+          | _ -> 1
+        in
+        let d = tdepth t in
+        if tdepth t > 1 then
+          add_module ("FStar.Tuple" ^ string_of_int d);
         collect_term' t.tm
 
       and collect_constant = function
@@ -922,7 +935,7 @@ let collect_one
             ()
         | Const c ->
             collect_constant c
-        | Op (_, ts) ->
+        | Op (op, ts) ->
             List.iter collect_term ts
         | Tvar _
         | AST.Uvar _ ->
@@ -1004,6 +1017,13 @@ let collect_one
           collect_binders binders;
           collect_term t
         | Sum (binders, t) ->
+            let sn = string_of_int (1 + List.length binders) in
+            let is_dep =
+              not <| List.for_all (function | Inr _ -> true | _ -> false) binders
+            in
+            if is_dep
+            then add_module ("FStar.DTuple" ^ sn)
+            else add_module ("FStar.Tuple" ^ sn);
             List.iter (function
               | Inl b -> collect_binder b
               | Inr t -> collect_term t)
@@ -1028,7 +1048,7 @@ let collect_one
             collect_term t
         | LexList l -> List.iter collect_term l
         | WFOrder (t1, t2) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.WellFounded")));
+          add_module "FStar.WellFounded";
           begin
            collect_term t1; collect_term t2
           end
@@ -1040,7 +1060,7 @@ let collect_one
         | Attributes cattributes  ->
             List.iter collect_term cattributes
         | CalcProof (rel, init, steps) ->
-            add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Calc")));
+            add_module "FStar.Calc";
             begin
             collect_term rel;
             collect_term init;
@@ -1051,46 +1071,46 @@ let collect_one
             end
 
         | IntroForall (bs, p, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_binders bs;
           collect_term p;
           collect_term e
 
         | IntroExists(bs, t, vs, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_binders bs;
           collect_term t;
           List.iter collect_term vs;
           collect_term e
 
         | IntroImplies(p, q, x, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_binder x;
           collect_term e
 
         | IntroOr(b, p, q, r) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_term r
 
         | IntroAnd(p, q, r, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_term r;
           collect_term e
 
         | ElimForall(bs, p, vs) ->
-           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           add_module "FStar.Classical.Sugar";
            collect_binders bs;
            collect_term p;
            List.iter collect_term vs
 
         | ElimExists(bs, p, q, b, e) ->
-           add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+           add_module "FStar.Classical.Sugar";
            collect_binders bs;
            collect_term p;
            collect_term q;
@@ -1098,13 +1118,13 @@ let collect_one
            collect_term e
 
         | ElimImplies(p, q, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_term e
 
         | ElimAnd(p, q, r, x, y, e) ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_term r;
@@ -1113,7 +1133,7 @@ let collect_one
           collect_term e
 
         | ElimOr(p, q, r, x, e, y, e') ->
-          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Classical.Sugar")));
+          add_module "FStar.Classical.Sugar";
           collect_term p;
           collect_term q;
           collect_term r;
@@ -1146,8 +1166,14 @@ let collect_one
         | PatName _ ->
             ()
         | PatList ps
-        | PatOr ps
-        | PatTuple (ps, _) ->
+        | PatOr ps ->
+            collect_patterns ps
+
+        | PatTuple (ps, is_dep) ->
+            let sn = string_of_int (List.length ps) in
+            if is_dep
+            then add_module ("FStar.DTuple" ^ sn)
+            else add_module ("FStar.Tuple" ^ sn);
             collect_patterns ps
         | PatRecord lidpats ->
             List.iter (fun (_, p) -> collect_pattern p) lidpats

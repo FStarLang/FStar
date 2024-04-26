@@ -385,20 +385,78 @@ let (const_to_string : FStar_Const.sconst -> Prims.string) =
     | FStar_Const.Const_reflect l ->
         let uu___ = sli l in
         FStar_Compiler_Util.format1 "[[%s.reflect]]" uu___
+let (tuple_table : (Prims.int * Prims.string * Prims.string) Prims.list) =
+  [((Prims.of_int (2)), "FStar.Pervasives.Native.tuple2",
+     "FStar.Pervasives.Native.Mktuple2");
+  ((Prims.of_int (3)), "FStar.Tuple3.tuple3", "FStar.Tuple3.Mktuple3");
+  ((Prims.of_int (4)), "FStar.Tuple4.tuple4", "FStar.Tuple4.Mktuple4");
+  ((Prims.of_int (5)), "FStar.Tuple5.tuple5", "FStar.Tuple5.Mktuple5");
+  ((Prims.of_int (6)), "FStar.Tuple6.tuple6", "FStar.Tuple6.Mktuple6");
+  ((Prims.of_int (7)), "FStar.Tuple7.tuple7", "FStar.Tuple7.Mktuple7");
+  ((Prims.of_int (8)), "FStar.Tuple8.tuple8", "FStar.Tuple8.Mktuple8");
+  ((Prims.of_int (9)), "FStar.Tuple9.tuple9", "FStar.Tuple9.Mktuple9");
+  ((Prims.of_int (10)), "FStar.Tuple10.tuple10", "FStar.Tuple10.Mktuple10");
+  ((Prims.of_int (11)), "FStar.Tuple11.tuple11", "FStar.Tuple11.Mktuple11");
+  ((Prims.of_int (12)), "FStar.Tuple12.tuple12", "FStar.Tuple12.Mktuple12");
+  ((Prims.of_int (13)), "FStar.Tuple13.tuple13", "FStar.Tuple13.Mktuple13");
+  ((Prims.of_int (14)), "FStar.Tuple14.tuple14", "FStar.Tuple14.Mktuple14")]
 let (mk_tuple_lid :
   Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
-      let t =
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "tuple%s" uu___ in
-      let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
-let (lid_tuple2 : FStar_Ident.lident) =
-  mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
-let (lid_tuple3 : FStar_Ident.lident) =
-  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 -> match uu___1 with | (n', uu___2, uu___3) -> n = n')
+          tuple_table in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (uu___1, s, uu___2) ->
+          let l = FStar_Ident.lid_of_str s in FStar_Ident.set_lid_range l r
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.failwith "Tuple too large"
+let (mk_tuple_data_lid :
+  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
+  fun n ->
+    fun r ->
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 -> match uu___1 with | (n', uu___2, uu___3) -> n = n')
+          tuple_table in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (uu___1, uu___2, s) ->
+          let l = FStar_Ident.lid_of_str s in FStar_Ident.set_lid_range l r
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.failwith "Tuple too large"
+let (get_tuple_datacon_arity :
+  Prims.string -> Prims.int FStar_Pervasives_Native.option) =
+  fun s ->
+    let uu___ =
+      FStar_Compiler_List.tryFind
+        (fun uu___1 -> match uu___1 with | (uu___2, uu___3, s') -> s = s')
+        tuple_table in
+    match uu___ with
+    | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+        FStar_Pervasives_Native.Some n
+    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+let (get_tuple_tycon_arity :
+  Prims.string -> Prims.int FStar_Pervasives_Native.option) =
+  fun s ->
+    let uu___ =
+      FStar_Compiler_List.tryFind
+        (fun uu___1 -> match uu___1 with | (uu___2, s', uu___3) -> s = s')
+        tuple_table in
+    match uu___ with
+    | FStar_Pervasives_Native.Some (n, uu___1, uu___2) ->
+        FStar_Pervasives_Native.Some n
+    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
-  fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
+  fun s ->
+    FStar_Compiler_List.existsb
+      (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
+      tuple_table
+let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
+  fun s ->
+    FStar_Compiler_List.existsb
+      (fun uu___ -> match uu___ with | (n, uu___1, s') -> s = s') tuple_table
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
   fun id ->
     let uu___ = FStar_Ident.string_of_id id in
@@ -407,21 +465,6 @@ let (is_tuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
   fun lid ->
     let uu___ = FStar_Ident.string_of_lid lid in
     is_tuple_constructor_string uu___
-let (mk_tuple_data_lid :
-  Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
-  fun n ->
-    fun r ->
-      let t =
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "Mktuple%s" uu___ in
-      let uu___ = psnconst t in FStar_Ident.set_lid_range uu___ r
-let (lid_Mktuple2 : FStar_Ident.lident) =
-  mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
-let (lid_Mktuple3 : FStar_Ident.lident) =
-  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
-let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
-  fun s ->
-    FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"
 let (is_tuple_datacon_id : FStar_Ident.ident -> Prims.bool) =
   fun id ->
     let uu___ = FStar_Ident.string_of_id id in is_tuple_datacon_string uu___
@@ -434,47 +477,65 @@ let (is_tuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
     fun n ->
       let uu___ = mk_tuple_data_lid n FStar_Compiler_Range_Type.dummyRange in
       FStar_Ident.lid_equals f uu___
-let (is_tuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
-  fun f ->
-    let uu___ = FStar_Ident.string_of_lid f in is_tuple_datacon_string uu___
-let (mod_prefix_dtuple : Prims.int -> Prims.string -> FStar_Ident.lident) =
-  fun n -> if n = (Prims.of_int (2)) then pconst else psconst
+let (lid_tuple2 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
+let (lid_tuple3 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple2 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple3 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (dtuple_table : (Prims.int * Prims.string * Prims.string) Prims.list) =
+  [((Prims.of_int (2)), "Prims.dtuple2", "Prims.Mkdtuple2");
+  ((Prims.of_int (3)), "FStar.DTuple3.dtuple3", "FStar.DTuple3.Mkdtuple3");
+  ((Prims.of_int (4)), "FStar.DTuple4.dtuple4", "FStar.DTuple4.Mkdtuple4");
+  ((Prims.of_int (5)), "FStar.DTuple5.dtuple5", "FStar.DTuple5.Mkdtuple5")]
 let (mk_dtuple_lid :
   Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
-      let t =
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "dtuple%s" uu___ in
-      let uu___ = let uu___1 = mod_prefix_dtuple n in uu___1 t in
-      FStar_Ident.set_lid_range uu___ r
-let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
-  fun s ->
-    (s = "Prims.dtuple2") ||
-      (FStar_Compiler_Util.starts_with s "FStar.Pervasives.dtuple")
-let (is_dtuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
-  fun lid ->
-    let uu___ = FStar_Ident.string_of_lid lid in
-    is_dtuple_constructor_string uu___
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 -> match uu___1 with | (n', uu___2, uu___3) -> n = n')
+          dtuple_table in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (uu___1, s, uu___2) ->
+          let l = FStar_Ident.lid_of_str s in FStar_Ident.set_lid_range l r
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.failwith "Dependent Tuple too large"
 let (mk_dtuple_data_lid :
   Prims.int -> FStar_Compiler_Range_Type.range -> FStar_Ident.lident) =
   fun n ->
     fun r ->
-      let t =
-        let uu___ = FStar_Compiler_Util.string_of_int n in
-        FStar_Compiler_Util.format1 "Mkdtuple%s" uu___ in
-      let uu___ = let uu___1 = mod_prefix_dtuple n in uu___1 t in
-      FStar_Ident.set_lid_range uu___ r
+      let uu___ =
+        FStar_Compiler_List.tryFind
+          (fun uu___1 -> match uu___1 with | (n', uu___2, uu___3) -> n = n')
+          dtuple_table in
+      match uu___ with
+      | FStar_Pervasives_Native.Some (uu___1, uu___2, s) ->
+          let l = FStar_Ident.lid_of_str s in FStar_Ident.set_lid_range l r
+      | FStar_Pervasives_Native.None ->
+          FStar_Compiler_Effect.failwith "Dependent Tuple too large"
+let (is_dtuple_constructor_string : Prims.string -> Prims.bool) =
+  fun s ->
+    FStar_Compiler_List.existsb
+      (fun uu___ -> match uu___ with | (uu___1, s', uu___2) -> s = s')
+      dtuple_table
 let (is_dtuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
-    (s = "Prims.Mkdtuple2") ||
-      (FStar_Compiler_Util.starts_with s "FStar.Pervasives.Mkdtuple")
+    FStar_Compiler_List.existsb
+      (fun uu___ -> match uu___ with | (uu___1, uu___2, s') -> s = s')
+      dtuple_table
+let (is_dtuple_constructor_lid : FStar_Ident.lident -> Prims.bool) =
+  fun lid ->
+    let uu___ = FStar_Ident.string_of_lid lid in
+    is_dtuple_constructor_string uu___
 let (is_dtuple_data_lid : FStar_Ident.lident -> Prims.int -> Prims.bool) =
   fun f ->
     fun n ->
       let uu___ = mk_dtuple_data_lid n FStar_Compiler_Range_Type.dummyRange in
       FStar_Ident.lid_equals f uu___
-let (is_dtuple_data_lid' : FStar_Ident.lident -> Prims.bool) =
+let (is_dtuple_datacon_lid : FStar_Ident.lident -> Prims.bool) =
   fun f ->
     let uu___ = FStar_Ident.string_of_lid f in is_dtuple_datacon_string uu___
 let (is_name : FStar_Ident.lident -> Prims.bool) =

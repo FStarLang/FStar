@@ -1190,7 +1190,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
     | Op(op_star, [lhs;rhs]) when
       (Ident.string_of_id op_star = "*" &&
        op_as_term env 2 op_star |> Option.isNone) ->
-      (* See the comment in parse.mly to understand why this implicitly relies
+      (* See the comment in FStar_Parser_Parse.mly to understand why this implicitly relies
        * on the presence of a Paren node in the AST. *)
       let rec flatten t = match t.tm with
         // * is left-associative
@@ -1438,8 +1438,14 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
 
             is desugared to
 
-         fun y1 y2 y3 -> match (y1, y2, y3) with
-                | (P1 x1, P2 x2, P3 x3) -> [[e]]
+         fun y1 y2 y3 ->
+           match y1 with P1 x1 ->
+           match y2 with P2 x2 ->
+           match y3 with P3 x3 ->
+           [[e]]
+
+          The nested matches allow us to not use any tuples, which
+          must be loaded from FStar.TupleX. (FIXME: not true, nested pairs now)
       *)
       let rec aux aqs env bs sc_pat_opt pats : S.term * antiquotations_temp =
         match pats with
@@ -1473,20 +1479,11 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
                         | None, _ -> sc_pat_opt
                         | Some p, None -> Some (S.bv_to_name x, p)
                         | Some p, Some (sc, p') -> begin
-                          match sc.n, p'.v with
-                          | Tm_name _, _ ->
-                            let tup2 = S.lid_and_dd_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
-                            let sc = S.mk (Tm_app {hd=mk (Tm_fvar tup2);
-                                                   args=[as_arg sc; as_arg <| S.bv_to_name x]}) top.range in
-                            let p = withinfo (Pat_cons(tup2, None, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
-                            Some(sc, p)
-                          | Tm_app {args}, Pat_cons(_, _, pats) ->
-                            let tupn = S.lid_and_dd_as_fv (C.mk_tuple_data_lid (1 + List.length args) top.range) delta_constant (Some Data_ctor) in
-                            let sc = mk (Tm_app {hd=mk (Tm_fvar tupn);
-                                                 args=args@[as_arg <| S.bv_to_name x]}) in
-                            let p = withinfo (Pat_cons(tupn, None, pats@[(p, false)])) (Range.union_ranges p'.p p.p) in
-                            Some(sc, p)
-                          | _ -> failwith "Impossible"
+                          let tup2 = S.lid_and_dd_as_fv (C.mk_tuple_data_lid 2 top.range) delta_constant (Some Data_ctor) in
+                          let sc = S.mk (Tm_app {hd=mk (Tm_fvar tup2);
+                                                 args=[as_arg sc; as_arg <| S.bv_to_name x]}) top.range in
+                          let p = withinfo (Pat_cons(tup2, None, [(p', false);(p, false)])) (Range.union_ranges p'.p p.p) in
+                          Some(sc, p)
                           end
                     in
                     (mk_binder_with_attrs x aq attrs), sc_pat_opt

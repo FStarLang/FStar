@@ -84,8 +84,7 @@ let rec closure_one_aux :
       'a ->
         ('a, 'r, unit, unit) _closure ->
           (unit,
-            ('a, unit, ('a, 'r, unit, unit) _closure)
-              FStar_Pervasives.dtuple3)
+            ('a, unit, ('a, 'r, unit, unit) _closure) FStar_DTuple3.dtuple3)
             FStar_Pervasives.either
   =
   fun x ->
@@ -94,22 +93,21 @@ let rec closure_one_aux :
         match xy with
         | Refl uu___ -> FStar_Pervasives.Inl ()
         | Step (uu___, uu___1, pr) ->
-            FStar_Pervasives.Inr
-              (FStar_Pervasives.Mkdtuple3 (y, (), (Refl y)))
+            FStar_Pervasives.Inr (FStar_DTuple3.Mkdtuple3 (y, (), (Refl y)))
         | Closure (x1, i, y1, xi, iy) ->
             (match closure_one_aux i y1 iy with
              | FStar_Pervasives.Inl uu___ -> closure_one_aux x1 y1 xi
-             | FStar_Pervasives.Inr (FStar_Pervasives.Mkdtuple3
+             | FStar_Pervasives.Inr (FStar_DTuple3.Mkdtuple3
                  (z, r_i_z, c_z_y)) ->
                  let c_z_y1 = c_z_y in
                  (match closure_one_aux x1 i xi with
                   | FStar_Pervasives.Inl uu___ ->
                       FStar_Pervasives.Inr
-                        (FStar_Pervasives.Mkdtuple3 (z, (), c_z_y1))
-                  | FStar_Pervasives.Inr (FStar_Pervasives.Mkdtuple3
+                        (FStar_DTuple3.Mkdtuple3 (z, (), c_z_y1))
+                  | FStar_Pervasives.Inr (FStar_DTuple3.Mkdtuple3
                       (w, r_x_w, c_w_i)) ->
                       let step = Step (i, z, ()) in
                       let c_i_y = Closure (i, z, y1, step, c_z_y1) in
                       let c_w_y = Closure (w, i, y1, c_w_i, c_i_y) in
                       FStar_Pervasives.Inr
-                        (FStar_Pervasives.Mkdtuple3 (w, (), c_w_y))))
+                        (FStar_DTuple3.Mkdtuple3 (w, (), c_w_y))))

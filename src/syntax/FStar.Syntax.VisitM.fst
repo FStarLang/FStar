@@ -8,6 +8,7 @@ open FStar.Class.Monad
 
 open FStar.Syntax
 open FStar.Syntax.Syntax
+open FStar.Tuple3
 
 type endo (m:Type -> Type) a = a -> m a
 

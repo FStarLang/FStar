@@ -31,6 +31,7 @@ open FStar.Compiler.Dyn
 module U = FStar.Compiler.Util
 module List = FStar.Compiler.List
 module PC = FStar.Parser.Const
+open FStar.Tuple3
 
 open FStar.Class.Show
 open FStar.Class.Monad

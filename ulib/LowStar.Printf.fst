@@ -254,7 +254,7 @@ let rec arg_t (a:arg) : Type u#1 =
   match a with
   | Base t -> lift (base_typ_as_type t)
   | Array t -> (l:UInt32.t & r:_ & s:_ & lmbuffer (base_typ_as_type t) r s l)
-  | Any -> (a:Type0 & (a -> StTrivial unit) & a)
+  | Any -> (a:Type0 & _:(a -> StTrivial unit) & a)
 
 /// `frag_t`: a fragment is either a string literal or a argument to be interpolated
 noextract

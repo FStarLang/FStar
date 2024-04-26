@@ -3291,128 +3291,59 @@ and (desugar_term_maybe_top :
                                      | (FStar_Pervasives_Native.Some p1,
                                         FStar_Pervasives_Native.Some
                                         (sc, p')) ->
-                                         (match ((sc.FStar_Syntax_Syntax.n),
-                                                  (p'.FStar_Syntax_Syntax.v))
-                                          with
-                                          | (FStar_Syntax_Syntax.Tm_name
-                                             uu___6, uu___7) ->
-                                              let tup2 =
-                                                let uu___8 =
-                                                  FStar_Parser_Const.mk_tuple_data_lid
-                                                    (Prims.of_int (2))
-                                                    top.FStar_Parser_AST.range in
-                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
-                                                  uu___8
-                                                  FStar_Syntax_Syntax.delta_constant
-                                                  (FStar_Pervasives_Native.Some
-                                                     FStar_Syntax_Syntax.Data_ctor) in
-                                              let sc1 =
-                                                let uu___8 =
-                                                  let uu___9 =
-                                                    let uu___10 =
-                                                      mk
-                                                        (FStar_Syntax_Syntax.Tm_fvar
-                                                           tup2) in
-                                                    let uu___11 =
-                                                      let uu___12 =
-                                                        FStar_Syntax_Syntax.as_arg
-                                                          sc in
-                                                      let uu___13 =
-                                                        let uu___14 =
-                                                          let uu___15 =
-                                                            FStar_Syntax_Syntax.bv_to_name
-                                                              x in
-                                                          FStar_Syntax_Syntax.as_arg
-                                                            uu___15 in
-                                                        [uu___14] in
-                                                      uu___12 :: uu___13 in
-                                                    {
-                                                      FStar_Syntax_Syntax.hd
-                                                        = uu___10;
-                                                      FStar_Syntax_Syntax.args
-                                                        = uu___11
-                                                    } in
-                                                  FStar_Syntax_Syntax.Tm_app
-                                                    uu___9 in
-                                                FStar_Syntax_Syntax.mk uu___8
-                                                  top.FStar_Parser_AST.range in
-                                              let p2 =
-                                                let uu___8 =
-                                                  FStar_Compiler_Range_Ops.union_ranges
-                                                    p'.FStar_Syntax_Syntax.p
-                                                    p1.FStar_Syntax_Syntax.p in
-                                                FStar_Syntax_Syntax.withinfo
-                                                  (FStar_Syntax_Syntax.Pat_cons
-                                                     (tup2,
-                                                       FStar_Pervasives_Native.None,
-                                                       [(p', false);
-                                                       (p1, false)])) uu___8 in
-                                              FStar_Pervasives_Native.Some
-                                                (sc1, p2)
-                                          | (FStar_Syntax_Syntax.Tm_app
-                                             {
-                                               FStar_Syntax_Syntax.hd =
-                                                 uu___6;
-                                               FStar_Syntax_Syntax.args =
-                                                 args;_},
-                                             FStar_Syntax_Syntax.Pat_cons
-                                             (uu___7, uu___8, pats1)) ->
-                                              let tupn =
-                                                let uu___9 =
-                                                  FStar_Parser_Const.mk_tuple_data_lid
-                                                    (Prims.int_one +
-                                                       (FStar_Compiler_List.length
-                                                          args))
-                                                    top.FStar_Parser_AST.range in
-                                                FStar_Syntax_Syntax.lid_and_dd_as_fv
-                                                  uu___9
-                                                  FStar_Syntax_Syntax.delta_constant
-                                                  (FStar_Pervasives_Native.Some
-                                                     FStar_Syntax_Syntax.Data_ctor) in
-                                              let sc1 =
-                                                let uu___9 =
-                                                  let uu___10 =
-                                                    let uu___11 =
-                                                      mk
-                                                        (FStar_Syntax_Syntax.Tm_fvar
-                                                           tupn) in
-                                                    let uu___12 =
-                                                      let uu___13 =
-                                                        let uu___14 =
-                                                          let uu___15 =
-                                                            FStar_Syntax_Syntax.bv_to_name
-                                                              x in
-                                                          FStar_Syntax_Syntax.as_arg
-                                                            uu___15 in
-                                                        [uu___14] in
-                                                      FStar_Compiler_List.op_At
-                                                        args uu___13 in
-                                                    {
-                                                      FStar_Syntax_Syntax.hd
-                                                        = uu___11;
-                                                      FStar_Syntax_Syntax.args
-                                                        = uu___12
-                                                    } in
-                                                  FStar_Syntax_Syntax.Tm_app
-                                                    uu___10 in
-                                                mk uu___9 in
-                                              let p2 =
-                                                let uu___9 =
-                                                  FStar_Compiler_Range_Ops.union_ranges
-                                                    p'.FStar_Syntax_Syntax.p
-                                                    p1.FStar_Syntax_Syntax.p in
-                                                FStar_Syntax_Syntax.withinfo
-                                                  (FStar_Syntax_Syntax.Pat_cons
-                                                     (tupn,
-                                                       FStar_Pervasives_Native.None,
-                                                       (FStar_Compiler_List.op_At
-                                                          pats1 [(p1, false)])))
-                                                  uu___9 in
-                                              FStar_Pervasives_Native.Some
-                                                (sc1, p2)
-                                          | uu___6 ->
-                                              FStar_Compiler_Effect.failwith
-                                                "Impossible") in
+                                         let tup2 =
+                                           let uu___6 =
+                                             FStar_Parser_Const.mk_tuple_data_lid
+                                               (Prims.of_int (2))
+                                               top.FStar_Parser_AST.range in
+                                           FStar_Syntax_Syntax.lid_and_dd_as_fv
+                                             uu___6
+                                             FStar_Syntax_Syntax.delta_constant
+                                             (FStar_Pervasives_Native.Some
+                                                FStar_Syntax_Syntax.Data_ctor) in
+                                         let sc1 =
+                                           let uu___6 =
+                                             let uu___7 =
+                                               let uu___8 =
+                                                 mk
+                                                   (FStar_Syntax_Syntax.Tm_fvar
+                                                      tup2) in
+                                               let uu___9 =
+                                                 let uu___10 =
+                                                   FStar_Syntax_Syntax.as_arg
+                                                     sc in
+                                                 let uu___11 =
+                                                   let uu___12 =
+                                                     let uu___13 =
+                                                       FStar_Syntax_Syntax.bv_to_name
+                                                         x in
+                                                     FStar_Syntax_Syntax.as_arg
+                                                       uu___13 in
+                                                   [uu___12] in
+                                                 uu___10 :: uu___11 in
+                                               {
+                                                 FStar_Syntax_Syntax.hd =
+                                                   uu___8;
+                                                 FStar_Syntax_Syntax.args =
+                                                   uu___9
+                                               } in
+                                             FStar_Syntax_Syntax.Tm_app
+                                               uu___7 in
+                                           FStar_Syntax_Syntax.mk uu___6
+                                             top.FStar_Parser_AST.range in
+                                         let p2 =
+                                           let uu___6 =
+                                             FStar_Compiler_Range_Ops.union_ranges
+                                               p'.FStar_Syntax_Syntax.p
+                                               p1.FStar_Syntax_Syntax.p in
+                                           FStar_Syntax_Syntax.withinfo
+                                             (FStar_Syntax_Syntax.Pat_cons
+                                                (tup2,
+                                                  FStar_Pervasives_Native.None,
+                                                  [(p', false); (p1, false)]))
+                                             uu___6 in
+                                         FStar_Pervasives_Native.Some
+                                           (sc1, p2) in
                                    let uu___6 =
                                      mk_binder_with_attrs x aq1 attrs in
                                    (uu___6, sc_pat_opt1) in

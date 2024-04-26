@@ -17,6 +17,8 @@ module FStar.Compiler.List
 open FStar.Compiler.Effect
 open Prims
 
+open FStar.Tuple3
+
 val isEmpty : (list 'a) -> Tot bool
 val singleton : 'a -> list 'a
 val hd : (list 'a) -> 'a

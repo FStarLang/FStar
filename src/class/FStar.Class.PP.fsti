@@ -3,6 +3,11 @@ module FStar.Class.PP
 open FStar.Compiler.Effect
 open FStar.Pprint
 
+open FStar.Tuple3
+open FStar.Tuple4
+open FStar.Tuple5
+open FStar.Tuple6
+
 class pretty (a:Type) = {
   pp : a -> ML document;
 }

@@ -103,9 +103,9 @@ type ('s1, 's2) loc_includes =
 type ('s1, 's2) loc_disjoint =
   (unit, unit, unit, unit) FStar_ModifiesGen.loc_disjoint
 type buf_t =
-  (unit, unit, unit, (Obj.t, Obj.t, Obj.t) mbuffer) FStar_Pervasives.dtuple4
+  (unit, unit, unit, (Obj.t, Obj.t, Obj.t) mbuffer) FStar_DTuple4.dtuple4
 let buf : 'a 'rrel 'rel . ('a, 'rrel, 'rel) mbuffer -> buf_t =
-  fun b -> FStar_Pervasives.Mkdtuple4 ((), (), (), (Obj.magic b))
+  fun b -> FStar_DTuple4.Mkdtuple4 ((), (), (), (Obj.magic b))
 type ('h, 'l) all_live = Obj.t
 type 'l all_disjoint = Obj.t
 type 'l loc_pairwise_disjoint = Obj.t

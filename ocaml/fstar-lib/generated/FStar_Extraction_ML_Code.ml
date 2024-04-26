@@ -78,8 +78,8 @@ let (enclose : doc -> doc -> doc -> doc) =
   fun uu___ ->
     fun uu___1 ->
       fun uu___2 ->
-        match (uu___, uu___1, uu___2) with
-        | (Doc l, Doc r, Doc x) -> Doc (Prims.strcat l (Prims.strcat x r))
+        match ((uu___, uu___1), uu___2) with
+        | ((Doc l, Doc r), Doc x) -> Doc (Prims.strcat l (Prims.strcat x r))
 let (cbrackets : doc -> doc) =
   fun uu___ ->
     match uu___ with | Doc d -> enclose (text "{") (text "}") (Doc d)
