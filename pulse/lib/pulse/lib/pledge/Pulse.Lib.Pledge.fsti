@@ -50,6 +50,9 @@ val make_pledge_invs (is:invlist) (f v extra:vprop)
 val redeem_pledge (is:inames) (f v:vprop)
   : stt_ghost unit is (f ** pledge is f v) (fun () -> f ** v)
 
+val squash_pledge (is:inames) (f:vprop) (v1:vprop)
+  : stt_ghost unit emp_inames (pledge is f (pledge is f v1)) (fun () -> pledge is f v1)
+
 // Unclear how useful/convenient this is
 val bind_pledge (#is:inames) (#f:vprop) (#v1:vprop) (#v2:vprop)
         (extra : vprop)
@@ -84,9 +87,6 @@ val join_pledge (#is:inames) (#f:vprop) (v1:vprop) (v2:vprop)
   : stt_ghost unit emp_inames
       (pledge is f v1 ** pledge is f v2)
       (fun () -> pledge is f (v1 ** v2))
-
-val squash_pledge (is:inames) (f:vprop) (v1:vprop)
-  : stt_ghost unit emp_inames (pledge is f (pledge is f v1)) (fun () -> pledge is f v1)
 
 (* Heterogenous variant. Takes the result invlist as an arg since we don't have
 a join defined yet. *)

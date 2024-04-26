@@ -44,7 +44,7 @@ let iref_of c = c.i
 
 ```pulse
 ghost
-fn new_cancellable_invariant_aux (v:vprop { is_big v })
+fn new_cancellable_invariant (v:vprop { is_big v })
   requires v
   returns c:cinv
   ensures inv (iref_of c) (cinv_vp c v) ** active 1.0R c
@@ -62,14 +62,12 @@ fn new_cancellable_invariant_aux (v:vprop { is_big v })
 }
 ```
 
-let new_cancellable_invariant = new_cancellable_invariant_aux
-
 let unpacked c = GR.pts_to c.r #0.5R true
 
 
 ```pulse
 ghost
-fn unpack_cinv_vp_aux (#p:perm) (#v:vprop) (c:cinv)
+fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   requires cinv_vp c v ** active p c
   ensures v ** unpacked c ** active p c
   opens emp_inames
@@ -84,11 +82,9 @@ fn unpack_cinv_vp_aux (#p:perm) (#v:vprop) (c:cinv)
 }
 ```
 
-let unpack_cinv_vp = unpack_cinv_vp_aux
-
 ```pulse
 ghost
-fn pack_cinv_vp_aux (#v:vprop) (c:cinv)
+fn pack_cinv_vp (#v:vprop) (c:cinv)
   requires v ** unpacked c
   ensures cinv_vp c v
   opens emp_inames
@@ -100,11 +96,9 @@ fn pack_cinv_vp_aux (#v:vprop) (c:cinv)
 }
 ```
 
-let pack_cinv_vp = pack_cinv_vp_aux
-
 ```pulse
 ghost
-fn share_aux (#p:perm) (c:cinv)
+fn share (#p:perm) (c:cinv)
   requires active p c
   ensures active (p /. 2.0R) c ** active (p /. 2.0R) c
   opens emp_inames
@@ -116,13 +110,11 @@ fn share_aux (#p:perm) (c:cinv)
 }
 ```
 
-let share = share_aux
-
 let share2 c = share #1.0R c
 
 ```pulse
 ghost
-fn gather_aux (#p1 #p2:perm) (c:cinv)
+fn gather (#p1 #p2:perm) (c:cinv)
   requires active p1 c ** active p2 c
   ensures active (p1 +. p2) c
 {
@@ -132,7 +124,6 @@ fn gather_aux (#p1 #p2:perm) (c:cinv)
   fold active (p1 +. p2) c;
 }
 ```
-let gather = gather_aux
 
 let gather2 c = gather #0.5R #0.5R c
 
@@ -161,7 +152,7 @@ opens emp_inames
 
 ```pulse
 ghost
-fn cancel_aux (#v:vprop) (c:cinv)
+fn cancel (#v:vprop) (c:cinv)
   requires inv (iref_of c) (cinv_vp c v) ** active 1.0R c
   ensures v
   opens (add_inv emp_inames (iref_of c))
@@ -175,5 +166,3 @@ fn cancel_aux (#v:vprop) (c:cinv)
   drop_ (inv (iref_of c) _)
 }
 ```
-
-let cancel = cancel_aux
