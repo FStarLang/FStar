@@ -119,6 +119,23 @@ val pack_inspect_universe (u:R.universe)
           (ensures R.pack_universe (R.inspect_universe u) == u)
           [SMTPat (R.pack_universe (R.inspect_universe u))]
 
+val inspect_pack_lb (lb:R.lb_view)
+  : Lemma (ensures R.inspect_lb (R.pack_lb lb) == lb)
+          [SMTPat (R.inspect_lb (R.pack_lb lb))]
+
+val pack_inspect_lb (lb:R.letbinding)
+  : Lemma (ensures R.pack_lb (R.inspect_lb lb) == lb)
+          [SMTPat (R.pack_lb (R.inspect_lb lb))]
+
+val inspect_pack_sigelt (sev:R.sigelt_view { ~ (Unk? sev) })
+  : Lemma (ensures R.inspect_sigelt (R.pack_sigelt sev) == sev)
+          [SMTPat (R.inspect_sigelt (R.pack_sigelt sev))]
+
+val pack_inspect_sigelt (se:R.sigelt)
+  : Lemma (requires ~ (Unk? (R.inspect_sigelt se)))
+          (ensures R.pack_sigelt (R.inspect_sigelt se) == se)
+          [SMTPat (R.pack_sigelt (R.inspect_sigelt se))]
+
 val lookup_bvar (e:env) (x:int) : option term
 
 val lookup_fvar_uinst (e:R.env) (x:R.fv) (us:list R.universe) : option R.term
@@ -1791,18 +1808,38 @@ type sigelt_typing : env -> sigelt -> Type0 =
  *
  *)
 let blob = string & R.term
-(* If checked is true, this sigelt is properly typed for the environment. If not,
-we don't know and let F* re-typecheck the sigelt. *)
-let sigelt_for (g:env) =
-  tup:(bool & sigelt & option blob)
-  {
+
+let sigelt_has_type (s:R.sigelt) (t:option R.term) : prop =
+  let open R in
+  match t with
+  | None -> True
+  | Some t ->
+    match inspect_sigelt s with
+    | Sg_Let false [lb] -> begin
+      let {lb_typ} = inspect_lb lb in
+      lb_typ == t
+    end
+
+    | _ -> False
+
+//
+// If checked is true, this sigelt is properly typed for the environment
+// If not, we don't know and let F* re-typecheck the sigelt.
+//
+
+let sigelt_for (g:env) (t:option R.typ) =
+  tup:(bool & sigelt & option blob) {
     let (checked, se, _) = tup in
-    checked ==> sigelt_typing g se
+    checked ==> (sigelt_typing g se /\ sigelt_has_type se t)
   }
 
-let dsl_tac_result_t (g:env) = list (sigelt_for g)
+let dsl_tac_result_t (g:env) (t:option R.typ) =
+  list (sigelt_for g None) &
+  (sigelt_for g t) &
+  list (sigelt_for g None)
 
-type dsl_tac_t = g:fstar_top_env -> T.Tac (dsl_tac_result_t g)
+type dsl_tac_t =
+  gt:(fstar_top_env & option R.typ) -> T.Tac (dsl_tac_result_t (fst gt) (snd gt))
 
 val if_complete_match (g:env) (t:term)
   : T.match_complete_token g t bool_ty [
@@ -1829,8 +1866,9 @@ val mkif
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
 
 (* Helper to return a single let definition in a splice_t tactic. *)
-let mk_checked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (T.E_Total, ty)}) : T.Tac (sigelt_for g) =
-  let fv = pack_fv (T.cur_module () @ [nm]) in
+let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (T.E_Total, ty)})
+  : sigelt_for g (Some ty) =
+  let fv = pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   let pf : sigelt_typing g se =
@@ -1838,8 +1876,9 @@ let mk_checked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (T.E_
   in
   ( true, se, None )
 
-let mk_unchecked_let (g:R.env) (nm:string) (tm:R.term) (ty:R.typ) : T.Tac (sigelt_for g) =
-  let fv = pack_fv (T.cur_module () @ [nm]) in
+let mk_unchecked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ)
+  : bool & sigelt & option blob =
+  let fv = pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
   let se = R.pack_sigelt (R.Sg_Let false [lb]) in
   ( false, se, None )
