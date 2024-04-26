@@ -8445,7 +8445,7 @@ let (term_to_doc :
         FStar_Syntax_DsEnv.set_current_module
           env1.FStar_TypeChecker_Env.dsenv
           env1.FStar_TypeChecker_Env.curmodule in
-      FStar_Syntax_Print_Pretty.term_to_doc' uu___ t1
+      FStar_Syntax_Print.term_to_doc' uu___ t1
 let (term_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun env1 ->

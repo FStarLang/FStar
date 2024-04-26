@@ -4228,14 +4228,14 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          let _ =
              if debug wl (Options.Other "Rel")
              then BU.print ">> (%s) (smtok=%s)\n>>> head1 = %s [interpreted=%s; no_free_uvars=%s]\n>>> head2 = %s [interpreted=%s; no_free_uvars=%s]\n"
-               [(string_of_int problem.pid);
-                (string_of_bool wl.smt_ok);
+               [(show problem.pid);
+                (show wl.smt_ok);
                 (show head1);
-                (string_of_bool (Env.is_interpreted wl.tcenv head1));
-                (string_of_bool (no_free_uvars t1));
+                (show (Env.is_interpreted wl.tcenv head1));
+                (show (no_free_uvars t1));
                 (show head2);
-                (string_of_bool (Env.is_interpreted wl.tcenv head2));
-                (string_of_bool (no_free_uvars t2))]
+                (show (Env.is_interpreted wl.tcenv head2));
+                (show (no_free_uvars t2))]
          in
          let equal t1 t2 : bool =
           (* Try comparing the terms as they are. If we get Equal or NotEqual,

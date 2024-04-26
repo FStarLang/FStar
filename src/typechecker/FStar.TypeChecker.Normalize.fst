@@ -3184,7 +3184,7 @@ let term_to_doc env t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
+  FStar.Syntax.Print.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =

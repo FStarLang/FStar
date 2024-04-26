@@ -10608,11 +10608,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -10622,11 +10627,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -10636,12 +10647,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -10744,11 +10759,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -10758,11 +10778,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -10772,12 +10798,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -10880,11 +10910,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -10894,11 +10929,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -10908,12 +10949,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11016,11 +11061,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11030,11 +11080,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11044,12 +11100,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11152,11 +11212,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11166,11 +11231,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11180,12 +11251,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11288,11 +11363,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11302,11 +11382,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11316,12 +11402,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11424,11 +11514,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11438,11 +11533,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11452,12 +11553,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11560,11 +11665,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11574,11 +11684,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11588,12 +11704,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11696,11 +11816,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11710,11 +11835,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11724,12 +11855,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11832,11 +11967,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11846,11 +11986,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11860,12 +12006,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -11968,11 +12118,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -11982,11 +12137,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -11996,12 +12157,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
@@ -12104,11 +12269,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                   then
                     let uu___11 =
                       let uu___12 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           problem.FStar_TypeChecker_Common.pid in
                       let uu___13 =
                         let uu___14 =
-                          FStar_Compiler_Util.string_of_bool wl.smt_ok in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool)
+                            wl.smt_ok in
                         let uu___15 =
                           let uu___16 =
                             FStar_Class_Show.show
@@ -12118,11 +12288,17 @@ and (solve_t' : tprob -> worklist -> solution) =
                               let uu___19 =
                                 FStar_TypeChecker_Env.is_interpreted 
                                   wl.tcenv head1 in
-                              FStar_Compiler_Util.string_of_bool uu___19 in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_bool)
+                                uu___19 in
                             let uu___19 =
                               let uu___20 =
                                 let uu___21 = no_free_uvars t1 in
-                                FStar_Compiler_Util.string_of_bool uu___21 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)
+                                  uu___21 in
                               let uu___21 =
                                 let uu___22 =
                                   FStar_Class_Show.show
@@ -12132,12 +12308,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                                     let uu___25 =
                                       FStar_TypeChecker_Env.is_interpreted
                                         wl.tcenv head2 in
-                                    FStar_Compiler_Util.string_of_bool
+                                    FStar_Class_Show.show
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_bool)
                                       uu___25 in
                                   let uu___25 =
                                     let uu___26 =
                                       let uu___27 = no_free_uvars t2 in
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         uu___27 in
                                     [uu___26] in
                                   uu___24 :: uu___25 in
