@@ -26,6 +26,8 @@ open FStar.Errors
 open FStar.Syntax.Syntax
 open FStar.Parser.AST
 
+module BU = FStar.Compiler.Util
+
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
 
@@ -52,6 +54,23 @@ let definition_lids d =
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
     | Splice (_, ids, _) -> List.map (fun id -> Ident.lid_of_ids [id]) ids
+    | DeclSyntaxExtension (extension_name, code, _, range) -> begin
+      let ext_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
+      match ext_parser with
+      | None ->
+        raise_error
+          (Errors.Fatal_SyntaxError,
+           BU.format1 "Unknown syntax extension %s" extension_name)
+          d.drange
+       | Some parser ->
+         match parser.parse_decl_name code range with
+         | Inl error ->
+           raise_error
+             (Errors.Fatal_SyntaxError, error.message)
+             error.range
+         | Inr id ->
+           [Ident.lid_of_ids [id]]
+      end
     | _ -> []
 
 let is_definition_of x d =
