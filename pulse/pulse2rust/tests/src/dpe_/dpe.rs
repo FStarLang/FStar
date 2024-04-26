@@ -4,9 +4,6 @@
 ////
 ////
 
-pub fn run_stt<A>(post: (), f: A) -> A {
-    panic!()
-}
 pub type ctxt_hndl_t = u32;
 pub type sid_t = u32;
 #[derive(Clone)]
@@ -31,6 +28,9 @@ pub struct st {
     pub st_tbl: super::dpe::ht_t,
 }
 pub type gref = ();
+pub fn run_stt<A>(post: (), f: A) -> A {
+    panic!()
+}
 pub fn sid_hash(uu___: super::dpe::sid_t) -> usize {
     panic!()
 }

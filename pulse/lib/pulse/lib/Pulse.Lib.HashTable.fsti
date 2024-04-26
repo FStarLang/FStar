@@ -155,10 +155,3 @@ val delete
           models (fst b) pht' **
           pure (same_sz_and_hashf (fst b) ht /\
                 (if snd b then pht' == PHT.delete pht k else pht' == reveal pht))))
-
-
-
-
-
-
-
