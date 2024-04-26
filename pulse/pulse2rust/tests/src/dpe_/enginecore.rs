@@ -98,7 +98,7 @@ pub fn compute_cdi(
     let uds_digest1 = l0_digest1;
     uds_digest1
 }
-pub fn engine_main_aux(
+pub fn engine_main(
     cdi: &mut [u8],
     uds: &mut [u8],
     record: super::enginetypes::engine_record_t,
@@ -118,14 +118,4 @@ pub fn engine_main_aux(
         res
     }
 }
-pub static engine_main: fn(
-    &mut [u8],
-    &mut [u8],
-    super::enginetypes::engine_record_t,
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> (super::enginetypes::engine_record_t, super::enginetypes::dice_return_code) = super::enginecore::engine_main_aux;
 
