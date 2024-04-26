@@ -23,7 +23,7 @@ val finv (p:vprop) : Type0
 val off #p (fi : finv p) : vprop
 val on  #p (fi : finv p) : vprop
 
-val mk_finv (p:vprop { is_big p }) : stt (finv p) emp off
+val mk_finv (p:vprop { is_big p }) : stt (finv p) emp (fun x -> off x)
 
 val iname_of #p (f : finv p) : erased iname
 
