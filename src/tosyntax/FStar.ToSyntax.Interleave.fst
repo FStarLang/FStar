@@ -40,8 +40,10 @@ let is_type x d = match d.d with
         tys |> Util.for_some (fun t -> id_of_tycon t = (string_of_id x))
     | _ -> false
 
+//
 //is d of of the form 'let x = ...' or 'type x = ...' or 'splice[..., x, ...] tac'
 // returns unqualified lids
+//
 let definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->

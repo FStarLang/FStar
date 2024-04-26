@@ -842,6 +842,9 @@ let splice
     let gs, sigelts =
       if is_typed then
       begin
+        //
+        // See if there is a val for the lid
+        //
         if List.length lids > 1
         then let s = lids |> List.map Ident.string_of_lid |> BU.concat_l ", " in
              Err.raise_error
@@ -849,13 +852,20 @@ let splice
                BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
               rng
         else begin
-          let val_t =
+          let val_t : option typ =  // val type, if any, for the lid
+            //
+            // For spliced vals, their lids is set to []
+            //   (see ToSyntax.fst:desugar_decl, splice case)
+            //
             if List.length lids = 0
             then None
             else
               match Env.try_lookup_val_decl env (List.hd lids) with
               | None -> None
               | Some ((uvs, tval), _) ->
+                //
+                // No universe polymorphic typed splice yet
+                //
                 if List.length uvs <> 0
                 then
                   Err.raise_error
@@ -865,6 +875,9 @@ let splice
                     rng
                 else Some tval in
           let e_blob = e_option (e_tuple2 e_string RE.e_term) in
+          //
+          // The arguments to run_tactic_on_ps here are in sync with ulib/FStar.Tactics.dsl_tac_t
+          //
           let gs, (sig_blobs_before, sig_blob, sig_blobs_after) = run_tactic_on_ps tau.pos tau.pos false
             (e_tuple2 RE.e_env (e_option RE.e_term))
             ({env with gamma=[]}, val_t)

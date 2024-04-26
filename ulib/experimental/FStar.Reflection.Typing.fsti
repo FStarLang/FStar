@@ -1764,13 +1764,8 @@ type fstar_top_env = g:fstar_env {
 }
 
 //
-// This doesn't allow for universe polymorphic definitions
+// No universe polymorphism yet
 //
-// May be we can change it to:
-//
-// g:fstar_top_env -> T.tac ((us, e, t):(univ_names & term & typ){typing (push g us) e t})
-//
-
 noeq
 type sigelt_typing : env -> sigelt -> Type0 =
   | ST_Let :
@@ -1791,24 +1786,31 @@ type sigelt_typing : env -> sigelt -> Type0 =
 
 (**
  * The type of the top-level tactic that would splice-in the definitions.
- * It returns a list of well typed definitions, via the judgment above.
  *
- * Each definition can have a 'blob' attached with a given name.
+ * The tactic takes as input as type environment and an optional expected type
+ *
+ * It returns (sigelts_before, sigelt, sigelt_after)
+ *   where sigelts_before and sigelt_after are list of sigelts
+ *
+ * All the returned sigelts indicate via a boolean flag whether they are well-typed,
+ *   in the judgment above
+ *
+ * If the flag is not set, F* typechecker typechecks the returned sigelts
+ *
+ * The sigelt in the middle, if well-typed, has the input expected type
+ *
+ * In addition, each sigelt can have a 'blob' attached with a given name.
  * The blob can be used later, e.g., during extraction, and passed back to the
  * extension to perform additional processing.
+ *
+ * The blob is stored in the sigmeta_extension_data field of the enclosing sigelt.
  *)
 
-(*
- * It returns either:
- *   - Some tm, blob, typ, with a proof that `typing g tm typ`
- *   - None, blob, typ), with a proof that `exists tm. typing g tm typ`
- * The blob itself is optional and can store some additional metadata that
- * constructed by the tactic. If present, it will be stored in the 
- * sigmeta_extension_data field of the enclosing sigelt.
- *
- *)
 let blob = string & R.term
 
+//
+// t is the optional expected type
+//
 let sigelt_has_type (s:R.sigelt) (t:option R.term) : prop =
   let open R in
   match t with
@@ -1833,13 +1835,20 @@ let sigelt_for (g:env) (t:option R.typ) =
     checked ==> (sigelt_typing g se /\ sigelt_has_type se t)
   }
 
+//
+// sigelts_before, sigelt, sigelts_after
+//
 let dsl_tac_result_t (g:env) (t:option R.typ) =
   list (sigelt_for g None) &
   (sigelt_for g t) &
   list (sigelt_for g None)
 
+//
+// The input option R.typ is the expected type
+//
 type dsl_tac_t =
-  gt:(fstar_top_env & option R.typ) -> T.Tac (dsl_tac_result_t (fst gt) (snd gt))
+  gt:(fstar_top_env & option R.typ) ->
+  T.Tac (dsl_tac_result_t (fst gt) (snd gt))
 
 val if_complete_match (g:env) (t:term)
   : T.match_complete_token g t bool_ty [
