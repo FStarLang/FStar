@@ -4,6 +4,7 @@ module DeltaDepthUnif
 
 open FStar.Reflection.V2
 open FStar.Reflection.Typing
+open FStar.Mul
 
 assume val tyc : term -> Type0
 
@@ -21,3 +22,7 @@ let test1 = return_squash (magic ())
 assume val f : p -> False
 val test2 : (~p)
 let test2 = return_squash f
+
+assume
+val ty : int -> Type
+let test3 (#n:nat) (x : ty 0) : ty (0 * n) = x
