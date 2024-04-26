@@ -1071,10 +1071,36 @@ let (__proj__Mkerror_message__item__range :
   error_message -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { message; range;_} -> range
 type extension_parser =
-  open_namespaces_and_abbreviations ->
+  {
+  parse_decl_name:
     Prims.string ->
       FStar_Compiler_Range_Type.range ->
-        (error_message, FStar_Parser_AST.decl) FStar_Pervasives.either
+        (error_message, FStar_Ident.ident) FStar_Pervasives.either
+    ;
+  parse_decl:
+    open_namespaces_and_abbreviations ->
+      Prims.string ->
+        FStar_Compiler_Range_Type.range ->
+          (error_message, FStar_Parser_AST.decl) FStar_Pervasives.either
+    }
+let (__proj__Mkextension_parser__item__parse_decl_name :
+  extension_parser ->
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (error_message, FStar_Ident.ident) FStar_Pervasives.either)
+  =
+  fun projectee ->
+    match projectee with
+    | { parse_decl_name; parse_decl;_} -> parse_decl_name
+let (__proj__Mkextension_parser__item__parse_decl :
+  extension_parser ->
+    open_namespaces_and_abbreviations ->
+      Prims.string ->
+        FStar_Compiler_Range_Type.range ->
+          (error_message, FStar_Parser_AST.decl) FStar_Pervasives.either)
+  =
+  fun projectee ->
+    match projectee with | { parse_decl_name; parse_decl;_} -> parse_decl
 let (extension_parser_table : extension_parser FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))
 let (register_extension_parser : Prims.string -> extension_parser -> unit) =

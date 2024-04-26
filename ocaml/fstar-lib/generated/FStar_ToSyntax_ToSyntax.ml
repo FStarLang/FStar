@@ -10150,7 +10150,8 @@ and (desugar_decl_core :
                      FStar_Parser_AST_Util.open_namespaces = uu___1;
                      FStar_Parser_AST_Util.module_abbreviations = uu___2
                    } in
-                 let uu___1 = parser opens code range in
+                 let uu___1 =
+                   parser.FStar_Parser_AST_Util.parse_decl opens code range in
                  (match uu___1 with
                   | FStar_Pervasives.Inl error ->
                       FStar_Errors.raise_error
