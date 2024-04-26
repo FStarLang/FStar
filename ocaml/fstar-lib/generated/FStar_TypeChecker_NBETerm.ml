@@ -495,14 +495,49 @@ let rec (eq_t :
                  FStar_Compiler_Effect.failwith
                    "eq_t, different number of args on Construct"
                else ();
-               (let uu___2 = FStar_Compiler_List.zip args1 args2 in
-                FStar_Compiler_List.fold_left
-                  (fun acc ->
-                     fun uu___3 ->
-                       match uu___3 with
-                       | ((a1, uu___4), (a2, uu___5)) ->
-                           let uu___6 = eq_t env a1 a2 in eq_inj acc uu___6)
-                  FStar_TypeChecker_TermEqAndSimplify.Equal uu___2))
+               (let uu___2 =
+                  let uu___3 = FStar_Syntax_Syntax.lid_of_fv v1 in
+                  FStar_TypeChecker_Env.num_datacon_ty_params env uu___3 in
+                match uu___2 with
+                | FStar_Pervasives_Native.None ->
+                    FStar_TypeChecker_TermEqAndSimplify.Unknown
+                | FStar_Pervasives_Native.Some n ->
+                    if n <= (FStar_Compiler_List.length args1)
+                    then
+                      let eq_args1 as1 as2 =
+                        FStar_Compiler_List.fold_left2
+                          (fun acc ->
+                             fun uu___3 ->
+                               fun uu___4 ->
+                                 match (uu___3, uu___4) with
+                                 | ((a1, uu___5), (a2, uu___6)) ->
+                                     let uu___7 = eq_t env a1 a2 in
+                                     eq_inj acc uu___7)
+                          FStar_TypeChecker_TermEqAndSimplify.Equal as1 as2 in
+                      let uu___3 = FStar_Compiler_List.splitAt n args1 in
+                      (match uu___3 with
+                       | (parms1, args11) ->
+                           let uu___4 = FStar_Compiler_List.splitAt n args2 in
+                           (match uu___4 with
+                            | (parms2, args21) ->
+                                let uu___5 =
+                                  let uu___6 = eq_args1 args11 args21 in
+                                  uu___6 =
+                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
+                                if uu___5
+                                then
+                                  let uu___6 =
+                                    let uu___7 = eq_args1 parms1 parms2 in
+                                    uu___7 =
+                                      FStar_TypeChecker_TermEqAndSimplify.Equal in
+                                  (if uu___6
+                                   then
+                                     FStar_TypeChecker_TermEqAndSimplify.Equal
+                                   else
+                                     FStar_TypeChecker_TermEqAndSimplify.Unknown)
+                                else
+                                  FStar_TypeChecker_TermEqAndSimplify.NotEqual))
+                    else FStar_TypeChecker_TermEqAndSimplify.Unknown))
             else FStar_TypeChecker_TermEqAndSimplify.NotEqual
         | (FV (v1, us1, args1), FV (v2, us2, args2)) ->
             let uu___ = FStar_Syntax_Syntax.fv_eq v1 v2 in

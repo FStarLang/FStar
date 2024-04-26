@@ -80,20 +80,37 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     let eq_tm = eq_tm env in
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
-    let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
+    let equal_data (f1:fv) (parms1 args1:Syntax.args) (f2:fv) (parms2 args2:Syntax.args) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
         then (
-            assert (List.length args1 = List.length args2);
-            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
-                                //if q1 <> q2
-                                //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
-                                //                (Ident.string_of_lid f1.fv_name.v));
-                                //NS: 05/06/2018 ...this does not always hold
-                                //    it's been succeeding because the assert is disabled in the non-debug builds
-                                //assert (q1 = q2);
-                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
+          if List.length parms1 = List.length parms2
+          && List.length args1 = List.length args2
+          then (
+            let eq_arg_list as1 as2 =
+              List.fold_left2
+                (fun acc (a1, q1) (a2, q2) ->
+                      //if q1 <> q2
+                      //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
+                      //                (Ident.string_of_lid f1.fv_name.v));
+                      //NS: 05/06/2018 ...this does not always hold
+                      //    it's been succeeding because the assert is disabled in the non-debug builds
+                      //assert (q1 = q2);
+                      eq_inj acc (eq_tm a1 a2))
+                  Equal
+                  as1
+                  as2
+            in
+            let args_eq = eq_arg_list args1 args2 in
+            if args_eq = Equal
+            then let parms_eq = eq_arg_list parms1 parms2 in
+                 if parms_eq = Equal
+                 then Equal
+                 else Unknown
+            else args_eq
+          )
+          else Unknown
         ) else NotEqual
     in
     let qual_is_inj = function
@@ -101,12 +118,25 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       | Some (Record_ctor _) -> true
       | _ -> false
     in
-    let heads_and_args_in_case_both_data :option (fv * args * fv * args) =
+    let heads_and_args_in_case_both_data :option (fv * args * args * fv * args * args) =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with
-      | Tm_fvar f, Tm_fvar g when qual_is_inj f.fv_qual &&
-                                  qual_is_inj g.fv_qual -> Some (f, args1, g, args2)
+      | Tm_fvar f, Tm_fvar g 
+        when qual_is_inj f.fv_qual &&
+             qual_is_inj g.fv_qual -> (
+        match Env.num_datacon_ty_params env (lid_of_fv f), Env.num_datacon_ty_params env (lid_of_fv g) with
+        | Some n1, Some n2 ->
+          if n1 <= List.length args1
+          && n2 <= List.length args2
+          then (
+            let parms1, args1 = List.splitAt n1 args1 in
+            let parms2, args2 = List.splitAt n2 args2 in
+            Some (f, parms1, args1, g, parms2, args2)
+          )
+          else None
+        | _ -> None
+      )
       | _ -> None
     in
     let t1 = unmeta t1 in
@@ -124,8 +154,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       equal_if (bv_eq a b)
 
     | _ when heads_and_args_in_case_both_data |> Some? ->  //matches only when both are data constructors
-      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2) ->
-        equal_data f args1 g args2
+      heads_and_args_in_case_both_data |> must |> (fun (f, parms1, args1, g, parms2, args2) ->
+        equal_data f parms1 args1 g parms2 args2
       )
 
     | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
@@ -164,7 +194,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
-        equal_data f1 args1 f2 args2
+        equal_data f1 [] args1 f2 [] args2
 
       | _ -> // can only assert they're equal if they syntactically match, nothing else
         eq_and (eq_tm h1 h2) (fun () -> eq_args env args1 args2)

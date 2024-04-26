@@ -3590,6 +3590,32 @@ let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
             let uu___3 = FStar_Syntax_Print.lid_to_string lid in
             FStar_Compiler_Util.format1 "Not a datacon: %s" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
+let (num_datacon_ty_params :
+  env -> FStar_Ident.lident -> Prims.int FStar_Pervasives_Native.option) =
+  fun env1 ->
+    fun lid ->
+      let uu___ = lookup_qname env1 lid in
+      match uu___ with
+      | FStar_Pervasives_Native.Some
+          (FStar_Pervasives.Inr
+           ({
+              FStar_Syntax_Syntax.sigel = FStar_Syntax_Syntax.Sig_datacon
+                { FStar_Syntax_Syntax.lid1 = uu___1;
+                  FStar_Syntax_Syntax.us1 = uu___2;
+                  FStar_Syntax_Syntax.t1 = uu___3;
+                  FStar_Syntax_Syntax.ty_lid = uu___4;
+                  FStar_Syntax_Syntax.num_ty_params = num_ty_params;
+                  FStar_Syntax_Syntax.mutuals1 = uu___5;_};
+              FStar_Syntax_Syntax.sigrng = uu___6;
+              FStar_Syntax_Syntax.sigquals = uu___7;
+              FStar_Syntax_Syntax.sigmeta = uu___8;
+              FStar_Syntax_Syntax.sigattrs = uu___9;
+              FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___10;
+              FStar_Syntax_Syntax.sigopts = uu___11;_},
+            uu___12),
+           uu___13)
+          -> FStar_Pervasives_Native.Some num_ty_params
+      | uu___1 -> FStar_Pervasives_Native.None
 let (lookup_definition_qninfo_aux :
   Prims.bool ->
     delta_level Prims.list ->

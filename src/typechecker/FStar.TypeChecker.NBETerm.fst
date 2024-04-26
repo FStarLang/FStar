@@ -123,8 +123,26 @@ let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
     if S.fv_eq v1 v2 then begin
         if List.length args1 <> List.length args2 then
             failwith "eq_t, different number of args on Construct";
-        List.fold_left (fun acc ((a1, _), (a2, _)) ->
-                            eq_inj acc (eq_t env a1 a2)) TEQ.Equal <| List.zip args1 args2
+        match Env.num_datacon_ty_params env (lid_of_fv v1) with
+        | None -> TEQ.Unknown
+        | Some n ->
+          if n <= List.length args1
+          then (
+            let eq_args as1 as2 =
+              List.fold_left2
+                (fun acc (a1, _) (a2, _) -> eq_inj acc (eq_t env a1 a2))
+                TEQ.Equal
+                as1 as2
+            in
+            let parms1, args1 = List.splitAt n args1 in
+            let parms2, args2 = List.splitAt n args2 in
+            if eq_args args1 args2 = TEQ.Equal
+            then if eq_args parms1 parms2 = TEQ.Equal
+                 then TEQ.Equal
+                 else TEQ.Unknown
+            else TEQ.NotEqual
+          )
+          else TEQ.Unknown
     end else TEQ.NotEqual
 
   | FV(v1, us1, args1), FV(v2, us2, args2) ->
