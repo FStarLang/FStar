@@ -42,63 +42,69 @@ type 'a problem =
   logical_guard_uvar: FStar_Syntax_Syntax.ctx_uvar ;
   reason: Prims.string Prims.list ;
   loc: FStar_Compiler_Range_Type.range ;
-  rank: rank_t FStar_Pervasives_Native.option }
+  rank: rank_t FStar_Pervasives_Native.option ;
+  logical: Prims.bool }
 let __proj__Mkproblem__item__pid : 'a . 'a problem -> Prims.int =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> pid
+        reason; loc; rank; logical;_} -> pid
 let __proj__Mkproblem__item__lhs : 'a . 'a problem -> 'a =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> lhs
+        reason; loc; rank; logical;_} -> lhs
 let __proj__Mkproblem__item__relation : 'a . 'a problem -> rel =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> relation
+        reason; loc; rank; logical;_} -> relation
 let __proj__Mkproblem__item__rhs : 'a . 'a problem -> 'a =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> rhs
+        reason; loc; rank; logical;_} -> rhs
 let __proj__Mkproblem__item__element :
   'a . 'a problem -> FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> element
+        reason; loc; rank; logical;_} -> element
 let __proj__Mkproblem__item__logical_guard :
   'a . 'a problem -> FStar_Syntax_Syntax.term =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> logical_guard
+        reason; loc; rank; logical;_} -> logical_guard
 let __proj__Mkproblem__item__logical_guard_uvar :
   'a . 'a problem -> FStar_Syntax_Syntax.ctx_uvar =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> logical_guard_uvar
+        reason; loc; rank; logical;_} -> logical_guard_uvar
 let __proj__Mkproblem__item__reason :
   'a . 'a problem -> Prims.string Prims.list =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> reason
+        reason; loc; rank; logical;_} -> reason
 let __proj__Mkproblem__item__loc :
   'a . 'a problem -> FStar_Compiler_Range_Type.range =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> loc
+        reason; loc; rank; logical;_} -> loc
 let __proj__Mkproblem__item__rank :
   'a . 'a problem -> rank_t FStar_Pervasives_Native.option =
   fun projectee ->
     match projectee with
     | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
-        reason; loc; rank;_} -> rank
+        reason; loc; rank; logical;_} -> rank
+let __proj__Mkproblem__item__logical : 'a . 'a problem -> Prims.bool =
+  fun projectee ->
+    match projectee with
+    | { pid; lhs; relation; rhs; element; logical_guard; logical_guard_uvar;
+        reason; loc; rank; logical;_} -> logical
 type prob =
   | TProb of FStar_Syntax_Syntax.typ problem 
   | CProb of FStar_Syntax_Syntax.comp problem 

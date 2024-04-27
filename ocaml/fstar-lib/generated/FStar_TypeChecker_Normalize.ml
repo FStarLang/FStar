@@ -2803,9 +2803,19 @@ let rec (norm :
                rebuild cfg empty_env stack2 t1
            | FStar_Syntax_Syntax.Tm_fvar
                { FStar_Syntax_Syntax.fv_name = uu___2;
-                 FStar_Syntax_Syntax.fv_delta = uu___3;
                  FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                    (FStar_Syntax_Syntax.Data_ctor);_}
+               ->
+               (FStar_TypeChecker_Cfg.log_unfolding cfg
+                  (fun uu___4 ->
+                     let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                     FStar_Compiler_Util.print1
+                       " >> This is a constructor: %s\n" uu___5);
+                rebuild cfg empty_env stack2 t1)
+           | FStar_Syntax_Syntax.Tm_fvar
+               { FStar_Syntax_Syntax.fv_name = uu___2;
+                 FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
+                   (FStar_Syntax_Syntax.Record_ctor uu___3);_}
                ->
                (FStar_TypeChecker_Cfg.log_unfolding cfg
                   (fun uu___5 ->
@@ -2813,28 +2823,16 @@ let rec (norm :
                      FStar_Compiler_Util.print1
                        " >> This is a constructor: %s\n" uu___6);
                 rebuild cfg empty_env stack2 t1)
-           | FStar_Syntax_Syntax.Tm_fvar
-               { FStar_Syntax_Syntax.fv_name = uu___2;
-                 FStar_Syntax_Syntax.fv_delta = uu___3;
-                 FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-                   (FStar_Syntax_Syntax.Record_ctor uu___4);_}
-               ->
-               (FStar_TypeChecker_Cfg.log_unfolding cfg
-                  (fun uu___6 ->
-                     let uu___7 = FStar_Syntax_Print.term_to_string t1 in
-                     FStar_Compiler_Util.print1
-                       " >> This is a constructor: %s\n" uu___7);
-                rebuild cfg empty_env stack2 t1)
            | FStar_Syntax_Syntax.Tm_fvar fv ->
                let lid = FStar_Syntax_Syntax.lid_of_fv fv in
                let qninfo =
                  FStar_TypeChecker_Env.lookup_qname
                    cfg.FStar_TypeChecker_Cfg.tcenv lid in
                let uu___2 =
-                 FStar_TypeChecker_Env.delta_depth_of_qninfo fv qninfo in
+                 FStar_TypeChecker_Env.delta_depth_of_qninfo
+                   cfg.FStar_TypeChecker_Cfg.tcenv fv qninfo in
                (match uu___2 with
-                | FStar_Pervasives_Native.Some
-                    (FStar_Syntax_Syntax.Delta_constant_at_level uu___3) when
+                | FStar_Syntax_Syntax.Delta_constant_at_level uu___3 when
                     uu___3 = Prims.int_zero ->
                     (FStar_TypeChecker_Cfg.log_unfolding cfg
                        (fun uu___5 ->
@@ -7811,17 +7809,15 @@ and (do_rebuild :
                   | FStar_Syntax_Syntax.Tm_constant uu___2 -> true
                   | FStar_Syntax_Syntax.Tm_fvar
                       { FStar_Syntax_Syntax.fv_name = uu___2;
-                        FStar_Syntax_Syntax.fv_delta = uu___3;
                         FStar_Syntax_Syntax.fv_qual =
                           FStar_Pervasives_Native.Some
                           (FStar_Syntax_Syntax.Data_ctor);_}
                       -> true
                   | FStar_Syntax_Syntax.Tm_fvar
                       { FStar_Syntax_Syntax.fv_name = uu___2;
-                        FStar_Syntax_Syntax.fv_delta = uu___3;
                         FStar_Syntax_Syntax.fv_qual =
                           FStar_Pervasives_Native.Some
-                          (FStar_Syntax_Syntax.Record_ctor uu___4);_}
+                          (FStar_Syntax_Syntax.Record_ctor uu___3);_}
                       -> true
                   | uu___2 -> false in
                 let guard_when_clause wopt b rest =
@@ -9633,7 +9629,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3792 : unit) =
+let (uu___3791 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

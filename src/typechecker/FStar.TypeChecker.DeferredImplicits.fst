@@ -192,11 +192,6 @@ let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
       | Sig_let {lids=[lid]} ->
         let qn = Env.lookup_qname env lid in
         let fv = S.lid_as_fv lid None in
-        let dd =
-          match Env.delta_depth_of_qninfo fv qn with
-          | Some dd -> dd
-          | None -> failwith "Expected a dd"
-        in
         let term = S.fv_to_tm (S.lid_as_fv lid None) in
         term
       | _ -> failwith "Resolve_tac not found"

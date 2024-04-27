@@ -2198,41 +2198,40 @@ and (resugar_pat' :
               mk (FStar_Parser_AST.PatTuple (args1, is_dependent_tuple))
           | FStar_Syntax_Syntax.Pat_cons
               ({ FStar_Syntax_Syntax.fv_name = uu___;
-                 FStar_Syntax_Syntax.fv_delta = uu___1;
                  FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                    (FStar_Syntax_Syntax.Record_ctor (name, fields));_},
-               uu___2, args)
+               uu___1, args)
               ->
               let fields1 =
-                let uu___3 =
+                let uu___2 =
                   FStar_Compiler_List.map
                     (fun f -> FStar_Ident.lid_of_ids [f]) fields in
-                FStar_Compiler_List.rev uu___3 in
+                FStar_Compiler_List.rev uu___2 in
               let args1 =
-                let uu___3 =
+                let uu___2 =
                   FStar_Compiler_List.map
-                    (fun uu___4 ->
-                       match uu___4 with
+                    (fun uu___3 ->
+                       match uu___3 with
                        | (p2, b) -> aux p2 (FStar_Pervasives_Native.Some b))
                     args in
-                FStar_Compiler_List.rev uu___3 in
+                FStar_Compiler_List.rev uu___2 in
               let rec map2 l1 l2 =
                 match (l1, l2) with
                 | ([], []) -> []
                 | ([], hd::tl) -> []
                 | (hd::tl, []) ->
-                    let uu___3 =
-                      let uu___4 =
+                    let uu___2 =
+                      let uu___3 =
                         mk
                           (FStar_Parser_AST.PatWild
                              (FStar_Pervasives_Native.None, [])) in
-                      (hd, uu___4) in
-                    let uu___4 = map2 tl [] in uu___3 :: uu___4
+                      (hd, uu___3) in
+                    let uu___3 = map2 tl [] in uu___2 :: uu___3
                 | (hd1::tl1, hd2::tl2) ->
-                    let uu___3 = map2 tl1 tl2 in (hd1, hd2) :: uu___3 in
+                    let uu___2 = map2 tl1 tl2 in (hd1, hd2) :: uu___2 in
               let args2 =
-                let uu___3 = map2 fields1 args1 in
-                FStar_Compiler_List.rev uu___3 in
+                let uu___2 = map2 fields1 args1 in
+                FStar_Compiler_List.rev uu___2 in
               mk (FStar_Parser_AST.PatRecord args2)
           | FStar_Syntax_Syntax.Pat_cons (fv, uu___, args) ->
               resugar_plain_pat_cons fv args

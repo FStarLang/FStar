@@ -914,7 +914,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
         else let disc_name = U.mk_discriminator lid in
              let x = S.new_bv (Some p) arg_typ in
              let sort =
-                 let disc_fvar = S.fvar_with_dd (Ident.set_lid_range disc_name p) (Delta_equational_at_level 1) None in
+                 let disc_fvar = S.fvar_with_dd (Ident.set_lid_range disc_name p) None in
                  U.refine x (U.b2t (S.mk_Tm_app (S.mk_Tm_uinst disc_fvar inst_univs) [as_arg <| S.bv_to_name x] p))
              in
              S.mk_binder ({projectee arg_typ with sort = sort})
@@ -991,11 +991,10 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                                       brs=[U.branch pat_true ; U.branch pat_false];
                                       rc_opt=None}) p
                 in
-                let dd = Delta_equational_at_level 1 in
                 let imp = U.abs binders body None in
                 let lbtyp = if no_decl then t else tun in
                 let lb = U.mk_letbinding
-                            (Inr (S.lid_and_dd_as_fv discriminator_name dd None))
+                            (Inr (S.lid_and_dd_as_fv discriminator_name None))
                             uvs
                             lbtyp
                             C.effect_Tot_lid
@@ -1104,7 +1103,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
               let dd = Delta_equational_at_level 1 in
               let lbtyp = if no_decl then t else tun in
               let lb = {
-                  lbname=Inr (S.lid_and_dd_as_fv field_name dd None);
+                  lbname=Inr (S.lid_and_dd_as_fv field_name None);
                   lbunivs=uvs;
                   lbtyp=lbtyp;
                   lbeff=C.effect_Tot_lid;

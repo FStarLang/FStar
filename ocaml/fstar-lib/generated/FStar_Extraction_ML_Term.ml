@@ -549,15 +549,13 @@ let (is_constructor : FStar_Syntax_Syntax.term -> Prims.bool) =
     match uu___ with
     | FStar_Syntax_Syntax.Tm_fvar
         { FStar_Syntax_Syntax.fv_name = uu___1;
-          FStar_Syntax_Syntax.fv_delta = uu___2;
           FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
             (FStar_Syntax_Syntax.Data_ctor);_}
         -> true
     | FStar_Syntax_Syntax.Tm_fvar
         { FStar_Syntax_Syntax.fv_name = uu___1;
-          FStar_Syntax_Syntax.fv_delta = uu___2;
           FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-            (FStar_Syntax_Syntax.Record_ctor uu___3);_}
+            (FStar_Syntax_Syntax.Record_ctor uu___2);_}
         -> true
     | uu___1 -> false
 let rec (is_fstar_value : FStar_Syntax_Syntax.term -> Prims.bool) =
