@@ -1205,8 +1205,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
             begin
-            match Env.delta_depth_of_qninfo fv qninfo with
-            | Some (Delta_constant_at_level 0) ->
+            match Env.delta_depth_of_qninfo cfg.tcenv fv qninfo with
+            | Delta_constant_at_level 0 ->
               log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->
@@ -3184,7 +3184,7 @@ let term_to_doc env t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
+  FStar.Syntax.Print.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =

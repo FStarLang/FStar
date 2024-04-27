@@ -107,10 +107,16 @@ type maybe_set_use_range =
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
-  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
-  | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
-
+  | Delta_constant_at_level of int
+  // ^ A symbol that can be unfolded n times to a term whose head is a
+  // constant, e.g., nat is (Delta_constant_at_level 1) to int, level 0
+  // is a literal constant.
+  | Delta_equational_at_level of int
+  // ^ Level 0 is a symbol that may be equated to another by
+  // extensional reasoning, n > 0 can be unfolded n times to a
+  // Delta_equational_at_level 0 term.
+  | Delta_abstract of delta_depth
+  // ^ A symbol marked abstract whose depth is the argument d.
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
@@ -370,7 +376,6 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
@@ -832,10 +837,10 @@ val gen_bv           : string -> option Range.range -> typ -> bv
 val gen_bv'          : ident -> option Range.range -> typ -> bv
 val new_bv           : option range -> typ -> bv
 val new_univ_name    : option range -> univ_name
-val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_and_dd_as_fv : lident -> option fv_qual -> fv
 val lid_as_fv        : lident -> option fv_qual -> fv
 val fv_to_tm         : fv -> term
-val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar_with_dd     : lident -> option fv_qual -> term
 val fvar             : lident -> option fv_qual -> term
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool

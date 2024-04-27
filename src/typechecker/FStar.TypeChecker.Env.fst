@@ -779,96 +779,112 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
-    match qn with
-    | None
-    | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
-    | Some (Inr(se, _), _) ->
-      match se.sigel with
-      | Sig_inductive_typ _
-      | Sig_bundle _
-      | Sig_datacon _ -> Some (Delta_constant_at_level 0)
-      | Sig_declare_typ _ -> Some (FStar.Syntax.DsEnv.delta_depth_of_declaration lid se.sigquals)
-      | Sig_let {lbs=(_,lbs)} ->
-          BU.find_map lbs (fun lb ->
-              let fv = right lb.lbname in
-              if fv_eq_lid fv lid
-              then fv.fv_delta
-              else None)
+let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : delta_depth =
+  match qn with
+  | None
+  | Some (Inl _, _) -> delta_constant
+  | Some (Inr(se, _), _) ->
+    match se.sigel with
+    | Sig_inductive_typ _
+    | Sig_bundle _
+    | Sig_datacon _ -> delta_constant
 
-      | Sig_fail _
-      | Sig_splice  _ ->
-        failwith "impossible: delta_depth_of_qninfo"
+    | Sig_declare_typ _ ->
+      let d0 =
+        if U.is_primop_lid lid
+        then delta_equational
+        else delta_constant
+      in
+      if se.sigquals |> BU.for_some (Assumption?)
+        && not (se.sigquals |> BU.for_some (New?))
+      then Delta_abstract d0
+      else d0
 
-      | Sig_assume _
-      | Sig_new_effect _
-      | Sig_sub_effect _
-      | Sig_effect_abbrev _ (* None? *)
-      | Sig_pragma  _
-      | Sig_polymonadic_bind _
-      | Sig_polymonadic_subcomp _ -> None
+    | Sig_let {lbs=(_,lbs)} ->
+      BU.find_map lbs (fun lb ->
+          let fv = right lb.lbname in
+          if fv_eq_lid fv lid then
+            Some (incr_delta_depth <| delta_depth_of_term env lb.lbdef)
+          else None) |> must
 
+    | Sig_fail _
+    | Sig_splice  _ ->
+      failwith "impossible: delta_depth_of_qninfo"
 
-//
-// For the following prims symbols,
-//   delta depth is handled specially
-// Instead of looking it up in the env,
-//   we  return as is set in the input fv.fv_delta
-// No principled reason, for backward compatibility
-//
-let prims_dd_lids = [
-  Const.and_lid;
-  Const.or_lid;
-  Const.imp_lid;
-  Const.iff_lid;
-  Const.true_lid;
-  Const.false_lid;
-  Const.not_lid;
-  Const.b2t_lid;
-  Const.eq2_lid;
-  Const.eq3_lid;
-  Const.op_Eq;
-  Const.op_LT;
-  Const.op_LTE;
-  Const.op_GT;
-  Const.op_GTE;
-  Const.forall_lid;
-  Const.exists_lid;
-  Const.haseq_lid;
-  Const.op_And;
-  Const.op_Or;
-  Const.op_Negation;
-]
+    | Sig_assume _
+    | Sig_new_effect _
+    | Sig_sub_effect _
+    | Sig_effect_abbrev _ (* None? *)
+    | Sig_pragma  _
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
+      delta_constant
 
-let is_prims_dd_lid (l:lident) =
-  List.existsb (fun l0 -> lid_equals l l0) prims_dd_lids
+and delta_depth_of_qninfo env (fv:fv) (qn:qninfo) : delta_depth =
+  delta_depth_of_qninfo_lid env fv.fv_name.v qn
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
+(* Computes the canonical delta_depth of a given fvar, by looking at its
+definition (and recursing) if needed. Results are memoized in the env.
+
+NB: The cache is never invalidated. A potential problem here would be
+if we memoize the delta_depth of a `val` before seeing the corresponding
+`let`, but I don't think that can happen. Before seeing the `let`, other code
+cannot refer to the name. *)
+and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
   let lid = fv.fv_name.v in
-  if is_prims_dd_lid lid && Some? fv.fv_delta
-  then fv.fv_delta //NS delta: too many special cases in existing code
-  else delta_depth_of_qninfo_lid lid qn
+  (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (function
+  | Some dd -> dd
+  | None ->
+    BU.smap_add env.fv_delta_depths (string_of_lid lid) delta_equational;
+    // ^ To prevent an infinite loop on recursive functions, we pre-seed the cache with
+    // a delta_equational. If we run into the same function while computing its delta_depth,
+    // we will return delta_equational. If not, we override the cache with the correct delta_depth.
+    let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
+    // if Options.debug_any () then
+    //  BU.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
+    BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
+    d)
 
-let delta_depth_of_fv env fv =
-  let lid = fv.fv_name.v in
-  if is_prims_dd_lid lid && Some? fv.fv_delta
-  then fv.fv_delta |> must
-  else
-    //try cache
-    (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
-      if d_opt |> is_some then d_opt |> must
-      else
-        match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
-        | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
-        | Some d ->
-          if Some? fv.fv_delta && d <> Some?.v fv.fv_delta
-          && Options.debug_any()
-          then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
-                         (Print.fv_to_string fv)
-                         (show (Some?.v fv.fv_delta))
-                         (show d);
-          BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
-          d)
+(* Computes the delta_depth of an fv, but taking into account the visibility
+in the current module. *)
+and fv_delta_depth (env:env) (fv:S.fv) : delta_depth =
+    let d = delta_depth_of_fv env fv in
+    match d with
+    | Delta_abstract (Delta_constant_at_level l) ->
+      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface
+       //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
+       //a better way would be create new fvs with appripriate delta_depth at extraction time
+      then Delta_constant_at_level l //we're in the defining module
+      else delta_constant
+    | d -> d
+
+(* Computes the delta_depth of a term. This is the single way to compute it. *)
+and delta_depth_of_term env t =
+    let t = U.unmeta t in
+    match t.n with
+    | Tm_meta _
+    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
+    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
+
+    | Tm_fvar fv -> fv_delta_depth env fv
+
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_match _
+    | Tm_uvar _
+    | Tm_unknown -> delta_equational
+
+    | Tm_type _
+    | Tm_quoted _
+    | Tm_constant _
+    | Tm_arrow _ -> delta_constant
+
+    | Tm_uinst(t, _)
+    | Tm_refine {b={sort=t}}
+    | Tm_ascribed {tm=t}
+    | Tm_app {hd=t}
+    | Tm_abs {body=t}
+    | Tm_let {body=t} -> delta_depth_of_term env t
 
 let quals_of_qninfo (qninfo : qninfo) : option (list qualifier) =
   match qninfo with
@@ -2032,11 +2048,6 @@ let get_letrec_arity (env:env) (lbname:lbname) : option int =
 
 let fvar_of_nonqual_lid env lid =
     let qn = lookup_qname env lid in
-    let dd =
-        match delta_depth_of_qninfo_lid lid qn with
-        | None -> failwith "Unexpected no delta_depth"
-        | Some dd -> dd
-    in
     fvar lid None
 
 let split_smt_query (e:env) (q:term) 

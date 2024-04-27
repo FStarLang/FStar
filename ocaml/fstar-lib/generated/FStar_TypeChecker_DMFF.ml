@@ -37,8 +37,7 @@ let (mk_toplevel_definition :
                "Registering top-level definition: %s\n%s\n" uu___3 uu___4))
          else ());
         (let fv =
-           let uu___1 = FStar_Syntax_Util.incr_delta_qualifier def in
-           FStar_Syntax_Syntax.lid_and_dd_as_fv lident uu___1
+           FStar_Syntax_Syntax.lid_and_dd_as_fv lident
              FStar_Pervasives_Native.None in
          let lbname = FStar_Pervasives.Inr fv in
          let lb =
@@ -667,8 +666,7 @@ let (gen_wps_for_free :
                       let l_ite =
                         FStar_Syntax_Syntax.fvar_with_dd
                           FStar_Parser_Const.ite_lid
-                          (FStar_Syntax_Syntax.Delta_constant_at_level
-                             (Prims.of_int (2))) FStar_Pervasives_Native.None in
+                          FStar_Pervasives_Native.None in
                       let uu___5 =
                         let uu___6 =
                           let uu___7 =
@@ -825,6 +823,7 @@ let (gen_wps_for_free :
                       FStar_TypeChecker_Normalize.normalize
                         [FStar_TypeChecker_Env.Beta;
                         FStar_TypeChecker_Env.Eager_unfolding;
+                        FStar_TypeChecker_Env.UnfoldTac;
                         FStar_TypeChecker_Env.UnfoldUntil
                           FStar_Syntax_Syntax.delta_constant] env2 t in
                     let uu___3 =
@@ -1021,6 +1020,7 @@ let (gen_wps_for_free :
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Beta;
                           FStar_TypeChecker_Env.Eager_unfolding;
+                          FStar_TypeChecker_Env.UnfoldTac;
                           FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant] env2 t in
                       let uu___3 =
@@ -1045,8 +1045,6 @@ let (gen_wps_for_free :
                                 FStar_TypeChecker_Env.lookup_projector env2
                                   uu___5 i in
                               FStar_Syntax_Syntax.fvar_with_dd uu___4
-                                (FStar_Syntax_Syntax.Delta_constant_at_level
-                                   Prims.int_one)
                                 FStar_Pervasives_Native.None in
                             FStar_Syntax_Util.mk_app projector
                               [(tuple, FStar_Pervasives_Native.None)] in
@@ -1207,7 +1205,6 @@ let (gen_wps_for_free :
                                 let uu___5 =
                                   FStar_Syntax_Syntax.lid_and_dd_as_fv
                                     FStar_Parser_Const.guard_free
-                                    FStar_Syntax_Syntax.delta_constant
                                     FStar_Pervasives_Native.None in
                                 FStar_Syntax_Syntax.fv_to_tm uu___5 in
                               let pat =
@@ -1773,6 +1770,7 @@ and (star_type' :
                          FStar_TypeChecker_Normalize.normalize
                            [FStar_TypeChecker_Env.EraseUniverses;
                            FStar_TypeChecker_Env.Inlining;
+                           FStar_TypeChecker_Env.UnfoldTac;
                            FStar_TypeChecker_Env.UnfoldUntil
                              FStar_Syntax_Syntax.delta_constant] env1.tcenv
                            t1 in
@@ -2296,6 +2294,7 @@ and (infer :
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Env.Beta;
           FStar_TypeChecker_Env.Eager_unfolding;
+          FStar_TypeChecker_Env.UnfoldTac;
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses] env1.tcenv in
@@ -2500,6 +2499,7 @@ and (infer :
                                  FStar_TypeChecker_Normalize.normalize
                                    [FStar_TypeChecker_Env.Beta;
                                    FStar_TypeChecker_Env.Eager_unfolding;
+                                   FStar_TypeChecker_Env.UnfoldTac;
                                    FStar_TypeChecker_Env.UnfoldUntil
                                      FStar_Syntax_Syntax.delta_constant;
                                    FStar_TypeChecker_Env.EraseUniverses]
@@ -2604,16 +2604,15 @@ and (infer :
             FStar_Syntax_Syntax.fv_name =
               { FStar_Syntax_Syntax.v = lid;
                 FStar_Syntax_Syntax.p = uu___1;_};
-            FStar_Syntax_Syntax.fv_delta = uu___2;
-            FStar_Syntax_Syntax.fv_qual = uu___3;_}
+            FStar_Syntax_Syntax.fv_qual = uu___2;_}
           ->
-          let uu___4 =
-            let uu___5 = FStar_TypeChecker_Env.lookup_lid env1.tcenv lid in
-            FStar_Pervasives_Native.fst uu___5 in
-          (match uu___4 with
-           | (uu___5, t) ->
-               let uu___6 = let uu___7 = normalize t in N uu___7 in
-               (uu___6, e, e))
+          let uu___3 =
+            let uu___4 = FStar_TypeChecker_Env.lookup_lid env1.tcenv lid in
+            FStar_Pervasives_Native.fst uu___4 in
+          (match uu___3 with
+           | (uu___4, t) ->
+               let uu___5 = let uu___6 = normalize t in N uu___6 in
+               (uu___5, e, e))
       | FStar_Syntax_Syntax.Tm_app
           {
             FStar_Syntax_Syntax.hd =
@@ -3674,7 +3673,7 @@ and (trans_F_ :
                                      ((let uu___10 =
                                          let uu___11 =
                                            FStar_Syntax_Util.eq_aqual q q' in
-                                         Prims.op_Negation uu___11 in
+                                         uu___11 <> FStar_Syntax_Util.Equal in
                                        if uu___10
                                        then
                                          let uu___11 =
@@ -3856,7 +3855,8 @@ let (n :
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   FStar_TypeChecker_Normalize.normalize
-    [FStar_TypeChecker_Env.Beta;
+    [FStar_TypeChecker_Env.UnfoldTac;
+    FStar_TypeChecker_Env.Beta;
     FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
     FStar_TypeChecker_Env.DoNotUnfoldPureLets;
     FStar_TypeChecker_Env.Eager_unfolding;
@@ -4469,7 +4469,6 @@ let (cps_and_elaborate :
                                                 (let uu___16 =
                                                    FStar_Syntax_Syntax.lid_and_dd_as_fv
                                                      l'
-                                                     FStar_Syntax_Syntax.delta_equational
                                                      FStar_Pervasives_Native.None in
                                                  FStar_Syntax_Syntax.fv_to_tm
                                                    uu___16))

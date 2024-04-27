@@ -55,7 +55,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
     BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
-  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
+  let fv = S.lid_and_dd_as_fv lident None in
   let lbname: lbname = Inr fv in
   let lb: letbindings =
     // the effect label will be recomputed correctly
@@ -300,7 +300,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar_with_dd PC.ite_lid (S.Delta_constant_at_level 2) None in
+      let l_ite = fvar_with_dd PC.ite_lid None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -355,7 +355,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -395,13 +395,13 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
+            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -439,7 +439,7 @@ let gen_wps_for_free
         match destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
             mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
@@ -643,7 +643,7 @@ and star_type' env t =
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.tcenv t in
+                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant] env.tcenv t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -899,7 +899,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 and infer (env: env) (e: term): nm * term * term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x e.pos in
-  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
+  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -977,7 +977,7 @@ and infer (env: env) (e: term): nm * term * term =
               Some rc
 
             | Some rt ->
-              let rt = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] (get_env env) rt in
+              let rt = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] (get_env env) rt in
               if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
               then
                 let flags = List.filter (function CPS -> false | _ -> true) rc.residual_flags in
@@ -1347,7 +1347,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
+let n = N.normalize [ Env.UnfoldTac; Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
 
 
 // Exported definitions -------------------------------------------------------
@@ -1536,7 +1536,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     match (SS.compress bind_wp).n with
     | Tm_abs {bs=binders; body; rc_opt=what} ->
         // TODO: figure out how to deal with ranges
-        //let r = S.lid_and_dd_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        //let r = S.lid_and_dd_as_fv PC.range_lid None in
         U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -1562,8 +1562,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     | Some (_us,_t) -> begin
       if Options.debug_any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-      // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
+      fv_to_tm (lid_and_dd_as_fv l' None)
       end
     | None ->
       let sigelt, fv = mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in

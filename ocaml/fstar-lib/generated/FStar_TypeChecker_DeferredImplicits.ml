@@ -54,7 +54,7 @@ let (uu___is_Imp : goal_type -> Prims.bool) =
 let (__proj__Imp__item___0 : goal_type -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee -> match projectee with | Imp _0 -> _0
 let (find_user_tac_for_uvar :
-  FStar_TypeChecker_Env.env_t ->
+  FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.ctx_uvar ->
       FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)
   =
@@ -120,8 +120,7 @@ let (find_user_tac_for_uvar :
           let candidates =
             FStar_Compiler_List.filter
               (fun hook ->
-                 FStar_Compiler_Util.for_some
-                   (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool env a)
+                 FStar_Compiler_Util.for_some (FStar_Syntax_Util.attr_eq a)
                    hook.FStar_Syntax_Syntax.sigattrs) hooks in
           let candidates1 =
             FStar_Compiler_Util.remove_dups
@@ -157,9 +156,7 @@ let (find_user_tac_for_uvar :
                                when
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.override_resolve_implicits_handler_lid)
-                                 &&
-                                 (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                    env a a')
+                                 && (FStar_Syntax_Util.attr_eq a a')
                                ->
                                let uu___5 = attr_list_elements overrides in
                                (match uu___5 with
@@ -177,9 +174,7 @@ let (find_user_tac_for_uvar :
                               (a', uu___2)::(overrides, uu___3)::[]) when
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.override_resolve_implicits_handler_lid)
-                                 &&
-                                 (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                                    env a a')
+                                 && (FStar_Syntax_Util.attr_eq a a')
                                ->
                                let uu___4 = attr_list_elements overrides in
                                (match uu___4 with
@@ -254,13 +249,6 @@ let solve_goals_with_tac :
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
-                     let dd =
-                       let uu___3 =
-                         FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
-                       match uu___3 with
-                       | FStar_Pervasives_Native.Some dd1 -> dd1
-                       | FStar_Pervasives_Native.None ->
-                           FStar_Compiler_Effect.failwith "Expected a dd" in
                      let term =
                        let uu___3 =
                          FStar_Syntax_Syntax.lid_as_fv lid

@@ -1261,10 +1261,9 @@ let rec (traverse_for_spinoff :
                                              FStar_Parser_Const.squash_lid))
                                          &&
                                          (let uu___8 =
-                                            FStar_TypeChecker_TermEqAndSimplify.eq_tm
-                                              e t2 FStar_Syntax_Util.t_true in
-                                          uu___8 =
-                                            FStar_TypeChecker_TermEqAndSimplify.Equal)
+                                            FStar_Syntax_Util.eq_tm t2
+                                              FStar_Syntax_Util.t_true in
+                                          uu___8 = FStar_Syntax_Util.Equal)
                                        ->
                                        (if debug
                                         then
@@ -1706,13 +1705,6 @@ let (handle_smt_goal :
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
-                     let dd =
-                       let uu___3 =
-                         FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
-                       match uu___3 with
-                       | FStar_Pervasives_Native.Some dd1 -> dd1
-                       | FStar_Pervasives_Native.None ->
-                           FStar_Compiler_Effect.failwith "Expected a dd" in
                      let uu___3 =
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
@@ -2028,25 +2020,9 @@ let (splice :
                                        FStar_Syntax_Syntax.lbattrs = uu___11;
                                        FStar_Syntax_Syntax.lbpos = uu___12;_}
                                        ->
-                                       let uu___13 =
-                                         let uu___14 =
-                                           let uu___15 =
-                                             let uu___16 =
-                                               FStar_Syntax_Util.incr_delta_qualifier
-                                                 lbdef in
-                                             FStar_Pervasives_Native.Some
-                                               uu___16 in
-                                           {
-                                             FStar_Syntax_Syntax.fv_name =
-                                               (fv.FStar_Syntax_Syntax.fv_name);
-                                             FStar_Syntax_Syntax.fv_delta =
-                                               uu___15;
-                                             FStar_Syntax_Syntax.fv_qual =
-                                               (fv.FStar_Syntax_Syntax.fv_qual)
-                                           } in
-                                         FStar_Pervasives.Inr uu___14 in
                                        {
-                                         FStar_Syntax_Syntax.lbname = uu___13;
+                                         FStar_Syntax_Syntax.lbname =
+                                           (FStar_Pervasives.Inr fv);
                                          FStar_Syntax_Syntax.lbunivs =
                                            (lb.FStar_Syntax_Syntax.lbunivs);
                                          FStar_Syntax_Syntax.lbtyp =

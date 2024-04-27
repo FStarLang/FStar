@@ -58,6 +58,7 @@ type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
     reason: list string;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
     rank: option rank_t;
+    logical : bool;                             //logical problems cannot unfold connectives
 }
 
 type prob =

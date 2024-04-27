@@ -376,10 +376,8 @@ and bv = {
   ppname: FStar_Ident.ident ;
   index: Prims.int ;
   sort: term' syntax }
-and fv =
-  {
+and fv = {
   fv_name: var ;
-  fv_delta: delta_depth FStar_Pervasives_Native.option ;
   fv_qual: fv_qual FStar_Pervasives_Native.option }
 and free_vars =
   {
@@ -970,18 +968,11 @@ let (__proj__Mkbv__item__sort : bv -> term' syntax) =
   fun projectee -> match projectee with | { ppname; index; sort;_} -> sort
 let (__proj__Mkfv__item__fv_name : fv -> var) =
   fun projectee ->
-    match projectee with
-    | { fv_name; fv_delta; fv_qual = fv_qual1;_} -> fv_name
-let (__proj__Mkfv__item__fv_delta :
-  fv -> delta_depth FStar_Pervasives_Native.option) =
-  fun projectee ->
-    match projectee with
-    | { fv_name; fv_delta; fv_qual = fv_qual1;_} -> fv_delta
+    match projectee with | { fv_name; fv_qual = fv_qual1;_} -> fv_name
 let (__proj__Mkfv__item__fv_qual :
   fv -> fv_qual FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with
-    | { fv_name; fv_delta; fv_qual = fv_qual1;_} -> fv_qual1
+    match projectee with | { fv_name; fv_qual = fv_qual1;_} -> fv_qual1
 let (__proj__Mkfree_vars__item__free_names : free_vars -> bv Prims.list) =
   fun projectee ->
     match projectee with
@@ -1772,8 +1763,7 @@ type sigelt'__Sig_inductive_typ__payload =
   num_uniform_params: Prims.int FStar_Pervasives_Native.option ;
   t: typ ;
   mutuals: FStar_Ident.lident Prims.list ;
-  ds: FStar_Ident.lident Prims.list ;
-  injective_type_params: Prims.bool }
+  ds: FStar_Ident.lident Prims.list }
 and sigelt'__Sig_bundle__payload =
   {
   ses: sigelt Prims.list ;
@@ -1785,8 +1775,7 @@ and sigelt'__Sig_datacon__payload =
   t1: typ ;
   ty_lid: FStar_Ident.lident ;
   num_ty_params: Prims.int ;
-  mutuals1: FStar_Ident.lident Prims.list ;
-  injective_type_params1: Prims.bool }
+  mutuals1: FStar_Ident.lident Prims.list }
 and sigelt'__Sig_declare_typ__payload =
   {
   lid2: FStar_Ident.lident ;
@@ -1864,20 +1853,17 @@ let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__lid :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> lid
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> lid
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__us :
   sigelt'__Sig_inductive_typ__payload -> univ_names) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> us
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> us
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__params :
   sigelt'__Sig_inductive_typ__payload -> binders) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> params
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> params
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__num_uniform_params
   :
   sigelt'__Sig_inductive_typ__payload ->
@@ -1885,32 +1871,23 @@ let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__num_uniform_params
   =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> num_uniform_params
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} ->
+        num_uniform_params
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__t :
   sigelt'__Sig_inductive_typ__payload -> typ) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> t
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> t
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__mutuals :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> mutuals
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> mutuals
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__ds :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> ds
-let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__injective_type_params
-  : sigelt'__Sig_inductive_typ__payload -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;
-        injective_type_params;_} -> injective_type_params
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> ds
 let (__proj__Mksigelt'__Sig_bundle__payload__item__ses :
   sigelt'__Sig_bundle__payload -> sigelt Prims.list) =
   fun projectee -> match projectee with | { ses; lids;_} -> ses
@@ -1922,50 +1899,37 @@ let (__proj__Mksigelt'__Sig_datacon__payload__item__lid :
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> lid
+        mutuals1 = mutuals;_} -> lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__us :
   sigelt'__Sig_datacon__payload -> univ_names) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> us
+        mutuals1 = mutuals;_} -> us
 let (__proj__Mksigelt'__Sig_datacon__payload__item__t :
   sigelt'__Sig_datacon__payload -> typ) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> t
+        mutuals1 = mutuals;_} -> t
 let (__proj__Mksigelt'__Sig_datacon__payload__item__ty_lid :
   sigelt'__Sig_datacon__payload -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> ty_lid
+        mutuals1 = mutuals;_} -> ty_lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__num_ty_params :
   sigelt'__Sig_datacon__payload -> Prims.int) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> num_ty_params
+        mutuals1 = mutuals;_} -> num_ty_params
 let (__proj__Mksigelt'__Sig_datacon__payload__item__mutuals :
   sigelt'__Sig_datacon__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> mutuals
-let (__proj__Mksigelt'__Sig_datacon__payload__item__injective_type_params :
-  sigelt'__Sig_datacon__payload -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
-        -> injective_type_params
+        mutuals1 = mutuals;_} -> mutuals
 let (__proj__Mksigelt'__Sig_declare_typ__payload__item__lid :
   sigelt'__Sig_declare_typ__payload -> FStar_Ident.lident) =
   fun projectee ->
@@ -2705,41 +2669,26 @@ let (set_bv_range : bv -> FStar_Compiler_Range_Type.range -> bv) =
       let uu___ = FStar_Ident.set_id_range r bv1.ppname in
       { ppname = uu___; index = (bv1.index); sort = (bv1.sort) }
 let (lid_and_dd_as_fv :
-  FStar_Ident.lident ->
-    delta_depth -> fv_qual FStar_Pervasives_Native.option -> fv)
-  =
+  FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
   fun l ->
-    fun dd ->
-      fun dq ->
-        let uu___ =
-          let uu___1 = FStar_Ident.range_of_lid l in withinfo l uu___1 in
-        {
-          fv_name = uu___;
-          fv_delta = (FStar_Pervasives_Native.Some dd);
-          fv_qual = dq
-        }
+    fun dq ->
+      let uu___ =
+        let uu___1 = FStar_Ident.range_of_lid l in withinfo l uu___1 in
+      { fv_name = uu___; fv_qual = dq }
 let (lid_as_fv :
   FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> fv) =
   fun l ->
     fun dq ->
       let uu___ =
         let uu___1 = FStar_Ident.range_of_lid l in withinfo l uu___1 in
-      {
-        fv_name = uu___;
-        fv_delta = FStar_Pervasives_Native.None;
-        fv_qual = dq
-      }
+      { fv_name = uu___; fv_qual = dq }
 let (fv_to_tm : fv -> term) =
   fun fv1 ->
     let uu___ = FStar_Ident.range_of_lid (fv1.fv_name).v in
     mk (Tm_fvar fv1) uu___
 let (fvar_with_dd :
-  FStar_Ident.lident ->
-    delta_depth -> fv_qual FStar_Pervasives_Native.option -> term)
-  =
-  fun l ->
-    fun dd ->
-      fun dq -> let uu___ = lid_and_dd_as_fv l dd dq in fv_to_tm uu___
+  FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> term) =
+  fun l -> fun dq -> let uu___ = lid_and_dd_as_fv l dq in fv_to_tm uu___
 let (fvar :
   FStar_Ident.lident -> fv_qual FStar_Pervasives_Native.option -> term) =
   fun l -> fun dq -> let uu___ = lid_as_fv l dq in fv_to_tm uu___
@@ -2754,7 +2703,7 @@ let (set_range_of_fv : fv -> FStar_Compiler_Range_Type.range -> fv) =
         let uu___2 =
           let uu___3 = lid_of_fv fv1 in FStar_Ident.set_lid_range uu___3 r in
         { v = uu___2; p = (uu___1.p) } in
-      { fv_name = uu___; fv_delta = (fv1.fv_delta); fv_qual = (fv1.fv_qual) }
+      { fv_name = uu___; fv_qual = (fv1.fv_qual) }
 let (has_simple_attribute : term Prims.list -> Prims.string -> Prims.bool) =
   fun l ->
     fun s ->
@@ -2800,7 +2749,7 @@ let (delta_constant : delta_depth) = Delta_constant_at_level Prims.int_zero
 let (delta_equational : delta_depth) =
   Delta_equational_at_level Prims.int_zero
 let (fvconst : FStar_Ident.lident -> fv) =
-  fun l -> lid_and_dd_as_fv l delta_constant FStar_Pervasives_Native.None
+  fun l -> lid_and_dd_as_fv l FStar_Pervasives_Native.None
 let (tconst : FStar_Ident.lident -> term) =
   fun l ->
     let uu___ = let uu___1 = fvconst l in Tm_fvar uu___1 in
@@ -2808,16 +2757,12 @@ let (tconst : FStar_Ident.lident -> term) =
 let (tabbrev : FStar_Ident.lident -> term) =
   fun l ->
     let uu___ =
-      let uu___1 =
-        lid_and_dd_as_fv l (Delta_constant_at_level Prims.int_one)
-          FStar_Pervasives_Native.None in
+      let uu___1 = lid_and_dd_as_fv l FStar_Pervasives_Native.None in
       Tm_fvar uu___1 in
     mk uu___ FStar_Compiler_Range_Type.dummyRange
 let (tdataconstr : FStar_Ident.lident -> term) =
   fun l ->
-    let uu___ =
-      lid_and_dd_as_fv l delta_constant
-        (FStar_Pervasives_Native.Some Data_ctor) in
+    let uu___ = lid_and_dd_as_fv l (FStar_Pervasives_Native.Some Data_ctor) in
     fv_to_tm uu___
 let (t_unit : term) = tconst FStar_Parser_Const.unit_lid
 let (t_bool : term) = tconst FStar_Parser_Const.bool_lid
