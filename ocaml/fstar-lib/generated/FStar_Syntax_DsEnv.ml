@@ -1176,16 +1176,17 @@ let (fv_qual_of_se :
         { FStar_Syntax_Syntax.lid1 = uu___; FStar_Syntax_Syntax.us1 = uu___1;
           FStar_Syntax_Syntax.t1 = uu___2; FStar_Syntax_Syntax.ty_lid = l;
           FStar_Syntax_Syntax.num_ty_params = uu___3;
-          FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+          FStar_Syntax_Syntax.mutuals1 = uu___4;
+          FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
         ->
         let qopt =
           FStar_Compiler_Util.find_map se.FStar_Syntax_Syntax.sigquals
-            (fun uu___5 ->
-               match uu___5 with
-               | FStar_Syntax_Syntax.RecordConstructor (uu___6, fs) ->
+            (fun uu___6 ->
+               match uu___6 with
+               | FStar_Syntax_Syntax.RecordConstructor (uu___7, fs) ->
                    FStar_Pervasives_Native.Some
                      (FStar_Syntax_Syntax.Record_ctor (l, fs))
-               | uu___6 -> FStar_Pervasives_Native.None) in
+               | uu___7 -> FStar_Pervasives_Native.None) in
         (match qopt with
          | FStar_Pervasives_Native.None ->
              FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Data_ctor
@@ -1898,14 +1899,15 @@ let (find_all_datacons :
                  FStar_Syntax_Syntax.num_uniform_params = uu___4;
                  FStar_Syntax_Syntax.t = uu___5;
                  FStar_Syntax_Syntax.mutuals = datas;
-                 FStar_Syntax_Syntax.ds = uu___6;_};
-             FStar_Syntax_Syntax.sigrng = uu___7;
-             FStar_Syntax_Syntax.sigquals = uu___8;
-             FStar_Syntax_Syntax.sigmeta = uu___9;
-             FStar_Syntax_Syntax.sigattrs = uu___10;
-             FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-             FStar_Syntax_Syntax.sigopts = uu___12;_},
-           uu___13) -> FStar_Pervasives_Native.Some datas
+                 FStar_Syntax_Syntax.ds = uu___6;
+                 FStar_Syntax_Syntax.injective_type_params = uu___7;_};
+             FStar_Syntax_Syntax.sigrng = uu___8;
+             FStar_Syntax_Syntax.sigquals = uu___9;
+             FStar_Syntax_Syntax.sigmeta = uu___10;
+             FStar_Syntax_Syntax.sigattrs = uu___11;
+             FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___12;
+             FStar_Syntax_Syntax.sigopts = uu___13;_},
+           uu___14) -> FStar_Pervasives_Native.Some datas
         | uu___1 -> FStar_Pervasives_Native.None in
       resolve_in_open_namespaces' env1 lid
         (fun uu___ -> FStar_Pervasives_Native.None)
@@ -2015,13 +2017,15 @@ let (extract_record :
                            FStar_Syntax_Syntax.t1 = uu___3;
                            FStar_Syntax_Syntax.ty_lid = uu___4;
                            FStar_Syntax_Syntax.num_ty_params = uu___5;
-                           FStar_Syntax_Syntax.mutuals1 = uu___6;_};
-                       FStar_Syntax_Syntax.sigrng = uu___7;
-                       FStar_Syntax_Syntax.sigquals = uu___8;
-                       FStar_Syntax_Syntax.sigmeta = uu___9;
-                       FStar_Syntax_Syntax.sigattrs = uu___10;
-                       FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-                       FStar_Syntax_Syntax.sigopts = uu___12;_} ->
+                           FStar_Syntax_Syntax.mutuals1 = uu___6;
+                           FStar_Syntax_Syntax.injective_type_params1 =
+                             uu___7;_};
+                       FStar_Syntax_Syntax.sigrng = uu___8;
+                       FStar_Syntax_Syntax.sigquals = uu___9;
+                       FStar_Syntax_Syntax.sigmeta = uu___10;
+                       FStar_Syntax_Syntax.sigattrs = uu___11;
+                       FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___12;
+                       FStar_Syntax_Syntax.sigopts = uu___13;_} ->
                        FStar_Ident.lid_equals dc lid
                    | uu___2 -> false) sigs in
             FStar_Compiler_List.iter
@@ -2036,51 +2040,54 @@ let (extract_record :
                          FStar_Syntax_Syntax.num_uniform_params = uu___2;
                          FStar_Syntax_Syntax.t = uu___3;
                          FStar_Syntax_Syntax.mutuals = uu___4;
-                         FStar_Syntax_Syntax.ds = dc::[];_};
-                     FStar_Syntax_Syntax.sigrng = uu___5;
+                         FStar_Syntax_Syntax.ds = dc::[];
+                         FStar_Syntax_Syntax.injective_type_params = uu___5;_};
+                     FStar_Syntax_Syntax.sigrng = uu___6;
                      FStar_Syntax_Syntax.sigquals = typename_quals;
-                     FStar_Syntax_Syntax.sigmeta = uu___6;
-                     FStar_Syntax_Syntax.sigattrs = uu___7;
-                     FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___8;
-                     FStar_Syntax_Syntax.sigopts = uu___9;_} ->
-                     let uu___10 =
-                       let uu___11 = find_dc dc in
-                       FStar_Compiler_Util.must uu___11 in
-                     (match uu___10 with
+                     FStar_Syntax_Syntax.sigmeta = uu___7;
+                     FStar_Syntax_Syntax.sigattrs = uu___8;
+                     FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___9;
+                     FStar_Syntax_Syntax.sigopts = uu___10;_} ->
+                     let uu___11 =
+                       let uu___12 = find_dc dc in
+                       FStar_Compiler_Util.must uu___12 in
+                     (match uu___11 with
                       | {
                           FStar_Syntax_Syntax.sigel =
                             FStar_Syntax_Syntax.Sig_datacon
                             { FStar_Syntax_Syntax.lid1 = constrname;
-                              FStar_Syntax_Syntax.us1 = uu___11;
+                              FStar_Syntax_Syntax.us1 = uu___12;
                               FStar_Syntax_Syntax.t1 = t;
-                              FStar_Syntax_Syntax.ty_lid = uu___12;
+                              FStar_Syntax_Syntax.ty_lid = uu___13;
                               FStar_Syntax_Syntax.num_ty_params = n;
-                              FStar_Syntax_Syntax.mutuals1 = uu___13;_};
-                          FStar_Syntax_Syntax.sigrng = uu___14;
-                          FStar_Syntax_Syntax.sigquals = uu___15;
-                          FStar_Syntax_Syntax.sigmeta = uu___16;
-                          FStar_Syntax_Syntax.sigattrs = uu___17;
-                          FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___18;
-                          FStar_Syntax_Syntax.sigopts = uu___19;_} ->
-                          let uu___20 = FStar_Syntax_Util.arrow_formals t in
-                          (match uu___20 with
-                           | (all_formals, uu___21) ->
-                               let uu___22 =
+                              FStar_Syntax_Syntax.mutuals1 = uu___14;
+                              FStar_Syntax_Syntax.injective_type_params1 =
+                                uu___15;_};
+                          FStar_Syntax_Syntax.sigrng = uu___16;
+                          FStar_Syntax_Syntax.sigquals = uu___17;
+                          FStar_Syntax_Syntax.sigmeta = uu___18;
+                          FStar_Syntax_Syntax.sigattrs = uu___19;
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___20;
+                          FStar_Syntax_Syntax.sigopts = uu___21;_} ->
+                          let uu___22 = FStar_Syntax_Util.arrow_formals t in
+                          (match uu___22 with
+                           | (all_formals, uu___23) ->
+                               let uu___24 =
                                  FStar_Compiler_Util.first_N n all_formals in
-                               (match uu___22 with
+                               (match uu___24 with
                                 | (_params, formals) ->
                                     let is_rec = is_record typename_quals in
                                     let formals' =
                                       FStar_Compiler_List.collect
                                         (fun f ->
-                                           let uu___23 =
+                                           let uu___25 =
                                              (FStar_Syntax_Syntax.is_null_bv
                                                 f.FStar_Syntax_Syntax.binder_bv)
                                                ||
                                                (is_rec &&
                                                   (FStar_Syntax_Syntax.is_bqual_implicit
                                                      f.FStar_Syntax_Syntax.binder_qual)) in
-                                           if uu___23 then [] else [f])
+                                           if uu___25 then [] else [f])
                                         formals in
                                     let fields' =
                                       FStar_Compiler_List.map
@@ -2090,11 +2097,11 @@ let (extract_record :
                                         formals' in
                                     let fields = fields' in
                                     let record =
-                                      let uu___23 =
+                                      let uu___25 =
                                         FStar_Ident.ident_of_lid constrname in
                                       {
                                         typename;
-                                        constrname = uu___23;
+                                        constrname = uu___25;
                                         parms;
                                         fields;
                                         is_private =
@@ -2103,41 +2110,41 @@ let (extract_record :
                                              typename_quals);
                                         is_record = is_rec
                                       } in
-                                    ((let uu___24 =
-                                        let uu___25 =
+                                    ((let uu___26 =
+                                        let uu___27 =
                                           FStar_Compiler_Effect.op_Bang
                                             new_globs in
-                                        (Record_or_dc record) :: uu___25 in
+                                        (Record_or_dc record) :: uu___27 in
                                       FStar_Compiler_Effect.op_Colon_Equals
-                                        new_globs uu___24);
+                                        new_globs uu___26);
                                      (match () with
                                       | () ->
-                                          ((let add_field uu___25 =
-                                              match uu___25 with
-                                              | (id, uu___26) ->
+                                          ((let add_field uu___27 =
+                                              match uu___27 with
+                                              | (id, uu___28) ->
                                                   let modul =
-                                                    let uu___27 =
-                                                      let uu___28 =
+                                                    let uu___29 =
+                                                      let uu___30 =
                                                         FStar_Ident.ns_of_lid
                                                           constrname in
                                                       FStar_Ident.lid_of_ids
-                                                        uu___28 in
+                                                        uu___30 in
                                                     FStar_Ident.string_of_lid
-                                                      uu___27 in
-                                                  let uu___27 =
+                                                      uu___29 in
+                                                  let uu___29 =
                                                     get_exported_id_set e
                                                       modul in
-                                                  (match uu___27 with
+                                                  (match uu___29 with
                                                    | FStar_Pervasives_Native.Some
                                                        my_ex ->
                                                        let my_exported_ids =
                                                          my_ex
                                                            Exported_id_field in
-                                                       ((let uu___29 =
-                                                           let uu___30 =
+                                                       ((let uu___31 =
+                                                           let uu___32 =
                                                              FStar_Ident.string_of_id
                                                                id in
-                                                           let uu___31 =
+                                                           let uu___33 =
                                                              FStar_Compiler_Effect.op_Bang
                                                                my_exported_ids in
                                                            Obj.magic
@@ -2146,27 +2153,27 @@ let (extract_record :
                                                                 (Obj.magic
                                                                    (FStar_Compiler_RBSet.setlike_rbset
                                                                     FStar_Class_Ord.ord_string))
-                                                                uu___30
+                                                                uu___32
                                                                 (Obj.magic
-                                                                   uu___31)) in
+                                                                   uu___33)) in
                                                          FStar_Compiler_Effect.op_Colon_Equals
                                                            my_exported_ids
-                                                           uu___29);
+                                                           uu___31);
                                                         (match () with
                                                          | () ->
                                                              let projname =
-                                                               let uu___29 =
-                                                                 let uu___30
+                                                               let uu___31 =
+                                                                 let uu___32
                                                                    =
                                                                    FStar_Syntax_Util.mk_field_projector_name_from_ident
                                                                     constrname
                                                                     id in
                                                                  FStar_Ident.ident_of_lid
-                                                                   uu___30 in
+                                                                   uu___32 in
                                                                FStar_Ident.string_of_id
-                                                                 uu___29 in
-                                                             let uu___30 =
-                                                               let uu___31 =
+                                                                 uu___31 in
+                                                             let uu___32 =
+                                                               let uu___33 =
                                                                  FStar_Compiler_Effect.op_Bang
                                                                    my_exported_ids in
                                                                Obj.magic
@@ -2179,10 +2186,10 @@ let (extract_record :
                                                                     projname
                                                                     (
                                                                     Obj.magic
-                                                                    uu___31)) in
+                                                                    uu___33)) in
                                                              FStar_Compiler_Effect.op_Colon_Equals
                                                                my_exported_ids
-                                                               uu___30))
+                                                               uu___32))
                                                    | FStar_Pervasives_Native.None
                                                        -> ()) in
                                             FStar_Compiler_List.iter
@@ -2190,7 +2197,7 @@ let (extract_record :
                                            (match () with
                                             | () ->
                                                 insert_record_cache record))))))
-                      | uu___11 -> ())
+                      | uu___12 -> ())
                  | uu___2 -> ()) sigs
         | uu___ -> ()
 let (try_lookup_record_or_dc_by_field_name :
@@ -2891,11 +2898,13 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
                             FStar_Syntax_Syntax.t1 = uu___3;
                             FStar_Syntax_Syntax.ty_lid = uu___4;
                             FStar_Syntax_Syntax.num_ty_params = uu___5;
-                            FStar_Syntax_Syntax.mutuals1 = uu___6;_}
+                            FStar_Syntax_Syntax.mutuals1 = uu___6;
+                            FStar_Syntax_Syntax.injective_type_params1 =
+                              uu___7;_}
                           ->
-                          let uu___7 = FStar_Ident.string_of_lid lid in
+                          let uu___8 = FStar_Ident.string_of_lid lid in
                           FStar_Compiler_Util.smap_remove (sigmap env1)
-                            uu___7
+                            uu___8
                       | FStar_Syntax_Syntax.Sig_inductive_typ
                           { FStar_Syntax_Syntax.lid = lid;
                             FStar_Syntax_Syntax.us = univ_names;
@@ -2903,36 +2912,39 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
                             FStar_Syntax_Syntax.num_uniform_params = uu___2;
                             FStar_Syntax_Syntax.t = typ;
                             FStar_Syntax_Syntax.mutuals = uu___3;
-                            FStar_Syntax_Syntax.ds = uu___4;_}
+                            FStar_Syntax_Syntax.ds = uu___4;
+                            FStar_Syntax_Syntax.injective_type_params =
+                              uu___5;_}
                           ->
-                          ((let uu___6 = FStar_Ident.string_of_lid lid in
+                          ((let uu___7 = FStar_Ident.string_of_lid lid in
                             FStar_Compiler_Util.smap_remove (sigmap env1)
-                              uu___6);
+                              uu___7);
                            if
                              Prims.op_Negation
                                (FStar_Compiler_List.contains
                                   FStar_Syntax_Syntax.Private quals)
                            then
                              (let sigel =
-                                let uu___6 =
-                                  let uu___7 =
-                                    let uu___8 =
-                                      let uu___9 =
-                                        let uu___10 =
+                                let uu___7 =
+                                  let uu___8 =
+                                    let uu___9 =
+                                      let uu___10 =
+                                        let uu___11 =
                                           FStar_Syntax_Syntax.mk_Total typ in
                                         {
                                           FStar_Syntax_Syntax.bs1 = binders;
-                                          FStar_Syntax_Syntax.comp = uu___10
+                                          FStar_Syntax_Syntax.comp = uu___11
                                         } in
-                                      FStar_Syntax_Syntax.Tm_arrow uu___9 in
-                                    let uu___9 = FStar_Ident.range_of_lid lid in
-                                    FStar_Syntax_Syntax.mk uu___8 uu___9 in
+                                      FStar_Syntax_Syntax.Tm_arrow uu___10 in
+                                    let uu___10 =
+                                      FStar_Ident.range_of_lid lid in
+                                    FStar_Syntax_Syntax.mk uu___9 uu___10 in
                                   {
                                     FStar_Syntax_Syntax.lid2 = lid;
                                     FStar_Syntax_Syntax.us2 = univ_names;
-                                    FStar_Syntax_Syntax.t2 = uu___7
+                                    FStar_Syntax_Syntax.t2 = uu___8
                                   } in
-                                FStar_Syntax_Syntax.Sig_declare_typ uu___6 in
+                                FStar_Syntax_Syntax.Sig_declare_typ uu___7 in
                               let se2 =
                                 {
                                   FStar_Syntax_Syntax.sigel = sigel;
@@ -2949,9 +2961,9 @@ let (finish : env -> FStar_Syntax_Syntax.modul -> env) =
                                   FStar_Syntax_Syntax.sigopts =
                                     (se1.FStar_Syntax_Syntax.sigopts)
                                 } in
-                              let uu___6 = FStar_Ident.string_of_lid lid in
+                              let uu___7 = FStar_Ident.string_of_lid lid in
                               FStar_Compiler_Util.smap_add (sigmap env1)
-                                uu___6 (se2, false))
+                                uu___7 (se2, false))
                            else ())
                       | uu___2 -> ()) ses
                else ()

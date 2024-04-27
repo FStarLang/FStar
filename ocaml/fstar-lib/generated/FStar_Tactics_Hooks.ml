@@ -1261,9 +1261,10 @@ let rec (traverse_for_spinoff :
                                              FStar_Parser_Const.squash_lid))
                                          &&
                                          (let uu___8 =
-                                            FStar_Syntax_Util.eq_tm t2
-                                              FStar_Syntax_Util.t_true in
-                                          uu___8 = FStar_Syntax_Util.Equal)
+                                            FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                              e t2 FStar_Syntax_Util.t_true in
+                                          uu___8 =
+                                            FStar_TypeChecker_TermEqAndSimplify.Equal)
                                        ->
                                        (if debug
                                         then

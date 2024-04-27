@@ -2378,96 +2378,100 @@ let (resugar_typ :
               FStar_Syntax_Syntax.num_uniform_params = uu___;
               FStar_Syntax_Syntax.t = t;
               FStar_Syntax_Syntax.mutuals = uu___1;
-              FStar_Syntax_Syntax.ds = datacons;_}
+              FStar_Syntax_Syntax.ds = datacons;
+              FStar_Syntax_Syntax.injective_type_params = uu___2;_}
             ->
-            let uu___2 =
+            let uu___3 =
               FStar_Compiler_List.partition
                 (fun se1 ->
                    match se1.FStar_Syntax_Syntax.sigel with
                    | FStar_Syntax_Syntax.Sig_datacon
-                       { FStar_Syntax_Syntax.lid1 = uu___3;
-                         FStar_Syntax_Syntax.us1 = uu___4;
-                         FStar_Syntax_Syntax.t1 = uu___5;
+                       { FStar_Syntax_Syntax.lid1 = uu___4;
+                         FStar_Syntax_Syntax.us1 = uu___5;
+                         FStar_Syntax_Syntax.t1 = uu___6;
                          FStar_Syntax_Syntax.ty_lid = inductive_lid;
-                         FStar_Syntax_Syntax.num_ty_params = uu___6;
-                         FStar_Syntax_Syntax.mutuals1 = uu___7;_}
+                         FStar_Syntax_Syntax.num_ty_params = uu___7;
+                         FStar_Syntax_Syntax.mutuals1 = uu___8;
+                         FStar_Syntax_Syntax.injective_type_params1 = uu___9;_}
                        -> FStar_Ident.lid_equals inductive_lid tylid
-                   | uu___3 -> FStar_Compiler_Effect.failwith "unexpected")
+                   | uu___4 -> FStar_Compiler_Effect.failwith "unexpected")
                 datacon_ses in
-            (match uu___2 with
+            (match uu___3 with
              | (current_datacons, other_datacons) ->
                  let bs1 =
-                   let uu___3 = FStar_Options.print_implicits () in
-                   if uu___3 then bs else filter_imp_bs bs in
+                   let uu___4 = FStar_Options.print_implicits () in
+                   if uu___4 then bs else filter_imp_bs bs in
                  let bs2 =
                    (map_opt ())
                      (fun b ->
                         resugar_binder' env b t.FStar_Syntax_Syntax.pos) bs1 in
                  let tyc =
-                   let uu___3 =
+                   let uu___4 =
                      FStar_Compiler_Util.for_some
-                       (fun uu___4 ->
-                          match uu___4 with
-                          | FStar_Syntax_Syntax.RecordType uu___5 -> true
-                          | uu___5 -> false) se.FStar_Syntax_Syntax.sigquals in
-                   if uu___3
+                       (fun uu___5 ->
+                          match uu___5 with
+                          | FStar_Syntax_Syntax.RecordType uu___6 -> true
+                          | uu___6 -> false) se.FStar_Syntax_Syntax.sigquals in
+                   if uu___4
                    then
                      let resugar_datacon_as_fields fields se1 =
                        match se1.FStar_Syntax_Syntax.sigel with
                        | FStar_Syntax_Syntax.Sig_datacon
-                           { FStar_Syntax_Syntax.lid1 = uu___4;
+                           { FStar_Syntax_Syntax.lid1 = uu___5;
                              FStar_Syntax_Syntax.us1 = univs;
                              FStar_Syntax_Syntax.t1 = term;
-                             FStar_Syntax_Syntax.ty_lid = uu___5;
+                             FStar_Syntax_Syntax.ty_lid = uu___6;
                              FStar_Syntax_Syntax.num_ty_params = num;
-                             FStar_Syntax_Syntax.mutuals1 = uu___6;_}
+                             FStar_Syntax_Syntax.mutuals1 = uu___7;
+                             FStar_Syntax_Syntax.injective_type_params1 =
+                               uu___8;_}
                            ->
-                           let uu___7 =
-                             let uu___8 = FStar_Syntax_Subst.compress term in
-                             uu___8.FStar_Syntax_Syntax.n in
-                           (match uu___7 with
+                           let uu___9 =
+                             let uu___10 = FStar_Syntax_Subst.compress term in
+                             uu___10.FStar_Syntax_Syntax.n in
+                           (match uu___9 with
                             | FStar_Syntax_Syntax.Tm_arrow
                                 { FStar_Syntax_Syntax.bs1 = bs3;
-                                  FStar_Syntax_Syntax.comp = uu___8;_}
+                                  FStar_Syntax_Syntax.comp = uu___10;_}
                                 ->
                                 let mfields =
                                   FStar_Compiler_List.collect
                                     (fun b ->
-                                       let uu___9 =
+                                       let uu___11 =
                                          resugar_bqual env
                                            b.FStar_Syntax_Syntax.binder_qual in
-                                       match uu___9 with
+                                       match uu___11 with
                                        | FStar_Pervasives_Native.None -> []
                                        | FStar_Pervasives_Native.Some q ->
-                                           let uu___10 =
-                                             let uu___11 =
+                                           let uu___12 =
+                                             let uu___13 =
                                                bv_as_unique_ident
                                                  b.FStar_Syntax_Syntax.binder_bv in
-                                             let uu___12 =
+                                             let uu___14 =
                                                FStar_Compiler_List.map
                                                  (resugar_term' env)
                                                  b.FStar_Syntax_Syntax.binder_attrs in
-                                             let uu___13 =
+                                             let uu___15 =
                                                resugar_term' env
                                                  (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                                             (uu___11, q, uu___12, uu___13) in
-                                           [uu___10]) bs3 in
+                                             (uu___13, q, uu___14, uu___15) in
+                                           [uu___12]) bs3 in
                                 FStar_Compiler_List.op_At mfields fields
-                            | uu___8 ->
+                            | uu___10 ->
                                 FStar_Compiler_Effect.failwith "unexpected")
-                       | uu___4 ->
+                       | uu___5 ->
                            FStar_Compiler_Effect.failwith "unexpected" in
                      let fields =
                        FStar_Compiler_List.fold_left
                          resugar_datacon_as_fields [] current_datacons in
-                     let uu___4 =
-                       let uu___5 = FStar_Ident.ident_of_lid tylid in
-                       let uu___6 =
+                     let uu___5 =
+                       let uu___6 = FStar_Ident.ident_of_lid tylid in
+                       let uu___7 =
                          FStar_Compiler_List.map (resugar_term' env)
                            se.FStar_Syntax_Syntax.sigattrs in
-                       (uu___5, bs2, FStar_Pervasives_Native.None, uu___6,
+                       (uu___6, bs2, FStar_Pervasives_Native.None, uu___7,
                          fields) in
-                     FStar_Parser_AST.TyconRecord uu___4
+                     FStar_Parser_AST.TyconRecord uu___5
                    else
                      (let resugar_datacon constructors se1 =
                         match se1.FStar_Syntax_Syntax.sigel with
@@ -2475,32 +2479,34 @@ let (resugar_typ :
                             { FStar_Syntax_Syntax.lid1 = l;
                               FStar_Syntax_Syntax.us1 = univs;
                               FStar_Syntax_Syntax.t1 = term;
-                              FStar_Syntax_Syntax.ty_lid = uu___5;
+                              FStar_Syntax_Syntax.ty_lid = uu___6;
                               FStar_Syntax_Syntax.num_ty_params = num;
-                              FStar_Syntax_Syntax.mutuals1 = uu___6;_}
+                              FStar_Syntax_Syntax.mutuals1 = uu___7;
+                              FStar_Syntax_Syntax.injective_type_params1 =
+                                uu___8;_}
                             ->
                             let c =
-                              let uu___7 = FStar_Ident.ident_of_lid l in
-                              let uu___8 =
-                                let uu___9 =
-                                  let uu___10 = resugar_term' env term in
-                                  FStar_Parser_AST.VpArbitrary uu___10 in
-                                FStar_Pervasives_Native.Some uu___9 in
-                              let uu___9 =
+                              let uu___9 = FStar_Ident.ident_of_lid l in
+                              let uu___10 =
+                                let uu___11 =
+                                  let uu___12 = resugar_term' env term in
+                                  FStar_Parser_AST.VpArbitrary uu___12 in
+                                FStar_Pervasives_Native.Some uu___11 in
+                              let uu___11 =
                                 FStar_Compiler_List.map (resugar_term' env)
                                   se1.FStar_Syntax_Syntax.sigattrs in
-                              (uu___7, uu___8, uu___9) in
+                              (uu___9, uu___10, uu___11) in
                             c :: constructors
-                        | uu___5 ->
+                        | uu___6 ->
                             FStar_Compiler_Effect.failwith "unexpected" in
                       let constructors =
                         FStar_Compiler_List.fold_left resugar_datacon []
                           current_datacons in
-                      let uu___5 =
-                        let uu___6 = FStar_Ident.ident_of_lid tylid in
-                        (uu___6, bs2, FStar_Pervasives_Native.None,
+                      let uu___6 =
+                        let uu___7 = FStar_Ident.ident_of_lid tylid in
+                        (uu___7, bs2, FStar_Pervasives_Native.None,
                           constructors) in
-                      FStar_Parser_AST.TyconVariant uu___5) in
+                      FStar_Parser_AST.TyconVariant uu___6) in
                  (other_datacons, tyc))
         | uu___ ->
             FStar_Compiler_Effect.failwith
@@ -2818,16 +2824,18 @@ let (resugar_sigelt' :
                                 FStar_Syntax_Syntax.t1 = uu___4;
                                 FStar_Syntax_Syntax.ty_lid = uu___5;
                                 FStar_Syntax_Syntax.num_ty_params = uu___6;
-                                FStar_Syntax_Syntax.mutuals1 = uu___7;_}
+                                FStar_Syntax_Syntax.mutuals1 = uu___7;
+                                FStar_Syntax_Syntax.injective_type_params1 =
+                                  uu___8;_}
                               ->
-                              let uu___8 =
-                                let uu___9 =
-                                  let uu___10 =
-                                    let uu___11 = FStar_Ident.ident_of_lid l in
-                                    (uu___11, FStar_Pervasives_Native.None) in
-                                  FStar_Parser_AST.Exception uu___10 in
-                                decl'_to_decl se1 uu___9 in
-                              FStar_Pervasives_Native.Some uu___8
+                              let uu___9 =
+                                let uu___10 =
+                                  let uu___11 =
+                                    let uu___12 = FStar_Ident.ident_of_lid l in
+                                    (uu___12, FStar_Pervasives_Native.None) in
+                                  FStar_Parser_AST.Exception uu___11 in
+                                decl'_to_decl se1 uu___10 in
+                              FStar_Pervasives_Native.Some uu___9
                           | uu___3 ->
                               FStar_Compiler_Effect.failwith
                                 "wrong format for resguar to Exception")

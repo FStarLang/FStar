@@ -3579,8 +3579,9 @@ and (check_relation_comp :
           match uu___ with
           | (FStar_Pervasives_Native.None, uu___1) ->
               let uu___2 =
-                let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
-                uu___3 = FStar_Syntax_Util.Equal in
+                let uu___3 =
+                  FStar_TypeChecker_TermEqAndSimplify.eq_comp g.tcenv c0 c1 in
+                uu___3 = FStar_TypeChecker_TermEqAndSimplify.Equal in
               if uu___2
               then (fun uu___3 -> Success ((), FStar_Pervasives_Native.None))
               else
@@ -3642,8 +3643,9 @@ and (check_relation_comp :
                                 fail uu___10))))
           | (uu___1, FStar_Pervasives_Native.None) ->
               let uu___2 =
-                let uu___3 = FStar_Syntax_Util.eq_comp c0 c1 in
-                uu___3 = FStar_Syntax_Util.Equal in
+                let uu___3 =
+                  FStar_TypeChecker_TermEqAndSimplify.eq_comp g.tcenv c0 c1 in
+                uu___3 = FStar_TypeChecker_TermEqAndSimplify.Equal in
               if uu___2
               then (fun uu___3 -> Success ((), FStar_Pervasives_Native.None))
               else
