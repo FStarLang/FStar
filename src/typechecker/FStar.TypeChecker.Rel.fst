@@ -342,11 +342,13 @@ let term_to_string t =
 let prob_to_string env prob =
   match prob with
   | TProb p ->
-    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
+    BU.format "\n%s:\t%s \n\t\t%s\n\t%s\n\t(reason:%s) (logical:%s)\n" //\twith guard %s\n\telement= %s\n" //  (guard %s)\n\t\t<Reason>\n\t\t\t%s\n\t\t</Reason>"
         [(BU.string_of_int p.pid);
          (term_to_string p.lhs);
          (rel_to_string p.relation);
          (term_to_string p.rhs);
+         (match p.reason with | [] -> "" | r::_ -> r);
+         (show p.logical)
          //(term_to_string p.logical_guard);
          //(match p.element with None -> "none" | Some t -> term_to_string t)
          (* (N.term_to_string env (fst p.logical_guard)); *)
@@ -432,6 +434,13 @@ let mk_eq2 wl prob t1 t2 : term * worklist =
 let p_invert = function
    | TProb p -> TProb <| invert p
    | CProb p -> CProb <| invert p
+let p_logical = function
+   | TProb p -> p.logical
+   | CProb p -> p.logical
+let set_logical (b:bool) = function
+   | TProb p -> TProb {p with logical=b}
+   | CProb p -> CProb {p with logical=b}
+
 let is_top_level_prob p = p_reason p |> List.length = 1
 let next_pid =
     let ctr = BU.mk_ref 0 in
@@ -470,6 +479,7 @@ let mk_problem wl scope orig lhs rel rhs elt reason =
              reason=reason::p_reason orig;
              loc=p_loc orig;
              rank=None;
+             logical=p_logical orig;
         }
     in
     (prob, wl)
@@ -521,6 +531,7 @@ let new_problem wl env lhs rel rhs (subject:option bv) loc reason =
     reason=[reason];
     loc=loc;
     rank=None;
+    logical=false; (* use set_logical to set this *)
    } in
    prob, wl
 
@@ -536,6 +547,7 @@ let problem_using_guard orig lhs rel rhs elt reason =
      reason=reason::p_reason orig;
      loc=p_loc orig;
      rank=None;
+     logical = p_logical orig;
     } in
     def_check_prob reason (TProb p);
     p
@@ -1240,45 +1252,6 @@ let head_match = function
     | HeadMatch true -> HeadMatch true
     | _ -> HeadMatch false
 
-let fv_delta_depth env fv =
-    let d = Env.delta_depth_of_fv env fv in
-    match d with
-    | Delta_abstract d ->
-      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface  //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
-                                                                     //    a better way would be create new fvs with appripriate delta_depth at extraction time
-      then d //we're in the defining module
-      else delta_constant
-    | Delta_constant_at_level i when i > 0 ->
-      begin match Env.lookup_definition [Unfold delta_constant] env fv.fv_name.v with
-            | None -> delta_constant //there's no definition to unfold, e.g., because it's marked irreducible
-            | _ -> d
-      end
-    | d ->
-      d
-
-let rec delta_depth_of_term env t =
-    let t = U.unmeta t in
-    match t.n with
-    | Tm_meta _
-    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
-    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
-    | Tm_unknown
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_uvar _
-    | Tm_let _
-    | Tm_match _ -> None
-    | Tm_uinst(t, _)
-    | Tm_ascribed {tm=t}
-    | Tm_app {hd=t}
-    | Tm_refine {b={sort=t}} -> delta_depth_of_term env t
-    | Tm_constant _
-    | Tm_type _
-    | Tm_arrow _
-    | Tm_quoted _
-    | Tm_abs _ -> Some delta_constant
-    | Tm_fvar fv -> Some (fv_delta_depth env fv)
-
 let universe_has_max env u =
   let u = N.normalize_universe env u in
   match u with
@@ -1328,10 +1301,28 @@ let rec head_matches env t1 t2 : match_result =
     | Tm_quoted _, Tm_quoted _
     | Tm_abs _, Tm_abs _ -> HeadMatch true
 
-    | _ -> MisMatch(delta_depth_of_term env t1, delta_depth_of_term env t2)
+    | _ ->
+      (* GM: I am retaining this logic here. I think it is meant to disable
+      unfolding of possibly-equational terms. This probably deserves a rework now
+      with the .logical field. *)
+      let maybe_dd (t:term) : option delta_depth =
+        match (SS.compress t).n with
+        | Tm_unknown
+        | Tm_bvar _
+        | Tm_name _
+        | Tm_uvar _
+        | Tm_let _
+        | Tm_match _ -> None
+        | _ -> Some (delta_depth_of_term env t)
+      in
+      MisMatch (maybe_dd t1, maybe_dd t2)
 
 (* Does t1 head-match t2, after some delta steps? *)
-let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
+let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option (typ&typ)) =
+    let base_steps =
+      (if logical then [Env.UnfoldTac] else []) @
+      [Env.Primops; Env.Weak; Env.HNF]
+    in
     let maybe_inline t =
         let head = U.head_of (unrefine env t) in
         if Env.debug env <| Options.Other "RelDelta" then
@@ -1351,6 +1342,7 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
             None
           | Some _ ->
             let basic_steps =
+                (if logical then [Env.UnfoldTac] else []) @
                 [Env.UnfoldUntil delta_constant;
                  Env.Weak;
                  Env.HNF;
@@ -1403,9 +1395,9 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           let d1_greater_than_d2 = Common.delta_depth_greater_than d1 d2 in
           let t1, t2, made_progress =
             if d1_greater_than_d2
-            then let t1' = normalize_refinement [Env.UnfoldUntil d2; Env.Primops; Env.Weak; Env.HNF] env t1 in
+            then let t1' = normalize_refinement (Env.UnfoldUntil d2 :: base_steps) env t1 in
                  t1', t2, made_progress t1 t1'
-            else let t2' = normalize_refinement [Env.UnfoldUntil d1; Env.Primops; Env.Weak; Env.HNF] env t2 in
+            else let t2' = normalize_refinement (Env.UnfoldUntil d1 :: base_steps) env t2 in
                  t1, t2', made_progress t2 t2' in
           if made_progress
           then aux retry (n_delta + 1) t1 t2
@@ -1416,8 +1408,8 @@ let head_matches_delta env smt_ok t1 t2 : (match_result & option (typ&typ)) =
           match Common.decr_delta_depth d with
           | None -> fail n_delta r t1 t2
           | Some d ->
-            let t1' = normalize_refinement [Env.UnfoldUntil d; Env.Primops; Env.Weak; Env.HNF] env t1 in
-            let t2' = normalize_refinement [Env.UnfoldUntil d; Env.Primops; Env.Weak; Env.HNF] env t2 in
+            let t1' = normalize_refinement (Env.UnfoldUntil d :: base_steps) env t1 in
+            let t2' = normalize_refinement (Env.UnfoldUntil d :: base_steps) env t2 in
             if made_progress t1 t1' &&
                made_progress t2 t2'
             then aux retry (n_delta + 1) t1' t2'
@@ -2315,7 +2307,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
         let pairwise t1 t2 wl =
             if debug wl <| Options.Other "Rel"
             then BU.print2 "[meet/join]: pairwise: %s and %s\n" (show t1) (show t2);
-            let mr, ts = head_matches_delta (p_env wl (TProb tp)) wl.smt_ok t1 t2 in
+            let mr, ts = head_matches_delta (p_env wl (TProb tp)) tp.logical wl.smt_ok t1 t2 in
             match mr with
             | HeadMatch true
             | MisMatch _ ->
@@ -3535,11 +3527,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                    | _ ->
                      solve_sub_probs env wl //fallback to trying to solve with SMT on
               in
-              let d =
-                match delta_depth_of_term env head1 with
-                | None -> None
-                | Some d -> decr_delta_depth d
-              in
+              let d = decr_delta_depth <| delta_depth_of_term env head1 in
               let treat_as_injective =
                 match (U.un_uinst head1).n with
                 | Tm_fvar fv ->
@@ -3645,7 +3633,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
             then begin
               let prob, wl = new_problem wl env scrutinee
                 EQ pat_term None scrutinee.pos
-                "match heuristic" in
+                "match heuristic"
+              in
 
               let wl' = extend_wl ({wl with defer_ok=NoDefer;
                                     smt_ok=false;
@@ -3713,7 +3702,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                             if pat_discriminates b
                             then
                               let (_, _, t') = SS.open_branch b in
-                              match head_matches_delta (p_env wl orig) wl.smt_ok s t' with
+                              match head_matches_delta (p_env wl orig) (p_logical orig) wl.smt_ok s t' with
                               | FullMatch, _
                               | HeadMatch _, _ ->
                                 true
@@ -3762,7 +3751,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                         (Print.tag_of_term t2)
                         (show t1)
                         (show t2);
-        let m, o = head_matches_delta (p_env wl orig) wl.smt_ok t1 t2 in
+        let m, o = head_matches_delta (p_env wl orig) (p_logical orig) wl.smt_ok t1 t2 in
         match m, o  with
         | (MisMatch _, _) -> //heads definitely do not match
             let try_reveal_hide t1 t2 =
@@ -3855,14 +3844,9 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     solve (solve_prob orig (Some guard) [] wl)
                 else giveup wl (mklstr (fun () -> BU.format4 "head mismatch (%s (%s) vs %s (%s))"
                                                   (show head1)
-                                                  (BU.dflt ""
-                                                    (BU.bind_opt (delta_depth_of_term wl.tcenv head1)
-                                                                 (fun x -> Some (show x))))
+                                                  (show (delta_depth_of_term wl.tcenv head1))
                                                   (show head2)
-                                                  (BU.dflt ""
-                                                    (BU.bind_opt (delta_depth_of_term wl.tcenv head2)
-                                                                (fun x -> Some (show x))))
-                                                  )) orig
+                                                  (show (delta_depth_of_term wl.tcenv head2)))) orig
             end
 
         | (HeadMatch true, _) when problem.relation <> EQ ->
@@ -3972,7 +3956,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
          *)
         let env = p_env wl (TProb problem) in
         let x1, x2 =
-            match head_matches_delta env wl.smt_ok x1.sort x2.sort with
+            match head_matches_delta env false wl.smt_ok x1.sort x2.sort with
             (* We allow (HeadMatch true) since we're gonna unify them again anyway via base_prob *)
             | FullMatch, Some (t1, t2)
             | HeadMatch _, Some (t1, t2) ->
@@ -4000,17 +3984,17 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         let phi1 = Subst.subst subst phi1 in
         let phi2 = Subst.subst subst phi2 in
         let mk_imp imp phi1 phi2 = imp phi1 phi2 |> guard_on_element wl problem x1 in
-             let fallback () =
-                let impl =
-                    if problem.relation = EQ
-                    then mk_imp U.mk_iff phi1 phi2
-                    else mk_imp U.mk_imp phi1 phi2 in
-                let guard = U.mk_conj (p_guard base_prob) impl in
-                def_check_scoped (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
-                def_check_scoped (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
-                let wl = solve_prob orig (Some guard) [] wl in
-                solve (attempt [base_prob] wl)
-             in
+        let fallback () =
+           let impl =
+               if problem.relation = EQ
+               then mk_imp U.mk_iff phi1 phi2
+               else mk_imp U.mk_imp phi1 phi2 in
+           let guard = U.mk_conj (p_guard base_prob) impl in
+           def_check_scoped (p_loc orig) "ref.1" (List.map (fun b -> b.binder_bv) (p_scope orig)) (p_guard base_prob);
+           def_check_scoped (p_loc orig) "ref.2" (List.map (fun b -> b.binder_bv) (p_scope orig)) impl;
+           let wl = solve_prob orig (Some guard) [] wl in
+           solve (attempt [base_prob] wl)
+        in
         let has_uvars =
             not (is_empty (FStar.Syntax.Free.uvars phi1))
             || not (is_empty (FStar.Syntax.Free.uvars phi2))
@@ -4020,6 +4004,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         then let ref_prob, wl =
                   mk_t_problem wl [mk_binder x1] orig phi1 EQ phi2 None "refinement formula"
              in
+             let ref_prob = set_logical true ref_prob in
+              
              let tx = UF.new_transaction () in
              (* We set wl_implicits to false, since in the success case we will
               * extend the original wl with the extra implicits we get, and we
@@ -4118,7 +4104,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
               then let flex, wl = destruct_flex_t not_abs wl in
                     solve_t_flex_rigid_eq orig wl flex t_abs
               else begin
-                match head_matches_delta env wl.smt_ok not_abs t_abs with
+                match head_matches_delta env false wl.smt_ok not_abs t_abs with
                 | HeadMatch _, Some (not_abs', _) ->
                   solve_t ({problem with lhs=not_abs'; rhs=t_abs}) wl
 

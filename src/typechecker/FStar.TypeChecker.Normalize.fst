@@ -1205,8 +1205,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
             begin
-            match Env.delta_depth_of_qninfo fv qninfo with
-            | Some (Delta_constant_at_level 0) ->
+            match Env.delta_depth_of_qninfo cfg.tcenv fv qninfo with
+            | Delta_constant_at_level 0 ->
               log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->

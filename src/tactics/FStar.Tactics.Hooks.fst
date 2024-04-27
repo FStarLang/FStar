@@ -787,11 +787,6 @@ let handle_smt_goal env goal =
         | Sig_let {lids=[lid]} ->
           let qn = Env.lookup_qname env lid in
           let fv = S.lid_as_fv lid None in
-          let dd =
-            match Env.delta_depth_of_qninfo fv qn with
-            | Some dd -> dd
-            | None -> failwith "Expected a dd"
-          in
           S.fv_to_tm (S.lid_as_fv lid None)
         | _ -> failwith "Resolve_tac not found"
       in
@@ -867,8 +862,7 @@ let splice (env:Env.env) (is_typed:bool) (lids:list Ident.lident) (tau:term) (rn
     let sigelts =
       let set_lb_dd lb =
         let {lbname=Inr fv; lbdef} = lb in
-        {lb with lbname=Inr {fv with fv_delta=U.incr_delta_qualifier lbdef
-                                              |> Some}} in
+        {lb with lbname=Inr fv} in
       List.map (fun se ->
         match se.sigel with
         | Sig_let {lbs=(is_rec, lbs); lids} ->

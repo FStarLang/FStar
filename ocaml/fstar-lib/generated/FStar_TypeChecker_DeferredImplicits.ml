@@ -249,13 +249,6 @@ let solve_goals_with_tac :
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
-                     let dd =
-                       let uu___3 =
-                         FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
-                       match uu___3 with
-                       | FStar_Pervasives_Native.Some dd1 -> dd1
-                       | FStar_Pervasives_Native.None ->
-                           FStar_Compiler_Effect.failwith "Expected a dd" in
                      let term =
                        let uu___3 =
                          FStar_Syntax_Syntax.lid_as_fv lid

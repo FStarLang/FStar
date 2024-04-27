@@ -739,27 +739,15 @@ let combine_path_and_branch_condition (path_condition:term)
     next_path_condition  //:bool
 
 let maybe_relate_after_unfolding (g:Env.env) t0 t1 : side =
-  let rec delta_depth_of_head t =
-    let head = U.leftmost_head t in
-    match (U.un_uinst head).n with
-    | Tm_fvar fv -> Some (Env.delta_depth_of_fv g fv)
-    | Tm_match {scrutinee=t} -> delta_depth_of_head t
-    | _ -> None in
+  let dd0 = Env.delta_depth_of_term g t0 in
+  let dd1 = Env.delta_depth_of_term g t1 in
 
-  let dd0 = delta_depth_of_head t0 in
-  let dd1 = delta_depth_of_head t1 in
-
-  match dd0, dd1 with
-  | Some _, None -> Left
-  | None, Some _ -> Right
-  | Some dd0, Some dd1 ->
-    if dd0 = dd1
-    then Both
-    else if Common.delta_depth_greater_than dd0 dd1
-    then Left
-    else Right
-  | None, None ->
-    Neither
+  if dd0 = dd1 then
+    Both
+  else if Common.delta_depth_greater_than dd0 dd1 then
+    Left
+  else
+    Right
 
 (*
      G |- e : t0 <: t1 | p

@@ -344,7 +344,7 @@ val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option int
 val num_inductive_uniform_ty_params: env -> lident -> option int
-val delta_depth_of_qninfo  : fv -> qninfo -> option delta_depth
+val delta_depth_of_qninfo  : env -> fv -> qninfo -> delta_depth
 val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
@@ -546,3 +546,6 @@ instance val hasNames_lcomp   : hasNames lcomp
 instance val pretty_lcomp     : FStar.Class.PP.pretty lcomp
 instance val hasNames_guard   : hasNames guard_t
 instance val pretty_guard     : FStar.Class.PP.pretty guard_t
+
+val fv_delta_depth : env -> fv -> delta_depth
+val delta_depth_of_term : env -> term -> delta_depth

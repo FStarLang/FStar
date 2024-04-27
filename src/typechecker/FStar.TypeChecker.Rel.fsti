@@ -48,7 +48,7 @@ val prob_to_string: env -> prob -> string
 val flex_prob_closing         : env -> binders -> prob -> bool
 
 
-val head_matches_delta (env:env) (smt_ok:bool) (t1 t2:typ) : (match_result & option (typ & typ))
+val head_matches_delta (env:env) (logical:bool) (smt_ok:bool) (t1 t2:typ) : (match_result & option (typ & typ))
 val may_relate_with_logical_guard (env:env) (is_equality:bool) (head:typ) : bool
 val guard_to_string           : env -> guard_t -> string
 val simplify_guard            : env -> guard_t -> guard_t
