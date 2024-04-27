@@ -32,6 +32,7 @@ RUN apt-get install -y --no-install-recommends \
       gnupg \
       sudo \
       python3 \
+      python3-distutils \
       python-is-python3 \
       opam \
       && apt-get clean -y
