@@ -9005,7 +9005,8 @@ let rec (elim_uvars :
             FStar_Syntax_Syntax.params = binders;
             FStar_Syntax_Syntax.num_uniform_params = num_uniform;
             FStar_Syntax_Syntax.t = typ; FStar_Syntax_Syntax.mutuals = lids;
-            FStar_Syntax_Syntax.ds = lids';_}
+            FStar_Syntax_Syntax.ds = lids';
+            FStar_Syntax_Syntax.injective_type_params = injective_type_params;_}
           ->
           let uu___ = elim_uvars_aux_t env1 univ_names binders typ in
           (match uu___ with
@@ -9020,7 +9021,9 @@ let rec (elim_uvars :
                         FStar_Syntax_Syntax.num_uniform_params = num_uniform;
                         FStar_Syntax_Syntax.t = typ1;
                         FStar_Syntax_Syntax.mutuals = lids;
-                        FStar_Syntax_Syntax.ds = lids'
+                        FStar_Syntax_Syntax.ds = lids';
+                        FStar_Syntax_Syntax.injective_type_params =
+                          injective_type_params
                       });
                  FStar_Syntax_Syntax.sigrng = (s1.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
@@ -9062,7 +9065,9 @@ let rec (elim_uvars :
             FStar_Syntax_Syntax.t1 = typ;
             FStar_Syntax_Syntax.ty_lid = lident;
             FStar_Syntax_Syntax.num_ty_params = i;
-            FStar_Syntax_Syntax.mutuals1 = lids;_}
+            FStar_Syntax_Syntax.mutuals1 = lids;
+            FStar_Syntax_Syntax.injective_type_params1 =
+              injective_type_params;_}
           ->
           let uu___ = elim_uvars_aux_t env1 univ_names [] typ in
           (match uu___ with
@@ -9076,7 +9081,9 @@ let rec (elim_uvars :
                         FStar_Syntax_Syntax.t1 = typ1;
                         FStar_Syntax_Syntax.ty_lid = lident;
                         FStar_Syntax_Syntax.num_ty_params = i;
-                        FStar_Syntax_Syntax.mutuals1 = lids
+                        FStar_Syntax_Syntax.mutuals1 = lids;
+                        FStar_Syntax_Syntax.injective_type_params1 =
+                          injective_type_params
                       });
                  FStar_Syntax_Syntax.sigrng = (s1.FStar_Syntax_Syntax.sigrng);
                  FStar_Syntax_Syntax.sigquals =
@@ -9641,7 +9648,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3792 : unit) =
+let (uu___3794 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

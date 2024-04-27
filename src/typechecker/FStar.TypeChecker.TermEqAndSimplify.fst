@@ -125,7 +125,8 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       | Tm_fvar f, Tm_fvar g 
         when qual_is_inj f.fv_qual &&
              qual_is_inj g.fv_qual -> (
-        match Env.num_datacon_ty_params env (lid_of_fv f), Env.num_datacon_ty_params env (lid_of_fv g) with
+        match Env.num_datacon_non_injective_ty_params env (lid_of_fv f),
+              Env.num_datacon_non_injective_ty_params env (lid_of_fv g) with
         | Some n1, Some n2 ->
           if n1 <= List.length args1
           && n2 <= List.length args2

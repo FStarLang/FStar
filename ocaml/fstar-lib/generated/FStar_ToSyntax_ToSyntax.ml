@@ -1170,30 +1170,33 @@ let rec (generalize_annotated_univs :
                          FStar_Syntax_Syntax.num_uniform_params = num_uniform;
                          FStar_Syntax_Syntax.t = t;
                          FStar_Syntax_Syntax.mutuals = lids1;
-                         FStar_Syntax_Syntax.ds = lids2;_}
+                         FStar_Syntax_Syntax.ds = lids2;
+                         FStar_Syntax_Syntax.injective_type_params = uu___5;_}
                        ->
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 =
-                             FStar_Syntax_Subst.subst_binders usubst bs in
+                       let uu___6 =
+                         let uu___7 =
                            let uu___8 =
-                             let uu___9 =
+                             FStar_Syntax_Subst.subst_binders usubst bs in
+                           let uu___9 =
+                             let uu___10 =
                                FStar_Syntax_Subst.shift_subst
                                  (FStar_Compiler_List.length bs) usubst in
-                             FStar_Syntax_Subst.subst uu___9 t in
+                             FStar_Syntax_Subst.subst uu___10 t in
                            {
                              FStar_Syntax_Syntax.lid = lid;
                              FStar_Syntax_Syntax.us = unames;
-                             FStar_Syntax_Syntax.params = uu___7;
+                             FStar_Syntax_Syntax.params = uu___8;
                              FStar_Syntax_Syntax.num_uniform_params =
                                num_uniform;
-                             FStar_Syntax_Syntax.t = uu___8;
+                             FStar_Syntax_Syntax.t = uu___9;
                              FStar_Syntax_Syntax.mutuals = lids1;
-                             FStar_Syntax_Syntax.ds = lids2
+                             FStar_Syntax_Syntax.ds = lids2;
+                             FStar_Syntax_Syntax.injective_type_params =
+                               false
                            } in
-                         FStar_Syntax_Syntax.Sig_inductive_typ uu___6 in
+                         FStar_Syntax_Syntax.Sig_inductive_typ uu___7 in
                        {
-                         FStar_Syntax_Syntax.sigel = uu___5;
+                         FStar_Syntax_Syntax.sigel = uu___6;
                          FStar_Syntax_Syntax.sigrng =
                            (se.FStar_Syntax_Syntax.sigrng);
                          FStar_Syntax_Syntax.sigquals =
@@ -1213,22 +1216,25 @@ let rec (generalize_annotated_univs :
                          FStar_Syntax_Syntax.t1 = t;
                          FStar_Syntax_Syntax.ty_lid = tlid;
                          FStar_Syntax_Syntax.num_ty_params = n;
-                         FStar_Syntax_Syntax.mutuals1 = lids1;_}
+                         FStar_Syntax_Syntax.mutuals1 = lids1;
+                         FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
                        ->
-                       let uu___5 =
-                         let uu___6 =
-                           let uu___7 = FStar_Syntax_Subst.subst usubst t in
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 = FStar_Syntax_Subst.subst usubst t in
                            {
                              FStar_Syntax_Syntax.lid1 = lid;
                              FStar_Syntax_Syntax.us1 = unames;
-                             FStar_Syntax_Syntax.t1 = uu___7;
+                             FStar_Syntax_Syntax.t1 = uu___8;
                              FStar_Syntax_Syntax.ty_lid = tlid;
                              FStar_Syntax_Syntax.num_ty_params = n;
-                             FStar_Syntax_Syntax.mutuals1 = lids1
+                             FStar_Syntax_Syntax.mutuals1 = lids1;
+                             FStar_Syntax_Syntax.injective_type_params1 =
+                               false
                            } in
-                         FStar_Syntax_Syntax.Sig_datacon uu___6 in
+                         FStar_Syntax_Syntax.Sig_datacon uu___7 in
                        {
-                         FStar_Syntax_Syntax.sigel = uu___5;
+                         FStar_Syntax_Syntax.sigel = uu___6;
                          FStar_Syntax_Syntax.sigrng =
                            (se.FStar_Syntax_Syntax.sigrng);
                          FStar_Syntax_Syntax.sigquals =
@@ -6660,32 +6666,33 @@ let (mk_data_projector_names :
                  FStar_Syntax_Syntax.us1 = uu___; FStar_Syntax_Syntax.t1 = t;
                  FStar_Syntax_Syntax.ty_lid = uu___1;
                  FStar_Syntax_Syntax.num_ty_params = n;
-                 FStar_Syntax_Syntax.mutuals1 = uu___2;_}
+                 FStar_Syntax_Syntax.mutuals1 = uu___2;
+                 FStar_Syntax_Syntax.injective_type_params1 = uu___3;_}
                ->
-               let uu___3 = FStar_Syntax_Util.arrow_formals t in
-               (match uu___3 with
-                | (formals, uu___4) ->
+               let uu___4 = FStar_Syntax_Util.arrow_formals t in
+               (match uu___4 with
+                | (formals, uu___5) ->
                     (match formals with
                      | [] -> []
-                     | uu___5 ->
-                         let filter_records uu___6 =
-                           match uu___6 with
+                     | uu___6 ->
+                         let filter_records uu___7 =
+                           match uu___7 with
                            | FStar_Syntax_Syntax.RecordConstructor
-                               (uu___7, fns) ->
+                               (uu___8, fns) ->
                                FStar_Pervasives_Native.Some
                                  (FStar_Syntax_Syntax.Record_ctor (lid, fns))
-                           | uu___7 -> FStar_Pervasives_Native.None in
+                           | uu___8 -> FStar_Pervasives_Native.None in
                          let fv_qual =
-                           let uu___6 =
+                           let uu___7 =
                              FStar_Compiler_Util.find_map
                                se.FStar_Syntax_Syntax.sigquals filter_records in
-                           match uu___6 with
+                           match uu___7 with
                            | FStar_Pervasives_Native.None ->
                                FStar_Syntax_Syntax.Data_ctor
                            | FStar_Pervasives_Native.Some q -> q in
-                         let uu___6 = FStar_Compiler_Util.first_N n formals in
-                         (match uu___6 with
-                          | (uu___7, rest) ->
+                         let uu___7 = FStar_Compiler_Util.first_N n formals in
+                         (match uu___7 with
+                          | (uu___8, rest) ->
                               mk_indexed_projector_names iquals fv_qual
                                 se.FStar_Syntax_Syntax.sigattrs env lid rest)))
            | uu___ -> [])
@@ -7072,7 +7079,9 @@ let rec (desugar_tycon :
                                     FStar_Pervasives_Native.None;
                                   FStar_Syntax_Syntax.t = k1;
                                   FStar_Syntax_Syntax.mutuals = mutuals;
-                                  FStar_Syntax_Syntax.ds = []
+                                  FStar_Syntax_Syntax.ds = [];
+                                  FStar_Syntax_Syntax.injective_type_params =
+                                    false
                                 });
                            FStar_Syntax_Syntax.sigrng = uu___2;
                            FStar_Syntax_Syntax.sigquals = quals1;
@@ -7138,7 +7147,9 @@ let rec (desugar_tycon :
                              FStar_Syntax_Syntax.num_uniform_params = uu___5;
                              FStar_Syntax_Syntax.t = k;
                              FStar_Syntax_Syntax.mutuals = [];
-                             FStar_Syntax_Syntax.ds = [];_}
+                             FStar_Syntax_Syntax.ds = [];
+                             FStar_Syntax_Syntax.injective_type_params =
+                               uu___6;_}
                            ->
                            let quals1 = se.FStar_Syntax_Syntax.sigquals in
                            let quals2 =
@@ -7147,22 +7158,22 @@ let rec (desugar_tycon :
                                  FStar_Syntax_Syntax.Assumption quals1
                              then quals1
                              else
-                               ((let uu___8 =
-                                   let uu___9 = FStar_Options.ml_ish () in
-                                   Prims.op_Negation uu___9 in
-                                 if uu___8
+                               ((let uu___9 =
+                                   let uu___10 = FStar_Options.ml_ish () in
+                                   Prims.op_Negation uu___10 in
+                                 if uu___9
                                  then
-                                   let uu___9 =
-                                     let uu___10 =
-                                       let uu___11 =
+                                   let uu___10 =
+                                     let uu___11 =
+                                       let uu___12 =
                                          FStar_Syntax_Print.lid_to_string l in
                                        FStar_Compiler_Util.format1
                                          "Adding an implicit 'assume new' qualifier on %s"
-                                         uu___11 in
+                                         uu___12 in
                                      (FStar_Errors_Codes.Warning_AddImplicitAssumeNewQualifier,
-                                       uu___10) in
+                                       uu___11) in
                                    FStar_Errors.log_issue
-                                     se.FStar_Syntax_Syntax.sigrng uu___9
+                                     se.FStar_Syntax_Syntax.sigrng uu___10
                                  else ());
                                 FStar_Syntax_Syntax.Assumption
                                 ::
@@ -7172,17 +7183,17 @@ let rec (desugar_tycon :
                            let t =
                              match typars with
                              | [] -> k
-                             | uu___6 ->
-                                 let uu___7 =
-                                   let uu___8 =
-                                     let uu___9 =
+                             | uu___7 ->
+                                 let uu___8 =
+                                   let uu___9 =
+                                     let uu___10 =
                                        FStar_Syntax_Syntax.mk_Total k in
                                      {
                                        FStar_Syntax_Syntax.bs1 = typars;
-                                       FStar_Syntax_Syntax.comp = uu___9
+                                       FStar_Syntax_Syntax.comp = uu___10
                                      } in
-                                   FStar_Syntax_Syntax.Tm_arrow uu___8 in
-                                 FStar_Syntax_Syntax.mk uu___7
+                                   FStar_Syntax_Syntax.Tm_arrow uu___9 in
+                                 FStar_Syntax_Syntax.mk uu___8
                                    se.FStar_Syntax_Syntax.sigrng in
                            {
                              FStar_Syntax_Syntax.sigel =
@@ -7421,37 +7432,39 @@ let rec (desugar_tycon :
                                          = uu___4;
                                        FStar_Syntax_Syntax.t = k;
                                        FStar_Syntax_Syntax.mutuals = uu___5;
-                                       FStar_Syntax_Syntax.ds = uu___6;_};
-                                   FStar_Syntax_Syntax.sigrng = uu___7;
-                                   FStar_Syntax_Syntax.sigquals = uu___8;
-                                   FStar_Syntax_Syntax.sigmeta = uu___9;
-                                   FStar_Syntax_Syntax.sigattrs = uu___10;
+                                       FStar_Syntax_Syntax.ds = uu___6;
+                                       FStar_Syntax_Syntax.injective_type_params
+                                         = uu___7;_};
+                                   FStar_Syntax_Syntax.sigrng = uu___8;
+                                   FStar_Syntax_Syntax.sigquals = uu___9;
+                                   FStar_Syntax_Syntax.sigmeta = uu___10;
+                                   FStar_Syntax_Syntax.sigattrs = uu___11;
                                    FStar_Syntax_Syntax.sigopens_and_abbrevs =
-                                     uu___11;
-                                   FStar_Syntax_Syntax.sigopts = uu___12;_},
+                                     uu___12;
+                                   FStar_Syntax_Syntax.sigopts = uu___13;_},
                                  binders, t, quals1)
                                 ->
                                 let t1 =
-                                  let uu___13 =
+                                  let uu___14 =
                                     typars_of_binders env1 binders in
-                                  match uu___13 with
+                                  match uu___14 with
                                   | (env2, tpars1) ->
-                                      let uu___14 = push_tparams env2 tpars1 in
-                                      (match uu___14 with
+                                      let uu___15 = push_tparams env2 tpars1 in
+                                      (match uu___15 with
                                        | (env_tps, tpars2) ->
                                            let t2 = desugar_typ env_tps t in
                                            let tpars3 =
                                              FStar_Syntax_Subst.close_binders
                                                tpars2 in
                                            FStar_Syntax_Subst.close tpars3 t2) in
-                                let uu___13 =
-                                  let uu___14 =
-                                    let uu___15 = FStar_Ident.range_of_lid id in
+                                let uu___14 =
+                                  let uu___15 =
+                                    let uu___16 = FStar_Ident.range_of_lid id in
                                     mk_typ_abbrev env1 d id uvs tpars
                                       (FStar_Pervasives_Native.Some k) t1
-                                      [id] quals1 uu___15 in
-                                  ([], uu___14) in
-                                [uu___13]
+                                      [id] quals1 uu___16 in
+                                  ([], uu___15) in
+                                [uu___14]
                             | FStar_Pervasives.Inl
                                 ({
                                    FStar_Syntax_Syntax.sigel =
@@ -7463,7 +7476,9 @@ let rec (desugar_tycon :
                                          = num_uniform;
                                        FStar_Syntax_Syntax.t = k;
                                        FStar_Syntax_Syntax.mutuals = mutuals1;
-                                       FStar_Syntax_Syntax.ds = uu___4;_};
+                                       FStar_Syntax_Syntax.ds = uu___4;
+                                       FStar_Syntax_Syntax.injective_type_params
+                                         = injective_type_params;_};
                                    FStar_Syntax_Syntax.sigrng = uu___5;
                                    FStar_Syntax_Syntax.sigquals = tname_quals;
                                    FStar_Syntax_Syntax.sigmeta = uu___6;
@@ -7613,7 +7628,10 @@ let rec (desugar_tycon :
                                                             FStar_Syntax_Syntax.num_ty_params
                                                               = ntps;
                                                             FStar_Syntax_Syntax.mutuals1
-                                                              = mutuals1
+                                                              = mutuals1;
+                                                            FStar_Syntax_Syntax.injective_type_params1
+                                                              =
+                                                              injective_type_params
                                                           } in
                                                         FStar_Syntax_Syntax.Sig_datacon
                                                           uu___17 in
@@ -7715,7 +7733,10 @@ let rec (desugar_tycon :
                                                          FStar_Syntax_Syntax.mutuals
                                                            = mutuals1;
                                                          FStar_Syntax_Syntax.ds
-                                                           = constrNames
+                                                           = constrNames;
+                                                         FStar_Syntax_Syntax.injective_type_params
+                                                           =
+                                                           injective_type_params
                                                        });
                                                   FStar_Syntax_Syntax.sigrng
                                                     = uu___15;
@@ -7784,16 +7805,18 @@ let rec (desugar_tycon :
                                            = uu___6;
                                          FStar_Syntax_Syntax.t = k;
                                          FStar_Syntax_Syntax.mutuals = uu___7;
-                                         FStar_Syntax_Syntax.ds = constrs;_}
+                                         FStar_Syntax_Syntax.ds = constrs;
+                                         FStar_Syntax_Syntax.injective_type_params
+                                           = uu___8;_}
                                        ->
                                        let quals1 =
                                          se.FStar_Syntax_Syntax.sigquals in
-                                       let uu___8 =
+                                       let uu___9 =
                                          FStar_Compiler_List.filter
                                            (fun data_lid ->
                                               let data_quals =
                                                 let data_se =
-                                                  let uu___9 =
+                                                  let uu___10 =
                                                     FStar_Compiler_List.find
                                                       (fun se1 ->
                                                          match se1.FStar_Syntax_Syntax.sigel
@@ -7803,35 +7826,37 @@ let rec (desugar_tycon :
                                                                FStar_Syntax_Syntax.lid1
                                                                  = name;
                                                                FStar_Syntax_Syntax.us1
-                                                                 = uu___10;
-                                                               FStar_Syntax_Syntax.t1
                                                                  = uu___11;
-                                                               FStar_Syntax_Syntax.ty_lid
+                                                               FStar_Syntax_Syntax.t1
                                                                  = uu___12;
-                                                               FStar_Syntax_Syntax.num_ty_params
+                                                               FStar_Syntax_Syntax.ty_lid
                                                                  = uu___13;
+                                                               FStar_Syntax_Syntax.num_ty_params
+                                                                 = uu___14;
                                                                FStar_Syntax_Syntax.mutuals1
-                                                                 = uu___14;_}
+                                                                 = uu___15;
+                                                               FStar_Syntax_Syntax.injective_type_params1
+                                                                 = uu___16;_}
                                                              ->
                                                              FStar_Ident.lid_equals
                                                                name data_lid
-                                                         | uu___10 -> false)
+                                                         | uu___11 -> false)
                                                       sigelts in
                                                   FStar_Compiler_Util.must
-                                                    uu___9 in
+                                                    uu___10 in
                                                 data_se.FStar_Syntax_Syntax.sigquals in
-                                              let uu___9 =
+                                              let uu___10 =
                                                 FStar_Compiler_List.existsb
-                                                  (fun uu___10 ->
-                                                     match uu___10 with
+                                                  (fun uu___11 ->
+                                                     match uu___11 with
                                                      | FStar_Syntax_Syntax.RecordConstructor
-                                                         uu___11 -> true
-                                                     | uu___11 -> false)
+                                                         uu___12 -> true
+                                                     | uu___12 -> false)
                                                   data_quals in
-                                              Prims.op_Negation uu___9)
+                                              Prims.op_Negation uu___10)
                                            constrs in
                                        mk_data_discriminators quals1 env3
-                                         uu___8
+                                         uu___9
                                          se.FStar_Syntax_Syntax.sigattrs
                                    | uu___5 -> []) sigelts in
                             let ops =
@@ -9275,12 +9300,14 @@ and (desugar_decl_core :
                                          FStar_Syntax_Syntax.num_ty_params =
                                            uu___6;
                                          FStar_Syntax_Syntax.mutuals1 =
-                                           uu___7;_}
+                                           uu___7;
+                                         FStar_Syntax_Syntax.injective_type_params1
+                                           = uu___8;_}
                                        ->
-                                       let uu___8 =
+                                       let uu___9 =
                                          FStar_Syntax_Util.arrow_formals t in
-                                       (match uu___8 with
-                                        | (formals1, uu___9) ->
+                                       (match uu___9 with
+                                        | (formals1, uu___10) ->
                                             FStar_Pervasives_Native.Some
                                               formals1)
                                    | uu___3 -> FStar_Pervasives_Native.None)
@@ -9300,7 +9327,8 @@ and (desugar_decl_core :
                            FStar_Syntax_Syntax.num_uniform_params = uu___4;
                            FStar_Syntax_Syntax.t = ty;
                            FStar_Syntax_Syntax.mutuals = uu___5;
-                           FStar_Syntax_Syntax.ds = uu___6;_}
+                           FStar_Syntax_Syntax.ds = uu___6;
+                           FStar_Syntax_Syntax.injective_type_params = uu___7;_}
                          ->
                          let formals1 =
                            match formals with
@@ -9311,44 +9339,44 @@ and (desugar_decl_core :
                            let i = FStar_Ident.ident_of_lid meth in
                            FStar_Compiler_Util.for_some
                              (fun formal ->
-                                let uu___7 =
+                                let uu___8 =
                                   FStar_Ident.ident_equals i
                                     (formal.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.ppname in
-                                if uu___7
+                                if uu___8
                                 then
                                   FStar_Compiler_Util.for_some
                                     (fun attr ->
-                                       let uu___8 =
-                                         let uu___9 =
+                                       let uu___9 =
+                                         let uu___10 =
                                            FStar_Syntax_Subst.compress attr in
-                                         uu___9.FStar_Syntax_Syntax.n in
-                                       match uu___8 with
+                                         uu___10.FStar_Syntax_Syntax.n in
+                                       match uu___9 with
                                        | FStar_Syntax_Syntax.Tm_fvar fv ->
                                            FStar_Syntax_Syntax.fv_eq_lid fv
                                              FStar_Parser_Const.no_method_lid
-                                       | uu___9 -> false)
+                                       | uu___10 -> false)
                                     formal.FStar_Syntax_Syntax.binder_attrs
                                 else false) formals1 in
                          let meths1 =
                            FStar_Compiler_List.filter
                              (fun x ->
-                                let uu___7 = has_no_method_attr x in
-                                Prims.op_Negation uu___7) meths in
+                                let uu___8 = has_no_method_attr x in
+                                Prims.op_Negation uu___8) meths in
                          let is_typed = false in
-                         let uu___7 =
-                           let uu___8 =
-                             let uu___9 =
-                               let uu___10 = mkclass lid in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               let uu___11 = mkclass lid in
                                {
                                  FStar_Syntax_Syntax.is_typed = is_typed;
                                  FStar_Syntax_Syntax.lids2 = meths1;
-                                 FStar_Syntax_Syntax.tac = uu___10
+                                 FStar_Syntax_Syntax.tac = uu___11
                                } in
-                             FStar_Syntax_Syntax.Sig_splice uu___9 in
-                           let uu___9 =
+                             FStar_Syntax_Syntax.Sig_splice uu___10 in
+                           let uu___10 =
                              FStar_Syntax_DsEnv.opens_and_abbrevs env1 in
                            {
-                             FStar_Syntax_Syntax.sigel = uu___8;
+                             FStar_Syntax_Syntax.sigel = uu___9;
                              FStar_Syntax_Syntax.sigrng =
                                (d.FStar_Parser_AST.drange);
                              FStar_Syntax_Syntax.sigquals = [];
@@ -9356,11 +9384,11 @@ and (desugar_decl_core :
                                FStar_Syntax_Syntax.default_sigmeta;
                              FStar_Syntax_Syntax.sigattrs = [];
                              FStar_Syntax_Syntax.sigopens_and_abbrevs =
-                               uu___9;
+                               uu___10;
                              FStar_Syntax_Syntax.sigopts =
                                FStar_Pervasives_Native.None
                            } in
-                         [uu___7]
+                         [uu___8]
                      | uu___2 -> [] in
                    let uu___2 =
                      if typeclass
@@ -9865,7 +9893,8 @@ and (desugar_decl_core :
                          FStar_Parser_Const.exn_lid;
                        FStar_Syntax_Syntax.num_ty_params = Prims.int_zero;
                        FStar_Syntax_Syntax.mutuals1 =
-                         [FStar_Parser_Const.exn_lid]
+                         [FStar_Parser_Const.exn_lid];
+                       FStar_Syntax_Syntax.injective_type_params1 = false
                      });
                 FStar_Syntax_Syntax.sigrng = (d.FStar_Parser_AST.drange);
                 FStar_Syntax_Syntax.sigquals = qual;

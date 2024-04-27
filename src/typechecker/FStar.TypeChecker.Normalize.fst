@@ -3290,7 +3290,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                          num_uniform_params=num_uniform;
                          t=typ;
                          mutuals=lids;
-                         ds=lids'} ->
+                         ds=lids';
+                         injective_type_params} ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
       {s with sigel = Sig_inductive_typ {lid;
                                          us=univ_names;
@@ -3298,19 +3299,21 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                                          num_uniform_params=num_uniform;
                                          t=typ;
                                          mutuals=lids;
-                                         ds=lids'}}
+                                         ds=lids';
+                                         injective_type_params}}
 
     | Sig_bundle {ses=sigs; lids} ->
       {s with sigel = Sig_bundle {ses=List.map (elim_uvars env) sigs; lids}}
 
-    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids} ->
+    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids; injective_type_params} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
       {s with sigel = Sig_datacon {lid;
                                    us=univ_names;
                                    t=typ;
                                    ty_lid=lident;
                                    num_ty_params=i;
-                                   mutuals=lids}}
+                                   mutuals=lids;
+                                   injective_type_params}}
 
     | Sig_declare_typ {lid; us=univ_names; t=typ} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in

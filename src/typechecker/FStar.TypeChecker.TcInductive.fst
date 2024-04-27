@@ -46,6 +46,90 @@ module C  = FStar.Parser.Const
 
 let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
+let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
+  : sigelt
+  = let Sig_inductive_typ dd = se.sigel in
+    let { lid=t; us=universe_names; params=tps; t=k } = dd in
+    let t_lid = t in
+    let usubst, uvs = SS.univ_var_opening universe_names in
+    let tcenv, tps, k =
+      Env.push_univ_vars tcenv uvs,
+      SS.subst_binders usubst tps,
+      SS.subst (SS.shift_subst (List.length tps) usubst) k
+    in
+    let tps, k = SS.open_term tps k in
+    let _, k = U.arrow_formals k in //don't care about indices here
+    let tps, env_tps, _, us = TcTerm.tc_binders tcenv tps in
+    let u_k =
+      TcTerm.level_of_type
+        env_tps
+        (S.mk_Tm_app
+          (S.fvar t None)
+          (snd (U.args_of_binders tps))
+          (Ident.range_of_lid t))
+        k
+    in
+    //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
+    let rec universe_leq u v =
+        match u, v with
+        | U_zero, _ -> true
+        | U_succ u0, U_succ v0 -> universe_leq u0 v0
+        | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
+        | U_name _,  U_succ v0 -> universe_leq u v0
+        | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
+        | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
+        | U_unknown, _
+        | _, U_unknown
+        | U_unif _, _
+        | _, U_unif _ -> failwith (BU.format3 "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
+                                            (Ident.string_of_lid t)
+                                            (Print.univ_to_string u)
+                                            (Print.univ_to_string v))
+        | _ -> false
+    in
+    let u_leq_u_k u =
+      let u = N.normalize_universe env_tps u in
+      universe_leq u u_k 
+    in
+    let tp_ok (tp:S.binder) (u_tp:universe) =
+      let t_tp = tp.binder_bv.sort in
+      if u_leq_u_k u_tp
+      then true
+      else (
+          let t_tp = 
+            N.normalize
+                [Unrefine; Unascribe; Unmeta;
+                Primops; HNF; UnfoldUntil delta_constant; Beta]
+                env_tps t_tp
+          in
+          let formals, t = U.arrow_formals t_tp in
+          let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
+          let inj = BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals in                  
+          if inj
+          then (
+            match (SS.compress t).n with
+            | Tm_type u -> 
+            (* retain injectivity for parameters that are type functions
+                from small universes (i.e., all formals are smaller than the constructed type)
+                to a universe <= the universe of the constructed type.
+                See BugBoxInjectivity.fst *)
+              u_leq_u_k u
+            | _ ->
+              false
+          )
+          else (
+            false
+          )
+
+        )
+    in
+    let injective_type_params = List.forall2 tp_ok tps us in
+    if Env.debug tcenv <| Options.Other "TcInductive"
+    then BU.print2 "%s injectivity for %s\n"
+                (if injective_type_params then "YES" else "NO")
+                (Ident.string_of_lid t);
+    { se with sigel = Sig_inductive_typ { dd with injective_type_params } }
+
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
        : env_t          (* environment extended with a refined type for the type-constructor *)
@@ -104,7 +188,8 @@ let tc_tycon (env:env_t)     (* environment that contains all mutually defined t
                                              num_uniform_params=n_uniform;
                                              t=k;
                                              mutuals;
-                                             ds=data} },
+                                             ds=data;
+                                             injective_type_params=false} },
          u,
          guard
 
@@ -235,7 +320,8 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
                                         t;
                                         ty_lid=tc_lid;
                                         num_ty_params=ntps;
-                                        mutuals=mutual_tcs} },
+                                        mutuals=mutual_tcs;
+                                        injective_type_params=false} },
          g
 
    | _ -> failwith "impossible"
@@ -290,7 +376,8 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
                                                    num_uniform_params=num_uniform;
                                                    t;
                                                    mutuals;
-                                                   ds=datas} }
+                                                   ds=datas;
+                                                   injective_type_params=false} }
             | _ -> failwith "Impossible")
             tc_types tcs
         in
@@ -310,7 +397,8 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
                                                       t=ty;
                                                       ty_lid=tc;
                                                       num_ty_params=ntps;
-                                                      mutuals} }
+                                                      mutuals;
+                                                      injective_type_params=false} }
                     | _ -> failwith "Impossible")
              data_types datas
         in
@@ -857,13 +945,33 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
                                                        num_uniform_params=num_uniform;
                                                        t=typ;
                                                        mutuals=ts;
-                                                       ds}}
+                                                       ds;
+                                                       injective_type_params=false}}
                    end
                    else fail expected_typ inferred_typ
               else fail expected_typ (inferred_typ_with_binders binders)
       end
     | _ -> se) in
 
+  let tcs = tcs |> List.map (check_sig_inductive_injectivity_on_params env) in
+  let is_injective l =
+    match
+      List.tryPick 
+        (fun se ->
+          let Sig_inductive_typ {lid=lid; injective_type_params} = se.sigel in
+          if lid_equals l lid then Some injective_type_params else None)
+        tcs
+    with
+    | None -> false
+    | Some i -> i
+  in
+  let datas =
+    datas |>
+    List.map
+      (fun se ->
+        let Sig_datacon dd = se.sigel in
+        { se with sigel=Sig_datacon { dd with injective_type_params=is_injective dd.ty_lid }})
+  in
   let sig_bndle = { sigel = Sig_bundle {ses=tcs@datas; lids};
                     sigquals = quals;
                     sigrng = Env.get_range env0;

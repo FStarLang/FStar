@@ -497,7 +497,8 @@ let rec (eq_t :
                else ();
                (let uu___2 =
                   let uu___3 = FStar_Syntax_Syntax.lid_of_fv v1 in
-                  FStar_TypeChecker_Env.num_datacon_ty_params env uu___3 in
+                  FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
+                    env uu___3 in
                 match uu___2 with
                 | FStar_Pervasives_Native.None ->
                     FStar_TypeChecker_TermEqAndSimplify.Unknown

@@ -656,6 +656,7 @@ type sigelt' =
       t:typ;                            //t
       mutuals:list lident;              //mutually defined types
       ds:list lident;                   //data constructors for this type
+      injective_type_params:bool        //is this type injective in its type parameters?
     }
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list list sigelt,
@@ -673,6 +674,7 @@ type sigelt' =
       ty_lid:lident;          //the inductive type of the value this constructs
       num_ty_params:int;        //and the number of parameters of the inductive
       mutuals:list lident;    //mutually defined types
+      injective_type_params:bool   //is this type injective in its type parameters?
     }      
   | Sig_declare_typ     {
       lid:lident;

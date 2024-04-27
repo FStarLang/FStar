@@ -366,7 +366,7 @@ let mark_uniform_type_parameters (env:env_t)
                                  (sig:sigelt)
   : sigelt
   = let mark_tycon_parameters tc datas =
-        let Sig_inductive_typ {lid=tc_lid; us; params=ty_param_binders; t; mutuals; ds=data_lids} = tc.sigel in
+        let Sig_inductive_typ {lid=tc_lid; us; params=ty_param_binders; t; mutuals; ds=data_lids; injective_type_params } = tc.sigel in
         let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
         let _, ty_param_args = U.args_of_binders ty_params in
         let datacon_fields : list (list binder) =
@@ -418,7 +418,8 @@ let mark_uniform_type_parameters (env:env_t)
                                        num_uniform_params=Some max_uniform_prefix;
                                        t;
                                        mutuals;
-                                       ds=data_lids} in
+                                       ds=data_lids;
+                                       injective_type_params} in
         { tc with sigel }
     in 
     match sig.sigel with

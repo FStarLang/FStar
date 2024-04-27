@@ -2424,8 +2424,8 @@ let (config' :
         let steps = let uu___ = to_fsteps s in add_nbe uu___ in
         let psteps1 =
           let uu___ =
-            let uu___1 = cached_steps () in
-            let uu___2 = env_dependent_ops e in merge_steps uu___1 uu___2 in
+            let uu___1 = env_dependent_ops e in
+            let uu___2 = cached_steps () in merge_steps uu___1 uu___2 in
           add_steps uu___ psteps in
         let dbg_flag =
           FStar_Compiler_List.contains FStar_TypeChecker_Env.NormDebug s in

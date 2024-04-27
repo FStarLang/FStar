@@ -627,14 +627,16 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
                                              num_uniform_params=num_uniform;
                                              t=Subst.subst (Subst.shift_subst (List.length bs) usubst) t;
                                              mutuals=lids1;
-                                             ds=lids2} }
+                                             ds=lids2;
+                                             injective_type_params=false} }
       | Sig_datacon {lid;t;ty_lid=tlid;num_ty_params=n;mutuals=lids} ->
         { se with sigel = Sig_datacon {lid;
                                        us=unames;
                                        t=Subst.subst usubst t;
                                        ty_lid=tlid;
                                        num_ty_params=n;
-                                       mutuals=lids} }
+                                       mutuals=lids;
+                                       injective_type_params=false} }
       | _ -> failwith "Impossible: collect_annotated_universes: Sig_bundle should not have a non data/type sigelt"
       ); lids} }
   | Sig_declare_typ {lid; t} ->
@@ -3007,7 +3009,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             num_uniform_params=None;
                                             t=k;
                                             mutuals;
-                                            ds=[]};
+                                            ds=[];
+                                            injective_type_params=false};
                  sigquals = quals;
                  sigrng = range_of_id id;
                  sigmeta = default_sigmeta;
@@ -3148,7 +3151,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             params=tpars;
                                             num_uniform_params=num_uniform;
                                             t=k;
-                                            mutuals}; sigquals = tname_quals },
+                                            mutuals;
+                                            injective_type_params}; sigquals = tname_quals },
                constrs, tconstr, quals) ->
           let mk_tot t =
             let tot = mk_term (Name C.effect_Tot_lid) t.range t.level in
@@ -3177,7 +3181,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                                     t=U.arrow data_tpars (mk_Total (t |> U.name_function_binders));
                                                     ty_lid=tname;
                                                     num_ty_params=ntps;
-                                                    mutuals};
+                                                    mutuals;
+                                                    injective_type_params};
                                             sigquals = quals;
                                             sigrng = range_of_lid name;
                                             sigmeta = default_sigmeta  ;
@@ -3199,7 +3204,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             num_uniform_params=num_uniform;
                                             t=k;
                                             mutuals;
-                                            ds=constrNames};
+                                            ds=constrNames;
+                                            injective_type_params};
                                  sigquals = tname_quals;
                                  sigrng = range_of_lid tname;
                                  sigmeta = default_sigmeta  ;
@@ -4084,7 +4090,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
     let l = qualify env id in
     let qual = [ExceptionConstructor] in
     let top_attrs = d_attrs in
-    let se = { sigel = Sig_datacon {lid=l;us=[];t;ty_lid=C.exn_lid;num_ty_params=0;mutuals=[C.exn_lid]};
+    let se = { sigel = Sig_datacon {lid=l;us=[];t;ty_lid=C.exn_lid;num_ty_params=0;mutuals=[C.exn_lid];injective_type_params=false};
                sigquals = qual;
                sigrng = d.drange;
                sigmeta = default_sigmeta  ;

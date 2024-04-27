@@ -745,9 +745,10 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
-let num_datacon_ty_params env lid =
+let num_datacon_non_injective_ty_params env lid =
   match lookup_qname env lid with
-    | Some (Inr ({ sigel = Sig_datacon {num_ty_params} }, _), _) -> Some num_ty_params
+    | Some (Inr ({ sigel = Sig_datacon {num_ty_params; injective_type_params} }, _), _) ->
+      if injective_type_params then Some 0 else Some num_ty_params
     | _ -> None
 
 let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =

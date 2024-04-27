@@ -1652,7 +1652,8 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt' -> 'm =
             FStar_Syntax_Syntax.params = params;
             FStar_Syntax_Syntax.num_uniform_params = num_uniform_params;
             FStar_Syntax_Syntax.t = t; FStar_Syntax_Syntax.mutuals = mutuals;
-            FStar_Syntax_Syntax.ds = ds;_}
+            FStar_Syntax_Syntax.ds = ds;
+            FStar_Syntax_Syntax.injective_type_params = injective_type_params;_}
           ->
           let uu___ =
             FStar_Class_Monad.mapM (_lvm_monad d) () ()
@@ -1683,7 +1684,9 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt' -> 'm =
                                           FStar_Syntax_Syntax.t = t1;
                                           FStar_Syntax_Syntax.mutuals =
                                             mutuals;
-                                          FStar_Syntax_Syntax.ds = ds
+                                          FStar_Syntax_Syntax.ds = ds;
+                                          FStar_Syntax_Syntax.injective_type_params
+                                            = injective_type_params
                                         })))) uu___2))) uu___1)
       | FStar_Syntax_Syntax.Sig_bundle
           { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = lids;_}
@@ -1708,7 +1711,9 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt' -> 'm =
           { FStar_Syntax_Syntax.lid1 = lid; FStar_Syntax_Syntax.us1 = us;
             FStar_Syntax_Syntax.t1 = t; FStar_Syntax_Syntax.ty_lid = ty_lid;
             FStar_Syntax_Syntax.num_ty_params = num_ty_params;
-            FStar_Syntax_Syntax.mutuals1 = mutuals;_}
+            FStar_Syntax_Syntax.mutuals1 = mutuals;
+            FStar_Syntax_Syntax.injective_type_params1 =
+              injective_type_params;_}
           ->
           let uu___ = f_term d t in
           FStar_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
@@ -1726,7 +1731,9 @@ let rec on_sub_sigelt' : 'm . 'm lvm -> FStar_Syntax_Syntax.sigelt' -> 'm =
                                FStar_Syntax_Syntax.ty_lid = ty_lid;
                                FStar_Syntax_Syntax.num_ty_params =
                                  num_ty_params;
-                               FStar_Syntax_Syntax.mutuals1 = mutuals
+                               FStar_Syntax_Syntax.mutuals1 = mutuals;
+                               FStar_Syntax_Syntax.injective_type_params1 =
+                                 injective_type_params
                              })))) uu___1)
       | FStar_Syntax_Syntax.Sig_declare_typ
           { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = us;

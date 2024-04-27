@@ -374,7 +374,7 @@ let config' psteps s e =
         | [] -> [Env.NoDelta]
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
-    let psteps = add_steps (merge_steps (cached_steps ()) (env_dependent_ops e))psteps in
+    let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
     {tcenv = e;
      debug = if dbg_flag || Options.debug_any () then

@@ -123,7 +123,7 @@ let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
     if S.fv_eq v1 v2 then begin
         if List.length args1 <> List.length args2 then
             failwith "eq_t, different number of args on Construct";
-        match Env.num_datacon_ty_params env (lid_of_fv v1) with
+        match Env.num_datacon_non_injective_ty_params env (lid_of_fv v1) with
         | None -> TEQ.Unknown
         | Some n ->
           if n <= List.length args1

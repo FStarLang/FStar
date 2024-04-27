@@ -122,12 +122,12 @@ let rec (eq_tm :
                         let uu___3 =
                           let uu___4 =
                             let uu___5 = FStar_Syntax_Syntax.lid_of_fv f in
-                            FStar_TypeChecker_Env.num_datacon_ty_params env
-                              uu___5 in
+                            FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
+                              env uu___5 in
                           let uu___5 =
                             let uu___6 = FStar_Syntax_Syntax.lid_of_fv g in
-                            FStar_TypeChecker_Env.num_datacon_ty_params env
-                              uu___6 in
+                            FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
+                              env uu___6 in
                           (uu___4, uu___5) in
                         (match uu___3 with
                          | (FStar_Pervasives_Native.Some n1,

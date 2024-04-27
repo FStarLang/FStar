@@ -8251,24 +8251,26 @@ let (try_lookup_record_type :
                                FStar_Syntax_Syntax.t1 = t;
                                FStar_Syntax_Syntax.ty_lid = uu___5;
                                FStar_Syntax_Syntax.num_ty_params = nparms;
-                               FStar_Syntax_Syntax.mutuals1 = uu___6;_};
-                           FStar_Syntax_Syntax.sigrng = uu___7;
-                           FStar_Syntax_Syntax.sigquals = uu___8;
-                           FStar_Syntax_Syntax.sigmeta = uu___9;
-                           FStar_Syntax_Syntax.sigattrs = uu___10;
-                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-                           FStar_Syntax_Syntax.sigopts = uu___12;_}
+                               FStar_Syntax_Syntax.mutuals1 = uu___6;
+                               FStar_Syntax_Syntax.injective_type_params1 =
+                                 uu___7;_};
+                           FStar_Syntax_Syntax.sigrng = uu___8;
+                           FStar_Syntax_Syntax.sigquals = uu___9;
+                           FStar_Syntax_Syntax.sigmeta = uu___10;
+                           FStar_Syntax_Syntax.sigattrs = uu___11;
+                           FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___12;
+                           FStar_Syntax_Syntax.sigopts = uu___13;_}
                          ->
-                         let uu___13 = FStar_Syntax_Util.arrow_formals t in
-                         (match uu___13 with
+                         let uu___14 = FStar_Syntax_Util.arrow_formals t in
+                         (match uu___14 with
                           | (formals, c) ->
                               if
                                 nparms < (FStar_Compiler_List.length formals)
                               then
-                                let uu___14 =
+                                let uu___15 =
                                   FStar_Compiler_List.splitAt nparms formals in
-                                (match uu___14 with
-                                 | (uu___15, fields) ->
+                                (match uu___15 with
+                                 | (uu___16, fields) ->
                                      let fields1 =
                                        FStar_Compiler_List.filter
                                          (fun b ->
@@ -8276,8 +8278,8 @@ let (try_lookup_record_type :
                                             with
                                             | FStar_Pervasives_Native.Some
                                                 (FStar_Syntax_Syntax.Implicit
-                                                uu___16) -> false
-                                            | uu___16 -> true) fields in
+                                                uu___17) -> false
+                                            | uu___17 -> true) fields in
                                      let fields2 =
                                        FStar_Compiler_List.map
                                          (fun b ->
@@ -8288,13 +8290,13 @@ let (try_lookup_record_type :
                                        FStar_TypeChecker_Env.is_record env
                                          typename in
                                      let r =
-                                       let uu___16 =
+                                       let uu___17 =
                                          FStar_Ident.ident_of_lid dc in
                                        {
                                          FStar_Syntax_DsEnv.typename =
                                            typename;
                                          FStar_Syntax_DsEnv.constrname =
-                                           uu___16;
+                                           uu___17;
                                          FStar_Syntax_DsEnv.parms = [];
                                          FStar_Syntax_DsEnv.fields = fields2;
                                          FStar_Syntax_DsEnv.is_private =

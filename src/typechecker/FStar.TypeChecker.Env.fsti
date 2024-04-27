@@ -344,7 +344,7 @@ val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option int
 val num_inductive_uniform_ty_params: env -> lident -> option int
-val num_datacon_ty_params  : env -> lident -> option int
+val num_datacon_non_injective_ty_params  : env -> lident -> option int
 val delta_depth_of_qninfo  : fv -> qninfo -> option delta_depth
 val delta_depth_of_fv      : env -> fv -> delta_depth
 

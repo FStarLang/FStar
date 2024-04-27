@@ -603,10 +603,12 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
       check_lid ind_lid;
       let nparam = List.length param_bs in
+      //We can't tust the value of injective_type_params; set it to false here and let the typechecker recompute
+      let injective_type_params = false in
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params }
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -621,7 +623,8 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                                         num_uniform_params=None;
                                         t=ty;
                                         mutuals=[];
-                                        ds=c_lids}
+                                        ds=c_lids;
+                                        injective_type_params }
       in
       let se = mk_sigelt <| Sig_bundle {ses=ind_se::ctor_ses; lids=ind_lid::c_lids} in
       { se with sigquals = Noeq::se.sigquals }

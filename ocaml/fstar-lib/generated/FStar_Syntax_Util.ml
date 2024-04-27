@@ -1065,7 +1065,8 @@ let (lids_of_sigelt :
           FStar_Syntax_Syntax.num_uniform_params = uu___2;
           FStar_Syntax_Syntax.t = uu___3;
           FStar_Syntax_Syntax.mutuals = uu___4;
-          FStar_Syntax_Syntax.ds = uu___5;_}
+          FStar_Syntax_Syntax.ds = uu___5;
+          FStar_Syntax_Syntax.injective_type_params = uu___6;_}
         -> [lid]
     | FStar_Syntax_Syntax.Sig_effect_abbrev
         { FStar_Syntax_Syntax.lid4 = lid; FStar_Syntax_Syntax.us4 = uu___;
@@ -1078,7 +1079,8 @@ let (lids_of_sigelt :
           FStar_Syntax_Syntax.t1 = uu___1;
           FStar_Syntax_Syntax.ty_lid = uu___2;
           FStar_Syntax_Syntax.num_ty_params = uu___3;
-          FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+          FStar_Syntax_Syntax.mutuals1 = uu___4;
+          FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
         -> [lid]
     | FStar_Syntax_Syntax.Sig_declare_typ
         { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = uu___;

@@ -1005,95 +1005,11 @@ let encode_top_level_let :
       let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
       [decl] |> mk_decls_trivial, env
 
-
-let is_sig_inductive_injective_on_params (env:env_t) (se:sigelt)
-  : bool 
-  = let Sig_inductive_typ { lid=t; us=universe_names; params=tps; t=k } = se.sigel in
-    let t_lid = t in
-    let tcenv = env.tcenv in 
-    let usubst, uvs = SS.univ_var_opening universe_names in
-    let tcenv, tps, k =
-      Env.push_univ_vars tcenv uvs,
-      SS.subst_binders usubst tps,
-      SS.subst (SS.shift_subst (List.length tps) usubst) k
-    in
-    let tps, k = SS.open_term tps k in
-    let _, k = U.arrow_formals k in //don't care about indices here
-    let tps, env_tps, _, us = TcTerm.tc_binders tcenv tps in
-    let u_k =
-      TcTerm.level_of_type
-        env_tps
-        (S.mk_Tm_app
-          (S.fvar t None)
-          (snd (U.args_of_binders tps))
-          (Ident.range_of_lid t))
-        k
-    in
-    //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
-    let rec universe_leq u v =
-        match u, v with
-        | U_zero, _ -> true
-        | U_succ u0, U_succ v0 -> universe_leq u0 v0
-        | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
-        | U_name _,  U_succ v0 -> universe_leq u v0
-        | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
-        | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
-        | U_unknown, _
-        | _, U_unknown
-        | U_unif _, _
-        | _, U_unif _ -> failwith (BU.format3 "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
-                                            (Ident.string_of_lid t)
-                                            (Print.univ_to_string u)
-                                            (Print.univ_to_string v))
-        | _ -> false
-    in
-    let u_leq_u_k u =
-      let u = N.normalize_universe env_tps u in
-      universe_leq u u_k 
-    in
-    let tp_ok (tp:S.binder) (u_tp:universe) =
-      let t_tp = tp.binder_bv.sort in
-      if u_leq_u_k u_tp
-      then true
-      else (
-          let t_tp = 
-            N.normalize
-                [Unrefine; Unascribe; Unmeta;
-                Primops; HNF; UnfoldUntil delta_constant; Beta]
-                env_tps t_tp
-          in
-          let formals, t = U.arrow_formals t_tp in
-          let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
-          let inj = BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals in                  
-          if inj
-          then (
-            match (SS.compress t).n with
-            | Tm_type u -> 
-            (* retain injectivity for parameters that are type functions
-                from small universes (i.e., all formals are smaller than the constructed type)
-                to a universe <= the universe of the constructed type.
-                See BugBoxInjectivity.fst *)
-              u_leq_u_k u
-            | _ ->
-              false
-          )
-          else (
-            false
-          )
-
-        )
-    in
-    let is_injective_on_params = List.forall2 tp_ok tps us in
-    if Env.debug env.tcenv <| Options.Other "SMTEncoding"
-    then BU.print2 "%s injectivity for %s\n"
-                (if is_injective_on_params then "YES" else "NO")
-                (Ident.string_of_lid t);
-    is_injective_on_params
-
-
-let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
+let encode_sig_inductive (env:env_t) (se:sigelt)
 : decls_t * env_t
-= let Sig_inductive_typ { lid=t; us=universe_names; params=tps; t=k; ds=datas} = se.sigel in 
+= let Sig_inductive_typ
+        { lid=t; us=universe_names; params=tps;
+          t=k; ds=datas; injective_type_params } = se.sigel in 
   let t_lid = t in
   let tcenv = env.tcenv in
   let quals = se.sigquals in
@@ -1113,7 +1029,7 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
           (fun (out, decls) l ->
             let is_l = mk_data_tester env l xx in
             let inversion_case, decls' =
-              if is_injective_on_params
+              if injective_type_params
               || Options.ext_getv "compat:injectivity" <> ""
               then (
                 let _, data_t = Env.lookup_datacon env.tcenv l in
@@ -1216,13 +1132,13 @@ let encode_sig_inductive (is_injective_on_params:bool) (env:env_t) (se:sigelt)
   let aux =
     kindingAx
     @(inversion_axioms env tapp vars)
-    @([pretype_axiom (not is_injective_on_params) (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
+    @([pretype_axiom (not injective_type_params) (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
   in
   (decls |> mk_decls_trivial)@binder_decls@aux, env
 
-let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
+let encode_datacon (env:env_t) (se:sigelt)
 : decls_t * env_t
-= let Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals} = se.sigel in
+= let Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
   let quals = se.sigquals in
   let t = norm_before_encoding env t in
   let formals, t_res = U.arrow_formals t in
@@ -1232,8 +1148,8 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
   let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
   let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
   let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-  let is_injective_on_tparams =
-    is_injective_on_tparams || Options.ext_getv "compat:injectivity" <> ""
+  let injective_type_params =
+    injective_type_params || Options.ext_getv "compat:injectivity" <> ""
   in
   let fields =
     names |>
@@ -1241,7 +1157,7 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
       (fun n x ->
         let field_projectible =
           n >= n_tps || //either this field is not a type parameter
-          is_injective_on_tparams //or we are allowed to be injective on parameters
+          injective_type_params //or we are allowed to be injective on parameters
         in
         { field_name=mk_term_projector_name d x;
           field_sort=Term_sort;
@@ -1252,7 +1168,7 @@ let encode_datacon (is_injective_on_tparams:bool) (env:env_t) (se:sigelt)
     constr_fields=fields;
     constr_sort=Term_sort;
     constr_id=Some (varops.next_id());
-    constr_base=not is_injective_on_tparams
+    constr_base=not injective_type_params
   } |> Term.constructor_to_decl (Ident.range_of_lid d) in
   let app = mk_Apply ddtok_tm vars in
   let guard = mk_and_l guards in
@@ -1761,15 +1677,6 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       encode_top_level_let env (is_rec, bindings) se.sigquals
 
     | Sig_bundle {ses} ->
-      let tycon = List.tryFind (fun se -> Sig_inductive_typ? se.sigel) ses in
-      let is_injective_on_params =
-        match tycon with
-        | None ->
-          //Exceptions appear as Sig_bundle without an inductive type
-          false
-        | Some se ->
-          is_sig_inductive_injective_on_params env se
-      in
       let g, env =
         ses |>
         List.fold_left
@@ -1777,9 +1684,9 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
             let g', env =
               match se.sigel with
               | Sig_inductive_typ _ ->
-                encode_sig_inductive is_injective_on_params env se
+                encode_sig_inductive env se
               | Sig_datacon _ -> 
-                encode_datacon is_injective_on_params env se
+                encode_datacon env se
               | _ ->
                 encode_sigelt env se
             in
