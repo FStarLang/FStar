@@ -289,7 +289,6 @@ val snapshot : env -> string -> (tcenv_depth_t * env)
 val rollback : solver_t -> string -> option tcenv_depth_t -> env
 
 (* Checking the per-module debug level and position info *)
-val debug          : env -> Options.debug_level_t -> bool
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range

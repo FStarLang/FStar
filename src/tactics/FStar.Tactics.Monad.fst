@@ -45,6 +45,11 @@ module Env     = FStar.TypeChecker.Env
 module Rel     = FStar.TypeChecker.Rel
 module Core    = FStar.TypeChecker.Core
 
+let dbg_Core         = Debug.get_toggle "Core"
+let dbg_CoreEq       = Debug.get_toggle "CoreEq"
+let dbg_RegisterGoal = Debug.get_toggle "RegisterGoal"
+let dbg_TacFail      = Debug.get_toggle "TacFail"
+
 let goal_ctr = BU.mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v
@@ -69,21 +74,19 @@ let register_goal (g:goal) =
   let i = Core.incr_goal_ctr () in
   if Allow_untyped? (U.ctx_uvar_should_check g.goal_ctx_uvar) then () else
   let env = {env with gamma = uv.ctx_uvar_gamma } in
-  if Env.debug env <| Options.Other "CoreEq"      
+  if !dbg_CoreEq
   then BU.print1 "(%s) Registering goal\n" (show i);
   let should_register = is_goal_safe_as_well_typed g in
   if not should_register
   then (
-    if Env.debug env <| Options.Other "Core"
-    ||  Env.debug env <| Options.Other "RegisterGoal"
+    if !dbg_Core || !dbg_RegisterGoal
     then BU.print1 "(%s) Not registering goal since it has unresolved uvar deps\n"
                      (show i);
         
     ()
   )
   else (
-    if Env.debug env <| Options.Other "Core"
-    ||  Env.debug env <| Options.Other "RegisterGoal"
+    if !dbg_Core || !dbg_RegisterGoal
     then BU.print2 "(%s) Registering goal for %s\n"
                      (show i)
                      (show uv);
@@ -153,7 +156,7 @@ let log ps (f : unit -> unit) : unit =
 
 let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
-        if Env.debug ps.main_context (Options.Other "TacFail") then
+        if !dbg_TacFail then
           do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
         Failed (TacticFailure msg, ps)
     )

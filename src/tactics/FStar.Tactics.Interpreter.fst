@@ -60,8 +60,9 @@ module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
 module U       = FStar.Syntax.Util
 
+let dbg_Tac = Debug.get_toggle "Tac"
+
 let solve (#a:Type) {| ev : a |} : Tot a = ev
-let tacdbg = BU.mk_ref false
 
 let embed {|embedding 'a|} r (x:'a) norm_cb = embed x r None norm_cb
 let unembed {|embedding 'a|} a norm_cb : option 'a = unembed a norm_cb
@@ -300,7 +301,7 @@ let run_unembedded_tactic_on_ps
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
     let env = ps.main_context in
-    (* if !tacdbg then *)
+    (* if !dbg_Tac then *)
     (*     BU.print1 "Running tactic with goal = (%s) {\n" (show typ); *)
     let res =
       Profiling.profile
@@ -308,15 +309,15 @@ let run_unembedded_tactic_on_ps
         (Some (Ident.string_of_lid (Env.current_module ps.main_context)))
         "FStar.Tactics.Interpreter.run_safe"
     in
-    if !tacdbg then
+    if !dbg_Tac then
         BU.print_string "}\n";
 
     match res with
     | Success (ret, ps) ->
-        if !tacdbg then
+        if !dbg_Tac then
             do_dump_proofstate ps "at the finish line";
 
-        (* if !tacdbg || Options.tactics_info () then *)
+        (* if !dbg_Tac || Options.tactics_info () then *)
         (*     BU.print1 "Tactic generated proofterm %s\n" (show w); *)
         let remaining_smt_goals = ps.goals@ps.smt_goals in
         List.iter
@@ -324,7 +325,7 @@ let run_unembedded_tactic_on_ps
             mark_goal_implicit_already_checked g;//all of these will be fed to SMT anyway
             if is_irrelevant g
             then (
-              if !tacdbg then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
+              if !dbg_Tac then BU.print1 "Assigning irrelevant goal %s\n" (show (goal_witness g));
               if TcRel.teq_nosmt_force (goal_env g) (goal_witness g) U.exp_unit
               then ()
               else failwith (BU.format1 "Irrelevant tactic witness does not unify with (): %s"
@@ -334,19 +335,19 @@ let run_unembedded_tactic_on_ps
 
         // Check that all implicits were instantiated
         Errors.with_ctx "While checking implicits left by a tactic" (fun () ->
-          if !tacdbg then
+          if !dbg_Tac then
               BU.print1 "About to check tactic implicits: %s\n" (FStar.Common.string_of_list
                                                                       (fun imp -> show imp.imp_uvar)
                                                                       ps.all_implicits);
 
           let g = {Env.trivial_guard with TcComm.implicits=ps.all_implicits} in
           let g = TcRel.solve_deferred_constraints env g in
-          if !tacdbg then
+          if !dbg_Tac then
               BU.print2 "Checked %s implicits (1): %s\n"
                           (show (List.length ps.all_implicits))
                           (show ps.all_implicits);
           let tagged_implicits = TcRel.resolve_implicits_tac env g in
-          if !tacdbg then
+          if !dbg_Tac then
               BU.print2 "Checked %s implicits (2): %s\n"
                           (show (List.length ps.all_implicits))
                           (show ps.all_implicits);
@@ -406,7 +407,7 @@ let run_tactic_on_ps'
   * 'b // return value
   =
     let env = ps.main_context in
-    if !tacdbg then
+    if !dbg_Tac then
         BU.print2 "Typechecking tactic: (%s) (already_typed: %s) {\n"
           (show tactic)
           (show tactic_already_typed);
@@ -421,7 +422,7 @@ let run_tactic_on_ps'
            g
     in
 
-    if !tacdbg then
+    if !dbg_Tac then
         BU.print_string "}\n";
 
     TcRel.force_trivial_guard env g;

@@ -19,6 +19,11 @@ module Subst = FStar.Syntax.Subst
 open FStar.Class.Show
 open FStar.Class.Setlike
 
+let dbg       = Debug.get_toggle "Core"
+let dbg_Eq    = Debug.get_toggle "CoreEq"
+let dbg_Top   = Debug.get_toggle "CoreTop"
+let dbg_Exit  = Debug.get_toggle "CoreExit"
+
 let goal_ctr = BU.mk_ref 0
 let get_goal_ctr () = !goal_ctr
 let incr_goal_ctr () = let v = !goal_ctr in goal_ctr := v + 1; v + 1
@@ -699,7 +704,7 @@ let unfolding_ok
   = fun ctx -> Success (ctx.unfolding_ok, None)
 
 let debug g f =
-  if Env.debug g.tcenv (Options.Other "Core")
+  if !dbg
   then f ()
 
 instance showable_side = {
@@ -773,7 +778,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
       | EQUALITY -> "=?="
       | SUBTYPING _ -> "<:?"
     in
-    if Env.debug g.tcenv (Options.Other "Core")
+    if !dbg
     then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
                    (P.tag_of_term t0)
                    (show t0)
@@ -940,7 +945,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         else (
           match! maybe_unfold x0.sort x1.sort with
           | None ->
-            if Env.debug g.tcenv (Options.Other "Core") then
+            if !dbg then
               BU.print2 "Cannot match ref heads %s and %s\n" (show x0.sort) (show x1.sort);
             fallback t0 t1
           | Some (t0, t1) ->
@@ -1836,12 +1841,11 @@ let simplify_steps =
 
 let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   : __result ((tot_or_ghost & S.typ) & precondition)
-  = if Env.debug g (Options.Other "CoreEq")
+  = if !dbg_Eq
     then BU.print1 "(%s) Entering core ... \n"
                    (BU.string_of_int (get_goal_ctr()));
 
-    if Env.debug g (Options.Other "Core")
-     || Env.debug g (Options.Other "CoreTop")
+    if !dbg || !dbg_Top
     then BU.print3 "(%s) Entering core with %s <: %s\n"
                    (BU.string_of_int (get_goal_ctr()))
                    (P.term_to_string e)
@@ -1863,12 +1867,10 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
       match res with
       | Success (et, Some guard0) ->
         // Options.push();
-        // Options.set_option "debug_level" (Options.List [Options.String "Unfolding"]);
+        // Options.set_option "debug" (Options.List [Options.String "Unfolding"]);
         let guard = N.normalize simplify_steps g guard0 in
         // Options.pop();
-        if Env.debug g (Options.Other "CoreExit")
-        || Env.debug g (Options.Other "Core")
-        || Env.debug g (Options.Other "CoreTop")
+        if !dbg || !dbg_Top || !dbg_Exit
         then begin
           BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (BU.string_of_int (get_goal_ctr()))
@@ -1886,20 +1888,18 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         Success (et, Some guard)
 
       | Success _ ->
-        if Env.debug g (Options.Other "Core")
-        ||  Env.debug g (Options.Other "CoreTop")
+        if !dbg || !dbg_Top
         then BU.print1 "(%s) Exiting core (ok)\n"
                     (BU.string_of_int (get_goal_ctr()));
         res
 
       | Error _ ->
-        if Env.debug g (Options.Other "Core")
-        ||  Env.debug g (Options.Other "CoreTop")
+        if !dbg || !dbg_Top
         then BU.print1 "(%s) Exiting core (failed)\n"
                        (BU.string_of_int (get_goal_ctr()));
         res
     in
-    if Env.debug g (Options.Other "CoreEq")
+    if !dbg_Eq
     then (
       THT.print_stats table;
       let cs = report_cache_stats() in
@@ -1941,12 +1941,12 @@ let open_binders_in_comp (env:Env.env) (bs:binders) (c:comp) =
 
 let check_term_equality guard_ok unfolding_ok g t0 t1
   = let g = initial_env g None in
-    if Env.debug g.tcenv (Options.Other "CoreTop") then
+    if !dbg_Top then
        BU.print4 "Entering check_term_equality with %s and %s (guard_ok=%s; unfolding_ok=%s) {\n"
          (show t0) (show t1) (show guard_ok) (show unfolding_ok);
     let ctx = { unfolding_ok = unfolding_ok; no_guard = not guard_ok; error_context = [("Eq", None)] } in
     let r = check_relation g EQUALITY t0 t1 ctx in
-    if Env.debug g.tcenv (Options.Other "CoreTop") then
+    if !dbg_Top then
        BU.print3 "} Exiting check_term_equality (%s, %s). Result = %s.\n" (show t0) (show t1) (show r);
     let r =
       match r with

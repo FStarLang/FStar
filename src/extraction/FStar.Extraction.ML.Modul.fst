@@ -50,6 +50,8 @@ module EMB    = FStar.Syntax.Embeddings
 module Cfg    = FStar.TypeChecker.Cfg
 module PO     = FStar.TypeChecker.Primops
 
+let dbg_ExtractionReify = Debug.get_toggle "ExtractionReify"
+
 type tydef_declaration = (mlsymbol * FStar.Extraction.ML.Syntax.metadata * int) //int is the arity
 
 type iface = {
@@ -554,7 +556,7 @@ let extract_reifiable_effect g ed
     in
 
     let rec extract_fv tm =
-        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
+        if !dbg_ExtractionReify then
             BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
         match (SS.compress tm).n with
         | Tm_uinst (tm, _) -> extract_fv tm
@@ -569,7 +571,7 @@ let extract_reifiable_effect g ed
 
     let extract_action g (a:S.action) =
         assert (match a.action_params with | [] -> true | _ -> false);
-        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
+        if !dbg_ExtractionReify then
             BU.print2 "Action type %s and term %s\n"
             (Print.term_to_string a.action_typ)
             (Print.term_to_string a.action_defn);
@@ -585,9 +587,9 @@ let extract_reifiable_effect g ed
                 | None -> failwith "No type scheme")
             | _ -> failwith "Impossible" in
         let a_nm, a_lid, exp_b, g = extend_with_action_name g ed a tysc in
-        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then
+        if !dbg_ExtractionReify then
             BU.print1 "Extracted action term: %s\n" (Code.string_of_mlexpr a_nm a_let);
-        if Env.debug (tcenv_of_uenv g) <| Options.Other "ExtractionReify" then begin
+        if !dbg_ExtractionReify then begin
             BU.print1 "Extracted action type: %s\n" (Code.string_of_mlty a_nm (snd tysc));
             List.iter (fun x -> BU.print1 "and binders: %s\n" x) (ty_param_names (fst tysc)) end;
         let iface, impl = extend_iface a_lid a_nm exp exp_b in
@@ -877,7 +879,7 @@ let extract_iface' (g:env_t) modul =
 let extract_iface (g:env_t) modul =
   let g, iface =
     UF.with_uf_enabled (fun () ->
-      if Options.debug_any()
+      if Debug.any()
       then FStar.Compiler.Util.measure_execution_time
              (BU.format1 "Extracted interface of %s" (string_of_lid modul.name))
              (fun () -> extract_iface' g modul)
@@ -1290,7 +1292,7 @@ let extract' (g:uenv) (m:modul) : uenv * option mllib =
   let g, sigs =
     BU.fold_map
         (fun g se ->
-            if Options.debug_module (string_of_lid m.name)
+            if Debug.any ()
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
                  FStar.Compiler.Util.measure_execution_time

@@ -44,6 +44,9 @@ module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module C  = FStar.Parser.Const
 
+let dbg_GenUniverses = Debug.get_toggle "GenUniverses"
+let dbg_LogTypes     = Debug.get_toggle "LogTypes"
+
 let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
@@ -165,7 +168,7 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
                 | _ -> [], t
          in
 
-         if Env.debug env Options.Low then BU.print3 "Checking datacon  %s : %s -> %s \n"
+         if Debug.low () then BU.print3 "Checking datacon  %s : %s -> %s \n"
                 (Print.lid_to_string c)
                 (Print.binders_to_string "->" arguments)
                 (Print.term_to_string result);
@@ -257,10 +260,10 @@ let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas
             | Sig_datacon  {t} -> S.null_binder t
             | _ -> failwith "Impossible") in
         let t = U.arrow (binders@binders') (S.mk_Total t_unit) in
-        if Env.debug env <| Options.Other "GenUniverses"
+        if !dbg_GenUniverses
         then BU.print1 "@@@@@@Trying to generalize universes in %s\n" (N.term_to_string env t);
         let (uvs, t) = Gen.generalize_universes env t in
-        if Env.debug env <| Options.Other "GenUniverses"
+        if !dbg_GenUniverses
         then BU.print2 "@@@@@@Generalized to (%s, %s)\n"
                             (uvs |> List.map (fun u -> (string_of_id u)) |> String.concat ", ")
                             (Print.term_to_string t);
@@ -757,7 +760,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
   let env, tcs, g = List.fold_right (fun tc (env, all_tcs, g)  ->
     let env, tc, tc_u, guard = tc_tycon env tc in
     let g' = Rel.universe_inequality S.U_zero tc_u in
-    if Env.debug env Options.Low then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
+    if Debug.low () then BU.print1 "Checked inductive: %s\n" (Print.sigelt_to_string tc);
     env, (tc, tc_u)::all_tcs, Env.conj_guard g (Env.conj_guard guard g')
   ) tys (env, [], Env.trivial_guard)
   in
@@ -776,7 +779,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
     let tc_universe_vars = List.map snd tcs in
     let g = {g with univ_ineqs=tc_universe_vars, snd (g.univ_ineqs)} in
 
-    if Env.debug env0 <| Options.Other "GenUniverses"
+    if !dbg_GenUniverses
     then BU.print1 "@@@@@@Guard before (possible) generalization: %s\n" (Rel.guard_to_string env g);
 
     Rel.force_trivial_guard env0 g;
@@ -972,7 +975,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                          sigattrs = attrs;
                          sigopts = None;
                          sigopens_and_abbrevs=[] } in
-            if Env.debug env (Options.Other "LogTypes")
+            if !dbg_LogTypes
             then BU.print1 "Declaration of a discriminator %s\n"  (Print.sigelt_to_string decl);
 
             if only_decl
@@ -1015,7 +1018,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                              sigattrs = attrs;
                              sigopts = None;
                              sigopens_and_abbrevs=[] } in
-                if Env.debug env (Options.Other "LogTypes")
+                if !dbg_LogTypes
                 then BU.print1 "Implementation of a discriminator %s\n"  (Print.sigelt_to_string impl);
                 (* TODO : Are there some cases where we don't want one of these ? *)
                 (* If not the declaration is useless, isn't it ?*)
@@ -1076,7 +1079,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                        sigattrs = attrs;
                        sigopts = None;
                        sigopens_and_abbrevs=[] } in
-          if Env.debug env (Options.Other "LogTypes")
+          if !dbg_LogTypes
           then BU.print1 "Declaration of a projector %s\n"  (Print.sigelt_to_string decl);
           if only_decl
           then [decl] //only the signature
@@ -1124,7 +1127,7 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
                            sigattrs = attrs;
                            sigopts = None;
                            sigopens_and_abbrevs=[] } in
-              if Env.debug env (Options.Other "LogTypes")
+              if !dbg_LogTypes
               then BU.print1 "Implementation of a projector %s\n"  (Print.sigelt_to_string impl);
               if no_decl then [impl] else [decl;impl]) |> List.flatten
     in

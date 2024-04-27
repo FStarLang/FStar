@@ -52,9 +52,6 @@ val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit
 (* Called by Main *)
 val register_tactic_primitive_step : FStar.TypeChecker.Primops.primitive_step -> unit
 
-(* For debugging only *)
-val tacdbg : ref bool
-
 open FStar.Tactics.Monad
 module NBET = FStar.TypeChecker.NBETerm
 val e_tactic_thunk (er : embedding 'r) : embedding (tac 'r)

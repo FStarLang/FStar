@@ -48,6 +48,9 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module TcUtil = FStar.TypeChecker.Util
 module U      = FStar.Syntax.Util
 
+let dbg_Extraction     = Debug.get_toggle "Extraction"
+let dbg_ExtractionNorm = Debug.get_toggle "ExtractionNorm"
+
 exception Un_extractable
 
 
@@ -1894,7 +1897,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     //             (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
                     // debug g (fun () ->
                     //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
-                    //            Options.set_option "debug_level" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
+                    //            Options.set_option "debug" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         let norm_call () =
                             Profiling.profile
@@ -1903,8 +1906,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                               (Some (Ident.string_of_lid (Env.current_module tcenv)))
                               "FStar.Extraction.ML.Term.normalize_lb_def"
                         in
-                        if TcEnv.debug tcenv <| Options.Other "Extraction"
-                        || TcEnv.debug tcenv <| Options.Other "ExtractNorm"
+                        if !dbg_Extraction || !dbg_ExtractionNorm
                         then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
                                        (Print.lbname_to_string lb.lbname)
                                        (Print.term_to_string lb.lbdef)

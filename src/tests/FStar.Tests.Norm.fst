@@ -264,7 +264,7 @@ let run_either i r expected normalizer =
     Options.set_option "print_implicits" (Options.Bool true);
     Options.set_option "ugly" (Options.Bool true);
     Options.set_option "print_bound_var_types" (Options.Bool true);
-    // ignore (Options.set_options "--debug Test --debug_level univ_norm --debug_level NBE");
+    // ignore (Options.set_options "--debug Test --debug univ_norm,NBE");
     always i (term_eq (U.unascribe x) expected)
 
 let run_whnf i r expected = 

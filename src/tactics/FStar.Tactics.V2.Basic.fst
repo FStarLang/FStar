@@ -60,6 +60,11 @@ module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 module PO     = FStar.TypeChecker.Primops
 
+let dbg_TacUnify   = Debug.get_toggle "TacUnify"
+let dbg_2635       = Debug.get_toggle "2635"
+let dbg_ReflTc     = Debug.get_toggle "ReflTc"
+let dbg_TacVerbose = Debug.get_toggle "TacVerbose"
+
 open FStar.Class.Show
 open FStar.Class.Monad
 open FStar.Class.PP
@@ -73,7 +78,7 @@ let core_check env sol t must_tot
   : either (option typ) Core.error
   = if not (Options.compat_pre_core_should_check()) then Inl None else
     let debug f =
-        if Options.debug_any()
+        if Debug.any()
         then f ()
         else ()
     in
@@ -127,9 +132,10 @@ let print (msg:string) : tac unit =
       tacprint msg;
     return ()
 
+let dbg_Tac = Debug.get_toggle "Tac"
 let debugging () : tac bool =
     let! ps = get in
-    return (Env.debug ps.main_context (Options.Other "Tac"))
+    return !dbg_Tac
 
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
@@ -415,15 +421,14 @@ let __do_unify
   (check_side:check_unifier_solved_implicits_side)
   (env:env) (t1:term) (t2:term)
   : tac (option guard_t) =
-  let dbg = Env.debug env (Options.Other "TacUnify") in
   return ();!
-  if dbg then begin
+  if !dbg_TacUnify then begin
     Options.push ();
-    let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
+    let _ = Options.set_options "--debug Rel,RelCheck" in
     ()
   end;
-  let! r = __do_unify_wflags dbg allow_guards must_tot check_side env t1 t2 in
-  if dbg then Options.pop ();
+  let! r = __do_unify_wflags !dbg_TacUnify allow_guards must_tot check_side env t1 t2 in
+  if !dbg_TacUnify then Options.pop ();
   return r
 
 (* SMT-free unification. *)
@@ -741,7 +746,7 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
         //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
         //BU.print1 "[intro]: new goal is %s"
         //           (show ctx_uvar);
-        //ignore (FStar.Options.set_options "--debug_level Rel");
+        //ignore (FStar.Options.set_options "--debug Rel");
          (* Suppose if instead of simply assigning `?u` to the lambda term on
            the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
 
@@ -1065,7 +1070,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                       |> Some)
                      deps
                      (rangeof goal) in
-                   if Env.debug env <| Options.Other "2635"
+                   if !dbg_2635
                    then
                      BU.print2 "Apply lemma created a new uvar %s while applying %s\n"
                        (show u)
@@ -2143,7 +2148,7 @@ let write (r:tref 'a) (x:'a) : tac unit =
 (***** Builtins used in the meta DSL framework *****)
 
 let dbg_refl (g:env) (msg:unit -> string) =
-  if Env.debug g <| Options.Other "ReflTc"
+  if !dbg_ReflTc
   then BU.print_string (msg ())
 
 let issues = list Errors.issue
@@ -2789,7 +2794,7 @@ let proofstate_of_goals rng env goals imps =
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
-        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        tac_verb_dbg = !dbg_TacVerbose;
         local_state = BU.psmap_empty ();
         urgency = 1;
         dump_on_failure = true;
@@ -2819,7 +2824,7 @@ let proofstate_of_all_implicits rng env imps =
         entry_range = rng;
         guard_policy = SMT;
         freshness = 0;
-        tac_verb_dbg = Env.debug env (Options.Other "TacVerbose");
+        tac_verb_dbg = !dbg_TacVerbose;
         local_state = BU.psmap_empty ();
         urgency = 1;
         dump_on_failure = true;
