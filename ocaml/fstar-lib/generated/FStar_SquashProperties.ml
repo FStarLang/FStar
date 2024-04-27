@@ -11,6 +11,6 @@ type ('a, 'b) retract_cond =
   | MkC of unit * unit * unit 
 let uu___is_MkC : 'a 'b . ('a, 'b) retract_cond -> Prims.bool =
   fun projectee -> true
-let false_elim : 'a . unit -> 'a =
+let false_elim : 'a . Prims.l_False -> 'a =
   fun uu___ -> (fun f -> Obj.magic (failwith "unreachable")) uu___
 type u = unit
