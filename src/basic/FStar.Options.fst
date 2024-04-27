@@ -478,6 +478,10 @@ let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
 
+let display_debug_keys () =
+  let keys = Debug.list_all_toggles () in
+  keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
+
 let display_usage_aux specs =
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
@@ -1418,7 +1422,13 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     "help",
      WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
                      (Const (Bool true))),
-    text "Display this information")
+    text "Display this information");
+
+  ( noshort,
+    "list_debug_keys",
+     WithSideEffect ((fun _ -> display_debug_keys(); exit 0),
+                     (Const (Bool true))),
+    text "List all debug keys and exit");
   ]
 
 and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
