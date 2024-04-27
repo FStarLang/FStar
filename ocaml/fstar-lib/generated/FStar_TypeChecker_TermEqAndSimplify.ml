@@ -56,35 +56,37 @@ let rec (eq_tm :
   fun env ->
     fun t1 ->
       fun t2 ->
-        let eq_tm1 = eq_tm env in
         let t11 = FStar_Syntax_Util.canon_app t1 in
         let t21 = FStar_Syntax_Util.canon_app t2 in
-        let equal_data f1 parms1 args1 f2 parms2 args2 =
+        let equal_data f1 args1 f2 args2 n_parms =
           let uu___ = FStar_Syntax_Syntax.fv_eq f1 f2 in
           if uu___
           then
-            (if
-               ((FStar_Compiler_List.length parms1) =
-                  (FStar_Compiler_List.length parms2))
-                 &&
-                 ((FStar_Compiler_List.length args1) =
-                    (FStar_Compiler_List.length args2))
+            let n1 = FStar_Compiler_List.length args1 in
+            let n2 = FStar_Compiler_List.length args2 in
+            (if (n1 = n2) && (n_parms <= n1)
              then
-               let eq_arg_list as1 as2 =
-                 FStar_Compiler_List.fold_left2
-                   (fun acc ->
-                      fun uu___1 ->
-                        fun uu___2 ->
-                          match (uu___1, uu___2) with
-                          | ((a1, q1), (a2, q2)) ->
-                              let uu___3 = eq_tm1 a1 a2 in eq_inj acc uu___3)
-                   Equal as1 as2 in
-               let args_eq = eq_arg_list args1 args2 in
-               (if args_eq = Equal
-                then
-                  let parms_eq = eq_arg_list parms1 parms2 in
-                  (if parms_eq = Equal then Equal else Unknown)
-                else args_eq)
+               let uu___1 = FStar_Compiler_List.splitAt n_parms args1 in
+               match uu___1 with
+               | (parms1, args11) ->
+                   let uu___2 = FStar_Compiler_List.splitAt n_parms args2 in
+                   (match uu___2 with
+                    | (parms2, args21) ->
+                        let eq_arg_list as1 as2 =
+                          FStar_Compiler_List.fold_left2
+                            (fun acc ->
+                               fun uu___3 ->
+                                 fun uu___4 ->
+                                   match (uu___3, uu___4) with
+                                   | ((a1, q1), (a2, q2)) ->
+                                       let uu___5 = eq_tm env a1 a2 in
+                                       eq_inj acc uu___5) Equal as1 as2 in
+                        let args_eq = eq_arg_list args11 args21 in
+                        if args_eq = Equal
+                        then
+                          let parms_eq = eq_arg_list parms1 parms2 in
+                          (if parms_eq = Equal then Equal else Unknown)
+                        else args_eq)
              else Unknown)
           else NotEqual in
         let qual_is_inj uu___ =
@@ -120,34 +122,13 @@ let rec (eq_tm :
                           (qual_is_inj g.FStar_Syntax_Syntax.fv_qual)
                         ->
                         let uu___3 =
-                          let uu___4 =
-                            let uu___5 = FStar_Syntax_Syntax.lid_of_fv f in
-                            FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
-                              env uu___5 in
-                          let uu___5 =
-                            let uu___6 = FStar_Syntax_Syntax.lid_of_fv g in
-                            FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
-                              env uu___6 in
-                          (uu___4, uu___5) in
+                          let uu___4 = FStar_Syntax_Syntax.lid_of_fv f in
+                          FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
+                            env uu___4 in
                         (match uu___3 with
-                         | (FStar_Pervasives_Native.Some n1,
-                            FStar_Pervasives_Native.Some n2) ->
-                             if
-                               (n1 <= (FStar_Compiler_List.length args1)) &&
-                                 (n2 <= (FStar_Compiler_List.length args2))
-                             then
-                               let uu___4 =
-                                 FStar_Compiler_List.splitAt n1 args1 in
-                               (match uu___4 with
-                                | (parms1, args11) ->
-                                    let uu___5 =
-                                      FStar_Compiler_List.splitAt n2 args2 in
-                                    (match uu___5 with
-                                     | (parms2, args21) ->
-                                         FStar_Pervasives_Native.Some
-                                           (f, parms1, args11, g, parms2,
-                                             args21)))
-                             else FStar_Pervasives_Native.None
+                         | FStar_Pervasives_Native.Some n ->
+                             FStar_Pervasives_Native.Some
+                               (f, args1, g, args2, n)
                          | uu___4 -> FStar_Pervasives_Native.None)
                     | uu___3 -> FStar_Pervasives_Native.None)) in
         let t12 = FStar_Syntax_Util.unmeta t11 in
@@ -158,9 +139,9 @@ let rec (eq_tm :
             equal_if
               (bv1.FStar_Syntax_Syntax.index = bv2.FStar_Syntax_Syntax.index)
         | (FStar_Syntax_Syntax.Tm_lazy uu___, uu___1) ->
-            let uu___2 = FStar_Syntax_Util.unlazy t12 in eq_tm1 uu___2 t22
+            let uu___2 = FStar_Syntax_Util.unlazy t12 in eq_tm env uu___2 t22
         | (uu___, FStar_Syntax_Syntax.Tm_lazy uu___1) ->
-            let uu___2 = FStar_Syntax_Util.unlazy t22 in eq_tm1 t12 uu___2
+            let uu___2 = FStar_Syntax_Util.unlazy t22 in eq_tm env t12 uu___2
         | (FStar_Syntax_Syntax.Tm_name a, FStar_Syntax_Syntax.Tm_name b) ->
             let uu___ = FStar_Syntax_Syntax.bv_eq a b in equal_if uu___
         | uu___ when
@@ -170,13 +151,12 @@ let rec (eq_tm :
             let uu___1 =
               FStar_Compiler_Util.must heads_and_args_in_case_both_data in
             (match uu___1 with
-             | (f, parms1, args1, g, parms2, args2) ->
-                 equal_data f parms1 args1 g parms2 args2)
+             | (f, args1, g, args2, n) -> equal_data f args1 g args2 n)
         | (FStar_Syntax_Syntax.Tm_fvar f, FStar_Syntax_Syntax.Tm_fvar g) ->
             let uu___ = FStar_Syntax_Syntax.fv_eq f g in equal_if uu___
         | (FStar_Syntax_Syntax.Tm_uinst (f, us), FStar_Syntax_Syntax.Tm_uinst
            (g, vs)) ->
-            let uu___ = eq_tm1 f g in
+            let uu___ = eq_tm env f g in
             eq_and uu___
               (fun uu___1 ->
                  let uu___2 = FStar_Syntax_Util.eq_univs_list us vs in
@@ -217,9 +197,9 @@ let rec (eq_tm :
                       let uu___2 = FStar_Syntax_Syntax.lid_of_fv f1 in
                       FStar_Ident.string_of_lid uu___2 in
                     FStar_Compiler_List.mem uu___1 injectives)
-                 -> equal_data f1 [] args1 f2 [] args2
+                 -> equal_data f1 args1 f2 args2 Prims.int_zero
              | uu___1 ->
-                 let uu___2 = eq_tm1 h1 h2 in
+                 let uu___2 = eq_tm env h1 h2 in
                  eq_and uu___2 (fun uu___3 -> eq_args env args1 args2))
         | (FStar_Syntax_Syntax.Tm_match
            { FStar_Syntax_Syntax.scrutinee = t13;
@@ -237,7 +217,7 @@ let rec (eq_tm :
                 (FStar_Compiler_List.length bs2)
             then
               let uu___4 = FStar_Compiler_List.zip bs1 bs2 in
-              let uu___5 = eq_tm1 t13 t23 in
+              let uu___5 = eq_tm env t13 t23 in
               FStar_Compiler_List.fold_right
                 (fun uu___6 ->
                    fun a ->
@@ -256,9 +236,9 @@ let rec (eq_tm :
            { FStar_Syntax_Syntax.b = t23; FStar_Syntax_Syntax.phi = phi2;_})
             ->
             let uu___ =
-              eq_tm1 t13.FStar_Syntax_Syntax.sort
+              eq_tm env t13.FStar_Syntax_Syntax.sort
                 t23.FStar_Syntax_Syntax.sort in
-            eq_and uu___ (fun uu___1 -> eq_tm1 phi1 phi2)
+            eq_and uu___ (fun uu___1 -> eq_tm env phi1 phi2)
         | (FStar_Syntax_Syntax.Tm_abs
            { FStar_Syntax_Syntax.bs = bs1; FStar_Syntax_Syntax.body = body1;
              FStar_Syntax_Syntax.rc_opt = uu___;_},
@@ -276,11 +256,11 @@ let rec (eq_tm :
                      fun b2 ->
                        eq_and r
                          (fun uu___3 ->
-                            eq_tm1
+                            eq_tm env
                               (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                               (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
                 Equal bs1 bs2 in
-            eq_and uu___2 (fun uu___3 -> eq_tm1 body1 body2)
+            eq_and uu___2 (fun uu___3 -> eq_tm env body1 body2)
         | (FStar_Syntax_Syntax.Tm_arrow
            { FStar_Syntax_Syntax.bs1 = bs1; FStar_Syntax_Syntax.comp = c1;_},
            FStar_Syntax_Syntax.Tm_arrow
@@ -296,7 +276,7 @@ let rec (eq_tm :
                      fun b2 ->
                        eq_and r
                          (fun uu___1 ->
-                            eq_tm1
+                            eq_tm env
                               (b1.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
                               (b2.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort))
                 Equal bs1 bs2 in

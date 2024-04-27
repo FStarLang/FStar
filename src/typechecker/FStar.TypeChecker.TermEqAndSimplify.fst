@@ -77,65 +77,60 @@ let eq_and r s =
 
 (* Precondition: terms are well-typed in a common environment, or this can return false positives *)
 let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
-    let eq_tm = eq_tm env in
     let t1 = canon_app t1 in
     let t2 = canon_app t2 in
-    let equal_data (f1:fv) (parms1 args1:Syntax.args) (f2:fv) (parms2 args2:Syntax.args) =
+    let equal_data (f1:S.fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) (n_parms:int) =
         // we got constructors! we know they are injective and disjoint, so we can do some
         // good analysis on them
         if fv_eq f1 f2
         then (
-          if List.length parms1 = List.length parms2
-          && List.length args1 = List.length args2
+          let n1 = List.length args1 in
+          let n2 = List.length args2 in
+          if n1 = n2 && n_parms <= n1
           then (
+            let parms1, args1 = List.splitAt n_parms args1 in
+            let parms2, args2 = List.splitAt n_parms args2 in
             let eq_arg_list as1 as2 =
-              List.fold_left2
-                (fun acc (a1, q1) (a2, q2) ->
-                      //if q1 <> q2
-                      //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
-                      //                (Ident.string_of_lid f1.fv_name.v));
-                      //NS: 05/06/2018 ...this does not always hold
-                      //    it's been succeeding because the assert is disabled in the non-debug builds
-                      //assert (q1 = q2);
-                      eq_inj acc (eq_tm a1 a2))
-                  Equal
-                  as1
-                  as2
+                List.fold_left2
+                  (fun acc (a1, q1) (a2, q2) ->
+                        //if q1 <> q2
+                        //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
+                        //                (Ident.string_of_lid f1.fv_name.v));
+                        //NS: 05/06/2018 ...this does not always hold
+                        //    it's been succeeding because the assert is disabled in the non-debug builds
+                        //assert (q1 = q2);
+                        eq_inj acc (eq_tm env a1 a2))
+                    Equal
+                    as1
+                    as2
             in
             let args_eq = eq_arg_list args1 args2 in
             if args_eq = Equal
-            then let parms_eq = eq_arg_list parms1 parms2 in
-                 if parms_eq = Equal
-                 then Equal
-                 else Unknown
+            then
+              let parms_eq = eq_arg_list parms1 parms2 in
+              if parms_eq = Equal
+              then Equal
+              else Unknown
             else args_eq
           )
           else Unknown
-        ) else NotEqual
+        )
+        else NotEqual
     in
     let qual_is_inj = function
       | Some Data_ctor
       | Some (Record_ctor _) -> true
       | _ -> false
     in
-    let heads_and_args_in_case_both_data :option (fv * args * args * fv * args * args) =
+    let heads_and_args_in_case_both_data : option (S.fv * args * S.fv * args * int) =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with
       | Tm_fvar f, Tm_fvar g 
         when qual_is_inj f.fv_qual &&
              qual_is_inj g.fv_qual -> (
-        match Env.num_datacon_non_injective_ty_params env (lid_of_fv f),
-              Env.num_datacon_non_injective_ty_params env (lid_of_fv g) with
-        | Some n1, Some n2 ->
-          if n1 <= List.length args1
-          && n2 <= List.length args2
-          then (
-            let parms1, args1 = List.splitAt n1 args1 in
-            let parms2, args2 = List.splitAt n2 args2 in
-            Some (f, parms1, args1, g, parms2, args2)
-          )
-          else None
+        match Env.num_datacon_non_injective_ty_params env (lid_of_fv f) with
+        | Some n -> Some (f, args1, g, args2, n)
         | _ -> None
       )
       | _ -> None
@@ -148,15 +143,15 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_bvar bv1, Tm_bvar bv2 ->
       equal_if (bv1.index = bv2.index)
 
-    | Tm_lazy _, _ -> eq_tm (unlazy t1) t2
-    | _, Tm_lazy _ -> eq_tm t1 (unlazy t2)
+    | Tm_lazy _, _ -> eq_tm env (unlazy t1) t2
+    | _, Tm_lazy _ -> eq_tm env t1 (unlazy t2)
 
     | Tm_name a, Tm_name b ->
       equal_if (bv_eq a b)
 
     | _ when heads_and_args_in_case_both_data |> Some? ->  //matches only when both are data constructors
-      heads_and_args_in_case_both_data |> must |> (fun (f, parms1, args1, g, parms2, args2) ->
-        equal_data f parms1 args1 g parms2 args2
+      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2, n) ->
+        equal_data f args1 g args2 n
       )
 
     | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
@@ -164,7 +159,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_uinst(f, us), Tm_uinst(g, vs) ->
       // If the fvars and universe instantiations match, then Equal,
       // otherwise Unknown.
-      eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
+      eq_and (eq_tm env f g) (fun () -> equal_if (eq_univs_list us vs))
 
     | Tm_constant (Const_range _), Tm_constant (Const_range _) ->
       // Ranges should be opaque, even to the normalizer. c.f. #1312
@@ -195,17 +190,17 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
       begin match (un_uinst h1).n, (un_uinst h2).n with
       | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
-        equal_data f1 [] args1 f2 [] args2
+        equal_data f1 args1 f2 args2 0
 
       | _ -> // can only assert they're equal if they syntactically match, nothing else
-        eq_and (eq_tm h1 h2) (fun () -> eq_args env args1 args2)
+        eq_and (eq_tm env h1 h2) (fun () -> eq_args env args1 args2)
       end
 
     | Tm_match {scrutinee=t1; brs=bs1}, Tm_match {scrutinee=t2; brs=bs2} ->  //AR: note: no return annotations
         if List.length bs1 = List.length bs2
         then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches env b1 b2))
                              (List.zip bs1 bs2)
-                             (eq_tm t1 t2)
+                             (eq_tm env t1 t2)
         else Unknown
 
     | Tm_type u, Tm_type v ->
@@ -221,7 +216,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       Unknown
 
     | Tm_refine {b=t1; phi=phi1}, Tm_refine {b=t2; phi=phi2} ->
-      eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
+      eq_and (eq_tm env t1.sort t2.sort) (fun () -> eq_tm env phi1 phi2)
 
       (*
        * AR: ignoring residual comp here, that's an ascription added by the typechecker
@@ -230,13 +225,13 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
     | Tm_abs {bs=bs1; body=body1}, Tm_abs {bs=bs2; body=body2}
       when List.length bs1 = List.length bs2 ->
 
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm env b1.binder_bv.sort b2.binder_bv.sort))
                 Equal bs1 bs2)
-             (fun () -> eq_tm body1 body2)
+             (fun () -> eq_tm env body1 body2)
 
     | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2}
           when List.length bs1 = List.length bs2 ->
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
+      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm env b1.binder_bv.sort b2.binder_bv.sort))
                 Equal bs1 bs2)
              (fun () -> eq_comp env c1 c2)
 
