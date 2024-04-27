@@ -48,7 +48,8 @@ let unfold_whnf = N.unfold_whnf' [Env.AllowUnboundUniverses]
 
 let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
   : sigelt
-  = let Sig_inductive_typ dd = se.sigel in
+  = if tcenv.phase1 then se else 
+    let Sig_inductive_typ dd = se.sigel in
     let { lid=t; us=universe_names; params=tps; t=k } = dd in
     let t_lid = t in
     let usubst, uvs = SS.univ_var_opening universe_names in
@@ -953,7 +954,7 @@ let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qua
       end
     | _ -> se) in
 
-  let tcs = tcs |> List.map (check_sig_inductive_injectivity_on_params env) in
+  let tcs = tcs |> List.map (check_sig_inductive_injectivity_on_params env0) in
   let is_injective l =
     match
       List.tryPick 
