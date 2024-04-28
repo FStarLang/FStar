@@ -202,7 +202,7 @@ let repeat_gen_blocks_multi_vec_step #inp_t w blocksize n hi_f inp a a_vec f f_v
 
   assert (repeat_gen_blocks_multi_vec_equiv_pre w blocksize n hi_f a a_vec f f_v normalize_v i b_v acc_v)
 
-#push-options "--z3rlimit_factor 12"
+#push-options "--z3rlimit_factor 16 --retry 2"
 let lemma_repeat_gen_blocks_multi_vec #inp_t w blocksize n hi_f inp a a_vec f f_v normalize_v acc_v0 =
   let len = length inp in
   let blocksize_v = w * blocksize in
