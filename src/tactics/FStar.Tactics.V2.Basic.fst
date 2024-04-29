@@ -789,6 +789,31 @@ let intro () : tac RD.binding = wrap_err "intro" <| (
         fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
     )
 
+(* As [intro], but will introduce n binders at once when the expected type is a
+literal arrow. *)
+let intros () : tac (list RD.binding) = wrap_err "intros" <| (
+    let! goal = cur_goal in
+    match U.arrow_formals_comp_ln (goal_type goal) with
+    | bs, c  ->
+        fail "Codomain is effectful"
+    | [], _ ->
+        fail1 "goal is not an arrow (%s)" (tts (goal_env goal) (goal_type goal))
+
+    | bs, c ->
+        let env', bs, c = FStar.TypeChecker.Core.open_binders_in_comp (goal_env goal) bs c in
+        let typ' = U.comp_result c in
+        let! body, ctx_uvar =
+          new_uvar "intros" env' typ'
+                   (Some (should_check_goal_uvar goal))
+                   (goal_typedness_deps goal)
+                   (rangeof goal) in
+        let sol = U.abs bs body (Some (U.residual_comp_of_comp c)) in
+        set_solution goal sol ;!
+        let g = mk_goal env' ctx_uvar goal.opts goal.is_guard goal.label in
+        bnorm_and_replace g ;!
+        return (List.map binder_to_binding bs)
+    )
+
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
 let intro_rec () : tac (RD.binding & RD.binding) =
     let! goal = cur_goal in

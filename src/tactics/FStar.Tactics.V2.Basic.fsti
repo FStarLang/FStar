@@ -58,6 +58,7 @@ val norm                   : list Pervasives.norm_step -> tac unit
 val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
 val norm_binding_type      : list Pervasives.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
+val intros                 : unit -> tac (list RD.binding)
 val intro_rec              : unit -> tac (RD.binding & RD.binding)
 val rename_to              : RD.binding -> string -> tac RD.binding
 val revert                 : unit -> tac unit
