@@ -1102,9 +1102,12 @@ let run_unembedded_tactic_on_ps :
                      let uu___2 =
                        let uu___3 =
                          let uu___4 =
-                           let uu___5 =
-                             FStar_Pprint.doc_of_string "Tactic failed" in
-                           [uu___5] in
+                           if ps3.FStar_Tactics_Types.dump_on_failure
+                           then
+                             let uu___5 =
+                               FStar_Pprint.doc_of_string "Tactic failed" in
+                             [uu___5]
+                           else [] in
                          let uu___5 = texn_to_doc e in
                          FStar_Compiler_List.op_At uu___4 uu___5 in
                        (FStar_Errors_Codes.Fatal_UserTacticFailure, uu___3) in
