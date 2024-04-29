@@ -3695,27 +3695,38 @@ and (encode_formula :
                   | (FStar_Pervasives_Native.Some r1,
                      FStar_Pervasives_Native.Some s) ->
                       let phi3 =
-                        FStar_Syntax_Syntax.mk
-                          (FStar_Syntax_Syntax.Tm_meta
-                             {
-                               FStar_Syntax_Syntax.tm2 = phi2;
-                               FStar_Syntax_Syntax.meta =
-                                 (FStar_Syntax_Syntax.Meta_labeled
-                                    (s, r1, false))
-                             }) r1 in
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 = FStar_Errors_Msg.mkmsg s in
+                                (uu___8, r1, false) in
+                              FStar_Syntax_Syntax.Meta_labeled uu___7 in
+                            {
+                              FStar_Syntax_Syntax.tm2 = phi2;
+                              FStar_Syntax_Syntax.meta = uu___6
+                            } in
+                          FStar_Syntax_Syntax.Tm_meta uu___5 in
+                        FStar_Syntax_Syntax.mk uu___4 r1 in
                       fallback phi3
                   | (FStar_Pervasives_Native.None,
                      FStar_Pervasives_Native.Some s) ->
                       let phi3 =
-                        FStar_Syntax_Syntax.mk
-                          (FStar_Syntax_Syntax.Tm_meta
-                             {
-                               FStar_Syntax_Syntax.tm2 = phi2;
-                               FStar_Syntax_Syntax.meta =
-                                 (FStar_Syntax_Syntax.Meta_labeled
-                                    (s, (phi2.FStar_Syntax_Syntax.pos),
-                                      false))
-                             }) phi2.FStar_Syntax_Syntax.pos in
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 = FStar_Errors_Msg.mkmsg s in
+                                (uu___8, (phi2.FStar_Syntax_Syntax.pos),
+                                  false) in
+                              FStar_Syntax_Syntax.Meta_labeled uu___7 in
+                            {
+                              FStar_Syntax_Syntax.tm2 = phi2;
+                              FStar_Syntax_Syntax.meta = uu___6
+                            } in
+                          FStar_Syntax_Syntax.Tm_meta uu___5 in
+                        FStar_Syntax_Syntax.mk uu___4
+                          phi2.FStar_Syntax_Syntax.pos in
                       fallback phi3
                   | uu___4 -> fallback phi2)
              | (FStar_Syntax_Syntax.Tm_fvar fv, (t, uu___)::[]) when

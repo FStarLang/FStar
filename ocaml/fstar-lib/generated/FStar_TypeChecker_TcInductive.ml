@@ -1299,10 +1299,27 @@ let (optimized_haseq_soundness_for_data :
                          ((b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos in
                        let haseq_b1 =
                          let uu___2 =
-                           let uu___3 = FStar_Ident.string_of_lid ty_lid in
-                           FStar_Compiler_Util.format1
-                             "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier"
-                             uu___3 in
+                           let uu___3 =
+                             let uu___4 =
+                               FStar_Errors_Msg.text
+                                 "Failed to prove that the type" in
+                             let uu___5 =
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStar_Class_PP.pp
+                                     FStar_Ident.pretty_lident ty_lid in
+                                 FStar_Pprint.squotes uu___7 in
+                               let uu___7 =
+                                 FStar_Errors_Msg.text
+                                   "supports decidable equality because of this argument." in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                           let uu___4 =
+                             let uu___5 =
+                               FStar_Errors_Msg.text
+                                 "Add either the 'noeq' or 'unopteq' qualifier" in
+                             [uu___5] in
+                           uu___3 :: uu___4 in
                          FStar_TypeChecker_Util.label uu___2 sort_range
                            haseq_b in
                        FStar_Syntax_Util.mk_conj t haseq_b1)

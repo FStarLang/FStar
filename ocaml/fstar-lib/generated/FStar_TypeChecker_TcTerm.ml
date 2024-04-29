@@ -809,9 +809,11 @@ let (check_expected_effect :
                                       let g1 =
                                         let uu___10 =
                                           FStar_TypeChecker_Env.get_range env in
+                                        let uu___11 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Could not prove post-condition" in
                                         FStar_TypeChecker_Util.label_guard
-                                          uu___10
-                                          "Could not prove post-condition" g in
+                                          uu___10 uu___11 g in
                                       ((let uu___11 =
                                           FStar_TypeChecker_Env.debug env
                                             FStar_Options.Medium in
@@ -1606,9 +1608,10 @@ let (guard_letrecs :
                              FStar_TypeChecker_Env.push_binders env1 formals1 in
                            mk_precedes env2 dec previous_dec in
                          let precedes1 =
-                           FStar_TypeChecker_Util.label
-                             "Could not prove termination of this recursive call"
-                             r precedes in
+                           let uu___3 =
+                             FStar_Errors_Msg.mkmsg
+                               "Could not prove termination of this recursive call" in
+                           FStar_TypeChecker_Util.label uu___3 r precedes in
                          let uu___3 = FStar_Compiler_Util.prefix formals1 in
                          match uu___3 with
                          | (bs,
@@ -2639,8 +2642,7 @@ and (tc_maybe_toplevel_term :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___9 ->
-                                     FStar_Compiler_Util.return_all
-                                       FStar_TypeChecker_Err.ill_kinded_type))
+                                     FStar_TypeChecker_Err.ill_kinded_type))
                                uu___8 e2 c f in
                            (match uu___7 with
                             | (c1, f1) ->
@@ -6067,10 +6069,12 @@ and (tc_abs_check_binders :
                                 | (t, uu___8, g1_env) ->
                                     let g2_env =
                                       let label_guard g =
+                                        let uu___9 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Type annotation on parameter incompatible with the expected type" in
                                         FStar_TypeChecker_Util.label_guard
                                           (hd.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos
-                                          "Type annotation on parameter incompatible with the expected type"
-                                          g in
+                                          uu___9 g in
                                       let uu___9 =
                                         FStar_TypeChecker_Rel.teq_nosmt env1
                                           t expected_t in
@@ -10699,7 +10703,8 @@ and (check_inner_let :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___7 ->
-                                     "folding guard g2 of e2 in the lcomp"))
+                                     FStar_Errors_Msg.mkmsg
+                                       "folding guard g2 of e2 in the lcomp"))
                                env_x e22 c2 g2 in
                            (match uu___6 with | (c21, g21) -> (e22, c21, g21)) in
                      (match uu___4 with

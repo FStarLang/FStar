@@ -83,6 +83,15 @@ let hash_option :
             let uu___1 = FStar_Hash.of_int (Prims.of_int (1249)) in
             ret uu___1 in
           let uu___1 = h o1 in mix uu___ uu___1
+let (hash_doc : FStar_Pprint.document -> FStar_Hash.hash_code mm) =
+  fun d ->
+    let uu___ =
+      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
+        (Prims.of_int (80)) d in
+    of_string uu___
+let (hash_doc_list :
+  FStar_Pprint.document Prims.list -> FStar_Hash.hash_code mm) =
+  fun ds -> hash_list hash_doc ds
 let hash_pair :
   'a 'b .
     ('a -> FStar_Hash.hash_code mm) ->
@@ -579,7 +588,7 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code mm) =
         let uu___1 =
           let uu___2 = of_int (Prims.of_int (1031)) in
           let uu___3 =
-            let uu___4 = of_string s in
+            let uu___4 = hash_doc_list s in
             let uu___5 =
               let uu___6 =
                 let uu___7 = FStar_Compiler_Range_Ops.string_of_range r in

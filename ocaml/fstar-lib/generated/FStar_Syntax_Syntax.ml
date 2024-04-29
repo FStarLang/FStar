@@ -337,8 +337,8 @@ and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list Prims.list) 
   | Meta_named of FStar_Ident.lident 
-  | Meta_labeled of (Prims.string * FStar_Compiler_Range_Type.range *
-  Prims.bool) 
+  | Meta_labeled of (FStar_Pprint.document Prims.list *
+  FStar_Compiler_Range_Type.range * Prims.bool) 
   | Meta_desugared of meta_source_info 
   | Meta_monadic of (monad_name * term' syntax) 
   | Meta_monadic_lift of (monad_name * monad_name * term' syntax) 
@@ -847,7 +847,9 @@ let (uu___is_Meta_labeled : metadata -> Prims.bool) =
   fun projectee ->
     match projectee with | Meta_labeled _0 -> true | uu___ -> false
 let (__proj__Meta_labeled__item___0 :
-  metadata -> (Prims.string * FStar_Compiler_Range_Type.range * Prims.bool))
+  metadata ->
+    (FStar_Pprint.document Prims.list * FStar_Compiler_Range_Type.range *
+      Prims.bool))
   = fun projectee -> match projectee with | Meta_labeled _0 -> _0
 let (uu___is_Meta_desugared : metadata -> Prims.bool) =
   fun projectee ->
