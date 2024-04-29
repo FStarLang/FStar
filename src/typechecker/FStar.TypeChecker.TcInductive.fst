@@ -932,8 +932,9 @@ let mk_discriminator_and_indexed_projectors iquals                   (* Qualifie
     in
 
     let discriminator_ses =
-        if fvq <> Data_ctor
-        then [] // We do not generate discriminators for record types
+        if fvq <> Data_ctor || not refine_domain
+        then [] // We do not generate discriminators for record types nor single-constructor
+                // inductive. `refine_domain` is only false for such inductives, so reuse it.
         else
             let discriminator_name = U.mk_discriminator lid in
             let no_decl = false in

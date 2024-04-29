@@ -39,4 +39,5 @@ val get_haseq_axiom_lid: lid -> lid  //for the given inductive tycon lid, get th
 val optimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> list sigelt
 val unoptimized_haseq_scheme: sigelt -> list sigelt -> list sigelt -> env_t -> list sigelt
 
-val mk_data_operations: list qualifier -> list attribute -> env -> list sigelt -> sigelt -> list sigelt  //elaborate discriminator and projectors
+// Elaborate discriminator and projectors
+val mk_data_operations: list qualifier -> list attribute -> env -> list sigelt -> sigelt -> list sigelt
