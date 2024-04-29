@@ -4186,7 +4186,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
         open_namespaces = open_modules_and_namespaces env;
         module_abbreviations = module_abbrevs env
       } in
-      match parser opens code range with
+      match parser.parse_decl opens code range with
       | Inl error ->
         raise_error
           (Errors.Fatal_SyntaxError, error.message)

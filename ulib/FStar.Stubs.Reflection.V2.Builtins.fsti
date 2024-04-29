@@ -101,6 +101,13 @@ val inspect_pack_universe (uv:universe_view) : Lemma (inspect_universe (pack_uni
 val pack_inspect_ident (u:ident) : Lemma (pack_ident (inspect_ident u) == u)
 val inspect_pack_ident (uv:ident_view) : Lemma (inspect_ident (pack_ident uv) == uv)
 
+val pack_inspect_lb (lb:letbinding) : Lemma (pack_lb (inspect_lb lb) == lb)
+val inspect_pack_lb (lbv:lb_view) : Lemma (inspect_lb (pack_lb lbv) == lbv)
+
+val pack_inspect_sigelt (se:sigelt) : Lemma ((~(Unk? (inspect_sigelt se))) ==> pack_sigelt (inspect_sigelt se) == se)
+val inspect_pack_sigelt (sev:sigelt_view { ~ (Unk? sev) }) : Lemma (inspect_sigelt (pack_sigelt sev) == sev)
+
+
 val simple_binder_defn (b:binder) :
   Lemma (binder_is_simple b <==>
           Q_Explicit? (inspect_binder b).qual /\ Nil? (inspect_binder b).attrs)

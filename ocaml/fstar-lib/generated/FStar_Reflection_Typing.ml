@@ -1652,13 +1652,16 @@ let (__proj__ST_Let_Opaque__item__ty :
       fun projectee ->
         match projectee with | ST_Let_Opaque (g, fv, ty, _3) -> ty
 type blob = (Prims.string * FStar_Reflection_Types.term)
-type 'g sigelt_for =
+type ('s, 't) sigelt_has_type = Obj.t
+type ('g, 't) sigelt_for =
   (Prims.bool * FStar_Reflection_Types.sigelt * blob
     FStar_Pervasives_Native.option)
-type 'g dsl_tac_result_t = unit sigelt_for Prims.list
+type ('g, 't) dsl_tac_result_t =
+  ((unit, unit) sigelt_for Prims.list * (unit, unit) sigelt_for * (unit,
+    unit) sigelt_for Prims.list)
 type dsl_tac_t =
-  fstar_top_env ->
-    (unit dsl_tac_result_t, unit) FStar_Tactics_Effect.tac_repr
+  (fstar_top_env * FStar_Reflection_Types.typ FStar_Pervasives_Native.option)
+    -> ((unit, unit) dsl_tac_result_t, unit) FStar_Tactics_Effect.tac_repr
 let (if_complete_match :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
@@ -1734,146 +1737,61 @@ let (mkif :
                                 (brty ()))
 let (mk_checked_let :
   FStar_Reflection_Types.env ->
-    Prims.string ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          (unit sigelt_for, unit) FStar_Tactics_Effect.tac_repr)
+    FStar_Reflection_Types.name ->
+      Prims.string ->
+        FStar_Reflection_Types.term ->
+          FStar_Reflection_Types.typ -> (unit, unit) sigelt_for)
   =
   fun g ->
-    fun nm ->
-      fun tm ->
-        fun ty ->
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1833)) (Prims.of_int (11))
-                     (Prims.of_int (1833)) (Prims.of_int (43)))))
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1833)) (Prims.of_int (46))
-                     (Prims.of_int (1839)) (Prims.of_int (20)))))
-            (Obj.magic
-               (FStar_Tactics_Effect.tac_bind
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1833)) (Prims.of_int (19))
-                           (Prims.of_int (1833)) (Prims.of_int (43)))))
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1833)) (Prims.of_int (11))
-                           (Prims.of_int (1833)) (Prims.of_int (43)))))
-                  (Obj.magic
-                     (FStar_Tactics_Effect.tac_bind
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range
-                                 "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1833)) (Prims.of_int (20))
-                                 (Prims.of_int (1833)) (Prims.of_int (35)))))
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range
-                                 "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1833)) (Prims.of_int (19))
-                                 (Prims.of_int (1833)) (Prims.of_int (43)))))
-                        (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
-                        (fun uu___ ->
-                           FStar_Tactics_Effect.lift_div_tac
-                             (fun uu___1 ->
-                                FStar_List_Tot_Base.op_At uu___ [nm]))))
-                  (fun uu___ ->
-                     FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___1 ->
-                          FStar_Reflection_V2_Builtins.pack_fv uu___))))
-            (fun fv ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___ ->
-                    (true,
-                      (FStar_Reflection_V2_Builtins.pack_sigelt
-                         (FStar_Reflection_V2_Data.Sg_Let
-                            (false,
-                              [FStar_Reflection_V2_Builtins.pack_lb
-                                 {
-                                   FStar_Reflection_V2_Data.lb_fv = fv;
-                                   FStar_Reflection_V2_Data.lb_us = [];
-                                   FStar_Reflection_V2_Data.lb_typ = ty;
-                                   FStar_Reflection_V2_Data.lb_def = tm
-                                 }]))), FStar_Pervasives_Native.None)))
+    fun cur_module ->
+      fun nm ->
+        fun tm ->
+          fun ty ->
+            let fv =
+              FStar_Reflection_V2_Builtins.pack_fv
+                (FStar_List_Tot_Base.op_At cur_module [nm]) in
+            let lb =
+              FStar_Reflection_V2_Builtins.pack_lb
+                {
+                  FStar_Reflection_V2_Data.lb_fv = fv;
+                  FStar_Reflection_V2_Data.lb_us = [];
+                  FStar_Reflection_V2_Data.lb_typ = ty;
+                  FStar_Reflection_V2_Data.lb_def = tm
+                } in
+            let se =
+              FStar_Reflection_V2_Builtins.pack_sigelt
+                (FStar_Reflection_V2_Data.Sg_Let (false, [lb])) in
+            let pf = ST_Let (g, fv, ty, tm, ()) in
+            (true, se, FStar_Pervasives_Native.None)
 let (mk_unchecked_let :
   FStar_Reflection_Types.env ->
-    Prims.string ->
-      FStar_Reflection_Types.term ->
-        FStar_Reflection_Types.typ ->
-          (unit sigelt_for, unit) FStar_Tactics_Effect.tac_repr)
+    FStar_Reflection_Types.name ->
+      Prims.string ->
+        FStar_Reflection_Types.term ->
+          FStar_Reflection_Types.typ ->
+            (Prims.bool * FStar_Reflection_Types.sigelt * blob
+              FStar_Pervasives_Native.option))
   =
   fun g ->
-    fun nm ->
-      fun tm ->
-        fun ty ->
-          FStar_Tactics_Effect.tac_bind
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1842)) (Prims.of_int (11))
-                     (Prims.of_int (1842)) (Prims.of_int (43)))))
-            (FStar_Sealed.seal
-               (Obj.magic
-                  (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                     (Prims.of_int (1842)) (Prims.of_int (46))
-                     (Prims.of_int (1845)) (Prims.of_int (21)))))
-            (Obj.magic
-               (FStar_Tactics_Effect.tac_bind
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1842)) (Prims.of_int (19))
-                           (Prims.of_int (1842)) (Prims.of_int (43)))))
-                  (FStar_Sealed.seal
-                     (Obj.magic
-                        (FStar_Range.mk_range "FStar.Reflection.Typing.fsti"
-                           (Prims.of_int (1842)) (Prims.of_int (11))
-                           (Prims.of_int (1842)) (Prims.of_int (43)))))
-                  (Obj.magic
-                     (FStar_Tactics_Effect.tac_bind
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range
-                                 "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1842)) (Prims.of_int (20))
-                                 (Prims.of_int (1842)) (Prims.of_int (35)))))
-                        (FStar_Sealed.seal
-                           (Obj.magic
-                              (FStar_Range.mk_range
-                                 "FStar.Reflection.Typing.fsti"
-                                 (Prims.of_int (1842)) (Prims.of_int (19))
-                                 (Prims.of_int (1842)) (Prims.of_int (43)))))
-                        (Obj.magic (FStar_Tactics_V2_Derived.cur_module ()))
-                        (fun uu___ ->
-                           FStar_Tactics_Effect.lift_div_tac
-                             (fun uu___1 ->
-                                FStar_List_Tot_Base.op_At uu___ [nm]))))
-                  (fun uu___ ->
-                     FStar_Tactics_Effect.lift_div_tac
-                       (fun uu___1 ->
-                          FStar_Reflection_V2_Builtins.pack_fv uu___))))
-            (fun fv ->
-               FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___ ->
-                    (false,
-                      (FStar_Reflection_V2_Builtins.pack_sigelt
-                         (FStar_Reflection_V2_Data.Sg_Let
-                            (false,
-                              [FStar_Reflection_V2_Builtins.pack_lb
-                                 {
-                                   FStar_Reflection_V2_Data.lb_fv = fv;
-                                   FStar_Reflection_V2_Data.lb_us = [];
-                                   FStar_Reflection_V2_Data.lb_typ = ty;
-                                   FStar_Reflection_V2_Data.lb_def = tm
-                                 }]))), FStar_Pervasives_Native.None)))
+    fun cur_module ->
+      fun nm ->
+        fun tm ->
+          fun ty ->
+            let fv =
+              FStar_Reflection_V2_Builtins.pack_fv
+                (FStar_List_Tot_Base.op_At cur_module [nm]) in
+            let lb =
+              FStar_Reflection_V2_Builtins.pack_lb
+                {
+                  FStar_Reflection_V2_Data.lb_fv = fv;
+                  FStar_Reflection_V2_Data.lb_us = [];
+                  FStar_Reflection_V2_Data.lb_typ = ty;
+                  FStar_Reflection_V2_Data.lb_def = tm
+                } in
+            let se =
+              FStar_Reflection_V2_Builtins.pack_sigelt
+                (FStar_Reflection_V2_Data.Sg_Let (false, [lb])) in
+            (false, se, FStar_Pervasives_Native.None)
 let (typing_to_token :
   FStar_Reflection_Types.env ->
     FStar_Reflection_Types.term ->
