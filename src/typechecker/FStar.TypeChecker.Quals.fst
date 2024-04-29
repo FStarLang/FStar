@@ -230,54 +230,39 @@ let check_erasable env quals r se =
  *  if and only if `e` is a type that's non-informative (e..g., unit, t -> unit, etc.)
  *)
 let check_must_erase_attribute env se =
-    match se.sigel with
-    | Sig_let {lbs; lids=l} ->
-        if not (Options.ide())
-        then
-        begin
-          match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
-          | None ->
-            ()
+  if Options.ide() then () else
+  match se.sigel with
+  | Sig_let {lbs; lids=l} ->
+    begin match DsEnv.iface_decls (Env.dsenv env) (Env.current_module env) with
+     | None ->
+       ()
 
-          | Some iface_decls ->
-            snd lbs |> List.iter (fun lb ->
-                let lbname = BU.right lb.lbname in
-                let has_iface_val =
-                    iface_decls |> BU.for_some (FStar.Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
-                in
-                if has_iface_val
-                then
-                    let must_erase =
-                      TcUtil.must_erase_for_extraction env lb.lbdef in
-                    let has_attr =
-                      Env.fv_has_attr env
-                                      lbname
-                                      FStar.Parser.Const.must_erase_for_extraction_attr in
-                    if must_erase && not has_attr
-                    then
-                        FStar.Errors.log_issue_doc
-                            (range_of_fv lbname)
-                            (FStar.Errors.Error_MustEraseMissing,
-                               [Errors.text (BU.format2
-                                    "Values of type `%s` will be erased during extraction, \
-                                    but its interface hides this fact. Add the `must_erase_for_extraction` \
-                                    attribute to the `val %s` declaration for this symbol in the interface"
-                                    (Print.fv_to_string lbname)
-                                    (Print.fv_to_string lbname)
-                                    )])
-                    else if has_attr && not must_erase
-                    then FStar.Errors.log_issue_doc
-                        (range_of_fv lbname)
-                        (FStar.Errors.Error_MustEraseMissing,
-                           [Errors.text (BU.format1
-                                "Values of type `%s` cannot be erased during extraction, \
-                                but the `must_erase_for_extraction` attribute claims that it can. \
-                                Please remove the attribute."
-                                (Print.fv_to_string lbname)
-                                )]))
-    end
-
-    | _ -> ()
+     | Some iface_decls ->
+       snd lbs |> List.iter (fun lb ->
+           let lbname = BU.right lb.lbname in
+           let has_iface_val =
+               iface_decls |> BU.for_some (Parser.AST.decl_is_val (ident_of_lid lbname.fv_name.v))
+           in
+           if has_iface_val
+           then
+               let must_erase = TcUtil.must_erase_for_extraction env lb.lbdef in
+               let has_attr = Env.fv_has_attr env lbname C.must_erase_for_extraction_attr in
+               if must_erase && not has_attr
+               then log_issue_doc (range_of_fv lbname) (Error_MustEraseMissing, [
+                        text (BU.format2 "Values of type `%s` will be erased during extraction, \
+                               but its interface hides this fact. Add the `must_erase_for_extraction` \
+                               attribute to the `val %s` declaration for this symbol in the interface"
+                               (show lbname) (show lbname));
+                      ])
+               else if has_attr && not must_erase
+               then log_issue_doc (range_of_fv lbname) (Error_MustEraseMissing, [
+                        text (BU.format1 "Values of type `%s` cannot be erased during extraction, \
+                               but the `must_erase_for_extraction` attribute claims that it can. \
+                               Please remove the attribute."
+                               (show lbname));
+                      ]))
+  end
+  | _ -> ()
 
 let check_typeclass_instance_attribute env rng se =
   let is_tc_instance =
