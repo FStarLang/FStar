@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Imp.List
-//#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug SMTQuery"
 open FStar.Mul
 module R = Registers.List
 

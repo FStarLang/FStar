@@ -38,6 +38,8 @@ module UF    = FStar.Syntax.Unionfind
 module Env   = FStar.TypeChecker.Env
 module N     = FStar.TypeChecker.Normalize
 
+let dbg_Gen = Debug.get_toggle "Gen"
+
 instance showable_univ_var : showable universe_uvar = {
   show = (fun u -> show (U_unif u));
 }
@@ -49,12 +51,12 @@ instance showable_univ_var : showable universe_uvar = {
 let gen_univs env (x:FlatSet.t universe_uvar) : list univ_name =
     if is_empty x then []
     else let s = diff x (Env.univ_vars env) |> elems in // GGG: bad, order dependent
-         if Env.debug env <| Options.Other "Gen" then
+         if !dbg_Gen then
            BU.print1 "univ_vars in env: %s\n" (show (Env.univ_vars env));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u ->
            let u_name = Syntax.new_univ_name r in
-           if Env.debug env <| Options.Other "Gen" then
+           if !dbg_Gen then
             BU.print3 "Setting ?%s (%s) to %s\n"
                             (string_of_int <| UF.univ_uvar_id u)
                             (show (U_unif u))
@@ -91,13 +93,13 @@ let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
     let univnames = elems (gather_free_univnames env t) in /// GGG: bad, order dependent
-    if Env.debug env <| Options.Other "Gen"
+    if !dbg_Gen
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (show t) (show univnames);
     let univs = Free.univs t in
-    if Env.debug env <| Options.Other "Gen"
+    if !dbg_Gen
     then BU.print1 "univs to gen : %s\n" (show univs);
     let gen = gen_univs env univs in
-    if Env.debug env <| Options.Other "Gen"
+    if !dbg_Gen
     then BU.print2 "After generalization, t: %s and univs: %s\n"  (show t) (show gen);
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
@@ -110,10 +112,10 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
   then None
   else
      let norm c =
-        if debug env Options.Medium
+        if Debug.medium ()
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (show c);
          let c = Normalize.normalize_comp [Env.Beta; Env.Exclude Env.Zeta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env c in
-         if debug env Options.Medium then
+         if Debug.medium () then
             BU.print1 "Normalized to:\n\t %s\n" (show c);
          c in
      let env_uvars = Env.uvars_in_env env in
@@ -123,7 +125,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
           let t = U.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
-          if Env.debug env <| Options.Other "Gen"
+          if !dbg_Gen
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (show univs) (show uvt);
           let univs =
@@ -133,7 +135,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
              (elems uvt) // Bad; order dependent
           in
           let uvs = gen_uvars uvt in
-          if Env.debug env <| Options.Other "Gen"
+          if !dbg_Gen
           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n"
                 (show univs) (show uvs);
 
@@ -262,7 +264,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
 
 let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname*univ_names*term*comp*list binder)) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
-  if debug env Options.Low then
+  if Debug.low () then
      BU.print1 "Generalizing: %s\n"
        (show <| List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs);
   let univnames_lecs = 
@@ -278,7 +280,7 @@ let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
           | Some luecs ->
-            if debug env Options.Medium
+            if Debug.medium ()
             then luecs |> List.iter
                     (fun (l, us, e, c, gvs) ->
                          BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"

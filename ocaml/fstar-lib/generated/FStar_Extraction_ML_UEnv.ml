@@ -251,12 +251,13 @@ let with_typars_env :
              currentModule = (u.currentModule)
            }, x)
 let (bindings_of_uenv : uenv -> binding Prims.list) = fun u -> u.env_bindings
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Extraction"
 let (debug : uenv -> (unit -> unit) -> unit) =
   fun g ->
     fun f ->
       let c = FStar_Extraction_ML_Syntax.string_of_mlpath g.currentModule in
-      let uu___ =
-        FStar_Options.debug_at_level c (FStar_Options.Other "Extraction") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg in
       if uu___ then f () else ()
 let (print_mlpath_map : uenv -> Prims.string) =
   fun g ->

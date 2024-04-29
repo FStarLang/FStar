@@ -971,7 +971,7 @@ let ask_solver_quake
                  then (nsucc, nfail, rs)
                  else begin
                  if quaking_or_retrying
-                    && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
+                    && (Options.interactive () || Debug.any ()) (* only on emacs or when debugging *)
                     && n>0 then (* no need to print last *)
                    BU.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
                        (if quaking then "Quake" else "Retry")
@@ -1298,7 +1298,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
       | Assume _ ->
         if (is_retry || Options.split_queries() = Options.Always)
-        && Options.debug_any()
+        && Debug.any()
         then (
           let n = List.length labels in
           if n <> 1

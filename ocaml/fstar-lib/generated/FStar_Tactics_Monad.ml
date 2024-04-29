@@ -1,4 +1,12 @@
 open Prims
+let (dbg_Core : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Core"
+let (dbg_CoreEq : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreEq"
+let (dbg_RegisterGoal : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RegisterGoal"
+let (dbg_TacFail : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacFail"
 let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (get_goal_ctr : unit -> Prims.int) =
@@ -153,9 +161,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.core_check =
                    (env.FStar_TypeChecker_Env.core_check)
                } in
-             (let uu___6 =
-                FStar_TypeChecker_Env.debug env1
-                  (FStar_Options.Other "CoreEq") in
+             (let uu___6 = FStar_Compiler_Effect.op_Bang dbg_CoreEq in
               if uu___6
               then
                 let uu___7 =
@@ -168,11 +174,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
               if Prims.op_Negation should_register
               then
                 let uu___7 =
-                  (FStar_TypeChecker_Env.debug env1
-                     (FStar_Options.Other "Core"))
-                    ||
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "RegisterGoal")) in
+                  (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                    (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                 (if uu___7
                  then
                    let uu___8 =
@@ -185,11 +188,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  else ())
               else
                 ((let uu___8 =
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "Core"))
-                      ||
-                      (FStar_TypeChecker_Env.debug env1
-                         (FStar_Options.Other "RegisterGoal")) in
+                    (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                      (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                   if uu___8
                   then
                     let uu___9 =
@@ -291,9 +291,7 @@ let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
   fun msg ->
     mk_tac
       (fun ps ->
-         (let uu___1 =
-            FStar_TypeChecker_Env.debug ps.FStar_Tactics_Types.main_context
-              (FStar_Options.Other "TacFail") in
+         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_TacFail in
           if uu___1
           then
             let uu___2 =

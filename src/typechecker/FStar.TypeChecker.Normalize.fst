@@ -52,6 +52,9 @@ module TcComm = FStar.TypeChecker.Common
 module PO = FStar.TypeChecker.Primops
 open FStar.TypeChecker.Normalize.Unfolding
 
+let dbg_univ_norm = Debug.get_toggle "univ_norm"
+let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
+
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
  * reduction and strong reduction (under binders), as described in:
@@ -218,7 +221,7 @@ let norm_universe cfg (env:env) u =
             begin
                 try match snd (List.nth env x) with
                       | Univ u ->
-                           if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                           if !dbg_univ_norm then
                                BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
                            else ();  aux u
                       | Dummy -> [u]
@@ -1155,7 +1158,7 @@ let is_forall_const cfg (phi : term) : option term =
 
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
- * information when --debug_level NormTop is given, which makes it a
+ * information when --debug NormTop is given, which makes it a
  * whole lot easier to find normalization calls that are taking a long
  * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -1814,7 +1817,7 @@ and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          if n > 0
          then match stack with //universe beta reduction
                 | UnivArgs(us', _)::stack ->
-                  if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                  if !dbg_univ_norm then
                       List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
                   else ();
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
@@ -2540,7 +2543,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                         (show t)
                                         (show (List.length env))
                                         (show (fst <| firstn 4 stack));
-    if Env.debug cfg.tcenv (Options.Other "NormRebuild")
+    if !dbg_NormRebuild
     then match FStar.Syntax.Util.unbound_variables t with
          | [] -> ()
          | bvs ->

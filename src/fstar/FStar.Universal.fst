@@ -553,8 +553,9 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
+let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
-  if Options.debug_at_level_no_module (Options.Other "Dep") then begin
+  if !dbg_dep then begin
     FStar.Compiler.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Compiler.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);

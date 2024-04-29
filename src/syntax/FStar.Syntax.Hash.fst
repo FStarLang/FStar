@@ -99,7 +99,7 @@ and hash_comp c
 
 and hash_term' (t:term)
   : mm H.hash_code
-  = // if Options.debug_any ()
+  = // if Debug.any ()
     // then FStar.Compiler.Util.print1 "Hash_term %s\n" (FStar.Syntax.Print.term_to_string t);
     match (SS.compress t).n with
     | Tm_bvar bv -> mix (of_int 3) (of_int bv.index)

@@ -41,6 +41,8 @@ module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
 module SS = FStar.Syntax.Subst
 
+let dbg_attrs = Debug.get_toggle "attrs"
+
 type antiquotations_temp = list (bv * S.term)
 
 let tun_r (r:Range.range) : S.term = { tun with pos = r }
@@ -3141,7 +3143,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                                             sigopens_and_abbrevs = opens_and_abbrevs env
                               }))))
           in
-          if Options.debug_at_level_no_module (Options.Other "attrs")
+          if !dbg_attrs
           then (
             BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
               (string_of_lid tname)
@@ -3166,7 +3168,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
       in
       let sigelts = tps_sigelts |> List.map (fun (_, se) -> se) in
       let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
-      if Options.debug_at_level_no_module (Options.Other "attrs")
+      if !dbg_attrs
       then (
         BU.print1 "After disentangling: %s\n"
               (Print.sigelt_to_string bundle)
@@ -3728,7 +3730,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t * sigelts) =
         else quals
     in
     let env, ses = desugar_tycon env d d_attrs (List.map (trans_qual None) quals) tcs in
-    if Options.debug_at_level_no_module (Options.Other "attrs")
+    if !dbg_attrs
     then (
       BU.print2 "Desugared tycon from {%s} to {%s}\n"
                 (FStar.Parser.AST.decl_to_string d)

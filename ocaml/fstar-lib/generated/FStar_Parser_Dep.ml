@@ -9,6 +9,8 @@ let (uu___is_Open_namespace : open_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Open_namespace -> true | uu___ -> false
 type module_name = Prims.string
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Dep"
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
@@ -1124,9 +1126,7 @@ let (collect_one :
             if uu___
             then ()
             else
-              (let uu___2 =
-                 FStar_Options.debug_at_level_no_module
-                   (FStar_Options.Other "Dep") in
+              (let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                if uu___2
                then
                  let uu___3 = FStar_Ident.range_of_lid module_name1 in
@@ -1186,9 +1186,7 @@ let (collect_one :
             from_parsing_data uu___1 original_map filename in
           match uu___ with
           | (deps1, has_inline_for_extraction, mo_roots) ->
-              ((let uu___2 =
-                  FStar_Options.debug_at_level_no_module
-                    (FStar_Options.Other "Dep") in
+              ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                 if uu___2
                 then
                   let uu___3 =
@@ -1884,9 +1882,7 @@ let (topological_dependences_of' :
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black -> (all_friends, all_files)
                    | White ->
-                       ((let uu___2 =
-                           FStar_Options.debug_at_level_no_module
-                             (FStar_Options.Other "Dep") in
+                       ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                          if uu___2
                          then
                            let uu___3 =
@@ -1909,9 +1905,7 @@ let (topological_dependences_of' :
                          | (all_friends1, all_files1) ->
                              (deps_add_dep dep_graph1 filename
                                 { edges = (dep_node1.edges); color = Black };
-                              (let uu___6 =
-                                 FStar_Options.debug_at_level_no_module
-                                   (FStar_Options.Other "Dep") in
+                              (let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
                                if uu___6
                                then
                                  FStar_Compiler_Util.print1 "Adding %s\n"
@@ -1936,9 +1930,7 @@ let (topological_dependences_of' :
             let uu___ = all_friend_deps dep_graph [] ([], []) root_files in
             match uu___ with
             | (friends1, all_files_0) ->
-                ((let uu___2 =
-                    FStar_Options.debug_at_level_no_module
-                      (FStar_Options.Other "Dep") in
+                ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                   if uu___2
                   then
                     let uu___3 =
@@ -1957,9 +1949,7 @@ let (topological_dependences_of' :
                   match uu___2 with
                   | (widened1, dep_graph1) ->
                       let uu___3 =
-                        (let uu___5 =
-                           FStar_Options.debug_at_level_no_module
-                             (FStar_Options.Other "Dep") in
+                        (let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                          if uu___5
                          then
                            FStar_Compiler_Util.print_string
@@ -1968,9 +1958,7 @@ let (topological_dependences_of' :
                         all_friend_deps dep_graph1 [] ([], []) root_files in
                       (match uu___3 with
                        | (uu___4, all_files) ->
-                           ((let uu___6 =
-                               FStar_Options.debug_at_level_no_module
-                                 (FStar_Options.Other "Dep") in
+                           ((let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
                              if uu___6
                              then
                                FStar_Compiler_Util.print1
@@ -1987,9 +1975,7 @@ let (phase1 :
     fun dep_graph ->
       fun interfaces_needing_inlining ->
         fun for_extraction ->
-          (let uu___1 =
-             FStar_Options.debug_at_level_no_module
-               (FStar_Options.Other "Dep") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
            if uu___1
            then
              FStar_Compiler_Util.print_string
@@ -2226,9 +2212,7 @@ let (collect :
             "FStar.Parser.Dep.topological_dependences_of" in
         match uu___3 with
         | (all_files, uu___4) ->
-            ((let uu___6 =
-                FStar_Options.debug_at_level_no_module
-                  (FStar_Options.Other "Dep") in
+            ((let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
               if uu___6
               then
                 FStar_Compiler_Util.print1

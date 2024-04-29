@@ -1375,6 +1375,8 @@ let rec (tc_fold_interleave :
                          ((FStar_Compiler_List.op_At mods [nmod]),
                            (FStar_Compiler_List.op_At mllibs
                               (as_list env_before mllib)), env) remaining1)))
+let (dbg_dep : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Dep"
 let (batch_mode_tc :
   Prims.string Prims.list ->
     FStar_Parser_Dep.deps ->
@@ -1382,8 +1384,7 @@ let (batch_mode_tc :
   =
   fun filenames ->
     fun dep_graph ->
-      (let uu___1 =
-         FStar_Options.debug_at_level_no_module (FStar_Options.Other "Dep") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_dep in
        if uu___1
        then
          (FStar_Compiler_Util.print_endline

@@ -15,7 +15,7 @@
 *)
 module Imp
 
-//#set-options "--debug Imp --debug_level SMTQuery"
+//#set-options "--debug SMTQuery"
 
 open FStar.Mul
 open FStar.Tactics.V2

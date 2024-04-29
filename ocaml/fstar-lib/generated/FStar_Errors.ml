@@ -483,7 +483,7 @@ let (mk_default_handler : Prims.bool -> error_handler) =
       else ();
       (match e.issue_level with
        | EInfo -> print_issue e
-       | uu___2 when print && (FStar_Options.debug_any ()) -> print_issue e
+       | uu___2 when print && (FStar_Compiler_Debug.any ()) -> print_issue e
        | uu___2 ->
            let uu___3 =
              let uu___4 = FStar_Compiler_Effect.op_Bang issues in e :: uu___4 in
@@ -649,7 +649,7 @@ let (diag_doc :
   =
   fun r ->
     fun msg ->
-      let uu___ = FStar_Options.debug_any () in
+      let uu___ = FStar_Compiler_Debug.any () in
       if uu___
       then
         let msg1 = maybe_add_backtrace msg in
@@ -663,7 +663,7 @@ let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
     fun msg -> let uu___ = FStar_Errors_Msg.mkmsg msg in diag_doc r uu___
 let (diag0 : Prims.string -> unit) =
   fun msg ->
-    let uu___ = FStar_Options.debug_any () in
+    let uu___ = FStar_Compiler_Debug.any () in
     if uu___
     then
       let uu___1 =

@@ -115,7 +115,7 @@ let (load_native_tactics : unit -> unit) =
     let cmxs_files =
       FStar_Compiler_List.map cmxs_file
         (FStar_Compiler_List.op_At modules_to_load cmxs_to_load) in
-    (let uu___2 = FStar_Options.debug_any () in
+    (let uu___2 = FStar_Compiler_Debug.any () in
      if uu___2
      then
        FStar_Compiler_Util.print1 "Will try to load cmxs files: [%s]\n"

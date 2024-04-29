@@ -224,7 +224,7 @@ let va_lemma_weakest_pre_norm_wp (inss:list ins) (s0:state) (sN:state) : pure_wp
 [@"uninterpreted_by_smt"]
 val va_lemma_weakest_pre_norm (inss:list ins) (s0:state) (sN:state) : PURE unit (va_lemma_weakest_pre_norm_wp inss s0 sN)
 
-(* #reset-options "--log_queries --debug X64.Vale.StrongPost_i --debug_level print_normalized_terms" *)
+(* #reset-options "--log_queries --debug X64.Vale.StrongPost_i --debug print_normalized_terms" *)
 // let test_lemma (s0:state) (sN:state) =
 //     assume (s0.ok);
 //     // assume (Map.contains s0.mem (s0.regs Rsi));
