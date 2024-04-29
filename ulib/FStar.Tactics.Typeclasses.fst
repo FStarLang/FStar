@@ -59,10 +59,20 @@ type st_t = {
 
 noeq
 type tc_goal = {
-  g : term;
-  head_fv : fv;
+  g              : term;
+  (* ^ The goal as a term *)
+  head_fv        : fv;
+  (* ^ Head fv of goal (g), i.e. the class name *)
+  c_se           : option sigelt;
+  (* ^ Class sigelt *)
+  fundeps        : option (list int);
+  (* ^ Functional dependendcies of class, if any. *)
   args_and_uvars : list (argv & bool);
+  (* ^ The arguments of the goal, and whether they are
+  unresolved, even partially. I.e. the boolean is true
+  when the arg contains uvars. *)
 }
+
 
 val fv_eq : fv -> fv -> Tot bool
 let fv_eq fv1 fv2 =
@@ -148,7 +158,7 @@ let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (opti
   | _ ->
     None
 
-let extract_fundep (se : sigelt) : Tac (option (list int)) =
+let extract_fundeps (se : sigelt) : Tac (option (list int)) =
   let attrs = sigelt_attrs se in
   let rec aux (attrs : list term) : Tac (option (list int)) =
     match attrs with
@@ -166,14 +176,6 @@ let extract_fundep (se : sigelt) : Tac (option (list int)) =
     aux attrs
 
 let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac unit =
-    (* Class sigelt *)
-    let c_se = lookup_typ (cur_env()) (inspect_fv g.head_fv) in
-    let fundeps =
-      match c_se with
-      | Some se ->
-        extract_fundep se
-      | None -> None
-    in
     // print ("head_fv = " ^ fv_to_string g.head_fv);
     // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
     let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
@@ -188,10 +190,10 @@ let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac un
         raise NoInst; // class mismatch, would be better to not even get here
       debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
       (fun () ->
-        if Cons? unresolved_args && None? fundeps then
+        if Cons? unresolved_args && None? g.fundeps then
           fail "Will not continue as there are unresolved args (and no fundeps)"
-        else if Cons? unresolved_args && Some? fundeps then (
-          let Some fundeps = fundeps in
+        else if Cons? unresolved_args && Some? g.fundeps then (
+          let Some fundeps = g.fundeps in
           debug (fun () -> "checking fundeps");
           let all_good = List.Tot.for_all (fun i -> List.Tot.mem i fundeps) unresolved_args in
           if all_good then apply t else fail "fundeps"
@@ -218,15 +220,9 @@ let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
           st.glb
 
 (*
- tcresolve': the main typeclass instantiation function.
+  tcresolve': the main typeclass instantiation function.
 
- seen : a list of goals we've seen already in this path of the search,
-        used to prevent loops
- glb : a list of all global instances in scope, for all classes
- fuel : amount of steps we allow in this path, we stop if we reach zero
- head_fv : the head of the goal we're trying to solve, i.e. the class name
-
- TODO: some form of memoization
+  It mostly creates a tc_goal record and calls the functions above.
 *)
 let rec tcresolve' (st:st_t) : Tac unit =
     if st.fuel <= 0 then
@@ -248,10 +244,16 @@ let rec tcresolve' (st:st_t) : Tac unit =
       raise NoInst
 
     | Some (head_fv, us, args) ->
-      let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       (* ^ Maybe should check is this really is a class too? *)
+      let c_se = lookup_typ (cur_env ()) (inspect_fv head_fv) in
+      let fundeps = match c_se with
+        | None -> None
+        | Some se -> extract_fundeps se
+      in
+
+      let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       let st = { st with seen = g :: st.seen } in
-      let g = { g = g; head_fv = head_fv; args_and_uvars = args_and_uvars } in
+      let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
       local st g tcresolve' `or_else` global st g tcresolve'
 
 let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
@@ -261,15 +263,17 @@ let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
 
 [@@plugin]
 let tcresolve () : Tac unit =
+    let open FStar.Stubs.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
     let w = cur_witness () in
+    set_dump_on_failure false; (* We report our own errors *)
 
     // Not using intros () directly, since that unfolds aggressively if the term is not a literal arrow
     maybe_intros ();
 
     // Fetch a list of all instances in scope right now.
     // TODO: turn this into a hash map per class, ideally one that can be
-    // stored.
+    // persisted across calss.
     let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
     let glb = glb |> concatMap (fun se ->
               sigelt_name se |> concatMap (fun fv -> [(se, fv)])
@@ -287,6 +291,7 @@ let tcresolve () : Tac unit =
     | NoInst ->
       let open FStar.Stubs.Pprint in
       fail_doc [
+        text "Typeclass resolution failed";
         prefix 2 1 (text "Could not solve constraint")
           (arbitrary_string (term_to_string (cur_goal ())));
       ]

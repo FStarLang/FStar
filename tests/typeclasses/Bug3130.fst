@@ -22,7 +22,7 @@ assume val truc:
 
 open FStar.Tactics.Typeclasses
 
-#set-options "--debug Low"
+//#set-options "--debug Low"
 
 noeq
 type machin (a:Type) (d : typeclass2 bytes #solve a) (content:a) = {

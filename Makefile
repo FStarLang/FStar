@@ -127,10 +127,22 @@ bench:
 # Regenerate and accept expected output tests. Should be manually
 # reviewed before checking in.
 .PHONY: output
-output:
+output: output-error-messages output-ide-emacs output-ide-lsp output-bug-reports
+
+.PHONY: output-error-messages
+output-error-messages:
 	+$(Q)$(MAKE) -C tests/error-messages accept
+
+.PHONY: output-ide-emacs
+output-ide-emacs:
 	+$(Q)$(MAKE) -C tests/ide/emacs accept
+
+.PHONY: output-ide-lsp
+output-ide-lsp:
 	+$(Q)$(MAKE) -C tests/ide/lsp accept
+
+.PHONY: output-bug-reports
+output-bug-reports:
 	+$(Q)$(MAKE) -C tests/bug-reports output-accept
 
 # This rule is meant to mimic what the docker based CI does, but it
