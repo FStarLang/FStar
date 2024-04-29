@@ -2436,7 +2436,9 @@ let (mk_discriminator_and_indexed_projectors :
                                       FStar_Ident.string_of_id uu___1 in
                                     s = uu___) early_prims_inductives) in
                           let discriminator_ses =
-                            if fvq <> FStar_Syntax_Syntax.Data_ctor
+                            if
+                              (fvq <> FStar_Syntax_Syntax.Data_ctor) ||
+                                (Prims.op_Negation refine_domain)
                             then []
                             else
                               (let discriminator_name =
