@@ -89,6 +89,10 @@ noeq
 type test3 (a:idx) : Type u#1 =
   | Mk3 : test3 a
 
+[@@expect_failure]
+let eq_test3_should_fail (x0 : test3 A1) (x1 : test3 A2) : unit =
+  assert (test3 A1 == test3 A2)
+
 let case0 (x0 : test3 A1) (x1 : test3 A2) : Lemma False =
  assume (test3 A1 == test3 A2);
  assume (~ (Mk3 #A1 == coerce_eq () (Mk3 #A2)))
