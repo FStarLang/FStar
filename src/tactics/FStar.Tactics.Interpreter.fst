@@ -388,7 +388,7 @@ let run_unembedded_tactic_on_ps
         in
         let open FStar.Pprint in
         Err.raise_error_doc (Err.Fatal_UserTacticFailure, (
-                              [doc_of_string "Tactic failed"]
+                              (if ps.dump_on_failure then [doc_of_string "Tactic failed"] else [])
                               @ texn_to_doc e)
                             )
                           rng

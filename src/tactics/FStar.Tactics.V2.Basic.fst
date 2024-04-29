@@ -2765,9 +2765,14 @@ let resolve_name (e:env) (n:list string) =
 let log_issues (is : list Errors.issue) : tac unit =
   let open FStar.Errors in
   let! ps = get in
-  (* Prepend an error component *)
-  let is = is |>
-     List.map (fun i -> { i with issue_msg = (Errors.text "Tactic logged issue:")::i.issue_msg })
+  (* Prepend an error component, unless the tactic handles its own errors. *)
+  let is =
+    if ps.dump_on_failure
+    then
+      is |>
+      List.map (fun i -> { i with issue_msg = (Errors.text "Tactic logged issue:")::i.issue_msg })
+    else
+      is
   in
   add_issues is;
   return ()
