@@ -167,3 +167,7 @@ instance setlike_rbset (a:Type) (_ : ord a) : Tot (setlike a (rbset a)) = {
     from_list = from_list;
     addn = addn;
 }
+
+instance showable_rbset (a:Type) (_ : showable a) : Tot (showable (rbset a)) = {
+  show = (fun s -> "RBSet " ^ show (elems s));
+}
