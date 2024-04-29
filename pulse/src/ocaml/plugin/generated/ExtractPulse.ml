@@ -38,13 +38,13 @@ let (flatten_app :
                    (e1.FStar_Extraction_ML_Syntax.loc)
                }) in
     aux [] e
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "extraction"
 let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
   fun env ->
     fun e ->
       let e1 = flatten_app e in
-      (let uu___1 =
-         FStar_Options.debug_at_level_no_module
-           (FStar_Options.Other "extraction") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
        if uu___1
        then
          let uu___2 = FStar_Extraction_ML_Syntax.mlexpr_to_string e1 in
