@@ -215,3 +215,14 @@ let setlike_rbset :
       FStar_Class_Setlike.from_list = (from_list uu___);
       FStar_Class_Setlike.addn = (addn uu___)
     }
+let showable_rbset :
+  'a . 'a FStar_Class_Show.showable -> 'a t FStar_Class_Show.showable =
+  fun uu___ ->
+    {
+      FStar_Class_Show.show =
+        (fun s ->
+           let uu___1 =
+             let uu___2 = elems s in
+             FStar_Class_Show.show (FStar_Class_Show.show_list uu___) uu___2 in
+           Prims.strcat "RBSet " uu___1)
+    }
