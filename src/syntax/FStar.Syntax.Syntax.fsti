@@ -379,10 +379,10 @@ and fv = {
     fv_qual :option fv_qual
 }
 and free_vars = {
-    free_names:list bv;
-    free_uvars:list ctx_uvar;
-    free_univs:list universe_uvar;
-    free_univ_names:list univ_name; //fifo
+    free_names      : FlatSet.t bv;
+    free_uvars      : uvars;
+    free_univs      : FlatSet.t universe_uvar;
+    free_univ_names : FlatSet.t univ_name; //fifo
 }
 
 (* Residual of a computation type after typechecking *)
