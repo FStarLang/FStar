@@ -2245,8 +2245,13 @@ let (log_cfg : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).cfg then f () else ()
 let (log_primops : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).primop then f () else ()
+let (dbg_unfolding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Unfolding"
 let (log_unfolding : cfg -> (unit -> unit) -> unit) =
-  fun cfg1 -> fun f -> if (cfg1.debug).unfolding then f () else ()
+  fun cfg1 ->
+    fun f ->
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg_unfolding in
+      if uu___ then f () else ()
 let (log_nbe : cfg -> (unit -> unit) -> unit) =
   fun cfg1 -> fun f -> if (cfg1.debug).debug_nbe then f () else ()
 let (primop_time_map : Prims.int FStar_Compiler_Util.smap) =
@@ -2385,6 +2390,28 @@ let (add_nbe : fsteps -> fsteps) =
         default_univs_to_zero = (s.default_univs_to_zero)
       }
     else s
+let (dbg_Norm : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Norm"
+let (dbg_NormTop : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NormTop"
+let (dbg_NormCfg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NormCfg"
+let (dbg_Primops : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Primops"
+let (dbg_Unfolding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Unfolding"
+let (dbg_380 : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "380"
+let (dbg_WPE : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "WPE"
+let (dbg_NormDelayed : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NormDelayed"
+let (dbg_print_normalized : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "print_normalized_terms"
+let (dbg_NBE : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NBE"
+let (dbg_UNSOUND_EraseErasableArgs : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "UNSOUND_EraseErasableArgs"
 let (config' :
   FStar_TypeChecker_Primops_Base.primitive_step Prims.list ->
     FStar_TypeChecker_Env.step Prims.list -> FStar_TypeChecker_Env.env -> cfg)
@@ -2418,59 +2445,41 @@ let (config' :
         let dbg_flag =
           FStar_Compiler_List.contains FStar_TypeChecker_Env.NormDebug s in
         let uu___ =
-          let uu___1 = dbg_flag || (FStar_Options.debug_any ()) in
-          if uu___1
-          then
-            let uu___2 =
-              (FStar_TypeChecker_Env.debug e (FStar_Options.Other "Norm")) ||
-                dbg_flag in
-            let uu___3 =
-              (FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormTop"))
-                || dbg_flag in
-            let uu___4 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "NormCfg") in
-            let uu___5 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "Primops") in
-            let uu___6 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "Unfolding") in
-            let uu___7 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "380") in
-            let uu___8 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "WPE") in
-            let uu___9 =
-              FStar_TypeChecker_Env.debug e
-                (FStar_Options.Other "NormDelayed") in
-            let uu___10 =
-              FStar_TypeChecker_Env.debug e
-                (FStar_Options.Other "print_normalized_terms") in
-            let uu___11 =
-              FStar_TypeChecker_Env.debug e (FStar_Options.Other "NBE") in
-            let uu___12 =
-              let b =
-                FStar_TypeChecker_Env.debug e
-                  (FStar_Options.Other "UNSOUND_EraseErasableArgs") in
-              if b
-              then
-                (let uu___14 = FStar_TypeChecker_Env.get_range e in
-                 FStar_Errors.log_issue uu___14
-                   (FStar_Errors_Codes.Warning_WarnOnUse,
-                     "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound"))
-              else ();
-              b in
-            {
-              gen = uu___2;
-              top = uu___3;
-              cfg = uu___4;
-              primop = uu___5;
-              unfolding = uu___6;
-              b380 = uu___7;
-              wpe = uu___8;
-              norm_delayed = uu___9;
-              print_normalized = uu___10;
-              debug_nbe = uu___11;
-              erase_erasable_args = uu___12
-            }
-          else no_debug_switches in
+          let uu___1 = (FStar_Compiler_Effect.op_Bang dbg_Norm) || dbg_flag in
+          let uu___2 =
+            (FStar_Compiler_Effect.op_Bang dbg_NormTop) || dbg_flag in
+          let uu___3 = FStar_Compiler_Effect.op_Bang dbg_NormCfg in
+          let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Primops in
+          let uu___5 = FStar_Compiler_Effect.op_Bang dbg_Unfolding in
+          let uu___6 = FStar_Compiler_Effect.op_Bang dbg_380 in
+          let uu___7 = FStar_Compiler_Effect.op_Bang dbg_WPE in
+          let uu___8 = FStar_Compiler_Effect.op_Bang dbg_NormDelayed in
+          let uu___9 = FStar_Compiler_Effect.op_Bang dbg_print_normalized in
+          let uu___10 = FStar_Compiler_Effect.op_Bang dbg_NBE in
+          let uu___11 =
+            (let uu___13 =
+               FStar_Compiler_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
+             if uu___13
+             then
+               let uu___14 = FStar_TypeChecker_Env.get_range e in
+               FStar_Errors.log_issue uu___14
+                 (FStar_Errors_Codes.Warning_WarnOnUse,
+                   "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound")
+             else ());
+            FStar_Compiler_Effect.op_Bang dbg_UNSOUND_EraseErasableArgs in
+          {
+            gen = uu___1;
+            top = uu___2;
+            cfg = uu___3;
+            primop = uu___4;
+            unfolding = uu___5;
+            b380 = uu___6;
+            wpe = uu___7;
+            norm_delayed = uu___8;
+            print_normalized = uu___9;
+            debug_nbe = uu___10;
+            erase_erasable_args = uu___11
+          } in
         let uu___1 =
           (Prims.op_Negation steps.pure_subterms_within_computations) ||
             (FStar_Options.normalize_pure_terms_for_extraction ()) in

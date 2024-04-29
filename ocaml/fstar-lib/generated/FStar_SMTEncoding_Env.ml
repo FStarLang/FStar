@@ -1,4 +1,6 @@
 open Prims
+let (dbg_PartialApp : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "PartialApp"
 exception Inner_let_rec of (Prims.string * FStar_Compiler_Range_Type.range)
   Prims.list 
 let (uu___is_Inner_let_rec : Prims.exn -> Prims.bool) =
@@ -922,9 +924,7 @@ let (try_lookup_free_var :
       match uu___ with
       | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
       | FStar_Pervasives_Native.Some fvb ->
-          ((let uu___2 =
-              FStar_TypeChecker_Env.debug env.tcenv
-                (FStar_Options.Other "PartialApp") in
+          ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_PartialApp in
             if uu___2
             then
               let uu___3 = FStar_Ident.string_of_lid l in

@@ -1,4 +1,8 @@
 open Prims
+let (dbg_NBE : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NBE"
+let (dbg_NBETop : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NBETop"
 let (max : Prims.int -> Prims.int -> Prims.int) =
   fun a -> fun b -> if a > b then a else b
 let map_rev : 'a 'b . ('a -> 'b) -> 'a Prims.list -> 'b Prims.list =
@@ -3357,9 +3361,8 @@ let (normalize :
                 (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
             } in
           (let uu___1 =
-             (FStar_TypeChecker_Env.debug env (FStar_Options.Other "NBETop"))
-               ||
-               (FStar_TypeChecker_Env.debug env (FStar_Options.Other "NBE")) in
+             (FStar_Compiler_Effect.op_Bang dbg_NBETop) ||
+               (FStar_Compiler_Effect.op_Bang dbg_NBE) in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.term_to_string e in
@@ -3368,9 +3371,8 @@ let (normalize :
           (let cfg2 = new_config cfg1 in
            let r = let uu___1 = translate cfg2 [] e in readback cfg2 uu___1 in
            (let uu___2 =
-              (FStar_TypeChecker_Env.debug env (FStar_Options.Other "NBETop"))
-                ||
-                (FStar_TypeChecker_Env.debug env (FStar_Options.Other "NBE")) in
+              (FStar_Compiler_Effect.op_Bang dbg_NBETop) ||
+                (FStar_Compiler_Effect.op_Bang dbg_NBE) in
             if uu___2
             then
               let uu___3 = FStar_Syntax_Print.term_to_string r in

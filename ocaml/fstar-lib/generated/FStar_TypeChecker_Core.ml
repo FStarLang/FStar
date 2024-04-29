@@ -6,6 +6,14 @@ let (uu___is_E_Total : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Total -> true | uu___ -> false
 let (uu___is_E_Ghost : tot_or_ghost -> Prims.bool) =
   fun projectee -> match projectee with | E_Ghost -> true | uu___ -> false
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Core"
+let (dbg_Eq : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreEq"
+let (dbg_Top : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreTop"
+let (dbg_Exit : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreExit"
 let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (get_goal_ctr : unit -> Prims.int) =
@@ -1597,11 +1605,10 @@ let (guard_not_allowed : Prims.bool result) =
   fun ctx -> Success ((ctx.no_guard), FStar_Pervasives_Native.None)
 let (unfolding_ok : Prims.bool result) =
   fun ctx -> Success ((ctx.unfolding_ok), FStar_Pervasives_Native.None)
-let (debug : env -> (unit -> unit) -> unit) =
+let debug : 'uuuuu . 'uuuuu -> (unit -> unit) -> unit =
   fun g ->
     fun f ->
-      let uu___ =
-        FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg in
       if uu___ then f () else ()
 let (showable_side : side FStar_Class_Show.showable) =
   {
@@ -1701,8 +1708,7 @@ let rec (check_relation :
                 fail uu___2 in
           let rel_to_string rel1 =
             match rel1 with | EQUALITY -> "=?=" | SUBTYPING uu___ -> "<:?" in
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug g.tcenv (FStar_Options.Other "Core") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.tag_of_term t0 in
@@ -2224,10 +2230,8 @@ let rec (check_relation :
                                          match x2 with
                                          | FStar_Pervasives_Native.None ->
                                              ((let uu___13 =
-                                                 FStar_TypeChecker_Env.debug
-                                                   g.tcenv
-                                                   (FStar_Options.Other
-                                                      "Core") in
+                                                 FStar_Compiler_Effect.op_Bang
+                                                   dbg in
                                                if uu___13
                                                then
                                                  let uu___14 =
@@ -7754,8 +7758,7 @@ let (check_term_top_gh :
       fun topt ->
         fun must_tot ->
           fun gh ->
-            (let uu___1 =
-               FStar_TypeChecker_Env.debug g (FStar_Options.Other "CoreEq") in
+            (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Eq in
              if uu___1
              then
                let uu___2 =
@@ -7764,10 +7767,8 @@ let (check_term_top_gh :
                FStar_Compiler_Util.print1 "(%s) Entering core ... \n" uu___2
              else ());
             (let uu___2 =
-               (FStar_TypeChecker_Env.debug g (FStar_Options.Other "Core"))
-                 ||
-                 (FStar_TypeChecker_Env.debug g
-                    (FStar_Options.Other "CoreTop")) in
+               (FStar_Compiler_Effect.op_Bang dbg) ||
+                 (FStar_Compiler_Effect.op_Bang dbg_Top) in
              if uu___2
              then
                let uu___3 =
@@ -7807,14 +7808,9 @@ let (check_term_top_gh :
                      FStar_TypeChecker_Normalize.normalize simplify_steps g
                        guard0 in
                    ((let uu___5 =
-                       ((FStar_TypeChecker_Env.debug g
-                           (FStar_Options.Other "CoreExit"))
-                          ||
-                          (FStar_TypeChecker_Env.debug g
-                             (FStar_Options.Other "Core")))
-                         ||
-                         (FStar_TypeChecker_Env.debug g
-                            (FStar_Options.Other "CoreTop")) in
+                       ((FStar_Compiler_Effect.op_Bang dbg) ||
+                          (FStar_Compiler_Effect.op_Bang dbg_Top))
+                         || (FStar_Compiler_Effect.op_Bang dbg_Exit) in
                      if uu___5
                      then
                        ((let uu___7 =
@@ -7861,11 +7857,8 @@ let (check_term_top_gh :
                     Success (et, (FStar_Pervasives_Native.Some guard1)))
                | Success uu___4 ->
                    ((let uu___6 =
-                       (FStar_TypeChecker_Env.debug g
-                          (FStar_Options.Other "Core"))
-                         ||
-                         (FStar_TypeChecker_Env.debug g
-                            (FStar_Options.Other "CoreTop")) in
+                       (FStar_Compiler_Effect.op_Bang dbg) ||
+                         (FStar_Compiler_Effect.op_Bang dbg_Top) in
                      if uu___6
                      then
                        let uu___7 =
@@ -7877,11 +7870,8 @@ let (check_term_top_gh :
                     res)
                | Error uu___4 ->
                    ((let uu___6 =
-                       (FStar_TypeChecker_Env.debug g
-                          (FStar_Options.Other "Core"))
-                         ||
-                         (FStar_TypeChecker_Env.debug g
-                            (FStar_Options.Other "CoreTop")) in
+                       (FStar_Compiler_Effect.op_Bang dbg) ||
+                         (FStar_Compiler_Effect.op_Bang dbg_Top) in
                      if uu___6
                      then
                        let uu___7 =
@@ -7891,8 +7881,7 @@ let (check_term_top_gh :
                          "(%s) Exiting core (failed)\n" uu___7
                      else ());
                     res) in
-             (let uu___5 =
-                FStar_TypeChecker_Env.debug g (FStar_Options.Other "CoreEq") in
+             (let uu___5 = FStar_Compiler_Effect.op_Bang dbg_Eq in
               if uu___5
               then
                 (FStar_Syntax_TermHashTable.print_stats table;
@@ -8001,9 +7990,7 @@ let (check_term_equality :
         fun t0 ->
           fun t1 ->
             let g1 = initial_env g FStar_Pervasives_Native.None in
-            (let uu___1 =
-               FStar_TypeChecker_Env.debug g1.tcenv
-                 (FStar_Options.Other "CoreTop") in
+            (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Top in
              if uu___1
              then
                let uu___2 =
@@ -8030,9 +8017,7 @@ let (check_term_equality :
                } in
              let r =
                let uu___1 = check_relation g1 EQUALITY t0 t1 in uu___1 ctx in
-             (let uu___2 =
-                FStar_TypeChecker_Env.debug g1.tcenv
-                  (FStar_Options.Other "CoreTop") in
+             (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Top in
               if uu___2
               then
                 let uu___3 =

@@ -1,4 +1,8 @@
 open Prims
+let (dbg_Extraction : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Extraction"
+let (dbg_ExtractionNorm : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ExtractionNorm"
 exception Un_extractable 
 let (uu___is_Un_extractable : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -3945,11 +3949,10 @@ and (term_as_mlexpr' :
                                     lb.FStar_Syntax_Syntax.lbdef) uu___3
                                "FStar.Extraction.ML.Term.normalize_lb_def" in
                            let uu___2 =
-                             (FStar_TypeChecker_Env.debug tcenv
-                                (FStar_Options.Other "Extraction"))
+                             (FStar_Compiler_Effect.op_Bang dbg_Extraction)
                                ||
-                               (FStar_TypeChecker_Env.debug tcenv
-                                  (FStar_Options.Other "ExtractNorm")) in
+                               (FStar_Compiler_Effect.op_Bang
+                                  dbg_ExtractionNorm) in
                            if uu___2
                            then
                              ((let uu___4 =

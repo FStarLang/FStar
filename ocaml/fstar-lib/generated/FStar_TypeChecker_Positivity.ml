@@ -1,14 +1,11 @@
 open Prims
-let (string_of_lids : FStar_Ident.lident Prims.list -> Prims.string) =
-  fun lids ->
-    let uu___ = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
-    FStar_Compiler_String.concat ", " uu___
+let (dbg_Positivity : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Positivity"
 let (debug_positivity :
   FStar_TypeChecker_Env.env_t -> (unit -> Prims.string) -> unit) =
   fun env ->
     fun msg ->
-      let uu___ =
-        FStar_TypeChecker_Env.debug env (FStar_Options.Other "Positivity") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg_Positivity in
       if uu___
       then
         let uu___1 =
@@ -16,6 +13,10 @@ let (debug_positivity :
           Prims.strcat "Positivity::" uu___2 in
         FStar_Compiler_Util.print_string uu___1
       else ()
+let (string_of_lids : FStar_Ident.lident Prims.list -> Prims.string) =
+  fun lids ->
+    let uu___ = FStar_Compiler_List.map FStar_Ident.string_of_lid lids in
+    FStar_Compiler_String.concat ", " uu___
 let (normalize :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)

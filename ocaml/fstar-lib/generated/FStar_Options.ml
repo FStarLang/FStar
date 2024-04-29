@@ -1,22 +1,4 @@
 open Prims
-type debug_level_t =
-  | Low 
-  | Medium 
-  | High 
-  | Extreme 
-  | Other of Prims.string 
-let (uu___is_Low : debug_level_t -> Prims.bool) =
-  fun projectee -> match projectee with | Low -> true | uu___ -> false
-let (uu___is_Medium : debug_level_t -> Prims.bool) =
-  fun projectee -> match projectee with | Medium -> true | uu___ -> false
-let (uu___is_High : debug_level_t -> Prims.bool) =
-  fun projectee -> match projectee with | High -> true | uu___ -> false
-let (uu___is_Extreme : debug_level_t -> Prims.bool) =
-  fun projectee -> match projectee with | Extreme -> true | uu___ -> false
-let (uu___is_Other : debug_level_t -> Prims.bool) =
-  fun projectee -> match projectee with | Other _0 -> true | uu___ -> false
-let (__proj__Other__item___0 : debug_level_t -> Prims.string) =
-  fun projectee -> match projectee with | Other _0 -> _0
 type split_queries_t =
   | No 
   | OnFailure 
@@ -288,9 +270,9 @@ let (defaults : (Prims.string * option_val) Prims.list) =
   ("cmi", (Bool false));
   ("codegen", Unset);
   ("codegen-lib", (List []));
-  ("debug", (List []));
-  ("debug_level", (List []));
   ("defensive", (String "no"));
+  ("debug", (List []));
+  ("debug_all_modules", (Bool false));
   ("dep", Unset);
   ("detail_errors", (Bool false));
   ("detail_hint_replay", (Bool false));
@@ -490,10 +472,6 @@ let (get_codegen : unit -> Prims.string FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "codegen" (as_option as_string)
 let (get_codegen_lib : unit -> Prims.string Prims.list) =
   fun uu___ -> lookup_opt "codegen-lib" (as_list as_string)
-let (get_debug : unit -> Prims.string Prims.list) =
-  fun uu___ -> lookup_opt "debug" as_comma_string_list
-let (get_debug_level : unit -> Prims.string Prims.list) =
-  fun uu___ -> lookup_opt "debug_level" as_comma_string_list
 let (get_defensive : unit -> Prims.string) =
   fun uu___ -> lookup_opt "defensive" as_string
 let (get_dep : unit -> Prims.string FStar_Pervasives_Native.option) =
@@ -713,29 +691,6 @@ let (get_profile_group_by_decl : unit -> Prims.bool) =
 let (get_profile_component :
   unit -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun uu___ -> lookup_opt "profile_component" (as_option (as_list as_string))
-let (dlevel : Prims.string -> debug_level_t) =
-  fun uu___ ->
-    match uu___ with
-    | "Low" -> Low
-    | "Medium" -> Medium
-    | "High" -> High
-    | "Extreme" -> Extreme
-    | s -> Other s
-let (one_debug_level_geq : debug_level_t -> debug_level_t -> Prims.bool) =
-  fun l1 ->
-    fun l2 ->
-      match l1 with
-      | Other uu___ -> l1 = l2
-      | Low -> l1 = l2
-      | Medium -> (l2 = Low) || (l2 = Medium)
-      | High -> ((l2 = Low) || (l2 = Medium)) || (l2 = High)
-      | Extreme ->
-          (((l2 = Low) || (l2 = Medium)) || (l2 = High)) || (l2 = Extreme)
-let (debug_level_geq : debug_level_t -> Prims.bool) =
-  fun l2 ->
-    let uu___ = get_debug_level () in
-    FStar_Compiler_Util.for_some
-      (fun l1 -> one_debug_level_geq (dlevel l1) l2) uu___
 let (universe_include_path_base_dirs : Prims.string Prims.list) =
   let sub_dirs = ["legacy"; "experimental"; ".cache"] in
   FStar_Compiler_List.collect
@@ -768,6 +723,15 @@ let (display_version : unit -> unit) =
         "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n" uu___2 uu___3
         uu___4 uu___5 uu___6 in
     FStar_Compiler_Util.print_string uu___1
+let (display_debug_keys : unit -> unit) =
+  fun uu___ ->
+    let keys = FStar_Compiler_Debug.list_all_toggles () in
+    let uu___1 =
+      FStar_Compiler_List.sortWith FStar_Compiler_String.compare keys in
+    FStar_Compiler_List.iter
+      (fun s ->
+         let uu___2 = FStar_Compiler_String.op_Hat s "\n" in
+         FStar_Compiler_Util.print_string uu___2) uu___1
 let display_usage_aux :
   'uuuuu 'uuuuu1 .
     (('uuuuu * Prims.string * 'uuuuu1 FStar_Getopt.opt_variant) *
@@ -1016,7 +980,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else FStar_Compiler_Effect.failwith "unexpected value for --quake"
     | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
-let (uu___461 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___443 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -1028,11 +992,11 @@ let (uu___461 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___461 with
+  match uu___443 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___461 with
+  match uu___443 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -1167,22 +1131,25 @@ let rec (specs_with_types :
                                 let uu___28 =
                                   let uu___29 =
                                     text
-                                      "Print lots of debugging information while checking module" in
-                                  (FStar_Getopt.noshort, "debug",
-                                    (Accumulated (SimpleStr "module_name")),
+                                      "Debug toggles (comma-separated list of debug keys)" in
+                                  (100, "debug",
+                                    (PostProcessed
+                                       ((fun o ->
+                                           let keys = as_comma_string_list o in
+                                           FStar_Compiler_Debug.enable_toggles
+                                             keys;
+                                           o),
+                                         (Accumulated
+                                            (SimpleStr "debug toggles")))),
                                     uu___29) in
                                 let uu___29 =
                                   let uu___30 =
                                     let uu___31 =
                                       text
-                                        "Control the verbosity of debugging info" in
-                                    (FStar_Getopt.noshort, "debug_level",
-                                      (Accumulated
-                                         (OpenEnumStr
-                                            (["Low";
-                                             "Medium";
-                                             "High";
-                                             "Extreme"], "..."))), uu___31) in
+                                        "Enable to make the effect of --debug apply to every module processed by the compiler, including dependencies." in
+                                    (FStar_Getopt.noshort,
+                                      "debug_all_modules",
+                                      (Const (Bool true)), uu___31) in
                                   let uu___31 =
                                     let uu___32 =
                                       let uu___33 =
@@ -3137,7 +3104,32 @@ let rec (specs_with_types :
                                                                     (Bool
                                                                     true)))),
                                                                     uu___253) in
-                                                                    [uu___252] in
+                                                                    let uu___253
+                                                                    =
+                                                                    let uu___254
+                                                                    =
+                                                                    let uu___255
+                                                                    =
+                                                                    text
+                                                                    "List all debug keys and exit" in
+                                                                    (FStar_Getopt.noshort,
+                                                                    "list_debug_keys",
+                                                                    (WithSideEffect
+                                                                    ((fun
+                                                                    uu___256
+                                                                    ->
+                                                                    display_debug_keys
+                                                                    ();
+                                                                    FStar_Compiler_Effect.exit
+                                                                    Prims.int_zero),
+                                                                    (Const
+                                                                    (Bool
+                                                                    true)))),
+                                                                    uu___255) in
+                                                                    [uu___254] in
+                                                                    uu___252
+                                                                    ::
+                                                                    uu___253 in
                                                                     uu___250
                                                                     ::
                                                                     uu___251 in
@@ -3481,7 +3473,7 @@ let (settable : Prims.string -> Prims.bool) =
     | "compat_pre_typed_indexed_effects" -> true
     | "disallow_unification_guards" -> true
     | "debug" -> true
-    | "debug_level" -> true
+    | "debug_all_modules" -> true
     | "defensive" -> true
     | "detail_errors" -> true
     | "detail_hint_replay" -> true
@@ -3577,7 +3569,7 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___658 :
+let (uu___645 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3594,11 +3586,11 @@ let (uu___658 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___658 with
+  match uu___645 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___658 with
+  match uu___645 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -3958,17 +3950,6 @@ let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
   fun uu___ ->
     let uu___1 = get_codegen_lib () in
     FStar_Compiler_List.map (fun x -> FStar_Compiler_Util.split x ".") uu___1
-let (debug_any : unit -> Prims.bool) =
-  fun uu___ -> let uu___1 = get_debug () in uu___1 <> []
-let (debug_module : Prims.string -> Prims.bool) =
-  fun modul ->
-    let uu___ = get_debug () in
-    FStar_Compiler_List.existsb (module_name_eq modul) uu___
-let (debug_at_level_no_module : debug_level_t -> Prims.bool) =
-  fun level -> debug_level_geq level
-let (debug_at_level : Prims.string -> debug_level_t -> Prims.bool) =
-  fun modul ->
-    fun level -> (debug_module modul) && (debug_at_level_no_module level)
 let (profile_group_by_decls : unit -> Prims.bool) =
   fun uu___ -> get_profile_group_by_decl ()
 let (defensive : unit -> Prims.bool) =
@@ -4187,6 +4168,10 @@ let (use_nbe_for_extraction : unit -> Prims.bool) =
   fun uu___ -> get_use_nbe_for_extraction ()
 let (trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
   fun uu___ -> get_trivial_pre_for_unannotated_effectful_fns ()
+let (debug_keys : unit -> Prims.string Prims.list) =
+  fun uu___ -> lookup_opt "debug" (as_list as_string)
+let (debug_all_modules : unit -> Prims.bool) =
+  fun uu___ -> lookup_opt "debug_all_modules" as_bool
 let with_saved_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
     let uu___ = let uu___1 = trace_error () in Prims.op_Negation uu___1 in

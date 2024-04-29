@@ -1,4 +1,6 @@
 open Prims
+let (dbg_attrs : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "attrs"
 type antiquotations_temp =
   (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list
 let (tun_r : FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.term) =
@@ -7502,8 +7504,8 @@ let rec (desugar_tycon :
                                      (match uu___11 with
                                       | (constrNames, constrs1) ->
                                           ((let uu___13 =
-                                              FStar_Options.debug_at_level_no_module
-                                                (FStar_Options.Other "attrs") in
+                                              FStar_Compiler_Effect.op_Bang
+                                                dbg_attrs in
                                             if uu___13
                                             then
                                               let uu___14 =
@@ -7592,8 +7594,7 @@ let rec (desugar_tycon :
                      (match uu___3 with
                       | (bundle, abbrevs) ->
                           ((let uu___5 =
-                              FStar_Options.debug_at_level_no_module
-                                (FStar_Options.Other "attrs") in
+                              FStar_Compiler_Effect.op_Bang dbg_attrs in
                             if uu___5
                             then
                               let uu___6 =
@@ -9006,9 +9007,7 @@ and (desugar_decl_core :
               desugar_tycon env d d_attrs uu___1 tcs in
             (match uu___ with
              | (env1, ses) ->
-                 ((let uu___2 =
-                     FStar_Options.debug_at_level_no_module
-                       (FStar_Options.Other "attrs") in
+                 ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_attrs in
                    if uu___2
                    then
                      let uu___3 = FStar_Parser_AST.decl_to_string d in

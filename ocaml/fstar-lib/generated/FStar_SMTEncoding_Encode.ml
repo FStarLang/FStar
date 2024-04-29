@@ -1,4 +1,10 @@
 open Prims
+let (dbg_SMTEncoding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTEncoding"
+let (dbg_SMTQuery : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTQuery"
+let (dbg_Time : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Time"
 let (norm_before_encoding :
   FStar_SMTEncoding_Env.env_t ->
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -2680,10 +2686,8 @@ let (encode_top_level_let :
                                                FStar_Syntax_Util.comp_result
                                                  t_body_comp in
                                              ((let uu___12 =
-                                                 FStar_TypeChecker_Env.debug
-                                                   env2.FStar_SMTEncoding_Env.tcenv
-                                                   (FStar_Options.Other
-                                                      "SMTEncoding") in
+                                                 FStar_Compiler_Effect.op_Bang
+                                                   dbg_SMTEncoding in
                                                if uu___12
                                                then
                                                  let uu___13 =
@@ -3030,10 +3034,8 @@ let (encode_top_level_let :
                                          (match uu___12 with
                                           | (env', e1, t_norm1) ->
                                               ((let uu___14 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env01.FStar_SMTEncoding_Env.tcenv
-                                                    (FStar_Options.Other
-                                                       "SMTEncoding") in
+                                                  FStar_Compiler_Effect.op_Bang
+                                                    dbg_SMTEncoding in
                                                 if uu___14
                                                 then
                                                   let uu___15 =
@@ -3067,10 +3069,8 @@ let (encode_top_level_let :
                                                     (match uu___15 with
                                                      | (pre_opt, tres) ->
                                                          ((let uu___17 =
-                                                             FStar_TypeChecker_Env.debug
-                                                               env01.FStar_SMTEncoding_Env.tcenv
-                                                               (FStar_Options.Other
-                                                                  "SMTEncoding") in
+                                                             FStar_Compiler_Effect.op_Bang
+                                                               dbg_SMTEncoding in
                                                            if uu___17
                                                            then
                                                              let uu___18 =
@@ -3780,10 +3780,7 @@ let rec (encode_sigelt :
           let g1 =
             match g with
             | [] ->
-                ((let uu___2 =
-                    FStar_TypeChecker_Env.debug
-                      env1.FStar_SMTEncoding_Env.tcenv
-                      (FStar_Options.Other "SMTEncoding") in
+                ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
                   if uu___2
                   then
                     FStar_Compiler_Util.print1 "Skipped encoding of %s\n" nm
@@ -3823,9 +3820,7 @@ and (encode_sigelt' :
   =
   fun env ->
     fun se ->
-      (let uu___1 =
-         FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-           (FStar_Options.Other "SMTEncoding") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.sigelt_to_string se in
@@ -4278,9 +4273,7 @@ and (encode_sigelt' :
                 | FStar_Syntax_Syntax.Discriminator uu___3 -> true
                 | uu___3 -> false) se.FStar_Syntax_Syntax.sigquals
            ->
-           ((let uu___3 =
-               FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-                 (FStar_Options.Other "SMTEncoding") in
+           ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
              if uu___3
              then
                let uu___4 = FStar_Syntax_Print.sigelt_to_string_short se in
@@ -4308,9 +4301,7 @@ and (encode_sigelt' :
                        true
                    | uu___3 -> false) se.FStar_Syntax_Syntax.sigquals)
            ->
-           ((let uu___3 =
-               FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-                 (FStar_Options.Other "SMTEncoding") in
+           ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
              if uu___3
              then
                let uu___4 = FStar_Syntax_Print.sigelt_to_string_short se in
@@ -4665,9 +4656,7 @@ and (encode_sigelt' :
                                                      u_formals)) in
                                      FStar_Compiler_List.forall2 tp_ok tps3
                                        us)))) in
-           ((let uu___4 =
-               FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-                 (FStar_Options.Other "SMTEncoding") in
+           ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
              if uu___4
              then
                let uu___5 = FStar_Ident.string_of_lid t in
@@ -7049,10 +7038,7 @@ let (encode_env_bindings :
              | FStar_Syntax_Syntax.Binding_var x ->
                  let t1 =
                    norm_before_encoding env1 x.FStar_Syntax_Syntax.sort in
-                 ((let uu___2 =
-                     FStar_TypeChecker_Env.debug
-                       env1.FStar_SMTEncoding_Env.tcenv
-                       (FStar_Options.Other "SMTEncoding") in
+                 ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
                    if uu___2
                    then
                      let uu___3 = FStar_Syntax_Print.bv_to_string x in
@@ -7413,7 +7399,7 @@ let (encode_sig :
             FStar_SMTEncoding_Term.Caption uu___2 in
           uu___1 :: decls
         else decls in
-      (let uu___1 = FStar_TypeChecker_Env.debug tcenv FStar_Options.Medium in
+      (let uu___1 = FStar_Compiler_Debug.medium () in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.sigelt_to_string se in
@@ -7504,8 +7490,7 @@ let (encode_modul :
                    (if modul.FStar_Syntax_Syntax.is_interface
                     then "interface"
                     else "module") uu___4 in
-               (let uu___5 =
-                  FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
+               (let uu___5 = FStar_Compiler_Debug.medium () in
                 if uu___5
                 then
                   FStar_Compiler_Util.print2
@@ -7557,9 +7542,7 @@ let (encode_modul :
                 match uu___5 with
                 | (decls, env1) ->
                     (give_decls_to_z3_and_set_env env1 name decls;
-                     (let uu___8 =
-                        FStar_TypeChecker_Env.debug tcenv1
-                          FStar_Options.Medium in
+                     (let uu___8 = FStar_Compiler_Debug.medium () in
                       if uu___8
                       then
                         FStar_Compiler_Util.print1
@@ -7592,8 +7575,7 @@ let (encode_modul_from_cache :
                    (if tcmod.FStar_Syntax_Syntax.is_interface
                     then "interface"
                     else "module") uu___3 in
-               (let uu___4 =
-                  FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
+               (let uu___4 = FStar_Compiler_Debug.medium () in
                 if uu___4
                 then
                   FStar_Compiler_Util.print2
@@ -7611,8 +7593,7 @@ let (encode_modul_from_cache :
                          FStar_SMTEncoding_Env.add_fvar_binding_to_env fvb
                            env2) env (FStar_Compiler_List.rev fvbs) in
                 give_decls_to_z3_and_set_env env1 name decls;
-                (let uu___5 =
-                   FStar_TypeChecker_Env.debug tcenv1 FStar_Options.Medium in
+                (let uu___5 = FStar_Compiler_Debug.medium () in
                  if uu___5
                  then
                    FStar_Compiler_Util.print1
@@ -7694,14 +7675,9 @@ let (encode_query :
                   (match uu___3 with
                    | (env_decls, env1) ->
                        ((let uu___5 =
-                           ((FStar_TypeChecker_Env.debug tcenv
-                               FStar_Options.Medium)
-                              ||
-                              (FStar_TypeChecker_Env.debug tcenv
-                                 (FStar_Options.Other "SMTEncoding")))
-                             ||
-                             (FStar_TypeChecker_Env.debug tcenv
-                                (FStar_Options.Other "SMTQuery")) in
+                           ((FStar_Compiler_Debug.medium ()) ||
+                              (FStar_Compiler_Effect.op_Bang dbg_SMTEncoding))
+                             || (FStar_Compiler_Effect.op_Bang dbg_SMTQuery) in
                          if uu___5
                          then
                            let uu___6 = FStar_Syntax_Print.term_to_string q1 in
@@ -7802,40 +7778,26 @@ let (encode_query :
                                               FStar_SMTEncoding_Term.Echo
                                                 "Done!"]) in
                                        ((let uu___9 =
-                                           ((FStar_TypeChecker_Env.debug
-                                               tcenv FStar_Options.Medium)
+                                           ((FStar_Compiler_Debug.medium ())
                                               ||
-                                              (FStar_TypeChecker_Env.debug
-                                                 tcenv
-                                                 (FStar_Options.Other
-                                                    "SMTEncoding")))
+                                              (FStar_Compiler_Effect.op_Bang
+                                                 dbg_SMTEncoding))
                                              ||
-                                             (FStar_TypeChecker_Env.debug
-                                                tcenv
-                                                (FStar_Options.Other
-                                                   "SMTQuery")) in
+                                             (FStar_Compiler_Effect.op_Bang
+                                                dbg_SMTQuery) in
                                          if uu___9
                                          then
                                            FStar_Compiler_Util.print_string
                                              "} Done encoding\n"
                                          else ());
                                         (let uu___10 =
-                                           (((FStar_TypeChecker_Env.debug
-                                                tcenv FStar_Options.Medium)
-                                               ||
-                                               (FStar_TypeChecker_Env.debug
-                                                  tcenv
-                                                  (FStar_Options.Other
-                                                     "SMTEncoding")))
+                                           ((FStar_Compiler_Debug.medium ())
                                               ||
-                                              (FStar_TypeChecker_Env.debug
-                                                 tcenv
-                                                 (FStar_Options.Other
-                                                    "SMTQuery")))
+                                              (FStar_Compiler_Effect.op_Bang
+                                                 dbg_SMTEncoding))
                                              ||
-                                             (FStar_TypeChecker_Env.debug
-                                                tcenv
-                                                (FStar_Options.Other "Time")) in
+                                             (FStar_Compiler_Effect.op_Bang
+                                                dbg_Time) in
                                          if uu___10
                                          then
                                            FStar_Compiler_Util.print1

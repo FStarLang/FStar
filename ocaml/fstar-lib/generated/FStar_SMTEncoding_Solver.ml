@@ -1666,7 +1666,7 @@ let (ask_solver_quake : query_settings Prims.list -> answer) =
                    ((let uu___5 =
                        (quaking_or_retrying &&
                           ((FStar_Options.interactive ()) ||
-                             (FStar_Options.debug_any ())))
+                             (FStar_Compiler_Debug.any ())))
                          && (n > Prims.int_zero) in
                      if uu___5
                      then
@@ -2233,7 +2233,7 @@ let (encode_and_ask :
                                   (let uu___7 =
                                      FStar_Options.split_queries () in
                                    uu___7 = FStar_Options.Always))
-                                 && (FStar_Options.debug_any ()) in
+                                 && (FStar_Compiler_Debug.any ()) in
                              if uu___6
                              then
                                let n = FStar_Compiler_List.length labels in
