@@ -132,7 +132,7 @@ fn compute_cdi
 ```
 
 ```pulse
-fn engine_main_aux
+fn engine_main
   (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
   (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
   (#c0:Ghost.erased (Seq.seq U8.t))
@@ -166,4 +166,3 @@ fn engine_main_aux
   }
 }
 ```
-let engine_main = engine_main_aux

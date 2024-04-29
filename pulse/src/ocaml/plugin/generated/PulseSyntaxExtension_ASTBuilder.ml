@@ -14,7 +14,32 @@ let (tm :
         FStar_Parser_AST.range = r;
         FStar_Parser_AST.level = FStar_Parser_AST.Un
       }
-let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
+let (parse_decl_name :
+  Prims.string ->
+    FStar_Compiler_Range_Type.range ->
+      (FStar_Parser_AST_Util.error_message, FStar_Ident.ident)
+        FStar_Pervasives.either)
+  =
+  fun contents ->
+    fun r ->
+      let uu___ = PulseSyntaxExtension_Parser.parse_peek_id contents r in
+      match uu___ with
+      | FStar_Pervasives.Inl s ->
+          let uu___1 = FStar_Ident.id_of_text s in
+          FStar_Pervasives.Inr uu___1
+      | FStar_Pervasives.Inr (msg, r1) ->
+          FStar_Pervasives.Inl
+            {
+              FStar_Parser_AST_Util.message = msg;
+              FStar_Parser_AST_Util.range = r1
+            }
+let (parse_decl :
+  FStar_Parser_AST_Util.open_namespaces_and_abbreviations ->
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (FStar_Parser_AST_Util.error_message, FStar_Parser_AST.decl)
+          FStar_Pervasives.either)
+  =
   fun ctx ->
     fun contents ->
       fun r ->
@@ -107,8 +132,12 @@ let (extension_parser : FStar_Parser_AST_Util.extension_parser) =
                 FStar_Parser_AST.interleaved = false
               } in
             FStar_Pervasives.Inr d1
-let (uu___36 : unit) =
-  FStar_Parser_AST_Util.register_extension_parser "pulse" extension_parser
+let (uu___49 : unit) =
+  FStar_Parser_AST_Util.register_extension_parser "pulse"
+    {
+      FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
+      FStar_Parser_AST_Util.parse_decl = parse_decl
+    }
 let (parse_pulse :
   FStar_TypeChecker_Env.env ->
     Prims.string Prims.list ->

@@ -49,7 +49,7 @@ let lock_alive l #p v =
 let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
 ```pulse
-fn new_lock_aux (v:vprop { is_big v })
+fn new_lock (v:vprop { is_big v })
   requires v
   returns l:lock
   ensures lock_alive l v
@@ -70,10 +70,8 @@ fn new_lock_aux (v:vprop { is_big v })
 }
 ```
 
-let new_lock = new_lock_aux
-
 ```pulse
-fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
+fn rec acquire (#v:vprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
   ensures v **  lock_alive l #p v ** lock_acquired l
 {
@@ -127,15 +125,13 @@ fn rec acquire_aux (#v:vprop) (#p:perm) (l:lock)
     rewrite (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) as
             emp;
     fold (lock_alive l #p v);
-    acquire_aux l
+    acquire l
   }
 }
 ```
 
-let acquire = acquire_aux
-
 ```pulse
-fn release_aux (#v:vprop) (#p:perm) (l:lock)
+fn release (#v:vprop) (#p:perm) (l:lock)
   requires lock_alive l #p v ** lock_acquired l ** v
   ensures lock_alive l #p v
 {
@@ -163,11 +159,9 @@ fn release_aux (#v:vprop) (#p:perm) (l:lock)
 }
 ```
 
-let release = release_aux
-
 ```pulse
 ghost
-fn share_aux (#v:vprop) (#p:perm) (l:lock)
+fn share (#v:vprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
   ensures lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v
 {
@@ -179,13 +173,11 @@ fn share_aux (#v:vprop) (#p:perm) (l:lock)
 } 
 ```
 
-let share = share_aux
-
 let share2 #v l = share #v #1.0R l
 
 ```pulse
 ghost
-fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
+fn gather (#v:vprop) (#p1 #p2 :perm) (l:lock)
   requires lock_alive l #p1 v ** lock_alive l #p2 v
   ensures lock_alive l #(p1 +. p2) v
 {
@@ -196,12 +188,11 @@ fn gather_aux (#v:vprop) (#p1 #p2 :perm) (l:lock)
   drop_ (inv _ _)
 } 
 ```
-let gather = gather_aux
 
 let gather2 #v l = gather #v #0.5R #0.5R l
 
 ```pulse
-fn free_aux (#v:vprop) (l:lock)
+fn free (#v:vprop) (l:lock)
   requires lock_alive l #1.0R v ** lock_acquired l
   ensures emp
 {
@@ -217,11 +208,9 @@ fn free_aux (#v:vprop) (l:lock)
 }
 ```
 
-let free = free_aux
-
 ```pulse
 ghost
-fn __lock_alive_inj
+fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :vprop)
   requires lock_alive l #p1 v1 ** lock_alive l #p2 v2
   ensures  lock_alive l #p1 v1 ** lock_alive l #p2 v1
@@ -241,4 +230,3 @@ fn __lock_alive_inj
   fold (lock_alive l #p2 v1);
 }
 ```
-let lock_alive_inj = __lock_alive_inj

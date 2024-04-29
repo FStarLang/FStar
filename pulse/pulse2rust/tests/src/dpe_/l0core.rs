@@ -149,7 +149,7 @@ pub fn sign_and_finalize_aliasKeyCRT(
         (),
     )
 }
-pub fn l0_main_aux(
+pub fn l0_main(
     cdi: &mut [u8],
     deviceID_pub: &mut [u8],
     deviceID_priv: &mut [u8],
@@ -279,28 +279,4 @@ pub fn l0_main_aux(
     };
     r1
 }
-pub static l0_main: fn(
-    &mut [u8],
-    &mut [u8],
-    &mut [u8],
-    &mut [u8],
-    &mut [u8],
-    usize,
-    usize,
-    &mut [u8],
-    usize,
-    usize,
-    &mut [u8],
-    super::l0types::l0_record_t,
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> super::l0types::l0_record_t = super::l0core::l0_main_aux;
 

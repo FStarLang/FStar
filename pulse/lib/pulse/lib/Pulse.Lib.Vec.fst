@@ -46,7 +46,7 @@ let to_vec_pts_to v #p #s =
           (vprop_equiv_refl _)
 
 ```pulse
-fn read_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
+fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires R.pts_to r v ** pts_to v s
@@ -63,10 +63,8 @@ fn read_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
 }
 ```
 
-let read_ref = read_ref'
-
 ```pulse
-fn write_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires R.pts_to r v ** pts_to v s
@@ -82,10 +80,8 @@ fn write_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
 }
 ```
 
-let write_ref = write_ref'
-
 ```pulse
-fn replace_i' (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
+fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires pts_to v s
   returns res:a
@@ -97,10 +93,8 @@ fn replace_i' (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
 }
 ```
 
-let replace_i = replace_i'
-
 ```pulse
-fn replace_i_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
+fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s })
   requires R.pts_to r v ** pts_to v s
@@ -118,5 +112,3 @@ fn replace_i_ref' (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   y
 }
 ```
-
-let replace_i_ref = replace_i_ref'

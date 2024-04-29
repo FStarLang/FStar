@@ -59,7 +59,7 @@ let pts_to_is_small _ _ _ = ()
 
 ```pulse
 ghost
-fn pts_to_len' (#t:Type) (a:array t) (#p:perm) (#x:FStar.Seq.seq t)
+fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:FStar.Seq.seq t)
 requires pts_to a #p x
 ensures pts_to a #p x ** pure (length a == Seq.length x)
 {
@@ -68,10 +68,9 @@ ensures pts_to a #p x ** pure (length a == Seq.length x)
   fold (pts_to a #p x)
 }
 ```
-let pts_to_len = pts_to_len'
 
 ```pulse
-fn alloc' (#elt:Type0) (x:elt) (n:SZ.t)
+fn alloc (#elt:Type0) (x:elt) (n:SZ.t)
 requires emp
 returns a:array elt
 ensures
@@ -85,10 +84,9 @@ ensures
   a
 }
 ```
-let alloc = alloc'
 
 ```pulse
-fn read
+fn op_Array_Access
     (#t: Type)
     (a: array t)
     (i: SZ.t)
@@ -107,10 +105,9 @@ ensures
   U.downgrade_val res
 }
 ```
-let op_Array_Access #t a i #p #s = read #t a i #p #s
 
 ```pulse
-fn write
+fn op_Array_Assignment
     (#t: Type)
     (a: array t)
     (i: SZ.t)
@@ -128,10 +125,9 @@ ensures
   fold (pts_to a (Seq.upd s (SZ.v i) v))
 }
 ```
-let op_Array_Assignment #t a i v #s = write #t a i v #s
 
 ```pulse
-fn free'
+fn free
     (#elt: Type)
     (a: array elt)
     (#s: Ghost.erased (Seq.seq elt))
@@ -144,7 +140,6 @@ ensures
   H.free a;
 }
 ```
-let free = free'
 
 let share #a arr #s #p = H.share arr #(raise_seq s) #p
 
@@ -166,7 +161,7 @@ let downgrade_seq_inv (#elt:Type0) (x:FStar.Seq.seq (U.raise_t u#0 u#1 elt))
 
 ```pulse
 ghost
-fn gather'
+fn gather
   (#a:Type)
   (arr:array a)
   (#s0 #s1:Ghost.erased (Seq.seq a))
@@ -180,7 +175,6 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
   fold (pts_to arr #(p0 +. p1) s0);
 }
 ```
-let gather = gather'
 
 let pts_to_range
   (#a:Type)
@@ -196,7 +190,7 @@ let pts_to_range_is_small _ _ _ _ _ = ()
 
 ```pulse
 ghost
-fn pts_to_range_prop'
+fn pts_to_range_prop
   (#elt: Type)
   (a: array elt)
   (#i #j: nat)
@@ -215,13 +209,12 @@ ensures
   fold (pts_to_range a i j #p s);
 }
 ```
-let pts_to_range_prop = pts_to_range_prop'
 let pts_to_range_intro a p s = H.pts_to_range_intro a p (raise_seq s)
 let pts_to_range_elim a p s = H.pts_to_range_elim a p (raise_seq s)
 
 ```pulse
 ghost
-fn pts_to_range_split'
+fn pts_to_range_split
   (#elt: Type0)
   (a: array elt)
   (i m j: nat)
@@ -255,11 +248,10 @@ ensures exists* s1 s2.
   )
 }
 ```
-let pts_to_range_split = pts_to_range_split'
 
 ```pulse
 ghost
-fn pts_to_range_join'
+fn pts_to_range_join
   (#elt: Type0)
   (a: array elt)
   (i m j: nat)
@@ -281,10 +273,9 @@ ensures
   fold (pts_to_range a i j #p (s1 `Seq.append` s2));
 }
 ```
-let pts_to_range_join = pts_to_range_join'
 
 ```pulse
-fn pts_to_range_index'
+fn pts_to_range_index
   (#t: Type)
   (a: array t)
   (i: SZ.t)
@@ -306,10 +297,9 @@ ensures
   U.downgrade_val res
 }
 ```
-let pts_to_range_index = pts_to_range_index'
 
 ```pulse
-fn pts_to_range_upd'
+fn pts_to_range_upd
   (#t: Type)
   (a: array t)
   (i: SZ.t)
@@ -337,7 +327,6 @@ ensures
   fold (pts_to_range a l r (Seq.upd s0 (SZ.v i - l) v));
 }
 ```
-let pts_to_range_upd = pts_to_range_upd'
 
 let with_pre (pre:vprop) (#a:Type) (#post:a -> vprop)(m:stt a emp post)
 : stt a pre (fun v -> pre ** post v)

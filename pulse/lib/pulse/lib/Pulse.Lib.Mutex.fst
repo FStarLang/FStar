@@ -46,7 +46,7 @@ let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
 let replace #a r y #x = R.replace #a r y #x
 
 ```pulse
-fn new_mutex' (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
+fn new_mutex (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
   requires v x
   returns m:mutex a
   ensures mutex_live m v
@@ -62,13 +62,11 @@ fn new_mutex' (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
 }
 ```
 
-let new_mutex = new_mutex'
-
 let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : vprop =
   pure (r == B.box_to_ref m.r) ** lock_acquired m.l
 
 ```pulse
-fn lock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+fn lock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
   returns r:mutex_guard a
   ensures mutex_live m #p v ** r `belongs_to` m ** (exists* x. pts_to r x ** v x)
@@ -85,10 +83,8 @@ fn lock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 } 
 ```
 
-let lock = lock'
-
 ```pulse
-fn unlock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
+fn unlock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   requires mutex_live m #p v ** mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures mutex_live m #p v
 {
@@ -102,11 +98,9 @@ fn unlock' (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
 }
 ```
 
-let unlock = unlock'
-
 ```pulse
 ghost
-fn share_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+fn share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
   ensures mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v
 {
@@ -117,11 +111,9 @@ fn share_aux (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 }
 ```
 
-let share = share_aux
-
 ```pulse
 ghost
-fn gather_aux (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
+fn gather (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
   requires mutex_live m #p1 v ** mutex_live m #p2 v
   ensures mutex_live m #(p1 +. p2) v
 {
@@ -131,5 +123,3 @@ fn gather_aux (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
   fold (mutex_live m #(p1 +. p2) v)
 }
 ```
-
-let gather = gather_aux

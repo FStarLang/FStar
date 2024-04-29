@@ -302,7 +302,7 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
 
 
 ```pulse
-fn l0_main_aux
+fn l0_main
   (cdi: A.larray U8.t (US.v dice_digest_len))
   (deviceID_pub: A.larray U8.t (US.v v32us))
   (deviceID_priv: A.larray U8.t (US.v v32us))
@@ -435,4 +435,3 @@ fn l0_main_aux
   r1
 }
 ```
-let l0_main = l0_main_aux

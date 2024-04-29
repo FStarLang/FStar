@@ -40,7 +40,7 @@ let trade_is_small (#is:invlist) (hyp concl:vprop)
 
 ```pulse
 ghost
-fn __intro_trade
+fn intro_trade
   (#is:invlist)
   (hyp concl:vprop)
   (extra:vprop { is_small extra })
@@ -59,11 +59,9 @@ fn __intro_trade
 }
 ```
 
-let intro_trade = __intro_trade
-
 ```pulse
 ghost
-fn intro_trade_invs_aux
+fn intro_trade_invs
   (#is:invlist)
   (hyp concl:vprop)
   (extra:vprop { is_small extra })
@@ -91,11 +89,9 @@ fn intro_trade_invs_aux
     with_invlist is aux
   };
 
-  __intro_trade hyp concl extra aux
+  intro_trade hyp concl extra aux
 }
 ```
-
-let intro_trade_invs = intro_trade_invs_aux
 
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
@@ -142,7 +138,7 @@ fn deconstruct_trade (is:invlist) (hyp concl:vprop)
 
 ```pulse
 ghost
-fn elim_trade_aux
+fn elim_trade
   (#is:invlist)
   (hyp concl:vprop)
   requires invlist_inv is ** trade #is hyp concl ** hyp
@@ -154,11 +150,10 @@ fn elim_trade_aux
   f ()
 }
 ```
-let elim_trade = elim_trade_aux
 
 ```pulse
 ghost
-fn trade_sub_inv_aux
+fn trade_sub_inv
   (#is1:invlist)
   (#is2:invlist { invlist_sub is1 is2 })
   (hyp concl:vprop)
@@ -179,15 +174,13 @@ fn trade_sub_inv_aux
     Pulse.Lib.Priv.Trade0.elim_stick (invlist_inv is1) (invlist_inv is2)
   };
   
-  __intro_trade #is2 hyp concl (reveal (dfst res)) aux
+  intro_trade #is2 hyp concl (reveal (dfst res)) aux
 }
 ```
 
-let trade_sub_inv = trade_sub_inv_aux
-
 ```pulse
 ghost
-fn __trade_map
+fn trade_map
   (#os : invlist)
   (p q r : vprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
@@ -206,11 +199,10 @@ fn __trade_map
   intro_trade #os p r (trade #os p q) aux;
 }
 ```
-let trade_map = __trade_map
 
 ```pulse
 ghost
-fn __trade_compose
+fn trade_compose
   (#os : invlist)
   (p q r : vprop)
   requires trade #os p q ** trade #os q r
@@ -229,4 +221,3 @@ fn __trade_compose
   intro_trade #os p r (trade #os p q ** trade #os q r) aux;
 }
 ```
-let trade_compose = __trade_compose

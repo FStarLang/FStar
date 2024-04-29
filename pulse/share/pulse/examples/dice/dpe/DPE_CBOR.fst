@@ -88,11 +88,11 @@ fn initialize_context (r:DPE.gref)
                       (#s:erased (Seq.seq U8.t))
                       (#p:perm)
     requires
-        mutex_live m (DPE.inv r) **
+        mutex_live m (DPE.dpe_inv r) **
         A.pts_to input #p s
     returns b:(mutex (option st) & option ctxt_hndl_t)
     ensures
-        mutex_live (fst b) (DPE.inv r) **
+        mutex_live (fst b) (DPE.dpe_inv r) **
         A.pts_to input #p s
 {
     let read = parse_dpe_cmd len input;

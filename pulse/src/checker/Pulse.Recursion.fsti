@@ -29,5 +29,5 @@ val add_knot (g : env)  (rng : R.range)
 
 val tie_knot (g : env)  (rng : R.range)
              (nm_orig : string) (nm_aux : string)
-             (d : decl) (r_typ : R.term) (blob:RT.blob)
-: Tac (list (RT.sigelt_for (fstar_env g)))
+             (r_typ : R.term) (blob:RT.blob)
+: Tac (r:(bool & sigelt & option RT.blob) { let (checked, _, _) = r in ~ checked })

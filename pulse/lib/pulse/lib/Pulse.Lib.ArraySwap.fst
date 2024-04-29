@@ -190,7 +190,7 @@ let intro_array_swap_post2 (lb rb mb:SZ.t) (mb':SZ.t)
 #push-options "--fuel 0 --ifuel 0 --split_queries no"
 inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn array_swap0
+fn array_swap
   (#t: Type0)
   (a: A.array t)
   (lb: SZ.t) (rb: SZ.t)
@@ -267,5 +267,3 @@ ensures (
 }
 ```
 #pop-options
-
-let array_swap = array_swap0

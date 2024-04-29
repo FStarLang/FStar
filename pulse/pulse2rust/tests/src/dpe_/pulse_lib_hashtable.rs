@@ -43,32 +43,6 @@ pub fn sz_add(x: usize, y: usize) -> std::option::Option<usize> {
 pub fn size_t_mod(x: usize, y: usize) -> usize {
     x % y
 }
-pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
-    pht: (),
-    ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
-    idx: usize,
-    k: KT,
-    v: VT,
-    uu___: (),
-) -> (super::pulse_lib_hashtable_type::ht_t<KT, VT>, VT) {
-    let hashf = ht.hashf;
-    let mut contents = ht.contents;
-    let v_ = std::mem::replace::<
-        super::pulse_lib_hashtable_spec::cell<KT, VT>,
-    >(&mut contents[idx], super::pulse_lib_hashtable::mk_used_cell(k, v));
-    let vcontents = contents;
-    let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
-    let _bind_c = match v_ {
-        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_1) => {
-            let res = (ht1, v_1);
-            res
-        }
-        super::pulse_lib_hashtable_spec::cell::Clean => panic!(),
-        super::pulse_lib_hashtable_spec::cell::Zombie => panic!(),
-    };
-    let contents1 = _bind_c;
-    contents1
-}
 pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     pht: (),
     ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
@@ -153,6 +127,32 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
     let cont1 = err1;
     let off1 = cont1;
     let contents1 = off1;
+    contents1
+}
+pub fn replace<KT: Copy + PartialEq + Clone, VT: Clone>(
+    pht: (),
+    ht: super::pulse_lib_hashtable_type::ht_t<KT, VT>,
+    idx: usize,
+    k: KT,
+    v: VT,
+    uu___: (),
+) -> (super::pulse_lib_hashtable_type::ht_t<KT, VT>, VT) {
+    let hashf = ht.hashf;
+    let mut contents = ht.contents;
+    let v_ = std::mem::replace::<
+        super::pulse_lib_hashtable_spec::cell<KT, VT>,
+    >(&mut contents[idx], super::pulse_lib_hashtable::mk_used_cell(k, v));
+    let vcontents = contents;
+    let ht1 = super::pulse_lib_hashtable::mk_ht(ht.sz, hashf, vcontents);
+    let _bind_c = match v_ {
+        super::pulse_lib_hashtable_spec::cell::Used(mut k_, mut v_1) => {
+            let res = (ht1, v_1);
+            res
+        }
+        super::pulse_lib_hashtable_spec::cell::Clean => panic!(),
+        super::pulse_lib_hashtable_spec::cell::Zombie => panic!(),
+    };
+    let contents1 = _bind_c;
     contents1
 }
 pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
