@@ -1,4 +1,6 @@
 open Prims
+let (dbg_attrs : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "attrs"
 type antiquotations_temp =
   (FStar_Syntax_Syntax.bv * FStar_Syntax_Syntax.term) Prims.list
 let (tun_r : FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.term) =
@@ -6011,14 +6013,19 @@ and (desugar_formula :
       match uu___ with
       | FStar_Parser_AST.Labeled (f1, l, p) ->
           let f2 = desugar_formula env f1 in
-          mk
-            (FStar_Syntax_Syntax.Tm_meta
-               {
-                 FStar_Syntax_Syntax.tm2 = f2;
-                 FStar_Syntax_Syntax.meta =
-                   (FStar_Syntax_Syntax.Meta_labeled
-                      (l, (f2.FStar_Syntax_Syntax.pos), p))
-               })
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStar_Errors_Msg.mkmsg l in
+                  (uu___5, (f2.FStar_Syntax_Syntax.pos), p) in
+                FStar_Syntax_Syntax.Meta_labeled uu___4 in
+              {
+                FStar_Syntax_Syntax.tm2 = f2;
+                FStar_Syntax_Syntax.meta = uu___3
+              } in
+            FStar_Syntax_Syntax.Tm_meta uu___2 in
+          mk uu___1
       | FStar_Parser_AST.QForall ([], uu___1, uu___2) ->
           FStar_Compiler_Effect.failwith
             "Impossible: Quantifier without binders"
@@ -7515,8 +7522,8 @@ let rec (desugar_tycon :
                                      (match uu___11 with
                                       | (constrNames, constrs1) ->
                                           ((let uu___13 =
-                                              FStar_Options.debug_at_level_no_module
-                                                (FStar_Options.Other "attrs") in
+                                              FStar_Compiler_Effect.op_Bang
+                                                dbg_attrs in
                                             if uu___13
                                             then
                                               let uu___14 =
@@ -7608,8 +7615,7 @@ let rec (desugar_tycon :
                      (match uu___3 with
                       | (bundle, abbrevs) ->
                           ((let uu___5 =
-                              FStar_Options.debug_at_level_no_module
-                                (FStar_Options.Other "attrs") in
+                              FStar_Compiler_Effect.op_Bang dbg_attrs in
                             if uu___5
                             then
                               let uu___6 =
@@ -9026,9 +9032,7 @@ and (desugar_decl_core :
               desugar_tycon env d d_attrs uu___1 tcs in
             (match uu___ with
              | (env1, ses) ->
-                 ((let uu___2 =
-                     FStar_Options.debug_at_level_no_module
-                       (FStar_Options.Other "attrs") in
+                 ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_attrs in
                    if uu___2
                    then
                      let uu___3 = FStar_Parser_AST.decl_to_string d in
@@ -10013,7 +10017,8 @@ and (desugar_decl_core :
                      FStar_Parser_AST_Util.open_namespaces = uu___1;
                      FStar_Parser_AST_Util.module_abbreviations = uu___2
                    } in
-                 let uu___1 = parser opens code range in
+                 let uu___1 =
+                   parser.FStar_Parser_AST_Util.parse_decl opens code range in
                  (match uu___1 with
                   | FStar_Pervasives.Inl error ->
                       FStar_Errors.raise_error

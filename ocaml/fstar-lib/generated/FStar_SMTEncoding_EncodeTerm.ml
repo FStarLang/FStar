@@ -1,4 +1,10 @@
 open Prims
+let (dbg_PartialApp : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "PartialApp"
+let (dbg_SMTEncoding : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTEncoding"
+let (dbg_SMTEncodingReify : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTEncodingReify"
 let mkForall_fuel' :
   'uuuuu .
     Prims.string ->
@@ -728,9 +734,7 @@ and (encode_binders :
   fun fuel_opt ->
     fun bs ->
       fun env ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-             FStar_Options.Medium in
+        (let uu___1 = FStar_Compiler_Debug.medium () in
          if uu___1
          then
            let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
@@ -1274,9 +1278,7 @@ and (encode_term :
         env.FStar_SMTEncoding_Env.tcenv t;
       (let t1 = FStar_Syntax_Subst.compress t in
        let t0 = t1 in
-       (let uu___2 =
-          FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-            (FStar_Options.Other "SMTEncoding") in
+       (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
         if uu___2
         then
           let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
@@ -1306,9 +1308,7 @@ and (encode_term :
             FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_lazy i ->
             let e = FStar_Syntax_Util.unfold_lazy i in
-            ((let uu___3 =
-                FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-                  (FStar_Options.Other "SMTEncoding") in
+            ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
               if uu___3
               then
                 let uu___4 = FStar_Syntax_Print.term_to_string t1 in
@@ -1343,9 +1343,7 @@ and (encode_term :
                   FStar_Reflection_V2_Embeddings.e_term_view uu___4 in
               uu___3 t1.FStar_Syntax_Syntax.pos FStar_Pervasives_Native.None
                 FStar_Syntax_Embeddings_Base.id_norm_cb in
-            ((let uu___4 =
-                FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-                  (FStar_Options.Other "SMTEncoding") in
+            ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
               if uu___4
               then
                 let uu___5 = FStar_Syntax_Print.term_to_string t0 in
@@ -2064,9 +2062,8 @@ and (encode_term :
                                        FStar_SMTEncoding_Term.hash_of_term
                                          tkey in
                                      ((let uu___9 =
-                                         FStar_TypeChecker_Env.debug
-                                           env.FStar_SMTEncoding_Env.tcenv
-                                           (FStar_Options.Other "SMTEncoding") in
+                                         FStar_Compiler_Effect.op_Bang
+                                           dbg_SMTEncoding in
                                        if uu___9
                                        then
                                          let uu___10 =
@@ -2372,10 +2369,8 @@ and (encode_term :
                                         env.FStar_SMTEncoding_Env.tcenv []
                                         uu___8 in
                                     ((let uu___9 =
-                                        FStar_TypeChecker_Env.debug
-                                          env.FStar_SMTEncoding_Env.tcenv
-                                          (FStar_Options.Other
-                                             "SMTEncodingReify") in
+                                        FStar_Compiler_Effect.op_Bang
+                                          dbg_SMTEncodingReify in
                                       if uu___9
                                       then
                                         let uu___10 =
@@ -2584,10 +2579,8 @@ and (encode_term :
                                          (match uu___8 with
                                           | (head_type2, formals, c) ->
                                               ((let uu___10 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env.FStar_SMTEncoding_Env.tcenv
-                                                    (FStar_Options.Other
-                                                       "PartialApp") in
+                                                  FStar_Compiler_Effect.op_Bang
+                                                    dbg_PartialApp in
                                                 if uu___10
                                                 then
                                                   let uu___11 =
@@ -2840,10 +2833,8 @@ and (encode_term :
                                               FStar_SMTEncoding_Term.hash_of_term
                                                 tkey in
                                             ((let uu___11 =
-                                                FStar_TypeChecker_Env.debug
-                                                  env.FStar_SMTEncoding_Env.tcenv
-                                                  (FStar_Options.Other
-                                                     "PartialApp") in
+                                                FStar_Compiler_Effect.op_Bang
+                                                  dbg_PartialApp in
                                               if uu___11
                                               then
                                                 let uu___12 =
@@ -3199,9 +3190,7 @@ and (encode_pat :
   =
   fun env ->
     fun pat ->
-      (let uu___1 =
-         FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-           FStar_Options.Medium in
+      (let uu___1 = FStar_Compiler_Debug.medium () in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.pat_to_string pat in
@@ -3433,9 +3422,7 @@ and (encode_formula :
   fun phi ->
     fun env ->
       let debug phi1 =
-        let uu___ =
-          FStar_TypeChecker_Env.debug env.FStar_SMTEncoding_Env.tcenv
-            (FStar_Options.Other "SMTEncoding") in
+        let uu___ = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
         if uu___
         then
           let uu___1 = FStar_Syntax_Print.tag_of_term phi1 in
@@ -3695,27 +3682,38 @@ and (encode_formula :
                   | (FStar_Pervasives_Native.Some r1,
                      FStar_Pervasives_Native.Some s) ->
                       let phi3 =
-                        FStar_Syntax_Syntax.mk
-                          (FStar_Syntax_Syntax.Tm_meta
-                             {
-                               FStar_Syntax_Syntax.tm2 = phi2;
-                               FStar_Syntax_Syntax.meta =
-                                 (FStar_Syntax_Syntax.Meta_labeled
-                                    (s, r1, false))
-                             }) r1 in
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 = FStar_Errors_Msg.mkmsg s in
+                                (uu___8, r1, false) in
+                              FStar_Syntax_Syntax.Meta_labeled uu___7 in
+                            {
+                              FStar_Syntax_Syntax.tm2 = phi2;
+                              FStar_Syntax_Syntax.meta = uu___6
+                            } in
+                          FStar_Syntax_Syntax.Tm_meta uu___5 in
+                        FStar_Syntax_Syntax.mk uu___4 r1 in
                       fallback phi3
                   | (FStar_Pervasives_Native.None,
                      FStar_Pervasives_Native.Some s) ->
                       let phi3 =
-                        FStar_Syntax_Syntax.mk
-                          (FStar_Syntax_Syntax.Tm_meta
-                             {
-                               FStar_Syntax_Syntax.tm2 = phi2;
-                               FStar_Syntax_Syntax.meta =
-                                 (FStar_Syntax_Syntax.Meta_labeled
-                                    (s, (phi2.FStar_Syntax_Syntax.pos),
-                                      false))
-                             }) phi2.FStar_Syntax_Syntax.pos in
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 =
+                                let uu___8 = FStar_Errors_Msg.mkmsg s in
+                                (uu___8, (phi2.FStar_Syntax_Syntax.pos),
+                                  false) in
+                              FStar_Syntax_Syntax.Meta_labeled uu___7 in
+                            {
+                              FStar_Syntax_Syntax.tm2 = phi2;
+                              FStar_Syntax_Syntax.meta = uu___6
+                            } in
+                          FStar_Syntax_Syntax.Tm_meta uu___5 in
+                        FStar_Syntax_Syntax.mk uu___4
+                          phi2.FStar_Syntax_Syntax.pos in
                       fallback phi3
                   | uu___4 -> fallback phi2)
              | (FStar_Syntax_Syntax.Tm_fvar fv, (t, uu___)::[]) when

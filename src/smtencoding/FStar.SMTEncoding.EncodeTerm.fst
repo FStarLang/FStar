@@ -50,6 +50,10 @@ module U      = FStar.Syntax.Util
 open FStar.Class.Show
 open FStar.Class.Setlike
 
+let dbg_PartialApp       = Debug.get_toggle "PartialApp"
+let dbg_SMTEncoding      = Debug.get_toggle "SMTEncoding"
+let dbg_SMTEncodingReify = Debug.get_toggle "SMTEncodingReify"
+
 (*---------------------------------------------------------------------------------*)
 (*  <Utilities> *)
 
@@ -374,7 +378,7 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             * decls_t                       (* top-level decls to be emitted *)
                             * list bv)                     (* names *) =
 
-    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    if Debug.medium () then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
 
     let vars, guards, env, decls, names =
       bs |> List.fold_left
@@ -621,7 +625,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
     def_check_scoped t.pos "encode_term" env.tcenv t;
     let t = SS.compress t in
     let t0 = t in
-    if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    if !dbg_SMTEncoding
     then BU.print2 "(%s)   %s\n" (Print.tag_of_term t) (Print.term_to_string t);
     match t.n with
       | Tm_delayed  _
@@ -633,7 +637,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
       | Tm_lazy i ->
         let e = U.unfold_lazy i in
-        if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        if !dbg_SMTEncoding then
             BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t)
                                                    (Print.term_to_string e);
         encode_term e env
@@ -653,7 +657,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
         let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
-        if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+        if !dbg_SMTEncoding then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
                                                     (Print.term_to_string tv);
         let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
@@ -931,7 +935,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         let tkey = mkForall t0.pos ([], ffv::xfv::cvars, encoding) in
         let tkey_hash = Term.hash_of_term tkey in
 
-        if Env.debug env.tcenv (Options.Other "SMTEncoding")
+        if !dbg_SMTEncoding
         then BU.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
                (Syntax.Print.term_to_string f) tkey_hash (BU.digest_of_string tkey_hash)
         else ();
@@ -1046,7 +1050,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
            | _ ->             
             let e0 = TcUtil.norm_reify env.tcenv []
               (U.mk_reify (args_e |> List.hd |> fst) lopt) in
-            if Env.debug env.tcenv <| Options.Other "SMTEncodingReify"
+            if !dbg_SMTEncodingReify
             then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
             encode_term e env)
@@ -1073,7 +1077,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 match ht_opt with
                 | _ when 1=1 -> app_tm, decls@decls' //NS: Intentionally using a default case here to disable the axiom below
                 | Some (head_type, formals, c) ->
-                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    if !dbg_PartialApp
                     then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
                              (Print.term_to_string head)
                              (Print.term_to_string head_type)
@@ -1083,7 +1087,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                     let formals, rest = BU.first_N (List.length args_e) formals in
                     let subst = List.map2 (fun ({binder_bv=bv}) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
-                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    if !dbg_PartialApp
                     then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
                             (Print.term_to_string ty);
                     let vars, pattern, has_type, decls'' =
@@ -1091,7 +1095,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                         List.fold_left2 (fun (t_hyps, decls) ({binder_bv=bv}) e ->
                           let t = SS.subst subst bv.sort in
                           let t_hyp, decls' = encode_term_pred None t env e in
-                          if Env.debug env.tcenv (Options.Other "PartialApp")
+                          if !dbg_PartialApp
                           then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
                                          (Print.term_to_string t)
                                          (Term.print_smt_term t_hyp);
@@ -1133,7 +1137,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                       has_type,
                       decls@decls'@decls''
                     in
-                    if Env.debug env.tcenv (Options.Other "PartialApp")
+                    if !dbg_PartialApp
                     then BU.print1 "Encoding partial application, after SMT encoded predicate:\n\t=%s\n"
                             (Term.print_smt_term has_type);
                     let tkey_hash = Term.hash_of_term app_tm in
@@ -1182,7 +1186,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                        head_type, formals, c
                   else head_type, formals, c
                 in
-                if Env.debug env.tcenv (Options.Other "PartialApp")
+                if !dbg_PartialApp
                 then BU.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
                             (Print.term_to_string head_type)
                             (Print.binders_to_string ", " formals)
@@ -1298,7 +1302,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 let tkey = mkForall t0.pos ([], cvars, key_body) in
                 let tkey_hash = Term.hash_of_term tkey in
-                if Env.debug env.tcenv <| Options.Other "PartialApp"
+                if !dbg_PartialApp
                 then BU.print2 "Checking eta expansion of\n\tvars={%s}\n\tbody=%s\n"
                        (List.map fv_name vars |> String.concat ", ")
                        (print_smt_term body);
@@ -1392,7 +1396,7 @@ and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
     mkLet' ([mk_fv (scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t * pattern) =
-    if Env.debug env.tcenv Options.Medium then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    if Debug.medium () then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
     let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
@@ -1490,7 +1494,7 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) * decl
 
 and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to be normalized; the existential variables are all labels *)
     let debug phi =
-       if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+       if !dbg_SMTEncoding
        then BU.print2 "Formula (%s)  %s\n"
                      (Print.tag_of_term phi)
                      (Print.term_to_string phi) in
@@ -1593,15 +1597,17 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+              (* NB: below we use Errors.mkmsg since FStar.Range.labeled takes a string, but
+                 the Meta_labeled node needs a list of docs (Errors.error_message). *)
               begin match SE.try_unembed r SE.id_norm_cb,
                           SE.try_unembed msg SE.id_norm_cb with
               | Some r, Some s ->
-                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(Errors.mkmsg s, r, false)}) r in
                 fallback phi
 
               (* If we could not unembed the position, still use the string *)
               | None, Some s ->
-                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, phi.pos, false)}) phi.pos in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(Errors.mkmsg s, phi.pos, false)}) phi.pos in
                 fallback phi
 
               | _ ->

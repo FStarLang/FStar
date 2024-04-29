@@ -98,7 +98,7 @@ val bind_cases: env -> typ -> list (typ * lident * list cflag * (bool -> lcomp))
  *)
 val weaken_result_typ: env -> term -> lcomp -> typ -> bool -> term * lcomp * guard_t
 
-val strengthen_precondition: (option (unit -> string) -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
+val strengthen_precondition: (option (unit -> list Pprint.document) -> env -> term -> lcomp -> guard_t -> lcomp*guard_t)
 val weaken_guard: guard_formula -> guard_formula -> guard_formula
 val weaken_precondition: env -> lcomp -> guard_formula -> lcomp
 val maybe_assume_result_eq_pure_term: env -> term -> lcomp -> lcomp
@@ -132,8 +132,8 @@ val check_top_level: env -> guard_t -> lcomp -> bool*comp
 val maybe_coerce_lc : env -> term -> lcomp -> typ -> term * lcomp * guard_t
 
 //misc.
-val label: string -> Range.range -> typ -> typ
-val label_guard: Range.range -> string -> guard_t -> guard_t
+val label: list Pprint.document -> Range.range -> typ -> typ
+val label_guard: Range.range -> list Pprint.document -> guard_t -> guard_t
 val short_circuit: term -> args -> guard_formula
 val short_circuit_head: term -> bool
 val maybe_add_implicit_binders: env -> binders -> binders

@@ -131,6 +131,10 @@ let (uu___is_DefaultUnivsToZero : step -> Prims.bool) =
   fun projectee ->
     match projectee with | DefaultUnivsToZero -> true | uu___ -> false
 type steps = step Prims.list
+let (dbg_ImplicitTrace : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ImplicitTrace"
+let (dbg_LayeredEffectsEqns : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffectsEqns"
 let rec (eq_step : step -> step -> Prims.bool) =
   fun s1 ->
     fun s2 ->
@@ -2406,11 +2410,6 @@ let (incr_query_index : env -> env) =
                 erase_erasable_args = (env1.erase_erasable_args);
                 core_check = (env1.core_check)
               }))
-let (debug : env -> FStar_Options.debug_level_t -> Prims.bool) =
-  fun env1 ->
-    fun l ->
-      let uu___ = FStar_Ident.string_of_lid env1.curmodule in
-      FStar_Options.debug_at_level uu___ l
 let (set_range : env -> FStar_Compiler_Range_Type.range -> env) =
   fun e ->
     fun r ->
@@ -6936,7 +6935,7 @@ let (new_tac_implicit_var :
                      FStar_TypeChecker_Common.imp_range = r
                    } in
                  (let uu___2 =
-                    debug env1 (FStar_Options.Other "ImplicitTrace") in
+                    FStar_Compiler_Effect.op_Bang dbg_ImplicitTrace in
                   if uu___2
                   then
                     let uu___3 =
@@ -7026,8 +7025,8 @@ let (uvars_for_binders :
                          (match uu___2 with
                           | (t, l_ctx_uvars, g_t) ->
                               ((let uu___4 =
-                                  debug env1
-                                    (FStar_Options.Other "LayeredEffectsEqns") in
+                                  FStar_Compiler_Effect.op_Bang
+                                    dbg_LayeredEffectsEqns in
                                 if uu___4
                                 then
                                   FStar_Compiler_List.iter

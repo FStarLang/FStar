@@ -631,10 +631,9 @@ let (query_errors :
                      (fun uu___3 ->
                         match uu___3 with
                         | (uu___4, x, y) ->
-                            let uu___5 = FStar_Errors_Msg.mkmsg x in
-                            let uu___6 = FStar_Errors.get_ctx () in
-                            (FStar_Errors_Codes.Error_Z3SolverError, uu___5,
-                              y, uu___6)) error_labels in
+                            let uu___5 = FStar_Errors.get_ctx () in
+                            (FStar_Errors_Codes.Error_Z3SolverError, x, y,
+                              uu___5)) error_labels in
                  {
                    error_reason = msg;
                    error_fuel = (settings.query_fuel);
@@ -821,9 +820,8 @@ let (errors_to_report :
         | (FStar_Pervasives_Native.None, (uu___1, msg, rng)::[]) ->
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Errors_Msg.mkmsg msg in
-                let uu___5 = FStar_Errors.get_ctx () in
-                (FStar_Errors_Codes.Error_Z3SolverError, uu___4, rng, uu___5) in
+                let uu___4 = FStar_Errors.get_ctx () in
+                (FStar_Errors_Codes.Error_Z3SolverError, msg, rng, uu___4) in
               [uu___3] in
             FStar_TypeChecker_Err.errors_smt_detail settings.query_env uu___2
               recovery_failed_msg
@@ -840,10 +838,14 @@ let (errors_to_report :
                        ("", FStar_SMTEncoding_Term.dummy_sort) in
                    let msg =
                      let uu___3 =
-                       FStar_Syntax_Print.term_to_string settings.query_term in
-                     FStar_Compiler_Util.format1
-                       "Failed to prove the following goal, although it appears to be trivial: %s"
-                       uu___3 in
+                       let uu___4 =
+                         FStar_Errors_Msg.text
+                           "Failed to prove the following goal, although it appears to be trivial:" in
+                       let uu___5 =
+                         FStar_Class_PP.pp FStar_Syntax_Print.pretty_term
+                           settings.query_term in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     [uu___3] in
                    let range =
                      FStar_TypeChecker_Env.get_range settings.query_env in
                    [(dummy_fv, msg, range)]
@@ -870,10 +872,9 @@ let (errors_to_report :
                     | (uu___4, msg, rng) ->
                         let uu___5 =
                           let uu___6 =
-                            let uu___7 = FStar_Errors_Msg.mkmsg msg in
-                            let uu___8 = FStar_Errors.get_ctx () in
-                            (FStar_Errors_Codes.Error_Z3SolverError, uu___7,
-                              rng, uu___8) in
+                            let uu___7 = FStar_Errors.get_ctx () in
+                            (FStar_Errors_Codes.Error_Z3SolverError, msg,
+                              rng, uu___7) in
                           [uu___6] in
                         FStar_TypeChecker_Err.errors_smt_detail
                           settings.query_env uu___5 recovery_failed_msg)
@@ -1140,13 +1141,17 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                     (fun uu___5 ->
                        match uu___5 with
                        | (uu___6, msg, range1) ->
-                           let tag1 =
+                           let msg1 =
                              if used_hint settings
-                             then "(Hint-replay failed): "
-                             else "" in
-                           FStar_Errors.log_issue range1
+                             then
+                               let uu___7 =
+                                 FStar_Pprint.doc_of_string
+                                   "Hint-replay failed" in
+                               uu___7 :: msg
+                             else msg in
+                           FStar_Errors.log_issue_doc range1
                              (FStar_Errors_Codes.Warning_HitReplayFailed,
-                               (Prims.strcat tag1 msg))) errs))
+                               msg1)) errs))
       else ()
 let (store_hint : FStar_Compiler_Hints.hint -> unit) =
   fun hint ->
@@ -1661,7 +1666,7 @@ let (ask_solver_quake : query_settings Prims.list -> answer) =
                    ((let uu___5 =
                        (quaking_or_retrying &&
                           ((FStar_Options.interactive ()) ||
-                             (FStar_Options.debug_any ())))
+                             (FStar_Compiler_Debug.any ())))
                          && (n > Prims.int_zero) in
                      if uu___5
                      then
@@ -2228,7 +2233,7 @@ let (encode_and_ask :
                                   (let uu___7 =
                                      FStar_Options.split_queries () in
                                    uu___7 = FStar_Options.Always))
-                                 && (FStar_Options.debug_any ()) in
+                                 && (FStar_Compiler_Debug.any ()) in
                              if uu___6
                              then
                                let n = FStar_Compiler_List.length labels in

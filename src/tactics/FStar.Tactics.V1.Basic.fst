@@ -62,6 +62,11 @@ module PO     = FStar.TypeChecker.Primops
 open FStar.Class.Monad
 open FStar.Class.Setlike
 
+let dbg_2635     = Debug.get_toggle "2635"
+let dbg_ReflTc   = Debug.get_toggle "ReflTc"
+let dbg_Tac      = Debug.get_toggle "Tac"
+let dbg_TacUnify = Debug.get_toggle "TacUnify"
+
 let ret #a (x:a) : tac a = return x
 let bind #a #b : tac a -> (a -> tac b) -> tac b = ( let! )
 let idtac : tac unit = return ()
@@ -77,7 +82,7 @@ let core_check env sol t must_tot
   : either (option typ) Core.error
   = if not (Options.compat_pre_core_should_check()) then Inl None else
     let debug f =
-        if Options.debug_any()
+        if Debug.any()
         then f ()
         else ()
     in
@@ -156,7 +161,7 @@ let print (msg:string) : tac unit =
 
 let debugging () : tac bool =
     bind get (fun ps ->
-    ret (Env.debug ps.main_context (Options.Other "Tac")))
+    ret !dbg_Tac)
 
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in
@@ -433,15 +438,14 @@ let __do_unify
   (check_side:check_unifier_solved_implicits_side)
   (env:env) (t1:term) (t2:term)
   : tac (option guard_t) =
-  let dbg = Env.debug env (Options.Other "TacUnify") in
   bind idtac (fun () ->
-  if dbg then begin
+  if !dbg_TacUnify then begin
     Options.push ();
-    let _ = Options.set_options "--debug_level Rel --debug_level RelCheck" in
+    let _ = Options.set_options "--debug Rel,RelCheck" in
     ()
   end;
-  bind (__do_unify_wflags dbg allow_guards must_tot check_side env t1 t2) (fun r ->
-  if dbg then Options.pop ();
+  bind (__do_unify_wflags !dbg_TacUnify allow_guards must_tot check_side env t1 t2) (fun r ->
+  if !dbg_TacUnify then Options.pop ();
   ret r))
 
 (* SMT-free unification. *)
@@ -742,7 +746,7 @@ let intro () : tac binder = wrap_err "intro" <| (
              //BU.print1 "[intro]: old goal is %s" (goal_to_string goal);
              //BU.print1 "[intro]: new goal is %s"
              //           (show ctx_uvar);
-             //ignore (FStar.Options.set_options "--debug_level Rel");
+             //ignore (FStar.Options.set_options "--debug Rel");
               (* Suppose if instead of simply assigning `?u` to the lambda term on
                 the RHS, we tried to unify `?u` with the `(fun (x:t) -> ?v @ [NM(x, 0)])`.
 
@@ -1069,7 +1073,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
                       |> Some)
                      deps
                      (rangeof goal) in
-                   if Env.debug env <| Options.Other "2635"
+                   if Debug.medium () || !dbg_2635
                    then
                      BU.print2 "Apply lemma created a new uvar %s while applying %s\n"
                        (show u)
@@ -2295,7 +2299,7 @@ let free_uvars (tm : term) : tac (list Z.t)
 (***** Builtins used in the meta DSL framework *****)
 
 let dbg_refl (g:env) (msg:unit -> string) =
-  if Env.debug g <| Options.Other "ReflTc"
+  if !dbg_ReflTc
   then BU.print_string (msg ())
 
 let issues = list Errors.issue

@@ -1,4 +1,6 @@
 open Prims
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CheckedFiles"
 let (cache_version_number : Prims.int) = (Prims.of_int (67))
 type tc_result =
   {
@@ -162,9 +164,7 @@ let (hash_dependences :
                    FStar_Compiler_Util.format1
                      "hash_dependences::the interface checked file %s does not exist\n"
                      iface in
-                 ((let uu___2 =
-                     FStar_Options.debug_at_level_no_module
-                       (FStar_Options.Other "CheckedFiles") in
+                 ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                    if uu___2
                    then FStar_Compiler_Util.print1 "%s\n" msg
                    else ());
@@ -193,9 +193,7 @@ let (hash_dependences :
                     FStar_Compiler_Util.format2
                       "For dependency %s, cache file %s is not loaded" fn2
                       cache_fn in
-                  ((let uu___3 =
-                      FStar_Options.debug_at_level_no_module
-                        (FStar_Options.Other "CheckedFiles") in
+                  ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg in
                     if uu___3
                     then FStar_Compiler_Util.print1 "%s\n" msg
                     else ());
@@ -223,9 +221,7 @@ let (hash_dependences :
 let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
   fun fn ->
     fun checked_fn ->
-      (let uu___1 =
-         FStar_Options.debug_at_level_no_module
-           (FStar_Options.Other "CheckedFiles") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
        if uu___1
        then
          FStar_Compiler_Util.print1 "Trying to load checked file result %s\n"
@@ -263,9 +259,7 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
                       FStar_Compiler_Util.digest_of_file fn in
                     if x.digest <> current_digest
                     then
-                      ((let uu___5 =
-                          FStar_Options.debug_at_level_no_module
-                            (FStar_Options.Other "CheckedFiles") in
+                      ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                         if uu___5
                         then
                           FStar_Compiler_Util.print4
@@ -289,9 +283,7 @@ let (load_checked_file_with_tc_result :
   fun deps ->
     fun fn ->
       fun checked_fn ->
-        (let uu___1 =
-           FStar_Options.debug_at_level_no_module
-             (FStar_Options.Other "CheckedFiles") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
          if uu___1
          then
            FStar_Compiler_Util.print1
@@ -369,9 +361,7 @@ let (load_checked_file_with_tc_result :
                            validate_iface_cache ();
                            FStar_Pervasives.Inr tc_result1))
                        else
-                         ((let uu___5 =
-                             FStar_Options.debug_at_level_no_module
-                               (FStar_Options.Other "CheckedFiles") in
+                         ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                            if uu___5
                            then
                              ((let uu___7 =
@@ -490,9 +480,7 @@ let (load_module_from_cache :
              | FStar_Pervasives.Inl msg ->
                  (fail msg cache_file; FStar_Pervasives_Native.None)
              | FStar_Pervasives.Inr tc_result1 ->
-                 ((let uu___4 =
-                     FStar_Options.debug_at_level_no_module
-                       (FStar_Options.Other "CheckedFiles") in
+                 ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg in
                    if uu___4
                    then
                      FStar_Compiler_Util.print1

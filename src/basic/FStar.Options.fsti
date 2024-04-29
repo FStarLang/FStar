@@ -23,13 +23,6 @@ open FStar.Compiler
 
 //let __test_norm_all = Util.mk_ref false
 
-type debug_level_t =
-  | Low
-  | Medium
-  | High
-  | Extreme
-  | Other of string
-
 type split_queries_t = | No | OnFailure | Always
 
 type option_val =
@@ -56,7 +49,7 @@ type opt_type =
 | EnumStr of list string
   // --codegen OCaml
 | OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
-  // --debug_level …
+  // --debug …
 | PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
 | Accumulated of opt_type (* elem spec *)
@@ -249,19 +242,12 @@ val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
 
-(* True iff the user passed '--debug M' for some M *)
-val debug_any                   : unit    -> bool
+(* List of enabled debug toggles. *)
+val debug_keys                  : unit    -> list string
 
-(* True for M when the user passed '--debug M' *)
-val debug_module                : string  -> bool
-
-(* True for M and L when the user passed '--debug M --debug_level L'
- * (and possibly more) *)
-val debug_at_level              : string  -> debug_level_t -> bool
-
-(* True for L when the user passed '--debug_level L'
- * (and possibly more, but independent of --debug) *)
-val debug_at_level_no_module    : debug_level_t -> bool
+(* Whether we are debugging every module and not just the ones
+in the cmdline. *)
+val debug_all_modules           : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

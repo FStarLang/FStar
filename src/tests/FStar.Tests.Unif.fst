@@ -197,7 +197,6 @@ let run_all () =
     FStar.Main.process_args () |> ignore; //set options
     let tm, us = inst 1 (tc "fun (u:Type0 -> Type0) (x:Type0) -> u x") in
     let sol = tc "fun (x:Type0) -> Prims.pair x x" in
-    BU.print1 "Processed args: debug_at_level Core? %s\n" (BU.string_of_bool (Options.debug_at_level_no_module (Options.Other "Core")));
     unify_check 9 [] tm
             sol
             Trivial

@@ -6,8 +6,8 @@ module EC = FStar_Errors_Codes
 module EM = FStar_Errors_Msg
 module O = FStar_Options
 
-let perr  s   = if O.debug_any () then U.print_error s
-let perr1 s x = if O.debug_any () then U.print1_error s x
+let perr  s   = if FStar_Compiler_Debug.any () then U.print_error s
+let perr1 s x = if FStar_Compiler_Debug.any () then U.print1_error s x
 
 let dynlink (fname:string) : unit =
   try

@@ -283,8 +283,9 @@ let log_cfg cfg f =
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
 
+let dbg_unfolding = Debug.get_toggle "Unfolding"
 let log_unfolding cfg f =
-    if cfg.debug.unfolding then f () else ()
+  if !dbg_unfolding then f () else ()
 
 let log_nbe cfg f =
     if cfg.debug.debug_nbe then f ()
@@ -359,6 +360,17 @@ let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strate
     then { s with nbe_step = true }
     else s
 
+let dbg_Norm = Debug.get_toggle "Norm"
+let dbg_NormTop = Debug.get_toggle "NormTop"
+let dbg_NormCfg = Debug.get_toggle "NormCfg"
+let dbg_Primops = Debug.get_toggle "Primops"
+let dbg_Unfolding = Debug.get_toggle "Unfolding"
+let dbg_380 = Debug.get_toggle "380"
+let dbg_WPE = Debug.get_toggle "WPE"
+let dbg_NormDelayed = Debug.get_toggle "NormDelayed"
+let dbg_print_normalized = Debug.get_toggle "print_normalized_terms"
+let dbg_NBE = Debug.get_toggle "NBE"
+let dbg_UNSOUND_EraseErasableArgs = Debug.get_toggle "UNSOUND_EraseErasableArgs"
 
 let config' psteps s e =
     let d = s |> List.collect (function
@@ -376,37 +388,33 @@ let config' psteps s e =
     let steps = to_fsteps s |> add_nbe in
     let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
-    {tcenv = e;
-     debug = if dbg_flag || Options.debug_any () then
-            { gen = Env.debug e (Options.Other "Norm") || dbg_flag
-             ; top = Env.debug e (Options.Other "NormTop") || dbg_flag
-             ; cfg = Env.debug e (Options.Other "NormCfg")
-             ; primop = Env.debug e (Options.Other "Primops")
-             ; unfolding = Env.debug e (Options.Other "Unfolding")
-             ; b380 = Env.debug e (Options.Other "380")
-             ; wpe = Env.debug e (Options.Other "WPE")
-             ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
-             ; debug_nbe = Env.debug e (Options.Other "NBE")
-             ; erase_erasable_args =
-               (let b = Env.debug e (Options.Other "UNSOUND_EraseErasableArgs") in
-                if b
-                then Errors.log_issue
-                        (Env.get_range e)
-                        (Errors.Warning_WarnOnUse,
-                         "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
-                b)
-             }
-            else no_debug_switches
-      ;
-     steps = steps;
-     delta_level = d;
-     primitive_steps = psteps;
-     strong = false;
-     memoize_lazy = true;
-     normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
-     reifying = false;
-     compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
+    {
+      tcenv = e;
+      debug = {
+        gen = !dbg_Norm || dbg_flag;
+        top = !dbg_NormTop || dbg_flag;
+        cfg = !dbg_NormCfg;
+        primop = !dbg_Primops;
+        unfolding = !dbg_Unfolding;
+        b380 = !dbg_380;
+        wpe = !dbg_WPE;
+        norm_delayed = !dbg_NormDelayed;
+        print_normalized = !dbg_print_normalized;
+        debug_nbe = !dbg_NBE;
+        erase_erasable_args = (
+         if !dbg_UNSOUND_EraseErasableArgs then
+           Errors.log_issue (Env.get_range e) (Errors.Warning_WarnOnUse,
+                  "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
+         !dbg_UNSOUND_EraseErasableArgs);
+      };
+      steps = steps;
+      delta_level = d;
+      primitive_steps = psteps;
+      strong = false;
+      memoize_lazy = true;
+      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
+      reifying = false;
+      compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
    }
 
 let config s e = config' [] s e

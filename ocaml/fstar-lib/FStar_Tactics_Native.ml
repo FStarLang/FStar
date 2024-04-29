@@ -30,8 +30,8 @@ type native_primitive_step =
       strong_reduction_ok: bool;
       tactic: itac}
 
-let perr  s   = if O.debug_any () then BU.print_error s
-let perr1 s x = if O.debug_any () then BU.print1_error s x
+let perr  s   = if FStar_Compiler_Debug.any () then BU.print_error s
+let perr1 s x = if FStar_Compiler_Debug.any () then BU.print1_error s x
 
 let compiled_tactics: native_primitive_step list ref = ref []
 

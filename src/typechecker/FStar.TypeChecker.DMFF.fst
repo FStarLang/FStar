@@ -44,13 +44,15 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
 
+let dbg = Debug.get_toggle "ED"
+
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
 // Takes care of creating the [fv], generating the top-level let-binding, and
 // return a term that's a suitable reference (a [Tm_fv]) to the definition
 let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
   // Debug
-  if Env.debug env (Options.Other "ED") then begin
+  if !dbg then begin
     d (string_of_lid lident);
     BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
@@ -85,7 +87,7 @@ let gen_wps_for_free
 
   // Debugging
   let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s in
-  if Env.debug env (Options.Other "ED") then begin
+  if !dbg then begin
     d "Elaborating extra WP combinators";
     BU.print1 "wp_a is: %s\n" (Print.term_to_string wp_a)
   end;
@@ -123,7 +125,7 @@ let gen_wps_for_free
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     d (BU.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x Range.dummyRange in
@@ -480,7 +482,7 @@ let gen_wps_for_free
   let wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
   let wp_trivial = mk_generic_app wp_trivial in
 
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     d "End Dijkstra monads for free";
 
   let c = close binders in
@@ -1363,10 +1365,10 @@ let trans_F (env: env_) (c: typ) (wp: term): term =
 
 // A helper to check that the terms elaborated by DMFF are well-typed
 let recheck_debug (s:string) (env:FStar.TypeChecker.Env.env) (t:S.term) : S.term =
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
   let t', _, _ = TcTerm.tc_term env t in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
   t'
 
@@ -1421,7 +1423,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> must |> snd) in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let ed_range = Env.get_range env in
@@ -1560,7 +1562,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     let l' = lid_of_path p' ed_range in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
-      if Options.debug_any () then
+      if Debug.any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
       fv_to_tm (lid_and_dd_as_fv l' None)
       end
@@ -1611,7 +1613,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       | [] -> action_typ_with_wp
       | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
     in
-    if Env.debug env <| Options.Other "ED"
+    if !dbg
     then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
         (Print.binders_to_string "," params_un)
         (Print.binders_to_string "," action_params)
@@ -1707,7 +1709,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // Generate the missing combinators.
   let sigelts', ed = gen_wps_for_free env effect_binders a wp_a ed in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print_string (Print.eff_decl_to_string true ed);
 
   let lift_from_pure_opt =

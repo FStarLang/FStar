@@ -490,7 +490,7 @@ let (run_full_buffer :
                                     FStar_Interactive_Ide_Types.Cache
                                 then log_syntax_issues err_opt
                                 else ();
-                                (let uu___6 = FStar_Options.debug_any () in
+                                (let uu___6 = FStar_Compiler_Debug.any () in
                                  if uu___6
                                  then
                                    let uu___7 =

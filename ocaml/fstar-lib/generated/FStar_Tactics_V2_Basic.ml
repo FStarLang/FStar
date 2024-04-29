@@ -1,4 +1,12 @@
 open Prims
+let (dbg_TacUnify : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacUnify"
+let (dbg_2635 : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "2635"
+let (dbg_ReflTc : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ReflTc"
+let (dbg_TacVerbose : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacVerbose"
 let (compress :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
@@ -37,7 +45,7 @@ let (core_check :
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
             (let debug f =
-               let uu___2 = FStar_Options.debug_any () in
+               let uu___2 = FStar_Compiler_Debug.any () in
                if uu___2 then f () else () in
              let uu___2 =
                FStar_TypeChecker_Core.check_term env sol t must_tot in
@@ -128,6 +136,8 @@ let (print : Prims.string -> unit FStar_Tactics_Monad.tac) =
        let uu___2 = FStar_Options.silent () in Prims.op_Negation uu___2 in
      if uu___1 then tacprint msg else ());
     FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac () (Obj.repr ())
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
 let (debugging : unit -> Prims.bool FStar_Tactics_Monad.tac) =
   fun uu___ ->
     (fun uu___ ->
@@ -137,10 +147,7 @@ let (debugging : unit -> Prims.bool FStar_Tactics_Monad.tac) =
             (fun uu___1 ->
                (fun ps ->
                   let ps = Obj.magic ps in
-                  let uu___1 =
-                    FStar_TypeChecker_Env.debug
-                      ps.FStar_Tactics_Types.main_context
-                      (FStar_Options.Other "Tac") in
+                  let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___1))) uu___1))) uu___
@@ -1238,9 +1245,6 @@ let (__do_unify :
                      fun env1 ->
                        fun t1 ->
                          fun t2 ->
-                           let dbg =
-                             FStar_TypeChecker_Env.debug env1
-                               (FStar_Options.Other "TacUnify") in
                            let uu___ =
                              FStar_Class_Monad.return
                                FStar_Tactics_Monad.monad_tac () (Obj.repr ()) in
@@ -1250,17 +1254,24 @@ let (__do_unify :
                                 (fun uu___1 ->
                                    (fun uu___1 ->
                                       let uu___1 = Obj.magic uu___1 in
-                                      if dbg
-                                      then
-                                        (FStar_Options.push ();
-                                         (let uu___4 =
-                                            FStar_Options.set_options
-                                              "--debug_level Rel --debug_level RelCheck" in
-                                          ()))
-                                      else ();
                                       (let uu___3 =
-                                         __do_unify_wflags dbg allow_guards
-                                           must_tot check_side env1 t1 t2 in
+                                         FStar_Compiler_Effect.op_Bang
+                                           dbg_TacUnify in
+                                       if uu___3
+                                       then
+                                         (FStar_Options.push ();
+                                          (let uu___5 =
+                                             FStar_Options.set_options
+                                               "--debug Rel,RelCheck" in
+                                           ()))
+                                       else ());
+                                      (let uu___3 =
+                                         let uu___4 =
+                                           FStar_Compiler_Effect.op_Bang
+                                             dbg_TacUnify in
+                                         __do_unify_wflags uu___4
+                                           allow_guards must_tot check_side
+                                           env1 t1 t2 in
                                        Obj.magic
                                          (FStar_Class_Monad.op_let_Bang
                                             FStar_Tactics_Monad.monad_tac ()
@@ -1268,9 +1279,12 @@ let (__do_unify :
                                             (fun uu___4 ->
                                                (fun r ->
                                                   let r = Obj.magic r in
-                                                  if dbg
-                                                  then FStar_Options.pop ()
-                                                  else ();
+                                                  (let uu___5 =
+                                                     FStar_Compiler_Effect.op_Bang
+                                                       dbg_TacUnify in
+                                                   if uu___5
+                                                   then FStar_Options.pop ()
+                                                   else ());
                                                   Obj.magic
                                                     (FStar_Class_Monad.return
                                                        FStar_Tactics_Monad.monad_tac
@@ -4591,10 +4605,8 @@ let (t_apply_lemma :
                                                                     ((
                                                                     let uu___19
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "2635") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_2635 in
                                                                     if
                                                                     uu___19
                                                                     then
@@ -9797,8 +9809,7 @@ let write :
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
-      let uu___ =
-        FStar_TypeChecker_Env.debug g (FStar_Options.Other "ReflTc") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg_ReflTc in
       if uu___
       then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
       else ()
@@ -12660,9 +12671,7 @@ let (proofstate_of_goals :
         fun imps ->
           let env2 = tac_env env1 in
           let ps =
-            let uu___ =
-              FStar_TypeChecker_Env.debug env2
-                (FStar_Options.Other "TacVerbose") in
+            let uu___ = FStar_Compiler_Effect.op_Bang dbg_TacVerbose in
             let uu___1 = FStar_Compiler_Util.psmap_empty () in
             {
               FStar_Tactics_Types.main_context = env2;
@@ -12818,9 +12827,7 @@ let (proofstate_of_all_implicits :
           let uu___ = FStar_Compiler_List.hd goals in
           FStar_Tactics_Types.goal_witness uu___ in
         let ps =
-          let uu___ =
-            FStar_TypeChecker_Env.debug env2
-              (FStar_Options.Other "TacVerbose") in
+          let uu___ = FStar_Compiler_Effect.op_Bang dbg_TacVerbose in
           let uu___1 = FStar_Compiler_Util.psmap_empty () in
           {
             FStar_Tactics_Types.main_context = env2;

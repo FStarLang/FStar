@@ -191,9 +191,11 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (RC.fstar_refl_data_lid  "qualifier",      {arity=0; syn_emb=refl_emb_lid "e_qualifier";      nbe_emb=Some(nbe_refl_emb_lid "e_qualifier")});
   ]
 
+let dbg_plugin = Debug.get_toggle "Plugins"
+
 let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = BU.mk_ref []
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
-  if Options.debug_at_level_no_module (Options.Other "Plugins") then
+  if !dbg_plugin then
     BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
   local_fv_embeddings := (l,d) :: !local_fv_embeddings
 

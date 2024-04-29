@@ -17,6 +17,7 @@ module FStar.Errors
 
 open FStar.Pervasives
 open FStar.String
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler.Util
@@ -253,7 +254,7 @@ let mk_default_handler print =
            err_count := 1 + !err_count);
         begin match e.issue_level with
           | EInfo -> print_issue e
-          | _ when print && Options.debug_any () -> print_issue e
+          | _ when print && Debug.any () -> print_issue e
           | _ -> issues := e :: !issues
         end;
         if Options.defensive_abort () && e.issue_number = Some defensive_errno then
@@ -352,7 +353,7 @@ let maybe_add_backtrace (msg : error_message) : error_message =
     msg
 
 let diag_doc r msg =
-  if Options.debug_any() then
+  if Debug.any() then
     let msg = maybe_add_backtrace msg in
     let ctx = get_ctx () in
     add_one (mk_issue EInfo (Some r) msg None ctx)
@@ -361,7 +362,7 @@ let diag r msg =
   diag_doc r (mkmsg msg)
 
 let diag0 msg =
-  if Options.debug_any()
+  if Debug.any()
   then add_one (mk_issue EInfo None (mkmsg msg) None [])
 
 let diag1 f a         = diag0 (BU.format1 f a)

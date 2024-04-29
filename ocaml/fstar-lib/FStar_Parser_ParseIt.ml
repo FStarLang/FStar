@@ -65,7 +65,7 @@ let read_physical_file (filename: string) =
     raise_err (Fatal_UnableToReadFile, U.format1 "Unable to read file %s\n" filename)
 
 let read_file (filename:string) =
-  let debug = FStar_Options.debug_any () in
+  let debug = FStar_Compiler_Debug.any () in
   match read_vfs_entry filename with
   | Some (_mtime, contents) ->
     if debug then U.print1 "Reading in-memory file %s\n" filename;
@@ -268,7 +268,7 @@ let parse fn =
             current_pos lexbuf
           in
           let raw_contents = contents_at d.drange in
-          if FStar_Options.debug_any()
+          if FStar_Compiler_Debug.any()
           then 
             FStar_Compiler_Util.print2 "At range %s, got code\n%s\n"
               (FStar_Compiler_Range.string_of_range raw_contents.range)

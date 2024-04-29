@@ -45,6 +45,40 @@ let (__proj__Implicit_has_typing_guard__item___0 :
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.typ))
   =
   fun projectee -> match projectee with | Implicit_has_typing_guard _0 -> _0
+let (dbg_Disch : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Disch"
+let (dbg_Discharge : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Discharge"
+let (dbg_EQ : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "EQ"
+let (dbg_ExplainRel : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ExplainRel"
+let (dbg_GenUniverses : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "GenUniverses"
+let (dbg_ImplicitTrace : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ImplicitTrace"
+let (dbg_Imps : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Imps"
+let (dbg_LayeredEffectsApp : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffectsApp"
+let (dbg_LayeredEffectsEqns : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffectsEqns"
+let (dbg_Rel : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Rel"
+let (dbg_RelBench : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RelBench"
+let (dbg_RelDelta : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RelDelta"
+let (dbg_RelTop : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RelTop"
+let (dbg_ResolveImplicitsHook : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ResolveImplicitsHook"
+let (dbg_Simplification : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Simplification"
+let (dbg_SMTQuery : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTQuery"
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
 let (showable_implicit_checking_status :
   implicit_checking_status FStar_Class_Show.showable) =
   {
@@ -231,8 +265,6 @@ let (__proj__Mkworklist__item__typeclass_variables :
     | { attempting; wl_deferred; wl_deferred_to_tac; ctr; defer_ok; smt_ok;
         umax_heuristic_ok; tcenv; wl_implicits; repr_subcomp_allowed;
         typeclass_variables;_} -> typeclass_variables
-let (debug : worklist -> FStar_Options.debug_level_t -> Prims.bool) =
-  fun wl -> fun lvl -> FStar_TypeChecker_Env.debug wl.tcenv lvl
 let (as_deferred :
   (Prims.int * FStar_TypeChecker_Common.deferred_reason * lstring *
     FStar_TypeChecker_Common.prob) Prims.list ->
@@ -311,7 +343,7 @@ let (new_uvar :
                        FStar_TypeChecker_Common.imp_range = r
                      } in
                    (let uu___2 =
-                      debug wl (FStar_Options.Other "ImplicitTrace") in
+                      FStar_Compiler_Effect.op_Bang dbg_ImplicitTrace in
                     if uu___2
                     then
                       let uu___3 =
@@ -1112,7 +1144,7 @@ let (giveup :
   fun wl ->
     fun reason ->
       fun prob ->
-        (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
          if uu___1
          then
            let uu___2 = FStar_Thunk.force reason in
@@ -1583,8 +1615,8 @@ let (explain :
     fun d ->
       fun s ->
         let uu___ =
-          (debug wl (FStar_Options.Other "ExplainRel")) ||
-            (debug wl (FStar_Options.Other "Rel")) in
+          (FStar_Compiler_Effect.op_Bang dbg_ExplainRel) ||
+            (FStar_Compiler_Effect.op_Bang dbg_Rel) in
         if uu___
         then
           let uu___1 = FStar_Compiler_Range_Ops.string_of_range (p_loc d) in
@@ -2121,10 +2153,11 @@ let (flex_uvar_head :
         (match uu___1 with
          | FStar_Syntax_Syntax.Tm_uvar (u, uu___2) -> u
          | uu___2 -> FStar_Compiler_Effect.failwith "Not a flex-uvar")
-let (ensure_no_uvar_subst :
-  FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term ->
-      worklist -> (FStar_Syntax_Syntax.term * worklist))
+let ensure_no_uvar_subst :
+  'uuuuu .
+    'uuuuu ->
+      FStar_Syntax_Syntax.term ->
+        worklist -> (FStar_Syntax_Syntax.term * worklist)
   =
   fun env ->
     fun t0 ->
@@ -2195,8 +2228,7 @@ let (ensure_no_uvar_subst :
                                   FStar_Syntax_Syntax.mk_Tm_app t_v args_sol
                                     t0.FStar_Syntax_Syntax.pos in
                                 ((let uu___6 =
-                                    FStar_TypeChecker_Env.debug env
-                                      (FStar_Options.Other "Rel") in
+                                    FStar_Compiler_Effect.op_Bang dbg_Rel in
                                   if uu___6
                                   then
                                     let uu___7 =
@@ -2376,7 +2408,7 @@ let (solve_prob' :
                | FStar_Pervasives_Native.None -> FStar_Syntax_Util.t_true
                | FStar_Pervasives_Native.Some phi1 -> phi1 in
              let assign_solution xs uv phi1 =
-               (let uu___2 = debug wl (FStar_Options.Other "Rel") in
+               (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                 if uu___2
                 then
                   let uu___3 = FStar_Compiler_Util.string_of_int (p_pid prob) in
@@ -2475,7 +2507,7 @@ let (extend_universe_solution :
   fun pid ->
     fun sol ->
       fun wl ->
-        (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
          if uu___1
          then
            let uu___2 = FStar_Compiler_Util.string_of_int pid in
@@ -2508,7 +2540,7 @@ let (solve_prob :
           def_check_prob "solve_prob.prob" prob;
           FStar_Compiler_Util.iter_opt logical_guard
             (def_check_term_scoped_in_prob "solve_prob.guard" prob);
-          (let uu___3 = debug wl (FStar_Options.Other "Rel") in
+          (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Rel in
            if uu___3
            then
              let uu___4 = FStar_Compiler_Util.string_of_int (p_pid prob) in
@@ -2971,8 +3003,7 @@ let rec (head_matches :
       fun t2 ->
         let t11 = FStar_Syntax_Util.unmeta t1 in
         let t21 = FStar_Syntax_Util.unmeta t2 in
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelDelta") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
          if uu___1
          then
            ((let uu___3 =
@@ -3162,9 +3193,7 @@ let (head_matches_delta :
             let maybe_inline t =
               let head =
                 let uu___ = unrefine env t in FStar_Syntax_Util.head_of uu___ in
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env
-                   (FStar_Options.Other "RelDelta") in
+              (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
                if uu___1
                then
                  let uu___2 =
@@ -3189,8 +3218,7 @@ let (head_matches_delta :
                    (match uu___2 with
                     | FStar_Pervasives_Native.None ->
                         ((let uu___4 =
-                            FStar_TypeChecker_Env.debug env
-                              (FStar_Options.Other "RelDelta") in
+                            FStar_Compiler_Effect.op_Bang dbg_RelDelta in
                           if uu___4
                           then
                             let uu___5 =
@@ -3234,8 +3262,7 @@ let (head_matches_delta :
                         then FStar_Pervasives_Native.None
                         else
                           ((let uu___7 =
-                              FStar_TypeChecker_Env.debug env
-                                (FStar_Options.Other "RelDelta") in
+                              FStar_Compiler_Effect.op_Bang dbg_RelDelta in
                             if uu___7
                             then
                               let uu___8 =
@@ -3278,9 +3305,7 @@ let (head_matches_delta :
                   Prims.op_Negation uu___1 in
             let rec aux retry n_delta t11 t21 =
               let r = head_matches env t11 t21 in
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env
-                   (FStar_Options.Other "RelDelta") in
+              (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
                if uu___1
                then
                  let uu___2 =
@@ -3402,9 +3427,7 @@ let (head_matches_delta :
                | MisMatch uu___1 -> fail n_delta r t11 t21
                | uu___1 -> success n_delta r t11 t21) in
             let r = aux true Prims.int_zero t1 t2 in
-            (let uu___1 =
-               FStar_TypeChecker_Env.debug env
-                 (FStar_Options.Other "RelDelta") in
+            (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
              if uu___1
              then
                let uu___2 =
@@ -4175,7 +4198,7 @@ let (should_defer_flex_to_user_tac : worklist -> flex_t -> Prims.bool) =
             FStar_TypeChecker_DeferredImplicits.should_defer_uvar_to_user_tac
               wl.tcenv u in
           ((let uu___4 =
-              debug wl (FStar_Options.Other "ResolveImplicitsHook") in
+              FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
             if uu___4
             then
               let uu___5 = FStar_Syntax_Print.ctx_uvar_to_string_no_reason u in
@@ -4414,8 +4437,7 @@ let (run_meta_arg_tac :
               FStar_TypeChecker_Env.core_check =
                 (env.FStar_TypeChecker_Env.core_check)
             } in
-          ((let uu___1 =
-              FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "Tac") in
+          ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Tac in
             if uu___1
             then
               let uu___2 =
@@ -4438,9 +4460,7 @@ let (simplify_vc :
   fun full_norm_allowed ->
     fun env ->
       fun t ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env
-             (FStar_Options.Other "Simplification") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Simplification in
          if uu___1
          then
            let uu___2 =
@@ -4459,9 +4479,7 @@ let (simplify_vc :
            else FStar_TypeChecker_Env.NoFullNorm :: steps in
          let t' =
            norm_with_steps "FStar.TypeChecker.Rel.simplify_vc" steps1 env t in
-         (let uu___2 =
-            FStar_TypeChecker_Env.debug env
-              (FStar_Options.Other "Simplification") in
+         (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Simplification in
           if uu___2
           then
             let uu___3 =
@@ -4570,8 +4588,6 @@ let (apply_substitutive_indexed_subcomp :
                   fun wl ->
                     fun subcomp_name ->
                       fun r1 ->
-                        let debug1 =
-                          debug wl (FStar_Options.Other "LayeredEffectsApp") in
                         let uu___ =
                           let uu___1 = bs in
                           match uu___1 with
@@ -4757,19 +4773,22 @@ let (apply_substitutive_indexed_subcomp :
                                                           FStar_TypeChecker_Env.uvars_for_binders
                                                             env [b] ss
                                                             (fun b1 ->
-                                                               if debug1
+                                                               let uu___7 =
+                                                                 FStar_Compiler_Effect.op_Bang
+                                                                   dbg_LayeredEffectsApp in
+                                                               if uu___7
                                                                then
-                                                                 let uu___7 =
+                                                                 let uu___8 =
                                                                    FStar_Syntax_Print.binder_to_string
                                                                     b1 in
-                                                                 let uu___8 =
+                                                                 let uu___9 =
                                                                    FStar_Compiler_Range_Ops.string_of_range
                                                                     r1 in
                                                                  FStar_Compiler_Util.format3
                                                                    "implicit var for additional binder %s in subcomp %s at %s"
-                                                                   uu___7
-                                                                   subcomp_name
                                                                    uu___8
+                                                                   subcomp_name
+                                                                   uu___9
                                                                else
                                                                  "apply_substitutive_indexed_subcomp")
                                                             r1 in
@@ -4873,8 +4892,6 @@ let (apply_ad_hoc_indexed_subcomp :
               fun wl ->
                 fun subcomp_name ->
                   fun r1 ->
-                    let dbg =
-                      debug wl (FStar_Options.Other "LayeredEffectsApp") in
                     let stronger_t_shape_error s =
                       let uu___ =
                         FStar_Ident.string_of_lid
@@ -4916,16 +4933,19 @@ let (apply_ad_hoc_indexed_subcomp :
                                ((a_b.FStar_Syntax_Syntax.binder_bv),
                                  (ct2.FStar_Syntax_Syntax.result_typ))]
                             (fun b ->
-                               if dbg
+                               let uu___2 =
+                                 FStar_Compiler_Effect.op_Bang
+                                   dbg_LayeredEffectsApp in
+                               if uu___2
                                then
-                                 let uu___2 =
-                                   FStar_Syntax_Print.binder_to_string b in
                                  let uu___3 =
+                                   FStar_Syntax_Print.binder_to_string b in
+                                 let uu___4 =
                                    FStar_Compiler_Range_Ops.string_of_range
                                      r1 in
                                  FStar_Compiler_Util.format3
                                    "implicit for binder %s in subcomp %s at %s"
-                                   uu___2 subcomp_name uu___3
+                                   uu___3 subcomp_name uu___4
                                else "apply_ad_hoc_indexed_subcomp") r1 in
                         (match uu___1 with
                          | (rest_bs_uvars, g_uvars) ->
@@ -4983,9 +5003,8 @@ let (apply_ad_hoc_indexed_subcomp :
                                         match uu___4 with
                                         | (ps, wl2) ->
                                             ((let uu___6 =
-                                                debug wl2
-                                                  (FStar_Options.Other
-                                                     "LayeredEffectsEqns") in
+                                                FStar_Compiler_Effect.op_Bang
+                                                  dbg_LayeredEffectsApp in
                                               if uu___6
                                               then
                                                 let uu___7 =
@@ -5040,9 +5059,8 @@ let (apply_ad_hoc_indexed_subcomp :
                                              match uu___5 with
                                              | (ps, wl3) ->
                                                  ((let uu___7 =
-                                                     debug wl3
-                                                       (FStar_Options.Other
-                                                          "LayeredEffectsEqns") in
+                                                     FStar_Compiler_Effect.op_Bang
+                                                       dbg_LayeredEffectsApp in
                                                    if uu___7
                                                    then
                                                      let uu___8 =
@@ -5160,13 +5178,13 @@ let (__proj__Reveal__item___0 :
   = fun projectee -> match projectee with | Reveal _0 -> _0
 let rec (solve : worklist -> solution) =
   fun probs ->
-    (let uu___1 = debug probs (FStar_Options.Other "Rel") in
+    (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
      if uu___1
      then
        let uu___2 = wl_to_string probs in
        FStar_Compiler_Util.print1 "solve:\n\t%s\n" uu___2
      else ());
-    (let uu___2 = debug probs (FStar_Options.Other "ImplicitTrace") in
+    (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_ImplicitTrace in
      if uu___2
      then
        let uu___3 =
@@ -5376,7 +5394,7 @@ and (giveup_or_defer :
         fun msg ->
           if wl.defer_ok = DeferAny
           then
-            ((let uu___1 = debug wl (FStar_Options.Other "Rel") in
+            ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
               if uu___1
               then
                 let uu___2 = prob_to_string wl.tcenv orig in
@@ -5397,7 +5415,7 @@ and (giveup_or_defer_flex_flex :
         fun msg ->
           if wl.defer_ok <> NoDefer
           then
-            ((let uu___1 = debug wl (FStar_Options.Other "Rel") in
+            ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
               if uu___1
               then
                 let uu___2 = prob_to_string wl.tcenv orig in
@@ -5412,7 +5430,7 @@ and (defer_to_user_tac :
   fun orig ->
     fun reason ->
       fun wl ->
-        (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
          if uu___1
          then
            let uu___2 = prob_to_string wl.tcenv orig in
@@ -5507,7 +5525,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                     (FStar_TypeChecker_Common.TProb p);
                   ((FStar_TypeChecker_Common.TProb p), wl3)) in
            let pairwise t1 t2 wl2 =
-             (let uu___2 = debug wl2 (FStar_Options.Other "Rel") in
+             (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Rel in
               if uu___2
               then
                 let uu___3 =
@@ -5774,7 +5792,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                             (match uu___4 with
                              | (t12, ps, wl3) ->
                                  ((let uu___6 =
-                                     debug wl3 (FStar_Options.Other "Rel") in
+                                     FStar_Compiler_Effect.op_Bang dbg_Rel in
                                    if uu___6
                                    then
                                      let uu___7 =
@@ -5833,7 +5851,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                           | FStar_Pervasives_Native.Some (flex_bs, flex_t1)
                               ->
                               ((let uu___7 =
-                                  debug wl1 (FStar_Options.Other "Rel") in
+                                  FStar_Compiler_Effect.op_Bang dbg_Rel in
                                 if uu___7
                                 then
                                   let uu___8 =
@@ -5878,7 +5896,7 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                             }] wl in
                      solve uu___5)
               | uu___3 ->
-                  ((let uu___5 = debug wl (FStar_Options.Other "Rel") in
+                  ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                     if uu___5
                     then
                       let uu___6 =
@@ -6034,9 +6052,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                     (FStar_TypeChecker_Common.TProb
                                                        eq_prob);
                                                   (let uu___13 =
-                                                     debug wl1
-                                                       (FStar_Options.Other
-                                                          "Rel") in
+                                                     FStar_Compiler_Effect.op_Bang
+                                                       dbg_Rel in
                                                    if uu___13
                                                    then
                                                      let wl'1 =
@@ -6167,9 +6184,8 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                                                          solve wl4)
                                                     | Failed (p, msg) ->
                                                         ((let uu___16 =
-                                                            debug wl1
-                                                              (FStar_Options.Other
-                                                                 "Rel") in
+                                                            FStar_Compiler_Effect.op_Bang
+                                                              dbg_Rel in
                                                           if uu___16
                                                           then
                                                             let uu___17 =
@@ -6555,7 +6571,7 @@ and (solve_binders :
       fun orig ->
         fun wl ->
           fun rhs ->
-            (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+            (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
              if uu___1
              then
                let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs1 in
@@ -6583,7 +6599,7 @@ and (solve_binders :
                    let uu___1 = rhs wl1 scope subst in
                    (match uu___1 with
                     | (rhs_prob, wl2) ->
-                        ((let uu___3 = debug wl2 (FStar_Options.Other "Rel") in
+                        ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                           if uu___3
                           then
                             let uu___4 =
@@ -6689,8 +6705,8 @@ and (solve_binders :
                                          FStar_Syntax_Util.mk_conj
                                            (p_guard prob) uu___5 in
                                        ((let uu___6 =
-                                           debug wl3
-                                             (FStar_Options.Other "Rel") in
+                                           FStar_Compiler_Effect.op_Bang
+                                             dbg_Rel in
                                          if uu___6
                                          then
                                            let uu___7 =
@@ -6823,7 +6839,7 @@ and (solve_t_flex_rigid_eq :
     fun wl ->
       fun lhs ->
         fun rhs ->
-          (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
            if uu___1
            then FStar_Compiler_Util.print_string "solve_t_flex_rigid_eq\n"
            else ());
@@ -6919,7 +6935,7 @@ and (solve_t_flex_rigid_eq :
                                u_abs uu___7 uu___8 rhs2 in
                          [TERM (ctx_u, sol)]) in
               let try_quasi_pattern orig1 env wl1 lhs1 rhs1 =
-                (let uu___4 = debug wl1 (FStar_Options.Other "Rel") in
+                (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                  if uu___4
                  then FStar_Compiler_Util.print_string "try_quasi_pattern\n"
                  else ());
@@ -7180,7 +7196,7 @@ and (solve_t_flex_rigid_eq :
                                           attempt sub_probs uu___9 in
                                         solve uu___8)))) in
               let imitate orig1 env wl1 lhs1 rhs1 =
-                (let uu___4 = debug wl1 (FStar_Options.Other "Rel") in
+                (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                  if uu___4
                  then FStar_Compiler_Util.print_string "imitate\n"
                  else ());
@@ -7233,7 +7249,7 @@ and (solve_t_flex_rigid_eq :
                              msg))) in
               let try_first_order orig1 env wl1 lhs1 rhs1 =
                 let inapplicable msg lstring_opt =
-                  (let uu___4 = debug wl1 (FStar_Options.Other "Rel") in
+                  (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                    if uu___4
                    then
                      let extra_msg =
@@ -7246,7 +7262,7 @@ and (solve_t_flex_rigid_eq :
                        extra_msg
                    else ());
                   FStar_Pervasives.Inl "first_order doesn't apply" in
-                (let uu___4 = debug wl1 (FStar_Options.Other "Rel") in
+                (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                  if uu___4
                  then
                    let uu___5 = flex_t_to_string lhs1 in
@@ -7580,9 +7596,8 @@ and (solve_t_flex_rigid_eq :
                                                     uvars_head wl1
                                                 else
                                                   ((let uu___18 =
-                                                      debug wl1
-                                                        (FStar_Options.Other
-                                                           "Rel") in
+                                                      FStar_Compiler_Effect.op_Bang
+                                                        dbg_Rel in
                                                     if uu___18
                                                     then
                                                       let uu___19 =
@@ -7669,7 +7684,7 @@ and (solve_t_flex_rigid_eq :
                        (match uu___4 with
                         | FStar_Pervasives_Native.Some lhs_binders ->
                             ((let uu___6 =
-                                debug wl (FStar_Options.Other "Rel") in
+                                FStar_Compiler_Effect.op_Bang dbg_Rel in
                               if uu___6
                               then
                                 FStar_Compiler_Util.print_string
@@ -7794,7 +7809,7 @@ and (solve_t_flex_flex :
             let run_meta_arg_tac_and_try_again flex =
               let uv = flex_uvar flex in
               let t = run_meta_arg_tac env uv in
-              (let uu___1 = debug wl (FStar_Options.Other "Rel") in
+              (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                if uu___1
                then
                  let uu___2 =
@@ -8032,9 +8047,8 @@ and (solve_t_flex_flex :
                                                                 w uu___24
                                                                 w.FStar_Syntax_Syntax.pos in
                                                             ((let uu___25 =
-                                                                debug wl1
-                                                                  (FStar_Options.Other
-                                                                    "Rel") in
+                                                                FStar_Compiler_Effect.op_Bang
+                                                                  dbg_Rel in
                                                               if uu___25
                                                               then
                                                                 let uu___26 =
@@ -8161,7 +8175,7 @@ and (solve_t' : tprob -> worklist -> solution) =
        let rigid_heads_match need_unif torig wl1 t1 t2 =
          let orig = FStar_TypeChecker_Common.TProb torig in
          let env = p_env wl1 orig in
-         (let uu___2 = debug wl1 (FStar_Options.Other "Rel") in
+         (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Rel in
           if uu___2
           then
             let uu___3 =
@@ -8330,8 +8344,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                          match uu___9 with
                                          | (subprobs, wl3) ->
                                              ((let uu___11 =
-                                                 debug wl3
-                                                   (FStar_Options.Other "Rel") in
+                                                 FStar_Compiler_Effect.op_Bang
+                                                   dbg_Rel in
                                                if uu___11
                                                then
                                                  let uu___12 =
@@ -8407,8 +8421,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                          match uu___9 with
                                          | (prob, reason) ->
                                              ((let uu___11 =
-                                                 debug wl2
-                                                   (FStar_Options.Other "Rel") in
+                                                 FStar_Compiler_Effect.op_Bang
+                                                   dbg_Rel in
                                                if uu___11
                                                then
                                                  let uu___12 =
@@ -8464,9 +8478,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                                   ->
                                                                   ((let uu___18
                                                                     =
-                                                                    debug wl2
-                                                                    (FStar_Options.Other
-                                                                    "Rel") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_Rel in
                                                                     if
                                                                     uu___18
                                                                     then
@@ -8537,9 +8550,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                                     } in
                                                                   ((let uu___19
                                                                     =
-                                                                    debug wl2
-                                                                    (FStar_Options.Other
-                                                                    "Rel") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_Rel in
                                                                     if
                                                                     uu___19
                                                                     then
@@ -8663,7 +8675,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                  uu___7 in
                              FStar_Syntax_Util.unrefine uu___6 in
                            (let uu___7 =
-                              debug wl3 (FStar_Options.Other "Rel") in
+                              FStar_Compiler_Effect.op_Bang dbg_Rel in
                             if uu___7
                             then
                               let uu___8 =
@@ -8682,7 +8694,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                             match uu___7 with
                             | (pat_term2, pat_term_t, g_pat_term) ->
                                 ((let uu___9 =
-                                    debug wl3 (FStar_Options.Other "Rel") in
+                                    FStar_Compiler_Effect.op_Bang dbg_Rel in
                                   if uu___9
                                   then
                                     let uu___10 =
@@ -8798,7 +8810,7 @@ and (solve_t' : tprob -> worklist -> solution) =
          | FStar_Pervasives_Native.None ->
              FStar_Pervasives.Inr FStar_Pervasives_Native.None
          | FStar_Pervasives_Native.Some (t1, t2) ->
-             ((let uu___2 = debug wl1 (FStar_Options.Other "Rel") in
+             ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                if uu___2
                then
                  let uu___3 =
@@ -8831,7 +8843,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                      Prims.op_Negation uu___10 in
                    if uu___9
                    then
-                     ((let uu___11 = debug wl1 (FStar_Options.Other "Rel") in
+                     ((let uu___11 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                        if uu___11
                        then
                          let uu___12 =
@@ -8844,7 +8856,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                    else
                      if wl1.defer_ok = DeferAny
                      then
-                       ((let uu___12 = debug wl1 (FStar_Options.Other "Rel") in
+                       ((let uu___12 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                          if uu___12
                          then
                            FStar_Compiler_Util.print_string
@@ -8852,7 +8864,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                          else ());
                         FStar_Pervasives.Inl "defer")
                      else
-                       ((let uu___13 = debug wl1 (FStar_Options.Other "Rel") in
+                       ((let uu___13 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                          if uu___13
                          then
                            let uu___14 =
@@ -8898,7 +8910,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                          match head_matching_branch with
                          | FStar_Pervasives_Native.None ->
                              ((let uu___14 =
-                                 debug wl1 (FStar_Options.Other "Rel") in
+                                 FStar_Compiler_Effect.op_Bang dbg_Rel in
                                if uu___14
                                then
                                  FStar_Compiler_Util.print_string
@@ -8929,7 +8941,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                              (match uu___13 with
                               | (p, uu___14, e) ->
                                   ((let uu___16 =
-                                      debug wl1 (FStar_Options.Other "Rel") in
+                                      FStar_Compiler_Effect.op_Bang dbg_Rel in
                                     if uu___16
                                     then
                                       let uu___17 =
@@ -8961,7 +8973,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                      Prims.op_Negation uu___10 in
                    if uu___9
                    then
-                     ((let uu___11 = debug wl1 (FStar_Options.Other "Rel") in
+                     ((let uu___11 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                        if uu___11
                        then
                          let uu___12 =
@@ -8974,7 +8986,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                    else
                      if wl1.defer_ok = DeferAny
                      then
-                       ((let uu___12 = debug wl1 (FStar_Options.Other "Rel") in
+                       ((let uu___12 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                          if uu___12
                          then
                            FStar_Compiler_Util.print_string
@@ -8982,7 +8994,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                          else ());
                         FStar_Pervasives.Inl "defer")
                      else
-                       ((let uu___13 = debug wl1 (FStar_Options.Other "Rel") in
+                       ((let uu___13 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                          if uu___13
                          then
                            let uu___14 =
@@ -9028,7 +9040,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                          match head_matching_branch with
                          | FStar_Pervasives_Native.None ->
                              ((let uu___14 =
-                                 debug wl1 (FStar_Options.Other "Rel") in
+                                 FStar_Compiler_Effect.op_Bang dbg_Rel in
                                if uu___14
                                then
                                  FStar_Compiler_Util.print_string
@@ -9059,7 +9071,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                              (match uu___13 with
                               | (p, uu___14, e) ->
                                   ((let uu___16 =
-                                      debug wl1 (FStar_Options.Other "Rel") in
+                                      FStar_Compiler_Effect.op_Bang dbg_Rel in
                                     if uu___16
                                     then
                                       let uu___17 =
@@ -9075,7 +9087,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                       try_solve_branch scrutinee p in
                                     FStar_Pervasives.Inr uu___16)))))
                | uu___3 ->
-                   ((let uu___5 = debug wl1 (FStar_Options.Other "Rel") in
+                   ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                      if uu___5
                      then
                        let uu___6 = FStar_Syntax_Print.tag_of_term t1 in
@@ -9087,7 +9099,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                     FStar_Pervasives.Inr FStar_Pervasives_Native.None))) in
        let rigid_rigid_delta torig wl1 head1 head2 t1 t2 =
          let orig = FStar_TypeChecker_Common.TProb torig in
-         (let uu___2 = debug wl1 (FStar_Options.Other "RelDelta") in
+         (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
           if uu___2
           then
             let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
@@ -9377,7 +9389,7 @@ and (solve_t' : tprob -> worklist -> solution) =
               FStar_Class_Binders.hasBinders_list_bv
               FStar_Class_Binders.hasNames_term
               FStar_Syntax_Print.pretty_term (p_loc orig) "ref.t2" uu___6 t2);
-           (let uu___7 = debug wl (FStar_Options.Other "Rel") in
+           (let uu___7 = FStar_Compiler_Effect.op_Bang dbg_Rel in
             if uu___7
             then
               let uu___8 =
@@ -9677,7 +9689,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                           (match uu___9 with
                            | (x22, phi21) ->
                                ((let uu___11 =
-                                   debug wl (FStar_Options.Other "Rel") in
+                                   FStar_Compiler_Effect.op_Bang dbg_Rel in
                                  if uu___11
                                  then
                                    ((let uu___13 =
@@ -10566,9 +10578,8 @@ and (solve_t' : tprob -> worklist -> solution) =
                                                      (match uu___21 with
                                                       | (prob, wl3) ->
                                                           ((let uu___23 =
-                                                              debug wl3
-                                                                (FStar_Options.Other
-                                                                   "Rel") in
+                                                              FStar_Compiler_Effect.op_Bang
+                                                                dbg_Rel in
                                                             if uu___23
                                                             then
                                                               let uu___24 =
@@ -10674,7 +10685,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -10828,7 +10839,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -10982,7 +10993,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11136,7 +11147,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11290,7 +11301,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11444,7 +11455,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11598,7 +11609,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11752,7 +11763,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -11906,7 +11917,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -12060,7 +12071,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -12214,7 +12225,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -12368,7 +12379,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                 let head2 =
                   let uu___9 = FStar_Syntax_Util.head_and_args t2 in
                   FStar_Pervasives_Native.fst uu___9 in
-                ((let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                ((let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                   if uu___10
                   then
                     let uu___11 =
@@ -12620,7 +12631,7 @@ and (solve_c :
         mk_t_problem wl1 [] orig t1 rel t2 FStar_Pervasives_Native.None
           reason in
       let solve_eq c1_comp c2_comp g_lift =
-        (let uu___1 = debug wl (FStar_Options.Other "EQ") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_EQ in
          if uu___1
          then
            let uu___2 =
@@ -12788,7 +12799,7 @@ and (solve_c :
                 Prims.op_Negation uu___1))
               && (FStar_TypeChecker_Env.is_reifiable_effect wl.tcenv c22) in
       let solve_layered_sub c11 c21 =
-        (let uu___1 = debug wl (FStar_Options.Other "LayeredEffectsApp") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsApp in
          if uu___1
          then
            let uu___2 =
@@ -13000,9 +13011,8 @@ and (solve_c :
                                         if uu___14
                                         then
                                           ((let uu___16 =
-                                              debug wl2
-                                                (FStar_Options.Other
-                                                   "LayeredEffectsEqns") in
+                                              FStar_Compiler_Effect.op_Bang
+                                                dbg_LayeredEffectsEqns in
                                             if uu___16
                                             then
                                               let uu___17 =
@@ -13082,9 +13092,8 @@ and (solve_c :
                                              (FStar_Pervasives_Native.Some
                                                 guard) [] wl4 in
                                          ((let uu___12 =
-                                             debug wl5
-                                               (FStar_Options.Other
-                                                  "LayeredEffectsApp") in
+                                             FStar_Compiler_Effect.op_Bang
+                                               dbg_LayeredEffectsApp in
                                            if uu___12
                                            then
                                              FStar_Compiler_Util.print_string
@@ -13291,7 +13300,7 @@ and (solve_c :
                                if is_null_wp_2
                                then
                                  ((let uu___10 =
-                                     debug wl (FStar_Options.Other "Rel") in
+                                     FStar_Compiler_Effect.op_Bang dbg_Rel in
                                    if uu___10
                                    then
                                      FStar_Compiler_Util.print_string
@@ -13354,7 +13363,7 @@ and (solve_c :
                                       } in
                                     FStar_Syntax_Syntax.Tm_app uu___11 in
                                   FStar_Syntax_Syntax.mk uu___10 r)) in
-                          (let uu___9 = debug wl (FStar_Options.Other "Rel") in
+                          (let uu___9 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                            if uu___9
                            then
                              let uu___10 =
@@ -13391,7 +13400,7 @@ and (solve_c :
         let uu___1 = solve_prob orig FStar_Pervasives_Native.None [] wl in
         solve uu___1
       else
-        ((let uu___3 = debug wl (FStar_Options.Other "Rel") in
+        ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Rel in
           if uu___3
           then
             let uu___4 =
@@ -13643,7 +13652,7 @@ and (solve_c :
                            FStar_TypeChecker_Env.unfold_effect_abbrev env c11 in
                          let c22 =
                            FStar_TypeChecker_Env.unfold_effect_abbrev env c21 in
-                         (let uu___10 = debug wl (FStar_Options.Other "Rel") in
+                         (let uu___10 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                           if uu___10
                           then
                             let uu___11 =
@@ -13737,10 +13746,8 @@ let (guard_to_string :
             | FStar_TypeChecker_Common.Trivial -> "trivial"
             | FStar_TypeChecker_Common.NonTrivial f ->
                 let uu___1 =
-                  ((FStar_TypeChecker_Env.debug env
-                      (FStar_Options.Other "Rel"))
-                     ||
-                     (FStar_TypeChecker_Env.debug env FStar_Options.Extreme))
+                  ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                     (FStar_Compiler_Debug.extreme ()))
                     || (FStar_Options.print_implicits ()) in
                 if uu___1
                 then FStar_TypeChecker_Normalize.term_to_string env f
@@ -13782,8 +13789,8 @@ let (new_t_problem :
               fun loc ->
                 let reason =
                   let uu___ =
-                    (debug wl (FStar_Options.Other "ExplainRel")) ||
-                      (debug wl (FStar_Options.Other "Rel")) in
+                    (FStar_Compiler_Effect.op_Bang dbg_ExplainRel) ||
+                      (FStar_Compiler_Effect.op_Bang dbg_Rel) in
                   if uu___
                   then
                     let uu___1 =
@@ -13835,7 +13842,7 @@ let (solve_and_commit :
   fun wl ->
     fun err ->
       let tx = FStar_Syntax_Unionfind.new_transaction () in
-      (let uu___1 = debug wl (FStar_Options.Other "RelBench") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelBench in
        if uu___1
        then
          let uu___2 =
@@ -13847,7 +13854,7 @@ let (solve_and_commit :
       (let uu___1 = FStar_Compiler_Util.record_time (fun uu___2 -> solve wl) in
        match uu___1 with
        | (sol, ms) ->
-           ((let uu___3 = debug wl (FStar_Options.Other "RelBench") in
+           ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_RelBench in
              if uu___3
              then
                let uu___4 = FStar_Compiler_Util.string_of_int ms in
@@ -13861,7 +13868,7 @@ let (solve_and_commit :
                  (match uu___3 with
                   | ((), ms1) ->
                       ((let uu___5 =
-                          debug wl (FStar_Options.Other "RelBench") in
+                          FStar_Compiler_Effect.op_Bang dbg_RelBench in
                         if uu___5
                         then
                           let uu___6 = FStar_Compiler_Util.string_of_int ms1 in
@@ -13872,8 +13879,8 @@ let (solve_and_commit :
                          (deferred, defer_to_tac, implicits)))
              | Failed (d, s) ->
                  ((let uu___4 =
-                     (debug wl (FStar_Options.Other "ExplainRel")) ||
-                       (debug wl (FStar_Options.Other "Rel")) in
+                     (FStar_Compiler_Effect.op_Bang dbg_ExplainRel) ||
+                       (FStar_Compiler_Effect.op_Bang dbg_Rel) in
                    if uu___4
                    then
                      let uu___5 = explain wl d s in
@@ -13940,12 +13947,7 @@ let (try_teq :
              FStar_Pervasives_Native.Some uu___3 in
            FStar_Profiling.profile
              (fun uu___3 ->
-                (let uu___5 =
-                   (FStar_TypeChecker_Env.debug env
-                      (FStar_Options.Other "Rel"))
-                     ||
-                     (FStar_TypeChecker_Env.debug env
-                        (FStar_Options.Other "RelTop")) in
+                (let uu___5 = FStar_Compiler_Effect.op_Bang dbg_RelTop in
                  if uu___5
                  then
                    let uu___6 =
@@ -13974,12 +13976,7 @@ let (try_teq :
                          solve_and_commit (singleton wl prob smt_ok1)
                            (fun uu___7 -> FStar_Pervasives_Native.None) in
                        with_guard env prob uu___6 in
-                     ((let uu___7 =
-                         (FStar_TypeChecker_Env.debug env
-                            (FStar_Options.Other "Rel"))
-                           ||
-                           (FStar_TypeChecker_Env.debug env
-                              (FStar_Options.Other "RelTop")) in
+                     ((let uu___7 = FStar_Compiler_Effect.op_Bang dbg_RelTop in
                        if uu___7
                        then
                          let uu___8 =
@@ -14007,10 +14004,8 @@ let (teq :
              FStar_TypeChecker_Common.trivial_guard)
         | FStar_Pervasives_Native.Some g ->
             ((let uu___2 =
-                (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
-                  ||
-                  (FStar_TypeChecker_Env.debug env
-                     (FStar_Options.Other "RelTop")) in
+                (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                  (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
               if uu___2
               then
                 let uu___3 =
@@ -14033,8 +14028,8 @@ let (get_teq_predicate :
     fun t1 ->
       fun t2 ->
         (let uu___1 =
-           (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
-             (FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelTop")) in
+           (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+             (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
          if uu___1
          then
            let uu___2 =
@@ -14055,10 +14050,8 @@ let (get_teq_predicate :
                    (fun uu___3 -> FStar_Pervasives_Native.None) in
                with_guard env prob uu___2 in
              ((let uu___3 =
-                 (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
-                   ||
-                   (FStar_TypeChecker_Env.debug env
-                      (FStar_Options.Other "RelTop")) in
+                 (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                   (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
                if uu___3
                then
                  let uu___4 =
@@ -14110,11 +14103,8 @@ let (sub_or_eq_comp :
                  then FStar_TypeChecker_Common.EQ
                  else FStar_TypeChecker_Common.SUB in
                (let uu___3 =
-                  (FStar_TypeChecker_Env.debug env
-                     (FStar_Options.Other "Rel"))
-                    ||
-                    (FStar_TypeChecker_Env.debug env
-                       (FStar_Options.Other "RelTop")) in
+                  (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                    (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
                 if uu___3
                 then
                   let uu___4 =
@@ -14160,8 +14150,7 @@ let (sub_or_eq_comp :
                       match uu___5 with
                       | (r, ms) ->
                           ((let uu___7 =
-                              FStar_TypeChecker_Env.debug env
-                                (FStar_Options.Other "RelBench") in
+                              FStar_Compiler_Effect.op_Bang dbg_RelBench in
                             if uu___7
                             then
                               let uu___8 =
@@ -14347,8 +14336,7 @@ let (solve_universe_inequalities' :
                        then true
                        else
                          ((let uu___7 =
-                             FStar_TypeChecker_Env.debug env
-                               (FStar_Options.Other "GenUniverses") in
+                             FStar_Compiler_Effect.op_Bang dbg_GenUniverses in
                            if uu___7
                            then
                              let uu___8 =
@@ -14364,9 +14352,7 @@ let (solve_universe_inequalities' :
             if uu___2
             then ()
             else
-              ((let uu___5 =
-                  FStar_TypeChecker_Env.debug env
-                    (FStar_Options.Other "GenUniverses") in
+              ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg_GenUniverses in
                 if uu___5
                 then
                   ((let uu___7 = ineqs_to_string (variables, ineqs) in
@@ -14481,9 +14467,7 @@ let (try_solve_deferred_constraints :
                             FStar_Errors.raise_error
                               (FStar_Errors_Codes.Fatal_ErrorInSolveDeferredConstraints,
                                 msg) (p_loc d) in
-                      (let uu___4 =
-                         FStar_TypeChecker_Env.debug env
-                           (FStar_Options.Other "Rel") in
+                      (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                        if uu___4
                        then
                          let uu___5 = FStar_Class_Show.show uu___78 defer_ok in
@@ -14546,8 +14530,8 @@ let (try_solve_deferred_constraints :
                               "FStar.TypeChecker.Rel.solve_deferred_to_tactic_goals"
                           else g1 in
                         (let uu___6 =
-                           FStar_TypeChecker_Env.debug env
-                             (FStar_Options.Other "ResolveImplicitsHook") in
+                           FStar_Compiler_Effect.op_Bang
+                             dbg_ResolveImplicitsHook in
                          if uu___6
                          then
                            let uu___7 = guard_to_string env g2 in
@@ -14613,17 +14597,14 @@ let (do_discharge_vc :
   fun use_env_range_msg ->
     fun env ->
       fun vc ->
-        let debug1 =
-          ((FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
-             (FStar_TypeChecker_Env.debug env
-                (FStar_Options.Other "SMTQuery")))
-            ||
-            (FStar_TypeChecker_Env.debug env
-               (FStar_Options.Other "Discharge")) in
+        let debug =
+          ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+             (FStar_Compiler_Effect.op_Bang dbg_SMTQuery))
+            || (FStar_Compiler_Effect.op_Bang dbg_Discharge) in
         let diag_doc =
           let uu___ = FStar_TypeChecker_Env.get_range env in
           FStar_Errors.diag_doc uu___ in
-        if debug1
+        if debug
         then
           (let uu___1 =
              let uu___2 =
@@ -14647,7 +14628,7 @@ let (do_discharge_vc :
                        env vc in
                    match uu___4 with
                    | (did_anything, vcs1) ->
-                       (if debug1 && did_anything
+                       (if debug && did_anything
                         then
                           (let uu___6 =
                              let uu___7 =
@@ -14703,7 +14684,7 @@ let (do_discharge_vc :
                                         goal in
                                     (match uu___7 with
                                      | FStar_TypeChecker_Common.Trivial ->
-                                         (if debug1
+                                         (if debug
                                           then
                                             (let uu___9 =
                                                let uu___10 =
@@ -14749,7 +14730,7 @@ let (do_discharge_vc :
                   FStar_Options.with_saved_options
                     (fun uu___2 ->
                        FStar_Options.set opts;
-                       if debug1
+                       if debug
                        then
                          (let uu___5 =
                             let uu___6 =
@@ -14777,8 +14758,7 @@ let (discharge_guard' :
       fun g ->
         fun use_smt ->
           (let uu___1 =
-             FStar_TypeChecker_Env.debug env
-               (FStar_Options.Other "ResolveImplicitsHook") in
+             FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
            if uu___1
            then
              let uu___2 = guard_to_string env g in
@@ -14794,13 +14774,10 @@ let (discharge_guard' :
              let deferred_to_tac_ok = true in
              try_solve_deferred_constraints defer_ok smt_ok
                deferred_to_tac_ok env g in
-           let debug1 =
-             ((FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
-                ||
-                (FStar_TypeChecker_Env.debug env
-                   (FStar_Options.Other "SMTQuery")))
-               ||
-               (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Disch")) in
+           let debug =
+             ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                (FStar_Compiler_Effect.op_Bang dbg_SMTQuery))
+               || (FStar_Compiler_Effect.op_Bang dbg_Discharge) in
            let diag_doc =
              let uu___1 = FStar_TypeChecker_Env.get_range env in
              FStar_Errors.diag_doc uu___1 in
@@ -14823,8 +14800,7 @@ let (discharge_guard' :
            if uu___1
            then
              (if
-                debug1 &&
-                  (Prims.op_Negation env.FStar_TypeChecker_Env.phase1)
+                debug && (Prims.op_Negation env.FStar_TypeChecker_Env.phase1)
               then
                 (let uu___3 =
                    let uu___4 =
@@ -14841,7 +14817,7 @@ let (discharge_guard' :
                   FStar_Pervasives_Native.Some ret_g
               | FStar_TypeChecker_Common.NonTrivial vc when
                   Prims.op_Negation use_smt ->
-                  (if debug1
+                  (if debug
                    then
                      (let uu___4 =
                         let uu___5 =
@@ -14912,8 +14888,8 @@ let (subtype_nosmt :
     fun t1 ->
       fun t2 ->
         (let uu___1 =
-           (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel")) ||
-             (FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelTop")) in
+           (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+             (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
          if uu___1
          then
            let uu___2 = FStar_TypeChecker_Normalize.term_to_string env t1 in
@@ -14958,10 +14934,8 @@ let (check_subtyping :
         FStar_Profiling.profile
           (fun uu___1 ->
              (let uu___3 =
-                (FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel"))
-                  ||
-                  (FStar_TypeChecker_Env.debug env
-                     (FStar_Options.Other "RelTop")) in
+                (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                  (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
               if uu___3
               then
                 let uu___4 =
@@ -14986,11 +14960,8 @@ let (check_subtyping :
                         (fun uu___5 -> FStar_Pervasives_Native.None) in
                     with_guard env_x prob uu___4 in
                   ((let uu___5 =
-                      ((FStar_TypeChecker_Env.debug env
-                          (FStar_Options.Other "Rel"))
-                         ||
-                         (FStar_TypeChecker_Env.debug env
-                            (FStar_Options.Other "RelTop")))
+                      ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                         (FStar_Compiler_Effect.op_Bang dbg_RelTop))
                         && (FStar_Compiler_Util.is_some g) in
                     if uu___5
                     then
@@ -15158,8 +15129,7 @@ let (check_implicit_solution_and_discharge_guard :
               let uvar_ty = FStar_Syntax_Util.ctx_uvar_typ imp_uvar in
               let uvar_should_check =
                 FStar_Syntax_Util.ctx_uvar_should_check imp_uvar in
-              ((let uu___2 =
-                  FStar_TypeChecker_Env.debug env (FStar_Options.Other "Rel") in
+              ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                 if uu___2
                 then
                   let uu___3 =
@@ -15645,8 +15615,7 @@ let (resolve_implicits' :
                                  = uvar_decoration_should_check;_}
                                ->
                                ((let uu___5 =
-                                   FStar_TypeChecker_Env.debug env
-                                     (FStar_Options.Other "Rel") in
+                                   FStar_Compiler_Effect.op_Bang dbg_Rel in
                                  if uu___5
                                  then
                                    let uu___6 =
@@ -15833,14 +15802,11 @@ let (resolve_implicits' :
                                          if defer_open_metas && is_open
                                          then
                                            ((let uu___7 =
-                                               (FStar_TypeChecker_Env.debug
-                                                  env1
-                                                  (FStar_Options.Other "Rel"))
+                                               (FStar_Compiler_Effect.op_Bang
+                                                  dbg_Rel)
                                                  ||
-                                                 (FStar_TypeChecker_Env.debug
-                                                    env1
-                                                    (FStar_Options.Other
-                                                       "Imps")) in
+                                                 (FStar_Compiler_Effect.op_Bang
+                                                    dbg_Imps) in
                                              if uu___7
                                              then
                                                let uu___8 =
@@ -16149,9 +16115,7 @@ let (resolve_implicits :
   =
   fun env ->
     fun g ->
-      (let uu___1 =
-         FStar_TypeChecker_Env.debug env
-           (FStar_Options.Other "ResolveImplicitsHook") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
        if uu___1
        then
          let uu___2 = guard_to_string env g in
@@ -16162,9 +16126,7 @@ let (resolve_implicits :
       (let tagged_implicits1 =
          resolve_implicits' env false false
            g.FStar_TypeChecker_Common.implicits in
-       (let uu___2 =
-          FStar_TypeChecker_Env.debug env
-            (FStar_Options.Other "ResolveImplicitsHook") in
+       (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
         if uu___2
         then
           FStar_Compiler_Util.print_string
@@ -16217,9 +16179,7 @@ let (force_trivial_guard :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.guard_t -> unit) =
   fun env ->
     fun g ->
-      (let uu___1 =
-         FStar_TypeChecker_Env.debug env
-           (FStar_Options.Other "ResolveImplicitsHook") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ResolveImplicitsHook in
        if uu___1
        then
          let uu___2 = guard_to_string env g in
@@ -16309,9 +16269,7 @@ let (layered_effect_teq :
     fun t1 ->
       fun t2 ->
         fun reason ->
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug env
-               (FStar_Options.Other "LayeredEffectsEqns") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsEqns in
            if uu___1
            then
              let uu___2 =

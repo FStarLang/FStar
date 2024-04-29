@@ -44,6 +44,10 @@ module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
 module TEQ    = FStar.TypeChecker.TermEqAndSimplify
 
+let dbg_SMTEncoding = Debug.get_toggle "SMTEncoding"
+let dbg_SMTQuery    = Debug.get_toggle "SMTQuery"
+let dbg_Time        = Debug.get_toggle "Time"
+
 let norm_before_encoding env t =
     let steps = [Env.Eager_unfolding;
                  Env.Simplify;
@@ -571,7 +575,7 @@ let encode_top_level_val uninterpreted env fv t quals =
                  env.tcenv t
       else norm_before_encoding env t
     in
-    // if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    // if !dbg_SMTEncoding
     // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
     //        (Print.fv_to_string fv)
     //        (Print.term_to_string t)
@@ -759,7 +763,7 @@ let encode_top_level_let :
                 (* Open binders *)
                 let (binders, body, t_body_comp) = destruct_bound_function t_norm e in
                 let t_body = U.comp_result t_body_comp in
-                if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+                if !dbg_SMTEncoding
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
                                 (Print.binders_to_string ", " binders)
                                 (Print.term_to_string body);
@@ -854,7 +858,7 @@ let encode_top_level_let :
                     | _ -> failwith "Impossible" in
                 {env with tcenv=tcenv'}, e, t_norm
             in
-            if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+            if !dbg_SMTEncoding
             then BU.print3 "Encoding let rec %s : %s = %s\n"
                         (Print.lbname_to_string lbn)
                         (Print.term_to_string t_norm)
@@ -864,7 +868,7 @@ let encode_top_level_let :
             let (binders, body, tres_comp) = destruct_bound_function t_norm e in
             let curry = fvb.smt_arity <> List.length binders in
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
-            if Env.debug env0.tcenv <| Options.Other "SMTEncoding"
+            if !dbg_SMTEncoding
             then BU.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
                               (Print.lbname_to_string lbn)
                               (Print.binders_to_string ", " binders)
@@ -1473,7 +1477,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
         match g with
          | [] ->
             begin
-            if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+            if !dbg_SMTEncoding then
               BU.print1 "Skipped encoding of %s\n" nm;
             [Caption (BU.format1 "<Skipped %s/>" nm)] |> mk_decls_trivial
             end
@@ -1484,7 +1488,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     g, env
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
-    if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+    if !dbg_SMTEncoding
     then (BU.print1 "@@@Encoding sigelt %s\n" (Print.sigelt_to_string se));
 
     let is_opaque_to_smt (t:S.term) =
@@ -1637,7 +1641,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     (* Discriminators *)
     | Sig_let _ when (se.sigquals |> BU.for_some (function Discriminator _ -> true | _ -> false)) ->
       //Discriminators are encoded directly via (our encoding of) theory of datatypes
-      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+      if !dbg_SMTEncoding then
         BU.print1 "Not encoding discriminator '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
@@ -1645,7 +1649,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
     | Sig_let {lids} when (lids |> BU.for_some (fun (l:lident) -> string_of_id (List.hd (ns_of_lid l)) = "Prims")
                              && se.sigquals |> BU.for_some (function Unfold_for_unification_and_vcgen -> true | _ -> false)) ->
         //inline lets from prims are never encoded as definitions --- since they will be inlined
-      if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
+      if !dbg_SMTEncoding then
         BU.print1 "Not encoding unfold let from Prims '%s'\n" (Print.sigelt_to_string_short se);
       [], env
 
@@ -1765,7 +1769,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t * env_t
 
         | S.Binding_var x ->
             let t1 = norm_before_encoding env x.sort in
-            if Env.debug env.tcenv <| Options.Other "SMTEncoding"
+            if !dbg_SMTEncoding
             then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
             let t, decls' = encode_term t1 env in
             let t_hash = Term.hash_of_term t in
@@ -1897,7 +1901,7 @@ let encode_sig tcenv se =
     if Options.log_queries()
     then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls
     else decls in
-   if Env.debug tcenv Options.Medium
+   if Debug.medium ()
    then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
@@ -1922,7 +1926,7 @@ let encode_modul tcenv modul =
     UF.with_uf_enabled (fun () ->
     varops.reset_fresh ();
     let name = BU.format2 "%s %s" (if modul.is_interface then "interface" else "module")  (string_of_lid modul.name) in
-    if Env.debug tcenv Options.Medium
+    if Debug.medium ()
     then BU.print2 "+++++++++++Encoding externals for %s ... %s declarations\n" name (List.length modul.declarations |> string_of_int);
     let env = get_env modul.name tcenv |> reset_current_module_fvbs in
     let encode_signature (env:env_t) (ses:sigelts) =
@@ -1932,7 +1936,7 @@ let encode_modul tcenv modul =
     in
     let decls, env = encode_signature ({env with warn=false}) modul.declarations in
     give_decls_to_z3_and_set_env env name decls;
-    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals for %s\n" name;
+    if Debug.medium () then BU.print1 "Done encoding externals for %s\n" name;
     decls, env |> get_current_module_fvbs
   ) end
 
@@ -1941,7 +1945,7 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
   else
     let tcenv = Env.set_current_module tcenv tcmod.name in
     let name = BU.format2 "%s %s" (if tcmod.is_interface then "interface" else "module") (string_of_lid tcmod.name) in
-    if Env.debug tcenv Options.Medium
+    if Debug.medium ()
     then BU.print2 "+++++++++++Encoding externals from cache for %s ... %s decls\n" name (List.length decls |> string_of_int);
     let env = get_env tcmod.name tcenv |> reset_current_module_fvbs in
     let env =
@@ -1949,7 +1953,7 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
         add_fvar_binding_to_env fvb env
       ) env in
     give_decls_to_z3_and_set_env env name decls;
-    if Env.debug tcenv Options.Medium then BU.print1 "Done encoding externals from cache for %s\n" name
+    if Debug.medium () then BU.print1 "Done encoding externals from cache for %s\n" name
 
 open FStar.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
@@ -1980,9 +1984,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
         U.close_forall_no_univs (List.rev closing) q, bindings
     in
     let env_decls, env = encode_env_bindings env bindings in
-    if debug tcenv Options.Medium
-    || debug tcenv <| Options.Other "SMTEncoding"
-    || debug tcenv <| Options.Other "SMTQuery"
+    if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
     let (phi, qdecls), ms = BU.record_time (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
@@ -2003,14 +2005,9 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
 
     let qry = Util.mkAssume(mkNot phi, Some "query", (varops.mk_unique "@query")) in
     let suffix = [Term.Echo "<labels>"] @ label_suffix @ [Term.Echo "</labels>"; Term.Echo "Done!"] in
-    if debug tcenv Options.Medium
-    || debug tcenv <| Options.Other "SMTEncoding"
-    || debug tcenv <| Options.Other "SMTQuery"
+    if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
     then BU.print_string "} Done encoding\n";
-    if debug tcenv Options.Medium
-    || debug tcenv <| Options.Other "SMTEncoding"
-    || debug tcenv <| Options.Other "SMTQuery"
-    || debug tcenv <| Options.Other "Time"
+    if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
     query_prelude, labels, qry, suffix
   )

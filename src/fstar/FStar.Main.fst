@@ -98,7 +98,7 @@ let load_native_tactics () =
               end
     in
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Options.debug_any () then
+    if Debug.any () then
       Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;

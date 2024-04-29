@@ -1039,15 +1039,15 @@ let (builtin_embeddings : (FStar_Ident.lident * embedding_data) Prims.list) =
       uu___4 :: uu___5 in
     uu___2 :: uu___3 in
   uu___ :: uu___1
+let (dbg_plugin : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Plugins"
 let (local_fv_embeddings :
   (FStar_Ident.lident * embedding_data) Prims.list FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref []
 let (register_embedding : FStar_Ident.lident -> embedding_data -> unit) =
   fun l ->
     fun d ->
-      (let uu___1 =
-         FStar_Options.debug_at_level_no_module
-           (FStar_Options.Other "Plugins") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_plugin in
        if uu___1
        then
          let uu___2 = FStar_Ident.string_of_lid l in

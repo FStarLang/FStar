@@ -118,9 +118,10 @@ let with_typars_env (u:uenv) (f:_) =
 // Only for debug printing in Modul.fs
 let bindings_of_uenv u = u.env_bindings
 
+let dbg = Debug.get_toggle "Extraction"
 let debug g f =
     let c = string_of_mlpath g.currentModule in
-    if Options.debug_at_level c (Options.Other "Extraction")
+    if !dbg
     then f ()
 
 let print_mlpath_map (g:uenv) =

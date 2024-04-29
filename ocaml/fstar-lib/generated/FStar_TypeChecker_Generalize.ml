@@ -1,4 +1,6 @@
 open Prims
+let (dbg_Gen : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Gen"
 let (showable_univ_var :
   FStar_Syntax_Syntax.universe_uvar FStar_Class_Show.showable) =
   {
@@ -35,8 +37,7 @@ let (gen_univs :
              (Obj.magic
                 (FStar_Compiler_FlatSet.setlike_flat_set
                    FStar_Syntax_Free.ord_univ_uvar)) (Obj.magic uu___2) in
-         (let uu___3 =
-            FStar_TypeChecker_Env.debug env (FStar_Options.Other "Gen") in
+         (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Gen in
           if uu___3
           then
             let uu___4 =
@@ -53,9 +54,7 @@ let (gen_univs :
             FStar_Compiler_List.map
               (fun u ->
                  let u_name = FStar_Syntax_Syntax.new_univ_name r in
-                 (let uu___4 =
-                    FStar_TypeChecker_Env.debug env
-                      (FStar_Options.Other "Gen") in
+                 (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Gen in
                   if uu___4
                   then
                     let uu___5 =
@@ -132,8 +131,7 @@ let (generalize_universes :
                (Obj.magic
                   (FStar_Compiler_FlatSet.setlike_flat_set
                      FStar_Syntax_Syntax.ord_ident)) (Obj.magic uu___1) in
-           (let uu___2 =
-              FStar_TypeChecker_Env.debug env (FStar_Options.Other "Gen") in
+           (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Gen in
             if uu___2
             then
               let uu___3 =
@@ -147,8 +145,7 @@ let (generalize_universes :
                 uu___3 uu___4
             else ());
            (let univs = FStar_Syntax_Free.univs t in
-            (let uu___3 =
-               FStar_TypeChecker_Env.debug env (FStar_Options.Other "Gen") in
+            (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Gen in
              if uu___3
              then
                let uu___4 =
@@ -159,8 +156,7 @@ let (generalize_universes :
                FStar_Compiler_Util.print1 "univs to gen : %s\n" uu___4
              else ());
             (let gen = gen_univs env univs in
-             (let uu___4 =
-                FStar_TypeChecker_Env.debug env (FStar_Options.Other "Gen") in
+             (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Gen in
               if uu___4
               then
                 let uu___5 =
@@ -202,8 +198,7 @@ let (gen :
         then FStar_Pervasives_Native.None
         else
           (let norm c =
-             (let uu___3 =
-                FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+             (let uu___3 = FStar_Compiler_Debug.medium () in
               if uu___3
               then
                 let uu___4 =
@@ -217,8 +212,7 @@ let (gen :
                   FStar_TypeChecker_Env.Exclude FStar_TypeChecker_Env.Zeta;
                   FStar_TypeChecker_Env.NoFullNorm;
                   FStar_TypeChecker_Env.DoNotUnfoldPureLets] env c in
-              (let uu___4 =
-                 FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+              (let uu___4 = FStar_Compiler_Debug.medium () in
                if uu___4
                then
                  let uu___5 =
@@ -246,9 +240,7 @@ let (gen :
                  let t = FStar_Syntax_Util.comp_result c1 in
                  let univs = FStar_Syntax_Free.univs t in
                  let uvt = FStar_Syntax_Free.uvars t in
-                 ((let uu___4 =
-                     FStar_TypeChecker_Env.debug env
-                       (FStar_Options.Other "Gen") in
+                 ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Gen in
                    if uu___4
                    then
                      let uu___5 =
@@ -289,9 +281,7 @@ let (gen :
                                       (Obj.magic univs2) (Obj.magic uu___5)))
                               uu___6 uu___5) univs uu___4 in
                    let uvs = gen_uvars uvt in
-                   (let uu___5 =
-                      FStar_TypeChecker_Env.debug env
-                        (FStar_Options.Other "Gen") in
+                   (let uu___5 = FStar_Compiler_Effect.op_Bang dbg_Gen in
                     if uu___5
                     then
                       let uu___6 =
@@ -583,7 +573,7 @@ let (generalize' :
   fun env ->
     fun is_rec ->
       fun lecs ->
-        (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Low in
+        (let uu___2 = FStar_Compiler_Debug.low () in
          if uu___2
          then
            let uu___3 =
@@ -634,8 +624,7 @@ let (generalize' :
                  (fun uu___3 ->
                     match uu___3 with | (l, t, c) -> (l, [], t, c, [])) lecs
            | FStar_Pervasives_Native.Some luecs ->
-               ((let uu___4 =
-                   FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+               ((let uu___4 = FStar_Compiler_Debug.medium () in
                  if uu___4
                  then
                    FStar_Compiler_List.iter

@@ -1,4 +1,12 @@
 open Prims
+let (dbg_2635 : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "2635"
+let (dbg_ReflTc : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ReflTc"
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
+let (dbg_TacUnify : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacUnify"
 let ret : 'a . 'a -> 'a FStar_Tactics_Monad.tac =
   fun uu___ ->
     (fun x ->
@@ -51,7 +59,7 @@ let (core_check :
           then FStar_Pervasives.Inl FStar_Pervasives_Native.None
           else
             (let debug f =
-               let uu___2 = FStar_Options.debug_any () in
+               let uu___2 = FStar_Compiler_Debug.any () in
                if uu___2 then f () else () in
              let uu___2 =
                FStar_TypeChecker_Core.check_term env sol t must_tot in
@@ -190,10 +198,7 @@ let (debugging : unit -> Prims.bool FStar_Tactics_Monad.tac) =
     let uu___1 = bind () in
     uu___1 FStar_Tactics_Monad.get
       (fun ps ->
-         let uu___2 =
-           FStar_TypeChecker_Env.debug ps.FStar_Tactics_Types.main_context
-             (FStar_Options.Other "Tac") in
-         ret uu___2)
+         let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Tac in ret uu___2)
 let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
   fun msg ->
     fun ps ->
@@ -1131,27 +1136,28 @@ let (__do_unify :
         fun env1 ->
           fun t1 ->
             fun t2 ->
-              let dbg =
-                FStar_TypeChecker_Env.debug env1
-                  (FStar_Options.Other "TacUnify") in
               let uu___ = bind () in
               uu___ idtac
                 (fun uu___1 ->
-                   if dbg
-                   then
-                     (FStar_Options.push ();
-                      (let uu___4 =
-                         FStar_Options.set_options
-                           "--debug_level Rel --debug_level RelCheck" in
-                       ()))
-                   else ();
+                   (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_TacUnify in
+                    if uu___3
+                    then
+                      (FStar_Options.push ();
+                       (let uu___5 =
+                          FStar_Options.set_options "--debug Rel,RelCheck" in
+                        ()))
+                    else ());
                    (let uu___3 =
-                      __do_unify_wflags dbg allow_guards must_tot check_side
-                        env1 t1 t2 in
+                      let uu___4 = FStar_Compiler_Effect.op_Bang dbg_TacUnify in
+                      __do_unify_wflags uu___4 allow_guards must_tot
+                        check_side env1 t1 t2 in
                     let uu___4 = bind () in
                     uu___4 uu___3
                       (fun r ->
-                         if dbg then FStar_Options.pop () else (); ret r)))
+                         (let uu___6 =
+                            FStar_Compiler_Effect.op_Bang dbg_TacUnify in
+                          if uu___6 then FStar_Options.pop () else ());
+                         ret r)))
 let (do_unify_aux :
   Prims.bool ->
     check_unifier_solved_implicits_side ->
@@ -4060,10 +4066,10 @@ let (t_apply_lemma :
                                                                     ((
                                                                     let uu___19
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "2635") in
+                                                                    (FStar_Compiler_Debug.medium
+                                                                    ()) ||
+                                                                    (FStar_Compiler_Effect.op_Bang
+                                                                    dbg_2635) in
                                                                     if
                                                                     uu___19
                                                                     then
@@ -9369,8 +9375,7 @@ let (free_uvars :
 let (dbg_refl : env -> (unit -> Prims.string) -> unit) =
   fun g ->
     fun msg ->
-      let uu___ =
-        FStar_TypeChecker_Env.debug g (FStar_Options.Other "ReflTc") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg_ReflTc in
       if uu___
       then let uu___1 = msg () in FStar_Compiler_Util.print_string uu___1
       else ()

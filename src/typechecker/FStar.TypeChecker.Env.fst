@@ -43,6 +43,9 @@ module TcComm = FStar.TypeChecker.Common
 
 open FStar.Defensive
 
+let dbg_ImplicitTrace = Debug.get_toggle "ImplicitTrace"
+let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
+
 let rec eq_step s1 s2 =
   match s1, s2 with
   | Beta, Beta
@@ -344,8 +347,7 @@ let incr_query_index env =
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
-let debug env (l:Options.debug_level_t) =
-    Options.debug_at_level (string_of_lid env.curmodule) l
+
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
@@ -840,7 +842,7 @@ and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
     // a delta_equational. If we run into the same function while computing its delta_depth,
     // we will return delta_equational. If not, we override the cache with the correct delta_depth.
     let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
-    // if Options.debug_any () then
+    // if Debug.any () then
     //  BU.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
     BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
     d)
@@ -1978,7 +1980,7 @@ let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
                 ; imp_uvar   = ctx_uvar
                 ; imp_range  = r
                 } in
-      if debug env (Options.Other "ImplicitTrace") then
+      if !dbg_ImplicitTrace then
         BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
@@ -2011,7 +2013,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
        else Strict)
       ctx_uvar_meta_t in
 
-    if debug env <| Options.Other "LayeredEffectsEqns"
+    if !dbg_LayeredEffectsEqns
     then List.iter (fun (ctx_uvar, _) ->
                     BU.print1 "Layered Effect uvar : %s\n"
                       (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;

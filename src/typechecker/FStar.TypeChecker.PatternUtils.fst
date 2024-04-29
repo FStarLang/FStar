@@ -37,6 +37,8 @@ module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 
+let dbg_Patterns = Debug.get_toggle "Patterns"
+
 (************************************************************************)
 (* Utilities on patterns  *)
 (************************************************************************)
@@ -208,7 +210,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
            | Pat_dot_term eopt ->
              (match eopt with
               | None ->
-                if Env.debug env <| Options.Other "Patterns"
+                if !dbg_Patterns
                 then begin
                   if not env.phase1
                   then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"

@@ -2,6 +2,8 @@ open Prims
 type lcomp_with_binder =
   (FStar_Syntax_Syntax.bv FStar_Pervasives_Native.option *
     FStar_TypeChecker_Common.lcomp)
+let (dbg_Patterns : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Patterns"
 let rec (elaborate_pat :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.pat -> FStar_Syntax_Syntax.pat)
@@ -301,8 +303,7 @@ let (pat_as_exp :
                 (match eopt with
                  | FStar_Pervasives_Native.None ->
                      ((let uu___1 =
-                         FStar_TypeChecker_Env.debug env1
-                           (FStar_Options.Other "Patterns") in
+                         FStar_Compiler_Effect.op_Bang dbg_Patterns in
                        if uu___1
                        then
                          (if

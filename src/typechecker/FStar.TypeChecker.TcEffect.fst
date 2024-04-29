@@ -43,6 +43,9 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 module BU = FStar.Compiler.Util
 open FStar.Class.Show
 
+let dbg                  = Debug.get_toggle "ED"
+let dbg_LayeredEffectsTc = Debug.get_toggle "LayeredEffectsTc"
+
 let dmff_cps_and_elaborate env ed =
   (* This is only an elaboration rule not a typechecking one *)
 
@@ -155,7 +158,7 @@ let bind_combinator_kind (env:env)
   : option (list indexed_effect_binder_kind) =
 
   let debug s =
-    if Env.debug env <| Options.Other "LayeredEffectsTc"
+    if Debug.medium () || !dbg_LayeredEffectsTc
     then BU.print1 "%s\n" s in
 
   debug (BU.format1
@@ -497,7 +500,7 @@ let validate_indexed_effect_bind_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Bind %s has %s kind\n" bind_name
          (Print.indexed_effect_combinator_kind_to_string kind);
 
@@ -711,7 +714,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   let k = U.arrow (a_b::rest_bs@[f]) c in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc" then
+  if Debug.medium () || !dbg_LayeredEffectsTc then
     BU.print1 "Expected type of subcomp before unification: %s\n"
       (Print.term_to_string k);
 
@@ -747,7 +750,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Subcomp %s has %s kind\n" subcomp_name
          (Print.indexed_effect_combinator_kind_to_string kind);
 
@@ -958,7 +961,7 @@ let validate_indexed_effect_ite_shape (env:env)
       Ad_hoc_combinator
     | Some k -> k in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Ite %s has %s kind\n" ite_name
          (Print.indexed_effect_combinator_kind_to_string kind);
 
@@ -1193,7 +1196,7 @@ let validate_indexed_effect_lift_shape (env:env)
       Ad_hoc_combinator
     | Some l -> Substitutive_combinator l in
 
-  if Env.debug env <| Options.Other "LayeredEffectsTc"
+  if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Lift %s has %s kind\n" lift_name
          (Print.indexed_effect_combinator_kind_to_string kind);
 
@@ -1207,7 +1210,7 @@ let validate_indexed_effect_lift_shape (env:env)
  *)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
-  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+  if !dbg_LayeredEffectsTc then
     BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
   //we don't support effect binders in layered effects yet
@@ -1217,7 +1220,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       (range_of_lid ed.mname);
 
   let log_combinator s (us, t, ty) =
-    if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+    if !dbg_LayeredEffectsTc then
       BU.print4 "Typechecked %s:%s = %s:%s\n"
         (string_of_lid ed.mname) s
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
@@ -1434,7 +1437,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
       let stronger_us, stronger_t, stronger_ty = check_and_gen "stronger_repr" 1 stronger_repr in
 
-      if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+      if !dbg_LayeredEffectsTc then
         BU.print2 "stronger combinator typechecked with term: %s and type: %s\n"
           (Print.tscheme_to_string (stronger_us, stronger_t))
           (Print.tscheme_to_string (stronger_us, stronger_ty));
@@ -1815,7 +1818,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       ({ Env.set_expected_typ env act_typ with instantiate_imp = false })
       act.action_defn in
     
-    if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print2 "Typechecked action definition: %s and action type: %s\n"
         (Print.term_to_string act_defn) (Print.term_to_string act_typ);
 
@@ -1835,13 +1838,13 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         BU.format3 "Unexpected non-function type for action %s:%s (%s)"
           (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string act_typ)) r in
 
-    if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
 
     let g = Rel.teq env act_typ k in
     List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
 
-    if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print1 "Expected action type after unification: %s\n" (Print.term_to_string k);
     
     let act_typ =
@@ -1870,7 +1873,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         U.arrow bs (S.mk_Comp ct)
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg k) r in
 
-    if Env.debug env <| Options.Other "LayeredEffectsTc" then
+    if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
     
     let act =
@@ -1939,7 +1942,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     end
   in
 
-  if Env.debug env0 <| Options.Other "LayeredEffectsTc"
+  if !dbg_LayeredEffectsTc
   then BU.print2 "Effect %s has extraction mode %s\n"
          (string_of_lid ed.mname)
          (Print.eff_extraction_mode_to_string extraction_mode);
@@ -1967,7 +1970,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
 Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
-  if Env.debug env0 <| Options.Other "ED" then
+  if !dbg then
     BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
   let us, bs =
@@ -2027,7 +2030,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
                  action_typ  = snd (op (a.action_univs, a.action_typ)) }) ed.actions;
     } in
 
-  if Env.debug env0 <| Options.Other "ED" then
+  if !dbg then
     BU.print1 "After typechecking binders eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
 
   let env = Env.push_binders (Env.push_univ_vars env0 ed_univs) ed_bs in
@@ -2071,7 +2074,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
 
   let signature = check_and_gen' "signature" 1 None (U.effect_sig_ts ed.signature) None in
 
-  if Env.debug env0 <| Options.Other "ED" then
+  if !dbg then
     BU.print1 "Typechecked signature: %s\n" (Print.tscheme_to_string signature);
 
   (*
@@ -2091,7 +2094,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
   in
 
   let log_combinator s ts =
-    if Env.debug env <| Options.Other "ED" then
+    if !dbg then
       BU.print3 "Typechecked %s:%s = %s\n" (string_of_lid ed.mname) s (Print.tscheme_to_string ts) in
 
   let ret_wp =
@@ -2279,7 +2282,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           // 1) Check action definition, setting its expected type to
           //    [action_typ]
           let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
-          if Env.debug env (Options.Other "ED") then
+          if !dbg then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
               (string_of_lid act.action_name) (Print.term_to_string act.action_defn)
               (Print.term_to_string act_typ);
@@ -2394,7 +2397,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           action_typ  = cl (a.action_univs, a.action_typ) |> snd;
           action_defn = cl (a.action_univs, a.action_defn) |> snd }) actions } in
 
-  if Env.debug env <| Options.Other "ED" then
+  if !dbg then
     BU.print1 "Typechecked effect declaration:\n\t%s\n" (Print.eff_decl_to_string false ed);
 
   ed
@@ -2422,7 +2425,7 @@ let monad_signature env m s =
  *
  *)
 let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
-  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+  if !dbg_LayeredEffectsTc then
     BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
   let lift_ts = sub.lift |> must in
@@ -2430,7 +2433,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
 
   let us, lift, lift_ty = check_and_gen env0 "" "lift" 1 lift_ts in
 
-  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+  if !dbg_LayeredEffectsTc then
     BU.print2 "Typechecked lift: %s and lift_ty: %s\n"
       (Print.tscheme_to_string (us, lift)) (Print.tscheme_to_string ((us, lift_ty)));
 
@@ -2444,7 +2447,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     lift_wp = Some (us, k |> SS.close_univ_vars us);
     kind = Some kind } in
 
-  if Env.debug env0 <| Options.Other "LayeredEffectsTc" then
+  if !dbg_LayeredEffectsTc then
     BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
 
   sub
@@ -2524,7 +2527,7 @@ let tc_lift env sub r =
                uvs, SS.subst usubst lift
           else [], lift
         in
-        if Env.debug env (Options.Other "ED")
+        if !dbg
         then BU.print1 "Lift for free : %s\n" (Print.term_to_string lift);
         let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
         let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
@@ -2713,7 +2716,7 @@ let tc_polymonadic_bind env (m:lident) (n:lident) (p:lident) (ts:S.tscheme)
     0
     false in
 
-  if Env.debug env <| Options.Extreme
+  if Debug.extreme ()
   then BU.print3 "Polymonadic bind %s after typechecking (%s::%s)\n"
          eff_name (Print.tscheme_to_string (us, t))
                   (Print.tscheme_to_string (us, k));
@@ -2754,7 +2757,7 @@ let tc_polymonadic_subcomp env0 (m:lident) (n:lident) (ts:S.tscheme) =
     0
     (Env.get_range env) in
 
-  if Env.debug env <| Options.Extreme
+  if Debug.extreme ()
   then BU.print3 "Polymonadic subcomp %s after typechecking (%s::%s)\n"
          combinator_name
          (Print.tscheme_to_string (us, t))

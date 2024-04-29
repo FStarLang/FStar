@@ -878,10 +878,13 @@ and closed_ty (t:src_ty)
 
 let main (nm:string) (src:src_exp)
   : RT.dsl_tac_t
-  = fun f -> 
+  = fun (f, expected_t) -> 
       if closed src
-      then 
-        let (| src_ty, _ |) = check f [] src in
-        soundness_lemma f [] src src_ty;
-        [RT.mk_checked_let f nm (elab_exp src) (elab_ty src_ty)]
+      then if None? expected_t
+           then let (| src_ty, _ |) = check f [] src in
+                soundness_lemma f [] src src_ty;
+                [],
+                RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
+                []
+           else T.fail "Dependent bool refinement DSL: no support for expected type yet"
       else T.fail "Not locally nameless"

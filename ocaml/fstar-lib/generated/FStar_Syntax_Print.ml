@@ -417,10 +417,11 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_labeled
                    (l, r, b);_}
                ->
-               let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
-               let uu___4 = term_to_string t in
-               FStar_Compiler_Util.format3 "Meta_labeled(%s, %s){%s}" l
-                 uu___3 uu___4
+               let uu___3 = FStar_Errors_Msg.rendermsg l in
+               let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
+               let uu___5 = term_to_string t in
+               FStar_Compiler_Util.format3 "Meta_labeled(%s, %s){%s}" uu___3
+                 uu___4 uu___5
            | FStar_Syntax_Syntax.Tm_meta
                { FStar_Syntax_Syntax.tm2 = t;
                  FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_named l;_}
@@ -1111,8 +1112,9 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
         let uu___1 = sli lid in
         FStar_Compiler_Util.format1 "{Meta_named %s}" uu___1
     | FStar_Syntax_Syntax.Meta_labeled (l, r, uu___1) ->
-        let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
-        FStar_Compiler_Util.format2 "{Meta_labeled (%s, %s)}" l uu___2
+        let uu___2 = FStar_Errors_Msg.rendermsg l in
+        let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
+        FStar_Compiler_Util.format2 "{Meta_labeled (%s, %s)}" uu___2 uu___3
     | FStar_Syntax_Syntax.Meta_desugared msi -> "{Meta_desugared}"
     | FStar_Syntax_Syntax.Meta_monadic (m, t) ->
         let uu___1 = sli m in

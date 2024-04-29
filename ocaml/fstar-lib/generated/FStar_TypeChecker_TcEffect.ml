@@ -1,4 +1,8 @@
 open Prims
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ED"
+let (dbg_LayeredEffectsTc : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffectsTc"
 let (dmff_cps_and_elaborate :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.eff_decl ->
@@ -266,8 +270,9 @@ let (bind_combinator_kind :
                             fun has_range_binders ->
                               let debug s =
                                 let uu___ =
-                                  FStar_TypeChecker_Env.debug env
-                                    (FStar_Options.Other "LayeredEffectsTc") in
+                                  (FStar_Compiler_Debug.medium ()) ||
+                                    (FStar_Compiler_Effect.op_Bang
+                                       dbg_LayeredEffectsTc) in
                                 if uu___
                                 then FStar_Compiler_Util.print1 "%s\n" s
                                 else () in
@@ -1630,11 +1635,11 @@ let (validate_indexed_effect_bind_shape :
                                                                     FStar_Syntax_Syntax.Substitutive_combinator
                                                                     l in
                                                                (let uu___8 =
-                                                                  FStar_TypeChecker_Env.debug
-                                                                    env
+                                                                  (FStar_Compiler_Debug.medium
+                                                                    ()) ||
                                                                     (
-                                                                    FStar_Options.Other
-                                                                    "LayeredEffectsTc") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffectsTc) in
                                                                 if uu___8
                                                                 then
                                                                   let uu___9
@@ -2405,9 +2410,9 @@ let (validate_indexed_effect_subcomp_shape :
                                           (FStar_Compiler_List.op_At (a_b ::
                                              rest_bs) [f]) c in
                                       ((let uu___4 =
-                                          FStar_TypeChecker_Env.debug env
-                                            (FStar_Options.Other
-                                               "LayeredEffectsTc") in
+                                          (FStar_Compiler_Debug.medium ()) ||
+                                            (FStar_Compiler_Effect.op_Bang
+                                               dbg_LayeredEffectsTc) in
                                         if uu___4
                                         then
                                           let uu___5 =
@@ -2464,9 +2469,10 @@ let (validate_indexed_effect_subcomp_shape :
                                            | FStar_Pervasives_Native.Some k2
                                                -> k2 in
                                          (let uu___6 =
-                                            FStar_TypeChecker_Env.debug env
-                                              (FStar_Options.Other
-                                                 "LayeredEffectsTc") in
+                                            (FStar_Compiler_Debug.medium ())
+                                              ||
+                                              (FStar_Compiler_Effect.op_Bang
+                                                 dbg_LayeredEffectsTc) in
                                           if uu___6
                                           then
                                             let uu___7 =
@@ -3104,9 +3110,9 @@ let (validate_indexed_effect_ite_shape :
                                            FStar_Syntax_Syntax.Ad_hoc_combinator)
                                       | FStar_Pervasives_Native.Some k2 -> k2 in
                                     (let uu___5 =
-                                       FStar_TypeChecker_Env.debug env
-                                         (FStar_Options.Other
-                                            "LayeredEffectsTc") in
+                                       (FStar_Compiler_Debug.medium ()) ||
+                                         (FStar_Compiler_Effect.op_Bang
+                                            dbg_LayeredEffectsTc) in
                                      if uu___5
                                      then
                                        let uu___6 =
@@ -3740,9 +3746,10 @@ let (validate_indexed_effect_lift_shape :
                                                FStar_Syntax_Syntax.Substitutive_combinator
                                                  l in
                                          (let uu___8 =
-                                            FStar_TypeChecker_Env.debug env
-                                              (FStar_Options.Other
-                                                 "LayeredEffectsTc") in
+                                            (FStar_Compiler_Debug.medium ())
+                                              ||
+                                              (FStar_Compiler_Effect.op_Bang
+                                                 dbg_LayeredEffectsTc) in
                                           if uu___8
                                           then
                                             let uu___9 =
@@ -3772,8 +3779,7 @@ let (tc_layered_eff_decl :
           FStar_Errors.with_ctx uu___
             (fun uu___1 ->
                (let uu___3 =
-                  FStar_TypeChecker_Env.debug env0
-                    (FStar_Options.Other "LayeredEffectsTc") in
+                  FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
                 if uu___3
                 then
                   let uu___4 = FStar_Syntax_Print.eff_decl_to_string false ed in
@@ -3807,8 +3813,7 @@ let (tc_layered_eff_decl :
                   match uu___4 with
                   | (us, t, ty) ->
                       let uu___5 =
-                        FStar_TypeChecker_Env.debug env0
-                          (FStar_Options.Other "LayeredEffectsTc") in
+                        FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
                       if uu___5
                       then
                         let uu___6 =
@@ -4308,9 +4313,8 @@ let (tc_layered_eff_decl :
                                      | (stronger_us, stronger_t, stronger_ty)
                                          ->
                                          ((let uu___14 =
-                                             FStar_TypeChecker_Env.debug env0
-                                               (FStar_Options.Other
-                                                  "LayeredEffectsTc") in
+                                             FStar_Compiler_Effect.op_Bang
+                                               dbg_LayeredEffectsTc in
                                            if uu___14
                                            then
                                              let uu___15 =
@@ -5742,10 +5746,11 @@ let (tc_layered_eff_decl :
                                                         | (act_defn, uu___19,
                                                            g_d) ->
                                                             ((let uu___21 =
-                                                                FStar_TypeChecker_Env.debug
-                                                                  env1
-                                                                  (FStar_Options.Other
-                                                                    "LayeredEffectsTc") in
+                                                                (FStar_Compiler_Debug.medium
+                                                                   ())
+                                                                  ||
+                                                                  (FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffectsTc) in
                                                               if uu___21
                                                               then
                                                                 let uu___22 =
@@ -5877,10 +5882,10 @@ let (tc_layered_eff_decl :
                                                               | (k, g_k) ->
                                                                   ((let uu___23
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffectsTc") in
+                                                                    (FStar_Compiler_Debug.medium
+                                                                    ()) ||
+                                                                    (FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffectsTc) in
                                                                     if
                                                                     uu___23
                                                                     then
@@ -5907,10 +5912,10 @@ let (tc_layered_eff_decl :
                                                                     (
                                                                     let uu___25
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffectsTc") in
+                                                                    (FStar_Compiler_Debug.medium
+                                                                    ()) ||
+                                                                    (FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffectsTc) in
                                                                     if
                                                                     uu___25
                                                                     then
@@ -6079,10 +6084,10 @@ let (tc_layered_eff_decl :
                                                                     (
                                                                     let uu___26
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffectsTc") in
+                                                                    (FStar_Compiler_Debug.medium
+                                                                    ()) ||
+                                                                    (FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffectsTc) in
                                                                     if
                                                                     uu___26
                                                                     then
@@ -6354,10 +6359,8 @@ let (tc_layered_eff_decl :
                                                               FStar_Syntax_Syntax.Extract_none
                                                                 m))) in
                                            (let uu___15 =
-                                              FStar_TypeChecker_Env.debug
-                                                env0
-                                                (FStar_Options.Other
-                                                   "LayeredEffectsTc") in
+                                              FStar_Compiler_Effect.op_Bang
+                                                dbg_LayeredEffectsTc in
                                             if uu___15
                                             then
                                               let uu___16 =
@@ -6462,8 +6465,7 @@ let (tc_non_layered_eff_decl :
               "While checking effect definition `%s`" uu___1 in
           FStar_Errors.with_ctx uu___
             (fun uu___1 ->
-               (let uu___3 =
-                  FStar_TypeChecker_Env.debug env0 (FStar_Options.Other "ED") in
+               (let uu___3 = FStar_Compiler_Effect.op_Bang dbg in
                 if uu___3
                 then
                   let uu___4 = FStar_Syntax_Print.eff_decl_to_string false ed in
@@ -6685,8 +6687,7 @@ let (tc_non_layered_eff_decl :
                                     (ed1.FStar_Syntax_Syntax.extraction_mode)
                                 } in
                               ((let uu___7 =
-                                  FStar_TypeChecker_Env.debug env0
-                                    (FStar_Options.Other "ED") in
+                                  FStar_Compiler_Effect.op_Bang dbg in
                                 if uu___7
                                 then
                                   let uu___8 =
@@ -6821,8 +6822,7 @@ let (tc_non_layered_eff_decl :
                                     FStar_Pervasives_Native.None uu___7
                                     FStar_Pervasives_Native.None in
                                 (let uu___8 =
-                                   FStar_TypeChecker_Env.debug env0
-                                     (FStar_Options.Other "ED") in
+                                   FStar_Compiler_Effect.op_Bang dbg in
                                  if uu___8
                                  then
                                    let uu___9 =
@@ -6888,8 +6888,7 @@ let (tc_non_layered_eff_decl :
                                         | uu___12 -> fail signature1) in
                                  let log_combinator s ts =
                                    let uu___8 =
-                                     FStar_TypeChecker_Env.debug env
-                                       (FStar_Options.Other "ED") in
+                                     FStar_Compiler_Effect.op_Bang dbg in
                                    if uu___8
                                    then
                                      let uu___9 =
@@ -8104,10 +8103,8 @@ let (tc_non_layered_eff_decl :
                                                                  } in
                                                                ((let uu___25
                                                                    =
-                                                                   FStar_TypeChecker_Env.debug
-                                                                    env1
-                                                                    (FStar_Options.Other
-                                                                    "ED") in
+                                                                   FStar_Compiler_Effect.op_Bang
+                                                                    dbg in
                                                                  if uu___25
                                                                  then
                                                                    let uu___26
@@ -8703,9 +8700,8 @@ let (tc_non_layered_eff_decl :
                                                  (ed2.FStar_Syntax_Syntax.extraction_mode)
                                              } in
                                            ((let uu___16 =
-                                               FStar_TypeChecker_Env.debug
-                                                 env
-                                                 (FStar_Options.Other "ED") in
+                                               FStar_Compiler_Effect.op_Bang
+                                                 dbg in
                                              if uu___16
                                              then
                                                let uu___17 =
@@ -8774,9 +8770,7 @@ let (tc_layered_lift :
   =
   fun env0 ->
     fun sub ->
-      (let uu___1 =
-         FStar_TypeChecker_Env.debug env0
-           (FStar_Options.Other "LayeredEffectsTc") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.sub_eff_to_string sub in
@@ -8787,9 +8781,7 @@ let (tc_layered_lift :
        let uu___1 = check_and_gen env0 "" "lift" Prims.int_one lift_ts in
        match uu___1 with
        | (us, lift, lift_ty) ->
-           ((let uu___3 =
-               FStar_TypeChecker_Env.debug env0
-                 (FStar_Options.Other "LayeredEffectsTc") in
+           ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
              if uu___3
              then
                let uu___4 = FStar_Syntax_Print.tscheme_to_string (us, lift) in
@@ -8828,8 +8820,7 @@ let (tc_layered_lift :
                             (FStar_Pervasives_Native.Some kind)
                         } in
                       ((let uu___6 =
-                          FStar_TypeChecker_Env.debug env0
-                            (FStar_Options.Other "LayeredEffectsTc") in
+                          FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
                         if uu___6
                         then
                           let uu___7 =
@@ -9066,8 +9057,7 @@ let (tc_lift :
                             (match uu___7 with
                              | (uvs, lift1) ->
                                  ((let uu___9 =
-                                     FStar_TypeChecker_Env.debug env
-                                       (FStar_Options.Other "ED") in
+                                     FStar_Compiler_Effect.op_Bang dbg in
                                    if uu___9
                                    then
                                      let uu___10 =
@@ -9768,8 +9758,7 @@ let (tc_polymonadic_bind :
                            (match uu___4 with
                             | (k, kind) ->
                                 ((let uu___6 =
-                                    FStar_TypeChecker_Env.debug env1
-                                      FStar_Options.Extreme in
+                                    FStar_Compiler_Debug.extreme () in
                                   if uu___6
                                   then
                                     let uu___7 =
@@ -9857,9 +9846,7 @@ let (tc_polymonadic_subcomp :
                              Prims.int_zero uu___10 in
                          (match uu___4 with
                           | (k, kind) ->
-                              ((let uu___6 =
-                                  FStar_TypeChecker_Env.debug env
-                                    FStar_Options.Extreme in
+                              ((let uu___6 = FStar_Compiler_Debug.extreme () in
                                 if uu___6
                                 then
                                   let uu___7 =

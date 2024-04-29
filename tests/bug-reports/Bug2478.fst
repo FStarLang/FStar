@@ -28,7 +28,7 @@ let key0 (bytes:Type0) (#pf: bytes_like bytes) = bytes
 // assume
 // val ps_key0: #bytes:Type0 -> (#pf: bytes_like bytes ) -> test_type bytes (key0 bytes #pf)
 
-// //#push-options "--debug Bug2478 --debug_level Rel,RelCheck,Tac --lax"
+// //#push-options "--debug Rel,RelCheck,Tac --lax"
 // let ps_pair3_0 (bytes:Type0) (#pf: bytes_like bytes ): (test_type bytes (x0:bytes & (x1:bytes & bytes))) =
 //     ps_key0 #_ #_;;
 //     ps_key0 ;;
@@ -39,7 +39,7 @@ let key (bytes:Type0) {|bytes_like bytes|} = bytes
 
 assume val ps_key: #bytes:Type0 -> {|bytes_like bytes|} -> test_type bytes (key bytes)
 
-// #push-options "--debug Bug2478 --debug_level Rel,RelCheck,Tac --lax"
+// #push-options "--debug Rel,RelCheck,Tac --lax"
 let ps_pair3 (bytes:Type0) {| pf: bytes_like bytes|}: (test_type bytes (x0:bytes & (x1:bytes & bytes))) =
     ps_key #_ #_;;
     ps_key;;

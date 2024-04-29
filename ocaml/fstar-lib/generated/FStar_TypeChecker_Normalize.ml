@@ -1,4 +1,8 @@
 open Prims
+let (dbg_univ_norm : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "univ_norm"
+let (dbg_NormRebuild : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NormRebuild"
 let (maybe_debug :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_Syntax_Syntax.term ->
@@ -357,9 +361,7 @@ let (norm_universe :
                         (match uu___1 with
                          | Univ u3 ->
                              ((let uu___3 =
-                                 FStar_TypeChecker_Env.debug
-                                   cfg.FStar_TypeChecker_Cfg.tcenv
-                                   (FStar_Options.Other "univ_norm") in
+                                 FStar_Compiler_Effect.op_Bang dbg_univ_norm in
                                if uu___3
                                then
                                  let uu___4 =
@@ -4512,9 +4514,7 @@ and (do_unfold_fv :
                     match stack1 with
                     | (UnivArgs (us', uu___2))::stack2 ->
                         ((let uu___4 =
-                            FStar_TypeChecker_Env.debug
-                              cfg.FStar_TypeChecker_Cfg.tcenv
-                              (FStar_Options.Other "univ_norm") in
+                            FStar_Compiler_Effect.op_Bang dbg_univ_norm in
                           if uu___4
                           then
                             FStar_Compiler_List.iter
@@ -7022,9 +7022,7 @@ and (rebuild :
                 FStar_Compiler_Util.print4
                   ">>> %s\nRebuild %s with %s env elements and top of the stack %s\n"
                   uu___3 uu___4 uu___5 uu___6);
-               (let uu___3 =
-                  FStar_TypeChecker_Env.debug cfg.FStar_TypeChecker_Cfg.tcenv
-                    (FStar_Options.Other "NormRebuild") in
+               (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_NormRebuild in
                 if uu___3
                 then
                   let uu___4 = FStar_Syntax_Util.unbound_variables t in

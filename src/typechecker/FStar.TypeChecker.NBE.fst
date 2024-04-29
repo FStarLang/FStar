@@ -49,6 +49,9 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Show
 
+let dbg_NBE    = Debug.get_toggle "NBE"
+let dbg_NBETop = Debug.get_toggle "NBETop"
+
 (* Broadly, the algorithm implemented here is inspired by
 
    Full Reduction at Full Throttle:
@@ -1518,13 +1521,11 @@ let normalize psteps (steps:list Env.step)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e);
   let cfg = new_config cfg in
   let r = readback cfg (translate cfg [] e) in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r);
   r
 

@@ -35,6 +35,11 @@ module C = FStar.Parser.Const
 
 open FStar.Class.Setlike
 
+let dbg_Positivity = Debug.get_toggle "Positivity"
+let debug_positivity (env:env_t) (msg:unit -> string) : unit =
+  if !dbg_Positivity
+  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
+
 (**
 
   This module implements the strict positivity check on inductive type
@@ -135,11 +140,6 @@ open FStar.Class.Setlike
 (* A debugging utility to print a list of lids *)
 let string_of_lids lids =
     List.map string_of_lid lids |> String.concat ", "
-
-(* Used extensively for verbose debugging output at debug_level Positivity *)
-let debug_positivity (env:env_t) (msg:unit -> string) : unit =
-  if Env.debug env <| Options.Other "Positivity"
-  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
 
 (* Normalize a term before checking for non-strictly positive occurrences *)
 let normalize env t =

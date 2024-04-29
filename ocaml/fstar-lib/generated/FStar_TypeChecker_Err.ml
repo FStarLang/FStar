@@ -219,23 +219,36 @@ let (err_msg_comp_strings :
       fun c2 ->
         print_discrepancy (FStar_TypeChecker_Normalize.comp_to_string env) c1
           c2
-let (exhaustiveness_check : Prims.string) = "Patterns are incomplete"
+let (exhaustiveness_check : FStar_Pprint.document Prims.list) =
+  let uu___ = FStar_Errors_Msg.text "Patterns are incomplete" in [uu___]
 let (subtyping_failed :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ -> unit -> Prims.string)
+      FStar_Syntax_Syntax.typ -> unit -> FStar_Errors_Msg.error_message)
   =
   fun env ->
     fun t1 ->
       fun t2 ->
         fun uu___ ->
-          let uu___1 = err_msg_type_strings env t1 t2 in
-          match uu___1 with
-          | (s1, s2) ->
-              FStar_Compiler_Util.format2
-                "Subtyping check failed; expected type %s; got type %s" s2 s1
-let (ill_kinded_type : Prims.string) = "Ill-kinded type"
-let (totality_check : Prims.string) = "This term may not terminate"
+          let ppt = FStar_TypeChecker_Normalize.term_to_doc env in
+          let uu___1 = FStar_Errors_Msg.text "Subtyping check failed" in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Errors_Msg.text "Expected type" in
+                let uu___6 = ppt t2 in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                  uu___6 in
+              let uu___5 =
+                let uu___6 = FStar_Errors_Msg.text "got type" in
+                let uu___7 = ppt t1 in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
+                  uu___7 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+            [uu___3] in
+          uu___1 :: uu___2
+let (ill_kinded_type : FStar_Errors_Msg.error_message) =
+  FStar_Errors_Msg.mkmsg "Ill-kinded type"
 let (unexpected_signature_for_monad :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->

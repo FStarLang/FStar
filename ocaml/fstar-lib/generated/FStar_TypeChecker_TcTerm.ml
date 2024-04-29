@@ -1,4 +1,22 @@
 open Prims
+let (dbg_Exports : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Exports"
+let (dbg_LayeredEffects : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffects"
+let (dbg_NYC : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NYC"
+let (dbg_Patterns : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Patterns"
+let (dbg_Range : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Range"
+let (dbg_RelCheck : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RelCheck"
+let (dbg_RFD : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RFD"
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
+let (dbg_UniverseOf : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "UniverseOf"
 let (instantiate_both :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env ->
@@ -518,9 +536,7 @@ let (value_check_expected_typ :
                      lc t' use_eq in
                  (match uu___3 with
                   | (e1, lc1, g) ->
-                      ((let uu___5 =
-                          FStar_TypeChecker_Env.debug env
-                            FStar_Options.Medium in
+                      ((let uu___5 = FStar_Compiler_Debug.medium () in
                         if uu___5
                         then
                           let uu___6 =
@@ -782,9 +798,7 @@ let (check_expected_effect :
                                    c4.FStar_Syntax_Syntax.pos
                                    "check_expected_effect.c.after_assume" env
                                    c4;
-                                 (let uu___8 =
-                                    FStar_TypeChecker_Env.debug env
-                                      FStar_Options.Medium in
+                                 (let uu___8 = FStar_Compiler_Debug.medium () in
                                   if uu___8
                                   then
                                     let uu___9 =
@@ -809,12 +823,13 @@ let (check_expected_effect :
                                       let g1 =
                                         let uu___10 =
                                           FStar_TypeChecker_Env.get_range env in
+                                        let uu___11 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Could not prove post-condition" in
                                         FStar_TypeChecker_Util.label_guard
-                                          uu___10
-                                          "Could not prove post-condition" g in
+                                          uu___10 uu___11 g in
                                       ((let uu___11 =
-                                          FStar_TypeChecker_Env.debug env
-                                            FStar_Options.Medium in
+                                          FStar_Compiler_Debug.medium () in
                                         if uu___11
                                         then
                                           let uu___12 =
@@ -1260,8 +1275,7 @@ let (guard_letrecs :
                   (env.FStar_TypeChecker_Env.core_check)
               } in
             let decreases_clause bs c =
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
+              (let uu___1 = FStar_Compiler_Debug.low () in
                if uu___1
                then
                  let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
@@ -1610,9 +1624,10 @@ let (guard_letrecs :
                              FStar_TypeChecker_Env.push_binders env1 formals1 in
                            mk_precedes env2 dec previous_dec in
                          let precedes1 =
-                           FStar_TypeChecker_Util.label
-                             "Could not prove termination of this recursive call"
-                             r precedes in
+                           let uu___3 =
+                             FStar_Errors_Msg.mkmsg
+                               "Could not prove termination of this recursive call" in
+                           FStar_TypeChecker_Util.label uu___3 r precedes in
                          let uu___3 = FStar_Compiler_Util.prefix formals1 in
                          match uu___3 with
                          | (bs,
@@ -1640,9 +1655,7 @@ let (guard_letrecs :
                                FStar_Compiler_List.op_At bs uu___4 in
                              let t' =
                                FStar_Syntax_Util.arrow refined_formals c in
-                             ((let uu___5 =
-                                 FStar_TypeChecker_Env.debug env1
-                                   FStar_Options.Medium in
+                             ((let uu___5 = FStar_Compiler_Debug.medium () in
                                if uu___5
                                then
                                  let uu___6 =
@@ -1719,7 +1732,7 @@ let rec (tc_term :
       FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
         FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
         e.FStar_Syntax_Syntax.pos "tc_term.entry" env e;
-      (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+      (let uu___2 = FStar_Compiler_Debug.medium () in
        if uu___2
        then
          let uu___3 =
@@ -1846,8 +1859,7 @@ let rec (tc_term :
                 } e) in
        match uu___2 with
        | (r, ms) ->
-           ((let uu___4 =
-               FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+           ((let uu___4 = FStar_Compiler_Debug.medium () in
              if uu___4
              then
                ((let uu___6 =
@@ -1894,7 +1906,7 @@ and (tc_maybe_toplevel_term :
         FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
         e.FStar_Syntax_Syntax.pos "tc_maybe_toplevel_term.entry" env1 e;
       (let top = FStar_Syntax_Subst.compress e in
-       (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Medium in
+       (let uu___2 = FStar_Compiler_Debug.medium () in
         if uu___2
         then
           let uu___3 =
@@ -2480,9 +2492,7 @@ and (tc_maybe_toplevel_term :
                                  FStar_Syntax_Syntax.Tm_ascribed uu___12 in
                                FStar_Syntax_Syntax.mk uu___11
                                  e1.FStar_Syntax_Syntax.pos in
-                             (let uu___12 =
-                                FStar_TypeChecker_Env.debug env0
-                                  FStar_Options.Extreme in
+                             (let uu___12 = FStar_Compiler_Debug.extreme () in
                               if uu___12
                               then
                                 let uu___13 =
@@ -2496,8 +2506,7 @@ and (tc_maybe_toplevel_term :
                               | (e3, uu___13, g_e) ->
                                   let e4 = FStar_Syntax_Util.unascribe e3 in
                                   ((let uu___15 =
-                                      FStar_TypeChecker_Env.debug env0
-                                        FStar_Options.Extreme in
+                                      FStar_Compiler_Debug.extreme () in
                                     if uu___15
                                     then
                                       let uu___16 =
@@ -2643,8 +2652,7 @@ and (tc_maybe_toplevel_term :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___9 ->
-                                     FStar_Compiler_Util.return_all
-                                       FStar_TypeChecker_Err.ill_kinded_type))
+                                     FStar_TypeChecker_Err.ill_kinded_type))
                                uu___8 e2 c f in
                            (match uu___7 with
                             | (c1, f1) ->
@@ -3369,9 +3377,7 @@ and (tc_maybe_toplevel_term :
                  let uu___9 = FStar_Syntax_Util.head_and_args t0 in
                  (match uu___9 with
                   | (thead, uu___10) ->
-                      ((let uu___12 =
-                          FStar_TypeChecker_Env.debug env1
-                            (FStar_Options.Other "RFD") in
+                      ((let uu___12 = FStar_Compiler_Effect.op_Bang dbg_RFD in
                         if uu___12
                         then
                           let uu___13 =
@@ -3505,8 +3511,7 @@ and (tc_maybe_toplevel_term :
                 let uu___3 = FStar_TypeChecker_Env.clear_expected_typ env1 in
                 FStar_Pervasives_Native.fst uu___3 in
               instantiate_both uu___2 in
-            ((let uu___3 =
-                FStar_TypeChecker_Env.debug env2 FStar_Options.High in
+            ((let uu___3 = FStar_Compiler_Debug.high () in
               if uu___3
               then
                 let uu___4 =
@@ -3577,8 +3582,7 @@ and (tc_maybe_toplevel_term :
                             (match uu___6 with
                              | (e2, c1, implicits) ->
                                  ((let uu___8 =
-                                     FStar_TypeChecker_Env.debug env2
-                                       FStar_Options.Extreme in
+                                     FStar_Compiler_Debug.extreme () in
                                    if uu___8
                                    then
                                      let uu___9 =
@@ -3599,8 +3603,7 @@ and (tc_maybe_toplevel_term :
                                          FStar_TypeChecker_Env.conj_guard
                                            gres implicits in
                                        ((let uu___10 =
-                                           FStar_TypeChecker_Env.debug env2
-                                             FStar_Options.Extreme in
+                                           FStar_Compiler_Debug.extreme () in
                                          if uu___10
                                          then
                                            let uu___11 =
@@ -4172,8 +4175,7 @@ and (tc_match :
                               (match uu___6 with
                                | (e2, cres2, g_expected_type) ->
                                    ((let uu___8 =
-                                       FStar_TypeChecker_Env.debug env
-                                         FStar_Options.Extreme in
+                                       FStar_Compiler_Debug.extreme () in
                                      if uu___8
                                      then
                                        let uu___9 =
@@ -4227,8 +4229,7 @@ and (tc_synth :
                     "synth_by_tactic: bad application") rng in
           match uu___ with
           | (tau, atyp) ->
-              ((let uu___2 =
-                  FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
+              ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                 if uu___2
                 then
                   let uu___3 =
@@ -4297,8 +4298,7 @@ and (tc_synth :
                                     (tau1.FStar_Syntax_Syntax.hash_code)
                                 } in
                             (let uu___9 =
-                               FStar_TypeChecker_Env.debug env
-                                 (FStar_Options.Other "Tac") in
+                               FStar_Compiler_Effect.op_Bang dbg_Tac in
                              if uu___9
                              then
                                let uu___10 =
@@ -4680,9 +4680,7 @@ and (tc_value :
            | ((us, t), range) ->
                let fv1 = FStar_Syntax_Syntax.set_range_of_fv fv range in
                (maybe_warn_on_use env1 fv1;
-                (let uu___3 =
-                   FStar_TypeChecker_Env.debug env1
-                     (FStar_Options.Other "Range") in
+                (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Range in
                  if uu___3
                  then
                    let uu___4 =
@@ -4790,9 +4788,7 @@ and (tc_value :
                       tc_binder env2 uu___4 in
                     (match uu___3 with
                      | (x2, env3, f1, u) ->
-                         ((let uu___5 =
-                             FStar_TypeChecker_Env.debug env3
-                               FStar_Options.High in
+                         ((let uu___5 = FStar_Compiler_Debug.high () in
                            if uu___5
                            then
                              let uu___6 =
@@ -4850,8 +4846,7 @@ and (tc_value :
             FStar_Syntax_Syntax.rc_opt = uu___;_}
           ->
           let bs1 = FStar_TypeChecker_Util.maybe_add_implicit_binders env1 bs in
-          ((let uu___2 =
-              FStar_TypeChecker_Env.debug env1 FStar_Options.Medium in
+          ((let uu___2 = FStar_Compiler_Debug.medium () in
             if uu___2
             then
               let uu___3 =
@@ -6054,9 +6049,7 @@ and (tc_abs_check_binders :
                               (expected_t,
                                 FStar_TypeChecker_Env.trivial_guard)
                           | uu___5 ->
-                              ((let uu___7 =
-                                  FStar_TypeChecker_Env.debug env1
-                                    FStar_Options.High in
+                              ((let uu___7 = FStar_Compiler_Debug.high () in
                                 if uu___7
                                 then
                                   let uu___8 =
@@ -6071,10 +6064,12 @@ and (tc_abs_check_binders :
                                 | (t, uu___8, g1_env) ->
                                     let g2_env =
                                       let label_guard g =
+                                        let uu___9 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Type annotation on parameter incompatible with the expected type" in
                                         FStar_TypeChecker_Util.label_guard
                                           (hd.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos
-                                          "Type annotation on parameter incompatible with the expected type"
-                                          g in
+                                          uu___9 g in
                                       let uu___9 =
                                         FStar_TypeChecker_Rel.teq_nosmt env1
                                           t expected_t in
@@ -6204,8 +6199,7 @@ and (tc_abs :
           let uu___ = FStar_TypeChecker_Env.clear_expected_typ env in
           match uu___ with
           | (env1, topt) ->
-              ((let uu___2 =
-                  FStar_TypeChecker_Env.debug env1 FStar_Options.High in
+              ((let uu___2 = FStar_Compiler_Debug.high () in
                 if uu___2
                 then
                   let uu___3 =
@@ -6231,9 +6225,7 @@ and (tc_abs :
                 match uu___2 with
                 | (tfun_opt, bs1, letrec_binders, c_opt, envbody, body1,
                    g_env) ->
-                    ((let uu___4 =
-                        FStar_TypeChecker_Env.debug env1
-                          FStar_Options.Extreme in
+                    ((let uu___4 = FStar_Compiler_Debug.extreme () in
                       if uu___4
                       then
                         let uu___5 =
@@ -6263,9 +6255,7 @@ and (tc_abs :
                           "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
                           uu___5 uu___6 uu___7
                       else ());
-                     (let uu___5 =
-                        FStar_TypeChecker_Env.debug env1
-                          (FStar_Options.Other "NYC") in
+                     (let uu___5 = FStar_Compiler_Effect.op_Bang dbg_NYC in
                       if uu___5
                       then
                         let uu___6 =
@@ -6511,9 +6501,7 @@ and (tc_abs :
                                            (body3, cbody1, uu___10)))) in
                       match uu___5 with
                       | (body2, cbody, guard_body) ->
-                          ((let uu___7 =
-                              FStar_TypeChecker_Env.debug env1
-                                FStar_Options.Extreme in
+                          ((let uu___7 = FStar_Compiler_Debug.extreme () in
                             if uu___7
                             then
                               let uu___8 =
@@ -6525,9 +6513,7 @@ and (tc_abs :
                            (let guard_body1 =
                               if env1.FStar_TypeChecker_Env.top_level
                               then
-                                ((let uu___8 =
-                                    FStar_TypeChecker_Env.debug env1
-                                      FStar_Options.Medium in
+                                ((let uu___8 = FStar_Compiler_Debug.medium () in
                                   if uu___8
                                   then
                                     let uu___9 =
@@ -6695,8 +6681,7 @@ and (check_application_args :
               let n_args = FStar_Compiler_List.length args in
               let r = FStar_TypeChecker_Env.get_range env in
               let thead = FStar_Syntax_Util.comp_result chead in
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env FStar_Options.High in
+              (let uu___1 = FStar_Compiler_Debug.high () in
                if uu___1
                then
                  let uu___2 =
@@ -6749,8 +6734,7 @@ and (check_application_args :
                                (match uu___4 with
                                 | (cres2, guard2) ->
                                     ((let uu___6 =
-                                        FStar_TypeChecker_Env.debug env
-                                          FStar_Options.Medium in
+                                        FStar_Compiler_Debug.medium () in
                                       if uu___6
                                       then
                                         let uu___7 =
@@ -6810,8 +6794,8 @@ and (check_application_args :
                                             if uu___8
                                             then
                                               ((let uu___10 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env FStar_Options.Extreme in
+                                                  FStar_Compiler_Debug.extreme
+                                                    () in
                                                 if uu___10
                                                 then
                                                   let uu___11 =
@@ -6827,8 +6811,8 @@ and (check_application_args :
                                                 (uu___10, true)))
                                             else
                                               ((let uu___11 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env FStar_Options.Extreme in
+                                                  FStar_Compiler_Debug.extreme
+                                                    () in
                                                 if uu___11
                                                 then
                                                   let uu___12 =
@@ -6886,9 +6870,8 @@ and (check_application_args :
                                                              ((e, q), x, c))
                                                               ->
                                                               ((let uu___12 =
-                                                                  FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                  FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                 if uu___12
                                                                 then
                                                                   let uu___13
@@ -6975,9 +6958,8 @@ and (check_application_args :
                                                          env
                                                          arg_rets_names_opt in
                                                      ((let uu___11 =
-                                                         FStar_TypeChecker_Env.debug
-                                                           env1
-                                                           FStar_Options.Extreme in
+                                                         FStar_Compiler_Debug.extreme
+                                                           () in
                                                        if uu___11
                                                        then
                                                          let uu___12 =
@@ -7061,9 +7043,8 @@ and (check_application_args :
                                                         | ((e, q), uu___11,
                                                            c) ->
                                                             ((let uu___13 =
-                                                                FStar_TypeChecker_Env.debug
-                                                                  env
-                                                                  FStar_Options.Extreme in
+                                                                FStar_Compiler_Debug.extreme
+                                                                  () in
                                                               if uu___13
                                                               then
                                                                 let uu___14 =
@@ -7084,9 +7065,8 @@ and (check_application_args :
                                                               then
                                                                 ((let uu___15
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                    FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                   if uu___15
                                                                   then
                                                                     FStar_Compiler_Util.print_string
@@ -7162,9 +7142,8 @@ and (check_application_args :
                                                                  else ();
                                                                  (let uu___17
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                    FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                   if uu___17
                                                                   then
                                                                     FStar_Compiler_Util.print_string
@@ -7310,9 +7289,8 @@ and (check_application_args :
                                                (match uu___8 with
                                                 | (comp1, g) ->
                                                     ((let uu___10 =
-                                                        FStar_TypeChecker_Env.debug
-                                                          env
-                                                          FStar_Options.Extreme in
+                                                        FStar_Compiler_Debug.extreme
+                                                          () in
                                                       if uu___10
                                                       then
                                                         let uu___11 =
@@ -7561,9 +7539,7 @@ and (check_application_args :
                                 (x.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = targ
                             } in
-                          ((let uu___4 =
-                              FStar_TypeChecker_Env.debug env
-                                FStar_Options.Extreme in
+                          ((let uu___4 = FStar_Compiler_Debug.extreme () in
                             if uu___4
                             then
                               let uu___5 =
@@ -7597,9 +7573,7 @@ and (check_application_args :
                                 let env1 =
                                   FStar_TypeChecker_Env.set_expected_typ_maybe_eq
                                     env targ1 (is_eq bqual1) in
-                                ((let uu___6 =
-                                    FStar_TypeChecker_Env.debug env1
-                                      FStar_Options.High in
+                                ((let uu___6 = FStar_Compiler_Debug.high () in
                                   if uu___6
                                   then
                                     let uu___7 =
@@ -7697,8 +7671,8 @@ and (check_application_args :
                                                  (head1, chead2, ghead3,
                                                    cres'1) in
                                                ((let uu___7 =
-                                                   FStar_TypeChecker_Env.debug
-                                                     env FStar_Options.Low in
+                                                   FStar_Compiler_Debug.low
+                                                     () in
                                                  if uu___7
                                                  then
                                                    FStar_Errors.log_issue
@@ -7863,9 +7837,7 @@ and (check_application_args :
                           (match uu___4 with
                            | (cres, guard2) ->
                                let bs_cres = FStar_Syntax_Util.arrow bs cres in
-                               ((let uu___6 =
-                                   FStar_TypeChecker_Env.debug env
-                                     FStar_Options.Extreme in
+                               ((let uu___6 = FStar_Compiler_Debug.extreme () in
                                  if uu___6
                                  then
                                    let uu___7 =
@@ -7952,8 +7924,7 @@ and (check_application_args :
                            | (cres, guard2) ->
                                let bs_cres = FStar_Syntax_Util.arrow bs cres in
                                ((let uu___10 =
-                                   FStar_TypeChecker_Env.debug env
-                                     FStar_Options.Extreme in
+                                   FStar_Compiler_Debug.extreme () in
                                  if uu___10
                                  then
                                    let uu___11 =
@@ -7983,9 +7954,7 @@ and (check_application_args :
                      (match uu___2 with
                       | (bs1, c1) ->
                           let head_info = (head, chead, ghead, c1) in
-                          ((let uu___4 =
-                              FStar_TypeChecker_Env.debug env
-                                FStar_Options.Extreme in
+                          ((let uu___4 = FStar_Compiler_Debug.extreme () in
                             if uu___4
                             then
                               let uu___5 =
@@ -8187,9 +8156,7 @@ and (tc_pat :
               scrutinee_t in
           aux false uu___ in
         let pat_typ_ok env1 pat_t1 scrutinee_t =
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug env1
-               (FStar_Options.Other "Patterns") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.term_to_string pat_t1 in
@@ -8657,9 +8624,7 @@ and (tc_pat :
                                  formals args))))
                | uu___1 -> fail "Not a simple pattern") in
         let rec check_nested_pattern env1 p t =
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug env1
-               (FStar_Options.Other "Patterns") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
            if uu___1
            then
              let uu___2 = FStar_Syntax_Print.pat_to_string p in
@@ -8957,8 +8922,7 @@ and (tc_pat :
                             let guard2 =
                               FStar_TypeChecker_Env.conj_guard guard1 g' in
                             ((let uu___6 =
-                                FStar_TypeChecker_Env.debug env1
-                                  (FStar_Options.Other "Patterns") in
+                                FStar_Compiler_Effect.op_Bang dbg_Patterns in
                               if uu___6
                               then
                                 let uu___7 =
@@ -9141,8 +9105,7 @@ and (tc_pat :
                                let uu___6 =
                                  reconstruct_nested_pat simple_pat_elab in
                                (bvs, tms, pat_e, uu___6, g, erasable1)))))) in
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "Patterns") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
          if uu___1
          then
            let uu___2 = FStar_Syntax_Print.pat_to_string p0 in
@@ -9161,9 +9124,7 @@ and (tc_pat :
              let pat_e_norm =
                FStar_TypeChecker_Normalize.normalize
                  [FStar_TypeChecker_Env.Beta] extended_env pat_e in
-             ((let uu___3 =
-                 FStar_TypeChecker_Env.debug env
-                   (FStar_Options.Other "Patterns") in
+             ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
                if uu___3
                then
                  let uu___4 = FStar_Syntax_Print.pat_to_string pat in
@@ -9213,9 +9174,7 @@ and (tc_eqn :
                         (match uu___5 with
                          | (pattern1, pat_bvs, pat_bv_tms, pat_env, pat_exp,
                             norm_pat_exp, guard_pat, erasable) ->
-                             ((let uu___7 =
-                                 FStar_TypeChecker_Env.debug env
-                                   FStar_Options.Extreme in
+                             ((let uu___7 = FStar_Compiler_Debug.extreme () in
                                if uu___7
                                then
                                  let uu___8 =
@@ -9713,8 +9672,7 @@ and (tc_eqn :
                                                        branch_guard1 w in
                                                branch_guard2) in
                                           (let uu___11 =
-                                             FStar_TypeChecker_Env.debug env
-                                               FStar_Options.Extreme in
+                                             FStar_Compiler_Debug.extreme () in
                                            if uu___11
                                            then
                                              let uu___12 =
@@ -9936,10 +9894,8 @@ and (tc_eqn :
                                                              then
                                                                ((let uu___16
                                                                    =
-                                                                   FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffects") in
+                                                                   FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffects in
                                                                  if uu___16
                                                                  then
                                                                    FStar_Compiler_Util.print_string
@@ -10190,10 +10146,8 @@ and (tc_eqn :
                                                                     uu___16 in
                                                                  (let uu___17
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffects") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffects in
                                                                   if uu___17
                                                                   then
                                                                     let uu___18
@@ -10318,8 +10272,8 @@ and (tc_eqn :
                                                  FStar_TypeChecker_Env.conj_guard
                                                    g_when1 g_branch1 in
                                                ((let uu___13 =
-                                                   FStar_TypeChecker_Env.debug
-                                                     env FStar_Options.High in
+                                                   FStar_Compiler_Debug.high
+                                                     () in
                                                  if uu___13
                                                  then
                                                    let uu___14 =
@@ -10432,9 +10386,7 @@ and (check_top_level_let :
                               (uu___6, c12))) in
                     (match uu___2 with
                      | (e21, c12) ->
-                         ((let uu___4 =
-                             FStar_TypeChecker_Env.debug env1
-                               FStar_Options.Medium in
+                         ((let uu___4 = FStar_Compiler_Debug.medium () in
                            if uu___4
                            then
                              let uu___5 =
@@ -10457,9 +10409,7 @@ and (check_top_level_let :
                                  FStar_TypeChecker_Env.DoNotUnfoldPureLets]
                                  env1 e11
                              else e11 in
-                           (let uu___5 =
-                              FStar_TypeChecker_Env.debug env1
-                                FStar_Options.Medium in
+                           (let uu___5 = FStar_Compiler_Debug.medium () in
                             if uu___5
                             then
                               let uu___6 =
@@ -10704,7 +10654,8 @@ and (check_inner_let :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___7 ->
-                                     "folding guard g2 of e2 in the lcomp"))
+                                     FStar_Errors_Msg.mkmsg
+                                       "folding guard g2 of e2 in the lcomp"))
                                env_x e22 c2 g2 in
                            (match uu___6 with | (c21, g21) -> (e22, c21, g21)) in
                      (match uu___4 with
@@ -10791,8 +10742,7 @@ and (check_inner_let :
                                 FStar_Compiler_Option.get uu___7 in
                               FStar_Pervasives_Native.fst uu___6 in
                             ((let uu___7 =
-                                FStar_TypeChecker_Env.debug env2
-                                  (FStar_Options.Other "Exports") in
+                                FStar_Compiler_Effect.op_Bang dbg_Exports in
                               if uu___7
                               then
                                 let uu___8 =
@@ -10813,8 +10763,8 @@ and (check_inner_let :
                              match uu___7 with
                              | (t, g_ex) ->
                                  ((let uu___9 =
-                                     FStar_TypeChecker_Env.debug env2
-                                       (FStar_Options.Other "Exports") in
+                                     FStar_Compiler_Effect.op_Bang
+                                       dbg_Exports in
                                    if uu___9
                                    then
                                      let uu___10 =
@@ -11455,8 +11405,7 @@ and (build_let_rec_env :
                                  | FStar_Pervasives_Native.Some
                                      (arity, lbdef1) ->
                                      ((let uu___7 =
-                                         FStar_TypeChecker_Env.debug env2
-                                           FStar_Options.Extreme in
+                                         FStar_Compiler_Debug.extreme () in
                                        if uu___7
                                        then
                                          let uu___8 =
@@ -11911,9 +11860,7 @@ and (check_let_bound_def :
                         | (c11, guard_f) ->
                             let g11 =
                               FStar_TypeChecker_Env.conj_guard g1 guard_f in
-                            ((let uu___7 =
-                                FStar_TypeChecker_Env.debug env
-                                  FStar_Options.Extreme in
+                            ((let uu___7 = FStar_Compiler_Debug.extreme () in
                               if uu___7
                               then
                                 let uu___8 =
@@ -11987,8 +11934,7 @@ and (check_lbtyp :
                              (match uu___6 with
                               | (t2, uu___7, g) ->
                                   ((let uu___9 =
-                                      FStar_TypeChecker_Env.debug env
-                                        FStar_Options.Medium in
+                                      FStar_Compiler_Debug.medium () in
                                     if uu___9
                                     then
                                       let uu___10 =
@@ -12025,8 +11971,7 @@ and (tc_binder :
           let uu___1 = FStar_Syntax_Util.type_u () in
           (match uu___1 with
            | (tu, u) ->
-               ((let uu___3 =
-                   FStar_TypeChecker_Env.debug env FStar_Options.Extreme in
+               ((let uu___3 = FStar_Compiler_Debug.extreme () in
                  if uu___3
                  then
                    let uu___4 = FStar_Syntax_Print.bv_to_string x in
@@ -12072,9 +12017,7 @@ and (tc_binder :
                                          (x.FStar_Syntax_Syntax.index);
                                        FStar_Syntax_Syntax.sort = t
                                      } imp1 pqual attrs1 in
-                                 (let uu___9 =
-                                    FStar_TypeChecker_Env.debug env
-                                      FStar_Options.High in
+                                 (let uu___9 = FStar_Compiler_Debug.high () in
                                   if uu___9
                                   then
                                     let uu___10 =
@@ -12096,7 +12039,7 @@ and (tc_binders :
   =
   fun env ->
     fun bs ->
-      (let uu___1 = FStar_TypeChecker_Env.debug env FStar_Options.Extreme in
+      (let uu___1 = FStar_Compiler_Debug.extreme () in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
@@ -12307,8 +12250,7 @@ let (typeof_tot_or_gtot_term :
   fun env ->
     fun e ->
       fun must_tot ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelCheck") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelCheck in
          if uu___1
          then
            let uu___2 = FStar_Syntax_Print.term_to_string e in
@@ -13006,8 +12948,7 @@ let rec (universe_of_aux :
                            (env2.FStar_TypeChecker_Env.core_check)
                        } in
                      ((let uu___5 =
-                         FStar_TypeChecker_Env.debug env3
-                           (FStar_Options.Other "UniverseOf") in
+                         FStar_Compiler_Effect.op_Bang dbg_UniverseOf in
                        if uu___5
                        then
                          let uu___6 =
@@ -13065,7 +13006,7 @@ let (universe_of :
     fun e ->
       FStar_Errors.with_ctx "While attempting to compute a universe level"
         (fun uu___ ->
-           (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+           (let uu___2 = FStar_Compiler_Debug.high () in
             if uu___2
             then
               let uu___3 = FStar_Syntax_Print.term_to_string e in
@@ -13077,7 +13018,7 @@ let (universe_of :
              FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
              e.FStar_Syntax_Syntax.pos "universe_of entry" env e;
            (let r = universe_of_aux env e in
-            (let uu___4 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+            (let uu___4 = FStar_Compiler_Debug.high () in
              if uu___4
              then
                let uu___5 = FStar_Syntax_Print.term_to_string r in

@@ -1,4 +1,6 @@
 open Prims
+let (dbg_ExtractionReify : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ExtractionReify"
 type tydef_declaration =
   (FStar_Extraction_ML_Syntax.mlsymbol * FStar_Extraction_ML_Syntax.metadata
     * Prims.int)
@@ -1185,10 +1187,7 @@ let (extract_reifiable_effect :
              (FStar_Extraction_ML_Syntax.MLM_Let
                 (FStar_Extraction_ML_Syntax.NonRec, [lb])))) in
       let rec extract_fv tm =
-        (let uu___1 =
-           let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
-           FStar_TypeChecker_Env.debug uu___2
-             (FStar_Options.Other "ExtractionReify") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
          if uu___1
          then
            let uu___2 = FStar_Syntax_Print.term_to_string tm in
@@ -1222,10 +1221,7 @@ let (extract_reifiable_effect :
                FStar_Compiler_Util.format2 "(%s) Not an fv: %s" uu___4 uu___5 in
              FStar_Compiler_Effect.failwith uu___3) in
       let extract_action g1 a =
-        (let uu___1 =
-           let uu___2 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g1 in
-           FStar_TypeChecker_Env.debug uu___2
-             (FStar_Options.Other "ExtractionReify") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
          if uu___1
          then
            let uu___2 =
@@ -1282,10 +1278,7 @@ let (extract_reifiable_effect :
                   (match uu___4 with
                    | (a_nm, a_lid, exp_b, g2) ->
                        ((let uu___6 =
-                           let uu___7 =
-                             FStar_Extraction_ML_UEnv.tcenv_of_uenv g2 in
-                           FStar_TypeChecker_Env.debug uu___7
-                             (FStar_Options.Other "ExtractionReify") in
+                           FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
                          if uu___6
                          then
                            let uu___7 =
@@ -1295,10 +1288,7 @@ let (extract_reifiable_effect :
                              "Extracted action term: %s\n" uu___7
                          else ());
                         (let uu___7 =
-                           let uu___8 =
-                             FStar_Extraction_ML_UEnv.tcenv_of_uenv g2 in
-                           FStar_TypeChecker_Env.debug uu___8
-                             (FStar_Options.Other "ExtractionReify") in
+                           FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
                          if uu___7
                          then
                            ((let uu___9 =
@@ -1858,7 +1848,7 @@ let (extract_iface :
       let uu___ =
         FStar_Syntax_Unionfind.with_uf_enabled
           (fun uu___1 ->
-             let uu___2 = FStar_Options.debug_any () in
+             let uu___2 = FStar_Compiler_Debug.any () in
              if uu___2
              then
                let uu___3 =
@@ -2948,10 +2938,7 @@ let (extract' :
             FStar_Compiler_Util.fold_map
               (fun g4 ->
                  fun se ->
-                   let uu___3 =
-                     let uu___4 =
-                       FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-                     FStar_Options.debug_module uu___4 in
+                   let uu___3 = FStar_Compiler_Debug.any () in
                    if uu___3
                    then
                      let nm =

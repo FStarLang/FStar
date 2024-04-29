@@ -30,3 +30,6 @@ type t = rbset
 
 instance
 val setlike_rbset (a:Type0) (_ : ord a) : Tot (setlike a (t a))
+
+instance
+val showable_rbset (a:Type0) (_ : showable a) : Tot (showable (t a))

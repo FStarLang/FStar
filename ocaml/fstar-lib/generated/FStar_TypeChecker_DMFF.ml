@@ -15,6 +15,8 @@ let (__proj__Mkenv__item__tc_const :
   env -> FStar_Const.sconst -> FStar_Syntax_Syntax.typ) =
   fun projectee ->
     match projectee with | { tcenv; subst; tc_const;_} -> tc_const
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ED"
 let (d : Prims.string -> unit) =
   fun s -> FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s
 let (mk_toplevel_definition :
@@ -26,8 +28,7 @@ let (mk_toplevel_definition :
   fun env1 ->
     fun lident ->
       fun def ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
          if uu___1
          then
            ((let uu___3 = FStar_Ident.string_of_lid lident in d uu___3);
@@ -101,8 +102,7 @@ let (gen_wps_for_free :
                 FStar_Syntax_Syntax.sort = uu___
               } in
             let d1 s = FStar_Compiler_Util.print1 "\027[01;36m%s\027[00m\n" s in
-            (let uu___1 =
-               FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+            (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
              if uu___1
              then
                (d1 "Elaborating extra WP combinators";
@@ -148,8 +148,7 @@ let (gen_wps_for_free :
              let gamma =
                let uu___1 = collect_binders wp_a1 in
                FStar_Syntax_Util.name_binders uu___1 in
-             (let uu___2 =
-                FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+             (let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
               if uu___2
               then
                 let uu___3 =
@@ -1336,9 +1335,7 @@ let (gen_wps_for_free :
                     let uu___3 = mk_lid "wp_trivial" in
                     register env2 uu___3 wp_trivial in
                   let wp_trivial2 = mk_generic_app wp_trivial1 in
-                  ((let uu___4 =
-                      FStar_TypeChecker_Env.debug env2
-                        (FStar_Options.Other "ED") in
+                  ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg in
                     if uu___4 then d1 "End Dijkstra monads for free" else ());
                    (let c = FStar_Syntax_Subst.close binders in
                     let ed_combs =
@@ -3887,8 +3884,7 @@ let (recheck_debug :
   fun s ->
     fun env1 ->
       fun t ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
          if uu___1
          then
            let uu___2 = FStar_Syntax_Print.term_to_string t in
@@ -3898,8 +3894,7 @@ let (recheck_debug :
         (let uu___1 = FStar_TypeChecker_TcTerm.tc_term env1 t in
          match uu___1 with
          | (t', uu___2, uu___3) ->
-             ((let uu___5 =
-                 FStar_TypeChecker_Env.debug env1 (FStar_Options.Other "ED") in
+             ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                if uu___5
                then
                  let uu___6 = FStar_Syntax_Print.term_to_string t' in
@@ -4015,8 +4010,7 @@ let (cps_and_elaborate :
                          (match uu___6 with
                           | (repr, _comp) ->
                               ((let uu___8 =
-                                  FStar_TypeChecker_Env.debug env2
-                                    (FStar_Options.Other "ED") in
+                                  FStar_Compiler_Effect.op_Bang dbg in
                                 if uu___8
                                 then
                                   let uu___9 =
@@ -4456,7 +4450,8 @@ let (cps_and_elaborate :
                                            | FStar_Pervasives_Native.Some
                                                (_us, _t) ->
                                                ((let uu___16 =
-                                                   FStar_Options.debug_any () in
+                                                   FStar_Compiler_Debug.any
+                                                     () in
                                                  if uu___16
                                                  then
                                                    let uu___17 =
@@ -4695,10 +4690,8 @@ let (cps_and_elaborate :
                                                                     uu___20 in
                                                                 ((let uu___20
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env2
-                                                                    (FStar_Options.Other
-                                                                    "ED") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg in
                                                                   if uu___20
                                                                   then
                                                                     let uu___21
@@ -5146,10 +5139,8 @@ let (cps_and_elaborate :
                                                      match uu___20 with
                                                      | (sigelts', ed2) ->
                                                          ((let uu___22 =
-                                                             FStar_TypeChecker_Env.debug
-                                                               env2
-                                                               (FStar_Options.Other
-                                                                  "ED") in
+                                                             FStar_Compiler_Effect.op_Bang
+                                                               dbg in
                                                            if uu___22
                                                            then
                                                              let uu___23 =

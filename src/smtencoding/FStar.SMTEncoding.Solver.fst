@@ -321,7 +321,7 @@ let query_errors settings z3result =
             error_messages =
                error_labels |>
                List.map (fun (_, x, y) -> Errors.Error_Z3SolverError,
-                                          Errors.mkmsg x,
+                                          x,
                                           y,
                                           Errors.get_ctx ()) // FIXME: leaking abstraction
         }
@@ -442,7 +442,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
           //we have a unique label already; just report it
           FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
-                     [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
+                     [(Error_Z3SolverError, msg, rng, get_ctx())]
                      recovery_failed_msg
 
         | None, _ ->
@@ -461,9 +461,10 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                   //with no labeled sub-goals and so no error location to report.
                   //So, print the source location and the query term itself
                   let dummy_fv = Term.mk_fv ("", dummy_sort) in
-                  let msg =
-                    BU.format1 "Failed to prove the following goal, although it appears to be trivial: %s"
-                               (Print.term_to_string settings.query_term)
+                  let msg = [
+                    Errors.Msg.text "Failed to prove the following goal, although it appears to be trivial:"
+                      ^/^ pp settings.query_term;
+                  ]
                   in
                   let range = Env.get_range settings.query_env in
                   [dummy_fv, msg, range]
@@ -490,7 +491,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                  List.collect (fun (_, msg, rng) ->
                    FStar.TypeChecker.Err.errors_smt_detail
                      settings.query_env
-                     [(Error_Z3SolverError, mkmsg msg, rng, get_ctx())]
+                     [(Error_Z3SolverError, msg, rng, get_ctx())]
                      recovery_failed_msg
                      )
             )
@@ -670,8 +671,8 @@ let query_info settings z3result =
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
-            let tag = if used_hint settings then "(Hint-replay failed): " else "" in
-            FStar.Errors.log_issue range (FStar.Errors.Warning_HitReplayFailed, (tag ^ msg)))
+            let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
+            FStar.Errors.log_issue_doc range (FStar.Errors.Warning_HitReplayFailed, msg))
     end
 
 //caller must ensure that the recorded_hints is already initiailized
@@ -970,7 +971,7 @@ let ask_solver_quake
                  then (nsucc, nfail, rs)
                  else begin
                  if quaking_or_retrying
-                    && (Options.interactive () || Options.debug_any ()) (* only on emacs or when debugging *)
+                    && (Options.interactive () || Debug.any ()) (* only on emacs or when debugging *)
                     && n>0 then (* no need to print last *)
                    BU.print5 "%s: so far query %s %sfailed %s (%s runs remain)\n"
                        (if quaking then "Quake" else "Retry")
@@ -1297,7 +1298,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
       | Assume _ ->
         if (is_retry || Options.split_queries() = Options.Always)
-        && Options.debug_any()
+        && Debug.any()
         then (
           let n = List.length labels in
           if n <> 1

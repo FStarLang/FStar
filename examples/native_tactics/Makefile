@@ -54,7 +54,7 @@ all: $(addsuffix .sep.test, $(TAC_MODULES)) $(addsuffix .test, $(ALL))
 	touch $@
 
 %.sep.test: %.fst %.ml
-	$(FSTAR) $*.Test.fst --load $* --debug $* --debug_level tactics
+	$(FSTAR) $*.Test.fst --load $*
 	touch $@
 
 %.ml: %.fst
