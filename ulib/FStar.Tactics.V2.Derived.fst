@@ -548,7 +548,7 @@ let simpl   () : Tac unit = norm [simplify; primops]
 let whnf    () : Tac unit = norm [weak; hnf; primops; delta]
 let compute () : Tac unit = norm [primops; iota; delta; zeta]
 
-let intros () : Tac (list binding) = repeat intro
+let intros () : Tac (list binding) = intros (-1)
 
 let intros' () : Tac unit = let _ = intros () in ()
 let destruct tm : Tac unit = let _ = t_destruct tm in ()

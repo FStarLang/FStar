@@ -75,6 +75,7 @@ let norm                    = fun s ->   from_tac_1 "B.norm" B.norm s
 let norm_term_env           = fun e s -> from_tac_3 "B.norm_term_env" B.norm_term_env e s
 let norm_binding_type       = fun s ->   from_tac_2 "B.norm_binding_type" B.norm_binding_type s
 let intro                   = from_tac_1 "B.intro" B.intro
+let intros                  = from_tac_1 "B.intros" B.intros
 let intro_rec               = from_tac_1 "B.intro_rec" B.intro_rec
 let rename_to               = from_tac_2 "B.rename_to" B.rename_to
 let revert                  = from_tac_1 "B.revert" B.revert

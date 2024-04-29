@@ -108,6 +108,15 @@ FStar.Tactics.Logic for that.
 *)
 val intro : unit -> Tac binding
 
+(** Like [intro] but pushes many binders at once. The goal has to be
+a literal arrow, we will not normalize it nor unfold it. This can be
+faster than repeatedly calling intros, and furthermore it will solve the
+witness to a flat abstraction instead of many nested ones.
+
+[max] is an upper bound on the amount of binders this will introduce,
+only considered when [max >= 0] (so use [-1] for no limit). *)
+val intros (max:int) : Tac (list binding)
+
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
