@@ -118,22 +118,6 @@ let (e_universe_uvar :
   FStar_Syntax_Syntax.universe_uvar FStar_Syntax_Embeddings_Base.embedding) =
   FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_universe_uvar
     FStar_Reflection_V2_Constants.fstar_refl_universe_uvar
-let rec mapM_opt :
-  'a 'b .
-    ('a -> 'b FStar_Pervasives_Native.option) ->
-      'a Prims.list -> 'b Prims.list FStar_Pervasives_Native.option
-  =
-  fun f ->
-    fun l ->
-      match l with
-      | [] -> FStar_Pervasives_Native.Some []
-      | x::xs ->
-          let uu___ = f x in
-          FStar_Compiler_Util.bind_opt uu___
-            (fun x1 ->
-               let uu___1 = mapM_opt f xs in
-               FStar_Compiler_Util.bind_opt uu___1
-                 (fun xs1 -> FStar_Pervasives_Native.Some (x1 :: xs1)))
 let (e_term_aq :
   FStar_Syntax_Syntax.antiquotations ->
     FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding)
@@ -147,32 +131,47 @@ let (e_term_aq :
         } in
       FStar_Syntax_Syntax.mk (FStar_Syntax_Syntax.Tm_quoted (t, qi)) rng in
     let rec unembed_term t =
-      let apply_antiquotations t1 aq1 =
-        let uu___ = aq1 in
-        match uu___ with
-        | (shift, aqs) ->
-            let aqs1 = FStar_Compiler_List.rev aqs in
-            let uu___1 = mapM_opt unembed_term aqs1 in
-            FStar_Compiler_Util.bind_opt uu___1
-              (fun aq_ts ->
-                 let uu___2 =
-                   let uu___3 =
-                     FStar_Compiler_List.mapi
-                       (fun i ->
-                          fun at ->
-                            let x =
-                              FStar_Syntax_Syntax.new_bv
-                                FStar_Pervasives_Native.None
-                                FStar_Syntax_Syntax.t_term in
-                            ((FStar_Syntax_Syntax.DB ((shift + i), x)),
-                              (FStar_Syntax_Syntax.NT (x, at)))) aq_ts in
-                   FStar_Compiler_List.unzip uu___3 in
-                 match uu___2 with
-                 | (subst_open, subst) ->
-                     let uu___3 =
-                       let uu___4 = FStar_Syntax_Subst.subst subst_open t1 in
-                       FStar_Syntax_Subst.subst subst uu___4 in
-                     FStar_Pervasives_Native.Some uu___3) in
+      let apply_antiquotations uu___1 uu___ =
+        (fun t1 ->
+           fun aq1 ->
+             let uu___ = aq1 in
+             match uu___ with
+             | (shift, aqs) ->
+                 let aqs1 = FStar_Compiler_List.rev aqs in
+                 let uu___1 =
+                   Obj.magic
+                     (FStar_Class_Monad.mapM FStar_Class_Monad.monad_option
+                        () () (fun uu___2 -> (Obj.magic unembed_term) uu___2)
+                        (Obj.magic aqs1)) in
+                 Obj.magic
+                   (FStar_Class_Monad.op_let_Bang
+                      FStar_Class_Monad.monad_option () () (Obj.magic uu___1)
+                      (fun uu___2 ->
+                         (fun aq_ts ->
+                            let aq_ts = Obj.magic aq_ts in
+                            let uu___2 =
+                              let uu___3 =
+                                FStar_Compiler_List.mapi
+                                  (fun i ->
+                                     fun at ->
+                                       let x =
+                                         FStar_Syntax_Syntax.new_bv
+                                           FStar_Pervasives_Native.None
+                                           FStar_Syntax_Syntax.t_term in
+                                       ((FStar_Syntax_Syntax.DB
+                                           ((shift + i), x)),
+                                         (FStar_Syntax_Syntax.NT (x, at))))
+                                  aq_ts in
+                              FStar_Compiler_List.unzip uu___3 in
+                            match uu___2 with
+                            | (subst_open, subst) ->
+                                let uu___3 =
+                                  let uu___4 =
+                                    FStar_Syntax_Subst.subst subst_open t1 in
+                                  FStar_Syntax_Subst.subst subst uu___4 in
+                                Obj.magic
+                                  (FStar_Pervasives_Native.Some uu___3))
+                           uu___2))) uu___1 uu___ in
       let t1 = FStar_Syntax_Util.unmeta t in
       let uu___ =
         let uu___1 = FStar_Syntax_Subst.compress t1 in
@@ -694,15 +693,40 @@ let (e_args :
   FStar_Reflection_V2_Data.argv Prims.list
     FStar_Syntax_Embeddings_Base.embedding)
   = FStar_Syntax_Embeddings.e_list e_argv
+let (pattern_depth : FStar_Syntax_Syntax.pat -> Prims.int) =
+  fun p ->
+    let uu___ =
+      FStar_Syntax_Subst.subst_pat' ([], FStar_Syntax_Syntax.NoUseRange) p in
+    match uu___ with | (uu___1, n) -> n
 let (e_branch_aq :
-  FStar_Syntax_Syntax.antiquotations ->
+  (Prims.int * FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax
+    Prims.list) ->
     (FStar_Reflection_V2_Data.pattern * FStar_Syntax_Syntax.term)
       FStar_Syntax_Embeddings_Base.embedding)
   =
   fun aq ->
-    let uu___ = e_pattern_aq aq in
-    let uu___1 = e_term_aq aq in
-    FStar_Syntax_Embeddings.e_tuple2 uu___ uu___1
+    let push n uu___ = match uu___ with | (s, aq1) -> ((s + n), aq1) in
+    let embed_branch rng pe =
+      let uu___ = pe in
+      match uu___ with
+      | (p, e) ->
+          let n =
+            let uu___1 = FStar_Reflection_V2_Builtins.pack_pat p in
+            pattern_depth uu___1 in
+          let uu___1 =
+            let uu___2 = e_pattern_aq aq in
+            let uu___3 = e_term_aq (push n aq) in
+            FStar_Syntax_Embeddings.e_tuple2 uu___2 uu___3 in
+          embed uu___1 rng (p, e) in
+    let unembed_branch t =
+      let uu___ =
+        let uu___1 = e_pattern_aq aq in
+        let uu___2 = e_term_aq aq in
+        FStar_Syntax_Embeddings.e_tuple2 uu___1 uu___2 in
+      FStar_Syntax_Embeddings_Base.unembed uu___ t
+        FStar_Syntax_Embeddings_Base.id_norm_cb in
+    mk_emb embed_branch unembed_branch
+      FStar_Reflection_V2_Constants.fstar_refl_branch
 let (e_argv_aq :
   FStar_Syntax_Syntax.antiquotations ->
     (FStar_Syntax_Syntax.term * FStar_Reflection_V2_Data.aqualv)

@@ -233,7 +233,7 @@ and quoteinfo = {
  antiquotations list above. The terms inside that list are not scoped by
  any binder *inside* the quoted term, but are affected by substitutions
  on the full term as usual. Inside the quoted terms, the points where
- antiquotations are spliced in Tm_bvar nodes, where the index of the
+ antiquotations are spliced in are the Tm_bvar nodes, where the index of the
  bv indexes into the antiquotations list above, where the rightmost
  elements is closer in scope. I.e., a term like
 

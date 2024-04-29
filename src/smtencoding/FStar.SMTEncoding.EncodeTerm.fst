@@ -646,17 +646,16 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         then Term.mk_Term_unit, []
         else encode_term t env
 
-      | Tm_quoted (qt, _) ->
+      | Tm_quoted (qt, qi) ->
         // Inspect the term and encode its view, recursively.
         // Quoted terms are, in a way, simply an optimization.
         // They should be equivalent to a fully spelled out view.
         //
         // Actual encoding: `q ~> pack qv where qv is the view of q
-        let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
+        let t = Reflection.V2.Util.unfold_quotation qt qi in
         if Env.debug env.tcenv <| Options.Other "SMTEncoding" then
             BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
-                                                    (Print.term_to_string tv);
-        let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
+                                                    (Print.term_to_string t);
         encode_term t env
 
       | Tm_meta {tm=t; meta=Meta_pattern _} ->

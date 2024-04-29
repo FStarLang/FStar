@@ -2260,16 +2260,17 @@ let (on_antiquoted : (term -> term) -> quoteinfo -> quoteinfo) =
 let (lookup_aq : bv -> antiquotations -> term) =
   fun bv1 ->
     fun aq ->
+      let idx =
+        (((FStar_Compiler_List.length (FStar_Pervasives_Native.snd aq)) -
+            Prims.int_one)
+           - bv1.index)
+          + (FStar_Pervasives_Native.fst aq) in
       try
         (fun uu___ ->
            match () with
            | () ->
-               FStar_Compiler_List.nth (FStar_Pervasives_Native.snd aq)
-                 ((((FStar_Compiler_List.length
-                       (FStar_Pervasives_Native.snd aq))
-                      - Prims.int_one)
-                     - bv1.index)
-                    + (FStar_Pervasives_Native.fst aq))) ()
+               FStar_Compiler_List.nth (FStar_Pervasives_Native.snd aq) idx)
+          ()
       with
       | uu___ -> FStar_Compiler_Effect.failwith "antiquotation out of bounds"
 type path = Prims.string Prims.list

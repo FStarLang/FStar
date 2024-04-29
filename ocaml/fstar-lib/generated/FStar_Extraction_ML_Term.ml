@@ -2794,53 +2794,20 @@ and (term_as_mlexpr' :
                                   "Cannot evaluate open quotation at runtime"))]))),
                   FStar_Extraction_ML_Syntax.E_PURE,
                   FStar_Extraction_ML_Syntax.ml_int_ty))
-       | FStar_Syntax_Syntax.Tm_quoted
-           (qt,
-            { FStar_Syntax_Syntax.qkind = FStar_Syntax_Syntax.Quote_static;
-              FStar_Syntax_Syntax.antiquotations = (shift, aqs);_})
-           ->
-           let uu___1 = FStar_Reflection_V2_Builtins.inspect_ln qt in
-           (match uu___1 with
-            | FStar_Reflection_V2_Data.Tv_BVar bv ->
-                if bv.FStar_Syntax_Syntax.index < shift
-                then
-                  let tv' = FStar_Reflection_V2_Data.Tv_BVar bv in
-                  let tv =
-                    let uu___2 =
-                      FStar_Syntax_Embeddings_Base.embed
-                        FStar_Reflection_V2_Embeddings.e_term_view tv' in
-                    uu___2 t.FStar_Syntax_Syntax.pos
-                      FStar_Pervasives_Native.None
-                      FStar_Syntax_Embeddings_Base.id_norm_cb in
-                  let t1 =
-                    let uu___2 =
-                      let uu___3 = FStar_Syntax_Syntax.as_arg tv in [uu___3] in
-                    FStar_Syntax_Util.mk_app
-                      (FStar_Reflection_V2_Constants.refl_constant_term
-                         FStar_Reflection_V2_Constants.fstar_refl_pack_ln)
-                      uu___2 in
-                  term_as_mlexpr g t1
-                else
-                  (let tm = FStar_Syntax_Syntax.lookup_aq bv (shift, aqs) in
-                   term_as_mlexpr g tm)
-            | tv ->
-                let tv1 =
-                  let uu___2 =
-                    let uu___3 =
-                      FStar_Reflection_V2_Embeddings.e_term_view_aq
-                        (shift, aqs) in
-                    FStar_Syntax_Embeddings_Base.embed uu___3 tv in
-                  uu___2 t.FStar_Syntax_Syntax.pos
-                    FStar_Pervasives_Native.None
-                    FStar_Syntax_Embeddings_Base.id_norm_cb in
-                let t1 =
-                  let uu___2 =
-                    let uu___3 = FStar_Syntax_Syntax.as_arg tv1 in [uu___3] in
-                  FStar_Syntax_Util.mk_app
-                    (FStar_Reflection_V2_Constants.refl_constant_term
-                       FStar_Reflection_V2_Constants.fstar_refl_pack_ln)
-                    uu___2 in
-                term_as_mlexpr g t1)
+       | FStar_Syntax_Syntax.Tm_quoted (qt, qi) ->
+           let t' = FStar_Reflection_V2_Util.unfold_quotation qt qi in
+           ((let uu___2 =
+               let uu___3 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
+               FStar_TypeChecker_Env.debug uu___3
+                 (FStar_Options.Other "Extraction") in
+             if uu___2
+             then
+               let uu___3 = FStar_Syntax_Print.term_to_string t in
+               let uu___4 = FStar_Syntax_Print.term_to_string t' in
+               FStar_Compiler_Util.print2 ">> Inspected (%s) ~> (%s)\n"
+                 uu___3 uu___4
+             else ());
+            term_as_mlexpr g t')
        | FStar_Syntax_Syntax.Tm_meta
            { FStar_Syntax_Syntax.tm2 = t1;
              FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_monadic

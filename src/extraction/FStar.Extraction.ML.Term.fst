@@ -1418,26 +1418,12 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
           E_PURE,
           ml_int_ty
 
-        | Tm_quoted (qt, { qkind = Quote_static; antiquotations = (shift, aqs) }) ->
-          begin match R.inspect_ln qt with
-          | RD.Tv_BVar bv ->
-            (* If it's a variable, check whether it's an antiquotation or just a bvar node *)
-            if bv.index < shift then
-              (* just a local bvar *)
-              let tv' = RD.Tv_BVar bv in
-              let tv = EMB.embed tv' t.pos None EMB.id_norm_cb in
-              let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
-              term_as_mlexpr g t
-            else
-              let tm = S.lookup_aq bv (shift, aqs) in
-              term_as_mlexpr g tm
-
-          | tv ->
-            (* Else, just embed recursively. *)
-            let tv = EMB.embed #_ #(RE.e_term_view_aq (shift, aqs)) tv t.pos None EMB.id_norm_cb in
-            let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
-            term_as_mlexpr g t
-          end
+        | Tm_quoted (qt, qi) ->
+          let t' = Reflection.V2.Util.unfold_quotation qt qi in
+          if Env.debug (tcenv_of_uenv g) <| Options.Other "Extraction" then
+              BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t)
+                                                      (Print.term_to_string t');
+          term_as_mlexpr g t'
 
         | Tm_meta {tm=t; meta=Meta_monadic (m, _)} ->
           //

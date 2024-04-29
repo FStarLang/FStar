@@ -588,10 +588,8 @@ let (subst_univs_opt :
           let uu___ = FStar_Compiler_List.map (subst_univ sub) us in
           FStar_Pervasives_Native.Some uu___
 let (subst_pat' :
-  (FStar_Syntax_Syntax.subst_t Prims.list *
-    FStar_Syntax_Syntax.maybe_set_use_range) ->
-    FStar_Syntax_Syntax.pat' FStar_Syntax_Syntax.withinfo_t ->
-      (FStar_Syntax_Syntax.pat * Prims.int))
+  FStar_Syntax_Syntax.subst_ts ->
+    FStar_Syntax_Syntax.pat -> (FStar_Syntax_Syntax.pat * Prims.int))
   =
   fun s ->
     fun p ->
