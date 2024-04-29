@@ -29,8 +29,13 @@ let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
     )
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
-let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)
-let debug_at_level (g:FStar_Reflection_Types.env) (s:string) = FStar_TypeChecker_Env.debug g (FStar_Options.Other s)
+let debug_at_level_no_module (s:string) =
+  let r = FStar_Compiler_Debug.get_toggle s in
+  !r
+let debug_at_level (g:FStar_Reflection_Types.env) (s:string) =
+  let r = FStar_Compiler_Debug.get_toggle s in
+  !r
+
 let bv_set_range (bv:FStar_Syntax_Syntax.bv) (r:FStar_Range.range) = FStar_Syntax_Syntax.set_range_of_bv bv r
 let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =
