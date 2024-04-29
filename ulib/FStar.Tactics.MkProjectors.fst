@@ -94,14 +94,22 @@ let embed_string (s:string) : term =
   let open FStar.Reflection.V2 in
   pack_ln (Tv_Const (C_String s))
 
-let mk_proj_decl (is_method:bool)
-                 (tyqn:name) ctorname
-                 (univs : list univ_name)
-                 (params : list binder)
-                 (idx:nat)
-                 (field : binder)
-                 (unfold_names_tm : term)
-                 (smap : list (namedv & fv))
+(* For compatibility: the typechecker sets this attribute for all
+projectors. Karamel relies on it to do inlining. *)
+let substitute_attr : term =
+  `Pervasives.Substitute
+
+let mk_proj_decl
+  (is_method:bool)
+  (attrs : list term)
+  (quals : list qualifier)
+  (tyqn:name) ctorname
+  (univs : list univ_name)
+  (params : list binder)
+  (idx:nat)
+  (field : binder)
+  (unfold_names_tm : term)
+  (smap : list (namedv & fv))
 : Tac (list sigelt & fv)
 =
   debug (fun () -> "Processing field " ^ unseal field.ppname);
@@ -136,6 +144,7 @@ let mk_proj_decl (is_method:bool)
                             (`#(embed_int idx)))))
     }]}
   in
+  let filter_quals = List.Tot.filter (function | RecordType _ | Noeq -> false | _ -> true) in
   let maybe_se_method : list sigelt =
     if not is_method then [] else
     if List.existsb (Reflection.TermEq.Simple.term_eq (`Typeclasses.no_method)) field.attrs then [] else
@@ -163,18 +172,23 @@ let mk_proj_decl (is_method:bool)
     in
     (* dump ("returning se with name " ^ unseal field.ppname); *)
     (* dump ("def = " ^ term_to_string lb_def); *)
-    [pack_sigelt <| Sg_Let {
+    let se = pack_sigelt <| Sg_Let {
       isrec = false;
       lbs = [{
               lb_fv  = meth_fv;
               lb_us  = univs;
               lb_typ = projty;
               lb_def = lb_def;
-    }]}]
+      }]}
+    in
+    let se = set_sigelt_attrs (substitute_attr :: field.attrs @ attrs @ sigelt_attrs se) se in
+    let se = set_sigelt_quals (filter_quals quals @ sigelt_quals se) se in
+    [se]
   in
   (* Propagate binder attributes, i.e. attributes in the field
   decl, to the method itself. *)
-  let se_proj = set_sigelt_attrs (field.attrs @ sigelt_attrs se_proj) se_proj in
+  let se_proj = set_sigelt_attrs (substitute_attr :: field.attrs @ attrs @ sigelt_attrs se_proj) se_proj in
+  let se_proj = set_sigelt_quals (filter_quals quals @ sigelt_quals se_proj) se_proj in
 
   (* Do we need to set the sigelt's Projector qual? If so,
   here is how to do it, but F* currently rejects tactics
@@ -197,6 +211,8 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
   | None ->
     raise NotFound
   | Some se ->
+    let quals = sigelt_quals se in
+    let attrs = sigelt_attrs se in
     match inspect_sigelt se with
     | Sg_Inductive {nm; univs; params; typ; ctors} ->
       if (length ctors <> 1) then
@@ -211,7 +227,7 @@ let mk_projs (is_class:bool) (tyname:string) : Tac decls =
       let unfold_names_tm = `(Nil #string) in
       let (decls, _, _, _) =
         fold_left (fun (decls, smap, unfold_names_tm, idx) (field : binder) ->
-          let (ds, fv) = mk_proj_decl is_class tyqn ctorname univs params idx field unfold_names_tm smap in
+          let (ds, fv) = mk_proj_decl is_class attrs quals tyqn ctorname univs params idx field unfold_names_tm smap in
           (decls @ ds,
            (binder_to_namedv field, fv)::smap,
            (`(Cons #string (`#(embed_string (implode_qn (inspect_fv fv)))) (`#unfold_names_tm))),
