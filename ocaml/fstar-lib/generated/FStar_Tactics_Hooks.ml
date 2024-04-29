@@ -1769,6 +1769,15 @@ let (handle_smt_goal :
                                       uu___7) gs1)) in
                gs
            | FStar_Pervasives_Native.None -> [(env, goal1)])
+let (uu___844 :
+  FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
+  FStar_Reflection_V2_Embeddings.e_term
+type blob_t =
+  (Prims.string * FStar_Syntax_Syntax.term) FStar_Pervasives_Native.option
+type dsl_typed_sigelt_t = (Prims.bool * FStar_Syntax_Syntax.sigelt * blob_t)
+type dsl_tac_result_t =
+  (dsl_typed_sigelt_t Prims.list * dsl_typed_sigelt_t * dsl_typed_sigelt_t
+    Prims.list)
 let (splice :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
@@ -1815,11 +1824,6 @@ let (splice :
                                   (FStar_Compiler_List.length lids) >
                                     Prims.int_one
                                 then
-                                  let s =
-                                    let uu___7 =
-                                      FStar_Compiler_List.map
-                                        FStar_Ident.string_of_lid lids in
-                                    FStar_Compiler_Util.concat_l ", " uu___7 in
                                   let uu___7 =
                                     let uu___8 =
                                       let uu___9 =
@@ -1870,11 +1874,6 @@ let (splice :
                                             else
                                               FStar_Pervasives_Native.Some
                                                 tval) in
-                                   let e_blob =
-                                     FStar_Syntax_Embeddings.e_option
-                                       (FStar_Syntax_Embeddings.e_tuple2
-                                          FStar_Syntax_Embeddings.e_string
-                                          FStar_Reflection_V2_Embeddings.e_term) in
                                    let uu___8 =
                                      FStar_Tactics_Interpreter.run_tactic_on_ps
                                        tau1.FStar_Syntax_Syntax.pos
@@ -1882,7 +1881,7 @@ let (splice :
                                        (FStar_Syntax_Embeddings.e_tuple2
                                           FStar_Reflection_V2_Embeddings.e_env
                                           (FStar_Syntax_Embeddings.e_option
-                                             FStar_Reflection_V2_Embeddings.e_term))
+                                             uu___844))
                                        ({
                                           FStar_TypeChecker_Env.solver =
                                             (env.FStar_TypeChecker_Env.solver);
@@ -2012,62 +2011,72 @@ let (splice :
                                              (FStar_Syntax_Embeddings.e_tuple3
                                                 FStar_Syntax_Embeddings.e_bool
                                                 FStar_Reflection_V2_Embeddings.e_sigelt
-                                                e_blob))
+                                                (FStar_Syntax_Embeddings.e_option
+                                                   (FStar_Syntax_Embeddings.e_tuple2
+                                                      FStar_Syntax_Embeddings.e_string
+                                                      uu___844))))
                                           (FStar_Syntax_Embeddings.e_tuple3
                                              FStar_Syntax_Embeddings.e_bool
                                              FStar_Reflection_V2_Embeddings.e_sigelt
-                                             e_blob)
+                                             (FStar_Syntax_Embeddings.e_option
+                                                (FStar_Syntax_Embeddings.e_tuple2
+                                                   FStar_Syntax_Embeddings.e_string
+                                                   uu___844)))
                                           (FStar_Syntax_Embeddings.e_list
                                              (FStar_Syntax_Embeddings.e_tuple3
                                                 FStar_Syntax_Embeddings.e_bool
                                                 FStar_Reflection_V2_Embeddings.e_sigelt
-                                                e_blob))) tau1
+                                                (FStar_Syntax_Embeddings.e_option
+                                                   (FStar_Syntax_Embeddings.e_tuple2
+                                                      FStar_Syntax_Embeddings.e_string
+                                                      uu___844))))) tau1
                                        tactic_already_typed ps in
                                    match uu___8 with
                                    | (gs,
                                       (sig_blobs_before, sig_blob,
                                        sig_blobs_after)) ->
+                                       let uu___9 = uu___8 in
                                        let sig_blobs =
                                          FStar_Compiler_List.op_At
                                            sig_blobs_before (sig_blob ::
                                            sig_blobs_after) in
                                        let sigelts =
                                          FStar_Compiler_List.map
-                                           (fun uu___9 ->
-                                              match uu___9 with
+                                           (fun uu___10 ->
+                                              match uu___10 with
                                               | (checked, se, blob_opt) ->
-                                                  let uu___10 =
-                                                    let uu___11 =
-                                                      se.FStar_Syntax_Syntax.sigmeta in
+                                                  let uu___11 =
                                                     let uu___12 =
+                                                      se.FStar_Syntax_Syntax.sigmeta in
+                                                    let uu___13 =
                                                       match blob_opt with
                                                       | FStar_Pervasives_Native.Some
                                                           (s, blob) ->
-                                                          let uu___13 =
-                                                            let uu___14 =
+                                                          let uu___14 =
+                                                            let uu___15 =
                                                               FStar_Compiler_Dyn.mkdyn
                                                                 blob in
-                                                            (s, uu___14) in
-                                                          [uu___13]
+                                                            (s, uu___15) in
+                                                          [uu___14]
                                                       | FStar_Pervasives_Native.None
                                                           -> [] in
                                                     {
                                                       FStar_Syntax_Syntax.sigmeta_active
                                                         =
-                                                        (uu___11.FStar_Syntax_Syntax.sigmeta_active);
+                                                        (uu___12.FStar_Syntax_Syntax.sigmeta_active);
                                                       FStar_Syntax_Syntax.sigmeta_fact_db_ids
                                                         =
-                                                        (uu___11.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                                                        (uu___12.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
                                                       FStar_Syntax_Syntax.sigmeta_admit
                                                         =
-                                                        (uu___11.FStar_Syntax_Syntax.sigmeta_admit);
+                                                        (uu___12.FStar_Syntax_Syntax.sigmeta_admit);
                                                       FStar_Syntax_Syntax.sigmeta_spliced
                                                         =
-                                                        (uu___11.FStar_Syntax_Syntax.sigmeta_spliced);
+                                                        (uu___12.FStar_Syntax_Syntax.sigmeta_spliced);
                                                       FStar_Syntax_Syntax.sigmeta_already_checked
                                                         = checked;
                                                       FStar_Syntax_Syntax.sigmeta_extension_data
-                                                        = uu___12
+                                                        = uu___13
                                                     } in
                                                   {
                                                     FStar_Syntax_Syntax.sigel
@@ -2080,7 +2089,7 @@ let (splice :
                                                       =
                                                       (se.FStar_Syntax_Syntax.sigquals);
                                                     FStar_Syntax_Syntax.sigmeta
-                                                      = uu___10;
+                                                      = uu___11;
                                                     FStar_Syntax_Syntax.sigattrs
                                                       =
                                                       (se.FStar_Syntax_Syntax.sigattrs);

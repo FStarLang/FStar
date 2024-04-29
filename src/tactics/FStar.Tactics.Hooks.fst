@@ -817,6 +817,16 @@ let handle_smt_goal env goal =
     (* No such tactic was available in the current context *)
     | None -> [env, goal]
 
+// TODO: this is somehow needed for tcresolve to infer the embeddings in run_tactic_on_ps below
+instance _ = RE.e_term
+
+type blob_t = option (string & term)
+type dsl_typed_sigelt_t = bool & sigelt & blob_t
+type dsl_tac_result_t =
+  list dsl_typed_sigelt_t &
+  dsl_typed_sigelt_t &
+  list dsl_typed_sigelt_t
+
 let splice
   (env:Env.env)
   (is_typed:bool)
@@ -845,8 +855,7 @@ let splice
         // See if there is a val for the lid
         //
         if List.length lids > 1
-        then let s = lids |> List.map Ident.string_of_lid |> BU.concat_l ", " in
-             Err.raise_error
+        then Err.raise_error
               (Errors.Error_BadSplice,
                BU.format1 "Typed splice: unexpected lids length (> 1) (%s)" (show lids))
               rng
@@ -873,20 +882,19 @@ let splice
                        (string_of_int (List.length uvs)))
                     rng
                 else Some tval in
-          let e_blob = e_option (e_tuple2 e_string RE.e_term) in
+
           //
           // The arguments to run_tactic_on_ps here are in sync with ulib/FStar.Tactics.dsl_tac_t
           //
-          let gs, (sig_blobs_before, sig_blob, sig_blobs_after) = run_tactic_on_ps tau.pos tau.pos false
-            (e_tuple2 RE.e_env (e_option RE.e_term))
-            ({env with gamma=[]}, val_t)
-            (e_tuple3
-              (e_list (e_tuple3 e_bool RE.e_sigelt e_blob))
-              (e_tuple3 e_bool RE.e_sigelt e_blob)
-              (e_list (e_tuple3 e_bool RE.e_sigelt e_blob)))
-            tau
-            tactic_already_typed
-            ps 
+          let (gs, (sig_blobs_before, sig_blob, sig_blobs_after))
+            : list goal & dsl_tac_result_t =
+            run_tactic_on_ps tau.pos tau.pos false
+              FStar.Tactics.Typeclasses.solve
+              ({env with gamma=[]}, val_t)
+              FStar.Tactics.Typeclasses.solve
+              tau
+              tactic_already_typed
+              ps
           in
           let sig_blobs = sig_blobs_before@(sig_blob::sig_blobs_after) in
           let sigelts = sig_blobs |> map (fun (checked, se, blob_opt) ->
