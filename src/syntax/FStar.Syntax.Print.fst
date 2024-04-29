@@ -249,7 +249,7 @@ and term_to_string x =
       | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_labeled(l,r,b)} ->
-        U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
+        U.format3 "Meta_labeled(%s, %s){%s}" (Errors.Msg.rendermsg l) (Range.string_of_range r) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_named(l)} ->
         U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
@@ -559,7 +559,7 @@ and metadata_to_string = function
         U.format1 "{Meta_named %s}" (sli lid)
 
     | Meta_labeled (l, r, _) ->
-        U.format2 "{Meta_labeled (%s, %s)}" l (Range.string_of_range r)
+        U.format2 "{Meta_labeled (%s, %s)}" (Errors.Msg.rendermsg l) (Range.string_of_range r)
 
     | Meta_desugared msi ->
         "{Meta_desugared}"

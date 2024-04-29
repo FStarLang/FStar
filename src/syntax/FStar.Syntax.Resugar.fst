@@ -593,7 +593,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                         body
                       | Meta_labeled (s, r, p) ->
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [], mk (A.Labeled (body, s, p))
+                        [], mk (A.Labeled (body, Errors.Msg.rendermsg s, p))
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
                     pats, body

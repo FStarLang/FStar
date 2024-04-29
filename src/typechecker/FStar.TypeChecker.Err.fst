@@ -33,6 +33,9 @@ module BU = FStar.Compiler.Util //basic util
 module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
+open FStar.Errors.Msg
+open FStar.Class.PP
+
 let info_at_pos env file row col =
     match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
@@ -123,12 +126,6 @@ let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b
     in
     Options.with_saved_options (fun () -> go bas)
 
-(*
- * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
- *     in the first case, we print it starting from a newline,
- *       while in the latter, it is printed on the same line
- * GM: TODO: Use a document?
- *)
 let errors_smt_detail env
         (errs : list Errors.error)
         (smt_detail : Errors.error_message)
@@ -179,14 +176,20 @@ let err_msg_comp_strings env c1 c2 :(string * string) =
   print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)
-let exhaustiveness_check = "Patterns are incomplete"
+let exhaustiveness_check = [
+  FStar.Errors.Msg.text "Patterns are incomplete"
+]
 
-let subtyping_failed : env -> typ -> typ -> unit -> string =
+let subtyping_failed : env -> typ -> typ -> unit -> error_message =
      fun env t1 t2 () ->
-       let s1, s2 = err_msg_type_strings env t1 t2 in
-       BU.format2 "Subtyping check failed; expected type %s; got type %s" s2 s1
-let ill_kinded_type = "Ill-kinded type"
-let totality_check  = "This term may not terminate"
+      //  let s1, s2 = err_msg_type_strings env t1 t2 in
+      let ppt = N.term_to_doc env in
+       [text "Subtyping check failed";
+        prefix 2 1 (text "Expected type") (ppt t2) ^/^
+        prefix 2 1 (text "got type") (ppt t1);
+       ]
+
+let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
 let unexpected_signature_for_monad env m k =
   (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"

@@ -861,7 +861,7 @@ let (mk_wp_return :
                else ());
               c
 let (label :
-  Prims.string ->
+  FStar_Pprint.document Prims.list ->
     FStar_Compiler_Range_Type.range ->
       FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
   =
@@ -877,7 +877,8 @@ let (label :
              }) f.FStar_Syntax_Syntax.pos
 let (label_opt :
   FStar_TypeChecker_Env.env ->
-    (unit -> Prims.string) FStar_Pervasives_Native.option ->
+    (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
+      ->
       FStar_Compiler_Range_Type.range ->
         FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ)
   =
@@ -896,7 +897,7 @@ let (label_opt :
               else (let uu___2 = reason1 () in label uu___2 r f)
 let (label_guard :
   FStar_Compiler_Range_Type.range ->
-    Prims.string ->
+    FStar_Pprint.document Prims.list ->
       FStar_TypeChecker_Env.guard_t -> FStar_TypeChecker_Env.guard_t)
   =
   fun r ->
@@ -2794,7 +2795,8 @@ let (mk_bind :
                                       (c, uu___5)))))
 let (strengthen_comp :
   FStar_TypeChecker_Env.env ->
-    (unit -> Prims.string) FStar_Pervasives_Native.option ->
+    (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
+      ->
       FStar_Syntax_Syntax.comp ->
         FStar_Syntax_Syntax.formula ->
           FStar_Syntax_Syntax.cflag Prims.list ->
@@ -2982,7 +2984,8 @@ let (weaken_precondition :
           lc.FStar_TypeChecker_Common.eff_name
           lc.FStar_TypeChecker_Common.res_typ uu___ weaken
 let (strengthen_precondition :
-  (unit -> Prims.string) FStar_Pervasives_Native.option ->
+  (unit -> FStar_Pprint.document Prims.list) FStar_Pervasives_Native.option
+    ->
     FStar_TypeChecker_Env.env ->
       FStar_Syntax_Syntax.term ->
         FStar_TypeChecker_Common.lcomp ->

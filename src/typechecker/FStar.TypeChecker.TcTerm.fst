@@ -357,7 +357,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term * comp
                  (Print.comp_to_string expected_c)
                  (string_of_bool use_eq);
        let e, _, g = TcUtil.check_comp env use_eq e c expected_c in
-       let g = TcUtil.label_guard (Env.get_range env) "Could not prove post-condition" g in
+       let g = TcUtil.label_guard (Env.get_range env) (Errors.mkmsg "Could not prove post-condition") g in
        if debug env Options.Medium
        then BU.print2 "(%s) DONE check_expected_effect;\n\tguard is: %s\n"
                          (Range.string_of_range e.pos)
@@ -663,7 +663,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
         let precedes =
           let env = Env.push_binders env formals in
           mk_precedes env dec previous_dec in
-        let precedes = TcUtil.label "Could not prove termination of this recursive call" r precedes in
+        let precedes = TcUtil.label (Errors.mkmsg "Could not prove termination of this recursive call") r precedes in
         let bs, ({binder_bv=last; binder_positivity=pqual; binder_attrs=attrs; binder_qual=imp}) = BU.prefix formals in
         let last = {last with sort=U.refine last precedes} in
         let refined_formals = bs@[S.mk_binder_with_attrs last imp pqual attrs] in
@@ -982,7 +982,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let t, _, f = tc_check_tot_or_gtot_term env t k "" in
     let e, c, g = tc_term (Env.set_expected_typ_maybe_eq env t use_eq) e in
     //NS: Maybe redundant strengthen
-    let c, f = TcUtil.strengthen_precondition (Some (fun () -> return_all Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
+    let c, f = TcUtil.strengthen_precondition (Some (fun () -> Err.ill_kinded_type)) (Env.set_range env t.pos) e c f in
     let e, c, f2 = comp_check_expected_typ env (mk (Tm_ascribed {tm=e;
                                                                  asc=(Inl t, None, use_eq);
                                                                  eff_opt=Some c.eff_name}) top.pos) c in
@@ -2194,7 +2194,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
               let label_guard g =
                 TcUtil.label_guard
                   hd.sort.pos
-                  "Type annotation on parameter incompatible with the expected type"
+                  (Errors.mkmsg "Type annotation on parameter incompatible with the expected type")
                   g in
 
               //cf issue #57 (the discussion at the end about subtyping vs. equality in check_binders)
@@ -3979,7 +3979,7 @@ and check_inner_let env e =
          tc_term env_x e2
          |> (fun (e2, c2, g2) ->
             let c2, g2 = TcUtil.strengthen_precondition
-              ((fun _ -> "folding guard g2 of e2 in the lcomp") |> Some)
+              ((fun _ -> Errors.mkmsg "folding guard g2 of e2 in the lcomp") |> Some)
               env_x
               e2
               c2
