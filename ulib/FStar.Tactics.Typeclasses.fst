@@ -220,15 +220,9 @@ let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
           st.glb
 
 (*
- tcresolve': the main typeclass instantiation function.
+  tcresolve': the main typeclass instantiation function.
 
- seen : a list of goals we've seen already in this path of the search,
-        used to prevent loops
- glb : a list of all global instances in scope, for all classes
- fuel : amount of steps we allow in this path, we stop if we reach zero
- head_fv : the head of the goal we're trying to solve, i.e. the class name
-
- TODO: some form of memoization
+  It mostly creates a tc_goal record and calls the functions above.
 *)
 let rec tcresolve' (st:st_t) : Tac unit =
     if st.fuel <= 0 then
@@ -269,15 +263,17 @@ let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
 
 [@@plugin]
 let tcresolve () : Tac unit =
+    let open FStar.Stubs.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
     let w = cur_witness () in
+    set_dump_on_failure false; (* We report our own errors *)
 
     // Not using intros () directly, since that unfolds aggressively if the term is not a literal arrow
     maybe_intros ();
 
     // Fetch a list of all instances in scope right now.
     // TODO: turn this into a hash map per class, ideally one that can be
-    // stored.
+    // persisted across calss.
     let glb = lookup_attr_ses (`tcinstance) (cur_env ()) in
     let glb = glb |> concatMap (fun se ->
               sigelt_name se |> concatMap (fun fv -> [(se, fv)])
@@ -295,6 +291,7 @@ let tcresolve () : Tac unit =
     | NoInst ->
       let open FStar.Stubs.Pprint in
       fail_doc [
+        text "Typeclass resolution failed";
         prefix 2 1 (text "Could not solve constraint")
           (arbitrary_string (term_to_string (cur_goal ())));
       ]
