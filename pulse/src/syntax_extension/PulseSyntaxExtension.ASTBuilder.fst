@@ -30,8 +30,23 @@ let r_ = FStar.Compiler.Range.dummyRange
 let pulse_checker_tac = Ident.lid_of_path ["Pulse"; "Main"; "check_pulse"] r_
 let tm t r = { tm=t; range=r; level=Un}
 
-let extension_parser
-  : AU.extension_parser
+let parse_decl_name
+  : contents:string ->
+    FStar.Compiler.Range.range ->
+    either AU.error_message FStar.Ident.ident
+  = fun contents r ->
+    match Parser.parse_peek_id contents r with
+    | Inl s -> Inr (Ident.id_of_text s)
+    | Inr (msg, r) -> Inl {
+      AU.message = msg;
+      AU.range = r;
+    }
+
+let parse_decl
+  : open_namespaces_and_abbreviations ->
+    contents:string ->
+    FStar.Compiler.Range.range ->
+    either AU.error_message decl
   = fun ctx contents r ->
       let tm t = tm t r in
       let str s = tm (Const (Const_string (s, r))) in
@@ -78,7 +93,7 @@ let extension_parser
 
 #push-options "--warn_error -272" //intentional top-level effect
 let _ = 
-    register_extension_parser "pulse" extension_parser
+    register_extension_parser "pulse" {parse_decl_name; parse_decl}
 #pop-options
    
 module TcEnv = FStar.TypeChecker.Env

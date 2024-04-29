@@ -28,7 +28,7 @@ module R = Pulse.Lib.Reference
 
 #set-options "--print_implicits"
 ```pulse
-fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
+fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   requires pts_to a1 #p1 's1
         ** pts_to a2 #p2 's2
   returns res:bool
@@ -61,10 +61,9 @@ fn compare' (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   res
 }
 ```
-let compare = compare'
 
 ```pulse 
-fn memcpy' (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
+fn memcpy (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
   requires A.pts_to src #p src0
         ** A.pts_to dst dst0
@@ -95,10 +94,9 @@ fn memcpy' (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
   ()
 }
 ```
-let memcpy = memcpy'
 
 ```pulse
-fn fill' (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
+fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
   requires A.pts_to a 's
   ensures exists* (s:Seq.seq t).
     A.pts_to a s **
@@ -121,17 +119,15 @@ fn fill' (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
   }
 }
 ```
-let fill = fill'
 
 ```pulse
-fn zeroize' (l:US.t) (a:larray U8.t (US.v l))
+fn zeroize (l:US.t) (a:larray U8.t (US.v l))
   requires A.pts_to a 's
   ensures exists* (s:Seq.seq U8.t).
     A.pts_to a s **
     pure (s `Seq.equal` Seq.create (US.v l) 0uy)
 {
   pts_to_len a #1.0R #'s;
-  fill' l a 0uy
+  fill l a 0uy
 }
 ```
-let zeroize = zeroize'

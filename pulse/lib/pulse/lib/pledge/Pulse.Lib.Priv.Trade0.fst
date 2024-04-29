@@ -52,7 +52,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ```pulse
 ghost
-fn __elim_stick (hyp concl: vprop)
+fn elim_stick (hyp concl: vprop)
 requires stick hyp concl ** hyp
 ensures concl
 {
@@ -67,11 +67,10 @@ ensures concl
   f ();
 }
 ```
-let elim_stick = __elim_stick
 
 ```pulse
 ghost
-fn __intro_stick
+fn intro_stick
   (hyp concl: vprop)
   (v: vprop)
   (f_elim: unit -> (
@@ -87,11 +86,10 @@ ensures stick hyp concl
   fold (stick hyp concl);
 }
 ```
-let intro_stick = __intro_stick
 
 ```pulse
 ghost
-fn __frame_stick
+fn frame_stick
   (hyp concl: vprop)
   (f: vprop)
 requires stick hyp concl
@@ -107,4 +105,3 @@ ensures stick (hyp ** f) (concl ** f)
   intro_stick (hyp ** f) (concl ** f) (stick hyp concl) aux;
 }
 ```
-let frame_stick = __frame_stick

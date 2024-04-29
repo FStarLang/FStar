@@ -28,6 +28,7 @@ assume val impl_mytype: impl_typ mytype
 fn test
     (c: cbor)
     (v: Ghost.erased raw_data_item)
+    #full_perm
 requires
     raw_data_item_match full_perm c v
 ensures

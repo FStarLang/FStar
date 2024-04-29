@@ -25,7 +25,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ```pulse
 ghost
-fn __ghost_witness (a:Type u#0) (_:squash a)
+fn ghost_witness (a:Type u#0) (_:squash a)
 requires emp
 returns i:a
 ensures emp
@@ -37,11 +37,10 @@ ensures emp
   i
 }
 ```
-let ghost_witness = __ghost_witness
 
 ```pulse
 ghost
-fn __ghost_witness2 (a:Type u#4) (_:squash a)
+fn ghost_witness2 (a:Type u#4) (_:squash a)
 requires emp
 returns i:a
 ensures emp
@@ -53,11 +52,10 @@ ensures emp
   i
 }
 ```
-let ghost_witness2 = __ghost_witness2
 
 ```pulse
 ghost
-fn __ghost_witness_exists (a:Type u#0)
+fn ghost_witness_exists (a:Type u#0)
 requires pure (exists (x:a). True)
 returns i:a
 ensures emp
@@ -65,11 +63,10 @@ ensures emp
   ghost_witness a ();
 }
 ```
-let ghost_witness_exists = __ghost_witness_exists
 
 ```pulse
 ghost
-fn __ghost_witness_exists2 (a:Type u#4)
+fn ghost_witness_exists2 (a:Type u#4)
 requires pure (exists (x:a). True)
 returns i:a
 ensures emp
@@ -77,7 +74,6 @@ ensures emp
   ghost_witness2 a ();
 }
 ```
-let ghost_witness_exists2 = __ghost_witness_exists2
 
 
 // fails

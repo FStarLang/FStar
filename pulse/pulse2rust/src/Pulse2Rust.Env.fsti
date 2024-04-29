@@ -38,7 +38,7 @@ type var = string
 //   for a mutable local x
 //
 type binding = var & typ & bool // name, type, is_mut
-type reachable_defs = Set.set string
+type reachable_defs = RBSet.t string
 
 val reachable_defs_to_string (d:reachable_defs) : string
 

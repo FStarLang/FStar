@@ -336,64 +336,79 @@ let (idents_as_binders :
   =
   fun env ->
     fun l ->
-      let erased_tm =
-        FStar_Parser_AST.mk_term
-          (FStar_Parser_AST.Var FStar_Parser_Const.erased_lid)
-          FStar_Compiler_Range_Type.dummyRange FStar_Parser_AST.Un in
-      let rec aux uu___3 uu___2 uu___1 uu___ =
-        (fun env1 ->
-           fun binders ->
-             fun bvs ->
-               fun l1 ->
-                 match l1 with
-                 | [] ->
-                     Obj.magic
-                       (Obj.repr
-                          (PulseSyntaxExtension_Err.return
-                             (env1, (FStar_Compiler_List.rev binders),
-                               (FStar_Compiler_List.rev bvs))))
-                 | i::l2 ->
-                     Obj.magic
-                       (Obj.repr
-                          (let uu___ =
-                             PulseSyntaxExtension_Env.push_bv env1 i in
-                           match uu___ with
-                           | (env2, bv) ->
-                               let qual =
-                                 PulseSyntaxExtension_SyntaxWrapper.as_qual
-                                   true in
-                               let text = FStar_Ident.string_of_id i in
-                               let wild =
-                                 let uu___1 = FStar_Ident.range_of_id i in
-                                 FStar_Parser_AST.mk_term
-                                   FStar_Parser_AST.Wild uu___1
-                                   FStar_Parser_AST.Un in
-                               let ty =
-                                 if FStar_Compiler_Util.starts_with text "'"
-                                 then
-                                   let uu___1 = FStar_Ident.range_of_id i in
-                                   FStar_Parser_AST.mkApp erased_tm
-                                     [(wild, FStar_Parser_AST.Nothing)]
-                                     uu___1
-                                 else wild in
-                               let uu___1 = desugar_term env2 ty in
-                               FStar_Class_Monad.op_let_Bang
-                                 PulseSyntaxExtension_Err.err_monad () ()
-                                 (Obj.magic uu___1)
-                                 (fun uu___2 ->
-                                    (fun ty1 ->
-                                       let ty1 = Obj.magic ty1 in
-                                       let uu___2 =
-                                         let uu___3 =
-                                           let uu___4 =
-                                             PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                               i ty1 in
-                                           (qual, uu___4) in
-                                         uu___3 :: binders in
-                                       Obj.magic
-                                         (aux env2 uu___2 (bv :: bvs) l2))
-                                      uu___2)))) uu___3 uu___2 uu___1 uu___ in
-      aux env [] [] l
+      let non_tick_idents =
+        FStar_Compiler_List.filter
+          (fun i ->
+             let uu___ = FStar_Ident.string_of_id i in
+             Prims.op_Negation (FStar_Compiler_Util.starts_with uu___ "'")) l in
+      if (FStar_Compiler_List.length non_tick_idents) <> Prims.int_zero
+      then
+        let s =
+          let uu___ =
+            FStar_Compiler_List.map FStar_Ident.string_of_id non_tick_idents in
+          FStar_Compiler_Util.concat_l ", " uu___ in
+        let uu___ =
+          FStar_Compiler_Util.format1
+            "Identifiers (%s) not found, consider adding them as binders" s in
+        let uu___1 =
+          let uu___2 = FStar_Compiler_List.hd non_tick_idents in
+          FStar_Ident.range_of_id uu___2 in
+        PulseSyntaxExtension_Err.fail uu___ uu___1
+      else
+        (let erased_tm =
+           FStar_Parser_AST.mk_term
+             (FStar_Parser_AST.Var FStar_Parser_Const.erased_lid)
+             FStar_Compiler_Range_Type.dummyRange FStar_Parser_AST.Un in
+         let mk_ty i =
+           let wild =
+             let uu___1 = FStar_Ident.range_of_id i in
+             FStar_Parser_AST.mk_term FStar_Parser_AST.Wild uu___1
+               FStar_Parser_AST.Un in
+           let uu___1 = FStar_Ident.range_of_id i in
+           FStar_Parser_AST.mkApp erased_tm
+             [(wild, FStar_Parser_AST.Nothing)] uu___1 in
+         let rec aux uu___4 uu___3 uu___2 uu___1 =
+           (fun env1 ->
+              fun binders ->
+                fun bvs ->
+                  fun l1 ->
+                    match l1 with
+                    | [] ->
+                        Obj.magic
+                          (Obj.repr
+                             (PulseSyntaxExtension_Err.return
+                                (env1, (FStar_Compiler_List.rev binders),
+                                  (FStar_Compiler_List.rev bvs))))
+                    | i::l2 ->
+                        Obj.magic
+                          (Obj.repr
+                             (let uu___1 =
+                                PulseSyntaxExtension_Env.push_bv env1 i in
+                              match uu___1 with
+                              | (env2, bv) ->
+                                  let qual =
+                                    PulseSyntaxExtension_SyntaxWrapper.as_qual
+                                      true in
+                                  let ty = mk_ty i in
+                                  let uu___2 = desugar_term env2 ty in
+                                  FStar_Class_Monad.op_let_Bang
+                                    PulseSyntaxExtension_Err.err_monad () ()
+                                    (Obj.magic uu___2)
+                                    (fun uu___3 ->
+                                       (fun ty1 ->
+                                          let ty1 = Obj.magic ty1 in
+                                          let uu___3 =
+                                            let uu___4 =
+                                              let uu___5 =
+                                                PulseSyntaxExtension_SyntaxWrapper.mk_binder
+                                                  i ty1 in
+                                              (qual, uu___5) in
+                                            uu___4 :: binders in
+                                          Obj.magic
+                                            (aux env2 uu___3 (bv :: bvs) l2))
+                                         uu___3)))) uu___4 uu___3 uu___2
+             uu___1 in
+         aux env [] [] l)
 let rec (interpret_vprop_constructors :
   PulseSyntaxExtension_Env.env_t ->
     FStar_Syntax_Syntax.term ->

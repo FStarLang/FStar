@@ -180,28 +180,41 @@ let desugar_term_opt (env:env_t) (t:option A.term)
     | None -> return (SW.tm_unknown FStar.Compiler.Range.dummyRange)
     | Some e -> desugar_term env e
 
-
+//
+// Only add undeclared tick names (e.g. 'x) as binders,
+//   and with erased types
+//
+// Undeclared unticked names are errors
+//
 let idents_as_binders (env:env_t) (l:list ident)
   : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
-  = let erased_tm = A.(mk_term (Var FStar.Parser.Const.erased_lid) FStar.Compiler.Range.dummyRange Un) in
-    let rec aux env binders bvs l 
-      : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
-      = match l with
-        | [] -> return (env, L.rev binders, L.rev bvs)
-        | i::l ->
-          let env, bv = push_bv env i in
-          let qual = SW.as_qual true in
-          let text = Ident.string_of_id i in
-          let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
-          let ty = 
-            if BU.starts_with text "'"
-            then A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i))
-            else wild
-          in
-          let! ty = desugar_term env ty in
-          aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
-    in
-    aux env [] [] l
+  = let non_tick_idents =
+      l |> L.filter (fun i ->
+                     i |> Ident.string_of_id
+                       |> (fun s -> not (BU.starts_with s "'"))) in
+    if L.length non_tick_idents <> 0
+    then let s = non_tick_idents |> L.map Ident.string_of_id |> BU.concat_l ", " in
+         fail
+           (BU.format1 "Identifiers (%s) not found, consider adding them as binders" s)
+           (non_tick_idents |> L.hd |> Ident.range_of_id)
+    else begin
+      let erased_tm = A.(mk_term (Var FStar.Parser.Const.erased_lid) FStar.Compiler.Range.dummyRange Un) in
+      let mk_ty i =
+        let wild = A.(mk_term Wild (Ident.range_of_id i) Un) in
+        A.(mkApp erased_tm [wild, A.Nothing] (Ident.range_of_id i)) in
+      let rec aux env binders bvs l 
+        : err (env_t & list (option SW.qualifier & SW.binder) & list S.bv)
+        = match l with
+          | [] -> return (env, L.rev binders, L.rev bvs)
+          | i::l ->
+            let env, bv = push_bv env i in
+            let qual = SW.as_qual true in      
+            let ty = mk_ty i in
+            let! ty = desugar_term env ty in
+            aux env ((qual, SW.mk_binder i ty)::binders) (bv::bvs) l
+      in
+      aux env [] [] l
+    end
 
 let rec interpret_vprop_constructors (env:env_t) (v:S.term)
   : err SW.term

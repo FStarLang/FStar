@@ -26,7 +26,7 @@ let pledge (f:vprop) (v:vprop) : vprop =
 (* Anything that holds now holds in the future too. *)
 ```pulse
 ghost
-fn __return_pledge (f v : vprop)
+fn return_pledge (f v : vprop)
   requires v
   ensures pledge f v
 {
@@ -34,11 +34,10 @@ fn __return_pledge (f v : vprop)
   fold pledge;
 }
 ```
-let return_pledge = __return_pledge
 
 ```pulse
 ghost
-fn __make_pledge
+fn make_pledge
   (#is:inames)
   (f v extra:vprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
@@ -49,7 +48,6 @@ fn __make_pledge
   fold pledge;
 }
 ```
-let make_pledge = __make_pledge
 
 // FIXME: marking this ghost gives an awful error, but it should just
 // fail saying that `is` is not `emp_inames`
@@ -62,7 +60,7 @@ let make_pledge = __make_pledge
 //   >>>> app arg (_)
 //   Variable not found: _#6
 ```pulse
-fn __redeem_pledge (f v:vprop)
+fn redeem_pledge (f v:vprop)
   requires f ** pledge f v
   ensures f ** v
 {
@@ -70,11 +68,10 @@ fn __redeem_pledge (f v:vprop)
   P.redeem_pledge _ f v;
 }
 ```
-let redeem_pledge = __redeem_pledge
 
 ```pulse
 ghost
-fn __join_pledge (#f v1 v2:vprop)
+fn join_pledge (#f v1 v2:vprop)
   requires pledge f v1 ** pledge f v2
   ensures pledge f (v1 ** v2)
 {
@@ -88,11 +85,10 @@ fn __join_pledge (#f v1 v2:vprop)
   fold pledge
 }
 ```
-let join_pledge = __join_pledge
 
 ```pulse
 ghost
-fn __rewrite_pledge
+fn rewrite_pledge
   (#f v1 v2:vprop)
   (#is_k:inames)
   (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
@@ -106,4 +102,3 @@ fn __rewrite_pledge
   fold pledge
 }
 ```
-let rewrite_pledge = __rewrite_pledge

@@ -32,7 +32,7 @@ ensures emp ** pts_to x 1ul
 
 ```pulse
 atomic
-fn return_atomic2 ()
+fn return_atomic2 (x:ref U32.t)
 requires emp ** pts_to x 1ul
 returns n:U32.t
 ensures emp ** pts_to x 1ul

@@ -35,7 +35,7 @@ let on  #p (fi : finv p) : vprop =
   GR.pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 ```pulse
-fn __mk_finv (p:vprop { is_big p })
+fn mk_finv (p:vprop { is_big p })
    requires emp
    returns f:(finv p)
    ensures off f
@@ -55,13 +55,13 @@ fn __mk_finv (p:vprop { is_big p })
    fi
 }
 ```
-let mk_finv = __mk_finv
+
 
 let iname_of #p (f : finv p) : erased iname = iname_of f.i
 
 ```pulse
 atomic
-fn _flip_on (#p:vprop) (fi:finv p)
+fn flip_on (#p:vprop) (fi:finv p)
    requires off fi ** p
    ensures on fi
    opens add_iname emp_inames (iname_of fi)
@@ -84,11 +84,10 @@ fn _flip_on (#p:vprop) (fi:finv p)
   fold (on fi)
 }
 ```
-let flip_on = _flip_on
 
 ```pulse
 atomic
-fn _flip_off (#p:vprop) (fi : finv p)
+fn flip_off (#p:vprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
    opens add_iname emp_inames (iname_of fi)
@@ -111,4 +110,3 @@ fn _flip_off (#p:vprop) (fi : finv p)
   fold (off fi)
 }
 ```
-let flip_off = _flip_off

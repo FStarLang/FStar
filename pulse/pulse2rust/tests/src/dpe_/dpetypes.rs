@@ -273,12 +273,6 @@ pub fn mk_context_t_engine(
 ) -> super::dpetypes::context_t {
     super::dpetypes::context_t::Engine_context(c)
 }
-pub fn mk_context_t_l0(c: super::dpetypes::l0_context_t) -> super::dpetypes::context_t {
-    super::dpetypes::context_t::L0_context(c)
-}
-pub fn mk_context_t_l1(c: super::dpetypes::l1_context_t) -> super::dpetypes::context_t {
-    super::dpetypes::context_t::L1_context(c)
-}
 pub enum record_t {
     Engine_record(super::enginetypes::engine_record_t),
     L0_record(super::l0types::l0_record_t),

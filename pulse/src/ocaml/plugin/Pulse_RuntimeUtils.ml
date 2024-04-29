@@ -29,8 +29,13 @@ let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
     )
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
-let debug_at_level_no_module (s:string) = FStar_Options.debug_at_level_no_module (FStar_Options.Other s)
-let debug_at_level (g:FStar_Reflection_Types.env) (s:string) = FStar_TypeChecker_Env.debug g (FStar_Options.Other s)
+let debug_at_level_no_module (s:string) =
+  let r = FStar_Compiler_Debug.get_toggle s in
+  !r
+let debug_at_level (g:FStar_Reflection_Types.env) (s:string) =
+  let r = FStar_Compiler_Debug.get_toggle s in
+  !r
+
 let bv_set_range (bv:FStar_Syntax_Syntax.bv) (r:FStar_Range.range) = FStar_Syntax_Syntax.set_range_of_bv bv r
 let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =
@@ -124,7 +129,7 @@ let float_one = FStar_Compiler_Util.float_of_string "1.0"
 module TcEnv = FStar_TypeChecker_Env
 module Free = FStar_Syntax_Free
 module BU = FStar_Compiler_Util
-module Set = FStar_Compiler_Set
+module FlatSet = FStar_Compiler_FlatSet
 
 let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
   : S.term option
@@ -144,12 +149,12 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
             let g = {g with instantiate_imp=false; phase1=true; lax=true} in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = FStar_TypeChecker_Rel.resolve_implicits g guard in
-            let uvs = Set.union Free.ord_ctx_uvar (Free.uvars e) (Free.uvars t) in
-            if not (Set.is_empty Free.ord_ctx_uvar uvs)
+            let uvs = FlatSet.union Free.ord_ctx_uvar (Free.uvars e) (Free.uvars t) in
+            if not (FlatSet.is_empty uvs)
             then None
             else (
-              let univs = Set.union Free.ord_univ_uvar (Free.univs e) (Free.univs t) in
-              let univs = Set.elems Free.ord_univ_uvar univs in
+              let univs = FlatSet.union Free.ord_univ_uvar (Free.univs e) (Free.univs t) in
+              let univs = FlatSet.elems univs in
               List.iter (fun univ -> FStar_Syntax_Unionfind.univ_change univ S.U_unknown) univs;
               let t = FStar_Syntax_Compress.deep_compress false true t in
               Some t

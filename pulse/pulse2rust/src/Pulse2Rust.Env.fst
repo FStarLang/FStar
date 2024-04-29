@@ -21,6 +21,8 @@ open FStar.Compiler.Util
 open FStar.Compiler.List
 open FStar.Compiler.Effect
 
+open FStar.Class.Setlike
+
 open Pulse2Rust.Rust.Syntax
 
 open RustBindings
@@ -36,7 +38,7 @@ let fail_nyi (s:string) =
   failwith (format1 "Pulse to Rust extraction failed: no support yet for %s" s)
 
 let reachable_defs_to_string (d:reachable_defs) : string =
-  d |> Set.elems |> String.concat ";" |> format1 "[%s]"
+  d |> elems |> String.concat ";" |> format1 "[%s]"
 
 let empty_env (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) =
   { fns = [];

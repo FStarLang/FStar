@@ -42,30 +42,9 @@ let mk_ht
   : ht_t k v
   = { sz; hashf; contents; }
 
-let lift_hash_fun (#k:eqtype) (hashf:k -> SZ.t) : GTot (k -> nat) = fun k -> SZ.v (hashf k)
-
-let mk_init_pht (#k:eqtype) #v (hashf:k -> SZ.t) (sz:pos_us)
-  : GTot (pht_t k v)
-  = 
-  { spec = (fun k -> None);
-    repr = {
-      sz=SZ.v sz;
-      seq=Seq.create (SZ.v sz) Clean;
-      hashf=lift_hash_fun hashf;
-    };
-    inv = (); }
-
-noextract
-let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
-  SZ.v ht.sz == pht.repr.sz /\
-  pht.repr.hashf == lift_hash_fun ht.hashf
-
-let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
-  V.pts_to ht.contents pht.repr.seq
-  **
-  pure ( related ht pht /\ V.is_full_vec ht.contents)
-
-let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
+let models_is_small #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+  : Lemma (is_small (models ht pht))
+          [SMTPat (is_small (models ht pht))] = ()
 
 ```pulse
 fn alloc
@@ -115,55 +94,6 @@ let sz_add (x y : SZ.t)
 let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz }) 
 : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
   = SZ.(x %^ y)
-
-noextract
-let same_sz_and_hashf (#kt:eqtype) (#vt:Type) (ht1 ht2:ht_t kt vt) : GTot prop =
-  ht1.sz == ht2.sz /\
-  ht1.hashf == ht2.hashf
-
-```pulse
-fn replace
-  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
-  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
-  (#pht:erased (pht_t kt vt))
-  (ht:ht_t kt vt)
-  (idx:SZ.t)
-  (k:kt)
-  (v:vt)
-  (_:squash (SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
-  
-  requires models ht pht
-  returns p:(ht_t kt vt & vt)
-  ensures models (fst p) (PHT.upd_pht #kt #vt pht idx k v ()) **
-          pure (same_sz_and_hashf (fst p) ht /\ Some (snd p) == PHT.lookup pht k)
-{
-  let hashf = ht.hashf;
-  let mut contents = ht.contents;
-  unfold models;
-  rewrite (R.pts_to contents ht.contents) as (R.pts_to contents (reveal (hide ht.contents)));
-  rewrite (V.pts_to ht.contents pht.repr.seq) as (V.pts_to (reveal (hide ht.contents)) pht.repr.seq);
-  let v' = V.replace_i_ref contents idx (mk_used_cell k v);
-  let vcontents = !contents;
-  let ht1 = mk_ht ht.sz hashf vcontents;
-  with s. rewrite (V.pts_to (reveal (hide ht.contents)) s) as (V.pts_to ht1.contents s);
-  fold (models ht1 (PHT.upd_pht pht idx k v ()));
-  match v' {
-    Used k' v' -> {
-      let res = ((ht1 <: ht_t kt vt), v');
-      with pht. rewrite (models ht1 pht) as (models (fst res) pht);
-      res
-    }
-    Clean -> {
-      assert (pure (Used? v'));
-      Pulse.Lib.Core.unreachable ()
-    }
-    Zombie -> {
-      assert (pure (Used? v'));
-      Pulse.Lib.Core.unreachable ()
-    }
-  }
-}
-```
 
 #push-options "--fuel 1 --ifuel 1"
 ```pulse
@@ -305,7 +235,50 @@ fn lookup
 ```
 #pop-options
 
-#restart-solver
+```pulse
+fn replace
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (#pht:erased (pht_t kt vt))
+  (ht:ht_t kt vt)
+  (idx:SZ.t)
+  (k:kt)
+  (v:vt)
+  (_:squash (SZ.v idx < Seq.length pht.repr.seq /\ PHT.lookup_index_us pht k == Some idx))
+  
+  requires models ht pht
+  returns p:(ht_t kt vt & vt)
+  ensures models (fst p) (PHT.upd_pht #kt #vt pht idx k v ()) **
+          pure (same_sz_and_hashf (fst p) ht /\ Some (snd p) == PHT.lookup pht k)
+{
+  let hashf = ht.hashf;
+  let mut contents = ht.contents;
+  unfold models;
+  rewrite (R.pts_to contents ht.contents) as (R.pts_to contents (reveal (hide ht.contents)));
+  rewrite (V.pts_to ht.contents pht.repr.seq) as (V.pts_to (reveal (hide ht.contents)) pht.repr.seq);
+  let v' = V.replace_i_ref contents idx (mk_used_cell k v);
+  let vcontents = !contents;
+  let ht1 = mk_ht ht.sz hashf vcontents;
+  with s. rewrite (V.pts_to (reveal (hide ht.contents)) s) as (V.pts_to ht1.contents s);
+  fold (models ht1 (PHT.upd_pht pht idx k v ()));
+  match v' {
+    Used k' v' -> {
+      let res = ((ht1 <: ht_t kt vt), v');
+      with pht. rewrite (models ht1 pht) as (models (fst res) pht);
+      res
+    }
+    Clean -> {
+      assert (pure (Used? v'));
+      Pulse.Lib.Core.unreachable ()
+    }
+    Zombie -> {
+      assert (pure (Used? v'));
+      Pulse.Lib.Core.unreachable ()
+    }
+  }
+}
+```
+
 #push-options "--fuel 1 --ifuel 2"
 ```pulse
 fn insert
@@ -321,7 +294,7 @@ fn insert
       pure (same_sz_and_hashf (fst b) ht /\
             (if snd b
              then pht'==PHT.insert pht k v
-             else pht'==pht))
+             else pht'==reveal pht))
 {
   let hashf = ht.hashf;
   let mut contents = ht.contents;
@@ -501,6 +474,112 @@ fn insert
   }
 }
 ```
+let is_used
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
+  (c:cell k v) : (bool & cell k v) =
+  match c with
+  | Used _ _ -> true, c
+  | _ -> false, c
+
+```pulse
+fn not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (ht:ht_t kt vt)
+  (#pht:erased (pht_t kt vt))
+  
+  requires models ht pht
+  returns b:(ht_t kt vt & bool)
+  ensures
+    models (fst b) pht ** 
+    pure (same_sz_and_hashf (fst b) ht /\ (snd b ==> PHT.not_full pht.repr))
+{
+  let hashf = ht.hashf;
+  let mut contents = ht.contents;
+
+  let mut i = 0sz;
+  unfold (models ht pht);
+
+  while
+  (
+    let vi = !i;  
+    if SZ.(vi <^ ht.sz) 
+    { 
+      let c = V.replace_i_ref contents vi Zombie;
+      let b = is_used c;
+      V.replace_i_ref contents vi (snd b);
+      with vcontents. assert (R.pts_to contents vcontents);
+      with s. assert (V.pts_to vcontents s);
+      assert (pure (Seq.equal s pht.repr.seq));
+      (fst b)
+    }
+    else 
+    { 
+      false
+    }
+  )
+  invariant b. exists* (vi:SZ.t) vcontents. (
+    R.pts_to contents vcontents **
+    V.pts_to vcontents pht.repr.seq **
+    R.pts_to i vi **
+    pure (
+      V.is_full_vec vcontents /\
+      SZ.v ht.sz == pht_sz pht /\
+      SZ.(vi <=^ ht.sz) /\
+      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
+      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
+    )
+  )
+  {
+    let vi = !i;
+    i := SZ.(vi +^ 1sz);
+  };
+
+  let vi = !i;
+  let res = SZ.(vi <^ ht.sz);
+
+  let vcontents = !contents;
+  let ht = mk_ht ht.sz hashf vcontents;
+  with vcontentsg. assert (R.pts_to contents vcontentsg);
+  with s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
+  fold (models ht pht);
+  let b = ((ht <: ht_t kt vt), (res <: bool));
+  rewrite (models ht pht) as (models (fst b) pht);
+  b
+}
+```
+
+```pulse
+fn insert_if_not_full
+  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
+  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
+  (ht:ht_t kt vt) (k:kt) (v:vt)
+  (#pht:erased (PHT.pht_t kt vt))
+  requires models ht pht
+  returns b:(ht_t kt vt & bool)
+  ensures
+    exists* pht'.
+      models (fst b) pht' **
+      pure (same_sz_and_hashf (fst b) ht /\
+            (if snd b
+             then (PHT.not_full (reveal pht).repr /\
+                   pht'==PHT.insert pht k v)
+             else pht'==reveal pht))
+{
+  let b = not_full ht;
+  if snd b
+  {
+    Pulse.Lib.HashTable.insert (fst b) k v
+  }
+  else
+  {
+    let res = (fst b, false);
+    rewrite (models (fst b) pht) as (models (fst res) pht);
+    res
+  }
+}
+```
 
 ```pulse
 fn delete
@@ -515,7 +594,7 @@ fn delete
     (exists* pht'. 
      models (fst b) pht' **
      pure (same_sz_and_hashf (fst b) ht /\
-           (if snd b then pht' == PHT.delete pht k else pht' == pht)))
+           (if snd b then pht' == PHT.delete pht k else pht' == reveal pht)))
 {
   let hashf = ht.hashf;
   let mut contents = ht.contents;
@@ -621,83 +700,6 @@ fn delete
     rewrite (models ht (PHT.delete pht k)) as (models (fst res) (PHT.delete pht k));
     res
   }
-}
-```
-
-let is_used
-  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
-  (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
-  (c:cell k v) : (bool & cell k v) =
-  match c with
-  | Used _ _ -> true, c
-  | _ -> false, c
-
-#push-options "--print_implicits"
-```pulse
-fn not_full
-  (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
-  (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
-  (ht:ht_t kt vt)
-  (#pht:erased (pht_t kt vt))
-  
-  requires models ht pht
-  returns b:(ht_t kt vt & bool)
-  ensures
-    models (fst b) pht ** 
-    pure (same_sz_and_hashf (fst b) ht /\ (snd b ==> PHT.not_full pht.repr))
-{
-  let hashf = ht.hashf;
-  let mut contents = ht.contents;
-
-  let mut i = 0sz;
-  unfold (models ht pht);
-
-  while
-  (
-    let vi = !i;  
-    if SZ.(vi <^ ht.sz) 
-    { 
-      let c = V.replace_i_ref contents vi Zombie;
-      let b = is_used c;
-      V.replace_i_ref contents vi (snd b);
-      with vcontents. assert (R.pts_to contents vcontents);
-      with s. assert (V.pts_to vcontents s);
-      assert (pure (Seq.equal s pht.repr.seq));
-      (fst b)
-    }
-    else 
-    { 
-      false
-    }
-  )
-  invariant b. exists* (vi:SZ.t) vcontents. (
-    R.pts_to contents vcontents **
-    V.pts_to vcontents pht.repr.seq **
-    R.pts_to i vi **
-    pure (
-      V.is_full_vec vcontents /\
-      SZ.v ht.sz == pht_sz pht /\
-      SZ.(vi <=^ ht.sz) /\
-      (b == (SZ.(vi <^ ht.sz) && Used? (pht.repr @@ (SZ.v vi)))) /\
-      (forall (i:nat). i < SZ.v vi ==> Used? (pht.repr @@ i))
-    )
-  )
-  {
-    let vi = !i;
-    i := SZ.(vi +^ 1sz);
-  };
-
-  let vi = !i;
-  let res = SZ.(vi <^ ht.sz);
-
-  let vcontents = !contents;
-  let ht = mk_ht ht.sz hashf vcontents;
-  with vcontentsg. assert (R.pts_to contents vcontentsg);
-  with s. rewrite (V.pts_to vcontentsg s) as (V.pts_to ht.contents s);
-  fold (models ht pht);
-  let b = ((ht <: ht_t kt vt), (res <: bool));
-  rewrite (models ht pht) as (models (fst b) pht);
-  b
 }
 ```
 

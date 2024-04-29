@@ -120,6 +120,7 @@ fn copy
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
   (a1 a2:A.array t)
   (l:SZ.t)
+  (#p2:perm)
   requires (
     A.pts_to a1 's1 **
     A.pts_to a2 #p2 's2 **
@@ -162,6 +163,7 @@ fn copy2
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
   (a1 a2:A.array t)
   (l:SZ.t)
+  (#p2:perm)
   requires (
     A.pts_to a1 's1 **
     A.pts_to a2 #p2 's2 **

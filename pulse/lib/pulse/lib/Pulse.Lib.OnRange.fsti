@@ -23,6 +23,11 @@ val on_range (p: (nat -> vprop))
              ([@@@equate_by_smt] j:nat)
   : vprop
 
+val on_range_is_small (p:nat -> vprop) (i:nat) (j:nat)
+  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_small (p k))
+          (ensures is_small (on_range p i j))
+          [SMTPat (on_range p i j)]
+
 val on_range_le
   (p: (nat -> vprop))
   (#i:nat)
