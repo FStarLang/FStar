@@ -1,7 +1,6 @@
 open Prims
 type 'a emb_erased =
   | Hide of 'a 
-let uu___is_Hide : 'a . 'a emb_erased -> Prims.bool = fun projectee -> true
 let __proj__Hide__item__x : 'a . 'a emb_erased -> 'a =
   fun projectee -> match projectee with | Hide x -> x
 let e_erased :

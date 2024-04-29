@@ -1,7 +1,6 @@
 open Prims
 type 'a raise0 =
   | Ret of 'a 
-let uu___is_Ret : 'a . 'a raise0 -> Prims.bool = fun projectee -> true
 let __proj__Ret__item___0 : 'a . 'a raise0 -> 'a =
   fun projectee -> match projectee with | Ret _0 -> _0
 type 'a raise_t = 'a raise0

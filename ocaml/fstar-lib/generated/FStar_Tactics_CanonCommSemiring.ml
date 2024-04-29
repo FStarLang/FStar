@@ -11,7 +11,6 @@ type ('a, 'cmuadd, 'opp) add_opp_r_lemma = unit
 type 'a cr =
   | CR of 'a FStar_Algebra_CommMonoid.cm * 'a FStar_Algebra_CommMonoid.cm *
   ('a -> 'a) * unit * unit * unit 
-let uu___is_CR : 'a . 'a cr -> Prims.bool = fun projectee -> true
 let __proj__CR__item__cm_add : 'a . 'a cr -> 'a FStar_Algebra_CommMonoid.cm =
   fun projectee ->
     match projectee with

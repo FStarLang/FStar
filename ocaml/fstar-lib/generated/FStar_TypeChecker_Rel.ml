@@ -2072,7 +2072,6 @@ let (wl_to_string : worklist -> Prims.string) =
 type flex_t =
   | Flex of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar *
   FStar_Syntax_Syntax.args) 
-let (uu___is_Flex : flex_t -> Prims.bool) = fun projectee -> true
 let (__proj__Flex__item___0 :
   flex_t ->
     (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar *

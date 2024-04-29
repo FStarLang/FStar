@@ -1,11 +1,6 @@
 open Prims
 type ('rst, 'a, 'rg) copyable =
   | Cpy of ('rst -> 'a -> 'a -> unit) 
-let uu___is_Cpy :
-  'rst 'a .
-    ('rst, 'a) LowStar_Regional.regional ->
-      ('rst, 'a, unit) copyable -> Prims.bool
-  = fun rg -> fun projectee -> true
 let __proj__Cpy__item__copy :
   'rst 'a .
     ('rst, 'a) LowStar_Regional.regional ->

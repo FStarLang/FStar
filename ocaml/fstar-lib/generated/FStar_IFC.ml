@@ -4,7 +4,6 @@ type ('a, 'f) commutative = unit
 type ('a, 'f) idempotent = unit
 type semilattice =
   | SemiLattice of unit * Obj.t * (Obj.t -> Obj.t -> Obj.t) 
-let (uu___is_SemiLattice : semilattice -> Prims.bool) = fun projectee -> true
 let (__proj__SemiLattice__item__top : semilattice -> Obj.t) =
   fun projectee ->
     match projectee with | SemiLattice (carrier, top, lub) -> top

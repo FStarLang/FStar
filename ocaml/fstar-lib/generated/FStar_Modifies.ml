@@ -1,7 +1,6 @@
 open Prims
 type loc_aux =
   | LocBuffer of unit * Obj.t FStar_Buffer.buffer 
-let (uu___is_LocBuffer : loc_aux -> Prims.bool) = fun projectee -> true
 let (__proj__LocBuffer__item__b : loc_aux -> unit FStar_Buffer.buffer) =
   fun uu___ ->
     (fun projectee -> match projectee with | LocBuffer (t, b) -> Obj.magic b)

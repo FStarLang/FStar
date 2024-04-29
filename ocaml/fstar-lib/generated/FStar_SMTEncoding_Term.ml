@@ -226,7 +226,6 @@ let (__proj__Mkterm__item__freevars :
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> freevars
 let (__proj__Mkterm__item__rng : term -> FStar_Compiler_Range_Type.range) =
   fun projectee -> match projectee with | { tm; freevars; rng;_} -> rng
-let (uu___is_FV : fv -> Prims.bool) = fun projectee -> true
 let (__proj__FV__item___0 : fv -> (Prims.string * sort * Prims.bool)) =
   fun projectee -> match projectee with | FV _0 -> _0
 type pat = term

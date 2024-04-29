@@ -2,7 +2,6 @@ open Prims
 let (n : Prims.int) = (Prims.of_int (128))
 type t =
   | Mk of unit FStar_Int.int_t 
-let (uu___is_Mk : t -> Prims.bool) = fun projectee -> true
 let (__proj__Mk__item__v : t -> unit FStar_Int.int_t) =
   fun projectee -> match projectee with | Mk v -> v
 let (v : t -> unit FStar_Int.int_t) = fun x -> __proj__Mk__item__v x

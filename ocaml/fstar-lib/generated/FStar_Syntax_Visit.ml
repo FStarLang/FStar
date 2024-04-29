@@ -1,7 +1,6 @@
 open Prims
 type 'a id =
   | I of 'a 
-let uu___is_I : 'a . 'a id -> Prims.bool = fun projectee -> true
 let __proj__I__item__run : 'a . 'a id -> 'a =
   fun projectee -> match projectee with | I run -> run
 let (uu___9 : unit id FStar_Class_Monad.monad) =

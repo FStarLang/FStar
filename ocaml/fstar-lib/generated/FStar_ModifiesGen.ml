@@ -3,11 +3,8 @@ type aloc_t = unit
 type 'aloc cls =
   | Cls of unit * unit * unit * unit * unit * unit * unit * unit * unit *
   unit 
-let uu___is_Cls : 'aloc . 'aloc cls -> Prims.bool = fun projectee -> true
 type ('al, 'c) aloc =
   | ALoc of unit * Prims.nat * 'al FStar_Pervasives_Native.option 
-let uu___is_ALoc : 'al . 'al cls -> ('al, unit) aloc -> Prims.bool =
-  fun c -> fun projectee -> true
 
 let __proj__ALoc__item__addr : 'al . 'al cls -> ('al, unit) aloc -> Prims.nat
   =
@@ -24,8 +21,6 @@ type ('regions, 'regionulivenessutags, 'nonuliveuaddrs,
   'r) live_addrs_codom = unit
 type ('al, 'c) loc' =
   | Loc of unit * unit * unit * unit * unit 
-let uu___is_Loc : 'al . 'al cls -> ('al, unit) loc' -> Prims.bool =
-  fun c -> fun projectee -> true
 
 
 type ('aloc1, 'c) loc = ('aloc1, unit) loc'

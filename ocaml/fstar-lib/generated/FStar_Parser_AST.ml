@@ -426,7 +426,6 @@ let (__proj__Mkterm__item__range : term -> FStar_Compiler_Range_Type.range) =
 let (__proj__Mkterm__item__level : term -> level) =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> level1
-let (uu___is_CalcStep : calc_step -> Prims.bool) = fun projectee -> true
 let (__proj__CalcStep__item___0 : calc_step -> (term * term * term)) =
   fun projectee -> match projectee with | CalcStep _0 -> _0
 let (uu___is_Variable : binder' -> Prims.bool) =

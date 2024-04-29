@@ -752,7 +752,6 @@ let (with_ty : mlty -> mlexpr' -> mlexpr) =
 type mllib =
   | MLLib of (mlpath * (mlsig * mlmodule) FStar_Pervasives_Native.option *
   mllib) Prims.list 
-let (uu___is_MLLib : mllib -> Prims.bool) = fun projectee -> true
 let (__proj__MLLib__item___0 :
   mllib ->
     (mlpath * (mlsig * mlmodule) FStar_Pervasives_Native.option * mllib)

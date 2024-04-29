@@ -941,8 +941,6 @@ let lazy_unembed_lazy_kind :
       | uu___ -> FStar_Pervasives_Native.None
 type abstract_nbe_term =
   | AbstractNBE of t 
-let (uu___is_AbstractNBE : abstract_nbe_term -> Prims.bool) =
-  fun projectee -> true
 let (__proj__AbstractNBE__item__t : abstract_nbe_term -> t) =
   fun projectee -> match projectee with | AbstractNBE t1 -> t1
 let (mk_any_emb : t -> t embedding) =

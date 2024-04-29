@@ -4,7 +4,6 @@ type ('m, 'u, 'mult) left_unitality_lemma = unit
 type ('m, 'mult) associativity_lemma = unit
 type 'm monoid =
   | Monoid of 'm * ('m -> 'm -> 'm) * unit * unit * unit 
-let uu___is_Monoid : 'm . 'm monoid -> Prims.bool = fun projectee -> true
 let __proj__Monoid__item__unit : 'm . 'm monoid -> 'm =
   fun projectee ->
     match projectee with
@@ -45,12 +44,6 @@ type ('a, 'b, 'f, 'ma, 'mb) monoid_morphism_unit_lemma = unit
 type ('a, 'b, 'f, 'ma, 'mb) monoid_morphism_mult_lemma = unit
 type ('a, 'b, 'f, 'ma, 'mb) monoid_morphism =
   | MonoidMorphism of unit * unit 
-let uu___is_MonoidMorphism :
-  'a 'b .
-    ('a -> 'b) ->
-      'a monoid ->
-        'b monoid -> ('a, 'b, unit, unit, unit) monoid_morphism -> Prims.bool
-  = fun f -> fun ma -> fun mb -> fun projectee -> true
 let intro_monoid_morphism :
   'a 'b .
     ('a -> 'b) ->
@@ -70,9 +63,6 @@ type ('m, 'a, 'mult, 'act) mult_act_lemma = unit
 type ('m, 'a, 'u, 'act) unit_act_lemma = unit
 type ('m, 'mm, 'a) left_action =
   | LAct of ('m -> 'a -> 'a) * unit * unit 
-let uu___is_LAct :
-  'm . 'm monoid -> unit -> ('m, unit, Obj.t) left_action -> Prims.bool =
-  fun mm -> fun a -> fun projectee -> true
 let __proj__LAct__item__act :
   'm .
     'm monoid ->

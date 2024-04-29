@@ -202,7 +202,6 @@ let (__proj__Mkdep_node__item__color : dep_node -> color) =
     match projectee with | { edges; color = color1;_} -> color1
 type dependence_graph =
   | Deps of dep_node FStar_Compiler_Util.smap 
-let (uu___is_Deps : dependence_graph -> Prims.bool) = fun projectee -> true
 let (__proj__Deps__item___0 :
   dependence_graph -> dep_node FStar_Compiler_Util.smap) =
   fun projectee -> match projectee with | Deps _0 -> _0
@@ -254,7 +253,6 @@ let (uu___is_P_inline_for_extraction : parsing_data_elt -> Prims.bool) =
     match projectee with | P_inline_for_extraction -> true | uu___ -> false
 type parsing_data =
   | Mk_pd of parsing_data_elt Prims.list 
-let (uu___is_Mk_pd : parsing_data -> Prims.bool) = fun projectee -> true
 let (__proj__Mk_pd__item___0 : parsing_data -> parsing_data_elt Prims.list) =
   fun projectee -> match projectee with | Mk_pd _0 -> _0
 let (str_of_parsing_data_elt : parsing_data_elt -> Prims.string) =

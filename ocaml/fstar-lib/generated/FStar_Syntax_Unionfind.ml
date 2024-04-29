@@ -72,7 +72,6 @@ let (state : uf FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref uu___
 type tx =
   | TX of uf 
-let (uu___is_TX : tx -> Prims.bool) = fun projectee -> true
 let (__proj__TX__item___0 : tx -> uf) =
   fun projectee -> match projectee with | TX _0 -> _0
 let (get : unit -> uf) = fun uu___ -> FStar_Compiler_Effect.op_Bang state

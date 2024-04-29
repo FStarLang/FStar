@@ -1,9 +1,6 @@
 open Prims
 type ('a, 'r, 'x) acc_classical =
   | AccClassicalIntro of ('a -> ('a, 'r, unit) acc_classical) 
-let uu___is_AccClassicalIntro :
-  'a 'r . 'a -> ('a, 'r, unit) acc_classical -> Prims.bool =
-  fun x -> fun projectee -> true
 let __proj__AccClassicalIntro__item__access_smaller :
   'a 'r .
     'a -> ('a, 'r, unit) acc_classical -> 'a -> ('a, 'r, unit) acc_classical

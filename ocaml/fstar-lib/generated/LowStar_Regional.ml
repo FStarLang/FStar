@@ -2,8 +2,6 @@ open Prims
 type ('st, 'a) regional =
   | Rgl of 'st * unit * unit * 'a * unit * unit * unit * unit * unit * unit *
   unit * ('st -> unit -> 'a) * ('st -> 'a -> unit) 
-let uu___is_Rgl : 'st 'a . ('st, 'a) regional -> Prims.bool =
-  fun projectee -> true
 let __proj__Rgl__item__state : 'st 'a . ('st, 'a) regional -> 'st =
   fun projectee ->
     match projectee with

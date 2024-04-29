@@ -1454,10 +1454,6 @@ let uu___is_BT_Nil uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
   match uu___7 with | BT_Nil _ -> true | _ -> false
 let uu___is_BT_S uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
   match uu___7 with | BT_S _ -> true | _ -> false
-let uu___is_BO uu___6 uu___5 uu___4 uu___3 uu___2 uu___1 uu___ uu___7 =
-  match uu___7 with | BO _ -> true | _ -> false
-let uu___is_MC_Tok uu___4 uu___3 uu___2 uu___1 uu___ uu___5 =
-  match uu___5 with | MC_Tok _ -> true | _ -> false
 type ('g, 't1, 't2) sub_typing = (unit, unit, unit, unit) related
 type ('g, 'c1, 'c2) sub_comp = (unit, unit, unit, unit) related_comp
 type ('g, 't1, 't2) equiv = (unit, unit, unit, unit) related

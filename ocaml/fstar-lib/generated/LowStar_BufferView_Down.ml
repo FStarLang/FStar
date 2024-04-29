@@ -2,17 +2,11 @@ open Prims
 type ('a, 'b, 'f, 'g) inverses = unit
 type ('a, 'b) view =
   | View of Prims.pos * unit * unit 
-let uu___is_View : 'a 'b . ('a, 'b) view -> Prims.bool =
-  fun projectee -> true
 let __proj__View__item__n : 'a 'b . ('a, 'b) view -> Prims.pos =
   fun projectee -> match projectee with | View (n, get, put) -> n
 type ('src, 'rrel, 'rel, 'dest) buffer_view =
   | BufferView of ('src, 'rrel, 'rel) LowStar_Monotonic_Buffer.mbuffer *
   ('src, 'dest) view 
-let uu___is_BufferView :
-  'src 'rrel 'rel 'dest .
-    ('src, 'rrel, 'rel, 'dest) buffer_view -> Prims.bool
-  = fun projectee -> true
 let __proj__BufferView__item__buf :
   'src 'rrel 'rel 'dest .
     ('src, 'rrel, 'rel, 'dest) buffer_view ->

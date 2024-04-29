@@ -15,7 +15,6 @@ type ('tip, 'h) is_tip = unit
 type ('h, 'ctr, 'tip) is_wf_with_ctr_and_tip = unit
 type mem' =
   | HS of Prims.int * FStar_Monotonic_HyperHeap.hmap * unit 
-let (uu___is_HS : mem' -> Prims.bool) = fun projectee -> true
 let (__proj__HS__item__rid_ctr : mem' -> Prims.int) =
   fun projectee -> match projectee with | HS (rid_ctr, h, tip) -> rid_ctr
 let (__proj__HS__item__h : mem' -> FStar_Monotonic_HyperHeap.hmap) =
@@ -49,8 +48,6 @@ let (pop : mem -> mem) =
         let h1 = FStar_Map.restrict dom h0 in mk_mem rid_ctr0 h1 ()
 type ('a, 'rel) mreference' =
   | MkRef of unit * ('a, 'rel) FStar_Monotonic_Heap.mref 
-let uu___is_MkRef : 'a 'rel . ('a, 'rel) mreference' -> Prims.bool =
-  fun projectee -> true
 
 let __proj__MkRef__item__ref :
   'a 'rel . ('a, 'rel) mreference' -> ('a, 'rel) FStar_Monotonic_Heap.mref =
@@ -161,7 +158,6 @@ type ('id, 'h0, 'h1) modifies_one = unit
 type ('id, 's, 'h0, 'h1) modifies_ref = unit
 type some_ref =
   | Ref of unit * unit * (Obj.t, Obj.t) mreference 
-let (uu___is_Ref : some_ref -> Prims.bool) = fun projectee -> true
 let (__proj__Ref__item___2 : some_ref -> (unit, unit) mreference) =
   fun uu___ ->
     (fun projectee -> match projectee with | Ref (a, rel, _2) -> Obj.magic _2)
@@ -186,7 +182,6 @@ let (norm_steps : FStar_Pervasives.norm_step Prims.list) =
 type ('rs, 'h0, 'h1) mods = unit
 type aref =
   | ARef of unit * FStar_Monotonic_Heap.aref 
-let (uu___is_ARef : aref -> Prims.bool) = fun projectee -> true
 
 let (__proj__ARef__item__aref_aref : aref -> FStar_Monotonic_Heap.aref) =
   fun projectee ->

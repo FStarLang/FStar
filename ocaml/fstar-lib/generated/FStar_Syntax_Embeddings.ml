@@ -2327,7 +2327,6 @@ let (e_document :
   FStar_Syntax_Embeddings_Base.e_lazy FStar_Syntax_Syntax.Lazy_doc uu___
 type abstract_term =
   | Abstract of FStar_Syntax_Syntax.term 
-let (uu___is_Abstract : abstract_term -> Prims.bool) = fun projectee -> true
 let (__proj__Abstract__item__t : abstract_term -> FStar_Syntax_Syntax.term) =
   fun projectee -> match projectee with | Abstract t -> t
 let arrow_as_prim_step_1 :

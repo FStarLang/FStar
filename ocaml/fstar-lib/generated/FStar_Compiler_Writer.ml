@@ -1,11 +1,6 @@
 open Prims
 type ('m, 'uuuuu, 'a) writer =
   | Wr of ('m * 'a) 
-let uu___is_Wr :
-  'm .
-    'm FStar_Class_Monoid.monoid ->
-      unit -> ('m, unit, Obj.t) writer -> Prims.bool
-  = fun uu___ -> fun a -> fun projectee -> true
 let __proj__Wr__item___0 :
   'm .
     'm FStar_Class_Monoid.monoid ->

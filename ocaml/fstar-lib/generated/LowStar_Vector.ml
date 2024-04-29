@@ -3,7 +3,6 @@ type uint32_t = FStar_UInt32.t
 let (max_uint32 : uint32_t) = (Stdint.Uint32.of_string "4294967295")
 type 'a vector_str =
   | Vec of uint32_t * uint32_t * 'a LowStar_Buffer.buffer 
-let uu___is_Vec : 'a . 'a vector_str -> Prims.bool = fun projectee -> true
 let __proj__Vec__item__sz : 'a . 'a vector_str -> uint32_t =
   fun projectee -> match projectee with | Vec (sz, cap, vs) -> sz
 let __proj__Vec__item__cap : 'a . 'a vector_str -> uint32_t =

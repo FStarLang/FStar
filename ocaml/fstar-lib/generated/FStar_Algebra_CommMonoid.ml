@@ -1,7 +1,6 @@
 open Prims
 type 'a cm =
   | CM of 'a * ('a -> 'a -> 'a) * unit * unit * unit 
-let uu___is_CM : 'a . 'a cm -> Prims.bool = fun projectee -> true
 let __proj__CM__item__unit : 'a . 'a cm -> 'a =
   fun projectee ->
     match projectee with

@@ -182,8 +182,6 @@ let dsnd : 'a 'b . ('a, 'b) Prims.dtuple2 -> 'b =
   fun t -> Prims.__proj__Mkdtuple2__item___2 t
 type ('a, 'b, 'c) dtuple3 =
   | Mkdtuple3 of 'a * 'b * 'c 
-let uu___is_Mkdtuple3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> Prims.bool =
-  fun projectee -> true
 let __proj__Mkdtuple3__item___1 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'a =
   fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _1
 let __proj__Mkdtuple3__item___2 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'b =
@@ -192,8 +190,6 @@ let __proj__Mkdtuple3__item___3 : 'a 'b 'c . ('a, 'b, 'c) dtuple3 -> 'c =
   fun projectee -> match projectee with | Mkdtuple3 (_1, _2, _3) -> _3
 type ('a, 'b, 'c, 'd) dtuple4 =
   | Mkdtuple4 of 'a * 'b * 'c * 'd 
-let uu___is_Mkdtuple4 : 'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> Prims.bool
-  = fun projectee -> true
 let __proj__Mkdtuple4__item___1 :
   'a 'b 'c 'd . ('a, 'b, 'c, 'd) dtuple4 -> 'a =
   fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _1
@@ -208,9 +204,6 @@ let __proj__Mkdtuple4__item___4 :
   fun projectee -> match projectee with | Mkdtuple4 (_1, _2, _3, _4) -> _4
 type ('a, 'b, 'c, 'd, 'e) dtuple5 =
   | Mkdtuple5 of 'a * 'b * 'c * 'd * 'e 
-let uu___is_Mkdtuple5 :
-  'a 'b 'c 'd 'e . ('a, 'b, 'c, 'd, 'e) dtuple5 -> Prims.bool =
-  fun projectee -> true
 let __proj__Mkdtuple5__item___1 :
   'a 'b 'c 'd 'e . ('a, 'b, 'c, 'd, 'e) dtuple5 -> 'a =
   fun projectee ->

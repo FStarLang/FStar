@@ -6,9 +6,6 @@ type ('k, 'v, 'f, 'd) map_t =
     FStar_FunctionalExtensionality.restricted_t
 type ('k, 'v, 'f) ordmap =
   | Mk_map of ('k, unit) FStar_OrdSet.ordset * ('k, 'v, unit, unit) map_t 
-let uu___is_Mk_map :
-  'k 'v . 'k FStar_OrdSet.cmp -> ('k, 'v, unit) ordmap -> Prims.bool =
-  fun f -> fun projectee -> true
 let __proj__Mk_map__item__d :
   'k 'v .
     'k FStar_OrdSet.cmp ->

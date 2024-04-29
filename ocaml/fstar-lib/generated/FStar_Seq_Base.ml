@@ -1,7 +1,6 @@
 open Prims
 type 'a seq =
   | MkSeq of 'a Prims.list 
-let uu___is_MkSeq : 'a . 'a seq -> Prims.bool = fun projectee -> true
 let __proj__MkSeq__item__l : 'a . 'a seq -> 'a Prims.list =
   fun projectee -> match projectee with | MkSeq l -> l
 let length : 'uuuuu . 'uuuuu seq -> Prims.nat =

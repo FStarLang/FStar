@@ -1,7 +1,6 @@
 open Prims
 type doc =
   | Doc of Prims.string 
-let (uu___is_Doc : doc -> Prims.bool) = fun projectee -> true
 let (__proj__Doc__item___0 : doc -> Prims.string) =
   fun projectee -> match projectee with | Doc _0 -> _0
 type assoc =

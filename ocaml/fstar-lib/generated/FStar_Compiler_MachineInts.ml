@@ -122,8 +122,6 @@ let (__int_to_t_for : machint_kind -> FStar_Syntax_Syntax.term) =
 type 'k machint =
   | Mk of FStar_BigInt.t * FStar_Syntax_Syntax.meta_source_info
   FStar_Pervasives_Native.option 
-let (uu___is_Mk : machint_kind -> unit machint -> Prims.bool) =
-  fun k -> fun projectee -> true
 let (__proj__Mk__item___0 : machint_kind -> unit machint -> FStar_BigInt.t) =
   fun k -> fun projectee -> match projectee with | Mk (_0, _1) -> _0
 let (__proj__Mk__item___1 :

@@ -2,15 +2,11 @@ open Prims
 type ('uuuuu, 'uuuuu1, 'f, 'g) inverses = unit
 type ('a, 'b) view =
   | View of Prims.pos * unit * unit 
-let uu___is_View : 'a 'b . ('a, 'b) view -> Prims.bool =
-  fun projectee -> true
 let __proj__View__item__n : 'a 'b . ('a, 'b) view -> Prims.pos =
   fun projectee -> match projectee with | View (n, get, put) -> n
 type 'dest buffer =
   | Buffer of unit * Obj.t LowStar_BufferView_Down.buffer * (Obj.t, 'dest)
   view 
-let uu___is_Buffer : 'dest . 'dest buffer -> Prims.bool =
-  fun projectee -> true
 let __proj__Buffer__item__down_buf :
   'dest . 'dest buffer -> unit LowStar_BufferView_Down.buffer =
   fun uu___ ->
