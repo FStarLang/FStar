@@ -1593,15 +1593,17 @@ and encode_formula (phi:typ) (env:env_t) : (term * decls_t)  = (* expects phi to
               encode_formula phi env
 
             | Tm_fvar fv, [(r, _); (msg, _); (phi, _)] when S.fv_eq_lid fv Const.labeled_lid -> //interpret (labeled r msg t) as Tm_meta(t, Meta_labeled(msg, r, false)
+              (* NB: below we use Errors.mkmsg since FStar.Range.labeled takes a string, but
+                 the Meta_labeled node needs a list of docs (Errors.error_message). *)
               begin match SE.try_unembed r SE.id_norm_cb,
                           SE.try_unembed msg SE.id_norm_cb with
               | Some r, Some s ->
-                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, r, false)}) r in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(Errors.mkmsg s, r, false)}) r in
                 fallback phi
 
               (* If we could not unembed the position, still use the string *)
               | None, Some s ->
-                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(s, phi.pos, false)}) phi.pos in
+                let phi = S.mk (Tm_meta {tm=phi; meta=Meta_labeled(Errors.mkmsg s, phi.pos, false)}) phi.pos in
                 fallback phi
 
               | _ ->

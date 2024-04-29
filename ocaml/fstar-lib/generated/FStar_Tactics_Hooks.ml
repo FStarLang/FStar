@@ -649,26 +649,31 @@ let (preprocess :
                                 (let label =
                                    let uu___7 =
                                      let uu___8 =
-                                       FStar_Class_Show.show
-                                         (FStar_Class_Show.printableshow
-                                            FStar_Class_Printable.printable_int)
-                                         n in
+                                       FStar_Pprint.doc_of_string
+                                         "Could not prove goal #" in
                                      let uu___9 =
                                        let uu___10 =
-                                         let uu___11 =
-                                           FStar_Tactics_Types.get_label g in
-                                         uu___11 = "" in
-                                       if uu___10
-                                       then ""
-                                       else
-                                         (let uu___12 =
-                                            let uu___13 =
-                                              FStar_Tactics_Types.get_label g in
-                                            Prims.strcat uu___13 ")" in
-                                          Prims.strcat " (" uu___12) in
-                                     Prims.strcat uu___8 uu___9 in
-                                   Prims.strcat "Could not prove goal #"
-                                     uu___7 in
+                                         FStar_Class_PP.pp
+                                           FStar_Class_PP.pp_int n in
+                                       let uu___11 =
+                                         let uu___12 =
+                                           let uu___13 =
+                                             FStar_Tactics_Types.get_label g in
+                                           uu___13 = "" in
+                                         if uu___12
+                                         then FStar_Pprint.empty
+                                         else
+                                           (let uu___14 =
+                                              let uu___15 =
+                                                FStar_Tactics_Types.get_label
+                                                  g in
+                                              FStar_Pprint.doc_of_string
+                                                uu___15 in
+                                            FStar_Pprint.parens uu___14) in
+                                       FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                         uu___11 in
+                                     FStar_Pprint.op_Hat_Hat uu___8 uu___9 in
+                                   [uu___7] in
                                  let gt' =
                                    let uu___7 =
                                      FStar_Tactics_Types.goal_range g in
@@ -695,7 +700,7 @@ let (preprocess :
                       (did_anything, uu___7)))))
 let rec (traverse_for_spinoff :
   pol ->
-    (Prims.string * FStar_Compiler_Range_Type.range)
+    (FStar_Pprint.document Prims.list * FStar_Compiler_Range_Type.range)
       FStar_Pervasives_Native.option ->
       FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> tres)
   =
@@ -716,8 +721,9 @@ let rec (traverse_for_spinoff :
                     FStar_Compiler_Range_Ops.string_of_def_range rng in
                   let uu___2 =
                     FStar_Compiler_Range_Ops.string_of_use_range rng in
+                  let uu___3 = FStar_Errors_Msg.rendermsg msg in
                   FStar_Compiler_Util.format3 "(%s,%s) : %s" uu___1 uu___2
-                    msg in
+                    uu___3 in
             if debug
             then
               (let uu___1 =

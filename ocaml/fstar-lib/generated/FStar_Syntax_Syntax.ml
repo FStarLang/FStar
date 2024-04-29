@@ -337,8 +337,8 @@ and metadata =
   | Meta_pattern of (term' syntax Prims.list * (term' syntax * arg_qualifier
   FStar_Pervasives_Native.option) Prims.list Prims.list) 
   | Meta_named of FStar_Ident.lident 
-  | Meta_labeled of (Prims.string * FStar_Compiler_Range_Type.range *
-  Prims.bool) 
+  | Meta_labeled of (FStar_Pprint.document Prims.list *
+  FStar_Compiler_Range_Type.range * Prims.bool) 
   | Meta_desugared of meta_source_info 
   | Meta_monadic of (monad_name * term' syntax) 
   | Meta_monadic_lift of (monad_name * monad_name * term' syntax) 
@@ -381,10 +381,10 @@ and fv = {
   fv_qual: fv_qual FStar_Pervasives_Native.option }
 and free_vars =
   {
-  free_names: bv Prims.list ;
-  free_uvars: ctx_uvar Prims.list ;
-  free_univs: universe_uvar Prims.list ;
-  free_univ_names: univ_name Prims.list }
+  free_names: bv FStar_Compiler_FlatSet.t ;
+  free_uvars: ctx_uvar FStar_Compiler_FlatSet.t ;
+  free_univs: universe_uvar FStar_Compiler_FlatSet.t ;
+  free_univ_names: univ_name FStar_Compiler_FlatSet.t }
 and residual_comp =
   {
   residual_effect: FStar_Ident.lident ;
@@ -847,7 +847,9 @@ let (uu___is_Meta_labeled : metadata -> Prims.bool) =
   fun projectee ->
     match projectee with | Meta_labeled _0 -> true | uu___ -> false
 let (__proj__Meta_labeled__item___0 :
-  metadata -> (Prims.string * FStar_Compiler_Range_Type.range * Prims.bool))
+  metadata ->
+    (FStar_Pprint.document Prims.list * FStar_Compiler_Range_Type.range *
+      Prims.bool))
   = fun projectee -> match projectee with | Meta_labeled _0 -> _0
 let (uu___is_Meta_desugared : metadata -> Prims.bool) =
   fun projectee ->
@@ -973,22 +975,23 @@ let (__proj__Mkfv__item__fv_qual :
   fv -> fv_qual FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with | { fv_name; fv_qual = fv_qual1;_} -> fv_qual1
-let (__proj__Mkfree_vars__item__free_names : free_vars -> bv Prims.list) =
+let (__proj__Mkfree_vars__item__free_names :
+  free_vars -> bv FStar_Compiler_FlatSet.t) =
   fun projectee ->
     match projectee with
     | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_names
 let (__proj__Mkfree_vars__item__free_uvars :
-  free_vars -> ctx_uvar Prims.list) =
+  free_vars -> ctx_uvar FStar_Compiler_FlatSet.t) =
   fun projectee ->
     match projectee with
     | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_uvars
 let (__proj__Mkfree_vars__item__free_univs :
-  free_vars -> universe_uvar Prims.list) =
+  free_vars -> universe_uvar FStar_Compiler_FlatSet.t) =
   fun projectee ->
     match projectee with
     | { free_names; free_uvars; free_univs; free_univ_names;_} -> free_univs
 let (__proj__Mkfree_vars__item__free_univ_names :
-  free_vars -> univ_name Prims.list) =
+  free_vars -> univ_name FStar_Compiler_FlatSet.t) =
   fun projectee ->
     match projectee with
     | { free_names; free_uvars; free_univs; free_univ_names;_} ->

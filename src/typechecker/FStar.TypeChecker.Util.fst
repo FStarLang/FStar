@@ -1302,7 +1302,7 @@ let mk_bind env
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
-let strengthen_comp env (reason:option (unit -> string)) (c:comp) (f:formula) flags : comp * guard_t =
+let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) (f:formula) flags : comp * guard_t =
     if env.lax || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
@@ -1415,7 +1415,7 @@ let weaken_precondition env lc (f:guard_formula) : lcomp =
   TcComm.mk_lcomp lc.eff_name lc.res_typ (weaken_flags lc.cflags) weaken
 
 let strengthen_precondition
-            (reason:option (unit -> string))
+            (reason:option (unit -> list Pprint.document))
             env
             (e_for_debugging_only:term)
             (lc:lcomp)

@@ -166,7 +166,8 @@ type term' =
   | Quant of (qop * term Prims.list Prims.list * Prims.int
   FStar_Pervasives_Native.option * sort Prims.list * term) 
   | Let of (term Prims.list * term) 
-  | Labeled of (term * Prims.string * FStar_Compiler_Range_Type.range) 
+  | Labeled of (term * FStar_Errors_Msg.error_message *
+  FStar_Compiler_Range_Type.range) 
   | LblPos of (term * Prims.string) 
 and term =
   {
@@ -213,8 +214,9 @@ let (__proj__Let__item___0 : term' -> (term Prims.list * term)) =
 let (uu___is_Labeled : term' -> Prims.bool) =
   fun projectee -> match projectee with | Labeled _0 -> true | uu___ -> false
 let (__proj__Labeled__item___0 :
-  term' -> (term * Prims.string * FStar_Compiler_Range_Type.range)) =
-  fun projectee -> match projectee with | Labeled _0 -> _0
+  term' ->
+    (term * FStar_Errors_Msg.error_message * FStar_Compiler_Range_Type.range))
+  = fun projectee -> match projectee with | Labeled _0 -> _0
 let (uu___is_LblPos : term' -> Prims.bool) =
   fun projectee -> match projectee with | LblPos _0 -> true | uu___ -> false
 let (__proj__LblPos__item___0 : term' -> (term * Prims.string)) =
@@ -523,7 +525,8 @@ let (fv_sort : fv -> sort) =
 let (fv_force : fv -> Prims.bool) =
   fun x ->
     let uu___ = x in match uu___ with | FV (uu___1, uu___2, force) -> force
-type error_label = (fv * Prims.string * FStar_Compiler_Range_Type.range)
+type error_label =
+  (fv * FStar_Errors_Msg.error_message * FStar_Compiler_Range_Type.range)
 type error_labels = error_label Prims.list
 let (fv_eq : fv -> fv -> Prims.bool) =
   fun x ->
@@ -665,8 +668,9 @@ let rec (hash_of_term' : term' -> Prims.string) =
     | Labeled (t1, r1, r2) ->
         let uu___ = hash_of_term t1 in
         let uu___1 =
-          let uu___2 = FStar_Compiler_Range_Ops.string_of_range r2 in
-          Prims.strcat r1 uu___2 in
+          let uu___2 = FStar_Errors_Msg.rendermsg r1 in
+          let uu___3 = FStar_Compiler_Range_Ops.string_of_range r2 in
+          Prims.strcat uu___2 uu___3 in
         Prims.strcat uu___ uu___1
     | LblPos (t1, r) ->
         let uu___ =
@@ -1089,8 +1093,9 @@ let rec (print_smt_term : term -> Prims.string) =
         let uu___1 = print_smt_term_list l in
         FStar_Compiler_Util.format2 "(%s %s)" uu___ uu___1
     | Labeled (t1, r1, r2) ->
-        let uu___ = print_smt_term t1 in
-        FStar_Compiler_Util.format2 "(Labeled '%s' %s)" r1 uu___
+        let uu___ = FStar_Errors_Msg.rendermsg r1 in
+        let uu___1 = print_smt_term t1 in
+        FStar_Compiler_Util.format2 "(Labeled '%s' %s)" uu___ uu___1
     | LblPos (t1, s) ->
         let uu___ = print_smt_term t1 in
         FStar_Compiler_Util.format2 "(LblPos %s %s)" s uu___

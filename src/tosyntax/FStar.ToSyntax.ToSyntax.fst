@@ -2630,7 +2630,8 @@ and desugar_formula env (f:term) : S.term =
   match (unparen f).tm with
     | Labeled(f, l, p) ->
       let f = desugar_formula env f in
-      mk <| Tm_meta {tm=f; meta=Meta_labeled(l, f.pos, p)}
+      // GM: I don't think this case really happens?
+      mk <| Tm_meta {tm=f; meta=Meta_labeled(Errors.Msg.mkmsg l, f.pos, p)}
 
     | QForall([], _, _)
     | QExists([], _, _)

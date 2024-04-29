@@ -1,6 +1,7 @@
 >> Got issues: [
 * Error 19 at NegativeTests.ZZImplicitFalse.fst(20,27-20,28):
-  - Subtyping check failed; expected type Prims.l_False; got type Prims.unit
+  - Subtyping check failed
+  - Expected type Prims.l_False got type Prims.unit
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(138,29-138,34)

@@ -37,7 +37,7 @@ type ranges = list (option string * Range.range)
 //decorate a term with an error label
 let __ctr = BU.mk_ref 0
 
-let fresh_label : string -> Range.range -> term -> label * term =
+let fresh_label : Errors.error_message -> Range.range -> term -> label * term =
     fun message range t ->
         let l = incr __ctr; format1 "label_%s" (string_of_int !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
@@ -86,11 +86,12 @@ let label_goals use_env_msg  //when present, provides an alternate error message
     in
     let is_a_named_continuation lhs = conjuncts lhs |> BU.for_some is_guard_free in
     let flag, msg_prefix = match use_env_msg with
-        | None -> false, ""
-        | Some f -> true, f() in
+        | None -> false, Pprint.empty
+        | Some f -> true, Pprint.doc_of_string (f()) in
     let fresh_label msg ropt rng t =
+        let open FStar.Pprint in
         let msg = if flag
-                  then "Failed to verify implicit argument: " ^ msg_prefix ^ " :: " ^ msg
+                  then (Errors.Msg.text "Failed to verify implicit argument: " ^^ msg_prefix) :: msg
                   else msg in
         let rng = match ropt with
                   | None -> rng
@@ -100,7 +101,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
         in
         fresh_label msg rng t
     in
-    let rec aux (default_msg:string) //the error message text to generate at a label
+    let rec aux (default_msg : Errors.error_message) //the error message text to generate at a label
                 (ropt:option Range.range) //an optional position, if there was an enclosing Labeled node
                 (post_name_opt:option string) //the name of the current post-condition variable --- it is left uninstrumented
                 (labels:list label) //the labels accumulated so far
@@ -114,7 +115,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
 
         | LblPos _ -> failwith "Impossible" //these get added after errorReporting instrumentation only
 
-        | Labeled(arg, "Could not prove post-condition", label_range) ->
+        | Labeled(arg, [d], label_range) when Errors.Msg.renderdoc d = "Could not prove post-condition" ->
           //printfn "GOT A LABELED WP IMPLICATION\n\t%s"
           //        (Term.print_smt_term q);
           let fallback debug_msg =
@@ -138,7 +139,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                         | Quant(Forall, pats_ens, iopt_ens, sorts_ens, {tm=App(Imp, [ensures_conjuncts; post]); rng=rng_ens}) ->
                           if is_a_post_condition (Some post_name) post
                           then
-                            let labels, ensures_conjuncts = aux "Could not prove post-condition" None (Some post_name) labels ensures_conjuncts in
+                            let labels, ensures_conjuncts = aux (Errors.mkmsg "Could not prove post-condition") None (Some post_name) labels ensures_conjuncts in
                             let pats_ens =
                               match pats_ens with
                               | []
@@ -295,7 +296,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
           labels, Term.mkLet (es, body) q.rng
     in
     __ctr := 0;
-    aux "Assertion failed" None None [] q
+    aux (Errors.mkmsg "Assertion failed") None None [] q
 
 
 (*
@@ -325,15 +326,16 @@ let detail_errors hint_replay
     in
 
     let print_result ((_, msg, r), success) =
+      let open FStar.Pprint in
+      let open FStar.Errors.Msg in
         if success
         then BU.print1 "OK: proof obligation at %s was proven in isolation\n" (Range.string_of_range r)
         else if hint_replay
-        then FStar.Errors.log_issue r (Errors.Warning_HintFailedToReplayProof,
-                                       "Hint failed to replay this sub-proof: " ^ msg)
-        else FStar.Errors.log_issue r (Errors.Error_ProofObligationFailed,
-                                       BU.format2 "XX: proof obligation at %s failed\n\t%s\n"
-                                                  (Range.string_of_range r)
-                                                  msg)
+        then FStar.Errors.log_issue_doc r (Errors.Warning_HintFailedToReplayProof,
+               (text "Hint failed to replay this sub-proof" :: msg))
+        else FStar.Errors.log_issue_doc r (Errors.Error_ProofObligationFailed, [
+                 text <| BU.format1 "XX: proof obligation at %s failed." (Class.Show.show r);
+               ] @ msg)
     in
 
     let elim labs = //assumes that all the labs are true, effectively removing them from the query

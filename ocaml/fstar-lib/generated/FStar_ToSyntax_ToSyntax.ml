@@ -6005,14 +6005,19 @@ and (desugar_formula :
       match uu___ with
       | FStar_Parser_AST.Labeled (f1, l, p) ->
           let f2 = desugar_formula env f1 in
-          mk
-            (FStar_Syntax_Syntax.Tm_meta
-               {
-                 FStar_Syntax_Syntax.tm2 = f2;
-                 FStar_Syntax_Syntax.meta =
-                   (FStar_Syntax_Syntax.Meta_labeled
-                      (l, (f2.FStar_Syntax_Syntax.pos), p))
-               })
+          let uu___1 =
+            let uu___2 =
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 = FStar_Errors_Msg.mkmsg l in
+                  (uu___5, (f2.FStar_Syntax_Syntax.pos), p) in
+                FStar_Syntax_Syntax.Meta_labeled uu___4 in
+              {
+                FStar_Syntax_Syntax.tm2 = f2;
+                FStar_Syntax_Syntax.meta = uu___3
+              } in
+            FStar_Syntax_Syntax.Tm_meta uu___2 in
+          mk uu___1
       | FStar_Parser_AST.QForall ([], uu___1, uu___2) ->
           FStar_Compiler_Effect.failwith
             "Impossible: Quantifier without binders"

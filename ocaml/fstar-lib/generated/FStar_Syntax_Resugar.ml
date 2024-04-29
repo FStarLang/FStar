@@ -1035,9 +1035,13 @@ let rec (resugar_term' :
                                   | FStar_Syntax_Syntax.Meta_labeled
                                       (s, r, p) ->
                                       let uu___9 =
-                                        mk
-                                          (FStar_Parser_AST.Labeled
-                                             (body3, s, p)) in
+                                        let uu___10 =
+                                          let uu___11 =
+                                            let uu___12 =
+                                              FStar_Errors_Msg.rendermsg s in
+                                            (body3, uu___12, p) in
+                                          FStar_Parser_AST.Labeled uu___11 in
+                                        mk uu___10 in
                                       ([], uu___9)
                                   | uu___9 ->
                                       FStar_Compiler_Effect.failwith

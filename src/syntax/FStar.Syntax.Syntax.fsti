@@ -327,7 +327,7 @@ and cflag =                                                      (* flags applic
 and metadata =
   | Meta_pattern       of list term * list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_labeled       of list Pprint.document * Range.range * bool (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
@@ -379,10 +379,10 @@ and fv = {
     fv_qual :option fv_qual
 }
 and free_vars = {
-    free_names:list bv;
-    free_uvars:list ctx_uvar;
-    free_univs:list universe_uvar;
-    free_univ_names:list univ_name; //fifo
+    free_names      : FlatSet.t bv;
+    free_uvars      : uvars;
+    free_univs      : FlatSet.t universe_uvar;
+    free_univ_names : FlatSet.t univ_name; //fifo
 }
 
 (* Residual of a computation type after typechecking *)

@@ -412,8 +412,14 @@ let optimized_haseq_soundness_for_data (ty_lid:lident) (data:sigelt) (usubst:lis
       let haseq_b = mk_Tm_app U.t_haseq [S.as_arg b.binder_bv.sort] Range.dummyRange in
       //label the haseq predicate so that we get a proper error message if the assertion fails
       let sort_range = b.binder_bv.sort.pos in
+      let open FStar.Errors.Msg in
+      let open FStar.Pprint in
+      let open FStar.Class.PP in
       let haseq_b = TcUtil.label
-                    (BU.format1 "Failed to prove that the type '%s' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier" (string_of_lid ty_lid))
+                    [
+                      text "Failed to prove that the type" ^/^ squotes (pp ty_lid) ^/^ text "supports decidable equality because of this argument.";
+                      text "Add either the 'noeq' or 'unopteq' qualifier";
+                    ]
                     sort_range
                     haseq_b
       in
