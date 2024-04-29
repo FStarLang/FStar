@@ -328,8 +328,12 @@ let preprocess (env:Env.env) (goal:term)
                  if !tacdbg then
                      BU.print2 "Got goal #%s: %s\n" (show n) (show (goal_type g));
                  let label =
-                    "Could not prove goal #" ^ show n ^
-                    (if get_label g = "" then "" else " (" ^ get_label g ^ ")")
+                   let open FStar.Pprint in
+                   let open FStar.Class.PP in
+                   [
+                    doc_of_string "Could not prove goal #" ^^ pp n ^/^
+                    (if get_label g = "" then empty else parens (doc_of_string <| get_label g))
+                   ]
                  in
                  let gt' = TcUtil.label label (goal_range g) phi in
                  (n+1, (goal_env g, gt', goal_opts g)::gs)) s gs in
@@ -341,18 +345,18 @@ let preprocess (env:Env.env) (goal:term)
 
 let rec traverse_for_spinoff
                  (pol:pol)
-                 (label_ctx:option (string & Range.range))
+                 (label_ctx:option (list Pprint.document & Range.range))
                  (e:Env.env)
                  (t:term) : tres =
     let debug_any = Options.debug_any () in
     let debug = Env.debug e (O.Other "SpinoffAll") in
     let traverse pol e t = traverse_for_spinoff pol label_ctx e t in
-    let traverse_ctx pol ctx e t =
+    let traverse_ctx pol (ctx : list Pprint.document & Range.range) (e:Env.env) (t:term) : tres =
       let print_lc (msg, rng) =
         BU.format3 "(%s,%s) : %s"
           (Range.string_of_def_range rng)
           (Range.string_of_use_range rng)
-          msg
+          (Errors.Msg.rendermsg msg)
       in
        if debug
        then BU.print2 "Changing label context from %s to %s"
@@ -385,7 +389,7 @@ let rec traverse_for_spinoff
           res
     in
     let maybe_spinoff pol
-                      (label_ctx:option (string & Range.range))
+                      (label_ctx:option (list Pprint.document & Range.range))
                       (e:Env.env)
                       (t:term)
       : tres =
