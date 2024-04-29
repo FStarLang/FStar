@@ -59,10 +59,20 @@ type st_t = {
 
 noeq
 type tc_goal = {
-  g : term;
-  head_fv : fv;
+  g              : term;
+  (* ^ The goal as a term *)
+  head_fv        : fv;
+  (* ^ Head fv of goal (g), i.e. the class name *)
+  c_se           : option sigelt;
+  (* ^ Class sigelt *)
+  fundeps        : option (list int);
+  (* ^ Functional dependendcies of class, if any. *)
   args_and_uvars : list (argv & bool);
+  (* ^ The arguments of the goal, and whether they are
+  unresolved, even partially. I.e. the boolean is true
+  when the arg contains uvars. *)
 }
+
 
 val fv_eq : fv -> fv -> Tot bool
 let fv_eq fv1 fv2 =
@@ -148,7 +158,7 @@ let rec unembed_list (#a:Type) (u : term -> Tac (option a)) (t:term) : Tac (opti
   | _ ->
     None
 
-let extract_fundep (se : sigelt) : Tac (option (list int)) =
+let extract_fundeps (se : sigelt) : Tac (option (list int)) =
   let attrs = sigelt_attrs se in
   let rec aux (attrs : list term) : Tac (option (list int)) =
     match attrs with
@@ -166,14 +176,6 @@ let extract_fundep (se : sigelt) : Tac (option (list int)) =
     aux attrs
 
 let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac unit =
-    (* Class sigelt *)
-    let c_se = lookup_typ (cur_env()) (inspect_fv g.head_fv) in
-    let fundeps =
-      match c_se with
-      | Some se ->
-        extract_fundep se
-      | None -> None
-    in
     // print ("head_fv = " ^ fv_to_string g.head_fv);
     // print ("fundeps = " ^ Util.string_of_option (Util.string_of_list (fun i -> string_of_int i)) fundeps);
     let unresolved_args = g.args_and_uvars |> Util.mapi (fun i (_, b) -> if b then [i <: int] else []) |> List.Tot.flatten in
@@ -188,10 +190,10 @@ let trywith (st:st_t) (g:tc_goal) (t typ : term) (k : st_t -> Tac unit) : Tac un
         raise NoInst; // class mismatch, would be better to not even get here
       debug (fun () -> "Trying to apply hypothesis/instance: " ^ term_to_string t);
       (fun () ->
-        if Cons? unresolved_args && None? fundeps then
+        if Cons? unresolved_args && None? g.fundeps then
           fail "Will not continue as there are unresolved args (and no fundeps)"
-        else if Cons? unresolved_args && Some? fundeps then (
-          let Some fundeps = fundeps in
+        else if Cons? unresolved_args && Some? g.fundeps then (
+          let Some fundeps = g.fundeps in
           debug (fun () -> "checking fundeps");
           let all_good = List.Tot.for_all (fun i -> List.Tot.mem i fundeps) unresolved_args in
           if all_good then apply t else fail "fundeps"
@@ -248,10 +250,16 @@ let rec tcresolve' (st:st_t) : Tac unit =
       raise NoInst
 
     | Some (head_fv, us, args) ->
-      let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       (* ^ Maybe should check is this really is a class too? *)
+      let c_se = lookup_typ (cur_env ()) (inspect_fv head_fv) in
+      let fundeps = match c_se with
+        | None -> None
+        | Some se -> extract_fundeps se
+      in
+
+      let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       let st = { st with seen = g :: st.seen } in
-      let g = { g = g; head_fv = head_fv; args_and_uvars = args_and_uvars } in
+      let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
       local st g tcresolve' `or_else` global st g tcresolve'
 
 let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
