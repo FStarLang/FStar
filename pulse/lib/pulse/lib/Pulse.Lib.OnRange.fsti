@@ -23,9 +23,29 @@ val on_range (p: (nat -> vprop))
              ([@@@equate_by_smt] j:nat)
   : vprop
 
+val on_range_eq_false (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i > j)
+  (ensures on_range p i j == pure False)
+
+val on_range_eq_emp (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i == j)
+  (ensures on_range p i j == emp)
+
+val on_range_eq_cons (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i < j)
+  (ensures on_range p i j == (p i ** on_range p (i + 1) j))
+
 val on_range_is_small (p:nat -> vprop) (i:nat) (j:nat)
   : Lemma (requires forall k. (i <= k /\ k < j) ==> is_small (p k))
           (ensures is_small (on_range p i j))
+          [SMTPat (on_range p i j)]
+
+val on_range_is_big (p:nat -> vprop) (i:nat) (j:nat)
+  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_big (p k))
+          (ensures is_big (on_range p i j))
           [SMTPat (on_range p i j)]
 
 val on_range_le

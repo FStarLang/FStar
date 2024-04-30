@@ -43,11 +43,6 @@ let predicate_at (m:carrier) (i:nat)
   | Some f ->
     up2 (fst f)
 
-let on_range_is_big (p: nat -> boxable) (i j:nat)
-: Lemma (is_big (OR.on_range p i j))
-        [SMTPat (is_big (OR.on_range p i j))]
-= admit()
-
 let all_perms (m:carrier) (i j:nat) (p:perm) =
   forall k. 
     i <= k /\ k < j ==>
@@ -55,10 +50,13 @@ let all_perms (m:carrier) (i j:nat) (p:perm) =
      | None -> False
      | Some (_, q) -> p == q)
 
+let map_invariant0 (m:carrier) (n:nat) (p:storable)
+= pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
+
 let map_invariant (v:U32.t) (m:carrier) (n:nat) (p:storable)
 : boxable
 = if v = 0ul
-  then pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
+  then map_invariant0 m n p
   else OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R)
 
 let barrier_inv (b: barrier_t_core) (p:storable)
@@ -101,25 +99,14 @@ let initial_map (p:storable)
 : c:carrier { small_vprop_map.refine c }
 = comp (singleton 0 #1.0R p) (empty_map_below 1)
 
-assume
-val on_range_eq_emp (p:nat -> vprop) (i j:nat)
-: Lemma 
-  (requires i >= j)
-  (ensures OR.on_range p i j == emp)
-
-assume
-val on_range_eq_cons (p:nat -> vprop) (i j:nat)
-: Lemma 
-  (requires i < j)
-  (ensures OR.on_range p i j == (p i ** OR.on_range p (i + 1) j))
 
 let on_range_singleton (p:storable)
 : Lemma (OR.on_range (predicate_at (singleton 0 #0.5R p)) 0 1 == p)
 = let m = (singleton 0 #0.5R p) in
   calc (==) {
     OR.on_range (predicate_at m) 0 1;
-  (==) { on_range_eq_cons (predicate_at m) 0 1;
-        on_range_eq_emp (predicate_at m) 1 1 }
+  (==) { OR.on_range_eq_cons (predicate_at m) 0 1;
+         OR.on_range_eq_emp (predicate_at m) 1 1 }
     predicate_at m 0 ** emp;
   (==) { elim_vprop_equiv (vprop_equiv_unit (predicate_at m 0));
          elim_vprop_equiv (vprop_equiv_comm emp (predicate_at m 0)) }
@@ -199,9 +186,8 @@ ensures map_invariant 1ul m n p
 {
   unfold_map_invariant_0 v p m n;
   rewrite each v as 0ul;
-  rewrite_by (map_invariant 0ul m n p)
-             (pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R))
-             (apply_map_invariant_0_tac) ();
+  rewrite (map_invariant 0ul m n p) as (map_invariant0 m n p);
+  unfold map_invariant0;
   rewrite p as OR.on_range (predicate_at m) 0 n;
   rewrite (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R))
        as (map_invariant 1ul m n p);
@@ -481,7 +467,6 @@ ensures q
         intro_cond_true q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q));
         rewrite (OR.on_range (predicate_at m') 0 n ** pure (all_perms m' 0 n 0.5R))
             as  (map_invariant _v m' n p);
-//        fold (map_invariant _v m' n p);
         fold_barrier_inv _ _ _ _ m';
         drop_ (big_ghost_pcm_pts_to b.core.gref _);
         true;
@@ -501,6 +486,57 @@ ensures q
   }
 }
 ```
+
+let split_aux_post (b:barrier_t) (q r:storable)
+: vprop
+= exists* j k.
+    big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
+    big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r)
+
+      
+```pulse
+ghost
+fn split_aux (b:barrier_t) (p:erased storable) (q r:storable) (i:erased nat)
+requires barrier_inv b.core p **
+         big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R (q ** r))
+ensures  barrier_inv b.core p **
+         (exists* j k.
+            big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
+            big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r))
+
+{
+  admit()
+}
+```
+
+```pulse
+ghost
+fn split (b:barrier_t) (q r:storable)
+requires recv b (q ** r)
+ensures recv b q ** recv b r
+opens (add_inv emp_inames b.i)
+{
+  unfold recv;
+  with i. assert (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R (q ** r)));
+  with p. assert (barrier b p);
+  unfold barrier;
+  with_invariants b.i
+  returns u:unit
+  ensures inv b.i (barrier_inv b.core (reveal p)) **
+         (exists* j k.
+            big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
+            big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r))
+  {
+    split_aux b p q r i;
+  };
+  dup_inv _ _;
+  fold (barrier b p);
+  fold (recv b q);
+  fold (barrier b p);
+  fold (recv b r)
+}
+```
+
 
 let small_star = cm_small_vprop.mult
 let small_emp : small_vprop = cm_small_vprop.unit
