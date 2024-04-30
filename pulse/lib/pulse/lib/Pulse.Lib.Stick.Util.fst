@@ -31,8 +31,7 @@ fn intro
 requires v
 ensures hyp @==> concl
 {
-    intro_stick _ _ _ f_elim;
-    fold (hyp @==> concl);
+    intro_stick _ _ _ f_elim
 }
 ```
 
@@ -42,7 +41,6 @@ fn elim (p q:vprop)
    requires (p @==> q) ** p
    ensures q
 {
-  unfold (p @==> q);
   elim_stick p q;
 }
 ```
