@@ -41,18 +41,25 @@ let predicate_at (m:carrier) (i:nat)
   | None ->
     pure False
   | Some f ->
-    up2 (fst f) ** pure (snd f == 0.5R)
+    up2 (fst f)
 
 let on_range_is_big (p: nat -> boxable) (i j:nat)
 : Lemma (is_big (OR.on_range p i j))
         [SMTPat (is_big (OR.on_range p i j))]
 = admit()
 
+let all_perms (m:carrier) (i j:nat) (p:perm) =
+  forall k. 
+    i <= k /\ k < j ==>
+    (match Map.sel m k with
+     | None -> False
+     | Some (_, q) -> p == q)
+
 let map_invariant (v:U32.t) (m:carrier) (n:nat) (p:storable)
 : boxable
 = if v = 0ul
-  then pure (eq2 #storable p (OR.on_range (predicate_at m) 0 n))
-  else OR.on_range (predicate_at m) 0 n
+  then pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
+  else OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R)
 
 let barrier_inv (b: barrier_t_core) (p:storable)
 : boxable
@@ -94,14 +101,45 @@ let initial_map (p:storable)
 : c:carrier { small_vprop_map.refine c }
 = comp (singleton 0 #1.0R p) (empty_map_below 1)
 
+assume
+val on_range_eq_emp (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i >= j)
+  (ensures OR.on_range p i j == emp)
 
+assume
+val on_range_eq_cons (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i < j)
+  (ensures OR.on_range p i j == (p i ** OR.on_range p (i + 1) j))
+
+let on_range_singleton (p:storable)
+: Lemma (OR.on_range (predicate_at (singleton 0 #0.5R p)) 0 1 == p)
+= let m = (singleton 0 #0.5R p) in
+  calc (==) {
+    OR.on_range (predicate_at m) 0 1;
+  (==) { on_range_eq_cons (predicate_at m) 0 1;
+        on_range_eq_emp (predicate_at m) 1 1 }
+    predicate_at m 0 ** emp;
+  (==) { elim_vprop_equiv (vprop_equiv_unit (predicate_at m 0));
+         elim_vprop_equiv (vprop_equiv_comm emp (predicate_at m 0)) }
+    predicate_at m 0;
+  (==) {}
+    up2 (down2 p);
+  (==) {}
+    p;
+  }
+  
+  
 ```pulse
 ghost
-fn intro_init_map_invariant (p:storable) (q:perm)
+fn intro_init_map_invariant (p:storable)
 requires emp
-ensures map_invariant 0ul (singleton 0 #q p) 1 p
+ensures map_invariant 0ul (singleton 0 #0.5R p) 1 p
 {
-  admit()
+  on_range_singleton p; //inlining the calc does not work
+  rewrite pure (p == OR.on_range (predicate_at (singleton 0 #0.5R p)) 0 1 /\ all_perms (singleton 0 #0.5R p) 0 1 0.5R)
+     as  map_invariant 0ul (singleton 0 #0.5R p) 1 p;
 }
 ```
 
@@ -122,7 +160,7 @@ ensures send b p ** recv b p
           as (comp (singleton 0 #0.5R p) (singleton 0 #0.5R p));
   big_ghost_share gref (singleton 0 #0.5R p) (singleton 0 #0.5R p);
   Box.share2 r;
-  intro_init_map_invariant p 0.5R;
+  intro_init_map_invariant p;
   let b = { r; ctr; gref };
   rewrite each r as b.r, gref as b.gref, ctr as b.ctr;
   fold (barrier_inv b p);
@@ -141,6 +179,17 @@ ensures send b p ** recv b p
 }
 ```
 
+let unfold_map_invariant_0  (v:U32.t) (p:storable) (m:carrier) (n:nat)
+: Lemma
+  (requires v == 0ul)
+  (ensures map_invariant v m n p == pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R))
+= ()
+
+module T = FStar.Tactics
+let apply_map_invariant_0_tac () = 
+  T.mapply (`vprop_equiv_ext);
+  // T.mapply (`unfold_map_invariant_0)
+  T.tadmit()
 
 ```pulse
 ghost
@@ -148,7 +197,14 @@ fn flip_map_invariant (v:U32.t) (p:storable) (m:carrier) (n:nat)
 requires map_invariant v m n p ** p ** pure (v == 0ul)
 ensures map_invariant 1ul m n p
 {
-  admit()
+  unfold_map_invariant_0 v p m n;
+  rewrite each v as 0ul;
+  rewrite_by (map_invariant 0ul m n p)
+             (pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R))
+             (apply_map_invariant_0_tac) ();
+  rewrite p as OR.on_range (predicate_at m) 0 n;
+  rewrite (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R))
+       as (map_invariant 1ul m n p);
 }
 ```
 
@@ -186,8 +242,20 @@ let predicate_at_i_is_q_lemma (m:carrier) (i:nat) (n:nat) (q:storable)
     composable (comp (singleton i #0.5R q) m) (empty_map_below n))
   (ensures
     i < n /\
-    (Some? (Map.sel m i) ==> Map.sel m i == (Some (down2 q, 0.5R))))
-= admit()
+    (Some? (Map.sel m i) ==> fst (Some?.v (Map.sel m i)) == down2 q))
+= if i < n
+  then (
+    match Map.sel m i with
+    | None -> ()
+    | Some (qq, pp) -> ()
+  )
+  else (
+    match Map.sel (empty_map_below n) i with
+    | None -> ()
+    | Some (_, pp) ->
+      assert (pp == 1.0R);
+      ()
+  )
 
 ```pulse
 ghost
@@ -195,7 +263,17 @@ fn elim_on_range_at_i (m:carrier) (i n:nat)
 requires OR.on_range (predicate_at m) 0 n ** pure (i < n)
 ensures OR.on_range (predicate_at m) 0 n ** pure (Some? (Map.sel m i))
 {
-  admit()
+  OR.on_range_get i;
+  match Map.sel m i {
+    None -> {
+      rewrite (predicate_at m i) as pure False;
+      unreachable();
+    }
+
+    Some _ -> {
+      OR.on_range_put 0 i n;
+    }
+  }
 }
 ```
 
@@ -221,7 +299,7 @@ let elim_predicate_at (m:carrier) (i:nat)
 : Lemma 
   (requires Some? (Map.sel m i))
   (ensures predicate_at m i ==
-           up2 (fst (Some?.v (Map.sel m i))) ** pure (snd (Some?.v (Map.sel m i)) == 0.5R))
+           up2 (fst (Some?.v (Map.sel m i)))) // ** pure (snd (Some?.v (Map.sel m i)) == 0.5R))
 = ()
 
 let apply_equiv (_:unit) : T.Tac unit = 
@@ -235,11 +313,10 @@ let apply_equiv (_:unit) : T.Tac unit =
 ghost
 fn elim_predicate_at_alt (m:carrier) (i:nat) (_:squash (Some? (Map.sel m i)))
 requires predicate_at m i
-ensures up2 (fst (Some?.v (Map.sel m i))) ** pure (snd (Some?.v (Map.sel m i)) == 0.5R)
+ensures up2 (fst (Some?.v (Map.sel m i)))
 {
-  rewrite_by (predicate_at m i) 
-             (up2 (fst (Some?.v (Map.sel m i))) ** pure (snd (Some?.v (Map.sel m i)) == 0.5R))
-             (apply_equiv) ();
+  rewrite (predicate_at m i) 
+      as  (up2 (fst (Some?.v (Map.sel m i))));
 }
 ```
 
@@ -260,9 +337,9 @@ ensures
   q **
   OR.on_range (predicate_at m) (i + 1) n **
   pure (Map.sel m i == Some (down2 q, 0.5R)) **
-  pure (i < n)
+  pure (i < n /\ all_perms m 0 n 0.5R)
 {
-  rewrite (map_invariant v m n p) as (OR.on_range (predicate_at m) 0 n);
+  rewrite (map_invariant v m n p) as (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R));
   composable_three _ _ _ _;
   predicate_at_i_is_q_lemma m i n q;
   elim_on_range_at_i m i n;
@@ -311,7 +388,7 @@ fn predicate_at_singleton (m:carrier) (i:nat) (q:storable)
 requires q ** pure (Map.sel m i == Some (down2 q, 0.5R))
 ensures predicate_at m i
 {
-  admit()
+  rewrite q as (predicate_at m i)
 }
 ```
 
@@ -324,12 +401,13 @@ requires
   pure (Map.sel m i == Some (down2 q, 0.5R)) **
   OR.on_range (predicate_at m) 0 i **
   OR.on_range (predicate_at m) (i + 1) n **
-  pure (i < n)
+  pure (i < n /\ all_perms m 0 n 0.5R)
 returns m': erased carrier
 ensures
   big_ghost_pcm_pts_to gref m' **
   big_ghost_pcm_pts_to gref (singleton i #0.5R emp) **
-  OR.on_range (predicate_at m') 0 n
+  OR.on_range (predicate_at m') 0 n **
+  pure (all_perms m' 0 n 0.5R)
 {
   big_ghost_gather gref _ _;
   big_ghost_write gref _ _
@@ -401,7 +479,9 @@ ensures q
         predicate_at_i_is_q ();
         let m' = clear_i ();
         intro_cond_true q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q));
-        fold (map_invariant _v m' n p);
+        rewrite (OR.on_range (predicate_at m') 0 n ** pure (all_perms m' 0 n 0.5R))
+            as  (map_invariant _v m' n p);
+//        fold (map_invariant _v m' n p);
         fold_barrier_inv _ _ _ _ m';
         drop_ (big_ghost_pcm_pts_to b.core.gref _);
         true;
