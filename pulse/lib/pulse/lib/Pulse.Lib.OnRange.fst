@@ -167,13 +167,7 @@ fn on_range_cons_with_implies (i:nat) (#p:nat -> vprop) (#k:nat)
     on_range_uncons ()
   };
 
-  intro_stick (on_range p i k)
-              (p i ** on_range p (i + 1) k)
-              emp
-              aux;
-  
-  rewrite (stick (on_range p i k) (p i ** on_range p (i + 1) k)) as
-          (on_range p i k @==> (p i ** on_range p (i + 1) k))
+  intro_stick _ _ _ aux
 }
 ```
 
@@ -233,12 +227,7 @@ fn on_range_snoc_with_implies () (#p:nat -> vprop) (#i #j:nat)
     on_range_unsnoc () #p #i #(j + 1);
     rewrite (p ((j + 1) - 1)) as p j
   };
-  intro_stick (on_range p i (j + 1))
-              (on_range p i j ** p j)
-              emp
-              aux;
-  rewrite (stick (on_range p i (j + 1)) (on_range p i j ** p j)) as
-          (on_range p i (j + 1) @==> (on_range p i j ** p j))
+  intro_stick _ _ _ aux;
 }
 ```
 
@@ -280,12 +269,7 @@ fn on_range_focus (j:nat) (#p:nat -> vprop) (#i:nat { i <= j }) (#k:nat { j < k 
     on_range_put i j k
   };
 
-  intro_stick (p j)
-              (on_range p i k)
-              (on_range p i j ** on_range p (j + 1) k)
-              aux;
-  rewrite (stick (p j) (on_range p i k)) as
-          (p j @==> on_range p i k)
+  intro_stick _ _ _ aux
 }
 ```
 

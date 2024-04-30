@@ -32,7 +32,7 @@ let ( @==> ) :
 val elim_stick
   (hyp concl: vprop)
 : stt_ghost unit emp_inames
-    ((stick hyp concl) ** hyp)
+    ((hyp @==> concl) ** hyp)
     (fun _ -> concl)
 
 val intro_stick
@@ -45,4 +45,4 @@ val intro_stick
   ))
 : stt_ghost unit emp_inames
     v
-    (fun _ -> stick hyp concl)
+    (fun _ -> hyp @==> concl)
