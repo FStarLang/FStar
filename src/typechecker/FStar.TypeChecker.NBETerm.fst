@@ -136,11 +136,7 @@ let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
             in
             let parms1, args1 = List.splitAt n args1 in
             let parms2, args2 = List.splitAt n args2 in
-            if eq_args args1 args2 = TEQ.Equal
-            then if eq_args parms1 parms2 = TEQ.Equal
-                 then TEQ.Equal
-                 else TEQ.Unknown
-            else TEQ.NotEqual
+            eq_args args1 args2
           )
           else TEQ.Unknown
     end else TEQ.NotEqual

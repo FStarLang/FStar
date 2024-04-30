@@ -112,22 +112,19 @@ let case2 (x0 : test3 A1) (x1 : test3 A2) : Lemma False =
         T.trefl ())
 
 
-[@@expect_failure]
 let case4 (x0 : test3 A1) (x1 : test3 A2) : Lemma (test3 A1 == test3 A2 ==> Mk3 #A1 == coerce_eq () (Mk3 #A2)) =
  assume (test3 A1 == test3 A2);
  assert (Mk3 #A1 == coerce_eq () (Mk3 #A2))
     by (T.norm [delta;primops];
-        T.trivial()) //this can't be proven by the normalizer alone
+        T.trivial()) //this can be proven by the normalizer alone
 
-[@@expect_failure]
 let case5 (x0 : test3 A1) (x1 : test3 A2) : Lemma (test3 A1 == test3 A2 ==> Mk3 #A1 == coerce_eq () (Mk3 #A2)) =
  assume (test3 A1 == test3 A2);
  assert (Mk3 #A1 == coerce_eq () (Mk3 #A2))
     by (T.norm [delta;primops;nbe];
-        T.trivial()) //this can't be proven by the normalizer alone; nor by nbe
+        T.trivial()) //this can be proven by the normalizer alone; nor by nbe
 
 let case6 (x0 : test3 A1) (x1 : test3 A2) : Lemma (test3 A1 == test3 A2 ==> Mk3 #A1 == coerce_eq () (Mk3 #A2)) =
  assume (test3 A1 == test3 A2);
  assert (Mk3 #A1 == coerce_eq () (Mk3 #A2))
-    by (T.norm [delta;primops];
-        T.smt()) //but it can by SMT, since the parameters are irrelevant
+    by (T.smt()) //but it can also by SMT, since the parameters are irrelevant

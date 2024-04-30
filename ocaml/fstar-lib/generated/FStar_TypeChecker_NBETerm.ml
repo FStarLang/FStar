@@ -520,24 +520,7 @@ let rec (eq_t :
                        | (parms1, args11) ->
                            let uu___4 = FStar_Compiler_List.splitAt n args2 in
                            (match uu___4 with
-                            | (parms2, args21) ->
-                                let uu___5 =
-                                  let uu___6 = eq_args1 args11 args21 in
-                                  uu___6 =
-                                    FStar_TypeChecker_TermEqAndSimplify.Equal in
-                                if uu___5
-                                then
-                                  let uu___6 =
-                                    let uu___7 = eq_args1 parms1 parms2 in
-                                    uu___7 =
-                                      FStar_TypeChecker_TermEqAndSimplify.Equal in
-                                  (if uu___6
-                                   then
-                                     FStar_TypeChecker_TermEqAndSimplify.Equal
-                                   else
-                                     FStar_TypeChecker_TermEqAndSimplify.Unknown)
-                                else
-                                  FStar_TypeChecker_TermEqAndSimplify.NotEqual))
+                            | (parms2, args21) -> eq_args1 args11 args21))
                     else FStar_TypeChecker_TermEqAndSimplify.Unknown))
             else FStar_TypeChecker_TermEqAndSimplify.NotEqual
         | (FV (v1, us1, args1), FV (v2, us2, args2)) ->

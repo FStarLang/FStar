@@ -104,14 +104,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
                     as1
                     as2
             in
-            let args_eq = eq_arg_list args1 args2 in
-            if args_eq = Equal
-            then
-              let parms_eq = eq_arg_list parms1 parms2 in
-              if parms_eq = Equal
-              then Equal
-              else Unknown
-            else args_eq
+            eq_arg_list args1 args2
           )
           else Unknown
         )

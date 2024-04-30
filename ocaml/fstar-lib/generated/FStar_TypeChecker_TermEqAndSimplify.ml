@@ -81,12 +81,7 @@ let rec (eq_tm :
                                    | ((a1, q1), (a2, q2)) ->
                                        let uu___5 = eq_tm env a1 a2 in
                                        eq_inj acc uu___5) Equal as1 as2 in
-                        let args_eq = eq_arg_list args11 args21 in
-                        if args_eq = Equal
-                        then
-                          let parms_eq = eq_arg_list parms1 parms2 in
-                          (if parms_eq = Equal then Equal else Unknown)
-                        else args_eq)
+                        eq_arg_list args11 args21)
              else Unknown)
           else NotEqual in
         let qual_is_inj uu___ =
