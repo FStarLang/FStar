@@ -493,19 +493,138 @@ let split_aux_post (b:barrier_t) (q r:storable)
     big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
     big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r)
 
-      
+```pulse
+ghost
+fn map_invariant_all_perms v m n p
+requires map_invariant v m n p
+ensures  map_invariant v m n p ** pure (all_perms m 0 n 0.5R)
+{
+  admit()
+}
+```
+
+```pulse
+ghost
+fn q_at_i (#gref:ghost_pcm_ref small_vprop_map) (#v:U32.t) (#m:carrier) (#i #n:nat) (#p #q:storable) ()
+requires
+  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
+  big_ghost_pcm_pts_to gref m **
+  big_ghost_pcm_pts_to gref (empty_map_below n) **
+  map_invariant v m n p
+ensures
+  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
+  big_ghost_pcm_pts_to gref m **
+  big_ghost_pcm_pts_to gref (empty_map_below n) **
+  map_invariant v m n p **
+  pure (Map.sel m i == Some (down2 q, 0.5R) /\ i < n /\ all_perms m 0 n 0.5R)
+{
+  map_invariant_all_perms v m n p;
+  composable_three _ _ _ _;
+  predicate_at_i_is_q_lemma m i n q;
+  ()
+}
+```
+
+
+```pulse
+ghost
+fn upd_i  (#gref:ghost_pcm_ref small_vprop_map) (#m:carrier) (#i:nat) (#q:storable) ()
+requires
+  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
+  big_ghost_pcm_pts_to gref m **
+  pure (Map.sel m i == Some (down2 q, 0.5R))
+returns m': erased carrier
+ensures
+  big_ghost_pcm_pts_to gref m' **
+  // big_ghost_pcm_pts_to gref (singleton i #0.5R emp) **
+  pure (m' == Map.upd m i (Some (down2 emp, 0.5R)))
+{
+  big_ghost_gather gref _ _;
+  big_ghost_write gref _ _
+    (PM.lift_frame_preserving_upd
+        _ _
+        (PF.mk_frame_preserving_upd (down2 q) (down2 emp))
+        (comp (singleton i #0.5R q) m)
+        i);
+  with m'. assert (big_ghost_pcm_pts_to gref m');
+  assert pure (Map.equal m' (comp (singleton i #0.5R emp) (Map.upd m i (Some (down2 emp, 0.5R)))));
+  rewrite (big_ghost_pcm_pts_to gref m') as
+          (big_ghost_pcm_pts_to gref (comp (singleton i #0.5R emp) (Map.upd m i (Some (down2 emp, 0.5R)))));
+  big_ghost_share gref (singleton i #0.5R emp) (Map.upd m i (Some (down2 emp, 0.5R)));
+  drop_ (big_ghost_pcm_pts_to gref (singleton i #0.5R emp));
+  hide #carrier (Map.upd m i (Some (down2 emp, 0.5R))) 
+}
+```
+
+```pulse
+ghost
+fn alloc (#b:barrier_t_core) (#n:nat) (q:storable)
+requires big_ghost_pcm_pts_to b.gref (empty_map_below n) **
+         GR.pts_to b.ctr n
+ensures  GR.pts_to b.ctr (n + 1) **
+         big_ghost_pcm_pts_to b.gref (empty_map_below (n + 1)) **
+         big_ghost_pcm_pts_to b.gref (singleton n #0.5R q) **
+         big_ghost_pcm_pts_to b.gref (singleton n #0.5R q)
+{
+  admit()
+}
+```
+
+let up_i (m:carrier) (i:nat) (p:storable) = Map.upd m i (Some (down2 p, 0.5R))
+let split_map (m:carrier) (i n:nat) (q r:storable) = (up_i (up_i (up_i m i emp) n q) (n + 1) r)
+```pulse
+ghost
+fn split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
+requires pure (Map.sel m i == Some (down2 (q ** r), 0.5R))
+ensures pure (OR.on_range (predicate_at m) 0 n ==
+              OR.on_range (predicate_at (split_map m i n q r)) 0 (n + 2))
+{
+  admit()
+}
+```
+
 ```pulse
 ghost
 fn split_aux (b:barrier_t) (p:erased storable) (q r:storable) (i:erased nat)
 requires barrier_inv b.core p **
          big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R (q ** r))
-ensures  barrier_inv b.core p **
-         (exists* j k.
-            big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
-            big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r))
-
+ensures  barrier_inv b.core p ** split_aux_post b q r
 {
-  admit()
+  unfold barrier_inv;
+  q_at_i ();
+  let m' = upd_i ();
+  with v m n. assert (map_invariant v m n p);
+  alloc q;
+  alloc r;
+  big_ghost_gather b.core.gref m' (singleton n #0.5R q);
+  big_ghost_gather b.core.gref (comp m' (singleton n #0.5R q)) (singleton (n + 1) #0.5R r);
+  assume_ (pure (Map.equal (comp (comp m' (singleton n #0.5R q)) (singleton (n + 1) #0.5R r))
+                           (split_map m i n q r)));
+  rewrite (big_ghost_pcm_pts_to b.core.gref (comp (comp m' (singleton n #0.5R q)) (singleton (n + 1) #0.5R r)))
+       as (big_ghost_pcm_pts_to b.core.gref (split_map m i n q r));
+  fold (split_aux_post b q r);
+  split_lemma b.core m q r i n;
+  let vv = reveal v;
+  if (vv = 0ul)
+  {
+    rewrite (map_invariant v m n p) as (map_invariant0 m n p);
+    unfold map_invariant0;
+    fold (map_invariant0 (split_map m i n q r) (n + 2) p);
+    fold (map_invariant 0ul (split_map m i n q r) (n + 2) p);
+    fold_barrier_inv b.core p 0ul (n + 2) (split_map m i n q r);
+  }
+  else
+  {
+    rewrite (map_invariant v m n p) as (
+        OR.on_range (predicate_at (split_map m i n q r)) 0 (n + 2) **
+        pure (all_perms m 0 n 0.5R)
+    );
+    rewrite (OR.on_range (predicate_at (split_map m i n q r)) 0 (n + 2) **
+             pure (all_perms (split_map m i n q r) 0 (n + 2) 0.5R))
+        as (map_invariant v (split_map m i n q r) (n + 2) p);
+    fold_barrier_inv b.core p v (n + 2) (split_map m i n q r);
+  }
+ 
 }
 ```
 
