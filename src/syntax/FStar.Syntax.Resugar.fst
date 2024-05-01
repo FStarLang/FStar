@@ -84,7 +84,7 @@ let label s t =
   else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
 
 let rec universe_to_int n u =
-  match u with
+  match Subst.compress_univ u with
     | U_succ u -> universe_to_int (n+1) u
     | _ -> (n, u)
 
@@ -98,7 +98,8 @@ let rec resugar_universe (u:S.universe) r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
   in
-  begin match Subst.compress_univ u with
+  let u = Subst.compress_univ u in
+  begin match u with
     | U_zero ->
       mk (A.Const(Const_int ("0", None))) r
 
