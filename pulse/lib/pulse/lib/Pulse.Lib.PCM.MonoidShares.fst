@@ -24,7 +24,7 @@ let nat_plus_cm : M.cm nat =
 let pcm_of_nat (v:nat) = pcm_of nat_plus_cm v
 let test (x:nat) (u v w:nat) = 
   let p = pcm_of_nat x in
-  assume (p.refine u);
+  assume (p.refine u); //test
   assert (u == x);
-  assume (compatible p (v + w) x);
+  assume (compatible p (v + w) x); //test
   assert (v + w <= x)

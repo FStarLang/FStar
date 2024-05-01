@@ -8,7 +8,7 @@ module OR = Pulse.Lib.OnRange
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
 let small_vprop_map = PM.pointwise nat (PF.pcm_frac #small_vprop)
 let carrier = PM.map nat (PF.fractional small_vprop)
-let small_emp : small_vprop = cm_small_vprop.unit
+
 noeq
 type cvar_t_core = {
   r: Box.box U32.t;
@@ -29,7 +29,7 @@ let empty_map_below (n:nat)
   (fun (k:nat) -> 
     if k < n
     then None
-    else Some (small_emp, full_perm))
+    else Some (down2 emp, full_perm))
 
 
 let up2_is_small (p:small_vprop)
@@ -146,14 +146,44 @@ ensures
 }
 ```
 
-let comp (c0:carrier) (c1:carrier { PM.composable_maps (PF.pcm_frac #small_vprop) c0 c1 })
+
+```pulse
+ghost
+fn map_invariant_all_perms v m n p
+requires map_invariant v m n p
+ensures  map_invariant v m n p ** pure (all_perms m 0 n 0.5R)
+{
+  if (v = 0ul)
+  {
+     unfold_map_invariant0 _ _ _ _;
+     fold_map_invariant0 m n p;
+     rewrite each 0ul as v;
+  }
+  else {
+    unfold_map_invariant1 _ _ _ _;
+    fold_map_invariant1 v m n p;
+  }
+}
+```
+
+```pulse
+ghost
+fn flip_map_invariant (v:U32.t) (p:storable) (m:carrier) (n:nat)
+requires map_invariant v m n p ** p ** pure (v == 0ul)
+ensures map_invariant 1ul m n p
+{
+  unfold_map_invariant0 v m n p;
+  rewrite p as OR.on_range (predicate_at m) 0 n;
+  fold_map_invariant1 1ul m n p;
+}
+```
+
+let composable (c0:carrier) (c1:carrier)
+= PM.composable_maps (PF.pcm_frac #small_vprop) c0 c1
+
+let comp (c0:carrier) (c1:carrier { composable c0 c1 })
 : carrier 
 = PM.compose_maps (PF.pcm_frac #small_vprop) c0 c1
-
-let initial_map (p:storable)
-: c:carrier { small_vprop_map.refine c }
-= comp (singleton 0 #1.0R p) (empty_map_below 1)
-
 
 let on_range_singleton (p:storable)
 : Lemma (OR.on_range (predicate_at (singleton 0 #0.5R p)) 0 1 == p)
@@ -163,8 +193,7 @@ let on_range_singleton (p:storable)
   (==) { OR.on_range_eq_cons (predicate_at m) 0 1;
          OR.on_range_eq_emp (predicate_at m) 1 1 }
     predicate_at m 0 ** emp;
-  (==) { elim_vprop_equiv (vprop_equiv_unit (predicate_at m 0));
-         elim_vprop_equiv (vprop_equiv_comm emp (predicate_at m 0)) }
+  (==) { vprop_equivs () }
     predicate_at m 0;
   (==) {}
     up2 (down2 p);
@@ -183,6 +212,52 @@ ensures map_invariant 0ul (singleton 0 #0.5R p) 1 p
   fold_map_invariant0 (singleton 0 #0.5R p) 1 p;
 }
 ```
+
+let initial_map (p:storable)
+: c:carrier { small_vprop_map.refine c }
+= comp (singleton 0 #1.0R p) (empty_map_below 1)
+
+
+```pulse
+ghost
+fn fold_cvar_inv (b: cvar_t_core) (p:storable)
+                    (v n m:_)
+requires
+    Box.pts_to b.r #0.5R v **
+    GR.pts_to #nat b.ctr n **
+    big_ghost_pcm_pts_to b.gref m **
+    big_ghost_pcm_pts_to b.gref (empty_map_below n) **
+    map_invariant v m n p
+ensures
+    cvar_inv b p
+{
+  fold cvar_inv
+}
+```
+
+```pulse
+ghost
+fn frame_predicate_at (m0:carrier) (i j:nat) (k:nat) (v:_)
+requires OR.on_range (predicate_at m0) i j ** 
+         pure ((j <= k \/ k < i))
+ensures OR.on_range (predicate_at (Map.upd m0 k v)) i j
+{
+  OR.on_range_frame (predicate_at m0) (predicate_at (Map.upd m0 k v)) i j;
+  rewrite (OR.on_range (predicate_at m0) i j)
+       as (OR.on_range (predicate_at (Map.upd m0 k v)) i j);
+}
+```
+
+```pulse
+ghost
+fn predicate_at_singleton (m:carrier) (i:nat) (q:storable)
+requires q ** pure (Map.sel m i == Some (down2 q, 0.5R))
+ensures predicate_at m i
+{
+  rewrite q as (predicate_at m i)
+}
+```
+
 
 ```pulse
 fn create (p:storable)
@@ -218,20 +293,6 @@ ensures send b p ** recv b p
 }
 ```
 
-```pulse
-ghost
-fn flip_map_invariant (v:U32.t) (p:storable) (m:carrier) (n:nat)
-requires map_invariant v m n p ** p ** pure (v == 0ul)
-ensures map_invariant 1ul m n p
-{
-  rewrite each v as 0ul;
-  rewrite (map_invariant 0ul m n p) as (map_invariant0 m n p);
-  unfold map_invariant0;
-  rewrite p as OR.on_range (predicate_at m) 0 n;
-  rewrite (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R))
-       as (map_invariant 1ul m n p);
-}
-```
 
 ```pulse
 fn signal (b:cvar_t) (#p:storable)
@@ -256,8 +317,6 @@ ensures emp
 }
 ```
 
-let composable (c0:carrier) (c1:carrier)
-= PM.composable_maps (PF.pcm_frac #small_vprop) c0 c1
 
 let predicate_at_i_is_q_lemma (m:carrier) (i:nat) (n:nat) (q:storable)
 : Lemma
@@ -304,9 +363,15 @@ ensures OR.on_range (predicate_at m) 0 n ** pure (Some? (Map.sel m i))
 ```pulse
 ghost
 fn composable_three (gref:ghost_pcm_ref small_vprop_map) (c0 c1 c2:carrier)
-requires big_ghost_pcm_pts_to gref c0 ** big_ghost_pcm_pts_to gref c1 ** big_ghost_pcm_pts_to gref c2
-ensures  big_ghost_pcm_pts_to gref c0 ** big_ghost_pcm_pts_to gref c1 ** big_ghost_pcm_pts_to gref c2
-         ** pure (composable c0 c1 /\ composable (comp c0 c1) c2)
+requires
+  big_ghost_pcm_pts_to gref c0 **
+  big_ghost_pcm_pts_to gref c1 **
+  big_ghost_pcm_pts_to gref c2
+ensures
+  big_ghost_pcm_pts_to gref c0 **
+  big_ghost_pcm_pts_to gref c1 **
+  big_ghost_pcm_pts_to gref c2 **
+  pure (composable c0 c1 /\ composable (comp c0 c1) c2)
 {
   big_ghost_gather gref c0 c1;
   big_ghost_gather gref (comp c0 c1) c2;
@@ -314,18 +379,6 @@ ensures  big_ghost_pcm_pts_to gref c0 ** big_ghost_pcm_pts_to gref c1 ** big_gho
   big_ghost_share gref c0 c1;
 }
 ```
-
-module T = FStar.Tactics
-let norm_tac (_:unit) : T.Tac unit =
-    T.mapply (`vprop_equiv_refl)
-
-let elim_predicate_at (m:carrier) (i:nat) 
-: Lemma 
-  (requires Some? (Map.sel m i))
-  (ensures predicate_at m i ==
-           up2 (fst (Some?.v (Map.sel m i)))) // ** pure (snd (Some?.v (Map.sel m i)) == 0.5R))
-= ()
-
 
 ```pulse
 ghost
@@ -335,6 +388,31 @@ ensures up2 (fst (Some?.v (Map.sel m i)))
 {
   rewrite (predicate_at m i) 
       as  (up2 (fst (Some?.v (Map.sel m i))));
+}
+```
+
+```pulse
+ghost
+fn q_at_i (#gref:ghost_pcm_ref small_vprop_map) (#v:U32.t) (#m:carrier) (#i #n:nat) (#p #q:storable) ()
+requires
+  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
+  big_ghost_pcm_pts_to gref m **
+  big_ghost_pcm_pts_to gref (empty_map_below n) **
+  map_invariant v m n p
+ensures
+  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
+  big_ghost_pcm_pts_to gref m **
+  big_ghost_pcm_pts_to gref (empty_map_below n) **
+  map_invariant v m n p **
+  pure (Map.sel m i == Some (down2 q, 0.5R) /\
+        i < n /\
+        all_perms m 0 n 0.5R /\
+        (forall j. n <= j ==> Map.sel m j == None))
+{
+  map_invariant_all_perms v m n p;
+  composable_three _ _ _ _;
+  predicate_at_i_is_q_lemma m i n q;
+  ()
 }
 ```
 
@@ -357,9 +435,8 @@ ensures
   pure (Map.sel m i == Some (down2 q, 0.5R)) **
   pure (i < n /\ all_perms m 0 n 0.5R)
 {
-  rewrite (map_invariant v m n p) as (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R));
-  composable_three _ _ _ _;
-  predicate_at_i_is_q_lemma m i n q;
+  q_at_i();
+  unfold_map_invariant1 v m n p;
   elim_on_range_at_i m i n;
   OR.on_range_get i;
   match Map.sel m i {
@@ -377,38 +454,6 @@ ensures
 }
 ```
 
-```pulse
-ghost
-fn frame_predicate_at (m0:carrier) (i j:nat) (k:nat) (v:_)
-requires OR.on_range (predicate_at m0) i j ** 
-         pure ((j <= k \/ k < i))
-ensures OR.on_range (predicate_at (Map.upd m0 k v)) i j
-{
-  ghost
-  fn aux (kk:nat { i <= kk /\ kk < j})
-  requires (predicate_at m0 kk)
-  ensures (predicate_at (Map.upd m0 k v) kk)
-  {
-    rewrite (predicate_at m0 kk)
-        as  (predicate_at (Map.upd m0 k v) kk);
-  };
-  OR.on_range_weaken
-    (predicate_at m0)
-    (predicate_at (Map.upd m0 k v))
-    i j
-    aux
-}
-```
-
-```pulse
-ghost
-fn predicate_at_singleton (m:carrier) (i:nat) (q:storable)
-requires q ** pure (Map.sel m i == Some (down2 q, 0.5R))
-ensures predicate_at m i
-{
-  rewrite q as (predicate_at m i)
-}
-```
 
 ```pulse
 ghost
@@ -449,22 +494,6 @@ ensures
 }
 ```
 
-```pulse
-ghost
-fn fold_cvar_inv (b: cvar_t_core) (p:storable)
-                    (v n m:_)
-requires
-    Box.pts_to b.r #0.5R v **
-    GR.pts_to #nat b.ctr n **
-    big_ghost_pcm_pts_to b.gref m **
-    big_ghost_pcm_pts_to b.gref (empty_map_below n) **
-    map_invariant v m n p
-ensures
-    cvar_inv b p
-{
-  fold cvar_inv
-}
-```
 
 ```pulse
 fn rec wait (b:cvar_t) (#q:storable)
@@ -527,50 +556,6 @@ let split_aux_post (b:cvar_t) (q r:storable)
 
 
 
-```pulse
-ghost
-fn map_invariant_all_perms v m n p
-requires map_invariant v m n p
-ensures  map_invariant v m n p ** pure (all_perms m 0 n 0.5R)
-{
-  if (v = 0ul)
-  {
-     unfold_map_invariant0 _ _ _ _;
-     fold_map_invariant0 m n p;
-     rewrite each 0ul as v;
-  }
-  else {
-    unfold_map_invariant1 _ _ _ _;
-    fold_map_invariant1 v m n p;
-  }
-}
-```
-
-```pulse
-ghost
-fn q_at_i (#gref:ghost_pcm_ref small_vprop_map) (#v:U32.t) (#m:carrier) (#i #n:nat) (#p #q:storable) ()
-requires
-  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
-  big_ghost_pcm_pts_to gref m **
-  big_ghost_pcm_pts_to gref (empty_map_below n) **
-  map_invariant v m n p
-ensures
-  big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
-  big_ghost_pcm_pts_to gref m **
-  big_ghost_pcm_pts_to gref (empty_map_below n) **
-  map_invariant v m n p **
-  pure (Map.sel m i == Some (down2 q, 0.5R) /\
-        i < n /\
-        all_perms m 0 n 0.5R /\
-        (forall j. n <= j ==> Map.sel m j == None))
-{
-  map_invariant_all_perms v m n p;
-  composable_three _ _ _ _;
-  predicate_at_i_is_q_lemma m i n q;
-  ()
-}
-```
-
 
 ```pulse
 ghost
@@ -582,7 +567,6 @@ requires
 returns m': erased carrier
 ensures
   big_ghost_pcm_pts_to gref m' **
-  // big_ghost_pcm_pts_to gref (singleton i #0.5R emp) **
   pure (m' == Map.upd m i (Some (down2 emp, 0.5R)))
 {
   big_ghost_gather gref _ _;
