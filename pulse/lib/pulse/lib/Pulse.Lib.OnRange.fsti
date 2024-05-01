@@ -198,7 +198,7 @@ val on_range_weaken_and_shift
   (i: nat { i + delta >= 0 })
   (j: nat { j + delta >= 0 })
   (* maybe phi could open some invariants too? *)
-  (phi: (k: nat { i <= k /\ k < j }) -> stt_ghost unit emp_inames(p k) (fun _ -> p' (k + delta)))
+  (phi: (k: nat { i <= k /\ k < j }) -> stt_ghost unit emp_inames (p k) (fun _ -> p' (k + delta)))
 : stt_ghost unit emp_inames
     (on_range p i j)
     (fun _ -> on_range p' (i + delta) (j + delta))

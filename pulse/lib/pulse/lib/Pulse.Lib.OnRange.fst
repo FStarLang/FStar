@@ -243,7 +243,6 @@ ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
     rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
   };
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
-  with a b. rewrite (stick a b) as (a @==> b);
   rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
 }
 ```
@@ -319,7 +318,6 @@ ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p
     rewrite (p (j + 1 - 1)) as (p j)
   };
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
-  with a b. rewrite (stick a b) as (a @==> b);
   on_range_snoc()
 }
 ```
@@ -395,7 +393,6 @@ ensures p j ** (p j @==> on_range p i k)
     on_range_put i j k;
   };
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
-  with a b. rewrite (stick a b) as (a @==> b);
 }
 ```
 
