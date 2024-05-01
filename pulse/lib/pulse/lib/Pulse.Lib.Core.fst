@@ -112,6 +112,11 @@ let vprop_equiv_assoc (p1 p2 p3:vprop)
   : vprop_equiv ((p1 ** p2) ** p3) (p1 ** (p2 ** p3))
   = slprop_equiv_assoc p1 p2 p3
 
+let vprop_equiv_exists (#a:Type) (p q : a -> vprop)
+  (_ : squash (forall x. vprop_equiv (p x) (q x)))
+  : vprop_equiv (op_exists_Star p) (op_exists_Star q)
+  = slprop_equiv_exists p q ()
+
 let vprop_equiv_cong (p1 p2 p3 p4:vprop)
                      (f: vprop_equiv p1 p3)
                      (g: vprop_equiv p2 p4)
