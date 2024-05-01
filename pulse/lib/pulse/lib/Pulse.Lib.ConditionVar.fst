@@ -1,4 +1,4 @@
-module Pulse.Lib.Barrier
+module Pulse.Lib.ConditionVar
 open Pulse.Lib.Pervasives
 module PM = Pulse.Lib.PCMMap
 module PF = Pulse.Lib.PCM.Fraction
@@ -10,14 +10,14 @@ let small_vprop_map = PM.pointwise nat (PF.pcm_frac #small_vprop)
 let carrier = PM.map nat (PF.fractional small_vprop)
 let small_emp : small_vprop = cm_small_vprop.unit
 noeq
-type barrier_t_core = {
+type cvar_t_core = {
   r: Box.box U32.t;
   ctr : GR.ref nat;
   gref: ghost_pcm_ref small_vprop_map;
 }
 
-noeq type barrier_t = {
-  core: barrier_t_core;
+noeq type cvar_t = {
+  core: cvar_t_core;
   i: iref
 }
 
@@ -61,7 +61,7 @@ let map_invariant (v:U32.t) (m:carrier) (n:nat) (p:storable)
   then map_invariant0 m n p
   else OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R)
 
-let barrier_inv (b: barrier_t_core) (p:storable)
+let cvar_inv (b: cvar_t_core) (p:storable)
 : boxable
 = exists* v n m.
     Box.pts_to b.r #0.5R v **
@@ -70,13 +70,15 @@ let barrier_inv (b: barrier_t_core) (p:storable)
     big_ghost_pcm_pts_to b.gref (empty_map_below n) **
     map_invariant v m n p
 
-let barrier (b: barrier_t) (p:storable)
+let cvar (b: cvar_t) (p:storable)
 : vprop
-= inv b.i (barrier_inv b.core p)
+= inv b.i (cvar_inv b.core p)
 
-let send (b: barrier_t) (p:storable)
+let inv_name (b:cvar_t) = b.i
+
+let send (b: cvar_t) (p:storable)
 : vprop
-= barrier b p **
+= cvar b p **
   Box.pts_to b.core.r #0.5R 0ul
 
 let singleton (i:nat) (#p:perm) (q:storable)
@@ -87,10 +89,10 @@ let singleton (i:nat) (#p:perm) (q:storable)
         then Some (down2 q, p)
         else None)
 
-let recv (b:barrier_t) (q:storable)
+let recv (b:cvar_t) (q:storable)
 : vprop
 = exists* p i.
-    barrier b p **
+    cvar b p **
     big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q)
 
 ```pulse
@@ -183,9 +185,9 @@ ensures map_invariant 0ul (singleton 0 #0.5R p) 1 p
 ```
 
 ```pulse
-fn new_barrier (p:storable)
+fn create (p:storable)
 requires emp
-returns b:barrier_t
+returns b:cvar_t
 ensures send b p ** recv b p
 {
   let r = Box.alloc 0ul;
@@ -200,24 +202,21 @@ ensures send b p ** recv b p
   intro_init_map_invariant p;
   let b = { r; ctr; gref };
   rewrite each r as b.r, gref as b.gref, ctr as b.ctr;
-  fold (barrier_inv b p);
-  let i = new_invariant (barrier_inv b p);
+  fold (cvar_inv b p);
+  let i = new_invariant (cvar_inv b p);
   let bb = { core = b; i = i };
   rewrite each b as bb.core;
   rewrite each i as bb.i;
   dup_inv _ _;
-  fold (barrier bb p);
+  fold (cvar bb p);
   fold (send bb p);
-  fold (barrier bb p);
+  fold (cvar bb p);
   with v. rewrite (big_ghost_pcm_pts_to bb.core.gref v) as
           (big_ghost_pcm_pts_to bb.core.gref (singleton 0 #0.5R p));
   fold (recv bb p);
   bb
 }
 ```
-
-
-module T = FStar.Tactics
 
 ```pulse
 ghost
@@ -235,23 +234,23 @@ ensures map_invariant 1ul m n p
 ```
 
 ```pulse
-fn signal (b:barrier_t) (#p:storable)
+fn signal (b:cvar_t) (#p:storable)
 requires send b p ** p
 ensures emp
 {
   unfold send;
-  unfold barrier;
+  unfold cvar;
   with_invariants b.i 
   returns u:unit
-  ensures inv b.i (barrier_inv b.core p) ** emp
+  ensures inv b.i (cvar_inv b.core p) ** emp
   {
-    unfold barrier_inv;
+    unfold cvar_inv;
     Box.gather b.core.r;
     write_atomic_box b.core.r 1ul;
     Box.share b.core.r;
     drop_ (Box.pts_to b.core.r #0.5R 1ul);
     flip_map_invariant _ _ _ _;
-    fold (barrier_inv b.core p);
+    fold (cvar_inv b.core p);
   };
   drop_ (inv b.i _)
 }
@@ -452,7 +451,7 @@ ensures
 
 ```pulse
 ghost
-fn fold_barrier_inv (b: barrier_t_core) (p:storable)
+fn fold_cvar_inv (b: cvar_t_core) (p:storable)
                     (v n m:_)
 requires
     Box.pts_to b.r #0.5R v **
@@ -461,28 +460,28 @@ requires
     big_ghost_pcm_pts_to b.gref (empty_map_below n) **
     map_invariant v m n p
 ensures
-    barrier_inv b p
+    cvar_inv b p
 {
-  fold barrier_inv
+  fold cvar_inv
 }
 ```
 
 ```pulse
-fn rec wait (b:barrier_t) (q:storable)
+fn rec wait (b:cvar_t) (#q:storable)
 requires recv b q
 ensures q
 {
   unfold recv;
-  with p. assert (barrier b p);
+  with p. assert (cvar b p);
   with i. assert (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q));
-  unfold barrier;
+  unfold cvar;
   let res : bool =
     with_invariants b.i
     returns res:bool
-    ensures inv b.i (barrier_inv b.core p) **
+    ensures inv b.i (cvar_inv b.core p) **
             (cond res q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q)))
     {
-      unfold barrier_inv;
+      unfold cvar_inv;
       with _v m n. assert (map_invariant _v m n p);
       let v = read_atomic_box b.core.r;
       if (v = 0ul)
@@ -490,7 +489,7 @@ ensures q
         intro_cond_false
           q
           (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q));
-        fold (barrier_inv b.core p);
+        fold (cvar_inv b.core p);
         false;
       }
       else
@@ -500,7 +499,7 @@ ensures q
         intro_cond_true q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R q));
         rewrite (OR.on_range (predicate_at m') 0 n ** pure (all_perms m' 0 n 0.5R))
             as  (map_invariant _v m' n p);
-        fold_barrier_inv _ _ _ _ m';
+        fold_cvar_inv _ _ _ _ m';
         drop_ (big_ghost_pcm_pts_to b.core.gref _);
         true;
       }
@@ -513,14 +512,14 @@ ensures q
   else 
   {
     elim_cond_false _ _ _;
-    fold (barrier b p);
+    fold (cvar b p);
     fold (recv b q);
-    wait b q;
+    wait b #q;
   }
 }
 ```
 
-let split_aux_post (b:barrier_t) (q r:storable)
+let split_aux_post (b:cvar_t) (q r:storable)
 : vprop
 = exists* j k.
     big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
@@ -605,7 +604,7 @@ ensures
 
 ```pulse
 ghost
-fn alloc (#b:barrier_t_core) (#n:nat) (q:storable)
+fn alloc (#b:cvar_t_core) (#n:nat) (q:storable)
 requires big_ghost_pcm_pts_to b.gref (empty_map_below n) **
          GR.pts_to b.ctr n
 ensures  GR.pts_to b.ctr (n + 1) **
@@ -638,7 +637,7 @@ let up_i (m:carrier) (i:nat) (p:storable) = Map.upd m i (Some (down2 p, 0.5R))
 let split_map (m:carrier) (i n:nat) (q r:storable) = (up_i (up_i (up_i m i emp) n q) (n + 1) r)
 
 
-let split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
+let split_lemma (b:cvar_t_core) (m:carrier) (q r:storable) (i n:nat)
 : Lemma
 (requires i < n /\ Map.sel m i == Some (down2 (q ** r), 0.5R))
 (ensures OR.on_range (predicate_at m) 0 n ==
@@ -676,12 +675,12 @@ let split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
 
 ```pulse
 ghost
-fn split_aux (b:barrier_t) (p:erased storable) (q r:storable) (i:erased nat)
-requires barrier_inv b.core p **
+fn split_aux (b:cvar_t) (p:erased storable) (q r:storable) (i:erased nat)
+requires cvar_inv b.core p **
          big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R (q ** r))
-ensures  barrier_inv b.core p ** split_aux_post b q r
+ensures  cvar_inv b.core p ** split_aux_post b q r
 {
-  unfold barrier_inv;
+  unfold cvar_inv;
   q_at_i ();
   let m' = upd_i ();
   with v m n. assert (map_invariant v m n p);
@@ -702,7 +701,7 @@ ensures  barrier_inv b.core p ** split_aux_post b q r
     unfold map_invariant0;
     fold (map_invariant0 (split_map m i n q r) (n + 2) p);
     fold (map_invariant 0ul (split_map m i n q r) (n + 2) p);
-    fold_barrier_inv b.core p 0ul (n + 2) (split_map m i n q r);
+    fold_cvar_inv b.core p 0ul (n + 2) (split_map m i n q r);
   }
   else
   {
@@ -710,7 +709,7 @@ ensures  barrier_inv b.core p ** split_aux_post b q r
     rewrite (OR.on_range (predicate_at m) 0 n)
     as      (OR.on_range (predicate_at (split_map m i n q r)) 0 (n + 2));
     fold_map_invariant1 v (split_map m i n q r) (n + 2) p;
-    fold_barrier_inv b.core p v (n + 2) (split_map m i n q r);
+    fold_cvar_inv b.core p v (n + 2) (split_map m i n q r);
   }
  
 }
@@ -718,18 +717,18 @@ ensures  barrier_inv b.core p ** split_aux_post b q r
 
 ```pulse
 ghost
-fn split (b:barrier_t) (q r:storable)
+fn split (b:cvar_t) (#q #r:storable)
 requires recv b (q ** r)
 ensures recv b q ** recv b r
 opens (add_inv emp_inames b.i)
 {
   unfold recv;
   with i. assert (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R (q ** r)));
-  with p. assert (barrier b p);
-  unfold barrier;
+  with p. assert (cvar b p);
+  unfold cvar;
   with_invariants b.i
   returns u:unit
-  ensures inv b.i (barrier_inv b.core (reveal p)) **
+  ensures inv b.i (cvar_inv b.core (reveal p)) **
          (exists* j k.
             big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
             big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r))
@@ -738,9 +737,9 @@ opens (add_inv emp_inames b.i)
     unfold split_aux_post;
   };
   dup_inv _ _;
-  fold (barrier b p);
+  fold (cvar b p);
   fold (recv b q);
-  fold (barrier b p);
+  fold (cvar b p);
   fold (recv b r)
 }
 ```
