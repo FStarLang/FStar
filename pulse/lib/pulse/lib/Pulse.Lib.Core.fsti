@@ -19,6 +19,7 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
+module CM = FStar.Algebra.CommMonoid
 module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
@@ -55,15 +56,19 @@ val vprop : Type u#4
 
 [@@erasable]
 val big_vprop : Type u#3
+val cm_big_vprop : CM.cm big_vprop
 val down (p:vprop) : big_vprop
 val up (p:big_vprop) : vprop
 let is_big (v:vprop) : prop = up (down v) == v
+val up_is_big (p:big_vprop) : Lemma (is_big (up p))
 
 [@@erasable]
 val small_vprop : Type u#2
+val cm_small_vprop : CM.cm small_vprop
 val down2 (p:vprop) : small_vprop
 val up2 (p:small_vprop) : vprop
 let is_small (v:vprop) : prop = up2 (down2 v) == v
+val up2_is_small (p:small_vprop) : Lemma (is_small (up2 p))
 
 //
 // A note on smt patterns on is_small and is_big lemmas:
@@ -115,7 +120,28 @@ val small_exists (#a:Type u#a) (p: a -> vprop)
     (requires forall x. is_small (p x))
     (ensures is_small (op_exists_Star p))
     [SMTPat (is_small (op_exists_Star p))]
-    
+
+let boxable = v:vprop { is_big v }
+let storable = v:vprop { is_small v }
+
+val up_emp ()
+: Lemma (up cm_big_vprop.unit == emp)
+val down_emp ()
+: Lemma (down emp == cm_big_vprop.unit)
+val up_star (p q:big_vprop)
+: Lemma (up (p `cm_big_vprop.mult` q) == up p ** up q)
+val down_star (p q:boxable)
+: Lemma (down (p ** q) == down p `cm_big_vprop.mult` down q)
+
+val up2_emp ()
+: Lemma (up2 cm_small_vprop.unit == emp)
+val down2_emp ()
+: Lemma (down2 emp == cm_small_vprop.unit)
+val up2_star (p q:small_vprop)
+: Lemma (up2 (p `cm_small_vprop.mult` q) == up2 p ** up2 q)
+val down2_star (p q:storable)
+: Lemma (down2 (p ** q) == down2 p `cm_small_vprop.mult` down2 q)
+
 val vprop_equiv (p q:vprop) : prop
 val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
 val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
@@ -155,6 +181,28 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
 
 val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
   : vprop_equiv p1 p2
+
+
+let star_assoc (p q r:vprop)
+: Lemma (p ** (q ** r) == (p ** q) ** r)
+= elim_vprop_equiv (vprop_equiv_assoc p q r)
+let star_comm (p q:vprop)
+: Lemma (p ** q == q ** p)
+= elim_vprop_equiv (vprop_equiv_comm p q)
+let emp_unit (p:vprop)
+: Lemma (emp ** p == p)
+= elim_vprop_equiv (vprop_equiv_unit p)
+let vprop_equivs () 
+: Lemma (
+      (forall p q r. p ** (q ** r) == (p ** q) ** r) /\
+      (forall p q. p ** q == q ** p) /\
+      (forall p. emp ** p == p)
+  )
+= FStar.Classical.(
+    forall_intro_3 star_assoc;
+    forall_intro_2 star_comm;
+    forall_intro emp_unit
+  )
 
 (***** end vprop_equiv *****)
 
@@ -877,6 +925,14 @@ val big_ghost_pcm_pts_to
     (r:ghost_pcm_ref p)
     (v:a)
 : vprop
+
+val is_big_big_ghost_pcm_pts_to
+    (#a:Type u#2)
+    (#p:pcm a)
+    (r:ghost_pcm_ref p)
+    (v:a)
+: Lemma (is_big (big_ghost_pcm_pts_to r v))
+        [SMTPat (is_big (big_ghost_pcm_pts_to r v))]
 
 val big_ghost_alloc
     (#a:Type)

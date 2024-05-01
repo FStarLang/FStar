@@ -28,6 +28,7 @@ module S = FStar.Set
 module Frac = PulseCore.FractionalPermission
 module L = FStar.List.Tot
 module PA = PulseCore.PCM.Agreement
+module CM = FStar.Algebra.CommMonoid
 
 let istore : Type u#(a + 3) = erased (H0.heap u#(a + 2))
 
@@ -256,6 +257,18 @@ let join_associative (m0 m1 m2:mem)
   = ijoin_associative m0.iheap m1.iheap m2.iheap
 
 let big_slprop = H2.slprop u#a
+let cm_big_slprop =
+  introduce
+    forall x y. H2.equiv x y ==> x == y
+  with introduce _ ==> _
+  with _ . (
+   H2.slprop_extensionality x y
+  );
+  FStar.Classical.forall_intro_2 H2.star_commutative;
+  CM.CM H2.emp H2.star 
+    (fun x -> H2.emp_unit x)
+    (fun x y z -> H2.star_associative x y z)
+    (fun x y -> H2.star_commutative x y)
 let down_p (p:slprop u#a)
 : H2.heap u#a -> prop
 = fun h -> p { concrete = h; invariants = H0.empty_heap }
@@ -306,6 +319,7 @@ let down_up (p:big_slprop)
 let up_big_is_big b = ()
 
 let small_slprop = H2.small_slprop
+let cm_small_slprop = H2.cm_small_slprop
 let down2 (s:slprop) = H2.down (down s)
 let up2 (s:small_slprop) = up (H2.up s)
 let small_is_also_big (s:slprop) = ()
@@ -676,6 +690,15 @@ let star_congruence_h0 (p q:H0.slprop)
   );
   slprop_extensionality (lift_h0 (p `H0.star` q)) (lift_h0 p `star` lift_h0 q)
 
+let up_emp_big () = ()
+let down_emp_big () = ()
+let up_star_big p q = ()
+let down_star_big p q = down_star p q
+
+let up2_emp () = H2.up_emp ()
+let down2_emp () = H2.down_emp ()
+let up2_star p q = H2.up_star p q
+let down2_star p q = down_star p q; H2.down_star (down p) (down q)
 ////////////////////////////////////////////////////////////////////////////////
 // Invariants
 ////////////////////////////////////////////////////////////////////////////////

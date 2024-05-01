@@ -6,6 +6,7 @@ module F = FStar.FunctionalExtensionality
 module T = FStar.Tactics
 module H = PulseCore.Heap
 module H2 = PulseCore.Heap2
+module CM = FStar.Algebra.CommMonoid
 (**** The base : partial heaps *)
 
 (**
@@ -111,6 +112,18 @@ let interp_depends_only_on hp = ()
 let slprop_extensionality p q = FStar.PredicateExtensionality.predicateExtensionality _ p q
 
 let small_slprop = H2.slprop u#a
+let cm_small_slprop =
+  introduce
+    forall x y. H2.equiv x y ==> x == y
+  with introduce _ ==> _
+  with _ . (
+   H2.slprop_extensionality x y
+  );
+  FStar.Classical.forall_intro_2 H2.star_commutative;
+  CM.CM H2.emp H2.star 
+    (fun x -> H2.emp_unit x)
+    (fun x y z -> H2.star_associative x y z)
+    (fun x y -> H2.star_commutative x y)
 let down_p (p:slprop u#a)
 : small_heap u#a -> prop
 = fun h -> p { small = h; big = H2.empty_heap }
@@ -388,9 +401,56 @@ let vprop_exists (a:Type) (p:a -> vprop)
 : Lemma (is_small (h_exists p))
 = vprop_exists_alt a p
 
+let up_emp () = ()
+let down_emp () = ()
+let up_star p q = ()
+let down_star (p1 p2:vprop)
+: Lemma 
+  (ensures down (p1 `star` p2) == down p1 `H2.star` down p2)
+= introduce forall (h:H2.heap). 
+    H2.interp (down (p1 `star` p2)) h ==>
+    H2.interp (down p1 `H2.star` down p2) h
+  with introduce _ ==> _
+  with _ . (
+    down_p_affine (p1 `star` p2);
+    assert ((down_p (p1 `star` p2)) h);
+    let hh = {small = h; big = H2.empty_heap} in
+    assert ((p1 `star` p2) hh);
+    eliminate exists hh1 hh2. 
+      disjoint hh1 hh2 /\
+      hh == join hh1 hh2 /\
+      p1 hh1 /\
+      p2 hh2
+    returns H2.interp (down p1 `H2.star` down p2) h
+    with _ . (
+      H2.intro_star (down p1) (down p2) hh1.small hh2.small
+    )
+  );
+  introduce forall h. 
+    H2.interp (down p1 `H2.star` down p2) h ==>
+    H2.interp (down (p1 `star` p2)) h
+  with introduce _ ==> _
+  with _ . (
+    H2.elim_star (down p1) (down p2) h;
+    eliminate exists h1 h2.
+      H2.disjoint h1 h2 /\
+      h == H2.join h1 h2 /\
+      H2.interp (down p1) h1 /\
+      H2.interp (down p2) h2
+    returns
+      H2.interp (down (p1 `star` p2)) h
+    with _ . (
+      down_p_affine (p1 `star` p2);
+      assert (down (p1 `star` p2) == H2.as_slprop (down_p (p1 `star` p2)));
+      let m1 = {small=h1; big=H2.empty_heap} in
+      let m2 = {small=h2; big=H2.empty_heap} in
+      assert (p1 m1 /\ p2 m2 /\ disjoint m1 m2);
+      assert (down_p (p1 `star` p2) h)
+    )
+  );
+  H2.slprop_extensionality (down (p1 `star` p2)) (down p1 `H2.star` down p2)
 let stronger_star p q r = ()
 let weaken p q r h = ()
-
 
 let full_heap_pred h =
   H2.full_heap_pred h.small /\

@@ -20,6 +20,7 @@ val slprop : Type u#4
 
 [@@erasable]
 val big_slprop : Type u#3
+val cm_big_slprop : FStar.Algebra.CommMonoid.cm big_slprop
 val down (s:slprop) : big_slprop
 val up (s:big_slprop) : slprop
 let is_big (s:slprop) = s == up (down s)
@@ -28,6 +29,7 @@ val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
 
 [@@erasable]
 val small_slprop : Type u#2
+val cm_small_slprop : FStar.Algebra.CommMonoid.cm small_slprop
 val down2 (s:slprop) : small_slprop
 val up2 (s:small_slprop) : slprop
 let is_small (s:slprop) : prop = up2 (down2 s) == s
@@ -52,6 +54,24 @@ val small_star (p q:vprop) : squash (is_small (p ** q))
 val small_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_small (p x))
         (ensures is_small (op_exists_Star p))
+
+val up_emp ()
+: Lemma (up cm_big_slprop.unit == emp)
+val down_emp ()
+: Lemma (down emp == cm_big_slprop.unit)
+val up_star (p q:big_slprop)
+: Lemma (up (p `cm_big_slprop.mult` q) == up p ** up q)
+val down_star (p q:big_vprop)
+: Lemma (down (p ** q) == down p `cm_big_slprop.mult` down q)
+
+val up2_emp ()
+: Lemma (up2 cm_small_slprop.unit == emp)
+val down2_emp ()
+: Lemma (down2 emp == cm_small_slprop.unit)
+val up2_star (p q:small_slprop)
+: Lemma (up2 (p `cm_small_slprop.mult` q) == up2 p ** up2 q)
+val down2_star (p q:vprop)
+: Lemma (down2 (p ** q) == down2 p `cm_small_slprop.mult` down2 q)
 
 [@@ erasable]
 val iref : Type0

@@ -18,6 +18,7 @@ module I = PulseCore.InstantiatedSemantics
 module A = PulseCore.Atomic
 module T = FStar.Tactics.V2
 module F = FStar.FunctionalExtensionality
+module CM = FStar.Algebra.CommMonoid
 open PulseCore.InstantiatedSemantics
 open PulseCore.FractionalPermission
 open PulseCore.Observability
@@ -25,11 +26,15 @@ open PulseCore.Observability
 let equate_by_smt = ()
 let vprop = slprop
 let big_vprop = big_slprop
+let cm_big_vprop = cm_big_slprop
 let down = down
 let up = up
+let up_is_big = up_big_is_big
 let small_vprop = small_slprop
+let cm_small_vprop = cm_small_slprop
 let down2 = down2
 let up2 = up2
+let up2_is_small = up2_small_is_small
 let small_is_also_big v = small_is_also_big v
 let emp = emp
 let emp_is_small = ()
@@ -41,6 +46,14 @@ let small_star p q = small_star p q
 let op_exists_Star = op_exists_Star
 let big_exists #a p = big_exists #a p
 let small_exists #a p = small_exists #a p
+let up_emp = up_emp
+let down_emp = down_emp
+let up_star = up_star
+let down_star = down_star
+let up2_emp = up2_emp
+let down2_emp = down2_emp
+let up2_star = up2_star
+let down2_star = down2_star
 let vprop_equiv = slprop_equiv
 let elim_vprop_equiv #p #q pf = slprop_equiv_elim p q
 let vprop_post_equiv = slprop_post_equiv
@@ -375,6 +388,7 @@ let big_share = A.big_share
 let big_gather = A.big_gather
 
 let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
+let is_big_big_ghost_pcm_pts_to _ _ = ()
 let big_ghost_alloc = A.big_ghost_alloc
 let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write
