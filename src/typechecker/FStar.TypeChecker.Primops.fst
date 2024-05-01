@@ -400,8 +400,9 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.Erased.ops
   @ Primops.Docs.ops
   @ Primops.MachineInts.ops
-  @ Primops.Eq.dec_eq_ops
   @ Primops.Errors.Msg.ops
 
-let equality_ops_list : list primitive_step =
-  Primops.Eq.prop_eq_ops
+let equality_ops_list env : list primitive_step =
+  Primops.Eq.prop_eq_ops env
+
+let env_dependent_ops (env:Env.env_t) = Primops.Eq.dec_eq_ops env

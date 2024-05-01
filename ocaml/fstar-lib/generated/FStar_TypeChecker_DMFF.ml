@@ -3670,7 +3670,7 @@ and (trans_F_ :
                                      ((let uu___10 =
                                          let uu___11 =
                                            FStar_Syntax_Util.eq_aqual q q' in
-                                         uu___11 <> FStar_Syntax_Util.Equal in
+                                         Prims.op_Negation uu___11 in
                                        if uu___10
                                        then
                                          let uu___11 =

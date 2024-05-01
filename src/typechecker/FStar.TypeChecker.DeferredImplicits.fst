@@ -35,6 +35,7 @@ module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module SS = FStar.Syntax.Subst
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
 
@@ -115,7 +116,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       (* candidates: hooks that also have the attribute [a] *)
       let candidates = 
         hooks |> List.filter
-                  (fun hook -> hook.sigattrs |> BU.for_some (U.attr_eq a))
+                  (fun hook -> hook.sigattrs |> BU.for_some (TEQ.eq_tm_bool env a))
       in
       (* The environment sometimes returns duplicates in the candidate list; filter out dups *)
       let candidates =
@@ -146,7 +147,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
                  | Tm_fvar fv, [_; (a', _); (overrides, _)] //type argument may be missing, since it is just an attr
                  | Tm_fvar fv, [(a', _); (overrides, _)]                 
                    when fv_eq_lid fv FStar.Parser.Const.override_resolve_implicits_handler_lid
-                     && U.attr_eq a a' ->
+                     && TEQ.eq_tm_bool env a a' ->
                    //other has an attribute [@@override_resolve_implicits_handler a overrides]
                    begin
                    match attr_list_elements overrides with

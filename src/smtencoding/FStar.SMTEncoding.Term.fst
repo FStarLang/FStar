@@ -18,8 +18,6 @@ module FStar.SMTEncoding.Term
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
-open FStar.Compiler.List
-open FStar.Class.Ord
 
 module S   = FStar.Syntax.Syntax
 module BU  = FStar.Compiler.Util
@@ -583,23 +581,23 @@ let injective_constructor
     let capp = mkApp(name, bvars) norng in
     fields
     |> List.mapi (fun i {field_projectible=projectible; field_name=name; field_sort=s} ->
-            let cproj_app = mkApp(name, [capp]) norng in
-            let proj_name = DeclFun(name, [sort], s, Some "Projector") in
             if projectible
-            then let a = {
+            then
+              let cproj_app = mkApp(name, [capp]) norng in
+              let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+              let a = {
                     assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
                     assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
                     assumption_fact_ids = []
                  } in
-                 [proj_name; Assume a]
-            else [proj_name])
+              [proj_name; Assume a]
+            else [])
     |> List.flatten
 
 let discriminator_name constr = "is-"^constr.constr_name
 
 let constructor_to_decl rng constr =
-    let injective = true in
     let sort = constr.constr_sort in
     let field_sorts = constr.constr_fields |> List.map (fun f -> f.field_sort) in
     let cdecl = DeclFun(constr.constr_name, field_sorts, constr.constr_sort, Some "Constructor") in
@@ -636,8 +634,36 @@ let constructor_to_decl rng constr =
                     Some "Discriminator definition") in
         def in
     let projs = injective_constructor rng (constr.constr_name, constr.constr_fields, sort) in
+    let base =
+      if not constr.constr_base
+      then []
+      else (
+        let arg_sorts =
+          constr.constr_fields 
+          |> List.filter (fun f -> f.field_projectible)
+          |> List.map (fun _ -> Term_sort)
+        in
+        let base_name = constr.constr_name ^ "@base" in
+        let decl = DeclFun(base_name, arg_sorts, Term_sort, Some "Constructor base") in
+        let formals = List.mapi (fun i _ -> mk_fv ("x" ^ string_of_int i, Term_sort)) constr.constr_fields in
+        let constructed_term = mkApp(constr.constr_name, List.map (fun fv -> mkFreeV fv norng) formals) norng in
+        let inj_formals = List.flatten <| List.map2 (fun f fld -> if fld.field_projectible then [f] else []) formals constr.constr_fields in
+        let base_term = mkApp(base_name, List.map (fun fv -> mkFreeV fv norng) inj_formals) norng in
+        let eq = mkEq(constructed_term, base_term) norng in
+        let guard = mkApp(discriminator_name constr, [constructed_term]) norng in
+        let q = mkForall rng ([[constructed_term]], formals, mkImp (guard, eq) norng) in
+        //forall (x0...xn:Term). {:pattern (C x0 ...xn)} is-C (C x0..xn) ==> C x0..xn == C-base x2 x3..xn
+        let a = {
+          assumption_name=escape ("constructor_base_" ^ constr.constr_name);
+          assumption_caption=Some "Constructor base";
+          assumption_term=q;
+          assumption_fact_ids=[]
+        } in
+        [decl; Assume a]
+    )
+    in
     Caption (format1 "<start constructor %s>" constr.constr_name)::
-    [cdecl]@cid@projs@[disc]
+    [cdecl]@cid@projs@[disc]@base
     @[Caption (format1 "</end constructor %s>" constr.constr_name)]
 
 (****************************************************************************)
@@ -904,7 +930,8 @@ and mkPrelude z3options =
      = { constr_name=name;
          constr_fields=List.map (fun (field_name, field_sort, field_projectible) -> {field_name; field_sort; field_projectible}) fields;
          constr_sort=sort;
-         constr_id=Some id }
+         constr_id=Some id;
+         constr_base=false }
    in
    let constrs : constructors = 
      List.map as_constr
@@ -984,7 +1011,8 @@ let mkBvConstructor (sz : int) =
     constr_name=fst (boxBitVecFun sz);
     constr_sort=Term_sort;
     constr_id=None;
-    constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }]
+    constr_fields=[{field_projectible=true; field_name=snd (boxBitVecFun sz); field_sort=BitVec_sort sz }];
+    constr_base=false
   } in
   constructor_to_decl norng constr, 
   constr.constr_name, 

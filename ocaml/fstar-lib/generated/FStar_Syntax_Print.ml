@@ -1452,41 +1452,43 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                FStar_Syntax_Syntax.num_uniform_params = uu___2;
                FStar_Syntax_Syntax.t = k;
                FStar_Syntax_Syntax.mutuals = uu___3;
-               FStar_Syntax_Syntax.ds = uu___4;_}
+               FStar_Syntax_Syntax.ds = uu___4;
+               FStar_Syntax_Syntax.injective_type_params = uu___5;_}
              ->
              let quals_str = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
              let binders_str = binders_to_string " " tps in
              let term_str = term_to_string k in
-             let uu___5 = FStar_Options.print_universes () in
-             if uu___5
+             let uu___6 = FStar_Options.print_universes () in
+             if uu___6
              then
-               let uu___6 = FStar_Ident.string_of_lid lid in
-               let uu___7 = univ_names_to_string univs in
+               let uu___7 = FStar_Ident.string_of_lid lid in
+               let uu___8 = univ_names_to_string univs in
                FStar_Compiler_Util.format5 "%stype %s<%s> %s : %s" quals_str
-                 uu___6 uu___7 binders_str term_str
+                 uu___7 uu___8 binders_str term_str
              else
-               (let uu___7 = FStar_Ident.string_of_lid lid in
+               (let uu___8 = FStar_Ident.string_of_lid lid in
                 FStar_Compiler_Util.format4 "%stype %s %s : %s" quals_str
-                  uu___7 binders_str term_str)
+                  uu___8 binders_str term_str)
          | FStar_Syntax_Syntax.Sig_datacon
              { FStar_Syntax_Syntax.lid1 = lid;
                FStar_Syntax_Syntax.us1 = univs; FStar_Syntax_Syntax.t1 = t;
                FStar_Syntax_Syntax.ty_lid = uu___2;
                FStar_Syntax_Syntax.num_ty_params = uu___3;
-               FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+               FStar_Syntax_Syntax.mutuals1 = uu___4;
+               FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
              ->
-             let uu___5 = FStar_Options.print_universes () in
-             if uu___5
+             let uu___6 = FStar_Options.print_universes () in
+             if uu___6
              then
-               let uu___6 = univ_names_to_string univs in
-               let uu___7 = FStar_Ident.string_of_lid lid in
-               let uu___8 = term_to_string t in
-               FStar_Compiler_Util.format3 "datacon<%s> %s : %s" uu___6
-                 uu___7 uu___8
+               let uu___7 = univ_names_to_string univs in
+               let uu___8 = FStar_Ident.string_of_lid lid in
+               let uu___9 = term_to_string t in
+               FStar_Compiler_Util.format3 "datacon<%s> %s : %s" uu___7
+                 uu___8 uu___9
              else
-               (let uu___7 = FStar_Ident.string_of_lid lid in
-                let uu___8 = term_to_string t in
-                FStar_Compiler_Util.format2 "datacon %s : %s" uu___7 uu___8)
+               (let uu___8 = FStar_Ident.string_of_lid lid in
+                let uu___9 = term_to_string t in
+                FStar_Compiler_Util.format2 "datacon %s : %s" uu___8 uu___9)
          | FStar_Syntax_Syntax.Sig_declare_typ
              { FStar_Syntax_Syntax.lid2 = lid;
                FStar_Syntax_Syntax.us2 = univs; FStar_Syntax_Syntax.t2 = t;_}
@@ -1728,20 +1730,22 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
           FStar_Syntax_Syntax.num_uniform_params = uu___2;
           FStar_Syntax_Syntax.t = uu___3;
           FStar_Syntax_Syntax.mutuals = uu___4;
-          FStar_Syntax_Syntax.ds = uu___5;_}
+          FStar_Syntax_Syntax.ds = uu___5;
+          FStar_Syntax_Syntax.injective_type_params = uu___6;_}
         ->
-        let uu___6 = FStar_Ident.string_of_lid lid in
-        FStar_Compiler_Util.format1 "type %s" uu___6
+        let uu___7 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "type %s" uu___7
     | FStar_Syntax_Syntax.Sig_datacon
         { FStar_Syntax_Syntax.lid1 = lid; FStar_Syntax_Syntax.us1 = uu___;
           FStar_Syntax_Syntax.t1 = uu___1;
           FStar_Syntax_Syntax.ty_lid = t_lid;
           FStar_Syntax_Syntax.num_ty_params = uu___2;
-          FStar_Syntax_Syntax.mutuals1 = uu___3;_}
+          FStar_Syntax_Syntax.mutuals1 = uu___3;
+          FStar_Syntax_Syntax.injective_type_params1 = uu___4;_}
         ->
-        let uu___4 = FStar_Ident.string_of_lid lid in
-        let uu___5 = FStar_Ident.string_of_lid t_lid in
-        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___4 uu___5
+        let uu___5 = FStar_Ident.string_of_lid lid in
+        let uu___6 = FStar_Ident.string_of_lid t_lid in
+        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___5 uu___6
     | FStar_Syntax_Syntax.Sig_assume
         { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = uu___;
           FStar_Syntax_Syntax.phi1 = uu___1;_}

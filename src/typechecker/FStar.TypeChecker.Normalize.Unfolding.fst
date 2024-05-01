@@ -15,6 +15,8 @@ module PC = FStar.Parser.Const
 module Print = FStar.Syntax.Print
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
+
 open FStar.Class.Show
 
 (* Max number of warnings to print in a single run.
@@ -142,7 +144,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         meets_some_criterion
 
     // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (U.attr_eq U.tac_opaque_attr) attrs ->
+    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.tac_opaque_attr) attrs ->
         log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
         no
 

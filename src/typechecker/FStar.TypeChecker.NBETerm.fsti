@@ -29,7 +29,7 @@ open FStar.Char
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module Z = FStar.BigInt
-
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 open FStar.Class.Show
 
 val interleave_hack : int
@@ -238,7 +238,7 @@ class embedding (a:Type0) = {
   e_typ : unit -> emb_typ;
 }
 
-val eq_t : t -> t -> U.eq_result
+val eq_t : Env.env_t -> t -> t -> TEQ.eq_result
 
 // Printing functions
 

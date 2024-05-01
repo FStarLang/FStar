@@ -48,7 +48,7 @@ module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
-
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 module PO = FStar.TypeChecker.Primops
 open FStar.TypeChecker.Normalize.Unfolding
 
@@ -752,7 +752,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops}) tm
+                              primitive_steps=equality_ops cfg.tcenv}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -1980,7 +1980,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
                   let maybe_range_arg =
-                    if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                    if BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
                     then [as_arg (PO.embed_simple lb.lbpos lb.lbpos);
                           as_arg (PO.embed_simple body.pos body.pos)]
                     else []
@@ -3293,7 +3293,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                          num_uniform_params=num_uniform;
                          t=typ;
                          mutuals=lids;
-                         ds=lids'} ->
+                         ds=lids';
+                         injective_type_params} ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
       {s with sigel = Sig_inductive_typ {lid;
                                          us=univ_names;
@@ -3301,19 +3302,21 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                                          num_uniform_params=num_uniform;
                                          t=typ;
                                          mutuals=lids;
-                                         ds=lids'}}
+                                         ds=lids';
+                                         injective_type_params}}
 
     | Sig_bundle {ses=sigs; lids} ->
       {s with sigel = Sig_bundle {ses=List.map (elim_uvars env) sigs; lids}}
 
-    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids} ->
+    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids; injective_type_params} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
       {s with sigel = Sig_datacon {lid;
                                    us=univ_names;
                                    t=typ;
                                    ty_lid=lident;
                                    num_ty_params=i;
-                                   mutuals=lids}}
+                                   mutuals=lids;
+                                   injective_type_params}}
 
     | Sig_declare_typ {lid; us=univ_names; t=typ} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in

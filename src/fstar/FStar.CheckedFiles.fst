@@ -36,7 +36,7 @@ let dbg = Debug.get_toggle "CheckedFiles"
  * detect when loading the cache that the version number is same
  * It needs to be kept in sync with prims.fst
  *)
-let cache_version_number = 66
+let cache_version_number = 67
 
 (*
  * Abbreviation for what we store in the checked files (stages as described below)

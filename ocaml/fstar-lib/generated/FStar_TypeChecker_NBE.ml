@@ -2337,7 +2337,8 @@ and (translate_monadic :
                         let maybe_range_arg =
                           let uu___2 =
                             FStar_Compiler_Util.for_some
-                              (FStar_Syntax_Util.attr_eq
+                              (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                                 (cfg.core_cfg).FStar_TypeChecker_Cfg.tcenv
                                  FStar_Syntax_Util.dm4f_bind_range_attr)
                               ed.FStar_Syntax_Syntax.eff_attrs in
                           if uu___2
@@ -2893,9 +2894,9 @@ and (readback :
                 if
                   ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.simplify
                 then
-                  FStar_TypeChecker_Common.simplify
+                  FStar_TypeChecker_TermEqAndSimplify.simplify
                     ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
-                    refinement
+                    (cfg.core_cfg).FStar_TypeChecker_Cfg.tcenv refinement
                 else refinement in
               with_range uu___2)
        | FStar_TypeChecker_NBETerm.Reflect t ->
@@ -2962,9 +2963,9 @@ and (readback :
              if
                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.simplify
              then
-               FStar_TypeChecker_Common.simplify
+               FStar_TypeChecker_TermEqAndSimplify.simplify
                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
-                 app
+                 (cfg.core_cfg).FStar_TypeChecker_Cfg.tcenv app
              else app in
            with_range uu___1
        | FStar_TypeChecker_NBETerm.Accu
@@ -2981,9 +2982,9 @@ and (readback :
              if
                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.simplify
              then
-               FStar_TypeChecker_Common.simplify
+               FStar_TypeChecker_TermEqAndSimplify.simplify
                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
-                 app
+                 (cfg.core_cfg).FStar_TypeChecker_Cfg.tcenv app
              else app in
            with_range uu___1
        | FStar_TypeChecker_NBETerm.Accu
@@ -3009,9 +3010,9 @@ and (readback :
              if
                ((cfg.core_cfg).FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.simplify
              then
-               FStar_TypeChecker_Common.simplify
+               FStar_TypeChecker_TermEqAndSimplify.simplify
                  ((cfg.core_cfg).FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
-                 app
+                 (cfg.core_cfg).FStar_TypeChecker_Cfg.tcenv app
              else app in
            with_range uu___1
        | FStar_TypeChecker_NBETerm.Accu

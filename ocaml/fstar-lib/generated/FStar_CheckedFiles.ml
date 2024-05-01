@@ -1,7 +1,7 @@
 open Prims
 let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "CheckedFiles"
-let (cache_version_number : Prims.int) = (Prims.of_int (66))
+let (cache_version_number : Prims.int) = (Prims.of_int (67))
 type tc_result =
   {
   checked_module: FStar_Syntax_Syntax.modul ;

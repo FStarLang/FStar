@@ -49,6 +49,7 @@ module U  = FStar.Syntax.Util
 module PP = FStar.Syntax.Print
 module UF = FStar.Syntax.Unionfind
 module Const = FStar.Parser.Const
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 let dbg_Exports        = Debug.get_toggle "Exports"
 let dbg_LayeredEffects = Debug.get_toggle "LayeredEffects"
@@ -565,7 +566,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
            let t1 = env.typeof_well_typed_tot_or_gtot_term env e1 false |> fst |> U.unrefine in
            let t2 = env.typeof_well_typed_tot_or_gtot_term env e2 false |> fst |> U.unrefine in
            let rec warn t1 t2 =
-             if U.eq_tm t1 t2 = Equal
+             if TEQ.eq_tm env t1 t2 = TEQ.Equal
              then false
              else match (SS.compress t1).n, (SS.compress t2).n with
                   | Tm_uinst (t1, _), Tm_uinst (t2, _) -> warn t1 t2
@@ -629,7 +630,7 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
            *   just prove that (rel e e_prev)
            *)
           let rel_guard = mk_Tm_app rel [as_arg e; as_arg e_prev] r in
-          if U.eq_tm rel rel_prev = U.Equal
+          if TEQ.eq_tm env rel rel_prev = TEQ.Equal
           then rel_guard
           else (
             (* if the relation is dependent on parameters in scope, 
@@ -2163,7 +2164,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
 
-        if not (special imp imp') && U.eq_bqual imp imp' <> U.Equal
+        if not (special imp imp') && not (U.eq_bqual imp imp')
         then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
                           BU.format1 "Inconsistent implicit argument annotation on argument %s" (Print.bv_to_string hd))
                          (S.range_of_bv hd)
@@ -2224,7 +2225,7 @@ and tc_abs_check_binders env bs bs_expected use_eq
         let hd = {hd with sort=t} in
         let combine_attrs (attrs:list S.attribute) (attrs':list S.attribute) : list S.attribute =
           let diff = List.filter (fun attr' ->
-            not (List.existsb (fun attr -> U.eq_tm attr attr' = U.Equal) attrs)
+            not (List.existsb (fun attr -> TEQ.eq_tm env attr attr' = TEQ.Equal) attrs)
           ) attrs' in
           attrs@diff
         in

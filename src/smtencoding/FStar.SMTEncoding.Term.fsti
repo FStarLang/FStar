@@ -20,6 +20,8 @@ open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
 open FStar.Class.Show
+open FStar.Compiler.List
+open FStar.Class.Ord
 
 module S = FStar.Syntax.Syntax
 
@@ -102,8 +104,10 @@ type constructor_t = {
   constr_name:string;
   constr_fields:list constructor_field;
   constr_sort:sort;
-  constr_id:option int; //Some i, if a term whose head is this constructor is distinct from 
-               //terms with other head constructors
+  constr_id:option int;
+    //Some i, if a term whose head is this constructor is distinct from 
+    //terms with other head constructors
+  constr_base: bool; //generate a base to eliminate non-injective arguments
 }
 type constructors  = list constructor_t
 type fact_db_id =

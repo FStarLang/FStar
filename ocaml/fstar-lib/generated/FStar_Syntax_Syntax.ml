@@ -1766,7 +1766,8 @@ type sigelt'__Sig_inductive_typ__payload =
   num_uniform_params: Prims.int FStar_Pervasives_Native.option ;
   t: typ ;
   mutuals: FStar_Ident.lident Prims.list ;
-  ds: FStar_Ident.lident Prims.list }
+  ds: FStar_Ident.lident Prims.list ;
+  injective_type_params: Prims.bool }
 and sigelt'__Sig_bundle__payload =
   {
   ses: sigelt Prims.list ;
@@ -1778,7 +1779,8 @@ and sigelt'__Sig_datacon__payload =
   t1: typ ;
   ty_lid: FStar_Ident.lident ;
   num_ty_params: Prims.int ;
-  mutuals1: FStar_Ident.lident Prims.list }
+  mutuals1: FStar_Ident.lident Prims.list ;
+  injective_type_params1: Prims.bool }
 and sigelt'__Sig_declare_typ__payload =
   {
   lid2: FStar_Ident.lident ;
@@ -1856,17 +1858,20 @@ let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__lid :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> lid
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> lid
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__us :
   sigelt'__Sig_inductive_typ__payload -> univ_names) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> us
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> us
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__params :
   sigelt'__Sig_inductive_typ__payload -> binders) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> params
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> params
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__num_uniform_params
   :
   sigelt'__Sig_inductive_typ__payload ->
@@ -1874,23 +1879,32 @@ let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__num_uniform_params
   =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} ->
-        num_uniform_params
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> num_uniform_params
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__t :
   sigelt'__Sig_inductive_typ__payload -> typ) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> t
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> t
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__mutuals :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> mutuals
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> mutuals
 let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__ds :
   sigelt'__Sig_inductive_typ__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
-    | { lid; us; params; num_uniform_params; t; mutuals; ds;_} -> ds
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> ds
+let (__proj__Mksigelt'__Sig_inductive_typ__payload__item__injective_type_params
+  : sigelt'__Sig_inductive_typ__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { lid; us; params; num_uniform_params; t; mutuals; ds;
+        injective_type_params;_} -> injective_type_params
 let (__proj__Mksigelt'__Sig_bundle__payload__item__ses :
   sigelt'__Sig_bundle__payload -> sigelt Prims.list) =
   fun projectee -> match projectee with | { ses; lids;_} -> ses
@@ -1902,37 +1916,50 @@ let (__proj__Mksigelt'__Sig_datacon__payload__item__lid :
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> lid
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__us :
   sigelt'__Sig_datacon__payload -> univ_names) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> us
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> us
 let (__proj__Mksigelt'__Sig_datacon__payload__item__t :
   sigelt'__Sig_datacon__payload -> typ) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> t
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> t
 let (__proj__Mksigelt'__Sig_datacon__payload__item__ty_lid :
   sigelt'__Sig_datacon__payload -> FStar_Ident.lident) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> ty_lid
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> ty_lid
 let (__proj__Mksigelt'__Sig_datacon__payload__item__num_ty_params :
   sigelt'__Sig_datacon__payload -> Prims.int) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> num_ty_params
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> num_ty_params
 let (__proj__Mksigelt'__Sig_datacon__payload__item__mutuals :
   sigelt'__Sig_datacon__payload -> FStar_Ident.lident Prims.list) =
   fun projectee ->
     match projectee with
     | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
-        mutuals1 = mutuals;_} -> mutuals
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> mutuals
+let (__proj__Mksigelt'__Sig_datacon__payload__item__injective_type_params :
+  sigelt'__Sig_datacon__payload -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { lid1 = lid; us1 = us; t1 = t; ty_lid; num_ty_params;
+        mutuals1 = mutuals; injective_type_params1 = injective_type_params;_}
+        -> injective_type_params
 let (__proj__Mksigelt'__Sig_declare_typ__payload__item__lid :
   sigelt'__Sig_declare_typ__payload -> FStar_Ident.lident) =
   fun projectee ->

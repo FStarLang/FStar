@@ -42,6 +42,7 @@ module SS     = FStar.Syntax.Subst
 module TcUtil = FStar.TypeChecker.Util
 module UF     = FStar.Syntax.Unionfind
 module U      = FStar.Syntax.Util
+module TEQ    = FStar.TypeChecker.TermEqAndSimplify
 
 let dbg_SMTEncoding = Debug.get_toggle "SMTEncoding"
 let dbg_SMTQuery    = Debug.get_toggle "SMTQuery"
@@ -172,14 +173,19 @@ let prims =
     {mk=mk;
      is=is}
 
-let pretype_axiom rng env tapp vars =
+let pretype_axiom term_constr_eq rng env tapp vars =
     let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
     let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
     let xx_has_type = mk_HasTypeFuel ff xx tapp in
     let tapp_hash = Term.hash_of_term tapp in
     let module_name = env.current_module_name in
     Util.mkAssume(mkForall rng ([[xx_has_type]], mk_fv (xxsym, Term_sort)::mk_fv (ffsym, Fuel_sort)::vars,
-                                mkImp(xx_has_type, mkEq(tapp, mkApp("PreType", [xx])))),
+                                mkImp(xx_has_type, 
+                                     (if term_constr_eq
+                                      then mkEq(mkApp ("Term_constr_id", [tapp]), 
+                                                mkApp ("Term_constr_id", [mkApp("PreType", [xx])]))
+                                      else mkEq(tapp, 
+                                                mkApp("PreType", [xx]))))),
                          Some "pretyping",
                          (varops.mk_unique (module_name ^ "_pretyping_" ^ (BU.digest_of_string tapp_hash))))
 
@@ -537,7 +543,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               let freshness =
                 if quals |> List.contains New
                 then [Term.fresh_constructor (S.range_of_fv fv) (vname, vars |> List.map fv_sort, Term_sort, varops.next_id());
-                      pretype_axiom (S.range_of_fv fv) env vapp vars]
+                      pretype_axiom false (S.range_of_fv fv) env vapp vars]
                 else [] in
               let g = decls1@decls2@decls3@(freshness@typingAx::mk_disc_proj_axioms guard encoded_res_t vapp vars
                                             |> mk_decls_trivial) in
@@ -1003,6 +1009,463 @@ let encode_top_level_let :
       let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
       [decl] |> mk_decls_trivial, env
 
+let encode_sig_inductive (env:env_t) (se:sigelt)
+: decls_t * env_t
+= let Sig_inductive_typ
+        { lid=t; us=universe_names; params=tps;
+          t=k; ds=datas; injective_type_params } = se.sigel in 
+  let t_lid = t in
+  let tcenv = env.tcenv in
+  let quals = se.sigquals in
+  let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
+  let constructor_or_logic_type_decl (c:constructor_t) =
+    if is_logical
+    then [Term.DeclFun(c.constr_name, c.constr_fields |> List.map (fun f -> f.field_sort), Term_sort, None)]
+    else constructor_to_decl (Ident.range_of_lid t) c in
+  let inversion_axioms env tapp vars =
+    if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
+    then []
+    else (
+      let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
+      let data_ax, decls =
+        datas |>
+        List.fold_left
+          (fun (out, decls) l ->
+            let is_l = mk_data_tester env l xx in
+            let inversion_case, decls' =
+              if injective_type_params
+              || Options.ext_getv "compat:injectivity" <> ""
+              then (
+                let _, data_t = Env.lookup_datacon env.tcenv l in
+                let args, res = U.arrow_formals data_t in
+                let indices = res |> U.head_and_args_full |> snd in
+                let env = args |> List.fold_left
+                    (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
+                    env in
+                let indices, decls' = encode_args indices env in
+                if List.length indices <> List.length vars
+                then failwith "Impossible";
+                let eqs = List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices in
+                mkAnd(is_l, mk_and_l eqs), decls'
+              )
+              else is_l, []
+            in
+            mkOr(out, inversion_case), decls@decls')
+          (mkFalse, [])
+      in
+      let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
+      let fuel_guarded_inversion =
+        let xx_has_type_sfuel =
+          if List.length datas > 1
+          then mk_HasTypeFuel (mkApp("SFuel", [ff])) xx tapp
+          else mk_HasTypeFuel ff xx tapp //no point requiring non-zero fuel if there are no disjunctions
+        in
+        Util.mkAssume(
+          mkForall
+            (Ident.range_of_lid t) 
+            ([[xx_has_type_sfuel]],
+             add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::vars),
+            mkImp(xx_has_type_sfuel, data_ax)),
+            Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
+            (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t))))
+      in
+      decls
+      @([fuel_guarded_inversion] |> mk_decls_trivial)
+    )
+  in
+  let formals, res =
+    let k =
+      match tps with
+      | [] -> k
+      | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
+    in
+    let k = norm_before_encoding env k in
+    U.arrow_formals k
+  in
+  let vars, guards, env', binder_decls, _ = encode_binders None formals env in
+  let arity = List.length vars in
+  let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
+  let ttok_tm = mkApp(ttok, []) in
+  let guard = mk_and_l guards in
+  let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
+  let decls, env =
+    //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
+    //See: https://github.com/FStarLang/FStar/issues/349
+    let tname_decl =
+      constructor_or_logic_type_decl
+        {
+          constr_name = tname;
+          constr_fields = vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
+          //The field_projectible=false above is extremely important; it makes sure that type-formers are not injective
+          constr_sort=Term_sort;
+          constr_id=Some (varops.next_id());
+          constr_base=false
+        }
+    in
+    let tok_decls, env =
+      match vars with
+      | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
+      | _ ->
+        let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
+        let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in
+        let ttok_app = mk_Apply ttok_tm vars in
+        let pats = [[ttok_app]; [tapp]] in
+        // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
+        // This seems necessary for some proofs, but the bidirectional rewriting may be inefficient
+        let name_tok_corr =
+          Util.mkAssume(mkForall' (Ident.range_of_lid t) (pats, None, vars, mkEq(ttok_app, tapp)),
+                        Some "name-token correspondence",
+                        ("token_correspondence_"^ttok)) in
+        [ttok_decl; ttok_fresh; name_tok_corr], env
+    in
+    tname_decl@tok_decls, env
+  in
+  let kindingAx =
+    let k, decls = encode_term_pred None res env' tapp in
+    let karr =
+      if List.length formals > 0
+      then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
+      else []
+    in
+    let rng = Ident.range_of_lid t in
+    let tot_fun_axioms = EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true in
+    decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], vars, mkImp(guard, k))),
+                                None,
+                                ("kinding_"^ttok))] |> mk_decls_trivial)
+  in
+  let aux =
+    kindingAx
+    @(inversion_axioms env tapp vars)
+    @([pretype_axiom (not injective_type_params) (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial)
+  in
+  (decls |> mk_decls_trivial)@binder_decls@aux, env
+
+let encode_datacon (env:env_t) (se:sigelt)
+: decls_t * env_t
+= let Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
+  let quals = se.sigquals in
+  let t = norm_before_encoding env t in
+  let formals, t_res = U.arrow_formals t in
+  let arity = List.length formals in
+  let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
+  let ddtok_tm = mkApp(ddtok, []) in
+  let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
+  let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
+  let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
+  let injective_type_params =
+    injective_type_params || Options.ext_getv "compat:injectivity" <> ""
+  in
+  let fields =
+    names |>
+    List.mapi
+      (fun n x ->
+        let field_projectible =
+          n >= n_tps || //either this field is not a type parameter
+          injective_type_params //or we are allowed to be injective on parameters
+        in
+        { field_name=mk_term_projector_name d x;
+          field_sort=Term_sort;
+          field_projectible })
+  in
+  let datacons = {
+    constr_name=ddconstrsym;
+    constr_fields=fields;
+    constr_sort=Term_sort;
+    constr_id=Some (varops.next_id());
+    constr_base=not injective_type_params
+  } |> Term.constructor_to_decl (Ident.range_of_lid d) in
+  let app = mk_Apply ddtok_tm vars in
+  let guard = mk_and_l guards in
+  let xvars = List.map mkFreeV vars in
+  let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
+
+  let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
+  let tok_typing =
+        match fields with
+        | _::_ ->
+          let ff = mk_fv ("ty", Term_sort) in
+          let f = mkFreeV ff in
+          let vtok_app_l = mk_Apply ddtok_tm [ff] in
+          let vtok_app_r = mk_Apply f [mk_fv (ddtok, Term_sort)] in
+          //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
+          //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
+          //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
+          //Since the top-levels of modules are full of function typed terms
+          //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
+          //regardless of whether or not the function is used ... leading to bloat
+          //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
+          mkForall (Ident.range_of_lid d)
+                  ([[vtok_app_l]; [vtok_app_r]],
+                  [ff],
+                  Term.mk_NoHoist f tok_typing)
+        | _ -> tok_typing in
+  let ty_pred', t_res_tm, decls_pred =
+        let t_res_tm, t_res_decls = encode_term t_res env' in
+        mk_HasTypeWithFuel (Some fuel_tm) dapp t_res_tm, t_res_tm, t_res_decls in
+  let proxy_fresh = match formals with
+      | [] -> []
+      | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
+
+  let encode_elim () =
+      let head, args = U.head_and_args t_res in
+      match (SS.compress head).n with
+      | Tm_uinst({n=Tm_fvar fv}, _)
+      | Tm_fvar fv ->
+        let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
+        let encoded_args, arg_decls = encode_args args env' in
+        let _, arg_vars, elim_eqns_or_guards, _ =
+            List.fold_left
+              (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
+                let _, xv, env = gen_term_var env (S.new_bv None tun) in
+                (* we only get equations induced on the type indices, not parameters; *)
+                (* Also see https://github.com/FStarLang/FStar/issues/349 *)
+                let eqns =
+                  if i < n_tps
+                  then eqns_or_guards
+                  else mkEq(arg, xv)::eqns_or_guards
+                in
+                (env, xv::arg_vars, eqns, i + 1))
+              (env', [], [], 0)
+              (FStar.Compiler.List.zip args encoded_args)
+        in
+        let arg_vars = List.rev arg_vars in
+        let arg_params, _ = List.splitAt n_tps arg_vars in
+        let data_arg_params, _ = List.splitAt n_tps vars in
+        //Express the guards in terms of the parameters of the type constructor
+        //not the arguments of the data constructor
+        let elim_eqns_and_guards =
+          List.fold_left2 
+            (fun elim_eqns_and_guards data_arg_param arg_param ->
+                Term.subst elim_eqns_and_guards data_arg_param arg_param)
+            (mk_and_l (elim_eqns_or_guards@guards))
+            data_arg_params
+            arg_params
+        in
+        let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
+        let xvars = List.map mkFreeV vars in
+        let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
+        let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
+        let arg_binders = List.map fv_of_term arg_vars in
+        let typing_inversion =
+              Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
+                                  add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                  mkImp(ty_pred, elim_eqns_and_guards)),
+                          Some "data constructor typing elim",
+                          ("data_elim_" ^ ddconstrsym)) in
+        let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
+        let subterm_ordering =
+            (* subterm ordering *)
+            let prec =
+                  vars
+                    |> List.mapi (fun i v ->
+                          (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
+                          if i < n_tps
+                          then []
+                          else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
+                    |> List.flatten
+            in
+            Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                    ([[ty_pred]],
+                                    add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                    mkImp(ty_pred, mk_and_l prec)),
+                          Some "subterm ordering",
+                          ("subterm_ordering_"^ddconstrsym))
+        in
+        let codomain_ordering, codomain_decls =
+          let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
+          let _, vars' = BU.first_N n_tps vars in
+          let norm t = 
+              N.unfold_whnf' [Env.AllowUnboundUniverses;
+                              Env.EraseUniverses;
+                              Env.Unascribe;
+                              //we don't know if this will terminate; so don't do recursive steps
+                              Env.Exclude Env.Zeta]
+                            env'.tcenv
+                            t                
+          in
+          let warn_compat () =
+            FStar.Errors.log_issue
+              (S.range_of_fv fv)
+              (FStar.Errors.Warning_DeprecatedGeneric,
+              "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\n\
+                This is deprecated and will be removed in a future version of F*.")
+          in
+          let codomain_prec_l, cod_decls =
+            List.fold_left2
+              (fun (codomain_prec_l, cod_decls) formal var ->
+                  let rec binder_and_codomain_type t =
+                      let t = U.unrefine t in
+                      match (SS.compress t).n with
+                      | Tm_arrow _ ->
+                        let bs, c = U.arrow_formals_comp (U.unrefine t) in
+                        begin
+                        match bs with
+                        | [] -> None
+                        | _ when not (U.is_tot_or_gtot_comp c) -> None
+                        | _ ->
+                          if U.is_lemma_comp c
+                          then None //not useful for lemmas
+                          else
+                            let t = U.unrefine (U.comp_result c) in
+                            let t = norm t in
+                            if is_type t || U.is_sub_singleton t
+                            then None //ordering on Type and squashed values is not useful
+                            else (
+                              let head, _ = U.head_and_args_full t in
+                              match (U.un_uinst head).n with
+                              | Tm_fvar fv ->
+                                if BU.for_some (S.fv_eq_lid fv) mutuals
+                                then Some (bs, c)
+                                else if Options.ext_getv "compat:2954" <> ""
+                                then (warn_compat(); Some (bs, c)) //compatibility mode
+                                else None
+                              | _ ->
+                                if Options.ext_getv "compat:2954" <> ""
+                                then (warn_compat(); Some (bs, c)) //compatibility mode
+                                else None
+                            )
+                        end
+                      | _ ->
+                        let head, _ = U.head_and_args t in
+                        let t' = norm t in
+                        let head', _ = U.head_and_args t' in
+                        match TEQ.eq_tm env.tcenv head head' with
+                        | TEQ.Equal -> None //no progress after whnf
+                        | TEQ.NotEqual -> binder_and_codomain_type t'
+                        | _ ->
+                          //Did we actually make progress? Be conservative to avoid an infinite loop
+                          match (SS.compress head).n with
+                          | Tm_fvar _
+                          | Tm_name _
+                          | Tm_uinst _ ->
+                            //The underlying name must have changed, otherwise we would have got Equal
+                            //so, we made some progress
+                            binder_and_codomain_type t'
+                          | _ ->
+                            //unclear if we made progress or not
+                            None
+
+                  in
+                  match binder_and_codomain_type formal.binder_bv.sort with
+                  | None -> 
+                    codomain_prec_l, cod_decls
+                  | Some (bs, c) ->
+                    //var bs << D ... var ...
+                    let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
+                    let fun_app = mk_Apply (mkFreeV var) bs' in
+                    mkForall (Ident.range_of_lid d)
+                              ([[mk_Precedes lex_t lex_t fun_app dapp]],
+                                bs',
+                                //need to use ty_pred' here, to avoid variable capture
+                                //Note, ty_pred' is indexed by fuel, not S_fuel
+                                //That's ok, since the outer pattern is guarded on S_fuel
+                                mkImp (mk_and_l (ty_pred'::guards'),
+                                      mk_Precedes lex_t lex_t fun_app dapp))
+                    :: codomain_prec_l,
+                    bs_decls @ cod_decls)
+              ([],[])
+              formals'
+              vars'
+          in
+          match codomain_prec_l with
+          | [] ->
+            [], cod_decls
+          | _ ->
+            [Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                    ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
+                                      add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
+                                      mk_and_l codomain_prec_l),
+                            Some "well-founded ordering on codomain",
+                            ("well_founded_ordering_on_codomain_"^ddconstrsym))],
+            cod_decls
+        in
+        arg_decls @ codomain_decls,
+        [typing_inversion; subterm_ordering] @ codomain_ordering
+
+      | _ ->
+        Errors.log_issue se.sigrng
+            (Errors.Warning_ConstructorBuildsUnexpectedType,
+              BU.format2 "Constructor %s builds an unexpected type %s\n"
+                        (Print.lid_to_string d) (Print.term_to_string head));
+        [], []
+  in
+  let decls2, elim = encode_elim () in
+  let data_cons_typing_intro_decl =
+    //
+    //AR:
+    //
+    //Typing intro for the data constructor
+    //
+    //We do a bit of manipulation for type indices
+    //Consider the Cons data constructor of a length-indexed vector type:
+    //  type vector : nat -> Type = | Emp : vector 0
+    //  | Cons: n:nat -> hd:nat -> tl:vec n -> vec (n+1)
+    //
+    //So far we have
+    //  ty_pred' = HasTypeFuel f (Cons n hd tl) (vector (n+1))
+    //  vars = n, hd, tl
+    //  guard = And of typing guards for n, hd, tl (i.e. (HasType n nat) etc.)
+    //
+    //If we emitted the straightforward typing axiom:
+    //  forall n hd tl. HasTypeFuel f (Cons n hd tl) (vector (n+1))
+    //with pattern
+    //  HasTypeFuel f (Cons n hd tl) (vecor (n+1))
+    //
+    //It results in too restrictive a pattern,
+    //Specifically, if we need to prove HasTypeFuel f (Cons 0 1 Emp) (vector 1),
+    //  the axiom will not fire, since the pattern is specifically looking for
+    //  (n+1) in the resulting vector type, whereas here we have a term 1,
+    //  which is not addition syntactically
+    //
+    //So we do a little bit of surgery below to emit an axiom of the form:
+    //  forall n hd tl m. m = n + 1 ==> HasTypeFuel f (Cons n hd tl) (vector m)
+    //where m is a fresh variable
+    //
+    //Also see #2456
+    //
+    let ty_pred', vars, guard =
+      match t_res_tm.tm with
+      | App (op, args) ->
+        //iargs are index arguments in the return type of the data constructor
+        let targs, iargs = List.splitAt n_tps args in
+        //fresh vars for iargs
+        let fresh_ivars, fresh_iargs =
+          iargs |> List.map (fun _ -> fresh_fvar env.current_module_name "i" Term_sort)
+                |> List.split in
+        //equality guards
+        let additional_guards =
+          mk_and_l (List.map2 (fun a fresh_a -> mkEq (a, fresh_a)) iargs fresh_iargs) in
+
+        mk_HasTypeWithFuel
+          (Some fuel_tm)
+          dapp
+          ({t_res_tm with tm = App (op, targs@fresh_iargs)}),
+
+        vars@(fresh_ivars |> List.map (fun s -> mk_fv (s, Term_sort))),
+
+        mkAnd (guard, additional_guards)
+
+      | _ -> ty_pred', vars, guard in  //When will this case arise?
+
+    Util.mkAssume(mkForall (Ident.range_of_lid d)
+                            ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars, mkImp(guard, ty_pred')),
+                            Some "data constructor typing intro",
+                            ("data_typing_intro_"^ddtok)) in
+
+  let g = binder_decls
+          @decls2
+          @decls3
+          @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
+            @proxy_fresh |> mk_decls_trivial)
+          @decls_pred
+          @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
+              Util.mkAssume(mkForall (Ident.range_of_lid d)
+                                    ([[app]], vars,
+                                      mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
+              data_cons_typing_intro_decl;
+              ]@elim |> mk_decls_trivial) in
+  (datacons |> mk_decls_trivial) @ g, env
+
 
 let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
     let nm = Print.sigelt_to_string_short se in
@@ -1218,514 +1681,62 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       encode_top_level_let env (is_rec, bindings) se.sigquals
 
     | Sig_bundle {ses} ->
-       let g, env = encode_sigelts env ses in
-       let g', inversions = List.fold_left (fun (g', inversions) elt ->
-         let elt_g', elt_inversions = elt.decls |> List.partition (function
-           | Term.Assume({assumption_caption=Some "inversion axiom"}) -> false
-          | _ -> true) in
-         g' @ [ { elt with decls = elt_g' } ], inversions @ elt_inversions
-       ) ([], []) g in
-       let decls, elts, rest = List.fold_left (fun (decls, elts, rest) elt ->
-         if elt.key |> BU.is_some && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
-         then decls, elts@[elt], rest
-         else let elt_decls, elt_rest = elt.decls |> List.partition (function
-              | Term.DeclFun _ -> true
-              | _ -> false) in
+      let g, env =
+        ses |>
+        List.fold_left
+          (fun (g, env) se ->
+            let g', env =
+              match se.sigel with
+              | Sig_inductive_typ _ ->
+                encode_sig_inductive env se
+              | Sig_datacon _ -> 
+                encode_datacon env se
+              | _ ->
+                encode_sigelt env se
+            in
+            g@g', env) 
+          ([], env)
+      in      
+      //reorder the generated decls in proper def-use order, 
+      //i.e, declare all the function symbols first
+      //1. move the inversions last; they rely on all the symbols
+      let g', inversions =
+        List.fold_left
+          (fun (g', inversions) elt ->
+              let elt_g', elt_inversions =
+                elt.decls |>
+                List.partition 
+                  (function
+                    | Term.Assume({assumption_caption=Some "inversion axiom"}) -> false
+                    | _ -> true)
+              in
+              g' @ [ { elt with decls = elt_g' } ],
+              inversions @ elt_inversions)
+          ([], [])
+          g
+      in
+      //2. decls are all the function symbol declarations
+      //   elts: all elements that have a key and which contain function declarations (not sure why this class is important to pull out)
+      //   rest: all the non-declarations, excepting the inversion axiom which is already identified above
+      let decls, elts, rest =
+        List.fold_left
+          (fun (decls, elts, rest) elt ->
+            if BU.is_some elt.key //NS: Not sure what this case is for
+            && List.existsb (function | Term.DeclFun _ -> true | _ -> false) elt.decls
+            then decls, elts@[elt], rest 
+            else ( //Pull the function symbol decls to the front
+              let elt_decls, elt_rest =
+                elt.decls |>
+                List.partition
+                  (function
+                    | Term.DeclFun _ -> true
+                    | _ -> false)
+              in
               decls @ elt_decls, elts, rest @ [ { elt with decls = elt_rest }]
-       ) ([], [], []) g' in
-       (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
-
-     | Sig_inductive_typ {lid=t;
-                          us=universe_names;
-                          params=tps;
-                          t=k;
-                          ds=datas} ->
-         let tcenv = env.tcenv in
-         let is_injective  =
-             let usubst, uvs = SS.univ_var_opening universe_names in
-             let env, tps, k =
-                Env.push_univ_vars tcenv uvs,
-                SS.subst_binders usubst tps,
-                SS.subst (SS.shift_subst (List.length tps) usubst) k
-             in
-             let tps, k = SS.open_term tps k in
-             let _, k = U.arrow_formals k in //don't care about indices here
-             let tps, env_tps, _, us = TcTerm.tc_binders env tps in
-             let u_k =
-               TcTerm.level_of_type
-                 env_tps
-                 (S.mk_Tm_app
-                   (S.fvar t None)
-                   (snd (U.args_of_binders tps))
-                   (Ident.range_of_lid t))
-                 k
-             in
-             //BU.print2 "Universe of tycon: %s : %s\n" (Ident.string_of_lid t) (Print.univ_to_string u_k);
-             let rec universe_leq u v =
-                 match u, v with
-                 | U_zero, _ -> true
-                 | U_succ u0, U_succ v0 -> universe_leq u0 v0
-                 | U_name u0, U_name v0 -> Ident.ident_equals u0 v0
-                 | U_name _,  U_succ v0 -> universe_leq u v0
-                 | U_max us,  _         -> us |> BU.for_all (fun u -> universe_leq u v)
-                 | _,         U_max vs  -> vs |> BU.for_some (universe_leq u)
-                 | U_unknown, _
-                 | _, U_unknown
-                 | U_unif _, _
-                 | _, U_unif _ -> failwith (BU.format3 "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
-                                                      (Ident.string_of_lid t)
-                                                      (Print.univ_to_string u)
-                                                      (Print.univ_to_string v))
-                 | _ -> false
-             in
-             let u_leq_u_k u =
-                universe_leq (N.normalize_universe env_tps u) u_k
-             in
-             let tp_ok (tp:S.binder) (u_tp:universe) =
-                let t_tp = tp.binder_bv.sort in
-                if u_leq_u_k u_tp
-                then true
-                else let formals, _ = U.arrow_formals t_tp in
-                     let _, _, _, u_formals = TcTerm.tc_binders env_tps formals in
-                     //List.iter (fun u -> BU.print1 "Universe of formal: %s\n" (Print.univ_to_string u)) u_formals;
-                     BU.for_all (fun u_formal -> u_leq_u_k u_formal) u_formals
-             in
-             List.forall2 tp_ok tps us
-        in
-        if !dbg_SMTEncoding
-        then BU.print2 "%s injectivity for %s\n"
-                    (if is_injective then "YES" else "NO")
-                    (Ident.string_of_lid t);
-        let quals = se.sigquals in
-        let is_logical = quals |> BU.for_some (function Logic | Assumption -> true | _ -> false) in
-        let constructor_or_logic_type_decl (c:constructor_t) =
-            if is_logical
-            then [Term.DeclFun(c.constr_name, c.constr_fields |> List.map (fun f -> f.field_sort), Term_sort, None)]
-            else constructor_to_decl (Ident.range_of_lid t) c in
-        let inversion_axioms env tapp vars =
-            if datas |> BU.for_some (fun l -> Env.try_lookup_lid env.tcenv l |> Option.isNone) //Q: Why would this happen?
-            then []
-            else
-                 let xxsym, xx = fresh_fvar env.current_module_name "x" Term_sort in
-                 let data_ax, decls = datas |> List.fold_left (fun (out, decls) l ->
-                    let _, data_t = Env.lookup_datacon env.tcenv l in
-                    let args, res = U.arrow_formals data_t in
-                    let indices = res |> U.head_and_args_full |> snd in
-                    let env = args |> List.fold_left
-                        (fun env ({binder_bv=x}) -> push_term_var env x (mkApp(mk_term_projector_name l x, [xx])))
-                        env in
-                    let indices, decls' = encode_args indices env in
-                    if List.length indices <> List.length vars
-                    then failwith "Impossible";
-                    let eqs =
-                        if is_injective
-                        then List.map2 (fun v a -> mkEq(mkFreeV v, a)) vars indices
-                        else [] in
-                    mkOr(out, mkAnd(mk_data_tester env l xx, eqs |> mk_and_l)), decls@decls') (mkFalse, []) in
-                let ffsym, ff = fresh_fvar env.current_module_name "f" Fuel_sort in
-                let fuel_guarded_inversion =
-                    let xx_has_type_sfuel =
-                        if List.length datas > 1
-                        then mk_HasTypeFuel (mkApp("SFuel", [ff])) xx tapp
-                        else mk_HasTypeFuel ff xx tapp in //no point requiring non-zero fuel if there are no disjunctions
-                    Util.mkAssume(mkForall (Ident.range_of_lid t) ([[xx_has_type_sfuel]], add_fuel (mk_fv (ffsym, Fuel_sort)) (mk_fv (xxsym, Term_sort)::vars),
-                                        mkImp(xx_has_type_sfuel, data_ax)),
-                                Some "inversion axiom", //this name matters! see Sig_bundle case near line 1493
-                                (varops.mk_unique ("fuel_guarded_inversion_"^(string_of_lid t)))) in
-                decls
-                @([fuel_guarded_inversion] |> mk_decls_trivial) in
-
-        let formals, res =
-          let k =
-            match tps with
-            | [] -> k
-            | _ -> S.mk (Tm_arrow {bs=tps; comp=S.mk_Total k}) k.pos
-          in
-          let k = norm_before_encoding env k in
-          U.arrow_formals k
-        in
-
-        let vars, guards, env', binder_decls, _ = encode_binders None formals env in
-        let arity = List.length vars in
-        let tname, ttok, env = new_term_constant_and_tok_from_lid env t arity in
-        let ttok_tm = mkApp(ttok, []) in
-        let guard = mk_and_l guards in
-        let tapp = mkApp(tname, List.map mkFreeV vars) in //arity ok
-        let decls, env =
-            //See: https://github.com/FStarLang/FStar/commit/b75225bfbe427c8aef5b59f70ff6d79aa014f0b4
-            //See: https://github.com/FStarLang/FStar/issues/349
-            let tname_decl =
-                constructor_or_logic_type_decl
-                  {
-                    constr_name = tname;
-                    constr_fields = vars |> List.map (fun fv -> {field_name=tname^fv_name fv; field_sort=fv_sort fv; field_projectible=false}) ;
-                    //The field_projectible=false above is extremely important; it makes sure that type-formers are not injective
-                    constr_sort=Term_sort;
-                    constr_id=Some (varops.next_id())
-                  }
-            in
-            let tok_decls, env =
-                match vars with
-                | [] -> [], push_free_var env t arity tname (Some <| mkApp(tname, []))
-                | _ ->
-                        let ttok_decl = Term.DeclFun(ttok, [], Term_sort, Some "token") in
-                        let ttok_fresh = Term.fresh_token (ttok, Term_sort) (varops.next_id()) in
-                        let ttok_app = mk_Apply ttok_tm vars in
-                        let pats = [[ttok_app]; [tapp]] in
-                        // These patterns allow rewriting (ApplyT T@tok args) to (T args) and vice versa
-                        // This seems necessary for some proofs, but the bidirectional rewriting may be inefficient
-                        let name_tok_corr = Util.mkAssume(mkForall' (Ident.range_of_lid t) (pats, None, vars, mkEq(ttok_app, tapp)),
-                                                        Some "name-token correspondence",
-                                                        ("token_correspondence_"^ttok)) in
-                        [ttok_decl; ttok_fresh; name_tok_corr], env in
-            tname_decl@tok_decls, env in
-        let kindingAx =
-            let k, decls = encode_term_pred None res env' tapp in
-            let karr =
-                if List.length formals > 0
-                then [Util.mkAssume(mk_tester "Tm_arrow" (mk_PreType ttok_tm), Some "kinding", ("pre_kinding_"^ttok))]
-                else []
-            in
-            let rng = Ident.range_of_lid t in
-            let tot_fun_axioms =
-              EncodeTerm.isTotFun_axioms rng ttok_tm vars (List.map (fun _ -> mkTrue) vars) true
-            in
-
-            decls@(karr@[Util.mkAssume(mkAnd(tot_fun_axioms, mkForall rng ([[tapp]], vars, mkImp(guard, k))), None, ("kinding_"^ttok))]
-                   |> mk_decls_trivial) in
-        let aux =
-            kindingAx
-            @(inversion_axioms env tapp vars)
-            @([pretype_axiom (Ident.range_of_lid t) env tapp vars] |> mk_decls_trivial) in
-
-        let g = (decls |> mk_decls_trivial)
-                @binder_decls
-                @aux in
-        g, env
-
-    | Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals} ->
-        let quals = se.sigquals in
-        let t = norm_before_encoding env t in
-        let formals, t_res = U.arrow_formals t in
-        let arity = List.length formals in
-        let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
-        let ddtok_tm = mkApp(ddtok, []) in
-        let fuel_var, fuel_tm = fresh_fvar env.current_module_name "f" Fuel_sort in
-        let s_fuel_tm = mkApp("SFuel", [fuel_tm]) in
-        let vars, guards, env', binder_decls, names = encode_binders (Some fuel_tm) formals env in
-        let fields = names |> List.mapi (fun n x ->
-            { field_name=mk_term_projector_name d x;
-              field_sort=Term_sort;
-              field_projectible=true })
-        in
-        let datacons = 
-          {constr_name=ddconstrsym;
-           constr_fields=fields;
-           constr_sort=Term_sort;
-           constr_id=Some (varops.next_id())
-           } |> Term.constructor_to_decl (Ident.range_of_lid d) in
-        let app = mk_Apply ddtok_tm vars in
-        let guard = mk_and_l guards in
-        let xvars = List.map mkFreeV vars in
-        let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-
-        let tok_typing, decls3 = encode_term_pred None t env ddtok_tm in
-        let tok_typing =
-             match fields with
-             | _::_ ->
-               let ff = mk_fv ("ty", Term_sort) in
-               let f = mkFreeV ff in
-               let vtok_app_l = mk_Apply ddtok_tm [ff] in
-               let vtok_app_r = mk_Apply f [mk_fv (ddtok, Term_sort)] in
-                //guard the token typing assumption with a Apply(tok, f) or Apply(f, tok)
-                //Additionally, the body of the term becomes NoHoist f (HasType tok ...)
-                //   to prevent the Z3 simplifier from hoisting the (HasType tok ...) part out
-                //Since the top-levels of modules are full of function typed terms
-                //not guarding it this way causes every typing assumption of an arrow type to be fired immediately
-                //regardless of whether or not the function is used ... leading to bloat
-                //these patterns aim to restrict the use of the typing assumption until such point as it is actually needed
-               mkForall (Ident.range_of_lid d)
-                        ([[vtok_app_l]; [vtok_app_r]],
-                        [ff],
-                        Term.mk_NoHoist f tok_typing)
-             | _ -> tok_typing in
-        let ty_pred', t_res_tm, decls_pred =
-             let t_res_tm, t_res_decls = encode_term t_res env' in
-             mk_HasTypeWithFuel (Some fuel_tm) dapp t_res_tm, t_res_tm, t_res_decls in
-        let proxy_fresh = match formals with
-            | [] -> []
-            | _ -> [Term.fresh_token (ddtok, Term_sort) (varops.next_id())] in
-
-        let encode_elim () =
-            let head, args = U.head_and_args t_res in
-            match (SS.compress head).n with
-            | Tm_uinst({n=Tm_fvar fv}, _)
-            | Tm_fvar fv ->
-              let encoded_head_fvb = lookup_free_var_name env' fv.fv_name in
-              let encoded_args, arg_decls = encode_args args env' in
-              let guards_for_parameter (orig_arg:S.term)(arg:term) xv =
-                  let fv =
-                      match arg.tm with
-                      | FreeV fv -> fv
-                      | _ ->
-                         Errors.raise_error (Errors.Fatal_NonVariableInductiveTypeParameter,
-                           BU.format1 "Inductive type parameter %s must be a variable ; \
-                                       You may want to change it to an index."
-                                      (FStar.Syntax.Print.term_to_string orig_arg)) orig_arg.pos
-                  in
-                  let guards = guards |> List.collect (fun g ->
-                        if List.contains fv (Term.free_variables g)
-                        then [Term.subst g fv xv]
-                        else [])
-                  in
-                  mk_and_l guards
-              in
-              let _, arg_vars, elim_eqns_or_guards, _ =
-                  List.fold_left
-                    (fun (env, arg_vars, eqns_or_guards, i) (orig_arg, arg) ->
-                      let _, xv, env = gen_term_var env (S.new_bv None tun) in
-                      (* we only get equations induced on the type indices, not parameters; *)
-                      (* Also see https://github.com/FStarLang/FStar/issues/349 *)
-                      let eqns =
-                        if i < n_tps
-                        then guards_for_parameter (fst orig_arg) arg xv::eqns_or_guards
-                        else mkEq(arg, xv)::eqns_or_guards
-                      in
-                      (env, xv::arg_vars, eqns, i + 1))
-                    (env', [], [], 0)
-                    (FStar.Compiler.List.zip args encoded_args)
-              in
-              let arg_vars = List.rev arg_vars in
-              let ty = maybe_curry_fvb fv.fv_name.p encoded_head_fvb arg_vars in
-              let xvars = List.map mkFreeV vars in
-              let dapp =  mkApp(ddconstrsym, xvars) in //arity ok; |xvars| = |formals| = arity
-              let ty_pred = mk_HasTypeWithFuel (Some s_fuel_tm) dapp ty in
-              let arg_binders = List.map fv_of_term arg_vars in
-              let typing_inversion =
-                    Util.mkAssume(mkForall (Ident.range_of_lid d) ([[ty_pred]],
-                                        add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                        mkImp(ty_pred, mk_and_l (elim_eqns_or_guards@guards))),
-                               Some "data constructor typing elim",
-                               ("data_elim_" ^ ddconstrsym)) in
-              let lex_t = mkFreeV <| mk_fv (string_of_lid Const.lex_t_lid, Term_sort) in
-              let subterm_ordering =
-                  (* subterm ordering *)
-                  let prec =
-                        vars
-                          |> List.mapi (fun i v ->
-                                (* it's a parameter, so it's inaccessible and no need for a sub-term ordering on it *)
-                                if i < n_tps
-                                then []
-                                else [mk_Precedes lex_t lex_t (mkFreeV v) dapp])
-                          |> List.flatten
-                  in
-                  Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                         ([[ty_pred]],
-                                          add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                          mkImp(ty_pred, mk_and_l prec)),
-                                Some "subterm ordering",
-                                ("subterm_ordering_"^ddconstrsym))
-              in
-              let codomain_ordering, codomain_decls =
-                let _, formals' = BU.first_N n_tps formals in (* no codomain ordering for the parameters *)
-                let _, vars' = BU.first_N n_tps vars in
-                let norm t = 
-                   N.unfold_whnf' [Env.AllowUnboundUniverses;
-                                   Env.EraseUniverses;
-                                   Env.Unascribe;
-                                   //we don't know if this will terminate; so don't do recursive steps
-                                   Env.Exclude Env.Zeta]
-                                  env'.tcenv
-                                  t                
-                in
-                let warn_compat () =
-                  FStar.Errors.log_issue
-                    (S.range_of_fv fv)
-                    (FStar.Errors.Warning_DeprecatedGeneric,
-                    "Using 'compat:2954' to use a permissive encoding of the subterm ordering on the codomain of a constructor.\n\
-                     This is deprecated and will be removed in a future version of F*.")
-                in
-                let codomain_prec_l, cod_decls =
-                  List.fold_left2
-                    (fun (codomain_prec_l, cod_decls) formal var ->
-                        let rec binder_and_codomain_type t =
-                            let t = U.unrefine t in
-                            match (SS.compress t).n with
-                            | Tm_arrow _ ->
-                              let bs, c = U.arrow_formals_comp (U.unrefine t) in
-                              begin
-                              match bs with
-                              | [] -> None
-                              | _ when not (U.is_tot_or_gtot_comp c) -> None
-                              | _ ->
-                                if U.is_lemma_comp c
-                                then None //not useful for lemmas
-                                else
-                                  let t = U.unrefine (U.comp_result c) in
-                                  let t = norm t in
-                                  if is_type t || U.is_sub_singleton t
-                                  then None //ordering on Type and squashed values is not useful
-                                  else (
-                                    let head, _ = U.head_and_args_full t in
-                                    match (U.un_uinst head).n with
-                                    | Tm_fvar fv ->
-                                      if BU.for_some (S.fv_eq_lid fv) mutuals
-                                      then Some (bs, c)
-                                      else if Options.ext_getv "compat:2954" <> ""
-                                      then (warn_compat(); Some (bs, c)) //compatibility mode
-                                      else None
-                                    | _ ->
-                                      if Options.ext_getv "compat:2954" <> ""
-                                      then (warn_compat(); Some (bs, c)) //compatibility mode
-                                      else None
-                                  )
-                              end
-                            | _ ->
-                              let head, _ = U.head_and_args t in
-                              let t' = norm t in
-                              let head', _ = U.head_and_args t' in
-                              match U.eq_tm head head' with
-                              | U.Equal -> None //no progress after whnf
-                              | U.NotEqual -> binder_and_codomain_type t'
-                              | _ ->
-                                //Did we actually make progress? Be conservative to avoid an infinite loop
-                                match (SS.compress head).n with
-                                | Tm_fvar _
-                                | Tm_name _
-                                | Tm_uinst _ ->
-                                  //The underlying name must have changed, otherwise we would have got Equal
-                                  //so, we made some progress
-                                  binder_and_codomain_type t'
-                                | _ ->
-                                  //unclear if we made progress or not
-                                  None
-
-                        in
-                        match binder_and_codomain_type formal.binder_bv.sort with
-                        | None -> 
-                          codomain_prec_l, cod_decls
-                        | Some (bs, c) ->
-                          //var bs << D ... var ...
-                          let bs', guards', _env', bs_decls, _ = encode_binders None bs env' in
-                          let fun_app = mk_Apply (mkFreeV var) bs' in
-                          mkForall (Ident.range_of_lid d)
-                                   ([[mk_Precedes lex_t lex_t fun_app dapp]],
-                                     bs',
-                                     //need to use ty_pred' here, to avoid variable capture
-                                     //Note, ty_pred' is indexed by fuel, not S_fuel
-                                     //That's ok, since the outer pattern is guarded on S_fuel
-                                     mkImp (mk_and_l (ty_pred'::guards'),
-                                            mk_Precedes lex_t lex_t fun_app dapp))
-                          :: codomain_prec_l,
-                          bs_decls @ cod_decls)
-                    ([],[])
-                    formals'
-                    vars'
-                in
-                match codomain_prec_l with
-                | [] ->
-                  [], cod_decls
-                | _ ->
-                  [Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[ty_pred]],//we use ty_pred here as the pattern, which has an S_fuel guard
-                                           add_fuel (mk_fv (fuel_var, Fuel_sort)) (vars@arg_binders),
-                                           mk_and_l codomain_prec_l),
-                                 Some "well-founded ordering on codomain",
-                                 ("well_founded_ordering_on_codomain_"^ddconstrsym))],
-                  cod_decls
-              in
-              arg_decls @ codomain_decls,
-              [typing_inversion; subterm_ordering] @ codomain_ordering
-
-            | _ ->
-              Errors.log_issue se.sigrng
-                  (Errors.Warning_ConstructorBuildsUnexpectedType,
-                   BU.format2 "Constructor %s builds an unexpected type %s\n"
-                              (Print.lid_to_string d) (Print.term_to_string head));
-              [], []
-        in
-        let decls2, elim = encode_elim () in
-        let data_cons_typing_intro_decl =
-          //
-          //AR:
-          //
-          //Typing intro for the data constructor
-          //
-          //We do a bit of manipulation for type indices
-          //Consider the Cons data constructor of a length-indexed vector type:
-          //  type vector : nat -> Type = | Emp : vector 0
-          //  | Cons: n:nat -> hd:nat -> tl:vec n -> vec (n+1)
-          //
-          //So far we have
-          //  ty_pred' = HasTypeFuel f (Cons n hd tl) (vector (n+1))
-          //  vars = n, hd, tl
-          //  guard = And of typing guards for n, hd, tl (i.e. (HasType n nat) etc.)
-          //
-          //If we emitted the straightforward typing axiom:
-          //  forall n hd tl. HasTypeFuel f (Cons n hd tl) (vector (n+1))
-          //with pattern
-          //  HasTypeFuel f (Cons n hd tl) (vecor (n+1))
-          //
-          //It results in too restrictive a pattern,
-          //Specifically, if we need to prove HasTypeFuel f (Cons 0 1 Emp) (vector 1),
-          //  the axiom will not fire, since the pattern is specifically looking for
-          //  (n+1) in the resulting vector type, whereas here we have a term 1,
-          //  which is not addition syntactically
-          //
-          //So we do a little bit of surgery below to emit an axiom of the form:
-          //  forall n hd tl m. m = n + 1 ==> HasTypeFuel f (Cons n hd tl) (vector m)
-          //where m is a fresh variable
-          //
-          //Also see #2456
-          //
-          let ty_pred', vars, guard =
-            match t_res_tm.tm with
-            | App (op, args) ->
-              //iargs are index arguments in the return type of the data constructor
-              let targs, iargs = List.splitAt n_tps args in
-              //fresh vars for iargs
-              let fresh_ivars, fresh_iargs =
-                iargs |> List.map (fun _ -> fresh_fvar env.current_module_name "i" Term_sort)
-                      |> List.split in
-              //equality guards
-              let additional_guards =
-                mk_and_l (List.map2 (fun a fresh_a -> mkEq (a, fresh_a)) iargs fresh_iargs) in
-
-              mk_HasTypeWithFuel
-                (Some fuel_tm)
-                dapp
-                ({t_res_tm with tm = App (op, targs@fresh_iargs)}),
-
-              vars@(fresh_ivars |> List.map (fun s -> mk_fv (s, Term_sort))),
-
-              mkAnd (guard, additional_guards)
-
-            | _ -> ty_pred', vars, guard in  //When will this case arise?
-
-          Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                 ([[ty_pred']],add_fuel (mk_fv (fuel_var, Fuel_sort)) vars, mkImp(guard, ty_pred')),
-                                 Some "data constructor typing intro",
-                                 ("data_typing_intro_"^ddtok)) in
-
-        let g = binder_decls
-                @decls2
-                @decls3
-                @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
-                  @proxy_fresh |> mk_decls_trivial)
-                @decls_pred
-                @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
-                   Util.mkAssume(mkForall (Ident.range_of_lid d)
-                                          ([[app]], vars,
-                                           mkEq(app, dapp)), Some "equality for proxy", ("equality_tok_"^ddtok));
-                   data_cons_typing_intro_decl;
-                   ]@elim |> mk_decls_trivial) in
-        (datacons |> mk_decls_trivial) @ g, env
-
-and encode_sigelts env ses :(decls_t * env_t) =
-    ses |> List.fold_left (fun (g, env) se ->
-      let g', env = encode_sigelt env se in
-      g@g', env) ([], env)
-
+            ))
+          ([], [], []) g'
+      in
+      (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
 let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t * env_t) =
      (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing.

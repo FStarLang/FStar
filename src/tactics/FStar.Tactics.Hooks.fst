@@ -44,6 +44,7 @@ module Env     = FStar.TypeChecker.Env
 module TcUtil  = FStar.TypeChecker.Util
 module TcRel   = FStar.TypeChecker.Rel
 module TcTerm  = FStar.TypeChecker.TcTerm
+module TEQ     = FStar.TypeChecker.TermEqAndSimplify
 
 (* We only use the _abstract_ embeddings from this module,
 hence there is no v1/v2 distinction. *)
@@ -581,7 +582,7 @@ let rec traverse_for_spinoff
                        | Tm_fvar fv, [(t, _)]
                          when simplified &&
                               S.fv_eq_lid fv PC.squash_lid &&
-                              U.eq_tm t U.t_true = U.Equal ->
+                              TEQ.eq_tm e t U.t_true = TEQ.Equal ->
                          //simplify squash True to True
                          //important for simplifying queries to Trivial
                          if !dbg_SpinoffAll then BU.print_string "Simplified squash True to True";

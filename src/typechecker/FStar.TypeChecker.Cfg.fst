@@ -251,7 +251,8 @@ let prim_from_list (l : list primitive_step) : prim_step_set =
 
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
-let equality_ops = prim_from_list equality_ops_list
+let env_dependent_ops env = prim_from_list (env_dependent_ops env)
+let equality_ops env = prim_from_list (equality_ops_list env)
 
 instance showable_cfg : showable cfg = {
   show = (fun cfg ->
@@ -385,7 +386,7 @@ let config' psteps s e =
         | [] -> [Env.NoDelta]
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
-    let psteps = add_steps (cached_steps ()) psteps in
+    let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
     {
       tcenv = e;
