@@ -637,32 +637,6 @@ ensures  GR.pts_to b.ctr (n + 1) **
 let up_i (m:carrier) (i:nat) (p:storable) = Map.upd m i (Some (down2 p, 0.5R))
 let split_map (m:carrier) (i n:nat) (q r:storable) = (up_i (up_i (up_i m i emp) n q) (n + 1) r)
 
-assume
-val on_range_eq_get (p:nat -> vprop) (i j k:nat)
-: Lemma 
-  (requires i <= j /\ j < k)
-  (ensures OR.on_range p i k == (OR.on_range p i j ** p j ** OR.on_range p (j + 1) k))
-
-assume
-val on_range_eq_snoc (p:nat -> vprop) (i j:nat)
-: Lemma 
-  (ensures OR.on_range p i (j + 1) == OR.on_range p i j ** p j)
-
-assume
-val on_range_frame (p q:nat -> vprop) (i j:nat)
-: Lemma 
-  (requires forall k. i <= k /\ k < j ==> p k == q k)
-  (ensures OR.on_range p i j == OR.on_range q i j)
-
-let star_assoc (p q r:vprop)
-: Lemma (p ** (q ** r) == (p ** q) ** r)
-= elim_vprop_equiv (vprop_equiv_assoc p q r)
-let star_comm (p q:vprop)
-: Lemma (p ** q == q ** p)
-= elim_vprop_equiv (vprop_equiv_comm p q)
-let emp_unit (p:vprop)
-: Lemma (emp ** p == p)
-= elim_vprop_equiv (vprop_equiv_unit p)
 
 let split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
 : Lemma
@@ -672,7 +646,7 @@ let split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
 = let m' = (split_map m i n q r) in
   calc (==) {
     OR.on_range (predicate_at m) 0 n;
-  (==) { on_range_eq_get (predicate_at m) 0 i n }
+  (==) { OR.on_range_eq_get (predicate_at m) 0 i n }
     OR.on_range (predicate_at m) 0 i **
     up2 (down2 (q ** r)) **
     OR.on_range (predicate_at m) (i + 1) n;
@@ -680,29 +654,23 @@ let split_lemma (b:barrier_t_core) (m:carrier) (q r:storable) (i n:nat)
     OR.on_range (predicate_at m) 0 i **
     (q ** r) **
     OR.on_range (predicate_at m) (i + 1) n;
-  (==) { 
-         FStar.Classical.(
-          forall_intro_3 star_assoc;
-          forall_intro_2 star_comm;
-          forall_intro emp_unit 
-         )
-       }
+  (==) { vprop_equivs () }
    (OR.on_range (predicate_at m) 0 i **
     emp **
     OR.on_range (predicate_at m) (i + 1) n) **
     q ** r;
   (==){
-        on_range_frame (predicate_at m) (predicate_at m') 0 i;
-        on_range_frame (predicate_at m) (predicate_at m') (i + 1) n
+        OR.on_range_frame (predicate_at m) (predicate_at m') 0 i;
+        OR.on_range_frame (predicate_at m) (predicate_at m') (i + 1) n
       }
     (OR.on_range (predicate_at m') 0 i **
     emp ** 
     OR.on_range (predicate_at m') (i + 1) n) ** q ** r;
-  (==) { on_range_eq_get (predicate_at m') 0 i n }
+  (==) { OR.on_range_eq_get (predicate_at m') 0 i n }
     (OR.on_range (predicate_at m') 0 n ** q) ** r;
-  (==) { on_range_eq_snoc (predicate_at m') 0 n }
+  (==) { OR.on_range_eq_snoc (predicate_at m') 0 n }
     OR.on_range (predicate_at m') 0 (n + 1) ** r;
-  (==) { on_range_eq_snoc (predicate_at m') 0 (n + 1) }
+  (==) { OR.on_range_eq_snoc (predicate_at m') 0 (n + 1) }
     OR.on_range (predicate_at m') 0 (n + 2);
   }
 

@@ -38,6 +38,21 @@ val on_range_eq_cons (p:nat -> vprop) (i j:nat)
   (requires i < j)
   (ensures on_range p i j == (p i ** on_range p (i + 1) j))
 
+val on_range_eq_get (p:nat -> vprop) (i j k:nat)
+: Lemma 
+  (requires i <= j /\ j < k)
+  (ensures on_range p i k == (on_range p i j ** p j ** on_range p (j + 1) k))
+
+val on_range_eq_snoc (p:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires i <= j)
+  (ensures on_range p i (j + 1) == on_range p i j ** p j)
+
+val on_range_frame (p q:nat -> vprop) (i j:nat)
+: Lemma 
+  (requires forall k. i <= k /\ k < j ==> p k == q k)
+  (ensures on_range p i j == on_range q i j)
+
 val on_range_is_small (p:nat -> vprop) (i:nat) (j:nat)
   : Lemma (requires forall k. (i <= k /\ k < j) ==> is_small (p k))
           (ensures is_small (on_range p i j))

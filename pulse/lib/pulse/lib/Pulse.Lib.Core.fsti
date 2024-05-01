@@ -182,6 +182,28 @@ val vprop_equiv_cong (p1 p2 p3 p4:vprop)
 val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
   : vprop_equiv p1 p2
 
+
+let star_assoc (p q r:vprop)
+: Lemma (p ** (q ** r) == (p ** q) ** r)
+= elim_vprop_equiv (vprop_equiv_assoc p q r)
+let star_comm (p q:vprop)
+: Lemma (p ** q == q ** p)
+= elim_vprop_equiv (vprop_equiv_comm p q)
+let emp_unit (p:vprop)
+: Lemma (emp ** p == p)
+= elim_vprop_equiv (vprop_equiv_unit p)
+let vprop_equivs () 
+: Lemma (
+      (forall p q r. p ** (q ** r) == (p ** q) ** r) /\
+      (forall p q. p ** q == q ** p) /\
+      (forall p. emp ** p == p)
+  )
+= FStar.Classical.(
+    forall_intro_3 star_assoc;
+    forall_intro_2 star_comm;
+    forall_intro emp_unit
+  )
+
 (***** end vprop_equiv *****)
 
 ////////////////////////////////////////////////////////////////////
