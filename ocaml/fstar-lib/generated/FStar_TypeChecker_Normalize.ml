@@ -8508,6 +8508,39 @@ let (comp_to_string :
                env1.FStar_TypeChecker_Env.dsenv
                env1.FStar_TypeChecker_Env.curmodule in
            FStar_Syntax_Print.comp_to_string' uu___1 c1)
+let (comp_to_doc :
+  FStar_TypeChecker_Env.env ->
+    FStar_Syntax_Syntax.comp -> FStar_Pprint.document)
+  =
+  fun env1 ->
+    fun c ->
+      FStar_GenSym.with_frozen_gensym
+        (fun uu___ ->
+           let c1 =
+             try
+               (fun uu___1 ->
+                  match () with
+                  | () ->
+                      let uu___2 =
+                        FStar_TypeChecker_Cfg.config
+                          [FStar_TypeChecker_Env.AllowUnboundUniverses] env1 in
+                      norm_comp uu___2 [] c) ()
+             with
+             | uu___1 ->
+                 ((let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Compiler_Util.message_of_exn uu___1 in
+                       FStar_Compiler_Util.format1
+                         "Normalization failed with error %s\n" uu___5 in
+                     (FStar_Errors_Codes.Warning_NormalizationFailure,
+                       uu___4) in
+                   FStar_Errors.log_issue c.FStar_Syntax_Syntax.pos uu___3);
+                  c) in
+           let uu___1 =
+             FStar_Syntax_DsEnv.set_current_module
+               env1.FStar_TypeChecker_Env.dsenv
+               env1.FStar_TypeChecker_Env.curmodule in
+           FStar_Syntax_Print.comp_to_doc' uu___1 c1)
 let (normalize_refinement :
   FStar_TypeChecker_Env.steps ->
     FStar_TypeChecker_Env.env ->
@@ -9642,7 +9675,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3793 : unit) =
+let (uu___3806 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->
