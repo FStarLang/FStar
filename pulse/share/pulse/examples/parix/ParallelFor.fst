@@ -22,6 +22,7 @@ open Pulse.Lib.Task
 open FStar.Real
 open Pulse.Lib.Pledge
 open Pulse.Lib.InvList
+open Pulse.Lib.OnRange
 
 module P = Pulse.Lib.Pledge
 
@@ -54,165 +55,92 @@ let div_perm (p:perm) (n:pos) : perm =
 
 (* First, a sequential one. *)
 
-val range : (nat -> vprop) -> i:nat -> j:nat -> vprop
-let rec range p i j : Tot vprop (decreases j-i) =
-  if i < j
-  then p i ** range p (i+1) j
-  else emp
-
-(* The precondition on i/j/k is needed otherwise the LHS can be stronger. *)
-val p_join_equiv (p : nat -> vprop) (i j k : nat) (_ : squash (i <= j /\ j <= k))
-  : Tot (vprop_equiv (range p i j ** range p j k) (range p i k)) (decreases j-i)
-let rec p_join_equiv p i j k _ =
-  if i = j
-  then (
-    assert (range p i j == emp);
-    vprop_equiv_unit _
-  )
-  else (
-    let eq : vprop_equiv (range p i j ** range p j k) ((p i ** range p (i+1) j) ** range p j k) =
-      vprop_equiv_refl _
-    in
-    let eq : vprop_equiv (range p i j ** range p j k) (p i ** (range p (i+1) j ** range p j k)) =
-      vprop_equiv_trans _ _ _ eq
-        (vprop_equiv_assoc _ _ _)
-    in
-    let eq : vprop_equiv (range p i j ** range p j k) (p i ** range p (i+1) k) =
-      vprop_equiv_trans _ _ _ eq
-        (vprop_equiv_cong _ _ _ _ (vprop_equiv_refl _) (p_join_equiv p (i+1) j k ()))
-    in
-    eq
-  )
-
-val p_join_last_equiv (p : nat -> vprop) (n : pos)
-  : Tot (vprop_equiv (range p 0 n) (range p 0 (n-1) ** p (n-1)))
-
-let rec p_join_last_equiv p n =
-  if n = 1 then vprop_equiv_comm _ _
-  else (
-    let eq : vprop_equiv (range p 0 n) (range p 0 (n-1) ** range p (n-1) n) =
-      vprop_equiv_sym _ _ (p_join_equiv p 0 (n-1) n ())
-    in
-    let eq : vprop_equiv (range p 0 n) (range p 0 (n-1) ** (p (n-1) ** emp)) =
-      vprop_equiv_trans _ _ _ eq
-        (vprop_equiv_refl _)
-    in
-    let eq : vprop_equiv (range p 0 n) (range p 0 (n-1) ** (emp ** p (n-1))) =
-      vprop_equiv_trans _ _ _ eq
-        (vprop_equiv_cong _ _ _ _ (vprop_equiv_refl _) (vprop_equiv_comm _ _)) // (vprop_equiv_unit _)))
-    in
-    let eq : vprop_equiv (range p 0 n) (range p 0 (n-1) ** p (n-1)) =
-      vprop_equiv_trans _ _ _ eq
-        (vprop_equiv_cong _ _ _ _ (vprop_equiv_refl _) (vprop_equiv_unit _))
-    in
-    eq
-  )
-
-val p_combine_equiv (p1 p2 : nat -> vprop) (i j : nat)
-  : Tot (vprop_equiv (range p1 i j ** range p2 i j) (range (fun i -> p1 i ** p2 i) i j))
-let p_combine_equiv p1 p2 i j = magic()
-
 let rewrite_ = Pulse.Lib.Core.rewrite
 
-```pulse
-ghost
-fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
-  requires range p i j ** range p j k
-  ensures  range p i k
-{
-  rewrite_ _ _ (p_join_equiv p i j k ())
-}
-```
+// ```pulse
+// ghost
+// fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+//   requires on_range p i j ** on_range p j k
+//   ensures  on_range p i k
+// {
+//   rewrite_ _ _ (p_join_equiv p i j k ())
+// }
+// ```
 
-```pulse
-fn p_split (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
-  requires range p i k
-  ensures range p i j ** range p j k
-{
-  rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_equiv p i j k ()))
-}
-```
+// ```pulse
+// fn p_split (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+//   requires on_range p i k
+//   ensures on_range p i j ** on_range p j k
+// {
+//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_equiv p i j k ()))
+// }
+// ```
 
-```pulse
-ghost
-fn p_join_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
-  requires range p 0 (n-1) ** p (n-1)
-  ensures range p 0 n
-{
-  rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_last_equiv p n))
-}
-```
+// ```pulse
+// ghost
+// fn p_join_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
+//   requires on_range p 0 (n-1) ** p (n-1)
+//   ensures on_range p 0 n
+// {
+//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_last_equiv p n))
+// }
+// ```
 
-```pulse
-ghost
-fn p_split_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
-  requires range p 0 n
-  ensures range p 0 (n-1) ** p (n-1)
-{
-  rewrite_ _ _ (p_join_last_equiv p n)
-}
-```
+// ```pulse
+// ghost
+// fn p_split_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
+//   requires on_range p 0 n
+//   ensures on_range p 0 (n-1) ** p (n-1)
+// {
+//   rewrite_ _ _ (p_join_last_equiv p n)
+// }
+// ```
 
-```pulse
-ghost
-fn p_combine (p1 p2 : (nat->vprop)) (i j : nat)
-  requires range p1 i j ** range p2 i j
-  ensures range (fun i -> p1 i ** p2 i) i j
-{
-  rewrite_ _ _ (p_combine_equiv p1 p2 i j)
-//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
-}
-```
-
-```pulse
-ghost
-fn p_uncombine (p1 p2 : (nat->vprop)) (i j : nat)
-  requires range (fun i -> p1 i ** p2 i) i j
-  ensures range p1 i j ** range p2 i j
-{
+// ```pulse
+// ghost
+// fn p_combine (p1 p2 : (nat->vprop)) (i j : nat)
+//   requires on_range p1 i j ** on_range p2 i j
+//   ensures on_range (fun i -> p1 i ** p2 i) i j
+// {
 //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
-  rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
-}
-```
+// //   rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
+// }
+// ```
+
+// ```pulse
+// ghost
+// fn p_uncombine (p1 p2 : (nat->vprop)) (i j : nat)
+//   requires on_range (fun i -> p1 i ** p2 i) i j
+//   ensures on_range p1 i j ** on_range p2 i j
+// {
+// //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
+//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
+// }
+// ```
 
 ```pulse
-fn __simple_for
+fn rec simple_for
    (pre post : (nat -> vprop))
    (r : vprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
-   (kk : (
-     (n : nat) ->
-     stt unit (r ** range pre 0 n) (fun _ -> r ** range post 0 n)
-   ))
    (n : nat)
-   requires r ** range pre 0 n
-   ensures r ** range post 0 n
+   requires r ** on_range pre 0 n
+   ensures r ** on_range post 0 n
 {
   (* Couldn't use a while loop here, weird errors, try again. *)
   if (n = 0) {
-    rewrite (range pre 0 n) as emp;
-    rewrite emp as (range post 0 n);
-    ()
+    on_range_empty_elim pre 0;
+    on_range_empty post 0;
   } else {
-    // rewrite (range pre 0 n) as (range pre (reveal (hide 0)) (reveal (hide n)));
-    p_split_last pre n ();
+    // rewrite (on_range pre 0 n) as (on_range pre (reveal (hide 0)) (reveal (hide n)));
+    on_range_unsnoc ();
     f (n-1);
-    kk (n-1);
-    p_join_last post n ();
+    simple_for pre post r f (n-1);
+    on_range_snoc ();
     ()
   }
 }
 ```
-
-let simple_for  :
-     (pre : (nat -> vprop)) ->
-     (post : (nat -> vprop)) ->
-     (r : vprop) -> // This resource is passed around through iterations.
-     (f : (i:nat -> stt unit (r ** pre i) (fun () -> r ** post i))) ->
-     (n : nat) ->
-     stt unit (r ** range pre 0 n) (fun _ -> r ** range post 0 n)
-  = 
-  fun pre post r f -> fix_stt_1 (__simple_for pre post r f)
 
 ```pulse
 fn for_loop
@@ -220,25 +148,70 @@ fn for_loop
    (r : vprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (lo hi : nat)
-   requires r ** range pre lo hi
-   ensures r ** range post lo hi
+   requires r ** on_range pre lo hi
+   ensures r ** on_range post lo hi
 {
-  (* TODO: implement by just shifting simple_for? *)
-  admit()
+  on_range_le pre;
+  let pre'  : (nat -> vprop) = (fun (i:nat) -> pre  (i + lo));
+  let post' : (nat -> vprop) = (fun (i:nat) -> post (i + lo));
+  ghost
+  fn shift_back (k : nat{lo <= k /\ k < hi})
+    requires pre k
+    ensures pre' (k + (-lo))
+  {
+    rewrite pre k as pre' (k + (-lo));
+  };
+  assert (on_range pre lo hi);
+  on_range_weaken_and_shift
+    pre pre'
+    (-lo)
+    lo hi
+    shift_back;
+  rewrite (on_range pre' (lo+(-lo)) (hi+(-lo))) as (on_range pre' 0 (hi-lo));
+  assert (on_range pre' 0 (hi-lo));
+
+  fn f' (i:nat)
+    requires r ** pre' i
+    ensures r ** post' i
+  {
+    rewrite pre' i as pre (i+lo);
+    f (i+lo);
+    rewrite post (i+lo) as post' i;
+  };
+
+  simple_for pre' post' r f' (hi-lo);
+
+  assert (on_range post' 0 (hi-lo));
+
+  ghost
+  fn shift_forward (k : nat{k < hi-lo})
+    requires post' k
+    ensures post (k + lo)
+  {
+    rewrite post' k as post (k + lo);
+  };
+  on_range_weaken_and_shift
+    post' post
+    lo
+    0 (hi-lo)
+    shift_forward;
+  rewrite
+    on_range post (0+lo) ((hi-lo)+lo)
+  as
+    on_range post lo hi;
 }
 ```
 
-
 assume val frac_n (n:pos) (p:pool) (e:perm)
   : stt unit (pool_alive #e p)
-             (fun () -> range (fun i -> pool_alive #(div_perm e n) p) 0 n)
+             (fun () -> on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
 
 assume val unfrac_n (n:pos) (p:pool) (e:perm)
-  : stt unit (range (fun i -> pool_alive #(div_perm e n) p) 0 n)
+  : stt unit (on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
              (fun () -> pool_alive #e p)
 
 ```pulse
-fn spawned_f_i 
+fn spawned_f_i
   (p:pool)
   (pre : (nat -> vprop))
   (post : (nat -> vprop))
@@ -254,39 +227,29 @@ fn spawned_f_i
 
 // In pulse, using fixpoint combinator below. Should be a ghost step eventually
 ```pulse
-fn __redeem_range
+fn rec redeem_range
   (p : (nat -> vprop))
   (f : vprop)
-  (kk : (
-    (n:nat) ->
-    stt unit (f ** range (fun i -> pledge emp_inames f (p i)) 0 n)
-             (fun _ -> f ** range p 0 n)
-  ))
   (n : nat)
-  requires f ** range (fun i -> pledge emp_inames f (p i)) 0 n
-  ensures f ** range p 0 n
+  requires f ** on_range (fun i -> pledge emp_inames f (p i)) 0 n
+  ensures f ** on_range p 0 n
 {
   if (n = 0) {
-    rewrite (range (fun i -> pledge emp_inames f (p i)) 0 n) as emp;
-    rewrite emp as range p 0 n;
-    ()
+    on_range_empty_elim (fun i -> pledge emp_inames f (p i)) 0;
+    on_range_empty p 0;
   } else {
-    p_split_last (fun i -> pledge emp_inames f (p i)) n ();
+    on_range_unsnoc (); // (fun i -> pledge emp_inames f (p i)) n ();
+    rewrite // ????
+      (fun i -> pledge emp_inames f (p i)) (n-1)
+    as
+      pledge emp_inames f (p (n-1));
     redeem_pledge _ f (p (n-1));
-    kk (n-1);
-    p_join_last p n ()
+    redeem_range p f (n-1);
+    on_range_snoc ();
+    // p_join_last p n ()
   }
 }
 ```
-
-let redeem_range :
-  (p : (nat -> vprop)) ->
-  (f : vprop) ->
-    (n:nat) ->
-    stt unit (f ** range (fun i -> pledge emp_inames f (p i)) 0 n)
-             (fun _ -> f ** range p 0 n)
-  =
-  fun p f -> fix_stt_1 (__redeem_range p f)
 
 ```pulse
 fn
@@ -295,17 +258,20 @@ parallel_for
   (post : (nat -> vprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires range pre 0 n
-  ensures range post 0 n
+  requires on_range pre 0 n
+  ensures on_range post 0 n
 {
   let p = setup_pool 42;
   (* Use a normal for loop to *spawn* each task *)
-  
+
   (* First, share the pool_alive permission among all n tasks. *)
   assert (pool_alive #1.0R p);
   frac_n n p 1.0R;
-  
-  p_combine pre (fun i -> pool_alive #(div_perm 1.0R n) p) 0 n;
+
+  on_range_zip
+    pre
+    (fun i -> pool_alive #(div_perm 1.0R n) p)
+    0 n;
 
   simple_for
     (fun i -> pre i ** pool_alive #(div_perm 1.0R n) p)
@@ -313,11 +279,15 @@ parallel_for
     emp // Alternative: pass pool_alive p here and forget about the n-way split. See below.
     (spawned_f_i p pre post (div_perm 1.0R n) f)
     n;
-    
-  p_uncombine (fun i -> pledge emp_inames (pool_done p) (post i)) (fun i -> pool_alive #(div_perm 1.0R n) p) 0 n;
+
+  on_range_unzip
+    (fun i -> pledge emp_inames (pool_done p) (post i))
+    (fun i -> pool_alive #(div_perm 1.0R n) p)
+    0 n;
+
   unfrac_n n p 1.0R;
   teardown_pool p;
-  
+
   redeem_range post (pool_done p) n;
 
   drop_ (pool_done p);
@@ -350,8 +320,8 @@ parallel_for_alt
   (post : (nat -> vprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires range pre 0 n
-  ensures range post 0 n
+  requires on_range pre 0 n
+  ensures on_range post 0 n
 {
   let p = setup_pool 42;
 
@@ -361,16 +331,13 @@ parallel_for_alt
     (pool_alive p)
     (spawned_f_i_alt p pre post f)
     n;
-    
+
   teardown_pool p;
   redeem_range post (pool_done p) n;
   drop_ (pool_done p);
   ()
 }
 ```
-
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-#push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
 
 let wsr_loop_inv_f
   (pre : (nat -> vprop))
@@ -384,7 +351,7 @@ let wsr_loop_inv_f
   exists* (ii:nat).
        pts_to i ii
     ** full_post ii
-    ** range post ii n
+    ** on_range post ii n
     ** pure (b == (Prims.op_LessThan ii n))
 
 let wsr_loop_inv_tf
@@ -395,77 +362,56 @@ let wsr_loop_inv_tf
   (i : ref int)
   : Tot vprop =
   exists* (b:bool). wsr_loop_inv_f pre post full_post n i b
-  
+
 (* This can be ghost. *)
 ```pulse
-fn
-__ffold
+fn rec ffold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
   (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
   (n : nat)
-  (kk: (
-        (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
-  ))
   (i : nat)
-  requires pure (i <= n) ** fp i ** range p i n
+  requires pure (i <= n) ** fp i ** on_range p i n
   ensures fp n
 {
    if (i = n) {
-     rewrite (range p i n) as emp;
+     on_range_empty_elim p n;
      rewrite fp i as fp n;
      ()
    } else {
-     assert (fp i ** range p i n);
-     rewrite (range p i n) as (p i ** range p (i+1) n);
+     assert (fp i ** on_range p i n);
+     on_range_uncons ();
      ss i;
-     kk (i+1);
+     ffold p fp ss n (i+1);
      ()
    }
 }
 ```
-let ffold
-  (p : (nat -> vprop))
-  (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
-  (n:nat)
-  : (i:nat) -> stt unit (pure (i <= n) ** fp i ** range p i n) (fun _ -> fp n)
-  = fix_stt_1 (__ffold p fp ss n)
 
 (* This can be ghost. *)
 ```pulse
-fn
-__funfold
+fn rec funfold
   (p : (nat -> vprop))
   (fp : (nat -> vprop))
   (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
-  (kk: (
-        (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
-  ))
   (n : nat)
   requires fp n
-  ensures fp 0 ** range p 0 n
+  ensures fp 0 ** on_range p 0 n
 {
    if (n = 0) {
      rewrite fp n as fp 0;
-     rewrite emp as range p 0 n;
+     on_range_empty p 0;
      ()
    } else {
      assert (fp n);
      rewrite fp n as fp ((n-1)+1);
      ss (n-1);
      assert (p (n-1) ** fp (n-1));
-     kk (n-1);
-     p_join_last p n ()
+     funfold p fp ss (n-1);
+     on_range_snoc ();
    }
 }
 ```
-let funfold
-  (p : (nat -> vprop))
-  (fp : (nat -> vprop))
-  (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
-  : (n:nat) -> stt unit (fp n) (fun _ -> fp 0 ** range p 0 n)
-  = fix_stt_1 (__funfold p fp ss)
 
 ```pulse
 fn
@@ -495,10 +441,8 @@ val frame_stt_left
   (e:stt a pre post)
   : stt a (frame ** pre) (fun x -> frame ** post x)
 
-#set-options "--ext pulse:guard_policy=SMTSync"
-
 ```pulse
-fn h_for_task__
+fn rec h_for_task
   (p:pool)
   (e:perm)
   (pre : (nat -> vprop))
@@ -506,24 +450,8 @@ fn h_for_task__
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (lo hi : nat)
   (_:unit)
-  requires pool_alive #e p ** range pre lo hi
-  ensures pledge emp_inames (pool_done p) (range post lo hi)
-{
-  admit()
-}
-```
-
-```pulse
-fn h_for_task
-  (p:pool)
-  (e:perm)
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
-  (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
-  (lo hi : nat)
-  (_:unit)
-  requires pool_alive #e p ** range pre lo hi
-  ensures pledge emp_inames (pool_done p) (range post lo hi)
+  requires pool_alive #e p ** on_range pre lo hi
+  ensures pledge emp_inames (pool_done p) (on_range post lo hi)
 {
   if (hi - lo < 100) {
     (* Too small, just run sequentially *)
@@ -531,7 +459,7 @@ fn h_for_task
     for_loop pre post emp
              (fun i -> frame_stt_left emp (f i)) lo hi;
 
-    return_pledge (pool_done p) (range post lo hi)
+    return_pledge (pool_done p) (on_range post lo hi)
   } else {
     let mid = (hi+lo)/2;
     assert (pure (lo <= mid /\ mid <= hi));
@@ -539,38 +467,38 @@ fn h_for_task
     share_alive p e;
     share_alive p (e /. 2.0R);
 
-    p_split pre lo mid hi ();
+    on_range_split mid;
 
-    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** range pre lo mid)
-            #(pledge emp_inames (pool_done p) (range post lo mid))
+    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre lo mid)
+            #(pledge emp_inames (pool_done p) (on_range post lo mid))
             p
             #(e /. 2.0R)
-            (h_for_task__ p ((e /. 2.0R) /. 2.0R) pre post f lo mid);
+            (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f lo mid);
 
-    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** range pre mid hi)
-            #(pledge emp_inames (pool_done p) (range post mid hi))
+    spawn_ #(pool_alive #((e /. 2.0R) /. 2.0R) p ** on_range pre mid hi)
+            #(pledge emp_inames (pool_done p) (on_range post mid hi))
             p
             #(e /. 2.0R)
-            (h_for_task__ p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
+            (h_for_task p ((e /. 2.0R) /. 2.0R) pre post f mid hi);
 
     (* We get this complicated pledge emp_inames from the spawns above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post lo mid)));
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post mid hi)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post lo mid)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post mid hi)));
 
-    squash_pledge (pool_done p) (range post lo mid);
-    squash_pledge (pool_done p) (range post mid hi);
+    squash_pledge (pool_done p) (on_range post lo mid);
+    squash_pledge (pool_done p) (on_range post mid hi);
 
-    join_pledge #emp_inames #(pool_done p) (range post lo mid) (range post mid hi);
+    join_pledge #emp_inames #(pool_done p) (on_range post lo mid) (on_range post mid hi);
     rewrite_pledge
       #emp_inames
       #(pool_done p)
-      (range post lo mid ** range post mid hi)
-      (range post lo hi)
-      (p_join post lo mid hi);
+      (on_range post lo mid ** on_range post mid hi)
+      (on_range post lo hi)
+      (fun () -> on_range_join lo mid hi);
 
     (* Better *)
-    assert (pledge emp_inames (pool_done p) (range post lo hi));
+    assert (pledge emp_inames (pool_done p) (on_range post lo hi));
 
     drop_ (pool_alive #(e /. 2.0R) p);
 
@@ -589,7 +517,6 @@ val wait_pool
   (e:perm)
   : stt unit (pool_alive #e p) (fun _ -> pool_done p)
 
-#push-options "--print_implicits --ugly"
 ```pulse
 fn
 parallel_for_hier
@@ -597,8 +524,8 @@ parallel_for_hier
   (post : (nat -> vprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
-  requires range pre 0 n
-  ensures range post 0 n
+  requires on_range pre 0 n
+  ensures on_range post 0 n
 {
   let p = setup_pool 42;
 
@@ -612,23 +539,23 @@ parallel_for_hier
     assert (pool_alive #0.5R p ** pool_alive #0.5R p);
 
 
-    spawn_ #(pool_alive #0.5R p ** range pre 0 n)
-            #(pledge emp_inames (pool_done p) (range post 0 n))
+    spawn_ #(pool_alive #0.5R p ** on_range pre 0 n)
+            #(pledge emp_inames (pool_done p) (on_range post 0 n))
             p
             #0.5R
             (h_for_task p 0.5R pre post f 0 n);
 
     (* We get this complicated pledge emp_inames from the spawn above. We can
     massage it before even waiting. *)
-    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (range post 0 n)));
+    assert (pledge emp_inames (pool_done p) (pledge emp_inames (pool_done p) (on_range post 0 n)));
 
-    squash_pledge (pool_done p) (range post 0 n);
+    squash_pledge (pool_done p) (on_range post 0 n);
 
-    assert (pledge emp_inames (pool_done p) (range post 0 n));
+    assert (pledge emp_inames (pool_done p) (on_range post 0 n));
 
     wait_pool p 0.5R;
 
-    redeem_pledge emp_inames (pool_done p) (range post 0 n);
+    redeem_pledge emp_inames (pool_done p) (on_range post 0 n);
 
     drop_ (pool_done p)
   } else {
@@ -640,7 +567,7 @@ parallel_for_hier
 
     assert (pool_done p);
 
-    redeem_pledge emp_inames (pool_done p) (range post 0 n);
+    redeem_pledge emp_inames (pool_done p) (on_range post 0 n);
 
     drop_ (pool_done p)
   }
