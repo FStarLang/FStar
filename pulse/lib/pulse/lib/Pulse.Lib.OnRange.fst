@@ -121,6 +121,18 @@ ensures on_range p i i
 
 ```pulse
 ghost
+fn on_range_empty_elim
+  (p: (nat -> vprop))
+  (i: nat)
+requires on_range p i i
+ensures emp
+{
+  rewrite (on_range p i i) as emp;
+}
+```
+
+```pulse
+ghost
 fn on_range_singleton_intro
   (p: (nat -> vprop))
   (i: nat)
@@ -441,3 +453,51 @@ let on_range_weaken
     (on_range p i j)
     (fun _ -> on_range p' i j)
 = on_range_weaken_and_shift p p' 0 i j phi
+
+```pulse
+ghost
+fn rec on_range_zip (p q:nat -> vprop) (i j:nat)
+  requires on_range p i j ** on_range q i j
+  ensures on_range (fun k -> p k ** q k) i j
+  decreases (j-i)
+{
+  if (j < i) {
+    on_range_eq_false p i j;
+    rewrite (on_range p i j) as pure False;
+    unreachable ();
+  } else if (j = i) {
+    on_range_empty_elim p i;
+    on_range_empty_elim q i;
+    on_range_empty (fun k -> p k ** q k) i;
+  } else {
+    on_range_uncons () #p;
+    on_range_uncons () #q;
+    on_range_zip p q (i + 1) j;
+    on_range_cons i #(fun k -> p k ** q k);
+  }
+}
+```
+
+```pulse
+ghost
+fn rec on_range_unzip (p q:nat -> vprop) (i j:nat)
+  requires on_range (fun k -> p k ** q k) i j
+  ensures  on_range p i j ** on_range q i j
+  decreases (j-i)
+{
+  if (j < i) {
+    on_range_eq_false (fun k -> p k ** q k) i j;
+    rewrite (on_range (fun k -> p k ** q k) i j) as pure False;
+    unreachable ();
+  } else if (j = i) {
+    on_range_empty_elim (fun k -> p k ** q k) i;
+    on_range_empty p i;
+    on_range_empty q i;
+  } else {
+    on_range_uncons () #(fun k -> p k ** q k);
+    on_range_unzip p q (i + 1) j;
+    on_range_cons i #p;
+    on_range_cons i #q;
+  }
+}
+```
