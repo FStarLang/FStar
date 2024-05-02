@@ -1938,7 +1938,7 @@ let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
 
-let debug_keys                   () = lookup_opt "debug" (as_list as_string)
+let debug_keys                   () = lookup_opt "debug" as_comma_string_list
 let debug_all_modules            () = lookup_opt "debug_all_modules" as_bool
 
 let with_saved_options f =
