@@ -263,18 +263,23 @@ let name_and_result c = match c.n with
   | Comp ct -> Print.lid_to_string ct.effect_name, ct.result_typ
 
 let computed_computation_type_does_not_match_annotation env e c c' =
+  let ppt = N.term_to_doc env in
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
-  let s1, s2 = err_msg_type_strings env r1 r2 in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format4
-    "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-      s1 f1 s2 f2))
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, [
+    prefix 2 1 (text "Computed type") (ppt r1) ^/^
+    prefix 2 1 (text "and effect") (text f1) ^/^
+    prefix 2 1 (text "is not compatible with the annotated type") (ppt r2) ^/^
+    prefix 2 1 (text "and effect") (text f2)
+  ])
 
 let computed_computation_type_does_not_match_annotation_eq env e c c' =
-  let s1, s2 = err_msg_comp_strings env c c' in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format2
-    "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
-      s1 s2))
+  let ppc = N.comp_to_doc env in
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, ([
+    prefix 2 1 (text "Computed type") (ppc c) ^/^
+    prefix 2 1 (text "does not match annotated type") (ppc c') ^/^
+    text "and no subtyping was allowed";
+  ]))
 
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
