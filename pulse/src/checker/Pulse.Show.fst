@@ -88,6 +88,10 @@ instance tac_showable_r_term : tac_showable Reflection.term = {
   show = Tactics.term_to_string;
 }
 
+instance tac_showable_range : tac_showable Range.range = {
+  show = Tactics.range_to_string;
+}
+
 instance tac_showable_tuple2 (a b : Type) (_ : tac_showable a) (_ : tac_showable b) : tac_showable (a & b) = {
   show = (fun (x, y) -> "(" ^ show x ^ ", " ^ show y ^ ")");
 }
