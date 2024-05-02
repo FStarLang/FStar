@@ -19,4 +19,6 @@ let ops = [
       mk_range fn (mk_pos (Z.to_int_fs from_l) (Z.to_int_fs from_c))
                   (mk_pos (Z.to_int_fs to_l) (Z.to_int_fs to_c))
   );
+
+  mk2 0 PC.join_range_lid FStar.Compiler.Range.union_ranges;
 ]
