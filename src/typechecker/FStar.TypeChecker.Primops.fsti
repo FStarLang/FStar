@@ -1,5 +1,6 @@
 module FStar.TypeChecker.Primops
 
+open FStar.Compiler.Effect
 include FStar.TypeChecker.Primops.Base
 
 (* This module just contains the list of all builtin primitive steps
