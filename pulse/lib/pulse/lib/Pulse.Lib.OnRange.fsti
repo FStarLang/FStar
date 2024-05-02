@@ -78,6 +78,13 @@ val on_range_empty
     (requires emp)
     (ensures fun _ -> on_range p i i)
 
+val on_range_empty_elim
+  (p: (nat -> vprop))
+  (i: nat)
+: stt_ghost unit emp_inames
+    (requires on_range p i i)
+    (ensures fun _ -> emp)
+
 val on_range_singleton_intro
   (p: (nat -> vprop))
   (i: nat)
@@ -211,3 +218,13 @@ val on_range_weaken
 : stt_ghost unit emp_inames
     (on_range p i j)
     (fun _ -> on_range p' i j)
+
+val on_range_zip (p q:nat -> vprop) (i j:nat)
+  : stt_ghost unit emp_inames
+      (on_range p i j ** on_range q i j)
+      (fun _ -> on_range (fun k -> p k ** q k) i j)
+
+val on_range_unzip (p q:nat -> vprop) (i j:nat)
+  : stt_ghost unit emp_inames
+      (on_range (fun k -> p k ** q k) i j)
+      (fun _ -> on_range p i j ** on_range q i j)
