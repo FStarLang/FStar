@@ -142,13 +142,17 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
         begin  match pol with
         | StrictlyPositive
         | Pos ->
-            Simplified (FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
+          let g = fst <| goal_of_goal_ty e assertion in
+          let g = set_label "spun-off assertion" g in
+          Simplified (FStar.Syntax.Util.t_true, [g])
 
         | Both ->
-            Dual (assertion, FStar.Syntax.Util.t_true, [fst <| goal_of_goal_ty e assertion])
+          let g = fst <| goal_of_goal_ty e assertion in
+          let g = set_label "spun-off assertion" g in
+          Dual (assertion, FStar.Syntax.Util.t_true, [g])
 
         | Neg ->
-            Simplified (assertion, [])
+          Simplified (assertion, [])
         end
 
     // rewrite_with_tactic marker
