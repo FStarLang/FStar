@@ -10635,7 +10635,7 @@ and (solve_t' : tprob -> worklist -> solution) =
                                    match uu___14 with
                                    | (scope, p) ->
                                        FStar_TypeChecker_Env.close_forall
-                                         wl2.tcenv scope (p_guard p))
+                                         (p_env wl2 orig) scope (p_guard p))
                                 sub_probs1 in
                             FStar_Syntax_Util.mk_conj_l uu___13 in
                           let tx = FStar_Syntax_Unionfind.new_transaction () in

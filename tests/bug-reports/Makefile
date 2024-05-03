@@ -78,7 +78,7 @@ SHOULD_VERIFY_CLOSED=\
 	Bug3120a.fst Bug3120b.fst Bug3186.fst Bug3185.fst Bug3210.fst			\
 	Bug3213.fst Bug3213b.fst Bug3207.fst Bug3207b.fst Bug3207c.fst			\
 	Bug2155.fst Bug3224a.fst Bug3224b.fst Bug3236.fst Bug3252.fst \
-  BugBoxInjectivity.fst BugTypeParamProjector.fst
+	BugBoxInjectivity.fst BugTypeParamProjector.fst Bug2172.fst Bug3266.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
