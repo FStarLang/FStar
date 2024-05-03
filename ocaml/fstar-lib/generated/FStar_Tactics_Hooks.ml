@@ -168,35 +168,29 @@ let (by_tactic_interp :
                  ->
                  (match pol1 with
                   | StrictlyPositive ->
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 =
-                              FStar_Tactics_Types.goal_of_goal_ty e assertion in
-                            FStar_Pervasives_Native.fst uu___5 in
-                          [uu___4] in
-                        (FStar_Syntax_Util.t_true, uu___3) in
-                      Simplified uu___2
+                      let g =
+                        let uu___2 =
+                          FStar_Tactics_Types.goal_of_goal_ty e assertion in
+                        FStar_Pervasives_Native.fst uu___2 in
+                      let g1 =
+                        FStar_Tactics_Types.set_label "spun-off assertion" g in
+                      Simplified (FStar_Syntax_Util.t_true, [g1])
                   | Pos ->
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 =
-                              FStar_Tactics_Types.goal_of_goal_ty e assertion in
-                            FStar_Pervasives_Native.fst uu___5 in
-                          [uu___4] in
-                        (FStar_Syntax_Util.t_true, uu___3) in
-                      Simplified uu___2
+                      let g =
+                        let uu___2 =
+                          FStar_Tactics_Types.goal_of_goal_ty e assertion in
+                        FStar_Pervasives_Native.fst uu___2 in
+                      let g1 =
+                        FStar_Tactics_Types.set_label "spun-off assertion" g in
+                      Simplified (FStar_Syntax_Util.t_true, [g1])
                   | Both ->
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            let uu___5 =
-                              FStar_Tactics_Types.goal_of_goal_ty e assertion in
-                            FStar_Pervasives_Native.fst uu___5 in
-                          [uu___4] in
-                        (assertion, FStar_Syntax_Util.t_true, uu___3) in
-                      Dual uu___2
+                      let g =
+                        let uu___2 =
+                          FStar_Tactics_Types.goal_of_goal_ty e assertion in
+                        FStar_Pervasives_Native.fst uu___2 in
+                      let g1 =
+                        FStar_Tactics_Types.set_label "spun-off assertion" g in
+                      Dual (assertion, FStar_Syntax_Util.t_true, [g1])
                   | Neg -> Simplified (assertion, []))
              | (FStar_Syntax_Syntax.Tm_fvar fv,
                 (tactic, FStar_Pervasives_Native.None)::(typ,
@@ -1752,7 +1746,7 @@ let (handle_smt_goal :
                                      uu___6) gs1) in
                gs
            | FStar_Pervasives_Native.None -> [(env, goal1)])
-let (uu___838 :
+let (uu___842 :
   FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding) =
   FStar_Reflection_V2_Embeddings.e_term
 type blob_t =
@@ -1858,7 +1852,7 @@ let (splice :
                                       (FStar_Syntax_Embeddings.e_tuple2
                                          FStar_Reflection_V2_Embeddings.e_env
                                          (FStar_Syntax_Embeddings.e_option
-                                            uu___838))
+                                            uu___842))
                                       ({
                                          FStar_TypeChecker_Env.solver =
                                            (env.FStar_TypeChecker_Env.solver);
@@ -1990,14 +1984,14 @@ let (splice :
                                                (FStar_Syntax_Embeddings.e_option
                                                   (FStar_Syntax_Embeddings.e_tuple2
                                                      FStar_Syntax_Embeddings.e_string
-                                                     uu___838))))
+                                                     uu___842))))
                                          (FStar_Syntax_Embeddings.e_tuple3
                                             FStar_Syntax_Embeddings.e_bool
                                             FStar_Reflection_V2_Embeddings.e_sigelt
                                             (FStar_Syntax_Embeddings.e_option
                                                (FStar_Syntax_Embeddings.e_tuple2
                                                   FStar_Syntax_Embeddings.e_string
-                                                  uu___838)))
+                                                  uu___842)))
                                          (FStar_Syntax_Embeddings.e_list
                                             (FStar_Syntax_Embeddings.e_tuple3
                                                FStar_Syntax_Embeddings.e_bool
@@ -2005,7 +1999,7 @@ let (splice :
                                                (FStar_Syntax_Embeddings.e_option
                                                   (FStar_Syntax_Embeddings.e_tuple2
                                                      FStar_Syntax_Embeddings.e_string
-                                                     uu___838))))) tau1
+                                                     uu___842))))) tau1
                                       tactic_already_typed ps in
                                   match uu___7 with
                                   | (gs,

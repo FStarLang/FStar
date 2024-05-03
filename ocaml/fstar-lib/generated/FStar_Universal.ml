@@ -1361,8 +1361,7 @@ let rec (tc_fold_interleave :
                  (match uu___2 with
                   | (remaining1, nmod, mllib, env) ->
                       ((let uu___4 =
-                          let uu___5 =
-                            FStar_Options.profile_group_by_decls () in
+                          let uu___5 = FStar_Options.profile_group_by_decl () in
                           Prims.op_Negation uu___5 in
                         if uu___4
                         then

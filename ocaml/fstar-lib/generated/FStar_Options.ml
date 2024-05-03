@@ -2572,7 +2572,7 @@ let rec (specs_with_types :
                                                                     let uu___189
                                                                     =
                                                                     text
-                                                                    "Print the time it takes to verify each top-level definition. This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. In particular, it implies --profile_group_by_decls." in
+                                                                    "Print the time it takes to verify each top-level definition. This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. In particular, it implies --profile_group_by_decl." in
                                                                     (FStar_Getopt.noshort,
                                                                     "timing",
                                                                     (Const
@@ -3950,7 +3950,7 @@ let (codegen_libs : unit -> Prims.string Prims.list Prims.list) =
   fun uu___ ->
     let uu___1 = get_codegen_lib () in
     FStar_Compiler_List.map (fun x -> FStar_Compiler_Util.split x ".") uu___1
-let (profile_group_by_decls : unit -> Prims.bool) =
+let (profile_group_by_decl : unit -> Prims.bool) =
   fun uu___ -> get_profile_group_by_decl ()
 let (defensive : unit -> Prims.bool) =
   fun uu___ -> let uu___1 = get_defensive () in uu___1 <> "no"
