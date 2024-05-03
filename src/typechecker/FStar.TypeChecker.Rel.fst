@@ -4194,7 +4194,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         | Some (sub_probs, wl) ->
             let sc_prob, wl = mk_t_problem wl [] orig s1 EQ s2 None "match scrutinee" in
             let sub_probs = ([], sc_prob)::sub_probs in
-            let formula = U.mk_conj_l (List.map (fun (scope, p) -> close_forall wl.tcenv scope (p_guard p)) sub_probs) in
+            let formula = U.mk_conj_l (List.map (fun (scope, p) -> close_forall (p_env wl orig) scope (p_guard p)) sub_probs) in
             let tx = UF.new_transaction () in
             let wl = solve_prob orig (Some formula) [] wl in
             begin match solve (attempt (List.map snd sub_probs) ({wl with smt_ok = false})) with
