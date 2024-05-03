@@ -2269,8 +2269,8 @@ let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * gua
   match f env c c' with
     | None ->
         if use_eq
-        then raise_error (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
-        else raise_error (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
+        then raise_error_doc (Err.computed_computation_type_does_not_match_annotation_eq env e c c') (Env.get_range env)
+        else raise_error_doc (Err.computed_computation_type_does_not_match_annotation env e c c') (Env.get_range env)
     | Some g -> e, c', g
 
 let universe_of_comp env u_res c =

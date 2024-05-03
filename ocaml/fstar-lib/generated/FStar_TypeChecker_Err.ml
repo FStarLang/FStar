@@ -475,48 +475,84 @@ let computed_computation_type_does_not_match_annotation :
       'uuuuu ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-            (FStar_Errors_Codes.raw_error * Prims.string)
+            (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list)
   =
   fun env ->
     fun e ->
       fun c ->
         fun c' ->
+          let ppt = FStar_TypeChecker_Normalize.term_to_doc env in
           let uu___ = name_and_result c in
           match uu___ with
           | (f1, r1) ->
               let uu___1 = name_and_result c' in
               (match uu___1 with
                | (f2, r2) ->
-                   let uu___2 = err_msg_type_strings env r1 r2 in
-                   (match uu___2 with
-                    | (s1, s2) ->
-                        let uu___3 =
-                          FStar_Compiler_Util.format4
-                            "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-                            s1 f1 s2 f2 in
-                        (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
-                          uu___3)))
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Errors_Msg.text "Computed type" in
+                         let uu___6 = ppt r1 in
+                         FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                           uu___5 uu___6 in
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Errors_Msg.text "and effect" in
+                           let uu___8 = FStar_Errors_Msg.text f1 in
+                           FStar_Pprint.prefix (Prims.of_int (2))
+                             Prims.int_one uu___7 uu___8 in
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 =
+                               FStar_Errors_Msg.text
+                                 "is not compatible with the annotated type" in
+                             let uu___10 = ppt r2 in
+                             FStar_Pprint.prefix (Prims.of_int (2))
+                               Prims.int_one uu___9 uu___10 in
+                           let uu___9 =
+                             let uu___10 = FStar_Errors_Msg.text "and effect" in
+                             let uu___11 = FStar_Errors_Msg.text f2 in
+                             FStar_Pprint.prefix (Prims.of_int (2))
+                               Prims.int_one uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     [uu___3] in
+                   (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
+                     uu___2))
 let computed_computation_type_does_not_match_annotation_eq :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
       'uuuuu ->
         FStar_Syntax_Syntax.comp ->
           FStar_Syntax_Syntax.comp ->
-            (FStar_Errors_Codes.raw_error * Prims.string)
+            (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list)
   =
   fun env ->
     fun e ->
       fun c ->
         fun c' ->
-          let uu___ = err_msg_comp_strings env c c' in
-          match uu___ with
-          | (s1, s2) ->
-              let uu___1 =
-                FStar_Compiler_Util.format2
-                  "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
-                  s1 s2 in
-              (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
-                uu___1)
+          let ppc = FStar_TypeChecker_Normalize.comp_to_doc env in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Errors_Msg.text "Computed type" in
+                let uu___4 = ppc c in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+                  uu___4 in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    FStar_Errors_Msg.text "does not match annotated type" in
+                  let uu___6 = ppc c' in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                    uu___6 in
+                let uu___5 =
+                  FStar_Errors_Msg.text "and no subtyping was allowed" in
+                FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+            [uu___1] in
+          (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation, uu___)
 let (unexpected_non_trivial_precondition_on_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> (FStar_Errors_Codes.raw_error * Prims.string))

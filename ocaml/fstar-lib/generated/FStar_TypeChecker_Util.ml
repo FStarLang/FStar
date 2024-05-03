@@ -4854,13 +4854,13 @@ let (check_comp :
                      FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation_eq
                        env e c c' in
                    let uu___5 = FStar_TypeChecker_Env.get_range env in
-                   FStar_Errors.raise_error uu___4 uu___5
+                   FStar_Errors.raise_error_doc uu___4 uu___5
                  else
                    (let uu___5 =
                       FStar_TypeChecker_Err.computed_computation_type_does_not_match_annotation
                         env e c c' in
                     let uu___6 = FStar_TypeChecker_Env.get_range env in
-                    FStar_Errors.raise_error uu___5 uu___6)
+                    FStar_Errors.raise_error_doc uu___5 uu___6)
              | FStar_Pervasives_Native.Some g -> (e, c', g))
 let (universe_of_comp :
   FStar_TypeChecker_Env.env ->

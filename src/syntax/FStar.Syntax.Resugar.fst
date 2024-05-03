@@ -442,6 +442,34 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         if Options.print_implicits ()
         then args
         else filter_imp_args args in
+
+      let is_projector (t:S.term) : option (lident & ident) =
+        (* Detect projectors and resugar them as t.x instead of Mkt?.x t *)
+        match (U.un_uinst (SS.compress t)).n with
+        | Tm_fvar fv ->
+          let a = fv.fv_name.v in
+          let length = String.length (nsstr fv.fv_name.v) in
+          let s = if length=0 then string_of_lid a
+              else BU.substring_from (string_of_lid a) (length+1) in
+          if BU.starts_with s U.field_projector_prefix then
+            let rest = BU.substring_from s (String.length U.field_projector_prefix) in
+            let r = BU.split rest U.field_projector_sep in
+            begin match r with
+              | [fst; snd] ->
+                let l = lid_of_path [fst] t.pos in
+                let r = I.mk_ident (snd, t.pos) in
+                Some (l, r)
+              | _ ->
+                failwith "wrong projector format"
+            end
+          else None
+        | _ -> None
+      in
+      if Some? (is_projector e) && List.length args = 1 then
+        let (_, fi) = Some?.v (is_projector e) in
+        let arg = resugar_term' env (fst (List.hd args)) in
+        mk <| Project (arg, Ident.lid_of_ids [fi])
+      else
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args

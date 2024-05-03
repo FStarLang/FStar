@@ -1,11 +1,17 @@
 >> Got issues: [
 * Error 34 at Coercions.fst(6,38-6,39):
-  - Computed type "Prims.int" and effect "GTot" is not compatible with the annotated type "Prims.int" effect "Tot"
+  - Computed type Prims.int
+    and effect GTot
+    is not compatible with the annotated type Prims.int
+    and effect Tot
 
 >>]
 >> Got issues: [
 * Error 34 at Coercions.fst(19,37-19,38):
-  - Computed type "'a" and effect "GTot" is not compatible with the annotated type "'a" effect "Tot"
+  - Computed type 'a
+    and effect GTot
+    is not compatible with the annotated type 'a
+    and effect Tot
 
 >>]
 >> Got issues: [

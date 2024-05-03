@@ -4169,7 +4169,7 @@ let (use_nbe_for_extraction : unit -> Prims.bool) =
 let (trivial_pre_for_unannotated_effectful_fns : unit -> Prims.bool) =
   fun uu___ -> get_trivial_pre_for_unannotated_effectful_fns ()
 let (debug_keys : unit -> Prims.string Prims.list) =
-  fun uu___ -> lookup_opt "debug" (as_list as_string)
+  fun uu___ -> lookup_opt "debug" as_comma_string_list
 let (debug_all_modules : unit -> Prims.bool) =
   fun uu___ -> lookup_opt "debug_all_modules" as_bool
 let with_saved_options : 'a . (unit -> 'a) -> 'a =

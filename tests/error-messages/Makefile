@@ -21,8 +21,11 @@ OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 check-all: $(addsuffix .check, $(FSTAR_FILES))
 all: check-all
 
+# For these tests, we check that the resugared output
+# matches the expected file.
 Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
 Bug2820.fst.output: OTHERFLAGS+=--dump_module Bug2820
+Bug3227.fst.output: OTHERFLAGS+=--dump_module Bug3227
 CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
 
 include $(FSTAR_HOME)/examples/Makefile.common
