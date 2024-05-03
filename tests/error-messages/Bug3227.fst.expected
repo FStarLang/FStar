@@ -1,0 +1,83 @@
+Module after desugaring:
+module Bug3227
+Declarations: [
+type box (a: Type) = {  }
+
+let proj b = x (x (x b)) <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+Exports: [
+type box (a: Type) = {  }
+
+let proj b = x (x (x b)) <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+
+Module before type checking:
+module Bug3227
+Declarations: [
+type box (a: Type) = {  }
+
+let proj b = x (x (x b)) <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+Exports: [
+type box (a: Type) = {  }
+
+let proj b = x (x (x b)) <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+
+Module after type checking:
+module Bug3227
+Declarations: [
+type box (a: Type) = { x:a }
+val box__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box a)}
+  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box a)
+
+
+let proj b = b.x.x.x <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+val box2__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box2 a)}
+  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box2 a)
+
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+Exports: [
+type box (a: Type) = { x:a }
+val box__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box a)}
+  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box a)
+
+
+let proj b = b.x.x.x <: Prims.int
+type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
+val box2__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box2 a)}
+  Prims.l_True /\ Prims.hasEq a ==> Prims.hasEq (Bug3227.box2 a)
+
+
+
+
+let test b = Box2? b && Box2? b.x
+]
+
+Verified module: Bug3227
+All verification conditions discharged successfully
