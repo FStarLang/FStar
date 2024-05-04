@@ -3374,7 +3374,7 @@ and tc_pat env (pat_t:typ) (p0:pat) :
                  |> BU.first_N (List.length simple_bvs - List.length simple_bvs_pat)
                  |> snd in
 
-              let g' = pat_typ_ok env simple_pat_t (expected_pat_typ env p0.p t) in
+              let g' = pat_typ_ok (Env.push_bvs env simple_bvs) simple_pat_t (expected_pat_typ env p0.p t) in
               //
               // Now solve guard
               // guard may have logical payload coming from typechecking of the
