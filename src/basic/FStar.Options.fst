@@ -1239,7 +1239,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     Const (Bool true),
     text "Print the time it takes to verify each top-level definition. \
           This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. \
-          In particular, it implies --profile_group_by_decls.");
+          In particular, it implies --profile_group_by_decl.");
 
   ( noshort,
     "trace_error",
@@ -1804,7 +1804,7 @@ let codegen                      () =
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
 
-let profile_group_by_decls       () = get_profile_group_by_decl ()
+let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_error              () = get_defensive () = "error"
 let defensive_abort              () = get_defensive () = "abort"

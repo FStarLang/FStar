@@ -1063,8 +1063,8 @@ let tc_decls env ses =
       // ^ See a special case for this phase in FStar.Options. --timing
       // enables it.
     in
-    if Options.profile_group_by_decls()
-    || Options.timing () // --timing implies --profile_group_by_decls
+    if Options.profile_group_by_decl()
+    || Options.timing () // --timing implies --profile_group_by_decl
     then begin
          let tag =
           match lids_of_sigelt se with
