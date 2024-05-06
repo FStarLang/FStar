@@ -1,0 +1,7 @@
+* Warning 271 at SMTPatSymbols.fst(3,34-3,52):
+  - Pattern uses these theory symbols or terms that should not be in an SMT
+    pattern:
+      Prims.op_Addition, Prims.op_Subtraction
+
+Verified module: SMTPatSymbols
+All verification conditions discharged successfully
