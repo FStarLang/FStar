@@ -87,6 +87,9 @@ variable to your F* clone. Indeed, the extraction rules typecheck
 against the F* sources. An opam installation of F* (or a binary
 package) will not work.
 
+Optionally, to extract C code, you must set the `KRML_HOME` environment
+variable. This should point to your clone of the Karamel repository.
+
 Then, you can extract the rules and recompile everything with `make -j
 boot` from the Pulse root directory.
 
@@ -97,10 +100,10 @@ generated OCaml files beforehand.
 
 `share/pulse` contains all examples and tests. You can run `make -j -C
 share/pulse` to verify and test them. This rule will work whether you have
-Karamel or not. If you have Karamel, then this rule will also extract
-and compile (and sometimes run) C extraction examples. Alternatively,
-you can run `make -j test` from the Pulse root directory, which will
-build Pulse beforehand.
+Karamel or not. If you have Karamel with the `KRML_HOME` variable set, then
+this rule will also extract and compile (and sometimes run) C extraction
+examples. Alternatively, you can run `make -j test` from the Pulse root
+directory, which will build Pulse beforehand.
 
 If you have Docker, you can run `docker build -f
 src/ci/opam.Dockerfile .` to test the opam installation of Pulse
