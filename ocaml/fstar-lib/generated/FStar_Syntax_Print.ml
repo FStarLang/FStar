@@ -1987,6 +1987,10 @@ let (showable_branch : FStar_Syntax_Syntax.branch FStar_Class_Show.showable)
 let (showable_qualifier :
   FStar_Syntax_Syntax.qualifier FStar_Class_Show.showable) =
   { FStar_Class_Show.show = qual_to_string }
+let (showable_pat : FStar_Syntax_Syntax.pat FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = pat_to_string }
+let (showable_const : FStar_Const.sconst FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = const_to_string }
 let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = term_to_doc }
 let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
