@@ -56,10 +56,9 @@ ensures
 }
 ```
 
-#push-options "--print_implicits --print_universes"
 ```pulse
 ghost
-fn share_gref_pts_to (#n:nat) (g:gref n) (#v:erased nat { v > 0 })
+fn share_gref_pts_to (#n:nat) (g:gref n) (#v:nat { v > 0 })
 requires
   gref_pts_to g v
 ensures
@@ -71,15 +70,10 @@ ensures
   rewrite (GPR.pts_to g v)
        as (GPR.pts_to g (op (pcm_of n) (v - 1) 1));
   GPR.share g (v - 1) 1; //leaving the arguments (v - 1) and 1 as _ _ causes a crash
-  rewrite (GPR.pts_to g (reveal #nat (hide #nat (v - 1))))
-      as (GPR.pts_to g (v - 1));
   fold (gref_pts_to g (v - 1));
-  rewrite (GPR.pts_to g (reveal #nat (hide #nat 1)))
-      as (GPR.pts_to g 1);
   fold gref_pts_to
 }
 ```
-
 
 [@@erasable]
 noeq
@@ -145,7 +139,6 @@ ensures
     unfold contributions;
     unfold can_give;
     gather_gref_pts_to gs.given;
-    with t. assert (gref_pts_to gs.to_give t);
     share_gref_pts_to gs.to_give;
     atomic_incr r;
     fold (contributions n initial gs r);
@@ -155,7 +148,6 @@ ensures
 }
 ```
 
-#push-options "--print_implicits --print_universes"
 ```pulse
 ghost
 fn init_ghost_state (initial:nat) (r:ref nat)
@@ -166,13 +158,11 @@ ensures contributions 2 initial gs r **
         can_give #2 gs
 {
   let given = GPR.alloc #_ #(pcm_of 2) 2;
-  with _v .rewrite (GPR.pts_to given _v) as (GPR.pts_to given 2);
   fold (gref_pts_to #2 given 2);
   share_gref_pts_to given;
   share_gref_pts_to given;
 
   let to_give = GPR.alloc #_ #(pcm_of 2) 2;
-  with _v .rewrite (GPR.pts_to to_give _v) as (GPR.pts_to to_give 2);
   fold (gref_pts_to #2 to_give 2);
   
   let gs : ghost_state 2 = { given; to_give };
@@ -201,8 +191,7 @@ ensures
 }
 ```
 
-#push-options "--print_implicits"
-```pulse //par$
+```pulse
 fn par (#pf #pg #qf #qg:_)
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
@@ -235,8 +224,8 @@ ensures pts_to r ('i + 2)
   CI.cancel ci;
   drop_ (inv _ _);
   rewrite each (reveal #nat (hide #nat 2)) as 2;
-  unfold (has_given #2 gs);
-  unfold (has_given #2 gs);
+  unfold has_given;
+  unfold has_given;
   gather_gref_pts_to gs.to_give;
   elim_ghost_state 'i r gs;
 }

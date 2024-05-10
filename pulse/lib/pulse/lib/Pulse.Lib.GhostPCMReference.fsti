@@ -16,7 +16,7 @@ val pts_to
 val alloc
     (#a:Type u#0)
     (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
+    (x:a{pcm.refine x})
 : stt_ghost (gref pcm)
     emp_inames
     emp
@@ -26,11 +26,11 @@ val read
     (#a:Type)
     (#p:pcm a)
     (r:gref p)
-    (x:erased a)
+    (x:a)
     (f:(v:a{compatible p x v}
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
-: stt_ghost (v:erased a{compatible p x v /\ p.refine v})
+: stt_ghost (v:a{compatible p x v /\ p.refine v})
     emp_inames
     (pts_to r x)
     (fun v -> pts_to r (f v))
@@ -39,8 +39,8 @@ val read_simple
     (#a:Type)
     (#p:pcm a)
     (r:gref p)
-    (#x:erased a)
-: stt_ghost (v:erased a{compatible p x v /\ p.refine v})
+    (#x:a)
+: stt_ghost (v:a{compatible p x v /\ p.refine v})
     emp_inames
     (pts_to r x)
     (fun v -> pts_to r x)
@@ -49,7 +49,7 @@ val write
     (#a:Type)
     (#p:pcm a)
     (r:gref p)
-    (x y:Ghost.erased a)
+    (x y:a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : stt_ghost unit
     emp_inames
@@ -60,8 +60,8 @@ val share
     (#a:Type)
     (#pcm:pcm a)
     (r:gref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+    (v0:a)
+    (v1:a{composable pcm v0 v1})
 : stt_ghost unit
     emp_inames
     (pts_to r (v0 `op pcm` v1))
@@ -71,8 +71,8 @@ val gather
     (#a:Type)
     (#pcm:pcm a)
     (r:gref pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a)
+    (v0:a)
+    (v1:a)
 : stt_ghost (squash (composable pcm v0 v1))
     emp_inames
     (pts_to r v0 ** pts_to r v1)
