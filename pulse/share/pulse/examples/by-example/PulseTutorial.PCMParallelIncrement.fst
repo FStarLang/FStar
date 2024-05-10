@@ -6,6 +6,21 @@ module U = FStar.Universe
 module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
 
+// For this example: we assume we have an atomic operation
+// to increment a ref nat
+// We could use a ref U32 and use Pulse.Lib.Primitives
+// but that adds needless noise, unrelated to the main point
+// of this example
+```pulse
+atomic
+fn atomic_incr (r:ref nat)
+requires pts_to r 'i
+ensures pts_to r ('i + 1)
+{
+  admit()
+}
+```
+
 (* This example illustrates the use of a custom PCM
    to reason about the "contributions" of multiple threads to
    a shared memory location. It is an adaptation of the classic
@@ -62,98 +77,105 @@ module CI = Pulse.Lib.CancellableInvariant
 // `pcm_of n` represents a "tank" whose capacity is `n`
 let pcm_of (n:nat) = MS.pcm_of MS.nat_plus_cm n
 
-let gref (n:nat) = GPR.gref (pcm_of n)
+// A tank is a ghost reference from the above PCM
+let tank (n:nat) = GPR.gref (pcm_of n)
 
-let gref_pts_to #n (g:gref n) (i:nat)
+// A predicate asserting ownership of `i` units of the tank
+let owns_tank_units #n (g:tank n) (i:nat)
 : boxable
 = GPR.pts_to #_ #(pcm_of n) g i
 
 
+// You cannot own more than the tank capacity
 ```pulse
 ghost
-fn extract_gref_bound (#n:nat) (g:gref n) (#i:erased nat)
+fn extract_tank_bound (#n:nat) (g:tank n) (#i:erased nat)
 requires
-  gref_pts_to g i
+  owns_tank_units g i
 ensures
-  gref_pts_to g i ** pure (i <= n)
+  owns_tank_units g i ** pure (i <= n)
 {
-  unfold gref_pts_to;
+  unfold owns_tank_units;
   let v = GPR.read_simple g; 
-  fold gref_pts_to;
+  fold owns_tank_units;
 }
 ```
 
-
+// Ownership of tank units can be combined additively
 ```pulse
 ghost
-fn gather_gref_pts_to (#n:nat) (g:gref n) (#i #j:erased nat)
+fn gather_tank_units (#n:nat) (g:tank n) (#i #j:erased nat)
 requires
-  gref_pts_to g i **
-  gref_pts_to g j
+  owns_tank_units g i **
+  owns_tank_units g j
 ensures
-  gref_pts_to g (i + j) **
+  owns_tank_units g (i + j) **
   pure (i <= n /\ j <= n /\ i + j <= n)
 {
-  extract_gref_bound g #i;
-  extract_gref_bound g #j;
-  unfold gref_pts_to;
-  unfold gref_pts_to;
+  extract_tank_bound g #i;
+  extract_tank_bound g #j;
+  unfold owns_tank_units;
+  unfold owns_tank_units;
   GPR.gather g _ _;
-  fold gref_pts_to;
-  extract_gref_bound g;
+  fold owns_tank_units;
+  extract_tank_bound g;
 }
 ```
 
+// Ownership of a unit can also split out and shared
 ```pulse
 ghost
-fn share_gref_pts_to (#n:nat) (g:gref n) (#v:nat { v > 0 })
+fn share_tank_units (#n:nat) (g:tank n) (#u #v:nat)
 requires
-  gref_pts_to g v
+  owns_tank_units g (u + v)
 ensures
-  gref_pts_to g (v - 1) **
-  gref_pts_to g 1
+  owns_tank_units g u **
+  owns_tank_units g v
 {
   open FStar.PCM;
-  unfold gref_pts_to;
-  rewrite (GPR.pts_to g v)
-       as (GPR.pts_to g (op (pcm_of n) (v - 1) 1));
-  GPR.share g (v - 1) 1; //leaving the arguments (v - 1) and 1 as _ _ causes a crash
-  fold (gref_pts_to g (v - 1));
-  fold gref_pts_to
+  unfold owns_tank_units;
+  rewrite (GPR.pts_to g (u + v))
+       as (GPR.pts_to g (op (pcm_of n) u v));
+  GPR.share g u v;  //leaving the arguments as _ _ causes a crash
+  fold (owns_tank_units g u);
+  fold (owns_tank_units g v)
 }
 ```
 
-```pulse
-ghost
-fn share_gref_pts_to_unit (#n:nat) (g:gref n) (#v:nat)
-requires
-  gref_pts_to g v
-ensures
-  gref_pts_to g v **
-  gref_pts_to g 0
-{
-  open FStar.PCM;
-  unfold gref_pts_to;
-  rewrite (GPR.pts_to g v)
-       as (GPR.pts_to g (op (pcm_of n) v 0));
-  GPR.share g v 0; //leaving the arguments (v - 1) and 1 as _ _ causes a crash
-  fold (gref_pts_to g v);
-  fold gref_pts_to
-}
-```
+// ```pulse
+// ghost
+// fn share_owns_tank_units_unit (#n:nat) (g:tank n) (#v:nat)
+// requires
+//   owns_tank_units g v
+// ensures
+//   owns_tank_units g v **
+//   owns_tank_units g 0
+// {
+//   open FStar.PCM;
+//   unfold owns_tank_units;
+//   rewrite (GPR.pts_to g v)
+//        as (GPR.pts_to g (op (pcm_of n) v 0));
+//   GPR.share g v 0; //leaving the arguments (v - 1) and 1 as _ _ causes a crash
+//   fold (owns_tank_units g v);
+//   fold owns_tank_units
+// }
+// ```
 
+// The ghost state is a pair of tanks of capacity `n`
 [@@erasable]
 noeq
 type ghost_state (n:nat) = {
-  given:gref n;
-  to_give:gref n
+  given:tank n;
+  to_give:tank n
 } 
 
-open Pulse.Lib
 instance non_informative_gs (n:nat)
 : Pulse.Lib.NonInformative.non_informative (ghost_state n)
-= { reveal = (fun r -> FStar.Ghost.reveal r) <: NonInformative.revealer (ghost_state n) }
+= { reveal = (fun r -> FStar.Ghost.reveal r) <: Pulse.Lib.NonInformative.revealer (ghost_state n) }
 
+// Now for the main invariant
+// The total volume of the given and to_give tanks owned by the invariant is n
+// The value of r is v, and v == initial + g, the owned units in the given tank
 let contributions
     (n:nat)
     (initial:nat)
@@ -161,14 +183,21 @@ let contributions
     (r:ref nat)
 : boxable
 = exists* (v g t:nat).
-    pts_to r v **
-    gref_pts_to gs.given g **
-    gref_pts_to gs.to_give t **
+    pts_to r v **    
+    owns_tank_units gs.given g **
+    owns_tank_units gs.to_give t **
     pure (v == initial + g /\ g + t == n)
 
-let can_give #n (gs:ghost_state n) (k:nat) = gref_pts_to gs.given k
-let has_given #n (gs:ghost_state n) (k:nat) = gref_pts_to gs.to_give k
+// can_give gs k: Knowledge that the given tank has at least `k` units
+// remaining to be filled
+let can_give #n (gs:ghost_state n) (k:nat) = owns_tank_units gs.given k
 
+
+// has_given gs k: Knowledge that the to_give tank is at least `k` units
+// from being full
+let has_given #n (gs:ghost_state n) (k:nat) = owns_tank_units gs.to_give k
+
+// A utility to share out can_give units
 ```pulse
 ghost
 fn share_can_give (#n:nat) (gs:ghost_state n) (#i:nat { i > 0 })
@@ -176,72 +205,42 @@ requires can_give gs i
 ensures can_give gs (i - 1) ** can_give gs 1
 {
   unfold can_give;
-  share_gref_pts_to gs.given;
+  share_tank_units gs.given #(i - 1) #1;
   fold (can_give gs (i - 1));
   fold can_give;
 }
 ```
 
+// A utility to gather has_given units
 ```pulse
-atomic
-fn atomic_incr (r:ref nat)
-requires pts_to r 'i
-ensures pts_to r ('i + 1)
+ghost
+fn gather_has_given (#n:nat) (gs:ghost_state n) (#i #j:nat)
+requires has_given gs i ** has_given gs j
+ensures has_given gs (i + j)
 {
-  admit()
+  unfold has_given;
+  unfold has_given;
+  gather_tank_units gs.to_give;
+  fold (has_given gs (i + j));
 }
 ```
 
-```pulse
-// atomic
-fn increment 
-    (#initial:erased nat)
-    (#n:erased nat)
-    (#gs:ghost_state n)
-    (#p:perm)
-    (r:ref nat)
-    (i:CI.cinv)
-requires
-    can_give gs 1 **
-    CI.active p i **
-    inv (CI.iref_of i) 
-        (CI.cinv_vp i (contributions n initial gs r))
-ensures
-    has_given gs 1 **
-    CI.active p i **
-    inv (CI.iref_of i) 
-        (CI.cinv_vp i (contributions n initial gs r))
-// opens (add_inv emp_inames (CI.iref_of i))
-{ 
-  with_invariants (CI.iref_of i)
-  {
-    CI.unpack_cinv_vp i;
-    unfold contributions;
-    unfold can_give;
-    gather_gref_pts_to gs.given;
-    share_gref_pts_to gs.to_give;
-    atomic_incr r;
-    fold (contributions n initial gs r);
-    fold (has_given gs 1);
-    CI.pack_cinv_vp #(contributions n initial gs r) i;
-  }
-}
-```
 
+// Initializing the ghost state and building the invariant
 ```pulse
 ghost
 fn init_ghost_state (initial:nat) (capacity:nat) (r:ref nat)
 requires pts_to r initial
 returns gs:ghost_state capacity
 ensures contributions capacity initial gs r **
-        can_give gs capacity
+        can_give gs capacity 
 {
   let given = GPR.alloc #_ #(pcm_of capacity) capacity;
-  fold (gref_pts_to given capacity);
-  share_gref_pts_to_unit given;
+  fold (owns_tank_units given capacity);
+  share_tank_units given #capacity #0;
 
   let to_give = GPR.alloc #_ #(pcm_of capacity) capacity;
-  fold (gref_pts_to to_give capacity);
+  fold (owns_tank_units to_give capacity);
   
   let gs : ghost_state capacity = { given; to_give };
   rewrite each given as gs.given;
@@ -252,6 +251,7 @@ ensures contributions capacity initial gs r **
 }
 ```
 
+// Tearing down the ghost state and recovering the main postcondition
 ```pulse
 ghost
 fn elim_ghost_state (initial:nat) (capacity:nat) (r:ref nat) (gs:ghost_state capacity)
@@ -263,65 +263,97 @@ ensures
 {
   unfold contributions;
   unfold has_given;
-  gather_gref_pts_to gs.to_give;
-  drop_ (gref_pts_to gs.to_give _);
-  drop_ (gref_pts_to gs.given _);
+  gather_tank_units gs.to_give;
+  drop_ (owns_tank_units gs.to_give _);
+  drop_ (owns_tank_units gs.given _);
 }
 ```
 
+// The core function to increment a reference
 ```pulse
-fn par (#pf #pg #qf #qg:_)
-       (f: unit -> stt unit pf (fun _ -> qf))
-       (g: unit -> stt unit pg (fun _ -> qg))
-requires pf ** pg
-ensures qf ** qg
-{
-  parallel 
-  requires pf and pg
-  ensures qf and qg
-  { f () }
-  { g () };
-  ()
+atomic
+fn increment 
+    (#n:erased nat)
+    (#initial:erased nat)
+    (#gs:ghost_state n)
+    (#p:perm)
+    (r:ref nat)
+    (i:CI.cinv)
+requires
+    can_give gs 1 **     //we have permission to add one to the reference
+    CI.active p i **     //the invariant is active
+    inv (CI.iref_of i)   //the invariant itself
+        (CI.cinv_vp i (contributions n initial gs r))
+ensures
+    has_given gs 1 **    //we have contributed 1 unit to the reference
+    CI.active p i **     //and the invariant remains ...
+    inv (CI.iref_of i) 
+        (CI.cinv_vp i (contributions n initial gs r))
+opens (add_inv emp_inames (CI.iref_of i)) //we used the invariant
+{ 
+  with_invariants (CI.iref_of i)
+  {
+    CI.unpack_cinv_vp i;
+    unfold contributions;
+    unfold can_give;
+    //this moves one unit of ownership of the given tank
+    //from the caller into the invariant; while gaining
+    //information that the to_give tank cannot be empty
+    gather_tank_units gs.given;
+    atomic_incr r; //the actual increment
+    with t. assert (owns_tank_units gs.to_give t);
+    //We take out ownership of one unit of the to_give tank
+    //to return to the caller as `has_given gs 1`
+    share_tank_units gs.to_give #(t - 1) #1;
+    fold (has_given gs 1);
+    //rebuild the invariant
+    fold (contributions n initial gs r);
+    CI.pack_cinv_vp #(contributions n initial gs r) i;
+  }
 }
 ```
 
-```pulse
-ghost
-fn gather_has_given (#n:nat) (gs:ghost_state n) (#i #j:nat)
-requires has_given gs i ** has_given gs j
-ensures has_given gs (i + j)
-{
-  unfold has_given;
-  unfold has_given;
-  gather_gref_pts_to gs.to_give;
-  fold (has_given gs (i + j));
-}
-```
 
-#push-options "--print_implicits"
+// First, a simple variant to increment a reference in parallel in two threads,
+// the classic Owicki-Gries example
 ```pulse
 fn incr2 (r:ref nat)
 requires pts_to r 'i
 ensures pts_to r ('i + 2)
 {
-  let gs = init_ghost_state 'i 2 r;
-  let ci = CI.new_cancellable_invariant (contributions 2 'i gs r);
-  share_can_give gs;
+  let gs = init_ghost_state 'i 2 r; // initialize the ghost state with a capacity of 2
+  let ci = CI.new_cancellable_invariant (contributions 2 'i gs r); // allocate an invariant
+  share_can_give gs; // split permission to can_give for use in two threads
+  //These next two rewrites are ugly!
   rewrite (can_give #2 gs (2 - 1)) as (can_give #(reveal (hide 2)) gs 1);
   rewrite (can_give #2 gs 1) as (can_give #(reveal (hide 2)) gs 1);
+  // share permission to the invariant for use in two threads
   CI.share2 ci;
+  // and duplicate the invariant itself
   dup_inv _ _;
-  par (fun _ -> increment #'i #2 #gs r ci)
-      (fun _ -> increment #'i #2 #gs r ci);
-  CI.gather2 ci;
-  CI.cancel ci;
-  drop_ (inv _ _);
+  // Now, spawn two threads in which to run increment
+  // Note: the code on the two sides is identical! Unlike
+  // in classic variants of this example, where you have to run
+  // different ghost steps to account for contributions in each thread
+  par_atomic
+    (fun _ -> increment #2 r ci)
+    (fun _ -> increment #2 r ci);
+  CI.gather2 ci; CI.cancel ci; // Collect back permission to the invariant and then cancel it
+  drop_ (inv _ _); //drop the other copy of the invariant; it is now useless
+  // ugly! reveal/hide rewrite
   rewrite each (reveal #nat (hide #nat 2)) as 2;
+  // collect up the has_given predicates from each thread
   gather_has_given gs;
-  elim_ghost_state 'i _ r gs;
+  // recover the postcondition by the main ghost state eliminator lemma
+  elim_ghost_state _ _ _ gs;
 }
 ```
 
+// We can now generalize this to an arbitrary number of threads
+
+
+// We first need an auxilary function that allows us to take
+// ownership of 0 units of the has_given tank from the invariant
 ```pulse
 ghost
 fn has_given_zero 
@@ -346,7 +378,8 @@ opens (add_inv emp_inames (CI.iref_of ci))
   {
     CI.unpack_cinv_vp ci;
     unfold contributions;
-    share_gref_pts_to_unit gs.to_give;
+    with u. assert (owns_tank_units gs.to_give u);
+    share_tank_units gs.to_give #u #0;
     fold (has_given gs 0);
     fold (contributions capacity initial gs r);
     CI.pack_cinv_vp #(contributions capacity initial gs r) ci;
@@ -354,29 +387,31 @@ opens (add_inv emp_inames (CI.iref_of ci))
 }
 ```
 
+
+// Now, we can recursively spawn `n` threads to increment `r`
 ```pulse
 fn rec incr_n_aux
-        (#initial:erased nat)
         (#capacity:erased nat)
+        (#initial:erased nat)
         (#gs:ghost_state capacity)
         (#p:perm)
         (r:ref nat)
         (remaining:nat)
         (ci:CI.cinv)
 requires
-    can_give gs remaining **
-    CI.active p ci **
+    can_give gs remaining ** // if we have permission to add remaining to r
+    CI.active p ci **        // and the invariant ...
     inv (CI.iref_of ci) 
         (CI.cinv_vp ci (contributions capacity initial gs r))
 ensures
-   has_given gs remaining **
-   CI.active p ci **
+   has_given gs remaining ** // we have added remaining to r
+   CI.active p ci **         // and retain the invariant ... 
    inv (CI.iref_of ci) 
        (CI.cinv_vp ci (contributions capacity initial gs r))
 decreases remaining
 {
   if (remaining = 0)
-  {
+  { //we're done; just take out has_given 0 from the invariant
     drop_ (can_give gs remaining);
     has_given_zero #_ #capacity r ci;
   }
@@ -385,8 +420,9 @@ decreases remaining
     share_can_give gs;
     CI.share ci;
     dup_inv _ _;
-    par (fun _ -> increment #_ #capacity r ci)
-        (fun _ -> incr_n_aux #_ #capacity r (remaining - 1) ci);
+    par_atomic_l
+      (fun _ -> increment #capacity r ci) //call increment in one thread
+      (fun _ -> incr_n_aux #capacity r (remaining - 1) ci); //recursively call to spawn more
     drop_ (inv _ _);
     CI.gather ci;
     gather_has_given gs;
@@ -395,7 +431,7 @@ decreases remaining
 }
 ```
 
-
+/// Finally, the main `incr_n r n`
 ```pulse
 fn incr_n (r:ref nat) (n:nat)
 requires pts_to r 'i
@@ -404,7 +440,7 @@ ensures pts_to r ('i + n)
   let gs = init_ghost_state 'i n r;
   let ci = CI.new_cancellable_invariant (contributions n 'i gs r);
   rewrite (can_give #n gs n) as (can_give #(reveal (hide n)) gs n);
-  incr_n_aux #_ #n r n ci;
+  incr_n_aux #n r n ci;
   CI.cancel ci;
   rewrite (contributions (reveal (hide n)) 'i gs r) as
           (contributions n 'i gs r);
