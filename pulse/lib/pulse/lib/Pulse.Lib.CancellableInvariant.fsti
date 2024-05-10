@@ -31,6 +31,10 @@ val is_big_cinv_vp (c:cinv) (v:vprop)
 
 val active (p:perm) (c:cinv) : vprop
 
+val active_is_small (p:perm) (c:cinv)
+  : Lemma (is_small (active p c))
+          [SMTPat (is_small (active p c))]
+
 val iref_of (c:cinv) : GTot iref
 
 val new_cancellable_invariant (v:vprop { is_big v })

@@ -230,3 +230,76 @@ fn lock_alive_inj
   fold (lock_alive l #p2 v1);
 }
 ```
+
+let iref_of l = iref_of l.i
+let iref_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
+let lock_active #p l = active p l.i
+
+```pulse
+ghost
+fn share_lock_active (#p:perm) (l:lock)
+  requires lock_active #p l
+  ensures lock_active #(p /. 2.0R) l ** lock_active #(p /. 2.0R) l
+{
+  unfold (lock_active #p l);
+  Pulse.Lib.CancellableInvariant.share l.i;
+  fold (lock_active #(p /. 2.0R) l);
+  fold (lock_active #(p /. 2.0R) l)
+}
+```
+
+```pulse
+ghost
+fn gather_lock_active (#p1 #p2:perm) (l:lock)
+  requires lock_active #p1 l ** lock_active #p2 l
+  ensures lock_active #(p1 +. p2) l
+{
+  unfold (lock_active #p1 l);
+  unfold (lock_active #p2 l);
+  Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
+  fold (lock_active #(p1 +. p2) l)
+}
+```
+
+```pulse
+ghost
+fn elim_inv_and_active_into_alive (l:lock) (v:vprop) (#p:perm)
+  requires emp
+  ensures (inv (iref_of l) (iref_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
+{
+  ghost
+  fn aux ()
+    requires emp ** (inv (iref_of l) (iref_v_of l v) ** lock_active #p l)
+    ensures lock_alive l #p v
+  {
+    rewrite each
+      iref_of l as Pulse.Lib.CancellableInvariant.iref_of l.i,
+      iref_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
+    unfold (lock_active #p l);
+    fold (lock_alive l #p v)
+  };
+
+  intro_stick _ _ _ aux
+}
+```
+
+```pulse
+ghost
+fn elim_alive_into_inv_and_active (l:lock) (v:vprop) (#p:perm)
+  requires emp
+  ensures lock_alive l #p v @==> (inv (iref_of l) (iref_v_of l v) ** lock_active #p l)
+{
+  ghost
+  fn aux ()
+    requires emp ** lock_alive l #p v
+    ensures inv (iref_of l) (iref_v_of l v) ** lock_active #p l
+  {
+    unfold (lock_alive l #p v);
+    fold (lock_active #p l);
+    rewrite each
+      Pulse.Lib.CancellableInvariant.iref_of l.i as iref_of l,
+      cinv_vp l.i (lock_inv l.r l.gr v) as iref_v_of l v
+  };
+  intro_stick _ _ _ aux
+}
+```

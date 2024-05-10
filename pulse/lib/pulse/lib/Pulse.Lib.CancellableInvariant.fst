@@ -40,6 +40,8 @@ let is_big_cinv_vp _ _ = ()
 
 let active p c = GR.pts_to c.r #(p /. 2.0R) true
 
+let active_is_small p c = ()
+
 let iref_of c = c.i
 
 ```pulse
