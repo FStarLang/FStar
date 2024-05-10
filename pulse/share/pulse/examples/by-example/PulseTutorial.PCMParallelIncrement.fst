@@ -3,48 +3,23 @@ open Pulse.Lib.Pervasives
 module M = FStar.Algebra.CommMonoid
 module MS = Pulse.Lib.PCM.MonoidShares
 module U = FStar.Universe
+module GPR = Pulse.Lib.GhostPCMReference
 module CI = Pulse.Lib.CancellableInvariant
 
-let raise_monoid (#a:Type u#a) (m:M.cm a)
-: M.cm (U.raise_t u#a u#b a)
-= let M.CM u op id assoc comm = m in
-  M.CM (U.raise_val u) 
-       (fun x y -> U.raise_val <| (U.downgrade_val x) `op` (U.downgrade_val y))
-       (fun x -> id (U.downgrade_val x))
-       (fun x y z -> assoc (U.downgrade_val x) (U.downgrade_val y) (U.downgrade_val z))
-       (fun x y -> comm (U.downgrade_val x) (U.downgrade_val y))
+let pcm_of (n:nat) = MS.pcm_of MS.nat_plus_cm n
 
-let pcm_of (n:nat) = (MS.pcm_of (raise_monoid u#0 u#1 MS.nat_plus_cm) (U.raise_val n))
 let elim_compatible (n:nat) (i:nat)
 : Lemma
-  (requires FStar.PCM.compatible (pcm_of n) (U.raise_val u#0 u#1 i) (U.raise_val u#0 u#1 n))
+  (requires FStar.PCM.compatible (pcm_of n) i n)
   (ensures i <= n)
-= assert (U.downgrade_val (U.raise_val n) == n);
-  assert (U.downgrade_val (U.raise_val i) == i)
+= ()
 
-let gref (n:nat) = ghost_pcm_ref (pcm_of n)
+let gref (n:nat) = GPR.gref (pcm_of n)
 
 let gref_pts_to #n (g:gref n) (i:nat)
 : boxable
-= ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val i)
+= GPR.pts_to #_ #(pcm_of n) g i
 
-let identity_frame_compatible
-      #a (p:FStar.PCM.pcm a)
-      (x:a)
-      (v:a{FStar.PCM.compatible p x v})
-: y:a { FStar.PCM.compatible p y v /\ FStar.PCM.frame_compatible p x v y }
-= x
-
-let ghost_read_simple
-    (#a:Type)
-    (#p:FStar.PCM.pcm a)
-    (r:ghost_pcm_ref p)
-    (#x:erased a)
-: stt_ghost (erased (v:a{FStar.PCM.compatible p x v /\ p.refine v}))
-    emp_inames
-    (ghost_pcm_pts_to r x)
-    (fun v -> ghost_pcm_pts_to r x)
-= ghost_read #a #p r x (identity_frame_compatible p x)
 
 ```pulse
 ghost
@@ -55,15 +30,8 @@ ensures
   gref_pts_to g i ** pure (i <= n)
 {
   unfold gref_pts_to;
-  rewrite (ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val (reveal i)))
-        as (ghost_pcm_pts_to #_ #(pcm_of n) g (reveal (hide (U.raise_val (reveal i)))));
-  let v = ghost_read_simple #_ #(pcm_of n) g;
-  rewrite (ghost_pcm_pts_to #_ #(pcm_of n) g (reveal (hide (U.raise_val (reveal i)))))
-      as (ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val (reveal i)));
-  assert (pure (FStar.PCM.compatible (pcm_of n) (U.raise_val (reveal i)) v));
+  let v = GPR.read_simple g; 
   fold gref_pts_to;
-  elim_compatible n i;
-  ()
 }
 ```
 
@@ -79,18 +47,11 @@ ensures
   pure (i <= n /\ j <= n /\ i + j <= n)
 {
   extract_gref_bound g #i;
-  extract_gref_bound g #j;  
+  extract_gref_bound g #j;
   unfold gref_pts_to;
   unfold gref_pts_to;
-  rewrite (ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val (reveal i)))
-        as (ghost_pcm_pts_to #_ #(pcm_of n) g (reveal (hide (U.raise_val (reveal i)))));
-  rewrite (ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val (reveal j)))
-        as (ghost_pcm_pts_to #_ #(pcm_of n) g (reveal (hide (U.raise_val (reveal j)))));
-  ghost_gather #(U.raise_t nat) #(pcm_of n) g (hide (U.raise_val (reveal i))) (hide (U.raise_val (reveal j)));
-  with v.
-    rewrite (ghost_pcm_pts_to #_ #(pcm_of n) g v)
-        as  (ghost_pcm_pts_to #_ #(pcm_of n) g (U.raise_val (reveal i + reveal j)));
-  fold (gref_pts_to g (reveal i + reveal j));
+  GPR.gather g _ _;
+  fold gref_pts_to;
   extract_gref_bound g;
 }
 ```
@@ -107,19 +68,18 @@ ensures
 {
   open FStar.PCM;
   unfold gref_pts_to;
-  rewrite (ghost_pcm_pts_to g (U.raise_val #nat v))
-       as (ghost_pcm_pts_to g (op (pcm_of n) (U.raise_val (v - 1)) (U.raise_val u#0 u#1 #nat 1)));
-  ghost_share g (U.raise_val (v - 1)) (U.raise_val u#0 u#1 #nat 1);
-  with v.
-    rewrite 
-         ghost_pcm_pts_to g (reveal #(U.raise_t u#0 u#1 nat) (hide #(U.raise_t u#0 u#1 nat) v)) 
-    as   ghost_pcm_pts_to g v ;
-  fold gref_pts_to;
-  rewrite ghost_pcm_pts_to g (reveal #(U.raise_t u#0 u#1 nat) (hide  #(U.raise_t u#0 u#1 nat) (U.raise_val 1))) 
-      as  ghost_pcm_pts_to g (U.raise_val u#0 u#1 #nat 1);
-  fold (gref_pts_to g 1);
+  rewrite (GPR.pts_to g v)
+       as (GPR.pts_to g (op (pcm_of n) (v - 1) 1));
+  GPR.share g (v - 1) 1; //leaving the arguments (v - 1) and 1 as _ _ causes a crash
+  rewrite (GPR.pts_to g (reveal #nat (hide #nat (v - 1))))
+      as (GPR.pts_to g (v - 1));
+  fold (gref_pts_to g (v - 1));
+  rewrite (GPR.pts_to g (reveal #nat (hide #nat 1)))
+      as (GPR.pts_to g 1);
+  fold gref_pts_to
 }
 ```
+
 
 [@@erasable]
 noeq
@@ -205,14 +165,14 @@ ensures contributions 2 initial gs r **
         can_give #2 gs **
         can_give #2 gs
 {
-  let given = ghost_alloc #_ #(pcm_of 2) (hide (U.raise_val 2));
-  with _v .rewrite (ghost_pcm_pts_to given _v) as (ghost_pcm_pts_to given (U.raise_val 2));
+  let given = GPR.alloc #_ #(pcm_of 2) 2;
+  with _v .rewrite (GPR.pts_to given _v) as (GPR.pts_to given 2);
   fold (gref_pts_to #2 given 2);
   share_gref_pts_to given;
   share_gref_pts_to given;
 
-  let to_give = ghost_alloc #_ #(pcm_of 2) (hide (U.raise_val 2));
-  with _v .rewrite (ghost_pcm_pts_to to_give _v) as (ghost_pcm_pts_to to_give (U.raise_val 2));
+  let to_give = GPR.alloc #_ #(pcm_of 2) 2;
+  with _v .rewrite (GPR.pts_to to_give _v) as (GPR.pts_to to_give 2);
   fold (gref_pts_to #2 to_give 2);
   
   let gs : ghost_state 2 = { given; to_give };
