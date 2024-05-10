@@ -38,7 +38,7 @@ let cinv_vp c v = cinv_vp_aux c.r v
 
 let is_big_cinv_vp _ _ = ()
 
-let active p c = GR.pts_to c.r #(p /. 2.0R) true
+let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
 let iref_of c = c.i
 
@@ -47,7 +47,7 @@ ghost
 fn new_cancellable_invariant (v:vprop { is_big v })
   requires v
   returns c:cinv
-  ensures inv (iref_of c) (cinv_vp c v) ** active 1.0R c
+  ensures inv (iref_of c) (cinv_vp c v) ** active c 1.0R
   opens emp_inames
 {
   let r = GR.alloc true;
@@ -57,7 +57,7 @@ fn new_cancellable_invariant (v:vprop { is_big v })
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
   rewrite (inv i (cinv_vp_aux r v)) as (inv (iref_of c) (cinv_vp c v));
-  with _p _v. rewrite (GR.pts_to r #_p _v) as (active 1.0R c);
+  with _p _v. rewrite (GR.pts_to r #_p _v) as (active c 1.0R);
   c
 }
 ```
@@ -68,8 +68,8 @@ let unpacked c = GR.pts_to c.r #0.5R true
 ```pulse
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
-  requires cinv_vp c v ** active p c
-  ensures v ** unpacked c ** active p c
+  requires cinv_vp c v ** active c p
+  ensures v ** unpacked c ** active c p
   opens emp_inames
 {
   unfold cinv_vp;
@@ -77,7 +77,7 @@ fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   unfold active;
   GR.pts_to_injective_eq c.r;
   rewrite (if true then v else emp) as v;
-  fold (active p c);
+  fold (active c p);
   fold (unpacked c)
 }
 ```
@@ -99,8 +99,8 @@ fn pack_cinv_vp (#v:vprop) (c:cinv)
 ```pulse
 ghost
 fn share (#p:perm) (c:cinv)
-  requires active p c
-  ensures active (p /. 2.0R) c ** active (p /. 2.0R) c
+  requires active c p
+  ensures active c (p /. 2.0R) ** active c (p /. 2.0R)
   opens emp_inames
 {
   unfold active;
@@ -115,13 +115,13 @@ let share2 c = share #1.0R c
 ```pulse
 ghost
 fn gather (#p1 #p2:perm) (c:cinv)
-  requires active p1 c ** active p2 c
-  ensures active (p1 +. p2) c
+  requires active c p1 ** active c p2
+  ensures active c (p1 +. p2)
 {
   unfold active;
   unfold active;
   GR.gather c.r #_ #_ #(p1 /. 2.0R) #(p2 /. 2.0R);
-  fold active (p1 +. p2) c;
+  fold active c (p1 +. p2);
 }
 ```
 
@@ -131,7 +131,7 @@ let gather2 c = gather #0.5R #0.5R c
 ghost
 fn cancel_ (#v:vprop) (c:cinv)
 requires cinv_vp c v **
-         active 1.0R c
+         active c 1.0R
 ensures cinv_vp c v ** v
 opens emp_inames
 {
@@ -153,7 +153,7 @@ opens emp_inames
 ```pulse
 ghost
 fn cancel (#v:vprop) (c:cinv)
-  requires inv (iref_of c) (cinv_vp c v) ** active 1.0R c
+  requires inv (iref_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
   opens (add_inv emp_inames (iref_of c))
 {

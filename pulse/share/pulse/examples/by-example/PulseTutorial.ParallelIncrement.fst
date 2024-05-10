@@ -316,16 +316,16 @@ fn incr_atomic
                   emp_inames
                   (refine v ** aspec vq ** pts_to x (v + 1))
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active p c
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active p c
+requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
+ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active p c
+  requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   returns v:int
-  ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active p c
+  ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   opens (add_inv emp_inames (C.iref_of c))
   {
     with_invariants (C.iref_of c)
@@ -349,7 +349,7 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
   invariant b.
     inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
-    C.active p c **
+    C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
     let v = read ();
@@ -359,7 +359,7 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
       ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
-          ** C.active p c
+          ** C.active c p
       {
         C.unpack_cinv_vp c;
         let b = cas x v (v + 1);

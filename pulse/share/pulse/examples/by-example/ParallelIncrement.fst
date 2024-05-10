@@ -373,8 +373,8 @@ fn atomic_increment_f6
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active p c
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active p c
+requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
+ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
   with_invariants (C.iref_of c) {
     C.unpack_cinv_vp c;
@@ -451,16 +451,16 @@ ensures pts_to x ('i + 2)
 
     parallel
     requires GR.pts_to left #0.5R 0 **
-             C.active 0.5R c **
+             C.active c 0.5R **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 0 **
-             C.active 0.5R c **
+             C.active c 0.5R **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     ensures  GR.pts_to left #0.5R 1 **
-             C.active 0.5R c **
+             C.active c 0.5R **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 1 **
-             C.active 0.5R c **
+             C.active c 0.5R **
              inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
