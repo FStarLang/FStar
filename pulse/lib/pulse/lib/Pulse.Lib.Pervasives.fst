@@ -145,6 +145,54 @@ ensures cond false p q
 }
 ```
 
+```pulse
+fn par (#pf #pg #qf #qg:_)
+       (f: unit -> stt unit pf (fun _ -> qf))
+       (g: unit -> stt unit pg (fun _ -> qg))
+requires pf ** pg
+ensures qf ** qg
+{
+  parallel 
+  requires pf and pg
+  ensures qf and qg
+  { f () }
+  { g () };
+  ()
+}
+```
+
+```pulse
+fn par_atomic (#is #js #pf #pg #qf #qg:_)
+       (f: unit -> stt_atomic unit is pf (fun _ -> qf))
+       (g: unit -> stt_atomic unit js pg (fun _ -> qg))
+requires pf ** pg
+ensures qf ** qg
+{
+  parallel 
+  requires pf and pg
+  ensures qf and qg
+  { f () }
+  { g () };
+  ()
+}
+```
+
+```pulse
+fn par_atomic_l (#is #pf #pg #qf #qg:_)
+       (f: unit -> stt_atomic unit is pf (fun _ -> qf))
+       (g: unit -> stt unit pg (fun _ -> qg))
+requires pf ** pg
+ensures qf ** qg
+{
+  parallel 
+  requires pf and pg
+  ensures qf and qg
+  { f () }
+  { g () };
+  ()
+}
+```
+
 type rust_extraction_attr =
   | Rust_const_fn
   | Rust_generics_bounds : list string -> rust_extraction_attr

@@ -45,7 +45,7 @@ type lock = {
 }
 
 let lock_alive l #p v =
-  inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active p l.i
+  inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
 
 let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
@@ -81,7 +81,7 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
     with_invariants (CInv.iref_of l.i)
       returns b:bool
       ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
-              active p l.i **
+              active l.i p **
               (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
       unfold lock_inv;
@@ -96,7 +96,7 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
         fold (lock_inv l.r l.gr v);
         pack_cinv_vp l.i;
         assert (cinv_vp l.i (lock_inv l.r l.gr v) **
-                active p l.i **
+                active l.i p **
                 GR.pts_to l.gr #0.5R 1ul **
                 v);
         let b = true;
@@ -109,7 +109,7 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
         fold (lock_inv l.r l.gr v);
         pack_cinv_vp l.i;
         assert (cinv_vp l.i (lock_inv l.r l.gr v) **
-                active p l.i);
+                active l.i p);
         let b = false;
         rewrite emp as
                 (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp);
@@ -142,7 +142,7 @@ fn release (#v:vprop) (#p:perm) (l:lock)
   with_invariants (CInv.iref_of l.i)
     returns _:unit
     ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
-            active p l.i {
+            active l.i p {
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
     unfold (lock_inv_aux l.r l.gr v);
@@ -234,7 +234,7 @@ fn lock_alive_inj
 
 let iref_of l = CInv.iref_of l.i
 let iref_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
-let lock_active #p l = active p l.i
+let lock_active #p l = active l.i p
 
 ```pulse
 ghost

@@ -29,25 +29,25 @@ val cinv_vp (c:cinv) (v:vprop) : vprop
 val is_big_cinv_vp (c:cinv) (v:vprop)
   : Lemma (is_big v ==> is_big (cinv_vp c v))
 
-val active (p:perm) (c:cinv) : vprop
+val active (c:cinv) (p:perm) : vprop
 
-val active_is_small (p:perm) (c:cinv)
-  : Lemma (is_small (active p c))
-          [SMTPat (is_small (active p c))]
+val active_is_small (c:cinv) (p:perm)
+  : Lemma (is_small (active c p))
+          [SMTPat (is_small (active c p))]
 
 val iref_of (c:cinv) : GTot iref
 
 val new_cancellable_invariant (v:vprop { is_big v })
   : stt_ghost cinv emp_inames
       v
-      (fun c -> inv (iref_of c) (cinv_vp c v) ** active 1.0R c)
+      (fun c -> inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
 
 val unpacked (c:cinv) : vprop
 
 val unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
-      (cinv_vp c v ** active p c)
-      (fun _ -> v ** unpacked c ** active p c)
+      (cinv_vp c v ** active c p)
+      (fun _ -> v ** unpacked c ** active c p)
 
 val pack_cinv_vp (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
@@ -56,25 +56,25 @@ val pack_cinv_vp (#v:vprop) (c:cinv)
 
 val share (#p:perm) (c:cinv)
   : stt_ghost unit emp_inames
-      (active p c)
-      (fun _ -> active (p /. 2.0R) c ** active (p /. 2.0R) c)
+      (active c p)
+      (fun _ -> active c (p /. 2.0R) ** active c (p /. 2.0R))
 
 val share2 (c:cinv)
   : stt_ghost unit emp_inames
-      (active 1.0R c)
-      (fun _ -> active 0.5R c ** active 0.5R c)
+      (active c 1.0R)
+      (fun _ -> active c 0.5R ** active c 0.5R)
 
 val gather (#p1 #p2 :perm) (c:cinv)
   : stt_ghost unit emp_inames
-      (active p1 c ** active p2 c)
-      (fun _ -> active (p1 +. p2) c)
+      (active c p1 ** active c p2)
+      (fun _ -> active c (p1 +. p2))
 
 val gather2 (c:cinv)
   : stt_ghost unit emp_inames
-      (active 0.5R c ** active 0.5R c)
-      (fun _ -> active 1.0R c)
+      (active c 0.5R ** active c 0.5R)
+      (fun _ -> active c 1.0R)
 
 val cancel (#v:vprop) (c:cinv)
   : stt_ghost unit (add_inv emp_inames (iref_of c))
-      (inv (iref_of c) (cinv_vp c v) ** active 1.0R c)
+      (inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
       (fun _ -> v)
