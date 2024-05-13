@@ -935,10 +935,10 @@ let (enter_namespace :
   =
   fun original_map ->
     fun working_map ->
-      fun prefix ->
+      fun sprefix ->
         fun implicit_open ->
           let found = FStar_Compiler_Util.mk_ref false in
-          let prefix1 = Prims.strcat prefix "." in
+          let sprefix1 = Prims.strcat sprefix "." in
           let suffix_exists mopt =
             match mopt with
             | FStar_Pervasives_Native.None -> false
@@ -948,13 +948,13 @@ let (enter_namespace :
           FStar_Compiler_Util.smap_iter original_map
             (fun k ->
                fun uu___1 ->
-                 if FStar_Compiler_Util.starts_with k prefix1
+                 if FStar_Compiler_Util.starts_with k sprefix1
                  then
                    let suffix =
                      FStar_Compiler_String.substring k
-                       (FStar_Compiler_String.length prefix1)
+                       (FStar_Compiler_String.length sprefix1)
                        ((FStar_Compiler_String.length k) -
-                          (FStar_Compiler_String.length prefix1)) in
+                          (FStar_Compiler_String.length sprefix1)) in
                    ((let suffix_filename =
                        FStar_Compiler_Util.smap_try_find original_map suffix in
                      if implicit_open && (suffix_exists suffix_filename)
@@ -966,12 +966,58 @@ let (enter_namespace :
                        let uu___3 =
                          let uu___4 =
                            let uu___5 =
-                             let uu___6 =
-                               FStar_Compiler_Util.format4
-                                 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
-                                 prefix1 suffix str str in
-                             FStar_Errors_Msg.text uu___6 in
-                           [uu___5] in
+                             let uu___6 = FStar_Pprint.break_ Prims.int_one in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Errors_Msg.text
+                                   "Implicitly opening namespace" in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Pprint.doc_of_string sprefix1 in
+                                   FStar_Pprint.squotes uu___11 in
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStar_Errors_Msg.text "shadows module" in
+                                   let uu___13 =
+                                     let uu___14 =
+                                       let uu___15 =
+                                         FStar_Pprint.doc_of_string suffix in
+                                       FStar_Pprint.squotes uu___15 in
+                                     let uu___15 =
+                                       let uu___16 =
+                                         FStar_Errors_Msg.text "in file" in
+                                       let uu___17 =
+                                         let uu___18 =
+                                           let uu___19 =
+                                             let uu___20 =
+                                               FStar_Pprint.doc_of_string str in
+                                             FStar_Pprint.dquotes uu___20 in
+                                           FStar_Pprint.op_Hat_Hat uu___19
+                                             FStar_Pprint.dot in
+                                         [uu___18] in
+                                       uu___16 :: uu___17 in
+                                     uu___14 :: uu___15 in
+                                   uu___12 :: uu___13 in
+                                 uu___10 :: uu___11 in
+                               uu___8 :: uu___9 in
+                             FStar_Pprint.flow uu___6 uu___7 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 = FStar_Errors_Msg.text "Rename" in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Pprint.doc_of_string str in
+                                   FStar_Pprint.dquotes uu___11 in
+                                 let uu___11 =
+                                   FStar_Errors_Msg.text
+                                     "to avoid conflicts." in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                   uu___11 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                             [uu___7] in
+                           uu___5 :: uu___6 in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
                        FStar_Errors.log_issue_doc
                          FStar_Compiler_Range_Type.dummyRange uu___3

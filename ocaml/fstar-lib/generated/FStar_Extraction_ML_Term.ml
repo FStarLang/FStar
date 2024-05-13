@@ -112,12 +112,12 @@ let err_value_restriction :
           uu___2 uu___3 in
       (FStar_Errors_Codes.Fatal_ValueRestriction, uu___1) in
     fail t.FStar_Syntax_Syntax.pos uu___
-let err_unexpected_eff :
-  'uuuuu .
-    FStar_Extraction_ML_UEnv.uenv ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Extraction_ML_Syntax.mlty ->
-          FStar_Extraction_ML_Syntax.e_tag -> 'uuuuu -> unit
+let (err_unexpected_eff :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Extraction_ML_Syntax.mlty ->
+        FStar_Extraction_ML_Syntax.e_tag ->
+          FStar_Extraction_ML_Syntax.e_tag -> unit)
   =
   fun env ->
     fun t ->
@@ -157,7 +157,7 @@ let err_unexpected_eff :
                       let uu___7 = FStar_Errors_Msg.text "got effect" in
                       let uu___8 =
                         let uu___9 =
-                          FStar_Extraction_ML_Util.eff_to_string f0 in
+                          FStar_Extraction_ML_Util.eff_to_string f1 in
                         FStar_Pprint.arbitrary_string uu___9 in
                       FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                         uu___7 uu___8 in
