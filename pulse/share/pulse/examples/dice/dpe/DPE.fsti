@@ -263,6 +263,7 @@ noextract
 let pcm : PCM.pcm pcm_t = PM.pointwise sid_t trace_pcm
 
 [@@ erasable]
+noextract
 type gref = ghost_pcm_ref pcm
 
 noextract

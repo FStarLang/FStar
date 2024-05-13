@@ -27,7 +27,6 @@ pub struct st {
     pub st_ctr: super::dpe::sid_t,
     pub st_tbl: super::dpe::ht_t,
 }
-pub type gref = ();
 pub fn run_stt<A>(post: (), f: A) -> A {
     panic!()
 }
@@ -38,15 +37,13 @@ pub const fn initialize_global_state(
     uu___: (),
 ) -> ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) {
     let m = std::sync::Mutex::new(None);
-    let s = ((), m);
-    s
+    ((), m)
 }
-pub static global_state: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
+pub static gst: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
 pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
     panic!()
 }
 pub fn __open_session(
-    r: (),
     s: super::dpe::st,
 ) -> (super::dpe::st, std::option::Option<super::dpe::sid_t>) {
     let ctr = s.st_ctr;
@@ -89,7 +86,6 @@ pub fn __open_session(
     }
 }
 pub fn maybe_mk_session_tbl(
-    r: (),
     sopt: std::option::Option<super::dpe::st>,
 ) -> super::dpe::st {
     match sopt {
@@ -104,33 +100,24 @@ pub fn maybe_mk_session_tbl(
         Some(mut s) => s,
     }
 }
-pub fn open_session(
-    r: (),
-    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
-) -> (
-    std::sync::Mutex<std::option::Option<super::dpe::st>>,
-    std::option::Option<super::dpe::sid_t>,
-) {
-    let mut mg = m.lock().unwrap();
+pub fn open_session(uu___: ()) -> std::option::Option<super::dpe::sid_t> {
+    let mut mg = super::dpe::gst.1.lock().unwrap();
     let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
-    let s = super::dpe::maybe_mk_session_tbl((), sopt);
-    let ret = super::dpe::__open_session((), s);
+    let s = super::dpe::maybe_mk_session_tbl(sopt);
+    let ret = super::dpe::__open_session(s);
     let s1 = ret.0;
     let sid_opt = ret.1;
     *mg = Some(s1);
     std::mem::drop(mg);
-    let ret1 = (m, sid_opt);
-    ret1
+    sid_opt
 }
 pub fn replace_session(
-    r: (),
-    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
     sid: super::dpe::sid_t,
     t: (),
     sst: super::dpe::session_state,
     gsst: (),
-) -> (std::sync::Mutex<std::option::Option<super::dpe::st>>, super::dpe::session_state) {
-    let mut mg = m.lock().unwrap();
+) -> super::dpe::session_state {
+    let mut mg = super::dpe::gst.1.lock().unwrap();
     let sopt = std::mem::replace::<std::option::Option<super::dpe::st>>(&mut mg, None);
     match sopt {
         None => panic!(),
@@ -161,8 +148,7 @@ pub fn replace_session(
                             };
                             *mg = Some(s1);
                             std::mem::drop(mg);
-                            let ret2 = (m, st1);
-                            ret2
+                            st1
                         }
                         None => panic!(),
                     }
@@ -197,24 +183,13 @@ pub fn prng(uu___: ()) -> super::dpe::ctxt_hndl_t {
     panic!()
 }
 pub fn initialize_context(
-    r: (),
-    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
     sid: super::dpe::sid_t,
     t: (),
     p: (),
     uds_bytes: (),
     uds: &mut [u8],
-) -> (std::sync::Mutex<std::option::Option<super::dpe::st>>, super::dpe::ctxt_hndl_t) {
-    let ret = super::dpe::replace_session(
-        (),
-        m,
-        sid,
-        (),
-        super::dpe::session_state::InUse,
-        (),
-    );
-    let m1 = ret.0;
-    let s = ret.1;
+) -> super::dpe::ctxt_hndl_t {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::SessionStart => {
             let context = super::dpe::init_engine_ctxt(uds, (), ());
@@ -223,10 +198,8 @@ pub fn initialize_context(
                 handle: handle,
                 context: context,
             });
-            let ret1 = super::dpe::replace_session((), m1, sid, (), s1, ());
-            let m2 = ret1.0;
-            let ret2 = (m2, handle);
-            ret2
+            let s2 = super::dpe::replace_session(sid, (), s1, ());
+            handle
         }
         super::dpe::session_state::InUse => panic!(),
         super::dpe::session_state::SessionClosed => panic!(),
@@ -488,35 +461,20 @@ pub fn destroy_ctxt(ctxt: super::dpetypes::context_t, repr: ()) -> () {
     }
 }
 pub fn derive_child(
-    r: (),
-    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
     sid: super::dpe::sid_t,
     ctxt_hndl: super::dpe::ctxt_hndl_t,
     t: (),
     record: super::dpetypes::record_t,
     rrepr: (),
     p: (),
-) -> (
-    std::sync::Mutex<std::option::Option<super::dpe::st>>,
-    super::dpetypes::record_t,
-    std::option::Option<super::dpe::ctxt_hndl_t>,
-) {
-    let ret = super::dpe::replace_session(
-        (),
-        m,
-        sid,
-        (),
-        super::dpe::session_state::InUse,
-        (),
-    );
-    let m1 = ret.0;
-    let s = ret.1;
+) -> (super::dpetypes::record_t, std::option::Option<super::dpe::ctxt_hndl_t>) {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::Available(mut hc) => {
             match hc.context {
                 super::dpetypes::context_t::L1_context(_) => panic!(),
                 _ => {
-                    let ret1 = super::dpe::derive_child_from_context(
+                    let ret = super::dpe::derive_child_from_context(
                         hc.context,
                         record,
                         (),
@@ -524,9 +482,9 @@ pub fn derive_child(
                         (),
                         (),
                     );
-                    let octxt = ret1.0;
-                    let record1 = ret1.1;
-                    let nctxt = ret1.2;
+                    let octxt = ret.0;
+                    let record1 = ret.1;
+                    let nctxt = ret.2;
                     super::dpe::destroy_ctxt(octxt, ());
                     match nctxt {
                         Some(mut nctxt1) => {
@@ -535,31 +493,15 @@ pub fn derive_child(
                                 handle: handle,
                                 context: nctxt1,
                             });
-                            let ret2 = super::dpe::replace_session(
-                                (),
-                                m1,
-                                sid,
-                                (),
-                                s1,
-                                (),
-                            );
-                            let m2 = ret2.0;
-                            let ret3 = (m2, record1, Some(handle));
-                            ret3
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            let ret1 = (record1, Some(handle));
+                            ret1
                         }
                         None => {
                             let s1 = super::dpe::session_state::SessionError;
-                            let ret2 = super::dpe::replace_session(
-                                (),
-                                m1,
-                                sid,
-                                (),
-                                s1,
-                                (),
-                            );
-                            let m2 = ret2.0;
-                            let ret3 = (m2, record1, None);
-                            ret3
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            let ret1 = (record1, None);
+                            ret1
                         }
                     }
                 }
@@ -579,33 +521,15 @@ pub fn destroy_session_state(s: super::dpe::session_state, t: ()) -> () {
         _ => {}
     }
 }
-pub fn close_session(
-    r: (),
-    m: std::sync::Mutex<std::option::Option<super::dpe::st>>,
-    sid: super::dpe::sid_t,
-    t: (),
-) -> std::sync::Mutex<std::option::Option<super::dpe::st>> {
-    let ret = super::dpe::replace_session(
-        (),
-        m,
-        sid,
-        (),
-        super::dpe::session_state::InUse,
-        (),
-    );
-    let m1 = ret.0;
-    let s = ret.1;
+pub fn close_session(sid: super::dpe::sid_t, t: ()) -> () {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     super::dpe::destroy_session_state(s, ());
-    let ret1 = super::dpe::replace_session(
-        (),
-        m1,
+    let s1 = super::dpe::replace_session(
         sid,
         (),
         super::dpe::session_state::SessionClosed,
         (),
     );
-    let m2 = ret1.0;
-    m2
 }
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
     super::dpetypes::mk_profile_descriptor(

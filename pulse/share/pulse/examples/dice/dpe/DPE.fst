@@ -368,28 +368,24 @@ fn maybe_mk_session_tbl (sopt:option st)
 ```
 
 ```pulse
-fn lock ()
-  requires emp
-  returns mg:M.mutex_guard (option st)
-  ensures M.belongs_to mg (dsnd gst) **
-          (exists* s. M.pts_to mg s ** dpe_inv trace_ref s)
+ghost
+fn to_dpe_inv_trace_ref (#s:option st) ()
+  requires dpe_inv (Mkdtuple2?._1 gst) s
+  ensures dpe_inv trace_ref s
 {
-  let mg = M.lock (dsnd gst);
-  with s r. assert (dpe_inv r s);
-  rewrite (dpe_inv r s) as (dpe_inv trace_ref s);
-  mg
+  rewrite (dpe_inv (Mkdtuple2?._1 gst) s) as
+          (dpe_inv trace_ref s)
 }
 ```
 
 ```pulse
-fn unlock (mg:mutex_guard (option st))
-  requires M.belongs_to mg (dsnd gst) **
-           (exists* s. M.pts_to mg s ** dpe_inv trace_ref s)
-  ensures emp
+ghost
+fn from_dpe_inv_trace_ref (#s:option st) ()
+  requires dpe_inv trace_ref s
+  ensures dpe_inv (Mkdtuple2?._1 gst) s
 {
-  with s. assert (dpe_inv trace_ref s);
-  rewrite (dpe_inv trace_ref s) as (dpe_inv (Mkdtuple2?._1 gst) s);
-  M.unlock (dsnd gst) mg
+  rewrite (dpe_inv trace_ref s) as
+          (dpe_inv (Mkdtuple2?._1 gst) s)
 }
 ```
 
@@ -399,7 +395,9 @@ fn open_session ()
   returns r:(option sid_t)
   ensures open_session_client_perm r
 {
-  let mg = lock ();
+  let mg = M.lock (dsnd gst);
+  to_dpe_inv_trace_ref ();
+
   let sopt = M.replace #(option st) mg None;
 
   let s = maybe_mk_session_tbl sopt;
@@ -410,7 +408,10 @@ fn open_session ()
     fst ret as s,
     snd ret as sid_opt;
   mg := Some s;
-  unlock mg;
+
+  from_dpe_inv_trace_ref ();
+  M.unlock (dsnd gst) mg;
+  
   sid_opt
 }
 ```
@@ -493,7 +494,9 @@ fn replace_session
   ensures session_state_related r (current_state t) **
           sid_pts_to trace_ref sid (next_trace t gsst)
 {
-  let mg = lock ();
+  let mg = M.lock (dsnd gst);
+  to_dpe_inv_trace_ref ();
+
   let sopt = M.replace mg None;
   match sopt {
     None -> {
@@ -556,7 +559,10 @@ fn replace_session
                 tbl as s.st_tbl;
               fold (dpe_inv trace_ref (Some s));
               mg := Some s;
-              unlock mg;
+
+              from_dpe_inv_trace_ref ();
+              M.unlock (dsnd gst) mg;
+              
               st
             }
             None -> {
