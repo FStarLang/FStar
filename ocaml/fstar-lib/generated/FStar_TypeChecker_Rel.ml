@@ -110,6 +110,18 @@ let (is_base_type :
            | FStar_Syntax_Syntax.Tm_fvar uu___2 -> true
            | FStar_Syntax_Syntax.Tm_type uu___2 -> true
            | uu___2 -> false)
+let (term_is_uvar :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.term -> Prims.bool) =
+  fun uv ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Syntax_Util.unascribe t in
+        uu___1.FStar_Syntax_Syntax.n in
+      match uu___ with
+      | FStar_Syntax_Syntax.Tm_uvar (uv', uu___1) ->
+          FStar_Syntax_Unionfind.equiv uv.FStar_Syntax_Syntax.ctx_uvar_head
+            uv'.FStar_Syntax_Syntax.ctx_uvar_head
+      | uu___1 -> false
 let (binders_as_bv_set :
   FStar_Syntax_Syntax.binders ->
     FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
@@ -158,7 +170,7 @@ let (uu___is_DeferAny : defer_ok_t -> Prims.bool) =
 let (uu___is_DeferFlexFlexOnly : defer_ok_t -> Prims.bool) =
   fun projectee ->
     match projectee with | DeferFlexFlexOnly -> true | uu___ -> false
-let (uu___78 : defer_ok_t FStar_Class_Show.showable) =
+let (uu___85 : defer_ok_t FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun uu___ ->
@@ -6841,7 +6853,11 @@ and (solve_t_flex_rigid_eq :
         fun rhs ->
           (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Rel in
            if uu___1
-           then FStar_Compiler_Util.print_string "solve_t_flex_rigid_eq\n"
+           then
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term rhs in
+             FStar_Compiler_Util.print1 "solve_t_flex_rigid_eq rhs=%s\n"
+               uu___2
            else ());
           (let uu___1 = should_defer_flex_to_user_tac wl lhs in
            if uu___1
@@ -7700,68 +7716,102 @@ and (solve_t_flex_rigid_eq :
                               let uu___6 = occurs_check ctx_uv rhs1 in
                               match uu___6 with
                               | (uvars, occurs_ok, msg) ->
-                                  if Prims.op_Negation occurs_ok
-                                  then
-                                    let uu___7 =
-                                      let uu___8 =
-                                        let uu___9 =
-                                          FStar_Compiler_Option.get msg in
-                                        Prims.strcat "occurs-check failed: "
-                                          uu___9 in
-                                      FStar_Thunk.mkv uu___8 in
-                                    giveup_or_defer orig wl
-                                      FStar_TypeChecker_Common.Deferred_occur_check_failed
-                                      uu___7
-                                  else
-                                    (let uu___8 =
-                                       FStar_Class_Setlike.subset ()
-                                         (Obj.magic
-                                            (FStar_Compiler_FlatSet.setlike_flat_set
-                                               FStar_Syntax_Syntax.ord_bv))
-                                         (Obj.magic fvs2) (Obj.magic fvs1) in
-                                     if uu___8
-                                     then
-                                       let sol =
-                                         mk_solution env lhs lhs_binders rhs1 in
-                                       let wl1 =
-                                         restrict_all_uvars env ctx_uv
-                                           lhs_binders uvars wl in
-                                       let uu___9 =
-                                         solve_prob orig
-                                           FStar_Pervasives_Native.None sol
-                                           wl1 in
-                                       solve uu___9
-                                     else
-                                       if wl.defer_ok = DeferAny
+                                  let uu___7 =
+                                    if occurs_ok
+                                    then ((uvars, occurs_ok, msg), rhs1)
+                                    else
+                                      (let rhs2 =
+                                         FStar_TypeChecker_Normalize.normalize
+                                           [FStar_TypeChecker_Env.Primops;
+                                           FStar_TypeChecker_Env.Weak;
+                                           FStar_TypeChecker_Env.HNF;
+                                           FStar_TypeChecker_Env.Beta;
+                                           FStar_TypeChecker_Env.Eager_unfolding;
+                                           FStar_TypeChecker_Env.Unascribe]
+                                           (p_env wl orig) rhs1 in
+                                       let uu___9 = occurs_check ctx_uv rhs2 in
+                                       (uu___9, rhs2)) in
+                                  (match uu___7 with
+                                   | ((uvars1, occurs_ok1, msg1), rhs2) ->
+                                       let uu___8 =
+                                         (term_is_uvar ctx_uv rhs2) &&
+                                           (Prims.uu___is_Nil args_lhs) in
+                                       if uu___8
                                        then
-                                         (let msg1 =
-                                            mklstr
-                                              (fun uu___10 ->
-                                                 let uu___11 =
-                                                   FStar_Class_Show.show
-                                                     (FStar_Compiler_FlatSet.showable_set
-                                                        FStar_Syntax_Syntax.ord_bv
-                                                        FStar_Syntax_Print.showable_bv)
-                                                     fvs2 in
-                                                 let uu___12 =
-                                                   FStar_Class_Show.show
-                                                     (FStar_Compiler_FlatSet.showable_set
-                                                        FStar_Syntax_Syntax.ord_bv
-                                                        FStar_Syntax_Print.showable_bv)
-                                                     fvs1 in
-                                                 let uu___13 =
-                                                   FStar_Syntax_Print.binders_to_string
-                                                     ", "
-                                                     (FStar_Compiler_List.op_At
-                                                        ctx_uv.FStar_Syntax_Syntax.ctx_uvar_binders
-                                                        lhs_binders) in
-                                                 FStar_Compiler_Util.format3
-                                                   "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
-                                                   uu___11 uu___12 uu___13) in
-                                          giveup_or_defer orig wl
-                                            FStar_TypeChecker_Common.Deferred_free_names_check_failed
-                                            msg1)
-                                       else imitate orig env wl lhs rhs1)))
+                                         let uu___9 =
+                                           solve_prob orig
+                                             FStar_Pervasives_Native.None []
+                                             wl in
+                                         solve uu___9
+                                       else
+                                         if Prims.op_Negation occurs_ok1
+                                         then
+                                           (let uu___10 =
+                                              let uu___11 =
+                                                let uu___12 =
+                                                  FStar_Compiler_Option.get
+                                                    msg1 in
+                                                Prims.strcat
+                                                  "occurs-check failed: "
+                                                  uu___12 in
+                                              FStar_Thunk.mkv uu___11 in
+                                            giveup_or_defer orig wl
+                                              FStar_TypeChecker_Common.Deferred_occur_check_failed
+                                              uu___10)
+                                         else
+                                           (let uu___11 =
+                                              FStar_Class_Setlike.subset ()
+                                                (Obj.magic
+                                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                                      FStar_Syntax_Syntax.ord_bv))
+                                                (Obj.magic fvs2)
+                                                (Obj.magic fvs1) in
+                                            if uu___11
+                                            then
+                                              let sol =
+                                                mk_solution env lhs
+                                                  lhs_binders rhs2 in
+                                              let wl1 =
+                                                restrict_all_uvars env ctx_uv
+                                                  lhs_binders uvars1 wl in
+                                              let uu___12 =
+                                                solve_prob orig
+                                                  FStar_Pervasives_Native.None
+                                                  sol wl1 in
+                                              solve uu___12
+                                            else
+                                              if wl.defer_ok = DeferAny
+                                              then
+                                                (let msg2 =
+                                                   mklstr
+                                                     (fun uu___13 ->
+                                                        let uu___14 =
+                                                          FStar_Class_Show.show
+                                                            (FStar_Compiler_FlatSet.showable_set
+                                                               FStar_Syntax_Syntax.ord_bv
+                                                               FStar_Syntax_Print.showable_bv)
+                                                            fvs2 in
+                                                        let uu___15 =
+                                                          FStar_Class_Show.show
+                                                            (FStar_Compiler_FlatSet.showable_set
+                                                               FStar_Syntax_Syntax.ord_bv
+                                                               FStar_Syntax_Print.showable_bv)
+                                                            fvs1 in
+                                                        let uu___16 =
+                                                          FStar_Syntax_Print.binders_to_string
+                                                            ", "
+                                                            (FStar_Compiler_List.op_At
+                                                               ctx_uv.FStar_Syntax_Syntax.ctx_uvar_binders
+                                                               lhs_binders) in
+                                                        FStar_Compiler_Util.format3
+                                                          "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
+                                                          uu___14 uu___15
+                                                          uu___16) in
+                                                 giveup_or_defer orig wl
+                                                   FStar_TypeChecker_Common.Deferred_free_names_check_failed
+                                                   msg2)
+                                              else
+                                                imitate orig env wl lhs rhs2))))
                         | uu___5 ->
                             if wl.defer_ok = DeferAny
                             then
@@ -7951,7 +8001,7 @@ and (solve_t_flex_flex :
                                                     let uu___21 =
                                                       let uu___22 =
                                                         FStar_Class_Show.show
-                                                          uu___78 wl.defer_ok in
+                                                          uu___85 wl.defer_ok in
                                                       FStar_Compiler_Util.format1
                                                         "flex-flex: occurs\n defer_ok=%s\n"
                                                         uu___22 in
@@ -9409,10 +9459,16 @@ and (solve_t' : tprob -> worklist -> solution) =
                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t2 in
                   Prims.strcat "::" uu___13 in
                 Prims.strcat uu___11 uu___12 in
-              FStar_Compiler_Util.print4
-                "Attempting %s (%s vs %s); rel = (%s)\n" uu___8 uu___9
-                uu___10
+              let uu___11 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_nat)
+                  (FStar_Compiler_List.length wl.attempting) in
+              FStar_Compiler_Util.print5
+                "Attempting %s (%s vs %s); rel = (%s); number of problems in wl = %s\n"
+                uu___8 uu___9 uu___10
                 (rel_to_string problem.FStar_TypeChecker_Common.relation)
+                uu___11
             else ());
            (match ((t1.FStar_Syntax_Syntax.n), (t2.FStar_Syntax_Syntax.n))
             with
@@ -14470,7 +14526,7 @@ let (try_solve_deferred_constraints :
                       (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                        if uu___4
                        then
-                         let uu___5 = FStar_Class_Show.show uu___78 defer_ok in
+                         let uu___5 = FStar_Class_Show.show uu___85 defer_ok in
                          let uu___6 =
                            FStar_Class_Show.show
                              (FStar_Class_Show.printableshow

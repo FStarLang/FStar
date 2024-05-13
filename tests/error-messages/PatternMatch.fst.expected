@@ -29,8 +29,7 @@
 >>]
 >> Got issues: [
 * Error 114 at PatternMatch.fst(35,4-35,5):
-  - Type of pattern (PatternMatch.ab) does not match type of scrutinee
-    (Prims.int)
+  - Type of pattern PatternMatch.ab does not match type of scrutinee Prims.int
   - Head mismatch PatternMatch.ab vs Prims.int
 
 >>]

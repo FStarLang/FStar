@@ -86,6 +86,11 @@ let is_base_type env typ =
     | Tm_type _ -> true
     | _ -> false
 
+let term_is_uvar (uv:ctx_uvar) (t:term) : bool =
+  match (U.unascribe t).n with
+  | Tm_uvar (uv', _) -> UF.equiv uv.ctx_uvar_head uv'.ctx_uvar_head
+  | _ -> false
+
 let binders_as_bv_set (bs:binders) : FlatSet.t bv =
   from_list (List.map (fun b -> b.binder_bv) bs)
 
@@ -2824,8 +2829,10 @@ and solve_t (problem:tprob) (wl:worklist) : solution =
 
 and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     : solution =
-    if !dbg_Rel then
-      BU.print_string "solve_t_flex_rigid_eq\n";
+    if !dbg_Rel then (
+      BU.print1 "solve_t_flex_rigid_eq rhs=%s\n"
+        (show rhs)
+    );
 
     if should_defer_flex_to_user_tac wl lhs
     then defer_to_user_tac orig (flex_reason lhs) wl
@@ -3238,6 +3245,25 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         //               (show rhs)
         //               (show fvs2);
         let uvars, occurs_ok, msg = occurs_check ctx_uv rhs in
+
+        (* If the occurs check fails, attempt to do a bit more normalization
+           and try it again. *)
+        let (uvars, occurs_ok, msg), rhs =
+          if occurs_ok
+          then (uvars, occurs_ok, msg), rhs
+          else
+            let rhs = N.normalize
+                          [Env.Primops; Env.Weak; Env.HNF; Env.Beta; Env.Eager_unfolding; Env.Unascribe]
+                          (p_env wl orig) rhs in
+            occurs_check ctx_uv rhs, rhs
+        in
+
+        (* If, possibly after some extra normalization in the above block,
+        the RHS has become syntactically equal to the LHS, solve the problem
+        and carry on. See #3264. *)
+        if term_is_uvar ctx_uv rhs && Nil? args_lhs then
+          solve (solve_prob orig None [] wl)
+        else
         if not occurs_ok
         then giveup_or_defer orig wl
                Deferred_occur_check_failed
@@ -3894,10 +3920,11 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
     def_check_scoped (p_loc orig) "ref.t2" (List.map (fun b -> b.binder_bv) (p_scope orig)) t2;
     let _ =
         if !dbg_Rel
-        then BU.print4 "Attempting %s (%s vs %s); rel = (%s)\n" (string_of_int problem.pid)
+        then BU.print5 "Attempting %s (%s vs %s); rel = (%s); number of problems in wl = %s\n" (string_of_int problem.pid)
                             (Print.tag_of_term t1 ^ "::" ^ show t1)
                             (Print.tag_of_term t2 ^ "::" ^ show t2)
                             (rel_to_string problem.relation)
+                            (show (List.length wl.attempting))
                             in
     match t1.n, t2.n with
       | Tm_delayed _, _

@@ -1010,6 +1010,8 @@ instance showable_pragma = { show = pragma_to_string; }
 instance showable_subst_elt = { show = subst_elt_to_string; }
 instance showable_branch = { show = branch_to_string; }
 instance showable_qualifier = { show = qual_to_string; }
+instance showable_pat    = { show = pat_to_string; }
+instance showable_const  = { show = const_to_string; }
 
 instance pretty_term     = { pp   = term_to_doc; }
 instance pretty_univ     = { pp   = univ_to_doc; }
