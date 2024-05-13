@@ -60,7 +60,7 @@ let _ = define_struct0 _point "PulsePointStruct.point" point_fields
 inline_for_extraction noextract
 let point = struct0 _point "PulsePointStruct.point" point_fields
 
-#push-options "--query_stats  --fuel 0"
+#push-options "--fuel 0"
 
 ```pulse
 fn swap_struct (p: ref point) (v: Ghost.erased (typeof point))

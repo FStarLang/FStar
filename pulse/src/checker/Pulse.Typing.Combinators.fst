@@ -141,7 +141,7 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
         let t0_typing = d1 t1_typing in
         construct_forall_typing #g #u #b #t0 x b_typing t0_typing)
         
-#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2 --query_stats"
+#push-options "--z3rlimit_factor 8 --ifuel 1 --fuel 2"
 
 let bind_t (case_c1 case_c2:comp_st -> bool) =
       (g:env) ->
@@ -263,7 +263,6 @@ let mk_bind_ghost_ghost : bind_t C_STGhost? C_STGhost? =
     (| _, _, T_Bind _ e1 e2 _ _ b _ _ d_e1 d_c1res d_e2 bc |)
   end 
 
-#push-options "--query_stats"
 let mk_bind_atomic_atomic
   : bind_t C_STAtomic? C_STAtomic?
   = fun g pre e1 e2 c1 c2 px d_e1 d_c1res d_e2 res_typing post_typing post_hint ->
@@ -298,7 +297,6 @@ let mk_bind_atomic_atomic
       else (
         T.fail "Should have been handled separately"
       )
-#pop-options
 
 #push-options "--z3rlimit_factor 10 --fuel 0 --ifuel 1"
 let rec mk_bind (g:env) 

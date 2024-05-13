@@ -231,7 +231,7 @@ let stequiv_soundness
     STEquiv.st_equiv_soundness _ _ _ equiv _ r_e_typing
 
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 30"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 30"
 
 let bind_soundness
   (#g:stt_env)
@@ -316,7 +316,7 @@ let if_soundness
   RT.T_If _ _ _ _ _ _ _ _ _ rb_typing re1_typing re2_typing c_typing
 #pop-options
 
-#push-options "--query_stats --fuel 2 --ifuel 2"
+#push-options "--fuel 2 --ifuel 2"
 let rec soundness (g:stt_env)
                   (t:st_term)
                   (c:comp)

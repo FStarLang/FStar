@@ -24,7 +24,7 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Elaborate.Core
               
-#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 30 --query_stats --z3cliopt 'smt.qi.eager_threshold=100'"          
+#push-options "--fuel 10 --ifuel 10 --z3rlimit_factor 30 --z3cliopt 'smt.qi.eager_threshold=100'"
 
 let elab_open_commute' (e:term)
                        (v:term)

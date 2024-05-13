@@ -793,7 +793,7 @@ let close_proof_hint_ln (ht:proof_hint_type) (v:var) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 8 --split_queries no"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 8 --split_queries no"
 let rec close_st_term_ln' (t:st_term) (x:var) (i:index)
   : Lemma
     (requires ln_st' t (i - 1))
@@ -1050,7 +1050,7 @@ let ln_mk_array (t:term) (n:int)
       (ensures ln' (mk_array t) n) =
   admit ()
 
-#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --query_stats --split_queries no"
+#push-options "--z3rlimit_factor 15 --fuel 4 --ifuel 1 --split_queries no"
 let rec st_typing_ln (#g:_) (#t:_) (#c:_)
                      (d:st_typing g t c)
   : Lemma 
