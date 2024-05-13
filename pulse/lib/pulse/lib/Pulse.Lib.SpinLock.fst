@@ -22,6 +22,7 @@ open Pulse.Lib.CancellableInvariant
 module U32 = FStar.UInt32
 module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
+module CInv = Pulse.Lib.CancellableInvariant
 
 let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:vprop) : (w:vprop { is_big v ==> is_big w })  =
   exists* i p. B.pts_to r #1.0R i **
@@ -77,9 +78,9 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #p v);
   let b =
-    with_invariants (iref_of l.i)
+    with_invariants (CInv.iref_of l.i)
       returns b:bool
-      ensures inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+      ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
               active p l.i **
               (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
@@ -138,9 +139,9 @@ fn release (#v:vprop) (#p:perm) (l:lock)
   unfold (lock_alive l #p v);
   unfold (lock_acquired l);
 
-  with_invariants (iref_of l.i)
+  with_invariants (CInv.iref_of l.i)
     returns _:unit
-    ensures inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+    ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
             active p l.i {
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
@@ -166,8 +167,8 @@ fn share (#v:vprop) (#p:perm) (l:lock)
   ensures lock_alive l #(p /. 2.0R) v ** lock_alive l #(p /. 2.0R) v
 {
   unfold (lock_alive l #p v);
-  Pulse.Lib.CancellableInvariant.share l.i;
-  dup_inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
+  CInv.share l.i;
+  dup_inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
   fold (lock_alive l #(p /. 2.0R) v);
   fold (lock_alive l #(p /. 2.0R) v)
 } 
@@ -183,7 +184,7 @@ fn gather (#v:vprop) (#p1 #p2 :perm) (l:lock)
 {
   unfold (lock_alive l #p1 v);
   unfold (lock_alive l #p2 v);
-  Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
+  CInv.gather #p1 #p2 l.i;
   fold (lock_alive l #(p1 +. p2) v);
   drop_ (inv _ _)
 } 
@@ -218,7 +219,7 @@ fn lock_alive_inj
   unfold (lock_alive l #p1 v1);
   unfold (lock_alive l #p2 v2);
   invariant_name_identifies_invariant
-    (iref_of l.i) (iref_of l.i);
+    (CInv.iref_of l.i) (CInv.iref_of l.i);
   assert (
     pure (
       cinv_vp l.i (lock_inv l.r l.gr v1)
@@ -231,7 +232,7 @@ fn lock_alive_inj
 }
 ```
 
-let iref_of l = iref_of l.i
+let iref_of l = CInv.iref_of l.i
 let iref_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
 let lock_active #p l = active p l.i
 
@@ -242,7 +243,7 @@ fn share_lock_active (#p:perm) (l:lock)
   ensures lock_active #(p /. 2.0R) l ** lock_active #(p /. 2.0R) l
 {
   unfold (lock_active #p l);
-  Pulse.Lib.CancellableInvariant.share l.i;
+  CInv.share l.i;
   fold (lock_active #(p /. 2.0R) l);
   fold (lock_active #(p /. 2.0R) l)
 }
@@ -256,7 +257,7 @@ fn gather_lock_active (#p1 #p2:perm) (l:lock)
 {
   unfold (lock_active #p1 l);
   unfold (lock_active #p2 l);
-  Pulse.Lib.CancellableInvariant.gather #p1 #p2 l.i;
+  CInv.gather #p1 #p2 l.i;
   fold (lock_active #(p1 +. p2) l)
 }
 ```
@@ -273,7 +274,7 @@ fn elim_inv_and_active_into_alive (l:lock) (v:vprop) (#p:perm)
     ensures lock_alive l #p v
   {
     rewrite each
-      iref_of l as Pulse.Lib.CancellableInvariant.iref_of l.i,
+      iref_of l as CInv.iref_of l.i,
       iref_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
     unfold (lock_active #p l);
     fold (lock_alive l #p v)
@@ -297,7 +298,7 @@ fn elim_alive_into_inv_and_active (l:lock) (v:vprop) (#p:perm)
     unfold (lock_alive l #p v);
     fold (lock_active #p l);
     rewrite each
-      Pulse.Lib.CancellableInvariant.iref_of l.i as iref_of l,
+      CInv.iref_of l.i as iref_of l,
       cinv_vp l.i (lock_inv l.r l.gr v) as iref_v_of l v
   };
   intro_stick _ _ _ aux
