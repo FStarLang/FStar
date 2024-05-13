@@ -17,12 +17,48 @@ FSTAR_OPTIONS += --warn_error -342 --cmi
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
+DPE_SRC_DIR=../dpe/src
 
-all: test
+all: test dpe
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
 
 FSTAR_DEP_OPTIONS=--extract '* -FStar.Tactics -FStar.Reflection -Pulse +Pulse.Class +Pulse.Lib -Pulse.Lib.Core'
+
+# The following note is from share/pulse/examples/dice/Makefile
+# where a copy of the %.ast rule existed
+
+# FIXME: this rule should depend on the .checked file. However, right
+# now there is no way to reconcile the cache directories. There are
+# currently two modes:
+#
+# * share/pulse/examples/dice/Makefile produces the DICE .checked
+#   files in a single directory, _output/cache, but it assumes (with
+#   --already_cached) that the .checked files from the Pulse standard
+#   library already exist somewhere else.
+#
+# * src/verify.Makefile currently produces each .checked file next to
+#   its corresponding source file, thus with no cache directory
+# 
+# Alternatively, the latter verify.Makefile could produce everything
+# in one single cache directory, but in that case, all examples would
+# need to use that cache directory. This will work for CI but is not
+# desirable for end-users since:
+#
+# 1/ it will unnecessarily increase build time with example files
+# whose interface is not guaranteed to be stable (and thus users
+# should not write modules that depend on such examples), and
+# 
+# 2/ that cache directory will contain .checked files for example
+# modules without a namespace, which will likely clash with end-users'
+# modules once `--include`d.
+#
+# So, I believe the solution here is to make `fstar.exe --dep full`
+# produce dependency rules for .ast files, which will automatically
+# compute the right location for each .checked file, and a list of
+# ALL_AST_FILES, as is already done with .ml and .krml extracted
+# files. If so, then this %.ast rule will be generic and can move to
+# share/pulse/Makefile.include-base.
 
 %.ast:
 		$(FSTAR) --admit_smt_queries true --codegen Extension $(subst .ast,.fst, $(subst _,., $(notdir $@))) --extract_module $(basename $(subst .ast,.fst, $(subst _,., $(notdir $@))))
@@ -35,9 +71,6 @@ pulsetutorial-loops.rs: PulseTutorial_Loops.ast
 
 pulsetutorial-algorithms.rs: PulseTutorial_Algorithms.ast
 	$(MAIN) -odir $(RUST_SRC_DIR) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
-
-# FIXME: this seems to be a duplicate of the `dpe-ast` rule in
-# share/pulse/examples/dice/Makefile
 
 DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
@@ -52,11 +85,14 @@ DPE_FILES = EngineTypes.ast \
 	DPE.ast
 
 dpe.rs: $(DPE_FILES)
-	$(MAIN) -odir $(RUST_SRC_DIR)/dpe_ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+	$(MAIN) -odir $(DPE_SRC_DIR)/ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
-all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs dpe.rs  #pulsetutorial-array.rs
+all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
 
 test: all-rs
 	cargo test
 
-.PHONY: test
+dpe: dpe.rs
+	cd ../dpe && cargo build && cd -
+
+.PHONY: test dpe
