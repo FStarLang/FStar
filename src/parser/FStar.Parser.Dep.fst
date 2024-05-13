@@ -555,18 +555,18 @@ let dep_subsumed_by d d' =
 let enter_namespace
   (original_map: files_for_module_name)
   (working_map: files_for_module_name)
-  (prefix: string)
+  (sprefix: string)
   (implicit_open:bool) : bool =
   let found = BU.mk_ref false in
-  let prefix = prefix ^ "." in
+  let sprefix = sprefix ^ "." in
   let suffix_exists mopt =
     match mopt with
     | None -> false
     | Some (intf, impl) -> is_some intf || is_some impl in
   smap_iter original_map (fun k _ ->
-    if Util.starts_with k prefix then
+    if Util.starts_with k sprefix then
       let suffix =
-        String.substring k (String.length prefix) (String.length k - String.length prefix)
+        String.substring k (String.length sprefix) (String.length k - String.length sprefix)
       in
 
       begin
@@ -574,11 +574,19 @@ let enter_namespace
         if implicit_open &&
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
-             FStar.Errors.log_issue_doc Range.dummyRange
-               (Errors.Warning_UnexpectedFile,
-                [Errors.text <|
-                BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
-                  avoid conflicts" prefix suffix str str])
+             let open FStar.Pprint in
+             log_issue_doc Range.dummyRange
+               (Errors.Warning_UnexpectedFile, [
+                flow (break_ 1) [
+                  text "Implicitly opening namespace";
+                  squotes (doc_of_string sprefix);
+                  text "shadows module";
+                  squotes (doc_of_string suffix);
+                  text "in file";
+                  dquotes (doc_of_string str) ^^ dot;
+                ];
+                text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
+             ])
       end;
 
       let filename = must (smap_try_find original_map k) in
@@ -682,7 +690,7 @@ let collect_one
          end
        in
 
-         let record_open_namespace lid (implicit_open:bool) =
+       let record_open_namespace lid (implicit_open:bool) =
          let key = lowercase_join_longident lid true in
          let r = enter_namespace original_map working_map key implicit_open in
          if not r && not implicit_open then  //suppress the warning for implicit opens

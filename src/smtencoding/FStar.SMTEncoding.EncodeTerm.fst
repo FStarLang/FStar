@@ -1264,10 +1264,15 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
           begin match lopt with
             | None ->
+              let open FStar.Class.PP in
+              let open FStar.Pprint in
+              let open FStar.Errors.Msg in
               //we don't even know if this is a pure function, so give up
-              Errors.log_issue t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, (BU.format1
-                "Losing precision when encoding a function literal: %s\n\
-                 (Unnannotated abstraction in the compiler ?)" (Print.term_to_string t0)));
+              Errors.log_issue_doc t0.pos (Errors.Warning_FunctionLiteralPrecisionLoss, [
+                prefix 2 1 (text "Losing precision when encoding a function literal:")
+                  (pp t0);
+                text "Unannotated abstraction in the compiler?"
+              ]);
               fallback ()
 
             | Some rc ->

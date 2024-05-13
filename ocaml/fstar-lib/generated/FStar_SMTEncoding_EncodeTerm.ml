@@ -2730,13 +2730,24 @@ and (encode_term :
                   | FStar_Pervasives_Native.None ->
                       ((let uu___4 =
                           let uu___5 =
-                            let uu___6 = FStar_Syntax_Print.term_to_string t0 in
-                            FStar_Compiler_Util.format1
-                              "Losing precision when encoding a function literal: %s\n(Unnannotated abstraction in the compiler ?)"
-                              uu___6 in
+                            let uu___6 =
+                              let uu___7 =
+                                FStar_Errors_Msg.text
+                                  "Losing precision when encoding a function literal:" in
+                              let uu___8 =
+                                FStar_Class_PP.pp
+                                  FStar_Syntax_Print.pretty_term t0 in
+                              FStar_Pprint.prefix (Prims.of_int (2))
+                                Prims.int_one uu___7 uu___8 in
+                            let uu___7 =
+                              let uu___8 =
+                                FStar_Errors_Msg.text
+                                  "Unannotated abstraction in the compiler?" in
+                              [uu___8] in
+                            uu___6 :: uu___7 in
                           (FStar_Errors_Codes.Warning_FunctionLiteralPrecisionLoss,
                             uu___5) in
-                        FStar_Errors.log_issue t0.FStar_Syntax_Syntax.pos
+                        FStar_Errors.log_issue_doc t0.FStar_Syntax_Syntax.pos
                           uu___4);
                        fallback ())
                   | FStar_Pervasives_Native.Some rc ->
