@@ -33,7 +33,7 @@ let backtrace_doc () : document =
   text "Stack trace:" ^/^
   arbitrary_string (trim_string s)
 
-let subdoc d =
+let subdoc' (indent:bool) d =
   (* NOTE: slight hack here, using equality on Pprint documents. This works
   fine, particularly for this case, since empty is just a constructor Empty.
   There is even a new function to check if a document is empty, added two weeks ago!
@@ -42,7 +42,9 @@ let subdoc d =
   switch to using that function. (I won't right now as it is not released). *)
   if d = empty
   then empty
-  else blank 2 ^^ doc_of_string "-" ^^ blank 1 ^^ align d ^^ hardline
+  else (if indent then blank 2 else empty) ^^ doc_of_string "-" ^^ blank 1 ^^ align d ^^ hardline
+
+let subdoc d = subdoc' true d
 
 let rendermsg (ds : list document) : string =
   renderdoc (concat (List.map (fun d -> subdoc (group d)) ds))

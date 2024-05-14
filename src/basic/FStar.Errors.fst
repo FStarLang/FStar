@@ -183,6 +183,9 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
       List.fold_left (fun l r -> l ^^ hardline ^^ d1 r) (d1 h) t
     | _ -> empty
   in
+  (* We only indent if we are are printing the header. I.e., only ident for batch errors,
+  not for VS code diagnostics window. *)
+  let subdoc = subdoc' print_hdr in
   let mainmsg : document =
     concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
   in

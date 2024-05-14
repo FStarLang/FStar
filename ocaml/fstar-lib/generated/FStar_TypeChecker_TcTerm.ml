@@ -12289,13 +12289,13 @@ and (tc_tot_or_gtot_term_maybe_solve_deferred :
                                  let uu___7 =
                                    FStar_TypeChecker_Err.expected_ghost_expression
                                      e1 c2 msg in
-                                 FStar_Errors.raise_error uu___7
+                                 FStar_Errors.raise_error_doc uu___7
                                    e1.FStar_Syntax_Syntax.pos
                                else
                                  (let uu___8 =
                                     FStar_TypeChecker_Err.expected_pure_expression
                                       e1 c2 msg in
-                                  FStar_Errors.raise_error uu___8
+                                  FStar_Errors.raise_error_doc uu___8
                                     e1.FStar_Syntax_Syntax.pos))))
 and (tc_tot_or_gtot_term' :
   FStar_TypeChecker_Env.env ->

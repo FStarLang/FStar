@@ -4491,8 +4491,8 @@ and tc_tot_or_gtot_term_maybe_solve_deferred (env:env) (e:term) (msg:string) (so
         | Some g' -> e, TcComm.lcomp_of_comp target_comp, Env.conj_guard g (Env.conj_guard g_c g')
         | _ ->
           if allow_ghost
-          then raise_error (Err.expected_ghost_expression e c msg) e.pos
-          else raise_error (Err.expected_pure_expression e c msg) e.pos
+          then raise_error_doc (Err.expected_ghost_expression e c msg) e.pos
+          else raise_error_doc (Err.expected_pure_expression e c msg) e.pos
 
 and tc_tot_or_gtot_term' (env:env) (e:term) (msg:string)
 : term * lcomp * guard_t
