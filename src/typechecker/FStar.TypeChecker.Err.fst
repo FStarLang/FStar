@@ -284,25 +284,21 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c reason =
-  let msg = "Expected a pure expression" in
-  let msg =
-    if reason = ""
-    then msg
-    else BU.format1 (msg ^ " (%s)") reason in
-  (Errors.Fatal_ExpectedPureExpression,
-   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
-     (Print.term_to_string e) (fst <| name_and_result c))
+let __expected_eff_expression (effname:string) (e:term) (c:comp) (reason:string) =
+  let open FStar.Class.PP in
+  let open FStar.Pprint in
+  (Errors.Fatal_ExpectedGhostExpression, [
+    text ("Expected a " ^ effname ^ " expression.");
+    (if reason = "" then empty else flow (break_ 1) (doc_of_string "Because:" :: words (reason ^ ".")));
+    prefix 2 1 (text "Got an expression") (pp e) ^/^
+    prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
+  ])
 
-let expected_ghost_expression e c reason =
-  let msg = "Expected a ghost expression" in
-  let msg =
-    if reason = ""
-    then msg
-    else BU.format1 (msg ^ " (%s)") reason in
-  (Errors.Fatal_ExpectedGhostExpression,
-   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
-     (Print.term_to_string e) (fst <| name_and_result c))
+let expected_pure_expression (e:term) (c:comp) (reason:string) =
+  __expected_eff_expression "pure" e c reason
+
+let expected_ghost_expression (e:term) (c:comp) (reason:string) =
+  __expected_eff_expression "ghost" e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))
