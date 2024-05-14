@@ -389,19 +389,18 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
                      FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___2 in
                    FStar_Pprint.op_Hat_Hat l uu___1) uu___ t
         | uu___ -> FStar_Pprint.empty in
+      let subdoc = FStar_Errors_Msg.subdoc' print_hdr in
       let mainmsg =
         let uu___ =
           FStar_Compiler_List.map
-            (fun d ->
-               let uu___1 = FStar_Pprint.group d in
-               FStar_Errors_Msg.subdoc uu___1) issue1.issue_msg in
+            (fun d -> let uu___1 = FStar_Pprint.group d in subdoc uu___1)
+            issue1.issue_msg in
         FStar_Pprint.concat uu___ in
       let doc =
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_Errors_Msg.subdoc seealso in
-            let uu___3 = FStar_Errors_Msg.subdoc ctx in
-            FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+            let uu___2 = subdoc seealso in
+            let uu___3 = subdoc ctx in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
           FStar_Pprint.op_Hat_Hat mainmsg uu___1 in
         FStar_Pprint.op_Hat_Hat hdr uu___ in
       FStar_Errors_Msg.renderdoc doc
@@ -740,7 +739,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___385 :
+let (uu___386 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -786,10 +785,10 @@ let (uu___385 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___385 with
+  match uu___386 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___385 with
+  match uu___386 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

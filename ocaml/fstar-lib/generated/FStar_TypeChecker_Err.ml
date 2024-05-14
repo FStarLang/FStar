@@ -564,50 +564,75 @@ let (unexpected_non_trivial_precondition_on_term :
         FStar_Compiler_Util.format1
           "Term has an unexpected non-trivial pre-condition: %s" uu___1 in
       (FStar_Errors_Codes.Fatal_UnExpectedPreCondition, uu___)
+let (__expected_eff_expression :
+  Prims.string ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.comp ->
+        Prims.string ->
+          (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
+  =
+  fun effname ->
+    fun e ->
+      fun c ->
+        fun reason ->
+          let uu___ =
+            let uu___1 =
+              FStar_Errors_Msg.text
+                (Prims.strcat "Expected a "
+                   (Prims.strcat effname " expression.")) in
+            let uu___2 =
+              let uu___3 =
+                if reason = ""
+                then FStar_Pprint.empty
+                else
+                  (let uu___5 = FStar_Pprint.break_ Prims.int_one in
+                   let uu___6 =
+                     let uu___7 = FStar_Pprint.doc_of_string "Because:" in
+                     let uu___8 =
+                       FStar_Pprint.words (Prims.strcat reason ".") in
+                     uu___7 :: uu___8 in
+                   FStar_Pprint.flow uu___5 uu___6) in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 = FStar_Errors_Msg.text "Got an expression" in
+                    let uu___8 =
+                      FStar_Class_PP.pp FStar_Syntax_Print.pretty_term e in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___7 uu___8 in
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 = FStar_Errors_Msg.text "with effect" in
+                      let uu___10 =
+                        let uu___11 =
+                          let uu___12 =
+                            let uu___13 = name_and_result c in
+                            FStar_Pervasives_Native.fst uu___13 in
+                          FStar_Pprint.doc_of_string uu___12 in
+                        FStar_Pprint.squotes uu___11 in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___9 uu___10 in
+                    FStar_Pprint.op_Hat_Hat uu___8 FStar_Pprint.dot in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          (FStar_Errors_Codes.Fatal_ExpectedGhostExpression, uu___)
 let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      Prims.string -> (FStar_Errors_Codes.raw_error * Prims.string))
+    FStar_Syntax_Syntax.comp ->
+      Prims.string ->
+        (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
-  fun e ->
-    fun c ->
-      fun reason ->
-        let msg = "Expected a pure expression" in
-        let msg1 =
-          if reason = ""
-          then msg
-          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
-        let uu___ =
-          let uu___1 = FStar_Syntax_Print.term_to_string e in
-          let uu___2 =
-            let uu___3 = name_and_result c in
-            FStar_Pervasives_Native.fst uu___3 in
-          FStar_Compiler_Util.format2
-            (Prims.strcat msg1
-               "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
-        (FStar_Errors_Codes.Fatal_ExpectedPureExpression, uu___)
+  fun e -> fun c -> fun reason -> __expected_eff_expression "pure" e c reason
 let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      Prims.string -> (FStar_Errors_Codes.raw_error * Prims.string))
+    FStar_Syntax_Syntax.comp ->
+      Prims.string ->
+        (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun e ->
-    fun c ->
-      fun reason ->
-        let msg = "Expected a ghost expression" in
-        let msg1 =
-          if reason = ""
-          then msg
-          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
-        let uu___ =
-          let uu___1 = FStar_Syntax_Print.term_to_string e in
-          let uu___2 =
-            let uu___3 = name_and_result c in
-            FStar_Pervasives_Native.fst uu___3 in
-          FStar_Compiler_Util.format2
-            (Prims.strcat msg1
-               "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
-        (FStar_Errors_Codes.Fatal_ExpectedGhostExpression, uu___)
+    fun c -> fun reason -> __expected_eff_expression "ghost" e c reason
 let (expected_effect_1_got_effect_2 :
   FStar_Ident.lident ->
     FStar_Ident.lident -> (FStar_Errors_Codes.raw_error * Prims.string))
