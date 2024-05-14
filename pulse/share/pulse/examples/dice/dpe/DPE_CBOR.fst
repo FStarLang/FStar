@@ -103,12 +103,12 @@ fn initialize_context (len:SZ.t)
       {
         unfold (parse_dpe_cmd_post len input s p (Some cmd));
         if (cmd.dpe_cmd_sid `FStar.UInt64.gte` 4294967296uL) {
-          // FIXME: DPE.sid == U32.t, but the CDDL specification for DPE session messages does not specify any bound on sid (if so, I could have used a CDDL combinator and avoided this additional test here)
+          // FIXME: DPE.sid == U16.t, but the CDDL specification for DPE session messages does not specify any bound on sid (if so, I could have used a CDDL combinator and avoided this additional test here)
           elim_stick0 ();
           let ret = None #ctxt_hndl_t;
           ret
         } else {
-          let sid : FStar.UInt32.t = Cast.uint64_to_uint32 cmd.dpe_cmd_sid;
+          let sid : FStar.UInt16.t = Cast.uint64_to_uint16 cmd.dpe_cmd_sid;
           with vargs . assert (raw_data_item_match 1.0R cmd.dpe_cmd_args vargs);
           let key = cbor_constr_int64 cbor_major_type_uint64 MsgSpec.initialize_context_seed;
           with vkey . assert (raw_data_item_match 1.0R key vkey);

@@ -28,6 +28,7 @@ module G = FStar.Ghost
 module PCM = FStar.PCM
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
+module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module PM = Pulse.Lib.PCMMap
 module FP = Pulse.Lib.PCM.FractionalPreorder
@@ -46,7 +47,7 @@ open Pulse.Lib.HashTable
 
 type ctxt_hndl_t = U32.t
 
-type sid_t : eqtype = U32.t
+type sid_t : eqtype = U16.t
 
 //
 // A session may be in one of the following states
@@ -314,8 +315,8 @@ let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:vprop { is_small v }
 //   and this should go away
 //
 let session_perm (r:gref) (pht:pht_t) (sid:nat) =
-  if UInt.fits sid 32
-  then session_state_perm r pht (U32.uint_to_t sid)
+  if UInt.fits sid 16
+  then session_state_perm r pht (U16.uint_to_t sid)
   else emp
 
 noextract
@@ -325,7 +326,7 @@ noextract
 let all_sids_unused : pcm_t = map_literal (fun _ -> Some 1.0R, emp_trace)
 
 let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
-  if U32.lt sid s then None, emp_trace
+  if U16.lt sid s then None, emp_trace
   else Some 1.0R, emp_trace)
 
 //
@@ -352,7 +353,7 @@ let dpe_inv (r:gref) (s:option st) : vprop =
     // For sids below counter, we have the session state perm
     //
     (exists* pht. models s.st_tbl pht **
-                  on_range (session_perm r pht) 0 (U32.v s.st_ctr))
+                  on_range (session_perm r pht) 0 (U16.v s.st_ctr))
 
 let inv_is_small (r:gref) (s:option st)
   : Lemma (is_small (dpe_inv r s))

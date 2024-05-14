@@ -4,6 +4,7 @@ pub type Spec_Hash_Definitions_hash_alg = u8;
 extern "C" {
     pub fn EverCrypt_AutoConfig2_init();
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_Ed25519_sign(
         signature: *mut u8,
@@ -12,6 +13,7 @@ extern "C" {
         msg: *mut u8,
     );
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_Ed25519_verify(
         public_key: *mut u8,
@@ -20,9 +22,11 @@ extern "C" {
         signature: *mut u8,
     ) -> bool;
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_Hash_Incremental_hash_len(uu___: Spec_Hash_Definitions_hash_alg) -> u32;
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_Hash_Incremental_hash(
         a: Spec_Hash_Definitions_hash_alg,
@@ -31,9 +35,11 @@ extern "C" {
         input_len: u32,
     );
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_HMAC_is_supported_alg(uu___: Spec_Hash_Definitions_hash_alg) -> bool;
 }
+#[link(name = "evercrypt")]
 extern "C" {
     pub fn EverCrypt_HMAC_compute(
         a: Spec_Hash_Definitions_hash_alg,

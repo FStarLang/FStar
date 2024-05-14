@@ -10,8 +10,8 @@ pub fn compare(
     panic!()
 }
 
-pub fn memcpy<A>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
-    panic!()
+pub fn memcpy<A: Copy>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
+    dst.copy_from_slice(src);
 }
 
 pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {

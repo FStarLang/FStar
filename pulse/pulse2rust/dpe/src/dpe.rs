@@ -5,7 +5,7 @@
 ////
 
 pub type ctxt_hndl_t = u32;
-pub type sid_t = u32;
+pub type sid_t = u16;
 #[derive(Clone)]
 pub struct session_state__Available__payload {
     pub handle: super::dpe::ctxt_hndl_t,
@@ -30,8 +30,8 @@ pub struct st {
 pub fn run_stt<A>(post: (), f: A) -> A {
     panic!()
 }
-pub fn sid_hash(uu___: super::dpe::sid_t) -> usize {
-    panic!()
+pub fn sid_hash(s: super::dpe::sid_t) -> usize {
+    s.into()
 }
 pub const fn initialize_global_state(
     uu___: (),
@@ -40,15 +40,18 @@ pub const fn initialize_global_state(
     ((), m)
 }
 pub static gst: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
-pub fn safe_add(i: u32, j: u32) -> std::option::Option<u32> {
-    panic!()
+pub fn safe_incr(i: u16) -> std::option::Option<u16> {
+    match i < 0xffff {
+        true => Some(i + 1),
+        _ => None,
+    }
 }
 pub fn __open_session(
     s: super::dpe::st,
 ) -> (super::dpe::st, std::option::Option<super::dpe::sid_t>) {
     let ctr = s.st_ctr;
     let tbl = s.st_tbl;
-    let copt = super::dpe::safe_add(ctr, 1);
+    let copt = super::dpe::safe_incr(ctr);
     match copt {
         None => {
             let s1 = super::dpe::st {
@@ -180,7 +183,7 @@ pub fn init_engine_ctxt(
     ctxt
 }
 pub fn prng(uu___: ()) -> super::dpe::ctxt_hndl_t {
-    panic!()
+    0
 }
 pub fn initialize_context(
     sid: super::dpe::sid_t,

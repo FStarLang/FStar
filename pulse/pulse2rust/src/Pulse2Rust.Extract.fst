@@ -143,6 +143,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt8.t" -> mk_scalar_typ "u8"
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.UInt16.t" -> mk_scalar_typ "u16"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt32.t" -> mk_scalar_typ "u32"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.Int32.t" -> mk_scalar_typ "i32"
@@ -265,15 +267,18 @@ let extract_top_level_sig
 //
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition" ||
+     s = "FStar.UInt16.add" ||
      s = "FStar.UInt32.add" ||
      s = "FStar.SizeT.add"
   then Some Add
   else if s = "Prims.op_Subtraction" ||
           s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt16.sub" ||
           s = "FStar.UInt32.sub"
   then Some Sub
   else if s = "Prims.op_Multiply" ||
           s = "FStar.Mul.op_Star" ||
+          s = "FStar.UInt16.mul" ||
           s = "FStar.UInt32.mul" ||
           s = "FStar.UInt32.op_Star_Hat" ||
           s = "FStar.SizeT.mul" ||
@@ -282,24 +287,29 @@ let is_binop (s:string) : option binop =
   else if s = "Prims.op_disEquality"
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt16.lte" ||
           s = "FStar.UInt32.lte" ||
           s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
+          s = "FStar.UInt16.lt" ||
           s = "FStar.UInt32.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
   else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt16.gte" ||
           s = "FStar.UInt32.gte" ||
           s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
+          s = "FStar.UInt16.gt" ||
           s = "FStar.UInt32.gt" ||
           s = "FStar.SizeT.gt"
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
   else if s = "Prims.rem" ||
+          s = "FStar.UInt16.rem" ||
           s = "FStar.UInt32.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
@@ -449,6 +459,9 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ->
+    mk_method_call (extract_mlexpr g e) "into" []
 
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
   | S.MLE_Name p ->

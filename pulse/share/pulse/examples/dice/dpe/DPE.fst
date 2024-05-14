@@ -48,7 +48,7 @@ open Pulse.Lib.MutexToken
 assume
 val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
 
-assume val sid_hash : sid_t -> SZ.t
+let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
 [@@ Rust_const_fn]
 ```pulse
@@ -192,15 +192,20 @@ fn upd_sid_pts_to
 }
 ```
 
-assume val safe_add (i j:U32.t)
-  : o:option U32.t { Some? o ==> U32.v (Some?.v o) == U32.v i + U32.v j }
+let safe_incr (i:U16.t)
+  : r:option U16.t { Some? r ==> (U16.v (Some?.v r) == U16.v i + 1) } =
+
+  let open FStar.UInt16 in
+  if i <^ 0xffffus
+  then Some (i +^ 1us)
+  else None
 
 noextract
 let session_table_eq_on_range
   (pht0 pht1:pht_t)
   (i j:nat)
   : prop =
-  forall (k:sid_t). i <= U32.v k && U32.v k < j ==> PHT.lookup pht0 k == PHT.lookup pht1 k
+  forall (k:sid_t). i <= U16.v k && U16.v k < j ==> PHT.lookup pht0 k == PHT.lookup pht1 k
 
 ```pulse
 ghost
@@ -213,13 +218,13 @@ fn frame_session_perm_at_sid
   requires session_perm r pht0 sid
   ensures session_perm r pht1 sid
 {
-  if (UInt.fits sid 32) {
-    let sid32 = U32.uint_to_t sid;
+  if (UInt.fits sid 16) {
+    let sid16 = U16.uint_to_t sid;
     rewrite (session_perm r pht0 sid) as
-            (session_state_perm r pht0 sid32);
+            (session_state_perm r pht0 sid16);
     unfold session_state_perm;
-    fold (session_state_perm r pht1 sid32);
-    rewrite (session_state_perm r pht1 sid32) as
+    fold (session_state_perm r pht1 sid16);
+    rewrite (session_state_perm r pht1 sid16) as
             (session_perm r pht1 sid)
   } else {
     rewrite (session_perm r pht0 sid) as
@@ -266,10 +271,10 @@ fn __open_session (s:st)
     s.st_tbl as tbl;
 
   with pht. assert (models tbl pht);
-  assert (on_range (session_perm trace_ref pht) 0 (U32.v ctr));
+  assert (on_range (session_perm trace_ref pht) 0 (U16.v ctr));
   assert (ghost_pcm_pts_to trace_ref (sids_above_unused ctr));
 
-  let copt = ctr `safe_add` 1ul;
+  let copt = safe_incr ctr;
 
   match copt {
     None -> {
@@ -303,9 +308,9 @@ fn __open_session (s:st)
         rewrite emp as (session_state_related SessionStart G_SessionStart);
         fold (session_state_perm trace_ref pht1 ctr);
         rewrite (session_state_perm trace_ref pht1 ctr) as
-                (session_perm trace_ref pht1 (U32.v ctr));
-        frame_session_perm_on_range trace_ref pht pht1 0 (U32.v ctr);
-        on_range_snoc () #(session_perm trace_ref pht1) #0 #(U32.v ctr);
+                (session_perm trace_ref pht1 (U16.v ctr));
+        frame_session_perm_on_range trace_ref pht pht1 0 (U16.v ctr);
+        on_range_snoc () #(session_perm trace_ref pht1) #0 #(U16.v ctr);
         let s = { st_ctr = ctr1; st_tbl = tbl1 };
         let ret = s, Some ctr;
         rewrite each
@@ -341,7 +346,7 @@ fn maybe_mk_session_tbl (sopt:option st)
     None -> {
       let tbl = HT.alloc #sid_t #session_state sid_hash 256sz;
       let s = {
-        st_ctr = 0ul;
+        st_ctr = 0us;
         st_tbl = tbl;
       };
 
@@ -355,7 +360,7 @@ fn maybe_mk_session_tbl (sopt:option st)
       with pht. assert (models s.st_tbl pht);
       on_range_empty (session_perm trace_ref pht) 0;
       rewrite (on_range (session_perm trace_ref pht) 0 0) as
-              (on_range (session_perm trace_ref pht) 0 (U32.v s.st_ctr));
+              (on_range (session_perm trace_ref pht) 0 (U16.v s.st_ctr));
   
       fold (dpe_inv trace_ref (Some s));
       s
@@ -513,10 +518,10 @@ fn replace_session
         s.st_ctr as ctr,
         s.st_tbl as tbl;
       with pht0. assert (models tbl pht0);
-      assert (on_range (session_perm trace_ref pht0) 0 (U32.v ctr));
-      if U32.lt sid ctr {
-        on_range_get (U32.v sid) #(session_perm trace_ref pht0) #0 #(U32.v ctr);
-        rewrite (session_perm trace_ref pht0 (U32.v sid)) as
+      assert (on_range (session_perm trace_ref pht0) 0 (U16.v ctr));
+      if U16.lt sid ctr {
+        on_range_get (U16.v sid) #(session_perm trace_ref pht0) #0 #(U16.v ctr);
+        rewrite (session_perm trace_ref pht0 (U16.v sid)) as
                 (session_state_perm trace_ref pht0 sid);
         unfold session_state_perm;
         gather_sid_pts_to sid;
@@ -549,10 +554,10 @@ fn replace_session
                       (session_state_related sst (current_state (next_trace t1 gsst)));
               fold (session_state_perm trace_ref pht sid);
               rewrite (session_state_perm trace_ref pht sid) as
-                      (session_perm trace_ref pht (U32.v sid));
-              frame_session_perm_on_range trace_ref pht0 pht 0 (U32.v sid);
-              frame_session_perm_on_range trace_ref pht0 pht (U32.v sid + 1) (U32.v ctr);
-              on_range_put 0 (U32.v sid) (U32.v ctr) #(session_perm trace_ref pht);
+                      (session_perm trace_ref pht (U16.v sid));
+              frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
+              frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
+              on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
               let s = { st_ctr = ctr; st_tbl = tbl };
               rewrite each
                 ctr as s.st_ctr,
@@ -617,7 +622,18 @@ fn init_engine_ctxt
 }
 ```
 
-assume val prng () : stt ctxt_hndl_t emp (fun _ -> emp)
+//
+// TODO: FIXME
+//
+```pulse
+fn prng ()
+  requires emp
+  returns _:ctxt_hndl_t
+  ensures emp
+{
+  0ul
+}
+```
 
 let session_state_tag_related (s:session_state) (gs:g_session_state) : GTot bool =
   match s, gs with
