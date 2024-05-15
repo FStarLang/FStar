@@ -114,3 +114,5 @@ instance val pretty_sigelt      : pretty sigelt
 instance val pretty_uvar        : pretty uvar
 instance val pretty_ctxu        : pretty ctx_uvar
 instance val pretty_binder      : pretty binder
+instance val pretty_bv          : pretty bv
+instance val pretty_binding     : pretty binding

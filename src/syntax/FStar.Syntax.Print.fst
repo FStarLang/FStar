@@ -1020,3 +1020,12 @@ instance pretty_comp     = { pp   = comp_to_doc; }
 instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+
+open FStar.Pprint
+
+instance pretty_binding : pretty binding = {
+  pp = (function Binding_var bv -> pp bv
+               | Binding_lid (l, (us, t)) -> pp l ^^ colon ^^ pp t
+               | Binding_univ u -> pp u);
+}
