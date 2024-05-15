@@ -5,6 +5,7 @@ pub mod enginetypes;
 pub mod evercrypt;
 pub mod evercrypt_autoconfig2;
 pub mod evercrypt_ed25519;
+pub mod evercrypt_gen;
 pub mod evercrypt_hash_incremental;
 pub mod evercrypt_hmac;
 pub mod fstar_sizet;

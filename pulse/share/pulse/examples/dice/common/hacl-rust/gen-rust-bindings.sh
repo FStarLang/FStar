@@ -9,7 +9,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 # regenerate EverCrypt*.h
 make -j -C ../hacl-c
 ! [[ -d c ]]
-mkdir c
+mkdir -p c
 cp -v ../hacl-c/_output/*.h c/
 cp -v ../hacl-c/*.h c/
 for f in c/EverCrypt_*.h ; do echo '#include "'$(basename $f)'"' ; done > c/bindings.h
@@ -26,5 +26,5 @@ if  [[ -z "$PULSE_HOME" ]] ; then
 fi
 DOCKER_CONTAINER_NAME=haclrustbindingscont"$$"
 docker create --name $DOCKER_CONTAINER_NAME $DOCKER_IMAGE_NAME
-docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/evercrypt.rs $PULSE_HOME/pulse2rust/tests/src/dpe_/evercrypt.rs
+docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/evercrypt_gen.rs $PULSE_HOME/pulse2rust/dpe/src/evercrypt_gen.rs
 docker rm $DOCKER_CONTAINER_NAME
