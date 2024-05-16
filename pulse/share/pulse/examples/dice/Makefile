@@ -2,7 +2,7 @@ PULSE_HOME ?= ../../../..
 PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/pulse/examples
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
-SRC_DIRS = common dpe engine l0
+SRC_DIRS = dpe engine l0 external external/hacl
 INCLUDE_PATHS += cbor
 #/Pulse.Lib.HashTable.fst
 FSTAR_OPTIONS += --warn_error -342

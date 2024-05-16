@@ -1,7 +1,7 @@
-PULSE_HOME ?= ../../../../../..
+PULSE_HOME ?= ../../../../..
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
-INCLUDE_PATHS += ..
+INCLUDE_PATHS += .. hacl
 ifneq (,$(wildcard ../../_output/cache))
   INCLUDE_PATHS += ../../_output/cache
 endif
