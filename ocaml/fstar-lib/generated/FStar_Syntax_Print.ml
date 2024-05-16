@@ -2020,3 +2020,26 @@ let (pretty_binder : FStar_Syntax_Syntax.binder FStar_Class_PP.pretty) =
          let uu___ = FStar_Class_Show.show showable_binder x in
          FStar_Pprint.doc_of_string uu___)
   }
+let (pretty_bv : FStar_Syntax_Syntax.bv FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_bv x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_binding : FStar_Syntax_Syntax.binding FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun uu___ ->
+         match uu___ with
+         | FStar_Syntax_Syntax.Binding_var bv ->
+             FStar_Class_PP.pp pretty_bv bv
+         | FStar_Syntax_Syntax.Binding_lid (l, (us, t)) ->
+             let uu___1 = FStar_Class_PP.pp FStar_Ident.pretty_lident l in
+             let uu___2 =
+               let uu___3 = FStar_Class_PP.pp pretty_term t in
+               FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___3 in
+             FStar_Pprint.op_Hat_Hat uu___1 uu___2
+         | FStar_Syntax_Syntax.Binding_univ u ->
+             FStar_Class_PP.pp FStar_Ident.pretty_ident u)
+  }
