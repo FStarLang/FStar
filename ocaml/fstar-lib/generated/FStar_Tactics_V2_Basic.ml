@@ -12334,20 +12334,25 @@ let (log_issues :
          (fun ps ->
             let ps = Obj.magic ps in
             let is1 =
-              FStar_Compiler_List.map
-                (fun i ->
-                   let uu___ =
-                     let uu___1 =
-                       FStar_Errors_Msg.text "Tactic logged issue:" in
-                     uu___1 :: (i.FStar_Errors.issue_msg) in
-                   {
-                     FStar_Errors.issue_msg = uu___;
-                     FStar_Errors.issue_level = (i.FStar_Errors.issue_level);
-                     FStar_Errors.issue_range = (i.FStar_Errors.issue_range);
-                     FStar_Errors.issue_number =
-                       (i.FStar_Errors.issue_number);
-                     FStar_Errors.issue_ctx = (i.FStar_Errors.issue_ctx)
-                   }) is in
+              if ps.FStar_Tactics_Types.dump_on_failure
+              then
+                FStar_Compiler_List.map
+                  (fun i ->
+                     let uu___ =
+                       let uu___1 =
+                         FStar_Errors_Msg.text "Tactic logged issue:" in
+                       uu___1 :: (i.FStar_Errors.issue_msg) in
+                     {
+                       FStar_Errors.issue_msg = uu___;
+                       FStar_Errors.issue_level =
+                         (i.FStar_Errors.issue_level);
+                       FStar_Errors.issue_range =
+                         (i.FStar_Errors.issue_range);
+                       FStar_Errors.issue_number =
+                         (i.FStar_Errors.issue_number);
+                       FStar_Errors.issue_ctx = (i.FStar_Errors.issue_ctx)
+                     }) is
+              else is in
             FStar_Errors.add_issues is1;
             Obj.magic
               (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
