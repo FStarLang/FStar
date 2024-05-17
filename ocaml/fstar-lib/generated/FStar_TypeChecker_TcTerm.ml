@@ -1939,7 +1939,8 @@ and (tc_maybe_toplevel_term :
         then
           let uu___3 =
             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-            FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range uu___4 in
+            FStar_Class_Show.show FStar_Compiler_Range_Ops.showable_range
+              uu___4 in
           let uu___4 = FStar_Syntax_Print.tag_of_term top in
           let uu___5 =
             FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
@@ -6753,7 +6754,8 @@ and (check_application_args :
                if uu___1
                then
                  let uu___2 =
-                   FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range
+                   FStar_Class_Show.show
+                     FStar_Compiler_Range_Ops.showable_range
                      head.FStar_Syntax_Syntax.pos in
                  let uu___3 =
                    FStar_Class_Show.show FStar_Syntax_Print.showable_term

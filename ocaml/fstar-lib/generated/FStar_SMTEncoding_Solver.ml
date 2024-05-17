@@ -1066,7 +1066,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                    let uu___3 =
                      let uu___4 =
                        FStar_Class_Show.show
-                         FStar_Compiler_Range_Ops.show_range
+                         FStar_Compiler_Range_Ops.showable_range
                          settings.query_range in
                      Prims.strcat uu___4 (Prims.strcat at_log_file ")") in
                    Prims.strcat "(" uu___3 in

@@ -77,7 +77,7 @@ let (core_check :
                        let uu___5 =
                          let uu___6 = FStar_TypeChecker_Env.get_range env in
                          FStar_Class_Show.show
-                           FStar_Compiler_Range_Ops.show_range uu___6 in
+                           FStar_Compiler_Range_Ops.showable_range uu___6 in
                        let uu___6 =
                          FStar_TypeChecker_Core.print_error_short err in
                        let uu___7 =
@@ -1096,7 +1096,7 @@ let (__do_unify_wflags :
                                                       msg in
                                                   let uu___10 =
                                                     FStar_Class_Show.show
-                                                      FStar_Compiler_Range_Ops.show_range
+                                                      FStar_Compiler_Range_Ops.showable_range
                                                       r in
                                                   FStar_Compiler_Util.print2
                                                     ">> do_unify error, (%s) at (%s)\n"
@@ -9237,7 +9237,8 @@ let (comp_to_string :
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->
-    let uu___ = FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range r in
+    let uu___ =
+      FStar_Class_Show.show FStar_Compiler_Range_Ops.showable_range r in
     ret uu___
 let (term_eq_old :
   FStar_Syntax_Syntax.term ->

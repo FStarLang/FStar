@@ -633,7 +633,7 @@ let (generalize' :
                         | (l, us, e, c, gvs) ->
                             let uu___6 =
                               FStar_Class_Show.show
-                                FStar_Compiler_Range_Ops.show_range
+                                FStar_Compiler_Range_Ops.showable_range
                                 e.FStar_Syntax_Syntax.pos in
                             let uu___7 =
                               FStar_Syntax_Print.lbname_to_string l in

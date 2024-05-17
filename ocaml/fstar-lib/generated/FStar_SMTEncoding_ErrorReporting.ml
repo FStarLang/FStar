@@ -812,7 +812,7 @@ let (detail_errors :
                              let uu___8 =
                                let uu___9 =
                                  FStar_Class_Show.show
-                                   FStar_Compiler_Range_Ops.show_range r in
+                                   FStar_Compiler_Range_Ops.showable_range r in
                                FStar_Compiler_Util.format1
                                  "XX: proof obligation at %s failed." uu___9 in
                              FStar_Errors_Msg.text uu___8 in
