@@ -11,6 +11,7 @@ pub mod evercrypt_hmac;
 pub mod fstar_sizet;
 pub mod hacl;
 pub mod l0core;
+pub mod l0core_gen;
 pub mod l0types;
 pub mod pulse_lib_array;
 pub mod pulse_lib_hashtable;

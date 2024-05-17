@@ -24,50 +24,7 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 module I32 = FStar.Int32
 
-noeq
-type character_string_t = {
-  fst : U32.t;
-  snd : V.vec FStar.Char.char;
-}
-
-noeq
-type octet_string_t = {
-  len : U32.t;
-  s : V.vec FStar.Char.char;
-}
-
-noeq
-type deviceIDCSR_ingredients_t = {
-  ku        : I32.t;
-  version   : I32.t;
-  s_common  : character_string_t;
-  s_org     : character_string_t;
-  s_country : character_string_t;
-}
-
-noeq
-type aliasKeyCRT_ingredients_t = {
-  version       : I32.t;
-  serialNumber  : octet_string_t;
-  i_common      : character_string_t;
-  i_org         : character_string_t;
-  i_country     : character_string_t;
-  notBefore     : V.vec FStar.Char.char;
-  notAfter      : V.vec FStar.Char.char;
-  s_common      : character_string_t;
-  s_org         : character_string_t;
-  s_country     : character_string_t;
-  ku            : I32.t;
-  l0_version    : I32.t;
-}
-
-val valid_hkdf_lbl_len (n:U32.t) : prop
-val valid_deviceIDCSR_ingredients
-  (deviceIDCSR_ingredients:deviceIDCSR_ingredients_t)
-  (deviceIDCSR_len:U32.t) : prop
-val valid_aliasKeyCRT_ingredients
-  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
-  (aliasKeyCRT_len:U32.t) : prop
+open L0Core
 
 noeq
 type l0_record_t = {

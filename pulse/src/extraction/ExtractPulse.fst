@@ -24,7 +24,8 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
   | MLTY_Named ([arg], p) when
     (let p = Syntax.string_of_mlpath p in
      p = "Pulse.Lib.Reference.ref" ||
-     p = "Pulse.Lib.Array.Core.array")
+     p = "Pulse.Lib.Array.Core.array" ||
+     p = "Pulse.Lib.Vec.vec")
     ->
       TBuf (translate_type_without_decay env arg)
 

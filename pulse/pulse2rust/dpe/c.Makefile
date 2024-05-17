@@ -12,11 +12,11 @@ PULSE_HOME ?= ../..
 OUTPUT_DIRECTORY=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY)/cache
 DICE_DIR=$(PULSE_HOME)/share/pulse/examples/dice/
-INCLUDE_PATHS += $(DICE_DIR)/external $(DICE_DIR)/dpe $(DICE_DIR)/engine $(DICE_DIR)/l0 $(DICE_DIR)/external/hacl
+INCLUDE_PATHS += $(DICE_DIR)/external $(DICE_DIR)/dpe $(DICE_DIR)/engine $(DICE_DIR)/l0 $(DICE_DIR)/external/hacl $(DICE_DIR)/external/l0 $(DICE_DIR)/_output/cache
 FSTAR_FILES := $(DICE_DIR)/dpe/DPE.fst
-ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions
+ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions,-L0Core
 FSTAR_OPTIONS += --warn_error -342
-FSTAR_DEP_OPTIONS=--extract '+EverCrypt'
+FSTAR_DEP_OPTIONS=--extract '+EverCrypt +L0Core'
 all: verify extract
 
 include $(PULSE_HOME)/share/pulse/Makefile.include
@@ -25,4 +25,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' $^
+	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' -add-include '"compat.h"' $^
