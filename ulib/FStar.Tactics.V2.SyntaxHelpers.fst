@@ -86,3 +86,11 @@ let rec collect_app' (args : list argv) (t : term)
     | _ -> (t, args)
 
 let collect_app = collect_app' []
+
+(* Destruct an application into [h]ead fv, [u]niverses, and [a]rguments. *)
+let hua (t:term) : Tac (option (fv & universes & list argv)) =
+  let hd, args = collect_app t in
+  match inspect hd with
+  | Tv_FVar fv -> Some (fv, [], args)
+  | Tv_UInst fv us -> Some (fv, us, args)
+  | _ -> None
