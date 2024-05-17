@@ -578,7 +578,7 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <| (
   let! ps = get in
   let! g = cur_goal in
   // should somehow taint the state instead of just printing a warning
-  Err.log_issue (pos #_ #(has_range_syntax ()) (goal_type g))
+  Err.log_issue (pos (goal_type g))
       (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
                   (goal_to_string "" None ps g));
   solve' g t)

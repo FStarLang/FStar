@@ -63,7 +63,7 @@ let (core_check :
                        let uu___5 =
                          let uu___6 = FStar_TypeChecker_Env.get_range env in
                          FStar_Class_Show.show
-                           FStar_Compiler_Range_Ops.show_range uu___6 in
+                           FStar_Compiler_Range_Ops.showable_range uu___6 in
                        let uu___6 =
                          FStar_TypeChecker_Core.print_error_short err in
                        let uu___7 =
@@ -1187,7 +1187,7 @@ let (__do_unify_wflags :
                                                                msg in
                                                            let uu___9 =
                                                              FStar_Class_Show.show
-                                                               FStar_Compiler_Range_Ops.show_range
+                                                               FStar_Compiler_Range_Ops.showable_range
                                                                r in
                                                            FStar_Compiler_Util.print2
                                                              ">> do_unify error, (%s) at (%s)\n"
@@ -9557,7 +9557,7 @@ let (range_to_string :
   fun uu___ ->
     (fun r ->
        let uu___ =
-         FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range r in
+         FStar_Class_Show.show FStar_Compiler_Range_Ops.showable_range r in
        Obj.magic
          (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
             (Obj.magic uu___))) uu___
@@ -10543,7 +10543,7 @@ let (refl_tc_term :
                           (fun uu___3 ->
                              let uu___4 =
                                FStar_Class_Show.show
-                                 FStar_Compiler_Range_Ops.show_range
+                                 FStar_Compiler_Range_Ops.showable_range
                                  e.FStar_Syntax_Syntax.pos in
                              let uu___5 =
                                FStar_Class_Show.show
@@ -10824,7 +10824,7 @@ let (refl_tc_term :
                                                  FStar_TypeChecker_Env.get_range
                                                    g3 in
                                                FStar_Class_Show.show
-                                                 FStar_Compiler_Range_Ops.show_range
+                                                 FStar_Compiler_Range_Ops.showable_range
                                                  uu___11 in
                                              let uu___11 =
                                                FStar_Class_Show.show
@@ -10832,7 +10832,7 @@ let (refl_tc_term :
                                                  guard in
                                              let uu___12 =
                                                FStar_Class_Show.show
-                                                 FStar_Compiler_Range_Ops.show_range
+                                                 FStar_Compiler_Range_Ops.showable_range
                                                  guard.FStar_Syntax_Syntax.pos in
                                              FStar_Compiler_Util.format3
                                                "Got guard in Env@%s |- %s@%s\n"
@@ -10855,7 +10855,7 @@ let (refl_tc_term :
                                              (fun uu___10 ->
                                                 let uu___11 =
                                                   FStar_Class_Show.show
-                                                    FStar_Compiler_Range_Ops.show_range
+                                                    FStar_Compiler_Range_Ops.showable_range
                                                     e2.FStar_Syntax_Syntax.pos in
                                                 let uu___12 =
                                                   FStar_Class_Show.show

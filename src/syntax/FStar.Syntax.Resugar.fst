@@ -411,7 +411,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when can_resugar_machine_integer fv ->
       resugar_machine_integer fv i t.pos
 
-    | Tm_app {hd=e; args} ->
+    | Tm_app _ ->
+      let t = U.canon_app t in
+      let Tm_app {hd=e; args} = t.n in
+      (* NB: This cannot fail since U.canon_app constructs a Tm_app. *)
+
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
             | hd :: [] -> [hd]

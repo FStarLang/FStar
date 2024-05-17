@@ -57,6 +57,11 @@ bootstrap:
 	+$(Q)$(MAKE) dune-snapshot
 	+$(Q)$(MAKE) fstar
 
+# This is a faster version of bootstrap, since it does not use dune
+# to install the binary and libraries, and instead just copies the binary
+# mannualy. HOWEVER, note that this means plugins will not work well,
+# since they are compiled against the objects in bin/, which will become
+# stale if this rule is used. Using bootstrap is usually safer.
 .PHONY: boot
 boot:
 	+$(Q)$(MAKE) dune-snapshot
