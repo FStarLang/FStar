@@ -121,6 +121,10 @@ let json_of_def_range r =
             (start_of_range r)
             (end_of_range r)
 
-instance show_range = {
+instance showable_range = {
   show = string_of_range;
+}
+
+instance pretty_range = {
+  pp = (fun r -> Pprint.doc_of_string (string_of_range r));
 }

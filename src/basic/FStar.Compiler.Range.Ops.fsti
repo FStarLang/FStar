@@ -18,6 +18,7 @@ module FStar.Compiler.Range.Ops
 open FStar.Compiler.Range.Type
 open FStar.Compiler.Effect
 open FStar.Class.Show
+open FStar.Class.PP
 
 val union_rng: rng -> rng -> rng
 val union_ranges: range -> range -> range
@@ -47,4 +48,5 @@ val json_of_pos : pos -> Json.json
 val json_of_use_range : range -> Json.json
 val json_of_def_range : range -> Json.json
 
-instance val show_range : showable range
+instance val showable_range : showable range
+instance val pretty_range : pretty range
