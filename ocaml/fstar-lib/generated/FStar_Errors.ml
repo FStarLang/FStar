@@ -412,7 +412,7 @@ let (print_issue : issue -> unit) =
       match issue1.issue_level with
       | EInfo ->
           (fun s ->
-             let uu___ = FStar_Compiler_Util.colorize_magenta s in
+             let uu___ = FStar_Compiler_Util.colorize_cyan s in
              FStar_Compiler_Util.print_string uu___)
       | EWarning -> FStar_Compiler_Util.print_warning
       | EError -> FStar_Compiler_Util.print_error

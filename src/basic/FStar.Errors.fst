@@ -203,7 +203,7 @@ let format_issue issue : string = format_issue' true issue
 let print_issue issue =
     let printer =
         match issue.issue_level with
-        | EInfo -> (fun s -> BU.print_string (colorize_magenta s))
+        | EInfo -> (fun s -> BU.print_string (colorize_cyan s))
         | EWarning -> BU.print_warning
         | EError -> BU.print_error
         | ENotImplemented -> BU.print_error in
