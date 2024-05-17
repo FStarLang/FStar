@@ -264,6 +264,16 @@ let proc_guard_formula
     | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
            fail1 "Forcing the guard failed (%s)" reason))
 
+  | ForceSMT ->
+    mlog (fun () -> BU.print2 "Forcing guard WITH SMT (%s:%s)\n" reason (show f)) (fun () ->
+    let g = { Env.trivial_guard with guard_f = NonTrivial f } in
+    try if not (Env.is_trivial <| Rel.discharge_guard e g)
+        then fail1 "Forcing the guard failed (%s)" reason
+        else return ()
+    with
+    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
+           fail1 "Forcing the guard failed (%s)" reason))
+
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
