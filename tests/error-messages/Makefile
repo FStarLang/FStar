@@ -26,6 +26,7 @@ all: check-all
 Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
 Bug2820.fst.output: OTHERFLAGS+=--dump_module Bug2820
 Bug3227.fst.output: OTHERFLAGS+=--dump_module Bug3227
+Bug3292.fst.output: OTHERFLAGS+=--dump_module Bug3292
 CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
 
 include $(FSTAR_HOME)/examples/Makefile.common

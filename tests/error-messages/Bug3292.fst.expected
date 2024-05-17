@@ -1,0 +1,155 @@
+Module after desugaring:
+module Bug3292
+Declarations: [
+#set-options "--print_implicits"
+let op_Plus #a x y = x, y
+let op_Minus #a x y = x, y
+let op_Slash #a x y = x, y
+let op_Greater #a x y = x, y
+let op_Less #a x y = x, y
+let op_GreaterEquals #a x y = x, y
+let op_LessEquals #a x y = x, y
+private
+let _ = 1 + 1
+private
+let _ = 1 - 1
+private
+let _ = 1 / 1
+private
+let _ = 1 > 1
+private
+let _ = 1 < 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+Exports: [
+#set-options "--print_implicits"
+let op_Plus #a x y = x, y
+let op_Minus #a x y = x, y
+let op_Slash #a x y = x, y
+let op_Greater #a x y = x, y
+let op_Less #a x y = x, y
+let op_GreaterEquals #a x y = x, y
+let op_LessEquals #a x y = x, y
+private
+let _ = 1 + 1
+private
+let _ = 1 - 1
+private
+let _ = 1 / 1
+private
+let _ = 1 > 1
+private
+let _ = 1 < 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+
+Module before type checking:
+module Bug3292
+Declarations: [
+#set-options "--print_implicits"
+let op_Plus x y = x, y
+let op_Minus x y = x, y
+let op_Slash x y = x, y
+let op_Greater x y = x, y
+let op_Less x y = x, y
+let op_GreaterEquals x y = x, y
+let op_LessEquals x y = x, y
+private
+let _ = 1 + 1
+private
+let _ = 1 - 1
+private
+let _ = 1 / 1
+private
+let _ = 1 > 1
+private
+let _ = 1 < 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+Exports: [
+#set-options "--print_implicits"
+let op_Plus x y = x, y
+let op_Minus x y = x, y
+let op_Slash x y = x, y
+let op_Greater x y = x, y
+let op_Less x y = x, y
+let op_GreaterEquals x y = x, y
+let op_LessEquals x y = x, y
+private
+let _ = 1 + 1
+private
+let _ = 1 - 1
+private
+let _ = 1 / 1
+private
+let _ = 1 > 1
+private
+let _ = 1 < 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+
+Module after type checking:
+module Bug3292
+Declarations: [
+#set-options "--print_implicits"
+let op_Plus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Slash #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Greater #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_GreaterEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_LessEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+private
+let _ = Bug3292.op_Plus #Prims.int 1 1
+private
+let _ = 1 - 1
+private
+let _ = Bug3292.op_Slash #Prims.int 1 1
+private
+let _ = Bug3292.op_Greater #Prims.int 1 1
+private
+let _ = Bug3292.op_Less #Prims.int 1 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+Exports: [
+#set-options "--print_implicits"
+let op_Plus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Minus #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Slash #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Greater #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_Less #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_GreaterEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+let op_LessEquals #a x y = FStar.Pervasives.Native.Mktuple2 #a #a x y
+private
+let _ = Bug3292.op_Plus #Prims.int 1 1
+private
+let _ = 1 - 1
+private
+let _ = Bug3292.op_Slash #Prims.int 1 1
+private
+let _ = Bug3292.op_Greater #Prims.int 1 1
+private
+let _ = Bug3292.op_Less #Prims.int 1 1
+private
+let _ = 1 >= 1
+private
+let _ = 1 <= 1
+]
+
+Verified module: Bug3292
+All verification conditions discharged successfully

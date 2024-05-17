@@ -303,7 +303,7 @@ val strip_prefix : string -> string -> option string
 
 val compile_op : int -> string -> range -> string
 val compile_op' : string -> range -> string
-val string_to_op : string -> option (string & option int)
+val string_to_op : string -> option (string & option int) // returns operator symbol and optional arity
 
 val string_of_fsdoc : string & list (string & string) -> string
 val string_of_let_qualifier : let_qualifier -> string
