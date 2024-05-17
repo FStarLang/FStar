@@ -82,6 +82,8 @@ let is_dom_push
 
   assert (Map.equal (remove_map (Map.upd m x t) x) m)
 
+let lemma_dom_empty () = ()
+
 let push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t =
   
   is_dom_push ss.l ss.m x t;

@@ -39,6 +39,9 @@ let sel (ss:ss_t) (x:var { contains ss x }) = Map.sel (as_map ss) x
 
 val empty : ss_t
 
+val lemma_dom_empty ()
+  : Lemma (dom empty == Set.empty)
+
 val push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t
 
 val push_ss (ss1:ss_t) (ss2:ss_t { Set.disjoint (dom ss1) (dom ss2) }) : ss_t
