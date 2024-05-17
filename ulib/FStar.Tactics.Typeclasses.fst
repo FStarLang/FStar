@@ -219,6 +219,19 @@ let global (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
               trywith st g (pack (Tv_FVar fv)) typ k)
           st.glb
 
+exception Next
+let try_trivial (st:st_t) (g:tc_goal) (k : st_t -> Tac unit) () : Tac unit =
+  match g.g with
+  | Tv_FVar fv ->
+    if implode_qn (inspect_fv fv) = `%unit
+    then exact (`())
+    else raise Next
+  | _ -> raise Next
+
+let ( <|> ) (t1 t2  : unit -> Tac 'a) : unit -> Tac 'a =
+  fun () ->
+    try t1 () with _ -> t2 ()
+
 (*
   tcresolve': the main typeclass instantiation function.
 
@@ -254,7 +267,9 @@ let rec tcresolve' (st:st_t) : Tac unit =
       let args_and_uvars = args |> Util.map (fun (a, q) -> (a, q), Cons? (free_uvars a )) in
       let st = { st with seen = g :: st.seen } in
       let g = { g; head_fv; c_se; fundeps; args_and_uvars } in
-      local st g tcresolve' `or_else` global st g tcresolve'
+      (try_trivial st g tcresolve' <|>
+       local st g tcresolve' <|>
+       global st g tcresolve') ()
 
 let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
   match l with
