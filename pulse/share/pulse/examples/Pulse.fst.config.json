@@ -29,6 +29,7 @@
     "dice/engine",
     "dice/external",
     "dice/external/hacl",
+    "dice/external/l0",
     "dice/cbor"
   ]
 }

@@ -17,7 +17,6 @@
 module DPETypes
 open Pulse.Lib.Pervasives
 open HACL
-open X509
 open EngineTypes
 open EngineCore
 open L0Types
@@ -173,96 +172,98 @@ let l0_context_perm (c:l0_context_t) (r:l0_context_repr_t): vprop
 (* L1 Context *)
 [@@ Rust_derive "Clone"]
 noeq
-type l1_context_t = { deviceID_priv: V.lvec U8.t (SZ.v v32us);
-                      deviceID_pub: V.lvec U8.t (SZ.v v32us);   
-                      aliasKey_priv: V.lvec U8.t (SZ.v v32us);
-                      aliasKey_pub: V.lvec U8.t (SZ.v v32us);
-                      aliasKeyCRT: V.vec U8.t;
-                      deviceIDCSR: V.vec U8.t; }
+type l1_context_t = {
+  deviceID_pub: V.lvec U8.t 32;
+  aliasKey_priv: V.lvec U8.t 32;
+  aliasKey_pub: V.lvec U8.t 32;
+  deviceIDCSR: V.vec U8.t;
+  aliasKeyCRT: V.vec U8.t;
+}
 
-let mk_l1_context_t deviceID_priv deviceID_pub aliasKey_priv aliasKey_pub aliasKeyCRT deviceIDCSR 
+let mk_l1_context_t deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR aliasKeyCRT
 : l1_context_t
-= {deviceID_priv; deviceID_pub; aliasKey_priv; aliasKey_pub; aliasKeyCRT; deviceIDCSR}
+= {deviceID_pub; aliasKey_pub; aliasKey_priv; deviceIDCSR; aliasKeyCRT}
 
 noeq
 type l1_context_repr_t = {
-  deviceID_label_len: hkdf_lbl_len;
-  aliasKey_label_len: hkdf_lbl_len;
-  deviceID_priv: Seq.seq U8.t;
-  deviceID_pub: Seq.seq U8.t;
-  aliasKey_priv: Seq.seq U8.t;
-  aliasKey_pub: Seq.seq U8.t;
-  aliasKeyCRT_len:SZ.t;
-  aliasKeyCRT:Seq.seq U8.t;// aliasKeyCRT_len;
-  deviceIDCSR_len:SZ.t;
-  deviceIDCSR:Seq.seq U8.t;// deviceIDCSR_len;
-  cdi:Seq.seq U8.t; // dice_digest_len;
-  repr:l0_record_repr_t;
-  deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
-  aliasKeyCRT_ingredients: (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t {
-    valid_hkdf_ikm_len dice_digest_len /\
-    aliasKey_functional_correctness
-      dice_hash_alg dice_digest_len cdi repr.fwid
-      aliasKey_label_len repr.aliasKey_label 
-      aliasKey_pub aliasKey_priv /\
-    deviceIDCSR_functional_correctness
-      dice_hash_alg dice_digest_len cdi
-      deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-      deviceIDCSR_len deviceIDCSR /\
-    aliasKeyCRT_functional_correctness
-      dice_hash_alg dice_digest_len cdi repr.fwid
-      deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-      aliasKeyCRT_len aliasKeyCRT aliasKey_pub
+  cdi:Seq.seq U8.t;
+  deviceID_label_len:(n:U32.t { valid_hkdf_lbl_len n });
+  aliasKey_label_len:(n:U32.t { valid_hkdf_lbl_len n });
+  deviceIDCSR_ingredients:deviceIDCSR_ingredients_t;
+  aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t;
+  deviceID_pub:Seq.seq U8.t;
+  aliasKey_pub:Seq.seq U8.t;
+  aliasKey_priv:Seq.seq U8.t;
+  deviceIDCSR_len:(n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n });
+  deviceIDCSR:Seq.seq U8.t;
+  aliasKeyCRT_len:(n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n });
+  aliasKeyCRT:Seq.seq U8.t;
+  repr:(repr:l0_record_repr_t {
+    l0_post
+     cdi
+     repr.fwid
+     deviceID_label_len
+     repr.deviceID_label
+     aliasKey_label_len
+     repr.aliasKey_label
+     deviceIDCSR_ingredients
+     aliasKeyCRT_ingredients
+     deviceID_pub
+     aliasKey_pub
+     aliasKey_priv
+     deviceIDCSR_len
+     deviceIDCSR
+     aliasKeyCRT_len
+     aliasKeyCRT
   });
 }
 
-let mk_l1_context_repr_t 
-  (deviceID_label_len:hkdf_lbl_len)
-  (aliasKey_label_len:hkdf_lbl_len)
-  (deviceID_priv:Seq.seq U8.t)
-  (deviceID_pub:Seq.seq U8.t)
-  (aliasKey_priv:Seq.seq U8.t)
-  (aliasKey_pub:Seq.seq U8.t)
-  (aliasKeyCRT_len:SZ.t)
-  (aliasKeyCRT:Seq.seq U8.t)
-  (deviceIDCSR_len:erased SZ.t)
-  (deviceIDCSR:Seq.seq U8.t)
+let mk_l1_context_repr_t
   (cdi:Seq.seq U8.t)
-  (repr:l0_record_repr_t)
+  (deviceID_label_len:(n:U32.t { valid_hkdf_lbl_len n }))
+  (aliasKey_label_len:(n:U32.t { valid_hkdf_lbl_len n }))
   (deviceIDCSR_ingredients:deviceIDCSR_ingredients_t)
-  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t {
-    valid_hkdf_ikm_len dice_digest_len /\
-    aliasKey_functional_correctness
-      dice_hash_alg dice_digest_len cdi repr.fwid
-      aliasKey_label_len repr.aliasKey_label 
-      aliasKey_pub aliasKey_priv /\
-    deviceIDCSR_functional_correctness
-      dice_hash_alg dice_digest_len cdi
-      deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-      deviceIDCSR_len deviceIDCSR /\
-    aliasKeyCRT_functional_correctness
-      dice_hash_alg dice_digest_len cdi repr.fwid
-      deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-      aliasKeyCRT_len aliasKeyCRT aliasKey_pub})
-: GTot l1_context_repr_t 
-= {deviceID_label_len; aliasKey_label_len; deviceID_priv; deviceID_pub; aliasKey_priv;
-  aliasKey_pub; aliasKeyCRT_len; aliasKeyCRT; deviceIDCSR_len; deviceIDCSR;
-  cdi; repr; deviceIDCSR_ingredients; aliasKeyCRT_ingredients}
+  (aliasKeyCRT_ingredients:aliasKeyCRT_ingredients_t)
+  (deviceID_pub:Seq.seq U8.t)
+  (aliasKey_pub:Seq.seq U8.t)
+  (aliasKey_priv:Seq.seq U8.t)
+  (deviceIDCSR_len:(n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n }))
+  (deviceIDCSR:Seq.seq U8.t)
+  (aliasKeyCRT_len:(n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n }))
+  (aliasKeyCRT:Seq.seq U8.t)
+  (repr:(repr:l0_record_repr_t {
+     l0_post
+       cdi
+       repr.fwid
+       deviceID_label_len
+       repr.deviceID_label
+       aliasKey_label_len
+       repr.aliasKey_label
+       deviceIDCSR_ingredients
+       aliasKeyCRT_ingredients
+       deviceID_pub
+       aliasKey_pub
+       aliasKey_priv
+       deviceIDCSR_len
+       deviceIDCSR
+       aliasKeyCRT_len
+       aliasKeyCRT }))
+  : GTot l1_context_repr_t =
+  { cdi; deviceID_label_len; aliasKey_label_len; deviceIDCSR_ingredients; aliasKeyCRT_ingredients;
+    deviceID_pub; aliasKey_pub; aliasKey_priv; deviceIDCSR_len; deviceIDCSR; aliasKeyCRT_len; aliasKeyCRT; repr }
 
 let l1_context_perm (c:l1_context_t) (r:l1_context_repr_t)
   : vprop
-  = V.pts_to c.deviceID_priv r.deviceID_priv **
-    V.pts_to c.deviceID_pub r.deviceID_pub **
-    V.pts_to c.aliasKey_priv r.aliasKey_priv **
+  = V.pts_to c.deviceID_pub r.deviceID_pub **
     V.pts_to c.aliasKey_pub r.aliasKey_pub **
-    V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+    V.pts_to c.aliasKey_priv r.aliasKey_priv **
     V.pts_to c.deviceIDCSR r.deviceIDCSR **
-    pure (V.is_full_vec c.deviceID_priv
-       /\ V.is_full_vec c.deviceID_pub
-       /\ V.is_full_vec c.aliasKey_priv
-       /\ V.is_full_vec c.aliasKey_pub
-       /\ V.is_full_vec c.aliasKeyCRT
-       /\ V.is_full_vec c.deviceIDCSR)  
+    V.pts_to c.aliasKeyCRT r.aliasKeyCRT **
+    pure (V.is_full_vec c.deviceID_pub /\
+          V.is_full_vec c.aliasKey_pub /\
+          V.is_full_vec c.aliasKey_priv /\
+          V.is_full_vec c.deviceIDCSR /\
+          V.is_full_vec c.aliasKeyCRT)
 
 [@@ Rust_derive "Clone"]
 noeq

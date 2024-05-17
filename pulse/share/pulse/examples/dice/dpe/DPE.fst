@@ -18,7 +18,6 @@ module DPE
 open Pulse.Lib.Pervasives
 open DPETypes
 open HACL
-open X509
 open EngineTypes
 open EngineCore
 open L0Types
@@ -752,94 +751,82 @@ fn init_l0_ctxt
 ```
 
 ```pulse
-fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t) 
-                (deviceID_priv: A.larray U8.t (SZ.v v32us)) (deviceID_pub: A.larray U8.t (SZ.v v32us))
-                (aliasKey_priv: A.larray U8.t (SZ.v v32us)) (aliasKey_pub: A.larray U8.t (SZ.v v32us)) 
-                (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (SZ.v aliasKeyCRT_len))
-                (deviceID_label_len aliasKey_label_len: erased hkdf_lbl_len)
-                (cdi:erased (Seq.seq U8.t))
-                (repr:erased l0_record_repr_t)
-                (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-                (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-                (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
-                 #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
-                (_:squash (
-                   valid_hkdf_ikm_len dice_digest_len /\
-                   aliasKey_functional_correctness
-                     dice_hash_alg dice_digest_len cdi repr.fwid
-                     aliasKey_label_len repr.aliasKey_label 
-                     aliasKey_pub0 aliasKey_priv0 /\
-                   deviceIDCSR_functional_correctness
-                     dice_hash_alg dice_digest_len cdi
-                     deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-                     deviceIDCSR_len deviceIDCSR0 /\
-                   aliasKeyCRT_functional_correctness
-                     dice_hash_alg dice_digest_len cdi repr.fwid
-                     deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-                     aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0))
-              
-  requires A.pts_to deviceID_priv deviceID_priv0 ** 
-           A.pts_to deviceID_pub deviceID_pub0 ** 
-           A.pts_to aliasKey_priv aliasKey_priv0 ** 
-           A.pts_to aliasKey_pub aliasKey_pub0 ** 
-           A.pts_to deviceIDCSR deviceIDCSR0 **
-           A.pts_to aliasKeyCRT aliasKeyCRT0
+fn init_l1_ctxt
+  (cdi:erased (Seq.seq U8.t))
+  (deviceID_label_len:(n:erased U32.t { valid_hkdf_lbl_len n }))
+  (aliasKey_label_len:(n:erased U32.t { valid_hkdf_lbl_len n }))
+  (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
+  (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
+  (deviceID_pub:V.lvec U8.t 32)
+  (aliasKey_priv:V.lvec U8.t 32)
+  (aliasKey_pub:V.lvec U8.t 32)
+  (deviceIDCSR_len:(n:erased U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n }))
+  (deviceIDCSR:V.vec U8.t)
+  (aliasKeyCRT_len:(n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n }))
+  (aliasKeyCRT:V.vec U8.t)
+  (repr:erased l0_record_repr_t)
+  (#deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
+   #deviceIDCSR_repr #aliasKeyCRT_repr:erased (Seq.seq U8.t))
+  (_:squash (l0_post
+     cdi
+     repr.fwid
+     deviceID_label_len
+     repr.deviceID_label
+     aliasKey_label_len
+     repr.aliasKey_label
+     deviceIDCSR_ingredients
+     aliasKeyCRT_ingredients
+     deviceID_pub_repr
+     aliasKey_pub_repr
+     aliasKey_priv_repr
+     deviceIDCSR_len
+     deviceIDCSR_repr
+     aliasKeyCRT_len
+     aliasKeyCRT_repr))
+  requires V.pts_to deviceID_pub deviceID_pub_repr ** 
+           V.pts_to aliasKey_pub aliasKey_pub_repr ** 
+           V.pts_to aliasKey_priv aliasKey_priv_repr ** 
+           V.pts_to deviceIDCSR deviceIDCSR_repr **
+           V.pts_to aliasKeyCRT aliasKeyCRT_repr **
+           pure (V.is_full_vec deviceID_pub /\
+                 V.is_full_vec aliasKey_pub /\
+                 V.is_full_vec aliasKey_priv /\
+                 V.is_full_vec deviceIDCSR /\
+                  V.is_full_vec aliasKeyCRT)
   returns ctxt:l1_context_t
   ensures 
-    A.pts_to deviceID_priv deviceID_priv0 ** 
-    A.pts_to deviceID_pub deviceID_pub0 **
-    A.pts_to aliasKey_priv aliasKey_priv0 ** 
-    A.pts_to aliasKey_pub aliasKey_pub0 ** 
-    A.pts_to deviceIDCSR deviceIDCSR0 **
-    A.pts_to aliasKeyCRT aliasKeyCRT0 **
-    l1_context_perm ctxt (mk_l1_context_repr_t 
-                            deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-                            aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-                            deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients)
+    l1_context_perm ctxt (mk_l1_context_repr_t
+      cdi deviceID_label_len aliasKey_label_len deviceIDCSR_ingredients aliasKeyCRT_ingredients
+      deviceID_pub_repr aliasKey_pub_repr aliasKey_priv_repr
+      deviceIDCSR_len deviceIDCSR_repr aliasKeyCRT_len aliasKeyCRT_repr repr)
 {
-  let deviceID_pub_buf = V.alloc 0uy v32us;
-  let deviceID_priv_buf = V.alloc 0uy v32us;
-  let aliasKey_priv_buf = V.alloc 0uy v32us;
-  let aliasKey_pub_buf = V.alloc 0uy v32us;
-  let deviceIDCSR_buf = V.alloc 0uy deviceIDCSR_len;
-  let aliasKeyCRT_buf = V.alloc 0uy aliasKeyCRT_len;
+  let ctxt = mk_l1_context_t
+    deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR aliasKeyCRT;
+  
+  let l1_ctxt_repr = hide (mk_l1_context_repr_t
+    cdi deviceID_label_len aliasKey_label_len
+    deviceIDCSR_ingredients aliasKeyCRT_ingredients
+    deviceID_pub_repr aliasKey_pub_repr aliasKey_priv_repr
+    deviceIDCSR_len deviceIDCSR_repr aliasKeyCRT_len aliasKeyCRT_repr
+    repr);
 
-  V.to_array_pts_to deviceID_pub_buf;
-  V.to_array_pts_to deviceID_priv_buf;
-  V.to_array_pts_to aliasKey_priv_buf;
-  V.to_array_pts_to aliasKey_pub_buf;
-  V.to_array_pts_to deviceIDCSR_buf;
-  V.to_array_pts_to aliasKeyCRT_buf;
-  memcpy v32us deviceID_priv (V.vec_to_array deviceID_priv_buf);
-  memcpy v32us deviceID_pub (V.vec_to_array deviceID_pub_buf);
-  memcpy v32us aliasKey_priv (V.vec_to_array aliasKey_priv_buf);
-  memcpy v32us aliasKey_pub (V.vec_to_array aliasKey_pub_buf);
-  memcpy deviceIDCSR_len deviceIDCSR (V.vec_to_array deviceIDCSR_buf);
-  memcpy aliasKeyCRT_len aliasKeyCRT (V.vec_to_array aliasKeyCRT_buf);
-  V.to_vec_pts_to deviceID_pub_buf;
-  V.to_vec_pts_to deviceID_priv_buf;
-  V.to_vec_pts_to aliasKey_priv_buf;
-  V.to_vec_pts_to aliasKey_pub_buf;
-  V.to_vec_pts_to deviceIDCSR_buf;
-  V.to_vec_pts_to aliasKeyCRT_buf;
+  rewrite each
+    deviceID_pub as ctxt.deviceID_pub,
+    aliasKey_pub as ctxt.aliasKey_pub,
+    aliasKey_priv as ctxt.aliasKey_priv,
+    deviceIDCSR as ctxt.deviceIDCSR,
+    aliasKeyCRT as ctxt.aliasKeyCRT;
 
-  let l1_context = mk_l1_context_t 
-    deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf 
-    aliasKeyCRT_buf deviceIDCSR_buf;
-  let l1_context_repr = hide (mk_l1_context_repr_t 
-    deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-    aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-    deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients);
+  rewrite each
+    cdi as l1_ctxt_repr.cdi,
+    deviceID_pub_repr as l1_ctxt_repr.deviceID_pub,
+    aliasKey_pub_repr as l1_ctxt_repr.aliasKey_pub,
+    aliasKey_priv_repr as l1_ctxt_repr.aliasKey_priv,
+    deviceIDCSR_repr as l1_ctxt_repr.deviceIDCSR,
+    aliasKeyCRT_repr as l1_ctxt_repr.aliasKeyCRT;
 
-  rewrite each deviceID_priv_buf  as l1_context.deviceID_priv,
-          deviceID_pub_buf  as l1_context.deviceID_pub,
-          aliasKey_priv_buf as l1_context.aliasKey_priv,
-          aliasKey_pub_buf  as l1_context.aliasKey_pub,
-          deviceIDCSR_buf   as l1_context.deviceIDCSR,
-          aliasKeyCRT_buf   as l1_context.aliasKeyCRT;
-
-  fold (l1_context_perm l1_context l1_context_repr);
-  l1_context
+  fold (l1_context_perm ctxt l1_ctxt_repr);
+  ctxt
 }
 ```
 
@@ -887,31 +874,32 @@ let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : pr
   | L0_context_repr _, L0_repr _ -> True
   | _ -> False
 
+#set-options "--print_implicits --ugly"
 ```pulse
 fn derive_child_from_context
     (context:context_t)
     (record:record_t)
-    p
     (#record_repr: erased repr_t)
     (#context_repr:erased (context_repr_t))
     (_:squash (valid_context_and_record_for_derive_child context_repr record_repr))
 
   requires
     context_perm context context_repr **
-    record_perm record p record_repr
+    record_perm record 1.0R record_repr
   returns res:(context_t & record_t & option context_t)
   ensures
     context_perm (tfst res) context_repr **
-    record_perm (tsnd res) p record_repr **
+    record_perm (tsnd res) 1.0R record_repr **
     maybe_context_perm context_repr record_repr (tthd res)
 {
   intro_context_and_repr_tag_related context context_repr;
-  intro_record_and_repr_tag_related record p record_repr;
+  intro_record_and_repr_tag_related record 1.0R record_repr;
  
   match context {
     Engine_context c -> {
       match record {
         Engine_record r -> {
+          admit ();
           let uds_bytes = rewrite_context_perm_engine context c;
           unfold (engine_context_perm c uds_bytes);
 
@@ -972,29 +960,53 @@ fn derive_child_from_context
           with s. assert (V.pts_to c.cdi s);
 
           let r0 = rewrite_record_perm_l0 record r;
+          unfold (l0_record_perm r 1.0R r0);
 
-          let deviceIDCRI_len_and_ing = len_of_deviceIDCRI r.deviceIDCSR_ingredients;
-          let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
-          let deviceIDCRI_len = snd deviceIDCRI_len_and_ing;
+          let deviceID_pub = V.alloc 0uy (SZ.uint_to_t 32);
+          let aliasKey_pub = V.alloc 0uy (SZ.uint_to_t 32);
+          let aliasKey_priv = V.alloc 0uy (SZ.uint_to_t 32);
+          assume_ (pure (SZ.fits_u32));
+          let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet r.deviceIDCSR_len);
+          let aliasKeyCRT = V.alloc 0uy (SZ.uint32_to_sizet r.aliasKeyCRT_len);
 
-          let aliasKeyTBS_len_and_ing = len_of_aliasKeyTBS r.aliasKeyCRT_ingredients;
-          let aliasKeyCRT_ingredients = fst aliasKeyTBS_len_and_ing;
-          let aliasKeyTBS_len = snd aliasKeyTBS_len_and_ing;
-
-          let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
-          let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
-
-          let mut deviceID_pub = [| 0uy; v32us |];
-          let mut deviceID_priv = [| 0uy; v32us |];
-          let mut aliasKey_pub = [| 0uy; v32us |];
-          let mut aliasKey_priv = [| 0uy; v32us |];
-
-          let deviceIDCSR = V.alloc 0uy deviceIDCSR_len;
-          let aliasKeyCRT = V.alloc 0uy aliasKeyCRT_len;
-
+          V.to_array_pts_to c.cdi;
+          V.to_array_pts_to r.fwid;
+          V.to_array_pts_to r.deviceID_label;
+          V.to_array_pts_to r.aliasKey_label;
+          V.to_array_pts_to deviceID_pub;
+          V.to_array_pts_to aliasKey_pub;
+          V.to_array_pts_to aliasKey_priv;
           V.to_array_pts_to deviceIDCSR;
           V.to_array_pts_to aliasKeyCRT;
-          V.to_array_pts_to c.cdi;
+
+          assume_ (pure (A.length (V.vec_to_array c.cdi) == 32));
+
+          let _ : unit = l0
+            (V.vec_to_array c.cdi)
+            (V.vec_to_array r.fwid)
+            r.deviceID_label_len
+            (V.vec_to_array r.deviceID_label)
+            r.aliasKey_label_len
+            (V.vec_to_array r.aliasKey_label)
+            r.deviceIDCSR_ingredients
+            r.aliasKeyCRT_ingredients
+            (V.vec_to_array deviceID_pub)
+            (V.vec_to_array aliasKey_pub)
+            (V.vec_to_array aliasKey_priv)
+            r.deviceIDCSR_len
+            (V.vec_to_array deviceIDCSR)
+            r.aliasKeyCRT_len
+            (V.vec_to_array aliasKeyCRT);
+          
+          V.to_vec_pts_to c.cdi;
+          V.to_vec_pts_to r.fwid;
+          V.to_vec_pts_to r.deviceID_label;
+          V.to_vec_pts_to r.aliasKey_label;
+          V.to_vec_pts_to deviceID_pub;
+          V.to_vec_pts_to aliasKey_pub;
+          V.to_vec_pts_to aliasKey_priv;
+          V.to_vec_pts_to deviceIDCSR;
+          V.to_vec_pts_to aliasKeyCRT;
 
           let r1 = {
             fwid = r.fwid;
@@ -1007,52 +1019,89 @@ fn derive_child_from_context
           } <: l0_record_t;
           l0_record_perm_aux r r1;
 
-          let r2 = L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
-                                   aliasKey_pub aliasKey_priv 
-                                   aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
-                                   deviceIDCRI_len deviceIDCSR_len (V.vec_to_array deviceIDCSR) r1;
 
-          V.to_vec_pts_to c.cdi;
+          admit ()
 
-          fold (l0_context_perm c cr);
-          rewrite (l0_context_perm c cr)
-               as (context_perm (L0_context c) context_repr);
-          rewrite (l0_record_perm r2 p r0)
-               as (record_perm (L0_record r2) p record_repr);
+          // let deviceIDCRI_len_and_ing = len_of_deviceIDCRI r.deviceIDCSR_ingredients;
+          // let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
+          // let deviceIDCRI_len = snd deviceIDCRI_len_and_ing;
+
+          // let aliasKeyTBS_len_and_ing = len_of_aliasKeyTBS r.aliasKeyCRT_ingredients;
+          // let aliasKeyCRT_ingredients = fst aliasKeyTBS_len_and_ing;
+          // let aliasKeyTBS_len = snd aliasKeyTBS_len_and_ing;
+
+          // let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
+          // let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
+
+          // let mut deviceID_pub = [| 0uy; v32us |];
+          // let mut deviceID_priv = [| 0uy; v32us |];
+          // let mut aliasKey_pub = [| 0uy; v32us |];
+          // let mut aliasKey_priv = [| 0uy; v32us |];
+
+          // let deviceIDCSR = V.alloc 0uy deviceIDCSR_len;
+          // let aliasKeyCRT = V.alloc 0uy aliasKeyCRT_len;
+
+          // V.to_array_pts_to deviceIDCSR;
+          // V.to_array_pts_to aliasKeyCRT;
+          // V.to_array_pts_to c.cdi;
+
+          // let r1 = {
+          //   fwid = r.fwid;
+          //   deviceID_label_len = r.deviceID_label_len;
+          //   deviceID_label = r.deviceID_label;
+          //   aliasKey_label_len = r.aliasKey_label_len;
+          //   aliasKey_label = r.aliasKey_label;
+          //   deviceIDCSR_ingredients;
+          //   aliasKeyCRT_ingredients;
+          // } <: l0_record_t;
+          // l0_record_perm_aux r r1;
+
+          // let r2 = L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
+          //                          aliasKey_pub aliasKey_priv 
+          //                          aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
+          //                          deviceIDCRI_len deviceIDCSR_len (V.vec_to_array deviceIDCSR) r1;
+
+          // V.to_vec_pts_to c.cdi;
+
+          // fold (l0_context_perm c cr);
+          // rewrite (l0_context_perm c cr)
+          //      as (context_perm (L0_context c) context_repr);
+          // rewrite (l0_record_perm r2 p r0)
+          //      as (record_perm (L0_record r2) p record_repr);
 
 
-          with deviceID_priv0. assert (A.pts_to deviceID_priv deviceID_priv0);
-          with deviceID_pub0. assert (A.pts_to deviceID_pub deviceID_pub0);
-          with aliasKey_priv0. assert (A.pts_to aliasKey_priv aliasKey_priv0);
-          with aliasKey_pub0. assert (A.pts_to aliasKey_pub aliasKey_pub0);
-          with deviceIDCSR0. assert (A.pts_to (V.vec_to_array deviceIDCSR) deviceIDCSR0);
-          with aliasKeyCRT0. assert (A.pts_to (V.vec_to_array aliasKeyCRT) aliasKeyCRT0);
+          // with deviceID_priv0. assert (A.pts_to deviceID_priv deviceID_priv0);
+          // with deviceID_pub0. assert (A.pts_to deviceID_pub deviceID_pub0);
+          // with aliasKey_priv0. assert (A.pts_to aliasKey_priv aliasKey_priv0);
+          // with aliasKey_pub0. assert (A.pts_to aliasKey_pub aliasKey_pub0);
+          // with deviceIDCSR0. assert (A.pts_to (V.vec_to_array deviceIDCSR) deviceIDCSR0);
+          // with aliasKeyCRT0. assert (A.pts_to (V.vec_to_array aliasKeyCRT) aliasKeyCRT0);
 
-          let l1_context = init_l1_ctxt 
-                      deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
-                      aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
-                      (hide r2.deviceID_label_len)
-                      (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients)
-                      #deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
-                      #deviceIDCSR0 #aliasKeyCRT0
-                      ();
+          // let l1_context = init_l1_ctxt 
+          //             deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
+          //             aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
+          //             (hide r2.deviceID_label_len)
+          //             (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients)
+          //             #deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
+          //             #deviceIDCSR0 #aliasKeyCRT0
+          //             ();
 
-          with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
-          fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
+          // with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
+          // fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
 
-          V.to_vec_pts_to deviceIDCSR;
-          V.to_vec_pts_to aliasKeyCRT;
-          V.free deviceIDCSR;
-          V.free aliasKeyCRT;
+          // V.to_vec_pts_to deviceIDCSR;
+          // V.to_vec_pts_to aliasKeyCRT;
+          // V.free deviceIDCSR;
+          // V.free aliasKeyCRT;
 
-          fold (maybe_context_perm context_repr record_repr (Some (L1_context l1_context)));
-          let ret = (L0_context c, L0_record r2, Some (L1_context l1_context));
-          rewrite each
-            L0_context c as tfst ret,
-            L0_record r2 as tsnd ret,
-            Some (L1_context l1_context) as tthd ret;
+          // fold (maybe_context_perm context_repr record_repr (Some (L1_context l1_context)));
+          // let ret = (L0_context c, L0_record r2, Some (L1_context l1_context));
+          // rewrite each
+          //   L0_context c as tfst ret,
+          //   L0_record r2 as tsnd ret,
+          //   Some (L1_context l1_context) as tthd ret;
 
-          ret
+          // ret
         }
         Engine_record _ -> {
           unreachable ()
@@ -1061,6 +1110,7 @@ fn derive_child_from_context
     }
 
     L1_context _ -> {
+      admit ();
       unreachable ()
     }
   }

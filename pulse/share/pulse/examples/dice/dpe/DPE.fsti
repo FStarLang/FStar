@@ -17,8 +17,6 @@
 module DPE
 open Pulse.Lib.Pervasives
 open DPETypes
-open HACL
-open X509
 open EngineTypes
 open EngineCore
 open L0Types
