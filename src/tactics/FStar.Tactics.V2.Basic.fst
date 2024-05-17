@@ -2308,10 +2308,10 @@ let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env)
            else Core.check_term_equality in
          match f smt_ok unfolding_ok g t0 t1 with
          | Inl None ->
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)\n");
            ((), [])
          | Inl (Some guard_f) ->
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded");
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded\n");
            ((), [(g, guard_f)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));
