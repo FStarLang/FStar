@@ -583,18 +583,22 @@ let guard_letrecs env actuals expected_c : list (lbname*typ*univ_names) =
                   | _, Tm_uvar _ -> false
                   | _, _ -> true in
 
-           (if should_warn && warn t1 t2
+           (if not env.phase1 && should_warn && warn t1 t2
             then match (SS.compress t1).n, (SS.compress t2).n with
                  | Tm_name _, Tm_name _ -> ()
                  | _, _ ->
+                   let open FStar.Pprint in
+                   let open FStar.Class.PP in
                    Errors.log_issue_doc e1.pos (Errors.Warning_Defensive, [
-                     Errors.Msg.text <| BU.format6 "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
-                       (show e1)
-                       (Range.string_of_range e1.pos)
-                       (show t1)
-                       (show e2)
-                       (Range.string_of_range e2.pos)
-                       (show t2)]));
+                     prefix 2 1 (text "In the decreases clause for this function, the SMT solver may not be able to prove that the types of")
+                       (group (pp e1 ^/^ parens (text "bound in" ^/^ pp e1.pos))) ^/^
+                     prefix 2 1 (text "and")
+                       (group (pp e2 ^/^ parens (text "bound in" ^/^ pp e2.pos))) ^/^
+                     text "are equal.";
+                     prefix 2 1 (text "The type of the first term is:")  (pp t1);
+                     prefix 2 1 (text "The type of the second term is:") (pp t2);
+                     text "If the proof fails, try annotating these with the same type.";
+                   ]));
            t1, t2 in
 
           match l, l_prev with
