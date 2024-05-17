@@ -5,13 +5,8 @@
 ////
 
 pub type alg_t = super::spec_hash_definitions::hash_alg;
-pub fn digest_len(a: super::hacl::alg_t) -> usize {
-    super::fstar_sizet::uint32_to_sizet(super::evercrypt_hash_incremental::hash_len(a))
-}
 pub type hashable_len = usize;
 pub type signable_len = usize;
-pub type hkdf_lbl_len = usize;
-pub type hkdf_ikm_len = usize;
 pub fn hacl_hash0(
     alg: super::hacl::alg_t,
     src_len: super::hacl::hashable_len,
@@ -116,39 +111,6 @@ pub static ed25519_verify: fn(
     (),
     (),
 ) -> bool = super::hacl::ed25519_verify0;
-pub fn ed25519_sign0(
-    buf: &mut [u8],
-    privk: &mut [u8],
-    len: usize,
-    msg: &mut [u8],
-    pprivk: (),
-    pmsg: (),
-    buf0: (),
-    privk_seq: (),
-    msg_seq: (),
-) -> () {
-    super::evercrypt_ed25519::sign(
-        buf,
-        (),
-        (),
-        privk,
-        super::fstar_sizet::sizet_to_uint32(len),
-        (),
-        (),
-        msg,
-    );
-}
-pub static ed25519_sign: fn(
-    &mut [u8],
-    &mut [u8],
-    usize,
-    &mut [u8],
-    (),
-    (),
-    (),
-    (),
-    (),
-) -> () = super::hacl::ed25519_sign0;
 pub fn dice_hash_alg1(uu___: ()) -> super::hacl::alg_t {
     panic!()
 }

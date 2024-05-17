@@ -4,40 +4,44 @@
 ////
 ////
 
-pub type x509_version_t = u32;
-pub type x509_serialNumber_t = u32;
-pub type deviceIDCRI_t = u32;
-pub type deviceIDCSR_t = u32;
-pub type aliasKeyTBS_t = u32;
-pub type aliasKeyCRT_t = u32;
+pub struct character_string_t {
+    pub fst: u32,
+    pub snd: std::vec::Vec<char>,
+}
+pub struct octet_string_t {
+    pub len: u32,
+    pub s: std::vec::Vec<char>,
+}
 pub struct deviceIDCSR_ingredients_t {
-    pub ku: u32,
-    pub version: super::l0types::x509_version_t,
-    pub s_common: String,
-    pub s_org: String,
-    pub s_country: String,
+    pub ku: i32,
+    pub version: i32,
+    pub s_common: super::l0types::character_string_t,
+    pub s_org: super::l0types::character_string_t,
+    pub s_country: super::l0types::character_string_t,
 }
 pub struct aliasKeyCRT_ingredients_t {
-    pub version1: super::l0types::x509_version_t,
-    pub serialNumber: super::l0types::x509_serialNumber_t,
-    pub i_common: String,
-    pub i_org: String,
-    pub i_country: String,
-    pub notBefore: usize,
-    pub notAfter: usize,
-    pub s_common1: String,
-    pub s_org1: String,
-    pub s_country1: String,
-    pub ku1: u32,
-    pub l0_version: u32,
+    pub version1: i32,
+    pub serialNumber: super::l0types::octet_string_t,
+    pub i_common: super::l0types::character_string_t,
+    pub i_org: super::l0types::character_string_t,
+    pub i_country: super::l0types::character_string_t,
+    pub notBefore: std::vec::Vec<char>,
+    pub notAfter: std::vec::Vec<char>,
+    pub s_common1: super::l0types::character_string_t,
+    pub s_org1: super::l0types::character_string_t,
+    pub s_country1: super::l0types::character_string_t,
+    pub ku1: i32,
+    pub l0_version: i32,
 }
 pub struct l0_record_t {
     pub fwid: std::vec::Vec<u8>,
-    pub deviceID_label_len: super::hacl::hkdf_lbl_len,
+    pub deviceID_label_len: u32,
     pub deviceID_label: std::vec::Vec<u8>,
-    pub aliasKey_label_len: super::hacl::hkdf_lbl_len,
+    pub aliasKey_label_len: u32,
     pub aliasKey_label: std::vec::Vec<u8>,
     pub deviceIDCSR_ingredients: super::l0types::deviceIDCSR_ingredients_t,
     pub aliasKeyCRT_ingredients: super::l0types::aliasKeyCRT_ingredients_t,
+    pub deviceIDCSR_len: u32,
+    pub aliasKeyCRT_len: u32,
 }
 

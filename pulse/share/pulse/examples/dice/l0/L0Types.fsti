@@ -27,13 +27,13 @@ module I32 = FStar.Int32
 noeq
 type character_string_t = {
   fst : U32.t;
-  snd : A.array FStar.Char.char;
+  snd : V.vec FStar.Char.char;
 }
 
 noeq
 type octet_string_t = {
   len : U32.t;
-  s : A.array FStar.Char.char;
+  s : V.vec FStar.Char.char;
 }
 
 noeq
@@ -52,8 +52,8 @@ type aliasKeyCRT_ingredients_t = {
   i_common      : character_string_t;
   i_org         : character_string_t;
   i_country     : character_string_t;
-  notBefore     : A.array FStar.Char.char;
-  notAfter      : A.array FStar.Char.char;
+  notBefore     : V.vec FStar.Char.char;
+  notAfter      : V.vec FStar.Char.char;
   s_common      : character_string_t;
   s_org         : character_string_t;
   s_country     : character_string_t;

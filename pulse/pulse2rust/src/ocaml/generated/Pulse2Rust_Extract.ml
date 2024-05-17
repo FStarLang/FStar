@@ -160,6 +160,10 @@ let rec (extract_mlty :
           Pulse2Rust_Rust_Syntax.mk_scalar_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "FStar.Char.char" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "char"
+      | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.UInt8.t" ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "u8"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when

@@ -8,7 +8,7 @@ PULSE_EXAMPLES_ROOT = $(PULSE_HOME)/share/pulse/examples
 OUTPUT_DIRECTORY_BASE=_output
 CACHE_DIRECTORY=$(OUTPUT_DIRECTORY_BASE)/cache
 OUTPUT_DIRECTORY=$(OUTPUT_DIRECTORY_BASE)/c
-INCLUDE_PATHS += external dpe engine l0 cbor external/hacl
+INCLUDE_PATHS += external dpe engine l0 cbor external/hacl external/l0
 FSTAR_FILES := dpe/DPE.fst
 ALREADY_CACHED_LIST = *,-HACL,-EverCrypt,-Spec.Hash.Definitions
 FSTAR_DEP_FILE=.depend-c
@@ -22,7 +22,7 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.Primitives,Pulse.Lib.SpinLockToken -add-include '"Pulse_Lib_SpinLockToken.h"' -add-include '"EverCrypt_Base.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
+	$(KRML) -skip-compilation -ccopt -Wno-unused-variable -bundle 'HACL=EverCrypt.\*,Spec.Hash.Definitions' -bundle 'DPE=*' -library Pulse.Lib.Primitives,Pulse.Lib.SpinLockToken,L0Core -add-include '"Pulse_Lib_SpinLockToken.h"' -add-include '"EverCrypt_Base.h"' -warn-error @4+9 -tmpdir $(OUTPUT_DIRECTORY) $^
 
 .PHONY: test
 test: extract

@@ -141,6 +141,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.Char.char" -> mk_scalar_typ "char"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt8.t" -> mk_scalar_typ "u8"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt16.t" -> mk_scalar_typ "u16"

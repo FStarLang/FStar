@@ -422,14 +422,12 @@ val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
-  (#p:perm)
-  : stt (record_t & option ctxt_hndl_t)
+  : stt (option ctxt_hndl_t)
         (requires
-           record_perm record p rrepr **
+           record_perm record 1.0R rrepr **
            sid_pts_to trace_ref sid t)
         (ensures fun b ->
-           record_perm (fst b) p rrepr **
-           derive_child_client_perm sid t rrepr (snd b))
+           derive_child_client_perm sid t rrepr b)
 
 noextract
 let trace_valid_for_close (t:trace) : prop =

@@ -1,7 +1,7 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/external dice/external/hacl dice/dpe dice/engine dice/l0)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
 ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
 SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
 endif
@@ -76,8 +76,6 @@ DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
 	HACL.ast \
 	L0Types.ast \
-	L0Crypto.ast \
-	L0Core.ast \
 	Pulse_Lib_HashTable_Type.ast \
 	Pulse_Lib_HashTable_Spec.ast \
 	Pulse_Lib_HashTable.ast \

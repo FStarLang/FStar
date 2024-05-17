@@ -238,28 +238,25 @@ pub fn mk_l0_context_t(cdi: std::vec::Vec<u8>) -> super::dpetypes::l0_context_t 
 }
 #[derive(Clone)]
 pub struct l1_context_t {
-    pub deviceID_priv: std::vec::Vec<u8>,
     pub deviceID_pub: std::vec::Vec<u8>,
     pub aliasKey_priv: std::vec::Vec<u8>,
     pub aliasKey_pub: std::vec::Vec<u8>,
-    pub aliasKeyCRT: std::vec::Vec<u8>,
     pub deviceIDCSR: std::vec::Vec<u8>,
+    pub aliasKeyCRT: std::vec::Vec<u8>,
 }
 pub fn mk_l1_context_t(
-    deviceID_priv: std::vec::Vec<u8>,
     deviceID_pub: std::vec::Vec<u8>,
-    aliasKey_priv: std::vec::Vec<u8>,
     aliasKey_pub: std::vec::Vec<u8>,
-    aliasKeyCRT: std::vec::Vec<u8>,
+    aliasKey_priv: std::vec::Vec<u8>,
     deviceIDCSR: std::vec::Vec<u8>,
+    aliasKeyCRT: std::vec::Vec<u8>,
 ) -> super::dpetypes::l1_context_t {
     super::dpetypes::l1_context_t {
-        deviceID_priv: deviceID_priv,
         deviceID_pub: deviceID_pub,
         aliasKey_priv: aliasKey_priv,
         aliasKey_pub: aliasKey_pub,
-        aliasKeyCRT: aliasKeyCRT,
         deviceIDCSR: deviceIDCSR,
+        aliasKeyCRT: aliasKeyCRT,
     }
 }
 #[derive(Clone)]

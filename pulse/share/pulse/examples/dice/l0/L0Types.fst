@@ -15,3 +15,7 @@
 *)
 
 module L0Types
+
+let valid_hkdf_lbl_len _ = True
+let valid_deviceIDCSR_ingredients _ _ = True
+let valid_aliasKeyCRT_ingredients _ _ = True
