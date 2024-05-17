@@ -306,12 +306,12 @@ let tcresolve () : Tac unit =
     | NoInst ->
       let open FStar.Stubs.Pprint in
       fail_doc [
-        text "Typeclass resolution failed";
+        text "Typeclass resolution failed.";
         prefix 2 1 (text "Could not solve constraint")
-          (arbitrary_string (term_to_string (cur_goal ())));
+          (term_to_doc (cur_goal ()));
       ]
     | TacticFailure msg ->
-      fail_doc ([text "Typeclass resolution failed"] @ msg)
+      fail_doc ([text "Typeclass resolution failed."] @ msg)
     | e -> raise e
 
 (**** Generating methods from a class ****)
