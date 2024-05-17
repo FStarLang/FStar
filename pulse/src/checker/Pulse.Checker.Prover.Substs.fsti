@@ -21,6 +21,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
+open Pulse.PP
 
 module L = FStar.List.Tot
 module T = FStar.Tactics
@@ -29,6 +30,8 @@ module RT = FStar.Reflection.Typing
 module Env = Pulse.Typing.Env
 
 val ss_t : Type0
+
+instance val pp_ss_t : printable ss_t
 
 val ln_ss_t (s:ss_t) : bool
 val as_map (ss:ss_t) : Map.t var term

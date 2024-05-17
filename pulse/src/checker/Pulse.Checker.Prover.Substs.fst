@@ -66,6 +66,28 @@ type ss_t = {
   m : m:ss_map { is_dom l m }
 }
 
+let rec separate_map (sep:document)
+   (f : 'a -> T.Tac document)
+   (xs : list 'a)
+   : T.Tac document =
+  match xs with
+  | [] -> empty
+  | [x] -> f x
+  | x::xs ->
+    let doc = f x in
+    let docs = separate_map sep f xs in
+    doc ^^ sep ^^ docs
+
+instance pp_ss_t : printable ss_t = {
+  pp = (function {l;m} ->
+        //  doc_of_string "dom="
+        //  pp (l <: list int) ^^
+        //  doc_of_string " |-> " ^^
+        l |> separate_map comma (fun k ->
+               pp (k <: int) ^^ doc_of_string " -> " ^^ pp (Map.sel m k))
+        );
+}
+
 let ln_ss_t (s:ss_t) =
   List.Tot.for_all (fun x -> ln (Map.sel s.m x)) s.l
 
