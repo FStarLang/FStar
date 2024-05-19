@@ -1400,10 +1400,19 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option 
      *       in an unfolding call to the normalizer
      *     This made_progress function is checking that we have made progress in unfolding t to t'
      *     See #2184
+     *
+     * GM: Updated 2024/05/18 to check for a discrepancy in syntactic equality, instead of
+     * eq_tm *not* returning Equal. We can have syntactically equal terms for which eq_tm
+     * returns unknown, so this code would falsely claim progress. For instance, Tm_let
+     * nodes are not handled by eq_tm and it always returns unknown. That should probably
+     * be improved, but in either case I think we want a syntactic check here (which is
+     * faster too) than eq_tm which is meant for decidable equality.
      *)
     let made_progress t t' =
-      let head, head' = U.head_and_args t |> fst, U.head_and_args t' |> fst in
-      not (TEQ.eq_tm env head head' = TEQ.Equal) in
+      let head  = U.head_and_args t  |> fst in
+      let head' = U.head_and_args t' |> fst in
+      not (U.term_eq head head')
+    in
 
     let rec aux retry n_delta t1 t2 =
         let r = head_matches env t1 t2 in

@@ -3299,22 +3299,14 @@ let (head_matches_delta :
                  then FStar_Pervasives_Native.Some (t11, t21)
                  else FStar_Pervasives_Native.None)) in
             let made_progress t t' =
-              let uu___ =
-                let uu___1 =
-                  let uu___2 = FStar_Syntax_Util.head_and_args t in
-                  FStar_Pervasives_Native.fst uu___2 in
-                let uu___2 =
-                  let uu___3 = FStar_Syntax_Util.head_and_args t' in
-                  FStar_Pervasives_Native.fst uu___3 in
-                (uu___1, uu___2) in
-              match uu___ with
-              | (head, head') ->
-                  let uu___1 =
-                    let uu___2 =
-                      FStar_TypeChecker_TermEqAndSimplify.eq_tm env head
-                        head' in
-                    uu___2 = FStar_TypeChecker_TermEqAndSimplify.Equal in
-                  Prims.op_Negation uu___1 in
+              let head =
+                let uu___ = FStar_Syntax_Util.head_and_args t in
+                FStar_Pervasives_Native.fst uu___ in
+              let head' =
+                let uu___ = FStar_Syntax_Util.head_and_args t' in
+                FStar_Pervasives_Native.fst uu___ in
+              let uu___ = FStar_Syntax_Util.term_eq head head' in
+              Prims.op_Negation uu___ in
             let rec aux retry n_delta t11 t21 =
               let r = head_matches env t11 t21 in
               (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelDelta in
