@@ -89,42 +89,54 @@ let copy_optionstate m = Util.smap_copy m
  *
  * No stack should ever be empty! Any of these failwiths should never be
  * triggered externally. IOW, the API should protect this invariant.
+ *
+ * We also keep a snapshot of the Debug module's state.
  *)
-let fstar_options : ref (list (list optionstate)) = Util.mk_ref []
+let fstar_options : ref (list (list (Debug.saved_state & optionstate))) = Util.mk_ref []
 
-let internal_peek () = List.hd (List.hd !fstar_options)
+let internal_peek () = snd <| List.hd (List.hd !fstar_options)
 let peek () = copy_optionstate (internal_peek())
 let pop  () = // already signal-atomic
-    match !fstar_options with
-    | []
-    | [_] -> failwith "TOO MANY POPS!"
-    | _::tl -> fstar_options := tl
+  match !fstar_options with
+  | []
+  | [_] -> failwith "TOO MANY POPS!"
+  | _::tl ->
+    fstar_options := tl
+
 let push () = // already signal-atomic
-    fstar_options := List.map copy_optionstate (List.hd !fstar_options) :: !fstar_options
+  let new_st =
+    List.hd !fstar_options |>
+    List.map (fun (dbg, opts) -> (dbg, copy_optionstate opts))
+  in
+  fstar_options := new_st :: !fstar_options
 
 let internal_pop () =
-    let curstack = List.hd !fstar_options in
-    match curstack with
-    | [] -> failwith "impossible: empty current option stack"
-    | [_] -> false
-    | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
+  let curstack = List.hd !fstar_options in
+  match curstack with
+  | [] -> failwith "impossible: empty current option stack"
+  | [_] -> false
+  | _::tl ->
+    fstar_options := tl :: List.tl !fstar_options;
+    Debug.restore (fst (List.hd tl));
+    true
 
 let internal_push () =
-    let curstack = List.hd !fstar_options in
-    let stack' = copy_optionstate (List.hd curstack) :: curstack in
-    fstar_options := stack' :: List.tl !fstar_options
+  let curstack = List.hd !fstar_options in
+  let stack' = (Debug.snapshot (), copy_optionstate (snd <| List.hd curstack)) :: curstack in
+  fstar_options := stack' :: List.tl !fstar_options
 
 let set o =
-    match !fstar_options with
-    | [] -> failwith "set on empty option stack"
-    | []::_ -> failwith "set on empty current option stack"
-    | (_::tl)::os -> fstar_options := ((o::tl)::os)
+ match !fstar_options with
+ | [] -> failwith "set on empty option stack"
+ | []::_ -> failwith "set on empty current option stack"
+ | ((dbg, _)::tl)::os ->
+   fstar_options := (((dbg, o)::tl)::os)
 
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v =
-  let map = internal_peek() in
+  let map : optionstate = internal_peek() in
   if k = "report_assumes"
   then match Util.smap_try_find map k with
        | Some (String "error") ->
@@ -282,7 +294,7 @@ let init () =
 
 let clear () =
    let o = Util.smap_create 50 in
-   fstar_options := [[o]];                               //clear and reset the options stack
+   fstar_options := [[(Debug.snapshot (), o)]];                               //clear and reset the options stack
    init()
 
 let _run = clear()

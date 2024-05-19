@@ -20,6 +20,12 @@ open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
 
+(* State handling for this module. Used by FStar.Options, which
+is the only module that modifies the debug state. *)
+val saved_state : Type0
+val snapshot () : saved_state
+val restore (s:saved_state) : unit
+
 (* Enable debugging. This will make any() return true, but
 does not enable any particular toggle. *)
 val enable () : unit

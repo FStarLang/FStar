@@ -24,6 +24,18 @@ let _debug_all : ref bool = BU.mk_ref false
 let toggle_list : ref (list (string & ref bool)) =
   BU.mk_ref []
 
+type saved_state = {
+  toggles : list (string & bool);
+  any     : bool;
+  all     : bool;
+}
+
+let snapshot () : saved_state = {
+  toggles = !toggle_list |> List.map (fun (k, r) -> (k, !r));
+  any     = !anyref;
+  all     = !_debug_all;
+}
+
 let register_toggle (k : string) : ref bool =
   let r = BU.mk_ref false in
   if !_debug_all then
@@ -35,6 +47,18 @@ let get_toggle (k : string) : ref bool =
   match List.tryFind (fun (k', _) -> k = k') !toggle_list with
   | Some (_, r) -> r
   | None -> register_toggle k
+
+let restore (snapshot : saved_state) : unit =
+  (* Set everything to false, then set all the saved ones
+  to true. *)
+  !toggle_list |> List.iter (fun (_, r) -> r := false);
+  snapshot.toggles |> List.iter (fun (k, b) ->
+    let r = get_toggle k in
+    r := b);
+  (* Also restore these references. *)
+  anyref := snapshot.any;
+  _debug_all := snapshot.all;
+  ()
 
 let list_all_toggles () : list string =
   List.map fst !toggle_list
