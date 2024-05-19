@@ -18,11 +18,16 @@ module FStar.Compiler.Debug
 
 module BU = FStar.Compiler.Util
 
+(* Mutable state *)
+let anyref = BU.mk_ref false
+let _debug_all : ref bool = BU.mk_ref false
 let toggle_list : ref (list (string & ref bool)) =
   BU.mk_ref []
 
 let register_toggle (k : string) : ref bool =
   let r = BU.mk_ref false in
+  if !_debug_all then
+    r := true;
   toggle_list := (k, r) :: !toggle_list;
   r
 
@@ -34,16 +39,15 @@ let get_toggle (k : string) : ref bool =
 let list_all_toggles () : list string =
   List.map fst !toggle_list
 
-let anyref = BU.mk_ref false
-let any () = !anyref
+let any () = !anyref || !_debug_all
 let enable () = anyref := true
 
 let dbg_level = BU.mk_ref 0
 
-let low     () = !dbg_level >= 1
-let medium  () = !dbg_level >= 2
-let high    () = !dbg_level >= 3
-let extreme () = !dbg_level >= 4
+let low     () = !dbg_level >= 1 || !_debug_all
+let medium  () = !dbg_level >= 2 || !_debug_all
+let high    () = !dbg_level >= 3 || !_debug_all
+let extreme () = !dbg_level >= 4 || !_debug_all
 
 let set_level_low     () = dbg_level := 1
 let set_level_medium  () = dbg_level := 2
@@ -66,3 +70,6 @@ let disable_all () : unit =
   anyref := false;
   dbg_level := 0;
   List.iter (fun (_, r) -> r := false) !toggle_list
+
+let set_debug_all () : unit =
+  _debug_all := true

@@ -155,6 +155,7 @@ let defaults =
       ("codegen-lib"                  , List []);
       ("defensive"                    , String "no");
       ("debug"                        , List []);
+      ("debug_all"                    , Bool false);
       ("debug_all_modules"            , Bool false);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
@@ -733,6 +734,18 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
         Debug.enable_toggles keys;
         o), Accumulated (SimpleStr "debug toggles")),
     text "Debug toggles (comma-separated list of debug keys)");
+
+  ( noshort,
+    "debug_all",
+    PostProcessed (
+      (fun o ->
+        match o with
+        | Bool true ->
+          Debug.set_debug_all ();
+          o
+        | _ -> failwith "?"
+        ), Const (Bool true)),
+    text "Enable all debug toggles. WARNING: this will cause a lot of output!");
 
   ( noshort,
     "debug_all_modules",
@@ -1448,6 +1461,7 @@ let settable = function
     | "compat_pre_typed_indexed_effects"
     | "disallow_unification_guards"
     | "debug"
+    | "debug_all"
     | "debug_all_modules"
     | "defensive"
     | "detail_errors"
@@ -1939,6 +1953,7 @@ let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
 
 let debug_keys                   () = lookup_opt "debug" as_comma_string_list
+let debug_all                    () = lookup_opt "debug_all" as_bool
 let debug_all_modules            () = lookup_opt "debug_all_modules" as_bool
 
 let with_saved_options f =

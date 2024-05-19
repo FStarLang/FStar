@@ -20,7 +20,8 @@ open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
 
-(* Enable debugging. *)
+(* Enable debugging. This will make any() return true, but
+does not enable any particular toggle. *)
 val enable () : unit
 
 (* Are we doing *any* kind of debugging? *)
@@ -47,6 +48,9 @@ val enable_toggles (keys : list string) : unit
 (* Sets the debug level to zero and sets all registered toggles
 to false. any() will return false after this. *)
 val disable_all () : unit
+
+(* Nuclear option: enable ALL debug toggles. *)
+val set_debug_all () : unit
 
 (* Not used externally at the moment. *)
 val set_level_low     () : unit
