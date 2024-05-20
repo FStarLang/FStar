@@ -577,6 +577,16 @@ val maybe_relate_after_unfolding (g:env) (t1 t2:term)
 val maybe_unfold_head (g:env) (t0:term)
   : Tac (ret_t (t1:term{equiv_token g t0 t1}))
 
+(** [norm_well_typed_term e steps t] will call the normalizer on the
+term [t] using the list of steps [steps], over environment [e]. It
+differs from norm_term_env in that it will not attempt to typecheck t
+(so there is an implicit well-typing precondition for t, which we are
+not strcitly requiring yet in reflection primitives) and it will also
+return a token for the equivalence between t and t'. *)
+val norm_well_typed_term
+  (g:env) (steps : list norm_step) (t:term)
+  : Tac (t':term{equiv_token g t t'})
+
 val push_open_namespace (g:env) (ns:name)
   : Tac env
 

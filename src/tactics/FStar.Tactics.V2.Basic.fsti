@@ -140,6 +140,7 @@ val refl_instantiate_implicits        : env -> term -> tac (option (list (bv & t
 val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> tac (option (list (bv & term)) & issues)
 val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
 val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)
+val refl_norm_well_typed_term         : env -> list norm_step -> term -> tac term
 
 val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env

@@ -817,18 +817,26 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     let t = normalize steps (goal_env goal) (goal_type goal) in
     replace_cur (goal_with_type goal t)
 
-
-let norm_term_env (e : env) (s : list Pervasives.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
+let __norm_term_env
+  (well_typed:bool) (e : env) (s : list Pervasives.norm_step) (t : term)
+  : tac term
+= wrap_err "norm_term" <| (
     let! ps = get in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (show t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
-    let! t, _, _ = __tc_lax e t in
+    let! t =
+      if well_typed
+      then return t
+      else let! t, _, _ = __tc_lax e t in return t
+    in
     let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
     let t = normalize steps ps.main_context t in
     if_verbose (fun () -> BU.print1 "norm_term_env: t' = %s\n" (show t)) ;!
     return t
     )
 
+let norm_term_env e s t = __norm_term_env false e s t
+let refl_norm_well_typed_term e s t = __norm_term_env true e s t
 
 let refine_intro () : tac unit = wrap_err "refine_intro" <| (
     let! g = cur_goal in
