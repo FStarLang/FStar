@@ -17,7 +17,7 @@ FSTAR_OPTIONS += --warn_error -342 --cmi
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
-DPE_SRC_DIR=../dpe/src
+DPE_OUTPUT_DIR=../dpe/src/generated
 
 all: test dpe
 
@@ -83,7 +83,7 @@ DPE_FILES = EngineTypes.ast \
 	DPE.ast
 
 dpe.rs: $(DPE_FILES)
-	$(MAIN) -odir $(DPE_SRC_DIR)/ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
 all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
 

@@ -1,8 +1,8 @@
 #
-# This Makefile is used to generate EverCrypt_*.h files,
-# which are further used to generate Rust bindings using the Rust bindgen tools
+# This Makefile is used to generate EverCrypt_*.h and L0*.h files,
+#   which are further used to generate Rust bindings using the Rust bindgen tools
 #
-# It is invoked by gen-rust-bindings.sh script
+# It is invoked by the gen-rust-bindings.sh script
 #
 # This is not run as part of CI,
 #   rather we check-in the generated bindings
@@ -25,4 +25,4 @@ KRML ?= $(KRML_HOME)/krml
 
 .PHONY: extract
 extract: $(ALL_KRML_FILES)
-	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' -add-include '"compat.h"' $^
+	$(KRML) -skip-makefiles -skip-compilation -bundle 'EverCrypt.Hash.Incremental=Spec.Hash.Definitions[rename=EverCrypt_Hash]' -warn-error @4 -tmpdir $(OUTPUT_DIRECTORY) -add-include '"EverCrypt_Base.h"' -add-include '"compat.h"' -no-prefix 'L0Core' $^
