@@ -241,21 +241,27 @@ pub struct l1_context_t {
     pub deviceID_pub: std::vec::Vec<u8>,
     pub aliasKey_priv: std::vec::Vec<u8>,
     pub aliasKey_pub: std::vec::Vec<u8>,
+    pub deviceIDCSR_len: u32,
     pub deviceIDCSR: std::vec::Vec<u8>,
+    pub aliasKeyCRT_len: u32,
     pub aliasKeyCRT: std::vec::Vec<u8>,
 }
 pub fn mk_l1_context_t(
     deviceID_pub: std::vec::Vec<u8>,
     aliasKey_pub: std::vec::Vec<u8>,
     aliasKey_priv: std::vec::Vec<u8>,
+    deviceIDCSR_len: u32,
     deviceIDCSR: std::vec::Vec<u8>,
+    aliasKeyCRT_len: u32,
     aliasKeyCRT: std::vec::Vec<u8>,
 ) -> super::dpetypes::l1_context_t {
     super::dpetypes::l1_context_t {
         deviceID_pub: deviceID_pub,
         aliasKey_priv: aliasKey_priv,
         aliasKey_pub: aliasKey_pub,
+        deviceIDCSR_len: deviceIDCSR_len,
         deviceIDCSR: deviceIDCSR,
+        aliasKeyCRT_len: aliasKeyCRT_len,
         aliasKeyCRT: aliasKeyCRT,
     }
 }

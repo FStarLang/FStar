@@ -1235,7 +1235,7 @@ fn close_session (sid:sid_t)
 }
 ```
 
-#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 4"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
 ```pulse
 fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (pub_key:A.larray U8.t 32)
@@ -1271,12 +1271,34 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
             fold (certify_key_client_perm sid t);
             false
           } else {
-            admit ()
+            let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+            let r = rewrite_context_perm_l1 (L1_context c) c;
+            unfold (l1_context_perm c r);
+
+            V.to_array_pts_to c.aliasKey_pub;
+            memcpy_l (SZ.uint_to_t 32) (V.vec_to_array c.aliasKey_pub) pub_key;
+            V.to_vec_pts_to c.aliasKey_pub;
+
+            assume_ (pure (SZ.fits_u32));
+            V.to_array_pts_to c.aliasKeyCRT;
+            memcpy_l (SZ.uint32_to_sizet crt_len) (V.vec_to_array c.aliasKeyCRT) crt;
+            V.to_vec_pts_to c.aliasKeyCRT;
+
+            fold (l1_context_perm c r);
+            rewrite (l1_context_perm c r) as
+                    (context_perm (L1_context c) (L1_context_repr r));
+            
+            let handle = prng ();
+            let ns = Available { handle; context = L1_context c };
+            rewrite (context_perm (L1_context c) (L1_context_repr r)) as
+                    (session_state_related ns (current_state t));
+            
+            let s = replace_session sid t1 ns (current_state t);
+            intro_session_state_tag_related s (current_state t1);
+            with _x _y. rewrite (session_state_related _x _y) as emp;
+            fold (certify_key_client_perm sid t);
+            true
           }
-          // let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
-          // let r = rewrite_context_perm_l1 (L1_context c) c;
-          // unfold (l1_context_perm c r);
-          // admit ()
         }
         _ -> {
           assume_ (pure (~ (L1_context? hc.context)));

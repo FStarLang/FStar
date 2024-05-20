@@ -19,7 +19,10 @@ pub enum session_state {
     SessionClosed,
     SessionError,
 }
-pub type ht_t = super::pulse_lib_hashtable_type::ht_t<super::dpe::sid_t, super::dpe::session_state>;
+pub type ht_t = super::pulse_lib_hashtable_type::ht_t<
+    super::dpe::sid_t,
+    super::dpe::session_state,
+>;
 pub struct st {
     pub st_ctr: super::dpe::sid_t,
     pub st_tbl: super::dpe::ht_t,
@@ -36,8 +39,7 @@ pub const fn initialize_global_state(
     let m = std::sync::Mutex::new(None);
     ((), m)
 }
-pub static gst: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) =
-    super::dpe::initialize_global_state(());
+pub static gst: ((), std::sync::Mutex<std::option::Option<super::dpe::st>>) = super::dpe::initialize_global_state(());
 pub fn safe_incr(i: u16) -> std::option::Option<u16> {
     match i < 0xffff {
         true => Some(i + 1),
@@ -86,7 +88,9 @@ pub fn __open_session(
         }
     }
 }
-pub fn maybe_mk_session_tbl(sopt: std::option::Option<super::dpe::st>) -> super::dpe::st {
+pub fn maybe_mk_session_tbl(
+    sopt: std::option::Option<super::dpe::st>,
+) -> super::dpe::st {
     match sopt {
         None => {
             let tbl = super::pulse_lib_hashtable::alloc(super::dpe::sid_hash, 256);
@@ -131,8 +135,14 @@ pub fn replace_session(
                 if b {
                     match idx {
                         Some(mut idx1) => {
-                            let ret1 =
-                                super::pulse_lib_hashtable::replace((), tbl1, idx1, sid, sst, ());
+                            let ret1 = super::pulse_lib_hashtable::replace(
+                                (),
+                                tbl1,
+                                idx1,
+                                sid,
+                                sst,
+                                (),
+                            );
                             let tbl2 = ret1.0;
                             let st1 = ret1.1;
                             let s1 = super::dpe::st {
@@ -154,9 +164,20 @@ pub fn replace_session(
         }
     }
 }
-pub fn init_engine_ctxt(uds: &mut [u8], p: (), uds_bytes: ()) -> super::dpetypes::context_t {
+pub fn init_engine_ctxt(
+    uds: &mut [u8],
+    p: (),
+    uds_bytes: (),
+) -> super::dpetypes::context_t {
     let mut uds_buf = vec![0; super::enginetypes::uds_len];
-    crate::pulse_lib_array::memcpy(super::enginetypes::uds_len, uds, &mut uds_buf, (), (), ());
+    crate::pulse_lib_array::memcpy(
+        super::enginetypes::uds_len,
+        uds,
+        &mut uds_buf,
+        (),
+        (),
+        (),
+    );
     let engine_context = super::dpetypes::mk_engine_context_t(uds_buf);
     let ctxt = super::dpetypes::mk_context_t_engine(engine_context);
     ctxt
@@ -176,12 +197,10 @@ pub fn initialize_context(
         super::dpe::session_state::SessionStart => {
             let context = super::dpe::init_engine_ctxt(uds, (), ());
             let handle = super::dpe::prng(());
-            let s1 = super::dpe::session_state::Available(
-                super::dpe::session_state__Available__payload {
-                    handle: handle,
-                    context: context,
-                },
-            );
+            let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                handle: handle,
+                context: context,
+            });
             let s2 = super::dpe::replace_session(sid, (), s1, ());
             handle
         }
@@ -212,7 +231,7 @@ pub fn init_l1_ctxt(
     deviceID_pub: std::vec::Vec<u8>,
     aliasKey_priv: std::vec::Vec<u8>,
     aliasKey_pub: std::vec::Vec<u8>,
-    deviceIDCSR_len: (),
+    deviceIDCSR_len: u32,
     deviceIDCSR: std::vec::Vec<u8>,
     aliasKeyCRT_len: u32,
     aliasKeyCRT: std::vec::Vec<u8>,
@@ -228,7 +247,9 @@ pub fn init_l1_ctxt(
         deviceID_pub,
         aliasKey_pub,
         aliasKey_priv,
+        deviceIDCSR_len,
         deviceIDCSR,
+        aliasKeyCRT_len,
         aliasKeyCRT,
     );
     ctxt
@@ -254,91 +275,114 @@ pub fn derive_child_from_context(
     uu___: (),
 ) -> std::option::Option<super::dpetypes::context_t> {
     match context {
-        super::dpetypes::context_t::Engine_context(mut c) => match record {
-            super::dpetypes::record_t::Engine_record(mut r) => {
-                let cdi = &mut [0; 32];
-                let ret = super::enginecore::engine_main(cdi, &mut c.uds, r, (), (), (), (), ());
-                let r1 = ret.0;
-                super::dpe::destroy_ctxt(super::dpetypes::context_t::Engine_context(c), ());
-                let _bind_c = match ret.1 {
-                    super::enginetypes::dice_return_code::DICE_SUCCESS => {
-                        let l0_ctxt = super::dpe::init_l0_ctxt(cdi, (), (), (), ());
-                        let ret1 = Some(super::dpetypes::context_t::L0_context(l0_ctxt));
-                        ret1
-                    }
-                    super::enginetypes::dice_return_code::DICE_ERROR => {
-                        crate::pulse_lib_array::zeroize(32, cdi, ());
-                        let ret1 = None;
-                        ret1
-                    }
-                };
-                let cdi1 = _bind_c;
-                cdi1
+        super::dpetypes::context_t::Engine_context(mut c) => {
+            match record {
+                super::dpetypes::record_t::Engine_record(mut r) => {
+                    let cdi = &mut [0; 32];
+                    let ret = super::enginecore::engine_main(
+                        cdi,
+                        &mut c.uds,
+                        r,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                    );
+                    let r1 = ret.0;
+                    super::dpe::destroy_ctxt(
+                        super::dpetypes::context_t::Engine_context(c),
+                        (),
+                    );
+                    let _bind_c = match ret.1 {
+                        super::enginetypes::dice_return_code::DICE_SUCCESS => {
+                            let l0_ctxt = super::dpe::init_l0_ctxt(cdi, (), (), (), ());
+                            let ret1 = Some(
+                                super::dpetypes::context_t::L0_context(l0_ctxt),
+                            );
+                            ret1
+                        }
+                        super::enginetypes::dice_return_code::DICE_ERROR => {
+                            crate::pulse_lib_array::zeroize(32, cdi, ());
+                            let ret1 = None;
+                            ret1
+                        }
+                    };
+                    let cdi1 = _bind_c;
+                    cdi1
+                }
+                super::dpetypes::record_t::L0_record(_) => panic!(),
             }
-            super::dpetypes::record_t::L0_record(_) => panic!(),
-        },
-        super::dpetypes::context_t::L0_context(mut c) => match record {
-            super::dpetypes::record_t::L0_record(mut r) => {
-                let mut deviceID_pub = vec![0; 32];
-                let mut aliasKey_pub = vec![0; 32];
-                let mut aliasKey_priv = vec![0; 32];
-                let mut deviceIDCSR =
-                    vec![0; crate::fstar_sizet::uint32_to_sizet(r.deviceIDCSR_len)];
-                let mut aliasKeyCRT =
-                    vec![0; crate::fstar_sizet::uint32_to_sizet(r.aliasKeyCRT_len)];
-                crate::l0core::l0(
-                    &mut c.cdi,
-                    &mut r.fwid,
-                    r.deviceID_label_len,
-                    &mut r.deviceID_label,
-                    r.aliasKey_label_len,
-                    &mut r.aliasKey_label,
-                    r.deviceIDCSR_ingredients,
-                    r.aliasKeyCRT_ingredients,
-                    &mut deviceID_pub,
-                    &mut aliasKey_pub,
-                    &mut aliasKey_priv,
-                    r.deviceIDCSR_len,
-                    &mut deviceIDCSR,
-                    r.aliasKeyCRT_len,
-                    &mut aliasKeyCRT,
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                );
-                let l1_context = super::dpe::init_l1_ctxt(
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    deviceID_pub,
-                    aliasKey_priv,
-                    aliasKey_pub,
-                    (),
-                    deviceIDCSR,
-                    r.aliasKeyCRT_len,
-                    aliasKeyCRT,
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                    (),
-                );
-                super::dpe::destroy_ctxt(super::dpetypes::context_t::L0_context(c), ());
-                let ret = Some(super::dpetypes::context_t::L1_context(l1_context));
-                ret
+        }
+        super::dpetypes::context_t::L0_context(mut c) => {
+            match record {
+                super::dpetypes::record_t::L0_record(mut r) => {
+                    let mut deviceID_pub = vec![0; 32];
+                    let mut aliasKey_pub = vec![0; 32];
+                    let mut aliasKey_priv = vec![0; 32];
+                    let mut deviceIDCSR = vec![
+                        0; crate ::fstar_sizet::uint32_to_sizet(r.deviceIDCSR_len)
+                    ];
+                    let mut aliasKeyCRT = vec![
+                        0; crate ::fstar_sizet::uint32_to_sizet(r.aliasKeyCRT_len)
+                    ];
+                    crate::l0core::l0(
+                        &mut c.cdi,
+                        &mut r.fwid,
+                        r.deviceID_label_len,
+                        &mut r.deviceID_label,
+                        r.aliasKey_label_len,
+                        &mut r.aliasKey_label,
+                        r.deviceIDCSR_ingredients,
+                        r.aliasKeyCRT_ingredients,
+                        &mut deviceID_pub,
+                        &mut aliasKey_pub,
+                        &mut aliasKey_priv,
+                        r.deviceIDCSR_len,
+                        &mut deviceIDCSR,
+                        r.aliasKeyCRT_len,
+                        &mut aliasKeyCRT,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                    );
+                    let l1_context = super::dpe::init_l1_ctxt(
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        deviceID_pub,
+                        aliasKey_priv,
+                        aliasKey_pub,
+                        r.deviceIDCSR_len,
+                        deviceIDCSR,
+                        r.aliasKeyCRT_len,
+                        aliasKeyCRT,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                    );
+                    super::dpe::destroy_ctxt(
+                        super::dpetypes::context_t::L0_context(c),
+                        (),
+                    );
+                    let ret = Some(super::dpetypes::context_t::L1_context(l1_context));
+                    ret
+                }
+                super::dpetypes::record_t::Engine_record(_) => panic!(),
             }
-            super::dpetypes::record_t::Engine_record(_) => panic!(),
-        },
+        }
         super::dpetypes::context_t::L1_context(_) => panic!(),
     }
 }
@@ -351,32 +395,38 @@ pub fn derive_child(
 ) -> std::option::Option<super::dpe::ctxt_hndl_t> {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
-        super::dpe::session_state::Available(mut hc) => match hc.context {
-            super::dpetypes::context_t::L1_context(_) => panic!(),
-            _ => {
-                let ret = super::dpe::derive_child_from_context(hc.context, record, (), (), ());
-                match ret {
-                    Some(mut nctxt) => {
-                        let handle = super::dpe::prng(());
-                        let s1 = super::dpe::session_state::Available(
-                            super::dpe::session_state__Available__payload {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(_) => panic!(),
+                _ => {
+                    let ret = super::dpe::derive_child_from_context(
+                        hc.context,
+                        record,
+                        (),
+                        (),
+                        (),
+                    );
+                    match ret {
+                        Some(mut nctxt) => {
+                            let handle = super::dpe::prng(());
+                            let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
                                 handle: handle,
                                 context: nctxt,
-                            },
-                        );
-                        let s2 = super::dpe::replace_session(sid, (), s1, ());
-                        let ret1 = Some(handle);
-                        ret1
-                    }
-                    None => {
-                        let s1 = super::dpe::session_state::SessionError;
-                        let s2 = super::dpe::replace_session(sid, (), s1, ());
-                        let ret1 = None;
-                        ret1
+                            });
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            let ret1 = Some(handle);
+                            ret1
+                        }
+                        None => {
+                            let s1 = super::dpe::session_state::SessionError;
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            let ret1 = None;
+                            ret1
+                        }
                     }
                 }
             }
-        },
+        }
         super::dpe::session_state::SessionStart => panic!(),
         super::dpe::session_state::InUse => panic!(),
         super::dpe::session_state::SessionClosed => panic!(),
@@ -385,14 +435,74 @@ pub fn derive_child(
 }
 pub fn destroy_session_state(s: super::dpe::session_state, t: ()) -> () {
     match s {
-        super::dpe::session_state::Available(mut hc) => super::dpe::destroy_ctxt(hc.context, ()),
+        super::dpe::session_state::Available(mut hc) => {
+            super::dpe::destroy_ctxt(hc.context, ())
+        }
         _ => {}
     }
 }
 pub fn close_session(sid: super::dpe::sid_t, t: ()) -> () {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     super::dpe::destroy_session_state(s, ());
-    let s1 = super::dpe::replace_session(sid, (), super::dpe::session_state::SessionClosed, ());
+    let s1 = super::dpe::replace_session(
+        sid,
+        (),
+        super::dpe::session_state::SessionClosed,
+        (),
+    );
+}
+pub fn certify_key(
+    sid: super::dpe::sid_t,
+    ctxt_hndl: super::dpe::ctxt_hndl_t,
+    pub_key: &mut [u8],
+    crt_len: u32,
+    crt: &mut [u8],
+    t: (),
+) -> bool {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(mut c) => {
+                    if c.aliasKeyCRT_len < crt_len {
+                        let handle = super::dpe::prng(());
+                        let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                            handle: handle,
+                            context: super::dpetypes::context_t::L1_context(c),
+                        });
+                        let s1 = super::dpe::replace_session(sid, (), ns, ());
+                        false
+                    } else {
+                        crate::pulse_lib_array::memcpy_l(
+                            32,
+                            &mut c.aliasKey_pub,
+                            pub_key,
+                            (),
+                            (),
+                            (),
+                        );
+                        crate::pulse_lib_array::memcpy_l(
+                            crate::fstar_sizet::uint32_to_sizet(crt_len),
+                            &mut c.aliasKeyCRT,
+                            crt,
+                            (),
+                            (),
+                            (),
+                        );
+                        let handle = super::dpe::prng(());
+                        let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                            handle: handle,
+                            context: super::dpetypes::context_t::L1_context(c),
+                        });
+                        let s1 = super::dpe::replace_session(sid, (), ns, ());
+                        true
+                    }
+                }
+                _ => panic!(),
+            }
+        }
+        _ => panic!(),
+    }
 }
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
     super::dpetypes::mk_profile_descriptor(
@@ -467,3 +577,4 @@ pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
         "".to_string(),
     )
 }
+
