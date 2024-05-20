@@ -18,7 +18,6 @@ module DPE
 open Pulse.Lib.Pervasives
 open DPETypes
 open HACL
-open X509
 open EngineTypes
 open EngineCore
 open L0Types
@@ -752,94 +751,82 @@ fn init_l0_ctxt
 ```
 
 ```pulse
-fn init_l1_ctxt (deviceIDCSR_len: SZ.t) (aliasKeyCRT_len: SZ.t) 
-                (deviceID_priv: A.larray U8.t (SZ.v v32us)) (deviceID_pub: A.larray U8.t (SZ.v v32us))
-                (aliasKey_priv: A.larray U8.t (SZ.v v32us)) (aliasKey_pub: A.larray U8.t (SZ.v v32us)) 
-                (deviceIDCSR: A.larray U8.t (SZ.v deviceIDCSR_len)) (aliasKeyCRT: A.larray U8.t (SZ.v aliasKeyCRT_len))
-                (deviceID_label_len aliasKey_label_len: erased hkdf_lbl_len)
-                (cdi:erased (Seq.seq U8.t))
-                (repr:erased l0_record_repr_t)
-                (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
-                (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
-                (#deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
-                 #deviceIDCSR0 #aliasKeyCRT0:erased (Seq.seq U8.t))
-                (_:squash (
-                   valid_hkdf_ikm_len dice_digest_len /\
-                   aliasKey_functional_correctness
-                     dice_hash_alg dice_digest_len cdi repr.fwid
-                     aliasKey_label_len repr.aliasKey_label 
-                     aliasKey_pub0 aliasKey_priv0 /\
-                   deviceIDCSR_functional_correctness
-                     dice_hash_alg dice_digest_len cdi
-                     deviceID_label_len repr.deviceID_label deviceIDCSR_ingredients 
-                     deviceIDCSR_len deviceIDCSR0 /\
-                   aliasKeyCRT_functional_correctness
-                     dice_hash_alg dice_digest_len cdi repr.fwid
-                     deviceID_label_len repr.deviceID_label aliasKeyCRT_ingredients 
-                     aliasKeyCRT_len aliasKeyCRT0 aliasKey_pub0))
-              
-  requires A.pts_to deviceID_priv deviceID_priv0 ** 
-           A.pts_to deviceID_pub deviceID_pub0 ** 
-           A.pts_to aliasKey_priv aliasKey_priv0 ** 
-           A.pts_to aliasKey_pub aliasKey_pub0 ** 
-           A.pts_to deviceIDCSR deviceIDCSR0 **
-           A.pts_to aliasKeyCRT aliasKeyCRT0
+fn init_l1_ctxt
+  (cdi:erased (Seq.seq U8.t))
+  (deviceID_label_len:(n:erased U32.t { valid_hkdf_lbl_len n }))
+  (aliasKey_label_len:(n:erased U32.t { valid_hkdf_lbl_len n }))
+  (deviceIDCSR_ingredients:erased deviceIDCSR_ingredients_t)
+  (aliasKeyCRT_ingredients:erased aliasKeyCRT_ingredients_t)
+  (deviceID_pub:V.lvec U8.t 32)
+  (aliasKey_priv:V.lvec U8.t 32)
+  (aliasKey_pub:V.lvec U8.t 32)
+  (deviceIDCSR_len:(n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n }))
+  (deviceIDCSR:V.lvec U8.t (U32.v deviceIDCSR_len))
+  (aliasKeyCRT_len:(n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n }))
+  (aliasKeyCRT:V.lvec U8.t (U32.v aliasKeyCRT_len))
+  (repr:erased l0_record_repr_t)
+  (#deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
+   #deviceIDCSR_repr #aliasKeyCRT_repr:erased (Seq.seq U8.t))
+  (_:squash (l0_post
+     cdi
+     repr.fwid
+     deviceID_label_len
+     repr.deviceID_label
+     aliasKey_label_len
+     repr.aliasKey_label
+     deviceIDCSR_ingredients
+     aliasKeyCRT_ingredients
+     deviceID_pub_repr
+     aliasKey_pub_repr
+     aliasKey_priv_repr
+     deviceIDCSR_len
+     deviceIDCSR_repr
+     aliasKeyCRT_len
+     aliasKeyCRT_repr))
+  requires V.pts_to deviceID_pub deviceID_pub_repr ** 
+           V.pts_to aliasKey_pub aliasKey_pub_repr ** 
+           V.pts_to aliasKey_priv aliasKey_priv_repr ** 
+           V.pts_to deviceIDCSR deviceIDCSR_repr **
+           V.pts_to aliasKeyCRT aliasKeyCRT_repr **
+           pure (V.is_full_vec deviceID_pub /\
+                 V.is_full_vec aliasKey_pub /\
+                 V.is_full_vec aliasKey_priv /\
+                 V.is_full_vec deviceIDCSR /\
+                  V.is_full_vec aliasKeyCRT)
   returns ctxt:l1_context_t
   ensures 
-    A.pts_to deviceID_priv deviceID_priv0 ** 
-    A.pts_to deviceID_pub deviceID_pub0 **
-    A.pts_to aliasKey_priv aliasKey_priv0 ** 
-    A.pts_to aliasKey_pub aliasKey_pub0 ** 
-    A.pts_to deviceIDCSR deviceIDCSR0 **
-    A.pts_to aliasKeyCRT aliasKeyCRT0 **
-    l1_context_perm ctxt (mk_l1_context_repr_t 
-                            deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-                            aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-                            deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients)
+    l1_context_perm ctxt (mk_l1_context_repr_t
+      cdi deviceID_label_len aliasKey_label_len deviceIDCSR_ingredients aliasKeyCRT_ingredients
+      deviceID_pub_repr aliasKey_pub_repr aliasKey_priv_repr
+      deviceIDCSR_len deviceIDCSR_repr aliasKeyCRT_len aliasKeyCRT_repr repr)
 {
-  let deviceID_pub_buf = V.alloc 0uy v32us;
-  let deviceID_priv_buf = V.alloc 0uy v32us;
-  let aliasKey_priv_buf = V.alloc 0uy v32us;
-  let aliasKey_pub_buf = V.alloc 0uy v32us;
-  let deviceIDCSR_buf = V.alloc 0uy deviceIDCSR_len;
-  let aliasKeyCRT_buf = V.alloc 0uy aliasKeyCRT_len;
+  let ctxt = mk_l1_context_t
+    deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR_len deviceIDCSR aliasKeyCRT_len aliasKeyCRT;
+  
+  let l1_ctxt_repr = hide (mk_l1_context_repr_t
+    cdi deviceID_label_len aliasKey_label_len
+    deviceIDCSR_ingredients aliasKeyCRT_ingredients
+    deviceID_pub_repr aliasKey_pub_repr aliasKey_priv_repr
+    deviceIDCSR_len deviceIDCSR_repr aliasKeyCRT_len aliasKeyCRT_repr
+    repr);
 
-  V.to_array_pts_to deviceID_pub_buf;
-  V.to_array_pts_to deviceID_priv_buf;
-  V.to_array_pts_to aliasKey_priv_buf;
-  V.to_array_pts_to aliasKey_pub_buf;
-  V.to_array_pts_to deviceIDCSR_buf;
-  V.to_array_pts_to aliasKeyCRT_buf;
-  memcpy v32us deviceID_priv (V.vec_to_array deviceID_priv_buf);
-  memcpy v32us deviceID_pub (V.vec_to_array deviceID_pub_buf);
-  memcpy v32us aliasKey_priv (V.vec_to_array aliasKey_priv_buf);
-  memcpy v32us aliasKey_pub (V.vec_to_array aliasKey_pub_buf);
-  memcpy deviceIDCSR_len deviceIDCSR (V.vec_to_array deviceIDCSR_buf);
-  memcpy aliasKeyCRT_len aliasKeyCRT (V.vec_to_array aliasKeyCRT_buf);
-  V.to_vec_pts_to deviceID_pub_buf;
-  V.to_vec_pts_to deviceID_priv_buf;
-  V.to_vec_pts_to aliasKey_priv_buf;
-  V.to_vec_pts_to aliasKey_pub_buf;
-  V.to_vec_pts_to deviceIDCSR_buf;
-  V.to_vec_pts_to aliasKeyCRT_buf;
+  rewrite each
+    deviceID_pub as ctxt.deviceID_pub,
+    aliasKey_pub as ctxt.aliasKey_pub,
+    aliasKey_priv as ctxt.aliasKey_priv,
+    deviceIDCSR as ctxt.deviceIDCSR,
+    aliasKeyCRT as ctxt.aliasKeyCRT;
 
-  let l1_context = mk_l1_context_t 
-    deviceID_priv_buf deviceID_pub_buf aliasKey_priv_buf aliasKey_pub_buf 
-    aliasKeyCRT_buf deviceIDCSR_buf;
-  let l1_context_repr = hide (mk_l1_context_repr_t 
-    deviceID_label_len aliasKey_label_len deviceID_priv0 deviceID_pub0
-    aliasKey_priv0 aliasKey_pub0 aliasKeyCRT_len aliasKeyCRT0 deviceIDCSR_len
-    deviceIDCSR0 cdi repr deviceIDCSR_ingredients aliasKeyCRT_ingredients);
+  rewrite each
+    cdi as l1_ctxt_repr.cdi,
+    deviceID_pub_repr as l1_ctxt_repr.deviceID_pub,
+    aliasKey_pub_repr as l1_ctxt_repr.aliasKey_pub,
+    aliasKey_priv_repr as l1_ctxt_repr.aliasKey_priv,
+    deviceIDCSR_repr as l1_ctxt_repr.deviceIDCSR,
+    aliasKeyCRT_repr as l1_ctxt_repr.aliasKeyCRT;
 
-  rewrite each deviceID_priv_buf  as l1_context.deviceID_priv,
-          deviceID_pub_buf  as l1_context.deviceID_pub,
-          aliasKey_priv_buf as l1_context.aliasKey_priv,
-          aliasKey_pub_buf  as l1_context.aliasKey_pub,
-          deviceIDCSR_buf   as l1_context.deviceIDCSR,
-          aliasKeyCRT_buf   as l1_context.aliasKeyCRT;
-
-  fold (l1_context_perm l1_context l1_context_repr);
-  l1_context
+  fold (l1_context_perm ctxt l1_ctxt_repr);
+  ctxt
 }
 ```
 
@@ -887,26 +874,56 @@ let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : pr
   | L0_context_repr _, L0_repr _ -> True
   | _ -> False
 
+```pulse 
+fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
+  requires context_perm ctxt repr
+  ensures emp
+{
+  match ctxt
+  {
+    Engine_context c ->
+    {
+      let uds = rewrite_context_perm_engine ctxt c;
+      unfold (engine_context_perm c uds);
+      V.free c.uds;
+    }
+    L0_context c ->
+    {
+      let r = rewrite_context_perm_l0 ctxt c;
+      unfold (l0_context_perm c r);
+      V.free c.cdi;
+    }
+    L1_context c ->
+    {
+      let r = rewrite_context_perm_l1 ctxt c;
+      unfold (l1_context_perm c r);
+      V.free c.deviceID_pub;
+      V.free c.aliasKey_priv;
+      V.free c.aliasKey_pub;
+      V.free c.aliasKeyCRT;
+      V.free c.deviceIDCSR;
+    }
+  }
+}
+```
+
 ```pulse
 fn derive_child_from_context
     (context:context_t)
     (record:record_t)
-    p
     (#record_repr: erased repr_t)
     (#context_repr:erased (context_repr_t))
     (_:squash (valid_context_and_record_for_derive_child context_repr record_repr))
 
   requires
     context_perm context context_repr **
-    record_perm record p record_repr
-  returns res:(context_t & record_t & option context_t)
+    record_perm record 1.0R record_repr
+  returns res:(option context_t)
   ensures
-    context_perm (tfst res) context_repr **
-    record_perm (tsnd res) p record_repr **
-    maybe_context_perm context_repr record_repr (tthd res)
+    maybe_context_perm context_repr record_repr res
 {
   intro_context_and_repr_tag_related context context_repr;
-  intro_record_and_repr_tag_related record p record_repr;
+  intro_record_and_repr_tag_related record 1.0R record_repr;
  
   match context {
     Engine_context c -> {
@@ -930,30 +947,31 @@ fn derive_child_from_context
           fold (engine_context_perm c uds_bytes);
           rewrite (engine_context_perm c uds_bytes)
                as (context_perm (Engine_context c) context_repr);
-          rewrite (engine_record_perm r p engine_record_repr)
-               as (record_perm (Engine_record r) p record_repr);
+          rewrite (engine_record_perm r 1.0R engine_record_repr)
+               as (record_perm (Engine_record r) 1.0R record_repr);
 
+          destroy_ctxt (Engine_context c);
+          //
+          // TODO: FIXME: deallocate
+          //
+          drop_ (record_perm (Engine_record r) 1.0R record_repr);
+         
           match snd ret {
             DICE_SUCCESS -> {
               let l0_ctxt = init_l0_ctxt cdi #engine_record_repr #s #uds_bytes ();
               with l0_ctxt_repr. assert (l0_context_perm l0_ctxt l0_ctxt_repr);
               fold (context_perm (L0_context l0_ctxt) (L0_context_repr l0_ctxt_repr));
               fold (maybe_context_perm context_repr record_repr (Some (L0_context l0_ctxt)));
-              let ret = (Engine_context c, Engine_record r, Some (L0_context l0_ctxt));
+              let ret = Some (L0_context l0_ctxt);
               rewrite each
-                Engine_context c as tfst ret,
-                Engine_record r as tsnd ret,
-                Some (L0_context l0_ctxt) as tthd ret;
+                Some (L0_context l0_ctxt) as ret;
               ret
             }
 
             DICE_ERROR -> {
               A.zeroize dice_digest_len cdi;
-              let ret = (Engine_context c, Engine_record r, None #context_t);
-              rewrite emp as (maybe_context_perm context_repr record_repr (tthd ret));
-              rewrite each
-                Engine_context c as tfst ret,
-                Engine_record r as tsnd ret;
+              let ret = None #context_t;
+              rewrite emp as (maybe_context_perm context_repr record_repr ret);
               ret
             }
           }
@@ -972,85 +990,88 @@ fn derive_child_from_context
           with s. assert (V.pts_to c.cdi s);
 
           let r0 = rewrite_record_perm_l0 record r;
+          unfold (l0_record_perm r 1.0R r0);
 
-          let deviceIDCRI_len_and_ing = len_of_deviceIDCRI r.deviceIDCSR_ingredients;
-          let deviceIDCSR_ingredients = fst deviceIDCRI_len_and_ing;
-          let deviceIDCRI_len = snd deviceIDCRI_len_and_ing;
+          let deviceID_pub = V.alloc 0uy (SZ.uint_to_t 32);
+          let aliasKey_pub = V.alloc 0uy (SZ.uint_to_t 32);
+          let aliasKey_priv = V.alloc 0uy (SZ.uint_to_t 32);
+          assume_ (pure (SZ.fits_u32));
+          let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet r.deviceIDCSR_len);
+          let aliasKeyCRT = V.alloc 0uy (SZ.uint32_to_sizet r.aliasKeyCRT_len);
 
-          let aliasKeyTBS_len_and_ing = len_of_aliasKeyTBS r.aliasKeyCRT_ingredients;
-          let aliasKeyCRT_ingredients = fst aliasKeyTBS_len_and_ing;
-          let aliasKeyTBS_len = snd aliasKeyTBS_len_and_ing;
-
-          let deviceIDCSR_len = length_of_deviceIDCSR deviceIDCRI_len;
-          let aliasKeyCRT_len = length_of_aliasKeyCRT aliasKeyTBS_len;
-
-          let mut deviceID_pub = [| 0uy; v32us |];
-          let mut deviceID_priv = [| 0uy; v32us |];
-          let mut aliasKey_pub = [| 0uy; v32us |];
-          let mut aliasKey_priv = [| 0uy; v32us |];
-
-          let deviceIDCSR = V.alloc 0uy deviceIDCSR_len;
-          let aliasKeyCRT = V.alloc 0uy aliasKeyCRT_len;
-
+          V.to_array_pts_to c.cdi;
+          V.to_array_pts_to r.fwid;
+          V.to_array_pts_to r.deviceID_label;
+          V.to_array_pts_to r.aliasKey_label;
+          V.to_array_pts_to deviceID_pub;
+          V.to_array_pts_to aliasKey_pub;
+          V.to_array_pts_to aliasKey_priv;
           V.to_array_pts_to deviceIDCSR;
           V.to_array_pts_to aliasKeyCRT;
-          V.to_array_pts_to c.cdi;
 
-          let r1 = {
-            fwid = r.fwid;
-            deviceID_label_len = r.deviceID_label_len;
-            deviceID_label = r.deviceID_label;
-            aliasKey_label_len = r.aliasKey_label_len;
-            aliasKey_label = r.aliasKey_label;
-            deviceIDCSR_ingredients;
-            aliasKeyCRT_ingredients;
-          } <: l0_record_t;
-          l0_record_perm_aux r r1;
+          assume_ (pure (A.length (V.vec_to_array c.cdi) == 32));
 
-          let r2 = L0Core.l0_main  (V.vec_to_array c.cdi) deviceID_pub deviceID_priv 
-                                   aliasKey_pub aliasKey_priv 
-                                   aliasKeyTBS_len aliasKeyCRT_len (V.vec_to_array aliasKeyCRT)
-                                   deviceIDCRI_len deviceIDCSR_len (V.vec_to_array deviceIDCSR) r1;
-
+          let _ : unit = l0
+            (V.vec_to_array c.cdi)
+            (V.vec_to_array r.fwid)
+            r.deviceID_label_len
+            (V.vec_to_array r.deviceID_label)
+            r.aliasKey_label_len
+            (V.vec_to_array r.aliasKey_label)
+            r.deviceIDCSR_ingredients
+            r.aliasKeyCRT_ingredients
+            (V.vec_to_array deviceID_pub)
+            (V.vec_to_array aliasKey_pub)
+            (V.vec_to_array aliasKey_priv)
+            r.deviceIDCSR_len
+            (V.vec_to_array deviceIDCSR)
+            r.aliasKeyCRT_len
+            (V.vec_to_array aliasKeyCRT);
+          
           V.to_vec_pts_to c.cdi;
-
-          fold (l0_context_perm c cr);
-          rewrite (l0_context_perm c cr)
-               as (context_perm (L0_context c) context_repr);
-          rewrite (l0_record_perm r2 p r0)
-               as (record_perm (L0_record r2) p record_repr);
-
-
-          with deviceID_priv0. assert (A.pts_to deviceID_priv deviceID_priv0);
-          with deviceID_pub0. assert (A.pts_to deviceID_pub deviceID_pub0);
-          with aliasKey_priv0. assert (A.pts_to aliasKey_priv aliasKey_priv0);
-          with aliasKey_pub0. assert (A.pts_to aliasKey_pub aliasKey_pub0);
-          with deviceIDCSR0. assert (A.pts_to (V.vec_to_array deviceIDCSR) deviceIDCSR0);
-          with aliasKeyCRT0. assert (A.pts_to (V.vec_to_array aliasKeyCRT) aliasKeyCRT0);
-
-          let l1_context = init_l1_ctxt 
-                      deviceIDCSR_len aliasKeyCRT_len deviceID_priv deviceID_pub
-                      aliasKey_priv aliasKey_pub (V.vec_to_array deviceIDCSR) (V.vec_to_array aliasKeyCRT)
-                      (hide r2.deviceID_label_len)
-                      (hide r2.aliasKey_label_len) s r0 (hide r2.deviceIDCSR_ingredients) (hide r2.aliasKeyCRT_ingredients)
-                      #deviceID_priv0 #deviceID_pub0 #aliasKey_priv0 #aliasKey_pub0
-                      #deviceIDCSR0 #aliasKeyCRT0
-                      ();
-
-          with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
-          fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
-
+          V.to_vec_pts_to r.fwid;
+          V.to_vec_pts_to r.deviceID_label;
+          V.to_vec_pts_to r.aliasKey_label;
+          V.to_vec_pts_to deviceID_pub;
+          V.to_vec_pts_to aliasKey_pub;
+          V.to_vec_pts_to aliasKey_priv;
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
-          V.free deviceIDCSR;
-          V.free aliasKeyCRT;
+
+          let l1_context : l1_context_t = init_l1_ctxt
+            s
+            (hide r.deviceID_label_len)
+            (hide r.aliasKey_label_len)
+            (hide r.deviceIDCSR_ingredients)
+            (hide r.aliasKeyCRT_ingredients)
+            deviceID_pub
+            aliasKey_priv
+            aliasKey_pub
+            r.deviceIDCSR_len
+            deviceIDCSR
+            r.aliasKeyCRT_len
+            aliasKeyCRT
+            r0
+            (magic ());
+
+          fold (l0_context_perm c cr);
+          rewrite (l0_context_perm c cr) as
+                  (context_perm (L0_context c) context_repr);
+          fold (l0_record_perm r 1.0R r0);
+          rewrite (l0_record_perm r 1.0R r0) as
+                  (record_perm (L0_record r) 1.0R record_repr);
+
+          destroy_ctxt (L0_context c);
+          drop_ (record_perm (L0_record r) 1.0R record_repr);
+                    
+          with l1_context_repr. assert (l1_context_perm l1_context l1_context_repr);
+          
+          fold (context_perm (L1_context l1_context) (L1_context_repr l1_context_repr));
 
           fold (maybe_context_perm context_repr record_repr (Some (L1_context l1_context)));
-          let ret = (L0_context c, L0_record r2, Some (L1_context l1_context));
+          let ret = Some (L1_context l1_context);
           rewrite each
-            L0_context c as tfst ret,
-            L0_record r2 as tsnd ret,
-            Some (L1_context l1_context) as tthd ret;
+            Some (L1_context l1_context) as ret;
 
           ret
         }
@@ -1087,54 +1108,18 @@ fn rewrite_session_state_related_available
 }
 ```
 
-```pulse 
-fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
-  requires context_perm ctxt repr
-  ensures emp
-{
-  match ctxt
-  {
-    Engine_context c ->
-    {
-      let uds = rewrite_context_perm_engine ctxt c;
-      unfold (engine_context_perm c uds);
-      V.free c.uds;
-    }
-    L0_context c ->
-    {
-      let r = rewrite_context_perm_l0 ctxt c;
-      unfold (l0_context_perm c r);
-      V.free c.cdi;
-    }
-    L1_context c ->
-    {
-      let r = rewrite_context_perm_l1 ctxt c;
-      unfold (l1_context_perm c r);
-      V.free c.deviceID_priv;
-      V.free c.deviceID_pub;
-      V.free c.aliasKey_priv;
-      V.free c.aliasKey_pub;
-      V.free c.aliasKeyCRT;
-      V.free c.deviceIDCSR;
-    }
-  }
-}
-```
-
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
 fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
-  (#p:perm)
-  requires record_perm record p rrepr **
+  requires record_perm record 1.0R rrepr **
            sid_pts_to trace_ref sid t
-  returns b:(record_t & option ctxt_hndl_t)
-  ensures record_perm (fst b) p rrepr **
-          derive_child_client_perm sid t rrepr (snd b)
+  returns b:(option ctxt_hndl_t)
+  ensures derive_child_client_perm sid t rrepr b
 {
-  intro_record_and_repr_tag_related record p rrepr;
+  intro_record_and_repr_tag_related record 1.0R rrepr;
 
   rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
   let s = replace_session sid t InUse (G_InUse (current_state t));
@@ -1152,18 +1137,9 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
           assume_ (pure (~ (L1_context? hc.context)));
           let repr = rewrite_session_state_related_available hc.handle hc.context s t;
           intro_context_and_repr_tag_related hc.context repr;
-          let ret = derive_child_from_context hc.context record p #rrepr #repr ();
+          let ret = derive_child_from_context hc.context record #rrepr #repr ();
 
-          let octxt = tfst ret;
-          let record = tsnd ret;
-          let nctxt = tthd ret;
-          rewrite each
-            tfst ret as octxt,
-            tsnd ret as record,
-            tthd ret as nctxt;
-          
-          destroy_ctxt octxt;
-          match nctxt {
+          match ret {
             Some nctxt -> {
               unfold (maybe_context_perm repr rrepr (Some nctxt));
               with nrepr. assert (context_perm nctxt nrepr);
@@ -1174,22 +1150,18 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
                       (session_state_related s (G_Available nrepr));
               let s = replace_session sid t1 s (G_Available nrepr);
               intro_session_state_tag_related s (current_state t1);
-              let ret = (record, Some handle);
-              rewrite each
-                record as fst ret;
+              let ret = Some handle;
               fold (derive_child_client_perm sid t rrepr (Some handle));
               with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
             }
             None -> {
               let s = SessionError;
+              rewrite (maybe_context_perm repr rrepr ret) as emp;
               rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
               let s = replace_session sid t1 s (G_SessionError (current_state t1));
               intro_session_state_tag_related s (current_state t1);
-              let ret = (record, None #ctxt_hndl_t);
-              rewrite each
-                record as fst ret;
-              rewrite (maybe_context_perm repr rrepr nctxt) as emp;
+              let ret = None #ctxt_hndl_t;
               fold (derive_child_client_perm sid t rrepr None);
               with _x _y. rewrite (session_state_related _x _y) as emp;
               ret
@@ -1262,6 +1234,155 @@ fn close_session (sid:sid_t)
   fold (session_closed_client_perm sid t)
 }
 ```
+
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
+```pulse
+fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (pub_key:A.larray U8.t 32)
+  (crt_len:U32.t)
+  (crt:A.larray U8.t (U32.v crt_len))
+  (t:G.erased trace { trace_valid_for_certify_key t })
+  requires sid_pts_to trace_ref sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr)
+  returns _:bool
+  ensures certify_key_client_perm sid t **
+          (exists* pub_key_repr crt_repr.
+             A.pts_to pub_key pub_key_repr **
+             A.pts_to crt crt_repr)
+{
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let s = replace_session sid t InUse (G_InUse (current_state t));
+  with t1. assert (sid_pts_to trace_ref sid t1);
+
+  match s {
+    Available hc -> {
+      match hc.context {
+        L1_context c -> {
+          if U32.lt c.aliasKeyCRT_len crt_len {
+            let handle = prng ();
+            let ns = Available { handle; context = L1_context c };
+            rewrite (session_state_related s (current_state t)) as
+                    (session_state_related ns (current_state t));
+            let s = replace_session sid t1 ns (current_state t);
+            intro_session_state_tag_related s (current_state t1);
+            with _x _y. rewrite (session_state_related _x _y) as emp;
+            fold (certify_key_client_perm sid t);
+            false
+          } else {
+            let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+            let r = rewrite_context_perm_l1 (L1_context c) c;
+            unfold (l1_context_perm c r);
+
+            V.to_array_pts_to c.aliasKey_pub;
+            memcpy_l (SZ.uint_to_t 32) (V.vec_to_array c.aliasKey_pub) pub_key;
+            V.to_vec_pts_to c.aliasKey_pub;
+
+            assume_ (pure (SZ.fits_u32));
+            V.to_array_pts_to c.aliasKeyCRT;
+            memcpy_l (SZ.uint32_to_sizet crt_len) (V.vec_to_array c.aliasKeyCRT) crt;
+            V.to_vec_pts_to c.aliasKeyCRT;
+
+            fold (l1_context_perm c r);
+            rewrite (l1_context_perm c r) as
+                    (context_perm (L1_context c) (L1_context_repr r));
+            
+            let handle = prng ();
+            let ns = Available { handle; context = L1_context c };
+            rewrite (context_perm (L1_context c) (L1_context_repr r)) as
+                    (session_state_related ns (current_state t));
+            
+            let s = replace_session sid t1 ns (current_state t);
+            intro_session_state_tag_related s (current_state t1);
+            with _x _y. rewrite (session_state_related _x _y) as emp;
+            fold (certify_key_client_perm sid t);
+            true
+          }
+        }
+        _ -> {
+          assume_ (pure (~ (L1_context? hc.context)));
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+      }
+    }
+    _ -> {
+      assume_ (pure (~ (Available? s)));
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+#pop-options
+
+#push-options "--split_queries no"
+```pulse
+fn sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (signature:A.larray U8.t 64)
+  (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
+  (msg:A.larray U8.t (SZ.v msg_len))
+  (t:G.erased trace { trace_valid_for_sign t })
+  requires sid_pts_to trace_ref sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr)
+  ensures sign_client_perm sid t **
+          (exists* signature_repr msg_repr.
+             A.pts_to signature signature_repr **
+             A.pts_to msg msg_repr)
+{
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let s = replace_session sid t InUse (G_InUse (current_state t));
+  with t1. assert (sid_pts_to trace_ref sid t1);
+
+  match s {
+    Available hc -> {
+      match hc.context {
+        L1_context c -> {
+          let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+          let r = rewrite_context_perm_l1 (L1_context c) c;
+          unfold (l1_context_perm c r);
+
+          V.to_array_pts_to c.aliasKey_priv;
+          HACL.ed25519_sign signature (V.vec_to_array c.aliasKey_priv) msg_len msg;
+          V.to_vec_pts_to c.aliasKey_priv;
+
+          fold (l1_context_perm c r);
+          rewrite (l1_context_perm c r) as
+                  (context_perm (L1_context c) (L1_context_repr r));
+            
+          let handle = prng ();
+          let ns = Available { handle; context = L1_context c };
+          rewrite (context_perm (L1_context c) (L1_context_repr r)) as
+                  (session_state_related ns (current_state t));
+            
+          let s = replace_session sid t1 ns (current_state t);
+          intro_session_state_tag_related s (current_state t1);
+          with _x _y. rewrite (session_state_related _x _y) as emp;
+          fold (sign_client_perm sid t);
+        }
+        _ -> {
+          assume_ (pure (~ (L1_context? hc.context)));
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+      }
+    }
+    _ -> {
+      assume_ (pure (~ (Available? s)));
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+#pop-options
 
 (*
   GetProfile: Part of DPE API 

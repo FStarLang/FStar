@@ -4,14 +4,9 @@
 ////
 ////
 
-pub type alg_t = super::spec_hash_definitions::hash_alg;
-pub fn digest_len(a: super::hacl::alg_t) -> usize {
-    super::fstar_sizet::uint32_to_sizet(super::evercrypt_hash_incremental::hash_len(a))
-}
+pub type alg_t = crate::spec_hash_definitions::hash_alg;
 pub type hashable_len = usize;
 pub type signable_len = usize;
-pub type hkdf_lbl_len = usize;
-pub type hkdf_ikm_len = usize;
 pub fn hacl_hash0(
     alg: super::hacl::alg_t,
     src_len: super::hacl::hashable_len,
@@ -21,14 +16,14 @@ pub fn hacl_hash0(
     src_seq: (),
     dst_seq: (),
 ) -> () {
-    super::evercrypt_autoconfig2::init(());
-    super::evercrypt_hash_incremental::hash(
+    crate::evercrypt_autoconfig2::init(());
+    crate::evercrypt_hash_incremental::hash(
         alg,
         dst,
         src,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(src_len),
+        crate::fstar_sizet::sizet_to_uint32(src_len),
     );
 }
 pub static hacl_hash: fn(
@@ -53,17 +48,17 @@ pub fn hacl_hmac0(
     key_seq: (),
     msg_seq: (),
 ) -> () {
-    super::evercrypt_hmac::compute(
+    crate::evercrypt_hmac::compute(
         alg,
         dst,
         key,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(key_len),
+        crate::fstar_sizet::sizet_to_uint32(key_len),
         msg,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(msg_len),
+        crate::fstar_sizet::sizet_to_uint32(msg_len),
     );
 }
 pub static hacl_hmac: fn(
@@ -91,11 +86,11 @@ pub fn ed25519_verify0(
     hdr_seq: (),
     sig_seq: (),
 ) -> bool {
-    super::evercrypt_ed25519::verify(
+    crate::evercrypt_ed25519::verify(
         (),
         (),
         pubk,
-        super::fstar_sizet::sizet_to_uint32(hdr_len),
+        crate::fstar_sizet::sizet_to_uint32(hdr_len),
         (),
         (),
         hdr,
@@ -127,12 +122,12 @@ pub fn ed25519_sign0(
     privk_seq: (),
     msg_seq: (),
 ) -> () {
-    super::evercrypt_ed25519::sign(
+    crate::evercrypt_ed25519::sign(
         buf,
         (),
         (),
         privk,
-        super::fstar_sizet::sizet_to_uint32(len),
+        crate::fstar_sizet::sizet_to_uint32(len),
         (),
         (),
         msg,

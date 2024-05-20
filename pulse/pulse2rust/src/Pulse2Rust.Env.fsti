@@ -45,15 +45,16 @@ val reachable_defs_to_string (d:reachable_defs) : string
 type dict = smap (list string & list UEnv.binding & S.mlmodule)
 
 type env = {
+  external_libs : list string;
   fns : list (string & fn_signature);
   statics : list (string & typ);
   gamma : list binding;
   d: dict;
   all_modules : list string;
-  reachable_defs : reachable_defs
+  reachable_defs : reachable_defs;
 }
 
-val empty_env (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) : env
+val empty_env (external_libs:list string) (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) : env
 
 val lookup_global_fn (g:env) (s:string) : option fn_signature
 
@@ -64,3 +65,5 @@ val push_fn (g:env) (s:string) (t:fn_signature) : env
 val push_static (g:env) (s:string) (t:typ) : env
 
 val push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env
+
+val is_external_lib (g:env) (s:string) : bool

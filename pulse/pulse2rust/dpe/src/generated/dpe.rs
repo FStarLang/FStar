@@ -170,7 +170,7 @@ pub fn init_engine_ctxt(
     uds_bytes: (),
 ) -> super::dpetypes::context_t {
     let mut uds_buf = vec![0; super::enginetypes::uds_len];
-    super::pulse_lib_array::memcpy(
+    crate::pulse_lib_array::memcpy(
         super::enginetypes::uds_len,
         uds,
         &mut uds_buf,
@@ -218,95 +218,62 @@ pub fn init_l0_ctxt(
     uu___: (),
 ) -> super::dpetypes::l0_context_t {
     let mut cdi_buf = vec![0; 32];
-    super::pulse_lib_array::memcpy(32, cdi, &mut cdi_buf, (), (), ());
+    crate::pulse_lib_array::memcpy(32, cdi, &mut cdi_buf, (), (), ());
     let l0_context = super::dpetypes::mk_l0_context_t(cdi_buf);
     l0_context
 }
 pub fn init_l1_ctxt(
-    deviceIDCSR_len: usize,
-    aliasKeyCRT_len: usize,
-    deviceID_priv: &mut [u8],
-    deviceID_pub: &mut [u8],
-    aliasKey_priv: &mut [u8],
-    aliasKey_pub: &mut [u8],
-    deviceIDCSR: &mut [u8],
-    aliasKeyCRT: &mut [u8],
+    cdi: (),
     deviceID_label_len: (),
     aliasKey_label_len: (),
-    cdi: (),
-    repr: (),
     deviceIDCSR_ingredients: (),
     aliasKeyCRT_ingredients: (),
-    deviceID_priv0: (),
-    deviceID_pub0: (),
-    aliasKey_priv0: (),
-    aliasKey_pub0: (),
-    deviceIDCSR0: (),
-    aliasKeyCRT0: (),
+    deviceID_pub: std::vec::Vec<u8>,
+    aliasKey_priv: std::vec::Vec<u8>,
+    aliasKey_pub: std::vec::Vec<u8>,
+    deviceIDCSR_len: u32,
+    deviceIDCSR: std::vec::Vec<u8>,
+    aliasKeyCRT_len: u32,
+    aliasKeyCRT: std::vec::Vec<u8>,
+    repr: (),
+    deviceID_pub_repr: (),
+    aliasKey_pub_repr: (),
+    aliasKey_priv_repr: (),
+    deviceIDCSR_repr: (),
+    aliasKeyCRT_repr: (),
     uu___: (),
 ) -> super::dpetypes::l1_context_t {
-    let mut deviceID_pub_buf = vec![0; 32];
-    let mut deviceID_priv_buf = vec![0; 32];
-    let mut aliasKey_priv_buf = vec![0; 32];
-    let mut aliasKey_pub_buf = vec![0; 32];
-    let mut deviceIDCSR_buf = vec![0; deviceIDCSR_len];
-    let mut aliasKeyCRT_buf = vec![0; aliasKeyCRT_len];
-    super::pulse_lib_array::memcpy(
-        32,
-        deviceID_priv,
-        &mut deviceID_priv_buf,
-        (),
-        (),
-        (),
-    );
-    super::pulse_lib_array::memcpy(32, deviceID_pub, &mut deviceID_pub_buf, (), (), ());
-    super::pulse_lib_array::memcpy(
-        32,
+    let ctxt = super::dpetypes::mk_l1_context_t(
+        deviceID_pub,
+        aliasKey_pub,
         aliasKey_priv,
-        &mut aliasKey_priv_buf,
-        (),
-        (),
-        (),
-    );
-    super::pulse_lib_array::memcpy(32, aliasKey_pub, &mut aliasKey_pub_buf, (), (), ());
-    super::pulse_lib_array::memcpy(
         deviceIDCSR_len,
         deviceIDCSR,
-        &mut deviceIDCSR_buf,
-        (),
-        (),
-        (),
-    );
-    super::pulse_lib_array::memcpy(
         aliasKeyCRT_len,
         aliasKeyCRT,
-        &mut aliasKeyCRT_buf,
-        (),
-        (),
-        (),
     );
-    let l1_context = super::dpetypes::mk_l1_context_t(
-        deviceID_priv_buf,
-        deviceID_pub_buf,
-        aliasKey_priv_buf,
-        aliasKey_pub_buf,
-        aliasKeyCRT_buf,
-        deviceIDCSR_buf,
-    );
-    l1_context
+    ctxt
+}
+pub fn destroy_ctxt(ctxt: super::dpetypes::context_t, repr: ()) -> () {
+    match ctxt {
+        super::dpetypes::context_t::Engine_context(mut c) => drop(c.uds),
+        super::dpetypes::context_t::L0_context(mut c) => drop(c.cdi),
+        super::dpetypes::context_t::L1_context(mut c) => {
+            drop(c.deviceID_pub);
+            drop(c.aliasKey_priv);
+            drop(c.aliasKey_pub);
+            drop(c.aliasKeyCRT);
+            drop(c.deviceIDCSR)
+        }
+    }
 }
 pub fn derive_child_from_context(
     context: super::dpetypes::context_t,
     record: super::dpetypes::record_t,
-    p: (),
     record_repr: (),
     context_repr: (),
     uu___: (),
-) -> (
-    super::dpetypes::context_t,
-    super::dpetypes::record_t,
-    std::option::Option<super::dpetypes::context_t>,
-) {
+) -> std::option::Option<super::dpetypes::context_t> {
     match context {
         super::dpetypes::context_t::Engine_context(mut c) => {
             match record {
@@ -323,23 +290,21 @@ pub fn derive_child_from_context(
                         (),
                     );
                     let r1 = ret.0;
+                    super::dpe::destroy_ctxt(
+                        super::dpetypes::context_t::Engine_context(c),
+                        (),
+                    );
                     let _bind_c = match ret.1 {
                         super::enginetypes::dice_return_code::DICE_SUCCESS => {
                             let l0_ctxt = super::dpe::init_l0_ctxt(cdi, (), (), (), ());
-                            let ret1 = (
-                                super::dpetypes::context_t::Engine_context(c),
-                                super::dpetypes::record_t::Engine_record(r1),
-                                Some(super::dpetypes::context_t::L0_context(l0_ctxt)),
+                            let ret1 = Some(
+                                super::dpetypes::context_t::L0_context(l0_ctxt),
                             );
                             ret1
                         }
                         super::enginetypes::dice_return_code::DICE_ERROR => {
-                            super::pulse_lib_array::zeroize(32, cdi, ());
-                            let ret1 = (
-                                super::dpetypes::context_t::Engine_context(c),
-                                super::dpetypes::record_t::Engine_record(r1),
-                                None,
-                            );
+                            crate::pulse_lib_array::zeroize(32, cdi, ());
+                            let ret1 = None;
                             ret1
                         }
                     };
@@ -352,51 +317,31 @@ pub fn derive_child_from_context(
         super::dpetypes::context_t::L0_context(mut c) => {
             match record {
                 super::dpetypes::record_t::L0_record(mut r) => {
-                    let deviceIDCRI_len_and_ing = super::x509::len_of_deviceIDCRI(
-                        r.deviceIDCSR_ingredients,
-                    );
-                    let deviceIDCSR_ingredients = deviceIDCRI_len_and_ing.0;
-                    let deviceIDCRI_len = deviceIDCRI_len_and_ing.1;
-                    let aliasKeyTBS_len_and_ing = super::x509::len_of_aliasKeyTBS(
-                        r.aliasKeyCRT_ingredients,
-                    );
-                    let aliasKeyCRT_ingredients = aliasKeyTBS_len_and_ing.0;
-                    let aliasKeyTBS_len = aliasKeyTBS_len_and_ing.1;
-                    let deviceIDCSR_len = super::x509::length_of_deviceIDCSR(
-                        deviceIDCRI_len,
-                    );
-                    let aliasKeyCRT_len = super::x509::length_of_aliasKeyCRT(
-                        aliasKeyTBS_len,
-                    );
-                    let deviceID_pub = &mut [0; 32];
-                    let deviceID_priv = &mut [0; 32];
-                    let aliasKey_pub = &mut [0; 32];
-                    let aliasKey_priv = &mut [0; 32];
-                    let mut deviceIDCSR = vec![0; deviceIDCSR_len];
-                    let mut aliasKeyCRT = vec![0; aliasKeyCRT_len];
-                    let r1 = super::l0types::l0_record_t {
-                        fwid: r.fwid,
-                        deviceID_label_len: r.deviceID_label_len,
-                        deviceID_label: r.deviceID_label,
-                        aliasKey_label_len: r.aliasKey_label_len,
-                        aliasKey_label: r.aliasKey_label,
-                        deviceIDCSR_ingredients: deviceIDCSR_ingredients,
-                        aliasKeyCRT_ingredients: aliasKeyCRT_ingredients,
-                    };
-                    let r2 = super::l0core::l0_main(
+                    let mut deviceID_pub = vec![0; 32];
+                    let mut aliasKey_pub = vec![0; 32];
+                    let mut aliasKey_priv = vec![0; 32];
+                    let mut deviceIDCSR = vec![
+                        0; crate ::fstar_sizet::uint32_to_sizet(r.deviceIDCSR_len)
+                    ];
+                    let mut aliasKeyCRT = vec![
+                        0; crate ::fstar_sizet::uint32_to_sizet(r.aliasKeyCRT_len)
+                    ];
+                    crate::l0core::l0(
                         &mut c.cdi,
-                        deviceID_pub,
-                        deviceID_priv,
-                        aliasKey_pub,
-                        aliasKey_priv,
-                        aliasKeyTBS_len,
-                        aliasKeyCRT_len,
-                        &mut aliasKeyCRT,
-                        deviceIDCRI_len,
-                        deviceIDCSR_len,
+                        &mut r.fwid,
+                        r.deviceID_label_len,
+                        &mut r.deviceID_label,
+                        r.aliasKey_label_len,
+                        &mut r.aliasKey_label,
+                        r.deviceIDCSR_ingredients,
+                        r.aliasKeyCRT_ingredients,
+                        &mut deviceID_pub,
+                        &mut aliasKey_pub,
+                        &mut aliasKey_priv,
+                        r.deviceIDCSR_len,
                         &mut deviceIDCSR,
-                        r1,
-                        (),
+                        r.aliasKeyCRT_len,
+                        &mut aliasKeyCRT,
                         (),
                         (),
                         (),
@@ -408,20 +353,18 @@ pub fn derive_child_from_context(
                         (),
                     );
                     let l1_context = super::dpe::init_l1_ctxt(
-                        deviceIDCSR_len,
-                        aliasKeyCRT_len,
-                        deviceID_priv,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
                         deviceID_pub,
                         aliasKey_priv,
                         aliasKey_pub,
-                        &mut deviceIDCSR,
-                        &mut aliasKeyCRT,
-                        (),
-                        (),
-                        (),
-                        (),
-                        (),
-                        (),
+                        r.deviceIDCSR_len,
+                        deviceIDCSR,
+                        r.aliasKeyCRT_len,
+                        aliasKeyCRT,
                         (),
                         (),
                         (),
@@ -430,37 +373,17 @@ pub fn derive_child_from_context(
                         (),
                         (),
                     );
-                    drop(deviceIDCSR);
-                    drop(aliasKeyCRT);
-                    let ret = (
+                    super::dpe::destroy_ctxt(
                         super::dpetypes::context_t::L0_context(c),
-                        super::dpetypes::record_t::L0_record(r2),
-                        Some(super::dpetypes::context_t::L1_context(l1_context)),
+                        (),
                     );
-                    let aliasKey_priv1 = ret;
-                    let aliasKey_pub1 = aliasKey_priv1;
-                    let deviceID_priv1 = aliasKey_pub1;
-                    let deviceID_pub1 = deviceID_priv1;
-                    deviceID_pub1
+                    let ret = Some(super::dpetypes::context_t::L1_context(l1_context));
+                    ret
                 }
                 super::dpetypes::record_t::Engine_record(_) => panic!(),
             }
         }
         super::dpetypes::context_t::L1_context(_) => panic!(),
-    }
-}
-pub fn destroy_ctxt(ctxt: super::dpetypes::context_t, repr: ()) -> () {
-    match ctxt {
-        super::dpetypes::context_t::Engine_context(mut c) => drop(c.uds),
-        super::dpetypes::context_t::L0_context(mut c) => drop(c.cdi),
-        super::dpetypes::context_t::L1_context(mut c) => {
-            drop(c.deviceID_priv);
-            drop(c.deviceID_pub);
-            drop(c.aliasKey_priv);
-            drop(c.aliasKey_pub);
-            drop(c.aliasKeyCRT);
-            drop(c.deviceIDCSR)
-        }
     }
 }
 pub fn derive_child(
@@ -469,8 +392,7 @@ pub fn derive_child(
     t: (),
     record: super::dpetypes::record_t,
     rrepr: (),
-    p: (),
-) -> (super::dpetypes::record_t, std::option::Option<super::dpe::ctxt_hndl_t>) {
+) -> std::option::Option<super::dpe::ctxt_hndl_t> {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::Available(mut hc) => {
@@ -483,27 +405,22 @@ pub fn derive_child(
                         (),
                         (),
                         (),
-                        (),
                     );
-                    let octxt = ret.0;
-                    let record1 = ret.1;
-                    let nctxt = ret.2;
-                    super::dpe::destroy_ctxt(octxt, ());
-                    match nctxt {
-                        Some(mut nctxt1) => {
+                    match ret {
+                        Some(mut nctxt) => {
                             let handle = super::dpe::prng(());
                             let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
                                 handle: handle,
-                                context: nctxt1,
+                                context: nctxt,
                             });
                             let s2 = super::dpe::replace_session(sid, (), s1, ());
-                            let ret1 = (record1, Some(handle));
+                            let ret1 = Some(handle);
                             ret1
                         }
                         None => {
                             let s1 = super::dpe::session_state::SessionError;
                             let s2 = super::dpe::replace_session(sid, (), s1, ());
-                            let ret1 = (record1, None);
+                            let ret1 = None;
                             ret1
                         }
                     }
@@ -533,6 +450,96 @@ pub fn close_session(sid: super::dpe::sid_t, t: ()) -> () {
         super::dpe::session_state::SessionClosed,
         (),
     );
+}
+pub fn certify_key(
+    sid: super::dpe::sid_t,
+    ctxt_hndl: super::dpe::ctxt_hndl_t,
+    pub_key: &mut [u8],
+    crt_len: u32,
+    crt: &mut [u8],
+    t: (),
+) -> bool {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(mut c) => {
+                    if c.aliasKeyCRT_len < crt_len {
+                        let handle = super::dpe::prng(());
+                        let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                            handle: handle,
+                            context: super::dpetypes::context_t::L1_context(c),
+                        });
+                        let s1 = super::dpe::replace_session(sid, (), ns, ());
+                        false
+                    } else {
+                        crate::pulse_lib_array::memcpy_l(
+                            32,
+                            &mut c.aliasKey_pub,
+                            pub_key,
+                            (),
+                            (),
+                            (),
+                        );
+                        crate::pulse_lib_array::memcpy_l(
+                            crate::fstar_sizet::uint32_to_sizet(crt_len),
+                            &mut c.aliasKeyCRT,
+                            crt,
+                            (),
+                            (),
+                            (),
+                        );
+                        let handle = super::dpe::prng(());
+                        let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                            handle: handle,
+                            context: super::dpetypes::context_t::L1_context(c),
+                        });
+                        let s1 = super::dpe::replace_session(sid, (), ns, ());
+                        true
+                    }
+                }
+                _ => panic!(),
+            }
+        }
+        _ => panic!(),
+    }
+}
+pub fn sign(
+    sid: super::dpe::sid_t,
+    ctxt_hndl: super::dpe::ctxt_hndl_t,
+    signature: &mut [u8],
+    msg_len: usize,
+    msg: &mut [u8],
+    t: (),
+) -> () {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(mut c) => {
+                    super::hacl::ed25519_sign(
+                        signature,
+                        &mut c.aliasKey_priv,
+                        msg_len,
+                        msg,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                    );
+                    let handle = super::dpe::prng(());
+                    let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                        handle: handle,
+                        context: super::dpetypes::context_t::L1_context(c),
+                    });
+                    let s1 = super::dpe::replace_session(sid, (), ns, ());
+                }
+                _ => panic!(),
+            }
+        }
+        _ => panic!(),
+    }
 }
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
     super::dpetypes::mk_profile_descriptor(

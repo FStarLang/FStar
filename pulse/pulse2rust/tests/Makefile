@@ -1,13 +1,13 @@
 PULSE_HOME ?= ../..
 PULSE_EXAMPLES_ROOT ?= $(PULSE_HOME)/share/pulse/examples
 
-SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/common dice/dpe dice/engine dice/l0 dice/common/hacl-c)
+SRC_DIRS := $(addprefix $(PULSE_EXAMPLES_ROOT)/,by-example dice/external dice/external/hacl dice/external/l0 dice/dpe dice/engine dice/l0)
 ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/_output/cache))
 SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/_output/cache
 endif
-ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache))
-SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache
-endif
+# ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache))
+# SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/dice/common/hacl-c/_output/cache
+# endif
 ifneq (,$(wildcard $(PULSE_EXAMPLES_ROOT)/_output/cache))
 SRC_DIRS += $(PULSE_EXAMPLES_ROOT)/_output/cache
 endif
@@ -17,7 +17,7 @@ FSTAR_OPTIONS += --warn_error -342 --cmi
 
 MAIN=../main.exe
 RUST_SRC_DIR=./src/
-DPE_SRC_DIR=../dpe/src
+DPE_OUTPUT_DIR=../dpe/src/generated
 
 all: test dpe
 
@@ -76,16 +76,16 @@ DPE_FILES = EngineTypes.ast \
   EngineCore.ast \
 	HACL.ast \
 	L0Types.ast \
-	L0Crypto.ast \
-	L0Core.ast \
 	Pulse_Lib_HashTable_Type.ast \
 	Pulse_Lib_HashTable_Spec.ast \
 	Pulse_Lib_HashTable.ast \
 	DPETypes.ast \
 	DPE.ast
 
+DPE_LIB = L0Core,Pulse.Lib.Array,FStar.SizeT,EverCrypt.HMAC,EverCrypt.Hash.Incremental,EverCrypt.Ed25519,EverCrypt.AutoConfig2,Spec.Hash.Definitions
+
 dpe.rs: $(DPE_FILES)
-	$(MAIN) -odir $(DPE_SRC_DIR)/ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ -lib $(DPE_LIB) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
 all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
 
@@ -94,5 +94,6 @@ test: all-rs
 
 dpe: dpe.rs
 	cd ../dpe && cargo build && cd -
+	$(MAKE) -C ../dpe -f c.Makefile
 
 .PHONY: test dpe

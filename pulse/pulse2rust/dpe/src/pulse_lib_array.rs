@@ -14,6 +14,10 @@ pub fn memcpy<A: Copy>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), 
     dst.copy_from_slice(src);
 }
 
+pub fn memcpy_l<A: Copy>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {
+    dst.copy_from_slice(src);
+}
+
 pub fn zeroize(len: usize, src: &mut [u8], s: ()) -> () {
     panic!()
 }

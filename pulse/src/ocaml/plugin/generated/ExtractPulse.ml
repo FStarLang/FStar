@@ -6,8 +6,9 @@ let (pulse_translate_type_without_decay :
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let p1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          (p1 = "Pulse.Lib.Reference.ref") ||
-            (p1 = "Pulse.Lib.Array.Core.array")
+          ((p1 = "Pulse.Lib.Reference.ref") ||
+             (p1 = "Pulse.Lib.Array.Core.array"))
+            || (p1 = "Pulse.Lib.Vec.vec")
           ->
           let uu___ =
             FStar_Extraction_Krml.translate_type_without_decay env arg in

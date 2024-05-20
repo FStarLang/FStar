@@ -19,7 +19,8 @@
     "share/pulse/examples/dice/dpe",
     "share/pulse/examples/dice/l0",
     "share/pulse/examples/dice/engine",
-    "share/pulse/examples/dice/common",
+    "share/pulse/examples/dice/external",
+    "share/pulse/examples/dice/external/hacl",
     "share/pulse/examples/dice/cbor"
   ]
 }

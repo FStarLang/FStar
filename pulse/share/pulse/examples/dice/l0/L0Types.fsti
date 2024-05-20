@@ -15,61 +15,28 @@
 *)
 
 module L0Types
+
 open Pulse.Lib.Pervasives
-module R = Pulse.Lib.Reference
+
 module V = Pulse.Lib.Vec
-module US = FStar.SizeT
+module A = Pulse.Lib.Array
 module U8 = FStar.UInt8
 module U32 = FStar.UInt32
-open HACL
+module I32 = FStar.Int32
 
-val x509_version_t : Type0
+open L0Core
 
-val x509_serialNumber_t : Type0
-
-val deviceIDCRI_t : Type0
-
-val deviceIDCSR_t : Type0
-
-val aliasKeyTBS_t : Type0
-
-val aliasKeyCRT_t : Type0
-
-noeq
-type deviceIDCSR_ingredients_t = {
-  ku        : U32.t;
-  version   : x509_version_t;
-  s_common  : string;
-  s_org     : string;
-  s_country : string;
-}
-
-noeq
-type aliasKeyCRT_ingredients_t = {
-  version       : x509_version_t;
-  serialNumber  : x509_serialNumber_t;
-  i_common      : string;
-  i_org         : string;
-  i_country     : string;
-  notBefore     : US.t; (* UTC_TIME *)
-  notAfter      : US.t; (* Generalized_Time *)
-  s_common      : string;
-  s_org         : string;
-  s_country     : string;
-  ku            : U32.t;
-  l0_version    : U32.t;
-}
-
-(* Record *)
 noeq
 type l0_record_t = {
-  fwid: V.lvec U8.t (US.v v32us);
-  deviceID_label_len: hkdf_lbl_len;
-  deviceID_label: V.lvec U8.t (US.v deviceID_label_len); (* public bytes *)
-  aliasKey_label_len: hkdf_lbl_len;
-  aliasKey_label: V.lvec U8.t (US.v aliasKey_label_len); (* public bytes *)
-  deviceIDCSR_ingredients: deviceIDCSR_ingredients_t;
-  aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t;
+  fwid : V.lvec U8.t 32;
+  deviceID_label_len : (n:U32.t { valid_hkdf_lbl_len n });
+  deviceID_label : V.lvec U8.t (U32.v deviceID_label_len);
+  aliasKey_label_len : (n:U32.t { valid_hkdf_lbl_len n });
+  aliasKey_label : V.lvec U8.t (U32.v aliasKey_label_len);
+  deviceIDCSR_ingredients : deviceIDCSR_ingredients_t;
+  aliasKeyCRT_ingredients : aliasKeyCRT_ingredients_t;
+  deviceIDCSR_len : (n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n });
+  aliasKeyCRT_len : (n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n });
 }
 
 noeq
@@ -82,12 +49,7 @@ type l0_record_repr_t = {
 let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
-// don't need full perm
 let l0_record_perm (record:l0_record_t) (p:perm) (repr:l0_record_repr_t) : vprop =
   V.pts_to record.fwid #p repr.fwid **
   V.pts_to record.deviceID_label #p repr.deviceID_label **
-  V.pts_to record.aliasKey_label #p repr.aliasKey_label **
-  pure (
-    valid_hkdf_lbl_len record.deviceID_label_len /\
-    valid_hkdf_lbl_len record.aliasKey_label_len
-  )
+  V.pts_to record.aliasKey_label #p repr.aliasKey_label

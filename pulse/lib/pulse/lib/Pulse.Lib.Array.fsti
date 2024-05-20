@@ -39,7 +39,22 @@ val compare
             pts_to a2 #p2 s2 **
             pure (res <==> Seq.equal s1 s2))
 
-val memcpy 
+val memcpy_l
+        (#t:eqtype)
+        (l:SZ.t)
+        (src dst:(a:array t { SZ.v l <= length a }))
+        (#p:perm)
+        (#src0 #dst0:Ghost.erased (Seq.seq t))
+  : stt (squash (Seq.length src0 == length src /\ Seq.length dst0 == length dst))
+        (requires 
+            pts_to src #p src0 **
+            pts_to dst dst0)
+        (ensures (fun _ ->
+            pts_to src #p src0 **
+            pts_to dst (Seq.append (Seq.slice src0 0 (SZ.v l))
+                                   (Seq.slice dst0 (SZ.v l) (length dst)))))
+
+val memcpy
         (#t:eqtype)
         (l:SZ.t)
         (src dst:larray t (SZ.v l))

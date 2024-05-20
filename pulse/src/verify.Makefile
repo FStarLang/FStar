@@ -10,7 +10,9 @@ PULSE_LIB_SUBDIRS = \
 	lib/pledge \
 	.
 PULSE_DICE_SUBDIRS = \
-	common \
+	external \
+  external/hacl \
+  external/l0 \
 	dpe \
 	engine \
 	l0 \

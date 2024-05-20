@@ -28,56 +28,67 @@ type dict =
     FStar_Extraction_ML_Syntax.mlmodule) FStar_Compiler_Util.smap
 type env =
   {
+  external_libs: Prims.string Prims.list ;
   fns: (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list ;
   statics: (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list ;
   gamma: binding Prims.list ;
   d: dict ;
   all_modules: Prims.string Prims.list ;
   reachable_defs: reachable_defs }
+let (__proj__Mkenv__item__external_libs : env -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { external_libs; fns; statics; gamma; d; all_modules;
+        reachable_defs = reachable_defs1;_} -> external_libs
 let (__proj__Mkenv__item__fns :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.fn_signature) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> fns
 let (__proj__Mkenv__item__statics :
   env -> (Prims.string * Pulse2Rust_Rust_Syntax.typ) Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> statics
 let (__proj__Mkenv__item__gamma : env -> binding Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> gamma
 let (__proj__Mkenv__item__d : env -> dict) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> d
 let (__proj__Mkenv__item__all_modules : env -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> all_modules
 let (__proj__Mkenv__item__reachable_defs : env -> reachable_defs) =
   fun projectee ->
     match projectee with
-    | { fns; statics; gamma; d; all_modules;
+    | { external_libs; fns; statics; gamma; d; all_modules;
         reachable_defs = reachable_defs1;_} -> reachable_defs1
-let (empty_env : dict -> Prims.string Prims.list -> reachable_defs -> env) =
-  fun d ->
-    fun all_modules ->
-      fun reachable_defs1 ->
-        {
-          fns = [];
-          statics = [];
-          gamma = [];
-          d;
-          all_modules;
-          reachable_defs = reachable_defs1
-        }
+let (empty_env :
+  Prims.string Prims.list ->
+    dict -> Prims.string Prims.list -> reachable_defs -> env)
+  =
+  fun external_libs ->
+    fun d ->
+      fun all_modules ->
+        fun reachable_defs1 ->
+          {
+            external_libs;
+            fns = [];
+            statics = [];
+            gamma = [];
+            d;
+            all_modules;
+            reachable_defs = reachable_defs1
+          }
 let (lookup_global_fn :
   env ->
     Prims.string ->
@@ -110,6 +121,7 @@ let (push_fn :
     fun s ->
       fun t ->
         {
+          external_libs = (g.external_libs);
           fns = ((s, t) :: (g.fns));
           statics = (g.statics);
           gamma = (g.gamma);
@@ -123,6 +135,7 @@ let (push_static : env -> Prims.string -> Pulse2Rust_Rust_Syntax.typ -> env)
     fun s ->
       fun t ->
         {
+          external_libs = (g.external_libs);
           fns = (g.fns);
           statics = ((s, t) :: (g.statics));
           gamma = (g.gamma);
@@ -137,6 +150,7 @@ let (push_local :
       fun t ->
         fun is_mut ->
           {
+            external_libs = (g.external_libs);
             fns = (g.fns);
             statics = (g.statics);
             gamma = ((s, t, is_mut) :: (g.gamma));
@@ -144,3 +158,5 @@ let (push_local :
             all_modules = (g.all_modules);
             reachable_defs = (g.reachable_defs)
           }
+let (is_external_lib : env -> Prims.string -> Prims.bool) =
+  fun g -> fun s -> FStar_Compiler_List.contains s g.external_libs
