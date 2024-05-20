@@ -130,7 +130,9 @@ let rec next (s0 s1:g_session_state) : prop =
   // Available r0 may go to Available r1,
   //   as long as repr r1 follows repr r0
   //
-  | G_Available r0, G_Available r1 -> next_repr r0 r1
+  | G_Available r0, G_Available r1 ->
+    next_repr r0 r1 \/
+    (L1_context_repr? r0 /\ r0 == r1)
 
   //
   // SessionClosed is a terminal state
@@ -449,3 +451,30 @@ val close_session
            sid_pts_to trace_ref sid t)
         (ensures fun m ->
            session_closed_client_perm sid t)
+
+noextract
+let trace_valid_for_certify_key (t:trace) : prop =
+  match current_state t with
+  | G_Available (L1_context_repr _) -> True
+  | _ -> False
+
+let certify_key_client_perm (sid:sid_t) (t0:trace) : vprop =
+  exists* t1. sid_pts_to trace_ref sid t1 **
+              pure (current_state t1 == current_state t0)
+
+val certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (pub_key:A.larray U8.t 32)
+  (crt_len:U32.t)
+  (crt:A.larray U8.t (U32.v crt_len))
+  (t:G.erased trace { trace_valid_for_certify_key t })
+  : stt bool
+        (requires
+           sid_pts_to trace_ref sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr))
+        (ensures fun _ ->
+           certify_key_client_perm sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr))

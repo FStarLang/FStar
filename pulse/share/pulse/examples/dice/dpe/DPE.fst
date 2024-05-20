@@ -760,10 +760,10 @@ fn init_l1_ctxt
   (deviceID_pub:V.lvec U8.t 32)
   (aliasKey_priv:V.lvec U8.t 32)
   (aliasKey_pub:V.lvec U8.t 32)
-  (deviceIDCSR_len:(n:erased U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n }))
-  (deviceIDCSR:V.vec U8.t)
+  (deviceIDCSR_len:(n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n }))
+  (deviceIDCSR:V.lvec U8.t (U32.v deviceIDCSR_len))
   (aliasKeyCRT_len:(n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n }))
-  (aliasKeyCRT:V.vec U8.t)
+  (aliasKeyCRT:V.lvec U8.t (U32.v aliasKeyCRT_len))
   (repr:erased l0_record_repr_t)
   (#deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
    #deviceIDCSR_repr #aliasKeyCRT_repr:erased (Seq.seq U8.t))
@@ -801,7 +801,7 @@ fn init_l1_ctxt
       deviceIDCSR_len deviceIDCSR_repr aliasKeyCRT_len aliasKeyCRT_repr repr)
 {
   let ctxt = mk_l1_context_t
-    deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR aliasKeyCRT;
+    deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR_len deviceIDCSR aliasKeyCRT_len aliasKeyCRT;
   
   let l1_ctxt_repr = hide (mk_l1_context_repr_t
     cdi deviceID_label_len aliasKey_label_len
@@ -907,7 +907,6 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
 }
 ```
 
-#set-options "--print_implicits --ugly"
 ```pulse
 fn derive_child_from_context
     (context:context_t)
@@ -1048,9 +1047,9 @@ fn derive_child_from_context
             deviceID_pub
             aliasKey_priv
             aliasKey_pub
-            (hide r.deviceIDCSR_len)
+            r.deviceIDCSR_len
             deviceIDCSR
-            (hide r.aliasKeyCRT_len)
+            r.aliasKeyCRT_len
             aliasKeyCRT
             r0
             (magic ());
@@ -1233,6 +1232,67 @@ fn close_session (sid:sid_t)
   intro_session_state_tag_related s (current_state t1);
   with _x _y. rewrite (session_state_related _x _y) as emp;
   fold (session_closed_client_perm sid t)
+}
+```
+
+#push-options "--z3rlimit_factor 4 --fuel 4 --ifuel 4"
+```pulse
+fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (pub_key:A.larray U8.t 32)
+  (crt_len:U32.t)
+  (crt:A.larray U8.t (U32.v crt_len))
+  (t:G.erased trace { trace_valid_for_certify_key t })
+  requires sid_pts_to trace_ref sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr)
+  returns _:bool
+  ensures certify_key_client_perm sid t **
+          (exists* pub_key_repr crt_repr.
+             A.pts_to pub_key pub_key_repr **
+             A.pts_to crt crt_repr)
+{
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let s = replace_session sid t InUse (G_InUse (current_state t));
+  with t1. assert (sid_pts_to trace_ref sid t1);
+
+  match s {
+    Available hc -> {
+      match hc.context {
+        L1_context c -> {
+          if U32.lt c.aliasKeyCRT_len crt_len {
+            let handle = prng ();
+            let ns = Available { handle; context = L1_context c };
+            rewrite (session_state_related s (current_state t)) as
+                    (session_state_related ns (current_state t));
+            let s = replace_session sid t1 ns (current_state t);
+            intro_session_state_tag_related s (current_state t1);
+            with _x _y. rewrite (session_state_related _x _y) as emp;
+            fold (certify_key_client_perm sid t);
+            false
+          } else {
+            admit ()
+          }
+          // let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+          // let r = rewrite_context_perm_l1 (L1_context c) c;
+          // unfold (l1_context_perm c r);
+          // admit ()
+        }
+        _ -> {
+          assume_ (pure (~ (L1_context? hc.context)));
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+      }
+    }
+    _ -> {
+      assume_ (pure (~ (Available? s)));
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+  }
 }
 ```
 

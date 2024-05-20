@@ -176,13 +176,15 @@ type l1_context_t = {
   deviceID_pub: V.lvec U8.t 32;
   aliasKey_priv: V.lvec U8.t 32;
   aliasKey_pub: V.lvec U8.t 32;
-  deviceIDCSR: V.vec U8.t;
-  aliasKeyCRT: V.vec U8.t;
+  deviceIDCSR_len : U32.t;
+  deviceIDCSR: V.lvec U8.t (U32.v deviceIDCSR_len);
+  aliasKeyCRT_len : U32.t;
+  aliasKeyCRT: V.lvec U8.t (U32.v aliasKeyCRT_len);
 }
 
-let mk_l1_context_t deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR aliasKeyCRT
+let mk_l1_context_t deviceID_pub aliasKey_pub aliasKey_priv deviceIDCSR_len deviceIDCSR aliasKeyCRT_len aliasKeyCRT
 : l1_context_t
-= {deviceID_pub; aliasKey_pub; aliasKey_priv; deviceIDCSR; aliasKeyCRT}
+= {deviceID_pub; aliasKey_pub; aliasKey_priv; deviceIDCSR_len; deviceIDCSR; aliasKeyCRT_len; aliasKeyCRT}
 
 noeq
 type l1_context_repr_t = {
