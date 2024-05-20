@@ -125,8 +125,12 @@ let rust_mod_name (path:list S.mlsymbol) : string =
   path |> List.map String.lowercase
        |> String.concat "_"  
 
-let extract_path_for_symbol (path:list S.mlsymbol) : list string =
-  [ "super"; rust_mod_name path ]
+let extract_path_for_symbol (g:env) (path:list S.mlsymbol) : list string =
+  let prefix =
+    if is_external_lib g (String.concat "." path)
+    then "crate"
+    else "super" in
+  [ prefix; rust_mod_name path ]
 
 //
 // Most translations are straightforward
@@ -198,7 +202,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named (args, p) ->
     let path =
       if should_extract_mlpath_with_symbol g (fst p)
-      then extract_path_for_symbol (fst p)
+      then extract_path_for_symbol g (fst p)
       else [] in
     mk_named_typ path (snd p) (List.map (extract_mlty g) args)
 
@@ -365,7 +369,7 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
       match ropt with
       | Some (l, t) ->
         if should_extract_mlpath_with_symbol g l
-        then List.append (extract_path_for_symbol l) [t]
+        then List.append (extract_path_for_symbol g l) [t]
         else []
       | None -> [] in
     g,
@@ -468,7 +472,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
   | S.MLE_Name p ->
     if should_extract_mlpath_with_symbol g (fst p)
-    then mk_expr_path (List.append (extract_path_for_symbol (fst p)) [snd p])
+    then mk_expr_path (List.append (extract_path_for_symbol g (fst p)) [snd p])
     else mk_expr_path_singl (snd p)
 
     // nested let binding
@@ -686,7 +690,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       if is_native then mk_expr_path_singl (snd p)
       else let path =
              if should_extract_mlpath_with_symbol g (fst p)
-             then extract_path_for_symbol (fst p)
+             then extract_path_for_symbol g (fst p)
              else [] in
            mk_expr_path (List.append path [ty_name; snd p]) in
     if List.length args = 0
@@ -718,7 +722,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_Record (p, nm, fields) ->
     let path =
       if should_extract_mlpath_with_symbol g p
-      then extract_path_for_symbol p
+      then extract_path_for_symbol g p
       else [] in
     mk_expr_struct (List.append path [nm]) (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 

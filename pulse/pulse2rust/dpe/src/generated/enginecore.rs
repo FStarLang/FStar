@@ -33,7 +33,7 @@ pub fn authenticate_l0_image(
             (),
             (),
         );
-        let res = super::pulse_lib_array::compare(
+        let res = crate::pulse_lib_array::compare(
             32,
             hash_buf,
             &mut record.l0_binary_hash,

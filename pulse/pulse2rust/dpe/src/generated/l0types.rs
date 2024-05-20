@@ -10,8 +10,9 @@ pub struct l0_record_t {
     pub deviceID_label: std::vec::Vec<u8>,
     pub aliasKey_label_len: u32,
     pub aliasKey_label: std::vec::Vec<u8>,
-    pub deviceIDCSR_ingredients: super::l0core::deviceIDCSR_ingredients_t,
-    pub aliasKeyCRT_ingredients: super::l0core::aliasKeyCRT_ingredients_t,
+    pub deviceIDCSR_ingredients: crate::l0core::deviceIDCSR_ingredients_t,
+    pub aliasKeyCRT_ingredients: crate::l0core::aliasKeyCRT_ingredients_t,
     pub deviceIDCSR_len: u32,
     pub aliasKeyCRT_len: u32,
 }
+

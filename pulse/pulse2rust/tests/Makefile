@@ -82,8 +82,10 @@ DPE_FILES = EngineTypes.ast \
 	DPETypes.ast \
 	DPE.ast
 
+DPE_LIB = L0Core,Pulse.Lib.Array,FStar.SizeT,EverCrypt.HMAC,EverCrypt.Hash.Incremental,EverCrypt.Ed25519,EverCrypt.AutoConfig2,Spec.Hash.Definitions
+
 dpe.rs: $(DPE_FILES)
-	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ $(addprefix $(OUTPUT_DIRECTORY)/, $^)
+	$(MAIN) -odir $(DPE_OUTPUT_DIR)/ -lib $(DPE_LIB) $(addprefix $(OUTPUT_DIRECTORY)/, $^)
 
 all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
 

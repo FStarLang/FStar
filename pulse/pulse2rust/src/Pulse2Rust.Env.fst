@@ -40,8 +40,9 @@ let fail_nyi (s:string) =
 let reachable_defs_to_string (d:reachable_defs) : string =
   d |> elems |> String.concat ";" |> format1 "[%s]"
 
-let empty_env (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) =
-  { fns = [];
+let empty_env (external_libs:list string) (d:dict) (all_modules:list string) (reachable_defs:reachable_defs) =
+  { external_libs;
+    fns = [];
     gamma = [];
     statics = [];
     d;
@@ -62,3 +63,5 @@ let push_static (g:env) (s:string) (t:typ) : env =
 
 let push_local (g:env) (s:string) (t:typ) (is_mut:bool) : env =
   { g with gamma = (s, t, is_mut)::g.gamma }
+
+let is_external_lib (g:env) (s:string) : bool = List.contains s g.external_libs

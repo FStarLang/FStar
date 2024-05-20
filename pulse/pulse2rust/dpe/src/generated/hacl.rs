@@ -4,7 +4,7 @@
 ////
 ////
 
-pub type alg_t = super::spec_hash_definitions::hash_alg;
+pub type alg_t = crate::spec_hash_definitions::hash_alg;
 pub type hashable_len = usize;
 pub type signable_len = usize;
 pub fn hacl_hash0(
@@ -16,14 +16,14 @@ pub fn hacl_hash0(
     src_seq: (),
     dst_seq: (),
 ) -> () {
-    super::evercrypt_autoconfig2::init(());
-    super::evercrypt_hash_incremental::hash(
+    crate::evercrypt_autoconfig2::init(());
+    crate::evercrypt_hash_incremental::hash(
         alg,
         dst,
         src,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(src_len),
+        crate::fstar_sizet::sizet_to_uint32(src_len),
     );
 }
 pub static hacl_hash: fn(
@@ -48,17 +48,17 @@ pub fn hacl_hmac0(
     key_seq: (),
     msg_seq: (),
 ) -> () {
-    super::evercrypt_hmac::compute(
+    crate::evercrypt_hmac::compute(
         alg,
         dst,
         key,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(key_len),
+        crate::fstar_sizet::sizet_to_uint32(key_len),
         msg,
         (),
         (),
-        super::fstar_sizet::sizet_to_uint32(msg_len),
+        crate::fstar_sizet::sizet_to_uint32(msg_len),
     );
 }
 pub static hacl_hmac: fn(
@@ -86,11 +86,11 @@ pub fn ed25519_verify0(
     hdr_seq: (),
     sig_seq: (),
 ) -> bool {
-    super::evercrypt_ed25519::verify(
+    crate::evercrypt_ed25519::verify(
         (),
         (),
         pubk,
-        super::fstar_sizet::sizet_to_uint32(hdr_len),
+        crate::fstar_sizet::sizet_to_uint32(hdr_len),
         (),
         (),
         hdr,
