@@ -28,6 +28,6 @@ DPE_OUTPUT_DIR=$PULSE_HOME/pulse2rust/dpe/src/generated
 # copy everCrypt.rs from the Docker image
 DOCKER_CONTAINER_NAME=haclrustbindingscont"$$"
 docker create --name $DOCKER_CONTAINER_NAME $DOCKER_IMAGE_NAME
-docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/evercrypt_gen.rs $DPE_OUTPUT_DIR/evercrypt_gen.rs
-docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/l0core_gen.rs $DPE_OUTPUT_DIR/l0core_gen.rs
+docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/evercrypt.rs $DPE_OUTPUT_DIR/evercrypt.rs
+docker cp $DOCKER_CONTAINER_NAME:/usr/src/hacl/l0core.rs $DPE_OUTPUT_DIR/l0core.rs
 docker rm $DOCKER_CONTAINER_NAME
