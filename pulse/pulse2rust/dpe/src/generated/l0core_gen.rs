@@ -43,31 +43,30 @@ fn bindgen_test_layout_FStar_Bytes_bytes() {
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct L0Core_character_string_t_s {
+pub struct character_string_t_s {
     pub fst: u32,
     pub snd: FStar_Bytes_bytes,
 }
 #[test]
-fn bindgen_test_layout_L0Core_character_string_t_s() {
-    const UNINIT: ::std::mem::MaybeUninit<L0Core_character_string_t_s> =
-        ::std::mem::MaybeUninit::uninit();
+fn bindgen_test_layout_character_string_t_s() {
+    const UNINIT: ::std::mem::MaybeUninit<character_string_t_s> = ::std::mem::MaybeUninit::uninit();
     let ptr = UNINIT.as_ptr();
     assert_eq!(
-        ::std::mem::size_of::<L0Core_character_string_t_s>(),
+        ::std::mem::size_of::<character_string_t_s>(),
         24usize,
-        concat!("Size of: ", stringify!(L0Core_character_string_t_s))
+        concat!("Size of: ", stringify!(character_string_t_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<L0Core_character_string_t_s>(),
+        ::std::mem::align_of::<character_string_t_s>(),
         8usize,
-        concat!("Alignment of ", stringify!(L0Core_character_string_t_s))
+        concat!("Alignment of ", stringify!(character_string_t_s))
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).fst) as usize - ptr as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_character_string_t_s),
+            stringify!(character_string_t_s),
             "::",
             stringify!(fst)
         )
@@ -77,40 +76,39 @@ fn bindgen_test_layout_L0Core_character_string_t_s() {
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_character_string_t_s),
+            stringify!(character_string_t_s),
             "::",
             stringify!(snd)
         )
     );
 }
-pub type L0Core_character_string_t = L0Core_character_string_t_s;
+pub type character_string_t = character_string_t_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct L0Core_octet_string_t_s {
+pub struct octet_string_t_s {
     pub len: u32,
     pub s: FStar_Bytes_bytes,
 }
 #[test]
-fn bindgen_test_layout_L0Core_octet_string_t_s() {
-    const UNINIT: ::std::mem::MaybeUninit<L0Core_octet_string_t_s> =
-        ::std::mem::MaybeUninit::uninit();
+fn bindgen_test_layout_octet_string_t_s() {
+    const UNINIT: ::std::mem::MaybeUninit<octet_string_t_s> = ::std::mem::MaybeUninit::uninit();
     let ptr = UNINIT.as_ptr();
     assert_eq!(
-        ::std::mem::size_of::<L0Core_octet_string_t_s>(),
+        ::std::mem::size_of::<octet_string_t_s>(),
         24usize,
-        concat!("Size of: ", stringify!(L0Core_octet_string_t_s))
+        concat!("Size of: ", stringify!(octet_string_t_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<L0Core_octet_string_t_s>(),
+        ::std::mem::align_of::<octet_string_t_s>(),
         8usize,
-        concat!("Alignment of ", stringify!(L0Core_octet_string_t_s))
+        concat!("Alignment of ", stringify!(octet_string_t_s))
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).len) as usize - ptr as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_octet_string_t_s),
+            stringify!(octet_string_t_s),
             "::",
             stringify!(len)
         )
@@ -120,46 +118,43 @@ fn bindgen_test_layout_L0Core_octet_string_t_s() {
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_octet_string_t_s),
+            stringify!(octet_string_t_s),
             "::",
             stringify!(s)
         )
     );
 }
-pub type L0Core_octet_string_t = L0Core_octet_string_t_s;
+pub type octet_string_t = octet_string_t_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct L0Core_deviceIDCSR_ingredients_t_s {
+pub struct deviceIDCSR_ingredients_t_s {
     pub ku: i32,
     pub version: i32,
-    pub s_common: L0Core_character_string_t,
-    pub s_org: L0Core_character_string_t,
-    pub s_country: L0Core_character_string_t,
+    pub s_common: character_string_t,
+    pub s_org: character_string_t,
+    pub s_country: character_string_t,
 }
 #[test]
-fn bindgen_test_layout_L0Core_deviceIDCSR_ingredients_t_s() {
-    const UNINIT: ::std::mem::MaybeUninit<L0Core_deviceIDCSR_ingredients_t_s> =
+fn bindgen_test_layout_deviceIDCSR_ingredients_t_s() {
+    const UNINIT: ::std::mem::MaybeUninit<deviceIDCSR_ingredients_t_s> =
         ::std::mem::MaybeUninit::uninit();
     let ptr = UNINIT.as_ptr();
     assert_eq!(
-        ::std::mem::size_of::<L0Core_deviceIDCSR_ingredients_t_s>(),
+        ::std::mem::size_of::<deviceIDCSR_ingredients_t_s>(),
         80usize,
-        concat!("Size of: ", stringify!(L0Core_deviceIDCSR_ingredients_t_s))
+        concat!("Size of: ", stringify!(deviceIDCSR_ingredients_t_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<L0Core_deviceIDCSR_ingredients_t_s>(),
+        ::std::mem::align_of::<deviceIDCSR_ingredients_t_s>(),
         8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s)
-        )
+        concat!("Alignment of ", stringify!(deviceIDCSR_ingredients_t_s))
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).ku) as usize - ptr as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s),
+            stringify!(deviceIDCSR_ingredients_t_s),
             "::",
             stringify!(ku)
         )
@@ -169,7 +164,7 @@ fn bindgen_test_layout_L0Core_deviceIDCSR_ingredients_t_s() {
         4usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s),
+            stringify!(deviceIDCSR_ingredients_t_s),
             "::",
             stringify!(version)
         )
@@ -179,7 +174,7 @@ fn bindgen_test_layout_L0Core_deviceIDCSR_ingredients_t_s() {
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s),
+            stringify!(deviceIDCSR_ingredients_t_s),
             "::",
             stringify!(s_common)
         )
@@ -189,7 +184,7 @@ fn bindgen_test_layout_L0Core_deviceIDCSR_ingredients_t_s() {
         32usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s),
+            stringify!(deviceIDCSR_ingredients_t_s),
             "::",
             stringify!(s_org)
         )
@@ -199,53 +194,50 @@ fn bindgen_test_layout_L0Core_deviceIDCSR_ingredients_t_s() {
         56usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_deviceIDCSR_ingredients_t_s),
+            stringify!(deviceIDCSR_ingredients_t_s),
             "::",
             stringify!(s_country)
         )
     );
 }
-pub type L0Core_deviceIDCSR_ingredients_t = L0Core_deviceIDCSR_ingredients_t_s;
+pub type deviceIDCSR_ingredients_t = deviceIDCSR_ingredients_t_s;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct L0Core_aliasKeyCRT_ingredients_t_s {
+pub struct aliasKeyCRT_ingredients_t_s {
     pub version1: i32,
-    pub serialNumber: L0Core_octet_string_t,
-    pub i_common: L0Core_character_string_t,
-    pub i_org: L0Core_character_string_t,
-    pub i_country: L0Core_character_string_t,
+    pub serialNumber: octet_string_t,
+    pub i_common: character_string_t,
+    pub i_org: character_string_t,
+    pub i_country: character_string_t,
     pub notBefore: FStar_Bytes_bytes,
     pub notAfter: FStar_Bytes_bytes,
-    pub s_common1: L0Core_character_string_t,
-    pub s_org1: L0Core_character_string_t,
-    pub s_country1: L0Core_character_string_t,
+    pub s_common1: character_string_t,
+    pub s_org1: character_string_t,
+    pub s_country1: character_string_t,
     pub ku1: i32,
     pub l0_version: i32,
 }
 #[test]
-fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
-    const UNINIT: ::std::mem::MaybeUninit<L0Core_aliasKeyCRT_ingredients_t_s> =
+fn bindgen_test_layout_aliasKeyCRT_ingredients_t_s() {
+    const UNINIT: ::std::mem::MaybeUninit<aliasKeyCRT_ingredients_t_s> =
         ::std::mem::MaybeUninit::uninit();
     let ptr = UNINIT.as_ptr();
     assert_eq!(
-        ::std::mem::size_of::<L0Core_aliasKeyCRT_ingredients_t_s>(),
+        ::std::mem::size_of::<aliasKeyCRT_ingredients_t_s>(),
         216usize,
-        concat!("Size of: ", stringify!(L0Core_aliasKeyCRT_ingredients_t_s))
+        concat!("Size of: ", stringify!(aliasKeyCRT_ingredients_t_s))
     );
     assert_eq!(
-        ::std::mem::align_of::<L0Core_aliasKeyCRT_ingredients_t_s>(),
+        ::std::mem::align_of::<aliasKeyCRT_ingredients_t_s>(),
         8usize,
-        concat!(
-            "Alignment of ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s)
-        )
+        concat!("Alignment of ", stringify!(aliasKeyCRT_ingredients_t_s))
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).version1) as usize - ptr as usize },
         0usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(version1)
         )
@@ -255,7 +247,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         8usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(serialNumber)
         )
@@ -265,7 +257,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         32usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(i_common)
         )
@@ -275,7 +267,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         56usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(i_org)
         )
@@ -285,7 +277,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         80usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(i_country)
         )
@@ -295,7 +287,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         104usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(notBefore)
         )
@@ -305,7 +297,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         120usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(notAfter)
         )
@@ -315,7 +307,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         136usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(s_common1)
         )
@@ -325,7 +317,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         160usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(s_org1)
         )
@@ -335,7 +327,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         184usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(s_country1)
         )
@@ -345,7 +337,7 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         208usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(ku1)
         )
@@ -355,25 +347,25 @@ fn bindgen_test_layout_L0Core_aliasKeyCRT_ingredients_t_s() {
         212usize,
         concat!(
             "Offset of field: ",
-            stringify!(L0Core_aliasKeyCRT_ingredients_t_s),
+            stringify!(aliasKeyCRT_ingredients_t_s),
             "::",
             stringify!(l0_version)
         )
     );
 }
-pub type L0Core_aliasKeyCRT_ingredients_t = L0Core_aliasKeyCRT_ingredients_t_s;
+pub type aliasKeyCRT_ingredients_t = aliasKeyCRT_ingredients_t_s;
 extern crate libloading;
 pub struct l0 {
     __library: ::libloading::Library,
-    pub L0Core_l0: unsafe extern "C" fn(
+    pub l0: unsafe extern "C" fn(
         cdi: *mut u8,
         fwid: *mut u8,
         deviceID_label_len: u32,
         deviceID_label: *mut u8,
         aliasKey_label_len: u32,
         aliasKey_label: *mut u8,
-        deviceIDCSR_ingredients: L0Core_deviceIDCSR_ingredients_t,
-        aliasKeyCRT_ingredients: L0Core_aliasKeyCRT_ingredients_t,
+        deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
+        aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
         deviceID_pub: *mut u8,
         aliasKey_pub: *mut u8,
         aliasKey_priv: *mut u8,
@@ -396,13 +388,10 @@ impl l0 {
         L: Into<::libloading::Library>,
     {
         let __library = library.into();
-        let L0Core_l0 = __library.get(b"L0Core_l0\0").map(|sym| *sym)?;
-        Ok(l0 {
-            __library,
-            L0Core_l0,
-        })
+        let l0 = __library.get(b"l0\0").map(|sym| *sym)?;
+        Ok(l0 { __library, l0 })
     }
-    pub unsafe fn L0Core_l0(
+    pub unsafe fn l0(
         &self,
         cdi: *mut u8,
         fwid: *mut u8,
@@ -410,8 +399,8 @@ impl l0 {
         deviceID_label: *mut u8,
         aliasKey_label_len: u32,
         aliasKey_label: *mut u8,
-        deviceIDCSR_ingredients: L0Core_deviceIDCSR_ingredients_t,
-        aliasKeyCRT_ingredients: L0Core_aliasKeyCRT_ingredients_t,
+        deviceIDCSR_ingredients: deviceIDCSR_ingredients_t,
+        aliasKeyCRT_ingredients: aliasKeyCRT_ingredients_t,
         deviceID_pub: *mut u8,
         aliasKey_pub: *mut u8,
         aliasKey_priv: *mut u8,
@@ -420,7 +409,7 @@ impl l0 {
         aliasKeyCRT_len: u32,
         aliasKeyCRT_buf: *mut u8,
     ) {
-        (self.L0Core_l0)(
+        (self.l0)(
             cdi,
             fwid,
             deviceID_label_len,
