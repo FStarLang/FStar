@@ -4,6 +4,9 @@ use once_cell::sync::Lazy;
 pub static L0: Lazy<super::generated::l0core_gen::l0> =
     Lazy::new(|| unsafe { l0core_gen::l0::new("l0.so").unwrap() });
 
+pub type FStar_Bytes_bytes = l0core_gen::FStar_Bytes_bytes;
+pub type character_string_t = l0core_gen::character_string_t;
+pub type octet_string_t = l0core_gen::octet_string_t;
 pub type deviceIDCSR_ingredients_t = l0core_gen::deviceIDCSR_ingredients_t;
 pub type aliasKeyCRT_ingredients_t = l0core_gen::aliasKeyCRT_ingredients_t;
 
