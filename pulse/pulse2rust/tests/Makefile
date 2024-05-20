@@ -92,5 +92,6 @@ test: all-rs
 
 dpe: dpe.rs
 	cd ../dpe && cargo build && cd -
+	$(MAKE) -C ../dpe -f c.Makefile
 
 .PHONY: test dpe

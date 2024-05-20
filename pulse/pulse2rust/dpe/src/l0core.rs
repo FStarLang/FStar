@@ -1,9 +1,11 @@
+use super::generated::l0core_gen;
 use once_cell::sync::Lazy;
-pub static L0: Lazy<super::l0core_gen::l0> =
-    Lazy::new(|| unsafe { super::l0core_gen::l0::new("l0.so").unwrap() });
 
-pub type deviceIDCSR_ingredients_t = super::l0core_gen::L0Core_deviceIDCSR_ingredients_t;
-pub type aliasKeyCRT_ingredients_t = super::l0core_gen::L0Core_aliasKeyCRT_ingredients_t;
+pub static L0: Lazy<super::generated::l0core_gen::l0> =
+    Lazy::new(|| unsafe { l0core_gen::l0::new("l0.so").unwrap() });
+
+pub type deviceIDCSR_ingredients_t = l0core_gen::L0Core_deviceIDCSR_ingredients_t;
+pub type aliasKeyCRT_ingredients_t = l0core_gen::L0Core_aliasKeyCRT_ingredients_t;
 
 pub fn l0(
     cdi: &mut [u8],
@@ -12,8 +14,8 @@ pub fn l0(
     deviceID_label: &mut [u8],
     aliasKey_label_len: u32,
     aliasKey_label: &mut [u8],
-    deviceIDCSR_ingredients: super::l0core_gen::L0Core_deviceIDCSR_ingredients_t,
-    aliasKeyCRT_ingredients: super::l0core_gen::L0Core_aliasKeyCRT_ingredients_t,
+    deviceIDCSR_ingredients: l0core_gen::L0Core_deviceIDCSR_ingredients_t,
+    aliasKeyCRT_ingredients: l0core_gen::L0Core_aliasKeyCRT_ingredients_t,
     deviceID_pub: &mut [u8],
     aliasKey_pub: &mut [u8],
     aliasKey_priv: &mut [u8],

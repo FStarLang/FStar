@@ -1,13 +1,14 @@
 use super::evercrypt::EVERCRYPT;
+use super::generated::evercrypt_gen;
 
-pub fn is_supported_alg(a: super::evercrypt_gen::Spec_Hash_Definitions_hash_alg) -> bool {
+pub fn is_supported_alg(a: evercrypt_gen::Spec_Hash_Definitions_hash_alg) -> bool {
     unsafe {
         return EVERCRYPT.EverCrypt_HMAC_is_supported_alg(a);
     }
 }
 
 pub fn compute(
-    a: super::evercrypt_gen::Spec_Hash_Definitions_hash_alg,
+    a: evercrypt_gen::Spec_Hash_Definitions_hash_alg,
     tag: &mut [u8],
     key: &mut [u8],
     p_key: (),

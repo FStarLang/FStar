@@ -1,13 +1,14 @@
 use super::evercrypt::EVERCRYPT;
+use super::generated::evercrypt_gen;
 
-pub fn hash_len(a: super::evercrypt_gen::Spec_Hash_Definitions_hash_alg) -> u32 {
+pub fn hash_len(a: evercrypt_gen::Spec_Hash_Definitions_hash_alg) -> u32 {
     unsafe {
         return EVERCRYPT.EverCrypt_Hash_Incremental_hash_len(a);
     }
 }
 
 pub fn hash(
-    a: super::evercrypt_gen::Spec_Hash_Definitions_hash_alg,
+    a: evercrypt_gen::Spec_Hash_Definitions_hash_alg,
     output: &mut [u8],
     input: &mut [u8],
     p_input: (),
