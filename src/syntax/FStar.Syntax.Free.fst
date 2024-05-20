@@ -173,6 +173,10 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
         free_names_and_uvars_args args (free_names_and_uvars t use_cache) use_cache
 
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt} ->
+        (match rc_opt with
+         | Some { residual_typ = Some t } -> free_names_and_uvars t use_cache
+         | None -> no_free_vars) ++
+        begin
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
                 | None ->   no_free_vars
@@ -189,6 +193,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
                  | Some (b, asc) ->
                    free_names_and_uvars_binders [b] use_cache ++
                    free_names_and_uvars_ascription asc use_cache))
+        end
 
       | Tm_ascribed {tm=t1; asc} ->
         free_names_and_uvars t1 use_cache ++
