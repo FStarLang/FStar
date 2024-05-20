@@ -16,7 +16,7 @@ let upd : 'k 'v . ('k, 'v) t -> 'k -> 'v -> ('k, 'v) t =
       fun y ->
         FStar_FunctionalExtensionality.on_domain
           (fun x1 -> if x1 = x then FStar_Pervasives_Native.Some y else m x1)
-let remove : 'k 'v . ('k, 'v) t -> 'k -> ('k, 'v) t =
+let remove : 'k 'uuuuu . ('k, 'uuuuu) t -> 'k -> ('k, 'uuuuu) t =
   fun m ->
     fun x ->
       FStar_FunctionalExtensionality.on_domain
