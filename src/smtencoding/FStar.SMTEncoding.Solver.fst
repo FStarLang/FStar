@@ -41,6 +41,8 @@ module TcUtil   = FStar.TypeChecker.Util
 module U        = FStar.Syntax.Util
 exception SplitQueryAndRetry
 
+let dbg_SMTFail = Debug.get_toggle "SMTFail"
+
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
 (****************************************************************************)
@@ -1107,6 +1109,7 @@ let ask_solver_recover
 let failing_query_ctr : ref int = BU.mk_ref 0
 
 let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
+  (* Save failing query to a clean file if --log_failing_queries. *)
   if Options.log_failing_queries () then (
     let mod = show (Env.current_module env) in
     let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
@@ -1121,7 +1124,18 @@ let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) 
     in
     write_file file_name query_str;
     ()
-  )
+  );
+  (* Also print it out if --debug SMTFail. *)
+  if !dbg_SMTFail then (
+    let open FStar.Pprint in
+    let open FStar.Class.PP in
+    let open FStar.Errors.Msg in
+    Errors.diag_doc qs.query_range [
+      text "This query failed:";
+      pp qs.query_term;
+    ]
+  );
+  ()
 
 let ask_solver
     (can_split : bool)
