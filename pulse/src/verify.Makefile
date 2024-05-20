@@ -12,7 +12,7 @@ PULSE_LIB_SUBDIRS = \
 PULSE_DICE_SUBDIRS = \
 	external \
   external/hacl \
-  external\l0 \
+  external/l0 \
 	dpe \
 	engine \
 	l0 \
