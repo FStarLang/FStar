@@ -478,3 +478,30 @@ val certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
            (exists* pub_key_repr crt_repr.
               A.pts_to pub_key pub_key_repr **
               A.pts_to crt crt_repr))
+
+noextract
+let trace_valid_for_sign (t:trace) : prop =
+  match current_state t with
+  | G_Available (L1_context_repr _) -> True
+  | _ -> False
+
+let sign_client_perm (sid:sid_t) (t0:trace) : vprop =
+  exists* t1. sid_pts_to trace_ref sid t1 **
+              pure (current_state t1 == current_state t0)
+
+val sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (signature:A.larray U8.t 64)
+  (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
+  (msg:A.larray U8.t (SZ.v msg_len))
+  (t:G.erased trace { trace_valid_for_sign t })
+  : stt unit
+        (requires
+           sid_pts_to trace_ref sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr))
+        (ensures fun _ ->
+           certify_key_client_perm sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr))

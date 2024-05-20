@@ -1317,6 +1317,72 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   }
 }
 ```
+#pop-options
+
+#push-options "--split_queries no"
+```pulse
+fn sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+  (signature:A.larray U8.t 64)
+  (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
+  (msg:A.larray U8.t (SZ.v msg_len))
+  (t:G.erased trace { trace_valid_for_sign t })
+  requires sid_pts_to trace_ref sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr)
+  ensures sign_client_perm sid t **
+          (exists* signature_repr msg_repr.
+             A.pts_to signature signature_repr **
+             A.pts_to msg msg_repr)
+{
+  rewrite emp as (session_state_related InUse (G_InUse (current_state t)));
+  let s = replace_session sid t InUse (G_InUse (current_state t));
+  with t1. assert (sid_pts_to trace_ref sid t1);
+
+  match s {
+    Available hc -> {
+      match hc.context {
+        L1_context c -> {
+          let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+          let r = rewrite_context_perm_l1 (L1_context c) c;
+          unfold (l1_context_perm c r);
+
+          V.to_array_pts_to c.aliasKey_priv;
+          HACL.ed25519_sign signature (V.vec_to_array c.aliasKey_priv) msg_len msg;
+          V.to_vec_pts_to c.aliasKey_priv;
+
+          fold (l1_context_perm c r);
+          rewrite (l1_context_perm c r) as
+                  (context_perm (L1_context c) (L1_context_repr r));
+            
+          let handle = prng ();
+          let ns = Available { handle; context = L1_context c };
+          rewrite (context_perm (L1_context c) (L1_context_repr r)) as
+                  (session_state_related ns (current_state t));
+            
+          let s = replace_session sid t1 ns (current_state t);
+          intro_session_state_tag_related s (current_state t1);
+          with _x _y. rewrite (session_state_related _x _y) as emp;
+          fold (sign_client_perm sid t);
+        }
+        _ -> {
+          assume_ (pure (~ (L1_context? hc.context)));
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+      }
+    }
+    _ -> {
+      assume_ (pure (~ (Available? s)));
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+  }
+}
+```
+#pop-options
 
 (*
   GetProfile: Part of DPE API 

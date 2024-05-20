@@ -111,6 +111,39 @@ pub static ed25519_verify: fn(
     (),
     (),
 ) -> bool = super::hacl::ed25519_verify0;
+pub fn ed25519_sign0(
+    buf: &mut [u8],
+    privk: &mut [u8],
+    len: usize,
+    msg: &mut [u8],
+    pprivk: (),
+    pmsg: (),
+    buf0: (),
+    privk_seq: (),
+    msg_seq: (),
+) -> () {
+    crate::evercrypt_ed25519::sign(
+        buf,
+        (),
+        (),
+        privk,
+        crate::fstar_sizet::sizet_to_uint32(len),
+        (),
+        (),
+        msg,
+    );
+}
+pub static ed25519_sign: fn(
+    &mut [u8],
+    &mut [u8],
+    usize,
+    &mut [u8],
+    (),
+    (),
+    (),
+    (),
+    (),
+) -> () = super::hacl::ed25519_sign0;
 pub fn dice_hash_alg1(uu___: ()) -> super::hacl::alg_t {
     panic!()
 }

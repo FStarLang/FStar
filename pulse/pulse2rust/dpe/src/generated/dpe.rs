@@ -504,6 +504,43 @@ pub fn certify_key(
         _ => panic!(),
     }
 }
+pub fn sign(
+    sid: super::dpe::sid_t,
+    ctxt_hndl: super::dpe::ctxt_hndl_t,
+    signature: &mut [u8],
+    msg_len: usize,
+    msg: &mut [u8],
+    t: (),
+) -> () {
+    let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
+    match s {
+        super::dpe::session_state::Available(mut hc) => {
+            match hc.context {
+                super::dpetypes::context_t::L1_context(mut c) => {
+                    super::hacl::ed25519_sign(
+                        signature,
+                        &mut c.aliasKey_priv,
+                        msg_len,
+                        msg,
+                        (),
+                        (),
+                        (),
+                        (),
+                        (),
+                    );
+                    let handle = super::dpe::prng(());
+                    let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                        handle: handle,
+                        context: super::dpetypes::context_t::L1_context(c),
+                    });
+                    let s1 = super::dpe::replace_session(sid, (), ns, ());
+                }
+                _ => panic!(),
+            }
+        }
+        _ => panic!(),
+    }
+}
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {
     super::dpetypes::mk_profile_descriptor(
         "".to_string(),
