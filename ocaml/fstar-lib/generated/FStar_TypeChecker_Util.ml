@@ -5877,7 +5877,8 @@ let (weaken_result_typ :
                      FStar_TypeChecker_Err.basic_type_error env
                        (FStar_Pervasives_Native.Some e) t
                        lc.FStar_TypeChecker_Common.res_typ in
-                   FStar_Errors.raise_error uu___2 e.FStar_Syntax_Syntax.pos
+                   FStar_Errors.raise_error_doc uu___2
+                     e.FStar_Syntax_Syntax.pos
                  else
                    (FStar_TypeChecker_Rel.subtype_fail env e
                       lc.FStar_TypeChecker_Common.res_typ t;

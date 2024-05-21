@@ -616,6 +616,66 @@ let (proc_guard_formula :
                                       (fun uu___2 ->
                                          fail1
                                            "Forcing the guard failed (%s)"
+                                           reason)))
+                    | FStar_Tactics_Types.ForceSMT ->
+                        Obj.magic
+                          (FStar_Tactics_Monad.mlog
+                             (fun uu___ ->
+                                let uu___1 =
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term f in
+                                FStar_Compiler_Util.print2
+                                  "Forcing guard WITH SMT (%s:%s)\n" reason
+                                  uu___1)
+                             (fun uu___ ->
+                                let g =
+                                  {
+                                    FStar_TypeChecker_Common.guard_f =
+                                      (FStar_TypeChecker_Common.NonTrivial f);
+                                    FStar_TypeChecker_Common.deferred_to_tac
+                                      =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred_to_tac);
+                                    FStar_TypeChecker_Common.deferred =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.deferred);
+                                    FStar_TypeChecker_Common.univ_ineqs =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.univ_ineqs);
+                                    FStar_TypeChecker_Common.implicits =
+                                      (FStar_TypeChecker_Env.trivial_guard.FStar_TypeChecker_Common.implicits)
+                                  } in
+                                try
+                                  (fun uu___1 ->
+                                     match () with
+                                     | () ->
+                                         let uu___2 =
+                                           let uu___3 =
+                                             let uu___4 =
+                                               FStar_TypeChecker_Rel.discharge_guard
+                                                 e g in
+                                             FStar_TypeChecker_Env.is_trivial
+                                               uu___4 in
+                                           Prims.op_Negation uu___3 in
+                                         if uu___2
+                                         then
+                                           fail1
+                                             "Forcing the guard failed (%s)"
+                                             reason
+                                         else
+                                           FStar_Class_Monad.return
+                                             FStar_Tactics_Monad.monad_tac ()
+                                             (Obj.repr ())) ()
+                                with
+                                | uu___1 ->
+                                    FStar_Tactics_Monad.mlog
+                                      (fun uu___2 ->
+                                         let uu___3 =
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
+                                             f in
+                                         FStar_Compiler_Util.print1
+                                           "guard = %s\n" uu___3)
+                                      (fun uu___2 ->
+                                         fail1
+                                           "Forcing the guard failed (%s)"
                                            reason)))) uu___)
 let (proc_guard' :
   Prims.bool ->
@@ -3269,84 +3329,119 @@ let (norm :
                        let uu___2 = FStar_Tactics_Monad.goal_with_type goal t in
                        Obj.magic (FStar_Tactics_Monad.replace_cur uu___2))
                       uu___1))) uu___)
+let (__norm_term_env :
+  Prims.bool ->
+    env ->
+      FStar_Pervasives.norm_step Prims.list ->
+        FStar_Syntax_Syntax.term ->
+          FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
+  =
+  fun well_typed ->
+    fun e ->
+      fun s ->
+        fun t ->
+          let uu___ =
+            Obj.magic
+              (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac ()
+                 () (Obj.magic FStar_Tactics_Monad.get)
+                 (fun uu___1 ->
+                    (fun ps ->
+                       let ps = Obj.magic ps in
+                       let uu___1 =
+                         FStar_Tactics_Monad.if_verbose
+                           (fun uu___2 ->
+                              let uu___3 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t in
+                              FStar_Compiler_Util.print1
+                                "norm_term_env: t = %s\n" uu___3) in
+                       Obj.magic
+                         (FStar_Class_Monad.op_let_Bang
+                            FStar_Tactics_Monad.monad_tac () () uu___1
+                            (fun uu___2 ->
+                               (fun uu___2 ->
+                                  let uu___2 = Obj.magic uu___2 in
+                                  let uu___3 =
+                                    if well_typed
+                                    then
+                                      Obj.magic
+                                        (FStar_Class_Monad.return
+                                           FStar_Tactics_Monad.monad_tac ()
+                                           (Obj.magic t))
+                                    else
+                                      (let uu___5 = __tc_lax e t in
+                                       Obj.magic
+                                         (FStar_Class_Monad.op_let_Bang
+                                            FStar_Tactics_Monad.monad_tac ()
+                                            () (Obj.magic uu___5)
+                                            (fun uu___6 ->
+                                               (fun uu___6 ->
+                                                  let uu___6 =
+                                                    Obj.magic uu___6 in
+                                                  match uu___6 with
+                                                  | (t1, uu___7, uu___8) ->
+                                                      Obj.magic
+                                                        (FStar_Class_Monad.return
+                                                           FStar_Tactics_Monad.monad_tac
+                                                           () (Obj.magic t1)))
+                                                 uu___6))) in
+                                  Obj.magic
+                                    (FStar_Class_Monad.op_let_Bang
+                                       FStar_Tactics_Monad.monad_tac () ()
+                                       (Obj.magic uu___3)
+                                       (fun uu___4 ->
+                                          (fun t1 ->
+                                             let t1 = Obj.magic t1 in
+                                             let steps =
+                                               let uu___4 =
+                                                 FStar_TypeChecker_Cfg.translate_norm_steps
+                                                   s in
+                                               FStar_Compiler_List.op_At
+                                                 [FStar_TypeChecker_Env.Reify;
+                                                 FStar_TypeChecker_Env.UnfoldTac]
+                                                 uu___4 in
+                                             let t2 =
+                                               normalize steps
+                                                 ps.FStar_Tactics_Types.main_context
+                                                 t1 in
+                                             let uu___4 =
+                                               FStar_Tactics_Monad.if_verbose
+                                                 (fun uu___5 ->
+                                                    let uu___6 =
+                                                      FStar_Class_Show.show
+                                                        FStar_Syntax_Print.showable_term
+                                                        t2 in
+                                                    FStar_Compiler_Util.print1
+                                                      "norm_term_env: t' = %s\n"
+                                                      uu___6) in
+                                             Obj.magic
+                                               (FStar_Class_Monad.op_let_Bang
+                                                  FStar_Tactics_Monad.monad_tac
+                                                  () () uu___4
+                                                  (fun uu___5 ->
+                                                     (fun uu___5 ->
+                                                        let uu___5 =
+                                                          Obj.magic uu___5 in
+                                                        Obj.magic
+                                                          (FStar_Class_Monad.return
+                                                             FStar_Tactics_Monad.monad_tac
+                                                             ()
+                                                             (Obj.magic t2)))
+                                                       uu___5))) uu___4)))
+                                 uu___2))) uu___1)) in
+          FStar_Tactics_Monad.wrap_err "norm_term" uu___
 let (norm_term_env :
   env ->
     FStar_Pervasives.norm_step Prims.list ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
-  =
-  fun e ->
-    fun s ->
-      fun t ->
-        let uu___ =
-          Obj.magic
-            (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac ()
-               () (Obj.magic FStar_Tactics_Monad.get)
-               (fun uu___1 ->
-                  (fun ps ->
-                     let ps = Obj.magic ps in
-                     let uu___1 =
-                       FStar_Tactics_Monad.if_verbose
-                         (fun uu___2 ->
-                            let uu___3 =
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_term t in
-                            FStar_Compiler_Util.print1
-                              "norm_term_env: t = %s\n" uu___3) in
-                     Obj.magic
-                       (FStar_Class_Monad.op_let_Bang
-                          FStar_Tactics_Monad.monad_tac () () uu___1
-                          (fun uu___2 ->
-                             (fun uu___2 ->
-                                let uu___2 = Obj.magic uu___2 in
-                                let uu___3 = __tc_lax e t in
-                                Obj.magic
-                                  (FStar_Class_Monad.op_let_Bang
-                                     FStar_Tactics_Monad.monad_tac () ()
-                                     (Obj.magic uu___3)
-                                     (fun uu___4 ->
-                                        (fun uu___4 ->
-                                           let uu___4 = Obj.magic uu___4 in
-                                           match uu___4 with
-                                           | (t1, uu___5, uu___6) ->
-                                               let steps =
-                                                 let uu___7 =
-                                                   FStar_TypeChecker_Cfg.translate_norm_steps
-                                                     s in
-                                                 FStar_Compiler_List.op_At
-                                                   [FStar_TypeChecker_Env.Reify;
-                                                   FStar_TypeChecker_Env.UnfoldTac]
-                                                   uu___7 in
-                                               let t2 =
-                                                 normalize steps
-                                                   ps.FStar_Tactics_Types.main_context
-                                                   t1 in
-                                               let uu___7 =
-                                                 FStar_Tactics_Monad.if_verbose
-                                                   (fun uu___8 ->
-                                                      let uu___9 =
-                                                        FStar_Class_Show.show
-                                                          FStar_Syntax_Print.showable_term
-                                                          t2 in
-                                                      FStar_Compiler_Util.print1
-                                                        "norm_term_env: t' = %s\n"
-                                                        uu___9) in
-                                               Obj.magic
-                                                 (FStar_Class_Monad.op_let_Bang
-                                                    FStar_Tactics_Monad.monad_tac
-                                                    () () uu___7
-                                                    (fun uu___8 ->
-                                                       (fun uu___8 ->
-                                                          let uu___8 =
-                                                            Obj.magic uu___8 in
-                                                          Obj.magic
-                                                            (FStar_Class_Monad.return
-                                                               FStar_Tactics_Monad.monad_tac
-                                                               ()
-                                                               (Obj.magic t2)))
-                                                         uu___8))) uu___4)))
-                               uu___2))) uu___1)) in
-        FStar_Tactics_Monad.wrap_err "norm_term" uu___
+  = fun e -> fun s -> fun t -> __norm_term_env false e s t
+let (refl_norm_well_typed_term :
+  env ->
+    FStar_Pervasives.norm_step Prims.list ->
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.term FStar_Tactics_Monad.tac)
+  = fun e -> fun s -> fun t -> __norm_term_env true e s t
 let (refine_intro : unit -> unit FStar_Tactics_Monad.tac) =
   fun uu___ ->
     let uu___1 =
@@ -10164,14 +10259,14 @@ let (refl_check_relation :
                                              ->
                                              (dbg_refl g1
                                                 (fun uu___5 ->
-                                                   "refl_check_relation: succeeded (no guard)");
+                                                   "refl_check_relation: succeeded (no guard)\n");
                                               ((), []))
                                          | FStar_Pervasives.Inl
                                              (FStar_Pervasives_Native.Some
                                              guard_f) ->
                                              (dbg_refl g1
                                                 (fun uu___5 ->
-                                                   "refl_check_relation: succeeded");
+                                                   "refl_check_relation: succeeded\n");
                                               ((), [(g1, guard_f)]))
                                          | FStar_Pervasives.Inr err ->
                                              (dbg_refl g1
