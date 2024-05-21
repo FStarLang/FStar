@@ -11,6 +11,7 @@ ARG opamthreads=24
 # https://github.com/nodesource/distributions/issues/1593
 # Remove when they are solved
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sed 's,https://deb.nodesource.com,http://deb.nodesource.com,' | sudo -E bash -
+RUN sudo apt-get install --yes --no-install-recommends llvm-dev libclang-dev clang
 RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
