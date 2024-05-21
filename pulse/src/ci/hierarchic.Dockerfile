@@ -9,6 +9,7 @@ RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN . "$HOME/.cargo/env" && rustup component add rustfmt && cargo install bindgen-cli
 
 ADD --chown=opam:opam ./ $HOME/pulse
 WORKDIR $HOME/pulse
