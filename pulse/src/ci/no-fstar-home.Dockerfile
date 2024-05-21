@@ -39,4 +39,4 @@ ENV PATH=$HOME/FStar/bin:$PATH
 # Pulse CI proper
 ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse test
+RUN eval $(opam env) && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C pulse/src ci
