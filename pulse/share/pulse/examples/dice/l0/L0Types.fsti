@@ -26,6 +26,24 @@ module I32 = FStar.Int32
 
 open L0Core
 
+let len_of_deviceIDCSR (x:deviceIDCSR_ingredients_t) : U32.t =
+  len_of_deviceIDCSR (len_of_deviceIDCRI
+    x.version
+    x.s_common
+    x.s_org
+    x.s_country)
+
+let len_of_aliasKeyCRT (x:aliasKeyCRT_ingredients_t) : U32.t =
+  len_of_aliasKeyCRT (len_of_aliasKeyTBS
+    x.serialNumber
+    x.i_common
+    x.i_org
+    x.i_country
+    x.s_common
+    x.s_org
+    x.s_country
+    x.l0_version)
+
 noeq
 type l0_record_t = {
   fwid : V.lvec U8.t 32;
@@ -33,10 +51,12 @@ type l0_record_t = {
   deviceID_label : V.lvec U8.t (U32.v deviceID_label_len);
   aliasKey_label_len : (n:U32.t { valid_hkdf_lbl_len n });
   aliasKey_label : V.lvec U8.t (U32.v aliasKey_label_len);
-  deviceIDCSR_ingredients : deviceIDCSR_ingredients_t;
-  aliasKeyCRT_ingredients : aliasKeyCRT_ingredients_t;
-  deviceIDCSR_len : (n:U32.t { valid_deviceIDCSR_ingredients deviceIDCSR_ingredients n });
-  aliasKeyCRT_len : (n:U32.t { valid_aliasKeyCRT_ingredients aliasKeyCRT_ingredients n });
+  deviceIDCSR_ingredients : (x:deviceIDCSR_ingredients_t {
+    valid_deviceIDCSR_ingredients x (len_of_deviceIDCSR x)
+  });
+  aliasKeyCRT_ingredients : (x:aliasKeyCRT_ingredients_t {
+    valid_aliasKeyCRT_ingredients x (len_of_aliasKeyCRT x)
+  });
 }
 
 noeq

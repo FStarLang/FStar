@@ -35,7 +35,7 @@ let v32us : US.t = 32sz
 
 (* a tiny model of HACL* hashes *)
 
-val alg_t : Type0
+type alg_t : Type0 = Spec.Hash.Definitions.hash_alg
 
 val digest_len (_:alg_t) : US.t
 

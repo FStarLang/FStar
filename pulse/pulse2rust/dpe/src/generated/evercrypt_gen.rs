@@ -13,8 +13,6 @@ pub struct evercrypt {
         msg: *mut u8,
         signature: *mut u8,
     ) -> bool,
-    pub EverCrypt_HMAC_is_supported_alg:
-        unsafe extern "C" fn(uu___: Spec_Hash_Definitions_hash_alg) -> bool,
     pub EverCrypt_HMAC_compute: unsafe extern "C" fn(
         a: Spec_Hash_Definitions_hash_alg,
         x0: *mut u8,
@@ -52,9 +50,6 @@ impl evercrypt {
         let EverCrypt_Ed25519_verify = __library
             .get(b"EverCrypt_Ed25519_verify\0")
             .map(|sym| *sym)?;
-        let EverCrypt_HMAC_is_supported_alg = __library
-            .get(b"EverCrypt_HMAC_is_supported_alg\0")
-            .map(|sym| *sym)?;
         let EverCrypt_HMAC_compute = __library.get(b"EverCrypt_HMAC_compute\0").map(|sym| *sym)?;
         let EverCrypt_Hash_Incremental_hash_len = __library
             .get(b"EverCrypt_Hash_Incremental_hash_len\0")
@@ -67,7 +62,6 @@ impl evercrypt {
             EverCrypt_AutoConfig2_init,
             EverCrypt_Ed25519_sign,
             EverCrypt_Ed25519_verify,
-            EverCrypt_HMAC_is_supported_alg,
             EverCrypt_HMAC_compute,
             EverCrypt_Hash_Incremental_hash_len,
             EverCrypt_Hash_Incremental_hash,
@@ -93,12 +87,6 @@ impl evercrypt {
         signature: *mut u8,
     ) -> bool {
         (self.EverCrypt_Ed25519_verify)(public_key, msg_len, msg, signature)
-    }
-    pub unsafe fn EverCrypt_HMAC_is_supported_alg(
-        &self,
-        uu___: Spec_Hash_Definitions_hash_alg,
-    ) -> bool {
-        (self.EverCrypt_HMAC_is_supported_alg)(uu___)
     }
     pub unsafe fn EverCrypt_HMAC_compute(
         &self,

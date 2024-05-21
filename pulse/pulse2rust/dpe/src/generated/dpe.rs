@@ -320,11 +320,17 @@ pub fn derive_child_from_context(
                     let mut deviceID_pub = vec![0; 32];
                     let mut aliasKey_pub = vec![0; 32];
                     let mut aliasKey_priv = vec![0; 32];
+                    let deviceIDCSR_len = super::l0types::len_of_deviceIDCSR(
+                        r.deviceIDCSR_ingredients,
+                    );
+                    let aliasKeyCRT_len = super::l0types::len_of_aliasKeyCRT(
+                        r.aliasKeyCRT_ingredients,
+                    );
                     let mut deviceIDCSR = vec![
-                        0; crate ::fstar_sizet::uint32_to_sizet(r.deviceIDCSR_len)
+                        0; crate ::fstar_sizet::uint32_to_sizet(deviceIDCSR_len)
                     ];
                     let mut aliasKeyCRT = vec![
-                        0; crate ::fstar_sizet::uint32_to_sizet(r.aliasKeyCRT_len)
+                        0; crate ::fstar_sizet::uint32_to_sizet(aliasKeyCRT_len)
                     ];
                     crate::l0core::l0(
                         &mut c.cdi,
@@ -338,9 +344,9 @@ pub fn derive_child_from_context(
                         &mut deviceID_pub,
                         &mut aliasKey_pub,
                         &mut aliasKey_priv,
-                        r.deviceIDCSR_len,
+                        deviceIDCSR_len,
                         &mut deviceIDCSR,
-                        r.aliasKeyCRT_len,
+                        aliasKeyCRT_len,
                         &mut aliasKeyCRT,
                         (),
                         (),
@@ -361,9 +367,9 @@ pub fn derive_child_from_context(
                         deviceID_pub,
                         aliasKey_priv,
                         aliasKey_pub,
-                        r.deviceIDCSR_len,
+                        deviceIDCSR_len,
                         deviceIDCSR,
-                        r.aliasKeyCRT_len,
+                        aliasKeyCRT_len,
                         aliasKeyCRT,
                         (),
                         (),
@@ -458,20 +464,21 @@ pub fn certify_key(
     crt_len: u32,
     crt: &mut [u8],
     t: (),
-) -> bool {
+) -> u32 {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::Available(mut hc) => {
             match hc.context {
                 super::dpetypes::context_t::L1_context(mut c) => {
-                    if c.aliasKeyCRT_len < crt_len {
+                    let c_crt_len = c.aliasKeyCRT_len;
+                    if crt_len < c_crt_len {
                         let handle = super::dpe::prng(());
                         let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
                             handle: handle,
                             context: super::dpetypes::context_t::L1_context(c),
                         });
                         let s1 = super::dpe::replace_session(sid, (), ns, ());
-                        false
+                        0
                     } else {
                         crate::pulse_lib_array::memcpy_l(
                             32,
@@ -482,7 +489,7 @@ pub fn certify_key(
                             (),
                         );
                         crate::pulse_lib_array::memcpy_l(
-                            crate::fstar_sizet::uint32_to_sizet(crt_len),
+                            crate::fstar_sizet::uint32_to_sizet(c.aliasKeyCRT_len),
                             &mut c.aliasKeyCRT,
                             crt,
                             (),
@@ -495,7 +502,7 @@ pub fn certify_key(
                             context: super::dpetypes::context_t::L1_context(c),
                         });
                         let s1 = super::dpe::replace_session(sid, (), ns, ());
-                        true
+                        c_crt_len
                     }
                 }
                 _ => panic!(),

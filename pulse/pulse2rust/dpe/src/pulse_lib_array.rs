@@ -7,7 +7,10 @@ pub fn compare(
     b_seq: (),
     __c0: (),
 ) -> bool {
-    panic!()
+    a[0..len]
+        .iter()
+        .zip(b[0..len].iter())
+        .fold(true, |acc, (x, y)| acc && x == y)
 }
 
 pub fn memcpy<A: Copy>(l: usize, src: &mut [A], dst: &mut [A], p: (), src0: (), dst0: ()) -> () {

@@ -10,6 +10,55 @@ pub type octet_string_t = l0core_gen::octet_string_t;
 pub type deviceIDCSR_ingredients_t = l0core_gen::deviceIDCSR_ingredients_t;
 pub type aliasKeyCRT_ingredients_t = l0core_gen::aliasKeyCRT_ingredients_t;
 
+pub fn len_of_deviceIDCRI(
+    version: i32,
+    s_common: character_string_t,
+    s_org: character_string_t,
+    s_country: character_string_t,
+) -> u32 {
+    unsafe { L0.len_of_deviceIDCRI(version, s_common, s_org, s_country) }
+}
+
+pub fn len_of_deviceIDCSR(tbs_len: u32) -> u32 {
+    unsafe { L0.len_of_deviceIDCSR(tbs_len) }
+}
+
+pub fn len_of_aliasKeyTBS(
+    serialNumber: octet_string_t,
+    i_common: character_string_t,
+    i_org: character_string_t,
+    i_country: character_string_t,
+    s_common: character_string_t,
+    s_org: character_string_t,
+    s_country: character_string_t,
+    l0_version: i32,
+) -> u32 {
+    unsafe {
+        L0.len_of_aliasKeyTBS(
+            serialNumber,
+            i_common,
+            i_org,
+            i_country,
+            s_common,
+            s_org,
+            s_country,
+            l0_version,
+        )
+    }
+}
+
+pub fn len_of_aliasKeyCRT(tbs_len: u32) -> u32 {
+    unsafe { L0.len_of_aliasKeyCRT(tbs_len) }
+}
+
+pub fn l0_get_deviceIDCSR_ingredients() -> deviceIDCSR_ingredients_t {
+    unsafe { L0.l0_get_deviceIDCSR_ingredients() }
+}
+
+pub fn l0_get_aliasKeyCRT_ingredients() -> aliasKeyCRT_ingredients_t {
+    unsafe { L0.l0_get_aliasKeyCRT_ingredients() }
+}
+
 pub fn l0(
     cdi: &mut [u8],
     fwid: &mut [u8],

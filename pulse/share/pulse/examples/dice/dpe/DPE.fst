@@ -996,8 +996,10 @@ fn derive_child_from_context
           let aliasKey_pub = V.alloc 0uy (SZ.uint_to_t 32);
           let aliasKey_priv = V.alloc 0uy (SZ.uint_to_t 32);
           assume_ (pure (SZ.fits_u32));
-          let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet r.deviceIDCSR_len);
-          let aliasKeyCRT = V.alloc 0uy (SZ.uint32_to_sizet r.aliasKeyCRT_len);
+          let deviceIDCSR_len = L0Types.len_of_deviceIDCSR r.deviceIDCSR_ingredients;
+          let aliasKeyCRT_len = L0Types.len_of_aliasKeyCRT r.aliasKeyCRT_ingredients;
+          let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet deviceIDCSR_len);
+          let aliasKeyCRT = V.alloc 0uy (SZ.uint32_to_sizet aliasKeyCRT_len);
 
           V.to_array_pts_to c.cdi;
           V.to_array_pts_to r.fwid;
@@ -1023,9 +1025,9 @@ fn derive_child_from_context
             (V.vec_to_array deviceID_pub)
             (V.vec_to_array aliasKey_pub)
             (V.vec_to_array aliasKey_priv)
-            r.deviceIDCSR_len
+            deviceIDCSR_len
             (V.vec_to_array deviceIDCSR)
-            r.aliasKeyCRT_len
+            aliasKeyCRT_len
             (V.vec_to_array aliasKeyCRT);
           
           V.to_vec_pts_to c.cdi;
@@ -1047,9 +1049,9 @@ fn derive_child_from_context
             deviceID_pub
             aliasKey_priv
             aliasKey_pub
-            r.deviceIDCSR_len
+            deviceIDCSR_len
             deviceIDCSR
-            r.aliasKeyCRT_len
+            aliasKeyCRT_len
             aliasKeyCRT
             r0
             (magic ());
@@ -1246,7 +1248,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
            (exists* pub_key_repr crt_repr.
               A.pts_to pub_key pub_key_repr **
               A.pts_to crt crt_repr)
-  returns _:bool
+  returns _:U32.t
   ensures certify_key_client_perm sid t **
           (exists* pub_key_repr crt_repr.
              A.pts_to pub_key pub_key_repr **
@@ -1260,7 +1262,8 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
     Available hc -> {
       match hc.context {
         L1_context c -> {
-          if U32.lt c.aliasKeyCRT_len crt_len {
+          let c_crt_len = c.aliasKeyCRT_len;
+          if U32.lt crt_len c_crt_len {
             let handle = prng ();
             let ns = Available { handle; context = L1_context c };
             rewrite (session_state_related s (current_state t)) as
@@ -1269,7 +1272,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
             intro_session_state_tag_related s (current_state t1);
             with _x _y. rewrite (session_state_related _x _y) as emp;
             fold (certify_key_client_perm sid t);
-            false
+            0ul
           } else {
             let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
             let r = rewrite_context_perm_l1 (L1_context c) c;
@@ -1281,7 +1284,8 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
 
             assume_ (pure (SZ.fits_u32));
             V.to_array_pts_to c.aliasKeyCRT;
-            memcpy_l (SZ.uint32_to_sizet crt_len) (V.vec_to_array c.aliasKeyCRT) crt;
+            
+            memcpy_l (SZ.uint32_to_sizet c.aliasKeyCRT_len) (V.vec_to_array c.aliasKeyCRT) crt;
             V.to_vec_pts_to c.aliasKeyCRT;
 
             fold (l1_context_perm c r);
@@ -1297,7 +1301,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
             intro_session_state_tag_related s (current_state t1);
             with _x _y. rewrite (session_state_related _x _y) as emp;
             fold (certify_key_client_perm sid t);
-            true
+            c_crt_len
           }
         }
         _ -> {
