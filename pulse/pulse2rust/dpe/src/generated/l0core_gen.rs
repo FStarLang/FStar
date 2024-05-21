@@ -357,6 +357,26 @@ pub type aliasKeyCRT_ingredients_t = aliasKeyCRT_ingredients_t_s;
 extern crate libloading;
 pub struct l0 {
     __library: ::libloading::Library,
+    pub len_of_deviceIDCRI: unsafe extern "C" fn(
+        version: i32,
+        s_common: character_string_t,
+        s_org: character_string_t,
+        s_country: character_string_t,
+    ) -> u32,
+    pub len_of_deviceIDCSR: unsafe extern "C" fn(cri_len: u32) -> u32,
+    pub len_of_aliasKeyTBS: unsafe extern "C" fn(
+        serialNumber: octet_string_t,
+        i_common: character_string_t,
+        i_org: character_string_t,
+        i_country: character_string_t,
+        s_common: character_string_t,
+        s_org: character_string_t,
+        s_country: character_string_t,
+        l0_version: i32,
+    ) -> u32,
+    pub len_of_aliasKeyCRT: unsafe extern "C" fn(tbs_len: u32) -> u32,
+    pub l0_get_deviceIDCSR_ingredients: unsafe extern "C" fn() -> deviceIDCSR_ingredients_t,
+    pub l0_get_aliasKeyCRT_ingredients: unsafe extern "C" fn() -> aliasKeyCRT_ingredients_t,
     pub l0: unsafe extern "C" fn(
         cdi: *mut u8,
         fwid: *mut u8,
@@ -388,8 +408,70 @@ impl l0 {
         L: Into<::libloading::Library>,
     {
         let __library = library.into();
+        let len_of_deviceIDCRI = __library.get(b"len_of_deviceIDCRI\0").map(|sym| *sym)?;
+        let len_of_deviceIDCSR = __library.get(b"len_of_deviceIDCSR\0").map(|sym| *sym)?;
+        let len_of_aliasKeyTBS = __library.get(b"len_of_aliasKeyTBS\0").map(|sym| *sym)?;
+        let len_of_aliasKeyCRT = __library.get(b"len_of_aliasKeyCRT\0").map(|sym| *sym)?;
+        let l0_get_deviceIDCSR_ingredients = __library
+            .get(b"l0_get_deviceIDCSR_ingredients\0")
+            .map(|sym| *sym)?;
+        let l0_get_aliasKeyCRT_ingredients = __library
+            .get(b"l0_get_aliasKeyCRT_ingredients\0")
+            .map(|sym| *sym)?;
         let l0 = __library.get(b"l0\0").map(|sym| *sym)?;
-        Ok(l0 { __library, l0 })
+        Ok(l0 {
+            __library,
+            len_of_deviceIDCRI,
+            len_of_deviceIDCSR,
+            len_of_aliasKeyTBS,
+            len_of_aliasKeyCRT,
+            l0_get_deviceIDCSR_ingredients,
+            l0_get_aliasKeyCRT_ingredients,
+            l0,
+        })
+    }
+    pub unsafe fn len_of_deviceIDCRI(
+        &self,
+        version: i32,
+        s_common: character_string_t,
+        s_org: character_string_t,
+        s_country: character_string_t,
+    ) -> u32 {
+        (self.len_of_deviceIDCRI)(version, s_common, s_org, s_country)
+    }
+    pub unsafe fn len_of_deviceIDCSR(&self, cri_len: u32) -> u32 {
+        (self.len_of_deviceIDCSR)(cri_len)
+    }
+    pub unsafe fn len_of_aliasKeyTBS(
+        &self,
+        serialNumber: octet_string_t,
+        i_common: character_string_t,
+        i_org: character_string_t,
+        i_country: character_string_t,
+        s_common: character_string_t,
+        s_org: character_string_t,
+        s_country: character_string_t,
+        l0_version: i32,
+    ) -> u32 {
+        (self.len_of_aliasKeyTBS)(
+            serialNumber,
+            i_common,
+            i_org,
+            i_country,
+            s_common,
+            s_org,
+            s_country,
+            l0_version,
+        )
+    }
+    pub unsafe fn len_of_aliasKeyCRT(&self, tbs_len: u32) -> u32 {
+        (self.len_of_aliasKeyCRT)(tbs_len)
+    }
+    pub unsafe fn l0_get_deviceIDCSR_ingredients(&self) -> deviceIDCSR_ingredients_t {
+        (self.l0_get_deviceIDCSR_ingredients)()
+    }
+    pub unsafe fn l0_get_aliasKeyCRT_ingredients(&self) -> aliasKeyCRT_ingredients_t {
+        (self.l0_get_aliasKeyCRT_ingredients)()
     }
     pub unsafe fn l0(
         &self,

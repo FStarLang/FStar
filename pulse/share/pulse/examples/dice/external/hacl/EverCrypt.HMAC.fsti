@@ -9,10 +9,10 @@ module U32 = FStar.UInt32
 module H = EverCrypt.Hash.Incremental
 
 /// From EverCrypt.HMAC.is_supported_alg
-val is_supported_alg: H.hash_alg -> bool
+// val is_supported_alg: H.hash_alg -> bool
 
-inline_for_extraction noextract
-let supported_alg = a:H.hash_alg{ is_supported_alg a }
+// inline_for_extraction noextract
+// let supported_alg = a:H.hash_alg{ is_supported_alg a }
 
 /// From Spec.Hash.Definitions.block_length
 noextract [@@noextract_to "krml"]
@@ -68,4 +68,4 @@ let compute_st (a: H.hash_alg) =
   )
 
 /// From EverCrypt.HMAC.compute
-val compute: a: supported_alg -> compute_st a
+val compute: a: H.hash_alg -> compute_st a

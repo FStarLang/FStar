@@ -1,6 +1,6 @@
 module HACL
 
-let alg_t = (a: EverCrypt.HMAC.supported_alg { US.fits_u32 })
+// let alg_t = (a: EverCrypt.HMAC.supported_alg { US.fits_u32 })
 
 let digest_len a = US.uint32_to_sizet (EverCrypt.Hash.Incremental.hash_len a)
 
@@ -162,7 +162,7 @@ let ed25519_sign = ed25519_sign0
 // let ed25519_sign buf privk len msg #pprivk #pmsg #buf0 #privk_seq #msg_seq =
 //  ed25519_sign0 buf privk len msg #pprivk #pmsg #buf0 #privk_seq #msg_seq
 
-assume val dice_hash_alg1 (_: unit) : alg_t
+let dice_hash_alg1 (_: unit) : alg_t = Spec.Hash.Definitions.sha2_256
 
 let dice_hash_alg0 _ = dice_hash_alg1 ()
 
