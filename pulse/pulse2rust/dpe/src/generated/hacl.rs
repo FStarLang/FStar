@@ -145,7 +145,7 @@ pub static ed25519_sign: fn(
     (),
 ) -> () = super::hacl::ed25519_sign0;
 pub fn dice_hash_alg1(uu___: ()) -> super::hacl::alg_t {
-    panic!()
+    crate::spec_hash_definitions::sha2_256
 }
 pub fn dice_hash_alg0(uu___: ()) -> super::hacl::alg_t {
     super::hacl::dice_hash_alg1(())
