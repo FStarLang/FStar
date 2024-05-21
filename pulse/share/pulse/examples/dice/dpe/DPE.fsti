@@ -467,7 +467,7 @@ val certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
   (crt_len:U32.t)
   (crt:A.larray U8.t (U32.v crt_len))
   (t:G.erased trace { trace_valid_for_certify_key t })
-  : stt bool
+  : stt U32.t
         (requires
            sid_pts_to trace_ref sid t **
            (exists* pub_key_repr crt_repr.
