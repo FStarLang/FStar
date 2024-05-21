@@ -155,6 +155,8 @@ let instantiate_implicits        = from_tac_2 "B.refl_instantiate_implicits" B.r
 let try_unify                    = from_tac_4 "B.refl_try_unify" B.refl_try_unify
 let maybe_relate_after_unfolding = from_tac_3 "B.refl_maybe_relate_after_unfolding" B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_maybe_unfold_head
+let norm_well_typed_term         = from_tac_3 "B.norm_well_typed_term" B.refl_norm_well_typed_term
+
 let push_open_namespace          = from_tac_2 "B.push_open_namespace" B.push_open_namespace
 let push_module_abbrev           = from_tac_3 "B.push_module_abbrev" B.push_module_abbrev
 let resolve_name                 = from_tac_2 "B.resolve_name" B.resolve_name

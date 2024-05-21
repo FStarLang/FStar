@@ -346,7 +346,7 @@ let (basic_type_error :
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Errors_Codes.raw_error * Prims.string))
+          (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun env ->
     fun eopt ->
@@ -358,14 +358,45 @@ let (basic_type_error :
               let msg =
                 match eopt with
                 | FStar_Pervasives_Native.None ->
-                    FStar_Compiler_Util.format2
-                      "Expected type \"%s\"; got type \"%s\"" s1 s2
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Errors_Msg.text "Expected type" in
+                        let uu___4 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t1 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___3 uu___4 in
+                      let uu___3 =
+                        let uu___4 = FStar_Errors_Msg.text "got type" in
+                        let uu___5 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t2 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___4 uu___5 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                    [uu___1]
                 | FStar_Pervasives_Native.Some e ->
                     let uu___1 =
-                      FStar_TypeChecker_Normalize.term_to_string env e in
-                    FStar_Compiler_Util.format3
-                      "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1
-                      uu___1 s2 in
+                      let uu___2 =
+                        let uu___3 = FStar_Errors_Msg.text "Expected type" in
+                        let uu___4 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t1 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___3 uu___4 in
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 = FStar_Errors_Msg.text "but" in
+                          let uu___6 =
+                            FStar_TypeChecker_Normalize.term_to_doc env e in
+                          FStar_Pprint.prefix (Prims.of_int (4))
+                            Prims.int_one uu___5 uu___6 in
+                        let uu___5 =
+                          let uu___6 = FStar_Errors_Msg.text "has type" in
+                          let uu___7 =
+                            FStar_TypeChecker_Normalize.term_to_doc env t2 in
+                          FStar_Pprint.prefix (Prims.of_int (4))
+                            Prims.int_one uu___6 uu___7 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                    [uu___1] in
               (FStar_Errors_Codes.Error_TypeError, msg)
 let (occurs_check : (FStar_Errors_Codes.raw_error * Prims.string)) =
   (FStar_Errors_Codes.Fatal_PossibleInfiniteTyp,

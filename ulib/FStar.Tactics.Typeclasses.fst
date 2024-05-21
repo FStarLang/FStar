@@ -89,13 +89,6 @@ let rec head_of (t:term) : Tac (option fv) =
   | Tv_App h _ -> head_of h
   | v -> None
 
-let hua (t:term) : Tac (option (fv & universes & list argv)) =
-  let hd, args = collect_app t in
-  match inspect hd with
-  | Tv_FVar fv -> Some (fv, [], args)
-  | Tv_UInst fv us -> Some (fv, us, args)
-  | _ -> None
-
 let rec res_typ (t:term) : Tac term =
   match inspect t with
   | Tv_Arrow _ c -> (

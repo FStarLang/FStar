@@ -261,6 +261,8 @@ let ops = [
     refl_try_unify refl_try_unify;
   mk_tac_step_3 0 "maybe_relate_after_unfolding" refl_maybe_relate_after_unfolding refl_maybe_relate_after_unfolding;
   mk_tac_step_2 0 "maybe_unfold_head" refl_maybe_unfold_head refl_maybe_unfold_head;
+  mk_tac_step_3 0 "norm_well_typed_term" refl_norm_well_typed_term refl_norm_well_typed_term;
+
   mk_tac_step_2 0 "push_open_namespace" push_open_namespace push_open_namespace;
   mk_tac_step_3 0 "push_module_abbrev" push_module_abbrev push_module_abbrev;
   mk_tac_step_2 0 "resolve_name"

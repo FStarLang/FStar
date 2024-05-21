@@ -49,6 +49,7 @@ type guard_policy =
     | SMT
     | SMTSync
     | Force
+    | ForceSMT
     | Drop // unsound
 
 type proofstate = {

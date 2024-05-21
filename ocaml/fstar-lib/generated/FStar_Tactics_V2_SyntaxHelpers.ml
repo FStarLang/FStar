@@ -413,3 +413,51 @@ let (collect_app :
        Prims.list),
       unit) FStar_Tactics_Effect.tac_repr)
   = collect_app' []
+let (hua :
+  FStar_Tactics_NamedView.term ->
+    ((FStar_Reflection_Types.fv * FStar_Reflection_V2_Data.universes *
+       FStar_Reflection_V2_Data.argv Prims.list)
+       FStar_Pervasives_Native.option,
+      unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun t ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
+               (Prims.of_int (92)) (Prims.of_int (17)) (Prims.of_int (92))
+               (Prims.of_int (30)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "FStar.Tactics.V2.SyntaxHelpers.fst"
+               (Prims.of_int (91)) (Prims.of_int (62)) (Prims.of_int (96))
+               (Prims.of_int (13))))) (Obj.magic (collect_app t))
+      (fun uu___ ->
+         (fun uu___ ->
+            match uu___ with
+            | (hd, args) ->
+                Obj.magic
+                  (FStar_Tactics_Effect.tac_bind
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.V2.SyntaxHelpers.fst"
+                              (Prims.of_int (93)) (Prims.of_int (8))
+                              (Prims.of_int (93)) (Prims.of_int (18)))))
+                     (FStar_Sealed.seal
+                        (Obj.magic
+                           (FStar_Range.mk_range
+                              "FStar.Tactics.V2.SyntaxHelpers.fst"
+                              (Prims.of_int (93)) (Prims.of_int (2))
+                              (Prims.of_int (96)) (Prims.of_int (13)))))
+                     (Obj.magic (FStar_Tactics_NamedView.inspect hd))
+                     (fun uu___1 ->
+                        FStar_Tactics_Effect.lift_div_tac
+                          (fun uu___2 ->
+                             match uu___1 with
+                             | FStar_Tactics_NamedView.Tv_FVar fv ->
+                                 FStar_Pervasives_Native.Some (fv, [], args)
+                             | FStar_Tactics_NamedView.Tv_UInst (fv, us) ->
+                                 FStar_Pervasives_Native.Some (fv, us, args)
+                             | uu___3 -> FStar_Pervasives_Native.None))))
+           uu___)

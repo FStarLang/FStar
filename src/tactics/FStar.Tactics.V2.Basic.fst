@@ -264,6 +264,16 @@ let proc_guard_formula
     | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
            fail1 "Forcing the guard failed (%s)" reason))
 
+  | ForceSMT ->
+    mlog (fun () -> BU.print2 "Forcing guard WITH SMT (%s:%s)\n" reason (show f)) (fun () ->
+    let g = { Env.trivial_guard with guard_f = NonTrivial f } in
+    try if not (Env.is_trivial <| Rel.discharge_guard e g)
+        then fail1 "Forcing the guard failed (%s)" reason
+        else return ()
+    with
+    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
+           fail1 "Forcing the guard failed (%s)" reason))
+
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
     mlog (fun () ->
         BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
@@ -807,18 +817,26 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     let t = normalize steps (goal_env goal) (goal_type goal) in
     replace_cur (goal_with_type goal t)
 
-
-let norm_term_env (e : env) (s : list Pervasives.norm_step) (t : term) : tac term = wrap_err "norm_term" <| (
+let __norm_term_env
+  (well_typed:bool) (e : env) (s : list Pervasives.norm_step) (t : term)
+  : tac term
+= wrap_err "norm_term" <| (
     let! ps = get in
     if_verbose (fun () -> BU.print1 "norm_term_env: t = %s\n" (show t)) ;!
     // only for elaborating lifts and all that, we don't care if it's actually well-typed
-    let! t, _, _ = __tc_lax e t in
+    let! t =
+      if well_typed
+      then return t
+      else let! t, _, _ = __tc_lax e t in return t
+    in
     let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
     let t = normalize steps ps.main_context t in
     if_verbose (fun () -> BU.print1 "norm_term_env: t' = %s\n" (show t)) ;!
     return t
     )
 
+let norm_term_env e s t = __norm_term_env false e s t
+let refl_norm_well_typed_term e s t = __norm_term_env true e s t
 
 let refine_intro () : tac unit = wrap_err "refine_intro" <| (
     let! g = cur_goal in
@@ -2298,10 +2316,10 @@ let refl_check_relation (rel:relation) (smt_ok:bool) (unfolding_ok:bool) (g:env)
            else Core.check_term_equality in
          match f smt_ok unfolding_ok g t0 t1 with
          | Inl None ->
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)");
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded (no guard)\n");
            ((), [])
          | Inl (Some guard_f) ->
-           dbg_refl g (fun _ -> "refl_check_relation: succeeded");
+           dbg_refl g (fun _ -> "refl_check_relation: succeeded\n");
            ((), [(g, guard_f)])
          | Inr err ->
            dbg_refl g (fun _ -> BU.format1 "refl_check_relation failed: %s\n" (Core.print_error err));

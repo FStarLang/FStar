@@ -35,6 +35,7 @@ type guard_policy =
   | SMT 
   | SMTSync 
   | Force 
+  | ForceSMT 
   | Drop 
 let (uu___is_Goal : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Goal -> true | uu___ -> false
@@ -44,6 +45,8 @@ let (uu___is_SMTSync : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | SMTSync -> true | uu___ -> false
 let (uu___is_Force : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Force -> true | uu___ -> false
+let (uu___is_ForceSMT : guard_policy -> Prims.bool) =
+  fun projectee -> match projectee with | ForceSMT -> true | uu___ -> false
 let (uu___is_Drop : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Drop -> true | uu___ -> false
 type proofstate =
