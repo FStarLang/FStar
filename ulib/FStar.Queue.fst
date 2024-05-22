@@ -115,10 +115,20 @@ let rec lemma_append_seq_of_list_dist (#a:Type) (l1 l2:list a)
 		)
 
 let lemma_snoc_list_seq (#a:Type) (x:a) (q:queue a)
-	: Lemma (seq_of_list (L.snoc ((queue_to_list q),x)) == Seq.snoc (queue_to_seq q) x)
-	= let l = (queue_to_list q) in 
-		lemma_append_seq_of_list_dist l [x];
-		lemma_seq_list_bij (Seq.create 1 x)
+    : Lemma (seq_of_list (L.snoc ((queue_to_list q),x)) == Seq.snoc (queue_to_seq q) x)
+=
+  let l = queue_to_list q in
+  calc (==) {
+    seq_of_list (L.snoc (l, x)) <: seq a;
+    == { () }
+    seq_of_list (l @ [x]);
+    == { lemma_append_seq_of_list_dist l [x] }
+    seq_of_list l `Seq.append` seq_of_list [x];
+    == { assert (Seq.equal (seq_of_list [x]) (Seq.create 1 x)) }
+    seq_of_list l `Seq.append` Seq.create 1 x;
+    == { admit() }
+    Seq.snoc (seq_of_list l) x;
+  }
 
 (* write comment *)
 let lemma_enqueue_ok (#a:Type) (x:a) (q:queue a)
