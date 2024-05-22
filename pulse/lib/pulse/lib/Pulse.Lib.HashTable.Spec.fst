@@ -17,9 +17,6 @@
 module Pulse.Lib.HashTable.Spec
 module US = FStar.SizeT
 
-let unreachable #a (_:squash False) : a =
-  coerce_eq () 42
-
 open FStar.Ghost
 
 [@@ Pulse.Lib.Pervasives.Rust_derive "Clone"]
@@ -578,7 +575,7 @@ let rec insert_repr_walk #kt #vt #sz (#spec : erased (spec_t kt vt))
         ()
       in
       Classical.forall_intro aux;
-      unreachable ()
+      false_elim () (* unreachable *)
     )
     else
     let idx = (cidx+off) % sz in
