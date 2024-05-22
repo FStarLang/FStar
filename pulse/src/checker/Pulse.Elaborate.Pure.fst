@@ -96,7 +96,6 @@ let elab_stt_equiv (g:R.env) (c:comp{C_ST? c}) (pre:R.term) (post:R.term)
     (comp_u c)
     (comp_res c)
     _ _ _ _ _ (RT.Rel_refl _ _ _) eq_pre eq_post
-#push-options "--query_stats"
 let elab_statomic_equiv (g:R.env) (c:comp{C_STAtomic? c}) (pre:R.term) (post:R.term)
   (eq_pre:RT.equiv g pre (comp_pre c))
   (eq_post:RT.equiv g post

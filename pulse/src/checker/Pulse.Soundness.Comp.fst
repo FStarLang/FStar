@@ -55,7 +55,7 @@ let stc_soundness
   let post_typing  = mk_t_abs_tot g ppname_default dres dpost in
   res_typing, pre_typing, post_typing
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let comp_typing_soundness (g:stt_env)
                           (c:comp)
                           (uc:universe)

@@ -21,6 +21,7 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
+open Pulse.PP
 
 module L = FStar.List.Tot
 module T = FStar.Tactics
@@ -30,6 +31,8 @@ module Env = Pulse.Typing.Env
 
 val ss_t : Type0
 
+instance val pp_ss_t : printable ss_t
+
 val ln_ss_t (s:ss_t) : bool
 val as_map (ss:ss_t) : Map.t var term
 
@@ -38,6 +41,9 @@ let contains (ss:ss_t) (x:var) = Map.contains (as_map ss) x
 let sel (ss:ss_t) (x:var { contains ss x }) = Map.sel (as_map ss) x
 
 val empty : ss_t
+
+val lemma_dom_empty ()
+  : Lemma (dom empty == Set.empty)
 
 val push (ss:ss_t) (x:var { ~ (contains ss x) }) (t:term) : ss_t
 

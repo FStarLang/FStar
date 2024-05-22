@@ -72,7 +72,6 @@ include $(FSTAR_DEP_FILE)
 
 $(ALL_CHECKED_FILES): %.checked:
 	$(call msg, "CHECK", $(basename $(notdir $@)))
-	@# You can debug with --debug $(basename $(notdir $<))
 	$(Q)$(RUNLIM) $(FSTAR) $(SIL) $(COMPAT_INDEXED_EFFECTS) $<
 	touch -c $@
 
