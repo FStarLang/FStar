@@ -123,12 +123,16 @@ let fresh : string -> string =
     s^"_"^(string_of_int v)
 
 let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
-    Errors.log_issue r
-        (Errors.Warning_PluginNotImplemented,
-         BU.format3 "Plugin `%s' can not run natively because %s (use --warn_error -%s to carry on)."
-                        t
-                        msg
-                        (string_of_int <| Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented)))
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  Errors.log_issue_doc r (Errors.Warning_PluginNotImplemented, [
+    prefix 2 1 (text (BU.format1 "Plugin `%s' can not run natively because:" t))
+      (text msg);
+    text "Use --warn_error -"
+      ^^ pp (Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented))
+      ^/^ text "to carry on."
+  ])
 
 type embedding_data = {
   arity : int;
