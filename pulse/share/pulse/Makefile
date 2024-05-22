@@ -12,4 +12,4 @@ $(TARGETS): %:
 %.install: %
 	$(INSTALL) -m 644 -D $< $(PREFIX)/share/pulse/$<
 
-install: $(addsuffix .install,Makefile.locate-fstar,Makefile.include-base,Makefile.include)
+install: $(addsuffix .install,Makefile.locate-fstar Makefile.include-base Makefile.include)

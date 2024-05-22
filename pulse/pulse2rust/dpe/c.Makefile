@@ -4,9 +4,6 @@
 #
 # It is invoked by the gen-rust-bindings.sh script
 #
-# This is not run as part of CI,
-#   rather we check-in the generated bindings
-#
 
 PULSE_HOME ?= ../..
 OUTPUT_DIRECTORY=_output
