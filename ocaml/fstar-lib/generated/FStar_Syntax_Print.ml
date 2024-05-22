@@ -1130,6 +1130,8 @@ let (aqual_to_string : FStar_Syntax_Syntax.aqual -> Prims.string) =
   fun aq -> aqual_to_string' "" aq
 let (bqual_to_string : FStar_Syntax_Syntax.bqual -> Prims.string) =
   fun bq -> bqual_to_string' "" bq
+let (lb_to_string : FStar_Syntax_Syntax.letbinding -> Prims.string) =
+  fun lb -> lbs_to_string [] (false, [lb])
 let (comp_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env ->
@@ -1991,6 +1993,9 @@ let (showable_pat : FStar_Syntax_Syntax.pat FStar_Class_Show.showable) =
   { FStar_Class_Show.show = pat_to_string }
 let (showable_const : FStar_Const.sconst FStar_Class_Show.showable) =
   { FStar_Class_Show.show = const_to_string }
+let (showable_letbinding :
+  FStar_Syntax_Syntax.letbinding FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = lb_to_string }
 let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = term_to_doc }
 let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =

@@ -1424,7 +1424,10 @@ let (guard_letrecs :
                        | (uu___3, FStar_Syntax_Syntax.Tm_uvar uu___4) ->
                            false
                        | (uu___3, uu___4) -> true) in
-                  (let uu___1 = should_warn && (warn t1 t2) in
+                  (let uu___1 =
+                     ((Prims.op_Negation env2.FStar_TypeChecker_Env.phase1)
+                        && should_warn)
+                       && (warn t1 t2) in
                    if uu___1
                    then
                      let uu___2 =
@@ -1444,29 +1447,86 @@ let (guard_letrecs :
                              let uu___7 =
                                let uu___8 =
                                  let uu___9 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term e1 in
+                                   FStar_Errors_Msg.text
+                                     "In the decreases clause for this function, the SMT solver may not be able to prove that the types of" in
                                  let uu___10 =
-                                   FStar_Compiler_Range_Ops.string_of_range
-                                     e1.FStar_Syntax_Syntax.pos in
+                                   let uu___11 =
+                                     let uu___12 =
+                                       FStar_Class_PP.pp
+                                         FStar_Syntax_Print.pretty_term e1 in
+                                     let uu___13 =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_Errors_Msg.text "bound in" in
+                                         let uu___16 =
+                                           FStar_Class_PP.pp
+                                             FStar_Compiler_Range_Ops.pretty_range
+                                             e1.FStar_Syntax_Syntax.pos in
+                                         FStar_Pprint.op_Hat_Slash_Hat
+                                           uu___15 uu___16 in
+                                       FStar_Pprint.parens uu___14 in
+                                     FStar_Pprint.op_Hat_Slash_Hat uu___12
+                                       uu___13 in
+                                   FStar_Pprint.group uu___11 in
+                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___9 uu___10 in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 = FStar_Errors_Msg.text "and" in
+                                   let uu___12 =
+                                     let uu___13 =
+                                       let uu___14 =
+                                         FStar_Class_PP.pp
+                                           FStar_Syntax_Print.pretty_term e2 in
+                                       let uu___15 =
+                                         let uu___16 =
+                                           let uu___17 =
+                                             FStar_Errors_Msg.text "bound in" in
+                                           let uu___18 =
+                                             FStar_Class_PP.pp
+                                               FStar_Compiler_Range_Ops.pretty_range
+                                               e2.FStar_Syntax_Syntax.pos in
+                                           FStar_Pprint.op_Hat_Slash_Hat
+                                             uu___17 uu___18 in
+                                         FStar_Pprint.parens uu___16 in
+                                       FStar_Pprint.op_Hat_Slash_Hat uu___14
+                                         uu___15 in
+                                     FStar_Pprint.group uu___13 in
+                                   FStar_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___11 uu___12 in
                                  let uu___11 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term t1 in
+                                   FStar_Errors_Msg.text "are equal." in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                   uu___11 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                             let uu___8 =
+                               let uu___9 =
+                                 let uu___10 =
+                                   FStar_Errors_Msg.text
+                                     "The type of the first term is:" in
+                                 let uu___11 =
+                                   FStar_Class_PP.pp
+                                     FStar_Syntax_Print.pretty_term t1 in
+                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___10 uu___11 in
+                               let uu___10 =
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStar_Errors_Msg.text
+                                       "The type of the second term is:" in
+                                   let uu___13 =
+                                     FStar_Class_PP.pp
+                                       FStar_Syntax_Print.pretty_term t2 in
+                                   FStar_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___12 uu___13 in
                                  let uu___12 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term e2 in
-                                 let uu___13 =
-                                   FStar_Compiler_Range_Ops.string_of_range
-                                     e2.FStar_Syntax_Syntax.pos in
-                                 let uu___14 =
-                                   FStar_Class_Show.show
-                                     FStar_Syntax_Print.showable_term t2 in
-                                 FStar_Compiler_Util.format6
-                                   "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
-                                   uu___9 uu___10 uu___11 uu___12 uu___13
-                                   uu___14 in
-                               FStar_Errors_Msg.text uu___8 in
-                             [uu___7] in
+                                   let uu___13 =
+                                     FStar_Errors_Msg.text
+                                       "If the proof fails, try annotating these with the same type." in
+                                   [uu___13] in
+                                 uu___11 :: uu___12 in
+                               uu___9 :: uu___10 in
+                             uu___7 :: uu___8 in
                            (FStar_Errors_Codes.Warning_Defensive, uu___6) in
                          FStar_Errors.log_issue_doc
                            e1.FStar_Syntax_Syntax.pos uu___5
