@@ -168,15 +168,30 @@ let (not_implemented_warning :
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  FStar_Errors.lookup
-                    FStar_Errors_Codes.Warning_PluginNotImplemented in
-                FStar_Errors.error_number uu___4 in
-              Prims.string_of_int uu___3 in
-            FStar_Compiler_Util.format3
-              "Plugin `%s' can not run natively because %s (use --warn_error -%s to carry on)."
-              t msg uu___2 in
+                  FStar_Compiler_Util.format1
+                    "Plugin `%s' can not run natively because:" t in
+                FStar_Errors_Msg.text uu___4 in
+              let uu___4 = FStar_Errors_Msg.text msg in
+              FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+                uu___4 in
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Errors_Msg.text "Use --warn_error -" in
+                let uu___6 =
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 =
+                        FStar_Errors.lookup
+                          FStar_Errors_Codes.Warning_PluginNotImplemented in
+                      FStar_Errors.error_number uu___9 in
+                    FStar_Class_PP.pp FStar_Class_PP.pp_int uu___8 in
+                  let uu___8 = FStar_Errors_Msg.text "to carry on." in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+              [uu___4] in
+            uu___2 :: uu___3 in
           (FStar_Errors_Codes.Warning_PluginNotImplemented, uu___1) in
-        FStar_Errors.log_issue r uu___
+        FStar_Errors.log_issue_doc r uu___
 type embedding_data =
   {
   arity: Prims.int ;

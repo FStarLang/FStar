@@ -572,6 +572,7 @@ and metadata_to_string = function
 
 let aqual_to_string aq = aqual_to_string' "" aq
 let bqual_to_string bq = bqual_to_string' "" bq
+let lb_to_string lb = lbs_to_string [] (false, [lb])
 
 let comp_to_string' env c =
   if Options.ugly ()
@@ -1012,6 +1013,7 @@ instance showable_branch = { show = branch_to_string; }
 instance showable_qualifier = { show = qual_to_string; }
 instance showable_pat    = { show = pat_to_string; }
 instance showable_const  = { show = const_to_string; }
+instance showable_letbinding  = { show = lb_to_string; }
 
 instance pretty_term     = { pp   = term_to_doc; }
 instance pretty_univ     = { pp   = univ_to_doc; }

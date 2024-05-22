@@ -1212,7 +1212,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
                      "Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
-                     top.range
+                     (range_of_id s)
       | Some op ->
             if List.length args > 0 then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
@@ -3653,6 +3653,12 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t * sigelts) =
 
       | errs, ropt -> (* failed! check that it failed as expected *)
         let errnos = List.concatMap (fun i -> FStar.Common.list_of_option i.issue_number) errs in
+        if Options.print_expected_failures () then (
+          (* Print errors if asked for *)
+          BU.print_string ">> Got issues: [\n";
+          List.iter Errors.print_issue errs;
+          BU.print_string ">>]\n"
+        );
         if expected_errs = [] then
           env0, []
         else begin

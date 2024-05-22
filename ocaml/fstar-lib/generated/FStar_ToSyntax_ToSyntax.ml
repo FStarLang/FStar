@@ -2607,7 +2607,8 @@ and (desugar_term_maybe_top :
                      Prims.strcat "Unexpected or unbound operator: " uu___4 in
                    (FStar_Errors_Codes.Fatal_UnepxectedOrUnboundOperator,
                      uu___3) in
-                 FStar_Errors.raise_error uu___2 top.FStar_Parser_AST.range
+                 let uu___3 = FStar_Ident.range_of_id s in
+                 FStar_Errors.raise_error uu___2 uu___3
              | FStar_Pervasives_Native.Some op ->
                  if (FStar_Compiler_List.length args) > Prims.int_zero
                  then
@@ -8879,41 +8880,50 @@ and (desugar_decl_maybe_fail_attr :
                           (fun i ->
                              FStar_Common.list_of_option
                                i.FStar_Errors.issue_number) errs1 in
-                      if expected_errs = []
-                      then (env0, [])
-                      else
-                        (let uu___4 =
-                           FStar_Errors.find_multiset_discrepancy
-                             expected_errs errnos in
-                         match uu___4 with
-                         | FStar_Pervasives_Native.None -> (env0, [])
-                         | FStar_Pervasives_Native.Some (e, n1, n2) ->
-                             (FStar_Compiler_List.iter
-                                FStar_Errors.print_issue errs1;
-                              (let uu___7 =
-                                 let uu___8 =
-                                   let uu___9 =
-                                     (FStar_Common.string_of_list ())
-                                       FStar_Compiler_Util.string_of_int
-                                       expected_errs in
-                                   let uu___10 =
-                                     (FStar_Common.string_of_list ())
-                                       FStar_Compiler_Util.string_of_int
-                                       errnos in
-                                   let uu___11 =
-                                     FStar_Compiler_Util.string_of_int e in
-                                   let uu___12 =
-                                     FStar_Compiler_Util.string_of_int n2 in
-                                   let uu___13 =
-                                     FStar_Compiler_Util.string_of_int n1 in
-                                   FStar_Compiler_Util.format5
-                                     "This top-level definition was expected to raise error codes %s, but it raised %s (at desugaring time). Error #%s was raised %s times, instead of %s."
-                                     uu___9 uu___10 uu___11 uu___12 uu___13 in
-                                 (FStar_Errors_Codes.Error_DidNotFail,
-                                   uu___8) in
-                               FStar_Errors.log_issue
-                                 d1.FStar_Parser_AST.drange uu___7);
-                              (env0, [])))))
+                      ((let uu___4 = FStar_Options.print_expected_failures () in
+                        if uu___4
+                        then
+                          (FStar_Compiler_Util.print_string
+                             ">> Got issues: [\n";
+                           FStar_Compiler_List.iter FStar_Errors.print_issue
+                             errs1;
+                           FStar_Compiler_Util.print_string ">>]\n")
+                        else ());
+                       if expected_errs = []
+                       then (env0, [])
+                       else
+                         (let uu___5 =
+                            FStar_Errors.find_multiset_discrepancy
+                              expected_errs errnos in
+                          match uu___5 with
+                          | FStar_Pervasives_Native.None -> (env0, [])
+                          | FStar_Pervasives_Native.Some (e, n1, n2) ->
+                              (FStar_Compiler_List.iter
+                                 FStar_Errors.print_issue errs1;
+                               (let uu___8 =
+                                  let uu___9 =
+                                    let uu___10 =
+                                      (FStar_Common.string_of_list ())
+                                        FStar_Compiler_Util.string_of_int
+                                        expected_errs in
+                                    let uu___11 =
+                                      (FStar_Common.string_of_list ())
+                                        FStar_Compiler_Util.string_of_int
+                                        errnos in
+                                    let uu___12 =
+                                      FStar_Compiler_Util.string_of_int e in
+                                    let uu___13 =
+                                      FStar_Compiler_Util.string_of_int n2 in
+                                    let uu___14 =
+                                      FStar_Compiler_Util.string_of_int n1 in
+                                    FStar_Compiler_Util.format5
+                                      "This top-level definition was expected to raise error codes %s, but it raised %s (at desugaring time). Error #%s was raised %s times, instead of %s."
+                                      uu___10 uu___11 uu___12 uu___13 uu___14 in
+                                  (FStar_Errors_Codes.Error_DidNotFail,
+                                    uu___9) in
+                                FStar_Errors.log_issue
+                                  d1.FStar_Parser_AST.drange uu___8);
+                               (env0, []))))))
         | FStar_Pervasives_Native.None -> desugar_decl_core env attrs d in
       match uu___ with | (env1, sigelts) -> (env1, sigelts)
 and (desugar_decl :
