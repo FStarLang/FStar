@@ -1,4 +1,19 @@
 >> Got issues: [
+* Error 178 at PatternMatch.fst(15,27-15,34):
+  - Type ascriptions within patterns are only allowed on variables
+
+>>]
+>> Got issues: [
+* Error 178 at PatternMatch.fst(18,29-18,48):
+  - Type ascriptions within patterns are only allowed on variables
+
+>>]
+>> Got issues: [
+* Error 178 at PatternMatch.fst(41,3-41,24):
+  - Type ascriptions within patterns are only allowed on variables
+
+>>]
+>> Got issues: [
 * Error 19:
   - Patterns are incomplete
   - The SMT solver could not prove the query. Use --query_stats for more
