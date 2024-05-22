@@ -410,7 +410,7 @@ let rec (free_names_and_uvs' :
                     FStar_Pervasives_Native.Some t2;
                   FStar_Syntax_Syntax.residual_flags = uu___2;_}
                 -> free_names_and_uvars t2 use_cache
-            | FStar_Pervasives_Native.None -> no_free_vars in
+            | uu___1 -> no_free_vars in
           let uu___1 =
             let uu___2 =
               let uu___3 = free_names_and_uvars t1 use_cache in
