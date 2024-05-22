@@ -1212,7 +1212,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term * an
         raise_error (Errors.Fatal_UnepxectedOrUnboundOperator,
                      "Unexpected or unbound operator: " ^
                      Ident.string_of_id s)
-                     top.range
+                     (range_of_id s)
       | Some op ->
             if List.length args > 0 then
               let args, aqs = args |> List.map (fun t -> let t', s = desugar_term_aq env t in
