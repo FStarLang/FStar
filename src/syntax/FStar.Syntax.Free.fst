@@ -175,7 +175,7 @@ let rec free_names_and_uvs' tm (use_cache:use_cache_t) : free_vars_and_fvars =
       | Tm_match {scrutinee=t; ret_opt=asc_opt; brs=pats; rc_opt} ->
         (match rc_opt with
          | Some { residual_typ = Some t } -> free_names_and_uvars t use_cache
-         | None -> no_free_vars) ++
+         | _ -> no_free_vars) ++
         begin
         pats |> List.fold_left (fun n (p, wopt, t) ->
             let n1 = match wopt with
