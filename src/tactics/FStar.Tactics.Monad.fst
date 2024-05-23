@@ -149,10 +149,14 @@ let get : tac proofstate =
 let traise e =
     mk_tac (fun ps -> Failed (e, ps))
 
-let log ps (f : unit -> unit) : unit =
-    if ps.tac_verb_dbg
-    then f ()
-    else ()
+let do_log ps (f : unit -> unit) : unit =
+  if ps.tac_verb_dbg then
+    f ()
+
+let log (f : unit -> unit) : tac unit =
+  mk_tac (fun ps ->
+    do_log ps f;
+    Success ((), ps))
 
 let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
@@ -194,7 +198,7 @@ let trytac_exn (t : tac 'a) : tac (option 'a) =
     try run (trytac t) ps
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) ->
-           log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
+           do_log ps (fun () -> BU.print1 "trytac_exn error: (%s)" (Errors.rendermsg msg));
            Success (None, ps))
 
 let rec iter_tac f l =
@@ -380,8 +384,7 @@ let wrap_err (pref:string) (t : tac 'a) : tac 'a =
   wrap_err_doc [text (pref ^ " failed")] t
 
 let mlog f (cont : unit -> tac 'a) : tac 'a =
-  let! ps = get in
-  log ps f;
+  log f;!
   cont ()
 
 let if_verbose_tac f =

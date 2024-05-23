@@ -129,9 +129,10 @@ val wrap_err_doc : pref:error_message -> tac 'a -> tac 'a
 val wrap_err : pref:string -> tac 'a -> tac 'a
 
 (* Call a (logging) function is verbose debugging is on *)
-val log : proofstate -> (unit -> unit) -> unit
+val log : (unit -> unit) -> tac unit
 
-(* As above, but as a tac<> with an implicit bind for brevity *)
+(* As above, but as a tac<> with an implicit bind for brevity (in code that does use
+monadic notation...) *)
 val mlog : (unit -> unit) -> (unit -> tac 'a) -> tac 'a
 
 val if_verbose_tac: (unit -> tac unit) -> tac unit
