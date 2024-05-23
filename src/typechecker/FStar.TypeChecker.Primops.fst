@@ -125,8 +125,10 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.MachineInts.ops
   @ Primops.Errors.Msg.ops
   @ Primops.Range.ops
+  @ Primops.Real.ops
 
 let env_dependent_ops (env:Env.env_t) = Primops.Eq.dec_eq_ops env
 
 let simplification_ops_list (env:Env.env_t) : list primitive_step =
   Primops.Eq.prop_eq_ops env
+  @ Primops.Real.simplify_ops
