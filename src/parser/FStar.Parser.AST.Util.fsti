@@ -37,11 +37,18 @@ type error_message = {
    range: FStar.Compiler.Range.range;
 }
 
-type extension_parser = 
-   open_namespaces_and_abbreviations ->
-   contents:string ->
-   p:FStar.Compiler.Range.range ->
-   either error_message decl
+type extension_parser = {
+  parse_decl_name:
+    (contents:string ->
+     FStar.Compiler.Range.range ->
+     either error_message FStar.Ident.ident);
+
+  parse_decl:
+   (open_namespaces_and_abbreviations ->
+    contents:string ->
+    p:FStar.Compiler.Range.range ->
+    either error_message decl)
+}
 
 val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
 val lookup_extension_parser (extension_name:string) : option extension_parser

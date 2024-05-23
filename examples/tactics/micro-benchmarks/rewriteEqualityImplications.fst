@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 (* Here's the incantation I use to check this file: *)
-(* $ fstar rewriteEqualityImplications.fst --debug RewriteEqualityImplications --debug_level Low | grep "\(Got goal\)\|Checking top-level decl let" *)
+(* $ fstar rewriteEqualityImplications.fst --debug Low | grep "\(Got goal\)\|Checking top-level decl let" *)
 (* Notice the "Got goal" output, in particular---that's the result of preprocessing the VC for each top-level term. *)
 (* Each term results in 0 or more queries that get sent to Z3 *)
 module RewriteEqualityImplications

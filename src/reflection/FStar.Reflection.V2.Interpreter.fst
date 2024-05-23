@@ -163,6 +163,10 @@ let reflection_primops : list PO.primitive_step = [
     #NRE.e_namedv #NRE.e_namedv #_
     RB.compare_namedv;
 
+  mk2 "lookup_attr_ses"
+    #RE.e_term
+    RB.lookup_attr_ses;
+
   mk2 "lookup_attr"
     #RE.e_term 
     RB.lookup_attr;

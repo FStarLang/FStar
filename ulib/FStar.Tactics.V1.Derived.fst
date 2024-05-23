@@ -137,8 +137,7 @@ let qed () : Tac unit =
     | _ -> fail "qed: not done!"
 
 (** [debug str] is similar to [print str], but will only print the message
-if the [--debug] option was given for the current module AND
-[--debug_level Tac] is on. *)
+if [--debug Tac] is on. *)
 let debug (m:string) : Tac unit =
     if debugging () then print m
 

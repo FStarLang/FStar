@@ -156,8 +156,7 @@ let qed () : Tac unit =
     | _ -> fail "qed: not done!"
 
 (** [debug str] is similar to [print str], but will only print the message
-if the [--debug] option was given for the current module AND
-[--debug_level Tac] is on. *)
+if [--debug Tac] is on. *)
 let debug (m:string) : Tac unit =
     if debugging () then print m
 
@@ -942,3 +941,7 @@ let smt_sync' (fuel ifuel : nat) : Tac unit =
                           ; initial_ifuel = ifuel; max_ifuel = ifuel }
     in
     t_smt_sync vcfg'
+
+(* t_check_equiv wrappers. *)
+let check_equiv       g t0 t1 = t_check_equiv true true g t0 t1
+let check_equiv_nosmt g t0 t1 = t_check_equiv false false g t0 t1

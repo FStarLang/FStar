@@ -23,7 +23,7 @@ To see more debug output related to the DMFF elaboration and star
 transformations:
 
 ```
-fstar.exe --trace_error --debug_level ED --debug FStar.DM4F.IntST FStar.DM4F.IntST.fst --prn --print_implicits --print_universes --print_bound_var_types
+fstar.exe --trace_error --debug ED FStar.DM4F.IntST.fst --prn --print_implicits --print_universes --print_bound_var_types
 ```
 
 Current status:

@@ -11,7 +11,7 @@ let (__proj__Not_a_wp_implication__item__uu___ : Prims.exn -> Prims.string) =
   fun projectee -> match projectee with | Not_a_wp_implication uu___ -> uu___
 let (sort_labels :
   (FStar_SMTEncoding_Term.error_label * Prims.bool) Prims.list ->
-    ((FStar_SMTEncoding_Term.fv * Prims.string *
+    ((FStar_SMTEncoding_Term.fv * FStar_Errors_Msg.error_message *
       FStar_Compiler_Range_Type.range) * Prims.bool) Prims.list)
   =
   fun l ->
@@ -23,7 +23,7 @@ let (sort_labels :
                -> FStar_Compiler_Range_Ops.compare r1 r2) l
 let (remove_dups :
   labels ->
-    (FStar_SMTEncoding_Term.fv * Prims.string *
+    (FStar_SMTEncoding_Term.fv * FStar_Errors_Msg.error_message *
       FStar_Compiler_Range_Type.range) Prims.list)
   =
   fun l ->
@@ -40,7 +40,7 @@ type ranges =
 let (__ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (fresh_label :
-  Prims.string ->
+  FStar_Errors_Msg.error_message ->
     FStar_Compiler_Range_Type.range ->
       FStar_SMTEncoding_Term.term -> (label * FStar_SMTEncoding_Term.term))
   =
@@ -104,17 +104,23 @@ let (label_goals :
           FStar_Compiler_Util.for_some is_guard_free (conjuncts lhs) in
         let uu___ =
           match use_env_msg with
-          | FStar_Pervasives_Native.None -> (false, "")
+          | FStar_Pervasives_Native.None -> (false, FStar_Pprint.empty)
           | FStar_Pervasives_Native.Some f ->
-              let uu___1 = f () in (true, uu___1) in
+              let uu___1 =
+                let uu___2 = f () in FStar_Pprint.doc_of_string uu___2 in
+              (true, uu___1) in
         match uu___ with
         | (flag, msg_prefix) ->
             let fresh_label1 msg1 ropt rng t =
               let msg2 =
                 if flag
                 then
-                  Prims.strcat "Failed to verify implicit argument: "
-                    (Prims.strcat msg_prefix (Prims.strcat " :: " msg1))
+                  let uu___1 =
+                    let uu___2 =
+                      FStar_Errors_Msg.text
+                        "Failed to verify implicit argument: " in
+                    FStar_Pprint.op_Hat_Hat uu___2 msg_prefix in
+                  uu___1 :: msg1
                 else msg1 in
               let rng1 =
                 match ropt with
@@ -138,8 +144,9 @@ let (label_goals :
               | FStar_SMTEncoding_Term.Real uu___1 -> (labels1, q1)
               | FStar_SMTEncoding_Term.LblPos uu___1 ->
                   FStar_Compiler_Effect.failwith "Impossible"
-              | FStar_SMTEncoding_Term.Labeled
-                  (arg, "Could not prove post-condition", label_range) ->
+              | FStar_SMTEncoding_Term.Labeled (arg, d::[], label_range) when
+                  let uu___1 = FStar_Errors_Msg.renderdoc d in
+                  uu___1 = "Could not prove post-condition" ->
                   let fallback debug_msg =
                     aux default_msg
                       (FStar_Pervasives_Native.Some label_range)
@@ -233,8 +240,10 @@ let (label_goals :
                                                       if uu___7
                                                       then
                                                         let uu___8 =
-                                                          aux
-                                                            "Could not prove post-condition"
+                                                          let uu___9 =
+                                                            FStar_Errors_Msg.mkmsg
+                                                              "Could not prove post-condition" in
+                                                          aux uu___9
                                                             FStar_Pervasives_Native.None
                                                             (FStar_Pervasives_Native.Some
                                                                post_name)
@@ -744,8 +753,9 @@ let (label_goals :
                            q1.FStar_SMTEncoding_Term.rng in
                        (labels2, uu___2)) in
             (FStar_Compiler_Effect.op_Colon_Equals __ctr Prims.int_zero;
-             aux "Assertion failed" FStar_Pervasives_Native.None
-               FStar_Pervasives_Native.None [] q)
+             (let uu___2 = FStar_Errors_Msg.mkmsg "Assertion failed" in
+              aux uu___2 FStar_Pervasives_Native.None
+                FStar_Pervasives_Native.None [] q))
 let (detail_errors :
   Prims.bool ->
     FStar_TypeChecker_Env.env ->
@@ -785,21 +795,32 @@ let (detail_errors :
                 else
                   if hint_replay
                   then
-                    FStar_Errors.log_issue r
-                      (FStar_Errors_Codes.Warning_HintFailedToReplayProof,
-                        (Prims.strcat
-                           "Hint failed to replay this sub-proof: " msg1))
+                    (let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           FStar_Errors_Msg.text
+                             "Hint failed to replay this sub-proof" in
+                         uu___5 :: msg1 in
+                       (FStar_Errors_Codes.Warning_HintFailedToReplayProof,
+                         uu___4) in
+                     FStar_Errors.log_issue_doc r uu___3)
                   else
                     (let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           FStar_Compiler_Range_Ops.string_of_range r in
-                         FStar_Compiler_Util.format2
-                           "XX: proof obligation at %s failed\n\t%s\n" uu___6
-                           msg1 in
+                           let uu___7 =
+                             let uu___8 =
+                               let uu___9 =
+                                 FStar_Class_Show.show
+                                   FStar_Compiler_Range_Ops.showable_range r in
+                               FStar_Compiler_Util.format1
+                                 "XX: proof obligation at %s failed." uu___9 in
+                             FStar_Errors_Msg.text uu___8 in
+                           [uu___7] in
+                         FStar_Compiler_List.op_At uu___6 msg1 in
                        (FStar_Errors_Codes.Error_ProofObligationFailed,
                          uu___5) in
-                     FStar_Errors.log_issue r uu___4) in
+                     FStar_Errors.log_issue_doc r uu___4) in
           let elim labs =
             FStar_Compiler_List.map
               (fun uu___ ->

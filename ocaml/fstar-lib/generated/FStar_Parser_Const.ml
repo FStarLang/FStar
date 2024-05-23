@@ -259,6 +259,8 @@ let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
 let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
 let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (mk_range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "mk_range"]
+let (join_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "join_range"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]

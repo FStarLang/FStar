@@ -1,6 +1,9 @@
 >> Got issues: [
 * Error 19 at TestHasEq.fst(58,10-58,11):
-  - Failed to prove that the type 'TestHasEq.t3' supports decidable equality because of this argument; add either the 'noeq' or 'unopteq' qualifier
+  - Failed to prove that the type
+    'TestHasEq.t3'
+    supports decidable equality because of this argument.
+  - Add either the 'noeq' or 'unopteq' qualifier
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestHasEq.fst(57,0-58,19)
@@ -8,7 +11,8 @@
 >>]
 >> Got issues: [
 * Error 19 at TestHasEq.fst(84,10-84,70):
-  - Subtyping check failed; expected type Prims.eqtype; got type Type0
+  - Subtyping check failed
+  - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also TestHasEq.fst(84,12-84,22)

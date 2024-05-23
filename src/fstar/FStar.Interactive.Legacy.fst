@@ -127,7 +127,7 @@ let the_interactive_state = {
 let rec read_chunk () =
   let s = the_interactive_state in
   let log : string -> unit =
-    if Options.debug_any() then
+    if Debug.any() then
       let transcript =
         match !s.log with
         | Some transcript -> transcript

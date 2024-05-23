@@ -31,6 +31,8 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
+let dbg_PartialApp = Debug.get_toggle "PartialApp"
+
 exception Inner_let_rec of list (string * Range.range) //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
@@ -305,7 +307,7 @@ let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
     | Some fvb ->
-      if TcEnv.debug env.tcenv <| Options.Other "PartialApp"
+      if !dbg_PartialApp
       then BU.print2 "Looked up %s found\n%s\n"
              (Ident.string_of_lid l)
              (fvb_to_string fvb);

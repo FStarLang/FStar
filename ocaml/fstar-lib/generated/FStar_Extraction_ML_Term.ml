@@ -1,4 +1,8 @@
 open Prims
+let (dbg_Extraction : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Extraction"
+let (dbg_ExtractionNorm : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "ExtractionNorm"
 exception Un_extractable 
 let (uu___is_Un_extractable : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -108,12 +112,12 @@ let err_value_restriction :
           uu___2 uu___3 in
       (FStar_Errors_Codes.Fatal_ValueRestriction, uu___1) in
     fail t.FStar_Syntax_Syntax.pos uu___
-let err_unexpected_eff :
-  'uuuuu .
-    FStar_Extraction_ML_UEnv.uenv ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Extraction_ML_Syntax.mlty ->
-          FStar_Extraction_ML_Syntax.e_tag -> 'uuuuu -> unit
+let (err_unexpected_eff :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Extraction_ML_Syntax.mlty ->
+        FStar_Extraction_ML_Syntax.e_tag ->
+          FStar_Extraction_ML_Syntax.e_tag -> unit)
   =
   fun env ->
     fun t ->
@@ -153,7 +157,7 @@ let err_unexpected_eff :
                       let uu___7 = FStar_Errors_Msg.text "got effect" in
                       let uu___8 =
                         let uu___9 =
-                          FStar_Extraction_ML_Util.eff_to_string f0 in
+                          FStar_Extraction_ML_Util.eff_to_string f1 in
                         FStar_Pprint.arbitrary_string uu___9 in
                       FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
                         uu___7 uu___8 in
@@ -549,15 +553,13 @@ let (is_constructor : FStar_Syntax_Syntax.term -> Prims.bool) =
     match uu___ with
     | FStar_Syntax_Syntax.Tm_fvar
         { FStar_Syntax_Syntax.fv_name = uu___1;
-          FStar_Syntax_Syntax.fv_delta = uu___2;
           FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
             (FStar_Syntax_Syntax.Data_ctor);_}
         -> true
     | FStar_Syntax_Syntax.Tm_fvar
         { FStar_Syntax_Syntax.fv_name = uu___1;
-          FStar_Syntax_Syntax.fv_delta = uu___2;
           FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
-            (FStar_Syntax_Syntax.Record_ctor uu___3);_}
+            (FStar_Syntax_Syntax.Record_ctor uu___2);_}
         -> true
     | uu___1 -> false
 let rec (is_fstar_value : FStar_Syntax_Syntax.term -> Prims.bool) =
@@ -3947,11 +3949,10 @@ and (term_as_mlexpr' :
                                     lb.FStar_Syntax_Syntax.lbdef) uu___3
                                "FStar.Extraction.ML.Term.normalize_lb_def" in
                            let uu___2 =
-                             (FStar_TypeChecker_Env.debug tcenv
-                                (FStar_Options.Other "Extraction"))
+                             (FStar_Compiler_Effect.op_Bang dbg_Extraction)
                                ||
-                               (FStar_TypeChecker_Env.debug tcenv
-                                  (FStar_Options.Other "ExtractNorm")) in
+                               (FStar_Compiler_Effect.op_Bang
+                                  dbg_ExtractionNorm) in
                            if uu___2
                            then
                              ((let uu___4 =

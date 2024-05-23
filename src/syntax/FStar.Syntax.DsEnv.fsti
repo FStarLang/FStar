@@ -20,6 +20,7 @@ open FStar.Compiler.Effect
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Util
+open FStar.Compiler.Effect
 open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Syntax.Util
@@ -110,11 +111,10 @@ val lookup_letbinding_quals_and_attrs: env -> lident -> list qualifier * list at
 val resolve_module_name: env:env -> lid:lident -> honor_ns:bool -> option lident
 val resolve_to_fully_qualified_name : env:env -> l:lident -> option lident
 val fv_qual_of_se : sigelt -> option fv_qual
-val delta_depth_of_declaration: lident -> list qualifier -> delta_depth
 
 val push_bv': env -> ident -> env * bv * used_marker
 val push_bv: env -> ident -> env * bv
-val push_top_level_rec_binding: env -> ident -> S.delta_depth -> env * ref bool
+val push_top_level_rec_binding: env -> ident -> env * ref bool
 val push_sigelt: env -> sigelt -> env
 val push_namespace: env -> lident -> env
 val push_include: env -> lident -> env

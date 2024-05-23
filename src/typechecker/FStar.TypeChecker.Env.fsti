@@ -36,7 +36,7 @@ type step =
   | ZetaFull        //fixed points, even under blocked matches
   | Exclude of step //the first three kinds are included by default, unless Excluded explicity
   | Weak            //Do not descend into binders
-  | HNF             //Only produce a head normal form
+  | HNF             //Only produce a head normal form: Do not descend into function arguments or into binder types
   | Primops         //reduce primitive operators like +, -, *, /, etc.
   | Eager_unfolding
   | Inlining
@@ -289,7 +289,6 @@ val snapshot : env -> string -> (tcenv_depth_t * env)
 val rollback : solver_t -> string -> option tcenv_depth_t -> env
 
 (* Checking the per-module debug level and position info *)
-val debug          : env -> Options.debug_level_t -> bool
 val current_module : env -> lident
 val set_range      : env -> Range.range -> env
 val get_range      : env -> Range.range
@@ -344,7 +343,8 @@ val is_irreducible         : env -> lident -> bool
 val is_type_constructor    : env -> lident -> bool
 val num_inductive_ty_params: env -> lident -> option int
 val num_inductive_uniform_ty_params: env -> lident -> option int
-val delta_depth_of_qninfo  : fv -> qninfo -> option delta_depth
+val num_datacon_non_injective_ty_params  : env -> lident -> option int
+val delta_depth_of_qninfo  : env -> fv -> qninfo -> delta_depth
 val delta_depth_of_fv      : env -> fv -> delta_depth
 
 (* Universe instantiation *)
@@ -405,8 +405,8 @@ val bound_vars   : env -> list bv
 val all_binders  : env -> binders
 val modules      : env -> list modul
 val uvars_in_env : env -> uvars
-val univ_vars    : env -> Set.set universe_uvar
-val univnames    : env -> Set.set univ_name
+val univ_vars    : env -> FlatSet.t universe_uvar
+val univnames    : env -> FlatSet.t univ_name
 val lidents      : env -> list lident
 
 (* operations on monads *)
@@ -456,7 +456,7 @@ val set_proof_ns    : proof_namespace -> env -> env
 val string_of_proof_ns : env -> string
 
 (* Check that all free variables of the term are defined in the environment *)
-val unbound_vars    : env -> term -> Set.set bv
+val unbound_vars    : env -> term -> FlatSet.t bv
 val closed          : env -> term -> bool
 val closed'         : term -> bool
 
@@ -546,3 +546,6 @@ instance val hasNames_lcomp   : hasNames lcomp
 instance val pretty_lcomp     : FStar.Class.PP.pretty lcomp
 instance val hasNames_guard   : hasNames guard_t
 instance val pretty_guard     : FStar.Class.PP.pretty guard_t
+
+val fv_delta_depth : env -> fv -> delta_depth
+val delta_depth_of_term : env -> term -> delta_depth

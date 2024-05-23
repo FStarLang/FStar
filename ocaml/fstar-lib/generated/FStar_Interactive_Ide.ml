@@ -1,4 +1,6 @@
 open Prims
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "IDE"
 let with_captured_errors' :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
@@ -150,9 +152,7 @@ let (run_repl_ld_transactions :
     fun tasks ->
       fun progress_callback ->
         let debug verb task =
-          let uu___ =
-            FStar_Options.debug_at_level_no_module
-              (FStar_Options.Other "IDE") in
+          let uu___ = FStar_Compiler_Effect.op_Bang dbg in
           if uu___
           then
             let uu___1 = FStar_Interactive_Ide_Types.string_of_repl_task task in
@@ -1836,8 +1836,7 @@ let (run_push_with_deps :
   =
   fun st ->
     fun query ->
-      (let uu___1 =
-         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
        if uu___1
        then FStar_Compiler_Util.print_string "Reloading dependencies"
        else ());
@@ -2444,7 +2443,7 @@ type search_candidate =
       FStar_Compiler_Effect.ref
     ;
   sc_fvars:
-    FStar_Ident.lid FStar_Compiler_Set.t FStar_Pervasives_Native.option
+    FStar_Ident.lid FStar_Compiler_RBSet.t FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref
     }
 let (__proj__Mksearch_candidate__item__sc_lid :
@@ -2460,7 +2459,7 @@ let (__proj__Mksearch_candidate__item__sc_typ :
     match projectee with | { sc_lid; sc_typ; sc_fvars;_} -> sc_typ
 let (__proj__Mksearch_candidate__item__sc_fvars :
   search_candidate ->
-    FStar_Ident.lid FStar_Compiler_Set.t FStar_Pervasives_Native.option
+    FStar_Ident.lid FStar_Compiler_RBSet.t FStar_Pervasives_Native.option
       FStar_Compiler_Effect.ref)
   =
   fun projectee ->
@@ -2490,7 +2489,7 @@ let (sc_typ :
            typ)
 let (sc_fvars :
   FStar_TypeChecker_Env.env ->
-    search_candidate -> FStar_Ident.lident FStar_Compiler_Set.set)
+    search_candidate -> FStar_Ident.lident FStar_Compiler_RBSet.t)
   =
   fun tcenv ->
     fun sc ->
@@ -2539,7 +2538,6 @@ let run_search :
   fun st ->
     fun search_str ->
       let tcenv = st.FStar_Interactive_Ide_Types.repl_env in
-      let empty_fv_set = FStar_Syntax_Syntax.new_fv_set () in
       let st_matches candidate term =
         let found =
           match term.st_term with
@@ -2548,7 +2546,10 @@ let run_search :
               FStar_Compiler_Util.contains uu___ str
           | TypeContainsLid lid ->
               let uu___ = sc_fvars tcenv candidate in
-              FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_fv lid uu___ in
+              FStar_Class_Setlike.mem ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Syntax_Syntax.ord_fv)) lid (Obj.magic uu___) in
         found <> term.st_negate in
       let parse search_str1 =
         let parse_one term =
@@ -2700,8 +2701,7 @@ let (maybe_cancel_queries :
   fun st ->
     fun l ->
       let log_cancellation l1 =
-        let uu___ =
-          FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
+        let uu___ = FStar_Compiler_Effect.op_Bang dbg in
         if uu___
         then
           FStar_Compiler_List.iter
@@ -2897,8 +2897,7 @@ and (validate_and_run_query :
       FStar_Compiler_Effect.op_Colon_Equals repl_current_qid
         (FStar_Pervasives_Native.Some
            (query1.FStar_Interactive_Ide_Types.qid));
-      (let uu___2 =
-         FStar_Options.debug_at_level_no_module (FStar_Options.Other "IDE") in
+      (let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
        if uu___2
        then
          let uu___3 = FStar_Interactive_Ide_Types.query_to_string query1 in

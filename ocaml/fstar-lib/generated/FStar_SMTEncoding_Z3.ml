@@ -145,7 +145,7 @@ let (z3_exe : unit -> Prims.string) =
            else
              (let uu___3 = inpath z3_v in
               if uu___3 then z3_v else FStar_Platform.exe "z3") in
-         (let uu___3 = FStar_Options.debug_any () in
+         (let uu___3 = FStar_Compiler_Debug.any () in
           if uu___3
           then FStar_Compiler_Util.print1 "Chosen Z3 executable: %s\n" path
           else ());
@@ -817,7 +817,7 @@ let (doZ3Exe :
                          res
                        else ru) in
                 let status =
-                  (let uu___1 = FStar_Options.debug_any () in
+                  (let uu___1 = FStar_Compiler_Debug.any () in
                    if uu___1
                    then
                      let uu___2 =

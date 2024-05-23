@@ -89,42 +89,54 @@ let copy_optionstate m = Util.smap_copy m
  *
  * No stack should ever be empty! Any of these failwiths should never be
  * triggered externally. IOW, the API should protect this invariant.
+ *
+ * We also keep a snapshot of the Debug module's state.
  *)
-let fstar_options : ref (list (list optionstate)) = Util.mk_ref []
+let fstar_options : ref (list (list (Debug.saved_state & optionstate))) = Util.mk_ref []
 
-let internal_peek () = List.hd (List.hd !fstar_options)
+let internal_peek () = snd <| List.hd (List.hd !fstar_options)
 let peek () = copy_optionstate (internal_peek())
 let pop  () = // already signal-atomic
-    match !fstar_options with
-    | []
-    | [_] -> failwith "TOO MANY POPS!"
-    | _::tl -> fstar_options := tl
+  match !fstar_options with
+  | []
+  | [_] -> failwith "TOO MANY POPS!"
+  | _::tl ->
+    fstar_options := tl
+
 let push () = // already signal-atomic
-    fstar_options := List.map copy_optionstate (List.hd !fstar_options) :: !fstar_options
+  let new_st =
+    List.hd !fstar_options |>
+    List.map (fun (dbg, opts) -> (dbg, copy_optionstate opts))
+  in
+  fstar_options := new_st :: !fstar_options
 
 let internal_pop () =
-    let curstack = List.hd !fstar_options in
-    match curstack with
-    | [] -> failwith "impossible: empty current option stack"
-    | [_] -> false
-    | _::tl -> (fstar_options := tl :: List.tl !fstar_options; true)
+  let curstack = List.hd !fstar_options in
+  match curstack with
+  | [] -> failwith "impossible: empty current option stack"
+  | [_] -> false
+  | _::tl ->
+    fstar_options := tl :: List.tl !fstar_options;
+    Debug.restore (fst (List.hd tl));
+    true
 
 let internal_push () =
-    let curstack = List.hd !fstar_options in
-    let stack' = copy_optionstate (List.hd curstack) :: curstack in
-    fstar_options := stack' :: List.tl !fstar_options
+  let curstack = List.hd !fstar_options in
+  let stack' = (Debug.snapshot (), copy_optionstate (snd <| List.hd curstack)) :: curstack in
+  fstar_options := stack' :: List.tl !fstar_options
 
 let set o =
-    match !fstar_options with
-    | [] -> failwith "set on empty option stack"
-    | []::_ -> failwith "set on empty current option stack"
-    | (_::tl)::os -> fstar_options := ((o::tl)::os)
+ match !fstar_options with
+ | [] -> failwith "set on empty option stack"
+ | []::_ -> failwith "set on empty current option stack"
+ | ((dbg, _)::tl)::os ->
+   fstar_options := (((dbg, o)::tl)::os)
 
 let snapshot () = Common.snapshot push fstar_options ()
 let rollback depth = Common.rollback pop fstar_options depth
 
 let set_option k v =
-  let map = internal_peek() in
+  let map : optionstate = internal_peek() in
   if k = "report_assumes"
   then match Util.smap_try_find map k with
        | Some (String "error") ->
@@ -153,9 +165,10 @@ let defaults =
       ("cmi"                          , Bool false);
       ("codegen"                      , Unset);
       ("codegen-lib"                  , List []);
-      ("debug"                        , List []);
-      ("debug_level"                  , List []);
       ("defensive"                    , String "no");
+      ("debug"                        , List []);
+      ("debug_all"                    , Bool false);
+      ("debug_all_modules"            , Bool false);
       ("dep"                          , Unset);
       ("detail_errors"                , Bool false);
       ("detail_hint_replay"           , Bool false);
@@ -281,7 +294,7 @@ let init () =
 
 let clear () =
    let o = Util.smap_create 50 in
-   fstar_options := [[o]];                               //clear and reset the options stack
+   fstar_options := [[(Debug.snapshot (), o)]];                               //clear and reset the options stack
    init()
 
 let _run = clear()
@@ -347,8 +360,6 @@ let get_print_cache_version     ()      = lookup_opt "print_cache_version"      
 let get_cmi                     ()      = lookup_opt "cmi"                      as_bool
 let get_codegen                 ()      = lookup_opt "codegen"                  (as_option as_string)
 let get_codegen_lib             ()      = lookup_opt "codegen-lib"              (as_list as_string)
-let get_debug                   ()      = lookup_opt "debug"                    as_comma_string_list
-let get_debug_level             ()      = lookup_opt "debug_level"              as_comma_string_list
 let get_defensive               ()      = lookup_opt "defensive"                as_string
 let get_dep                     ()      = lookup_opt "dep"                      (as_option as_string)
 let get_detail_errors           ()      = lookup_opt "detail_errors"            as_bool
@@ -460,20 +471,6 @@ let get_profile                 ()      = lookup_opt "profile"                  
 let get_profile_group_by_decl   ()      = lookup_opt "profile_group_by_decl"    as_bool
 let get_profile_component       ()      = lookup_opt "profile_component"        (as_option (as_list as_string))
 
-let dlevel = function
-   | "Low" -> Low
-   | "Medium" -> Medium
-   | "High" -> High
-   | "Extreme" -> Extreme
-   | s -> Other s
-let one_debug_level_geq l1 l2 = match l1 with
-   | Other _
-   | Low -> l1 = l2
-   | Medium -> (l2 = Low || l2 = Medium)
-   | High -> (l2 = Low || l2 = Medium || l2 = High)
-   | Extreme -> (l2 = Low || l2 = Medium || l2 = High || l2 = Extreme)
-let debug_level_geq l2 = get_debug_level() |> Util.for_some (fun l1 -> one_debug_level_geq (dlevel l1) l2)
-
 // Note: the "ulib/fstar" is for the case where package is installed in the
 // standard "unix" way (e.g. opam) and the lib directory is $PREFIX/lib/fstar
 let universe_include_path_base_dirs =
@@ -493,6 +490,10 @@ let _commit = Util.mk_ref ""
 let display_version () =
   Util.print_string (Util.format5 "F* %s\nplatform=%s\ncompiler=%s\ndate=%s\ncommit=%s\n"
                                   !_version !_platform !_compiler !_date !_commit)
+
+let display_debug_keys () =
+  let keys = Debug.list_all_toggles () in
+  keys |> List.sortWith String.compare |> List.iter (fun s -> Util.print_string (s ^ "\n"))
 
 let display_usage_aux specs =
   let open FStar.Pprint in
@@ -737,15 +738,32 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     Accumulated (SimpleStr "namespace"),
     text "External runtime library (i.e. M.N.x extracts to M.N.X instead of M_N.x)");
 
-  ( noshort,
+  ( 'd',
     "debug",
-    Accumulated (SimpleStr "module_name"),
-    text "Print lots of debugging information while checking module");
+    PostProcessed (
+      (fun o ->
+        let keys = as_comma_string_list o in
+        Debug.enable_toggles keys;
+        o), Accumulated (SimpleStr "debug toggles")),
+    text "Debug toggles (comma-separated list of debug keys)");
 
   ( noshort,
-    "debug_level",
-    Accumulated (OpenEnumStr (["Low"; "Medium"; "High"; "Extreme"], "...")),
-    text "Control the verbosity of debugging info");
+    "debug_all",
+    PostProcessed (
+      (fun o ->
+        match o with
+        | Bool true ->
+          Debug.set_debug_all ();
+          o
+        | _ -> failwith "?"
+        ), Const (Bool true)),
+    text "Enable all debug toggles. WARNING: this will cause a lot of output!");
+
+  ( noshort,
+    "debug_all_modules",
+    Const (Bool true),
+    text "Enable to make the effect of --debug apply to every module processed by the compiler, \
+          including dependencies.");
 
   ( noshort,
     "defensive",
@@ -1246,7 +1264,7 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     Const (Bool true),
     text "Print the time it takes to verify each top-level definition. \
           This is just an alias for an invocation of the profiler, so it may not work well if combined with --profile. \
-          In particular, it implies --profile_group_by_decls.");
+          In particular, it implies --profile_group_by_decl.");
 
   ( noshort,
     "trace_error",
@@ -1429,7 +1447,13 @@ let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.d
     "help",
      WithSideEffect ((fun _ -> display_usage_aux (specs warn_unsafe); exit 0),
                      (Const (Bool true))),
-    text "Display this information")
+    text "Display this information");
+
+  ( noshort,
+    "list_debug_keys",
+     WithSideEffect ((fun _ -> display_debug_keys(); exit 0),
+                     (Const (Bool true))),
+    text "List all debug keys and exit");
   ]
 
 and specs (warn_unsafe:bool) : list (FStar.Getopt.opt & Pprint.document) =
@@ -1449,7 +1473,8 @@ let settable = function
     | "compat_pre_typed_indexed_effects"
     | "disallow_unification_guards"
     | "debug"
-    | "debug_level"
+    | "debug_all"
+    | "debug_all_modules"
     | "defensive"
     | "detail_errors"
     | "detail_hint_replay"
@@ -1804,13 +1829,8 @@ let codegen                      () =
                  (fun s -> parse_codegen s |> must)
 
 let codegen_libs                 () = get_codegen_lib () |> List.map (fun x -> Util.split x ".")
-let debug_any                    () = get_debug () <> []
 
-let debug_module        modul       = (get_debug () |> List.existsb (module_name_eq modul))
-let debug_at_level_no_module level  = debug_level_geq level
-let debug_at_level      modul level = debug_module modul && debug_at_level_no_module level
-
-let profile_group_by_decls       () = get_profile_group_by_decl ()
+let profile_group_by_decl        () = get_profile_group_by_decl ()
 let defensive                    () = get_defensive () <> "no"
 let defensive_error              () = get_defensive () = "error"
 let defensive_abort              () = get_defensive () = "abort"
@@ -1943,6 +1963,10 @@ let use_nbe                      () = get_use_nbe                     ()
 let use_nbe_for_extraction       () = get_use_nbe_for_extraction      ()
 let trivial_pre_for_unannotated_effectful_fns
                                  () = get_trivial_pre_for_unannotated_effectful_fns ()
+
+let debug_keys                   () = lookup_opt "debug" as_comma_string_list
+let debug_all                    () = lookup_opt "debug_all" as_bool
+let debug_all_modules            () = lookup_opt "debug_all_modules" as_bool
 
 let with_saved_options f =
   // take some care to not mess up the stack on errors

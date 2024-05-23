@@ -11,14 +11,14 @@ val r_b (x:a) (y z:b x) : Type0
 
 let dsnd #a (#b: a -> Type) (x: dtuple2 a b) : b (dfst x) = dsnd x
 
-// #push-options "--debug CoreEqualityGuard --debug_level SMTQuery,Rel"
+// #push-options "--debug SMTQuery,Rel"
 // let test (t1 t2 : dtuple2 a b)
 //          (p: squash (dfst t1 == dfst t2))
 //   : b (dfst t1)
 //   = dsnd t2
   
 
-#push-options "--debug CoreEqualityGuard --debug_level Core"
+#push-options "--debug Core"
 
 let test (t1 t2 : dtuple2 a b)
          (p: (dfst t1 == dfst t2 /\

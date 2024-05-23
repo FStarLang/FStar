@@ -377,18 +377,18 @@ let on_sub_action #m {|d : lvm m |} (a : action) : m action =
 
 let rec on_sub_sigelt' #m {|d : lvm m |} (se : sigelt') : m sigelt' =
   match se with
-  | Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds} ->
+  | Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds; injective_type_params } ->
     let! params = params |> mapM f_binder in
     let! t = t |> f_term in
-    return <| Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds}
+    return <| Sig_inductive_typ {lid; us; params; num_uniform_params; t; mutuals; ds; injective_type_params }
 
   | Sig_bundle {ses; lids} ->
     let! ses = ses |> mapM on_sub_sigelt in
     return <| Sig_bundle {ses; lids}
 
-  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals} ->
+  | Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params } ->
     let! t = t |> f_term in
-    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals}
+    return <| Sig_datacon {lid; us; t; ty_lid; num_ty_params; mutuals; injective_type_params }
 
   | Sig_declare_typ {lid; us; t} ->
     let! t = t |> f_term in

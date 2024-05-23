@@ -313,7 +313,7 @@ let run_full_buffer (st:repl_state)
               run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
           in
           if request_type <> Cache then log_syntax_issues err_opt;
-          if Options.debug_any()
+          if Debug.any()
           then (
             BU.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))

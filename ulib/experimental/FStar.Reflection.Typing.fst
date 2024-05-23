@@ -53,6 +53,11 @@ let pack_inspect_fv = R.pack_inspect_fv
 let inspect_pack_universe = R.inspect_pack_universe
 let pack_inspect_universe = R.pack_inspect_universe
 
+let inspect_pack_lb = R.inspect_pack_lb
+let pack_inspect_lb = R.pack_inspect_lb
+
+let inspect_pack_sigelt = R.inspect_pack_sigelt
+let pack_inspect_sigelt = R.pack_inspect_sigelt
 
 let lookup_bvar (e:env) (x:int) : option term = magic ()
 

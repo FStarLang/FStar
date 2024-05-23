@@ -58,6 +58,7 @@ type problem 'a = {                  //Try to prove: lhs rel rhs ~ guard
     reason: list string;             //why we generated this problem, for error reporting
     loc: Range.range;                 //and the source location where this arose
     rank: option rank_t;
+    logical : bool;                             //logical problems cannot unfold connectives
 }
 
 type prob =
@@ -192,7 +193,7 @@ val mk_lcomp:
 
 val lcomp_comp: lcomp -> (comp * guard_t)
 val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
-val lcomp_to_string : lcomp -> string
+val lcomp_to_string : lcomp -> string (* CAUTION! can have side effects of forcing the lcomp *)
 val lcomp_set_flags : lcomp -> list S.cflag -> lcomp
 val is_total_lcomp : lcomp -> bool
 val is_tot_or_gtot_lcomp : lcomp -> bool
@@ -204,7 +205,6 @@ val residual_comp_of_lcomp : lcomp -> residual_comp
 val lcomp_of_comp_guard : comp -> guard_t -> lcomp
 //lcomp_of_comp_guard with trivial guard
 val lcomp_of_comp : comp -> lcomp
-val simplify : debug:bool -> term -> term
 
 val check_positivity_qual (subtyping:bool) (p0 p1:option positivity_qualifier)
   : bool

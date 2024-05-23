@@ -73,12 +73,17 @@ let mix_list_lit = mix_list
 
 let hash_list (h:'a -> mm H.hash_code) (ts:list 'a) : mm H.hash_code = mix_list (List.map h ts)
 
-
 let hash_option (h:'a -> mm H.hash_code) (o:option 'a) : mm H.hash_code =
   match o with
   | None -> ret (H.of_int 1237)
   | Some o -> mix (ret (H.of_int 1249)) (h o)
 
+// hash the string.
+let hash_doc (d : Pprint.document) : mm H.hash_code =
+  of_string (Pprint.pretty_string (float_of_string "1.0") 80 d)
+
+let hash_doc_list (ds : list Pprint.document) : mm H.hash_code =
+  hash_list hash_doc ds
 
 let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a * 'b))
   : mm H.hash_code
@@ -94,7 +99,7 @@ and hash_comp c
 
 and hash_term' (t:term)
   : mm H.hash_code
-  = // if Options.debug_any ()
+  = // if Debug.any ()
     // then FStar.Compiler.Util.print1 "Hash_term %s\n" (FStar.Syntax.Print.term_to_string t);
     match (SS.compress t).n with
     | Tm_bvar bv -> mix (of_int 3) (of_int bv.index)
@@ -298,7 +303,7 @@ and hash_meta m =
   | Meta_labeled (s, r, _) ->
     mix_list_lit
       [ of_int 1031;
-        of_string s;
+        hash_doc_list s;
         of_string (Range.string_of_range r) ]
   | Meta_desugared msi ->
     mix_list_lit

@@ -193,7 +193,9 @@ let disentangle_abbrevs_from_bundle
 
           let unfold_in_sig (x: sigelt) = match x.sigel with
               | Sig_inductive_typ {lid; us=univs; params=bnd;
-                                   num_uniform_params=num_uniform; t=ty; mutuals=mut; ds=dc} ->
+                                   num_uniform_params=num_uniform;
+                                   t=ty; mutuals=mut; ds=dc;
+                                   injective_type_params } ->
                 let bnd' = inst_binders unfold_fv bnd in
                 let ty'  = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
@@ -203,9 +205,12 @@ let disentangle_abbrevs_from_bundle
                                                      num_uniform_params=num_uniform;
                                                      t=ty';
                                                      mutuals=mut';
-                                                     ds=dc} }]
+                                                     ds=dc;
+                                                     injective_type_params } }]
 
-              | Sig_datacon {lid; us=univs; t=ty; ty_lid=res; num_ty_params=npars; mutuals=mut} ->
+              | Sig_datacon {lid; us=univs; t=ty; ty_lid=res;
+                             num_ty_params=npars; mutuals=mut;
+                             injective_type_params } ->
                 let ty' = inst unfold_fv ty in
                 let mut' = filter_out_type_abbrevs mut in
                 [{ x with sigel = Sig_datacon {lid;
@@ -213,7 +218,8 @@ let disentangle_abbrevs_from_bundle
                                                t=ty';
                                                ty_lid=res;
                                                num_ty_params=npars;
-                                               mutuals=mut'} }]
+                                               mutuals=mut';
+                                               injective_type_params } }]
 
               | Sig_let _ ->
                 []

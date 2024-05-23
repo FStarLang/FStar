@@ -107,10 +107,16 @@ type maybe_set_use_range =
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type delta_depth =
-  | Delta_constant_at_level of int    //A symbol that can be unfolded n types to a term whose head is a constant, e.g., nat is (Delta_unfoldable 1) to int, level 0 is a constant
-  | Delta_equational_at_level of int  //level 0 is a symbol that may be equated to another by extensional reasoning, n > 0 can be unfolded n times to a Delta_equational_at_level 0 term
-  | Delta_abstract of delta_depth   //A symbol marked abstract whose depth is the argument d
-
+  | Delta_constant_at_level of int
+  // ^ A symbol that can be unfolded n times to a term whose head is a
+  // constant, e.g., nat is (Delta_constant_at_level 1) to int, level 0
+  // is a literal constant.
+  | Delta_equational_at_level of int
+  // ^ Level 0 is a symbol that may be equated to another by
+  // extensional reasoning, n > 0 can be unfolded n times to a
+  // Delta_equational_at_level 0 term.
+  | Delta_abstract of delta_depth
+  // ^ A symbol marked abstract whose depth is the argument d.
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type should_check_uvar =
@@ -196,7 +202,7 @@ and uvar_decoration = {
 }
 
 and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
-and uvars = Set.t ctx_uvar
+and uvars = FlatSet.t ctx_uvar
 and match_returns_ascription = binder * ascription               (* as x returns C|t *)
 and branch = pat * option term * term                           (* optional when clause in each branch *)
 and ascription = either term comp * option term * bool        (* e <: t [by tac] or e <: C [by tac] *)
@@ -321,7 +327,7 @@ and cflag =                                                      (* flags applic
 and metadata =
   | Meta_pattern       of list term * list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of string * Range.range * bool            (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_labeled       of list Pprint.document * Range.range * bool (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
   | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
@@ -356,7 +362,7 @@ and subst_elt =
    | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
    | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
    | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
-and freenames = Set.t bv
+and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
     pos:Range.range;
@@ -370,14 +376,13 @@ and bv = {
 }
 and fv = {
     fv_name :var;
-    fv_delta:option delta_depth;
     fv_qual :option fv_qual
 }
 and free_vars = {
-    free_names:list bv;
-    free_uvars:list ctx_uvar;
-    free_univs:list universe_uvar;
-    free_univ_names:list univ_name; //fifo
+    free_names      : FlatSet.t bv;
+    free_uvars      : uvars;
+    free_univs      : FlatSet.t universe_uvar;
+    free_univ_names : FlatSet.t univ_name; //fifo
 }
 
 (* Residual of a computation type after typechecking *)
@@ -656,6 +661,7 @@ type sigelt' =
       t:typ;                            //t
       mutuals:list lident;              //mutually defined types
       ds:list lident;                   //data constructors for this type
+      injective_type_params:bool        //is this type injective in its type parameters?
     }
 (* a datatype definition is a Sig_bundle of all mutually defined `Sig_inductive_typ`s and `Sig_datacon`s.
    perhaps it would be nicer to let this have a 2-level structure, e.g. list list sigelt,
@@ -673,6 +679,7 @@ type sigelt' =
       ty_lid:lident;          //the inductive type of the value this constructs
       num_ty_params:int;        //and the number of parameters of the inductive
       mutuals:list lident;    //mutually defined types
+      injective_type_params:bool   //is this type injective in its type parameters?
     }      
   | Sig_declare_typ     {
       lid:lident;
@@ -751,10 +758,6 @@ val lookup_aq : bv -> antiquotations -> term
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 val lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term))
-val new_bv_set: unit -> Set.t bv
-val new_id_set: unit -> Set.t ident
-val new_fv_set: unit -> Set.t lident
-val new_universe_names_set: unit -> Set.t univ_name
 
 val mod_name: modul -> lident
 
@@ -804,13 +807,7 @@ val teff:     term
 val is_teff:  term -> bool
 val is_type:  term -> bool
 
-val no_names:          freenames
-val no_universe_names: Set.t univ_name
-val no_fvars:          Set.t lident
-
-val freenames_of_list:    list bv -> freenames
 val freenames_of_binders: binders -> freenames
-val list_of_freenames:    freenames -> list bv
 val binders_of_freenames: freenames -> binders
 val binders_of_list:      list bv -> binders
 
@@ -840,10 +837,10 @@ val gen_bv           : string -> option Range.range -> typ -> bv
 val gen_bv'          : ident -> option Range.range -> typ -> bv
 val new_bv           : option range -> typ -> bv
 val new_univ_name    : option range -> univ_name
-val lid_and_dd_as_fv : lident -> delta_depth -> option fv_qual -> fv
+val lid_and_dd_as_fv : lident -> option fv_qual -> fv
 val lid_as_fv        : lident -> option fv_qual -> fv
 val fv_to_tm         : fv -> term
-val fvar_with_dd     : lident -> delta_depth -> option fv_qual -> term
+val fvar_with_dd     : lident -> option fv_qual -> term
 val fvar             : lident -> option fv_qual -> term
 val fv_eq            : fv -> fv -> bool
 val fv_eq_lid        : fv -> lident -> bool

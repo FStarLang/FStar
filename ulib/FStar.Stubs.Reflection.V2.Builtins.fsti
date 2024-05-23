@@ -101,6 +101,13 @@ val inspect_pack_universe (uv:universe_view) : Lemma (inspect_universe (pack_uni
 val pack_inspect_ident (u:ident) : Lemma (pack_ident (inspect_ident u) == u)
 val inspect_pack_ident (uv:ident_view) : Lemma (inspect_ident (pack_ident uv) == uv)
 
+val pack_inspect_lb (lb:letbinding) : Lemma (pack_lb (inspect_lb lb) == lb)
+val inspect_pack_lb (lbv:lb_view) : Lemma (inspect_lb (pack_lb lbv) == lbv)
+
+val pack_inspect_sigelt (se:sigelt) : Lemma ((~(Unk? (inspect_sigelt se))) ==> pack_sigelt (inspect_sigelt se) == se)
+val inspect_pack_sigelt (sev:sigelt_view { ~ (Unk? sev) }) : Lemma (inspect_sigelt (pack_sigelt sev) == sev)
+
+
 val simple_binder_defn (b:binder) :
   Lemma (binder_is_simple b <==>
           Q_Explicit? (inspect_binder b).qual /\ Nil? (inspect_binder b).attrs)
@@ -134,8 +141,18 @@ val vars_of_env           : env -> list binding
 (** Returns the current module of an environment. *)
 val moduleof              : env -> name
 
-(** Returns all top-level names marked with a given attribute.
-Used e.g. to find all typeclass instances. *)
+(** Returns all top-level sigelts marked with a given attribute. The
+criterion used is that the [attr] attribute MUST be a top-level name
+(Tv_FVar) and any sigelt that has an attribute with [attr] (possibly
+applied) is returned. The sigelt can then be inspect to find the
+arguments to the attribute, if needed.
+
+Used e.g. to find all typeclass instances, and read their functional
+dependencies. *)
+val lookup_attr_ses       : attr:term -> env -> list sigelt
+
+(** As [lookup_attr_ses], but just returns the name associated
+to the sigelts. *)
 val lookup_attr           : term -> env -> list fv
 
 (** Returns all top-level names in an environment. *)

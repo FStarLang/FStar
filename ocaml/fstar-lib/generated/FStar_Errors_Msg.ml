@@ -45,22 +45,29 @@ let (backtrace_doc : unit -> FStar_Pprint.document) =
     let uu___2 =
       FStar_Pprint.arbitrary_string (FStar_Compiler_Util.trim_string s) in
     FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2
+let (subdoc' : Prims.bool -> FStar_Pprint.document -> FStar_Pprint.document)
+  =
+  fun indent ->
+    fun d ->
+      if d = FStar_Pprint.empty
+      then FStar_Pprint.empty
+      else
+        (let uu___1 =
+           if indent
+           then FStar_Pprint.blank (Prims.of_int (2))
+           else FStar_Pprint.empty in
+         let uu___2 =
+           let uu___3 = FStar_Pprint.doc_of_string "-" in
+           let uu___4 =
+             let uu___5 = FStar_Pprint.blank Prims.int_one in
+             let uu___6 =
+               let uu___7 = FStar_Pprint.align d in
+               FStar_Pprint.op_Hat_Hat uu___7 FStar_Pprint.hardline in
+             FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
+           FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
+         FStar_Pprint.op_Hat_Hat uu___1 uu___2)
 let (subdoc : FStar_Pprint.document -> FStar_Pprint.document) =
-  fun d ->
-    if d = FStar_Pprint.empty
-    then FStar_Pprint.empty
-    else
-      (let uu___1 = FStar_Pprint.blank (Prims.of_int (2)) in
-       let uu___2 =
-         let uu___3 = FStar_Pprint.doc_of_string "-" in
-         let uu___4 =
-           let uu___5 = FStar_Pprint.blank Prims.int_one in
-           let uu___6 =
-             let uu___7 = FStar_Pprint.align d in
-             FStar_Pprint.op_Hat_Hat uu___7 FStar_Pprint.hardline in
-           FStar_Pprint.op_Hat_Hat uu___5 uu___6 in
-         FStar_Pprint.op_Hat_Hat uu___3 uu___4 in
-       FStar_Pprint.op_Hat_Hat uu___1 uu___2)
+  fun d -> subdoc' true d
 let (rendermsg : error_message -> Prims.string) =
   fun ds ->
     let uu___ =

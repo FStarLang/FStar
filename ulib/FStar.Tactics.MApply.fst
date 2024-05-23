@@ -11,18 +11,8 @@ open FStar.Tactics.V2.Derived
 open FStar.Tactics.V2.SyntaxCoercions
 
 open FStar.Tactics.Typeclasses
-
-private val push1 : (#p:Type) -> (#q:Type) ->
-                        squash (p ==> q) ->
-                        squash p ->
-                        squash q
-private let push1 #p #q f u = ()
-
-private val push1' : (#p:Type) -> (#q:Type) ->
-                         (p ==> q) ->
-                         squash p ->
-                         squash q
-private let push1' #p #q f u = ()
+let push1 #p #q f u = ()
+let push1' #p #q f u = ()
 
 (*
  * Some easier applying, which should prevent frustration
@@ -90,22 +80,7 @@ let rec apply_squash_or_lem d t =
     | _ -> fail "mapply: can't apply (2)"
     end
 
-class termable (a : Type) = {
-  to_term : a -> Tac term
-}
-
-instance termable_term : termable term = {
-  to_term = (fun t -> t);
-}
-
-instance termable_binding : termable binding = {
-  to_term = (fun b -> binding_to_term b);
-}
-
 (* `m` is for `magic` *)
+[@@plugin]
 let mapply0 (t : term) : Tac unit =
-  apply_squash_or_lem 10 t
-
-let mapply (#ty:Type) {| termable ty |} (x : ty) : Tac unit =
-  let t = to_term x in
   apply_squash_or_lem 10 t

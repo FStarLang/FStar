@@ -35,6 +35,7 @@ module Z   = FStar.BigInt
 val compare_bv            : bv -> bv -> order
 val compare_namedv        : namedv -> namedv -> order
 val lookup_typ            : Env.env -> list string -> option sigelt
+val lookup_attr_ses       : term -> Env.env -> list sigelt
 val lookup_attr           : term -> Env.env -> list fv
 val all_defs_in_env       : Env.env -> list fv
 val defs_in_module        : Env.env -> name -> list fv

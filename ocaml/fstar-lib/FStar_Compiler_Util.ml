@@ -545,7 +545,7 @@ type printer = {
 
 let default_printer =
   { printer_prinfo = (fun s -> pr "%s" s; flush stdout);
-    printer_prwarning = (fun s -> fpr stderr "%s" (colorize_cyan s); flush stdout; flush stderr);
+    printer_prwarning = (fun s -> fpr stderr "%s" (colorize_yellow s); flush stdout; flush stderr);
     printer_prerror = (fun s -> fpr stderr "%s" (colorize_red s); flush stdout; flush stderr);
     printer_prgeneric = fun label get_string get_json -> pr "%s: %s" label (get_string ())}
 

@@ -275,7 +275,7 @@ let rec (read_chunk : unit -> input_chunks) =
   fun uu___ ->
     let s = the_interactive_state in
     let log =
-      let uu___1 = FStar_Options.debug_any () in
+      let uu___1 = FStar_Compiler_Debug.any () in
       if uu___1
       then
         let transcript =

@@ -314,6 +314,7 @@ let __range_lid    = p2l ["FStar"; "Range"; "__range"]
 let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
+let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]

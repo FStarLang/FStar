@@ -56,6 +56,7 @@ val normalize_with_primitive_steps : list Primops.primitive_step -> steps -> Env
 val term_to_string:  Env.env -> term -> string
 val term_to_doc:     Env.env -> term -> Pprint.document
 val comp_to_string:  Env.env -> comp -> string
+val comp_to_doc:     Env.env -> comp -> Pprint.document
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 

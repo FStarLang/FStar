@@ -1,16 +1,23 @@
 >> Got issues: [
 * Error 34 at Coercions.fst(6,38-6,39):
-  - Computed type "Prims.int" and effect "GTot" is not compatible with the annotated type "Prims.int" effect "Tot"
+  - Computed type Prims.int
+    and effect GTot
+    is not compatible with the annotated type Prims.int
+    and effect Tot
 
 >>]
 >> Got issues: [
 * Error 34 at Coercions.fst(19,37-19,38):
-  - Computed type "'a" and effect "GTot" is not compatible with the annotated type "'a" effect "Tot"
+  - Computed type 'a
+    and effect GTot
+    is not compatible with the annotated type 'a
+    and effect Tot
 
 >>]
 >> Got issues: [
 * Error 19 at Coercions.fst(71,4-71,8):
-  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(659,18-659,24)
@@ -18,7 +25,8 @@
 >>]
 >> Got issues: [
 * Error 19 at Coercions.fst(74,49-74,57):
-  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(659,18-659,24)
@@ -26,7 +34,8 @@
 >>]
 >> Got issues: [
 * Error 19 at Coercions.fst(76,55-76,56):
-  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(659,18-659,24)
@@ -34,7 +43,8 @@
 >>]
 >> Got issues: [
 * Error 19 at Coercions.fst(78,50-78,51):
-  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(659,18-659,24)
@@ -42,7 +52,8 @@
 >>]
 >> Got issues: [
 * Error 19 at Coercions.fst(80,51-80,52):
-  - Subtyping check failed; expected type Prims.nat; got type Prims.int
+  - Subtyping check failed
+  - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also prims.fst(659,18-659,24)

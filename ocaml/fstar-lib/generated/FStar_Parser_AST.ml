@@ -1665,7 +1665,8 @@ let (string_to_op :
       | "At" ->
           FStar_Pervasives_Native.Some ("@", FStar_Pervasives_Native.None)
       | "Plus" ->
-          FStar_Pervasives_Native.Some ("+", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("+", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Minus" ->
           FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
       | "Subtraction" ->
@@ -1674,15 +1675,18 @@ let (string_to_op :
       | "Tilde" ->
           FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
       | "Slash" ->
-          FStar_Pervasives_Native.Some ("/", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("/", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Backslash" ->
           FStar_Pervasives_Native.Some ("\\", FStar_Pervasives_Native.None)
       | "Less" ->
-          FStar_Pervasives_Native.Some ("<", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("<", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Equals" ->
           FStar_Pervasives_Native.Some ("=", FStar_Pervasives_Native.None)
       | "Greater" ->
-          FStar_Pervasives_Native.Some (">", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            (">", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Underscore" ->
           FStar_Pervasives_Native.Some ("_", FStar_Pervasives_Native.None)
       | "Bar" ->

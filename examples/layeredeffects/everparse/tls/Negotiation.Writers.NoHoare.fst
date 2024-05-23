@@ -14,7 +14,7 @@ open Negotiation
 module U32 = FStar.UInt32
 module B = LowStar.Buffer
 
-#push-options "--z3rlimit 16 --query_stats"
+#push-options "--z3rlimit 16"
 
 inline_for_extraction
 noextract

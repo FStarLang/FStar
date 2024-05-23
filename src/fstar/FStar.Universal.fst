@@ -546,15 +546,16 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
     | _  ->
       let mods, mllibs, env_before = acc in
       let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
-      if not (Options.profile_group_by_decls())
+      if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
       tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env_before mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
+let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
-  if Options.debug_at_level_no_module (Options.Other "Dep") then begin
+  if !dbg_dep then begin
     FStar.Compiler.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Compiler.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);

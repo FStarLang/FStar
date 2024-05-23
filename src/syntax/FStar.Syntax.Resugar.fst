@@ -27,6 +27,7 @@ open FStar.Const
 open FStar.Compiler.List
 open FStar.Parser.AST
 open FStar.Class.Monad
+open FStar.Class.Setlike
 
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
@@ -83,7 +84,7 @@ let label s t =
   else A.mk_term (A.Labeled (t,s,true)) t.range A.Un
 
 let rec universe_to_int n u =
-  match u with
+  match Subst.compress_univ u with
     | U_succ u -> universe_to_int (n+1) u
     | _ -> (n, u)
 
@@ -97,7 +98,8 @@ let rec resugar_universe (u:S.universe) r: A.term =
       //augment `a` an Unknown level (the level is unimportant ... we should maybe remove it altogether)
       A.mk_term a r A.Un
   in
-  begin match Subst.compress_univ u with
+  let u = Subst.compress_univ u in
+  begin match u with
     | U_zero ->
       mk (A.Const(Const_int ("0", None))) r
 
@@ -409,7 +411,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
       when can_resugar_machine_integer fv ->
       resugar_machine_integer fv i t.pos
 
-    | Tm_app {hd=e; args} ->
+    | Tm_app _ ->
+      let t = U.canon_app t in
+      let Tm_app {hd=e; args} = t.n in
+      (* NB: This cannot fail since U.canon_app constructs a Tm_app. *)
+
       (* Op("=!=", args) is desugared into Op("~", Op("==") and not resugared back as "=!=" *)
       let rec last = function
             | hd :: [] -> [hd]
@@ -440,6 +446,34 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         if Options.print_implicits ()
         then args
         else filter_imp_args args in
+
+      let is_projector (t:S.term) : option (lident & ident) =
+        (* Detect projectors and resugar them as t.x instead of Mkt?.x t *)
+        match (U.un_uinst (SS.compress t)).n with
+        | Tm_fvar fv ->
+          let a = fv.fv_name.v in
+          let length = String.length (nsstr fv.fv_name.v) in
+          let s = if length=0 then string_of_lid a
+              else BU.substring_from (string_of_lid a) (length+1) in
+          if BU.starts_with s U.field_projector_prefix then
+            let rest = BU.substring_from s (String.length U.field_projector_prefix) in
+            let r = BU.split rest U.field_projector_sep in
+            begin match r with
+              | [fst; snd] ->
+                let l = lid_of_path [fst] t.pos in
+                let r = I.mk_ident (snd, t.pos) in
+                Some (l, r)
+              | _ ->
+                failwith "wrong projector format"
+            end
+          else None
+        | _ -> None
+      in
+      if Some? (is_projector e) && List.length args = 1 then
+        let (_, fi) = Some?.v (is_projector e) in
+        let arg = resugar_term' env (fst (List.hd args)) in
+        mk <| Project (arg, Ident.lid_of_ids [fi])
+      else
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args
@@ -592,7 +626,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
                         body
                       | Meta_labeled (s, r, p) ->
                         // this case can occur in typechecker when a failure is wrapped in meta_labeled
-                        [], mk (A.Labeled (body, s, p))
+                        [], mk (A.Labeled (body, Errors.Msg.rendermsg s, p))
                       | _ -> failwith "wrong pattern format for QForall/QExists"
                     in
                     pats, body
@@ -1052,9 +1086,9 @@ and resugar_binder' env (b:S.binder) r : option A.binder =
         A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
   end
 
-and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: Set.set bv) typ_opt =
+and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: FlatSet.t bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
-  let used = Set.mem v body_bv in
+  let used = mem v body_bv in
   let pat =
     mk (if used
         then A.PatVar (bv_as_unique_ident v, aqual, [])
@@ -1070,7 +1104,7 @@ and resugar_bv_as_pat env (x:S.bv) qual body_bv: option A.pattern =
    (resugar_bqual env qual)
    (fun bq -> resugar_bv_as_pat' env x bq body_bv (Some <| SS.compress x.sort))
 
-and resugar_pat' env (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
+and resugar_pat' env (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   (* We lose information when desugar PatAscribed to able to resugar it back *)
   let mk a = A.mk_pattern a p.p in
   let to_arg_qual bopt = // FIXME do (Some false) and None mean the same thing?
@@ -1081,7 +1115,7 @@ and resugar_pat' env (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
       //FIXME
              let might_be_used =
                match pattern.v with
-               | Pat_var bv -> Set.mem bv branch_bv
+               | Pat_var bv -> mem bv branch_bv
                | _ -> true in
              is_implicit && might_be_used) args) in
   let resugar_plain_pat_cons' fv args =
@@ -1502,7 +1536,7 @@ let resugar_sigelt se : option A.decl =
 let resugar_comp (c:S.comp) : A.term =
   noenv resugar_comp' c
 
-let resugar_pat (p:S.pat) (branch_bv: Set.set bv) : A.pattern =
+let resugar_pat (p:S.pat) (branch_bv: FlatSet.t bv) : A.pattern =
   noenv resugar_pat' p branch_bv
 
 let resugar_binder (b:S.binder) r : option A.binder =

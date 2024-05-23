@@ -190,7 +190,7 @@ of printing [str] on the compiler's standard output. *)
 val print : string -> Tac unit
 
 (** [debugging ()] returns true if the current module has the debug flag
-on, i.e. when [--debug MyModule --debug_level Tac] was passed in. *)
+on, i.e. when [--debug Tac] was passed in. *)
 val debugging : unit -> Tac bool
 
 (** Similar to [print], but will dump a text representation of the proofstate
@@ -383,6 +383,11 @@ val curms : unit -> Tac int
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> TacS unit
 
+(** [set_dump_failure b] controls whether the engine will dump out
+the proofstate if a tactic fails during exception. This is true by
+default, but can be disabled to get less verbosity. *)
+val set_dump_on_failure : bool -> TacS unit
+
 (** [string_to_term e s] runs the F* parser on the string [s] in the
 environment [e], and produces a term. *)
 val string_to_term : env -> string -> Tac term
@@ -484,7 +489,7 @@ val is_non_informative (g:env) (t:typ)
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (ret_t (subtyping_token g t0 t1))
 
-val check_equiv (g:env) (t0 t1:typ)
+val t_check_equiv (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : Tac (ret_t (equiv_token g t0 t1))
 
 //
@@ -571,6 +576,16 @@ val maybe_relate_after_unfolding (g:env) (t1 t2:term)
 
 val maybe_unfold_head (g:env) (t0:term)
   : Tac (ret_t (t1:term{equiv_token g t0 t1}))
+
+(** [norm_well_typed_term e steps t] will call the normalizer on the
+term [t] using the list of steps [steps], over environment [e]. It
+differs from norm_term_env in that it will not attempt to typecheck t
+(so there is an implicit well-typing precondition for t, which we are
+not strcitly requiring yet in reflection primitives) and it will also
+return a token for the equivalence between t and t'. *)
+val norm_well_typed_term
+  (g:env) (steps : list norm_step) (t:term)
+  : Tac (t':term{equiv_token g t t'})
 
 val push_open_namespace (g:env) (ns:name)
   : Tac env

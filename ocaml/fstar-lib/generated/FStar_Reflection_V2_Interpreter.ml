@@ -337,43 +337,60 @@ let (reflection_primops :
                                                             FStar_Reflection_V2_Builtins.compare_namedv in
                                                         let uu___55 =
                                                           let uu___56 =
-                                                            mk2 "lookup_attr"
+                                                            mk2
+                                                              "lookup_attr_ses"
                                                               FStar_Reflection_V2_Embeddings.e_term
                                                               FStar_Reflection_V2_Embeddings.e_env
                                                               (FStar_Syntax_Embeddings.e_list
-                                                                 FStar_Reflection_V2_Embeddings.e_fv)
+                                                                 FStar_Reflection_V2_Embeddings.e_sigelt)
                                                               FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                               FStar_Reflection_V2_NBEEmbeddings.e_env
                                                               (FStar_TypeChecker_NBETerm.e_list
-                                                                 FStar_Reflection_V2_NBEEmbeddings.e_fv)
-                                                              FStar_Reflection_V2_Builtins.lookup_attr in
+                                                                 FStar_Reflection_V2_NBEEmbeddings.e_sigelt)
+                                                              FStar_Reflection_V2_Builtins.lookup_attr_ses in
                                                           let uu___57 =
                                                             let uu___58 =
-                                                              mk1
-                                                                "all_defs_in_env"
+                                                              mk2
+                                                                "lookup_attr"
+                                                                FStar_Reflection_V2_Embeddings.e_term
                                                                 FStar_Reflection_V2_Embeddings.e_env
                                                                 (FStar_Syntax_Embeddings.e_list
                                                                    FStar_Reflection_V2_Embeddings.e_fv)
+                                                                FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                 FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                 (FStar_TypeChecker_NBETerm.e_list
                                                                    FStar_Reflection_V2_NBEEmbeddings.e_fv)
-                                                                FStar_Reflection_V2_Builtins.all_defs_in_env in
+                                                                FStar_Reflection_V2_Builtins.lookup_attr in
                                                             let uu___59 =
                                                               let uu___60 =
-                                                                mk2
-                                                                  "defs_in_module"
+                                                                mk1
+                                                                  "all_defs_in_env"
                                                                   FStar_Reflection_V2_Embeddings.e_env
-                                                                  FStar_Syntax_Embeddings.e_string_list
                                                                   (FStar_Syntax_Embeddings.e_list
                                                                     FStar_Reflection_V2_Embeddings.e_fv)
                                                                   FStar_Reflection_V2_NBEEmbeddings.e_env
-                                                                  FStar_TypeChecker_NBETerm.e_string_list
                                                                   (FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_fv)
-                                                                  FStar_Reflection_V2_Builtins.defs_in_module in
+                                                                  FStar_Reflection_V2_Builtins.all_defs_in_env in
                                                               let uu___61 =
                                                                 let uu___62 =
                                                                   mk2
+                                                                    "defs_in_module"
+                                                                    FStar_Reflection_V2_Embeddings.e_env
+                                                                    FStar_Syntax_Embeddings.e_string_list
+                                                                    (
+                                                                    FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Reflection_V2_Embeddings.e_fv)
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
+                                                                    FStar_TypeChecker_NBETerm.e_string_list
+                                                                    (
+                                                                    FStar_TypeChecker_NBETerm.e_list
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_fv)
+                                                                    FStar_Reflection_V2_Builtins.defs_in_module in
+                                                                let uu___63 =
+                                                                  let uu___64
+                                                                    =
+                                                                    mk2
                                                                     "term_eq"
                                                                     FStar_Reflection_V2_Embeddings.e_term
                                                                     FStar_Reflection_V2_Embeddings.e_term
@@ -382,8 +399,9 @@ let (reflection_primops :
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_bool
                                                                     FStar_Reflection_V2_Builtins.term_eq in
-                                                                let uu___63 =
-                                                                  let uu___64
+                                                                  let uu___65
+                                                                    =
+                                                                    let uu___66
                                                                     =
                                                                     mk1
                                                                     "moduleof"
@@ -392,9 +410,9 @@ let (reflection_primops :
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_TypeChecker_NBETerm.e_string_list
                                                                     FStar_Reflection_V2_Builtins.moduleof in
-                                                                  let uu___65
+                                                                    let uu___67
                                                                     =
-                                                                    let uu___66
+                                                                    let uu___68
                                                                     =
                                                                     mk1
                                                                     "vars_of_env"
@@ -405,9 +423,9 @@ let (reflection_primops :
                                                                     (FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_binding)
                                                                     FStar_Reflection_V2_Builtins.vars_of_env in
-                                                                    let uu___67
+                                                                    let uu___69
                                                                     =
-                                                                    let uu___68
+                                                                    let uu___70
                                                                     =
                                                                     mk2
                                                                     "lookup_typ"
@@ -420,9 +438,9 @@ let (reflection_primops :
                                                                     (FStar_TypeChecker_NBETerm.e_option
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_sigelt)
                                                                     FStar_Reflection_V2_Builtins.lookup_typ in
-                                                                    let uu___69
+                                                                    let uu___71
                                                                     =
-                                                                    let uu___70
+                                                                    let uu___72
                                                                     =
                                                                     mk1
                                                                     "env_open_modules"
@@ -433,9 +451,9 @@ let (reflection_primops :
                                                                     (FStar_TypeChecker_NBETerm.e_list
                                                                     FStar_TypeChecker_NBETerm.e_string_list)
                                                                     FStar_Reflection_V2_Builtins.env_open_modules in
-                                                                    let uu___71
+                                                                    let uu___73
                                                                     =
-                                                                    let uu___72
+                                                                    let uu___74
                                                                     =
                                                                     mk1
                                                                     "implode_qn"
@@ -444,9 +462,9 @@ let (reflection_primops :
                                                                     FStar_TypeChecker_NBETerm.e_string_list
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_Reflection_V2_Builtins.implode_qn in
-                                                                    let uu___73
+                                                                    let uu___75
                                                                     =
-                                                                    let uu___74
+                                                                    let uu___76
                                                                     =
                                                                     mk1
                                                                     "explode_qn"
@@ -455,9 +473,9 @@ let (reflection_primops :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_string_list
                                                                     FStar_Reflection_V2_Builtins.explode_qn in
-                                                                    let uu___75
+                                                                    let uu___77
                                                                     =
-                                                                    let uu___76
+                                                                    let uu___78
                                                                     =
                                                                     mk2
                                                                     "compare_string"
@@ -468,9 +486,9 @@ let (reflection_primops :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_int
                                                                     FStar_Reflection_V2_Builtins.compare_string in
-                                                                    let uu___77
+                                                                    let uu___79
                                                                     =
-                                                                    let uu___78
+                                                                    let uu___80
                                                                     =
                                                                     mk2
                                                                     "push_namedv"
@@ -481,9 +499,9 @@ let (reflection_primops :
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_namedv
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_env
                                                                     FStar_Reflection_V2_Builtins.push_namedv in
-                                                                    let uu___79
+                                                                    let uu___81
                                                                     =
-                                                                    let uu___80
+                                                                    let uu___82
                                                                     =
                                                                     mk1
                                                                     "range_of_term"
@@ -492,9 +510,9 @@ let (reflection_primops :
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_attribute
                                                                     FStar_TypeChecker_NBETerm.e_range
                                                                     FStar_Reflection_V2_Builtins.range_of_term in
-                                                                    let uu___81
+                                                                    let uu___83
                                                                     =
-                                                                    let uu___82
+                                                                    let uu___84
                                                                     =
                                                                     mk1
                                                                     "range_of_sigelt"
@@ -503,9 +521,9 @@ let (reflection_primops :
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_sigelt
                                                                     FStar_TypeChecker_NBETerm.e_range
                                                                     FStar_Reflection_V2_Builtins.range_of_sigelt in
-                                                                    let uu___83
+                                                                    let uu___85
                                                                     =
-                                                                    let uu___84
+                                                                    let uu___86
                                                                     =
                                                                     mk1
                                                                     "inspect_ident"
@@ -518,9 +536,9 @@ let (reflection_primops :
                                                                     FStar_TypeChecker_NBETerm.e_string
                                                                     FStar_TypeChecker_NBETerm.e_range)
                                                                     FStar_Reflection_V2_Builtins.inspect_ident in
-                                                                    let uu___85
+                                                                    let uu___87
                                                                     =
-                                                                    let uu___86
+                                                                    let uu___88
                                                                     =
                                                                     mk1
                                                                     "pack_ident"
@@ -533,7 +551,10 @@ let (reflection_primops :
                                                                     FStar_TypeChecker_NBETerm.e_range)
                                                                     FStar_Reflection_V2_NBEEmbeddings.e_univ_name
                                                                     FStar_Reflection_V2_Builtins.pack_ident in
-                                                                    [uu___86] in
+                                                                    [uu___88] in
+                                                                    uu___86
+                                                                    ::
+                                                                    uu___87 in
                                                                     uu___84
                                                                     ::
                                                                     uu___85 in

@@ -1,7 +1,7 @@
 open Prims
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
 let solve : 'a . 'a -> 'a = fun ev -> ev
-let (tacdbg : Prims.bool FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref false
 let embed :
   'a .
     'a FStar_Syntax_Embeddings_Base.embedding ->
@@ -777,7 +777,9 @@ let run_unembedded_tactic_on_ps :
                   FStar_Tactics_Types.local_state =
                     (ps.FStar_Tactics_Types.local_state);
                   FStar_Tactics_Types.urgency =
-                    (ps.FStar_Tactics_Types.urgency)
+                    (ps.FStar_Tactics_Types.urgency);
+                  FStar_Tactics_Types.dump_on_failure =
+                    (ps.FStar_Tactics_Types.dump_on_failure)
                 } in
               let ps2 =
                 {
@@ -909,7 +911,9 @@ let run_unembedded_tactic_on_ps :
                   FStar_Tactics_Types.local_state =
                     (ps1.FStar_Tactics_Types.local_state);
                   FStar_Tactics_Types.urgency =
-                    (ps1.FStar_Tactics_Types.urgency)
+                    (ps1.FStar_Tactics_Types.urgency);
+                  FStar_Tactics_Types.dump_on_failure =
+                    (ps1.FStar_Tactics_Types.dump_on_failure)
                 } in
               let env = ps2.FStar_Tactics_Types.main_context in
               let res =
@@ -925,11 +929,11 @@ let run_unembedded_tactic_on_ps :
                      let uu___2 = tau arg in
                      FStar_Tactics_Monad.run_safe uu___2 ps2) uu___
                   "FStar.Tactics.Interpreter.run_safe" in
-              (let uu___1 = FStar_Compiler_Effect.op_Bang tacdbg in
+              (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                if uu___1 then FStar_Compiler_Util.print_string "}\n" else ());
               (match res with
                | FStar_Tactics_Result.Success (ret, ps3) ->
-                   ((let uu___2 = FStar_Compiler_Effect.op_Bang tacdbg in
+                   ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                      if uu___2
                      then
                        FStar_Tactics_Printing.do_dump_proofstate ps3
@@ -947,7 +951,7 @@ let run_unembedded_tactic_on_ps :
                            if uu___4
                            then
                              ((let uu___6 =
-                                 FStar_Compiler_Effect.op_Bang tacdbg in
+                                 FStar_Compiler_Effect.op_Bang dbg_Tac in
                                if uu___6
                                then
                                  let uu___7 =
@@ -982,7 +986,7 @@ let run_unembedded_tactic_on_ps :
                      FStar_Errors.with_ctx
                        "While checking implicits left by a tactic"
                        (fun uu___4 ->
-                          (let uu___6 = FStar_Compiler_Effect.op_Bang tacdbg in
+                          (let uu___6 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                            if uu___6
                            then
                              let uu___7 =
@@ -1011,7 +1015,8 @@ let run_unembedded_tactic_on_ps :
                            let g1 =
                              FStar_TypeChecker_Rel.solve_deferred_constraints
                                env g in
-                           (let uu___7 = FStar_Compiler_Effect.op_Bang tacdbg in
+                           (let uu___7 =
+                              FStar_Compiler_Effect.op_Bang dbg_Tac in
                             if uu___7
                             then
                               let uu___8 =
@@ -1033,7 +1038,7 @@ let run_unembedded_tactic_on_ps :
                               FStar_TypeChecker_Rel.resolve_implicits_tac env
                                 g1 in
                             (let uu___8 =
-                               FStar_Compiler_Effect.op_Bang tacdbg in
+                               FStar_Compiler_Effect.op_Bang dbg_Tac in
                              if uu___8
                              then
                                let uu___9 =
@@ -1068,8 +1073,11 @@ let run_unembedded_tactic_on_ps :
                    FStar_Compiler_Effect.raise
                      (FStar_Errors.Err (code, msg1, ctx))
                | FStar_Tactics_Result.Failed (e, ps3) ->
-                   (FStar_Tactics_Printing.do_dump_proofstate ps3
-                      "at the time of failure";
+                   (if ps3.FStar_Tactics_Types.dump_on_failure
+                    then
+                      FStar_Tactics_Printing.do_dump_proofstate ps3
+                        "at the time of failure"
+                    else ();
                     (let texn_to_doc e1 =
                        match e1 with
                        | FStar_Tactics_Common.TacticFailure msg -> msg
@@ -1094,9 +1102,12 @@ let run_unembedded_tactic_on_ps :
                      let uu___2 =
                        let uu___3 =
                          let uu___4 =
-                           let uu___5 =
-                             FStar_Pprint.doc_of_string "Tactic failed" in
-                           [uu___5] in
+                           if ps3.FStar_Tactics_Types.dump_on_failure
+                           then
+                             let uu___5 =
+                               FStar_Pprint.doc_of_string "Tactic failed" in
+                             [uu___5]
+                           else [] in
                          let uu___5 = texn_to_doc e in
                          FStar_Compiler_List.op_At uu___4 uu___5 in
                        (FStar_Errors_Codes.Fatal_UserTacticFailure, uu___3) in
@@ -1124,7 +1135,7 @@ let run_tactic_on_ps' :
                 fun tactic_already_typed ->
                   fun ps ->
                     let env = ps.FStar_Tactics_Types.main_context in
-                    (let uu___1 = FStar_Compiler_Effect.op_Bang tacdbg in
+                    (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                      if uu___1
                      then
                        let uu___2 =
@@ -1151,7 +1162,7 @@ let run_tactic_on_ps' :
                             FStar_TypeChecker_TcTerm.tc_tactic uu___3 uu___4
                               env tactic in
                           match uu___2 with | (uu___3, uu___4, g1) -> g1) in
-                     (let uu___2 = FStar_Compiler_Effect.op_Bang tacdbg in
+                     (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                       if uu___2
                       then FStar_Compiler_Util.print_string "}\n"
                       else ());

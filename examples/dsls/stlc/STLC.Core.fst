@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module STLC.Core
 module T = FStar.Tactics.V2
 module R = FStar.Reflection.V2
@@ -537,12 +553,15 @@ let soundness_lemma (sg:stlc_env)
       (fun dd -> FStar.Squash.return_squash (soundness dd g))
 
 let main (nm:string) (src:stlc_exp) : RT.dsl_tac_t =
-  fun g ->
+  fun (g, expected_t) ->
   if ln src && closed src
-  then
-    let (| src_ty, d |) = check g [] src in
-    soundness_lemma [] src src_ty g;
-    [RT.mk_checked_let g nm (elab_exp src) (elab_ty src_ty)]
+  then if None? expected_t
+       then let (| src_ty, d |) = check g [] src in
+            soundness_lemma [] src src_ty g;
+            [],
+            RT.mk_checked_let g (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
+            []
+       else T.fail "STLC Core DSL: no support for expected type yet"
   else T.fail "Not locally nameless"
 
 (***** Tests *****)

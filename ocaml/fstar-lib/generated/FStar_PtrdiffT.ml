@@ -4,7 +4,7 @@ type 'x fits = unit
 let (v : t -> Prims.int) = fun x -> FStar_Int64.v x
 let (int_to_t : Prims.int -> t) = fun x -> FStar_Int64.int_to_t x
 let (ptrdifft_to_sizet : t -> FStar_SizeT.t) =
-  fun x -> FStar_Int_Cast.int64_to_uint64 x
+  fun x -> FStar_SizeT.Sz (FStar_Int_Cast.int64_to_uint64 x)
 let (add : t -> t -> t) = fun x -> fun y -> FStar_Int64.add x y
 let (div : t -> t -> t) = fun x -> fun y -> FStar_Int64.div x y
 let (rem : t -> t -> t) = fun x -> fun y -> FStar_Int64.rem x y

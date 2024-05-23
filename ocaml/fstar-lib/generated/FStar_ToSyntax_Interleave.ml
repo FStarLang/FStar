@@ -46,6 +46,29 @@ let (definition_lids :
              | uu___3 -> []) tys
     | FStar_Parser_AST.Splice (uu___, ids, uu___1) ->
         FStar_Compiler_List.map (fun id -> FStar_Ident.lid_of_ids [id]) ids
+    | FStar_Parser_AST.DeclSyntaxExtension
+        (extension_name, code, uu___, range) ->
+        let ext_parser =
+          FStar_Parser_AST_Util.lookup_extension_parser extension_name in
+        (match ext_parser with
+         | FStar_Pervasives_Native.None ->
+             let uu___1 =
+               let uu___2 =
+                 FStar_Compiler_Util.format1 "Unknown syntax extension %s"
+                   extension_name in
+               (FStar_Errors_Codes.Fatal_SyntaxError, uu___2) in
+             FStar_Errors.raise_error uu___1 d.FStar_Parser_AST.drange
+         | FStar_Pervasives_Native.Some parser ->
+             let uu___1 =
+               parser.FStar_Parser_AST_Util.parse_decl_name code range in
+             (match uu___1 with
+              | FStar_Pervasives.Inl error ->
+                  FStar_Errors.raise_error
+                    (FStar_Errors_Codes.Fatal_SyntaxError,
+                      (error.FStar_Parser_AST_Util.message))
+                    error.FStar_Parser_AST_Util.range
+              | FStar_Pervasives.Inr id ->
+                  let uu___2 = FStar_Ident.lid_of_ids [id] in [uu___2]))
     | uu___ -> []
 let (is_definition_of :
   FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =

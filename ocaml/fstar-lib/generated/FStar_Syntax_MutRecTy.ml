@@ -353,7 +353,9 @@ let (disentangle_abbrevs_from_bundle :
                         FStar_Syntax_Syntax.num_uniform_params = num_uniform;
                         FStar_Syntax_Syntax.t = ty;
                         FStar_Syntax_Syntax.mutuals = mut;
-                        FStar_Syntax_Syntax.ds = dc;_}
+                        FStar_Syntax_Syntax.ds = dc;
+                        FStar_Syntax_Syntax.injective_type_params =
+                          injective_type_params;_}
                       ->
                       let bnd' =
                         FStar_Syntax_InstFV.inst_binders unfold_fv bnd in
@@ -370,7 +372,9 @@ let (disentangle_abbrevs_from_bundle :
                                   num_uniform;
                                 FStar_Syntax_Syntax.t = ty';
                                 FStar_Syntax_Syntax.mutuals = mut';
-                                FStar_Syntax_Syntax.ds = dc
+                                FStar_Syntax_Syntax.ds = dc;
+                                FStar_Syntax_Syntax.injective_type_params =
+                                  injective_type_params
                               });
                          FStar_Syntax_Syntax.sigrng =
                            (x.FStar_Syntax_Syntax.sigrng);
@@ -391,7 +395,9 @@ let (disentangle_abbrevs_from_bundle :
                         FStar_Syntax_Syntax.t1 = ty;
                         FStar_Syntax_Syntax.ty_lid = res;
                         FStar_Syntax_Syntax.num_ty_params = npars;
-                        FStar_Syntax_Syntax.mutuals1 = mut;_}
+                        FStar_Syntax_Syntax.mutuals1 = mut;
+                        FStar_Syntax_Syntax.injective_type_params1 =
+                          injective_type_params;_}
                       ->
                       let ty' = FStar_Syntax_InstFV.inst unfold_fv ty in
                       let mut' = filter_out_type_abbrevs mut in
@@ -404,7 +410,9 @@ let (disentangle_abbrevs_from_bundle :
                                 FStar_Syntax_Syntax.t1 = ty';
                                 FStar_Syntax_Syntax.ty_lid = res;
                                 FStar_Syntax_Syntax.num_ty_params = npars;
-                                FStar_Syntax_Syntax.mutuals1 = mut'
+                                FStar_Syntax_Syntax.mutuals1 = mut';
+                                FStar_Syntax_Syntax.injective_type_params1 =
+                                  injective_type_params
                               });
                          FStar_Syntax_Syntax.sigrng =
                            (x.FStar_Syntax_Syntax.sigrng);

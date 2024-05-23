@@ -1,0 +1,7 @@
+>> Got issues: [
+* Error 180 at UnboundOp.fst(4,10-4,13):
+  - Unexpected or unbound operator: ^%^
+
+>>]
+Verified module: UnboundOp
+All verification conditions discharged successfully

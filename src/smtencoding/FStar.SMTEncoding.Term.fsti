@@ -20,6 +20,8 @@ open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
 open FStar.Class.Show
+open FStar.Compiler.List
+open FStar.Class.Ord
 
 module S = FStar.Syntax.Syntax
 
@@ -84,8 +86,8 @@ type term' =
   | App        of op  * list term
   | Quant      of qop * list (list pat) * option int * list sort * term
   | Let        of list term * term
-  | Labeled    of term * string * Range.range
-  | LblPos     of term * string
+  | Labeled    of term * Errors.error_message * Range.range
+  | LblPos     of term * string // FIXME: this case is unused
 and pat  = term
 and term = {tm:term'; freevars:S.memo fvs; rng:Range.range}
 and fv = | FV of string * sort * bool (* bool iff variable must be forced/unthunked *)
@@ -102,8 +104,10 @@ type constructor_t = {
   constr_name:string;
   constr_fields:list constructor_field;
   constr_sort:sort;
-  constr_id:option int; //Some i, if a term whose head is this constructor is distinct from 
-               //terms with other head constructors
+  constr_id:option int;
+    //Some i, if a term whose head is this constructor is distinct from 
+    //terms with other head constructors
+  constr_base: bool; //generate a base to eliminate non-injective arguments
 }
 type constructors  = list constructor_t
 type fact_db_id =
@@ -190,7 +194,7 @@ val mk_decls_trivial: list decl -> decls_t
  *)
 val decls_list_of: decls_t -> list decl
 
-type error_label = (fv * string * Range.range)
+type error_label = (fv * Errors.error_message * Range.range)
 type error_labels = list error_label
 
 val escape: string -> string

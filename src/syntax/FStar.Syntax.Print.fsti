@@ -104,6 +104,9 @@ instance val showable_pragma    : showable pragma
 instance val showable_subst_elt : showable subst_elt
 instance val showable_branch    : showable branch
 instance val showable_qualifier : showable qualifier
+instance val showable_pat       : showable pat
+instance val showable_const     : showable sconst
+instance val showable_letbinding : showable letbinding
 
 instance val pretty_term        : pretty term
 instance val pretty_univ        : pretty universe
@@ -112,3 +115,5 @@ instance val pretty_sigelt      : pretty sigelt
 instance val pretty_uvar        : pretty uvar
 instance val pretty_ctxu        : pretty ctx_uvar
 instance val pretty_binder      : pretty binder
+instance val pretty_bv          : pretty bv
+instance val pretty_binding     : pretty binding

@@ -57,7 +57,8 @@ type guard_policy =
     | Goal      // Add guards as (normal) goals
     | SMT       // Add guards as SMT goals
     | SMTSync   // Send guards to SMT immediately, will *log* errors (not raise) if anything fails
-    | Force     // Force guards without SMT
+    | Force     // Force guards without SMT, immediately. Raises an exception on failure.
+    | ForceSMT  // Force guards with SMT, immediately. Raises an exception on failure.
     | Drop      // Drop guards, clearly unsound! careful!
 
 (* Typing reflection *)

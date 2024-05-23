@@ -48,9 +48,12 @@ module I  = FStar.Ident
 module EMB = FStar.Syntax.Embeddings
 module Z = FStar.BigInt
 module TcComm = FStar.TypeChecker.Common
-
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 module PO = FStar.TypeChecker.Primops
 open FStar.TypeChecker.Normalize.Unfolding
+
+let dbg_univ_norm = Debug.get_toggle "univ_norm"
+let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
 
 (**********************************************************************************************
  * Reduction of types via the Krivine Abstract Machine (KN), with lazy
@@ -218,7 +221,7 @@ let norm_universe cfg (env:env) u =
             begin
                 try match snd (List.nth env x) with
                       | Univ u ->
-                           if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                           if !dbg_univ_norm then
                                BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
                            else ();  aux u
                       | Dummy -> [u]
@@ -749,7 +752,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops}) tm
+                              primitive_steps=equality_ops cfg.tcenv}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -1155,7 +1158,7 @@ let is_forall_const cfg (phi : term) : option term =
 
 (* GM: Please consider this function private outside of this recursive
  * group, and call `normalize` instead. `normalize` will print timing
- * information when --debug_level NormTop is given, which makes it a
+ * information when --debug NormTop is given, which makes it a
  * whole lot easier to find normalization calls that are taking a long
  * time. *)
 let rec norm : cfg -> env -> stack -> term -> term =
@@ -1205,8 +1208,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             let lid = S.lid_of_fv fv in
             let qninfo = Env.lookup_qname cfg.tcenv lid in
             begin
-            match Env.delta_depth_of_qninfo fv qninfo with
-            | Some (Delta_constant_at_level 0) ->
+            match Env.delta_depth_of_qninfo cfg.tcenv fv qninfo with
+            | Delta_constant_at_level 0 ->
               log_unfolding cfg (fun () -> BU.print1 " >> This is a constant: %s\n" (Print.term_to_string t));
               rebuild cfg empty_env stack t
             | _ ->
@@ -1534,7 +1537,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
                  let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
-                 let t = arrow (norm_binders cfg env bs) c in
+                 let bs = if cfg.steps.hnf then (close_binders cfg env bs)._1 else norm_binders cfg env bs in
+                 let t = arrow bs c in
                  rebuild cfg env stack t
 
           | Tm_ascribed {tm=t1; eff_opt=l} when cfg.steps.unascribe ->
@@ -1813,7 +1817,7 @@ and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          if n > 0
          then match stack with //universe beta reduction
                 | UnivArgs(us', _)::stack ->
-                  if Env.debug cfg.tcenv <| Options.Other "univ_norm" then
+                  if !dbg_univ_norm then
                       List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
                   else ();
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
@@ -1976,7 +1980,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
                   (S.as_arg lb.lbtyp)::(S.as_arg t)::(unit_args@range_args@[S.as_arg f_arg; S.as_arg body])
                 else
                   let maybe_range_arg =
-                    if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+                    if BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
                     then [as_arg (PO.embed_simple lb.lbpos lb.lbpos);
                           as_arg (PO.embed_simple body.pos body.pos)]
                     else []
@@ -2539,7 +2543,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                                         (show t)
                                         (show (List.length env))
                                         (show (fst <| firstn 4 stack));
-    if Env.debug cfg.tcenv (Options.Other "NormRebuild")
+    if !dbg_NormRebuild
     then match FStar.Syntax.Util.unbound_variables t with
          | [] -> ()
          | bvs ->
@@ -3183,7 +3187,7 @@ let term_to_doc env t =
     try normalize [AllowUnboundUniverses] env t
     with e -> Errors.log_issue t.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; t
   in
-  FStar.Syntax.Print.Pretty.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
+  FStar.Syntax.Print.term_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) t
 
 let term_to_string env t = GenSym.with_frozen_gensym (fun () ->
   let t =
@@ -3198,6 +3202,13 @@ let comp_to_string env c = GenSym.with_frozen_gensym (fun () ->
     with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
   in
   Print.comp_to_string' (DsEnv.set_current_module env.dsenv env.curmodule) c)
+
+let comp_to_doc env c = GenSym.with_frozen_gensym (fun () ->
+  let c =
+    try norm_comp (config [AllowUnboundUniverses] env) [] c
+    with e -> Errors.log_issue c.pos (Errors.Warning_NormalizationFailure, (BU.format1 "Normalization failed with error %s\n" (BU.message_of_exn e))) ; c
+  in
+  Print.comp_to_doc' (DsEnv.set_current_module env.dsenv env.curmodule) c)
 
 let normalize_refinement steps env t0 =
    let t = normalize (steps@[Beta]) env t0 in
@@ -3289,7 +3300,8 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                          num_uniform_params=num_uniform;
                          t=typ;
                          mutuals=lids;
-                         ds=lids'} ->
+                         ds=lids';
+                         injective_type_params} ->
       let univ_names, binders, typ = elim_uvars_aux_t env univ_names binders typ in
       {s with sigel = Sig_inductive_typ {lid;
                                          us=univ_names;
@@ -3297,19 +3309,21 @@ let rec elim_uvars (env:Env.env) (s:sigelt) =
                                          num_uniform_params=num_uniform;
                                          t=typ;
                                          mutuals=lids;
-                                         ds=lids'}}
+                                         ds=lids';
+                                         injective_type_params}}
 
     | Sig_bundle {ses=sigs; lids} ->
       {s with sigel = Sig_bundle {ses=List.map (elim_uvars env) sigs; lids}}
 
-    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids} ->
+    | Sig_datacon {lid; us=univ_names; t=typ; ty_lid=lident; num_ty_params=i; mutuals=lids; injective_type_params} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in
       {s with sigel = Sig_datacon {lid;
                                    us=univ_names;
                                    t=typ;
                                    ty_lid=lident;
                                    num_ty_params=i;
-                                   mutuals=lids}}
+                                   mutuals=lids;
+                                   injective_type_params}}
 
     | Sig_declare_typ {lid; us=univ_names; t=typ} ->
       let univ_names, _, typ = elim_uvars_aux_t env univ_names [] typ in

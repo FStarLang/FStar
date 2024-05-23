@@ -9,7 +9,8 @@
 # will NOT use this file.
 
 # We always try to build against the most current ubuntu image.
-FROM ubuntu:latest
+# FIXME: Broken with 24.04, fixing it to 23.10 so we can keep working
+FROM ubuntu:23.10
 
 RUN apt-get update
 
@@ -22,7 +23,6 @@ RUN apt-get -y --no-install-recommends install vim emacs
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
 # python3 (for interactive tests)
-# libicu (for .NET, cf. https://aka.ms/dotnet-missing-libicu )
 RUN apt-get install -y --no-install-recommends \
       jq \
       bc \
@@ -34,7 +34,6 @@ RUN apt-get install -y --no-install-recommends \
       sudo \
       python3 \
       python-is-python3 \
-      libicu70 \
       opam \
       && apt-get clean -y
 

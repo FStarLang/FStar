@@ -25,7 +25,7 @@ let compress1_t (allow_uvars: bool) (allow_names: bool) : term -> term =
 
     | Tm_name bv when not allow_names ->
       (* This currently happens, and often, but it should not! *)
-      if Options.debug_any () then
+      if Debug.any () then
         Errors.log_issue t.pos (Err.Warning_NameEscape, format1 "Tm_name %s in deep compress" (show bv));
       mk (Tm_name ({bv with sort = mk Tm_unknown}))
 
@@ -39,7 +39,7 @@ let compress1_u (allow_uvars:bool) (allow_names:bool) : universe -> universe =
   fun u ->
     match u with
     | U_name bv when not allow_names ->
-      if Options.debug_any () then
+      if Debug.any () then
         Errors.log_issue Range.dummyRange (Err.Warning_NameEscape, format1 "U_name %s in deep compress" (show bv));
       u
 

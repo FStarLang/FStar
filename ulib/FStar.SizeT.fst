@@ -10,7 +10,7 @@ module I64 = FStar.Int64
 assume
 val bound : x:erased nat { x >= pow2 16 }
 
-let t = x:U64.t { U64.v x < bound }
+type t : eqtype = | Sz : (x:U64.t { U64.v x < bound }) -> t
 
 let fits x =
   FStar.UInt.fits x U64.n == true /\
@@ -19,11 +19,11 @@ let fits x =
 let fits_at_least_16 _ = ()
 
 let v x =
-  U64.v x
+  U64.v (Sz?.x x)
 
 irreducible
 let uint_to_t x =
-  U64.uint_to_t x
+  Sz (U64.uint_to_t x)
 
 let size_v_inj (x: t) = ()
 let size_uint_to_t_inj (x: nat) = ()
@@ -62,22 +62,23 @@ let of_u64 (x: U64.t)
 let uint16_to_sizet x = uint_to_t (U16.v x)
 let uint32_to_sizet x = uint_to_t (U32.v x)
 let uint64_to_sizet x = uint_to_t (U64.v x)
-let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 x
+let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 (Sz?.x x)
 
 let fits_lte x y = ()
 
 #push-options "--z3rlimit 20"
-let add x y = U64.add x y
-let sub x y = U64.sub x y
-let mul x y = U64.mul x y
+let add x y = Sz <| U64.add x.x y.x
+let sub x y = Sz <| U64.sub x.x y.x
+let mul x y = Sz <| U64.mul x.x y.x
 let div x y =
-  let res = U64.div x y in
-  fits_lte (U64.v res) (U64.v x);
-  FStar.Math.Lib.slash_decr_axiom (U64.v x) (U64.v y);
-  assert (U64.v x / U64.v y <= U64.v x);
+  let res = Sz <| U64.div x.x y.x in
+  fits_lte (U64.v res.x) (U64.v x.x);
+  FStar.Math.Lib.slash_decr_axiom (U64.v x.x) (U64.v y.x);
+  assert (U64.v x.x / U64.v y.x <= U64.v x.x);
   res
-let rem x y = U64.rem x y
-let gt x y = U64.gt x y
-let gte x y = U64.gte x y
-let lt x y = U64.lt x y
-let lte x y = U64.lte x y
+
+let rem x y = Sz <| U64.rem x.x y.x
+let gt  x y = U64.gt  x.x y.x
+let gte x y = U64.gte x.x y.x
+let lt  x y = U64.lt  x.x y.x
+let lte x y = U64.lte x.x y.x

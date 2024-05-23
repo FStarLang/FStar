@@ -1,8 +1,12 @@
 >> Got issues: [
 * Error 19 at NegativeTests.BST.fst(37,38-37,42):
-  - Subtyping check failed; expected type right:
-    FStar.Pervasives.Native.option (tree 2)
-      {0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\ None? FStar.Pervasives.Native.None == (1 = 0)}; got type FStar.Pervasives.Native.option (tree 2)
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree 2)
+        { 0 <= 1 /\ 1 <= 2 /\ None? right == (1 = 2) /\
+          None? FStar.Pervasives.Native.None == (1 = 0) }
+    got type FStar.Pervasives.Native.option (tree 2)
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)
@@ -10,10 +14,13 @@
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.BST.fst(40,61-40,65):
-  - Subtyping check failed; expected type right:
-    FStar.Pervasives.Native.option (tree (l + 1))
-      { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
-        None? (FStar.Pervasives.Native.Some t) == (l = l) }; got type FStar.Pervasives.Native.option (tree (l + 1))
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l /\ l <= l + 1 /\ None? right == (l = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t) == (l = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)
@@ -21,10 +28,13 @@
 >>]
 >> Got issues: [
 * Error 19 at NegativeTests.BST.fst(43,78-43,87):
-  - Subtyping check failed; expected type right:
-    FStar.Pervasives.Native.option (tree (l + 1))
-      { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
-        None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }; got type FStar.Pervasives.Native.option (tree (l + 1))
+  - Subtyping check failed
+  - Expected type
+      right:
+      FStar.Pervasives.Native.option (tree (l + 1))
+        { l <= l + 1 /\ l + 1 <= l + 1 /\ None? right == (l + 1 = l + 1) /\
+          None? (FStar.Pervasives.Native.Some t1) == (l + 1 = l) }
+    got type FStar.Pervasives.Native.option (tree (l + 1))
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - See also NegativeTests.BST.fst(27,36-27,58)

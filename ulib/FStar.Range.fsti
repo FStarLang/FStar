@@ -32,6 +32,8 @@ val range_0 : range
 (** Building a range constant *)
 val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
 
+val join_range (r1 r2 : range) : Tot range
+
 (** [labeled] is used internally to the SMT encoding to associate a
     source-code location with an assertion. *)
 irreducible

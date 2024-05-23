@@ -27,7 +27,9 @@ open FStar.Syntax.Util
 open FStar.Parser
 open FStar.Ident
 open FStar.Errors
+
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
 let ugly_sigelt_to_string (se:sigelt) : string = !ugly_sigelt_to_string_hook se
@@ -38,7 +40,7 @@ module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
 type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
-type rec_binding   = (ident * lid * delta_depth *         (* name bound by recursive type and top-level let-bindings definitions only *)
+type rec_binding   = (ident * lid *                       (* name bound by recursive type and top-level let-bindings definitions only *)
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 
 type scope_mod =
@@ -49,7 +51,7 @@ type scope_mod =
 | Top_level_def            of ident           (* top-level definition for an unqualified identifier x to be resolved as curmodule.x. *)
 | Record_or_dc             of record_or_dc    (* to honor interleavings of "open" and record definitions *)
 
-type string_set = Set.t string
+type string_set = RBSet.t string
 
 type exported_id_kind = (* kinds of identifiers exported by a module *)
 | Exported_id_term_type (* term and type identifiers *)
@@ -110,7 +112,7 @@ let transitive_exported_ids env lid =
     let module_name = Ident.string_of_lid lid in
     match BU.smap_try_find env.trans_exported_ids module_name with
     | None -> []
-    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> Set.elems
+    | Some exported_id_set -> !(exported_id_set Exported_id_term_type) |> elems
 let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev) =
     List.collect
        (function
@@ -184,13 +186,13 @@ let set_bv_range bv r =
 
 let bv_to_name bv r = bv_to_name (set_bv_range bv r)
 
-let unmangleMap = [("op_ColonColon", "Cons", delta_constant, Some Data_ctor);
-                   ("not", "op_Negation", delta_equational, None)]
+let unmangleMap = [("op_ColonColon", "Cons", Some Data_ctor);
+                   ("not", "op_Negation", None)]
 
 let unmangleOpName (id:ident) : option term =
-  find_map unmangleMap (fun (x,y,dd,dq) ->
+  find_map unmangleMap (fun (x,y,dq) ->
     if string_of_id id = x
-    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dd dq) //NS delta ok
+    then Some (S.fvar_with_dd (lid_of_path ["Prims"; y] (range_of_id id)) dq)
     else None)
 
 type cont_t 'a =
@@ -258,7 +260,7 @@ let find_in_module_with_includes
     | None -> true
     | Some mex ->
       let mexports = !(mex eikind) in
-      Set.mem idstr mexports
+      mem idstr mexports
     in
     let mincludes = match BU.smap_try_find env.includes mname with
     | None -> []
@@ -291,7 +293,7 @@ let try_lookup_id''
       (id', _, _) -> string_of_id id' = string_of_id id
     in
     let check_rec_binding_id : rec_binding -> bool = function
-      (id', _, _, _) -> string_of_id id' = string_of_id id
+      (id', _, _) -> string_of_id id' = string_of_id id
     in
     let curmod_ns = ids_of_lid (current_module env) in
     let proc = function
@@ -303,7 +305,7 @@ let try_lookup_id''
 
       | Rec_binding r
         when check_rec_binding_id r ->
-        let (_, _, _, used_marker) = r in
+        let (_, _, used_marker) = r in
         used_marker := true;
         k_rec_binding r
 
@@ -523,16 +525,6 @@ let ns_of_lid_equals (lid: lident) (ns: lident) =
     List.length (ns_of_lid lid) = List.length (ids_of_lid ns) &&
     lid_equals (lid_of_ids (ns_of_lid lid)) ns
 
-let delta_depth_of_declaration (lid:lident) (quals:list qualifier) =
-    let dd = if U.is_primop_lid lid
-            || (quals |> BU.for_some (function Projector _ | Discriminator _ -> true | _ -> false))
-            then delta_equational
-            else delta_constant in
-    if quals |> BU.for_some (function Assumption -> true | _ -> false)
-    && not (quals |> BU.for_some (function New -> true | _ -> false))
-    then Delta_abstract dd
-    else dd
-
 let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
   let occurrence_range = Ident.range_of_lid lid in
 
@@ -540,39 +532,38 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
       | (_, true) when exclude_interf -> None
       | (se, _) ->
         begin match se.sigel with
-          | Sig_inductive_typ _ ->   Some (Term_name (S.fvar_with_dd source_lid delta_constant None, se.sigattrs)) //NS delta: ok
-          | Sig_datacon _ ->         Some (Term_name (S.fvar_with_dd source_lid delta_constant (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
+          | Sig_inductive_typ _ ->   Some (Term_name (S.fvar_with_dd source_lid None, se.sigattrs))
+          | Sig_datacon _ ->         Some (Term_name (S.fvar_with_dd source_lid (fv_qual_of_se se), se.sigattrs))
           | Sig_let {lbs=(_, lbs)} ->
             let fv = lb_fv lbs source_lid in
-            Some (Term_name (S.fvar_with_dd source_lid (fv.fv_delta |> must) fv.fv_qual, se.sigattrs))
+            Some (Term_name (S.fvar_with_dd source_lid fv.fv_qual, se.sigattrs))
           | Sig_declare_typ {lid} ->
             let quals = se.sigquals in
             if any_val //only in scope in an interface (any_val is true) or if the val is assumed
             || quals |> BU.for_some (function Assumption -> true | _ -> false)
             then let lid = Ident.set_lid_range lid (Ident.range_of_lid source_lid) in
-                 let dd = delta_depth_of_declaration lid quals in
                  begin match BU.find_map quals (function Reflectable refl_monad -> Some refl_monad | _ -> None) with //this is really a M?.reflect
                  | Some refl_monad ->
                         let refl_const = S.mk (Tm_constant (FStar.Const.Const_reflect refl_monad)) occurrence_range in
                         Some (Term_name (refl_const, se.sigattrs))
                  | _ ->
-                   Some (Term_name(fvar_with_dd lid dd (fv_qual_of_se se), se.sigattrs)) //NS delta: ok
+                   Some (Term_name(fvar_with_dd lid (fv_qual_of_se se), se.sigattrs))
                  end
             else None
           | Sig_new_effect(ne) -> Some (Eff_name(se, set_lid_range ne.mname (range_of_lid source_lid)))
           | Sig_effect_abbrev _ ->   Some (Eff_name(se, source_lid))
           | Sig_splice {lids; tac=t} ->
                 // TODO: This depth is probably wrong
-                Some (Term_name (S.fvar_with_dd source_lid (Delta_constant_at_level 1) None, [])) //NS delta: wrong
+                Some (Term_name (S.fvar_with_dd source_lid None, []))
           | _ -> None
         end in
 
   let k_local_binding r = let t = found_local_binding (range_of_lid lid) r in Some (Term_name (t, []))
   in
 
-  let k_rec_binding (id, l, dd, used_marker) =
+  let k_rec_binding (id, l, used_marker) =
     used_marker := true;
-    Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) dd None, [])) //NS delta: ok
+    Some (Term_name(S.fvar_with_dd (set_lid_range l (range_of_lid lid)) None, []))
   in
 
   let found_unmangled = match ns_of_lid lid with
@@ -650,7 +641,7 @@ let try_lookup_let env (lid:lident) =
   let k_global_def lid = function
       | ({ sigel = Sig_let {lbs=(_, lbs)} }, _) ->
         let fv = lb_fv lbs lid in
-        Some (fvar_with_dd lid (fv.fv_delta |> must) fv.fv_qual) //NS delta: ok
+        Some (fvar_with_dd lid fv.fv_qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -779,12 +770,12 @@ let try_lookup_datacon env (lid:lident) =
       match se with
       | ({ sigel = Sig_declare_typ _; sigquals = quals }, _) ->
         if quals |> BU.for_some (function Assumption -> true | _ -> false)
-        then Some (lid_and_dd_as_fv lid delta_constant None)
+        then Some (lid_and_dd_as_fv lid None)
         else None
       | ({ sigel = Sig_splice _ }, _) (* A spliced datacon *)
       | ({ sigel = Sig_datacon _ }, _) ->
          let qual = fv_qual_of_se (fst se) in
-         Some (lid_and_dd_as_fv lid delta_constant qual)
+         Some (lid_and_dd_as_fv lid qual)
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
@@ -878,13 +869,13 @@ let extract_record (e:env) (new_globs: ref (list scope_mod)) = fun se -> match s
                     match get_exported_id_set e modul with
                     | Some my_ex ->
                       let my_exported_ids = my_ex Exported_id_field in
-                      let () = my_exported_ids := Set.add (string_of_id id) !my_exported_ids in
+                      let () = my_exported_ids := add (string_of_id id) !my_exported_ids in
                       (* also add the projector name *)
                       let projname = mk_field_projector_name_from_ident constrname id
                                      |> ident_of_lid
                                      |> string_of_id
                       in
-                      let () = my_exported_ids := Set.add projname !my_exported_ids in
+                      let () = my_exported_ids := add projname !my_exported_ids in
                       ()
                     | None -> () (* current module was not prepared? should not happen *)
                   in
@@ -956,7 +947,7 @@ let try_lookup_dc_by_field_name env (fieldname:lident) =
         | Some r -> Some (set_lid_range (lid_of_ids (ns_of_lid r.typename @ [r.constrname])) (range_of_lid fieldname), r.is_record)
         | _ -> None
 
-let string_set_ref_new () : ref (Set.t string) = BU.mk_ref (Set.empty ())
+let string_set_ref_new () : ref string_set = BU.mk_ref (empty ())
 let exported_id_set_new () =
     let term_type_set = string_set_ref_new () in
     let field_set = string_set_ref_new () in
@@ -989,12 +980,12 @@ let push_bv env x =
   let (env, bv, _) = push_bv' env x in
   (env, bv)
 
-let push_top_level_rec_binding env0 (x:ident) dd : env * ref bool =
+let push_top_level_rec_binding env0 (x:ident) : env * ref bool =
   let l = qualify env0 x in
   if unique false true env0 l || Options.interactive ()
   then
     let used_marker = BU.mk_ref false in
-    (push_scope_mod env0 (Rec_binding (x,l,dd,used_marker)), used_marker)
+    (push_scope_mod env0 (Rec_binding (x,l,used_marker)), used_marker)
   else raise_error (Errors.Fatal_DuplicateTopLevelNames, ("Duplicate top-level names " ^ (string_of_lid l))) (range_of_lid l)
 
 let push_sigelt' fail_on_dup env s =
@@ -1038,7 +1029,7 @@ let push_sigelt' fail_on_dup env s =
       let () = match get_exported_id_set env modul with
       | Some f ->
         let my_exported_ids = f Exported_id_term_type in
-        my_exported_ids := Set.add (string_of_id (ident_of_lid lid)) !my_exported_ids
+        my_exported_ids := add (string_of_id (ident_of_lid lid)) !my_exported_ids
       | None -> () (* current module was not prepared? should not happen *)
       in
       let is_iface = env.iface && not env.admitted_iface in
@@ -1102,9 +1093,9 @@ let push_include env ns =
           let update_exports (k: exported_id_kind) =
             let ns_ex = ! (ns_trans_exports k) in
             let ex = cur_exports k in
-            let () = ex := Set.diff (!ex) ns_ex in
+            let () = ex := diff (!ex) ns_ex in
             let trans_ex = cur_trans_exports k in
-            let () = trans_ex := Set.union (!trans_ex) ns_ex in
+            let () = trans_ex := union (!trans_ex) ns_ex in
             ()
           in
           List.iter update_exports all_exported_id_kinds
@@ -1193,7 +1184,7 @@ let finish env modul =
       let update_exports eikind =
         let cur_ex_set = ! (cur_ex eikind) in
         let cur_trans_ex_set_ref = cur_trans_ex eikind in
-        cur_trans_ex_set_ref := Set.union cur_ex_set (!cur_trans_ex_set_ref)
+        cur_trans_ex_set_ref := union cur_ex_set (!cur_trans_ex_set_ref)
        in
        List.iter update_exports all_exported_id_kinds
     | _ -> ()
@@ -1255,12 +1246,12 @@ let finish_module_or_interface env modul =
   finish env modul, modul
 
 type exported_ids = {
-    exported_id_terms:list string;
-    exported_id_fields:list string
+    exported_id_terms : string_set;
+    exported_id_fields: string_set;
 }
 let as_exported_ids (e:exported_id_set) =
-    let terms  = Set.elems (!(e Exported_id_term_type)) in
-    let fields = Set.elems (!(e Exported_id_field)) in
+    let terms  = (!(e Exported_id_term_type)) in
+    let fields = (!(e Exported_id_field)) in
     {exported_id_terms=terms;
      exported_id_fields=fields}
 
@@ -1269,9 +1260,9 @@ let as_exported_id_set (e:option exported_ids) =
     | None -> exported_id_set_new ()
     | Some e ->
       let terms =
-          BU.mk_ref (Set.from_list e.exported_id_terms) in
+          BU.mk_ref (e.exported_id_terms) in
       let fields =
-          BU.mk_ref (Set.from_list e.exported_id_fields) in
+          BU.mk_ref (e.exported_id_fields) in
       function
         | Exported_id_term_type -> terms
         | Exported_id_field -> fields
@@ -1400,5 +1391,4 @@ let resolve_name (e:env) (name:lident)
         | _ -> None
     )
     | Some (Eff_name(se, l)) ->
-      let _ =  delta_depth_of_declaration in
-      Some (Inr (S.lid_and_dd_as_fv l delta_constant None))
+      Some (Inr (S.lid_and_dd_as_fv l None))

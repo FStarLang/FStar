@@ -105,7 +105,7 @@ let put_unfolded (n: int): (n0: int -> PURE (unit * int) (fun post -> post ((), 
 let put_cps_type = n:int -> Tot (repr unit (fun n0 post -> post ((), n)))
 let put_cps_type_unfolded = n:int -> Tot (n0: int -> PURE (unit * int) (fun post -> post ((), n)))
 
-(* #reset-options "--debug NatST --debug_level SMTEncoding" *)
+(* #reset-options "--debug SMTEncoding" *)
 
 reifiable reflectable new_effect {
   STATE : a:Type -> wp:wp a -> Effect

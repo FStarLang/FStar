@@ -6,6 +6,7 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 
+new
 val t : eqtype
 
 val fits (x: nat) : Tot prop

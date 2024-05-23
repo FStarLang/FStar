@@ -36,3 +36,30 @@ let _ = assert True by begin
   let _ = must <| check_equiv env (`1) (`(reveal u#0 #int (hide u#0 #int 1))) in
   ()
 end
+
+[@@expect_failure] // this is fine, as nosmt implies nodelta
+let _ = assert True by begin
+  let env = cur_env () in
+  let _ = must <| check_equiv_nosmt env (`1) (`(g 1)) in
+  ()
+end
+
+let _ = assert True by begin
+  let env = cur_env () in
+  let _ = must <| check_equiv_nosmt env (`1) (`1) in
+  ()
+end
+
+let _ = assert True by begin
+  let env = cur_env () in
+  let _ = must <| check_equiv_nosmt env (`(1+1)) (`(3-1)) in
+  ()
+end
+
+let _ = assert True by begin
+  let env = cur_env () in
+  let _ = must <| check_equiv_nosmt env (`1) (`(reveal #int (hide #int 1))) in
+  ()
+end
+
+#pop-options

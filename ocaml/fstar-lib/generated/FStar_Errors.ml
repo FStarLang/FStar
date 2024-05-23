@@ -389,19 +389,18 @@ let (format_issue' : Prims.bool -> issue -> Prims.string) =
                      FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline uu___2 in
                    FStar_Pprint.op_Hat_Hat l uu___1) uu___ t
         | uu___ -> FStar_Pprint.empty in
+      let subdoc = FStar_Errors_Msg.subdoc' print_hdr in
       let mainmsg =
         let uu___ =
           FStar_Compiler_List.map
-            (fun d ->
-               let uu___1 = FStar_Pprint.group d in
-               FStar_Errors_Msg.subdoc uu___1) issue1.issue_msg in
+            (fun d -> let uu___1 = FStar_Pprint.group d in subdoc uu___1)
+            issue1.issue_msg in
         FStar_Pprint.concat uu___ in
       let doc =
         let uu___ =
           let uu___1 =
-            let uu___2 = FStar_Errors_Msg.subdoc seealso in
-            let uu___3 = FStar_Errors_Msg.subdoc ctx in
-            FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+            let uu___2 = subdoc seealso in
+            let uu___3 = subdoc ctx in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
           FStar_Pprint.op_Hat_Hat mainmsg uu___1 in
         FStar_Pprint.op_Hat_Hat hdr uu___ in
       FStar_Errors_Msg.renderdoc doc
@@ -413,7 +412,7 @@ let (print_issue : issue -> unit) =
       match issue1.issue_level with
       | EInfo ->
           (fun s ->
-             let uu___ = FStar_Compiler_Util.colorize_magenta s in
+             let uu___ = FStar_Compiler_Util.colorize_cyan s in
              FStar_Compiler_Util.print_string uu___)
       | EWarning -> FStar_Compiler_Util.print_warning
       | EError -> FStar_Compiler_Util.print_error
@@ -483,7 +482,7 @@ let (mk_default_handler : Prims.bool -> error_handler) =
       else ();
       (match e.issue_level with
        | EInfo -> print_issue e
-       | uu___2 when print && (FStar_Options.debug_any ()) -> print_issue e
+       | uu___2 when print && (FStar_Compiler_Debug.any ()) -> print_issue e
        | uu___2 ->
            let uu___3 =
              let uu___4 = FStar_Compiler_Effect.op_Bang issues in e :: uu___4 in
@@ -649,7 +648,7 @@ let (diag_doc :
   =
   fun r ->
     fun msg ->
-      let uu___ = FStar_Options.debug_any () in
+      let uu___ = FStar_Compiler_Debug.any () in
       if uu___
       then
         let msg1 = maybe_add_backtrace msg in
@@ -663,7 +662,7 @@ let (diag : FStar_Compiler_Range_Type.range -> Prims.string -> unit) =
     fun msg -> let uu___ = FStar_Errors_Msg.mkmsg msg in diag_doc r uu___
 let (diag0 : Prims.string -> unit) =
   fun msg ->
-    let uu___ = FStar_Options.debug_any () in
+    let uu___ = FStar_Compiler_Debug.any () in
     if uu___
     then
       let uu___1 =
@@ -740,7 +739,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___385 :
+let (uu___386 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -786,10 +785,10 @@ let (uu___385 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___385 with
+  match uu___386 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___385 with
+  match uu___386 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =

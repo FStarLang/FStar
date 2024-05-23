@@ -1,4 +1,12 @@
 open Prims
+let (dbg_Core : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Core"
+let (dbg_CoreEq : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreEq"
+let (dbg_RegisterGoal : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RegisterGoal"
+let (dbg_TacFail : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacFail"
 let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (get_goal_ctr : unit -> Prims.int) =
@@ -20,8 +28,10 @@ let (is_goal_safe_as_well_typed : FStar_Tactics_Types.goal -> Prims.bool) =
            match uu___1 with
            | FStar_Pervasives_Native.Some t ->
                let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar
-                 uu___2
+               FStar_Class_Setlike.is_empty ()
+                 (Obj.magic
+                    (FStar_Compiler_FlatSet.setlike_flat_set
+                       FStar_Syntax_Free.ord_ctx_uvar)) (Obj.magic uu___2)
            | uu___2 -> false) uu___ in
     all_deps_resolved
 let (register_goal : FStar_Tactics_Types.goal -> unit) =
@@ -151,9 +161,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.core_check =
                    (env.FStar_TypeChecker_Env.core_check)
                } in
-             (let uu___6 =
-                FStar_TypeChecker_Env.debug env1
-                  (FStar_Options.Other "CoreEq") in
+             (let uu___6 = FStar_Compiler_Effect.op_Bang dbg_CoreEq in
               if uu___6
               then
                 let uu___7 =
@@ -166,11 +174,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
               if Prims.op_Negation should_register
               then
                 let uu___7 =
-                  (FStar_TypeChecker_Env.debug env1
-                     (FStar_Options.Other "Core"))
-                    ||
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "RegisterGoal")) in
+                  (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                    (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                 (if uu___7
                  then
                    let uu___8 =
@@ -183,11 +188,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  else ())
               else
                 ((let uu___8 =
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "Core"))
-                      ||
-                      (FStar_TypeChecker_Env.debug env1
-                         (FStar_Options.Other "RegisterGoal")) in
+                    (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                      (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                   if uu___8
                   then
                     let uu___9 =
@@ -289,9 +291,7 @@ let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
   fun msg ->
     mk_tac
       (fun ps ->
-         (let uu___1 =
-            FStar_TypeChecker_Env.debug ps.FStar_Tactics_Types.main_context
-              (FStar_Options.Other "TacFail") in
+         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_TacFail in
           if uu___1
           then
             let uu___2 =
@@ -343,7 +343,9 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
                    FStar_Tactics_Types.local_state =
                      (ps.FStar_Tactics_Types.local_state);
                    FStar_Tactics_Types.urgency =
-                     (ps.FStar_Tactics_Types.urgency)
+                     (ps.FStar_Tactics_Types.urgency);
+                   FStar_Tactics_Types.dump_on_failure =
+                     (ps.FStar_Tactics_Types.dump_on_failure)
                  } in
                FStar_Tactics_Result.Success ((FStar_Pervasives.Inl m), ps1))))
 let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
@@ -508,7 +510,9 @@ let (set_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -535,7 +539,9 @@ let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (cur_goals : FStar_Tactics_Types.goal Prims.list tac) =
   bind get (fun ps -> ret ps.FStar_Tactics_Types.goals)
@@ -595,7 +601,9 @@ let (dismiss : unit tac) =
              (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
              (ps.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+           FStar_Tactics_Types.dump_on_failure =
+             (ps.FStar_Tactics_Types.dump_on_failure)
          } in
        set uu___)
 let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
@@ -629,7 +637,9 @@ let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
                 (ps.FStar_Tactics_Types.tac_verb_dbg);
               FStar_Tactics_Types.local_state =
                 (ps.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+              FStar_Tactics_Types.dump_on_failure =
+                (ps.FStar_Tactics_Types.dump_on_failure)
             } in
           set uu___1))
 let (getopts : FStar_Options.optionstate tac) =
@@ -668,7 +678,9 @@ let (add_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (add_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -697,7 +709,9 @@ let (add_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (push_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -727,7 +741,9 @@ let (push_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (push_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -756,7 +772,9 @@ let (push_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (add_implicits : FStar_TypeChecker_Env.implicits -> unit tac) =
   fun i ->
@@ -785,7 +803,9 @@ let (add_implicits : FStar_TypeChecker_Env.implicits -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (new_uvar :
   Prims.string ->
@@ -1003,7 +1023,9 @@ let (compress_implicits : unit tac) =
              (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
              (ps.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+           FStar_Tactics_Types.dump_on_failure =
+             (ps.FStar_Tactics_Types.dump_on_failure)
          } in
        set ps')
 let (get_phi :
@@ -1139,7 +1161,10 @@ let divide : 'a 'b . FStar_BigInt.t -> 'a tac -> 'b tac -> ('a * 'b) tac =
                                                =
                                                (p.FStar_Tactics_Types.local_state);
                                              FStar_Tactics_Types.urgency =
-                                               (p.FStar_Tactics_Types.urgency)
+                                               (p.FStar_Tactics_Types.urgency);
+                                             FStar_Tactics_Types.dump_on_failure
+                                               =
+                                               (p.FStar_Tactics_Types.dump_on_failure)
                                            } in
                                          let uu___2 = set lp in
                                          Obj.magic
@@ -1210,7 +1235,10 @@ let divide : 'a 'b . FStar_BigInt.t -> 'a tac -> 'b tac -> ('a * 'b) tac =
                                                                     (lp'.FStar_Tactics_Types.local_state);
                                                                     FStar_Tactics_Types.urgency
                                                                     =
-                                                                    (lp'.FStar_Tactics_Types.urgency)
+                                                                    (lp'.FStar_Tactics_Types.urgency);
+                                                                    FStar_Tactics_Types.dump_on_failure
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.dump_on_failure)
                                                                     } in
                                                                     let uu___4
                                                                     = set rp in
@@ -1299,7 +1327,10 @@ let divide : 'a 'b . FStar_BigInt.t -> 'a tac -> 'b tac -> ('a * 'b) tac =
                                                                     (rp'.FStar_Tactics_Types.local_state);
                                                                     FStar_Tactics_Types.urgency
                                                                     =
-                                                                    (rp'.FStar_Tactics_Types.urgency)
+                                                                    (rp'.FStar_Tactics_Types.urgency);
+                                                                    FStar_Tactics_Types.dump_on_failure
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.dump_on_failure)
                                                                     } in
                                                                     let uu___6
                                                                     = set p' in

@@ -45,8 +45,12 @@ module NU = FStar.TypeChecker.Normalize.Unfolding
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Show
+
+let dbg_NBE    = Debug.get_toggle "NBE"
+let dbg_NBETop = Debug.get_toggle "NBETop"
 
 (* Broadly, the algorithm implemented here is inspired by
 
@@ -1070,7 +1074,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            S.mk (Tm_abs {bs=[S.mk_binder (BU.left lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
        in
        let maybe_range_arg =
-           if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+           if BU.for_some (TEQ.eq_tm_bool cfg.core_cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
            then [translate cfg [] (PO.embed_simple lb.lbpos lb.lbpos), None;
                  translate cfg [] (PO.embed_simple body.pos body.pos), None]
            else []
@@ -1289,7 +1293,7 @@ and readback (cfg:config) (x:t) : term =
         let refinement = U.refine x body in
         with_range (
           if cfg.core_cfg.steps.simplify
-          then Common.simplify cfg.core_cfg.debug.wpe refinement
+          then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv refinement
           else refinement
         )
 
@@ -1326,7 +1330,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1338,7 +1342,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app (S.bv_to_name bv) args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1380,7 +1384,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app head args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1517,13 +1521,11 @@ let normalize psteps (steps:list Env.step)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e);
   let cfg = new_config cfg in
   let r = readback cfg (translate cfg [] e) in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r);
   r
 

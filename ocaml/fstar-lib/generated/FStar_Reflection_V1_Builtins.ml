@@ -882,22 +882,23 @@ let (inspect_sigelt :
           FStar_Syntax_Syntax.params = param_bs;
           FStar_Syntax_Syntax.num_uniform_params = uu___;
           FStar_Syntax_Syntax.t = ty; FStar_Syntax_Syntax.mutuals = uu___1;
-          FStar_Syntax_Syntax.ds = c_lids;_}
+          FStar_Syntax_Syntax.ds = c_lids;
+          FStar_Syntax_Syntax.injective_type_params = uu___2;_}
         ->
         let nm = FStar_Ident.path_of_lid lid in
-        let uu___2 = FStar_Syntax_Subst.univ_var_opening us in
-        (match uu___2 with
+        let uu___3 = FStar_Syntax_Subst.univ_var_opening us in
+        (match uu___3 with
          | (s, us1) ->
              let param_bs1 = FStar_Syntax_Subst.subst_binders s param_bs in
              let ty1 = FStar_Syntax_Subst.subst s ty in
-             let uu___3 = FStar_Syntax_Subst.open_term param_bs1 ty1 in
-             (match uu___3 with
+             let uu___4 = FStar_Syntax_Subst.open_term param_bs1 ty1 in
+             (match uu___4 with
               | (param_bs2, ty2) ->
                   let inspect_ctor c_lid =
-                    let uu___4 =
-                      let uu___5 = get_env () in
-                      FStar_TypeChecker_Env.lookup_sigelt uu___5 c_lid in
-                    match uu___4 with
+                    let uu___5 =
+                      let uu___6 = get_env () in
+                      FStar_TypeChecker_Env.lookup_sigelt uu___6 c_lid in
+                    match uu___5 with
                     | FStar_Pervasives_Native.Some
                         {
                           FStar_Syntax_Syntax.sigel =
@@ -905,22 +906,24 @@ let (inspect_sigelt :
                             { FStar_Syntax_Syntax.lid1 = lid1;
                               FStar_Syntax_Syntax.us1 = us2;
                               FStar_Syntax_Syntax.t1 = cty;
-                              FStar_Syntax_Syntax.ty_lid = uu___5;
+                              FStar_Syntax_Syntax.ty_lid = uu___6;
                               FStar_Syntax_Syntax.num_ty_params = nparam;
-                              FStar_Syntax_Syntax.mutuals1 = uu___6;_};
-                          FStar_Syntax_Syntax.sigrng = uu___7;
-                          FStar_Syntax_Syntax.sigquals = uu___8;
-                          FStar_Syntax_Syntax.sigmeta = uu___9;
-                          FStar_Syntax_Syntax.sigattrs = uu___10;
-                          FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___11;
-                          FStar_Syntax_Syntax.sigopts = uu___12;_}
+                              FStar_Syntax_Syntax.mutuals1 = uu___7;
+                              FStar_Syntax_Syntax.injective_type_params1 =
+                                uu___8;_};
+                          FStar_Syntax_Syntax.sigrng = uu___9;
+                          FStar_Syntax_Syntax.sigquals = uu___10;
+                          FStar_Syntax_Syntax.sigmeta = uu___11;
+                          FStar_Syntax_Syntax.sigattrs = uu___12;
+                          FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___13;
+                          FStar_Syntax_Syntax.sigopts = uu___14;_}
                         ->
                         let cty1 = FStar_Syntax_Subst.subst s cty in
-                        let uu___13 =
-                          let uu___14 = get_env () in
-                          FStar_TypeChecker_Normalize.get_n_binders uu___14
+                        let uu___15 =
+                          let uu___16 = get_env () in
+                          FStar_TypeChecker_Normalize.get_n_binders uu___16
                             nparam cty1 in
-                        (match uu___13 with
+                        (match uu___15 with
                          | (param_ctor_bs, c) ->
                              (if
                                 (FStar_Compiler_List.length param_ctor_bs) <>
@@ -929,11 +932,11 @@ let (inspect_sigelt :
                                 FStar_Compiler_Effect.failwith
                                   "impossible: inspect_sigelt: could not obtain sufficient ctor param binders"
                               else ();
-                              (let uu___16 =
-                                 let uu___17 =
+                              (let uu___18 =
+                                 let uu___19 =
                                    FStar_Syntax_Util.is_total_comp c in
-                                 Prims.op_Negation uu___17 in
-                               if uu___16
+                                 Prims.op_Negation uu___19 in
+                               if uu___18
                                then
                                  FStar_Compiler_Effect.failwith
                                    "impossible: inspect_sigelt: removed parameters and got an effectful comp"
@@ -943,26 +946,26 @@ let (inspect_sigelt :
                                  FStar_Compiler_List.map2
                                    (fun b1 ->
                                       fun b2 ->
-                                        let uu___16 =
-                                          let uu___17 =
+                                        let uu___18 =
+                                          let uu___19 =
                                             FStar_Syntax_Syntax.bv_to_name
                                               b2.FStar_Syntax_Syntax.binder_bv in
                                           ((b1.FStar_Syntax_Syntax.binder_bv),
-                                            uu___17) in
-                                        FStar_Syntax_Syntax.NT uu___16)
+                                            uu___19) in
+                                        FStar_Syntax_Syntax.NT uu___18)
                                    param_ctor_bs param_bs2 in
                                let cty3 = FStar_Syntax_Subst.subst s' cty2 in
                                let cty4 = FStar_Syntax_Util.remove_inacc cty3 in
-                               let uu___16 = FStar_Ident.path_of_lid lid1 in
-                               (uu___16, cty4))))
-                    | uu___5 ->
+                               let uu___18 = FStar_Ident.path_of_lid lid1 in
+                               (uu___18, cty4))))
+                    | uu___6 ->
                         FStar_Compiler_Effect.failwith
                           "impossible: inspect_sigelt: did not find ctor" in
-                  let uu___4 =
-                    let uu___5 = FStar_Compiler_List.map inspect_ident us1 in
-                    let uu___6 = FStar_Compiler_List.map inspect_ctor c_lids in
-                    (nm, uu___5, param_bs2, ty2, uu___6) in
-                  FStar_Reflection_V1_Data.Sg_Inductive uu___4))
+                  let uu___5 =
+                    let uu___6 = FStar_Compiler_List.map inspect_ident us1 in
+                    let uu___7 = FStar_Compiler_List.map inspect_ctor c_lids in
+                    (nm, uu___6, param_bs2, ty2, uu___7) in
+                  FStar_Reflection_V1_Data.Sg_Inductive uu___5))
     | FStar_Syntax_Syntax.Sig_declare_typ
         { FStar_Syntax_Syntax.lid2 = lid; FStar_Syntax_Syntax.us2 = us;
           FStar_Syntax_Syntax.t2 = ty;_}
@@ -1037,6 +1040,7 @@ let (pack_sigelt :
         (check_lid ind_lid;
          (let s = FStar_Syntax_Subst.univ_var_closing us_names1 in
           let nparam = FStar_Compiler_List.length param_bs in
+          let injective_type_params = false in
           let pack_ctor c =
             let uu___1 = c in
             match uu___1 with
@@ -1056,7 +1060,9 @@ let (pack_sigelt :
                        FStar_Syntax_Syntax.t1 = ty3;
                        FStar_Syntax_Syntax.ty_lid = ind_lid;
                        FStar_Syntax_Syntax.num_ty_params = nparam;
-                       FStar_Syntax_Syntax.mutuals1 = []
+                       FStar_Syntax_Syntax.mutuals1 = [];
+                       FStar_Syntax_Syntax.injective_type_params1 =
+                         injective_type_params
                      }) in
           let ctor_ses = FStar_Compiler_List.map pack_ctor ctors in
           let c_lids =
@@ -1079,7 +1085,9 @@ let (pack_sigelt :
                      FStar_Pervasives_Native.None;
                    FStar_Syntax_Syntax.t = ty2;
                    FStar_Syntax_Syntax.mutuals = [];
-                   FStar_Syntax_Syntax.ds = c_lids
+                   FStar_Syntax_Syntax.ds = c_lids;
+                   FStar_Syntax_Syntax.injective_type_params =
+                     injective_type_params
                  }) in
           let se =
             FStar_Syntax_Syntax.mk_sigelt

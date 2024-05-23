@@ -3,7 +3,7 @@ module Bug3185
 module FT = FStar.Tactics.V2
 
 #push-options "--print_bound_var_types --print_full_names"
-// #push-options "--debug_level NBE --debug Test_NbeIllTyped"
+// #push-options "--debug NBE"
 
 let test_normalise (): unit =
   assert (forall (i: int). op_LessThanOrEqual == op_LessThanOrEqual)

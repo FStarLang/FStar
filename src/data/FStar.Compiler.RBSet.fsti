@@ -1,5 +1,7 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2017 Microsoft Research
+
+   Authors: Aseem Rastogi, Nikhil Swamy, Jonathan Protzenko
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,8 +15,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module NegativeTests.ZZImplicitFalse
 
-val wtf: unit -> Lemma False
-[@@ expect_failure] // error 19 (assertion failed) on 1-phase, error 66 (failed to resolve impl) on 2-phase
-let wtf _ = let _:False = _ in ()
+module FStar.Compiler.RBSet
+
+open FStar.Class.Ord
+open FStar.Class.Show
+open FStar.Class.Setlike
+include FStar.Class.Setlike
+
+new
+val rbset (a:Type0) : Type0
+
+type t = rbset
+
+instance
+val setlike_rbset (a:Type0) (_ : ord a) : Tot (setlike a (t a))
+
+instance
+val showable_rbset (a:Type0) (_ : showable a) : Tot (showable (t a))

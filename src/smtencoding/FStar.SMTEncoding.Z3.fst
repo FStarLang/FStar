@@ -75,7 +75,7 @@ let z3_exe : unit -> string =
         else if inpath z3_v then z3_v
         else Platform.exe "z3"
       in
-      if Options.debug_any () then
+      if Debug.any () then
         BU.print1 "Chosen Z3 executable: %s\n" path;
       path
     )
@@ -448,7 +448,7 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
              res
         else ru) in
     let status =
-      if Options.debug_any() then print_string <| format1 "Z3 says: %s\n" (String.concat "\n" smt_output.smt_result);
+      if Debug.any() then print_string <| format1 "Z3 says: %s\n" (String.concat "\n" smt_output.smt_result);
       match smt_output.smt_result with
       | ["unsat"]   -> UNSAT unsat_core
       | ["sat"]     -> SAT     (labels, reason_unknown)

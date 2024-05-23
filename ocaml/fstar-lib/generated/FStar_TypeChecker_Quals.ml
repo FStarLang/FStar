@@ -499,85 +499,88 @@ let (check_must_erase_attribute :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun env ->
     fun se ->
-      match se.FStar_Syntax_Syntax.sigel with
-      | FStar_Syntax_Syntax.Sig_let
-          { FStar_Syntax_Syntax.lbs1 = lbs; FStar_Syntax_Syntax.lids1 = l;_}
-          ->
-          let uu___ =
-            let uu___1 = FStar_Options.ide () in Prims.op_Negation uu___1 in
-          if uu___
-          then
-            let uu___1 =
-              let uu___2 = FStar_TypeChecker_Env.dsenv env in
-              let uu___3 = FStar_TypeChecker_Env.current_module env in
-              FStar_Syntax_DsEnv.iface_decls uu___2 uu___3 in
-            (match uu___1 with
-             | FStar_Pervasives_Native.None -> ()
-             | FStar_Pervasives_Native.Some iface_decls ->
-                 FStar_Compiler_List.iter
-                   (fun lb ->
-                      let lbname =
-                        FStar_Compiler_Util.right
-                          lb.FStar_Syntax_Syntax.lbname in
-                      let has_iface_val =
-                        let uu___2 =
-                          let uu___3 =
-                            FStar_Ident.ident_of_lid
-                              (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                          FStar_Parser_AST.decl_is_val uu___3 in
-                        FStar_Compiler_Util.for_some uu___2 iface_decls in
-                      if has_iface_val
-                      then
-                        let must_erase =
-                          FStar_TypeChecker_Util.must_erase_for_extraction
-                            env lb.FStar_Syntax_Syntax.lbdef in
-                        let has_attr =
-                          FStar_TypeChecker_Env.fv_has_attr env lbname
-                            FStar_Parser_Const.must_erase_for_extraction_attr in
-                        (if must_erase && (Prims.op_Negation has_attr)
-                         then
-                           let uu___2 =
-                             FStar_Syntax_Syntax.range_of_fv lbname in
-                           let uu___3 =
-                             let uu___4 =
+      let uu___ = FStar_Options.ide () in
+      if uu___
+      then ()
+      else
+        (match se.FStar_Syntax_Syntax.sigel with
+         | FStar_Syntax_Syntax.Sig_let
+             { FStar_Syntax_Syntax.lbs1 = lbs;
+               FStar_Syntax_Syntax.lids1 = l;_}
+             ->
+             let uu___2 =
+               let uu___3 = FStar_TypeChecker_Env.dsenv env in
+               let uu___4 = FStar_TypeChecker_Env.current_module env in
+               FStar_Syntax_DsEnv.iface_decls uu___3 uu___4 in
+             (match uu___2 with
+              | FStar_Pervasives_Native.None -> ()
+              | FStar_Pervasives_Native.Some iface_decls ->
+                  FStar_Compiler_List.iter
+                    (fun lb ->
+                       let lbname =
+                         FStar_Compiler_Util.right
+                           lb.FStar_Syntax_Syntax.lbname in
+                       let has_iface_val =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Ident.ident_of_lid
+                               (lbname.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
+                           FStar_Parser_AST.decl_is_val uu___4 in
+                         FStar_Compiler_Util.for_some uu___3 iface_decls in
+                       if has_iface_val
+                       then
+                         let must_erase =
+                           FStar_TypeChecker_Util.must_erase_for_extraction
+                             env lb.FStar_Syntax_Syntax.lbdef in
+                         let has_attr =
+                           FStar_TypeChecker_Env.fv_has_attr env lbname
+                             FStar_Parser_Const.must_erase_for_extraction_attr in
+                         (if must_erase && (Prims.op_Negation has_attr)
+                          then
+                            let uu___3 =
+                              FStar_Syntax_Syntax.range_of_fv lbname in
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    let uu___8 =
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_fv lbname in
+                                    let uu___9 =
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_fv lbname in
+                                    FStar_Compiler_Util.format2
+                                      "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
+                                      uu___8 uu___9 in
+                                  FStar_Errors_Msg.text uu___7 in
+                                [uu___6] in
+                              (FStar_Errors_Codes.Error_MustEraseMissing,
+                                uu___5) in
+                            FStar_Errors.log_issue_doc uu___3 uu___4
+                          else
+                            if has_attr && (Prims.op_Negation must_erase)
+                            then
+                              (let uu___4 =
+                                 FStar_Syntax_Syntax.range_of_fv lbname in
                                let uu___5 =
                                  let uu___6 =
                                    let uu___7 =
-                                     FStar_Syntax_Print.fv_to_string lbname in
-                                   let uu___8 =
-                                     FStar_Syntax_Print.fv_to_string lbname in
-                                   FStar_Compiler_Util.format2
-                                     "Values of type `%s` will be erased during extraction, but its interface hides this fact. Add the `must_erase_for_extraction` attribute to the `val %s` declaration for this symbol in the interface"
-                                     uu___7 uu___8 in
-                                 FStar_Errors_Msg.text uu___6 in
-                               [uu___5] in
-                             (FStar_Errors_Codes.Error_MustEraseMissing,
-                               uu___4) in
-                           FStar_Errors.log_issue_doc uu___2 uu___3
-                         else
-                           if has_attr && (Prims.op_Negation must_erase)
-                           then
-                             (let uu___3 =
-                                FStar_Syntax_Syntax.range_of_fv lbname in
-                              let uu___4 =
-                                let uu___5 =
-                                  let uu___6 =
-                                    let uu___7 =
-                                      let uu___8 =
-                                        FStar_Syntax_Print.fv_to_string
-                                          lbname in
-                                      FStar_Compiler_Util.format1
-                                        "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
-                                        uu___8 in
-                                    FStar_Errors_Msg.text uu___7 in
-                                  [uu___6] in
-                                (FStar_Errors_Codes.Error_MustEraseMissing,
-                                  uu___5) in
-                              FStar_Errors.log_issue_doc uu___3 uu___4)
-                           else ())
-                      else ()) (FStar_Pervasives_Native.snd lbs))
-          else ()
-      | uu___ -> ()
+                                     let uu___8 =
+                                       let uu___9 =
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_fv
+                                           lbname in
+                                       FStar_Compiler_Util.format1
+                                         "Values of type `%s` cannot be erased during extraction, but the `must_erase_for_extraction` attribute claims that it can. Please remove the attribute."
+                                         uu___9 in
+                                     FStar_Errors_Msg.text uu___8 in
+                                   [uu___7] in
+                                 (FStar_Errors_Codes.Error_MustEraseMissing,
+                                   uu___6) in
+                               FStar_Errors.log_issue_doc uu___4 uu___5)
+                            else ())
+                       else ()) (FStar_Pervasives_Native.snd lbs))
+         | uu___2 -> ())
 let (check_typeclass_instance_attribute :
   FStar_TypeChecker_Env.env ->
     FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.sigelt -> unit)
@@ -597,67 +600,68 @@ let (check_typeclass_instance_attribute :
           let uu___ = FStar_Syntax_Util.arrow_formals_comp ty in
           match uu___ with
           | (uu___1, res) ->
-              let uu___2 = FStar_Syntax_Util.is_total_comp res in
-              if uu___2
-              then
-                let t = FStar_Syntax_Util.comp_result res in
+              ((let uu___3 =
+                  let uu___4 = FStar_Syntax_Util.is_total_comp res in
+                  Prims.op_Negation uu___4 in
+                if uu___3
+                then
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 =
+                        FStar_Errors_Msg.text
+                          "Instances are expected to be total." in
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 =
+                            FStar_Errors_Msg.text "This instance has effect" in
+                          let uu___10 =
+                            FStar_Class_PP.pp FStar_Ident.pretty_lident
+                              (FStar_Syntax_Util.comp_effect_name res) in
+                          FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
+                        [uu___8] in
+                      uu___6 :: uu___7 in
+                    (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
+                      uu___5) in
+                  FStar_Errors.log_issue_doc rng uu___4
+                else ());
+               (let t = FStar_Syntax_Util.comp_result res in
                 let uu___3 = FStar_Syntax_Util.head_and_args t in
-                (match uu___3 with
-                 | (head, uu___4) ->
-                     let err uu___5 =
-                       let uu___6 =
-                         let uu___7 =
-                           let uu___8 =
-                             FStar_Errors_Msg.text
-                               "Instances must define instances of `class` types." in
-                           let uu___9 =
-                             let uu___10 =
-                               let uu___11 = FStar_Errors_Msg.text "Type" in
-                               let uu___12 =
-                                 let uu___13 =
-                                   FStar_Class_PP.pp
-                                     FStar_Syntax_Print.pretty_term t in
-                                 let uu___14 =
-                                   FStar_Errors_Msg.text "is not a class." in
-                                 FStar_Pprint.op_Hat_Slash_Hat uu___13
-                                   uu___14 in
-                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
-                             [uu___10] in
-                           uu___8 :: uu___9 in
-                         (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                           uu___7) in
-                       FStar_Errors.log_issue_doc rng uu___6 in
-                     let uu___5 =
-                       let uu___6 = FStar_Syntax_Util.un_uinst head in
-                       uu___6.FStar_Syntax_Syntax.n in
-                     (match uu___5 with
-                      | FStar_Syntax_Syntax.Tm_fvar fv ->
-                          let uu___6 =
-                            let uu___7 =
-                              FStar_TypeChecker_Env.fv_has_attr env fv
-                                FStar_Parser_Const.tcclass_lid in
-                            Prims.op_Negation uu___7 in
-                          if uu___6 then err () else ()
-                      | uu___6 -> err ()))
-              else
-                (let uu___4 =
-                   let uu___5 =
-                     let uu___6 =
-                       FStar_Errors_Msg.text
-                         "Instances are expected to be total." in
-                     let uu___7 =
-                       let uu___8 =
-                         let uu___9 =
-                           FStar_Errors_Msg.text "This instance has effect" in
-                         let uu___10 =
-                           FStar_Class_PP.pp FStar_Ident.pretty_lident
-                             (FStar_Syntax_Util.comp_effect_name res) in
-                         FStar_Pprint.op_Hat_Hat uu___9 uu___10 in
-                       [uu___8] in
-                     uu___6 :: uu___7 in
-                   (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
-                     uu___5) in
-                 FStar_Errors.log_issue_doc rng uu___4) in
+                match uu___3 with
+                | (head, uu___4) ->
+                    let err uu___5 =
+                      let uu___6 =
+                        let uu___7 =
+                          let uu___8 =
+                            FStar_Errors_Msg.text
+                              "Instances must define instances of `class` types." in
+                          let uu___9 =
+                            let uu___10 =
+                              let uu___11 = FStar_Errors_Msg.text "Type" in
+                              let uu___12 =
+                                let uu___13 =
+                                  FStar_Class_PP.pp
+                                    FStar_Syntax_Print.pretty_term t in
+                                let uu___14 =
+                                  FStar_Errors_Msg.text "is not a class." in
+                                FStar_Pprint.op_Hat_Slash_Hat uu___13 uu___14 in
+                              FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                            [uu___10] in
+                          uu___8 :: uu___9 in
+                        (FStar_Errors_Codes.Error_UnexpectedTypeclassInstance,
+                          uu___7) in
+                      FStar_Errors.log_issue_doc rng uu___6 in
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Util.un_uinst head in
+                      uu___6.FStar_Syntax_Syntax.n in
+                    (match uu___5 with
+                     | FStar_Syntax_Syntax.Tm_fvar fv ->
+                         let uu___6 =
+                           let uu___7 =
+                             FStar_TypeChecker_Env.fv_has_attr env fv
+                               FStar_Parser_Const.tcclass_lid in
+                           Prims.op_Negation uu___7 in
+                         if uu___6 then err () else ()
+                     | uu___6 -> err ()))) in
         if is_tc_instance
         then
           match se.FStar_Syntax_Syntax.sigel with

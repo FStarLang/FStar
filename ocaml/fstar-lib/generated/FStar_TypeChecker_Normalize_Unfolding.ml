@@ -694,7 +694,8 @@ let (should_unfold :
                      (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
                        &&
                        (FStar_Compiler_Util.for_some
-                          (FStar_Syntax_Util.attr_eq
+                          (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                             cfg.FStar_TypeChecker_Cfg.tcenv
                              FStar_Syntax_Util.tac_opaque_attr) attrs)
                      ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -709,8 +710,8 @@ let (should_unfold :
                  FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
                let uu___3 =
                  let uu___4 = FStar_Syntax_Syntax.range_of_fv fv in
-                 FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range
-                   uu___4 in
+                 FStar_Class_Show.show
+                   FStar_Compiler_Range_Ops.showable_range uu___4 in
                let uu___4 =
                  FStar_Class_Show.show
                    (FStar_Class_Show.show_tuple3
