@@ -752,7 +752,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops cfg.tcenv}) tm
+                              primitive_steps=simplification_steps cfg.tcenv}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -2274,8 +2274,7 @@ and maybe_simplify cfg env stack tm =
     if cfg.debug.b380
     then BU.print4 "%sSimplified\n\t%s to\n\t%s\nrenorm = %s\n"
                    (if cfg.steps.simplify then "" else "NOT ")
-                   (Print.term_to_string tm) (Print.term_to_string tm')
-                   (string_of_bool renorm);
+                   (show tm) (show tm') (show renorm);
     tm', renorm
 
 and norm_cb cfg : EMB.norm_cb = function

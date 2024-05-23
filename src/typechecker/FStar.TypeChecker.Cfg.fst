@@ -252,7 +252,7 @@ let prim_from_list (l : list primitive_step) : prim_step_set =
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
 let env_dependent_ops env = prim_from_list (env_dependent_ops env)
-let equality_ops env = prim_from_list (equality_ops_list env)
+let simplification_steps env = prim_from_list (simplification_ops_list env)
 
 instance showable_cfg : showable cfg = {
   show = (fun cfg ->
