@@ -28,4 +28,4 @@ include FStar.Real
 /// when writing something like `p1+p2`, but every library does in fact limit
 /// permissions to 1.0R.
 [@@ erasable]
-type perm : Type0 = r:real { r >. zero }
+type perm : Type0 = r:real { r >. 0.0R }
