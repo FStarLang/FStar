@@ -372,6 +372,15 @@ let e_int : embedding Z.t =
     in
     mk_emb' em un (fun () -> lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of int)
 
+let e_real : embedding Compiler.Real.real =
+    let em _cb (Compiler.Real.Real c) = Constant (Real c) in
+    let un _cb c =
+        match c with
+        | Constant (Real a) -> Some (Compiler.Real.Real a)
+        | _ -> None
+    in
+    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Compiler.Real.real)
+
 let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 // Embedding at option type

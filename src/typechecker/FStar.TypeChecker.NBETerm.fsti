@@ -278,6 +278,7 @@ instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
 instance val e_int    : embedding Z.t
+instance val e_real   : embedding Compiler.Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t

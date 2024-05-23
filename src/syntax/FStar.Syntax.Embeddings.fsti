@@ -41,6 +41,7 @@ instance val e_char        : embedding char
 instance val e_int         : embedding Z.t
 instance val e_fsint       : embedding int
 instance val e_string      : embedding string
+instance val e_real        : embedding Compiler.Real.real
 instance val e_norm_step   : embedding Pervasives.norm_step
 instance val e_vconfig     : embedding vconfig
 instance val e_order       : embedding FStar.Order.order
