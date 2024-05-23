@@ -979,6 +979,7 @@ and translate_constant (c : sconst) : constant =
     | C.Const_string (s, r) -> String (s,r)
     | C.Const_char c -> Char c
     | C.Const_range r -> Range r
+    | C.Const_real r -> Real r
     | _ -> SConst c
 
 and readback_comp cfg (c: comp) : S.comp =
@@ -1229,6 +1230,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
     | Constant (Range r) -> PO.embed_simple x.nbe_r r
+    | Constant (Real r) ->  PO.embed_simple x.nbe_r (Compiler.Real.Real r)
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->

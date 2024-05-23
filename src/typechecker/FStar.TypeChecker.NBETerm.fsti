@@ -62,6 +62,7 @@ type constant =
   | Char of FStar.Char.char
   | Range of Range.range
   | SConst of FStar.Const.sconst
+  | Real of string
 
 // Atoms represent the head of an irreducible application
 // They can either be variables
