@@ -70,3 +70,28 @@ let mul_comm = assert (forall x y. x *. y == y *.x)
 let mul_assoc = assert (forall x y z. ((x *. y) *.z) == (x *. (y *. z)))
 let mul_dist = assert (forall x y z. x *. (y +. z) == (x *. y) +. (x *.z))
 #pop-options
+
+(* Testing some simplification rules *)
+#push-options "--no_smt"
+let _ = assert (0.0R <. 1.0R)
+let _ = assert (1.0R >. 0.0R)
+let _ = assert (1.0R >=. 0.0R)
+let _ = assert (0.0R <=. 1.0R)
+let _ = assert (0.0R >=. 0.0R)
+let _ = assert (0.0R <=. 0.0R)
+let _ = assert (1.0R >=. 1.0R)
+let _ = assert (1.0R <=. 1.0R)
+#pop-options
+
+[@@expect_failure] let _ = assert (1.0R <. 0.0R)
+[@@expect_failure] let _ = assert (0.0R >. 1.0R)
+[@@expect_failure] let _ = assert (0.0R >=. 1.0R)
+[@@expect_failure] let _ = assert (1.0R <=. 0.0R)
+
+#push-options "--no_smt"
+let test_ref1 = Some #(r:real{r >. 0.0R}) 1.0R
+let test_ref2 = Some #(r:real{r >. of_int 0}) 1.0R
+#pop-options
+
+// This one does not work witout SMT as zero is not unfolded!
+let test_ref3 = Some #(r:real{r >. zero}) 1.0R
