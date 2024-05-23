@@ -15,7 +15,7 @@
 
    Author: Megan Frisella
 *)
-module FStar.Queue
+module FStar.FunctionalQueue
 
 open FStar.Seq
 

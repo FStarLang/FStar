@@ -15,7 +15,7 @@
 
    Author: Megan Frisella
 *)
-module FStar.Queue
+module FStar.FunctionalQueue
 
 module L = FStar.List.Tot
 open FStar.List.Tot

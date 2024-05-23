@@ -1,7 +1,7 @@
 module TestQueue
 
-module Q = FStar.Queue
-open FStar.Queue
+module Q = FStar.FunctionalQueue
+open FStar.FunctionalQueue
 open FStar.Seq
 
 let my_queue = enqueue 3 (enqueue 2 (enqueue 1 Q.empty))
