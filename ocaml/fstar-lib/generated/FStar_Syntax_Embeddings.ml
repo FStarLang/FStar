@@ -346,6 +346,30 @@ let (e_string : Prims.string FStar_Syntax_Embeddings_Base.embedding) =
     (fun uu___ -> FStar_Syntax_Syntax.t_string)
     (fun x -> Prims.strcat "\"" (Prims.strcat x "\""))
     (fun uu___ -> emb_t_string)
+let (e_real :
+  FStar_Compiler_Real.real FStar_Syntax_Embeddings_Base.embedding) =
+  let ty = FStar_Syntax_Syntax.t_real in
+  let emb_t_real =
+    let uu___ =
+      let uu___1 = FStar_Ident.string_of_lid FStar_Parser_Const.real_lid in
+      (uu___1, []) in
+    FStar_Syntax_Syntax.ET_app uu___ in
+  let em r rng _shadow _norm =
+    let uu___ = r in
+    match uu___ with
+    | FStar_Compiler_Real.Real s ->
+        FStar_Syntax_Syntax.mk
+          (FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_real s)) rng in
+  let un t _norm =
+    let uu___ =
+      let uu___1 = FStar_Syntax_Embeddings_Base.unmeta_div_results t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_real s) ->
+        FStar_Pervasives_Native.Some (FStar_Compiler_Real.Real s)
+    | uu___1 -> FStar_Pervasives_Native.None in
+  FStar_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___ -> ty)
+    (fun uu___ -> "<real>") (fun uu___ -> emb_t_real)
 let e_option :
   'a .
     'a FStar_Syntax_Embeddings_Base.embedding ->

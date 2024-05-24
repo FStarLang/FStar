@@ -2194,12 +2194,12 @@ let (env_dependent_ops : FStar_TypeChecker_Env.env_t -> prim_step_set) =
   fun env ->
     let uu___ = FStar_TypeChecker_Primops.env_dependent_ops env in
     prim_from_list uu___
-let (equality_ops :
+let (simplification_steps :
   FStar_TypeChecker_Env.env_t ->
     FStar_TypeChecker_Primops_Base.primitive_step FStar_Compiler_Util.psmap)
   =
   fun env ->
-    let uu___ = FStar_TypeChecker_Primops.equality_ops_list env in
+    let uu___ = FStar_TypeChecker_Primops.simplification_ops_list env in
     prim_from_list uu___
 let (showable_cfg : cfg FStar_Class_Show.showable) =
   {

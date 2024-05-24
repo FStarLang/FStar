@@ -1402,7 +1402,8 @@ let (reduce_primops :
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
         Prims.list ->
-        FStar_Syntax_Syntax.term -> (FStar_Syntax_Syntax.term * Prims.bool))
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          (FStar_Syntax_Syntax.term * Prims.bool))
   =
   fun norm_cb ->
     fun cfg ->
@@ -1442,12 +1443,18 @@ let (reduce_primops :
                                   (FStar_TypeChecker_Cfg.log_primops cfg
                                      (fun uu___5 ->
                                         let uu___6 =
-                                          FStar_Syntax_Print.lid_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Ident.showable_lident
                                             prim_step.FStar_TypeChecker_Primops_Base.name in
                                         let uu___7 =
-                                          FStar_Compiler_Util.string_of_int l in
+                                          FStar_Class_Show.show
+                                            (FStar_Class_Show.printableshow
+                                               FStar_Class_Printable.printable_nat)
+                                            l in
                                         let uu___8 =
-                                          FStar_Compiler_Util.string_of_int
+                                          FStar_Class_Show.show
+                                            (FStar_Class_Show.printableshow
+                                               FStar_Class_Printable.printable_int)
                                             prim_step.FStar_TypeChecker_Primops_Base.arity in
                                         FStar_Compiler_Util.print3
                                           "primop: found partially applied %s (%s/%s args)\n"
@@ -1468,7 +1475,8 @@ let (reduce_primops :
                                        (FStar_TypeChecker_Cfg.log_primops cfg
                                           (fun uu___7 ->
                                              let uu___8 =
-                                               FStar_Syntax_Print.term_to_string
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_term
                                                  tm in
                                              FStar_Compiler_Util.print1
                                                "primop: trying to reduce <%s>\n"
@@ -1495,7 +1503,8 @@ let (reduce_primops :
                                                 cfg
                                                 (fun uu___8 ->
                                                    let uu___9 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        tm in
                                                    FStar_Compiler_Util.print1
                                                      "primop: <%s> did not reduce\n"
@@ -1507,10 +1516,12 @@ let (reduce_primops :
                                                 cfg
                                                 (fun uu___8 ->
                                                    let uu___9 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        tm in
                                                    let uu___10 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        reduced in
                                                    FStar_Compiler_Util.print2
                                                      "primop: <%s> reduced to  %s\n"
@@ -1524,7 +1535,8 @@ let (reduce_primops :
                                 (FStar_TypeChecker_Cfg.log_primops cfg
                                    (fun uu___6 ->
                                       let uu___7 =
-                                        FStar_Syntax_Print.term_to_string tm in
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term tm in
                                       FStar_Compiler_Util.print1
                                         "primop: not reducing <%s> since we're doing strong reduction\n"
                                         uu___7);
@@ -1537,7 +1549,8 @@ let (reduce_primops :
                            (FStar_TypeChecker_Cfg.log_primops cfg
                               (fun uu___4 ->
                                  let uu___5 =
-                                   FStar_Syntax_Print.term_to_string tm in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term tm in
                                  FStar_Compiler_Util.print1
                                    "primop: reducing <%s>\n" uu___5);
                             (match args with
@@ -1556,7 +1569,8 @@ let (reduce_primops :
                            (FStar_TypeChecker_Cfg.log_primops cfg
                               (fun uu___4 ->
                                  let uu___5 =
-                                   FStar_Syntax_Print.term_to_string tm in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term tm in
                                  FStar_Compiler_Util.print1
                                    "primop: reducing <%s>\n" uu___5);
                             (match args with
@@ -1579,14 +1593,15 @@ let (reduce_equality :
     FStar_TypeChecker_Cfg.cfg ->
       (FStar_Syntax_Syntax.binder FStar_Pervasives_Native.option * closure)
         Prims.list ->
-        FStar_Syntax_Syntax.term -> (FStar_Syntax_Syntax.term * Prims.bool))
+        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+          (FStar_Syntax_Syntax.term * Prims.bool))
   =
   fun norm_cb ->
     fun cfg ->
       fun tm ->
         let uu___ =
           let uu___1 =
-            FStar_TypeChecker_Cfg.equality_ops
+            FStar_TypeChecker_Cfg.simplification_steps
               cfg.FStar_TypeChecker_Cfg.tcenv in
           {
             FStar_TypeChecker_Cfg.steps =
@@ -5697,9 +5712,15 @@ and (maybe_simplify :
               (if
                  (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.b380
                then
-                 (let uu___2 = FStar_Syntax_Print.term_to_string tm in
-                  let uu___3 = FStar_Syntax_Print.term_to_string tm' in
-                  let uu___4 = FStar_Compiler_Util.string_of_bool renorm in
+                 (let uu___2 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
+                  let uu___3 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                      tm' in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_bool) renorm in
                   FStar_Compiler_Util.print4
                     "%sSimplified\n\t%s to\n\t%s\nrenorm = %s\n"
                     (if

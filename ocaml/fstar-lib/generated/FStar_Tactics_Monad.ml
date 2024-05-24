@@ -285,8 +285,11 @@ let (get : FStar_Tactics_Types.proofstate tac) =
   mk_tac (fun ps -> FStar_Tactics_Result.Success (ps, ps))
 let traise : 'a . Prims.exn -> 'a tac =
   fun e -> mk_tac (fun ps -> FStar_Tactics_Result.Failed (e, ps))
-let (log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
+let (do_log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
   fun ps -> fun f -> if ps.FStar_Tactics_Types.tac_verb_dbg then f () else ()
+let (log : (unit -> unit) -> unit tac) =
+  fun f ->
+    mk_tac (fun ps -> do_log ps f; FStar_Tactics_Result.Success ((), ps))
 let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
   fun msg ->
     mk_tac
@@ -376,13 +379,13 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
              ()
          with
          | FStar_Errors.Err (uu___1, msg, uu___2) ->
-             (log ps
+             (do_log ps
                 (fun uu___4 ->
                    let uu___5 = FStar_Errors_Msg.rendermsg msg in
                    FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___5);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
          | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
-             (log ps
+             (do_log ps
                 (fun uu___5 ->
                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                    FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___6);
@@ -966,12 +969,13 @@ let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
     fun uu___ ->
       (fun f ->
          fun cont ->
+           let uu___ = log f in
            Obj.magic
-             (FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)
-                (fun uu___ ->
-                   (fun ps ->
-                      let ps = Obj.magic ps in log ps f; Obj.magic (cont ()))
-                     uu___))) uu___1 uu___
+             (FStar_Class_Monad.op_let_Bang monad_tac () () uu___
+                (fun uu___1 ->
+                   (fun uu___1 ->
+                      let uu___1 = Obj.magic uu___1 in Obj.magic (cont ()))
+                     uu___1))) uu___1 uu___
 let (if_verbose_tac : (unit -> unit tac) -> unit tac) =
   fun f ->
     FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)

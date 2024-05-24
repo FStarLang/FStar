@@ -10,6 +10,7 @@ type constant =
   | Char of FStar_Char.char 
   | Range of FStar_Compiler_Range_Type.range 
   | SConst of FStar_Const.sconst 
+  | Real of Prims.string 
 let (uu___is_Unit : constant -> Prims.bool) =
   fun projectee -> match projectee with | Unit -> true | uu___ -> false
 let (uu___is_Bool : constant -> Prims.bool) =
@@ -37,6 +38,10 @@ let (uu___is_SConst : constant -> Prims.bool) =
   fun projectee -> match projectee with | SConst _0 -> true | uu___ -> false
 let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
   fun projectee -> match projectee with | SConst _0 -> _0
+let (uu___is_Real : constant -> Prims.bool) =
+  fun projectee -> match projectee with | Real _0 -> true | uu___ -> false
+let (__proj__Real__item___0 : constant -> Prims.string) =
+  fun projectee -> match projectee with | Real _0 -> _0
 type atom =
   | Var of var 
   | Match of (t *
@@ -470,6 +475,7 @@ let (eq_constant :
       | (String (s1, uu___), String (s2, uu___1)) -> equal_iff (s1 = s2)
       | (Char c11, Char c21) -> equal_iff (c11 = c21)
       | (Range r1, Range r2) -> FStar_TypeChecker_TermEqAndSimplify.Unknown
+      | (Real r1, Real r2) -> equal_if (r1 = r2)
       | (uu___, uu___1) -> FStar_TypeChecker_TermEqAndSimplify.NotEqual
 let rec (eq_t :
   FStar_TypeChecker_Env.env_t ->
@@ -598,6 +604,7 @@ let (constant_to_string : constant -> Prims.string) =
         let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format1 "Range %s" uu___
     | SConst s -> FStar_Syntax_Print.const_to_string s
+    | Real s -> FStar_Compiler_Util.format1 "Real %s" s
 let rec (t_to_string : t -> Prims.string) =
   fun x ->
     match x.nbe_t with
@@ -1042,6 +1049,16 @@ let (e_int : FStar_BigInt.t embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1 (fun uu___ -> lid_as_typ FStar_Parser_Const.int_lid [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_fsint)
+let (e_real : FStar_Compiler_Real.real embedding) =
+  let em1 _cb uu___ =
+    match uu___ with | FStar_Compiler_Real.Real c -> Constant (Real c) in
+  let un1 _cb c =
+    match c with
+    | Constant (Real a) ->
+        FStar_Pervasives_Native.Some (FStar_Compiler_Real.Real a)
+    | uu___ -> FStar_Pervasives_Native.None in
+  mk_emb' em1 un1 (fun uu___ -> lid_as_typ FStar_Parser_Const.real_lid [] [])
+    (FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_real)
 let (e_fsint : Prims.int embedding) =
   embed_as e_int FStar_BigInt.to_int_fs FStar_BigInt.of_int_fs
     FStar_Pervasives_Native.None
