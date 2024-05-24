@@ -30,7 +30,7 @@ module PS = Pulse.Checker.Prover.Substs
 module Abs = Pulse.Checker.Abs
 
 
-#push-options "--query_stats --z3rlimit_factor 4 --split_queries no"
+#push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
   (g:env)
   (ctxt:vprop)

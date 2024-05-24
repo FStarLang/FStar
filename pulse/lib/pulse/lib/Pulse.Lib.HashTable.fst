@@ -342,8 +342,8 @@ fn insert
     let voff = !off;
     if (voff = ht.sz)
     {
-      cont := false;
-      full_not_full pht.repr k
+      full_not_full pht.repr k;
+      unreachable();
     }
     else
     {

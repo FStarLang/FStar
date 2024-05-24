@@ -33,7 +33,7 @@ let freevars_close_term_host_term (t:term) (x:var) (i:index)
              (freevars (wr t FStar.Range.range_0) `set_minus` x)))
   = admit()
 
-#push-options "--query_stats --z3rlimit_factor 2"
+#push-options "--z3rlimit_factor 2"
 let freevars_close_term' (e:term) (x:var) (i:index)
   : Lemma 
     (ensures freevars (close_term' e x i) `Set.equal`
@@ -464,7 +464,7 @@ let freevars_array (t:term)
   = admit()
 
 // FIXME: tame this proof
-#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --query_stats --retry 5 --split_queries no"
+#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --retry 5 --split_queries no"
 let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
                            (d:st_typing g t c)
 : Lemma 

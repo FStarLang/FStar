@@ -175,7 +175,7 @@ pub fn insert<KT: Copy + PartialEq + Clone, VT: Clone>(
     } {
         let voff = off;
         if voff == ht.sz {
-            cont = false;
+            panic!()
         } else {
             let opt_sum = super::pulse_lib_hashtable::sz_add(cidx, voff);
             match opt_sum {

@@ -39,7 +39,7 @@ let mequiv_arrow (g:R.env) (t1:R.term) (u2:R.universe) (t2:R.term) (pre:R.term) 
   = admit()
 
 
-#push-options "--fuel 2 --ifuel 1 --query_stats"
+#push-options "--fuel 2 --ifuel 1"
 let inst_bind_t1 #u1 #u2 #g #head
                    (head_typing: RT.tot_typing g head (bind_type u1 u2))
                    (#t1:_)
@@ -189,7 +189,7 @@ let elab_bind_typing (g:stt_env)
     d
 #pop-options
 
-#push-options "--query_stats --z3rlimit_factor 4 --split_queries no"
+#push-options "--z3rlimit_factor 4 --split_queries no"
 assume
 val open_close_inverse_t (e:R.term { RT.ln e }) (x:var) (t:R.term)
   : Lemma (RT.open_with (RT.close_term e x) t == e)

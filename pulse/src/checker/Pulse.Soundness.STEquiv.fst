@@ -94,7 +94,7 @@ let inst_sub_stt (#g:R.env) (#u:_) (#a #pre1 #pre2 #post1 #post2 #r:R.term)
 
 let vprop_arrow (t:term) : term = tm_arrow (null_binder t) None (C_Tot tm_vprop)
 
-#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4 --query_stats"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit_factor 4"
 let st_equiv_soundness_aux (g:stt_env)
                            (c0:ln_comp) (c1:ln_comp { comp_res c0 == comp_res c1 })
                            (d:st_equiv g c0 c1)

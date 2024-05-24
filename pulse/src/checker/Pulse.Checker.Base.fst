@@ -365,7 +365,7 @@ let k_elab_equiv
     k_elab_equiv_prefix k d1 in
   k
 
-#push-options "--query_stats --fuel 3 --ifuel 2 --split_queries no --z3rlimit_factor 20"
+#push-options "--fuel 3 --ifuel 2 --split_queries no --z3rlimit_factor 20"
 open Pulse.PP
 let continuation_elaborator_with_bind (#g:env) (ctxt:term)
   (#c1:comp{stateful_comp c1})
@@ -646,7 +646,7 @@ let apply_checker_result_k (#g:env) (#ctxt:vprop) (#post_hint:post_hint_for_env 
 
   k (Some post_hint) d
 
-#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1 --query_stats"
+#push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
 let checker_result_for_st_typing (#g:env) (#ctxt:vprop) (#post_hint:post_hint_opt g)
   (d:st_typing_in_ctxt g ctxt post_hint)
   (ppname:ppname)

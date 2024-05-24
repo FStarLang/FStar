@@ -92,7 +92,11 @@ all-rs: pulsetutorial-loops.rs pulsetutorial-algorithms.rs
 test: all-rs
 	cargo test
 
-dpe: dpe.rs
+.PHONY: external
+external:
+	../dpe/gen-rust-bindings.sh
+
+dpe: dpe.rs external
 	cd ../dpe && cargo build && cd -
 	$(MAKE) -C ../dpe -f c.Makefile
 
