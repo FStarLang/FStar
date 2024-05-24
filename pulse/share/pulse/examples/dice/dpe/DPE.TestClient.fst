@@ -55,24 +55,21 @@ fn dpe_client ()
       let uds = get_uds ();
       with uds_repr. assert (A.pts_to uds uds_repr);
       unfold (open_session_client_perm (Some sid));
-      let h = initialize_context sid _ uds;
+      initialize_context sid _ uds;
       unfold (initialize_context_client_perm sid uds_repr);
       let r = get_engine_record ();
       with repr. assert (record_perm r 1.0R repr);
       with t. assert (sid_pts_to trace_ref sid t);
-      let hopt = derive_child sid h _ r;
-      match hopt {
-        Some h -> {
-          unfold (derive_child_client_perm sid t repr (Some h));
-          let r = get_l0_record ();
-          let hopt = derive_child sid h _ r;
-          drop_ (A.pts_to uds uds_repr);
-          drop_ (derive_child_client_perm _ _ _ _);
-        }
-        None -> {
-          drop_ (A.pts_to uds uds_repr);
-          drop_ (derive_child_client_perm _ _ _ _)
-        }
+      let res = derive_child sid _ r;
+      if res {
+        unfold (derive_child_client_perm sid t repr true);
+        let r = get_l0_record ();
+        let hopt = derive_child sid _ r;
+        drop_ (A.pts_to uds uds_repr);
+        drop_ (derive_child_client_perm _ _ _ _);
+      } else {
+        drop_ (A.pts_to uds uds_repr);
+        drop_ (derive_child_client_perm _ _ _ _)
       }
     }
     None -> {
@@ -94,10 +91,10 @@ fn dpe_client_err ()
       let uds = get_uds ();
       with uds_repr. assert (A.pts_to uds uds_repr);
       unfold (open_session_client_perm (Some sid));
-      let h = initialize_context sid _ uds;
+      initialize_context sid _ uds;
       unfold (initialize_context_client_perm sid uds_repr);
       let r = get_l0_record ();
-      let hopt = derive_child sid h _ r;
+      let hopt = derive_child sid _ r;
       admit ()
     }
     None -> {

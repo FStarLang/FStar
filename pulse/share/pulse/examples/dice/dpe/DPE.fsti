@@ -39,12 +39,6 @@ open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 
-//
-// Concrete state setup
-//
-
-type ctxt_hndl_t = U32.t
-
 type sid_t : eqtype = U16.t
 
 //
@@ -56,7 +50,7 @@ type sid_t : eqtype = U16.t
 noeq
 type session_state =
   | SessionStart
-  | Available { handle:ctxt_hndl_t; context:context_t }
+  | Available { context:context_t }
   | InUse
   | SessionClosed
   | SessionError
@@ -388,7 +382,7 @@ val initialize_context (sid:sid_t)
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
-  : stt ctxt_hndl_t
+  : stt unit
         (requires
            A.pts_to uds #p uds_bytes **
            sid_pts_to trace_ref sid t)
@@ -410,21 +404,21 @@ let derive_child_post_trace (r:repr_t) (t:trace) =
   | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
   | _ -> False
 
-let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (c:option ctxt_hndl_t)
+let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
   : vprop =
-  match c with
-  | None ->
+  match res with
+  | false ->
     exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (current_state t1 == G_SessionError (G_InUse (current_state t0)))
-  | Some _ ->
+  | true ->
     exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (derive_child_post_trace repr t1)
 
-val derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+val derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
-  : stt (option ctxt_hndl_t)
+  : stt bool
         (requires
            record_perm record 1.0R rrepr **
            sid_pts_to trace_ref sid t)
@@ -462,7 +456,7 @@ let certify_key_client_perm (sid:sid_t) (t0:trace) : vprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
-val certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+val certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
   (crt:A.larray U8.t (U32.v crt_len))
@@ -489,7 +483,7 @@ let sign_client_perm (sid:sid_t) (t0:trace) : vprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
-val sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+val sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
   (msg:A.larray U8.t (SZ.v msg_len))

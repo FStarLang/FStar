@@ -621,19 +621,6 @@ fn init_engine_ctxt
 }
 ```
 
-//
-// TODO: FIXME
-//
-```pulse
-fn prng ()
-  requires emp
-  returns _:ctxt_hndl_t
-  ensures emp
-{
-  0ul
-}
-```
-
 let session_state_tag_related (s:session_state) (gs:g_session_state) : GTot bool =
   match s, gs with
   | SessionStart, G_SessionStart
@@ -672,8 +659,6 @@ fn initialize_context (sid:sid_t)
   requires A.pts_to uds #p uds_bytes **
            sid_pts_to trace_ref sid t
 
-  returns r:ctxt_hndl_t
-
   ensures A.pts_to uds #p uds_bytes **
           initialize_context_client_perm sid uds_bytes
 {
@@ -685,15 +670,13 @@ fn initialize_context (sid:sid_t)
     SessionStart -> {
       rewrite (session_state_related s (current_state t)) as emp;
       let context = init_engine_ctxt uds;
-      let handle = prng ();
-      let s = Available { handle; context };
+      let s = Available { context };
       rewrite (context_perm context (Engine_context_repr uds_bytes)) as
               (session_state_related s (G_Available (Engine_context_repr uds_bytes)));
       let s = replace_session sid t1 s (G_Available (Engine_context_repr uds_bytes));
       intro_session_state_tag_related s (current_state t1);
       with _x _y. rewrite (session_state_related _x _y) as emp;
-      fold (initialize_context_client_perm sid uds_bytes);
-      handle
+      fold (initialize_context_client_perm sid uds_bytes)
     }
     InUse -> {
       rewrite (session_state_related s (current_state t)) as
@@ -1093,9 +1076,8 @@ fn derive_child_from_context
 ```pulse
 ghost
 fn rewrite_session_state_related_available
-  handle
   context
-  (s:session_state { s == Available { handle; context } })
+  (s:session_state { s == Available { context } })
   (t:trace)
   requires session_state_related s (current_state t)
   returns r:G.erased context_repr_t
@@ -1112,13 +1094,13 @@ fn rewrite_session_state_related_available
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
 ```pulse
-fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
   requires record_perm record 1.0R rrepr **
            sid_pts_to trace_ref sid t
-  returns b:(option ctxt_hndl_t)
+  returns b:bool
   ensures derive_child_client_perm sid t rrepr b
 {
   intro_record_and_repr_tag_related record 1.0R rrepr;
@@ -1137,7 +1119,7 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
         }
         _ -> {
           assume_ (pure (~ (L1_context? hc.context)));
-          let repr = rewrite_session_state_related_available hc.handle hc.context s t;
+          let repr = rewrite_session_state_related_available hc.context s t;
           intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record #rrepr #repr ();
 
@@ -1146,16 +1128,14 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
               unfold (maybe_context_perm repr rrepr (Some nctxt));
               with nrepr. assert (context_perm nctxt nrepr);
               intro_context_and_repr_tag_related nctxt nrepr;
-              let handle = prng ();
-              let s = Available { handle; context = nctxt };
+              let s = Available { context = nctxt };
               rewrite (context_perm nctxt nrepr) as
                       (session_state_related s (G_Available nrepr));
               let s = replace_session sid t1 s (G_Available nrepr);
               intro_session_state_tag_related s (current_state t1);
-              let ret = Some handle;
-              fold (derive_child_client_perm sid t rrepr (Some handle));
+              fold (derive_child_client_perm sid t rrepr true);
               with _x _y. rewrite (session_state_related _x _y) as emp;
-              ret
+              true
             }
             None -> {
               let s = SessionError;
@@ -1163,10 +1143,9 @@ fn derive_child (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
               rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
               let s = replace_session sid t1 s (G_SessionError (current_state t1));
               intro_session_state_tag_related s (current_state t1);
-              let ret = None #ctxt_hndl_t;
-              fold (derive_child_client_perm sid t rrepr None);
+              fold (derive_child_client_perm sid t rrepr false);
               with _x _y. rewrite (session_state_related _x _y) as emp;
-              ret
+              false
             }
           }
         }
@@ -1204,7 +1183,7 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
   intro_session_state_tag_related s (current_state t);
   match s {
     Available hc -> {
-      rewrite_session_state_related_available hc.handle hc.context s t;
+      rewrite_session_state_related_available hc.context s t;
       destroy_ctxt hc.context
     }
     _ -> {
@@ -1239,7 +1218,7 @@ fn close_session (sid:sid_t)
 
 #push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
 ```pulse
-fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+fn certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
   (crt:A.larray U8.t (U32.v crt_len))
@@ -1264,8 +1243,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
         L1_context c -> {
           let c_crt_len = c.aliasKeyCRT_len;
           if U32.lt crt_len c_crt_len {
-            let handle = prng ();
-            let ns = Available { handle; context = L1_context c };
+            let ns = Available { context = L1_context c };
             rewrite (session_state_related s (current_state t)) as
                     (session_state_related ns (current_state t));
             let s = replace_session sid t1 ns (current_state t);
@@ -1274,7 +1252,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
             fold (certify_key_client_perm sid t);
             0ul
           } else {
-            let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+            let r = rewrite_session_state_related_available (L1_context c) s t;
             let r = rewrite_context_perm_l1 (L1_context c) c;
             unfold (l1_context_perm c r);
 
@@ -1292,8 +1270,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
             rewrite (l1_context_perm c r) as
                     (context_perm (L1_context c) (L1_context_repr r));
             
-            let handle = prng ();
-            let ns = Available { handle; context = L1_context c };
+            let ns = Available { context = L1_context c };
             rewrite (context_perm (L1_context c) (L1_context_repr r)) as
                     (session_state_related ns (current_state t));
             
@@ -1325,7 +1302,7 @@ fn certify_key (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
 
 #push-options "--split_queries no"
 ```pulse
-fn sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+fn sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
   (msg:A.larray U8.t (SZ.v msg_len))
@@ -1347,7 +1324,7 @@ fn sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
     Available hc -> {
       match hc.context {
         L1_context c -> {
-          let r = rewrite_session_state_related_available hc.handle (L1_context c) s t;
+          let r = rewrite_session_state_related_available (L1_context c) s t;
           let r = rewrite_context_perm_l1 (L1_context c) c;
           unfold (l1_context_perm c r);
 
@@ -1359,8 +1336,7 @@ fn sign (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
           rewrite (l1_context_perm c r) as
                   (context_perm (L1_context c) (L1_context_repr r));
             
-          let handle = prng ();
-          let ns = Available { handle; context = L1_context c };
+          let ns = Available { context = L1_context c };
           rewrite (context_perm (L1_context c) (L1_context_repr r)) as
                   (session_state_related ns (current_state t));
             

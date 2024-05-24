@@ -4,11 +4,9 @@
 ////
 ////
 
-pub type ctxt_hndl_t = u32;
 pub type sid_t = u16;
 #[derive(Clone)]
 pub struct session_state__Available__payload {
-    pub handle: super::dpe::ctxt_hndl_t,
     pub context: super::dpetypes::context_t,
 }
 #[derive(Clone)]
@@ -182,27 +180,21 @@ pub fn init_engine_ctxt(
     let ctxt = super::dpetypes::mk_context_t_engine(engine_context);
     ctxt
 }
-pub fn prng(uu___: ()) -> super::dpe::ctxt_hndl_t {
-    0
-}
 pub fn initialize_context(
     sid: super::dpe::sid_t,
     t: (),
     p: (),
     uds_bytes: (),
     uds: &mut [u8],
-) -> super::dpe::ctxt_hndl_t {
+) -> () {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::SessionStart => {
             let context = super::dpe::init_engine_ctxt(uds, (), ());
-            let handle = super::dpe::prng(());
             let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-                handle: handle,
                 context: context,
             });
             let s2 = super::dpe::replace_session(sid, (), s1, ());
-            handle
         }
         super::dpe::session_state::InUse => panic!(),
         super::dpe::session_state::SessionClosed => panic!(),
@@ -394,11 +386,10 @@ pub fn derive_child_from_context(
 }
 pub fn derive_child(
     sid: super::dpe::sid_t,
-    ctxt_hndl: super::dpe::ctxt_hndl_t,
     t: (),
     record: super::dpetypes::record_t,
     rrepr: (),
-) -> std::option::Option<super::dpe::ctxt_hndl_t> {
+) -> bool {
     let s = super::dpe::replace_session(sid, (), super::dpe::session_state::InUse, ());
     match s {
         super::dpe::session_state::Available(mut hc) => {
@@ -414,20 +405,16 @@ pub fn derive_child(
                     );
                     match ret {
                         Some(mut nctxt) => {
-                            let handle = super::dpe::prng(());
                             let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-                                handle: handle,
                                 context: nctxt,
                             });
                             let s2 = super::dpe::replace_session(sid, (), s1, ());
-                            let ret1 = Some(handle);
-                            ret1
+                            true
                         }
                         None => {
                             let s1 = super::dpe::session_state::SessionError;
                             let s2 = super::dpe::replace_session(sid, (), s1, ());
-                            let ret1 = None;
-                            ret1
+                            false
                         }
                     }
                 }
@@ -459,7 +446,6 @@ pub fn close_session(sid: super::dpe::sid_t, t: ()) -> () {
 }
 pub fn certify_key(
     sid: super::dpe::sid_t,
-    ctxt_hndl: super::dpe::ctxt_hndl_t,
     pub_key: &mut [u8],
     crt_len: u32,
     crt: &mut [u8],
@@ -472,9 +458,7 @@ pub fn certify_key(
                 super::dpetypes::context_t::L1_context(mut c) => {
                     let c_crt_len = c.aliasKeyCRT_len;
                     if crt_len < c_crt_len {
-                        let handle = super::dpe::prng(());
                         let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-                            handle: handle,
                             context: super::dpetypes::context_t::L1_context(c),
                         });
                         let s1 = super::dpe::replace_session(sid, (), ns, ());
@@ -496,9 +480,7 @@ pub fn certify_key(
                             (),
                             (),
                         );
-                        let handle = super::dpe::prng(());
                         let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-                            handle: handle,
                             context: super::dpetypes::context_t::L1_context(c),
                         });
                         let s1 = super::dpe::replace_session(sid, (), ns, ());
@@ -513,7 +495,6 @@ pub fn certify_key(
 }
 pub fn sign(
     sid: super::dpe::sid_t,
-    ctxt_hndl: super::dpe::ctxt_hndl_t,
     signature: &mut [u8],
     msg_len: usize,
     msg: &mut [u8],
@@ -535,9 +516,7 @@ pub fn sign(
                         (),
                         (),
                     );
-                    let handle = super::dpe::prng(());
                     let ns = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
-                        handle: handle,
                         context: super::dpetypes::context_t::L1_context(c),
                     });
                     let s1 = super::dpe::replace_session(sid, (), ns, ());

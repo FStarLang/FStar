@@ -65,14 +65,14 @@ fn finish (c:cbor_read_t)
             raw_data_item_match 1.0R c.cbor_read_payload v **
             A.pts_to c.cbor_read_remainder #p rem **
             'uds_is_enabled
-  returns _:option ctxt_hndl_t
+  returns _:bool
   ensures A.pts_to input #p s
 {
    elim_implies ()  #(raw_data_item_match 1.0R c.cbor_read_payload v **
                             A.pts_to c.cbor_read_remainder #p rem)
                             #(A.pts_to input #p s);
     drop 'uds_is_enabled;
-    None #ctxt_hndl_t
+    false
 }
 ```
 
@@ -86,7 +86,7 @@ fn initialize_context (len:SZ.t)
                       (#p:perm)
     requires
         A.pts_to input #p s
-    returns r:(option ctxt_hndl_t)
+    returns r:bool
     ensures
         A.pts_to input #p s
 {
@@ -96,8 +96,7 @@ fn initialize_context (len:SZ.t)
       None ->
       {
         unfold (parse_dpe_cmd_post len input s p None);
-        let ret = None #ctxt_hndl_t;
-        ret
+        false
       }
       Some cmd ->
       {
@@ -105,8 +104,7 @@ fn initialize_context (len:SZ.t)
         if (cmd.dpe_cmd_sid `FStar.UInt64.gte` 4294967296uL) {
           // FIXME: DPE.sid == U16.t, but the CDDL specification for DPE session messages does not specify any bound on sid (if so, I could have used a CDDL combinator and avoided this additional test here)
           elim_stick0 ();
-          let ret = None #ctxt_hndl_t;
-          ret
+          false
         } else {
           let sid : FStar.UInt16.t = Cast.uint64_to_uint16 cmd.dpe_cmd_sid;
           with vargs . assert (raw_data_item_match 1.0R cmd.dpe_cmd_args vargs);
@@ -120,8 +118,7 @@ fn initialize_context (len:SZ.t)
             {
               unfold (cbor_map_get_with_typ_post (Cddl.str_size cbor_major_type_byte_string (SZ.v EngineTypes.uds_len)) 1.0R (Ghost.reveal vkey) vargs cmd.dpe_cmd_args NotFound); // same here; also WHY WHY WHY the explicit Ghost.reveal
               elim_stick0 ();
-              let ret = None #ctxt_hndl_t;
-              ret
+              false
             }
             Found uds_cbor ->
             {
@@ -131,13 +128,12 @@ fn initialize_context (len:SZ.t)
               assume_ (exists* t. DPE.sid_pts_to DPE.trace_ref sid t **
                                   pure (DPE.trace_valid_for_initialize_context t));
               with t. assert (DPE.sid_pts_to DPE.trace_ref sid t);
-              let h = DPE.initialize_context sid t uds.cbor_string_payload;
+              DPE.initialize_context sid t uds.cbor_string_payload;
               elim_stick0 ();
               elim_stick0 ();
               elim_stick0 ();
-              let ret = Some h;
               drop_ (initialize_context_client_perm sid _);
-              ret
+              true
             }
           }
         }
