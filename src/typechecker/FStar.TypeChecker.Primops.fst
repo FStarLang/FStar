@@ -126,7 +126,7 @@ let built_in_primitive_steps_list : list primitive_step =
   @ Primops.Errors.Msg.ops
   @ Primops.Range.ops
 
-let equality_ops_list env : list primitive_step =
-  Primops.Eq.prop_eq_ops env
-
 let env_dependent_ops (env:Env.env_t) = Primops.Eq.dec_eq_ops env
+
+let simplification_ops_list (env:Env.env_t) : list primitive_step =
+  Primops.Eq.prop_eq_ops env

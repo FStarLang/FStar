@@ -112,6 +112,7 @@ match c1, c2 with
 | String (s1, _), String (s2, _) -> equal_iff (s1 = s2)
 | Char c1, Char c2 -> equal_iff (c1 = c2)
 | Range r1, Range r2 -> TEQ.Unknown (* Seems that ranges are opaque *)
+| Real r1, Real r2 -> equal_if (r1 = r2) (* conservative, cannot use iff since strings could be 1.0 and 01.0 *)
 | _, _ -> TEQ.NotEqual
 
 
@@ -179,6 +180,7 @@ let constant_to_string (c: constant) =
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
   | SConst s -> P.const_to_string s
+  | Real s -> BU.format1 "Real %s" s
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
@@ -371,6 +373,15 @@ let e_int : embedding Z.t =
         | _ -> None
     in
     mk_emb' em un (fun () -> lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of int)
+
+let e_real : embedding Compiler.Real.real =
+    let em _cb (Compiler.Real.Real c) = Constant (Real c) in
+    let un _cb c =
+        match c with
+        | Constant (Real a) -> Some (Compiler.Real.Real a)
+        | _ -> None
+    in
+    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Compiler.Real.real)
 
 let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 

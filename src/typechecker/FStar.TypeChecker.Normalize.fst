@@ -682,9 +682,9 @@ let reduce_primops norm_cb cfg env tm : term & bool =
              let l = List.length args in
              if l < prim_step.arity
              then begin log_primops cfg (fun () -> BU.print3 "primop: found partially applied %s (%s/%s args)\n"
-                                                     (Print.lid_to_string prim_step.name)
-                                                     (string_of_int l)
-                                                     (string_of_int prim_step.arity));
+                                                     (show prim_step.name)
+                                                     (show l)
+                                                     (show prim_step.arity));
                         tm, false //partial application; can't step
                   end
              else begin
@@ -692,7 +692,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
                                        then args, []
                                        else List.splitAt prim_step.arity args
                   in
-                  log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (Print.term_to_string tm));
+                  log_primops cfg (fun () -> BU.print1 "primop: trying to reduce <%s>\n" (show tm));
                   let psc : PO.psc = {
                       psc_range = head.pos;
                       psc_subst = fun () -> if prim_step.requires_binder_substitution
@@ -702,19 +702,18 @@ let reduce_primops norm_cb cfg env tm : term & bool =
                   let r =
                       if false
                       then begin let (r, ms) = BU.record_time (fun () -> prim_step.interpretation psc norm_cb universes args_1) in
-                                 primop_time_count (Ident.string_of_lid fv.fv_name.v) ms;
+                                 primop_time_count (show fv.fv_name.v) ms;
                                  r
                            end
                       else prim_step.interpretation psc norm_cb universes args_1
                   in
                   match r with
                   | None ->
-                      log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (Print.term_to_string tm));
+                      log_primops cfg (fun () -> BU.print1 "primop: <%s> did not reduce\n" (show tm));
                       tm, false
                   | Some reduced ->
                       log_primops cfg (fun () -> BU.print2 "primop: <%s> reduced to  %s\n"
-                                              (Print.term_to_string tm)
-                                              (Print.term_to_string reduced));
+                                              (show tm) (show reduced));
                       (* If prim_step.renorm_after is step, we will later
                       keep reducing this term. Otherwise we will just
                       rebuild. *)
@@ -722,22 +721,20 @@ let reduce_primops norm_cb cfg env tm : term & bool =
                  end
            | Some _ ->
                log_primops cfg (fun () -> BU.print1 "primop: not reducing <%s> since we're doing strong reduction\n"
-                                            (Print.term_to_string tm));
+                                            (show tm));
                tm, false
            | None -> tm, false
            end
 
          | Tm_constant Const_range_of when not cfg.strong ->
-           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
-                                        (Print.term_to_string tm));
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n" (show tm));
            begin match args with
            | [(a1, _)] -> PO.embed_simple a1.pos tm.pos, false
            | _ -> tm, false
            end
 
          | Tm_constant Const_set_range_of when not cfg.strong ->
-           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n"
-                                        (Print.term_to_string tm));
+           log_primops cfg (fun () -> BU.print1 "primop: reducing <%s>\n" (show tm));
            begin match args with
            | [(t, _); (r, _)] ->
                 begin match PO.try_unembed_simple r with
@@ -752,7 +749,7 @@ let reduce_primops norm_cb cfg env tm : term & bool =
 
 let reduce_equality norm_cb cfg tm =
     reduce_primops norm_cb ({cfg with steps = { default_steps with primops = true };
-                              primitive_steps=equality_ops cfg.tcenv}) tm
+                              primitive_steps=simplification_steps cfg.tcenv}) tm
 
 (********************************************************************************************************************)
 (* Main normalization function of the abstract machine                                                              *)
@@ -2274,8 +2271,7 @@ and maybe_simplify cfg env stack tm =
     if cfg.debug.b380
     then BU.print4 "%sSimplified\n\t%s to\n\t%s\nrenorm = %s\n"
                    (if cfg.steps.simplify then "" else "NOT ")
-                   (Print.term_to_string tm) (Print.term_to_string tm')
-                   (string_of_bool renorm);
+                   (show tm) (show tm') (show renorm);
     tm', renorm
 
 and norm_cb cfg : EMB.norm_cb = function

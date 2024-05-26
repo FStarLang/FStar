@@ -2086,6 +2086,7 @@ and (translate_constant :
         FStar_TypeChecker_NBETerm.String (s, r)
     | FStar_Const.Const_char c1 -> FStar_TypeChecker_NBETerm.Char c1
     | FStar_Const.Const_range r -> FStar_TypeChecker_NBETerm.Range r
+    | FStar_Const.Const_real r -> FStar_TypeChecker_NBETerm.Real r
     | uu___ -> FStar_TypeChecker_NBETerm.SConst c
 and (readback_comp :
   config -> FStar_TypeChecker_NBETerm.comp -> FStar_Syntax_Syntax.comp) =
@@ -2738,6 +2739,11 @@ and (readback :
            FStar_TypeChecker_Primops_Base.embed_simple
              FStar_Syntax_Embeddings.e_range
              x.FStar_TypeChecker_NBETerm.nbe_r r
+       | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Real
+           r) ->
+           FStar_TypeChecker_Primops_Base.embed_simple
+             FStar_Syntax_Embeddings.e_real x.FStar_TypeChecker_NBETerm.nbe_r
+             (FStar_Compiler_Real.Real r)
        | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.SConst
            c) -> mk (FStar_Syntax_Syntax.Tm_constant c)
        | FStar_TypeChecker_NBETerm.Meta (t, m) ->

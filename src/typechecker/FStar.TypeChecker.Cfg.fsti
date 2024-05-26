@@ -137,7 +137,7 @@ val find_prim_step: cfg -> fv -> option primitive_step
 // val try_unembed_simple: EMB.embedding 'a -> term -> option 'a
 
 val built_in_primitive_steps : BU.psmap primitive_step
-val equality_ops (env:Env.env_t): BU.psmap primitive_step
+val simplification_steps (env:Env.env_t): BU.psmap primitive_step
 
 val register_plugin: primitive_step -> unit
 val register_extra_step: primitive_step -> unit

@@ -41,7 +41,8 @@ module TcUtil   = FStar.TypeChecker.Util
 module U        = FStar.Syntax.Util
 exception SplitQueryAndRetry
 
-let dbg_SMTFail = Debug.get_toggle "SMTFail"
+let dbg_SMTQuery = Debug.get_toggle "SMTQuery"
+let dbg_SMTFail  = Debug.get_toggle "SMTFail"
 
 (****************************************************************************)
 (* Hint databases for record and replay (private)                           *)
@@ -1445,10 +1446,17 @@ It will NOT do quake testing.
 It WILL raise fuel incrementally to attempt to solve the query
 
 *)
-let solve_sync use_env_msg tcenv q : answer =
+let solve_sync use_env_msg tcenv (q:Syntax.term) : answer =
     if Options.no_smt () then ans_fail
     else
     let go () =
+      if !dbg_SMTQuery then (
+        let open FStar.Errors.Msg in
+        let open FStar.Pprint in
+        Errors.diag_doc q.pos [
+          prefix 2 1 (text "Running synchronous SMT query. Q =") (pp q);
+        ]
+      );
       let _cfgs, ans = disable_quake_for (fun () -> encode_and_ask false false use_env_msg tcenv q) in
       ans
     in

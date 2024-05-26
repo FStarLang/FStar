@@ -239,44 +239,47 @@ let proc_guard_formula
     return ()
 
   | Goal ->
-    mlog (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (show f)) (fun () ->
+    log (fun () -> BU.print2 "Making guard (%s:%s) into a goal\n" reason (show f));!
     let! g = goal_of_guard reason e f sc_opt rng in
-    push_goals [g])
+    push_goals [g]
 
   | SMT ->
-    mlog (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (show f)) (fun () ->
+    log (fun () -> BU.print2 "Pushing guard (%s:%s) as SMT goal\n" reason (show f));!
     let! g = goal_of_guard reason e f sc_opt rng in
-    push_smt_goals [g])
+    push_smt_goals [g]
 
   | SMTSync ->
-    mlog (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (show f)) (fun () ->
+    log (fun () -> BU.print2 "Sending guard (%s:%s) to SMT Synchronously\n" reason (show f));!
     let g = { Env.trivial_guard with guard_f = NonTrivial f } in
     Rel.force_trivial_guard e g;
-    return ())
+    return ()
 
   | Force ->
-    mlog (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (show f)) (fun () ->
+    log (fun () -> BU.print2 "Forcing guard (%s:%s)\n" reason (show f));!
     let g = { Env.trivial_guard with guard_f = NonTrivial f } in
-    try if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
-        then fail1 "Forcing the guard failed (%s)" reason
-        else return ()
+    begin try
+      if not (Env.is_trivial <| Rel.discharge_guard_no_smt e g)
+      then fail1 "Forcing the guard failed (%s)" reason
+      else return ()
     with
-    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
-           fail1 "Forcing the guard failed (%s)" reason))
+    | _ ->
+      log (fun () -> BU.print1 "guard = %s\n" (show f));!
+      fail1 "Forcing the guard failed (%s)" reason
+    end
 
   | ForceSMT ->
-    mlog (fun () -> BU.print2 "Forcing guard WITH SMT (%s:%s)\n" reason (show f)) (fun () ->
+    log (fun () -> BU.print2 "Forcing guard WITH SMT (%s:%s)\n" reason (show f));!
     let g = { Env.trivial_guard with guard_f = NonTrivial f } in
     try if not (Env.is_trivial <| Rel.discharge_guard e g)
         then fail1 "Forcing the guard failed (%s)" reason
         else return ()
     with
-    | _ -> mlog (fun () -> BU.print1 "guard = %s\n" (show f)) (fun () ->
-           fail1 "Forcing the guard failed (%s)" reason))
+    | _ ->
+      log (fun () -> BU.print1 "guard = %s\n" (show f));!
+      fail1 "Forcing the guard failed (%s)" reason
 
 let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:option should_check_uvar) (rng:Range.range) : tac unit =
-    mlog (fun () ->
-        BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g)) (fun () ->
+    log (fun () -> BU.print2 "Processing guard (%s:%s)\n" reason (Rel.guard_to_string e g));!
     let _ =
       match sc_opt with
       | Some (Allow_untyped r) ->
@@ -294,7 +297,7 @@ let proc_guard' (simplify:bool) (reason:string) (e : env) (g : guard_t) (sc_opt:
     match guard_f with
     | TcComm.Trivial -> return ()
     | TcComm.NonTrivial f ->
-      proc_guard_formula reason e f sc_opt rng)
+      proc_guard_formula reason e f sc_opt rng
 
 let proc_guard = proc_guard' true
 
@@ -410,15 +413,12 @@ let __do_unify_wflags
             add_implicits g.implicits;!
             return (Some g)
 
-        with | Errors.Err (_, msg, _) -> begin
-                          mlog (fun () -> BU.print1 ">> do_unify error, (%s)\n" (Errors.rendermsg msg) ) (fun _ ->
-                          return None)
-               end
-             | Errors.Error (_, msg, r, _) -> begin
-                            mlog (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n"
-                            (Errors.rendermsg msg) (show r)) (fun _ ->
-                            return None)
-               end
+        with | Errors.Err (_, msg, _) ->
+               log (fun () -> BU.print1 ">> do_unify error, (%s)\n" (Errors.rendermsg msg));!
+               return None
+             | Errors.Error (_, msg, r, _) ->
+               log (fun () -> BU.print2 ">> do_unify error, (%s) at (%s)\n" (Errors.rendermsg msg) (show r));!
+               return None
       )
     with
     | Inl exn -> traise exn
@@ -530,8 +530,7 @@ let trysolve (goal : goal) (solution : term) : tac bool =
 
 let solve (goal : goal) (solution : term) : tac unit =
     let e = goal_env goal in
-    mlog (fun () -> BU.print2 "solve %s := %s\n" (show (goal_witness goal))
-                                                 (show solution)) (fun () ->
+    log (fun () -> BU.print2 "solve %s := %s\n" (show (goal_witness goal)) (show solution));!
     let! b = trysolve goal solution in
     if b
     then (dismiss;! remove_solved_goals)
@@ -541,7 +540,6 @@ let solve (goal : goal) (solution : term) : tac unit =
         text "does not solve" ^/^
         ttd (goal_env goal) (goal_witness goal) ^/^ text ":" ^/^ ttd (goal_env goal) (goal_type goal)
       ]
-    )
 
 let solve' (goal : goal) (solution : term) : tac unit =
   set_solution goal solution;!
@@ -606,7 +604,7 @@ let curms () : tac Z.t =
 (* Annoying duplication here *)
 let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
     let! ps = get in
-    mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t)) (fun () ->
+    log (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t));!
     let e = {e with uvar_subtyping=false} in
     try return (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Err (_, msg, _)
@@ -614,11 +612,11 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
            fail_doc ([
               prefix 2 1 (text "Cannot type") (ttd e t) ^/^
               prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg))
+             ] @ msg)
 
 let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
     let! ps = get in
-    mlog (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (show t)) (fun () ->
+    log (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (show t));!
     let e = {e with uvar_subtyping=false} in
     let e = {e with letrecs=[]} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
@@ -628,13 +626,13 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
            fail_doc ([
               prefix 2 1 (text "Cannot type") (ttd e t) ^/^
               prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg))
+             ] @ msg)
 
 let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
     let! ps = get in
-    mlog (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
+    log (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
-                           (Env.all_binders e |> Print.binders_to_string ", ")) (fun () ->
+                           (Env.all_binders e |> Print.binders_to_string ", "));!
     let e = {e with uvar_subtyping=false} in
     let e = {e with lax = true} in
     let e = {e with letrecs=[]} in
@@ -644,7 +642,7 @@ let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
            fail_doc ([
               prefix 2 1 (text "Cannot type") (ttd e t) ^/^
               prefix 2 1 (text "in context") (pp (Env.all_binders e))
-             ] @ msg))
+             ] @ msg)
 
 let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <| (
   let! (_, lc, _) = __tc_lax e t in

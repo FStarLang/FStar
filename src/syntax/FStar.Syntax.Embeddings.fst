@@ -306,6 +306,26 @@ let e_string =
         (fun x -> "\"" ^ x ^ "\"")
         (fun () -> emb_t_string)
 
+let e_real =
+    let open FStar.Compiler.Real in
+    let ty = S.t_real in
+    let emb_t_real = ET_app(PC.real_lid |> Ident.string_of_lid, []) in
+    let em (r:real) (rng:range) _shadow _norm : term =
+      let Real s = r in
+      mk (Tm_constant (Const.Const_real s)) rng
+    in
+    let un (t:term) _norm : option real =
+      match (unmeta_div_results t).n with
+      | Tm_constant (Const.Const_real s) -> Some (Real s)
+      | _ -> None
+    in
+    mk_emb_full
+        em
+        un
+        (fun () -> ty)
+        (fun _ -> "<real>")
+        (fun () -> emb_t_real)
+
 let e_option (ea : embedding 'a) : Tot _ =
     let typ () = S.t_option_of (type_of ea) in
     let emb_t_option_a () =

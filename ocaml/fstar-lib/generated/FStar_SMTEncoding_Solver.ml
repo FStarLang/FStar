@@ -3,6 +3,8 @@ exception SplitQueryAndRetry
 let (uu___is_SplitQueryAndRetry : Prims.exn -> Prims.bool) =
   fun projectee ->
     match projectee with | SplitQueryAndRetry -> true | uu___ -> false
+let (dbg_SMTQuery : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "SMTQuery"
 let (dbg_SMTFail : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "SMTFail"
 let (z3_replay_result : (unit * unit)) = ((), ())
@@ -2459,11 +2461,26 @@ let (solve_sync :
         then ans_fail
         else
           (let go uu___2 =
-             let uu___3 =
-               disable_quake_for
-                 (fun uu___4 ->
-                    encode_and_ask false false use_env_msg tcenv q) in
-             match uu___3 with | (_cfgs, ans) -> ans in
+             (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_SMTQuery in
+              if uu___4
+              then
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 =
+                      FStar_Errors_Msg.text
+                        "Running synchronous SMT query. Q =" in
+                    let uu___8 =
+                      FStar_Class_PP.pp FStar_Syntax_Print.pretty_term q in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___7 uu___8 in
+                  [uu___6] in
+                FStar_Errors.diag_doc q.FStar_Syntax_Syntax.pos uu___5
+              else ());
+             (let uu___4 =
+                disable_quake_for
+                  (fun uu___5 ->
+                     encode_and_ask false false use_env_msg tcenv q) in
+              match uu___4 with | (_cfgs, ans) -> ans) in
            let uu___2 =
              let uu___3 =
                let uu___4 = FStar_TypeChecker_Env.current_module tcenv in
