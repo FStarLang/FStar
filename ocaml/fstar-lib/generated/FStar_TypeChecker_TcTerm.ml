@@ -3661,7 +3661,12 @@ and (tc_maybe_toplevel_term :
                                 (FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
                                    c)
                                   ||
-                                  (env2.FStar_TypeChecker_Env.phase1 &&
+                                  ((env2.FStar_TypeChecker_Env.phase1 ||
+                                      (let uu___8 =
+                                         FStar_TypeChecker_Env.should_verify
+                                           env2 in
+                                       Prims.op_Negation uu___8))
+                                     &&
                                      (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
                                         c)) in
                               if uu___7
