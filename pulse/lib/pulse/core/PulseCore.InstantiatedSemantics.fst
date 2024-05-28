@@ -56,8 +56,8 @@ let laws ()
   in
   ()
 
-let state0 (e:inames) : Sem.state u#4 u#100 = {
-    max_act = U.raise_t u#0 u#100 unit;
+let state0 (e:inames) : Sem.state u#4 = {
+    // max_act = U.raise_t u#0 u#100 unit;
     s = mem u#1;
     is_full_mem = full_mem_pred;
     pred = slprop;
@@ -167,7 +167,7 @@ let stt (a:Type u#a)
         (pre:slprop)
         (post:a -> slprop)
 : Type0
-= lower (Sem.m u#4 u#100 u#a #state a pre (F.on_dom a post))
+= lower (Sem.m u#4 u#a u#100 #state a pre (F.on_dom a post))
 
 let return (#a:Type u#a) (x:a) (p:a -> slprop)
 : stt a (p x) p
