@@ -23,7 +23,6 @@ open FStar.FunctionalExtensionality
 module H0 = PulseCore.Heap
 module H2 = PulseCore.TwoLevelHeap
 module PP = PulseCore.Preorder
-module MSTTotal = PulseCore.MonotonicStateMonad
 module S = FStar.Set
 module Frac = PulseCore.FractionalPermission
 module L = FStar.List.Tot
@@ -1038,7 +1037,7 @@ let _PST_aux
   (expects:slprop u#m)
   (provides: a -> slprop u#m)
   (frame:slprop u#m)
-= PST.pst #(full_mem u#m) a mem_evolves
+= PST.st #(full_mem u#m) a
     (requires fun m0 ->
         pre m0 /\
         inames_ok except m0 /\

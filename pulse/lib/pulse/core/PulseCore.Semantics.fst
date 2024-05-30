@@ -16,13 +16,13 @@
 module PulseCore.Semantics
 
 module U = FStar.Universe
-module P = PulseCore.PreorderStateMonad
-module NP = PulseCore.NondeterministicPreorderStateMonad
+module P = PulseCore.HoareStateMonad
+module NP = PulseCore.NondeterministicHoareStateMonad
 module F = FStar.FunctionalExtensionality
 
-open FStar.Preorder
+// open FStar.Preorder
 open FStar.FunctionalExtensionality
-open PulseCore.NondeterministicPreorderStateMonad
+open PulseCore.NondeterministicHoareStateMonad
 
 /// We start by defining some basic notions for a commutative monoid.
 ///
@@ -59,7 +59,7 @@ type state : Type u#(s + 1)= {
   emp: pred;
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
-  evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
+  // evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star)
 }
@@ -80,14 +80,14 @@ let pst_sep_aux (st:state)
                 (a:Type)
                 (pre:st.pred)
                 (post:a -> st.pred) =
-  P.pst #(full_mem st) a st.evolves
+  P.st #(full_mem st) a
     (fun s0 -> aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
     (fun _ x s1 -> aux s1 /\ st.interp (post x `st.star` inv s1) s1)
      
 let pst_sep st a pre post = pst_sep_aux st (fun _ -> True) st.invariant a pre post
 
 let npst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
-  npst #(full_mem st) a st.evolves
+  nst #(full_mem st) a
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
 
@@ -223,22 +223,20 @@ let rec step
     weaken <| bind (flip()) choose 
 
 
-type tape = nat -> bool
-type ctr = nat
+// type tape = nat -> bool
+// type ctr = nat
 
-type npst' (#s:Type u#s)
-           (a:Type u#a)
-           (rel:preorder s)
-           (pre:req_t s)
-           (post:ens_t s a) =
-  s0:s { pre s0 } ->
-  tape ->
-  ctr ->
-  Dv (res:(a & s & ctr) {
-    post s0 res._1 res._2 /\
-    rel s0 res._2
-  })
-let repr #s #a #rel #pre #post (x:npst #s a rel pre post) : npst' #s a rel pre post = admit()
+// type npst' (#s:Type u#s)
+//            (a:Type u#a)
+//            (pre:req_t s)
+//            (post:ens_t s a) =
+//   s0:s { pre s0 } ->
+//   tape ->
+//   ctr ->
+//   Dv (res:(a & s & ctr) {
+//     post s0 res._1 res._2
+//   })
+// let repr #s #a #rel #pre #post (x:nst #s a pre post) : npst' #s a rel pre post = admit()
 
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
@@ -260,6 +258,8 @@ let rec run (#st:state u#s)
     in
     weaken <| bind (step f st.emp) k
 
+let ctr = nat
+let tape = ctr -> bool
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
@@ -271,8 +271,9 @@ let run_alt (#st:state u#s)
             (s0:full_mem st { st.interp (st.star pre (st.invariant s0)) s0 })
             (t:tape)
             (ctr:ctr)
-: Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 /\ st.evolves s0 res._2 })
-= let (x, s, _) = repr (run f) s0 t ctr in (x, s)
+: Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
+= let (x, s, _) = repr (run f) s0 t ctr in
+  (x, s)
 
 
 (** [return]: easy, just use Ret *)

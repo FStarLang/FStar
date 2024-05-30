@@ -64,7 +64,7 @@ let state0 (e:inames) : Sem.state u#4 = {
     emp = emp;
     star = star;
     interp = interp;
-    evolves = mem_evolves;
+    // evolves = mem_evolves;
     invariant = mem_invariant e;
     laws = laws ()
 }

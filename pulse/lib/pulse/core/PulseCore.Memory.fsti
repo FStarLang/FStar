@@ -18,7 +18,7 @@ module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
 module PP = PulseCore.Preorder
-module PST = PulseCore.PreorderStateMonad
+module PST = PulseCore.HoareStateMonad
 module U = FStar.Universe
 module S = FStar.Set
 module CM = FStar.Algebra.CommMonoid
@@ -230,7 +230,7 @@ let _PST
   (expects:slprop u#m)
   (provides: a -> slprop u#m)
   (frame:slprop u#m)
-= PST.pst #(full_mem u#m) a mem_evolves
+= PST.st #(full_mem u#m) a
     (requires fun m0 ->
         inames_ok except m0 /\
         interp (expects `star` frame `star` mem_invariant except m0) m0)

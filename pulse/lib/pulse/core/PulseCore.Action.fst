@@ -20,7 +20,7 @@ module Sem = PulseCore.Semantics
 module Mem = PulseCore.Memory
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
-module PST = PulseCore.PreorderStateMonad
+module PST = PulseCore.HoareStateMonad
 
 friend PulseCore.InstantiatedSemantics
 
@@ -58,8 +58,8 @@ let action_as_mem_action
 : Mem.pst_action_except a except pre post
 = fun frame ->
     let m
-      : PST.pst a
-                state.evolves
+      : PST.st #(full_mem)
+                a
                 (fun s0 -> 
                     inames_ok except s0 /\
                     interp ((pre `star` mem_invariant except s0) `star` frame) s0)
