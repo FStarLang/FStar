@@ -17,7 +17,6 @@ module PulseCore.Memory
 open FStar.Ghost
 open FStar.PCM
 open PulseCore.Tags
-module M_ = PulseCore.NondeterministicMonotonicStateMonad
 module F = FStar.FunctionalExtensionality
 open FStar.FunctionalExtensionality
 module H0 = PulseCore.Heap
