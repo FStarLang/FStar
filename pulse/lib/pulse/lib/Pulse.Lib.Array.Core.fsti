@@ -69,7 +69,7 @@ val op_Array_Access
             pure (res == Seq.index s (SZ.v i)))
 
 
-(* Written x.(i) <- v *)
+(* Written a.(i) <- v *)
 val op_Array_Assignment
         (#t: Type)
         (a: array t)

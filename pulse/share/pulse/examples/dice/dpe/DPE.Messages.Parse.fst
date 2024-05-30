@@ -146,7 +146,7 @@ type dpe_cmd = {
   dpe_cmd_args: cbor;
 }
 
-#push-options "--z3rlimit 64 --query_stats" // to let z3 cope with CDDL specs
+#push-options "--z3rlimit 64" // to let z3 cope with CDDL specs
 #restart-solver
 
 noextract [@@noextract_to "krml"]

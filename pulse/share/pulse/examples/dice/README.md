@@ -1,3 +1,5 @@
+THE README IS OUTDATED. TO BE UPDATED SOON.
+
 # Verified DPE in Pulse
 
 This directory hosts Megan's Summer 2023 work building a verified DPE (DICE Protection 

@@ -9,7 +9,8 @@ RUN sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN . "$HOME/.cargo/env"
+RUN sudo apt-get install --yes --no-install-recommends llvm-dev libclang-dev clang
+RUN . "$HOME/.cargo/env" && rustup component add rustfmt && cargo install bindgen-cli
 
 ADD --chown=opam:opam ./ $HOME/pulse
 WORKDIR $HOME/pulse
@@ -24,6 +25,6 @@ RUN mkdir -p $HOME/pulse_tools && \
 # Pulse CI proper
 ARG PULSE_NIGHTLY_CI
 ARG OTHERFLAGS=--use_hints
-RUN eval $(opam env) && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/pulse/src ci
+RUN eval $(opam env) && . "$HOME/.cargo/env" && env PULSE_NIGHTLY_CI="$PULSE_NIGHTLY_CI" make -k -j $opamthreads -C $HOME/pulse/src ci
 
 ENV PULSE_HOME $HOME/pulse

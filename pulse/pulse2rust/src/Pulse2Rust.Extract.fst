@@ -125,8 +125,12 @@ let rust_mod_name (path:list S.mlsymbol) : string =
   path |> List.map String.lowercase
        |> String.concat "_"  
 
-let extract_path_for_symbol (path:list S.mlsymbol) : list string =
-  [ "super"; rust_mod_name path ]
+let extract_path_for_symbol (g:env) (path:list S.mlsymbol) : list string =
+  let prefix =
+    if is_external_lib g (String.concat "." path)
+    then "crate"
+    else "super" in
+  [ prefix; rust_mod_name path ]
 
 //
 // Most translations are straightforward
@@ -141,7 +145,11 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   match t with
   | S.MLTY_Var s -> mk_scalar_typ (tyvar_of s)
   | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.Char.char" -> mk_scalar_typ "char"
+  | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt8.t" -> mk_scalar_typ "u8"
+  | S.MLTY_Named ([], p)
+    when S.string_of_mlpath p = "FStar.UInt16.t" -> mk_scalar_typ "u16"
   | S.MLTY_Named ([], p)
     when S.string_of_mlpath p = "FStar.UInt32.t" -> mk_scalar_typ "u32"
   | S.MLTY_Named ([], p)
@@ -161,7 +169,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "Prims.bool" -> mk_scalar_typ "bool"
   | S.MLTY_Named (l, p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.tuple2" ||
-         S.string_of_mlpath p = "FStar.Pervasives.Native.tuple3" ->
+         S.string_of_mlpath p = "FStar.Pervasives.Native.tuple3" ||
+         S.string_of_mlpath p = "Prims.dtuple2" ->
     mk_tuple_typ (List.map (extract_mlty g) l)
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "Pulse.Lib.Reference.ref" ->
@@ -182,7 +191,8 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
     when S.string_of_mlpath p = "Pulse.Lib.Vec.vec" ->
     arg |> extract_mlty g |> mk_vec_typ
   | S.MLTY_Named (arg::_, p)
-    when S.string_of_mlpath p = "Pulse.Lib.Mutex.mutex" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.mutex" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.mutex" ->
     arg |> extract_mlty g |> mk_mutex_typ
   | S.MLTY_Named ([arg], p)
     when S.string_of_mlpath p = "FStar.Pervasives.Native.option" ->
@@ -192,7 +202,7 @@ let rec extract_mlty (g:env) (t:S.mlty) : typ =
   | S.MLTY_Named (args, p) ->
     let path =
       if should_extract_mlpath_with_symbol g (fst p)
-      then extract_path_for_symbol (fst p)
+      then extract_path_for_symbol g (fst p)
       else [] in
     mk_named_typ path (snd p) (List.map (extract_mlty g) args)
 
@@ -263,15 +273,18 @@ let extract_top_level_sig
 //
 let is_binop (s:string) : option binop =
   if s = "Prims.op_Addition" ||
+     s = "FStar.UInt16.add" ||
      s = "FStar.UInt32.add" ||
      s = "FStar.SizeT.add"
   then Some Add
   else if s = "Prims.op_Subtraction" ||
           s = "FStar.SizeT.sub" ||
+          s = "FStar.UInt16.sub" ||
           s = "FStar.UInt32.sub"
   then Some Sub
   else if s = "Prims.op_Multiply" ||
           s = "FStar.Mul.op_Star" ||
+          s = "FStar.UInt16.mul" ||
           s = "FStar.UInt32.mul" ||
           s = "FStar.UInt32.op_Star_Hat" ||
           s = "FStar.SizeT.mul" ||
@@ -280,24 +293,29 @@ let is_binop (s:string) : option binop =
   else if s = "Prims.op_disEquality"
   then Some Ne
   else if s = "Prims.op_LessThanOrEqual" ||
+          s = "FStar.UInt16.lte" ||
           s = "FStar.UInt32.lte" ||
           s = "FStar.SizeT.lte"
   then Some Le
   else if s = "Prims.op_LessThan" ||
+          s = "FStar.UInt16.lt" ||
           s = "FStar.UInt32.lt" ||
           s = "FStar.SizeT.lt"
   then Some Lt
   else if s = "Prims.op_GreaterThanOrEqual" ||
+          s = "FStar.UInt16.gte" ||
           s = "FStar.UInt32.gte" ||
           s = "FStar.SizeT.gte"
   then Some Ge
   else if s = "Prims.op_GreaterThan" ||
+          s = "FStar.UInt16.gt" ||
           s = "FStar.UInt32.gt" ||
           s = "FStar.SizeT.gt"
   then Some Gt
   else if s = "Prims.op_Equality"
   then Some Eq
   else if s = "Prims.rem" ||
+          s = "FStar.UInt16.rem" ||
           s = "FStar.UInt32.rem" ||
           s = "FStar.SizeT.rem"
   then Some Rem
@@ -339,7 +357,8 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
      else mk_pat_ident (varname x))
   | S.MLP_CTor (p, ps)
     when snd p = "Mktuple2" ||
-         snd p = "Mktuple3" ->
+         snd p = "Mktuple3" ||
+         snd p = "Mkdtuple2" ->
     let g, ps = fold_left_map extract_mlpattern_to_pat g ps in
     g,
     mk_pat_tuple ps
@@ -350,7 +369,7 @@ let rec extract_mlpattern_to_pat (g:env) (p:S.mlpattern) : env & pat =
       match ropt with
       | Some (l, t) ->
         if should_extract_mlpath_with_symbol g l
-        then List.append (extract_path_for_symbol l) [t]
+        then List.append (extract_path_for_symbol g l) [t]
         else []
       | None -> [] in
     g,
@@ -417,7 +436,8 @@ let rec lb_init_and_def (g:env) (lb:S.mllb)
       | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _) ->
         S.string_of_mlpath p = "Pulse.Lib.Vec.alloc" ||
         S.string_of_mlpath p = "Pulse.Lib.Box.alloc" ||
-        S.string_of_mlpath p = "Pulse.Lib.Mutex.lock"
+        S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ||
+        S.string_of_mlpath p = "Pulse.Lib.MutexToken.lock"
       | _ -> false in
     is_mut,
     lb.mllb_tysc |> must |> snd |> extract_mlty g,
@@ -445,11 +465,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_Name p}, [e])
     when S.string_of_mlpath p = "FStar.SizeT.uint_to_t" ->
     extract_mlexpr g e
+  | S.MLE_App ({expr=S.MLE_Name p}, [e])
+    when S.string_of_mlpath p = "FStar.SizeT.uint16_to_sizet" ->
+    mk_method_call (extract_mlexpr g e) "into" []
 
   | S.MLE_Var x -> mk_expr_path_singl (varname x)
   | S.MLE_Name p ->
     if should_extract_mlpath_with_symbol g (fst p)
-    then mk_expr_path (List.append (extract_path_for_symbol (fst p)) [snd p])
+    then mk_expr_path (List.append (extract_path_for_symbol g (fst p)) [snd p])
     else mk_expr_path_singl (snd p)
 
     // nested let binding
@@ -457,12 +480,14 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tfst" ||
-         S.string_of_mlpath p = "FStar.Pervasives.Native.fst" ->
+         S.string_of_mlpath p = "FStar.Pervasives.Native.fst" ||
+         S.string_of_mlpath p = "FStar.Pervasives.dfst" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 0
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
     when S.string_of_mlpath p = "Pulse.Lib.Pervasives.tsnd" ||
-         S.string_of_mlpath p = "FStar.Pervasives.Native.snd" ->
+         S.string_of_mlpath p = "FStar.Pervasives.Native.snd" ||
+         S.string_of_mlpath p = "FStar.Pervasives.dsnd" ->
     let e = extract_mlexpr g e in
     mk_expr_field_unnamed e 1
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, _)}, [e])
@@ -473,21 +498,27 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e1; e2; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ||
-         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ->
+         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.op_Colon_Equals" ->
     let e1 = extract_mlexpr g e1 in
     let e2 = extract_mlexpr g e2 in
     let b = type_of g e1 in
-    let is_mutex_guard = S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" in
+    let is_mutex_guard =
+      S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" ||
+      S.string_of_mlpath p = "Pulse.Lib.MutexToken.op_Colon_Equals" in
     if is_mutex_guard || not b
     then mk_ref_assign e1 e2
     else mk_assign e1 e2
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, [e; _; _])
     when S.string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ||
          S.string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ||
-         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Bang" ->
+         S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Bang" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.op_Bang" ->
     let e = extract_mlexpr g e in
     let b = type_of g e in
-    let is_mutex_guard = S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Colon_Equals" in
+    let is_mutex_guard =
+      S.string_of_mlpath p = "Pulse.Lib.Mutex.op_Bang" ||
+      S.string_of_mlpath p = "Pulse.Lib.MutexToken.op_Bang" in
     if is_mutex_guard || not b
     then mk_ref_read e
     else e
@@ -581,19 +612,25 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     mk_call (mk_expr_path_singl "drop") [e]
 
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.new_mutex" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.new_mutex" ->
     let e = extract_mlexpr g e in
     mk_new_mutex e
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::_::e::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ->
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.lock" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.lock" ->
     let e = extract_mlexpr g e in
     mk_lock_mutex e
   | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::_::_::e::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Mutex.unlock" ->
+  | S.MLE_App ({expr=S.MLE_TApp ({expr=S.MLE_Name p}, [_])}, _::_::e::_)
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.unlock" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.unlock" ->
     let e = extract_mlexpr g e in
     mk_unlock_mutex e
   | S.MLE_App ({ expr=S.MLE_TApp ({expr=S.MLE_Name p}, [a])}, e_mg::e_x::_)
-    when S.string_of_mlpath p = "Pulse.Lib.Mutex.replace" ->
+    when S.string_of_mlpath p = "Pulse.Lib.Mutex.replace" ||
+         S.string_of_mlpath p = "Pulse.Lib.MutexToken.replace" ->
 
     let is_mut = true in
     mk_mem_replace (extract_mlty g a)
@@ -637,6 +674,10 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
     let args = List.map (extract_mlexpr g) args in
     mk_call head args
 
+  | S.MLE_CTor (p, e1::e2::_)
+    when snd p = "Mkdtuple2" ->
+    mk_expr_tuple [extract_mlexpr g e1; extract_mlexpr g e2]
+
   | S.MLE_CTor (p, args) ->
     let is_native =
       S.mlpath_to_string p = "FStar.Pervasives.Native.Some" ||
@@ -649,7 +690,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
       if is_native then mk_expr_path_singl (snd p)
       else let path =
              if should_extract_mlpath_with_symbol g (fst p)
-             then extract_path_for_symbol (fst p)
+             then extract_path_for_symbol g (fst p)
              else [] in
            mk_expr_path (List.append path [ty_name; snd p]) in
     if List.length args = 0
@@ -681,7 +722,7 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
   | S.MLE_Record (p, nm, fields) ->
     let path =
       if should_extract_mlpath_with_symbol g p
-      then extract_path_for_symbol p
+      then extract_path_for_symbol g p
       else [] in
     mk_expr_struct (List.append path [nm]) (List.map (fun (f, e) -> f, extract_mlexpr g e) fields)
 

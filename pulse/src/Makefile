@@ -51,7 +51,7 @@ endif
 extract-ocaml: extract-extraction extract-syntax-extension extract-checker $(fstar_parser_parse)
 
 .PHONY: extract-checker
-extract-checker: build-lib-core build-lib-main
+extract-checker: build-lib-core
 	+$(MAKE) -C checker
 
 .PHONY: extract-extraction
@@ -73,7 +73,7 @@ boot:
 .PHONY: boot-checker
 boot-checker:
 	+$(MAKE) extract-checker
-	+$(MAKE) build
+	+$(MAKE) build-ocaml
 
 .PHONY: clean-snapshot
 clean-snapshot:
@@ -121,5 +121,4 @@ ci:
 rust-ci:
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)/share/pulse/examples dice verify
-	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME)/share/pulse/examples/dice/common/hacl-c
 	+OTHERFLAGS='--admit_smt_queries true' $(MAKE) -C $(PULSE_HOME) pulse2rust

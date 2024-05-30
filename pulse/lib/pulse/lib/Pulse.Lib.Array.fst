@@ -63,12 +63,14 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
 ```
 
 ```pulse 
-fn memcpy (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
+fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
-  requires A.pts_to src #p src0
-        ** A.pts_to dst dst0
-  ensures A.pts_to src #p src0
-       ** A.pts_to dst src0
+  requires A.pts_to src #p src0 **
+           A.pts_to dst dst0
+  returns _:squash (Seq.length src0 == A.length src /\ Seq.length dst0 == A.length dst)
+  ensures A.pts_to src #p src0 **
+          A.pts_to dst (Seq.append (Seq.slice src0 0 (US.v l))
+                                   (Seq.slice dst0 (US.v l) (A.length dst)))
 {
   pts_to_len src #p #src0;
   pts_to_len dst #1.0R #dst0;
@@ -79,9 +81,11 @@ fn memcpy (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
     A.pts_to src #p src0 **
     A.pts_to dst s **
     pure (vi <= l
-       /\ Seq.length s == US.v l
+       /\ Seq.length s == Seq.length dst0
        /\ (b == (vi < l))
-       /\ (forall (i:nat). i < US.v vi ==> Seq.index src0 i == Seq.index s i)))
+       /\ (forall (i:nat). i < US.v vi ==> Seq.index src0 i == Seq.index s i)
+       /\ (forall (i:nat). (US.v vi <= i /\ i < Seq.length s) ==> Seq.index s i == Seq.index dst0 i)))
+
   {
     let vi = !i;
     let x = src.(vi);
@@ -90,7 +94,27 @@ fn memcpy (#t:eqtype) (l:US.t) (src dst:larray t (US.v l))
     i := vi + 1sz;
   };
   with s. assert (A.pts_to dst s);
-  Seq.lemma_eq_elim src0 s;
+  assert_ (pure (Seq.equal s (Seq.append (Seq.slice src0 0 (US.v l))
+                                         (Seq.slice dst0 (US.v l) (A.length dst)))));
+  ()
+}
+```
+
+```pulse
+fn memcpy
+  (#t:eqtype)
+  (l:SZ.t)
+  (src dst:larray t (SZ.v l))
+  (#p:perm)
+  (#src0 #dst0:Ghost.erased (Seq.seq t))
+  requires pts_to src #p src0 **
+           pts_to dst dst0
+  ensures pts_to src #p src0 **
+          pts_to dst src0
+{
+  memcpy_l l src dst;
+  with s. assert (A.pts_to dst s);
+  assert_ (pure (Seq.equal s src0));
   ()
 }
 ```

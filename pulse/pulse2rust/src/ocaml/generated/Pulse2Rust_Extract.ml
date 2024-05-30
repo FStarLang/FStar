@@ -138,11 +138,18 @@ let (rust_mod_name :
     let uu___ = FStar_Compiler_List.map FStar_Compiler_String.lowercase path in
     FStar_Compiler_String.concat "_" uu___
 let (extract_path_for_symbol :
-  FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string Prims.list)
+  Pulse2Rust_Env.env ->
+    FStar_Extraction_ML_Syntax.mlsymbol Prims.list -> Prims.string Prims.list)
   =
-  fun path ->
-    let uu___ = let uu___1 = rust_mod_name path in [uu___1] in "super" ::
-      uu___
+  fun g ->
+    fun path ->
+      let prefix =
+        let uu___ =
+          Pulse2Rust_Env.is_external_lib g
+            (FStar_Compiler_String.concat "." path) in
+        if uu___ then "crate" else "super" in
+      let uu___ = let uu___1 = rust_mod_name path in [uu___1] in prefix ::
+        uu___
 let rec (extract_mlty :
   Pulse2Rust_Env.env ->
     FStar_Extraction_ML_Syntax.mlty -> Pulse2Rust_Rust_Syntax.typ)
@@ -160,8 +167,16 @@ let rec (extract_mlty :
           Pulse2Rust_Rust_Syntax.mk_scalar_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "FStar.Char.char" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "char"
+      | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.UInt8.t" ->
           Pulse2Rust_Rust_Syntax.mk_scalar_typ "u8"
+      | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
+          let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___ = "FStar.UInt16.t" ->
+          Pulse2Rust_Rust_Syntax.mk_scalar_typ "u16"
       | FStar_Extraction_ML_Syntax.MLTY_Named ([], p) when
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "FStar.UInt32.t" ->
@@ -198,10 +213,13 @@ let rec (extract_mlty :
           let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___ = "Prims.bool" -> Pulse2Rust_Rust_Syntax.mk_scalar_typ "bool"
       | FStar_Extraction_ML_Syntax.MLTY_Named (l, p) when
-          (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___ = "FStar.Pervasives.Native.tuple2") ||
+          ((let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___ = "FStar.Pervasives.Native.tuple2") ||
+             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___ = "FStar.Pervasives.Native.tuple3"))
+            ||
             (let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___ = "FStar.Pervasives.Native.tuple3")
+             uu___ = "Prims.dtuple2")
           ->
           let uu___ = FStar_Compiler_List.map (extract_mlty g) l in
           Pulse2Rust_Rust_Syntax.mk_tuple_typ uu___
@@ -230,8 +248,11 @@ let rec (extract_mlty :
           let uu___ = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_vec_typ uu___
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::uu___, p) when
-          let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___1 = "Pulse.Lib.Mutex.mutex" ->
+          (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___1 = "Pulse.Lib.Mutex.mutex") ||
+            (let uu___1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___1 = "Pulse.Lib.MutexToken.mutex")
+          ->
           let uu___1 = extract_mlty g arg in
           Pulse2Rust_Rust_Syntax.mk_mutex_typ uu___1
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
@@ -247,7 +268,7 @@ let rec (extract_mlty :
               should_extract_mlpath_with_symbol g
                 (FStar_Pervasives_Native.fst p) in
             if uu___
-            then extract_path_for_symbol (FStar_Pervasives_Native.fst p)
+            then extract_path_for_symbol g (FStar_Pervasives_Native.fst p)
             else [] in
           let uu___ = FStar_Compiler_List.map (extract_mlty g) args in
           Pulse2Rust_Rust_Syntax.mk_named_typ path
@@ -355,18 +376,21 @@ let (is_binop :
   =
   fun s ->
     if
-      ((s = "Prims.op_Addition") || (s = "FStar.UInt32.add")) ||
-        (s = "FStar.SizeT.add")
+      (((s = "Prims.op_Addition") || (s = "FStar.UInt16.add")) ||
+         (s = "FStar.UInt32.add"))
+        || (s = "FStar.SizeT.add")
     then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Add
     else
       if
-        ((s = "Prims.op_Subtraction") || (s = "FStar.SizeT.sub")) ||
-          (s = "FStar.UInt32.sub")
+        (((s = "Prims.op_Subtraction") || (s = "FStar.SizeT.sub")) ||
+           (s = "FStar.UInt16.sub"))
+          || (s = "FStar.UInt32.sub")
       then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Sub
       else
         if
-          (((((s = "Prims.op_Multiply") || (s = "FStar.Mul.op_Star")) ||
-               (s = "FStar.UInt32.mul"))
+          ((((((s = "Prims.op_Multiply") || (s = "FStar.Mul.op_Star")) ||
+                (s = "FStar.UInt16.mul"))
+               || (s = "FStar.UInt32.mul"))
               || (s = "FStar.UInt32.op_Star_Hat"))
              || (s = "FStar.SizeT.mul"))
             || (s = "FStar.SizeT.op_Star_Hat")
@@ -376,23 +400,27 @@ let (is_binop :
           then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ne
           else
             if
-              ((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt32.lte"))
+              (((s = "Prims.op_LessThanOrEqual") || (s = "FStar.UInt16.lte"))
+                 || (s = "FStar.UInt32.lte"))
                 || (s = "FStar.SizeT.lte")
             then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Le
             else
               if
-                ((s = "Prims.op_LessThan") || (s = "FStar.UInt32.lt")) ||
-                  (s = "FStar.SizeT.lt")
+                (((s = "Prims.op_LessThan") || (s = "FStar.UInt16.lt")) ||
+                   (s = "FStar.UInt32.lt"))
+                  || (s = "FStar.SizeT.lt")
               then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Lt
               else
                 if
-                  ((s = "Prims.op_GreaterThanOrEqual") ||
-                     (s = "FStar.UInt32.gte"))
+                  (((s = "Prims.op_GreaterThanOrEqual") ||
+                      (s = "FStar.UInt16.gte"))
+                     || (s = "FStar.UInt32.gte"))
                     || (s = "FStar.SizeT.gte")
                 then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Ge
                 else
                   if
-                    ((s = "Prims.op_GreaterThan") || (s = "FStar.UInt32.gt"))
+                    (((s = "Prims.op_GreaterThan") || (s = "FStar.UInt16.gt"))
+                       || (s = "FStar.UInt32.gt"))
                       || (s = "FStar.SizeT.gt")
                   then FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Gt
                   else
@@ -401,8 +429,9 @@ let (is_binop :
                       FStar_Pervasives_Native.Some Pulse2Rust_Rust_Syntax.Eq
                     else
                       if
-                        ((s = "Prims.rem") || (s = "FStar.UInt32.rem")) ||
-                          (s = "FStar.SizeT.rem")
+                        (((s = "Prims.rem") || (s = "FStar.UInt16.rem")) ||
+                           (s = "FStar.UInt32.rem"))
+                          || (s = "FStar.SizeT.rem")
                       then
                         FStar_Pervasives_Native.Some
                           Pulse2Rust_Rust_Syntax.Rem
@@ -485,8 +514,9 @@ let rec (extract_mlpattern_to_pat :
                Pulse2Rust_Rust_Syntax.mk_pat_ident uu___4) in
           (uu___, uu___1)
       | FStar_Extraction_ML_Syntax.MLP_CTor (p1, ps) when
-          ((FStar_Pervasives_Native.snd p1) = "Mktuple2") ||
-            ((FStar_Pervasives_Native.snd p1) = "Mktuple3")
+          (((FStar_Pervasives_Native.snd p1) = "Mktuple2") ||
+             ((FStar_Pervasives_Native.snd p1) = "Mktuple3"))
+            || ((FStar_Pervasives_Native.snd p1) = "Mkdtuple2")
           ->
           let uu___ =
             FStar_Compiler_List.fold_left_map extract_mlpattern_to_pat g ps in
@@ -507,7 +537,7 @@ let rec (extract_mlpattern_to_pat :
                      let uu___1 = should_extract_mlpath_with_symbol g1 l in
                      if uu___1
                      then
-                       let uu___2 = extract_path_for_symbol l in
+                       let uu___2 = extract_path_for_symbol g1 l in
                        FStar_Compiler_List.append uu___2 [t]
                      else []
                  | FStar_Pervasives_Native.None -> [] in
@@ -621,13 +651,17 @@ let rec (lb_init_and_def :
                   FStar_Extraction_ML_Syntax.loc = uu___5;_},
                 uu___6)
                ->
-               ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                 uu___7 = "Pulse.Lib.Vec.alloc") ||
+               (((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                  uu___7 = "Pulse.Lib.Vec.alloc") ||
+                   (let uu___7 =
+                      FStar_Extraction_ML_Syntax.string_of_mlpath p in
+                    uu___7 = "Pulse.Lib.Box.alloc"))
+                  ||
                   (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                   uu___7 = "Pulse.Lib.Box.alloc"))
+                   uu___7 = "Pulse.Lib.Mutex.lock"))
                  ||
                  (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-                  uu___7 = "Pulse.Lib.Mutex.lock")
+                  uu___7 = "Pulse.Lib.MutexToken.lock")
            | uu___1 -> false in
          let uu___1 =
            let uu___2 =
@@ -666,6 +700,18 @@ and (extract_mlexpr :
           when
           let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
           uu___2 = "FStar.SizeT.uint_to_t" -> extract_mlexpr g e1
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_Name p;
+             FStar_Extraction_ML_Syntax.mlty = uu___;
+             FStar_Extraction_ML_Syntax.loc = uu___1;_},
+           e1::[])
+          when
+          let uu___2 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+          uu___2 = "FStar.SizeT.uint16_to_sizet" ->
+          let uu___2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_method_call uu___2 "into" []
       | FStar_Extraction_ML_Syntax.MLE_Var x ->
           let uu___ = varname x in
           Pulse2Rust_Rust_Syntax.mk_expr_path_singl uu___
@@ -677,7 +723,7 @@ and (extract_mlexpr :
           then
             let uu___1 =
               let uu___2 =
-                extract_path_for_symbol (FStar_Pervasives_Native.fst p) in
+                extract_path_for_symbol g (FStar_Pervasives_Native.fst p) in
               FStar_Compiler_List.append uu___2
                 [FStar_Pervasives_Native.snd p] in
             Pulse2Rust_Rust_Syntax.mk_expr_path uu___1
@@ -701,10 +747,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___5 = "Pulse.Lib.Pervasives.tfst") ||
+             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___5 = "FStar.Pervasives.Native.fst"))
+            ||
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "FStar.Pervasives.Native.fst")
+             uu___5 = "FStar.Pervasives.dfst")
           ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_expr_field_unnamed e2 Prims.int_zero
@@ -722,10 +771,13 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::[])
           when
-          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+          ((let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___5 = "Pulse.Lib.Pervasives.tsnd") ||
+             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___5 = "FStar.Pervasives.Native.snd"))
+            ||
             (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___5 = "FStar.Pervasives.Native.snd")
+             uu___5 = "FStar.Pervasives.dsnd")
           ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_expr_field_unnamed e2 Prims.int_one
@@ -761,20 +813,25 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::e2::uu___5::[])
           when
-          ((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+          (((let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.Box.op_Colon_Equals"))
+             ||
              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___6 = "Pulse.Lib.Box.op_Colon_Equals"))
+              uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals"))
             ||
             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals")
+             uu___6 = "Pulse.Lib.MutexToken.op_Colon_Equals")
           ->
           let e11 = extract_mlexpr g e1 in
           let e21 = extract_mlexpr g e2 in
           let b = type_of g e11 in
           let is_mutex_guard =
-            let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals" in
+            (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___6 = "Pulse.Lib.Mutex.op_Colon_Equals") ||
+              (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___6 = "Pulse.Lib.MutexToken.op_Colon_Equals") in
           if is_mutex_guard || (Prims.op_Negation b)
           then Pulse2Rust_Rust_Syntax.mk_ref_assign e11 e21
           else Pulse2Rust_Rust_Syntax.mk_assign e11 e21
@@ -792,19 +849,24 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            e1::uu___5::uu___6::[])
           when
-          ((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___7 = "Pulse.Lib.Reference.op_Bang") ||
+          (((let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___7 = "Pulse.Lib.Reference.op_Bang") ||
+              (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___7 = "Pulse.Lib.Box.op_Bang"))
+             ||
              (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-              uu___7 = "Pulse.Lib.Box.op_Bang"))
+              uu___7 = "Pulse.Lib.Mutex.op_Bang"))
             ||
             (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-             uu___7 = "Pulse.Lib.Mutex.op_Bang")
+             uu___7 = "Pulse.Lib.MutexToken.op_Bang")
           ->
           let e2 = extract_mlexpr g e1 in
           let b = type_of g e2 in
           let is_mutex_guard =
-            let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-            uu___7 = "Pulse.Lib.Mutex.op_Colon_Equals" in
+            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___7 = "Pulse.Lib.Mutex.op_Bang") ||
+              (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+               uu___7 = "Pulse.Lib.MutexToken.op_Bang") in
           if is_mutex_guard || (Prims.op_Negation b)
           then Pulse2Rust_Rust_Syntax.mk_ref_read e2
           else e2
@@ -1064,8 +1126,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::e1::uu___6)
           when
-          let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___7 = "Pulse.Lib.Mutex.new_mutex" ->
+          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Pulse.Lib.Mutex.new_mutex") ||
+            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___7 = "Pulse.Lib.MutexToken.new_mutex")
+          ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_new_mutex e2
       | FStar_Extraction_ML_Syntax.MLE_App
@@ -1082,8 +1147,32 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::uu___6::e1::uu___7)
           when
-          let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___8 = "Pulse.Lib.Mutex.lock" ->
+          (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___8 = "Pulse.Lib.Mutex.lock") ||
+            (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___8 = "Pulse.Lib.MutexToken.lock")
+          ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::e1::uu___6)
+          when
+          (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Pulse.Lib.Mutex.lock") ||
+            (let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___7 = "Pulse.Lib.MutexToken.lock")
+          ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_lock_mutex e2
       | FStar_Extraction_ML_Syntax.MLE_App
@@ -1100,8 +1189,32 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___4;_},
            uu___5::uu___6::uu___7::e1::uu___8)
           when
-          let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___9 = "Pulse.Lib.Mutex.unlock" ->
+          (let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___9 = "Pulse.Lib.Mutex.unlock") ||
+            (let uu___9 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___9 = "Pulse.Lib.MutexToken.unlock")
+          ->
+          let e2 = extract_mlexpr g e1 in
+          Pulse2Rust_Rust_Syntax.mk_unlock_mutex e2
+      | FStar_Extraction_ML_Syntax.MLE_App
+          ({
+             FStar_Extraction_ML_Syntax.expr =
+               FStar_Extraction_ML_Syntax.MLE_TApp
+               ({
+                  FStar_Extraction_ML_Syntax.expr =
+                    FStar_Extraction_ML_Syntax.MLE_Name p;
+                  FStar_Extraction_ML_Syntax.mlty = uu___;
+                  FStar_Extraction_ML_Syntax.loc = uu___1;_},
+                uu___2::[]);
+             FStar_Extraction_ML_Syntax.mlty = uu___3;
+             FStar_Extraction_ML_Syntax.loc = uu___4;_},
+           uu___5::uu___6::e1::uu___7)
+          when
+          (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___8 = "Pulse.Lib.Mutex.unlock") ||
+            (let uu___8 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___8 = "Pulse.Lib.MutexToken.unlock")
+          ->
           let e2 = extract_mlexpr g e1 in
           Pulse2Rust_Rust_Syntax.mk_unlock_mutex e2
       | FStar_Extraction_ML_Syntax.MLE_App
@@ -1118,8 +1231,11 @@ and (extract_mlexpr :
              FStar_Extraction_ML_Syntax.loc = uu___3;_},
            e_mg::e_x::uu___4)
           when
-          let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          uu___5 = "Pulse.Lib.Mutex.replace" ->
+          (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___5 = "Pulse.Lib.Mutex.replace") ||
+            (let uu___5 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+             uu___5 = "Pulse.Lib.MutexToken.replace")
+          ->
           let is_mut = true in
           let uu___5 = extract_mlty g a in
           let uu___6 =
@@ -1302,6 +1418,13 @@ and (extract_mlexpr :
           let head1 = extract_mlexpr g head in
           let args1 = FStar_Compiler_List.map (extract_mlexpr g) args in
           Pulse2Rust_Rust_Syntax.mk_call head1 args1
+      | FStar_Extraction_ML_Syntax.MLE_CTor (p, e1::e2::uu___) when
+          (FStar_Pervasives_Native.snd p) = "Mkdtuple2" ->
+          let uu___1 =
+            let uu___2 = extract_mlexpr g e1 in
+            let uu___3 = let uu___4 = extract_mlexpr g e2 in [uu___4] in
+            uu___2 :: uu___3 in
+          Pulse2Rust_Rust_Syntax.mk_expr_tuple uu___1
       | FStar_Extraction_ML_Syntax.MLE_CTor (p, args) ->
           let is_native =
             ((FStar_Extraction_ML_Syntax.mlpath_to_string p) =
@@ -1326,7 +1449,8 @@ and (extract_mlexpr :
                    should_extract_mlpath_with_symbol g
                      (FStar_Pervasives_Native.fst p) in
                  if uu___1
-                 then extract_path_for_symbol (FStar_Pervasives_Native.fst p)
+                 then
+                   extract_path_for_symbol g (FStar_Pervasives_Native.fst p)
                  else [] in
                Pulse2Rust_Rust_Syntax.mk_expr_path
                  (FStar_Compiler_List.append path
@@ -1366,7 +1490,7 @@ and (extract_mlexpr :
       | FStar_Extraction_ML_Syntax.MLE_Record (p, nm, fields) ->
           let path =
             let uu___ = should_extract_mlpath_with_symbol g p in
-            if uu___ then extract_path_for_symbol p else [] in
+            if uu___ then extract_path_for_symbol g p else [] in
           let uu___ =
             FStar_Compiler_List.map
               (fun uu___1 ->

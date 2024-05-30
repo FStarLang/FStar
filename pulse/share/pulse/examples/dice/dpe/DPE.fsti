@@ -17,8 +17,6 @@
 module DPE
 open Pulse.Lib.Pervasives
 open DPETypes
-open HACL
-open X509
 open EngineTypes
 open EngineCore
 open L0Types
@@ -28,10 +26,10 @@ module G = FStar.Ghost
 module PCM = FStar.PCM
 module SZ = FStar.SizeT
 module U8 = FStar.UInt8
+module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module PM = Pulse.Lib.PCMMap
 module FP = Pulse.Lib.PCM.FractionalPreorder
-module M = Pulse.Lib.Mutex
 module A = Pulse.Lib.Array
 module HT = Pulse.Lib.HashTable
 module PHT = Pulse.Lib.HashTable.Spec
@@ -40,15 +38,8 @@ open PulseCore.Preorder
 open Pulse.Lib.OnRange
 open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
-open Pulse.Lib.Mutex
 
-//
-// Concrete state setup
-//
-
-type ctxt_hndl_t = U32.t
-
-type sid_t : eqtype = U32.t
+type sid_t : eqtype = U16.t
 
 //
 // A session may be in one of the following states
@@ -59,7 +50,7 @@ type sid_t : eqtype = U32.t
 noeq
 type session_state =
   | SessionStart
-  | Available { handle:ctxt_hndl_t; context:context_t }
+  | Available { context:context_t }
   | InUse
   | SessionClosed
   | SessionError
@@ -133,7 +124,9 @@ let rec next (s0 s1:g_session_state) : prop =
   // Available r0 may go to Available r1,
   //   as long as repr r1 follows repr r0
   //
-  | G_Available r0, G_Available r1 -> next_repr r0 r1
+  | G_Available r0, G_Available r1 ->
+    next_repr r0 r1 \/
+    (L1_context_repr? r0 /\ r0 == r1)
 
   //
   // SessionClosed is a terminal state
@@ -265,6 +258,7 @@ noextract
 let pcm : PCM.pcm pcm_t = PM.pointwise sid_t trace_pcm
 
 [@@ erasable]
+noextract
 type gref = ghost_pcm_ref pcm
 
 noextract
@@ -315,8 +309,8 @@ let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:vprop { is_small v }
 //   and this should go away
 //
 let session_perm (r:gref) (pht:pht_t) (sid:nat) =
-  if UInt.fits sid 32
-  then session_state_perm r pht (U32.uint_to_t sid)
+  if UInt.fits sid 16
+  then session_state_perm r pht (U16.uint_to_t sid)
   else emp
 
 noextract
@@ -326,7 +320,7 @@ noextract
 let all_sids_unused : pcm_t = map_literal (fun _ -> Some 1.0R, emp_trace)
 
 let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
-  if U32.lt sid s then None, emp_trace
+  if U16.lt sid s then None, emp_trace
   else Some 1.0R, emp_trace)
 
 //
@@ -353,53 +347,48 @@ let dpe_inv (r:gref) (s:option st) : vprop =
     // For sids below counter, we have the session state perm
     //
     (exists* pht. models s.st_tbl pht **
-                  on_range (session_perm r pht) 0 (U32.v s.st_ctr))
+                  on_range (session_perm r pht) 0 (U16.v s.st_ctr))
 
 let inv_is_small (r:gref) (s:option st)
   : Lemma (is_small (dpe_inv r s))
           [SMTPat (is_small (dpe_inv r s))] = ()
 
+val trace_ref : gref
 
 //
 // The DPE API
 //
 
-let open_session_client_perm (r:gref) (s:option sid_t) : vprop =
+let open_session_client_perm (s:option sid_t) : vprop =
   match s with
   | None -> emp
   | Some s ->
-    exists* t. sid_pts_to r s t ** pure (current_state t == G_SessionStart)
+    exists* t. sid_pts_to trace_ref s t ** pure (current_state t == G_SessionStart)
 
-val open_session (r:gref) (m:mutex (option st))
-  : stt (mutex (option st) & option sid_t)
-        (requires mutex_live m (dpe_inv r))
-        (ensures fun b ->
-           mutex_live (fst b) (dpe_inv r) **
-           open_session_client_perm r (snd b) **
-           pure (fst b == m))
+val open_session ()
+  : stt (option sid_t)
+        (requires emp)
+        (ensures fun r -> open_session_client_perm r)
 
 noextract
 let trace_valid_for_initialize_context (t:trace) : prop =
   current_state t == G_SessionStart
 
-let initialize_context_client_perm (r:gref) (sid:sid_t) (uds:Seq.seq U8.t) =
-  exists* t. sid_pts_to r sid t **
+let initialize_context_client_perm (sid:sid_t) (uds:Seq.seq U8.t) =
+  exists* t. sid_pts_to trace_ref sid t **
              pure (current_state t == G_Available (Engine_context_repr uds))
 
-val initialize_context (r:gref) (m:mutex (option st))
-  (sid:sid_t) 
+val initialize_context (sid:sid_t) 
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
   (uds:A.larray U8.t (SZ.v uds_len)) 
-  : stt (mutex (option st) & ctxt_hndl_t)
+  : stt unit
         (requires
-           mutex_live m (dpe_inv r) **
            A.pts_to uds #p uds_bytes **
-           sid_pts_to r sid t)
+           sid_pts_to trace_ref sid t)
         (ensures fun b ->
-           mutex_live (fst b) (dpe_inv r) **
            A.pts_to uds #p uds_bytes **
-           initialize_context_client_perm r sid uds_bytes)
+           initialize_context_client_perm sid uds_bytes)
 
 noextract
 let trace_and_record_valid_for_derive_child (t:trace) (r:repr_t) : prop =
@@ -415,31 +404,26 @@ let derive_child_post_trace (r:repr_t) (t:trace) =
   | L0_repr r, G_Available (L1_context_repr lrepr) -> lrepr.repr == r
   | _ -> False
 
-let derive_child_client_perm (r:gref) (sid:sid_t) (t0:trace) (repr:repr_t) (c:option ctxt_hndl_t)
+let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
   : vprop =
-  match c with
-  | None ->
-    exists* t1. sid_pts_to r sid t1 **
+  match res with
+  | false ->
+    exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (current_state t1 == G_SessionError (G_InUse (current_state t0)))
-  | Some _ ->
-    exists* t1. sid_pts_to r sid t1 **
+  | true ->
+    exists* t1. sid_pts_to trace_ref sid t1 **
                 pure (derive_child_post_trace repr t1)
 
-val derive_child (r:gref) (m:mutex (option st)) (sid:sid_t) (ctxt_hndl:ctxt_hndl_t)
+val derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
   (#rrepr:erased repr_t { trace_and_record_valid_for_derive_child t rrepr })
-  (#p:perm)
-  : stt (mutex (option st) & record_t & option ctxt_hndl_t)
+  : stt bool
         (requires
-           mutex_live m (dpe_inv r) **
-           record_perm record p rrepr **
-           sid_pts_to r sid t)
+           record_perm record 1.0R rrepr **
+           sid_pts_to trace_ref sid t)
         (ensures fun b ->
-           mutex_live (tfst b) (dpe_inv r) **
-           record_perm (tsnd b) p rrepr **
-           derive_child_client_perm r sid t rrepr (tthd b))
-
+           derive_child_client_perm sid t rrepr b)
 
 noextract
 let trace_valid_for_close (t:trace) : prop =
@@ -449,19 +433,69 @@ let trace_valid_for_close (t:trace) : prop =
   | G_InUse _ -> False
   | _ -> True
 
-let session_closed_client_perm (r:gref) (sid:sid_t) (t0:trace) =
-  exists* t1. sid_pts_to r sid t1 **
+let session_closed_client_perm (sid:sid_t) (t0:trace) =
+  exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == G_SessionClosed (G_InUse (current_state t0)))
 
 val close_session
-  (r:gref)
-  (m:mutex (option st))
   (sid:sid_t)
   (t:G.erased trace { trace_valid_for_close t })
-  : stt (mutex (option st))
+  : stt unit
         (requires
-           mutex_live m (dpe_inv r) **
-           sid_pts_to r sid t)
+           sid_pts_to trace_ref sid t)
         (ensures fun m ->
-           mutex_live m (dpe_inv r) **
-           session_closed_client_perm r sid t)
+           session_closed_client_perm sid t)
+
+noextract
+let trace_valid_for_certify_key (t:trace) : prop =
+  match current_state t with
+  | G_Available (L1_context_repr _) -> True
+  | _ -> False
+
+let certify_key_client_perm (sid:sid_t) (t0:trace) : vprop =
+  exists* t1. sid_pts_to trace_ref sid t1 **
+              pure (current_state t1 == current_state t0)
+
+val certify_key (sid:sid_t)
+  (pub_key:A.larray U8.t 32)
+  (crt_len:U32.t)
+  (crt:A.larray U8.t (U32.v crt_len))
+  (t:G.erased trace { trace_valid_for_certify_key t })
+  : stt U32.t
+        (requires
+           sid_pts_to trace_ref sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr))
+        (ensures fun _ ->
+           certify_key_client_perm sid t **
+           (exists* pub_key_repr crt_repr.
+              A.pts_to pub_key pub_key_repr **
+              A.pts_to crt crt_repr))
+
+noextract
+let trace_valid_for_sign (t:trace) : prop =
+  match current_state t with
+  | G_Available (L1_context_repr _) -> True
+  | _ -> False
+
+let sign_client_perm (sid:sid_t) (t0:trace) : vprop =
+  exists* t1. sid_pts_to trace_ref sid t1 **
+              pure (current_state t1 == current_state t0)
+
+val sign (sid:sid_t)
+  (signature:A.larray U8.t 64)
+  (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
+  (msg:A.larray U8.t (SZ.v msg_len))
+  (t:G.erased trace { trace_valid_for_sign t })
+  : stt unit
+        (requires
+           sid_pts_to trace_ref sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr))
+        (ensures fun _ ->
+           certify_key_client_perm sid t **
+           (exists* signature_repr msg_repr.
+              A.pts_to signature signature_repr **
+              A.pts_to msg msg_repr))

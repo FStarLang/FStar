@@ -171,7 +171,7 @@ let header = "////
 ////
 ////\n"
 
-let extract (files:list string) (odir:string) : unit =
+let extract (files:list string) (odir:string) (libs:string) : unit =
   let d = read_all_ast_files files in
   //
   // reversed order in which decls should be emitted,
@@ -181,7 +181,8 @@ let extract (files:list string) (odir:string) : unit =
   // print1 "all_modules: %s\n" (String.concat " " all_modules);
   let root_module::_ = all_modules in
   let reachable_defs = collect_reachable_defs d root_module in
-  let g = empty_env d all_modules reachable_defs in
+  let external_libs = FStar.Compiler.Util.split libs "," |> List.map trim_string in
+  let g = empty_env external_libs d all_modules reachable_defs in
   let _, all_rust_files = List.fold_left (fun (g, all_rust_files) f ->
     // print1 "Extracting file: %s\n" f;
     let (_, bs, ds) = smap_try_find d f |> must in
