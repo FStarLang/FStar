@@ -94,7 +94,8 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
                                         is_terminal pst' }) =
 
   let x = fresh (push_env pst.pg pst.uvs) in
-  let px = b.binder_ppname, x in
+  let ppname = ppname_for_uvar b.binder_ppname in
+  let px = ppname, x in
   let preamble_sub = {
     g0 = pst.pg;
     ctxt = list_as_vprop pst.remaining_ctxt;
@@ -121,7 +122,7 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     pg = pst.pg;
     remaining_ctxt = vprop_as_list preamble_sub.ctxt;
     remaining_ctxt_frame_typing = RU.magic ();
-    uvs = push_binding pst.uvs x b.binder_ppname b.binder_ty;
+    uvs = push_binding pst.uvs x ppname b.binder_ty;
     ss = pst.ss;
     nts = None;
     solved = tm_emp;
