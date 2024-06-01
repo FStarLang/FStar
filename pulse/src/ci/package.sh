@@ -69,7 +69,7 @@ export FSTAR_HOME="$fstar_package_dir"
 $make -C "$PULSE_HOME" "$@"
 mkdir -p "$old_FSTAR_HOME"/src/.cache.boot
 if ! $is_windows ; then
-    FSTAR_HOME="$old_FSTAR_HOME" $make -C "$PULSE_HOME"/pulse2rust "$@"
+    FSTAR_HOME="$old_FSTAR_HOME" $make -C "$PULSE_HOME"/pulse2rust "$@" build
 fi
 
 # install Pulse into the package directory
