@@ -5,11 +5,11 @@ FROM fstar:local-branch-$FSTAR_BRANCH
 
 # CI dependencies for the Wasm11 test: node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-RUN sudo apt-get install -y --no-install-recommends nodejs
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends nodejs
 
 # install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN sudo apt-get install --yes --no-install-recommends llvm-dev libclang-dev clang
+RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends llvm-dev libclang-dev clang
 RUN . "$HOME/.cargo/env" && rustup component add rustfmt && cargo install bindgen-cli
 
 ADD --chown=opam:opam ./ $HOME/pulse
