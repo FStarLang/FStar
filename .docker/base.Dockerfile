@@ -99,4 +99,4 @@ WORKDIR $HOME
 
 # Configure the git user for hint refresh
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
-    git config --global user.email "everbld@microsoft.com"
+    git config --global user.email "24394600+dzomo@users.noreply.github.com"
