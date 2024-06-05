@@ -16,13 +16,13 @@
 module PulseCore.Semantics
 
 module U = FStar.Universe
-module P = PulseCore.PreorderStateMonad
-module NP = PulseCore.NondeterministicPreorderStateMonad
+module P = PulseCore.HoareStateMonad
+module NP = PulseCore.NondeterministicHoareStateMonad
 module F = FStar.FunctionalExtensionality
 
-open FStar.Preorder
+// open FStar.Preorder
 open FStar.FunctionalExtensionality
-open PulseCore.NondeterministicPreorderStateMonad
+open PulseCore.NondeterministicHoareStateMonad
 
 /// We start by defining some basic notions for a commutative monoid.
 ///
@@ -52,20 +52,19 @@ let is_unit #a (x:a) (f:a -> a -> a) =
  *  - [laws] state that {pred, emp, star} are a commutative monoid
  *)
 noeq
-type state : Type u#(max (s + 1) (act + 1)) = {
-  max_act:Type u#act;
+type state : Type u#(s + 1)= {
   s:Type u#s;
   is_full_mem: s -> prop;
   pred:Type u#s;
   emp: pred;
   star: pred -> pred -> pred;
   interp: pred -> s -> prop;
-  evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
+  // evolves: FStar.Preorder.preorder (s:s { is_full_mem s });
   invariant: s -> pred;
   laws: squash (associative star /\ commutative star /\ is_unit emp star)
 }
 
-let full_mem (st:state u#s u#act) : Type u#s = m:st.s { st.is_full_mem m }
+let full_mem (st:state u#s) : Type u#s = m:st.s { st.is_full_mem m }
 
 (** [post a c] is a postcondition on [a]-typed result *)
 let post (s:state) a = a ^-> s.pred
@@ -75,20 +74,20 @@ let post (s:state) a = a ^-> s.pred
     npst_sep provides separation-logic specifications for those computations.
     pst_sep is analogous, except computation in pst_sep are also total
  **)
-let pst_sep_aux (st:state u#s u#act)
+let pst_sep_aux (st:state)
                 (aux:full_mem st -> prop) 
                 (inv:full_mem st -> st.pred)
-                (a:Type u#a)
+                (a:Type)
                 (pre:st.pred)
                 (post:a -> st.pred) =
-  P.pst #(full_mem st) a st.evolves
+  P.st #(full_mem st) a
     (fun s0 -> aux s0 /\ st.interp (pre `st.star` inv s0) s0 )
     (fun _ x s1 -> aux s1 /\ st.interp (post x `st.star` inv s1) s1)
      
 let pst_sep st a pre post = pst_sep_aux st (fun _ -> True) st.invariant a pre post
 
-let npst_sep (st:state u#s u#act) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
-  npst #(full_mem st) a st.evolves
+let npst_sep (st:state u#s) (a:Type u#a) (pre:st.pred) (post:a -> st.pred) =
+  nst #(full_mem st) a
     (fun s0 -> st.interp (pre `st.star` st.invariant s0) s0 )
     (fun _ x s1 -> st.interp (post x `st.star` st.invariant s1) s1)
 
@@ -103,9 +102,9 @@ let npst_sep (st:state u#s u#act) (a:Type u#a) (pre:st.pred) (post:a -> st.pred)
  *  Also see: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/views.pdf
  *)
 noeq
-type action (st:state u#s u#act) (a:Type u#a) : Type u#(max a s) = {
+type action (st:state u#s) (a:Type u#a) : Type u#(max a s) = {
   pre: st.pred;
-  post: post st a; //a -> st.pred;
+  post: post st a;
   step: (
     frame:st.pred ->
     pst_sep st a (st.star pre frame) 
@@ -113,7 +112,7 @@ type action (st:state u#s u#act) (a:Type u#a) : Type u#(max a s) = {
   )
  }
   
-let as_post (#st:state u#s u#act) (#a:Type u#a) (p:st.pred)
+let as_post (#st:state u#s) (#a:Type u#a) (p:st.pred)
 : post st a
 = F.on_dom a (fun _ -> p)
 
@@ -129,7 +128,7 @@ let as_post (#st:state u#s u#act) (#a:Type u#a) (p:st.pred)
  *
  *)
 noeq
-type m (#st:state u#s u#act) : (a:Type u#a) -> st.pred -> post st a -> Type u#(max (act + 1) s (a + 1)) =
+type m (#st:state u#s) : (a:Type u#a) -> st.pred -> post st a -> Type u#(max (act + 1) s (a + 1)) =
   | Ret:
       #a:Type u#a ->
       #post:post st a ->
@@ -171,7 +170,7 @@ type m (#st:state u#s u#act) : (a:Type u#a) -> st.pred -> post st a -> Type u#(m
  *    - frame: a framed assertion to carry through the proof
  *)
 noeq
-type step_result (#st:state u#s u#act) (a:Type u#a) (q:post st a) (frame:st.pred) =
+type step_result (#st:state u#s) (a:Type u#a) (q:post st a) (frame:st.pred) =
   | Step: next:_ -> //precondition of the reduct
           m:m a next q -> //the reduct
           step_result a q frame
@@ -181,7 +180,7 @@ type step_result (#st:state u#s u#act) (a:Type u#a) (q:post st a) (frame:st.pred
  * the assertion [frame]
  *)
 let rec step 
-    (#st:state u#s u#act)
+    (#st:state u#s)
     (#p:st.pred)
     (#a:Type u#a)
     (#q:post st a)
@@ -223,10 +222,26 @@ let rec step
     in
     weaken <| bind (flip()) choose 
 
+
+// type tape = nat -> bool
+// type ctr = nat
+
+// type npst' (#s:Type u#s)
+//            (a:Type u#a)
+//            (pre:req_t s)
+//            (post:ens_t s a) =
+//   s0:s { pre s0 } ->
+//   tape ->
+//   ctr ->
+//   Dv (res:(a & s & ctr) {
+//     post s0 res._1 res._2
+//   })
+// let repr #s #a #rel #pre #post (x:nst #s a pre post) : npst' #s a rel pre post = admit()
+
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
-let rec run (#st:state u#s u#act) 
+let rec run (#st:state u#s) 
             (#pre:st.pred)
             (#a:Type u#a) 
             (#post:post st a)
@@ -242,15 +257,32 @@ let rec run (#st:state u#s u#act)
       run f
     in
     weaken <| bind (step f st.emp) k
- 
+
+let ctr = nat
+let tape = ctr -> bool
+(** The main partial correctness result:
+ *    m computations can be interpreted into nmst_sep computations 
+ *)    
+let run_alt (#st:state u#s) 
+            (#pre:st.pred)
+            (#a:Type u#a) 
+            (#post:post st a)
+            (f:m a pre post)
+            (s0:full_mem st { st.interp (st.star pre (st.invariant s0)) s0 })
+            (t:tape)
+            (ctr:ctr)
+: Dv (res:(a & full_mem st) { st.interp (st.star (post res._1) (st.invariant res._2)) res._2 })
+= let (x, s, _) = repr (run f) s0 t ctr in
+  (x, s)
+
 
 (** [return]: easy, just use Ret *)
-let ret (#st:state u#s u#act) (#a:Type u#a) (x:a) (post:post st a)
+let ret (#st:state) (#a:Type) (x:a) (post:post st a)
   : m a (post x) post
   = Ret x
 
 let raise_action
-    (#st:state u#s u#(max a b))
+    (#st:state u#s)
     (#t:Type u#a)
     (a:action st t)
  : action st (U.raise_t u#a u#(max a b) t)
@@ -264,7 +296,7 @@ let raise_action
    }
 
 let act
-    (#st:state u#s u#act)
+    (#st:state u#s)
     (#t:Type u#act)
     (a:action st t)
 : m t a.pre a.post
@@ -275,7 +307,7 @@ let act
  * at each node, finally applying it at the terminal `Ret`
  *)
 let rec mbind
-     (#st:state u#s u#act)
+     (#st:state u#s)
      (#a:Type u#a)
      (#b:Type u#b)
      (#p:st.pred)
@@ -283,7 +315,7 @@ let rec mbind
      (#r:post st b)
      (f:m a p q)
      (g: (x:a -> Dv (m b (q x) r)))
-  : Dv (m b p r)
+  : Dv (m u#s u#b u#act b p r)
   = match f with
     | Ret x -> g x
     | Act act k ->
@@ -301,7 +333,7 @@ let rec mbind
       Par ml' mr' k
 
 let act_as_m0
-    (#st:state u#s u#act)
+    (#st:state u#s)
     (#t:Type u#0)
     (a:action st t)
 : Dv (m t a.pre a.post)
@@ -312,10 +344,10 @@ let act_as_m0
   mbind (act (raise_action a)) k
 
 let act_as_m1
-    (#st:state u#s u#(max 1 b))
+    (#st:state u#s)
     (#t:Type u#1)
     (a:action st t)
-: Dv (m t a.pre a.post)
+: Dv (m u#s u#1 u#(max 1 b) t a.pre a.post)
 = let k (x:U.raise_t t)
     : Dv (m t (a.post (U.downgrade_val x)) a.post) 
     = Ret (U.downgrade_val x)
@@ -323,10 +355,10 @@ let act_as_m1
   mbind (act (raise_action a)) k
 
 let act_as_m2
-    (#st:state u#s u#(max 2 b))
+    (#st:state u#s)
     (#t:Type u#2)
     (a:action st t)
-: Dv (m t a.pre a.post)
+: Dv (m u#s u#2 u#(max 2 b) t a.pre a.post)
 = let k (x:U.raise_t t)
     : Dv (m t (a.post (U.downgrade_val x)) a.post) 
     = Ret (U.downgrade_val x)
@@ -340,7 +372,7 @@ let act_as_m2
 ///
 /// --- That's not so hard, since we specifically required actions to
 ///     be frameable
-let frame_action (#st:state u#s u#act) (#a:Type u#act) 
+let frame_action (#st:state u#s) (#a:Type u#act) 
                  (f:action st a) (frame:st.pred)
 : g:action st a { g.post == F.on_dom a (fun x -> f.post x `st.star` frame) /\
                   g.pre == f.pre `st.star` frame }
@@ -357,13 +389,13 @@ let frame_action (#st:state u#s u#act) (#a:Type u#act)
 /// Now, to prove that computations can be framed, we'll just thread
 /// the frame through the entire computation, passing it over every
 /// frameable action
-let rec frame (#st:state u#s u#act)
+let rec frame (#st:state u#s)
               (#a:Type u#a)
               (#p:st.pred)
               (#q:post st a)
               (fr:st.pred)
               (f:m a p q)
-   : Dv (m a (p `st.star` fr) (F.on_dom a (fun x -> q x `st.star` fr)))
+   : Dv (m u#s u#a u#act a (p `st.star` fr) (F.on_dom a (fun x -> q x `st.star` fr)))
    = match f with
      | Ret x -> Ret x
      | Act f k ->
@@ -384,17 +416,17 @@ let rec frame (#st:state u#s u#act)
  * [par]: Parallel composition
  * Works by just using the `Par` node and `Ret` as its continuation
  **)
-let par (#st:state u#s u#act)
+let par (#st:state u#s)
         #p0 #q0 (m0:m unit p0 (as_post q0))
         #p1 #q1 (m1:m unit p1 (as_post q1))
- : Dv (m unit (p0 `st.star` p1) (as_post (q0 `st.star` q1)))
+ : Dv (m u#s u#0 u#act unit (p0 `st.star` p1) (as_post (q0 `st.star` q1)))
  = let m0' = mbind m0 (fun _ -> Ret #_ #_ #(as_post q0) (U.raise_val u#0 u#0 ())) in
    let m1' = mbind m1 (fun _ -> Ret #_ #_ #(as_post q1) (U.raise_val u#0 u#0 ())) in
    Par m0' m1' (Ret ())
 
-let conv (#st:state u#s u#act) (a:Type u#a)
+let conv (#st:state u#s) (a:Type u#a)
          (#p:st.pred)
          (#q:post st a)
          (q':post st a { forall x. q x == q' x })
-: Lemma (m a p q == m a p q')
+: Lemma (m u#s u#a u#act a p q == m u#s u#a u#act a p q')
 = F.extensionality _ _ q q'

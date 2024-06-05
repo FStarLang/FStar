@@ -686,17 +686,17 @@ let full_heap_pred h =
 
 #push-options "--fuel 2 --ifuel 2"
 let heap_evolves : FStar.Preorder.preorder full_heap =
-  fun (h0 h1:heap) ->
-    forall (a:addr).
-      match h0 a, h1 a with
-      | None, _ -> True //an unused address in h0 can evolve anyway
+  fun (h0 h1:heap) -> True
+    // forall (a:addr).
+    //   match h0 a, h1 a with
+    //   | None, _ -> True //an unused address in h0 can evolve anyway
 
-      | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) ->
-        //if a is used h0 then it remains used and ...
-        a0 == a1 /\  //its type can't change
-        p0 == p1 /\  //its pcm can't change
-        PP.preorder_of_pcm p0 v0 v1 //and its value evolves by the pcm's preorder
-      | _ -> False
+    //   | Some (Ref a0 p0 v0), Some (Ref a1 p1 v1) -> True
+    //     // //if a is used h0 then it remains used and ...
+    //     // a0 == a1 /\  //its type can't change
+    //     // p0 == p1 /\  //its pcm can't change
+    //     // PP.preorder_of_pcm p0 v0 v1 //and its value evolves by the pcm's preorder
+    //   | _ -> False
 #pop-options
 
 let free_above_addr h a =
@@ -746,27 +746,27 @@ let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
     assert (sel r m == v);
     compatible_refl pcm v
   
-let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
-  = let fact_h = witnessed_ref r fact in
-    let aux (h0 h1:full_heap)
-      : Lemma
-        (requires
-          fact_h h0 /\
-          heap_evolves h0 h1)
-        (ensures
-          fact_h h1)
-        [SMTPat ()]
-      = let Addr addr = r in
-        assert (interp (ptr r) h0);
-        assert (fact (sel r h0));
-        assert (contains_addr h1 addr);
-        compatible_refl pcm (select_addr h1 addr).v;
-        assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
-        assert (interp (pts_to r (select_addr h1 addr).v) h1);
-        assert (interp (ptr r) h1);
-        assert (fact (sel r h1))
-    in
-    ()
+// let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
+//   = let fact_h = witnessed_ref r fact in
+//     let aux (h0 h1:full_heap)
+//       : Lemma
+//         (requires
+//           fact_h h0 /\
+//           heap_evolves h0 h1)
+//         (ensures
+//           fact_h h1)
+//         [SMTPat ()]
+//       = let Addr addr = r in
+//         assert (interp (ptr r) h0);
+//         assert (fact (sel r h0));
+//         assert (contains_addr h1 addr);
+//         compatible_refl pcm (select_addr h1 addr).v;
+//         assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
+//         assert (interp (pts_to r (select_addr h1 addr).v) h1);
+//         assert (interp (ptr r) h1);
+//         assert (fact (sel r h1))
+//     in
+//     ()
 
 #set-options "--fuel 2 --ifuel 2"
 #restart-solver

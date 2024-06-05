@@ -249,27 +249,27 @@ let heap_evolves_iff (h0 h1:full_heap)
       by (FStar.Tactics.norm [delta_only [`%heap_evolves]])
 
 
-let witnessed_ref_stability #a #pcm r fact = 
-  H.witnessed_ref_stability #a #pcm r fact;
-  assert (FStar.Preorder.stable (H.witnessed_ref #a #pcm r fact) H.heap_evolves);
-  introduce forall h0 h1. 
-    (witnessed_ref r fact h0 /\
-     heap_evolves h0 h1) ==>
-    witnessed_ref r fact h1
-  with (
-    introduce _ ==> _
-    with _ . (
-      assert (interp (ptr r) h0 /\ fact (sel r h0));
-      lower_ptr r h0;
-      assert (H.interp (H.ptr #a #pcm r) h0.concrete);
-      assert (heap_evolves h0 h1);
-      heap_evolves_iff h0 h1;
-      assert (H.heap_evolves h0.concrete h1.concrete);
-      assert (H.witnessed_ref #a #pcm r fact h1.concrete);
-      raise_ptr r h1;
-      assert (sel r h1 == H.sel #a #pcm r h1.concrete)
-    )
-  )
+// let witnessed_ref_stability #a #pcm r fact = 
+//   H.witnessed_ref_stability #a #pcm r fact;
+//   assert (FStar.Preorder.stable (H.witnessed_ref #a #pcm r fact) H.heap_evolves);
+//   introduce forall h0 h1. 
+//     (witnessed_ref r fact h0 /\
+//      heap_evolves h0 h1) ==>
+//     witnessed_ref r fact h1
+//   with (
+//     introduce _ ==> _
+//     with _ . (
+//       assert (interp (ptr r) h0 /\ fact (sel r h0));
+//       lower_ptr r h0;
+//       assert (H.interp (H.ptr #a #pcm r) h0.concrete);
+//       assert (heap_evolves h0 h1);
+//       heap_evolves_iff h0 h1;
+//       assert (H.heap_evolves h0.concrete h1.concrete);
+//       assert (H.witnessed_ref #a #pcm r fact h1.concrete);
+//       raise_ptr r h1;
+//       assert (sel r h1 == H.sel #a #pcm r h1.concrete)
+//     )
+//   )
 
 let llift_pred (l:tag) (pre:H.heap -> prop)
   : heap -> prop
