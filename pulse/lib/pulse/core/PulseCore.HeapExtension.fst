@@ -5,6 +5,7 @@ open FStar.PCM
 open FStar.FunctionalExtensionality
 module H2 = PulseCore.Heap2
 module F = FStar.FunctionalExtensionality
+module PA = PulseCore.PCM.Agreement
 
 noeq
 type core (h:heap_sig u#a) : Type u#(a + 2) = {
@@ -262,20 +263,102 @@ let star_commutative (h:heap_sig u#a) (p1 p2:slprop h)
 : Lemma (p1 `star h` p2 == p2 `star h` p1)
 = assert (equiv (p1 `star h` p2) (p2 `star h` p1))
 
+#push-options "--z3rlimit_factor 4"
 let star_associative (h:heap_sig u#a) (p1 p2 p3:slprop h)
 : Lemma (p1 `star h` (p2 `star h` p3) == (p1 `star h` p2) `star h` p3)
 = assert (equiv (p1 `star h` (p2 `star h` p3)) ((p1 `star h` p2) `star h` p3))
+#pop-options
 
-let pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ref a p) (x:a) : slprop h = admit()
-let ghost_pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref a p) (x:a) : slprop h = admit()
+let h2_of_slprop (p:H2.slprop u#a) : H2.a_heap_prop u#a =
+  H2.interp_depends_only_on p;
+  fun h -> H2.interp p h
 
-let iname (h:heap_sig u#a) : eqtype = admit()
-let iref (h:heap_sig u#a) : Type0 = erased (iname h)
-let iref_erasable (h:heap_sig u#a) : non_info (iref h) = admit()
-let iname_of (h:heap_sig u#a) (r:iref h) : GTot (iname h) = reveal r
-let inv (h:heap_sig u#a) (i:iref h) (p:slprop h) : slprop h = admit()
-let inames_ok (h:heap_sig u#a) (e:eset (iname h)) (m:mem h) : prop = admit()
-let mem_invariant (h:heap_sig u#a) (e:eset (iname h)) (m:mem h) : slprop h = admit()
+let lift (h:heap_sig u#a) (p:H2.slprop u#(a + 1))
+: slprop h
+= as_slprop (fun c -> h2_of_slprop p c.big_core)
+
+let pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ref a p) (x:a)
+: slprop h
+= lift h (H2.pts_to #a #p r x)
+
+let ghost_pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref a p) (x:a)
+: slprop h
+= lift h (H2.ghost_pts_to #a #p r x)
+
+let iname (h:heap_sig u#a) : eqtype = either h.iname nat
+assume
+val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
+let iref (h:heap_sig u#a) : Type0 = erased (either h.iref (ghost_ref _ (PA.pcm_agreement #h.slprop)))
+let iref_erasable (h:heap_sig u#a) : non_info (iref h) = fun x -> reveal x
+let iname_of (h:heap_sig u#a) (r:iref h) : GTot (iname h) =
+  match r with
+  | Inl i -> Inl (h.iname_of i)
+  | Inr r -> Inr (core_ghost_ref_as_addr r)
+let is_boxable (#h:heap_sig u#a) (p:slprop h) = up (down p) == p
+let inv (h:heap_sig u#a) (i:iref h) (p:slprop h)
+: slprop h
+= match i with
+  | Inl i -> up (h.inv i (down p))
+  | Inr r -> ghost_pts_to h r (Some (down p)) `star h` pure h (is_boxable p)
+module H = PulseCore.Heap
+
+assume
+val select (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
+
+assume
+val select_ghost (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
+
+let iname_ok (h:heap_sig u#a) (i:iname h) (m:mem h) : prop =
+  match i with
+  | Inl i -> h.iname_ok i m.small
+  | Inr i -> Some? (select_ghost i m.big)
+
+let down_inames (h:heap_sig u#h) (e:eset (iname h))
+: inames h
+= let e = Ghost.reveal e in
+  FStar.Set.intension (fun i -> Set.mem (Inl i) e)
+
+let sl_pure_imp (#h:heap_sig u#h) (p:prop) (q: squash p -> slprop h) : slprop h =
+  as_slprop (fun m -> p ==> interp (q ()) m)
+
+let cell_pred_pre (h:heap_sig u#h) (c:H.cell) =
+  let H.Ref a pcm _ = c in
+  a == PA.agreement h.slprop /\
+  pcm == PA.pcm_agreement #h.slprop
+
+let cell_pred_post (h:heap_sig u#h) (c:H.cell) (_:squash (cell_pred_pre h c)) =
+  let H.Ref _ _ v = c in
+  let v : PA.agreement h.slprop = v in
+  match v with
+  | None -> emp h
+  | Some p -> up p
+
+let invariant_of_one_cell
+      (#h:heap_sig u#a)
+      (addr:nat)
+      (e:eset (iname h))
+      (m:mem h)
+: slprop h
+= if Inr addr `Set.mem` e then emp h
+  else match select_ghost addr m.big with
+       | Some c -> 
+         sl_pure_imp #h
+          (cell_pred_pre h c)
+          (cell_pred_post h c)
+       | _ -> emp h
+
+let rec istore_invariant
+         (#h:heap_sig u#a)
+         (from:nat)
+         (e:eset (iname h))
+         (l:mem h)
+: slprop h
+= invariant_of_one_cell from e l `star h` 
+  (if from = 0 then emp h else istore_invariant (from - 1) e l)
+
+let mem_invariant (h:heap_sig u#a) (e:eset (iname h)) (m:mem h) : slprop h =
+  up (h.mem_invariant (down_inames h e) m.small) `star h`
+  istore_invariant #h m.ctr e m
 
 let extend (h:heap_sig u#a) = {
     mem = mem h;
@@ -296,6 +379,7 @@ let extend (h:heap_sig u#a) = {
     emp = emp h;
     pure = pure h;
     star = star h;
+    pure_interp = pure_interp #h;
     pure_true_emp = pure_true_emp h;
     emp_unit = emp_unit h;
     intro_emp = intro_emp h;
@@ -308,7 +392,7 @@ let extend (h:heap_sig u#a) = {
     iref_erasable = iref_erasable h;
     iname_of = iname_of h;
     inv = inv h;
-    inames_ok = inames_ok h;
+    iname_ok = iname_ok h;
     mem_invariant = mem_invariant h;
 }
     

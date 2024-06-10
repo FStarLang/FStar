@@ -1,17 +1,17 @@
 module PulseCore.HeapSig
 open FStar.Ghost
 open FStar.PCM
+module H2 = PulseCore.Heap2
 module ST = PulseCore.HoareStateMonad
 let eset (i:eqtype) = erased (Set.set i)
 
 let non_info (t:Type u#a) : Type u#a = x:erased t -> (y:t { y == reveal x })
 
-val core_ref: Type u#0
+let core_ref: Type u#0 = H2.core_ref
 let ref (a:Type u#a) (p:pcm a) = core_ref
 val is_null (c:core_ref) : GTot bool
 
-[@@erasable]
-val core_ghost_ref : Type u#0
+let core_ghost_ref : Type u#0 = H2.core_ghost_ref
 let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref
 
 noeq
@@ -162,12 +162,13 @@ type heap_sig : Type u#(a + 2) = {
     iref_erasable: non_info iref;
     iname_of: (i:iref -> GTot iname);
     inv : iref -> slprop -> slprop;
-    inames_ok: eset iname -> mem -> prop;
+    iname_ok: iname -> mem -> prop;
 
     mem_invariant : eset iname -> mem -> slprop;
 }
 let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)
 let inames (hs:heap_sig u#h) = eset hs.iname
+let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem) = forall (i:hs.iname). i `Set.mem` is ==> hs.iname_ok i m
 let full_mem (hs:heap_sig u#h) = m:hs.mem{ hs.full_mem_pred m }
 let maybe_ghost_action (chs:heap_sig u#m) (maybe_ghost:bool) (m0 m1:chs.mem)
     = maybe_ghost ==> chs.is_ghost_action m0 m1
@@ -182,11 +183,11 @@ let step_t
   (frame:chs.slprop)
 = ST.st #(full_mem chs) a
     (requires fun m0 ->
-        chs.inames_ok except m0 /\
+        inames_ok except m0 /\
         interpret (expects `chs.star` frame `chs.star` chs.mem_invariant except m0) m0)
     (ensures fun m0 x m1 ->
         maybe_ghost_action chs maybe_ghost m0 m1 /\
-        chs.inames_ok except m1 /\
+        inames_ok except m1 /\
         interpret (expects `chs.star` frame `chs.star` chs.mem_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interpret (provides x `chs.star` frame `chs.star` chs.mem_invariant except m1) m1)
 
