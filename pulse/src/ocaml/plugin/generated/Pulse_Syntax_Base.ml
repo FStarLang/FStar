@@ -838,3 +838,51 @@ let (comp_inames : comp -> term) =
 type nvar = (ppname * var)
 let (v_as_nv : var -> nvar) = fun x -> (ppname_default, x)
 let (as_binder : term -> binder) = fun t -> null_binder t
+let (ppname_for_uvar :
+  ppname -> (ppname, unit) FStar_Tactics_Effect.tac_repr) =
+  fun p ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
+               (Prims.of_int (395)) (Prims.of_int (18)) (Prims.of_int (395))
+               (Prims.of_int (48)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
+               (Prims.of_int (395)) (Prims.of_int (4)) (Prims.of_int (395))
+               (Prims.of_int (49)))))
+      (Obj.magic
+         (FStar_Tactics_Effect.tac_bind
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
+                     (Prims.of_int (395)) (Prims.of_int (25))
+                     (Prims.of_int (395)) (Prims.of_int (48)))))
+            (FStar_Sealed.seal
+               (Obj.magic
+                  (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
+                     (Prims.of_int (395)) (Prims.of_int (18))
+                     (Prims.of_int (395)) (Prims.of_int (48)))))
+            (Obj.magic
+               (FStar_Tactics_Effect.tac_bind
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
+                           (Prims.of_int (395)) (Prims.of_int (32))
+                           (Prims.of_int (395)) (Prims.of_int (47)))))
+                  (FStar_Sealed.seal
+                     (Obj.magic
+                        (FStar_Range.mk_range "prims.fst"
+                           (Prims.of_int (590)) (Prims.of_int (19))
+                           (Prims.of_int (590)) (Prims.of_int (31)))))
+                  (Obj.magic (FStar_Tactics_Unseal.unseal p.name))
+                  (fun uu___ ->
+                     FStar_Tactics_Effect.lift_div_tac
+                       (fun uu___1 -> Prims.strcat "?" uu___))))
+            (fun uu___ ->
+               FStar_Tactics_Effect.lift_div_tac
+                 (fun uu___1 -> FStar_Sealed.seal uu___))))
+      (fun uu___ ->
+         FStar_Tactics_Effect.lift_div_tac
+           (fun uu___1 -> { name = uu___; range = (p.range) }))
