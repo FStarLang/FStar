@@ -373,14 +373,15 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
-           else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
-                           BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
-                                       Alternatively, invoking fstar with %s on the command line breaks \
-                                       the abstraction imposed by its interface %s; \
-                                       if you really want this behavior add the option '--expose_interfaces'"
-                                       key
-                                       (Option.get (implementation_of_internal file_system_map key))
-                                       (Option.get (interface_of_internal file_system_map key)))
+           else raise_err_doc (Errors.Fatal_MissingExposeInterfacesOption, [
+                               text <|
+                               BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                                           Alternatively, invoking fstar with %s on the command line breaks \
+                                           the abstraction imposed by its interface %s."
+                                           key
+                                           (Option.get (implementation_of_internal file_system_map key))
+                                           (Option.get (interface_of_internal file_system_map key));
+                               text "If you really want this behavior add the option '--expose_interfaces'.";])
       else maybe_use_cache_of (Option.get (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
