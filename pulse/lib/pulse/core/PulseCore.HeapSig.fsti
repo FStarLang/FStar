@@ -85,7 +85,11 @@ type heap_sig : Type u#(a + 2) = {
     full_mem_pred : mem -> prop;
     
     is_ghost_action : mem -> mem -> prop;
-
+    is_ghost_action_refl : (
+      m0:mem ->
+      Lemma (is_ghost_action m0 m0)
+    );
+    
     slprop : Type u#(a + 1);
     interp: slprop -> affine_mem_prop sep;
     as_slprop: affine_mem_prop sep -> slprop;
@@ -174,7 +178,11 @@ type heap_sig : Type u#(a + 2) = {
     iname_of: (i:iref -> GTot iname);
     inv : iref -> slprop -> slprop;
     iname_ok: iname -> mem -> prop;
-
+    dup_inv_equiv : (
+      i:iref ->
+      p:slprop ->
+      Lemma (inv i p == (inv i p `star` inv i p))
+    );
     mem_invariant : eset iname -> mem -> slprop;
 }
 let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)

@@ -303,7 +303,7 @@ let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
   | Inl i -> Inl (h.iname_of i)
   | Inr r -> Inr (core_ghost_ref_as_addr r)
 let is_boxable (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
-let inv (h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
+let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : ext_slprop h
 = match i with
   | Inl i -> up (h.inv i (down p))
@@ -362,6 +362,98 @@ let mem_invariant (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 = up (h.mem_invariant (down_inames e) m.small) `star`
   istore_invariant #h m.ctr e m.big
 
+let share_gather_equiv (#a:_) (#p:pcm a) (r:H2.ghost_ref p) (v0:a) (v1:a{composable p v0 v1})
+: Lemma (H2.ghost_pts_to r (v0 `op p` v1) == 
+         H2.ghost_pts_to r v0 `H2.star` H2.ghost_pts_to r v1)
+= admit()
+
+let up_star (#h:heap_sig u#a) (p q:h.slprop)
+: Lemma (up (p `h.star` q) == (up p `star` up q))
+        [SMTPat (up (p `h.star` q))]
+= introduce forall m.
+      up (p `h.star` q) m ==>
+      (up p `star` up q) m
+  with introduce _ ==> _
+  with _ . (
+    h.star_equiv p q m.small_core;
+    eliminate exists m1 m2.
+      h.sep.disjoint m1 m2 /\
+      m.small_core == h.sep.join m1 m2 /\
+      h.interp p m1 /\
+      h.interp q m2
+    returns (up p `star` up q) m
+    with _ . (
+      let ml = { m with small_core = m1 } in
+      let mr = { m with small_core = m2; big_core = H2.empty_heap } in
+      H2.join_empty m.big_core;
+      assert (disjoint ml mr);
+      assert (m == join ml mr);
+      assert (up p ml);
+      assert (up q mr);
+      assert ((ext_sep h).disjoint ml mr)
+    )
+  );
+  introduce forall m.
+      (up p `star` up q) m ==>
+      up (p `h.star` q) m
+  with introduce _ ==> _
+  with _ . (
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      m == join m1 m2 /\
+      up p m1 /\
+      up q m2
+    returns up (p `h.star` q) m
+    with _ . (
+      h.star_equiv p q m.small_core
+    )    
+  );
+  slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
+
+let lift_star (#h:heap_sig u#a) (p q:H2.slprop u#(a + 1))
+: Lemma (lift h (p `H2.star` q) == lift h p `star` lift h q)
+= admit()
+
+let dup_pure (#h:heap_sig u#a) (p:prop) : Lemma (pure #h p == pure #h p `star` pure #h p) = admit()
+
+let ac_lemmas_ext (h:heap_sig u#a)
+: Lemma (
+    (forall (p q r:ext_slprop h). (p `star` q) `star` r == p `star` (q `star` r)) /\
+    (forall (p q:ext_slprop h). p `star` q == q `star` p) /\
+    (forall (p:ext_slprop h). p `star` emp == p)
+) = admit()
+
+let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
+: Lemma (inv i p == inv i p `star` inv i p)
+= match i with
+  | Inl j ->
+    calc (==) {
+      inv i p;
+    (==) { }
+      up (h.inv j (down p));
+    (==) {h.dup_inv_equiv j (down p)}
+      (up (h.inv j (down p) `h.star` h.inv j (down p)));
+    (==) { up_star (h.inv j (down p)) (h.inv j (down p)) }
+      inv i p `star` inv i p;
+    }
+
+  | Inr j -> 
+    calc (==) {
+      inv i p;
+    (==) {}
+      ghost_pts_to h j (Some (down p)) `star` pure (is_boxable p);
+    (==) {  share_gather_equiv #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) (Some (down p)) }
+      lift h (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.star`
+              H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
+    (==) { lift_star #h (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
+                        (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
+      (ghost_pts_to h j (Some (down p)) `star` ghost_pts_to h j (Some (down p))) `star` pure (is_boxable p);
+    (==) { dup_pure #( h) (is_boxable p) }
+      (ghost_pts_to h j (Some (down p)) `star` ghost_pts_to h j (Some (down p))) `star` (pure (is_boxable p) `star` pure (is_boxable p));
+    (==) { ac_lemmas_ext h }
+      inv i p `star` inv i p;
+    }
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -372,6 +464,7 @@ let extend (h:heap_sig u#a) = {
     interp_as = (fun p -> ());
     full_mem_pred = full_mem_pred h;
     is_ghost_action = is_ghost_action h;
+    is_ghost_action_refl = (fun m -> h.is_ghost_action_refl m.small);
     non_info_slprop = non_info_slprop h;
     bprop = bprop h;
     up = up #h;
@@ -394,8 +487,9 @@ let extend (h:heap_sig u#a) = {
     iref = ext_iref h;
     iref_erasable = iref_erasable h;
     iname_of = iname_of h;
-    inv = inv h;
+    inv = inv #h;
     iname_ok = iname_ok h;
+    dup_inv_equiv = dup_inv_equiv #h;
     mem_invariant = mem_invariant;
 }
 
@@ -540,64 +634,32 @@ let down_inames_ok (#h:heap_sig u#a) (ex:inames h) (m:ext_mem h)
     )
   )
 
-let up_star (#h:heap_sig u#a) (p q:h.slprop)
-: Lemma (up (p `h.star` q) == (up p `star` up q))
-        [SMTPat (up (p `h.star` q))]
-= introduce forall m.
-      up (p `h.star` q) m ==>
-      (up p `star` up q) m
-  with introduce _ ==> _
-  with _ . (
-    h.star_equiv p q m.small_core;
-    eliminate exists m1 m2.
-      h.sep.disjoint m1 m2 /\
-      m.small_core == h.sep.join m1 m2 /\
-      h.interp p m1 /\
-      h.interp q m2
-    returns (up p `star` up q) m
-    with _ . (
-      let ml = { m with small_core = m1 } in
-      let mr = { m with small_core = m2; big_core = H2.empty_heap } in
-      H2.join_empty m.big_core;
-      assert (disjoint ml mr);
-      assert (m == join ml mr);
-      assert (up p ml);
-      assert (up q mr);
-      assert ((extend h).sep.disjoint ml mr);
-      (extend h).star_equiv (up p) (up q) m
-    )
-  );
-  introduce forall m.
-      (up p `star` up q) m ==>
-      up (p `h.star` q) m
-  with introduce _ ==> _
-  with _ . (
-    eliminate exists m1 m2.
-      disjoint m1 m2 /\
-      m == join m1 m2 /\
-      up p m1 /\
-      up q m2
-    returns up (p `h.star` q) m
-    with _ . (
-      h.star_equiv p q m.small_core
-    )    
-  );
-  slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
 
 
 let up_down_inames (#h:heap_sig u#a) (i:inames h)
 : Lemma (down_inames (lift_inames i) `Set.equal` i)
 = ()
 
+let ac_lemmas (h:heap_sig u#a)
+: Lemma (
+    (forall p q r. (p `h.star` q) `h.star` r == p `h.star` (q `h.star` r)) /\
+    (forall p q. p `h.star` q == q `h.star` p) /\
+    (forall p. p `h.star` h.emp == p)
+)
+= FStar.Classical.forall_intro_3 h.star_associative;
+  FStar.Classical.forall_intro_2 h.star_commutative;
+  FStar.Classical.forall_intro h.emp_unit
+
 let pqrs_pr_qs (h:heap_sig u#a) (p q r s:h.slprop)
 : Lemma (
     p `h.star` q `h.star` (r `h.star` s) == (p `h.star` r) `h.star` (q `h.star` s)
 )
-= admit()
+= ac_lemmas h
 
 let pqr_prq (h:heap_sig u#a) (p q r:h.slprop)
 : Lemma ((p `h.star` q) `h.star` r == p `h.star` r `h.star` q)
-= admit()
+= ac_lemmas h
+
 module T = FStar.Tactics.V2
 #push-options "--fuel 0 --ifuel 0"
 let lift_action
@@ -683,3 +745,23 @@ let lift_action
         down_inames_ok #h ex m1;
         (x, m1)
 
+
+let dup_inv 
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (i:(extend h).iref)
+    (p:(extend h).slprop)
+: ghost_action_except (extend h) unit ex
+    ((extend h).inv i p) 
+    (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv i p)
+= fun frame
+      (m0:ext_mem h { 
+        (extend h).full_mem_pred m0 /\
+        inames_ok ex m0 /\
+        interpret #(extend h) 
+          (inv i p `star` frame `star` mem_invariant ex m0) m0
+      }) ->
+      dup_inv_equiv i p;
+      h.is_ghost_action_refl m0.small;
+      (), m0
+ 
