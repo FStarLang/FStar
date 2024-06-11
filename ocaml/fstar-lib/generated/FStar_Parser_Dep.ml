@@ -630,18 +630,28 @@ let (file_of_dep_aux :
                       let uu___4 =
                         let uu___5 =
                           let uu___6 =
-                            implementation_of_internal file_system_map key in
-                          FStar_Compiler_Option.get uu___6 in
+                            let uu___7 =
+                              let uu___8 =
+                                implementation_of_internal file_system_map
+                                  key in
+                              FStar_Compiler_Option.get uu___8 in
+                            let uu___8 =
+                              let uu___9 =
+                                interface_of_internal file_system_map key in
+                              FStar_Compiler_Option.get uu___9 in
+                            FStar_Compiler_Util.format3
+                              "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s."
+                              key uu___7 uu___8 in
+                          FStar_Errors_Msg.text uu___6 in
                         let uu___6 =
                           let uu___7 =
-                            interface_of_internal file_system_map key in
-                          FStar_Compiler_Option.get uu___7 in
-                        FStar_Compiler_Util.format3
-                          "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s; if you really want this behavior add the option '--expose_interfaces'"
-                          key uu___5 uu___6 in
+                            FStar_Errors_Msg.text
+                              "If you really want this behavior add the option '--expose_interfaces'." in
+                          [uu___7] in
+                        uu___5 :: uu___6 in
                       (FStar_Errors_Codes.Fatal_MissingExposeInterfacesOption,
                         uu___4) in
-                    FStar_Errors.raise_err uu___3))
+                    FStar_Errors.raise_err_doc uu___3))
               else
                 (let uu___2 =
                    let uu___3 = interface_of_internal file_system_map key in
