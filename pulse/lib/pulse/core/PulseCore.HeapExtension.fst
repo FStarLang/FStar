@@ -407,13 +407,17 @@ let lift_iname (#h:heap_sig u#a) (i:h.iname)
 : ext_iname h
 = Inl i
 
+irreducible //weird, without this irreducible, F* hangs on lift_action
+let lift_inames_body (#h:heap_sig u#a) (is:Set.set h.iname) (a:(extend h).iname)
+: b:bool { b <==> (Inl? a /\ Inl?.v a `Set.mem` is) }
+= match a with
+  | Inl i -> i `Set.mem` is
+  | _ -> false
+
 let lift_inames (#h:heap_sig u#a) (is:inames h)
 : inames (extend h) 
 = let is = Ghost.reveal is in
-  FStar.Set.intension
-    (function
-      | Inl i -> i `Set.mem` is
-      | _ -> false)
+  FStar.Set.intension (lift_inames_body #h is)
 
 let down_frame
       (#h:heap_sig u#a)
@@ -426,19 +430,76 @@ let down_frame
           (ensures interpret #(extend h) (up q `star` frame) ({m with small = m'})))
 = admit() 
 
+let mem_intension (#a:eqtype) (x:a) (f:(a -> Tot bool))
+: Lemma 
+  (ensures (Set.mem x (Set.intension f) = f x))
+  [SMTPat (Set.mem x (Set.intension f))]
+= FStar.Set.mem_intension x f
+
 let down_inames_ok (#h:heap_sig u#a) (ex:inames h) (m:ext_mem h)
 : Lemma 
   (ensures inames_ok (lift_inames ex) m <==> inames_ok ex m.small) 
-= admit()
+= introduce inames_ok (lift_inames ex) m ==> inames_ok ex m.small
+  with _ . (
+    introduce forall i. i `Set.mem` ex ==> h.iname_ok i m.small
+    with introduce _ ==> _
+    with _ . (
+      assert (Inl i `Set.mem` lift_inames ex)
+    )
+  )
+
+let core_of (#h:heap_sig) (m:h.mem)
+: h.sep.core
+= h.sep.lens_core.get m
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
         [SMTPat (up (p `h.star` q))]
-= admit()
+= introduce forall m.
+      up (p `h.star` q) m ==>
+      (up p `star` up q) m
+  with introduce _ ==> _
+  with _ . (
+    h.star_equiv p q m.small_core;
+    eliminate exists m1 m2.
+      h.sep.disjoint m1 m2 /\
+      m.small_core == h.sep.join m1 m2 /\
+      h.interp p m1 /\
+      h.interp q m2
+    returns (up p `star` up q) m
+    with _ . (
+      let ml = { m with small_core = m1 } in
+      let mr = { m with small_core = m2; big_core = H2.empty_heap } in
+      H2.join_empty m.big_core;
+      assert (disjoint ml mr);
+      assert (m == join ml mr);
+      assert (up p ml);
+      assert (up q mr);
+      assert ((extend h).sep.disjoint ml mr);
+      (extend h).star_equiv (up p) (up q) m
+    )
+  );
+  introduce forall m.
+      (up p `star` up q) m ==>
+      up (p `h.star` q) m
+  with introduce _ ==> _
+  with _ . (
+    eliminate exists m1 m2.
+      disjoint m1 m2 /\
+      m == join m1 m2 /\
+      up p m1 /\
+      up q m2
+    returns up (p `h.star` q) m
+    with _ . (
+      h.star_equiv p q m.small_core
+    )    
+  );
+  slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
+
 
 let up_down_inames (#h:heap_sig u#a) (i:inames h)
-: Lemma (down_inames (lift_inames i) == i)
-= admit()
+: Lemma (down_inames (lift_inames i) `Set.equal` i)
+= ()
 
 let pqrs_pr_qs (h:heap_sig u#a) (p q r s:h.slprop)
 : Lemma (
@@ -450,7 +511,7 @@ let pqr_prq (h:heap_sig u#a) (p q r:h.slprop)
 : Lemma ((p `h.star` q) `h.star` r == p `h.star` r `h.star` q)
 = admit()
 module T = FStar.Tactics.V2
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+#push-options "--fuel 0 --ifuel 0"
 let lift_action
     (#h:heap_sig u#h)
     (#a:Type u#a)
