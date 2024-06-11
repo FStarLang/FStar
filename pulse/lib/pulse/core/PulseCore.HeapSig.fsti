@@ -140,7 +140,18 @@ type heap_sig : Type u#(a + 2) = {
       r:slprop ->
       Lemma (p `star` (q `star` r) == (p `star` q) `star` r)
     );
-    
+    star_equiv: (
+      p:slprop ->
+      q:slprop ->
+      m:sep.core ->
+      Lemma (
+        interp (p `star` q) m <==> 
+        (exists m0 m1. 
+          sep.disjoint m0 m1 /\
+          m == sep.join m0 m1 /\
+          interp p m0 /\
+          interp q m1))
+    );
     pts_to: (
       #a:Type u#a ->
       #p:pcm a ->
