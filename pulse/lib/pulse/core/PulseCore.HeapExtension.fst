@@ -419,6 +419,97 @@ let lift_inames (#h:heap_sig u#a) (is:inames h)
 = let is = Ghost.reveal is in
   FStar.Set.intension (lift_inames_body #h is)
 
+let core_of (#h:heap_sig) (m:h.mem)
+: h.sep.core
+= h.sep.lens_core.get m
+
+let down_frame_core
+      (#h:heap_sig u#a)
+      (p:h.slprop)
+      (frame:ext_slprop h)
+      (m:ext_mem h { interpret #(extend h) (up p `star` frame) m })
+: frame':h.slprop { 
+  interpret #h (p `h.star` frame') m.small /\
+  (forall (q:h.slprop) (m':h.mem).
+    interpret #h (q `h.star` frame') m' ==>
+    interpret #(extend h) (up q `star` frame) ({m with small = m'}))
+}
+=
+  eliminate exists (m0:core h)  (m1: core h).
+    disjoint m0 m1 /\
+    core_of #(extend h) m == join #h m0 m1 /\
+    up #h p m0 /\
+    frame m1
+  returns exists frame'. 
+    interpret #h (p `h.star` frame') m.small /\
+    (forall (q:h.slprop) (m':h.mem).
+      interpret #h (q `h.star` frame') m' ==>
+      interpret #(extend h) (up q `star` frame) ({m with small = m'}))
+  with _ . (
+    let fr (ms:h.sep.core)
+      : prop 
+      = interp frame { small_core = ms; big_core = m1.big_core }
+    in
+    let fr_affine ()
+    : Lemma (is_affine_mem_prop h.sep fr)
+    = introduce forall s0 s1.
+        fr s0 /\ h.sep.disjoint s0 s1 ==> fr (h.sep.join s0 s1)
+      with introduce _ ==> _
+      with _. ( 
+        let left = { small_core = s0; big_core = m1.big_core } in
+        let right = { small_core = s1; big_core = H2.empty_heap } in
+        H2.join_empty m1.big_core;
+        assert (disjoint left right)
+      )
+    in
+    fr_affine();
+    let frame' = h.as_slprop fr in
+    up_down p;
+    assert (h.interp p m0.small_core);
+    assert (fr m1.small_core);
+    h.interp_as fr;
+    assert (h.interp frame' m1.small_core);
+    assert (h.sep.disjoint m0.small_core m1.small_core);
+    h.star_equiv p frame' (core_of m.small); 
+    assert (h.interp (p `h.star` frame') (core_of m.small));
+    introduce forall (q:h.slprop) (m':h.mem).
+        interpret #h (q `h.star` frame') m' ==>
+        interpret #(extend h) (up q `star` frame) ({m with small = m'})
+    with introduce _ ==> _
+    with _ . (
+        h.star_equiv q frame' (core_of m');
+        eliminate exists m0' m1'.
+          h.sep.disjoint m0' m1' /\
+          core_of #h m' == h.sep.join m0' m1' /\
+          h.interp q m0' /\
+          fr m1'
+        returns _
+        with _ . (
+          let mres = core_of #(extend h) { m with small = m'} in
+          introduce exists ml mr.
+            disjoint ml mr /\
+            mres == join ml mr /\
+            up q ml /\
+            frame mr
+          with ({ small_core=m0'; big_core=m0.big_core}) ({ small_core = m1'; big_core=m1.big_core })
+          and  (
+            ()
+          );
+          assert (interpret #(extend h) (up q `star` frame) ({m with small = m'}))
+        )
+    )
+  );
+  let frame' =
+    FStar.IndefiniteDescription.indefinite_description_tot 
+      h.slprop
+      (fun frame' ->
+        interpret #h (p `h.star` frame') m.small /\
+         (forall (q:h.slprop) (m':h.mem).
+            interpret #h (q `h.star` frame') m' ==>
+            interpret #(extend h) (up q `star` frame) ({m with small = m'})))
+  in
+  h.non_info_slprop frame'
+
 let down_frame
       (#h:heap_sig u#a)
       (p:h.slprop)
@@ -428,7 +519,8 @@ let down_frame
   (q:h.slprop -> m':h.mem -> 
     Lemma (requires interpret #h (q `h.star` frame') m')
           (ensures interpret #(extend h) (up q `star` frame) ({m with small = m'})))
-= admit() 
+= let frame' = down_frame_core p frame m in
+  (| frame', (fun q m' -> ()) |)
 
 let mem_intension (#a:eqtype) (x:a) (f:(a -> Tot bool))
 : Lemma 
@@ -447,10 +539,6 @@ let down_inames_ok (#h:heap_sig u#a) (ex:inames h) (m:ext_mem h)
       assert (Inl i `Set.mem` lift_inames ex)
     )
   )
-
-let core_of (#h:heap_sig) (m:h.mem)
-: h.sep.core
-= h.sep.lens_core.get m
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
