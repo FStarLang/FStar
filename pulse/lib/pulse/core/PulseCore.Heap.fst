@@ -52,8 +52,9 @@ let update_addr (m:heap) (a:addr) (c:cell)
   = update_addr' m a (Some c)
 
 let disjoint_cells (c0 c1:cell u#h) : prop =
-    let Ref t0 p0 v0 = c0 in
-    let Ref t1 p1 v1 = c1 in
+    let Ref m0 t0 p0 v0 = c0 in
+    let Ref m1 t1 p1 v1 = c1 in
+    m0 == m1 /\
     t0 == t1 /\
     p0 == p1 /\
     composable p0 v0 v1
@@ -61,8 +62,8 @@ let disjoint_cells (c0 c1:cell u#h) : prop =
 let disjoint_cells_sym (c0 c1:cell u#h)
   : Lemma (requires disjoint_cells c0 c1)
           (ensures disjoint_cells c1 c0)
-  = let Ref t0 p0 v0 = c0 in
-    let Ref t1 p1 v1 = c1 in
+  = let Ref _ t0 p0 v0 = c0 in
+    let Ref _ t1 p1 v1 = c1 in
     p0.comm v0 v1;
     ()
 
@@ -115,9 +116,9 @@ let disjoint_sym (m0 m1:heap u#h)
     ()
 
 let join_cells (c0:cell u#h) (c1:cell u#h{disjoint_cells c0 c1}) =
-  let Ref a0 p0 v0 = c0 in
-  let Ref a1 p1 v1 = c1 in
-  Ref a0 p0 (op p0 v0 v1)
+  let Ref m a0 p0 v0 = c0 in
+  let Ref _ a1 p1 v1 = c1 in
+  Ref m a0 p0 (op p0 v0 v1)
 
 let join (m0:heap) (m1:heap{disjoint m0 m1})
   : heap
@@ -136,9 +137,9 @@ let disjoint_join_cells_assoc (c0 c1 c2:cell u#h)
     (ensures  disjoint_cells c0 c1 /\
               disjoint_cells (join_cells c0 c1) c2 /\
               join_cells (join_cells c0 c1) c2 == join_cells c0 (join_cells c1 c2))
-  = let Ref a0 p0 v0 = c0 in
-    let Ref a1 p1 v1 = c1 in
-    let Ref a2 p2 v2 = c2 in
+  = let Ref _ a0 p0 v0 = c0 in
+    let Ref _ a1 p1 v1 = c1 in
+    let Ref _ a2 p2 v2 = c2 in
     p0.assoc v0 v1 v2
 
 let disjoint_join' (m0 m1 m2:heap u#h)
@@ -180,8 +181,8 @@ let mem_equiv_eq (m0 m1:heap)
 let join_cells_commutative (c0:cell u#h) (c1:cell u#h{disjoint_cells c0 c1})
   : Lemma (disjoint_cells_sym c0 c1; join_cells c0 c1 == join_cells c1 c0)
           [SMTPat (join_cells c0 c1)]
-  = let Ref a0 p0 v0 = c0 in
-    let Ref a1 p1 v1 = c1 in
+  = let Ref _ a0 p0 v0 = c0 in
+    let Ref _ a1 p1 v1 = c1 in
     p0.comm v0 v1
 
 let join_commutative' (m0 m1:heap)
@@ -297,27 +298,29 @@ let affine_hprop_intro
   in
   Classical.forall_intro_2 aux
 
-let pts_to_cell (#a:Type u#a) (pcm:pcm a) (v:a) (c:cell u#a) =
-  let Ref a' pcm' v' = c in
+let pts_to_cell (meta:bool) (#a:Type u#a) (pcm:pcm a) (v:a) (c:cell u#a) =
+  let Ref m' a' pcm' v' = c in
+  meta == reveal m' /\
   a == a' /\
   pcm == pcm' /\
   compatible pcm v v'
 
-let pts_to_cell_join (#a:Type u#a) (pcm:pcm a) (v1 v2:a) (c:cell u#a)
-  : Lemma (requires (pts_to_cell pcm v1 c /\ pts_to_cell pcm v2 c))
-          (ensures joinable pcm v1 v2)
-          = ()
+let pts_to_cell_join (meta:bool) (#a:Type u#a) (pcm:pcm a) (v1 v2:a) (c:cell u#a)
+: Lemma 
+  (requires (pts_to_cell meta pcm v1 c /\ pts_to_cell meta pcm v2 c))
+  (ensures joinable pcm v1 v2)
+= ()
 
-let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
+let pts_to (meta:bool) (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a =
   let hprop  (h: heap) : Tot prop =
     Addr? r /\
     h `contains_addr` (Addr?._0 r) /\
-    pts_to_cell pcm v (select_addr h (Addr?._0 r))
+    pts_to_cell meta pcm v (select_addr h (Addr?._0 r))
   in
   affine_hprop_intro hprop (fun h0 h1 ->
   match r with | Null -> () | Addr r -> (
     match h0 r, h1 r, (join h0 h1) r with
-    | Some (Ref a0 pcm0 v0), Some (Ref a1 pcm1 v1), Some (Ref a01 pcm01 v01) ->
+    | Some (Ref _ a0 pcm0 v0), Some (Ref _ a1 pcm1 v1), Some (Ref _ a01 pcm01 v01) ->
        compatible_elim pcm01 v v0 (compatible pcm01 v v01) (fun frame ->
          pcm01.comm frame v;
          pcm01.assoc_r v frame v1;
@@ -419,47 +422,49 @@ let interp_depends_only_on (hp:slprop u#a) = emp_unit hp
 //pts_to
 ////////////////////////////////////////////////////////////////////////////////
 
-let intro_pts_to (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
+let intro_pts_to (meta:bool) (#a:_) (#pcm:pcm a) (x:ref a pcm) (v:a) (m:heap)
   : Lemma
     (requires
        Addr? x /\
        m `contains_addr` (Addr?._0 x) /\
-       (let Ref a' pcm' v' = select_addr m (Addr?._0 x) in
+       (let Ref m' a' pcm' v' = select_addr m (Addr?._0 x) in
+        meta == reveal m' /\
         a == a' /\
         pcm == pcm' /\
         compatible pcm v v'))
      (ensures
-       interp (pts_to x v) m)
+       interp (pts_to meta x v) m)
   = ()
 
 #push-options "--z3rlimit_factor 4"
-let pts_to_compatible_fwd (#a:Type u#a)
+let pts_to_compatible_fwd (#meta:bool)
+                          (#a:Type u#a)
                           (#pcm:_)
                           (x:ref a pcm)
                           (v0 v1:a)
                           (m:heap u#a)
   : Lemma
     (requires
-      interp (pts_to x v0 `star` pts_to x v1) m)
+      interp (pts_to meta x v0 `star` pts_to meta x v1) m)
     (ensures
       composable pcm v0 v1 /\
-      interp (pts_to x (op pcm v0 v1)) m)
+      interp (pts_to meta x (op pcm v0 v1)) m)
   = let Addr addr = x in
     let c = select_addr m addr in
-    let Ref _ _ v = select_addr m addr in
+    let Ref _ _ _ v = select_addr m addr in
     let aux (c0 c1: cell u#a)
       : Lemma
         (requires
            c0 `disjoint_cells` c1 /\
-           pts_to_cell pcm v0 c0 /\
-           pts_to_cell pcm v1 c1 /\
+           pts_to_cell meta pcm v0 c0 /\
+           pts_to_cell meta pcm v1 c1 /\
            c == join_cells c0 c1 )
         (ensures
            composable pcm v0 v1 /\
-           interp (pts_to x (op pcm v0 v1)) m)
+           interp (pts_to meta x (op pcm v0 v1)) m)
         [SMTPat (c0 `disjoint_cells` c1)]
-      = let Ref _ _ v0' = c0 in
-        let Ref _ _ v1' = c1 in
+      = let Ref _ _ _ v0' = c0 in
+        let Ref _ _ _ v1' = c1 in
         assert (exists frame. composable pcm v0 frame /\ op pcm frame v0 == v0');
         assert (exists frame. composable pcm v1 frame /\ op pcm frame v1 == v1');
         assert (composable pcm v0' v1');
@@ -495,27 +500,29 @@ let pts_to_compatible_fwd (#a:Type u#a)
     in
     assert (exists c0 c1.
               c0 `disjoint_cells` c1 /\
-              pts_to_cell pcm v0 c0 /\
-              pts_to_cell pcm v1 c1 /\
+              pts_to_cell meta pcm v0 c0 /\
+              pts_to_cell meta pcm v1 c1 /\
               c == join_cells c0 c1)
 
-let pts_to_compatible_bk (#a:Type u#a)
-                          (#pcm:_)
-                          (x:ref a pcm)
-                          (v0 v1:a)
-                          (m:heap u#a)
+let pts_to_compatible_bk 
+      (#meta:bool)
+      (#a:Type u#a)
+      (#pcm:_)
+      (x:ref a pcm)
+      (v0 v1:a)
+      (m:heap u#a)
   : Lemma
     (requires
       composable pcm v0 v1 /\
-      interp (pts_to x (op pcm v0 v1)) m)
+      interp (pts_to meta x (op pcm v0 v1)) m)
     (ensures
-      interp (pts_to x v0 `star` pts_to x v1) m)
+      interp (pts_to meta x v0 `star` pts_to meta x v1) m)
   = let Addr addr = x in
     let c = select_addr m addr in
-    let Ref _ _ v = select_addr m addr in
+    let Ref _ _ _ v = select_addr m addr in
     let v01 = (op pcm v0 v1) in
-    assert (pts_to_cell pcm v01 c);
-    let Ref _ _ v = c in
+    assert (pts_to_cell meta pcm v01 c);
+    let Ref _ _ _ v = c in
     assert (compatible pcm v01 v);
     let aux frame
       : Lemma
@@ -524,19 +531,19 @@ let pts_to_compatible_bk (#a:Type u#a)
            op pcm frame v01 == v)
         (ensures
            exists m0 m1.
-             interp (pts_to x v0) m0 /\
-             interp (pts_to x v1) m1 /\
+             interp (pts_to meta x v0) m0 /\
+             interp (pts_to meta x v1) m1 /\
              disjoint m0 m1 /\
              m `mem_equiv` join m0 m1)
         [SMTPat (composable pcm v01 frame)]
-      = let c0 = Ref a pcm v0 in
+      = let c0 = Ref meta a pcm v0 in
         pcm.FStar.PCM.assoc_r v0 v1 frame;
-        let c1 : cell = Ref a pcm (op pcm v1 frame) in
+        let c1 : cell = Ref meta a pcm (op pcm v1 frame) in
         compatible_refl pcm v0;
-        assert (pts_to_cell pcm v0 c0);
+        assert (pts_to_cell meta pcm v0 c0);
         pcm.FStar.PCM.comm v1 frame;
         assert (compatible pcm v1 (op pcm v1 frame));
-        assert (pts_to_cell pcm v1 c1);
+        assert (pts_to_cell meta pcm v1 c1);
         calc (==) {
           (v0 `op pcm` (v1 `op pcm` frame));
             (==) {
@@ -553,30 +560,33 @@ let pts_to_compatible_bk (#a:Type u#a)
     in
     ()
 
-let pts_to_compatible (#a:Type u#a)
+let pts_to_compatible (#meta:bool)
+                      (#a:Type u#a)
                       (#pcm:_)
                       (x:ref a pcm)
                       (v0 v1:a)
                       (m:heap u#a) =
-    FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_fwd x v0 v1));
-    FStar.Classical.forall_intro (FStar.Classical.move_requires (pts_to_compatible_bk x v0 v1))
+    FStar.Classical.forall_intro 
+      (FStar.Classical.move_requires (pts_to_compatible_fwd #meta x v0 v1));
+    FStar.Classical.forall_intro
+      (FStar.Classical.move_requires (pts_to_compatible_bk #meta x v0 v1))
 
-let pts_to_join (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
+let pts_to_join (#meta:bool) (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
+  : Lemma (requires (interp (pts_to meta r v1) m /\ interp (pts_to meta r v2) m))
           (ensures joinable pcm v1 v2)
   = ()
 
-let pts_to_join' (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
-  : Lemma (requires (interp (pts_to r v1) m /\ interp (pts_to r v2) m))
+let pts_to_join'(#meta:_) (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v1 v2:a) (m:heap)
+  : Lemma (requires (interp (pts_to meta r v1) m /\ interp (pts_to meta r v2) m))
           (ensures (exists z. compatible pcm v1 z /\ compatible pcm v2 z /\
-                         interp (pts_to r z) m))
-  = let Ref a' pcm' v' = (select_addr m (Addr?._0 r)) in
+                         interp (pts_to meta r z) m))
+  = let Ref _ a' pcm' v' = (select_addr m (Addr?._0 r)) in
     compatible_refl pcm v'
 
-let pts_to_compatible_equiv (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
-  = FStar.Classical.forall_intro (pts_to_compatible x v0 v1)
+let pts_to_compatible_equiv (#meta:_) (#a:Type) (#pcm:_) (x:ref a pcm) (v0:a) (v1:a{composable pcm v0 v1})
+  = FStar.Classical.forall_intro (pts_to_compatible #meta x v0 v1)
 
-let pts_to_not_null (#a:Type) (#pcm:_) (x:ref a pcm) (v:a) (m:heap) = ()
+let pts_to_not_null #meta (#a:Type) (#pcm:_) (x:ref a pcm) (v:a) (m:heap) = ()
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -678,7 +688,7 @@ let weaken (p q r:slprop) (h:heap u#a) = ()
 ////////////////////////////////////////////////////////////////////////////////
 
 let full_cell (c:cell) =
-  let Ref _ p v = c in
+  let Ref _ _ p v = c in
   p.refine v
 
 let full_heap_pred h =
@@ -714,78 +724,62 @@ let weaken_free_above (h:heap) (a b:nat)
 ////////////////////////////////////////////////////////////////////////////////
 // sel
 ////////////////////////////////////////////////////////////////////////////////
-let sel #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
+let sel #meta #a #pcm (r:ref a pcm) (m:full_hheap (ptr meta r))
   : a
-  = let Ref _ _ v = select_addr m (Addr?._0 r) in
+  = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     v
 
-let sel_v #a #pcm r v m = sel r m
+let sel_v #meta #a #pcm r v m = sel #meta r m
 
  
 let interp_pts_to (i:core_ref)
+                  (#meta:bool)
                   (#a:Type)
                   (#pcm:FStar.PCM.pcm a)
                   (v:a)
                   (h0:heap)
 : Lemma
-  (requires interp (pts_to #a #pcm i v) h0)
+  (requires interp (pts_to meta #a #pcm i v) h0)
   (ensures (
     not (core_ref_is_null i) /\ (
     match select (core_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
-      let Ref a' pcm' v' = c in
+      let Ref m' a' pcm' v' = c in
+      meta == reveal m' /\
       a == a' /\
       pcm == pcm' /\
       compatible pcm v v')))
 = ()
 
-let sel_lemma (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr r))
-  : Lemma (interp (pts_to r (sel r m)) m)
-  = let Ref _ _ v = select_addr m (Addr?._0 r) in
+let sel_lemma #meta (#a:_) (#pcm:_) (r:ref a pcm) (m:full_hheap (ptr meta r))
+  : Lemma (interp (pts_to meta r (sel r m)) m)
+  = let Ref _ _ _ v = select_addr m (Addr?._0 r) in
     assert (sel r m == v);
     compatible_refl pcm v
   
-// let witnessed_ref_stability #a #pcm (r:ref a pcm) (fact:a -> prop)
-//   = let fact_h = witnessed_ref r fact in
-//     let aux (h0 h1:full_heap)
-//       : Lemma
-//         (requires
-//           fact_h h0 /\
-//           heap_evolves h0 h1)
-//         (ensures
-//           fact_h h1)
-//         [SMTPat ()]
-//       = let Addr addr = r in
-//         assert (interp (ptr r) h0);
-//         assert (fact (sel r h0));
-//         assert (contains_addr h1 addr);
-//         compatible_refl pcm (select_addr h1 addr).v;
-//         assert (compatible pcm (select_addr h1 addr).v (select_addr h1 addr).v);
-//         assert (interp (pts_to r (select_addr h1 addr).v) h1);
-//         assert (interp (ptr r) h1);
-//         assert (fact (sel r h1))
-//     in
-//     ()
-
 #set-options "--fuel 2 --ifuel 2"
 #restart-solver
-let sel_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
-  : action #immut_heap #no_allocs (pts_to r v0) (v:a{compatible pcm v0 v}) (fun _ -> pts_to r v0)
+let sel_action #meta (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a)
+  : action #immut_heap #no_allocs
+      (pts_to meta r v0)
+      (v:a{compatible pcm v0 v})
+      (fun _ -> pts_to meta r v0)
   = let f
-      : pre_action (pts_to r v0)
+      : pre_action (pts_to meta r v0)
                    (v:a{compatible pcm v0 v})
-                   (fun _ -> pts_to r v0)
-      = fun m0 -> (| sel r m0, m0 |)
+                   (fun _ -> pts_to meta r v0)
+      = fun m0 -> (| sel #meta r m0, m0 |)
     in
     f
 
-let sel_action' (#a:_) (#pcm:_) (r:ref a pcm) (v0:erased a) (h:full_hheap (pts_to r v0))
+let sel_action' (#meta:erased bool) (#a:_) (#pcm:_)
+                (r:ref a pcm) (v0:erased a) (h:full_hheap (pts_to meta r v0))
   : v:a{compatible pcm v0 v /\
         (forall frame. composable pcm frame v0 /\
-                  interp (pts_to r frame) h ==>
+                  interp (pts_to meta r frame) h ==>
                   compatible pcm frame v)}
-  = sel_v r v0 h
+  = sel_v #meta r v0 h
 
 let refined_pre_action (#immut:bool) (#allocates:bool)
                        (#[T.exact (`trivial_pre)]pre:heap ->prop)
@@ -806,57 +800,57 @@ let refined_pre_action_as_action #immut #allocs #pre #post (#fp0:slprop) (#a:Typ
   = let g : pre_action fp0 a fp1 = fun m -> f m in
     g
 
-let select_join #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
+let select_join (#meta:bool) #a #p (r:ref a p) (x:erased a) (h:full_heap) (hl hr:heap)
   : Lemma
     (requires
       disjoint hl hr /\
       h == join hl hr /\
-      interp (pts_to r x) h /\
-      interp (pts_to r x) hl /\
+      interp (pts_to meta r x) h /\
+      interp (pts_to meta r x) hl /\
       contains_addr hr (Addr?._0 r))
     (ensures (
-      let Ref _ _ vl = select_addr hl (Addr?._0 r) in
-      let Ref _ _ vr = select_addr hr (Addr?._0 r) in
-      sel_v r x h == op p vl vr))
+      let Ref _ _ _ vl = select_addr hl (Addr?._0 r) in
+      let Ref _ _ _ vr = select_addr hr (Addr?._0 r) in
+      sel_v #meta r x h == op p vl vr))
   = ()
 
 #push-options "--z3rlimit_factor 16 --fuel 1 --initial_ifuel 2 --max_ifuel 2"
-let select_refine_pre (#a:_) (#p:_)
+let select_refine_pre (#meta:erased bool) (#a:_) (#p:_)
                       (r:ref a p)
                       (x:erased a)
                       (f:(v:a{compatible p x v}
                         -> GTot (y:a{compatible p y v /\
                                     frame_compatible p x v y})))
    : refined_pre_action #immut_heap #no_allocs
-                (pts_to r x)
+                (pts_to meta r x)
                 (v:a{compatible p x v /\ p.refine v})
-                (fun v -> pts_to r (f v))
+                (fun v -> pts_to meta r (f v))
    = fun h0 ->
        let v = sel_v r x h0 in
        let aux (frame:slprop)
-         : Lemma (requires interp (pts_to r x `star` frame) h0)
-                 (ensures  interp (pts_to r (f v) `star` frame) h0)
+         : Lemma (requires interp (pts_to meta r x `star` frame) h0)
+                 (ensures  interp (pts_to meta r (f v) `star` frame) h0)
                  [SMTPat ()]
          = let aux (hl hr:_)
              : Lemma
                  (requires disjoint hl hr /\
                            h0 == join hl hr /\
-                           interp (pts_to r x) hl /\
+                           interp (pts_to meta r x) hl /\
                            interp frame hr)
                  (ensures
                            exists hl'. {:pattern disjoint hl' hr}
                              disjoint hl' hr /\
                              h0 == join hl' hr /\
-                             interp (pts_to r (f v)) hl' /\
+                             interp (pts_to meta r (f v)) hl' /\
                              interp frame hr)
                  [SMTPat()]
              = let Addr ad = r in
                if contains_addr hr ad
                then begin
-                    let Ref _ _ v_l = select_addr hl ad in
-                    let Ref _ _ v_r = select_addr hr ad in
+                    let Ref _ _ _ v_l = select_addr hl ad in
+                    let Ref _ _ _ v_r = select_addr hr ad in
                     assert (composable p v_l v_r);
-                    select_join r x h0 hl hr;
+                    select_join #meta r x h0 hl hr;
                     assert (op p v_l v_r == v); //NS: this one seems to be fragile, without the lemma call above
                     assert (compatible p x v_l);
                     let aux (frame_l:a)
@@ -868,7 +862,7 @@ let select_refine_pre (#a:_) (#p:_)
                           exists hl'. {:pattern (disjoint hl' hr)}
                             disjoint hl' hr /\
                             h0 == join hl' hr /\
-                            interp (pts_to r (f v)) hl' /\
+                            interp (pts_to meta r (f v)) hl' /\
                             interp frame hr)
                         [SMTPat (composable p x frame_l)]
                       = assert (op p (op p frame_l x) v_r == v);
@@ -882,11 +876,11 @@ let select_refine_pre (#a:_) (#p:_)
                         p.assoc (f v) frame_l v_r;
                         p.comm (f v) frame_l;
                         assert (op p (op p frame_l (f v)) v_r == v);
-                        let hl' = update_addr hl ad (Ref a p (op p frame_l (f v))) in
+                        let hl' = update_addr hl ad (Ref meta a p (op p frame_l (f v))) in
                         assert (disjoint hl' hr);
                         assert (h0 == join hl hr);
                         assert (forall a. a <> ad ==> hl a == hl' a);
-                        assert (hl' ad == Some (Ref a p (op p frame_l (f v))));
+                        assert (hl' ad == Some (Ref meta a p (op p frame_l (f v))));
                         let aux (a:addr)
                           : Lemma (h0 a == (join hl' hr) a)
                             [SMTPat (h0 a)]
@@ -910,15 +904,15 @@ let select_refine_pre (#a:_) (#p:_)
        (| v, h0 |)
 #pop-options
 
-let select_refine (#a:_) (#p:_)
+let select_refine (#meta:erased bool) (#a:_) (#p:_)
                   (r:ref a p)
                   (x:erased a)
                   (f:(v:a{compatible p x v}
                       -> GTot (y:a{compatible p y v /\
                                   frame_compatible p x v y})))
-   : action #immut_heap #no_allocs (pts_to r x)
+   : action #immut_heap #no_allocs (pts_to meta r x)
             (v:a{compatible p x v /\ p.refine v})
-            (fun v -> pts_to r (f v))
+            (fun v -> pts_to meta r (f v))
    = refined_pre_action_as_action (select_refine_pre r x f)
 
 let update_addr_full_heap (h:full_heap) (a:addr) (c:cell{full_cell c}) : full_heap =
@@ -929,42 +923,42 @@ let update_addr_full_heap (h:full_heap) (a:addr) (c:cell{full_cell c}) : full_he
 let partial_pre_action (fp:slprop u#a) (a:Type u#b) (fp':a -> slprop u#a) =
   full_hheap fp -> (x:a & full_hheap (fp' x))
 
-let upd_gen #a (#p:pcm a)
-               (r:ref a p)
-               (x v:Ghost.erased a)
-               (f: frame_preserving_upd p x v)
-  : partial_pre_action (pts_to r x)
+let upd_gen (#meta:erased bool) #a (#p:pcm a)
+            (r:ref a p)
+            (x v:Ghost.erased a)
+            (f: frame_preserving_upd p x v)
+  : partial_pre_action (pts_to meta r x)
                        unit
-                       (fun _ -> pts_to r v)
+                       (fun _ -> pts_to meta r v)
   = fun h ->
-     let Ref a p old_v = select_addr h (Addr?._0 r) in
+     let Ref _ a p old_v = select_addr h (Addr?._0 r) in
      let new_v = f old_v in
-     let cell = Ref a p new_v in
+     let cell = Ref meta a p new_v in
      let h' = update_addr_full_heap h (Addr?._0 r) cell in
      (| (), h' |)
 
-let upd_gen_updates_only_r #a (#p:pcm a) (r:ref a p)
+let upd_gen_updates_only_r #meta #a (#p:pcm a) (r:ref a p)
                            (x v:Ghost.erased a)
                            (f: frame_preserving_upd p x v)
-                           (h0:full_hheap (pts_to r x))
-  : Lemma (let (| _, h1 |) = upd_gen r x v f h0 in
+                           (h0:full_hheap (pts_to meta r x))
+  : Lemma (let (| _, h1 |) = upd_gen #meta r x v f h0 in
            forall s. s <> (Addr?._0 r) ==> h0 s == h1 s)
   = ()
 
-let upd_gen_full_evolution #a (#p:pcm a)
+let upd_gen_full_evolution #meta #a (#p:pcm a)
       (r:ref a p)
       (x y:Ghost.erased a)
       (f:frame_preserving_upd p x y)
-      (h:full_hheap (pts_to r x))
+      (h:full_hheap (pts_to meta r x))
   : Lemma
     (ensures
-      (let (| _, h1 |) = upd_gen r x y f h in
+      (let (| _, h1 |) = upd_gen #meta r x y f h in
        full_heap_pred h1 /\
        heap_evolves h h1))
-  = let old_v = sel_action' r x h in
+  = let old_v = sel_action' #meta r x h in
     let new_v = f old_v in
     assert (PP.preorder_of_pcm p old_v new_v);
-    let (| _, h1 |) = upd_gen r x y f h in
+    let (| _, h1 |) = upd_gen #meta r x y f h in
     assert (forall a. a<>(Addr?._0 r) ==> h1 a == h a);
     assert (forall (x:addr). contains_addr h1 x ==> x==(Addr?._0 r) \/ contains_addr h x);
     assert (full_heap_pred h1);
@@ -972,42 +966,42 @@ let upd_gen_full_evolution #a (#p:pcm a)
 
 #push-options "--z3rlimit_factor 8"
 
-let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
+let upd_gen_frame_preserving #meta (#a:Type u#a) (#p:pcm a)
       (r:ref a p)
       (x y:Ghost.erased a)
       (f:frame_preserving_upd p x y)
-      (h:full_hheap (pts_to r x))
+      (h:full_hheap (pts_to meta r x))
       (frame:slprop)
  : Lemma
-   (requires interp (pts_to r x `star` frame) h)
+   (requires interp (pts_to meta r x `star` frame) h)
    (ensures
-     (let (| b, h1 |) = upd_gen r x y f h in
-      interp ((pts_to r y) `star` frame) h1 /\
+     (let (| b, h1 |) = upd_gen #meta r x y f h in
+      interp ((pts_to meta r y) `star` frame) h1 /\
       (forall (hp:hprop frame). hp h == hp h1)))
- = let Ref a p old_v = select_addr h (Addr?._0 r) in
+ = let Ref _ a p old_v = select_addr h (Addr?._0 r) in
    let old_v : a = old_v in
    let (| _, h1 |) = upd_gen r x y f h in
    let new_v = f old_v in
    assert (forall a. a<>(Addr?._0 r) ==> h1 a == h a);
-   assert (h1 (Addr?._0 r) == Some (Ref a p new_v));
+   assert (h1 (Addr?._0 r) == Some (Ref meta a p new_v));
    let aux (hl hr:heap)
        : Lemma
          (requires
            disjoint hl hr /\
            h == join hl hr /\
-           interp (pts_to r x) hl /\
+           interp (pts_to meta r x) hl /\
            interp frame hr)
          (ensures
            exists hl'.
            disjoint hl' hr /\
            h1 == join hl' hr /\
-           interp (pts_to r y) hl')
+           interp (pts_to meta r y) hl')
          [SMTPat (disjoint hl hr)]
        = let r_addr = Addr?._0 r in
          assert (contains_addr hl r_addr);
-         let Ref a_l p_l old_v_l = select_addr hl r_addr in
+         let Ref _ a_l p_l old_v_l = select_addr hl r_addr in
          if contains_addr hr r_addr then
-           let Ref a_r p_r old_v_r = select_addr hr r_addr in
+           let Ref _ a_r p_r old_v_r = select_addr hr r_addr in
            assert (a_l == a_r /\ a_r == a /\
                    p_l == p_r /\ p_r == p /\
                    composable p old_v_l old_v_r /\
@@ -1025,22 +1019,22 @@ let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
            assert (op p y (op p frame old_v_r) == new_v);
            p.assoc y frame old_v_r;
            assert (op p (op p y frame) old_v_r == new_v);
-           let hl' = update_addr hl r_addr (Ref a_l p_l (op p y frame)) in
+           let hl' = update_addr hl r_addr (Ref meta a_l p_l (op p y frame)) in
            assert (disjoint hl' hr);
            assert (h1 r_addr == (join hl' hr) r_addr);
            assert (mem_equiv h1 (join hl' hr));
            assert (h1 == join hl' hr);
            p.comm frame y;
            assert (compatible p y (op p y frame));
-           assert (interp (pts_to r y) hl')
+           assert (interp (pts_to meta r y) hl')
          else begin
            assert (a_l == a /\ p_l == p /\ old_v_l == old_v);
-           let hl' = update_addr hl r_addr (Ref a_l p_l new_v) in
+           let hl' = update_addr hl r_addr (Ref meta a_l p_l new_v) in
            assert (disjoint hl' hr);
            assert (h1 r_addr == (join hl' hr) r_addr);
            assert (mem_equiv h1 (join hl' hr));
            assert (h1 == join hl' hr);
-           assert (interp (pts_to r y) hl')
+           assert (interp (pts_to meta r y) hl')
          end
      in
      let aux (hp:hprop frame)
@@ -1051,33 +1045,36 @@ let upd_gen_frame_preserving (#a:Type u#a) (#p:pcm a)
      ()
 #restart-solver 
 
-let upd_gen_action #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
-  : action #mut_heap #no_allocs (pts_to r x)
+let upd_gen_action (#meta:erased bool) #a (#p:pcm a) (r:ref a p) (x y:Ghost.erased a) (f:frame_preserving_upd p x y)
+  : action #mut_heap #no_allocs (pts_to meta r x)
            unit
-           (fun _ -> pts_to r y)
+           (fun _ -> pts_to meta r y)
   = let refined : refined_pre_action #mut_heap #no_allocs
-                    (pts_to r x)
+                    (pts_to meta r x)
                     unit
-                    (fun _ -> pts_to r y)
+                    (fun _ -> pts_to meta r y)
      = fun h ->
-         let (|u, h1|) = upd_gen #a #p r x y f h in
-         FStar.Classical.forall_intro (FStar.Classical.move_requires (upd_gen_frame_preserving r x y f h));
+         let (|u, h1|) = upd_gen #meta #a #p r x y f h in
+         FStar.Classical.forall_intro 
+          (FStar.Classical.move_requires (upd_gen_frame_preserving #meta r x y f h));
          upd_gen_full_evolution r x y f h;
-         let h1 : full_hheap (pts_to r y) = h1 in
+         let h1 : full_hheap (pts_to meta r y) = h1 in
          assert (forall ctr. h `free_above_addr` ctr ==> h1 `free_above_addr` ctr);
          (| (), h1 |)
     in
     refined_pre_action_as_action refined
 
-let upd_action (#a:_) (#pcm:_) (r:ref a pcm)
-               (v0:FStar.Ghost.erased a) (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : action (pts_to r v0) unit (fun _ -> pts_to r v1)
-  = upd_gen_action r v0 (Ghost.hide v1) (frame_preserving_val_to_fp_upd pcm  v0 v1)
+let upd_action (#meta:erased bool) (#a:_) (#pcm:_) (r:ref a pcm)
+               (v0:FStar.Ghost.erased a) 
+               (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})
+  : action (pts_to meta r v0) unit (fun _ -> pts_to meta r v1)
+  = upd_gen_action r v0 (Ghost.hide v1) (frame_preserving_val_to_fp_upd pcm v0 v1)
   
 ////////////////////////////////////////////////////////////////////////////////
 
-let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
-  : action (pts_to r v0) unit (fun _ -> pts_to r pcm.FStar.PCM.p.one)
+let free_action (#meta:erased bool) (#a:_) (#pcm:_) (r:ref a pcm)
+                (v0:FStar.Ghost.erased a{exclusive pcm v0 /\ pcm.refine pcm.FStar.PCM.p.one})
+  : action (pts_to meta r v0) unit (fun _ -> pts_to meta r pcm.FStar.PCM.p.one)
   = let one = pcm.FStar.PCM.p.one in
     compatible_refl pcm one;
     assert (compatible pcm one one);
@@ -1089,38 +1086,38 @@ let free_action (#a:_) (#pcm:_) (r:ref a pcm) (v0:FStar.Ghost.erased a{exclusive
     upd_gen_action r v0 one f
 
 ////////////////////////////////////////////////////////////////////////////////
-let split_action #a #pcm r v0 v1
-  = let g : refined_pre_action (pts_to r (v0 `op pcm` v1))
+let split_action #meta #a #pcm r v0 v1
+  = let g : refined_pre_action (pts_to meta r (v0 `op pcm` v1))
                                unit
-                               (fun _ -> pts_to r v0 `star` pts_to r v1)
+                               (fun _ -> pts_to meta r v0 `star` pts_to meta r v1)
       = fun m ->
-          pts_to_compatible_bk r v0 v1 m;
-          pts_to_compatible_equiv r v0 v1;
+          pts_to_compatible_bk #meta r v0 v1 m;
+          pts_to_compatible_equiv #meta r v0 v1;
           (| (), m |)
     in
     refined_pre_action_as_action g
 
 ////////////////////////////////////////////////////////////////////////////////
-let gather_action #a #pcm r v0 v1
-  = let g : refined_pre_action (pts_to r v0 `star` pts_to r v1)
+let gather_action #meta #a #pcm r v0 v1
+  = let g : refined_pre_action (pts_to meta r v0 `star` pts_to meta r v1)
                                (_:unit{composable pcm v0 v1})
-                               (fun _ -> pts_to r (v0 `op pcm` v1))
+                               (fun _ -> pts_to meta r (v0 `op pcm` v1))
 
       = fun m ->
-          pts_to_compatible_fwd r v0 v1 m;
-          pts_to_compatible_equiv r v0 v1;
+          pts_to_compatible_fwd #meta r v0 v1 m;
+          pts_to_compatible_equiv #meta r v0 v1;
           (| (), m |)
     in
     refined_pre_action_as_action g
 
 
 ////////////////////////////////////////////////////////////////////////////////
-let pts_to_not_null_action #a #pcm r v
-  = let g : refined_pre_action (pts_to r v)
+let pts_to_not_null_action #meta #a #pcm r v
+  = let g : refined_pre_action (pts_to meta r v)
                                (squash (not (is_null r)))
-                               (fun _ -> pts_to r v)
+                               (fun _ -> pts_to meta r v)
       = fun m ->
-          pts_to_not_null r v m;
+          pts_to_not_null #meta r v m;
           (| (), m |)
     in
     refined_pre_action_as_action g
@@ -1128,6 +1125,7 @@ let pts_to_not_null_action #a #pcm r v
 ////////////////////////////////////////////////////////////////////////////////
 #push-options "--z3rlimit 20"
 let extend_alt
+  (#meta:erased bool)
   (#a:Type u#a)
   (#pcm:pcm a)
   (x:a{pcm.refine x})
@@ -1137,7 +1135,7 @@ let extend_alt
     #(fun h -> h `free_above_addr` (addr + 1))
     emp
     (ref a pcm)
-    (fun r -> pts_to r x)
+    (fun r -> pts_to meta r x)
   // (h:full_heap{h `free_above_addr` addr})
   // : (
   //   r:ref a pcm
@@ -1150,11 +1148,11 @@ let extend_alt
   // )
   = fun h -> 
     let r : ref a pcm = Addr addr in
-    let h' = update_addr_full_heap h addr (Ref a pcm x) in
+    let h' = update_addr_full_heap h addr (Ref meta a pcm x) in
     assert (h' `free_above_addr` (addr + 1));
     assert (h' `contains_addr` addr);
     PCM.compatible_refl pcm x;
-    assert (interp (pts_to r x) h');
+    assert (interp (pts_to meta r x) h');
     let extend_aux (frame:slprop) (h0 hf:heap)
       : Lemma
        (requires
@@ -1163,22 +1161,22 @@ let extend_alt
           interp emp h0 /\
           interp frame hf)
        (ensures (
-          let h0' = update_addr h0 addr (Ref a pcm x) in
+          let h0' = update_addr h0 addr (Ref meta a pcm x) in
           disjoint h0' hf /\
-          interp (pts_to r x) h0' /\
+          interp (pts_to meta r x) h0' /\
           h' == join h0' hf /\
           heap_evolves h h' /\
-          interp (pts_to r x `star` frame) h' ///\
+          interp (pts_to meta r x `star` frame) h' ///\
           // (forall (hp:hprop frame). hp h == hp h')
          ))
        [SMTPat (interp emp h0);
         SMTPat (interp frame hf)]
-      = let h0' = update_addr h0 addr (Ref a pcm x) in
+      = let h0' = update_addr h0 addr (Ref meta a pcm x) in
         // assert (disjoint h0' hf);
         // assert (interp (pts_to r x) h0');
         assert (mem_equiv h' (join h0' hf));
         // assert (h' == (join h0' hf));
-        intro_star (pts_to r x) frame h0' hf;
+        intro_star (pts_to meta r x) frame h0' hf;
         // assert (interp (pts_to r x `star` frame) h');
         // let aux (hp:hprop frame)
         //   : Lemma (ensures (hp h == hp h'))
@@ -1190,18 +1188,18 @@ let extend_alt
      (| r, h' |)
 #pop-options
 
-let extend #a #pcm
+let extend #meta #a #pcm
         (x:a{pcm.refine x})
         (addr:nat)
- = refined_pre_action_as_action (extend_alt x addr)
+ = refined_pre_action_as_action (extend_alt #meta x addr)
 
 let extend_modifies_nothing
-      #a #pcm (x:a { pcm.refine x })
+      #meta #a #pcm (x:a { pcm.refine x })
       (addr:nat) (h:full_hheap emp { free_above_addr h addr })
 : Lemma (
-      let (| r, h1 |) = extend #a #pcm x addr h in
+      let (| r, h1 |) = extend #meta #a #pcm x addr h in
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
-      select addr h1 == Some (Ref a pcm x) /\
+      select addr h1 == Some (Ref meta a pcm x) /\
       not (core_ref_is_null r) /\
       addr == core_ref_as_addr r
   )
@@ -1296,10 +1294,10 @@ let intro_pure (p:prop) (_:squash p)
   in
   refined_pre_action_as_action f
 
-let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
-  : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
-          (ensures  (interp (pts_to r y) h))
-  = let Ref a' pcm' v' = (select_addr h (Addr?._0 r)) in
+let pts_to_evolve #meta (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
+  : Lemma (requires (interp (pts_to meta r x) h /\ compatible pcm y x))
+          (ensures  (interp (pts_to meta r y) h))
+  = let Ref _ a' pcm' v' = (select_addr h (Addr?._0 r)) in
     compatible_trans pcm y x v'
 
 let drop p
