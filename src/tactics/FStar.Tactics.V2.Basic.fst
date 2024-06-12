@@ -60,6 +60,7 @@ module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 module PO     = FStar.TypeChecker.Primops
 
+let dbg_Tac        = Debug.get_toggle "Tac"
 let dbg_TacUnify   = Debug.get_toggle "TacUnify"
 let dbg_2635       = Debug.get_toggle "2635"
 let dbg_ReflTc     = Debug.get_toggle "ReflTc"
@@ -132,10 +133,13 @@ let print (msg:string) : tac unit =
       tacprint msg;
     return ()
 
-let dbg_Tac = Debug.get_toggle "Tac"
 let debugging () : tac bool =
-    let! ps = get in
+    return ();! (* thunk *)
     return !dbg_Tac
+
+let ide () : tac bool =
+    return ();! (* thunk *)
+    return (Options.ide ())
 
 let do_dump_ps (msg:string) (ps:proofstate) : unit =
   let psc = ps.psc in

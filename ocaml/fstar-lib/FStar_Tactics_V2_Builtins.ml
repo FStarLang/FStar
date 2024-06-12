@@ -87,6 +87,7 @@ let t_apply                 = from_tac_4 "B.t_apply" B.t_apply
 let t_apply_lemma           = from_tac_3 "B.t_apply_lemma" B.t_apply_lemma
 let print                   = from_tac_1 "B.print" B.print
 let debugging               = from_tac_1 "B.debugging" B.debugging
+let ide                     = from_tac_1 "B.ide" B.ide
 let dump                    = from_tac_1 "B.dump" B.dump
 let dump_all                = from_tac_2 "B.dump_all" B.dump_all
 let dump_uvars_of           = from_tac_2 "B.dump_uvars_of" B.dump_uvars_of

@@ -193,6 +193,11 @@ val print : string -> Tac unit
 on, i.e. when [--debug Tac] was passed in. *)
 val debugging : unit -> Tac bool
 
+(** [ide ()] return true if F* is running in interactive mode. This is
+useful to only print diagnostics messages in interactive mode but not in
+batch. *)
+val ide : unit -> Tac bool
+
 (** Similar to [print], but will dump a text representation of the proofstate
 along with the message. *)
 val dump : string -> Tac unit

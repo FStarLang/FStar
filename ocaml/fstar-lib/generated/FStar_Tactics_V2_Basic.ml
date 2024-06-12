@@ -1,4 +1,6 @@
 open Prims
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
 let (dbg_TacUnify : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "TacUnify"
 let (dbg_2635 : Prims.bool FStar_Compiler_Effect.ref) =
@@ -136,21 +138,38 @@ let (print : Prims.string -> unit FStar_Tactics_Monad.tac) =
        let uu___2 = FStar_Options.silent () in Prims.op_Negation uu___2 in
      if uu___1 then tacprint msg else ());
     FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac () (Obj.repr ())
-let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Debug.get_toggle "Tac"
 let (debugging : unit -> Prims.bool FStar_Tactics_Monad.tac) =
   fun uu___ ->
     (fun uu___ ->
+       let uu___1 =
+         FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
+           (Obj.repr ()) in
        Obj.magic
          (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac () ()
-            (Obj.magic FStar_Tactics_Monad.get)
-            (fun uu___1 ->
-               (fun ps ->
-                  let ps = Obj.magic ps in
-                  let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Tac in
+            uu___1
+            (fun uu___2 ->
+               (fun uu___2 ->
+                  let uu___2 = Obj.magic uu___2 in
+                  let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
-                       () (Obj.magic uu___1))) uu___1))) uu___
+                       () (Obj.magic uu___3))) uu___2))) uu___
+let (ide : unit -> Prims.bool FStar_Tactics_Monad.tac) =
+  fun uu___ ->
+    (fun uu___ ->
+       let uu___1 =
+         FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
+           (Obj.repr ()) in
+       Obj.magic
+         (FStar_Class_Monad.op_let_Bang FStar_Tactics_Monad.monad_tac () ()
+            uu___1
+            (fun uu___2 ->
+               (fun uu___2 ->
+                  let uu___2 = Obj.magic uu___2 in
+                  let uu___3 = FStar_Options.ide () in
+                  Obj.magic
+                    (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
+                       () (Obj.magic uu___3))) uu___2))) uu___
 let (do_dump_ps : Prims.string -> FStar_Tactics_Types.proofstate -> unit) =
   fun msg ->
     fun ps ->

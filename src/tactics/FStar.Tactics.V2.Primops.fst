@@ -146,6 +146,7 @@ let ops = [
   mk_tac_step_1 0 "addns" addns addns;
   mk_tac_step_1 0 "print" print print;
   mk_tac_step_1 0 "debugging" debugging debugging;
+  mk_tac_step_1 0 "ide" ide ide;
   mk_tac_step_1 0 "dump" dump dump;
   mk_tac_step_2 0 "dump_all" dump_all dump_all;
   mk_tac_step_2 0 "dump_uvars_of" dump_uvars_of dump_uvars_of;
