@@ -36,6 +36,7 @@ let check
 
   : T.Tac (checker_result_t g pre post_hint) =
 
+  let t0 : st_term = t in
   let g = Pulse.Typing.Env.push_context g "check_admit" t.range in
 
   let Tm_Admit { ctag = c; typ=t; post } = t.term in
@@ -74,4 +75,19 @@ let check
   in
   let (| c, d_c |) = res in
   let d = T_Admit _ _ d_c in
+  FStar.Tactics.BreakVC.break_vc ();
+  // ^ This makes a big difference! Would be good to distill into
+  // a smaller F*-only example and file an issue.
+  (if T.ide () then begin
+    (* If we're running interactively, print out the context
+    and environment. *)
+    let open FStar.Stubs.Pprint in
+    let open Pulse.PP in
+    let msg = [
+      text "Admitting continuation.";
+      text "Current context:" ^^
+        indent (pp (VPropEquiv.canon_vprop pre))
+    ] in
+    info_doc_env g (Some t0.range) msg
+  end else ()) <: T.Tac unit;
   checker_result_for_st_typing (| _, _, d |) res_ppname

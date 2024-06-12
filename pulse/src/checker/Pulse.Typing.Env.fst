@@ -415,6 +415,12 @@ let info_doc (g:env) (r:option range) (msg:list Pprint.document) =
   let issue = FStar.Issue.mk_issue_doc "Info" msg (Some r) None (ctxt_to_list g) in
   T.log_issues [issue]
 
+let info_doc_env (g:env) (r:option range) (msg:list Pprint.document) =
+  let indent d = nest 2 (hardline ^^ align d) in
+  info_doc g r (msg @
+    [doc_of_string "In typing environment:" ^^ indent (env_to_doc g)]
+  )
+
 let fail (#a:Type) (g:env) (r:option range) (msg:string) =
   fail_doc g r [Pprint.arbitrary_string msg]
 
