@@ -70,6 +70,7 @@ val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
 val print                  : string -> tac unit
 val debugging              : unit -> tac bool
+val ide                    : unit -> tac bool
 val dump                   : string -> tac unit
 val dump_all               : bool -> string -> tac unit
 val dump_uvars_of          : goal -> string -> tac unit
