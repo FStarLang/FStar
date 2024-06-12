@@ -365,7 +365,8 @@ let mem_invariant (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 let share_gather_equiv (#a:_) (#p:pcm a) (r:H2.ghost_ref p) (v0:a) (v1:a{composable p v0 v1})
 : Lemma (H2.ghost_pts_to r (v0 `op p` v1) == 
          H2.ghost_pts_to r v0 `H2.star` H2.ghost_pts_to r v1)
-= admit()
+= H2.ghost_pts_to_compatible_equiv r v0 v1;
+  H2.slprop_extensionality (H2.ghost_pts_to r (v0 `op p` v1)) (H2.ghost_pts_to r v0 `H2.star` H2.ghost_pts_to r v1)
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
@@ -410,9 +411,80 @@ let up_star (#h:heap_sig u#a) (p q:h.slprop)
   );
   slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
 
+let h2_star_equiv (p q:H2.slprop) (m:H2.heap)
+: Lemma (
+    H2.interp (p `H2.star` q) m <==> 
+        (exists m0 m1. 
+          H2.disjoint m0 m1 /\
+          m == H2.join m0 m1 /\
+          H2.interp p m0 /\
+          H2.interp q m1)
+  )
+= introduce  
+    H2.interp (p `H2.star` q) m ==> 
+        (exists m0 m1. 
+          H2.disjoint m0 m1 /\
+          m == H2.join m0 m1 /\
+          H2.interp p m0 /\
+          H2.interp q m1)
+  with _ . (
+    H2.elim_star p q m
+  );
+  introduce
+        (exists m0 m1. 
+          H2.disjoint m0 m1 /\
+          m == H2.join m0 m1 /\
+          H2.interp p m0 /\
+          H2.interp q m1) ==>
+    H2.interp (p `H2.star` q) m
+  with _ . (
+      eliminate exists m0 m1. 
+          H2.disjoint m0 m1 /\
+          m == H2.join m0 m1 /\
+          H2.interp p m0 /\
+          H2.interp q m1
+      returns _ 
+      with _ . (
+          H2.intro_star p q m0 m1
+      )
+  )
+
+
+let core_of (#h:heap_sig) (m:h.mem)
+: h.sep.core
+= h.sep.lens_core.get m
+
+
 let lift_star (#h:heap_sig u#a) (p q:H2.slprop u#(a + 1))
 : Lemma (lift h (p `H2.star` q) == lift h p `star` lift h q)
-= admit()
+= introduce forall (m:core h). 
+    (lift h (p `H2.star` q)) m ==>
+    (lift h p `star` lift h q) m
+  with introduce _ ==> _
+  with _ . ( 
+    h2_star_equiv p q m.big_core;
+    eliminate exists (m0 m1:H2.heap).
+      H2.disjoint m0 m1 /\
+      m.big_core == H2.join m0 m1 /\
+      H2.interp p m0 /\
+      H2.interp q m1
+    returns (lift h p `star` lift h q) m
+    with _ . (
+      let ml = { m with big_core = m0 } in
+      let mr = { small_core = h.sep.empty; big_core = m1 } in
+      h.sep.join_empty m.small_core;
+      assert ((ext_sep h).disjoint ml mr);
+      assert (lift h p ml);
+      assert (lift h q mr)
+    )
+  );
+  introduce forall m.
+    (lift h p `star` lift h q) m ==>
+    (lift h (p `H2.star` q)) m
+  with (
+    h2_star_equiv p q m.big_core
+  );
+  slprop_extensionality _ (lift h (p `H2.star` q)) (lift h p `star` lift h q)
 
 let dup_pure (#h:heap_sig u#a) (p:prop) : Lemma (pure #h p == pure #h p `star` pure #h p) = admit()
 
@@ -513,9 +585,6 @@ let lift_inames (#h:heap_sig u#a) (is:inames h)
 = let is = Ghost.reveal is in
   FStar.Set.intension (lift_inames_body #h is)
 
-let core_of (#h:heap_sig) (m:h.mem)
-: h.sep.core
-= h.sep.lens_core.get m
 
 let down_frame_core
       (#h:heap_sig u#a)

@@ -638,6 +638,11 @@ let ni_unit : non_informative unit = fun x -> reveal x
 let lift_ghost_emp : squash (llift GHOST H.emp == emp) = 
   FStar.Classical.forall_intro H.intro_emp;
   slprop_extensionality (llift GHOST H.emp) emp
+
+let ghost_pts_to_compatible_equiv #a #pcm r v0 v1 =
+  H.pts_to_compatible_equiv #a #pcm r v0 v1;
+  lift_star GHOST (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
+
 let ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)

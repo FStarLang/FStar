@@ -747,6 +747,14 @@ val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
+val ghost_pts_to_compatible_equiv (#a:Type)
+                            (#pcm:_)
+                            (x:ghost_ref #a pcm)
+                            (v0:a)
+                            (v1:a{composable pcm v0 v1})
+  : Lemma (equiv (ghost_pts_to x v0 `star` ghost_pts_to x v1)
+                 (ghost_pts_to x (op pcm v0 v1)))
+
 val ghost_extend
     (#a:Type u#a)
     (#pcm:pcm a)
