@@ -213,6 +213,8 @@ val warn_doc (g:env) (r:option range) (msg:list Pprint.document)
 val info_doc (g:env) (r:option range) (msg:list Pprint.document)
   : T.Tac unit
 
+val info_doc_env (g:env) (r:option range) (msg:list Pprint.document)
+  : T.Tac unit
 
 val fail (#a:Type) (g:env) (r:option range) (msg:string) 
   : T.TAC a (fun _ post -> forall ex ps. post FStar.Tactics.Result.(Failed ex ps))
