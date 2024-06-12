@@ -293,7 +293,7 @@ let pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ref a p) (x:a)
 
 let ghost_pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref a p) (x:a)
 : ext_slprop h
-= lift h (H2.ghost_pts_to #a #p r x)
+= lift h (H2.ghost_pts_to false #a #p r x)
 
 let ext_iname (h:heap_sig u#a) : eqtype = either h.iname nat
 let ext_iref (h:heap_sig u#a) : Type0 = erased (either h.iref (ghost_ref _ (PA.pcm_agreement #h.slprop)))
@@ -303,11 +303,14 @@ let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
   | Inl i -> Inl (h.iname_of i)
   | Inr r -> Inr (core_ghost_ref_as_addr r)
 let is_boxable (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
+let inv_core (#h:heap_sig u#a) (i:ghost_ref _ (PA.pcm_agreement #h.slprop)) (p:ext_slprop h)
+: ext_slprop h
+= lift h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p)))
 let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : ext_slprop h
 = match i with
   | Inl i -> up (h.inv i (down p))
-  | Inr r -> ghost_pts_to h r (Some (down p)) `star` pure (is_boxable p)
+  | Inr r -> inv_core r p `star` pure (is_boxable p)
 
 let iname_ok (h:heap_sig u#a) (i:ext_iname h) (m:ext_mem h) : prop =
   match i with
@@ -323,12 +326,13 @@ let sl_pure_imp (#h:heap_sig u#h) (p:prop) (q: squash p -> ext_slprop h) : ext_s
   as_slprop (fun m -> p ==> interp (q ()) m)
 
 let cell_pred_pre (h:heap_sig u#h) (c:H.cell) =
-  let H.Ref a pcm _ = c in
+  let H.Ref meta a pcm _ = c in
+  reveal meta == true /\
   a == PA.agreement h.slprop /\
   pcm == PA.pcm_agreement #h.slprop
 
 let cell_pred_post (h:heap_sig u#h) (c:H.cell) (_:squash (cell_pred_pre h c)) =
-  let H.Ref _ _ v = c in
+  let H.Ref _ _ _ v = c in
   let v : PA.agreement h.slprop = v in
   match v with
   | None -> emp
@@ -362,11 +366,13 @@ let mem_invariant (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 = up (h.mem_invariant (down_inames e) m.small) `star`
   istore_invariant #h m.ctr e m.big
 
-let share_gather_equiv (#a:_) (#p:pcm a) (r:H2.ghost_ref p) (v0:a) (v1:a{composable p v0 v1})
-: Lemma (H2.ghost_pts_to r (v0 `op p` v1) == 
-         H2.ghost_pts_to r v0 `H2.star` H2.ghost_pts_to r v1)
-= H2.ghost_pts_to_compatible_equiv r v0 v1;
-  H2.slprop_extensionality (H2.ghost_pts_to r (v0 `op p` v1)) (H2.ghost_pts_to r v0 `H2.star` H2.ghost_pts_to r v1)
+let share_gather_equiv #meta (#a:_) (#p:pcm a) (r:H2.ghost_ref p) (v0:a) (v1:a{composable p v0 v1})
+: Lemma (H2.ghost_pts_to meta r (v0 `op p` v1) == 
+         H2.ghost_pts_to meta r v0 `H2.star` H2.ghost_pts_to meta r v1)
+= H2.ghost_pts_to_compatible_equiv #meta r v0 v1;
+  H2.slprop_extensionality 
+        (H2.ghost_pts_to meta r (v0 `op p` v1))
+        (H2.ghost_pts_to meta r v0 `H2.star` H2.ghost_pts_to meta r v1)
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
@@ -525,15 +531,15 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     calc (==) {
       inv i p;
     (==) {}
-      ghost_pts_to h j (Some (down p)) `star` pure (is_boxable p);
-    (==) {  share_gather_equiv #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) (Some (down p)) }
-      lift h (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.star`
-              H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
-    (==) { lift_star #h (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
-                        (H2.ghost_pts_to #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
-      (ghost_pts_to h j (Some (down p)) `star` ghost_pts_to h j (Some (down p))) `star` pure (is_boxable p);
+      inv_core j p `star` pure (is_boxable p);
+    (==) {  share_gather_equiv #true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) (Some (down p)) }
+      lift h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.star`
+              H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
+    (==) { lift_star #h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
+                        (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
+      (inv_core j p `star` inv_core j p) `star` pure (is_boxable p);
     (==) { dup_pure #( h) (is_boxable p) }
-      (ghost_pts_to h j (Some (down p)) `star` ghost_pts_to h j (Some (down p))) `star` (pure (is_boxable p) `star` pure (is_boxable p));
+      (inv_core j p `star` inv_core j p) `star` (pure (is_boxable p) `star` pure (is_boxable p));
     (==) { ac_lemmas_ext h }
       inv i p `star` inv i p;
     }

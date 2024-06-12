@@ -714,7 +714,7 @@ let extend
     in
     ff
 let core_ghost_ref = H2.core_ghost_ref
-let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to #a #pcm r v)
+let ghost_pts_to #a #pcm r v = up (H2.ghost_pts_to false #a #pcm r v)
 let ghost_extend
   (#a:Type u#a)
   (#pcm:pcm a)
@@ -733,7 +733,7 @@ let ghost_extend
     emp 
     (ghost_ref pcm)
     (fun r -> ghost_pts_to r x)
-    = up_action (H2.ghost_extend #a #pcm x addr)
+    = up_action (H2.ghost_extend #false #a #pcm x addr)
   in
   let ff :
       pre_action
@@ -744,15 +744,15 @@ let ghost_extend
         (fun r -> ghost_pts_to r x)
     = fun h0 ->
         let (| y, h1 |) = extend' h0 in
-        up_action_big_heap_immutable (H2.ghost_extend #a #pcm x addr) h0;
+        up_action_big_heap_immutable (H2.ghost_extend #false #a #pcm x addr) h0;
         H2.weaken_free_above GHOST h1.big addr (addr + 1);
         (| y, h1 |)
   in
   ff
-let ghost_read #a #p r x f = up_action (H2.ghost_read #a #p r x f)
-let ghost_write #a #p r x y f = up_action (H2.ghost_write #a #p r x y f)
-let ghost_share #a #p r v0 v1 = up_action (H2.ghost_share #a #p r v0 v1)
-let ghost_gather #a #pcm r v0 v1 = up_action (H2.ghost_gather #a #pcm r v0 v1)
+let ghost_read #a #p r x f = up_action (H2.ghost_read #false #a #p r x f)
+let ghost_write #a #p r x y f = up_action (H2.ghost_write #false #a #p r x y f)
+let ghost_share #a #p r v0 v1 = up_action (H2.ghost_share #false #a #p r v0 v1)
+let ghost_gather #a #pcm r v0 v1 = up_action (H2.ghost_gather #false #a #pcm r v0 v1)
 
 let big_pts_to #a #pcm (r:ref a pcm) (v:a) = big_up (H2.pts_to #a #pcm r v)
 let big_slprop = H2.slprop u#(a + 1)
@@ -946,7 +946,7 @@ let big_extend
     in
     ff
 
-let big_ghost_pts_to #a #pcm r v = big_up (H2.ghost_pts_to #a #pcm r v)
+let big_ghost_pts_to #a #pcm r v = big_up (H2.ghost_pts_to false #a #pcm r v)
 let big_ghost_extend
   (#a:Type u#(ua + 1))
   (#pcm:pcm a)
@@ -966,7 +966,7 @@ let big_ghost_extend
     emp 
     (ghost_ref pcm)
     (fun r -> big_ghost_pts_to r x)
-    = big_up_action (H2.ghost_extend #a #pcm x addr)
+    = big_up_action (H2.ghost_extend #false #a #pcm x addr)
   in
   let ff :
       pre_action
@@ -977,12 +977,12 @@ let big_ghost_extend
         (fun r -> big_ghost_pts_to r x)
     = fun h0 ->
         let (| y, h1 |) = extend' h0 in
-        big_up_action_small_heap_immutable (H2.ghost_extend #a #pcm x addr) h0;
+        big_up_action_small_heap_immutable (H2.ghost_extend #false #a #pcm x addr) h0;
         H2.weaken_free_above GHOST h1.small addr (addr + 1);
         (| y, h1 |)
   in
   ff
-let big_ghost_read #a #p r x f = big_up_action (H2.ghost_read #a #p r x f)
-let big_ghost_write #a #p r x y f = big_up_action (H2.ghost_write #a #p r x y f)
-let big_ghost_share #a #p r v0 v1 = big_up_action (H2.ghost_share #a #p r v0 v1)
-let big_ghost_gather #a #pcm r v0 v1 = big_up_action (H2.ghost_gather #a #pcm r v0 v1)
+let big_ghost_read #a #p r x f = big_up_action (H2.ghost_read #false #a #p r x f)
+let big_ghost_write #a #p r x y f = big_up_action (H2.ghost_write #false #a #p r x y f)
+let big_ghost_share #a #p r v0 v1 = big_up_action (H2.ghost_share #false #a #p r v0 v1)
+let big_ghost_gather #a #pcm r v0 v1 = big_up_action (H2.ghost_gather #false #a #pcm r v0 v1)

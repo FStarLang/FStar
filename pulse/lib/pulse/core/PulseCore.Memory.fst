@@ -707,12 +707,12 @@ let sl_pure_imp (p:prop) (q: squash p -> slprop) : slprop =
   as_slprop (fun (h:iheap) -> p ==> q () h)
 
 let cell_pred_pre (c:H0.cell) =
-  let H0.Ref a pcm _ = c in
+  let H0.Ref _ a pcm _ = c in
   a == PA.agreement H2.slprop /\
   pcm == PA.pcm_agreement #H2.slprop
 
 let cell_pred_post (c:H0.cell) (_:squash (cell_pred_pre c)) =
-  let H0.Ref _ _ v = c in
+  let H0.Ref _ _ _ v = c in
   let v : PA.agreement H2.slprop = v in
   match v with
   | None -> emp
@@ -790,7 +790,7 @@ let iname_for_p (i:iname) (p:slprop) (m:istore) =
   match H0.select i m with
   | None -> False
   | Some cell ->
-    let H0.Ref a pcm v = cell in
+    let H0.Ref _ a pcm v = cell in
     a == PA.agreement H2.slprop /\
     pcm == PA.pcm_agreement #H2.slprop /\ (
     let v : PA.agreement H2.slprop = cell.v in
@@ -802,7 +802,7 @@ let iname_for_p (i:iname) (p:slprop) (m:istore) =
 
 let iref = erased (H0.ref _ (PA.pcm_agreement #H2.slprop))
 let iname_ref_pts_to (i:iref) (p:slprop u#a) =
-  lift_h0 (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p)))
+  lift_h0 (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p)))
 
 let set_add (i:iname) (s:inames) = Set.union (Set.singleton i) s
 
@@ -1141,7 +1141,7 @@ let invariant_of_one_cell_is_big (from:nat) (e:inames) (i:istore)
        | Some c ->
          introduce cell_pred_pre c ==> is_big (cell_pred_post c ())
          with _ . (
-            let H0.Ref _ _ v = c in
+            let H0.Ref _ _ _ v = c in
             let v : PA.agreement H2.slprop = v in
             match v with
             | None -> ()
@@ -1204,7 +1204,7 @@ let istore_invariant_after_extend
         inames_ok e m0 /\
         heap_ctr_valid m0.ctr m0.ghost_ctr m0.iname_ctr m0.iheap})
 : Lemma (
-    let (| v, inv1 |) = H0.extend #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
+    let (| v, inv1 |) = H0.extend #false #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
     let m1 = { m0 with iname_ctr=iname + 1; iheap = {m0.iheap with invariants = inv1} } in
     istore_invariant m1.iname_ctr e m1.iheap.invariants ==
     p `star` istore_invariant m0.iname_ctr e m0.iheap.invariants /\
@@ -1214,9 +1214,9 @@ let istore_invariant_after_extend
     (p `star` mem_invariant e m0 == mem_invariant e m1) /\
     H0.core_ref_as_addr v == iname
   )
-= let (| v, inv1 |) = H0.extend #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
+= let (| v, inv1 |) = H0.extend #false #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0 in
   let m1 = { m0 with iname_ctr=iname + 1; iheap = {m0.iheap with invariants = inv1} } in
-  H0.extend_modifies_nothing #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0;
+  H0.extend_modifies_nothing #false #_ #(PA.pcm_agreement #H2.slprop) (Some (down p)) iname invs0;
   assert (m1.iheap.concrete `H2.free_above_addr CONCRETE` m1.ctr);
   H0.interp_free_above invs0 iname;
   calc (==) {
@@ -1315,9 +1315,9 @@ let new_invariant_pre_action (ctx:inames) (e:inames) (p:slprop u#a { is_big p })
     assert (full_mem_pred m0);
     assert (H0.full_heap_pred m0.iheap.invariants);
     let res 
-      : erased (x:H0.ref _ _ & H0.full_hheap (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))))
+      : erased (x:H0.ref _ _ & H0.full_hheap (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))))
       = H0.intro_emp m0.iheap.invariants;
-        Ghost.hide <| H0.extend #_ #(PA.pcm_agreement) (Some (down p)) iname m0.iheap.invariants
+        Ghost.hide <| H0.extend #false #_ #(PA.pcm_agreement) (Some (down p)) iname m0.iheap.invariants
     in
     let x : iref = dfst res in
     let inv1 : istore (* erased (H0.full_hheap (H0.pts_to x (Some (down p)))) *) = dsnd res in
@@ -1341,10 +1341,10 @@ let new_invariant_pre_action (ctx:inames) (e:inames) (p:slprop u#a { is_big p })
       (heap_ctr_valid m1.ctr m1.ghost_ctr m1.iname_ctr m1.iheap)
       m1;
     assert (interp (mem_invariant e m1) m1);
-    assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) m1.iheap.invariants);
+    assert (H0.interp (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) m1.iheap.invariants);
     assert (interp (iname_ref_pts_to x p) m1);
     mem_invariant_is_big e m1;
-    big_inv_star (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) (mem_invariant e m1) m1;
+    big_inv_star (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) (mem_invariant e m1) m1;
     assert (interp (iname_ref_pts_to x p `star` mem_invariant e m1) m1);
     assert (inames_ok e m1);
     let res :
@@ -1383,16 +1383,16 @@ let new_invariant_pre_action (ctx:inames) (e:inames) (p:slprop u#a { is_big p })
         assert (H0.interp (H0.emp `H0.star` frm) m0.iheap.invariants);
         let inv0 : H0.full_hheap (H0.emp `H0.star` frm) = m0.iheap.invariants in
         H0.action_framing 
-          (H0.extend #_ #(PA.pcm_agreement) (Some (down p)) iname)
+          (H0.extend #false #_ #(PA.pcm_agreement) (Some (down p)) iname)
           frm
           inv0;
-        assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p)) `H0.star` frm)
+        assert (H0.interp (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p)) `H0.star` frm)
                           inv1);
         assert (interp 
           (lift_h0 
-            (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p)) `H0.star` frm))
+            (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p)) `H0.star` frm))
           m1);
-        star_congruence_h0 (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) frm;
+        star_congruence_h0 (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) x (Some (down p))) frm;
         assert (interp (iname_ref_pts_to x p `star` lift_h0 frm) m1);
         eliminate 
           exists h1_0 h1_1.
@@ -1494,17 +1494,17 @@ let dup_inv_lemma (i:iref) (p:slprop) frame (m:mem)
   returns interp (((inv i p) `star` (inv i p)) `star` frame) m
   with _ . (
     let pcm = PA.pcm_agreement #(H2.slprop u#a) in
-    assert (H0.interp (H0.pts_to #_ #pcm i (Some (down p))) h0.invariants);
-    assert (H0.interp (H0.pts_to #_ #pcm i (op pcm (Some (down p)) (Some (down p)))) h0.invariants);
-    H0.pts_to_compatible #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p)) (Some (down p)) h0.invariants;
-    assert (H0.interp (H0.pts_to #_ #pcm i (Some (down p)) `H0.star`
-                       H0.pts_to #_ #pcm i (Some (down p))) h0.invariants);
+    assert (H0.interp (H0.pts_to false #_ #pcm i (Some (down p))) h0.invariants);
+    assert (H0.interp (H0.pts_to false #_ #pcm i (op pcm (Some (down p)) (Some (down p)))) h0.invariants);
+    H0.pts_to_compatible #false #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p)) (Some (down p)) h0.invariants;
+    assert (H0.interp (H0.pts_to false #_ #pcm i (Some (down p)) `H0.star`
+                       H0.pts_to false #_ #pcm i (Some (down p))) h0.invariants);
     assert ( (lift_h0 
-                      (H0.pts_to #_ #pcm i (Some (down p)) `H0.star`
-                                        H0.pts_to #_ #pcm i (Some (down p))))
+                      (H0.pts_to false #_ #pcm i (Some (down p)) `H0.star`
+                       H0.pts_to false #_ #pcm i (Some (down p))))
                     h0);
-    lift_h0_star (H0.pts_to #_ #pcm i (Some (down p)))
-                 (H0.pts_to #_ #pcm i (Some (down p)));
+    lift_h0_star (H0.pts_to false #_ #pcm i (Some (down p)))
+                 (H0.pts_to false #_ #pcm i (Some (down p)));
     iname_ref_pts_to_equiv i p;
     assert (((inv i p) `star` (inv i p)) h0)
   )
@@ -1551,8 +1551,8 @@ let elim_inv e (i:iref) (p:slprop { is_big p }) (m:mem)
            m.iname_ctr >= iname_of i /\
            not (H0.core_ref_is_null i))
 = assert (interp (pure (heap_ctr_valid m.ctr m.ghost_ctr m.iname_ctr m.iheap)) m);
-  assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
-  H0.interp_pts_to i #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
+  assert (H0.interp (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
+  H0.interp_pts_to i #false #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
   H0.interp_free_above m.iheap.invariants m.iname_ctr
   
 let pqrst_sq_pr_t (p q r s t : slprop)
@@ -1669,8 +1669,8 @@ let elim_inv_liveness e (i:iref) (p:slprop) (m:mem)
            m.iname_ctr >= iname_of i /\
            not (H0.core_ref_is_null i))
 = assert (interp (pure (heap_ctr_valid m.ctr m.ghost_ctr m.iname_ctr m.iheap)) m);
-  assert (H0.interp (H0.pts_to #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
-  H0.interp_pts_to i #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
+  assert (H0.interp (H0.pts_to false #_ #(PA.pcm_agreement #(H2.slprop u#a)) i (Some (down p))) m.iheap.invariants);
+  H0.interp_pts_to i #false #_ #(PA.pcm_agreement #(H2.slprop u#a)) (Some (down p)) m.iheap.invariants;
   H0.interp_free_above m.iheap.invariants m.iname_ctr
 
 let live_iname_ok 
