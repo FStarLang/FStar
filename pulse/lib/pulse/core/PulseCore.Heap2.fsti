@@ -745,17 +745,20 @@ val lift_erased
 [@@erasable]
 val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
-val ghost_pts_to_compatible_equiv (#a:Type)
-                            (#pcm:_)
-                            (x:ghost_ref #a pcm)
-                            (v0:a)
-                            (v1:a{composable pcm v0 v1})
-  : Lemma (equiv (ghost_pts_to x v0 `star` ghost_pts_to x v1)
-                 (ghost_pts_to x (op pcm v0 v1)))
+val ghost_pts_to_compatible_equiv 
+      (#meta:bool)
+      (#a:Type)
+      (#pcm:_)
+      (x:ghost_ref #a pcm)
+      (v0:a)
+      (v1:a{composable pcm v0 v1})
+: Lemma (equiv (ghost_pts_to meta x v0 `star` ghost_pts_to meta x v1)
+               (ghost_pts_to meta x (op pcm v0 v1)))
 
 val ghost_extend
+    (#meta:erased bool)
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
@@ -765,9 +768,10 @@ val ghost_extend
       #(fun h -> h `free_above_addr GHOST` (addr + 1))      
       emp 
       (ghost_ref pcm)
-      (fun r -> ghost_pts_to r x)
+      (fun r -> ghost_pts_to meta r x)
 
 val ghost_read
+    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
@@ -776,39 +780,42 @@ val ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : action #IMMUTABLE
-    (ghost_pts_to r x)
+    (ghost_pts_to meta r x)
     (erased (v:a{compatible p x v /\ p.refine v}))
-    (fun v -> ghost_pts_to r (f v))
+    (fun v -> ghost_pts_to meta r (f v))
 
 val ghost_write
+    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : action #ONLY_GHOST 
-    (ghost_pts_to r x)
+    (ghost_pts_to meta r x)
     unit
-    (fun _ -> ghost_pts_to r y)
+    (fun _ -> ghost_pts_to meta r y)
 
 val ghost_share
+    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : action #IMMUTABLE
-    (ghost_pts_to r (v0 `op pcm` v1))
+    (ghost_pts_to meta r (v0 `op pcm` v1))
     unit
-    (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
 
 val ghost_gather
+    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
-    (ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
     (squash (composable pcm v0 v1))
-    (fun _ -> ghost_pts_to r (op pcm v0 v1))
+    (fun _ -> ghost_pts_to meta r (op pcm v0 v1))

@@ -91,7 +91,7 @@ let emp = as_slprop (fun _ -> True)
 let llift (t:tag) (p:H.slprop) : slprop =
   as_slprop (fun h -> H.of_slprop p (get t h))
 let lift (p:H.slprop) : slprop = llift CONCRETE p
-let pts_to #a #pcm (r:ref a pcm) (v:a) = lift (H.pts_to #a #pcm r v)
+let pts_to #a #pcm (r:ref a pcm) (v:a) = lift (H.pts_to false #a #pcm r v)
 let star p1 p2 =
   as_slprop (fun (h: heap) ->
     exists (h1 h2 : heap).
@@ -159,20 +159,20 @@ let lift_emp : squash (lift H.emp == emp) =
   slprop_extensionality (lift H.emp) emp
 
 let pts_to_compatible #a #pcm (x:ref a pcm) (v0 v1:a) h = 
-  H.pts_to_compatible #a #pcm x v0 v1 h.concrete;
-  lift_star CONCRETE (H.pts_to #a #pcm x v0) (H.pts_to #a #pcm x v1)
+  H.pts_to_compatible #false #a #pcm x v0 v1 h.concrete;
+  lift_star CONCRETE (H.pts_to false #a #pcm x v0) (H.pts_to false #a #pcm x v1)
 
 let pts_to_join #a #pcm (r:ref a pcm) (v1 v2:a) h =
-  H.pts_to_join #a #pcm r v1 v2 h.concrete
+  H.pts_to_join #false #a #pcm r v1 v2 h.concrete
 
 let pts_to_join' #a #pcm r v1 v2 h =
-  H.pts_to_join' #a #pcm r v1 v2 h.concrete
+  H.pts_to_join' #false #a #pcm r v1 v2 h.concrete
 
 let pts_to_compatible_equiv #a #pcm r v0 v1 =
-  H.pts_to_compatible_equiv #a #pcm r v0 v1;
-  lift_star CONCRETE (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
+  H.pts_to_compatible_equiv #false #a #pcm r v0 v1;
+  lift_star CONCRETE (H.pts_to false #a #pcm r v0) (H.pts_to false #a #pcm r v1)
 
-let pts_to_not_null #a #pcm x v m = H.pts_to_not_null #a #pcm x v m.concrete
+let pts_to_not_null #a #pcm x v m = H.pts_to_not_null #false #a #pcm x v m.concrete
 
 let intro_star p q h hq = ()
 let elim_star p q h = ()
@@ -204,30 +204,30 @@ let sel_v' (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (
           interp (ptr r) m /\
           True
           }
-  = let v = H.sel_v #a #pcm r v m.concrete in
+  = let v = H.sel_v #false #a #pcm r v m.concrete in
     v
 
 let lower_ptr #a #pcm (r:ref a pcm) (m:full_hheap (ptr r))
-: Lemma (H.interp (H.ptr #a #pcm r) m.concrete)
-= eliminate exists v. H.interp (H.pts_to #a #pcm r v) m.concrete
-  returns H.interp (H.ptr #a #pcm r) m.concrete
-  with _ . ( H.intro_h_exists v (H.pts_to #a #pcm r) m.concrete )
+: Lemma (H.interp (H.ptr false #a #pcm r) m.concrete)
+= eliminate exists v. H.interp (H.pts_to false #a #pcm r v) m.concrete
+  returns H.interp (H.ptr false #a #pcm r) m.concrete
+  with _ . ( H.intro_h_exists v (H.pts_to false #a #pcm r) m.concrete )
 
 let raise_ptr #a #pcm (r:ref a pcm) (m:full_heap)
 : Lemma 
   (requires
-    H.interp (H.ptr #a #pcm r) m.concrete)
+    H.interp (H.ptr false #a #pcm r) m.concrete)
   (ensures
     interp (ptr r) m)
-= H.elim_h_exists (H.pts_to #a #pcm r) m.concrete;
-  eliminate exists v. H.interp (H.pts_to #a #pcm r v) m.concrete
+= H.elim_h_exists (H.pts_to false #a #pcm r) m.concrete;
+  eliminate exists v. H.interp (H.pts_to false #a #pcm r v) m.concrete
   returns interp (ptr #a #pcm r) m
   with _ . ()
 
 (** [sel] is a ghost read of the value contained in a heap reference *)
 let sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a =
  lower_ptr r m;
- H.sel #a #pcm r m.concrete
+ H.sel #false #a #pcm r m.concrete
  
 let sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (pts_to r v))
   : v':a{ compatible pcm v v' /\
@@ -235,9 +235,9 @@ let sel_v (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (v:erased a) (m:full_hheap (p
           interp (ptr r) m /\
           v' == sel r m
           }
-  = H.sel_v #a #pcm r v m.concrete
+  = H.sel_v #false #a #pcm r v m.concrete
 
-let sel_lemma #a #pcm r m = lower_ptr r m; H.sel_lemma #a #pcm r m.concrete
+let sel_lemma #a #pcm r m = lower_ptr r m; H.sel_lemma #false #a #pcm r m.concrete
 let heap_evolves_iff (h0 h1:full_heap)
 : Lemma 
   (ensures
@@ -360,15 +360,15 @@ let lift_action
   );
   p
 
-let sel_action #a #pcm r v0 = lift_action (H.sel_action #a #pcm r v0)
-let select_refine #a #p r x f = lift_action (H.select_refine #a #p r x f)
-let upd_gen_action #a #p r x y f = lift_action (H.upd_gen_action #a #p r x y f)
-let upd_action #a #p r x y = lift_action (H.upd_action #a #p r x y)
-let free_action #a #p r v0 = lift_action (H.free_action #a #p r v0)
-let split_action #a #p r v0 v1 = lift_action (H.split_action #a #p r v0 v1)
-let gather_action #a #p r v0 v1 = lift_action (H.gather_action #a #p r v0 v1)
-let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #a #p r v)
-let extend #a #pcm x addr = lift_action (H.extend #a #pcm x addr)
+let sel_action #a #pcm r v0 = lift_action (H.sel_action #false #a #pcm r v0)
+let select_refine #a #p r x f = lift_action (H.select_refine #false #a #p r x f)
+let upd_gen_action #a #p r x y f = lift_action (H.upd_gen_action #false #a #p r x y f)
+let upd_action #a #p r x y = lift_action (H.upd_action #false #a #p r x y)
+let free_action #a #p r v0 = lift_action (H.free_action #false #a #p r v0)
+let split_action #a #p r v0 v1 = lift_action (H.split_action #false #a #p r v0 v1)
+let gather_action #a #p r v0 v1 = lift_action (H.gather_action #false #a #p r v0 v1)
+let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #false #a #p r v)
+let extend #a #pcm x addr = lift_action (H.extend #false #a #pcm x addr)
 
 let refined_pre_action (#mut:mutability) (#allocates:option tag)
                        (#[T.exact (`trivial_pre)]pre:heap ->prop)
@@ -480,7 +480,7 @@ let intro_pure (p:prop) (_:squash p)
 let pts_to_evolve (#a:Type u#a) (#pcm:_) (r:ref a pcm) (x y : a) (h:heap)
   : Lemma (requires (interp (pts_to r x) h /\ compatible pcm y x))
           (ensures  (interp (pts_to r y) h))
-  = H.pts_to_evolve #a #pcm r x y h.concrete
+  = H.pts_to_evolve #false #a #pcm r x y h.concrete
 
 let drop p
 = let f
@@ -531,7 +531,7 @@ let lift_erased
   refined_pre_action_as_action g
 
 let core_ghost_ref = erased H.core_ref
-let ghost_pts_to #a #p r v = llift GHOST (H.pts_to #a #p r v)
+let ghost_pts_to meta #a #p r v = llift GHOST (H.pts_to meta #a #p r v)
 let ghost_free_above_addr h addr = H.free_above_addr h.ghost addr
 
 
@@ -639,21 +639,23 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
   FStar.Classical.forall_intro H.intro_emp;
   slprop_extensionality (llift GHOST H.emp) emp
 
-let ghost_pts_to_compatible_equiv #a #pcm r v0 v1 =
-  H.pts_to_compatible_equiv #a #pcm r v0 v1;
-  lift_star GHOST (H.pts_to #a #pcm r v0) (H.pts_to #a #pcm r v1)
+let ghost_pts_to_compatible_equiv #meta #a #pcm r v0 v1 =
+  H.pts_to_compatible_equiv #meta #a #pcm r v0 v1;
+  lift_star GHOST (H.pts_to meta #a #pcm r v0) (H.pts_to meta #a #pcm r v1)
 
 let ghost_extend
+    (#meta:_)
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
     (addr:erased nat)
 = lift_erased #_ #(ni_erased H.core_ref)
     (Ghost.hide <|
-      lift_action_ghost (ni_erased H.core_ref) (H.erase_action_result (H.extend #a #pcm x addr)))
+      lift_action_ghost (ni_erased H.core_ref) (H.erase_action_result (H.extend #meta #a #pcm x addr)))
 
 
 let ghost_read
+    #meta
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
@@ -663,51 +665,54 @@ let ghost_read
                      FStar.PCM.frame_compatible p x v y})))
 = lift_erased #_ #(ni_erased _) #None
     (Ghost.hide <|
-      lift_action_ghost (ni_erased _) (H.erase_action_result (H.select_refine #a #p r x f)))
+      lift_action_ghost (ni_erased _) (H.erase_action_result (H.select_refine #meta #a #p r x f)))
 
 let ghost_write
+    #meta
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : action #ONLY_GHOST #None
-    (ghost_pts_to r x)
+    (ghost_pts_to meta r x)
     unit
-    (fun _ -> ghost_pts_to r y)
+    (fun _ -> ghost_pts_to meta r y)
 = lift_erased #_ #(ni_unit) #None
     (Ghost.hide <|
-      lift_action_ghost ni_unit (H.upd_gen_action #a #p r x y f))
+      lift_action_ghost ni_unit (H.upd_gen_action #meta #a #p r x y f))
 
 
 let ghost_share
+    #meta
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : action #IMMUTABLE
-    (ghost_pts_to r (v0 `op pcm` v1))
+    (ghost_pts_to meta r (v0 `op pcm` v1))
     unit
-    (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
 = lift_erased #_ #(ni_unit) #None
     (Ghost.hide <|
-      lift_action_ghost ni_unit (H.split_action #a #pcm r v0 v1))
+      lift_action_ghost ni_unit (H.split_action #meta #a #pcm r v0 v1))
 
 let ni_squash #a : non_informative (squash a) = fun x -> reveal x
 
 #push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 8 --retry 3" // flaky
 let ghost_gather
+    #meta
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
-    (ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
     (squash (composable pcm v0 v1))
-    (fun _ -> ghost_pts_to r (op pcm v0 v1))
+    (fun _ -> ghost_pts_to meta r (op pcm v0 v1))
 = lift_erased #_ #(ni_squash ) #None
     (Ghost.hide <|
-      lift_action_ghost ni_squash (H.gather_action #a #pcm r v0 v1))
+      lift_action_ghost ni_squash (H.gather_action #meta #a #pcm r v0 v1))
 #pop-options
