@@ -30,7 +30,7 @@ val lift_action
 : ghost_action_except (extend h) unit e 
     ((extend h).inv i p) 
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv i p)
-
+(* TODO 
 val new_invariant
     (#h:heap_sig u#a) 
     (e:inames (extend h))
@@ -188,3 +188,5 @@ val pts_to_not_null_action
     (squash (not (is_null r))) e
     ((extend h).pts_to r v)
     (fun _ -> (extend h).pts_to r v)
+
+    *)
