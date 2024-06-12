@@ -486,14 +486,26 @@ let lift_star (#h:heap_sig u#a) (p q:H2.slprop u#(a + 1))
   );
   slprop_extensionality _ (lift h (p `H2.star` q)) (lift h p `star` lift h q)
 
-let dup_pure (#h:heap_sig u#a) (p:prop) : Lemma (pure #h p == pure #h p `star` pure #h p) = admit()
+let dup_pure_core (#h:heap_sig u#a) (p:prop)
+: Lemma (h.pure p == h.pure p `h.star` h.pure p)
+= FStar.Classical.forall_intro (h.star_equiv (h.pure p) (h.pure p));
+  FStar.Classical.forall_intro (h.pure_interp p);
+  FStar.Classical.forall_intro h.sep.join_empty ;
+  h.slprop_extensionality (h.pure p) (h.pure p `h.star` h.pure p)
+
+let dup_pure (#h:heap_sig u#a) (p:prop)
+: Lemma (pure #h p == pure #h p `star` pure #h p)
+= dup_pure_core #h p;
+  up_star (h.pure p) (h.pure p) 
 
 let ac_lemmas_ext (h:heap_sig u#a)
 : Lemma (
     (forall (p q r:ext_slprop h). (p `star` q) `star` r == p `star` (q `star` r)) /\
     (forall (p q:ext_slprop h). p `star` q == q `star` p) /\
     (forall (p:ext_slprop h). p `star` emp == p)
-) = admit()
+) = FStar.Classical.forall_intro_3 (star_associative #h);
+    FStar.Classical.forall_intro_2 (star_commutative #h);
+    FStar.Classical.forall_intro (emp_unit #h)
 
 let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : Lemma (inv i p == inv i p `star` inv i p)
