@@ -332,40 +332,48 @@ let (check_no_escape :
                             with | uu___4 -> fail x) in
                    aux false kt)
 let (check_expected_aqual_for_binder :
-  FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+  FStar_Syntax_Syntax.aqual ->
     FStar_Syntax_Syntax.binder ->
-      FStar_Compiler_Range_Type.range ->
-        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.aqual)
   =
   fun aq ->
     fun b ->
       fun pos ->
-        let expected_aq = FStar_Syntax_Util.aqual_of_binder b in
-        match (aq, expected_aq) with
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> aq
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some eaq) ->
-            if eaq.FStar_Syntax_Syntax.aqual_implicit
-            then
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers (expected implicit annotation on the argument)")
-                pos
-            else expected_aq
-        | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None) ->
-            FStar_Errors.raise_error
-              (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                "Inconsistent implicit qualifiers (did not expect argument aquals)")
+        let uu___ =
+          let expected_aq = FStar_Syntax_Util.aqual_of_binder b in
+          match (aq, expected_aq) with
+          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+              FStar_Pervasives.Inr aq
+          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some eaq)
+              ->
+              if eaq.FStar_Syntax_Syntax.aqual_implicit
+              then
+                FStar_Pervasives.Inl
+                  "expected implicit annotation on the argument"
+              else FStar_Pervasives.Inr expected_aq
+          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None)
+              ->
+              FStar_Pervasives.Inl
+                "expected an explicit argument (without annotation)"
+          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
+             eaq) ->
+              if
+                aq1.FStar_Syntax_Syntax.aqual_implicit <>
+                  eaq.FStar_Syntax_Syntax.aqual_implicit
+              then FStar_Pervasives.Inl "mismatch"
+              else FStar_Pervasives.Inr expected_aq in
+        match uu___ with
+        | FStar_Pervasives.Inl err ->
+            let msg =
+              let uu___1 =
+                FStar_Errors_Msg.text
+                  (Prims.strcat "Inconsistent argument qualifiers: "
+                     (Prims.strcat err ".")) in
+              [uu___1] in
+            FStar_Errors.raise_error_doc
+              (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier, msg)
               pos
-        | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
-           eaq) ->
-            if
-              aq1.FStar_Syntax_Syntax.aqual_implicit <>
-                eaq.FStar_Syntax_Syntax.aqual_implicit
-            then
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers (mismatch)") pos
-            else expected_aq
+        | FStar_Pervasives.Inr r -> r
 let (check_erasable_binder_attributes :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list ->
