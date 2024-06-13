@@ -19,6 +19,8 @@ open FStar.ST
 
 open FStar.Preorder
 
+let _unused x = x
+
 let stable = FStar.Preorder.stable
 
 val token (#a:Type) (#b:preorder a) (r:mref a b) (p:(a -> Type){stable p b}) : Type0
