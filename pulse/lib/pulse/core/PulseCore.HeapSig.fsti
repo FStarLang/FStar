@@ -89,7 +89,7 @@ type heap_sig : Type u#(a + 2) = {
       m0:mem ->
       Lemma (is_ghost_action m0 m0)
     );
-    
+
     slprop : Type u#(a + 1);
     interp: slprop -> affine_mem_prop sep;
     as_slprop: affine_mem_prop sep -> slprop;
@@ -184,6 +184,26 @@ type heap_sig : Type u#(a + 2) = {
       Lemma (inv i p == (inv i p `star` inv i p))
     );
     mem_invariant : eset iname -> mem -> slprop;
+    inv_iname_ok : (
+      i:iref ->
+      p:slprop ->
+      m:mem ->
+      Lemma 
+        (requires interp (inv i p) (sep.lens_core.get m))
+        (ensures iname_ok (iname_of i) m)
+    );
+    mem_invariant_equiv : (
+      e:eset iname ->
+      m:mem ->
+      i:iref ->
+      p:slprop ->
+      Lemma 
+        (requires
+          not (iname_of i `Set.mem` e))
+        (ensures
+          mem_invariant e m `star` inv i p ==
+          mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p)
+    );
 }
 let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)
 let inames (hs:heap_sig u#h) = eset hs.iname
@@ -242,4 +262,4 @@ let exists_
     (#a:Type u#a)
     (p: a -> GTot chs.slprop)
 : chs.slprop
-= admit()
+= chs.as_slprop (fun m -> exists (x:a). chs.interp (p x) m)

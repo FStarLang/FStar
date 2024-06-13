@@ -639,6 +639,9 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
   FStar.Classical.forall_intro H.intro_emp;
   slprop_extensionality (llift GHOST H.emp) emp
 
+let core_ghost_ref_as_addr i = H.core_ref_as_addr i
+let select_ghost i m = H.select i m.ghost
+let interp_ghost_pts_to i #m #a #p v h = H.interp_pts_to i #m #a #p v h.ghost
 let ghost_pts_to_compatible_equiv #meta #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #meta #a #pcm r v0 v1;
   lift_star GHOST (H.pts_to meta #a #pcm r v0) (H.pts_to meta #a #pcm r v1)

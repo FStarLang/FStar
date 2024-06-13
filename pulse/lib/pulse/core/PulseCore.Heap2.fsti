@@ -746,7 +746,28 @@ val lift_erased
 val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
+val select_ghost (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
 
+val interp_ghost_pts_to 
+      (i:core_ghost_ref)
+      (#meta:bool)
+      (#a:Type)
+      (#pcm:FStar.PCM.pcm a)
+      (v:a)
+      (h0:heap)
+: Lemma
+  (requires interp (ghost_pts_to meta #a #pcm i v) h0)
+  (ensures (
+    match select_ghost (core_ghost_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let H.Ref meta' a' pcm' v' = c in
+      meta == reveal meta' /\
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v'))
+      
 val ghost_pts_to_compatible_equiv 
       (#meta:bool)
       (#a:Type)

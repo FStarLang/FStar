@@ -9,13 +9,7 @@ module F = FStar.FunctionalExtensionality
 module PA = PulseCore.PCM.Agreement
 
 assume
-val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
-
-assume
 val select (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
-
-assume
-val select_ghost (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
 
 noeq
 type core (h:heap_sig u#a) : Type u#(a + 2) = {
@@ -301,7 +295,7 @@ let iref_erasable (h:heap_sig u#a) : non_info (ext_iref h) = fun x -> reveal x
 let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
   match r with
   | Inl i -> Inl (h.iname_of i)
-  | Inr r -> Inr (core_ghost_ref_as_addr r)
+  | Inr r -> Inr (H2.core_ghost_ref_as_addr r)
 let is_boxable (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
 let inv_core (#h:heap_sig u#a) (i:ghost_ref _ (PA.pcm_agreement #h.slprop)) (p:ext_slprop h)
 : ext_slprop h
@@ -315,7 +309,7 @@ let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 let iname_ok (h:heap_sig u#a) (i:ext_iname h) (m:ext_mem h) : prop =
   match i with
   | Inl i -> h.iname_ok i m.small
-  | Inr i -> Some? (select_ghost i m.big)
+  | Inr i -> Some? (H2.select_ghost i m.big)
 
 let down_inames (#h:heap_sig u#h) (e:eset (ext_iname h))
 : inames h
@@ -345,7 +339,7 @@ let invariant_of_one_cell
       (m:H2.heap u#(a + 1))
 : ext_slprop h
 = if Inr addr `Set.mem` e then emp
-  else match select_ghost addr m with
+  else match H2.select_ghost addr m with
        | Some c -> 
          sl_pure_imp
           (cell_pred_pre h c)
@@ -544,6 +538,28 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
       inv i p `star` inv i p;
     }
 
+let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
+: Lemma 
+  (requires interp (inv i p) (get_core m))
+  (ensures iname_ok h (iname_of h i) m)
+= match i with
+  | Inl j -> h.inv_iname_ok j (down p) m.small
+  | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) m.big
+
+let mem_invariant_equiv_ext 
+      (#h:heap_sig)
+      (e:eset (ext_iname h))
+      (m:ext_mem h)
+      (i:ext_iref h) 
+      (p:ext_slprop h)
+: Lemma 
+  (requires
+    not (iname_of h i `Set.mem` e))
+  (ensures
+    mem_invariant e m `star` inv i p ==
+    mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p)
+= admit()
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -579,8 +595,10 @@ let extend (h:heap_sig u#a) = {
     iname_of = iname_of h;
     inv = inv #h;
     iname_ok = iname_ok h;
+    inv_iname_ok = iname_ok_ext #h;
     dup_inv_equiv = dup_inv_equiv #h;
     mem_invariant = mem_invariant;
+    mem_invariant_equiv = mem_invariant_equiv_ext #h;
 }
 
 let lift_iref (#h:heap_sig u#a) (i:h.iref)
