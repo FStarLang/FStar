@@ -35,9 +35,8 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There are 2 uses of global side-effect in the printer for : *)
+(* There is ONE use of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
-(* - Printing tuples [unfold_tuples] *)
 
 let maybe_unthunk t =
     match t.tm with
@@ -80,10 +79,6 @@ let all1_explicit (args:list (term*imp)) : bool =
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
-
-(* Tuples which come from a resugared AST, via term_to_document are already flattened *)
-(* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
-let unfold_tuples = BU.mk_ref true
 
 // abbrev
 let str s = doc_of_string s
@@ -1951,13 +1946,6 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op(id, [e1; e2]) when string_of_id id = "*" && !unfold_tuples ->
-      let op = "*" in
-      let left, mine, right = levels op in
-      if inside_tuple then
-        infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2)
-      else
-        paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.string_of_id op in
       let left, mine, right = levels op in
@@ -2253,11 +2241,7 @@ and p_atomicUniverse u = match u.tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
-  let old_unfold_tuples = !unfold_tuples in
-  unfold_tuples := false;
-  let res = p_term false false e in
-  unfold_tuples := old_unfold_tuples;
-  res
+  p_term false false e
 
 let signature_to_document e = p_justSig e
 
