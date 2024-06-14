@@ -28,6 +28,7 @@ open FStar.Compiler.List
 open FStar.Parser.AST
 open FStar.Class.Monad
 open FStar.Class.Setlike
+open FStar.Class.Show
 
 module I = FStar.Ident
 module S  = FStar.Syntax.Syntax
@@ -474,6 +475,72 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         let arg = resugar_term' env (fst (List.hd args)) in
         mk <| Project (arg, Ident.lid_of_ids [fi])
       else
+      let unsnoc (#a:Type) (l : list a) : (list a * a) =
+        let rec unsnoc' acc = function
+          | [] -> failwith "unsnoc: empty list"
+          | [x] -> (List.rev acc, x)
+          | x::xs -> unsnoc' (x::acc) xs
+        in
+        unsnoc' [] l
+      in
+      let resugar_tuple_type env (args : S.args) : A.term =
+        let typs = args |> List.map (fun (x,_) -> resugar_term' env x) in
+        let pre, last = unsnoc typs in
+        mk (A.Sum (List.map Inr pre, last))
+      in
+      let resugar_dtuple_type env (hd:S.term) (args : S.args) : A.term =
+        (* We will resugar a dtuple type like:
+
+             dtuple3 int (fun i -> vector i) (fun i v -> vec_ok i v)
+
+          as
+             (i : int & v : vector i & vec_ok i v)
+
+          but only if every component is a lambda of that shape, defaulting
+          back to just an appication of dtupleN if not. *)
+        let fancy_resugar () : option A.term =
+          let open FStar.Class.Monad in
+          let n = List.length args in
+          let take (#a:Type) (n:int) (l : list a) : list a =
+            List.splitAt n l |> fst
+          in
+          let bs, _, _ = U.abs_formals (fst <| List.last args) in
+          if List.length bs < n-1 then (
+            (* This can definitely happen: we could have (dtuple2 int p) where p
+            is some int function, for example. In that case, we abort. *)
+            None
+          ) else Some ();!
+          let bs = take (n-1) bs in (* make sure to not take too many, shouldn't happen for anything well-typed but we do not know that *)
+          let concatM (#a:Type) (#m:Type -> Type) {| monad m |}
+            (l : list (m a)) : m (list a) = mapM id l
+          in
+          let rec open_lambda_binders (t : S.term) (bs: list S.binder) : option S.term =
+            match bs with
+            | [] -> Some t
+            | b::bs ->
+              let! (_, body) = U.abs_one_ln t in
+              let _, body = SS.open_term [b] body in
+              open_lambda_binders body bs
+          in
+          let! opened_bs_types : list S.term =
+            args |> mapMi (fun i (t, _) ->
+              open_lambda_binders t (take i bs))
+          in
+          let set_binder_sort t b =
+            { b with binder_bv = { b.binder_bv with sort = t } }
+          in
+          let pre_bs_types, last_type = unsnoc opened_bs_types in
+          let bs = List.map2 (fun b t ->
+                      let b = set_binder_sort t b in
+                      BU.must <| resugar_binder' env b t.pos)
+                    bs pre_bs_types
+          in
+          Some <| mk (A.Sum (List.map Inl bs, resugar_term' env last_type))
+        in
+        match fancy_resugar () with
+        | Some r -> r
+        | None -> resugar_as_app hd args
+      in
       begin match resugar_term_as_op e with
         | None->
           resugar_as_app e args
@@ -484,50 +551,11 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           | _ -> resugar_as_app e args
           end
 
-        | Some ("tuple", _) ->
-          let out =
-              List.fold_left
-                (fun out (x, _) ->
-                    let x = resugar_term' env x in
-                    match out with
-                    | None -> Some x
-                    | Some prefix ->
-                      Some (mk(A.Op(Ident.id_of_text "&", [prefix; x]))))
-                    None
-                    args
-          in
-          Option.get out
+        | Some ("tuple", n) when Some (List.length args <: int) = n ->
+          resugar_tuple_type env args
 
-(* This is wrong: It treats the first N - 1 args of dtupleN as implicit
-   But, they are not *)
-(*   
-        | Some ("dtuple", _) when List.length args > 0 ->
-          (* this is desugared from Sum(binders*term) *)
-          let args = last args in
-          let body = match args with
-            | [(b, _)] -> b
-            | _ -> failwith "wrong arguments to dtuple"
-          in
-          begin match (SS.compress body).n with
-            | Tm_abs(xs, body, _) ->
-                let xs, body = SS.open_term xs body in
-                let xs =
-                  if (Options.print_implicits())
-                  then xs
-                  else filter_imp_bs xs in
-                let xs = xs |> map_opt (fun b -> resugar_binder' env b t.pos) in
-                let body = resugar_term' env body in
-                mk (A.Sum(List.map Inl xs, body))
-
-            | _ ->
-              let args = args |> List.map (fun (e, qual) ->
-                resugar_term' env e) in
-              let e = resugar_term' env e in
-              List.fold_left(fun acc x -> mk (A.App(acc, x, A.Nothing))) e args
-          end
-*)
-        | Some ("dtuple", _) ->
-          resugar_as_app e args
+        | Some ("dtuple", n) when Some (List.length args <: int) = n ->
+          resugar_dtuple_type env e args
 
         | Some (ref_read, _) when (ref_read = string_of_lid C.sread_lid) ->
           let (t, _) = List.hd args in
