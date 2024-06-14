@@ -558,7 +558,7 @@ let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
   | Inl j -> h.inv_iname_ok j (down p) m.small
   | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) m.big
 
-let istore_invariant_unchanged (#h:heap_sig u#a)
+let rec istore_invariant_unchanged (#h:heap_sig u#a)
          (from:nat) 
          (e:eset (ext_iname h))
          (l:H2.heap u#(a + 1))
@@ -567,6 +567,29 @@ let istore_invariant_unchanged (#h:heap_sig u#a)
   (ensures
     istore_invariant #h from e l ==
     istore_invariant #h from (Set.add j e) l)
+= if from = 0 then () else istore_invariant_unchanged #h (from - 1) e l j
+
+let inv_i_p_property 
+      (#h:heap_sig u#a)
+      (i:ext_iref h {Inr? i})
+      (p:ext_slprop h)
+      (l:H2.heap u#(a + 1))
+= let Inr i = i in
+  H2.interp (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
+  is_boxable p
+
+let istore_invariant_eq_aux
+         (#h:heap_sig u#a)
+         (from:nat) 
+         (e:eset (ext_iname h))
+         (i:ext_iref h { Inr? i })
+         (p:ext_slprop h)
+         (l:H2.heap u#(a + 1) { inv_i_p_property i p l })
+: Lemma
+  (requires not (iname_of h i `Set.mem` e))
+  (ensures
+    istore_invariant #h from e l ==
+    istore_invariant #h from (Set.add (iname_of h i) e) l `star` p)
 = admit()
 
 let istore_invariant_eq
@@ -592,7 +615,7 @@ let hmem_invariant_unchanged
   (ensures
     h.mem_invariant (down_inames e) m ==
     h.mem_invariant (down_inames <| Set.add j e) m)
-= admit()
+= assert (Set.equal (down_inames e) (down_inames (Set.add j e)))
 
 let inv_boxes (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : Lemma (up (down p) `star` inv i p == p `star` inv i p)
@@ -701,7 +724,7 @@ let mem_invariant_equiv_ext_r
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;  
   }
-  
+
 let mem_invariant_equiv_ext 
       (#h:heap_sig)
       (e:eset (ext_iname h))
