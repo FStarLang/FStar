@@ -234,6 +234,18 @@ val lift_heap_action
 : _action_except base_heap a (mg_of_mut mut) e fp fp'
 
 let ghost_extend meta #ex #a #pcm x = admit()
+let ghost_extend_spec
+      (#meta:bool)
+      (#ex:inames base_heap)
+      #a #pcm (x:a { pcm.refine x })
+      (frame:base_heap.slprop)
+      (h:full_mem base_heap { 
+        inames_ok ex h /\
+        interpret (base_heap.emp `base_heap.star`
+                   frame `base_heap.star`
+                   base_heap.mem_invariant ex h) h })      
+= admit()
+
 let ghost_read #ex #meta #a #p r x f = lift_heap_action ex (H2.ghost_read #meta #a #p r x f)
 let ghost_write #ex #meta #a #p r x y f = lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
 let ghost_share #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_share #meta #a #p r x y)

@@ -47,6 +47,26 @@ val ghost_extend
       base_heap.emp 
       (fun r -> base_heap.ghost_pts_to meta r x)
 
+val ghost_extend_spec
+      (#meta:bool)
+      (#ex:inames base_heap)
+      #a #pcm (x:a { pcm.refine x })
+      (frame:base_heap.slprop)
+      (h:full_mem base_heap { 
+        inames_ok ex h /\
+        interpret (base_heap.emp `base_heap.star`
+                   frame `base_heap.star`
+                   base_heap.mem_invariant ex h) h })      
+: Lemma (
+      let (r, h1) = ghost_extend meta #ex #a #pcm x frame h in
+      (forall (a:nat).
+         a <> ghost_ctr h ==>
+         select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
+      ghost_ctr h1 == ghost_ctr h + 1 /\
+      select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
+      ghost_ctr h == core_ghost_ref_as_addr r
+  )
+
 val ghost_read
     (#ex:inames base_heap)
     (#meta:erased bool)
