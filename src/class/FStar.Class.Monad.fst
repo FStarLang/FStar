@@ -21,6 +21,18 @@ let rec mapM f l =
     let! ys = mapM f xs in
     return (y::ys)
 
+let mapMi #m #_ #a #b f l =
+  (* FIXME: need to annotate the return type, why? *)
+  let rec mapMi_go i f l : m (list b) =
+    match l with
+    | [] -> return []
+    | x::xs ->
+      let! y = f i x in
+      let! ys = mapMi_go (i+1) f xs in
+      return (y::ys)
+  in
+  mapMi_go 0 f l
+
 let map_optM f l =
   match l with
   | None -> return None
