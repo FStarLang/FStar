@@ -303,7 +303,7 @@ let inv_core (#h:heap_sig u#a) (i:ghost_ref _ (PA.pcm_agreement #h.slprop)) (p:e
 let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : ext_slprop h
 = match i with
-  | Inl i -> up (h.inv i (down p))
+  | Inl i -> up (h.inv i (down p)) `star` pure (is_boxable p)
   | Inr r -> inv_core r p `star` pure (is_boxable p)
 
 let iname_ok (h:heap_sig u#a) (i:ext_iname h) (m:ext_mem h) : prop =
@@ -315,6 +315,17 @@ let down_inames (#h:heap_sig u#h) (e:eset (ext_iname h))
 : inames h
 = let e = Ghost.reveal e in
   FStar.Set.intension (fun i -> Set.mem (Inl i) e)
+
+
+let mem_intension (#a:eqtype) (x:a) (f:(a -> Tot bool))
+: Lemma 
+  (ensures (Set.mem x (Set.intension f) = f x))
+  [SMTPat (Set.mem x (Set.intension f))]
+= FStar.Set.mem_intension x f
+
+let mem_down_inames (#h:heap_sig u#h) (i:h.iname) (e:eset (ext_iname h))
+: Lemma (i `Set.mem` down_inames e <==> Inl i `Set.mem` e)
+= ()
 
 let sl_pure_imp (#h:heap_sig u#h) (p:prop) (q: squash p -> ext_slprop h) : ext_slprop h =
   as_slprop (fun m -> p ==> interp (q ()) m)
@@ -514,10 +525,11 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     calc (==) {
       inv i p;
     (==) { }
-      up (h.inv j (down p));
-    (==) {h.dup_inv_equiv j (down p)}
-      (up (h.inv j (down p) `h.star` h.inv j (down p)));
-    (==) { up_star (h.inv j (down p)) (h.inv j (down p)) }
+      up (h.inv j (down p)) `star` pure (is_boxable p);
+    (==) {h.dup_inv_equiv j (down p); dup_pure #h (is_boxable p)}
+      (up (h.inv j (down p) `h.star` h.inv j (down p))) `star`
+      (pure (is_boxable p) `star` pure (is_boxable p));
+    (==) { up_star (h.inv j (down p)) (h.inv j (down p)); ac_lemmas_ext h}
       inv i p `star` inv i p;
     }
 
@@ -546,6 +558,150 @@ let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
   | Inl j -> h.inv_iname_ok j (down p) m.small
   | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) m.big
 
+let istore_invariant_unchanged (#h:heap_sig u#a)
+         (from:nat) 
+         (e:eset (ext_iname h))
+         (l:H2.heap u#(a + 1))
+         (j:ext_iname h { Inl? j })
+: Lemma
+  (ensures
+    istore_invariant #h from e l ==
+    istore_invariant #h from (Set.add j e) l)
+= admit()
+
+let istore_invariant_eq
+         (#h:heap_sig u#a)
+         (from:nat) 
+         (e:eset (ext_iname h))
+         (l:H2.heap u#(a + 1))
+         (i:ext_iref h { Inr? i })
+         (p:ext_slprop h)
+: Lemma
+  (requires not (iname_of h i `Set.mem` e))
+  (ensures
+    istore_invariant #h from e l `star` inv i p==
+    istore_invariant #h from (Set.add (iname_of h i) e) l `star` p `star` inv i p)
+= admit()
+
+let hmem_invariant_unchanged
+      (#h:heap_sig u#a)
+      (e:eset (ext_iname h))
+      (m:h.mem)
+      (j:ext_iname h{Inr? j})
+: Lemma
+  (ensures
+    h.mem_invariant (down_inames e) m ==
+    h.mem_invariant (down_inames <| Set.add j e) m)
+= admit()
+
+let inv_boxes (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
+: Lemma (up (down p) `star` inv i p == p `star` inv i p)
+=   introduce forall m. 
+      interp (up (down p) `star` inv i p) m ==> 
+      interp (p `star` inv i p) m
+    with introduce _ ==> _
+    with _ . (
+      pure_interp (is_boxable p) m
+    );
+    introduce forall m. 
+      interp (p `star `inv i p) m ==> 
+      interp (up (down p) `star` inv i p) m
+    with introduce _ ==> _
+    with _ . (
+      pure_interp (is_boxable p) m
+    );
+    slprop_extensionality h (up (down p) `star` inv i p) (p `star` inv i p)
+
+let mem_invariant_equiv_ext_l
+      (#h:heap_sig)
+      (e:eset (ext_iname h))
+      (m:ext_mem h)
+      (i:ext_iref h { Inl? i }) 
+      (p:ext_slprop h)
+: Lemma 
+  (requires
+    not (iname_of h i `Set.mem` e))
+  (ensures
+    mem_invariant e m `star` inv i p ==
+    mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p)
+= let Inl j = i in
+  calc (==) {
+    mem_invariant e m `star` inv i p;
+  (==) { }
+    (up (h.mem_invariant (down_inames e) m.small) `star`
+      istore_invariant #h m.ctr e m.big) `star` inv i p;
+  (==) { istore_invariant_unchanged #h m.ctr e m.big (iname_of h i) }
+    (up (h.mem_invariant (down_inames e) m.small) `star`
+      istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big) `star` inv i p;
+  (==) { ac_lemmas_ext h}
+    (up (h.mem_invariant (down_inames e) m.small) `star` inv i p) `star`
+      istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big;
+  (==) { }
+  (up (h.mem_invariant (down_inames e) m.small) `star` (up (h.inv j (down p)) `star` pure (is_boxable p))) `star`
+      istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big;
+  (==) {ac_lemmas_ext h}
+  (up (h.mem_invariant (down_inames e) m.small) `star` up (h.inv j (down p))) `star`
+      (istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big 
+      `star` pure (is_boxable p));
+
+  (==) { up_star (h.mem_invariant (down_inames e) m.small) (h.inv j (down p)) }
+    (up (h.mem_invariant (down_inames e) m.small `h.star` h.inv j (down p))) `star`
+      (istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big 
+      `star` pure (is_boxable p));
+  (==) { h.mem_invariant_equiv (down_inames e) m.small j (down p) }
+    (up (h.mem_invariant (Set.add (h.iname_of j) (down_inames e)) m.small 
+          `h.star` down p `h.star` h.inv j (down p))) `star`
+      (istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big
+      `star` pure (is_boxable p));
+  (==) { assert (Set.equal (Set.add (h.iname_of j) (down_inames e))
+                            (down_inames (Set.add (iname_of h i) e))) }
+    (up ((h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
+          `h.star` down p) `h.star` h.inv j (down p))) `star`
+      (istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big
+      `star` pure (is_boxable p));
+  (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small `h.star` down p)
+                  (h.inv j (down p));
+          ac_lemmas_ext h}
+    (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
+          `h.star` down p) `star` inv i p) `star`
+      istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big;
+  (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) (down p) }
+    (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star` up (down p)) `star`
+      inv i p `star` istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big;
+  (==) { ac_lemmas_ext h }
+    mem_invariant (Set.add (iname_of h i) e) m `star` (up (down p) `star` inv i p);
+  (==) { inv_boxes i p; ac_lemmas_ext h }
+    mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;
+  }
+
+let mem_invariant_equiv_ext_r
+      (#h:heap_sig)
+      (e:eset (ext_iname h))
+      (m:ext_mem h)
+      (i:ext_iref h { Inr? i }) 
+      (p:ext_slprop h)
+: Lemma 
+  (requires
+    not (iname_of h i `Set.mem` e))
+  (ensures
+    mem_invariant e m `star` inv i p ==
+    mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p)
+= let Inr j = i in
+  calc (==) {
+    mem_invariant e m `star` inv i p;
+  (==) { }
+    (up (h.mem_invariant (down_inames e) m.small) `star`
+      istore_invariant #h m.ctr e m.big) `star` inv i p;
+  (==) { hmem_invariant_unchanged #h e m.small (iname_of h i); ac_lemmas_ext h }
+    up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
+      (istore_invariant #h m.ctr e m.big `star` inv i p);
+  (==) { istore_invariant_eq #h m.ctr e m.big i p; ac_lemmas_ext h }
+    up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
+      (istore_invariant #h m.ctr (Set.add (iname_of h i) e) m.big `star` p `star` inv i p);
+  (==) { ac_lemmas_ext h }
+    mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;  
+  }
+  
 let mem_invariant_equiv_ext 
       (#h:heap_sig)
       (e:eset (ext_iname h))
@@ -558,7 +714,9 @@ let mem_invariant_equiv_ext
   (ensures
     mem_invariant e m `star` inv i p ==
     mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p)
-= admit()
+= match i with
+  | Inl j -> mem_invariant_equiv_ext_l e m i p
+  | Inr j -> mem_invariant_equiv_ext_r e m i p
 
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
@@ -721,11 +879,6 @@ let down_frame
 = let frame' = down_frame_core p frame m in
   (| frame', (fun q m' -> ()) |)
 
-let mem_intension (#a:eqtype) (x:a) (f:(a -> Tot bool))
-: Lemma 
-  (ensures (Set.mem x (Set.intension f) = f x))
-  [SMTPat (Set.mem x (Set.intension f))]
-= FStar.Set.mem_intension x f
 
 let down_inames_ok (#h:heap_sig u#a) (ex:inames h) (m:ext_mem h)
 : Lemma 
