@@ -5,7 +5,7 @@ open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
-val select_ghost (i:nat) (m:base_heap.sep.core) : GTot (option (H.cell u#a))
+val select_ghost (i:nat) (m:(base_heap u#a).sep.core) : GTot (option (H.cell u#a))
 val ghost_ctr (b:base_heap.mem) : GTot nat
 
 val interp_ghost_pts_to 
@@ -96,3 +96,59 @@ val ghost_gather
 : ghost_action_except base_heap (squash (composable pcm v0 v1)) ex
     (base_heap.ghost_pts_to meta r v0 `base_heap.star` base_heap.ghost_pts_to meta r v1)
     (fun _ -> base_heap.ghost_pts_to meta r (op pcm v0 v1))
+
+
+val extend
+    (#ex:inames base_heap)
+    (#a:Type u#a)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: action_except base_heap (ref a pcm) ex    
+      base_heap.emp 
+      (fun r -> base_heap.pts_to r x)
+
+val read
+    (#ex:inames base_heap)
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: action_except base_heap (v:a{compatible p x v /\ p.refine v}) ex
+    (base_heap.pts_to r x)
+    (fun v -> base_heap.pts_to r (f v))
+
+val write
+    (#ex:inames base_heap)
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: action_except base_heap unit ex
+    (base_heap.pts_to r x)
+    (fun _ -> base_heap.pts_to r y)
+
+val share
+    (#ex:inames base_heap)
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: action_except base_heap unit ex
+    (base_heap.pts_to r (v0 `op pcm` v1))
+    (fun _ -> base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
+
+val gather
+    (#ex:inames base_heap)
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: action_except base_heap (squash (composable pcm v0 v1)) ex
+    (base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
+    (fun _ -> base_heap.pts_to r (op pcm v0 v1))

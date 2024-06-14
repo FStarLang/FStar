@@ -423,45 +423,6 @@ let up_star (#h:heap_sig u#a) (p q:h.slprop)
   );
   slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
 
-// let h2_star_equiv (p q:H2.slprop) (m:H2.heap)
-// : Lemma (
-//     H2.interp (p `H2.star` q) m <==> 
-//         (exists m0 m1. 
-//           H2.disjoint m0 m1 /\
-//           m == H2.join m0 m1 /\
-//           H2.interp p m0 /\
-//           H2.interp q m1)
-//   )
-// = introduce  
-//     H2.interp (p `H2.star` q) m ==> 
-//         (exists m0 m1. 
-//           H2.disjoint m0 m1 /\
-//           m == H2.join m0 m1 /\
-//           H2.interp p m0 /\
-//           H2.interp q m1)
-//   with _ . (
-//     H2.elim_star p q m
-//   );
-//   introduce
-//         (exists m0 m1. 
-//           H2.disjoint m0 m1 /\
-//           m == H2.join m0 m1 /\
-//           H2.interp p m0 /\
-//           H2.interp q m1) ==>
-//     H2.interp (p `H2.star` q) m
-//   with _ . (
-//       eliminate exists m0 m1. 
-//           H2.disjoint m0 m1 /\
-//           m == H2.join m0 m1 /\
-//           H2.interp p m0 /\
-//           H2.interp q m1
-//       returns _ 
-//       with _ . (
-//           H2.intro_star p q m0 m1
-//       )
-//   )
-
-
 let lift_star (#h:heap_sig u#a) (p q:base_slprop u#(a + 1))
 : Lemma (lift h (p `H2.base_heap.star` q) == lift h p `star` lift h q)
 = introduce forall (m:core h). 
