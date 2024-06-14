@@ -389,18 +389,18 @@ let max_level l =
   in List.fold_left find_level_and_max 0 l
 
 let levels op =
-  (* See comment in parse.fsy: tuples MUST be parenthesized because [t * u * v]
-   * is not the same thing as [(t * u) * v]. So, we are conservative and make an
-   * exception for the "*" operator and treat it as, really, non-associative. If
+  (* See comment in parse.fsy: tuples MUST be parenthesized because [t & u & v]
+   * is not the same thing as [(t & u) & v]. So, we are conservative and make an
+   * exception for the "&" operator and treat it as, really, non-associative. If
    * the AST comes from the user, then the Paren node was there already and no
    * extra parentheses are added. If the AST comes from some client inside of
    * the F* compiler that doesn't know about this quirk, then it forces it to be
-   * parenthesized properly. In case the user overrode * to be a truly
-   * associative operator (e.g. multiplication) then we're just being a little
+   * parenthesized properly. In case the user overrode & to be a truly
+   * associative operator then we're just being a little
    * conservative because, unlike ToSyntax.fs, we don't have lexical context to
    * help us determine which operator this is, really. *)
   let left, mine, right = assign_levels level_associativity_spec op in
-  if op = "*" then
+  if op = "&" then
     left - 1, mine, right
   else
     left, mine, right
@@ -1904,10 +1904,10 @@ and p_tmTuple' e = match e.tm with
   | _ -> p_tmEq e
 
 and paren_if_gt curr mine doc =
-  if mine <= curr then
-    doc
-  else
+  if mine > curr then
     group (lparen ^^ doc ^^ rparen)
+  else
+    doc
 
 and p_tmEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
