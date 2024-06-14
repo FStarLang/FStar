@@ -214,6 +214,15 @@ let core_ghost_ref_as_addr (r:core_ghost_ref)
 
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
+let mem_invariant_interp (ex:inames base_heap) (h:base_heap.mem)
+: Lemma (interpret (base_heap.mem_invariant ex h) h <==>
+         (forall addr.
+            addr >= ghost_ctr h ==>
+            None? (select_ghost addr (core_of h))))
+= base_heap.pure_interp (free_above h) h.heap
+let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
+: Lemma (inames_ok ex h)
+= ()
 let interp_ghost_pts_to i #meta #a #pcm v h0 = H2.interp_ghost_pts_to i #meta #a #pcm v h0.heap
 let ghost_pts_to_compatible_equiv = H2.ghost_pts_to_compatible_equiv
 

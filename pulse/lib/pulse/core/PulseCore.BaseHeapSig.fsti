@@ -7,6 +7,13 @@ val base_heap : heap_sig u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
 val select_ghost (i:nat) (m:(base_heap u#a).sep.core) : GTot (option (H.cell u#a))
 val ghost_ctr (b:base_heap.mem) : GTot nat
+val mem_invariant_interp (ex:inames base_heap) (h:base_heap.mem)
+: Lemma (interpret (base_heap.mem_invariant ex h) h <==>
+         (forall addr.
+            addr >= ghost_ctr h ==>
+            None? (select_ghost addr (core_of h))))
+val inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
+: Lemma (inames_ok ex h)
 
 val interp_ghost_pts_to 
       (i:core_ghost_ref)

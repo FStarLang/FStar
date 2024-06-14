@@ -373,7 +373,8 @@ let rec istore_invariant
 let mem_invariant (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 : ext_slprop h
 = up (h.mem_invariant (down_inames e) m.small) `star`
-  istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big)
+  istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) `star`
+  lift h (H2.base_heap.mem_invariant Set.empty m.big)
 
 let share_gather_equiv #meta (#a:_) (#p:pcm a) (r:ghost_ref a p) (v0:a) (v1:a{composable p v0 v1})
 : Lemma (H2.base_heap.ghost_pts_to meta r (v0 `op p` v1) == 
@@ -594,6 +595,7 @@ let inv_boxes (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 
 let ghost_ctr (#h:heap_sig) (m:ext_mem h) : GTot nat = H2.ghost_ctr m.big
 
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let mem_invariant_equiv_ext_l
       (#h:heap_sig)
       (e:eset (ext_iname h))
@@ -611,50 +613,65 @@ let mem_invariant_equiv_ext_l
     mem_invariant e m `star` inv i p;
   (==) { }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h (ghost_ctr m) e (core_of m.big)) `star` inv i p;
+     istore_invariant #h (ghost_ctr m) e (core_of m.big) `star`
+     lift h (H2.base_heap.mem_invariant Set.empty m.big)) `star` inv i p;
   (==) { istore_invariant_unchanged #h (ghost_ctr m) e (core_of m.big) (iname_of h i) }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)) `star` inv i p;
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big)
+      ) `star` inv i p;
   (==) { ac_lemmas_ext h}
     (up (h.mem_invariant (down_inames e) m.small) `star` inv i p) `star`
-      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) { }
   (up (h.mem_invariant (down_inames e) m.small) `star` (up (h.inv j (down p)) `star` pure (is_boxable p))) `star`
-      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) {ac_lemmas_ext h}
   (up (h.mem_invariant (down_inames e) m.small) `star` up (h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
-      `star` pure (is_boxable p));
-
+      `star` 
+      lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
+      pure (is_boxable p));
   (==) { up_star (h.mem_invariant (down_inames e) m.small) (h.inv j (down p)) }
     (up (h.mem_invariant (down_inames e) m.small `h.star` h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
-      `star` pure (is_boxable p));
+      `star` 
+      lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
+      pure (is_boxable p));
   (==) { h.mem_invariant_equiv (down_inames e) m.small j (down p) }
     (up (h.mem_invariant (Set.add (h.iname_of j) (down_inames e)) m.small 
           `h.star` down p `h.star` h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
-      `star` pure (is_boxable p));
+      `star` 
+      lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
+      pure (is_boxable p));
   (==) { assert (Set.equal (Set.add (h.iname_of j) (down_inames e))
                             (down_inames (Set.add (iname_of h i) e))) }
     (up ((h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
           `h.star` down p) `h.star` h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
-      `star` pure (is_boxable p));
+      `star` 
+      lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
+      pure (is_boxable p));
   (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small `h.star` down p)
                   (h.inv j (down p));
           ac_lemmas_ext h}
     (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
           `h.star` down p) `star` inv i p) `star`
-      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) (down p) }
     (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star` up (down p)) `star`
-      inv i p `star` istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
+      inv i p `star` istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` (up (down p) `star` inv i p);
   (==) { inv_boxes i p; ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;
   }
+#pop-options
 
 let mem_invariant_equiv_ext_r
       (#h:heap_sig)
@@ -673,12 +690,15 @@ let mem_invariant_equiv_ext_r
     mem_invariant e m `star` inv i p;
   (==) { }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h (ghost_ctr m) e (core_of m.big)) `star` inv i p;
+      istore_invariant #h (ghost_ctr m) e (core_of m.big) `star`
+      lift h (H2.base_heap.mem_invariant Set.empty m.big)) `star` inv i p;
   (==) { hmem_invariant_unchanged #h e m.small (iname_of h i); ac_lemmas_ext h }
     up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
+    lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
       (istore_invariant #h (ghost_ctr m) e (core_of m.big) `star` inv i p);
   (==) { istore_invariant_eq #h m e i p; ac_lemmas_ext h }
     up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
+    lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star` p `star` inv i p);
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;  
@@ -926,24 +946,30 @@ let lift_action
           up pre `star` frame `star` mem_invariant (lift_inames ex) m0;
         (==) {} 
           up pre `star` frame `star` (up (h.mem_invariant (down_inames (lift_inames ex)) m0.small) `star`
-                                      istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
-        (==) { _ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
+                                      istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+                                      lift h (H2.base_heap.mem_invariant Set.empty m0.big));
+        (==) { ac_lemmas_ext h } //_ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
           (up pre `star` up (h.mem_invariant (down_inames (lift_inames ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+           lift h (H2.base_heap.mem_invariant Set.empty m0.big)
           );
         (==) { () }
           (up (pre `h.star` h.mem_invariant (down_inames (lift_inames ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+           lift h (H2.base_heap.mem_invariant Set.empty m0.big)
           );
-        (==) { }
+        (==) { () }
           (up (pre `h.star` h.mem_invariant ex m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+           lift h (H2.base_heap.mem_invariant Set.empty m0.big)
           );
         };
         let (| frame', restore |) =
           down_frame
             (pre `h.star` h.mem_invariant ex m0.small)
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big))
+            (frame `star` 
+             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+             lift h (H2.base_heap.mem_invariant Set.empty m0.big))
             m0
         in
         calc (==) {
@@ -962,23 +988,31 @@ let lift_action
         assert (
           interpret #(extend h)
             (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)))
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+            lift h (H2.base_heap.mem_invariant Set.empty m0.big)))
           m1
         );
         calc (==) {
           (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)));
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
+             `star`
+            lift h (H2.base_heap.mem_invariant Set.empty m0.big)));
         (==) {}
           (up (post x) `star` up (h.mem_invariant ex m1')) `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
-        (==) { _ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
+             `star`
+            lift h (H2.base_heap.mem_invariant Set.empty m0.big)
+            );
+        (==) { ac_lemmas_ext h }
           up (post x) `star` frame `star`
             (up (h.mem_invariant ex m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
+             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big) `star`
+             lift h (H2.base_heap.mem_invariant Set.empty m0.big));
         (==) {}
           up (post x) `star` frame `star`
             (up (h.mem_invariant (down_inames (lift_inames ex)) m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
+             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)  `star`
+             lift h (H2.base_heap.mem_invariant Set.empty m0.big));
         (==) { () }
           up (post x) `star` frame `star` (mem_invariant (lift_inames ex) m1);
         };
@@ -1015,4 +1049,7 @@ let new_invariant
     ex
     p
     (fun i -> (extend h).inv i p)
-= fun h0 -> admit()
+= fun frame h0 ->
+   assert (interp (p `star` frame `star` mem_invariant ex h0) (core_of h0)); 
+  //  let h1' = H2.ghost_extend true 
+   admit()
