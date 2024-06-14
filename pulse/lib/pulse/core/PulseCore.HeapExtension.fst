@@ -4,51 +4,57 @@ open FStar.Ghost
 open FStar.PCM
 open FStar.FunctionalExtensionality
 module H = PulseCore.Heap
-module H2 = PulseCore.Heap2
+module H2 = PulseCore.BaseHeapSig
 module F = FStar.FunctionalExtensionality
 module PA = PulseCore.PCM.Agreement
 
-assume
-val select (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
+let base_heap_mem : Type u#(a + 1) = (H2.base_heap u#a).mem
+let base_heap_core : Type u#(a + 1) = (H2.base_heap u#a).sep.core
+let base_slprop : Type u#(a + 1) = (H2.base_heap u#a).slprop
+// assume
+// val select (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
 
 noeq
 type core (h:heap_sig u#a) : Type u#(a + 2) = {
     small_core : h.sep.core;
-    big_core : H2.heap u#(a + 1);
+    big_core : base_heap_core u#(a + 1);
 }
 
 noeq
 type ext_mem (h:heap_sig u#a) : Type u#(a + 2) = {
     small : h.mem;
-    big : H2.heap u#(a + 1);
+    big : base_heap_mem u#(a + 1);
     ctr : nat;
-    ghost_ctr: erased nat;
+//    ghost_ctr: erased nat;
 }
 
 (* A lens between mem and core *)
 let get_core (#h:heap_sig u#h) (m:ext_mem h) : core h = {
-    small_core = h.sep.lens_core.get m.small;
-    big_core = m.big;
+    small_core = core_of m.small;
+    big_core = core_of m.big;
 }
 
 let put_core (#h:heap_sig u#h) (c:core h) (m:ext_mem h) : ext_mem h = {
     small = h.sep.lens_core.put c.small_core m.small;
-    big = c.big_core;
+    big = H2.base_heap.sep.lens_core.put c.big_core m.big;
     ctr = m.ctr;
-    ghost_ctr = m.ghost_ctr;
+    // ghost_ctr = m.ghost_ctr;
 }
 
 let get_put (#h:heap_sig u#h) (m:ext_mem h)
 : Lemma (put_core (get_core m) m == m)
-= h.sep.lens_core.get_put m.small
+= h.sep.lens_core.get_put m.small;
+  H2.base_heap.sep.lens_core.get_put m.big
 
 let put_get (#h:heap_sig u#h) (c:core h) (m:ext_mem h)
 : Lemma (get_core (put_core c m) == c)
-= h.sep.lens_core.put_get c.small_core m.small
+= h.sep.lens_core.put_get c.small_core m.small;
+  H2.base_heap.sep.lens_core.put_get c.big_core m.big
 
 let put_put (#h:heap_sig u#h) (c1 c2:core h) (m:ext_mem h)
 : Lemma (put_core c2 (put_core c1 m) == put_core c2 m)
-= h.sep.lens_core.put_put c1.small_core c2.small_core m.small
+= h.sep.lens_core.put_put c1.small_core c2.small_core m.small;
+  H2.base_heap.sep.lens_core.put_put c1.big_core c2.big_core m.big
 
 let lens_core (h:heap_sig u#a) : lens (ext_mem h) (core h) = {
     get = get_core #h;
@@ -60,31 +66,32 @@ let lens_core (h:heap_sig u#a) : lens (ext_mem h) (core h) = {
 
 let empty (#h:heap_sig u#a) : core h = {
     small_core = h.sep.empty;
-    big_core = H2.empty_heap;
+    big_core = H2.base_heap.sep.empty;
 }
 
 let disjoint (#h:heap_sig u#a) (m1 m2:core h)
 : prop
 = h.sep.disjoint m1.small_core m2.small_core /\
-  H2.disjoint m1.big_core m2.big_core
+  H2.base_heap.sep.disjoint m1.big_core m2.big_core
 
 let join (#h:heap_sig u#a) (m1:core h) (m2:core h { disjoint m1 m2 })
 : core h
 = {
     small_core = h.sep.join m1.small_core m2.small_core;
-    big_core = H2.join m1.big_core m2.big_core;
+    big_core = H2.base_heap.sep.join m1.big_core m2.big_core;
   }
 
 let disjoint_sym (#h:heap_sig u#a) (m1 m2:core h)
 : Lemma (disjoint m1 m2 <==> disjoint m2 m1)
         [SMTPat (disjoint m1 m2)]
-= h.sep.disjoint_sym m1.small_core m2.small_core
+= h.sep.disjoint_sym m1.small_core m2.small_core;
+  H2.base_heap.sep.disjoint_sym m1.big_core m2.big_core
 
 let join_commutative (#h:heap_sig u#a) (m1:core h) (m2:core h { disjoint m1 m2 })
 : Lemma (join m1 m2 == join m2 m1)
         [SMTPat (join m1 m2)]
 = h.sep.join_commutative m1.small_core m2.small_core;
-  H2.join_commutative m1.big_core m2.big_core
+  H2.base_heap.sep.join_commutative m1.big_core m2.big_core
 
 let disjoint_join (#h:heap_sig u#a) (m0 m1 m2:core h)
 : Lemma (
@@ -95,7 +102,7 @@ let disjoint_join (#h:heap_sig u#a) (m0 m1 m2:core h)
         disjoint (join m0 m1) m2 /\
         disjoint (join m0 m2) m1)
 = h.sep.disjoint_join m0.small_core m1.small_core m2.small_core;
-  H2.disjoint_join m0.big_core m1.big_core m2.big_core
+  H2.base_heap.sep.disjoint_join m0.big_core m1.big_core m2.big_core
 
 let join_associative (#h:heap_sig u#a) 
         (m0:core h)
@@ -105,7 +112,7 @@ let join_associative (#h:heap_sig u#a)
          disjoint (join m0 m1) m2 /\
          join m0 (join m1 m2) == join (join m0 m1) m2)
 = h.sep.join_associative m0.small_core m1.small_core m2.small_core;
-  H2.join_associative m0.big_core m1.big_core m2.big_core
+  H2.base_heap.sep.join_associative m0.big_core m1.big_core m2.big_core
 
 let join_associative2 (#h:heap_sig u#a) (m0 m1 m2:core h)
   : Lemma
@@ -127,7 +134,7 @@ let join_empty (#h:heap_sig u#a) (m:core h)
           [SMTPat (disjoint m (empty#h))];
           [SMTPat (join m (empty #h))]]]
 = h.sep.join_empty m.small_core;
-  H2.join_empty m.big_core
+  H2.base_heap.sep.join_empty m.big_core
 
 let ext_sep (h:heap_sig u#a)
 : separable (ext_mem h)
@@ -146,11 +153,11 @@ let ext_sep (h:heap_sig u#a)
 
 let full_mem_pred (h:heap_sig u#a) (m:ext_mem h) : prop =
     h.full_mem_pred m.small /\
-    H2.full_heap_pred m.big
+    H2.base_heap.full_mem_pred m.big
 
 let is_ghost_action (h:heap_sig u#a) (m0 m1:ext_mem h) : prop =
     h.is_ghost_action m0.small m1.small /\
-    H2.concrete m0.big == H2.concrete m1.big /\
+    H2.base_heap.is_ghost_action m0.big m1.big /\
     m0.ctr == m1.ctr
 
 let ext_affine_mem_prop (#m:Type u#a) (sep:separable m)
@@ -188,7 +195,7 @@ let up (#h:heap_sig u#a) (b:h.slprop) : ext_slprop h = as_slprop #h (up_p b)
 
 let down_p (#h:heap_sig u#a) (p:ext_slprop h)
 : h.sep.core -> prop
-= fun h -> p { small_core = h; big_core = H2.empty_heap }
+= fun h -> p { small_core = h; big_core = H2.base_heap.sep.empty }
 
 let down_p_affine (#h:heap_sig u#a) (p:ext_slprop h)
 : Lemma (is_affine_mem_prop h.sep (down_p #h p))
@@ -198,10 +205,10 @@ let down_p_affine (#h:heap_sig u#a) (p:ext_slprop h)
   with introduce _ ==> _
   with _ . (
     assert (down_p p h1);
-    let h1_ = { small_core = h1; big_core = H2.empty_heap } in
+    let h1_ = { small_core = h1; big_core = H2.base_heap.sep.empty } in
     assert (p h1_);
-    let h2_ = { small_core = h2; big_core = H2.empty_heap } in
-    H2.join_empty H2.empty_heap;
+    let h2_ = { small_core = h2; big_core = H2.base_heap.sep.empty } in
+    H2.base_heap.sep.join_empty H2.base_heap.sep.empty;
     assert (disjoint #h h1_ h2_);
     assert ((ext_sep h).disjoint h1_ h2_);
     assert (p (join #h h1_ h2_));
@@ -273,21 +280,18 @@ let star_associative (#h:heap_sig u#a) (p1 p2 p3:ext_slprop h)
 = assert (equiv (p1 `star` (p2 `star` p3)) ((p1 `star` p2) `star` p3))
 #pop-options
 
-let h2_of_slprop (p:H2.slprop u#a) : H2.a_heap_prop u#a =
-  H2.interp_depends_only_on p;
-  fun h -> H2.interp p h
 
-let lift (h:heap_sig u#a) (p:H2.slprop u#(a + 1))
+let lift (h:heap_sig u#a) (p:base_slprop u#(a + 1))
 : ext_slprop h
-= as_slprop (fun c -> h2_of_slprop p c.big_core)
+= as_slprop (fun c -> H2.base_heap.interp p c.big_core)
 
 let pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ref a p) (x:a)
 : ext_slprop h
-= lift h (H2.pts_to #a #p r x)
+= lift h (H2.base_heap.pts_to #a #p r x)
 
-let ghost_pts_to (h:heap_sig u#a) (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref a p) (x:a)
+let ghost_pts_to (h:heap_sig u#a) (meta:bool) (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref a p) (x:a)
 : ext_slprop h
-= lift h (H2.ghost_pts_to false #a #p r x)
+= lift h (H2.base_heap.ghost_pts_to meta #a #p r x)
 
 let ext_iname (h:heap_sig u#a) : eqtype = either h.iname nat
 let ext_iref (h:heap_sig u#a) : Type0 = erased (either h.iref (ghost_ref _ (PA.pcm_agreement #h.slprop)))
@@ -299,7 +303,7 @@ let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
 let is_boxable (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
 let inv_core (#h:heap_sig u#a) (i:ghost_ref _ (PA.pcm_agreement #h.slprop)) (p:ext_slprop h)
 : ext_slprop h
-= lift h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p)))
+= lift h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p)))
 let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : ext_slprop h
 = match i with
@@ -309,7 +313,7 @@ let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 let iname_ok (h:heap_sig u#a) (i:ext_iname h) (m:ext_mem h) : prop =
   match i with
   | Inl i -> h.iname_ok i m.small
-  | Inr i -> Some? (H2.select_ghost i m.big)
+  | Inr i -> Some? (H2.select_ghost i (core_of m.big))
 
 let down_inames (#h:heap_sig u#h) (e:eset (ext_iname h))
 : inames h
@@ -347,7 +351,7 @@ let invariant_of_one_cell
       (#h:heap_sig u#a)
       (addr:nat)
       (e:eset (ext_iname h))
-      (m:H2.heap u#(a + 1))
+      (m:base_heap_core u#(a + 1))
 : ext_slprop h
 = if Inr addr `Set.mem` e then emp
   else match H2.select_ghost addr m with
@@ -361,7 +365,7 @@ let rec istore_invariant
          (#h:heap_sig u#a)
          (from:nat)
          (e:eset (ext_iname h))
-         (l:H2.heap u#(a + 1))
+         (l:base_heap_core u#(a + 1))
 : ext_slprop h
 = invariant_of_one_cell from e l `star` 
   (if from = 0 then emp else istore_invariant (from - 1) e l)
@@ -369,15 +373,12 @@ let rec istore_invariant
 let mem_invariant (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 : ext_slprop h
 = up (h.mem_invariant (down_inames e) m.small) `star`
-  istore_invariant #h m.ghost_ctr e m.big
+  istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big)
 
-let share_gather_equiv #meta (#a:_) (#p:pcm a) (r:H2.ghost_ref p) (v0:a) (v1:a{composable p v0 v1})
-: Lemma (H2.ghost_pts_to meta r (v0 `op p` v1) == 
-         H2.ghost_pts_to meta r v0 `H2.star` H2.ghost_pts_to meta r v1)
-= H2.ghost_pts_to_compatible_equiv #meta r v0 v1;
-  H2.slprop_extensionality 
-        (H2.ghost_pts_to meta r (v0 `op p` v1))
-        (H2.ghost_pts_to meta r v0 `H2.star` H2.ghost_pts_to meta r v1)
+let share_gather_equiv #meta (#a:_) (#p:pcm a) (r:ghost_ref a p) (v0:a) (v1:a{composable p v0 v1})
+: Lemma (H2.base_heap.ghost_pts_to meta r (v0 `op p` v1) == 
+         H2.base_heap.ghost_pts_to meta r v0 `H2.base_heap.star` H2.base_heap.ghost_pts_to meta r v1)
+= H2.ghost_pts_to_compatible_equiv #meta r v0 v1
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
@@ -396,8 +397,8 @@ let up_star (#h:heap_sig u#a) (p q:h.slprop)
     returns (up p `star` up q) m
     with _ . (
       let ml = { m with small_core = m1 } in
-      let mr = { m with small_core = m2; big_core = H2.empty_heap } in
-      H2.join_empty m.big_core;
+      let mr = { m with small_core = m2; big_core = H2.base_heap.sep.empty } in
+      H2.base_heap.sep.join_empty m.big_core;
       assert (disjoint ml mr);
       assert (m == join ml mr);
       assert (up p ml);
@@ -422,63 +423,58 @@ let up_star (#h:heap_sig u#a) (p q:h.slprop)
   );
   slprop_extensionality _ (up (p `h.star` q)) (up p `star` up q)
 
-let h2_star_equiv (p q:H2.slprop) (m:H2.heap)
-: Lemma (
-    H2.interp (p `H2.star` q) m <==> 
-        (exists m0 m1. 
-          H2.disjoint m0 m1 /\
-          m == H2.join m0 m1 /\
-          H2.interp p m0 /\
-          H2.interp q m1)
-  )
-= introduce  
-    H2.interp (p `H2.star` q) m ==> 
-        (exists m0 m1. 
-          H2.disjoint m0 m1 /\
-          m == H2.join m0 m1 /\
-          H2.interp p m0 /\
-          H2.interp q m1)
-  with _ . (
-    H2.elim_star p q m
-  );
-  introduce
-        (exists m0 m1. 
-          H2.disjoint m0 m1 /\
-          m == H2.join m0 m1 /\
-          H2.interp p m0 /\
-          H2.interp q m1) ==>
-    H2.interp (p `H2.star` q) m
-  with _ . (
-      eliminate exists m0 m1. 
-          H2.disjoint m0 m1 /\
-          m == H2.join m0 m1 /\
-          H2.interp p m0 /\
-          H2.interp q m1
-      returns _ 
-      with _ . (
-          H2.intro_star p q m0 m1
-      )
-  )
+// let h2_star_equiv (p q:H2.slprop) (m:H2.heap)
+// : Lemma (
+//     H2.interp (p `H2.star` q) m <==> 
+//         (exists m0 m1. 
+//           H2.disjoint m0 m1 /\
+//           m == H2.join m0 m1 /\
+//           H2.interp p m0 /\
+//           H2.interp q m1)
+//   )
+// = introduce  
+//     H2.interp (p `H2.star` q) m ==> 
+//         (exists m0 m1. 
+//           H2.disjoint m0 m1 /\
+//           m == H2.join m0 m1 /\
+//           H2.interp p m0 /\
+//           H2.interp q m1)
+//   with _ . (
+//     H2.elim_star p q m
+//   );
+//   introduce
+//         (exists m0 m1. 
+//           H2.disjoint m0 m1 /\
+//           m == H2.join m0 m1 /\
+//           H2.interp p m0 /\
+//           H2.interp q m1) ==>
+//     H2.interp (p `H2.star` q) m
+//   with _ . (
+//       eliminate exists m0 m1. 
+//           H2.disjoint m0 m1 /\
+//           m == H2.join m0 m1 /\
+//           H2.interp p m0 /\
+//           H2.interp q m1
+//       returns _ 
+//       with _ . (
+//           H2.intro_star p q m0 m1
+//       )
+//   )
 
 
-let core_of (#h:heap_sig) (m:h.mem)
-: h.sep.core
-= h.sep.lens_core.get m
-
-
-let lift_star (#h:heap_sig u#a) (p q:H2.slprop u#(a + 1))
-: Lemma (lift h (p `H2.star` q) == lift h p `star` lift h q)
+let lift_star (#h:heap_sig u#a) (p q:base_slprop u#(a + 1))
+: Lemma (lift h (p `H2.base_heap.star` q) == lift h p `star` lift h q)
 = introduce forall (m:core h). 
-    (lift h (p `H2.star` q)) m ==>
+    (lift h (p `H2.base_heap.star` q)) m ==>
     (lift h p `star` lift h q) m
   with introduce _ ==> _
   with _ . ( 
-    h2_star_equiv p q m.big_core;
-    eliminate exists (m0 m1:H2.heap).
-      H2.disjoint m0 m1 /\
-      m.big_core == H2.join m0 m1 /\
-      H2.interp p m0 /\
-      H2.interp q m1
+    H2.base_heap.star_equiv p q m.big_core;
+    eliminate exists (m0 m1:base_heap_core).
+      H2.base_heap.sep.disjoint m0 m1 /\
+      m.big_core == H2.base_heap.sep.join m0 m1 /\
+      H2.base_heap.interp p m0 /\
+      H2.base_heap.interp q m1
     returns (lift h p `star` lift h q) m
     with _ . (
       let ml = { m with big_core = m0 } in
@@ -491,11 +487,11 @@ let lift_star (#h:heap_sig u#a) (p q:H2.slprop u#(a + 1))
   );
   introduce forall m.
     (lift h p `star` lift h q) m ==>
-    (lift h (p `H2.star` q)) m
+    (lift h (p `H2.base_heap.star` q)) m
   with (
-    h2_star_equiv p q m.big_core
+    H2.base_heap.star_equiv p q m.big_core
   );
-  slprop_extensionality _ (lift h (p `H2.star` q)) (lift h p `star` lift h q)
+  slprop_extensionality _ (lift h (p `H2.base_heap.star` q)) (lift h p `star` lift h q)
 
 let dup_pure_core (#h:heap_sig u#a) (p:prop)
 : Lemma (h.pure p == h.pure p `h.star` h.pure p)
@@ -539,10 +535,10 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     (==) {}
       inv_core j p `star` pure (is_boxable p);
     (==) {  share_gather_equiv #true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) (Some (down p)) }
-      lift h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.star`
-              H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
-    (==) { lift_star #h (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
-                        (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
+      lift h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.base_heap.star`
+              H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
+    (==) { lift_star #h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
+                        (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
       (inv_core j p `star` inv_core j p) `star` pure (is_boxable p);
     (==) { dup_pure #( h) (is_boxable p) }
       (inv_core j p `star` inv_core j p) `star` (pure (is_boxable p) `star` pure (is_boxable p));
@@ -561,7 +557,7 @@ let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
 let rec istore_invariant_unchanged (#h:heap_sig u#a)
          (from:nat) 
          (e:eset (ext_iname h))
-         (l:H2.heap u#(a + 1))
+         (l:base_heap_core u#(a + 1))
          (j:ext_iname h { Inl? j })
 : Lemma
   (ensures
@@ -573,18 +569,19 @@ let inv_i_p_property
       (#h:heap_sig u#a)
       (i:ext_iref h {Inr? i})
       (p:ext_slprop h)
-      (l:H2.heap u#(a + 1))
+      (l:base_heap_core u#(a + 1))
 = let Inr i = i in
-  H2.interp (H2.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
+  H2.base_heap.interp
+    (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
   is_boxable p
 
 let istore_invariant_eq_aux
-         (#h:heap_sig u#a)
-         (from:nat) 
-         (e:eset (ext_iname h))
-         (i:ext_iref h { Inr? i })
-         (p:ext_slprop h)
-         (l:H2.heap u#(a + 1) { inv_i_p_property i p l })
+      (#h:heap_sig u#a)
+      (from:nat) 
+      (e:eset (ext_iname h))
+      (i:ext_iref h { Inr? i })
+      (p:ext_slprop h)
+      (l:base_heap_core u#(a + 1) { inv_i_p_property i p l })
 : Lemma
   (requires not (iname_of h i `Set.mem` e))
   (ensures
@@ -593,16 +590,16 @@ let istore_invariant_eq_aux
 = admit()
 
 let istore_invariant_eq
-         (#h:heap_sig u#a)
-         (m:ext_mem h)
-         (e:eset (ext_iname h))
-         (i:ext_iref h { Inr? i })
-         (p:ext_slprop h)
+      (#h:heap_sig u#a)
+      (m:ext_mem h)
+      (e:eset (ext_iname h))
+      (i:ext_iref h { Inr? i })
+      (p:ext_slprop h)
 : Lemma
   (requires not (iname_of h i `Set.mem` e))
   (ensures
-    istore_invariant #h m.ghost_ctr e m.big `star` inv i p==
-    istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big `star` p `star` inv i p)
+    istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big) `star` inv i p==
+    istore_invariant #h (H2.ghost_ctr m.big) (Set.add (iname_of h i) e) (core_of m.big) `star` p `star` inv i p)
 = admit()
 
 let hmem_invariant_unchanged
@@ -634,6 +631,8 @@ let inv_boxes (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     );
     slprop_extensionality h (up (down p) `star` inv i p) (p `star` inv i p)
 
+let ghost_ctr (#h:heap_sig) (m:ext_mem h) : GTot nat = H2.ghost_ctr m.big
+
 let mem_invariant_equiv_ext_l
       (#h:heap_sig)
       (e:eset (ext_iname h))
@@ -651,45 +650,45 @@ let mem_invariant_equiv_ext_l
     mem_invariant e m `star` inv i p;
   (==) { }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h m.ghost_ctr e m.big) `star` inv i p;
-  (==) { istore_invariant_unchanged #h m.ghost_ctr e m.big (iname_of h i) }
+      istore_invariant #h (ghost_ctr m) e (core_of m.big)) `star` inv i p;
+  (==) { istore_invariant_unchanged #h (ghost_ctr m) e (core_of m.big) (iname_of h i) }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big) `star` inv i p;
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)) `star` inv i p;
   (==) { ac_lemmas_ext h}
     (up (h.mem_invariant (down_inames e) m.small) `star` inv i p) `star`
-      istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big;
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
   (==) { }
   (up (h.mem_invariant (down_inames e) m.small) `star` (up (h.inv j (down p)) `star` pure (is_boxable p))) `star`
-      istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big;
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
   (==) {ac_lemmas_ext h}
   (up (h.mem_invariant (down_inames e) m.small) `star` up (h.inv j (down p))) `star`
-      (istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big 
+      (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
       `star` pure (is_boxable p));
 
   (==) { up_star (h.mem_invariant (down_inames e) m.small) (h.inv j (down p)) }
     (up (h.mem_invariant (down_inames e) m.small `h.star` h.inv j (down p))) `star`
-      (istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big 
+      (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
       `star` pure (is_boxable p));
   (==) { h.mem_invariant_equiv (down_inames e) m.small j (down p) }
     (up (h.mem_invariant (Set.add (h.iname_of j) (down_inames e)) m.small 
           `h.star` down p `h.star` h.inv j (down p))) `star`
-      (istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big
+      (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
       `star` pure (is_boxable p));
   (==) { assert (Set.equal (Set.add (h.iname_of j) (down_inames e))
                             (down_inames (Set.add (iname_of h i) e))) }
     (up ((h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
           `h.star` down p) `h.star` h.inv j (down p))) `star`
-      (istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big
+      (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
       `star` pure (is_boxable p));
   (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small `h.star` down p)
                   (h.inv j (down p));
           ac_lemmas_ext h}
     (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
           `h.star` down p) `star` inv i p) `star`
-      istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big;
+      istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
   (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) (down p) }
     (up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star` up (down p)) `star`
-      inv i p `star` istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big;
+      inv i p `star` istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big);
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` (up (down p) `star` inv i p);
   (==) { inv_boxes i p; ac_lemmas_ext h }
@@ -713,13 +712,13 @@ let mem_invariant_equiv_ext_r
     mem_invariant e m `star` inv i p;
   (==) { }
     (up (h.mem_invariant (down_inames e) m.small) `star`
-      istore_invariant #h m.ghost_ctr e m.big) `star` inv i p;
+      istore_invariant #h (ghost_ctr m) e (core_of m.big)) `star` inv i p;
   (==) { hmem_invariant_unchanged #h e m.small (iname_of h i); ac_lemmas_ext h }
     up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
-      (istore_invariant #h m.ghost_ctr e m.big `star` inv i p);
+      (istore_invariant #h (ghost_ctr m) e (core_of m.big) `star` inv i p);
   (==) { istore_invariant_eq #h m e i p; ac_lemmas_ext h }
     up (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small) `star`
-      (istore_invariant #h m.ghost_ctr (Set.add (iname_of h i) e) m.big `star` p `star` inv i p);
+      (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star` p `star` inv i p);
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` p `star` inv i p;  
   }
@@ -750,7 +749,7 @@ let extend (h:heap_sig u#a) = {
     interp_as = (fun p -> ());
     full_mem_pred = full_mem_pred h;
     is_ghost_action = is_ghost_action h;
-    is_ghost_action_refl = (fun m -> h.is_ghost_action_refl m.small);
+    is_ghost_action_refl = (fun m -> h.is_ghost_action_refl m.small; H2.base_heap.is_ghost_action_refl m.big);
     non_info_slprop = non_info_slprop h;
     bprop = bprop h;
     up = up #h;
@@ -836,8 +835,8 @@ let down_frame_core
       with introduce _ ==> _
       with _. ( 
         let left = { small_core = s0; big_core = m1.big_core } in
-        let right = { small_core = s1; big_core = H2.empty_heap } in
-        H2.join_empty m1.big_core;
+        let right = { small_core = s1; big_core = H2.base_heap.sep.empty } in
+        H2.base_heap.sep.join_empty m1.big_core;
         assert (disjoint left right)
       )
     in
@@ -966,24 +965,24 @@ let lift_action
           up pre `star` frame `star` mem_invariant (lift_inames ex) m0;
         (==) {} 
           up pre `star` frame `star` (up (h.mem_invariant (down_inames (lift_inames ex)) m0.small) `star`
-                                      istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big);
+                                      istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
         (==) { _ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
           (up pre `star` up (h.mem_invariant (down_inames (lift_inames ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
           );
         (==) { () }
           (up (pre `h.star` h.mem_invariant (down_inames (lift_inames ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
           );
         (==) { }
           (up (pre `h.star` h.mem_invariant ex m0.small)) `star` (
-           frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big
+           frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)
           );
         };
         let (| frame', restore |) =
           down_frame
             (pre `h.star` h.mem_invariant ex m0.small)
-            (frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big)
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big))
             m0
         in
         calc (==) {
@@ -1002,27 +1001,28 @@ let lift_action
         assert (
           interpret #(extend h)
             (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big))
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)))
           m1
         );
         calc (==) {
           (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big));
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big)));
         (==) {}
           (up (post x) `star` up (h.mem_invariant ex m1')) `star`
-            (frame `star` istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big);
+            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
         (==) { _ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
           up (post x) `star` frame `star`
             (up (h.mem_invariant ex m1') `star` 
-             istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big);
+             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
         (==) {}
           up (post x) `star` frame `star`
             (up (h.mem_invariant (down_inames (lift_inames ex)) m1') `star` 
-             istore_invariant #h m0.ghost_ctr (lift_inames ex) m0.big);
+             istore_invariant #h (ghost_ctr m0) (lift_inames ex) (core_of m0.big));
         (==) { () }
           up (post x) `star` frame `star` (mem_invariant (lift_inames ex) m1);
         };
         down_inames_ok #h ex m1;
+        H2.base_heap.is_ghost_action_refl m1.big;
         (x, m1)
 
 
@@ -1042,6 +1042,16 @@ let dup_inv
           (inv i p `star` frame `star` mem_invariant ex m0) m0
       }) ->
       dup_inv_equiv i p;
-      h.is_ghost_action_refl m0.small;
+      (extend h).is_ghost_action_refl m0;
       (), m0
- 
+
+let new_invariant
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (p:boxable (extend h))
+: ghost_action_except (extend h) 
+    (extend h).iref
+    ex
+    p
+    (fun i -> (extend h).inv i p)
+= fun h0 -> admit()

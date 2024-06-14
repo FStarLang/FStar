@@ -30,7 +30,7 @@ val lift_action
 : ghost_action_except (extend h) unit e 
     ((extend h).inv i p) 
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv i p)
-(*
+
 val new_invariant
     (#h:heap_sig u#a) 
     (e:inames (extend h))
@@ -40,7 +40,7 @@ val new_invariant
     e
     p
     (fun i -> (extend h).inv i p)
-
+(*
 val with_invariant
     (#h:heap_sig u#a)
     (#a:Type u#aa)

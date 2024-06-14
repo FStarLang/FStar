@@ -165,6 +165,7 @@ type heap_sig : Type u#(a + 2) = {
     );
 
     ghost_pts_to: (
+      meta:bool ->
       #a:Type u#a ->
       #p:pcm a ->
       ghost_ref a p ->
@@ -205,6 +206,10 @@ type heap_sig : Type u#(a + 2) = {
           mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p)
     );
 }
+let core_of (#h:heap_sig) (m:h.mem)
+: h.sep.core
+= h.sep.lens_core.get m
+
 let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)
 let inames (hs:heap_sig u#h) = eset hs.iname
 let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem) = forall (i:hs.iname). i `Set.mem` is ==> hs.iname_ok i m
