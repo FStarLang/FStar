@@ -1074,17 +1074,16 @@ and resugar_comp' (env: DsEnv.env) (c:S.comp) : A.term =
       mk (A.Construct(maybe_shorten_lid env c.effect_name, [result]))
 
 and resugar_binder' env (b:S.binder) r : option A.binder =
-  BU.map_opt (resugar_bqual env b.binder_qual) begin fun imp ->
-    let e = resugar_term' env b.binder_bv.sort in
-    match (e.tm) with
-    | A.Wild ->
-      A.mk_binder (A.Variable(bv_as_unique_ident b.binder_bv)) r A.Type_level imp
-    | _ ->
-      if S.is_null_bv b.binder_bv then
-        A.mk_binder (A.NoName e) r A.Type_level imp
-      else
-        A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
-  end
+  let! imp = resugar_bqual env b.binder_qual in
+  let e = resugar_term' env b.binder_bv.sort in
+  match (e.tm) with
+  | A.Wild ->
+    Some <| A.mk_binder (A.Variable(bv_as_unique_ident b.binder_bv)) r A.Type_level imp
+  | _ ->
+    if S.is_null_bv b.binder_bv then
+      Some <| A.mk_binder (A.NoName e) r A.Type_level imp
+    else
+      Some <| A.mk_binder (A.Annotated (bv_as_unique_ident b.binder_bv, e)) r A.Type_level imp
 
 and resugar_bv_as_pat' env (v: S.bv) aqual (body_bv: FlatSet.t bv) typ_opt =
   let mk a = A.mk_pattern a (S.range_of_bv v) in
