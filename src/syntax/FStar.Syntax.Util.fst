@@ -1223,6 +1223,17 @@ let arrow_one (t:typ) : option (binder * comp) =
     in
     Some (b, c))
 
+let abs_one_ln (t:typ) : option (binder * term) =
+    match (compress t).n with
+    | Tm_abs {bs=[]} ->
+        failwith "fatal: empty binders on abs?"
+    | Tm_abs {bs=[b]; body} ->
+        Some (b, body)
+    | Tm_abs {bs=b::bs; body; rc_opt} ->
+        Some (b, abs bs body rc_opt)
+    | _ ->
+        None
+
 let is_free_in (bv:bv) (t:term) : bool =
     mem bv (FStar.Syntax.Free.names t)
 
