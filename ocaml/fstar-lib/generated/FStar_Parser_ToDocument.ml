@@ -51,8 +51,6 @@ let (all1_explicit :
             match uu___ with
             | (uu___1, FStar_Parser_AST.Nothing) -> true
             | uu___1 -> false) args)
-let (unfold_tuples : Prims.bool FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref true
 let (str : Prims.string -> FStar_Pprint.document) =
   fun s -> FStar_Pprint.doc_of_string s
 let default_or_map :
@@ -653,7 +651,7 @@ let (levels : Prims.string -> (Prims.int * Prims.int * Prims.int)) =
     let uu___ = assign_levels level_associativity_spec op in
     match uu___ with
     | (left, mine, right) ->
-        if op = "*"
+        if op = "&"
         then ((left - Prims.int_one), mine, right)
         else (left, mine, right)
 let (operatorInfix0ad12 : associativity_level Prims.list) =
@@ -4251,13 +4249,13 @@ and (paren_if_gt :
   fun curr ->
     fun mine ->
       fun doc ->
-        if mine <= curr
-        then doc
-        else
-          (let uu___1 =
-             let uu___2 = FStar_Pprint.op_Hat_Hat doc FStar_Pprint.rparen in
-             FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu___2 in
-           FStar_Pprint.group uu___1)
+        if mine > curr
+        then
+          let uu___ =
+            let uu___1 = FStar_Pprint.op_Hat_Hat doc FStar_Pprint.rparen in
+            FStar_Pprint.op_Hat_Hat FStar_Pprint.lparen uu___1 in
+          FStar_Pprint.group uu___
+        else doc
 and (p_tmEqWith :
   (FStar_Parser_AST.term -> FStar_Pprint.document) ->
     FStar_Parser_AST.term -> FStar_Pprint.document)
@@ -4379,27 +4377,6 @@ and (p_tmNoEqWith' :
                      let uu___3 = p_tmNoEqWith' false p_X right res in
                      FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
                    paren_if_gt curr mine uu___1)
-          | FStar_Parser_AST.Op (id, e1::e2::[]) when
-              (let uu___ = FStar_Ident.string_of_id id in uu___ = "*") &&
-                (FStar_Compiler_Effect.op_Bang unfold_tuples)
-              ->
-              let op = "*" in
-              let uu___ = levels op in
-              (match uu___ with
-               | (left, mine, right) ->
-                   if inside_tuple
-                   then
-                     let uu___1 = str op in
-                     let uu___2 = p_tmNoEqWith' true p_X left e1 in
-                     let uu___3 = p_tmNoEqWith' true p_X right e2 in
-                     infix0 uu___1 uu___2 uu___3
-                   else
-                     (let uu___2 =
-                        let uu___3 = str op in
-                        let uu___4 = p_tmNoEqWith' true p_X left e1 in
-                        let uu___5 = p_tmNoEqWith' true p_X right e2 in
-                        infix0 uu___3 uu___4 uu___5 in
-                      paren_if_gt curr mine uu___2))
           | FStar_Parser_AST.Op (op, e1::e2::[]) when is_operatorInfix34 op
               ->
               let op1 = FStar_Ident.string_of_id op in
@@ -5015,12 +4992,7 @@ and (p_atomicUniverse : FStar_Parser_AST.term -> FStar_Pprint.document) =
             uu___2 in
         FStar_Compiler_Effect.failwith uu___1
 let (term_to_document : FStar_Parser_AST.term -> FStar_Pprint.document) =
-  fun e ->
-    let old_unfold_tuples = FStar_Compiler_Effect.op_Bang unfold_tuples in
-    FStar_Compiler_Effect.op_Colon_Equals unfold_tuples false;
-    (let res = p_term false false e in
-     FStar_Compiler_Effect.op_Colon_Equals unfold_tuples old_unfold_tuples;
-     res)
+  fun e -> p_term false false e
 let (signature_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document)
   = fun e -> p_justSig e
 let (decl_to_document : FStar_Parser_AST.decl -> FStar_Pprint.document) =
