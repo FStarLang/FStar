@@ -34,7 +34,7 @@ val cache_version_number : int
 type tc_result = {
   checked_module: Syntax.modul; //persisted
   mii:DsEnv.module_inclusion_info; //persisted
-  smt_decls:(FStar.SMTEncoding.Term.decls_t *  //list of smt decls and fvbs for the module
+  smt_decls:(FStar.SMTEncoding.Term.decls_t &  //list of smt decls and fvbs for the module
              list FStar.SMTEncoding.Env.fvar_binding); //persisted
 
   tc_time:int;

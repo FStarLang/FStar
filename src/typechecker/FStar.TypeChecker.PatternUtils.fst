@@ -28,7 +28,7 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 
-type lcomp_with_binder = option bv * lcomp
+type lcomp_with_binder = option bv & lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -123,7 +123,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
 exception Raw_pat_cannot_be_translated
 let raw_pat_as_exp (env:Env.env) (p:pat)
-  : option (term * list bv)
+  : option (term & list bv)
   = let rec aux bs p = 
         match p.v with
         | Pat_constant c ->
@@ -176,10 +176,10 @@ let pat_as_exp (introduce_bv_uvars:bool)
                (env:Env.env)
                (p:pat)
     : (list bv          (* pattern-bound variables (which may appear in the branch of match) *)
-     * term              (* expressions corresponding to the pattern *)
-     * guard_t           (* guard with just the implicit variables introduced in the pattern *)
-     * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let intro_bv (env:Env.env) (x:bv) :(bv * guard_t * Env.env) =
+     & term              (* expressions corresponding to the pattern *)
+     & guard_t           (* guard with just the implicit variables introduced in the pattern *)
+     & pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
+    let intro_bv (env:Env.env) (x:bv) :(bv & guard_t & Env.env) =
         if not introduce_bv_uvars
         then {x with sort=S.tun}, Env.trivial_guard, env
         else let t, _ = U.type_u() in
@@ -190,12 +190,12 @@ let pat_as_exp (introduce_bv_uvars:bool)
     // TODO: remove wildcards
     let rec pat_as_arg_with_env env (p:pat) :
                                     (list bv    //all pattern-bound vars including wild-cards, in proper order
-                                    * list bv   //just the accessible vars, for the disjunctive pattern test
-                                    * list bv   //just the wildcards
-                                    * Env.env    //env extending with the pattern-bound variables
-                                    * term       //the pattern as a term/typ
-                                    * guard_t    //guard with all new implicits
-                                    * pat) =     //the elaborated pattern itself
+                                    & list bv   //just the accessible vars, for the disjunctive pattern test
+                                    & list bv   //just the wildcards
+                                    & Env.env    //env extending with the pattern-bound variables
+                                    & term       //the pattern as a term/typ
+                                    & guard_t    //guard with all new implicits
+                                    & pat) =     //the elaborated pattern itself
         match p.v with
            | Pat_constant c ->
              let e =

@@ -57,7 +57,7 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let amap (a:Type) = list (atom * a) * a
+let amap (a:Type) = list (atom & a) & a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
   match assoc #atom #a x (fst am) with
@@ -219,9 +219,9 @@ let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
-                        (mult unit t : term) : Tac (exp * list term * amap a) =
+                        (mult unit t : term) : Tac (exp & list term & amap a) =
   let hd, tl = collect_app_ref t in
-  let fatom (t:term) (ts:list term) (am:amap a) : Tac (exp * list term * amap a) =
+  let fatom (t:term) (ts:list term) (am:amap a) : Tac (exp & list term & amap a) =
     match where t ts with
     | Some v -> (Atom v, ts, am)
     | None -> let vfresh = length ts in let z = unquote t in
@@ -240,7 +240,7 @@ let rec reification_aux (#a:Type) (ts:list term) (am:amap a)
     else fatom t ts am
 
 let reification (#a:Type) (m:cm a) (ts:list term) (am:amap a) (t:term) :
-    Tac (exp * list term * amap a) =
+    Tac (exp & list term & amap a) =
   let mult = norm_term [delta;zeta;iota] (quote (CM?.mult m)) in
   let unit = norm_term [delta;zeta;iota] (quote (CM?.unit m)) in
   let t    = norm_term [delta;zeta;iota] t in

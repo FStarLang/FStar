@@ -39,8 +39,8 @@ module U = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
-type local_binding = (ident * bv * used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
-type rec_binding   = (ident * lid *                       (* name bound by recursive type and top-level let-bindings definitions only *)
+type local_binding = (ident & bv & used_marker)           (* local name binding for name resolution, paired with an env-generated unique name *)
+type rec_binding   = (ident & lid &                       (* name bound by recursive type and top-level let-bindings definitions only *)
                       used_marker)                        (* this ref marks whether it was used, so we can warn if not *)
 
 type scope_mod =
@@ -61,7 +61,7 @@ type exported_id_set = exported_id_kind -> ref string_set
 type env = {
   curmodule:            option lident;                   (* name of the module being desugared *)
   curmonad:             option ident;                    (* current monad being desugared *)
-  modules:              list (lident * modul);           (* previously desugared modules *)
+  modules:              list (lident & modul);           (* previously desugared modules *)
   scope_mods:           list scope_mod;                  (* a STACK of toplevel or definition-local scope modifiers *)
   exported_ids:         BU.smap exported_id_set;         (* identifiers (stored as strings for efficiency)
                                                              reachable in a module, not shadowed by "include"
@@ -77,11 +77,11 @@ type env = {
                                                              in this module or in one of its included modules. *)
   includes:             BU.smap (ref (list lident));   (* list of "includes" declarations for each module. *)
   sigaccum:             sigelts;                          (* type declarations being accumulated for the current module *)
-  sigmap:               BU.smap (sigelt * bool);         (* bool indicates that this was declared in an interface file *)
+  sigmap:               BU.smap (sigelt & bool);         (* bool indicates that this was declared in an interface file *)
   iface:                bool;                             (* whether or not we're desugaring an interface; different scoping rules apply *)
   admitted_iface:       bool;                             (* is it an admitted interface; different scoping rules apply *)
   expect_typ:           bool;                             (* syntactically, expect a type at this position in the term *)
-  remaining_iface_decls:list (lident*list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
+  remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
   dep_graph:            FStar.Parser.Dep.deps
@@ -366,7 +366,7 @@ let try_lookup_id env (id:ident) : option term =
 let lookup_default_id
     env
     (id: ident)
-    (k_global_def: lident -> sigelt * bool -> cont_t 'a)
+    (k_global_def: lident -> sigelt & bool -> cont_t 'a)
     (k_not_found: cont_t 'a)
   =
   let find_in_monad = match env.curmonad with
@@ -491,7 +491,7 @@ let resolve_in_open_namespaces'
   lid
   (k_local_binding: local_binding -> option 'a)
   (k_rec_binding:   rec_binding   -> option 'a)
-  (k_global_def: lident -> (sigelt * bool) -> option 'a)
+  (k_global_def: lident -> (sigelt & bool) -> option 'a)
   : option 'a =
   let k_global_def' k lid def = cont_of_option k (k_global_def lid def) in
   let f_module lid' = let k = Cont_ignore in find_in_module env lid' (k_global_def' k) k in
@@ -579,7 +579,7 @@ let try_lookup_name any_val exclude_interf env (lid:lident) : option foundname =
   | None -> resolve_in_open_namespaces'  env lid k_local_binding k_rec_binding k_global_def
   | x -> x
 
-let try_lookup_effect_name' exclude_interf env (lid:lident) : option (sigelt*lident) =
+let try_lookup_effect_name' exclude_interf env (lid:lident) : option (sigelt&lident) =
   match try_lookup_name true exclude_interf env lid with
     | Some (Eff_name(o, l)) -> Some (o,l)
     | _ -> None
@@ -660,17 +660,17 @@ let try_lookup_definition env (lid:lident) =
 let empty_include_smap : BU.smap (ref (list lident)) = new_sigmap()
 let empty_exported_id_smap : BU.smap exported_id_set = new_sigmap()
 
-let try_lookup_lid' any_val exclude_interface env (lid:lident) : option (term * list attribute) =
+let try_lookup_lid' any_val exclude_interface env (lid:lident) : option (term & list attribute) =
   match try_lookup_name any_val exclude_interface env lid with
     | Some (Term_name (e, attrs)) -> Some (e, attrs)
     | _ -> None
 
-let drop_attributes (x:option (term * list attribute)) :option (term) =
+let drop_attributes (x:option (term & list attribute)) :option (term) =
   match x with
   | Some (t, _) -> Some t
   | None        -> None
 
-let try_lookup_lid_with_attributes (env:env) (l:lident) :(option (term * list attribute)) = try_lookup_lid' env.iface false env l
+let try_lookup_lid_with_attributes (env:env) (l:lident) :(option (term & list attribute)) = try_lookup_lid' env.iface false env l
 let try_lookup_lid (env:env) l = try_lookup_lid_with_attributes env l |> drop_attributes
 
 let resolve_to_fully_qualified_name (env:env) (l:lident) : option lident =
@@ -698,7 +698,7 @@ let is_abbrev env lid : option ipath =
 (* Abbreviate a module lid. If there is a module M = A.B.C in scope,
 then this returns Some (M, C.D) for A.B.C.D (unless there is a more
 specific abbrev, such as one for A.B.C or A.B.C.D) *)
-let try_shorten_abbrev (env:env) (ns:ipath) : option (ipath * list ident) =
+let try_shorten_abbrev (env:env) (ns:ipath) : option (ipath & list ident) =
   let rec aux (ns : ipath) (rest : list ident) =
     match ns with
     | [] -> None
@@ -758,7 +758,7 @@ let shorten_lid env lid0 =
   | None -> lid0
   | _ -> shorten_lid' env lid0
 
-let try_lookup_lid_with_attributes_no_resolve (env: env) l :option (term * list attribute) =
+let try_lookup_lid_with_attributes_no_resolve (env: env) l :option (term & list attribute) =
   let env' = {env with scope_mods = [] ; exported_ids=empty_exported_id_smap; includes=empty_include_smap }
   in
   try_lookup_lid_with_attributes env' l
@@ -980,7 +980,7 @@ let push_bv env x =
   let (env, bv, _) = push_bv' env x in
   (env, bv)
 
-let push_top_level_rec_binding env0 (x:ident) : env * ref bool =
+let push_top_level_rec_binding env0 (x:ident) : env & ref bool =
   let l = qualify env0 x in
   if unique false true env0 l || Options.interactive ()
   then

@@ -24,7 +24,7 @@ open FStar.Monotonic.Witnessed
 // In the DM sub-language
 ////////////////////////////////////////////////////////////////////////////////
 (* Define a state monad with the `heap` type as the state *)
-let st (a: Type) = heap -> M (a * heap)
+let st (a: Type) = heap -> M (a & heap)
 
 val return_st: a:Type -> x:a -> Tot (st a)
 let return_st a x = fun s -> x, s
@@ -92,7 +92,7 @@ let heap_rel (h0:heap) (h1:heap) =
 (* Preconditions, postconditions and WPs for the preorder-indexed state monad. *)
 
 let ist_pre  (state:Type)          = state -> Type0
-let ist_post (state:Type) (a:Type) = (a * state) -> Type0
+let ist_post (state:Type) (a:Type) = (a & state) -> Type0
 let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 

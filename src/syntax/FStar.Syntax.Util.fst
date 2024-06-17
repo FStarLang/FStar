@@ -70,7 +70,7 @@ let aqual_of_binder (b:binder)
     | _ -> None
 
 let bqual_and_attrs_of_aqual (a:aqual)
-  : bqual * list attribute
+  : bqual & list attribute
   = match a with
     | None -> None, []
     | Some a -> (if a.aqual_implicit then Some imp_tag else None),
@@ -83,7 +83,7 @@ let args_of_non_null_binders (binders:binders) =
         if is_null_binder b then []
         else [arg_of_non_null_binder b])
 
-let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
+let args_of_binders (binders:Syntax.binders) : (Syntax.binders & args) =
  binders |> List.map (fun b ->
     if is_null_binder b
     then let b = { b with binder_bv = new_bv None b.binder_bv.sort } in
@@ -102,10 +102,10 @@ let name_function_binders t = match t.n with
     | Tm_arrow {bs=binders; comp} -> mk (Tm_arrow {bs=name_binders binders; comp}) t.pos
     | _ -> t
 
-let null_binders_of_tks (tks:list (typ * bqual)) : binders =
+let null_binders_of_tks (tks:list (typ & bqual)) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
-let binders_of_tks (tks:list (typ * bqual)) : binders =
+let binders_of_tks (tks:list (typ & bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
 
 let mk_subst s = [s]
@@ -275,7 +275,7 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:
        | Tm_arrow {comp=c} -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
-let destruct_comp c : (universe * typ * typ) =
+let destruct_comp c : (universe & typ & typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
     | _ ->
@@ -778,7 +778,7 @@ let arrow_formals k =
         3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
     This is used by NBE for detecting potential non-terminating loops
 *)
-let let_rec_arity (lb:letbinding) : int * option (list bool) =
+let let_rec_arity (lb:letbinding) : int & option (list bool) =
     let rec arrow_until_decreases (k:term) =
         let k = Subst.compress k in
         match k.n with
@@ -953,7 +953,7 @@ let ktype  : term = mk (Tm_type(U_unknown)) dummyRange
 let ktype0 : term = mk (Tm_type(U_zero)) dummyRange
 
 //Type(u), where u is a new universe unification variable
-let type_u () : typ * universe =
+let type_u () : typ & universe =
     let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) dummyRange, u
 
@@ -1203,7 +1203,7 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
-let arrow_one_ln (t:typ) : option (binder * comp) =
+let arrow_one_ln (t:typ) : option (binder & comp) =
     match (compress t).n with
     | Tm_arrow {bs=[]} ->
         failwith "fatal: empty binders on arrow?"
@@ -1214,7 +1214,7 @@ let arrow_one_ln (t:typ) : option (binder * comp) =
     | _ ->
         None
 
-let arrow_one (t:typ) : option (binder * comp) =
+let arrow_one (t:typ) : option (binder & comp) =
     bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
@@ -1223,7 +1223,7 @@ let arrow_one (t:typ) : option (binder * comp) =
     in
     Some (b, c))
 
-let abs_one_ln (t:typ) : option (binder * term) =
+let abs_one_ln (t:typ) : option (binder & term) =
     match (compress t).n with
     | Tm_abs {bs=[]} ->
         failwith "fatal: empty binders on abs?"
@@ -1306,7 +1306,7 @@ let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either 'a 'b) (y 
     | Inr x, Inr y -> e2 x y
     | _ -> false
 
-let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a * 'b) : bool =
+let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a & 'b) (y : 'a & 'b) : bool =
     match x, y with
     | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
 
@@ -1726,7 +1726,7 @@ and unbound_variables_comp c =
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
 
-let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term * args) =
+let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term & args) =
     let rec aux acc attrs =
         match attrs with
         | [] -> None
@@ -1742,7 +1742,7 @@ let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term * args) =
     in
     aux [] attrs
 
-let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt * args) =
+let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt & args) =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)

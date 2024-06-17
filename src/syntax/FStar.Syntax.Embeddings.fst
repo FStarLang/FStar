@@ -387,7 +387,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let printer (x, y) =
         BU.format2 "(%s, %s)" (printer_of ea x) (printer_of eb y)
     in
-    let em (x:('a * 'b)) (rng:range) shadow norm : term =
+    let em (x:('a & 'b)) (rng:range) shadow norm : term =
         lazy_embed
             printer
             emb_t_pair_a_b
@@ -413,7 +413,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                              S.as_arg (embed (snd x) rng shadow_b norm)]
                             rng)
     in
-    let un (t:term)  norm : option ('a * 'b) =
+    let un (t:term)  norm : option ('a & 'b) =
         lazy_unembed
             printer
             emb_t_pair_a_b
@@ -443,7 +443,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let printer (x, y, z) =
         BU.format3 "(%s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z)
     in
-    let em ((x1, x2, x3):('a * 'b * 'c)) (rng:range) shadow norm : term =
+    let em ((x1, x2, x3):('a & 'b & 'c)) (rng:range) shadow norm : term =
         lazy_embed
             printer
             emb_t_pair_a_b_c
@@ -473,7 +473,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                              S.as_arg (embed x3 rng shadow_c norm)]
                             rng)
     in
-    let un (t:term) norm : option ('a * 'b * 'c) =
+    let un (t:term) norm : option ('a & 'b & 'c) =
         lazy_unembed
             printer
             emb_t_pair_a_b_c

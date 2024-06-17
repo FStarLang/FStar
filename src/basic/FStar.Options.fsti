@@ -48,18 +48,18 @@ type opt_type =
   // --admit_except xyz
 | EnumStr of list string
   // --codegen OCaml
-| OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
+| OpenEnumStr of list string (* suggested values (not exhaustive) *) & string (* label *)
   // --debug …
-| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
+| PostProcessed of ((option_val -> option_val) (* validator *) & opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
 | Accumulated of opt_type (* elem spec *)
   // For options like --extract_module that can be repeated (LIFO)
 | ReverseAccumulated of opt_type (* elem spec *)
   // For options like --include that can be repeated (FIFO)
-| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
+| WithSideEffect of ((unit -> unit) & opt_type (* elem spec *))
   // For options like --version that have side effects
 
-val defaults                    : list (string * option_val)
+val defaults                    : list (string & option_val)
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
@@ -73,7 +73,7 @@ val push                        : unit -> unit
 val pop                         : unit -> unit
 val internal_push               : unit -> unit
 val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
-val snapshot                    : unit -> (int * unit)
+val snapshot                    : unit -> (int & unit)
 val rollback                    : option int -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
@@ -82,12 +82,12 @@ val set_verification_options    : optionstate -> unit
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
-val parse_cmd_line              : unit    -> parse_cmdline_res * list string
+val parse_cmd_line              : unit    -> parse_cmdline_res & list string
 val add_verify_module           : string  -> unit
 
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string
-val all_specs_with_types        : list (char * string * opt_type * Pprint.document)
+val all_specs_with_types        : list (char & string & opt_type & Pprint.document)
 val settable                    : string -> bool
 
 val abort_counter : ref int
@@ -223,7 +223,7 @@ val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option string
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> list (list string * bool)
+val using_facts_from            : unit    -> list (list string & bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val with_options                : string -> (unit -> 'a) -> 'a

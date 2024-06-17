@@ -30,7 +30,7 @@ val run_unembedded_tactic_on_ps :
     'a ->
     ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
     proofstate ->  (* proofstate *)
-    list goal * 'b (* goals and return value *)
+    list goal & 'b (* goals and return value *)
 
 (* Run a term of type `a -> Tac b` *)
 val run_tactic_on_ps :
@@ -43,7 +43,7 @@ val run_tactic_on_ps :
     term ->        (* a term representing an `'a -> tac 'b` *)
     bool ->        (* true if the tactic term is already typechecked *)
     proofstate ->  (* proofstate *)
-    list goal * 'b (* goals and return value *)
+    list goal & 'b (* goals and return value *)
 
 val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
 

@@ -52,7 +52,7 @@ type pattern =
  | Pat_Cons :
      head    : fv ->
      univs   : option universes ->
-     subpats : list (pattern * bool) ->
+     subpats : list (pattern & bool) ->
      pattern
 
  // A pattern-bound variable. It has a sealed sort in it.
@@ -70,7 +70,7 @@ type pattern =
      t : option term ->
      pattern
 
-type branch = pattern * term  // | pattern -> term
+type branch = pattern & term  // | pattern -> term
 
 noeq
 type aqualv =
@@ -78,7 +78,7 @@ type aqualv =
   | Q_Explicit
   | Q_Meta of term
 
-type argv = term * aqualv
+type argv = term & aqualv
 
 (* A named variable, with a unique identifier *)
 noeq
@@ -229,9 +229,9 @@ type qualifier =
   | Reifiable
   | Reflectable       of name
   | Discriminator     of name
-  | Projector         of name * ident
-  | RecordType        of list ident * list ident
-  | RecordConstructor of list ident * list ident
+  | Projector         of name & ident
+  | RecordType        of list ident & list ident
+  | RecordConstructor of list ident & list ident
   | Action            of name
   | ExceptionConstructor
   | HasMaskedEffect

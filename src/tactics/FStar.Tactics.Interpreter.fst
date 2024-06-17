@@ -296,7 +296,7 @@ let run_unembedded_tactic_on_ps
   (tau: 'a -> tac 'b)
   (ps:proofstate)
   : list goal // remaining goals
-  * 'b // return value
+  & 'b // return value
   =
     let ps = { ps with main_context = { ps.main_context with intactics = true } } in
     let ps = { ps with main_context = { ps.main_context with range = rng_goal } } in
@@ -404,7 +404,7 @@ let run_tactic_on_ps'
   (tactic_already_typed:bool)
   (ps:proofstate)
   : list goal // remaining goals
-  * 'b // return value
+  & 'b // return value
   =
     let env = ps.main_context in
     if !dbg_Tac then

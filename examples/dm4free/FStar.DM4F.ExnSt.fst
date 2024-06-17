@@ -25,7 +25,7 @@ module FStar.DM4F.ExnSt
 module IntST = FStar.DM4F.IntST
 
 (* The underlying representation type *)
-let exnst a = int -> M (option (a * int))
+let exnst a = int -> M (option (a & int))
 
 (* Monad definition *)
 val return : (a:Type) -> (x:a) -> exnst a
@@ -59,7 +59,7 @@ sub_effect IntST.STINT ~> EXNST {
 }
 
 (* Pre-/postcondition variant *)
-effect ExnSt (a:Type) (req:EXNST?.pre) (ens:int -> option (a * int) -> GTot Type0) =
+effect ExnSt (a:Type) (req:EXNST?.pre) (ens:int -> option (a & int) -> GTot Type0) =
        EXNST a
          (fun (h0:int) (p:EXNST?.post a) -> req h0 /\ (forall r. (req h0 /\ ens h0 r) ==> p r))
 
@@ -73,7 +73,7 @@ effect S (a:Type) =
  * doesn't modify the state.
  *)
 
-let div_intrisic_spec (i :nat) (j:int) (h0:int) (x:option (int * int)) : Type0 =
+let div_intrisic_spec (i :nat) (j:int) (h0:int) (x:option (int & int)) : Type0 =
   match x with
   | None -> j=0
   | Some (z, h1) -> h0 = h1 /\ j<>0 /\ z = i / j

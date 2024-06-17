@@ -24,7 +24,7 @@ type heap = seq int
 let in_ (x:id) (store:heap) = x < length store
 
 (* TODO : Try to use [either a exn] instead of [option] *)
-type int_store (a:Type) = heap -> M (option a * heap)
+type int_store (a:Type) = heap -> M (option a & heap)
 let return_is (a:Type) (x:a) : int_store a = fun store -> Some x, store
 let bind_is (a b : Type) (x:int_store a) (f: a -> int_store b) : int_store b =
   fun store ->
@@ -54,7 +54,7 @@ effect IntStore (a:Type) (pre:INT_STORE?.pre) (post: heap -> option a -> heap ->
   INT_STORE a (fun l0 p -> pre l0 /\ (forall x l1. pre l0 /\ post l0 x l1 ==> p (x, l1)))
 
 effect IS (a:Type) =
-  INT_STORE a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:(option a * heap)). p x)
+  INT_STORE a (fun (l0:heap) (p:((option a & heap) -> Type0)) -> forall (x:(option a & heap)). p x)
 
 (* TODO : having a in Type *and*  induces a Failure("Universe variable not found") *)
 (* whenever we try to normalize-reify it (see below in xxx for instance) *)

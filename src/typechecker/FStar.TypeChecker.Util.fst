@@ -192,9 +192,9 @@ let check_uvars r t =
 (************************************************************************)
 let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; lbdef=e} :
     list univ_name
-   * typ
-   * term
-   * bool //true indicates that the type needs to be checked; false indicates that it is already checked
+   & typ
+   & term
+   & bool //true indicates that the type needs to be checked; false indicates that it is already checked
    =
   let rng = S.range_of_lbname lbname in
   let t = SS.compress t in
@@ -269,10 +269,10 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
   in
   let extract_annot_from_body (lbtyp_opt:option typ)
     : typ
-    * term
-    * bool
+    & term
+    & bool
     = let rec aux_lbdef e
-        : typ * term * bool
+        : typ & term & bool
         = let e = SS.compress e in
           match e.n with
           | Tm_meta {tm=e';meta=m} ->
@@ -454,7 +454,7 @@ let extract_let_rec_annotation env {lbname=lbname; lbunivs=univ_vars; lbtyp=t; l
 //    in
 //    aux p exp
 
- let rec decorated_pattern_as_term (pat:pat) : list bv * term =
+ let rec decorated_pattern_as_term (pat:pat) : list bv & term =
     let mk f : term = mk f pat.p in
 
     let pat_as_arg (p, i) =
@@ -499,7 +499,7 @@ let comp_univ_opt c =
 
 let lcomp_univ_opt lc = lc |> TcComm.lcomp_comp |> (fun (c, g) -> comp_univ_opt c, g)
 
-let destruct_wp_comp c : (universe * typ * typ) = U.destruct_comp c
+let destruct_wp_comp c : (universe & typ & typ) = U.destruct_comp c
 
 let mk_comp_l mname u_result result wp flags =
   mk_Comp ({ comp_univs=[u_result];
@@ -570,7 +570,7 @@ let label_guard r reason (g:guard_t) = match g.guard_f with
     | Trivial -> g
     | NonTrivial f -> {g with guard_f=NonTrivial (label reason r f)}
 
-let lift_comp env (c:comp_typ) lift : comp * guard_t =
+let lift_comp env (c:comp_typ) lift : comp & guard_t =
   ({ c with flags = [] }) |> S.mk_Comp |> lift.mlift_wp env
 
 let join_effects env l1_in l2_in =
@@ -607,7 +607,7 @@ let maybe_push (env : Env.env) (b : option bv) : Env.env =
  *   where the two guards are weakened using different branch conditions
  *)
 let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
-: lident * comp * comp * guard_t * guard_t =
+: lident & comp & comp & guard_t & guard_t =
   let c1 = Env.unfold_effect_abbrev env c1 in
   let env2 = maybe_push env b in
   let c2 = Env.unfold_effect_abbrev env2 c2 in
@@ -631,7 +631,7 @@ let lift_comps_sep_guards env c1 c2 (b:option bv) (for_bind:bool)
       ]) env.range
 
 let lift_comps env c1 c2 (b:option bv) (for_bind:bool)
-  : lident * comp * comp * guard_t =
+  : lident & comp & comp & guard_t =
   let l, c1, c2, g1, g2 = lift_comps_sep_guards
     env
     c1
@@ -1107,7 +1107,7 @@ let ad_hoc_indexed_bind_substs env
  * Caller must ensure that ed is an indexed effect
  *)
 let mk_indexed_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-  : comp * guard_t =
+  : comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
 
@@ -1172,7 +1172,7 @@ let mk_indexed_bind env
   (flags:list cflag) (r1:Range.range)
   (num_effect_params:int)
   (has_range_binders:bool)
-  : comp * guard_t =
+  : comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
 
@@ -1283,7 +1283,7 @@ let mk_bind env
   (b:option bv)
   (c2:comp)
   (flags:list cflag)
-  (r1:Range.range) : comp * guard_t =
+  (r1:Range.range) : comp & guard_t =
 
   let env2 = maybe_push env b in
   let ct1, ct2 = Env.unfold_effect_abbrev env c1, Env.unfold_effect_abbrev env2 c2 in
@@ -1316,7 +1316,7 @@ let mk_bind env
       else mk_wp_bind env m ct1 b ct2 flags r1, Env.trivial_guard in
     c, Env.conj_guard g_lift g_bind
 
-let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) (f:formula) flags : comp * guard_t =
+let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) (f:formula) flags : comp & guard_t =
     if env.lax || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
@@ -1355,7 +1355,7 @@ let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) 
  * Wrapper over mk_wp_return and mk_indexed_return
  *)
 let mk_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.range)
-: comp * guard_t
+: comp & guard_t
 = if ed |> U.is_layered
   then mk_indexed_return env ed u_a a e r
   else mk_wp_return env ed u_a a e r, Env.trivial_guard
@@ -1378,7 +1378,7 @@ let weaken_flags flags =
          | RETURN -> [PARTIAL_RETURN; TRIVIAL_POSTCONDITION]
          | f -> [f])
 
-let weaken_comp env (c:comp) (formula:term) : comp * guard_t =
+let weaken_comp env (c:comp) (formula:term) : comp & guard_t =
   if U.is_ml_comp c
   then c, Env.trivial_guard
   else let ct = Env.unfold_effect_abbrev env c in
@@ -1434,7 +1434,7 @@ let strengthen_precondition
             (e_for_debugging_only:term)
             (lc:lcomp)
             (g0:guard_t)
-    : lcomp * guard_t =
+    : lcomp & guard_t =
     if Env.is_trivial_guard_formula g0
     then lc, g0
     else let flags =
@@ -1490,7 +1490,7 @@ let lcomp_has_trivial_postcondition (lc:lcomp) =
  *
  * We should make wp-effects also same as the layered effects
  *)
-let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp * guard_t =
+let maybe_capture_unit_refinement (env:env) (t:term) (x:bv) (c:comp) : comp & guard_t =
   let t = N.normalize_refinement N.whnf_steps env t in
   match t.n with
   | Tm_refine {b; phi} ->
@@ -1582,7 +1582,7 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
             then Inl (c2, "both ml")
             else Inr "c1 not trivial, and both are not ML"
           in
-          let try_simplify () : either (comp * guard_t * string) string =
+          let try_simplify () : either (comp & guard_t & string) string =
             let aux_with_trivial_guard () =
               match aux () with
               | Inl (c, reason) -> Inl (c, trivial_guard, reason)
@@ -1738,7 +1738,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
   let flags =
     if TcComm.is_total_lcomp lc then RETURN::lc.cflags else PARTIAL_RETURN::lc.cflags in
 
-  let refine () : comp * guard_t =
+  let refine () : comp & guard_t =
       let c, g_c = TcComm.lcomp_comp lc in
       let u_t =
           match comp_univ_opt c with
@@ -1985,7 +1985,7 @@ let ad_hoc_indexed_ite_substs (env:env)
   Env.conj_guards [g_uvars; f_guard; g_guard]
 
 let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (r:Range.range)
-: comp * guard_t =
+: comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
 
@@ -2040,7 +2040,7 @@ let mk_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (
  * For non-layered effects, just apply the if_then_else combinator
  *)
 let mk_non_layered_conjunction env (ed:S.eff_decl) (u_a:universe) (a:term) (p:typ) (ct1:comp_typ) (ct2:comp_typ) (_:Range.range)
-: comp * guard_t =
+: comp & guard_t =
   //p is a boolean guard, so b2t it
   let p = U.b2t p in
   let if_then_else = ed |> U.get_wp_if_then_else_combinator |> must in
@@ -2086,7 +2086,7 @@ let comp_pure_wp_false env (u:universe) (t:typ) =
      unreachable branch to check for pattern exhaustiveness)
  *)
 let get_neg_branch_conds (branch_conds:list formula)
-  : list formula * formula
+  : list formula & formula
   = branch_conds
     |> List.fold_left (fun (conds, acc) g ->
         let cond = U.mk_conj acc (g |> U.b2t |> U.mk_neg) in
@@ -2106,7 +2106,7 @@ let get_neg_branch_conds (branch_conds:list formula)
  * branch matches: i.e. the exhaustiveness check.
  *)
 let bind_cases env0 (res_t:typ)
-  (lcases:list (formula * lident * list cflag * (bool -> lcomp)))
+  (lcases:list (formula & lident & list cflag & (bool -> lcomp)))
   (scrutinee:bv) : lcomp =
     let env = Env.push_binders env0 [scrutinee |> S.mk_binder] in
     let eff = List.fold_left (fun eff (_, eff_label, _, _) -> join_effects env eff eff_label)
@@ -2256,7 +2256,7 @@ let bind_cases env0 (res_t:typ)
     in
     TcComm.mk_lcomp eff res_t bind_cases_flags bind_cases
 
-let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term * comp * guard_t =
+let check_comp env (use_eq:bool) (e:term) (c:comp) (c':comp) : term & comp & guard_t =
   def_check_scoped c.pos "check_comp.c" env c;
   def_check_scoped c'.pos "check_comp.c'" env c';
   if Debug.extreme () then
@@ -2328,7 +2328,7 @@ let coerce_with (env:Env.env)
                 (f : lident) // coercion
                 (us : universes) (eargs : args) // extra arguments to coertion
                 (comp2 : comp) // new result computation type
-                : term * lcomp =
+                : term & lcomp =
     match Env.try_lookup_lid env f with
     | Some _ ->
         if !dbg_Coercions then
@@ -2552,7 +2552,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
     )
 )
 
-let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_t =
+let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
   let should_coerce =
       (env.phase1
     || env.lax
@@ -2626,7 +2626,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term * lcomp * guard_
       | _ ->
         e, lc, Env.trivial_guard
 
-let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term * lcomp * guard_t =
+let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lcomp & guard_t =
   if Debug.high () then
     BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
             (Print.term_to_string e)
@@ -2981,7 +2981,7 @@ let check_has_type env (e:term) (t1:typ) (t2:typ) (use_eq:bool) : guard_t =
   | None -> raise_error_doc (Err.expected_expression_of_type env t2 e t1) (Env.get_range env)
   | Some g -> g
 
-let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term * lcomp * guard_t =
+let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term & lcomp & guard_t =
   let env = Env.set_range env e.pos in
   let e, lc, g_c = maybe_coerce_lc env e lc t2 in
   let g = check_has_type env e lc.res_typ t2 use_eq in
@@ -2990,7 +2990,7 @@ let check_has_type_maybe_coerce env (e:term) (lc:lcomp) (t2:typ) use_eq : term *
   e, lc, (Env.conj_guard g g_c)
 
 /////////////////////////////////////////////////////////////////////////////////
-let check_top_level env g lc : (bool * comp) =
+let check_top_level env g lc : (bool & comp) =
  Errors.with_ctx "While checking for top-level effects" (fun () ->
   if Debug.medium () then
     BU.print1 "check_top_level, lc = %s\n" (TcComm.lcomp_to_string lc);
@@ -3394,7 +3394,7 @@ let ad_hoc_indexed_lift_substs (env:env)
   Env.conj_guard g guard_f
 
 let lift_tf_layered_effect (tgt:lident) (lift_ts:tscheme) (kind:S.indexed_effect_combinator_kind)
-  env (c:comp) : comp * guard_t =
+  env (c:comp) : comp & guard_t =
 
   let debug = !dbg_LayeredEffectsApp in
   
@@ -3691,7 +3691,7 @@ let field_name_matches (field_name:lident) (rdc:DsEnv.record_or_dc) (field:ident
 *)
 let make_record_fields_in_order env uc topt
        (rdc : DsEnv.record_or_dc)
-       (fas : list (lident * 'a))
+       (fas : list (lident & 'a))
        (not_found:ident -> option 'a)
        (rng : Range.range)
   : list 'a

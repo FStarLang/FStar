@@ -195,7 +195,7 @@ let refine_st (#a:Type)
                               reify (f x) h0 == (z, h1) /\
                               post x h0 z h1)
   = let g (h0:heap)
-      : Pure (b * heap)
+      : Pure (b & heap)
              (pre x h0)
              (fun (z,h1) -> pre x h0 /\
                        reify (f x) h0 == (z, h1) /\

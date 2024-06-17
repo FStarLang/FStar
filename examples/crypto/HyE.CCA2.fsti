@@ -42,7 +42,7 @@ val access_pk_raw (pk:pkey) : RSA.pkey
 
 val skey : Type0
 
-val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
+val keygen: parent:rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey & skey)
 
 val encrypt (pk:pkey) (p:PlainPKE.t) : ML RSA.cipher
 

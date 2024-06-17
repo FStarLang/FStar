@@ -138,9 +138,9 @@ let check_sig_inductive_injectivity_on_params (tcenv:env_t) (se:sigelt)
 let tc_tycon (env:env_t)     (* environment that contains all mutually defined type constructors *)
              (s:sigelt)      (* a Sig_inductive_type (aka tc) that needs to be type-checked *)
        : env_t          (* environment extended with a refined type for the type-constructor *)
-       * sigelt         (* the typed version of s, with universe variables still TBD *)
-       * universe       (* universe of the constructed type *)
-       * guard_t        (* constraints on implicit variables *)
+       & sigelt         (* the typed version of s, with universe variables still TBD *)
+       & universe       (* universe of the constructed type *)
+       & guard_t        (* constraints on implicit variables *)
  = match s.sigel with
    | Sig_inductive_typ {lid=tc; us=uvs; params=tps; num_uniform_params=n_uniform;
                         t=k; mutuals; ds=data} -> //the only valid qual is Private
@@ -208,8 +208,8 @@ let mk_implicit : bqual -> bqual = function
   | _ -> Some (Implicit false)
 
 (* 2. Checking each datacon *)
-let tc_data (env:env_t) (tcs : list (sigelt * universe))
-  : sigelt -> sigelt * guard_t =
+let tc_data (env:env_t) (tcs : list (sigelt & universe))
+  : sigelt -> sigelt & guard_t =
     fun se -> match se.sigel with
     | Sig_datacon {lid=c; us=_uvs; t; ty_lid=tc_lid; num_ty_params=ntps; mutuals=mutual_tcs} ->
          //assert (_uvs = []);
@@ -333,8 +333,8 @@ let tc_data (env:env_t) (tcs : list (sigelt * universe))
 
 
 (* 3. Generalizing universes and 4. instantiate inductives within the datacons *)
-let generalize_and_inst_within (env:env_t) (tcs:list (sigelt * universe)) (datas:list sigelt)
-    : list sigelt * list sigelt
+let generalize_and_inst_within (env:env_t) (tcs:list (sigelt & universe)) (datas:list sigelt)
+    : list sigelt & list sigelt
     =   //We build a single arrow term of the form
         //   tc_1 -> .. -> tc_n -> dt_1 -> .. dt_n -> Tot unit
         //for each type constructor tc_i
@@ -435,7 +435,7 @@ let get_haseq_axiom_lid lid =
 //        -- opened parameter binders
 //        -- opened index binders
 //        -- conjunction of hasEq of the binders
-let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:univ_names) :(lident * term * binders * binders * term) =
+let get_optimized_haseq_axiom (en:env) (ty:sigelt) (usubst:list subst_elt) (us:univ_names) :(lident & term & binders & binders & term) =
   let lid, bs, t =
     match ty.sigel with
     | Sig_inductive_typ {lid; params=bs; t} -> lid, bs, t
@@ -765,7 +765,7 @@ let unoptimized_haseq_scheme (sig_bndle:sigelt) (tcs:list sigelt) (datas:list si
 
 
 //returns: sig bundle, list of type constructors, list of data constructors
-let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qualifier) (lids:list lident) :(sigelt * list sigelt * list sigelt) =
+let check_inductive_well_typedness (env:env_t) (ses:list sigelt) (quals:list qualifier) (lids:list lident) :(sigelt & list sigelt & list sigelt) =
     (*  Consider this illustrative example:
 
          type T (a:Type) : (b:Type) -> Type =

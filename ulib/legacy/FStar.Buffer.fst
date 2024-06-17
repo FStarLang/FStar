@@ -1212,7 +1212,7 @@ let rec fill #t b z len =
   Seq.lemma_eq_intro (Seq.slice (as_seq h1 b) 0 (v len)) (Seq.create (v len) z)
 
 
-let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t * buffer t)
+let split #t (b:buffer t) (i:UInt32.t{v i <= length b}) : Tot (buffer t & buffer t)
   = sub b 0ul i, offset b i
 
 let join #t (b:buffer t) (b':buffer t{b.max_length == b'.max_length /\ b.content === b'.content /\ idx b + length b == idx b'}) : Tot (buffer t)

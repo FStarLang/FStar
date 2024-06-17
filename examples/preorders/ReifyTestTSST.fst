@@ -24,7 +24,7 @@ open FStar.Monotonic.Witnessed
 
 let timestamp = nat
 
-let timestamped_state (state:Type) = timestamp * state
+let timestamped_state (state:Type) = timestamp & state
 
 let get_timestamp #state tss = fst tss
 

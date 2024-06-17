@@ -52,7 +52,7 @@ let bytes32 = bs:bytes{length bs < pow2 32}
 ///
 /// these parsers are used as specifications, and thus use unrepresentable types
 /// such as byte sequences and natural numbers and are always pure
-let parser (t:Type) = b:bytes32 -> Tot (option (t * n:nat{n <= length b}))
+let parser (t:Type) = b:bytes32 -> Tot (option (t & n:nat{n <= length b}))
 
 /// monadic bind for the parser monad
 val and_then : #t:Type -> #t':Type ->
@@ -82,7 +82,7 @@ let parsing_done : parser unit =
 
 /// projector for correctly parsed results
 let parse_result (#t:Type) (#b:bytes)
-  (r: option (t * n:nat{n <= length b}){Some? r}) : t =
+  (r: option (t & n:nat{n <= length b}){Some? r}) : t =
   fst (Some?.v r)
 
 /// repeat a parser `n` times, collecting all the results
@@ -103,7 +103,7 @@ let rec parse_many #t p n =
 /// function).
 inline_for_extraction
 let parser_st #t (p: erased (parser t)) =
-  input:bslice -> Stack (option (t * off:U32.t{U32.v off <= U32.v input.len}))
+  input:bslice -> Stack (option (t & off:U32.t{U32.v off <= U32.v input.len}))
   (requires (fun h0 -> live h0 input))
   (ensures (fun h0 r h1 -> live h1 input /\
             modifies_none h0 h1 /\
@@ -123,7 +123,7 @@ let parser_st #t (p: erased (parser t)) =
 /// not make error checks since those cases are impossible.
 inline_for_extraction
 let parser_st_nochk #t (p: erased (parser t)) =
-  input:bslice -> Stack (t * off:U32.t{U32.v off <= U32.v input.len})
+  input:bslice -> Stack (t & off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                      Some? (reveal p bs))))
@@ -143,7 +143,7 @@ let parser_st_nochk #t (p: erased (parser t)) =
 /// [None] validates any parse).
 unfold let validation_checks_parse #t (b: bytes)
   (v: option (off:U32.t{U32.v off <= length b}))
-  (p: option (t * n:nat{n <= length b})) : Type0 =
+  (p: option (t & n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ U32.v (Some?.v v) == snd (Some?.v p))
 
 /// A stateful validator is parametrized by a specification parser. A validator
@@ -283,7 +283,7 @@ val for_readonly :
   // buf is logical; it can be captured by f at runtime
   buf:B.buffer a ->
   inv:(vs:seq a{length vs == B.length buf} -> nat -> t -> bool -> GTot Type0) ->
-  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t * bool)
+  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t & bool)
      (requires (fun h0 -> B.live h0 buf /\
                        inv (B.as_seq h0 buf) (U32.v i) v false))
      (ensures (fun h0 r h1 -> let (v', break) = r in
@@ -292,7 +292,7 @@ val for_readonly :
                            inv (B.as_seq h0 buf) (U32.v i) v false /\
                            inv (B.as_seq h1 buf) U32.(v i + 1) v' break /\
                            modifies_none h0 h1))) ->
-  Stack (U32.t * t * bool)
+  Stack (U32.t & t & bool)
     (requires (fun h0 -> B.live h0 buf /\
                       inv (B.as_seq h0 buf) (U32.v start) init false))
     (ensures (fun h0 r h1 -> let (i, v, break) = r in

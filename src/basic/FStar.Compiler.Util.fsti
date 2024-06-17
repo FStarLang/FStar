@@ -28,8 +28,8 @@ val return_all: 'a -> ML 'a
 type time
 val now : unit -> time
 val now_ms : unit -> int
-val time_diff: time -> time -> float*int
-val record_time: (unit -> 'a) -> ('a * int)
+val time_diff: time -> time -> float&int
+val record_time: (unit -> 'a) -> ('a & int)
 val is_before: time -> time -> bool
 val get_file_last_modification_time: string -> time
 val string_of_time: time -> string
@@ -40,7 +40,7 @@ type smap 'value
 val smap_create: int -> smap 'value
 val smap_clear:smap 'value -> unit
 val smap_add: smap 'value -> string -> 'value -> unit
-val smap_of_list: list (string*'value) -> smap 'value
+val smap_of_list: list (string&'value) -> smap 'value
 val smap_try_find: smap 'value -> string -> option 'value
 val smap_fold: smap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val smap_remove: smap 'value -> string -> unit
@@ -65,7 +65,7 @@ type imap 'value
 val imap_create: int -> imap 'value
 val imap_clear:imap 'value -> unit
 val imap_add: imap 'value -> int -> 'value -> unit
-val imap_of_list: list (int*'value) -> imap 'value
+val imap_of_list: list (int&'value) -> imap 'value
 val imap_try_find: imap 'value -> int -> option 'value
 val imap_fold: imap 'value -> (int -> 'value -> 'a -> 'a) -> 'a -> 'a
 val imap_remove: imap 'value -> int -> unit
@@ -112,7 +112,7 @@ val flush_stdout: unit -> unit
 val stdout_isatty: unit -> option bool
 
 // These functions have no effect
-val colorize: string -> (string * string) -> string
+val colorize: string -> (string & string) -> string
 val colorize_bold: string -> string
 val colorize_red: string -> string
 val colorize_yellow: string -> string
@@ -263,20 +263,20 @@ val sort_with: ('a -> 'a -> int) -> list 'a -> list 'a
 val remove_dups: ('a -> 'a -> bool) -> list 'a -> list 'a
 val add_unique: ('a -> 'a -> bool) -> 'a -> list 'a -> list 'a
 val try_find: ('a -> bool) -> list 'a -> option 'a
-val try_find_i: (int -> 'a -> bool) -> list 'a -> option (int * 'a)
+val try_find_i: (int -> 'a -> bool) -> list 'a -> option (int & 'a)
 val find_map: list 'a -> ('a -> option 'b) -> option 'b
 val try_find_index: ('a -> bool) -> list 'a -> option int
-val fold_map: ('a -> 'b -> 'a * 'c) -> 'a -> list 'b -> 'a * list 'c
-val choose_map: ('a -> 'b -> 'a * option 'c) -> 'a -> list 'b -> 'a * list 'c
+val fold_map: ('a -> 'b -> 'a & 'c) -> 'a -> list 'b -> 'a & list 'c
+val choose_map: ('a -> 'b -> 'a & option 'c) -> 'a -> list 'b -> 'a & list 'c
 val for_all: ('a -> bool) -> list 'a -> bool
 val for_some: ('a -> bool) -> list 'a -> bool
 val forall_exists: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
 val multiset_equiv: ('a -> 'b -> bool) -> list 'a -> list 'b -> bool
-val take: ('a -> bool) -> list 'a -> list 'a * list 'a
+val take: ('a -> bool) -> list 'a -> list 'a & list 'a
 
 (* Variation on fold_left which pushes the list returned by the functional *)
 (* on top of the leftover input list *)
-val fold_flatten:('a -> 'b -> 'a * list 'b) -> 'a -> list 'b -> 'a
+val fold_flatten:('a -> 'b -> 'a & list 'b) -> 'a -> list 'b -> 'a
 
 val is_none: option 'a -> Tot bool
 val is_some: option 'a -> Tot bool
@@ -290,10 +290,10 @@ val catch_opt: option 'a -> (unit -> option 'a) -> option 'a
 val map_opt: option 'a -> ('a -> 'b) -> option 'b
 val iter_opt: option 'a -> ('a -> unit) -> unit
 
-val first_N: int -> list 'a -> (list 'a * list 'a)
+val first_N: int -> list 'a -> (list 'a & list 'a)
 val nth_tail: int -> list 'a -> list 'a
-val prefix_until: ('a -> bool) -> list 'a -> option (list 'a * 'a * list 'a)
-val prefix: list 'a -> Tot (list 'a * 'a)
+val prefix_until: ('a -> bool) -> list 'a -> option (list 'a & 'a & list 'a)
+val prefix: list 'a -> Tot (list 'a & 'a)
 
 val string_of_unicode: array byte -> Tot string
 val unicode_of_string: string -> Tot (array byte)
@@ -364,7 +364,7 @@ val map_option: ('a -> 'b) -> option 'a -> option 'b
 val save_value_to_file: string -> 'a -> unit
 val load_value_from_file: string -> option 'a
 val save_2values_to_file: string -> 'a -> 'b -> unit
-val load_2values_from_file: string -> option ('a * 'b)
+val load_2values_from_file: string -> option ('a & 'b)
 val print_exn: exn -> string
 val digest_of_file: string -> string
 val digest_of_string: string -> string
@@ -372,7 +372,7 @@ val touch_file: string -> unit (* Precondition: file exists *)
 
 val ensure_decimal: string -> string
 val measure_execution_time: string -> (unit -> 'a) -> 'a
-val return_execution_time: (unit -> 'a) -> ('a * float)
+val return_execution_time: (unit -> 'a) -> ('a & float)
 
 (* Common interface between F#, Ocaml and F* to read and write references *)
 (* F# uses native references, while OCaml uses both native references (Pervasives) and FStar_Heap ones *)

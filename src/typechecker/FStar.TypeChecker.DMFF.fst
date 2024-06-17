@@ -50,7 +50,7 @@ let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
 // Takes care of creating the [fv], generating the top-level let-binding, and
 // return a term that's a suitable reference (a [Tm_fv]) to the definition
-let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
+let mk_toplevel_definition (env: env_t) lident (def: term): sigelt & term =
   // Debug
   if !dbg then begin
     d (string_of_lid lident);
@@ -78,7 +78,7 @@ let empty env tc_const = {
 
 let gen_wps_for_free
   env (binders: binders) (a: bv) (wp_a: term) (ed: Syntax.eff_decl):
-  Syntax.sigelts * Syntax.eff_decl
+  Syntax.sigelts & Syntax.eff_decl
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
@@ -811,7 +811,7 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // [check] returns two terms:
 // - the first is [e*], the CPS'd version of [e]
 // - the second is [_e_], the elaborated version of [e]
-let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
+let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
@@ -838,7 +838,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 
   in
 
-  let ensure_m (env: env_) (e2: term): term * term * term =
+  let ensure_m (env: env_) (e2: term): term & term & term =
     let strip_m = function
       | M t, s_e, u_e -> t, s_e, u_e
       | _ -> failwith "impossible"
@@ -898,7 +898,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
       failwith (BU.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
 
 
-and infer (env: env) (e: term): nm * term * term =
+and infer (env: env) (e: term): nm & term & term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x e.pos in
   let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
@@ -1212,8 +1212,8 @@ and mk_match env e0 branches f =
   end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
-    (proceed: env_ -> term -> nm * term * term)
-    (ensure_m: env_ -> term -> term * term * term) =
+    (proceed: env_ -> term -> nm & term & term)
+    (ensure_m: env_ -> term -> term & term & term) =
   let mk x = mk x e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].
@@ -1259,13 +1259,13 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   end
 
 
-and check_n (env: env_) (e: term): typ * term * term =
+and check_n (env: env_) (e: term): typ & term & term =
   let mn = N (mk Tm_unknown e.pos) in
   match check env e mn with
   | N t, s_e, u_e -> t, s_e, u_e
   | _ -> failwith "[check_n]: impossible"
 
-and check_m (env: env_) (e: term): typ * term * term =
+and check_m (env: env_) (e: term): typ & term & term =
   let mn = M (mk Tm_unknown e.pos) in
   match check env e mn with
   | M t, s_e, u_e -> t, s_e, u_e
@@ -1374,8 +1374,8 @@ let recheck_debug (s:string) (env:FStar.TypeChecker.Env.env) (t:S.term) : S.term
 
 
 let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
-  : list S.sigelt *
-    S.eff_decl *
+  : list S.sigelt &
+    S.eff_decl &
     option S.sigelt =
   // Using [STInt: a:Type -> Effect] as an example...
   let effect_binders_un, signature_un = SS.open_term ed.binders (ed.signature |> U.effect_sig_ts |> snd) in
@@ -1385,7 +1385,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let signature, _ = TcTerm.tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
-  let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
+  let raise_error : (Errors.raw_error & string) -> 'a = fun (e, err_msg) ->
     Errors.raise_error (e, err_msg) signature.pos
   in
 

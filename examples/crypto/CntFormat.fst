@@ -102,7 +102,7 @@ let signal s c =
   let c_b = uint16_to_bytes c in
   (s_b @| c_b)
 
-val signal_split : m:msg signal_size -> Tot (x:(uint32 * uint16)
+val signal_split : m:msg signal_size -> Tot (x:(uint32 & uint16)
     { m = signal (fst x) (snd x)})
 let signal_split sc =
     let (s_b, c_b) = Platform.Bytes.split_eq sc 4 in

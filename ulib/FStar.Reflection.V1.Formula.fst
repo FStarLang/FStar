@@ -35,7 +35,7 @@ private let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}
     inspect_unascribe t
   | tv -> tv
 private let rec collect_app' (args : list argv) (t : term)
-  : Tac (term * list argv) =
+  : Tac (term & list argv) =
     match inspect_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l

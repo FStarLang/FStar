@@ -84,7 +84,7 @@ assume val abytes : (cbytes -> Tot bytes)
 val abyte : (FStar.UInt8.t -> Tot bytes)
 let abyte b = Seq.create 1 b
 
-val abyte2 : (FStar.UInt8.t * FStar.UInt8.t) -> Tot bytes
+val abyte2 : (FStar.UInt8.t & FStar.UInt8.t) -> Tot bytes
 let abyte2 (b1, b2) = Seq.append (Seq.create 1 b1) (Seq.create 1 b2)
 
 (*@ assume val get_cbytes : (a:bytes -> (b:cbytes){B (a) = b}) @*)
@@ -93,7 +93,7 @@ assume val get_cbytes : (bytes -> Tot cbytes)
 val cbyte : b:bytes{Seq.length b > 0} -> Tot FStar.UInt8.t
 let cbyte b = Seq.index b 0
 
-val cbyte2 : b:bytes{Seq.length b >= 2} -> Tot (FStar.UInt8.t * FStar.UInt8.t)
+val cbyte2 : b:bytes{Seq.length b >= 2} -> Tot (FStar.UInt8.t & FStar.UInt8.t)
 let cbyte2 b = (Seq.index b 0, Seq.index b 1)
 
 val index : b:bytes -> i:nat{Seq.length b > i} -> Tot FStar.UInt8.t
@@ -124,7 +124,7 @@ assume val xor: l:nat -> lbytes l -> lbytes l -> Tot (lbytes l)
 // consider making the length implicit
 
 val split: b:bytes -> n:nat{n <= Seq.length b} ->
-  Tot (x:(bytes * bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n * lbytes (length b - n))
+  Tot (x:(bytes & bytes) {Seq.length (fst (x))= n /\ Seq.length (snd (x)) == (Seq.length b) - n }) //(lbytes n & lbytes (length b - n))
 //val split: bytes -> nat -> Tot (bytes * bytes)
 let split b (n:nat { n <= Seq.length b}) = Seq.split b n
 
@@ -134,7 +134,7 @@ let lemma_split s i =
   cut (Seq.equal ((fst (split s i)) @| (snd (split s i)))  s)
 
 val split_eq: s:bytes -> i:nat{(0 <= i /\ i <= length s)} -> Pure
-  (x:(bytes * bytes){length (fst x) = i && length (snd x) = length s - i})
+  (x:(bytes & bytes){length (fst x) = i && length (snd x) = length s - i})
   (requires True)
   (ensures (fun x -> ((fst x) @| (snd x) = s)))
 let split_eq s i =
@@ -158,7 +158,7 @@ let append_assoc (l1 l2 l3: bytes): Lemma
   Seq.append_assoc l1 l2 l3
 
 (*@ assume val split2 : (b:bytes -> (i:nat -> ((j:nat){C_pr_GreaterThanOrEqual(Length (b), C_bop_Addition (i, j))} -> (b1:bytes * b2:bytes * b3:bytes){Length (b1) = i /\ Length (b2) = j /\ B (b) = C_bop_ArrayAppend (B (b1), C_bop_ArrayAppend (B (b2), B (b3)))}))) @*)
-assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 * lbytes n2 * lbytes (length b - n1 - n2))
+assume val split2 : b:bytes -> n1:nat{n1 <= Seq.length b} -> n2:nat{n1 + n2 <= Seq.length b} -> Tot (lbytes n1 & lbytes n2 & lbytes (length b - n1 - n2))
 (*@  assume (!x. C_bop_ArrayAppend (x, C_array_of_list C_op_Nil ()) = x) @*)
 
 (*@  assume (!b1. (!b2. (!c1. (!c2. C_bop_ArrayAppend (b1, b2) = C_bop_ArrayAppend (c1, c2) /\ BLength (b1) = BLength (c1) => b1 = c1 /\ b2 = c2)))) @*)

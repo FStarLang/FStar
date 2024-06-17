@@ -416,7 +416,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let etyp () =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ ()])
     in
-    let em cb (x:'a * 'b) : t =
+    let em cb (x:'a & 'b) : t =
         lazy_embed etyp x (fun () ->
         lid_as_constr (PC.lid_Mktuple2)
                       [U_zero; U_zero]
@@ -425,7 +425,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option ('a * 'b) =
+    let un cb (trm:t) : option ('a & 'b) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
@@ -442,7 +442,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let etyp () =
         ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ (); ec.e_typ ()])
     in
-    let em cb ((x1, x2, x3):('a * 'b * 'c)) : t =
+    let em cb ((x1, x2, x3):('a & 'b & 'c)) : t =
         lazy_embed etyp (x1, x2, x3) (fun () ->
         lid_as_constr (PC.lid_Mktuple3)
                       [U_zero; U_zero; U_zero]
@@ -453,7 +453,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option ('a * 'b * 'c) =
+    let un cb (trm:t) : option ('a & 'b & 'c) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->

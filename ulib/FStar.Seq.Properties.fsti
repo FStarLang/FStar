@@ -53,7 +53,7 @@ val lemma_cons_inj: #a:Type -> v1:a -> v2:a -> s1:seq a -> s2:seq a
   -> Lemma (requires (equal (cons v1 s1) (cons v2 s2)))
           (ensures (v1 == v2 /\ equal s1 s2))
 
-let split (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)}) : Tot (seq a * seq a)
+let split (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)}) : Tot (seq a & seq a)
   = slice s 0 i, slice s i (length s)
 
 val lemma_split : #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Lemma
@@ -61,7 +61,7 @@ val lemma_split : #a:Type -> s:seq a -> i:nat{(0 <= i /\ i <= length s)} -> Lemm
 
 let split_eq (#a:Type) (s:seq a) (i:nat{(0 <= i /\ i <= length s)})
 : Pure
-  (seq a * seq a)
+  (seq a & seq a)
   (requires True)
   (ensures (fun x -> (append (fst x) (snd x) == s)))
 = let x = split s i in
@@ -362,7 +362,7 @@ val find_snoc: #a:Type -> s:Seq.seq a -> x:a -> f:(a -> Tot bool)
                                  | None -> find_l f s == None /\ not (f x)
                                  | Some y -> res == find_l f s \/ (f x /\ x==y)))
 
-let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a * a){s == snoc (fst r) (snd r)}) =
+let un_snoc (#a:Type) (s:seq a{length s <> 0}) : Tot (r:(seq a & a){s == snoc (fst r) (snd r)}) =
   let s', a = split s (length s - 1) in
   assert (Seq.equal (snoc s' (Seq.index a 0)) s);
   s', Seq.index a 0

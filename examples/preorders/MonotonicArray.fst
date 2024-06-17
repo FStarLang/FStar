@@ -35,7 +35,7 @@ private type flag =
  * if the flag is Frozen, the sequence is all Some
  *)
 private type repr (a:Type0) (n:nat) :Type0 =
-  t:(Seq.seq (option a) * flag){Seq.length (fst t) = n /\ ((snd t == Frozen) ==> all_some (fst t))}
+  t:(Seq.seq (option a) & flag){Seq.length (fst t) = n /\ ((snd t == Frozen) ==> all_some (fst t))}
 
 (*
  * relation (preorder) between sequences

@@ -56,7 +56,7 @@ let rec fold_right f l x = match l with
   | hd::tl -> f hd (fold_right f tl x)
 
 (* There's no unconditionally total zip like this in Tot.Base, why? Anyway use this *)
-val zip : (#a:Type) -> (#b:Type) -> list a -> list b -> Tac (list (a * b))
+val zip : (#a:Type) -> (#b:Type) -> list a -> list b -> Tac (list (a & b))
 let rec zip #a #b l1 l2 = match l1, l2 with
     | x::xs, y::ys -> (x,y) :: (zip xs ys)
     | _ -> []

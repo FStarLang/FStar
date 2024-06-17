@@ -35,7 +35,7 @@ type msg = Plain.t
 type cipher = b:bytes{B.length b >= ivsize}
 (* MK: minimal cipher length twice blocksize? *)
 
-type mlog_t (r:erid) = m_rref r (seq (msg * cipher)) grows
+type mlog_t (r:erid) = m_rref r (seq (msg & cipher)) grows
 
 val key : Type0
 

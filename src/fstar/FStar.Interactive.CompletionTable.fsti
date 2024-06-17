@@ -46,8 +46,8 @@ val register_open : tbl:table -> is_module:bool -> host_query:query -> included_
 val register_include : tbl:table -> host_query:query -> included_query:query -> table
 val register_module_path : tbl:table -> loaded:bool -> mod_path:string -> mod_query:query -> table
 
-val alist_of_ns_info : ns_info -> list (string * FStar.Json.json)
-val alist_of_mod_info : mod_info -> list (string * FStar.Json.json)
+val alist_of_ns_info : ns_info -> list (string & FStar.Json.json)
+val alist_of_mod_info : mod_info -> list (string & FStar.Json.json)
 
 type completion_result =
   { completion_match_length: int;
@@ -60,4 +60,4 @@ val find_module_or_ns :
 val autocomplete_lid :
   tbl:table -> query:query -> list completion_result
 val autocomplete_mod_or_ns :
-  tbl:table -> query:query -> filter:((path * mod_symbol) -> option (path * mod_symbol)) -> list completion_result
+  tbl:table -> query:query -> filter:((path & mod_symbol) -> option (path & mod_symbol)) -> list completion_result

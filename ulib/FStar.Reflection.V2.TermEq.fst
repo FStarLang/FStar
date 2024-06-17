@@ -537,7 +537,7 @@ and faithful_pattern (p : pattern) : Type0 =
   | Pat_Dot_Term None -> True
   | Pat_Dot_Term (Some t) -> faithful t
 
-and faithful_pattern_arg (pb : pattern * bool) : Type0 =
+and faithful_pattern_arg (pb : pattern & bool) : Type0 =
   faithful_pattern (fst pb)
 
 and faithful_attrs ats : Type0 =

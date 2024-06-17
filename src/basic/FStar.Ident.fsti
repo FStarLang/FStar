@@ -37,7 +37,7 @@ type path = list string
 type ipath = list ident
 
 (** Create an ident *)
-val mk_ident            : (string * range) -> ident
+val mk_ident            : (string & range) -> ident
 
 (** Obtain the range of an ident *)
 val range_of_id         : ident -> range

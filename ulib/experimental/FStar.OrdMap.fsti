@@ -41,7 +41,7 @@ val dom     : #key:eqtype -> #value:Type -> #f:cmp key -> m:ordmap key value f -
 val remove  : #key:eqtype -> #value:Type -> #f:cmp key -> key
               -> ordmap key value f -> Tot (ordmap key value f)
 val choose  : #key:eqtype -> #value:Type -> #f:cmp key -> ordmap key value f
-              -> Tot (option (key * value))
+              -> Tot (option (key & value))
 
 val size    : #key:eqtype -> #value:Type -> #f:cmp key -> ordmap key value f
               -> Tot nat

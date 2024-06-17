@@ -52,7 +52,7 @@ let tc_one_file (remaining:list string) (env:TcEnv.env) = //:((string option * s
 
 type env_t = TcEnv.env
 type modul_t = option Syntax.Syntax.modul
-type stack_t = list (env_t * modul_t)
+type stack_t = list (env_t & modul_t)
 
 // Note: many of these functions are passing env around just for the sake of
 // providing a link to the solver (to avoid a cross-project dependency). They're
@@ -96,10 +96,10 @@ let report_fail () =
 (* Internal data structures for managing chunks of input from the editor                *)
 (****************************************************************************************)
 type input_chunks =
-  | Push of bool * int * int //the bool flag indicates lax flag set from the editor
+  | Push of bool & int & int //the bool flag indicates lax flag set from the editor
   | Pop  of string
-  | Code of string * (string * string)
-  | Info of string * bool * option (string * int * int)
+  | Code of string & (string & string)
+  | Info of string & bool & option (string & int & int)
   | Completions of string
 
 
@@ -244,7 +244,7 @@ let deps_of_our_file filename =
   deps, maybe_intf, dep_graph
 
 (* .fsti name (optional) * .fst name * .fsti recorded timestamp (optional) * .fst recorded timestamp  *)
-type m_timestamps = list (option string * string * option time * time)
+type m_timestamps = list (option string & string & option time & time)
 
 (*
  * type check remaining dependencies and record the timestamps.
@@ -289,7 +289,7 @@ let rec tc_deps (m:modul_t) (stack:stack_t)
  * returns the new stack, environment, and timestamps
  *)
 let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_timestamps)
-  : (stack_t * env_t * m_timestamps) =
+  : (stack_t & env_t & m_timestamps) =
   let is_stale (intf:option string) (impl:string) (intf_t:option time) (impl_t:time) :bool =
     let impl_mt = get_file_last_modification_time impl in
     (is_before impl_t impl_mt ||
@@ -314,7 +314,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
   (ts:m_timestamps) (good_stack:stack_t) (good_ts:m_timestamps) = //:(stack 'env, modul_t * 'env * m_timestamps) =
     //invariant length good_stack = length good_ts, and same for stack and ts
 
-    let match_dep (depnames:list string) (intf:option string) (impl:string) : (bool * list string) =
+    let match_dep (depnames:list string) (intf:option string) (impl:string) : (bool & list string) =
       match intf with
         | None      ->
           (match depnames with
@@ -327,7 +327,7 @@ let update_deps (filename:string) (m:modul_t) (stk:stack_t) (env:env_t) (ts:m_ti
     in
 
     //expected the stack to be in "last dependency first order", we want to pop in the proper order (although should not matter)
-    let rec pop_tc_and_stack (env:env_t) (stack:list (env_t * modul_t)) ts =
+    let rec pop_tc_and_stack (env:env_t) (stack:list (env_t & modul_t)) ts =
       match ts with
         | []    -> (* stack should also be empty here *) env
         | _::ts ->
@@ -365,7 +365,7 @@ let format_info env name typ range (doc: option string) =
      | Some docstring -> Util.format1 "#doc %s" docstring
      | None -> "")
 
-let rec go (line_col:(int*int))
+let rec go (line_col:(int&int))
            (filename:string)
            (stack:stack_t) (curmod:modul_t) (env:env_t) (ts:m_timestamps) : unit = begin
   match shift_chunk () with
@@ -397,7 +397,7 @@ let rec go (line_col:(int*int))
     //search_term is the partially written identifer by the user
     // FIXME a regular expression might be faster than this explicit matching
     let rec measure_anchored_match
-      : list string -> list ident -> option (list ident * int)
+      : list string -> list ident -> option (list ident & int)
       //determines it the candidate may match the search term
       //and, if so, provides an integer measure of the degree of the match
       //Q: isn't the output list ident always the same as the candidate?
@@ -422,7 +422,7 @@ let rec go (line_col:(int*int))
                         Util.map_option (fun (matched, len) -> (hc :: matched, String.length hc_text + 1 + len))
             else None in
     let rec locate_match
-      : list string -> list ident -> option (list ident * list ident * int)
+      : list string -> list ident -> option (list ident & list ident & int)
       = fun needle candidate ->
       match measure_anchored_match needle candidate with
       | Some (matched, n) -> Some ([], matched, n)
@@ -457,7 +457,7 @@ let rec go (line_col:(int*int))
         //In case (b), we find all lidents in the type-checking environment
         //   and rank them by potential matches to the needle
         let case_a_find_transitive_includes (orig_ns:list string) (m:lident) (id:string)
-            : list (list ident * list ident * int)
+            : list (list ident & list ident & int)
             =
             let exported_names = DsEnv.transitive_exported_ids env.dsenv m in
             let matched_length =
@@ -475,7 +475,7 @@ let rec go (line_col:(int*int))
             else None)
         in
         let case_b_find_matches_in_env ()
-          : list (list ident * list ident * int)
+          : list (list ident & list ident & int)
           = let matches = List.filter_map (match_lident_against needle) all_lidents_in_env in
             //Retain only the ones that can be resolved that are resolvable to themselves in dsenv
             matches |> List.filter (fun (ns, id, _) ->

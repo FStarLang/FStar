@@ -53,15 +53,15 @@ module MLSyntax = FStar.Extraction.ML.Syntax
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a * TcEnv.env =
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a & TcEnv.env =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})
 
-let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
+let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a & TcEnv.env) : 'a & uenv =
      let a, t' = f (tcenv_of_uenv e) in
      a, (set_tcenv e t')
 
-let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a * uenv =
+let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a & uenv =
      let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
      a, (set_tcenv e tcenv)
 
@@ -87,7 +87,7 @@ let env_of_tcenv (env:TcEnv.env) =
 (***********************************************************************)
 let parse (env:uenv) (pre_fn: option string) (fn:string)
   : Syntax.modul
-  * uenv =
+  & uenv =
   let ast, _ = Parser.Driver.parse_file fn in
   let ast, env = match pre_fn with
     | None ->
@@ -321,8 +321,8 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    * option MLSyntax.mllib
-    * uenv =
+    & option MLSyntax.mllib
+    & uenv =
   GenSym.reset_gensym();
 
   (*
@@ -498,7 +498,7 @@ let tc_one_file_for_ide
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //threaded along, ONLY for caching purposes at this point
     : tc_result
-    * TcEnv.env_t
+    & TcEnv.env_t
     =
     let env = env_of_tcenv env in
     let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in

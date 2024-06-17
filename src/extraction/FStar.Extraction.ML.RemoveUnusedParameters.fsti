@@ -20,8 +20,8 @@ open FStar.Extraction.ML.Syntax
 
 val env_t : Type0
 val initial_env : env_t
-type tydef = mlsymbol * metadata * either mltyscheme int
+type tydef = mlsymbol & metadata & either mltyscheme int
 val set_current_module (e:env_t) (n:mlpath) : env_t
 
-val elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef
-val elim_mllib (env:env_t) (m:mllib) : env_t * mllib
+val elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef
+val elim_mllib (env:env_t) (m:mllib) : env_t & mllib

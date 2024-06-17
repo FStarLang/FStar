@@ -22,7 +22,7 @@ type split_inv (l:list int) (l1:list int) (l2:list int) =
     (* needed for decreases clause in mergesort function *)
     length l > length l1 /\ length l > length l2
 
-val split: l:list int -> Pure (list int * list int)
+val split: l:list int -> Pure (list int & list int)
              (requires (Cons? l /\ Cons? (Cons?.tl l)))
 	     (ensures (fun r -> split_inv l (fst r) (snd r)))
 let rec split (x::y::l) =

@@ -149,7 +149,7 @@ let do_rewrite
     | Inl e -> traise e
     | Inr tm' -> return tm'
 
-type ctac 'a = 'a -> tac ('a * ctrl_flag)
+type ctac 'a = 'a -> tac ('a & ctrl_flag)
 
 (* Transform a value x with c1, and continue with c2 if needed *)
 let seq_ctac (c1 : ctac 'a) (c2 : ctac 'a)
@@ -171,7 +171,7 @@ let par_combine = function
 (* Transform a value (x, y) with cl and cr respectively.
  * Skip on x will still run c2 on y, but Abort will abort. *)
 let par_ctac (cl : ctac 'a) (cr : ctac 'b)
-  : ctac ('a * 'b)
+  : ctac ('a & 'b)
   = fun (x, y) ->
       let! x, flag = cl x in
       match flag with
@@ -210,7 +210,7 @@ let maybe_rewrite
     (rewriter   : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term * ctrl_flag)
+  : tac (term & ctrl_flag)
   = let! (rw, ctrl_flag) = controller tm in
     let! tm' = 
          if rw
@@ -226,7 +226,7 @@ let rec ctrl_fold_env
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term * ctrl_flag)
+  : tac (term & ctrl_flag)
   = let recurse tm =
       ctrl_fold_env g0 d controller rewriter env tm
     in
@@ -259,7 +259,7 @@ and on_subterms
     (rewriter : rewriter_ty)
     (env : env)
     (tm : term)
-  : tac (term * ctrl_flag)
+  : tac (term & ctrl_flag)
   = let recurse env tm = ctrl_fold_env g0 d controller rewriter env tm in
     let rr = recurse env in (* recurse on current env *)
 
@@ -302,7 +302,7 @@ and on_subterms
           let retyping_subst = NT(bv, bv_to_name bv) :: retyping_subst in
           descend_binders orig (b::accum_binders) retyping_subst (par_combine (accum_flag, flag)) env bs t k rebuild
     in
-    let go () : tac (term' * ctrl_flag) =
+    let go () : tac (term' & ctrl_flag) =
       let tm = SS.compress tm in
       match tm.n with
       (* Run on hd and args in parallel *)
@@ -348,7 +348,7 @@ and on_subterms
        * and do not go into patterns.
        * also ignoring the return annotations *)
       | Tm_match {scrutinee=hd; ret_opt=asc_opt; brs; rc_opt=lopt} ->
-        let c_branch (br:S.branch) : tac (S.branch * ctrl_flag) =
+        let c_branch (br:S.branch) : tac (S.branch & ctrl_flag) =
           let (pat, w, e) = SS.open_branch br in
           let bvs = S.pat_bvs pat in
           let! e, flag = recurse (Env.push_bvs env bvs) e in
@@ -377,7 +377,7 @@ and on_subterms
       (* Descend, in parallel, in *every* definiens and the body.
        * Again body is properly opened, and we don't go into types. *)
      | Tm_let {lbs=(true, lbs); body=e} ->
-       let c_lb (lb:S.letbinding) : tac (S.letbinding * ctrl_flag) =
+       let c_lb (lb:S.letbinding) : tac (S.letbinding & ctrl_flag) =
          let! (def, flag) = rr lb.lbdef in
          return ({lb with lbdef = def }, flag)
        in

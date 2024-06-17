@@ -39,9 +39,9 @@ module RD     = FStar.Reflection.V2.Data
 
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)
-val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
+val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate & term
 
-val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate * term
+val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate & term
 
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStar.Tactics.Builtins.fst` *)
@@ -58,7 +58,7 @@ val norm                   : list Pervasives.norm_step -> tac unit
 val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
 val norm_binding_type      : list Pervasives.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
-val intro_rec              : unit -> tac (RD.binding * RD.binding)
+val intro_rec              : unit -> tac (RD.binding & RD.binding)
 val rename_to              : RD.binding -> string -> tac RD.binding
 val revert                 : unit -> tac unit
 val var_retype             : RD.binding -> tac unit
@@ -78,7 +78,7 @@ val t_trefl                : (*allow_guards:*)bool -> tac unit
 val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv * Z.t))
+val t_destruct             : term -> tac (list (fv & Z.t))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
@@ -102,7 +102,7 @@ val set_urgency            : Z.t -> tac unit
 val set_dump_on_failure    : bool -> tac unit
 val t_commute_applied_match : unit -> tac unit
 val string_to_term         : env -> string -> tac term
-val push_bv_dsenv          : env -> string -> tac (env * RD.binding)
+val push_bv_dsenv          : env -> string -> tac (env & RD.binding)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val term_to_doc            : term -> tac Pprint.document

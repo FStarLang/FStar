@@ -19,7 +19,7 @@ type label =
   | Low
   | High
 
-let ifc (a:Type) = label -> M (option (a * label))
+let ifc (a:Type) = label -> M (option (a & label))
 
 let eq_ifc (a:Type) (f:ifc a) (g:ifc a) =
    forall l. f l == g l

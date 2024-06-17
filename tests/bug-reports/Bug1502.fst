@@ -21,7 +21,7 @@ type ty =
   | TGhost
   | TBuffer
 
-type arg = string * ty
+type arg = string & ty
 
 let is_buffer arg :Tot bool = let _, ty = arg in TBuffer? ty
 

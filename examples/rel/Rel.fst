@@ -58,4 +58,4 @@ let r_eq #t (R x y) = (x == y)
 let diag (#a:Type) (p:a -> Tot Type0) (r:rel a) : Type0 = p (R?.l r) /\ p (R?.r r)
 let diagb (#a:Type) (p:a -> Tot bool) (r:rel a) : Type0 = p (R?.l r) /\ p (R?.r r)
 
-let split (#a #b:Type) (r:rel (a*b)) : Tot (rel a * rel b) = (lift fst r, lift snd r)
+let split (#a #b:Type) (r:rel (a&b)) : Tot (rel a & rel b) = (lift fst r, lift snd r)

@@ -51,7 +51,7 @@ let mk_goal env u o b l = {
     label=l;
 }
 
-let goal_of_goal_ty env typ : goal * guard_t =
+let goal_of_goal_ty env typ : goal & guard_t =
     let u, ctx_uvars, g_u =
         Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None
     in

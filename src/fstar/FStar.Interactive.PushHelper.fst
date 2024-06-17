@@ -64,8 +64,8 @@ The dependencies are a list of file name.  The steps are a list of
 ``repl_task`` elements, to be executed by ``run_repl_task``. **)
 let deps_and_repl_ld_tasks_of_our_file filename
     : list string
-    * list repl_task
-    * FStar.Parser.Dep.deps =
+    & list repl_task
+    & FStar.Parser.Dep.deps =
   let get_mod_name fname =
     Parser.Dep.lowercase_module_name fname in
   let our_mod_name =
@@ -101,7 +101,7 @@ let deps_and_repl_ld_tasks_of_our_file filename
   real_deps, tasks, dep_graph
 
 (** Checkpoint the current (typechecking and desugaring) environment **)
-let snapshot_env env msg : repl_depth_t * env_t =
+let snapshot_env env msg : repl_depth_t & env_t =
   let ctx_depth, env = TypeChecker.Tc.snapshot_context env msg in
   let opt_depth, () = Options.snapshot () in
   (ctx_depth, opt_depth), env
@@ -170,7 +170,7 @@ let tc_one (env:env_t) intf_opt modf =
   env
 
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t * env_t =
+let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t & env_t =
   match task with
   | LDInterleaved (intf, impl) ->
     curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
@@ -247,7 +247,7 @@ let fresh_name_tracking_hooks () =
       (fun _ s -> push_event (NTBinding s)) }
 
 let track_name_changes (env: env_t)
-    : env_t * (env_t -> env_t * list name_tracking_event) =
+    : env_t & (env_t -> env_t & list name_tracking_event) =
   let set_hooks dshooks tchooks env =
     let (), tcenv' = with_dsenv_of_tcenv env (fun dsenv -> (), DsEnv.set_ds_hooks dsenv dshooks) in
     TcEnv.set_tc_hooks tcenv' tchooks in

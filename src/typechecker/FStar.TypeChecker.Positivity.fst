@@ -190,7 +190,7 @@ let ty_occurs_in (ty_lid:lident)
 
 (* Checks if `t` is a name or fv and returns it, if so. *)
 let rec term_as_fv_or_name (t:term) 
-  : option (either (fv * universes) bv)
+  : option (either (fv & universes) bv)
   = match (SS.compress t).n with
     | Tm_name x -> 
       Some (Inr x)

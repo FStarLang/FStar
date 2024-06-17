@@ -64,7 +64,7 @@ let dbg_NormRebuild = Debug.get_toggle "NormRebuild"
  * Higher-Order Symb Comput (2007) 20: 209–230
  **********************************************************************************************)
 
-let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term * BU.time)) =
+let maybe_debug (cfg:Cfg.cfg) (t:term) (dbg:option (term & BU.time)) =
   if cfg.debug.print_normalized
   then match dbg with
        | Some (tm, time_then) ->
@@ -92,33 +92,33 @@ let cases f d = function
  *
  * We compare the cfg with physical equality, so it has to be the
  * exact same object in memory. See read_memo and set_memo below. *)
-type cfg_memo 'a = memo (Cfg.cfg * 'a)
+type cfg_memo 'a = memo (Cfg.cfg & 'a)
 
 let fresh_memo (#a:Type) () : cfg_memo a = BU.mk_ref None
 
 type closure =
-  | Clos of env * term * cfg_memo (env * term) * bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
+  | Clos of env & term & cfg_memo (env & term) & bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
-and env = list (option binder*closure)
+and env = list (option binder&closure)
 
 let empty_env : env = []
 
-let dummy : option binder * closure = None,Dummy
+let dummy : option binder & closure = None,Dummy
 
-type branches = list (pat * option term * term)
+type branches = list (pat & option term & term)
 
 type stack_elt =
- | Arg      of closure * aqual * Range.range
- | UnivArgs of list universe * Range.range // NB: universes must be values already, no bvars allowed
- | MemoLazy of cfg_memo (env * term)
- | Match    of env * option match_returns_ascription * branches * option residual_comp * cfg * Range.range
- | Abs      of env * binders * env * option residual_comp * Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
- | App      of env * term * aqual * Range.range
- | CBVApp   of env * term * aqual * Range.range
- | Meta     of env * S.metadata * Range.range
- | Let      of env * binders * letbinding * Range.range
- | Cfg      of cfg * option (term * BU.time)
+ | Arg      of closure & aqual & Range.range
+ | UnivArgs of list universe & Range.range // NB: universes must be values already, no bvars allowed
+ | MemoLazy of cfg_memo (env & term)
+ | Match    of env & option match_returns_ascription & branches & option residual_comp & cfg & Range.range
+ | Abs      of env & binders & env & option residual_comp & Range.range //the second env is the first one extended with the binders, for reducing the option lcomp
+ | App      of env & term & aqual & Range.range
+ | CBVApp   of env & term & aqual & Range.range
+ | Meta     of env & S.metadata & Range.range
+ | Let      of env & binders & letbinding & Range.range
+ | Cfg      of cfg & option (term & BU.time)
 type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -129,7 +129,7 @@ let cfg_equivalent (c1 c2 : Cfg.cfg) : bool =
   c1.delta_level =? c2.delta_level &&
   c1.normalize_pure_lets =? c2.normalize_pure_lets
 
-let read_memo cfg (r:memo (Cfg.cfg * 'a)) : option 'a =
+let read_memo cfg (r:memo (Cfg.cfg & 'a)) : option 'a =
   match !r with
   (* We only take this memoized value if the cfg matches the current
   one, or if we are running in compatibility mode for it. *)
@@ -137,7 +137,7 @@ let read_memo cfg (r:memo (Cfg.cfg * 'a)) : option 'a =
     Some a
   | _ -> None
 
-let set_memo cfg (r:memo (Cfg.cfg * 'a)) (t:'a) : unit =
+let set_memo cfg (r:memo (Cfg.cfg & 'a)) (t:'a) : unit =
   if cfg.memoize_lazy then begin
     (* We do this only as a sanity check. The only situation where we
      * should set a memo again is when the cfg has changed. *)
@@ -1826,7 +1826,7 @@ and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          end
 
 and reduce_impure_comp cfg env stack (head : term) // monadic term
-                                     (m : either monad_name (monad_name * monad_name))
+                                     (m : either monad_name (monad_name & monad_name))
                                         // relevant monads.
                                         // Inl m - this is a Meta_monadic with monad m
                                         // Inr (m, m') - this is a Meta_monadic_lift with monad m
@@ -2918,7 +2918,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
 
         let rec matches_pat (scrutinee_orig:term) (p:pat)
-          : either (list (bv * term)) bool
+          : either (list (bv & term)) bool
             (* Inl ts: p matches t and ts are bindings for the branch *)
             (* Inr false: p definitely does not match t *)
             (* Inr true: p may match t, but p is an open term and we cannot decide for sure *)
@@ -2942,7 +2942,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 | _ -> Inr (not (is_cons head)) //if it's not a constant, it may match
               end
 
-        and matches_args out (a:args) (p:list (pat * bool)) : either (list (bv * term)) bool = match a, p with
+        and matches_args out (a:args) (p:list (pat & bool)) : either (list (bv & term)) bool = match a, p with
           | [], [] -> Inl out
           | (t, _)::rest_a, (p, _)::rest_p ->
               begin match matches_pat t p with
@@ -3477,8 +3477,8 @@ let unfold_head_once env t =
   | Tm_uinst({n=Tm_fvar fv}, us) -> aux fv us args
   | _ -> None
 
-let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : list binder * comp =
-  let rec aux (retry:bool) (n:int) (t:term) : list binder * comp =
+let get_n_binders' (env:Env.env) (steps : list step) (n:int) (t:term) : list binder & comp =
+  let rec aux (retry:bool) (n:int) (t:term) : list binder & comp =
     let bs, c = U.arrow_formals_comp t in
     let len = List.length bs in
     match bs, c with

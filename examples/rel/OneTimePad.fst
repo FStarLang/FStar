@@ -17,7 +17,7 @@ module OneTimePad
 
 open Bijection
 #reset-options "--z3rlimit 100 --initial_fuel 0 --max_fuel 0 --initial_ifuel 4 --max_ifuel 4"
-let nib = bool * bool * bool * bool
+let nib = bool & bool & bool & bool
 let xor_b (b1:bool) (b2:bool) = b1 <> b2
 let xor (a, b, c, d) (w, x, y, z) = (a `xor_b` w,  b `xor_b` x, c `xor_b` y, d `xor_b` z)
 let xor_properties (x:nib) (y:nib) =
@@ -27,7 +27,7 @@ let xor_properties (x:nib) (y:nib) =
   assert ((x `xor` y) `xor` y = x)
 
 type tape = int -> Tot nib
-type random (a:Type) = (int * (int -> Tot nib)) -> M (a * int)
+type random (a:Type) = (int & (int -> Tot nib)) -> M (a & int)
 let return (a:Type) (x:a) : random a = fun s -> (x, fst s)
 let bind (a b : Type) (x:random a) (f: a -> random b)
   : random b
@@ -47,10 +47,10 @@ total reifiable reflectable new_effect {
 }
 
 effect Rand (a:Type) =
-  RANDOM a (fun initial_tape post -> forall (x:(a * int)). post x)
+  RANDOM a (fun initial_tape post -> forall (x:(a & int)). post x)
 
 
-let one_time_pad () : Rand ((nib -> nib) * (nib -> nib)) =
+let one_time_pad () : Rand ((nib -> nib) & (nib -> nib)) =
   let key = RANDOM?.rand () in
   let encrypt (msg:nib) = msg `xor` key in
   let decrypt (cipher:nib) = cipher `xor` key in

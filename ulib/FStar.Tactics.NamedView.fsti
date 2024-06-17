@@ -71,7 +71,7 @@ type pattern =
  | Pat_Cons {
      head    : fv;
      univs   : option universes;
-     subpats : list (pattern * bool)
+     subpats : list (pattern & bool)
    }
 
  // A pattern-bound *named* variable.

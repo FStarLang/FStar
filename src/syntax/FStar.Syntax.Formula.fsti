@@ -26,9 +26,9 @@ open FStar.Class.Show
 
 type qpats = list args
 type connective =
-    | QAll of binders * qpats * typ
-    | QEx of binders * qpats * typ
-    | BaseConn of lident * args
+    | QAll of binders & qpats & typ
+    | QEx of binders & qpats & typ
+    | BaseConn of lident & args
 
 instance val showable_connective : showable connective
 

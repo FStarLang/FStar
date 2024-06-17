@@ -637,7 +637,7 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FullBufferFinished ->
       write_progress (Some "full-buffer-finished") []
 
-let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool * SS.modul =
+let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool & SS.modul =
   let rec filter decls acc =
     match decls with
     | [] -> false, List.rev acc
@@ -1072,7 +1072,7 @@ let as_json_list (q: (query_status & json) & either repl_state int)
   = let (q, j), s = q in
     (q, [j]), s
 
-let run_query_result = (query_status * list json) * either repl_state int 
+let run_query_result = (query_status & list json) & either repl_state int 
 
 let maybe_cancel_queries st l = 
   let log_cancellation l = 
@@ -1131,7 +1131,7 @@ let validate_query st (q: query) : query =
         | _ -> q
 
 
-let rec run_query st (q: query) : (query_status * list json) * either repl_state int =
+let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
   match q.qq with
   | Exit -> as_json_list (run_exit st)
   | DescribeProtocol -> as_json_list (run_describe_protocol st)

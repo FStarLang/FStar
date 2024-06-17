@@ -64,7 +64,7 @@ val sel : #a:Type ->
 val alloc_ref : h0:heap ->
                 a:Type -> 
 		x:a -> 
-		Tot (rh1:(ref a * heap)
+		Tot (rh1:(ref a & heap)
 			 {~(contains h0 (fst rh1)) /\ 
 			  contains (snd rh1) (fst rh1) /\
 		          sel (snd rh1) (fst rh1) == x /\

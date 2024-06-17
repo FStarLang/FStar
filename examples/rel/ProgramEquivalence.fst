@@ -32,7 +32,7 @@ private type get_t (inv:heap -> fp -> Type0) =
   s:fp -> ST nat (requires (fun h0       -> inv h0 s))
                (ensures  (fun h0 _ h1  -> inv h1 s))
 
-private type ctr_t (inv:heap -> fp -> Type0) = incr_t inv * get_t inv
+private type ctr_t (inv:heap -> fp -> Type0) = incr_t inv & get_t inv
 
 (*
  * main counter type exported to the client, but abstract

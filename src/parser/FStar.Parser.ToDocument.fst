@@ -74,7 +74,7 @@ let rec all (f: 'a -> bool) (l: list 'a): bool =
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all1_explicit (args:list (term*imp)) : bool =
+let all1_explicit (args:list (term&imp)) : bool =
     not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
@@ -308,7 +308,7 @@ type token =
     | Exact     : string    -> token
     | UnicodeOperator
 
-type associativity_level = associativity * list token
+type associativity_level = associativity & list token
 
 let token_to_string = function
     | StartsWith      c -> string_of_char c ^ ".*"
@@ -370,7 +370,7 @@ let level_table =
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int & int & int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -446,8 +446,8 @@ let handleable_op op args =
 // The third parameter in Binders controls whether each binder is
 // paranthesised
 type annotation_style =
-  | Binders of int * int * bool // val f (x1:t1) ... (xn:tn) : C
-  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
+  | Binders of int & int & bool // val f (x1:t1) ... (xn:tn) : C
+  | Arrows of int & int //  val f : x1:t1 -> ... -> xn:tn -> C
 
 // decide whether a type signature can be printed in the format
 //   val f (x1:t1) ... (xn:tn) : C
@@ -504,7 +504,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref (list (string*range))= BU.mk_ref []
+let comment_stack : ref (list (string&range))= BU.mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -1165,7 +1165,7 @@ and p_binder is_atomic b =
 //  2- optionally: a doc for the type annotation (if any), and a function to concat it to the binder
 // When the binder is nameless, the at
 // This does NOT handle typeclass arguments. The wrapping is done from the outside.
-and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option (document * catf) =
+and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (document & catf) =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
   | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
@@ -1626,8 +1626,8 @@ and sig_as_binders_if_possible t extra_space =
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
 // Typeclass arguments are not collapsed.
-and collapse_pats (pats: list (document * document * bool * bool)): list document =
-  let fold_fun (bs: list (list document * document * bool * bool)) (x: document * document * bool * bool) =
+and collapse_pats (pats: list (document & document & bool & bool)): list document =
+  let fold_fun (bs: list (list document & document & bool & bool)) (x: document & document & bool & bool) =
     let b1, t1, tc1, j1 = x in
     match bs with
     | [] -> [([b1], t1, tc1, j1)]
@@ -1638,7 +1638,7 @@ and collapse_pats (pats: list (document * document * bool * bool)): list documen
       else
         ([b1], t1, tc1, j1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list document * document * bool * bool): document =
+  let p_collapsed_binder (cb: list document & document & bool & bool): document =
     let bs, typ, istcarg, _ = cb in
     let body =
       match bs with
@@ -1831,7 +1831,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
   // - optional annotation doc + cat function
   // - whether it was a typeclass arg
   // - whether it is joinable (tc args and meta args are not)
-  let rec accumulate_binders p_Tm e: list ((document * option (document * catf)) * bool * bool) & document =
+  let rec accumulate_binders p_Tm e: list ((document & option (document & catf)) & bool & bool) & document =
     match e.tm with
     | Product(bs, tgt) ->
         let bs_ds = List.map (fun b -> p_binder' true false b, is_tc_binder b, is_joinable_binder b) bs in
@@ -1839,7 +1839,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
         bs_ds@bs_ds', ret
     | _ -> ([], p_Tm e)
   in
-  let fold_fun (bs: list (list document * option (document * catf) * bool * bool)) (x: (document * option (document * catf)) * bool * bool) =
+  let fold_fun (bs: list (list document & option (document & catf) & bool & bool)) (x: (document & option (document & catf)) & bool & bool) =
     let (b1, t1), tc1, j1 = x in
     match bs with
     | [] -> [([b1], t1, tc1, j1)]
@@ -1857,7 +1857,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
         (* Otherwise just make a new group *)
         ([b1], t1, tc1, j1) :: bs
   in
-  let p_collapsed_binder (cb: list document * option (document * catf) * bool * bool): document =
+  let p_collapsed_binder (cb: list document & option (document & catf) & bool & bool): document =
     let bs, t, is_tc, _ = cb in
     match t with
     | None -> begin
@@ -2257,7 +2257,7 @@ let modul_to_document (m:modul) =
   | Interface (_, decls, _) ->
     decls |> List.map decl_to_document |> separate hardline
 
-let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
+let comments_to_document (comments : list (string & FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

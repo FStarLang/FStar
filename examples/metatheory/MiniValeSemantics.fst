@@ -222,7 +222,7 @@ let t_wp = t_post -> t_pre
 let has_wp (c:code) (wp:t_wp) : Type =
   k:t_post -> //for any post-condition
   s0:state -> //and initial state
-  Ghost (state * fuel)
+  Ghost (state & fuel)
     (requires wp k s0) //Given the precondition
     (ensures fun (sM, f0) -> //we can compute the fuel f0 needed so that
       eval_code c f0 s0 == Some sM /\  //eval_code with that fuel returns sM
@@ -284,7 +284,7 @@ let rec vc_sound (cs:list code)
                  (qcs:with_wps cs)
                  (k:state -> Type0)
                  (s0:state)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
     (requires vc_gen cs qcs k s0)
     (ensures fun (sN, fN) -> eval_code (Block cs) fN s0 == Some sN /\ k sN)
   = match qcs with
@@ -310,7 +310,7 @@ let vc_sound' (cs:list code) (qcs:with_wps cs)
 //Instance for Mov
 ////////////////////////////////////////////////////////////////////////////////
 let lemma_Move (s0:state) (dst:operand) (src:operand)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
   (requires OReg? dst)
   (ensures fun (sM, fM) ->
     eval_code (Ins (Mov64 dst src)) fM s0 == Some sM /\
@@ -329,7 +329,7 @@ let wp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
     eval_operand dst sM == eval_operand src s0 ==> k sM
   )
 
-let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
+let hasWp_Move (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state & fuel)
   (requires wp_Move dst src k s0)
   (ensures fun (sM, f0) -> eval_code (Ins (Mov64 dst src)) f0 s0 == Some sM /\ k sM)
   =
@@ -342,7 +342,7 @@ let inst_Move (dst:operand) (src:operand) : with_wp (Ins (Mov64 dst src)) =
 ////////////////////////////////////////////////////////////////////////////////
 //Instance for Add
 ////////////////////////////////////////////////////////////////////////////////
-let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state * fuel)
+let lemma_Add (s0:state) (dst:operand) (src:operand) : Ghost (state & fuel)
   (requires OReg? dst /\ eval_operand dst s0 + eval_operand src s0 < pow2_64)
   (ensures fun (sM, fM) ->
     eval_code (Ins (Add64 dst src)) fM s0 == Some sM /\
@@ -361,7 +361,7 @@ let wp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Type0 =
     eval_operand dst sM == eval_operand dst s0 + eval_operand src s0 ==> k sM
   )
 
-let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state * fuel)
+let hasWp_Add (dst:operand) (src:operand) (k:state -> Type0) (s0:state) : Ghost (state & fuel)
   (requires wp_Add dst src k s0)
   (ensures fun (sM, f0) -> eval_code (Ins (Add64 dst src)) f0 s0 == Some sM /\ k sM)
   =
@@ -391,7 +391,7 @@ let vc_sound_norm
      (qcs:with_wps cs)
      (k:state -> Type0)
      (s0:state)
-  : Ghost (state * fuel)
+  : Ghost (state & fuel)
     (requires
       normal (vc_gen cs qcs k s0))
     (ensures fun (sN, fN) ->

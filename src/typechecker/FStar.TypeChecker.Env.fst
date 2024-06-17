@@ -261,7 +261,7 @@ let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
 
-let query_indices: ref (list (list (lident * int))) = BU.mk_ref [[]]
+let query_indices: ref (list (list (lident & int))) = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -388,7 +388,7 @@ let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     us |> List.mapi (fun i u -> UN (n - i, u))
 
 //Instantiate the universe variables in a type scheme with provided universes
-let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
+let inst_tscheme_with : tscheme -> universes -> universes & term = fun ts us ->
     match ts, us with
     | ([], t), [] -> [], t
     | (formals, t), _ ->
@@ -396,7 +396,7 @@ let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
       us, Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
-let inst_tscheme : tscheme -> universes * term = function
+let inst_tscheme : tscheme -> universes & term = function
     | [], t -> [], t
     | us, t ->
       let us' = us |> List.map (fun _ -> new_u_univ()) in
@@ -569,7 +569,7 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes * typ) * Range.range) =
+let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes & typ) & Range.range) =
   let inst_ts us_opt ts =
     match us_opt with
     | None -> inst_tscheme ts
@@ -901,7 +901,7 @@ let attrs_of_qninfo (qninfo : qninfo) : option (list attribute) =
 let lookup_attrs_of_lid env lid : option (list attribute) =
   attrs_of_qninfo <| lookup_qname env lid
 
-let fv_exists_and_has_attr env fv_lid attr_lid : bool * bool =
+let fv_exists_and_has_attr env fv_lid attr_lid : bool & bool =
     match lookup_attrs_of_lid env fv_lid with
     | None ->
       false, false
@@ -918,7 +918,7 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
-let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
+let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
   let s = string_of_lid (S.lid_of_fv fv) in
   match BU.smap_try_find tab s with
   | None ->
@@ -1215,7 +1215,7 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
+let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
   if lid_equals l1 l2
   then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
@@ -1225,7 +1225,7 @@ let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
         | None -> None
         | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
 
-let join env l1 l2 : (lident * mlift * mlift) =
+let join env l1 l2 : (lident & mlift & mlift) =
   match join_opt env l1 l2 with
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
@@ -1648,7 +1648,7 @@ let update_effect_lattice env src tgt st_mlift =
     //
     //A map where we populate all upper bounds for each pair of effects
     //
-    let ubs : smap (list (lident * lident * lident * mlift * mlift)) =
+    let ubs : smap (list (lident & lident & lident & mlift & mlift)) =
       BU.smap_create 10 in
     let add_ub i j k ik jk =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
@@ -1751,7 +1751,7 @@ let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ (env_: env): env * option (typ * bool) =
+let clear_expected_typ (env_: env): env & option (typ & bool) =
     {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =

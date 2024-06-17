@@ -118,7 +118,7 @@ let dump_symbols (d:decl)
 let push_decl (push_kind:push_kind)
               (with_symbols:bool)
               (write_full_buffer_fragment_progress: fragment_progress -> unit)
-              (ds:decl * code_fragment)              
+              (ds:decl & code_fragment)              
   : qst (list query)
   = let open FStar.Compiler.Range in
     let d, s = ds in

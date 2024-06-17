@@ -251,7 +251,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     (name, metadata, List.rev parameters, mlty)
 
 let elim_tydef_or_decl (env:env_t) (td:tydef)
-  : env_t * tydef
+  : env_t & tydef
   = match td with
     | name, metadata, Inr arity ->
       let remove_typars_list =
@@ -278,7 +278,7 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       in
       env, (name, meta, Inl (params, mlty))
 
-let elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef =
+let elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef =
   if Options.codegen() <> Some Options.FSharp then env, tds else
   let env, tds =
     List.fold_left
@@ -299,7 +299,7 @@ let elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef =
     in the environment and removes them from the definition here *)
 let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
   : env_t
-  * one_mltydecl
+  & one_mltydecl
   = let {tydecl_name=name; tydecl_meta=meta; tydecl_parameters=parameters; tydecl_defn=body} = td in
     let elim_td td =
       match td with

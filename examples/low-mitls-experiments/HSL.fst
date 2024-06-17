@@ -49,7 +49,7 @@ noeq type hsl_state =
               buf:Buffer.buffer u32{Buffer.len buf == len} ->
               p0:reference u32 ->
 	      p1:reference u32 ->
-	      msgs:reference (list (u32 * u32)) ->
+	      msgs:reference (list (u32 & u32)) ->
 	      hsl_state
 
 (* abstract getters *)
@@ -57,7 +57,7 @@ let hsl_get_len (st:hsl_state) :u32 = st.len
 let hsl_get_buf (st:hsl_state) :Buffer.buffer u32 = st.buf
 let hsl_get_p0 (st:hsl_state) :reference u32 = st.p0
 let hsl_get_p1 (st:hsl_state) :reference u32 = st.p1
-let hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32)) = st.msgs
+let hsl_get_msgs (st:hsl_state) :reference (list (u32 & u32)) = st.msgs
 
 (* Finally, the abstract invariant and its elimination *)
 let hsl_invariant (st:hsl_state) (h:mem) = hsl_invariant_predicate st h
@@ -110,8 +110,8 @@ let hsl_create (len:u32{len >^ 0ul})
  * Processes the buffer between p1 and p, one at a time
  * Returns new p0, and updated list of indices
  *)
-private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 * u32))
-  :ST (u32 * list (u32 * u32))
+private let rec aux_process (b:Buffer.buffer u32) (p0 p1 p:u32) (l:list (u32 & u32))
+  :ST (u32 & list (u32 & u32))
       (requires (fun h0 -> Buffer.live h0 b /\
                         p <=^ Buffer.len b /\ p1 <=^ p /\ p0 <=^ p1 /\
                         null_terminator_invariant_helper b p0 p1 h0 /\

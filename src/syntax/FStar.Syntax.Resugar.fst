@@ -142,7 +142,7 @@ type expected_arity = option int
 
 (* GM: This almost never actually returns an expected arity. It does so
 only for subtraction, I think. *)
-let rec resugar_term_as_op (t:S.term) : option (string*expected_arity) =
+let rec resugar_term_as_op (t:S.term) : option (string&expected_arity) =
   let infix_prim_ops = [
     (C.op_Addition    , "+" );
     (C.op_Subtraction , "-" );
@@ -443,7 +443,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | e ->
           List.fold_left (fun acc (x, qual) -> mk (A.App (acc, x, qual))) e args
       in
-      let args : list (S.term * S.aqual) =
+      let args : list (S.term & S.aqual) =
         if Options.print_implicits ()
         then args
         else filter_imp_args args in
@@ -475,7 +475,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         let arg = resugar_term' env (fst (List.hd args)) in
         mk <| Project (arg, Ident.lid_of_ids [fi])
       else
-      let unsnoc (#a:Type) (l : list a) : (list a * a) =
+      let unsnoc (#a:Type) (l : list a) : (list a & a) =
         let rec unsnoc' acc = function
           | [] -> failwith "unsnoc: empty list"
           | [x] -> (List.rev acc, x)
@@ -888,7 +888,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
     A.mk_term a t0.pos A.Un
   in
   (* Returns the non-resugared final relation and the calc_pack *)
-  let resugar_calc_finish (t:S.term) : option (S.term * S.term) =
+  let resugar_calc_finish (t:S.term) : option (S.term & S.term) =
     let hd, args = U.head_and_args t in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some { aqual_implicit = true }); // type
@@ -937,7 +937,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
   in
   (* Resugars an application of calc_step, returning the term, the relation,
    * the justifcation, and the rest of the proof. *)
-  let resugar_step (pack:S.term) : option (S.term * S.term * S.term * S.term) =
+  let resugar_step (pack:S.term) : option (S.term & S.term & S.term & S.term) =
     let hd, args = U.head_and_args pack in
     match (SS.compress (U.un_uinst hd)).n, args with
     | Tm_fvar fv, [(_, Some ({ aqual_implicit = true })); // type
@@ -969,7 +969,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
         None
   in
   (* Repeats the above function until it returns none; what remains should be a calc_init *)
-  let rec resugar_all_steps (pack:S.term) : option (list (S.term * S.term * S.term) * S.term) =
+  let rec resugar_all_steps (pack:S.term) : option (list (S.term & S.term & S.term) & S.term) =
     match resugar_step pack with
     | Some (t, r, j, k) ->
         BU.bind_opt (resugar_all_steps k) (fun (steps, k) ->
@@ -997,7 +997,7 @@ and resugar_calc (env:DsEnv.env) (t0:S.term) : option A.term =
       | _ -> fallback ()
       end
   in
-  let build_calc (rel:S.term) (x0:S.term) (steps : list (S.term * S.term * S.term)) : A.term =
+  let build_calc (rel:S.term) (x0:S.term) (steps : list (S.term & S.term & S.term)) : A.term =
     let r = resugar_term' env in
     mk (CalcProof (resugar_rel rel, r x0,
                     List.map (fun (z, rel, j) -> CalcStep (resugar_rel rel, r j, r z)) steps))
@@ -1281,7 +1281,7 @@ let resugar_pragma = function
   | S.RestartSolver -> A.RestartSolver
   | S.PrintEffectsGraph -> A.PrintEffectsGraph
 
-let resugar_typ env datacon_ses se : sigelts * A.tycon =
+let resugar_typ env datacon_ses se : sigelts & A.tycon =
   match se.sigel with
   | Sig_inductive_typ {lid=tylid;us=uvs;params=bs;t;ds=datacons} ->
       let current_datacons, other_datacons = datacon_ses |> List.partition (fun se -> match se.sigel with

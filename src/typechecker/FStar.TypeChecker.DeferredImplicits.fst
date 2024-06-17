@@ -52,9 +52,9 @@ let flex_uvar_head t =
     | _ -> failwith "Not a flex-uvar"
 
 type goal_type =
-  | FlexRigid of ctx_uvar * term
-  | FlexFlex of ctx_uvar * ctx_uvar
-  | Can_be_split_into of term * term * ctx_uvar
+  | FlexRigid of ctx_uvar & term
+  | FlexFlex of ctx_uvar & ctx_uvar
+  | Can_be_split_into of term & term & ctx_uvar
   | Imp of ctx_uvar
 
 (*
@@ -210,7 +210,7 @@ let solve_deferred_to_tactic_goals env g =
     (** A unification problem between two terms is presented to
         a tactic as an equality goal between the terms. *)
     let prob_as_implicit (_, reason, prob)
-      : implicit * sigelt =
+      : implicit & sigelt =
       match prob with
       | TProb tp when tp.relation=EQ ->
         let env, _ = Env.clear_expected_typ env in
@@ -279,8 +279,8 @@ let solve_deferred_to_tactic_goals env g =
     (** Each implicit is associated with a sigelt.
         Group them so that all implicits with the same associated sigelt
         are in the same bucket *)
-    let bucketize (is:list (implicit * sigelt)) : list (implicits * sigelt) =
-      let map : BU.smap (implicits * sigelt) = BU.smap_create 17 in
+    let bucketize (is:list (implicit & sigelt)) : list (implicits & sigelt) =
+      let map : BU.smap (implicits & sigelt) = BU.smap_create 17 in
       List.iter
         (fun (i, s) ->
            match U.lid_of_sigelt s with

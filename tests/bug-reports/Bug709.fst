@@ -15,7 +15,7 @@
 *)
 module Bug709
 
-let st (s:Type) (a:Type) = s -> M (a * s)
+let st (s:Type) (a:Type) = s -> M (a & s)
 
 let return_st (s:Type) (a:Type) (x:a) : st s a = fun s0 -> x, s0
 

@@ -30,10 +30,10 @@ type uenv = FStar.Extraction.ML.UEnv.uenv
 
 (* Takes a module an returns whether it is an interface or not,
 and an lid for its name. *)
-val module_or_interface_name : Syntax.modul -> bool * lid
+val module_or_interface_name : Syntax.modul -> bool & lid
 
 (* Uses the dsenv inside the TcEnv.env to run the computation. *)
-val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a * TcEnv.env
+val with_dsenv_of_tcenv : TcEnv.env -> DsEnv.withenv 'a -> 'a & TcEnv.env
 
 (* Initialize a clean environment, built from a dependency graph. The
 graph is used to populate the internal dsenv of the tcenv. *)
@@ -46,7 +46,7 @@ val tc_one_fragment :
     option Syntax.modul ->
     TcEnv.env_t ->
     either FStar.Parser.ParseIt.input_frag FStar.Parser.AST.decl ->
-    option Syntax.modul * TcEnv.env
+    option Syntax.modul & TcEnv.env
 
 (* Load an interface file into the dsenv. *)
 val load_interface_decls :
@@ -60,7 +60,7 @@ val tc_one_file :
     option string ->
     string ->
     FStar.Parser.Dep.parsing_data ->
-    tc_result * option FStar.Extraction.ML.Syntax.mllib * uenv
+    tc_result & option FStar.Extraction.ML.Syntax.mllib & uenv
 
 (* A thin wrapper for tc_one_file, called by the interactive mode.
 Basically discards any information about extraction. *)
@@ -69,7 +69,7 @@ val tc_one_file_for_ide :
     option string ->
     string ->
     FStar.Parser.Dep.parsing_data ->
-    tc_result * TcEnv.env_t
+    tc_result & TcEnv.env_t
 
 (* [needs_interleaving s1 s2] is when s1 and s2 are (resp.) the filenames
 for the interface and implementation of a (single) module. *)
@@ -82,4 +82,4 @@ val needs_interleaving :
 val batch_mode_tc :
     list string ->
     FStar.Parser.Dep.deps ->
-    list tc_result * uenv * (uenv -> uenv)
+    list tc_result & uenv & (uenv -> uenv)

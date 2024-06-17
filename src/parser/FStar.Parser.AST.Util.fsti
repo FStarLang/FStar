@@ -29,7 +29,7 @@ val lidents_of_decl (t:decl) : list FStar.Ident.lident
 
 type open_namespaces_and_abbreviations = {
    open_namespaces: list FStar.Ident.lident;
-   module_abbreviations: list (FStar.Ident.ident * FStar.Ident.lident);
+   module_abbreviations: list (FStar.Ident.ident & FStar.Ident.lident);
 }
 
 type error_message = {

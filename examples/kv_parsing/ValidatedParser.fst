@@ -108,7 +108,7 @@ let fold_left_buffer #t f acc b =
 
 #reset-options "--z3rlimit 30 --max_fuel 1 --max_ifuel 1"
 
-val parse_num_entries_valid : input:bslice -> Stack (U32.t * off:U32.t{U32.v off <= U32.v input.len})
+val parse_num_entries_valid : input:bslice -> Stack (U32.t & off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_abstract_store bs))))
@@ -137,7 +137,7 @@ let parse_num_entries_valid input =
   admit();
   (len, off)
 
-let parse_entry_st_nochk : input:bslice -> Stack (entry_st * off:U32.t{U32.v off <= U32.v input.len})
+let parse_entry_st_nochk : input:bslice -> Stack (entry_st & off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                     Some? (parse_entry bs))))
@@ -168,7 +168,7 @@ let parse_many_next (#t:Type) (p:parser t) (n:nat{n>0}) (bs:bytes{length bs < po
                     vs' == List.tail vs)))) =
   ()
 
-val parse_one_entry : n:U32.t{U32.v n > 0} -> input:bslice -> Stack (entry_st * off:U32.t{U32.v off <= U32.v input.len})
+val parse_one_entry : n:U32.t{U32.v n > 0} -> input:bslice -> Stack (entry_st & off:U32.t{U32.v off <= U32.v input.len})
   (requires (fun h0 -> live h0 input /\
                     (let bs = as_seq h0 input in
                      let n = U32.v n in

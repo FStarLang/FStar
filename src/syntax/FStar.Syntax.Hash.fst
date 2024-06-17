@@ -85,7 +85,7 @@ let hash_doc (d : Pprint.document) : mm H.hash_code =
 let hash_doc_list (ds : list Pprint.document) : mm H.hash_code =
   hash_list hash_doc ds
 
-let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a * 'b))
+let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a & 'b))
   : mm H.hash_code
   = mix (h (fst x)) (i (snd x))
 

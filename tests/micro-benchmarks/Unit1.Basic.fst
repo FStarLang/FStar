@@ -120,7 +120,7 @@ let hd_pure_alt = function
 val dup_pure: x:'a -> Tot ('a * 'a)
 let dup_pure x = (x,x)
 
-val dup_pure_eq: #a:eqtype -> x:a -> Pure (a * a) True
+val dup_pure_eq: #a:eqtype -> x:a -> Pure (a & a) True
                               (fun y -> b2t (Mktuple2?._1 y=Mktuple2?._2 y))
 let dup_pure_eq #a x = (x,x)
 
@@ -188,7 +188,7 @@ let test_impure l m =  lm_corr (l - 1) (unsafe_slice (impure m) 1 l)
 
 type mlist =
   | N
-  | C of (nat * mlist)
+  | C of (nat & mlist)
 
 val zero_list: l:mlist -> Tot bool
 let rec zero_list l = match l with

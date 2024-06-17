@@ -57,7 +57,7 @@ val liat (#a:eqtype) (#f:cmp a) (s: ordset a f{s <> empty}) : Tot (l:ordset a f{
     (if tail s <> empty then (l <> empty) && (head s = head l) else true)
   })
 
-val unsnoc (#a:eqtype) (#f:cmp a) (s: ordset a f{s <> empty}) : Tot (p:(ordset a f * a){
+val unsnoc (#a:eqtype) (#f:cmp a) (s: ordset a f{s <> empty}) : Tot (p:(ordset a f & a){
     p = (liat s, last s) 
   }) 
 

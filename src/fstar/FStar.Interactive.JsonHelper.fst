@@ -39,7 +39,7 @@ let try_assoc (key: string) (d: assoct) =
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
 exception InvalidQuery of string // Only in IDE
-exception UnexpectedJsonType of string * json
+exception UnexpectedJsonType of string & json
 exception MalformedHeader
 exception InputExhausted
 
@@ -116,12 +116,12 @@ let js_txdoc_item : json -> txdoc_item = function
   | other -> js_fail "dictionary" other
 
 // May throw, argument is of the form { "textDocument" : {"uri" : ... } }
-let js_txdoc_id (r: list (string * json)) : string =
+let js_txdoc_id (r: list (string & json)) : string =
   uri_to_path (assoc "uri" (arg "textDocument" r |> js_assoc) |> js_str)
 
 // May throw; argument is of the form { "textDocument" : ...,
 //                                      "position" : { "line" : ..., "character" : ... } }
-let js_txdoc_pos (r: list (string * json)) : txdoc_pos =
+let js_txdoc_pos (r: list (string & json)) : txdoc_pos =
   let pos = arg "position" r |> js_assoc in
   { path = js_txdoc_id r;
     line = assoc "line" pos |> js_int;
@@ -146,7 +146,7 @@ let js_contentch : json -> string = function
   | JsonList l -> List.hd (List.map (fun (JsonAssoc a) -> assoc "text" a |> js_str) l)
   | other -> js_fail "dictionary" other
 
-type rng = { rng_start: int * int; rng_end: int * int }
+type rng = { rng_start: int & int; rng_end: int & int }
 
 // May throw
 let js_rng : json -> rng = function

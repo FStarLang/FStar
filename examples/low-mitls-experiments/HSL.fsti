@@ -54,7 +54,7 @@ val hsl_get_len (st:hsl_state) :u32
 val hsl_get_buf (st:hsl_state) :Buffer.buffer u32
 val hsl_get_p0 (st:hsl_state) :reference u32
 val hsl_get_p1 (st:hsl_state) :reference u32
-val hsl_get_msgs (st:hsl_state) :reference (list (u32 * u32))
+val hsl_get_msgs (st:hsl_state) :reference (list (u32 & u32))
 
 (* Liveness and disjointness *)
 [@"opaque_to_smt"]
@@ -95,7 +95,7 @@ unfold private let null_terminator_invariant (st:hsl_state) (h:mem{liveness_and_
  *)
 [@"opaque_to_smt"]
 unfold private let msgs_list_invariant_helper
-  (buf:Buffer.buffer u32) (l:list (u32 * u32)) (p0:u32{p0 <=^ Buffer.len buf}) (h:mem)
+  (buf:Buffer.buffer u32) (l:list (u32 & u32)) (p0:u32{p0 <=^ Buffer.len buf}) (h:mem)
   = forall (i j:u32). List.Tot.mem (i, j) l ==>  //if (i, j) is in the list
                  (i <^ j /\ j <^ p0 /\  //then both lie before p0
 		  (let subseq_size = j -^ i in

@@ -25,7 +25,7 @@ open FStar.Json
 open FStar.Compiler.Util
 
 // Type of an associative array
-type assoct = list (string * json)
+type assoct = list (string & json)
 
 val try_assoc : string -> assoct -> option json // nothrow
 val assoc : string -> assoct -> json // throw
@@ -33,7 +33,7 @@ val assoc : string -> assoct -> json // throw
 // All exceptions are guaranteed to be caught in the LSP server implementation
 exception MissingKey of string // Only in LSP
 exception InvalidQuery of string // Only in IDE
-exception UnexpectedJsonType of string * json
+exception UnexpectedJsonType of string & json
 exception MalformedHeader
 exception InputExhausted
 
@@ -67,7 +67,7 @@ val js_wsch_event : json -> wsch_event
 val js_contentch : json -> string
 
 type lquery =
-| Initialize of int * string
+| Initialize of int & string
 | Initialized
 | Shutdown
 | Exit
@@ -78,12 +78,12 @@ type lquery =
 | Symbol of string
 | ExecCommand of string
 | DidOpen of txdoc_item
-| DidChange of string * string
+| DidChange of string & string
 | WillSave of string
 | WillSaveWait of string
-| DidSave of string * string
+| DidSave of string & string
 | DidClose of string
-| Completion of txdoc_pos * completion_context
+| Completion of txdoc_pos & completion_context
 | Resolve
 | Hover of txdoc_pos
 | SignatureHelp of txdoc_pos
@@ -157,7 +157,7 @@ val js_servcap : json
 val js_loclink : Range.range -> json
 
 // Convert txdoc_pos into (filename, line, col)
-val pos_munge : txdoc_pos -> string * int * int
+val pos_munge : txdoc_pos -> string & int & int
 
 // Build a JSON diagnostic
 val js_diag : string -> string -> option Range.range -> assoct

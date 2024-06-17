@@ -45,15 +45,15 @@ module FC = FStar.Const
 (* COPY-PASTED ****************************************************************)
 
 type decl =
-  | DGlobal of list flag * lident * int * typ * expr
-  | DFunction of option cc * list flag * int * typ * lident * list binder * expr
-  | DTypeAlias of lident * list flag * int * typ
-  | DTypeFlat of lident * list flag * int * fields_t
-  | DUnusedRetainedForBackwardsCompat of option cc * list flag * lident * typ
-  | DTypeVariant of lident * list flag * int * branches_t
+  | DGlobal of list flag & lident & int & typ & expr
+  | DFunction of option cc & list flag & int & typ & lident & list binder & expr
+  | DTypeAlias of lident & list flag & int & typ
+  | DTypeFlat of lident & list flag & int & fields_t
+  | DUnusedRetainedForBackwardsCompat of option cc & list flag & lident & typ
+  | DTypeVariant of lident & list flag & int & branches_t
   | DTypeAbstractStruct of lident
-  | DExternal of option cc * list flag * lident * typ * list ident
-  | DUntaggedUnion of lident * list flag * int * list (ident * typ)
+  | DExternal of option cc & list flag & lident & typ & list ident
+  | DUntaggedUnion of lident & list flag & int & list (ident & typ)
 
 and cc =
   | StdCall
@@ -61,10 +61,10 @@ and cc =
   | FastCall
 
 and fields_t =
-  list (ident * (typ * bool))
+  list (ident & (typ & bool))
 
 and branches_t =
-  list (ident * fields_t)
+  list (ident & fields_t)
 
 and flag =
   | Private
@@ -95,45 +95,45 @@ and expr =
   | EQualified of lident
   | EConstant of constant
   | EUnit
-  | EApp of expr * list expr
-  | ETypApp of expr * list typ
-  | ELet of binder * expr * expr
-  | EIfThenElse of expr * expr * expr
+  | EApp of expr & list expr
+  | ETypApp of expr & list typ
+  | ELet of binder & expr & expr
+  | EIfThenElse of expr & expr & expr
   | ESequence of list expr
-  | EAssign of expr * expr
+  | EAssign of expr & expr
   | (** left expression can only be a EBound of EOpen *)
-    EBufCreate of lifetime * expr * expr
-  | EBufRead of expr * expr
-  | EBufWrite of expr * expr * expr
-  | EBufSub of expr * expr
-  | EBufBlit of expr * expr * expr * expr * expr
-  | EMatch of expr * branches
-  | EOp of op * width
-  | ECast of expr * typ
+    EBufCreate of lifetime & expr & expr
+  | EBufRead of expr & expr
+  | EBufWrite of expr & expr & expr
+  | EBufSub of expr & expr
+  | EBufBlit of expr & expr & expr & expr & expr
+  | EMatch of expr & branches
+  | EOp of op & width
+  | ECast of expr & typ
   | EPushFrame
   | EPopFrame
   | EBool of bool
   | EAny
   | EAbort
   | EReturn of expr
-  | EFlat of typ * list (ident * expr)
-  | EField of typ * expr * ident
-  | EWhile of expr * expr
-  | EBufCreateL of lifetime * list expr
+  | EFlat of typ & list (ident & expr)
+  | EField of typ & expr & ident
+  | EWhile of expr & expr
+  | EBufCreateL of lifetime & list expr
   | ETuple of list expr
-  | ECons of typ * ident * list expr
-  | EBufFill of expr * expr * expr
+  | ECons of typ & ident & list expr
+  | EBufFill of expr & expr & expr
   | EString of string
-  | EFun of list binder * expr * typ
+  | EFun of list binder & expr & typ
   | EAbortS of string
   | EBufFree of expr
-  | EBufCreateNoInit of lifetime * expr
-  | EAbortT of string * typ
-  | EComment of string * expr * string
+  | EBufCreateNoInit of lifetime & expr
+  | EAbortT of string & typ
+  | EComment of string & expr & string
   | EStandaloneComment of string
   | EAddrOf of expr
   | EBufNull of typ
-  | EBufDiff of expr * expr
+  | EBufDiff of expr & expr
 
 and op =
   | Add | AddW | Sub | SubW | Div | DivW | Mult | MultW | Mod
@@ -145,15 +145,15 @@ and branches =
   list branch
 
 and branch =
-  pattern * expr
+  pattern & expr
 
 and pattern =
   | PUnit
   | PBool of bool
   | PVar of binder
-  | PCons of (ident * list pattern)
+  | PCons of (ident & list pattern)
   | PTuple of list pattern
-  | PRecord of list (ident * pattern)
+  | PRecord of list (ident & pattern)
   | PConstant of constant
 
 and width =
@@ -163,7 +163,7 @@ and width =
   | CInt
   | SizeT | PtrdiffT
 
-and constant = width * string
+and constant = width & string
 
 (* a De Bruijn index *)
 and var = int
@@ -178,7 +178,7 @@ and binder = {
 and ident = string
 
 and lident =
-  list ident * ident
+  list ident & ident
 
 and typ =
   | TInt of width
@@ -187,12 +187,12 @@ and typ =
   | TQualified of lident
   | TBool
   | TAny
-  | TArrow of typ * typ
+  | TArrow of typ & typ
   | TBound of int
-  | TApp of lident * list typ
+  | TApp of lident & list typ
   | TTuple of list typ
   | TConstBuf of typ
-  | TArray of typ * constant
+  | TArray of typ & constant
 
 
 let current_version: version = 28
@@ -1293,7 +1293,7 @@ let translate_decl env d: list decl =
       BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module (m : mlpath * option (mlsig * mlmodule) * mllib) : file =
+let translate_module (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
   let (module_name, modul, _) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with

@@ -66,7 +66,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type intf_and_impl = option string * option string
+type intf_and_impl = option string & option string
 
 type files_for_module_name = smap intf_and_impl
 
@@ -172,10 +172,10 @@ type dependence_graph = //maps file names to the modules it depends on
  *)
 type parsing_data_elt =
   | P_begin_module of lident  //begin_module
-  | P_open of bool * lident  //record_open
-  | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
-  | P_dep of bool * lident  //add_dep_on_module, bool=true iff it's a friend dependency
-  | P_alias of ident * lident  //record_module_alias
+  | P_open of bool & lident  //record_open
+  | P_implicit_open_module_or_namespace of (open_kind & lid)  //record_open_module_or_namespace
+  | P_dep of bool & lident  //add_dep_on_module, bool=true iff it's a friend dependency
+  | P_alias of ident & lident  //record_module_alias
   | P_lid of lident  //record_lid
   | P_inline_for_extraction
 
@@ -436,7 +436,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
-let build_inclusion_candidates_list (): list (string * string) =
+let build_inclusion_candidates_list (): list (string & string) =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
@@ -609,9 +609,9 @@ let collect_one
   (original_map: files_for_module_name)
   (filename: string)
   (get_parsing_data_from_cache:string -> option parsing_data)
-  : parsing_data *
-    list dependence *  //direct dependence
-    bool *  //has_inline_for_extraction
+  : parsing_data &
+    list dependence &  //direct dependence
+    bool &  //has_inline_for_extraction
     list dependence  //additional roots
                       //that used to be part of parsing_data earlier
                       //removing it from the cache (#1657)
@@ -623,8 +623,8 @@ let collect_one
    *   or constructed after AST traversal of the module
    *)
   let from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
-    : list dependence *
-      bool *
+    : list dependence &
+      bool &
       list dependence
     =  let deps     : ref (list dependence) = BU.mk_ref [] in
        let has_inline_for_extraction = BU.mk_ref false in
@@ -1197,10 +1197,10 @@ let collect_one
  * map lowercase module names to filenames. *)
 
 // Used by F*.js
-let collect_one_cache : ref (smap (list dependence * list dependence * bool)) =
+let collect_one_cache : ref (smap (list dependence & list dependence & bool)) =
   BU.mk_ref (BU.smap_create 0)
 
-let set_collect_one_cache (cache: smap (list dependence * list dependence * bool)) : unit =
+let set_collect_one_cache (cache: smap (list dependence & list dependence & bool)) : unit =
   collect_one_cache := cache
 
 let dep_graph_copy dep_graph =
@@ -1238,7 +1238,7 @@ let topological_dependences_of'
         root_files
         widened
     : list file_name
-    * bool =
+    & bool =
     let rec all_friend_deps_1
             dep_graph
             (cycle:list file_name)
@@ -1392,7 +1392,7 @@ let topological_dependences_of
         root_files
         for_extraction
     : list file_name
-    * bool =
+    & bool =
 
     let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
@@ -1416,7 +1416,7 @@ let all_files_in_include_paths () =
 let collect (all_cmd_line_files: list file_name)
             (get_parsing_data_from_cache:string -> option parsing_data)
     : list file_name
-    * deps //topologically sorted transitive dependences of all_cmd_line_files
+    & deps //topologically sorted transitive dependences of all_cmd_line_files
     =
   let all_cmd_line_files =
     match all_cmd_line_files with
@@ -1621,7 +1621,7 @@ let deps_of_modul deps (m:module_name) : list module_name =
     |> BU.dflt []
 
 (* In public interface *)
-let print_digest (dig:list (string * string)) : string =
+let print_digest (dig:list (string & string)) : string =
     dig
     |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
     |> String.concat "\n"

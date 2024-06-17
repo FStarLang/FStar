@@ -35,7 +35,7 @@ module TcEnv = FStar.TypeChecker.Env
 (* Request *)
 
 // nothrow
-let unpack_lsp_query (r : list (string * json)) : lsp_query =
+let unpack_lsp_query (r : list (string & json)) : lsp_query =
   let qid = try_assoc "id" r |> U.map_option js_str_int in // noexcept
 
   // If we make it this far, exceptions will come with qid info.
@@ -128,7 +128,7 @@ type optresponse = option assoct // Contains [("result", ...)], [("error", ...)]
 type either_gst_exit = either grepl_state int // grepl_state is independent of exit_code
 
 let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bool)
-  : optresponse * either_gst_exit =
+  : optresponse & either_gst_exit =
   let aux () =
     PI.add_vfs_entry fname text;
     let diag, st' = PH.full_lax text (repl_state_init fname) in
@@ -140,7 +140,7 @@ let invoke_full_lax (gst: grepl_state) (fname: string) (text: string) (force: bo
  | Some _ -> if force then aux () else None, Inl gst
  | None -> aux ()
 
-let run_query (gst: grepl_state) (q: lquery) : optresponse * either_gst_exit =
+let run_query (gst: grepl_state) (q: lquery) : optresponse & either_gst_exit =
   match q with
   | Initialize (_, _) -> resultResponse js_servcap, Inl gst
   | Initialized -> None, Inl gst

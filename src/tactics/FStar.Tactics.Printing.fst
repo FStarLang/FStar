@@ -50,7 +50,7 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
 
-let unshadow (bs : binders) (t : term) : binders * term =
+let unshadow (bs : binders) (t : term) : binders & term =
     (* string name of a bv *)
     let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
@@ -77,7 +77,7 @@ let unshadow (bs : binders) (t : term) : binders * term =
     in
     go [] [] bs [] t
 
-let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofstate) (g:goal) : string =
+let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : string =
     let w =
         if Options.print_implicits ()
         then term_to_string (goal_env g) (goal_witness g)

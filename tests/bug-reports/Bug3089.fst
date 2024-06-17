@@ -15,12 +15,12 @@ module List = FStar.List.Tot
 let rec row (l: list eqtype): Type =
   match l with
   | [] -> unit
-  | t :: ts -> t * row ts
+  | t :: ts -> t & row ts
 
 let rec index (l: list eqtype) (r: row l) (i: nat { i < List.length l}): List.index l i =
   match l with
   | t :: ts ->
-    let r': t * row (List.tl l) = r in
+    let r': t & row (List.tl l) = r in
     match r' with
     | (r0, rs) ->
       if i = 0

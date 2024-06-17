@@ -28,7 +28,7 @@ exception E3 of ((exn -> int) -> int)
 exception E4 of exn * (exn -> int)
 
 [@@(expect_failure [3])]
-exception E5 of exn * (exn -> exn)
+exception E5 of exn & (exn -> exn)
 
 (* Here's how to exploit it if it succeeded: *)
 
@@ -45,5 +45,5 @@ exception E5 of exn * (exn -> exn)
 exception G0 of int
 exception G1 of exn
 exception G2 of (int -> exn)
-exception G3 of (int -> exn * exn)
-exception G4 of (int -> exn) * exn
+exception G3 of (int -> exn & exn)
+exception G4 of (int -> exn) & exn

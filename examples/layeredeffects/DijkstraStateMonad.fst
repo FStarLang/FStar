@@ -41,7 +41,7 @@ let rec bind_m #s #a #b (x:m s a) (y: (a -> m s b)) : m s b =
 
 
 /// A postcondition is a predicate relating a result and final state
-let post_t (s:Type0) (a:Type) = a * s -> Type0
+let post_t (s:Type0) (a:Type) = a & s -> Type0
 
 /// A precondition is a predicate on the initial state (we don't
 /// really use this type in what follows)
@@ -87,7 +87,7 @@ let rec wp_of #a #s (x:m s a)
 /// We prove the soundness of the wp semantics by giving it a model in
 /// terms of F*'s pure computations
 let rec run (#a:_) (#s:_) (m:m s a) (s0:s) (post: post_t s a)
-  : Pure (a * s)
+  : Pure (a & s)
          (requires
            wp_of m s0 post)
          (ensures

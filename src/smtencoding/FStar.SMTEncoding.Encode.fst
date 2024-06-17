@@ -67,7 +67,7 @@ let norm_with_steps steps env t =
       "FStar.SMTEncoding.Encode.norm"
 
 type prims_t = {
-    mk:lident -> string -> term * int * list decl;
+    mk:lident -> string -> term & int & list decl;
     is:lident -> bool;
 }
 
@@ -83,7 +83,7 @@ let prims =
     let asym, a = fresh_fvar module_name "a" Term_sort in
     let xsym, x = fresh_fvar module_name "x" Term_sort in
     let ysym, y = fresh_fvar module_name "y" Term_sort in
-    let quant (rel:defn_rel_type) vars body : Range.range -> string -> term * int * list decl = fun rng x ->
+    let quant (rel:defn_rel_type) vars body : Range.range -> string -> term & int & list decl = fun rng x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map fv_sort, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
@@ -162,7 +162,7 @@ let prims =
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
-    let mk : lident -> string -> term * int * list decl =
+    let mk : lident -> string -> term & int & list decl =
         fun l v ->
             prims |>
             List.find (fun (l', _) -> lid_equals l l') |>
@@ -376,7 +376,7 @@ let encode_smt_lemma env fv t =
     decls@([Util.mkAssume(form, Some ("Lemma: " ^ (string_of_lid lid)), ("lemma_"^(string_of_lid lid)))]
            |> mk_decls_trivial)
 
-let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
+let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
     let lid = fv.fv_name.v in
     if not <| (U.is_pure_or_ghost_function t_norm || is_smt_reifiable_function env.tcenv t_norm)
     || U.is_lemma t_norm
@@ -550,7 +550,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t * env_t =
               g, env
 
 
-let declare_top_level_let env x t t_norm : fvar_binding * decls_t * env_t =
+let declare_top_level_let env x t t_norm : fvar_binding & decls_t & env_t =
   match lookup_fvar_binding env x.fv_name.v with
   (* Need to introduce a new name decl *)
   | None ->
@@ -595,7 +595,7 @@ exception Let_rec_unencodeable
 let copy_env (en:env_t) = { en with global_cache = BU.smap_copy en.global_cache}  //Make a copy of all the mutable state of env_t, central place for keeping track of mutable fields in env_t
 
 let encode_top_level_let :
-    env_t -> (bool * list letbinding) -> list qualifier -> decls_t * env_t =
+    env_t -> (bool & list letbinding) -> list qualifier -> decls_t & env_t =
     fun env (is_rec, bindings) quals ->
 
     let eta_expand binders formals body t =
@@ -620,8 +620,8 @@ let encode_top_level_let :
 
     let destruct_bound_function t e
       : (S.binders    //arguments of the (possibly reified) lambda abstraction
-       * S.term       //body of the (possibly reified) lambda abstraction
-       * S.comp)      //result comp
+       & S.term       //body of the (possibly reified) lambda abstraction
+       & S.comp)      //result comp
 //       * bool         //if set, we should generate a curried application of f
     =
       (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
@@ -1010,7 +1010,7 @@ let encode_top_level_let :
       [decl] |> mk_decls_trivial, env
 
 let encode_sig_inductive (env:env_t) (se:sigelt)
-: decls_t * env_t
+: decls_t & env_t
 = let Sig_inductive_typ
         { lid=t; us=universe_names; params=tps;
           t=k; ds=datas; injective_type_params } = se.sigel in 
@@ -1141,7 +1141,7 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
   (decls |> mk_decls_trivial)@binder_decls@aux, env
 
 let encode_datacon (env:env_t) (se:sigelt)
-: decls_t * env_t
+: decls_t & env_t
 = let Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
   let quals = se.sigquals in
   let t = norm_before_encoding env t in
@@ -1467,7 +1467,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   (datacons |> mk_decls_trivial) @ g, env
 
 
-let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
+let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
     let nm = Print.sigelt_to_string_short se in
     let g, env = Errors.with_ctx (BU.format1 "While encoding top-level declaration `%s`"
                                              (Print.sigelt_to_string_short se))
@@ -1487,7 +1487,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t * env_t) =
                 @([Caption (BU.format1 "</end encoding %s>" nm)] |> mk_decls_trivial) in
     g, env
 
-and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
+and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
     if !dbg_SMTEncoding
     then (BU.print1 "@@@Encoding sigelt %s\n" (Print.sigelt_to_string se));
 
@@ -1738,7 +1738,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t * env_t) =
       in
       (decls |> mk_decls_trivial) @ elts @ rest @ (inversions |> mk_decls_trivial), env
 
-let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t * env_t) =
+let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t) =
      (* Encoding Binding_var and Binding_typ as local constants leads to breakages in hash consing.
 
                Consider:
@@ -1958,9 +1958,9 @@ let encode_modul_from_cache tcenv tcmod (decls, fvbs) =
 open FStar.SMTEncoding.Z3
 let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   : list decl  //prelude, translation of  tcenv
-  * list ErrorReporting.label //labels in the query
-  * decl        //the query itself
-  * list decl  //suffix, evaluating labels in the model, etc.
+  & list ErrorReporting.label //labels in the query
+  & decl        //the query itself
+  & list decl  //suffix, evaluating labels in the model, etc.
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));

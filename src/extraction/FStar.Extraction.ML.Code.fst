@@ -33,8 +33,8 @@ module BU = FStar.Compiler.Util
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
 type fixity = | Prefix | Postfix | Infix of assoc
-type opprec = int * fixity
-type level  = opprec * assoc
+type opprec = int & fixity
+type level  = opprec & assoc
 
 let t_prio_fun  = (10, Infix Right)
 let t_prio_tpl  = (20, Infix NonAssoc)
@@ -92,7 +92,7 @@ let hbox (d : doc) = d (* FIXME *)
 (*copied from ocaml-asttrans.fs*)
 
 (* -------------------------------------------------------------------- *)
-let rec in_ns (x: (list 'a * list 'a)) : bool = match x with
+let rec in_ns (x: (list 'a & list 'a)) : bool = match x with
     | [], _ -> true
     | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
     | _, _ -> false

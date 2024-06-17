@@ -19,7 +19,7 @@ open FStar.HyperStack.ST
 
 noeq 
 type pkg (a:Type) = 
-  | Pkg : something: (a -> St (a * int))
+  | Pkg : something: (a -> St (a & int))
         -> pkg a
 
 inline_for_extraction

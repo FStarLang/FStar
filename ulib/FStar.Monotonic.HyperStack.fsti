@@ -303,7 +303,7 @@ let upd (#a:Type) (#rel:preorder a) (m:mem) (s:mreference a rel{live_region m (f
     mk_mem rid_ctr h tip
 
 let alloc (#a:Type0) (rel:preorder a) (id:rid) (init:a) (mm:bool) (m:mem{get_hmap m `Map.contains` id})
-  :Tot (p:(mreference a rel * mem){let (r, h) = Heap.alloc rel (get_hmap m `Map.sel` id) init mm in
+  :Tot (p:(mreference a rel & mem){let (r, h) = Heap.alloc rel (get_hmap m `Map.sel` id) init mm in
                                    as_ref (fst p) == r /\
                                    get_hmap (snd p) == Map.upd (get_hmap m) id h})
   = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
@@ -355,7 +355,7 @@ let hs_push_frame (m:mem) :Tot (m':mem{fresh_frame m m'})
 
 let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})
                        (c:option int{None? c \/ is_heap_color (Some?.v c)})
-  :Tot (t:(rid * mem){fresh_region (fst t) m (snd t)})
+  :Tot (t:(rid & mem){fresh_region (fst t) m (snd t)})
   = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
     lemma_is_wf_ctr_and_tip_elim m;
     let new_rid =
@@ -369,7 +369,7 @@ let new_eternal_region (m:mem) (parent:rid{is_eternal_region_hs parent /\ get_hm
 let new_freeable_heap_region
   (m:mem)
   (parent:rid{is_eternal_region_hs parent /\ get_hmap m `Map.contains` parent})  
-: t:(rid * mem){fresh_region (fst t) m (snd t) /\ rid_freeable (fst t)}
+: t:(rid & mem){fresh_region (fst t) m (snd t) /\ rid_freeable (fst t)}
 = let h, rid_ctr, tip = get_hmap m, get_rid_ctr m, get_tip m in
   lemma_is_wf_ctr_and_tip_elim m;
   let new_rid = extend_monochrome_freeable parent rid_ctr true in

@@ -101,8 +101,8 @@ let status_string_and_errors s =
 
 let query_logging =
     let query_number = BU.mk_ref 0 in
-    let log_file_opt : ref (option (out_channel * string)) = BU.mk_ref None in
-    let used_file_names : ref (list (string * int)) = BU.mk_ref [] in
+    let log_file_opt : ref (option (out_channel & string)) = BU.mk_ref None in
+    let used_file_names : ref (list (string & int)) = BU.mk_ref [] in
     let current_module_name : ref (option string) = BU.mk_ref None in
     let current_file_name : ref (option string) = BU.mk_ref None in
     let set_module_name n = current_module_name := Some n in
@@ -353,7 +353,7 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
     in
     let start_tag tag = "<" ^ tag ^ ">" in
     let end_tag tag = "</" ^ tag ^ ">" in
-    let find_section tag lines : option (list string) * list string =
+    let find_section tag lines : option (list string) & list string =
        match until (start_tag tag) lines with
        | None -> None, lines
        | Some (prefix, suffix) ->
@@ -391,7 +391,7 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status * z3statistics =
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -706,7 +706,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
 
 let ask_text
     (r:Range.range)
-    (filter_theory:list decl -> list decl * bool)
+    (filter_theory:list decl -> list decl & bool)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
@@ -722,7 +722,7 @@ let ask_text
 
 let ask
     (r:Range.range)
-    (filter_theory:list decl -> list decl * bool)
+    (filter_theory:list decl -> list decl & bool)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
