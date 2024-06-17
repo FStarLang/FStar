@@ -36,13 +36,13 @@ val warn_on_use_errno    : int
 val defensive_errno      : int
 val call_to_erased_errno : int
 
-val update_flags : list (error_flag * string) -> list error_setting
+val update_flags : list (error_flag & string) -> list error_setting
 
 (* error code, message, source position, and error context *)
-type error = raw_error * error_message * FStar.Compiler.Range.range * list string
+type error = raw_error & error_message & FStar.Compiler.Range.range & list string
 
 exception Error   of error
-exception Err     of raw_error * error_message * list string
+exception Err     of raw_error & error_message & list string
 exception Warning of error
 exception Stop
 exception Empty_frag
@@ -149,7 +149,7 @@ val no_ctx : (f : unit -> 'a) -> 'a
 
 (* Run a given function and return its result (if any) and the full list of
 issues it logged/raised. *)
-val catch_errors : (unit -> 'a) -> list issue * option 'a
+val catch_errors : (unit -> 'a) -> list issue & option 'a
 
 
 (* Similar to catch_errors, except the warnings are not added to the old handler *)
@@ -168,4 +168,4 @@ val catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
-val find_multiset_discrepancy : list int -> list int -> option (int * int * int)
+val find_multiset_discrepancy : list int -> list int -> option (int & int & int)

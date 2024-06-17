@@ -115,7 +115,7 @@ let rec eq_tm (env:env_t) (t1:term) (t2:term) : eq_result =
       | Some (Record_ctor _) -> true
       | _ -> false
     in
-    let heads_and_args_in_case_both_data : option (S.fv * args * S.fv * args * int) =
+    let heads_and_args_in_case_both_data : option (S.fv & args & S.fv & args & int) =
       let head1, args1 = t1 |> unmeta |> head_and_args in
       let head2, args2 = t2 |> unmeta |> head_and_args in
       match (un_uinst head1).n, (un_uinst head2).n with

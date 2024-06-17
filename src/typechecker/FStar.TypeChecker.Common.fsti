@@ -89,9 +89,9 @@ type deferred_reason =
 
 instance val showable_deferred_reason : showable deferred_reason
 
-type deferred = list (deferred_reason * string * prob)
+type deferred = list (deferred_reason & string & prob)
 
-type univ_ineq = universe * universe
+type univ_ineq = universe & universe
 
 (***********************************************************************************)
 (* A table of file -> starting row -> starting col -> identifier info              *)
@@ -110,7 +110,7 @@ type identifier_info = {
 }
 
 type id_info_by_col = //sorted in ascending order of columns
-    list (int * identifier_info)
+    list (int & identifier_info)
 
 type col_info_by_row =
     BU.pimap id_info_by_col
@@ -131,8 +131,8 @@ val mk_by_tactic : term -> term -> term
 val delta_depth_greater_than : delta_depth -> delta_depth -> bool
 val decr_delta_depth : delta_depth -> option delta_depth
 
-val insert_col_info : int -> identifier_info -> list (int * identifier_info) -> list (int * identifier_info)
-val find_nearest_preceding_col_info : int -> list (int * identifier_info) -> option identifier_info
+val insert_col_info : int -> identifier_info -> list (int & identifier_info) -> list (int & identifier_info)
+val find_nearest_preceding_col_info : int -> list (int & identifier_info) -> option identifier_info
 
 val id_info_table_empty : id_info_table
 
@@ -162,7 +162,7 @@ type guard_t = {
   deferred_to_tac: deferred; //This field maintains problems that are to be dispatched to a tactic
                              //They are never attempted by the unification engine in Rel
   deferred:   deferred;
-  univ_ineqs: list universe * list univ_ineq;
+  univ_ineqs: list universe & list univ_ineq;
   implicits:  implicits;
 }
 
@@ -182,16 +182,16 @@ type lcomp = { //a lazy computation
     eff_name: lident;
     res_typ: typ;
     cflags: list cflag;
-    comp_thunk: ref (either (unit -> (comp * guard_t)) comp)
+    comp_thunk: ref (either (unit -> (comp & guard_t)) comp)
 }
 
 val mk_lcomp:
     eff_name: lident ->
     res_typ: typ ->
     cflags: list cflag ->
-    comp_thunk: (unit -> (comp * guard_t)) -> lcomp
+    comp_thunk: (unit -> (comp & guard_t)) -> lcomp
 
-val lcomp_comp: lcomp -> (comp * guard_t)
+val lcomp_comp: lcomp -> (comp & guard_t)
 val apply_lcomp : (comp -> comp) -> (guard_t -> guard_t) -> lcomp -> lcomp
 val lcomp_to_string : lcomp -> string (* CAUTION! can have side effects of forcing the lcomp *)
 val lcomp_set_flags : lcomp -> list S.cflag -> lcomp

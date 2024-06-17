@@ -263,7 +263,7 @@ let proj_label_of (r:labeled_interface u#0) : #a:Type u#0 -> (proj_labeled r) a 
 %splice[proj_label_of_param] (paramd (`%proj_label_of))
 
 let lab_impl : labeled_interface = {
-  labeled = (fun (a:Type) -> a * label);
+  labeled = (fun (a:Type) -> a & label);
   mk_labeled = (fun (#a:Type) (x:a) (l:label) -> (x,l));
   label_of = (fun (#a:Type) x -> snd x);
 }

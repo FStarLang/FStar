@@ -70,8 +70,8 @@ let gt e1 e2 = CompProp e1 C_Gt e2
 let ge e1 e2 = CompProp (Plus (Lit 1) e1) C_Gt e2
 
 (* Define a traversal monad! Makes exception handling and counter-keeping easy *)
-private let st = p:(nat * list term){fst p == List.Tot.Base.length (snd p)}
-private let tm a = st -> Tac (either string (a * st))
+private let st = p:(nat & list term){fst p == List.Tot.Base.length (snd p)}
+private let tm a = st -> Tac (either string (a & st))
 private let return (x:'a) : tm 'a = fun i -> Inr (x, i)
 private let (let!) (m : tm 'a) (f : 'a -> tm 'b) : tm 'b =
     fun i -> match m i with
@@ -101,7 +101,7 @@ let liftM3 f x y z =
     return (f xx yy zz)
 
 
-private let rec find_idx (f : 'a -> Tac bool) (l : list 'a) : Tac (option ((n:nat{n < List.Tot.Base.length l}) * 'a)) =
+private let rec find_idx (f : 'a -> Tac bool) (l : list 'a) : Tac (option ((n:nat{n < List.Tot.Base.length l}) & 'a)) =
     match l with
     | [] -> None
     | x::xs ->
@@ -192,7 +192,7 @@ let is_arith_expr t =
 
 // Cannot use this...
 // val is_arith_prop : term -> tm prop
-val is_arith_prop : term -> st -> Tac (either string (prop * st))
+val is_arith_prop : term -> st -> Tac (either string (prop & st))
 let rec is_arith_prop (t:term) = fun i ->
    (let! f = lift (fun t -> term_as_formula t) t in
     match f with

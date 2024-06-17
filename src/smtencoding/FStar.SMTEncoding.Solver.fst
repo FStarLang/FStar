@@ -157,7 +157,7 @@ let filter_using_facts_from (e:env) (theory:list decl) =
     pruned_theory
 
 let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list decl)
-  :(list decl * bool * int * int) =  //(filtered theory, if core used, retained, pruned)
+  :(list decl & bool & int & int) =  //(filtered theory, if core used, retained, pruned)
     match core with
     | None ->
       filter_using_facts_from e theory, false, 0, 0  //no stats if no core
@@ -746,8 +746,8 @@ let fold_queries (qs:list query_settings)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
 
-let collect (l : list 'a) : list ('a * int) =
-    let acc : list ('a * int) = [] in
+let collect (l : list 'a) : list ('a & int) =
+    let acc : list ('a & int) = [] in
     let rec add_one acc x =
         match acc with
         | [] -> [(x, 1)]
@@ -806,7 +806,7 @@ let make_solver_configs
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
- : (list query_settings * option hint)
+ : (list query_settings & option hint)
  =
     (* Fetch the settings. *)
     let default_settings, next_hint =
@@ -1147,7 +1147,7 @@ let ask_solver
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
- : list query_settings * answer
+ : list query_settings & answer
  =
     (* Prepare the configurations to be used. *)
     let configs, next_hint = make_solver_configs can_split is_retry env all_labels prefix query query_term suffix in
@@ -1259,7 +1259,7 @@ type solver_cfg = {
   seed             : int;
   cliopt           : list string;
   smtopt           : list string;
-  facts            : list (list string * bool);
+  facts            : list (list string & bool);
   valid_intro      : bool;
   valid_elim       : bool;
   z3version        : string;
@@ -1299,7 +1299,7 @@ let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
   h (); r
 
 (* The query_settings list is non-empty unless the query was trivial. *)
-let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings * answer) =
+let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
     maybe_refresh_solver tcenv;
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in

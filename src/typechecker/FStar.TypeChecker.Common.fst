@@ -86,7 +86,7 @@ instance showable_deferred_reason : showable deferred_reason = {
 (*          -- its type                                                            *)
 (***********************************************************************************)
 
-let insert_col_info (col:int) (info:identifier_info) (col_infos:list (int * identifier_info)) =
+let insert_col_info (col:int) (info:identifier_info) (col_infos:list (int & identifier_info)) =
     // Tail recursive helper
     let rec __insert aux rest =
         match rest with
@@ -99,7 +99,7 @@ let insert_col_info (col:int) (info:identifier_info) (col_infos:list (int * iden
      let l, r = __insert [] col_infos
      in (List.rev l) @ r
 
-let find_nearest_preceding_col_info (col:int) (col_infos:list (int * identifier_info)) =
+let find_nearest_preceding_col_info (col:int) (col_infos:list (int & identifier_info)) =
     let rec aux out = function
         | [] -> out
         | (c, i)::rest ->

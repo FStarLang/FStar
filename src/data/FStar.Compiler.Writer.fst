@@ -6,7 +6,7 @@ open FStar.Class.Monad
 let writer_return #m {| monoid m |} #a (x:a) : writer m a =
   Wr (mzero, x)
 
-let run_writer #m {| monoid m |} #a (x : writer m a) : m * a =
+let run_writer #m {| monoid m |} #a (x : writer m a) : m & a =
   let Wr (m, x) = x in
   (m, x)
 

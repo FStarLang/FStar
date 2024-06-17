@@ -56,7 +56,7 @@ val norm                   : list Pervasives.norm_step -> tac unit
 val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
 val norm_binder_type       : list Pervasives.norm_step -> binder -> tac unit
 val intro                  : unit -> tac binder
-val intro_rec              : unit -> tac (binder * binder)
+val intro_rec              : unit -> tac (binder & binder)
 val rename_to              : binder -> string -> tac binder
 val revert                 : unit -> tac unit
 val binder_retype          : binder -> tac unit
@@ -75,7 +75,7 @@ val t_trefl                : (*allow_guards:*)bool -> tac unit
 val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv * Z.t))
+val t_destruct             : term -> tac (list (fv & Z.t))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
@@ -103,7 +103,7 @@ val t_commute_applied_match : unit -> tac unit
 val goal_with_type : goal -> typ -> goal
 val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
-val push_bv_dsenv          : env -> string -> tac (env * bv)
+val push_bv_dsenv          : env -> string -> tac (env & bv)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val range_to_string        : Range.range -> tac string

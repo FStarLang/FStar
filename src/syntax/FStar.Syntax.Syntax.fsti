@@ -64,8 +64,8 @@ type memo 'a = ref (option 'a)
  *)
 type emb_typ =
   | ET_abstract
-  | ET_fun  of emb_typ * emb_typ
-  | ET_app  of string * list emb_typ
+  | ET_fun  of emb_typ & emb_typ
+  | ET_app  of string & list emb_typ
 
 //versioning for unification variables
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -84,7 +84,7 @@ type universe =
   | U_unif  of universe_uvar
   | U_unknown
 and univ_name = ident
-and universe_uvar = Unionfind.p_uvar (option universe) * version * Range.range
+and universe_uvar = Unionfind.p_uvar (option universe) & version & Range.range
 
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
 type univ_names    = list univ_name
@@ -134,7 +134,7 @@ type term' =
   | Tm_bvar       of bv                //bound variable, referenced by de Bruijn index
   | Tm_name       of bv                //local constant, referenced by a unique name derived from bv.ppname and bv.index
   | Tm_fvar       of fv                //fully qualified reference to a top-level symbol from a module
-  | Tm_uinst      of term * universes  //universe instantiation; the first argument must be one of the three constructors above
+  | Tm_uinst      of term & universes  //universe instantiation; the first argument must be one of the three constructors above
   | Tm_constant   of sconst
   | Tm_type       of universe
   | Tm_abs        {  (* fun (xi:ti) -> t : (M t' wp | N) *)
@@ -180,7 +180,7 @@ type term' =
       meta:metadata
     }
   | Tm_lazy       of lazyinfo                                    (* A lazily encoded term *)
-  | Tm_quoted     of term * quoteinfo                            (* A quoted term, in one of its many variants *)
+  | Tm_quoted     of term & quoteinfo                            (* A quoted term, in one of its many variants *)
   | Tm_unknown                                                   (* only present initially while desugaring a term *)
 and ctx_uvar = {                                                 (* (G |- ?u : t), a uvar introduced in context G at type t *)
   ctx_uvar_head:uvar;                                          (* ?u *)
@@ -193,7 +193,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of term
   | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
-and ctx_uvar_and_subst = ctx_uvar * subst_ts
+and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
 and uvar_decoration = {
   uvar_decoration_typ:typ;
@@ -201,15 +201,15 @@ and uvar_decoration = {
   uvar_decoration_should_check:should_check_uvar;
 }
 
-and uvar = Unionfind.p_uvar (option term * uvar_decoration) * version * Range.range
+and uvar = Unionfind.p_uvar (option term & uvar_decoration) & version & Range.range
 and uvars = FlatSet.t ctx_uvar
-and match_returns_ascription = binder * ascription               (* as x returns C|t *)
-and branch = pat * option term * term                           (* optional when clause in each branch *)
-and ascription = either term comp * option term * bool        (* e <: t [by tac] or e <: C [by tac] *)
+and match_returns_ascription = binder & ascription               (* as x returns C|t *)
+and branch = pat & option term & term                           (* optional when clause in each branch *)
+and ascription = either term comp & option term & bool        (* e <: t [by tac] or e <: C [by tac] *)
                                                                  (* the bool says whether the ascription is an equality ascription, i.e. $: *)
 and pat' =
   | Pat_constant of sconst
-  | Pat_cons     of fv * option universes * list (pat * bool)    (* flag marks an explicitly provided implicit *)
+  | Pat_cons     of fv & option universes & list (pat & bool)    (* flag marks an explicitly provided implicit *)
   | Pat_var      of bv                                           (* a pattern bound variable (linear in a pattern) *)
   | Pat_dot_term of option term                                  (* dot patterns: determined by other elements in the pattern *)
                                                                  (* the option term is the optionally resolved pat dot term *)
@@ -222,7 +222,7 @@ and letbinding = {  //let f : forall u1..un. M t = e
     lbattrs:list attribute;  // attrs
     lbpos  :range;           // original position of 'e'
 }
-and antiquotations = int * list term
+and antiquotations = int & list term
 and quoteinfo = {
     qkind          : quote_kind;
     antiquotations : antiquotations;
@@ -301,7 +301,7 @@ and term = syntax term'
 and typ = term                                                   (* sometimes we use typ to emphasize that a term is a type *)
 and pat = withinfo_t pat'
 and comp = syntax comp'
-and arg = term * aqual                                           (* marks an explicitly provided implicit arg *)
+and arg = term & aqual                                           (* marks an explicitly provided implicit arg *)
 and args = list arg
 and binder = {
   binder_bv    : bv;
@@ -312,7 +312,7 @@ and binder = {
 and binders = list binder                                       (* bool marks implicit binder *)
 and decreases_order =
   | Decreases_lex of list term  (* a decreases clause may either specify a lexicographic ordered list of terms, *)
-  | Decreases_wf of term * term  (* or a well-founded relation and a term *)
+  | Decreases_wf of term & term  (* or a well-founded relation and a term *)
 and cflag =                                                      (* flags applicable to computation types, usually for optimizations *)
   | TOTAL                                                          (* computation has no real effect, can be reduced safely *)
   | MLEFFECT                                                       (* the effect is ML    (Parser.Const.effect_ML_lid) *)
@@ -325,24 +325,24 @@ and cflag =                                                      (* flags applic
   | CPS                                                            (* computation is marked with attribute `cps`, for DM4F, seems useless, see #1557 *)
   | DECREASES of decreases_order
 and metadata =
-  | Meta_pattern       of list term * list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
+  | Meta_pattern       of list term & list args                  (* Patterns for SMT quantifier instantiation; the first arg instantiation *)
   | Meta_named         of lident                                 (* Useful for pretty printing to keep the type abbreviation around *)
-  | Meta_labeled       of list Pprint.document * Range.range * bool (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
+  | Meta_labeled       of list Pprint.document & Range.range & bool (* Sub-terms in a VC are labeled with error messages to be reported, used in SMT encoding *)
   | Meta_desugared     of meta_source_info                       (* Node tagged with some information about source term before desugaring *)
-  | Meta_monadic       of monad_name * typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
+  | Meta_monadic       of monad_name & typ                       (* Annotation on a Tm_app or Tm_let node in case it is monadic for m not in {Pure, Ghost, Div} *)
                                                                  (* Contains the name of the monadic effect and  the type of the subterm *)
-  | Meta_monadic_lift  of monad_name * monad_name * typ          (* Sub-effecting: lift the subterm of type typ *)
+  | Meta_monadic_lift  of monad_name & monad_name & typ          (* Sub-effecting: lift the subterm of type typ *)
                                                                  (* from the first monad_name m1 to the second monad name m2 *)
 and meta_source_info =
   | Sequence                                    (* used when resugaring *)
   | Primop                                      (* ... add more cases here as needed for better code generation *)
   | Masked_effect
   | Meta_smt_pat
-  | Machine_integer of signedness * width
+  | Machine_integer of signedness & width
 and fv_qual =
   | Data_ctor
-  | Record_projector of (lident * ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
-  | Record_ctor of lident * list ident         (* the type of the record being constructed and its (unmangled) fields in order *)
+  | Record_projector of (lident & ident)        (* the fully qualified (unmangled) name of the data constructor and the field being projected *)
+  | Record_ctor of lident & list ident         (* the type of the record being constructed and its (unmangled) fields in order *)
   | Unresolved_projector of option fv          (* ToSyntax's best guess at what the projector is (based only on scoping rules) *)
   | Unresolved_constructor of unresolved_constructor (* ToSyntax's best guess at what the constructor is (based only on scoping rules) *)
 and unresolved_constructor = {
@@ -351,17 +351,17 @@ and unresolved_constructor = {
   uc_fields : list lident  // The fields names as written in the source
 }
 and lbname = either bv fv
-and letbindings = bool * list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
+and letbindings = bool & list letbinding        (* let recs may have more than one element; top-level lets have lidents *)
                                                 (* boolean true indicates rec *)
 and subst_ts = list (list subst_elt)            (* A composition of parallel substitutions *)
-             * maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
+             & maybe_set_use_range              (* and a maybe range update, Some r, to set the use_range of subterms to r.def_range *)
 and subst_elt =
-   | DB of int * bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
-   | DT of int * term                          (* DT i t: replace a bound variable with index i for term *)
-   | NM of bv  * int                           (* NM x i: replace a local name with a bound variable i                       *)
-   | NT of bv  * term                          (* NT x t: replace a local name with a term t                                 *)
-   | UN of int * universe                      (* UN u v: replace universes variable u with universe term v                  *)
-   | UD of univ_name * int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
+   | DB of int & bv                            (* DB i bv: replace a bound variable with index i with name bv                 *)
+   | DT of int & term                          (* DT i t: replace a bound variable with index i for term *)
+   | NM of bv  & int                           (* NM x i: replace a local name with a bound variable i                       *)
+   | NT of bv  & term                          (* NT x t: replace a local name with a term t                                 *)
+   | UN of int & universe                      (* UN u v: replace universes variable u with universe term v                  *)
+   | UD of univ_name & int                     (* UD x i: replace universe name x with de Bruijn index i                     *)
 and freenames = FlatSet.t bv
 and syntax 'a = {
     n:'a;
@@ -418,7 +418,7 @@ and lazy_kind =
   | Lazy_sigelt
   | Lazy_uvar
   | Lazy_letbinding
-  | Lazy_embedding of emb_typ * Thunk.t term
+  | Lazy_embedding of emb_typ & Thunk.t term
   | Lazy_universe
   | Lazy_universe_uvar
   | Lazy_issue
@@ -428,13 +428,13 @@ and lazy_kind =
   | Lazy_tref
 and binding =
   | Binding_var      of bv
-  | Binding_lid      of lident * (univ_names * typ)
+  | Binding_lid      of lident & (univ_names & typ)
   (* ^ Not a tscheme: the universe names must be taken
    * as fixed (and opened in the type). This is important since
    * we do not support universe-polymorphic recursion.
    * See #2106. *)
   | Binding_univ     of univ_name
-and tscheme = list univ_name * typ
+and tscheme = list univ_name & typ
 and gamma = list binding
 and binder_qualifier =
   | Implicit of bool //boolean marks an inaccessible implicit argument of a data constructor
@@ -469,9 +469,9 @@ type qualifier =
   //the remaining qualifiers are internal: the programmer cannot write them
   | Visible_default                        //a definition that may be unfolded by the normalizer, but only if necessary (default)
   | Discriminator of lident                //discriminator for a datacon l
-  | Projector of lident * ident            //projector for datacon l's argument x
-  | RecordType of (list ident * list ident)          //record type whose namespace is fst and unmangled field names are snd
-  | RecordConstructor of (list ident * list ident)   //record constructor whose namespace is fst and unmangled field names are snd
+  | Projector of lident & ident            //projector for datacon l's argument x
+  | RecordType of (list ident & list ident)          //record type whose namespace is fst and unmangled field names are snd
+  | RecordConstructor of (list ident & list ident)   //record constructor whose namespace is fst and unmangled field names are snd
   | Action of lident                       //action of some effect
   | ExceptionConstructor                   //a constructor of Prims.exn
   | HasMaskedEffect                        //a let binding that may have a top-level effect
@@ -483,7 +483,7 @@ type qualifier =
 (* Checks if the qualifer is internal, and should not be written by users. *)
 val is_internal_qualifier (q:qualifier) : bool
 
-type tycon = lident * binders * typ                   (* I (x1:t1) ... (xn:tn) : t *)
+type tycon = lident & binders & typ                   (* I (x1:t1) ... (xn:tn) : t *)
 type monad_abbrev = {
   mabbrev:lident;
   parms:binders;
@@ -576,12 +576,12 @@ type wp_eff_combinators = {
  *   the typechecker also does not synthesize it (unlike if-then-else and subcomp)
  *)
 type layered_eff_combinators = {
-  l_repr         : (tscheme * tscheme);
-  l_return       : (tscheme * tscheme);
-  l_bind         : (tscheme * tscheme * option indexed_effect_combinator_kind);
-  l_subcomp      : (tscheme * tscheme * option indexed_effect_combinator_kind);
-  l_if_then_else : (tscheme * tscheme * option indexed_effect_combinator_kind);
-  l_close        : option (tscheme * tscheme)
+  l_repr         : (tscheme & tscheme);
+  l_return       : (tscheme & tscheme);
+  l_bind         : (tscheme & tscheme & option indexed_effect_combinator_kind);
+  l_subcomp      : (tscheme & tscheme & option indexed_effect_combinator_kind);
+  l_if_then_else : (tscheme & tscheme & option indexed_effect_combinator_kind);
+  l_close        : option (tscheme & tscheme)
 }
 
 type eff_combinators =
@@ -645,8 +645,8 @@ type open_kind =                                          (* matters only for re
 | Open_module                                             (* only opens the module, not the namespace *)
 | Open_namespace  
 
-type open_module_or_namespace = (lident * open_kind)      (* lident fully qualified name, already resolved. *)
-type module_abbrev = (ident * lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
+type open_module_or_namespace = (lident & open_kind)      (* lident fully qualified name, already resolved. *)
+type module_abbrev = (ident & lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
 (*
  * AR: we no longer have Sig_new_effect_for_free
@@ -772,7 +772,7 @@ val withinfo: 'a -> Range.range -> withinfo_t 'a
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 val mk: 'a -> range -> syntax 'a
 
-val mk_lb :         (lbname * list univ_name * lident * typ * term * list attribute * range) -> letbinding
+val mk_lb :         (lbname & list univ_name & lident & typ & term & list attribute & range) -> letbinding
 val default_sigmeta: sig_metadata
 val mk_sigelt:      sigelt' -> sigelt // FIXME check uses
 val mk_Tm_app:      term -> args -> range -> term
@@ -786,7 +786,7 @@ val mk_Tm_uinst:    term -> universes -> term
 
 val extend_app:     term -> arg -> range -> term
 val extend_app_n:   term -> args -> range -> term
-val mk_Tm_delayed:  (term * subst_ts) -> Range.range -> term
+val mk_Tm_delayed:  (term & subst_ts) -> Range.range -> term
 val mk_Total:       typ -> comp
 val mk_GTotal:      typ -> comp
 val mk_Tac :        typ -> comp

@@ -151,7 +151,7 @@ let rec prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
    : list decl  //remaining iface decls
-   * list decl =  //d prefixed with relevant bits from iface
+   & list decl =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
        let karamel_private =
            FStar.Parser.AST.mk_term
@@ -246,7 +246,7 @@ let ml_mode_prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
    : list decl    //remaining iface decls
-   * list decl =  //impl prefixed with relevant bits from iface
+   & list decl =  //impl prefixed with relevant bits from iface
 
 
    match impl.d with

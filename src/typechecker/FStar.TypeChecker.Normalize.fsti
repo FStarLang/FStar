@@ -49,8 +49,8 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
  *   if one of them is erasable, and the other is GHOST,
  *   the GHOST one is promoted to PURE, see their implementation for more details
  *)
-val ghost_to_pure2 : Env.env -> (comp * comp) -> (comp * comp)
-val ghost_to_pure_lcomp2 : Env.env -> (lcomp * lcomp) -> (lcomp * lcomp)
+val ghost_to_pure2 : Env.env -> (comp & comp) -> (comp & comp)
+val ghost_to_pure_lcomp2 : Env.env -> (lcomp & lcomp) -> (lcomp & lcomp)
 
 val normalize_with_primitive_steps : list Primops.primitive_step -> steps -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
@@ -71,6 +71,6 @@ val reflection_env_hook : ref (option Env.env)
 (* Destructs the term as an arrow type and returns its binders and
 computation type. Only grabs up to [n] binders, and normalizes only as
 needed to discover the shape of the arrow. The binders are opened. *)
-val get_n_binders : Env.env -> int -> term -> list binder * comp
+val get_n_binders : Env.env -> int -> term -> list binder & comp
 
 val maybe_unfold_head : Env.env -> term -> option term

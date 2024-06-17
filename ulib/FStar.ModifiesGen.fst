@@ -1432,7 +1432,7 @@ let modifies_strengthen #al #c l #r0 #a0 al0 h h' alocs =
     modifies_strengthen' l al0 h h' alocs
 
 
-let does_not_contain_addr' (h: HS.mem) (ra: HS.rid * nat) : GTot Type0 =
+let does_not_contain_addr' (h: HS.mem) (ra: HS.rid & nat) : GTot Type0 =
   HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (HS.get_hmap h `Map.sel` (fst ra))
 
 let does_not_contain_addr = does_not_contain_addr'

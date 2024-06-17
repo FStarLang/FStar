@@ -198,7 +198,7 @@ val buffer_split_at: #a:Type -> b:B.buffer a ->
     // TODO: the above is wrong, there's B.offset to do exactly what we want for
     // the second buffer
     len:U32.t{U32.v len == B.length b} ->
-    Pure (B.buffer a * B.buffer a)
+    Pure (B.buffer a & B.buffer a)
          (requires True)
          (ensures (fun r ->
                      let (b1, b2) = r in
@@ -209,7 +209,7 @@ let buffer_split_at #a b off len =
     (B.sub b 0ul off, B.sub b off (U32.sub len off))
 
 val bslice_split_at: b:bslice -> off:U32.t{U32.v off <= U32.v b.len} ->
-    Pure (bslice * bslice)
+    Pure (bslice & bslice)
          (requires True)
          (ensures (fun r->
                      let (b1, b2) = r in

@@ -325,7 +325,7 @@ let new_uvar (reason:string) (env:env) (typ:typ)
              (sc_opt:option should_check_uvar)
              (uvar_typedness_deps:list ctx_uvar)
              (rng:Range.range) 
-  : tac (term * ctx_uvar) =
+  : tac (term & ctx_uvar) =
     let should_check = 
       match sc_opt with
       | Some sc -> sc
@@ -434,7 +434,7 @@ let goal_with_type g t
 
 module Z = FStar.BigInt
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b) =
+let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
   let! p = get in
   let! lgs, rgs =
     try return (List.splitAt (Z.to_int_fs n) p.goals) with

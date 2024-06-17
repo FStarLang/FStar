@@ -35,7 +35,7 @@ type id (n:nat) = i:nat{i < n}
  * each node maintains its parent id, height, and (ghost) subtree nodes (including itself)
  * the subtree is used as the decreasing metric in recursive calls
  *)
-type elt (n:nat) = id n * nat * erased (subtree_t)
+type elt (n:nat) = id n & nat & erased (subtree_t)
 
 type uf_forest (n:nat) = s:seq (ref (elt n)){length s = n}
 

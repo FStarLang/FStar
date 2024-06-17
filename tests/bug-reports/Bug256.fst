@@ -27,5 +27,5 @@ let f1 = let g () = witness in g
 (* let f1 = let g u = witness in g *)
 
 (* Fails to typecheck -- works now *)
-val f2: int -> ((i:int{p i}) * int)
+val f2: int -> ((i:int{p i}) & int)
 let f2 = let g i = (witness,4) in g

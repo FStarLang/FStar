@@ -53,14 +53,14 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let vmap (a b:Type) = list (var * (a*b)) * (a * b)
+let vmap (a b:Type) = list (var & (a&b)) & (a & b)
 let const (#a #b:Type) (xa:a) (xb:b) : vmap a b = [], (xa,xb)
 let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a =
-  match assoc #var #(a * b) x (fst vm) with
+  match assoc #var #(a & b) x (fst vm) with
   | Some (a, _) -> a
   | _ -> fst (snd vm)
 let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b =
-  match assoc #var #(a * b) x (fst vm) with
+  match assoc #var #(a & b) x (fst vm) with
   | Some (_, b) -> b
   | _ -> snd (snd vm)
 let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) : vmap a b =
@@ -239,9 +239,9 @@ let where = where_aux 0
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
     (vm:vmap a b) (f:term->Tac b)
-    (mult unit t : term) : Tac (exp * list term * vmap a b) =
+    (mult unit t : term) : Tac (exp & list term & vmap a b) =
   let hd, tl = collect_app_ref t in
-  let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
+  let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp & list term & vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
     | None -> let vfresh = length ts in let z = unquotea t in
@@ -263,7 +263,7 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
 let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
-    Tac (list exp * vmap a b) =
+    Tac (list exp & vmap a b) =
   let tmult: term = norm_term [delta;zeta;iota] tmult in
   let tunit: term = norm_term [delta;zeta;iota] tunit in
   let ts   = Tactics.Util.map (norm_term [delta;zeta;iota]) ts in
@@ -284,7 +284,7 @@ let rec term_mem x = function
   | hd::tl -> if term_eq_old hd x then true else term_mem x tl
 
 let unfold_topdown (ts: list term) =
-  let should_rewrite (s:term) : Tac (bool * int) =
+  let should_rewrite (s:term) : Tac (bool & int) =
     (term_mem s ts, 0)
   in
   let rewrite () : Tac unit =
@@ -303,11 +303,11 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) :
 
 let quote_vm (#a #b:Type) (ta tb: term)
     (quotea:a->Tac term) (quoteb:b->Tac term) (vm:vmap a b) : Tac term =
-  let quote_pair (p:a*b) : Tac term =
+  let quote_pair (p:a&b) : Tac term =
     mk_app (`Mktuple2) [(ta, Q_Implicit); (tb, Q_Implicit);
            (quotea (fst p), Q_Explicit); (quoteb (snd p), Q_Explicit)] in
   let t_a_star_b = mk_e_app (`tuple2) [ta;tb] in
-  let quote_map_entry (p:(nat*(a*b))) : Tac term =
+  let quote_map_entry (p:(nat&(a&b))) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quote_pair (snd p), Q_Explicit)] in

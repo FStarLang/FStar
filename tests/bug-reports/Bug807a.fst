@@ -16,7 +16,7 @@
 module Bug807a
 
 let test1 = 
-  let find (#a:Type) (x:nat) (l:list (int * a)) : option (int * a) = admit() in
+  let find (#a:Type) (x:nat) (l:list (int & a)) : option (int & a) = admit() in
   find 0 []
 
 let test2 = 

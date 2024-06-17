@@ -22,7 +22,7 @@ include FStar.DM4F.IntStoreFixed
 type reified_raw_computation =
   (nat ->
    heap ->
-   GTot (bool * heap)
+   GTot (bool & heap)
   )
 
 let fuel_monotonic
@@ -66,7 +66,7 @@ type var = id
 #set-options "--z3rlimit 128 --max_fuel 8 --max_ifuel 8"
 
 type exp (t: Type0) : Type0 = unit -> IntStore t (requires (fun _ -> True)) (ensures (fun h _ h' -> h' == h))
-let reified_exp (t: Type0) : Tot Type0 = (h: heap) -> Ghost (t * heap) (requires True) (ensures (fun rh -> snd rh == h))
+let reified_exp (t: Type0) : Tot Type0 = (h: heap) -> Ghost (t & heap) (requires True) (ensures (fun rh -> snd rh == h))
 
 let reify_exp (#t: Type0) (e: exp t) : GTot (reified_exp t) =
   let f = reify (e ()) in

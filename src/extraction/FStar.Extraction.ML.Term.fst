@@ -401,9 +401,9 @@ let unit_binder () = S.mk_binder <| S.new_bv None t_unit
 
 //check_pats_for_ite l:
 //    A helper to enable translating boolean matches back to if/then/else
-let check_pats_for_ite (l:list (pat * option term * term)) : (bool   //if l is pair of boolean branches
-                                                             * option term  //the 'then' case
-                                                             * option term) = //the 'else' case
+let check_pats_for_ite (l:list (pat & option term & term)) : (bool   //if l is pair of boolean branches
+                                                             & option term  //the 'then' case
+                                                             & option term) = //the 'else' case
     let def = false, None, None in
     if List.length l <> 2 then def
     else
@@ -440,7 +440,7 @@ let check_pats_for_ite (l:list (pat * option term * term)) : (bool   //if l is p
 //      pre-condition: List.length (fst s) = List.length args
 let instantiate_tyscheme (s:mltyscheme) (args:list mlty) : mlty = Util.subst s args
 
-let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
+let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident & mlty) & uenv =
    let g, vs_ts =
      List.fold_right
         (fun t (uenv, vs) ->
@@ -450,7 +450,7 @@ let fresh_mlidents (ts:list mlty) (g:uenv) : list (mlident * mlty) * uenv =
    in
    vs_ts, g
 
-let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder * uenv =
+let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder & uenv =
   let vs_ts, g = fresh_mlidents ts g in
   List.map (fun (v, t) -> {mlbinder_name=v; mlbinder_ty=t; mlbinder_attrs=[]}) vs_ts,
   g
@@ -460,7 +460,7 @@ let fresh_binders (ts:list mlty) (g:uenv) : list mlbinder * uenv =
 //  and isn't instantiated in F* (e.g., because of first-class polymorphism)
 //  we extract e to a type application in ML by instantiating all its
 //  type arguments to MLTY_Erased (later, perhaps, being forced to insert magics)
-let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr * e_tag * mlty) =
+let instantiate_maybe_partial (g:uenv) (e:mlexpr) (s:mltyscheme) (tyargs:list mlty) : (mlexpr & e_tag & mlty) =
     let vars, t = s in
     let n_vars = List.length vars in
     let n_args = List.length tyargs in
@@ -839,7 +839,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
          else mlt
 
 
-and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident * mlty) * uenv =
+and binders_as_ml_binders (g:uenv) (bs:binders) : list (mlident & mlty) & uenv =
     let ml_bs, env = bs |> List.fold_left (fun (ml_bs, env) b ->
             if is_type_binder g b
             then //no first-class polymorphism; so type-binders get wiped out
@@ -940,10 +940,10 @@ let rec extract_one_pat (imp : bool)
                         (g:uenv)
                         (p:S.pat)
                         (expected_ty:mlty)
-                        (term_as_mlexpr:uenv -> S.term -> (mlexpr * e_tag * mlty))
+                        (term_as_mlexpr:uenv -> S.term -> (mlexpr & e_tag & mlty))
     : uenv
-    * option (mlpattern * list mlexpr)
-    * bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
+    & option (mlpattern & list mlexpr)
+    & bool =  //the bool indicates whether or not a magic should be inserted around the scrutinee
     let ok t =
       match expected_ty with
       | MLTY_Top ->
@@ -1110,8 +1110,8 @@ let rec extract_one_pat (imp : bool)
         pat_ty_compat
 
 let extract_pat (g:uenv) (p:S.pat) (expected_t:mlty)
-                (term_as_mlexpr: uenv -> S.term -> (mlexpr * e_tag * mlty))
-    : (uenv * list (mlpattern * option mlexpr) * bool) =
+                (term_as_mlexpr: uenv -> S.term -> (mlexpr & e_tag & mlty))
+    : (uenv & list (mlpattern & option mlexpr) & bool) =
     let extract_one_pat g p expected_t =
         match extract_one_pat false g p expected_t term_as_mlexpr with
         | g, Some (x, v), b -> g, (x, v), b
@@ -1209,12 +1209,12 @@ let maybe_promote_effect ml_e tag t =
 let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
     let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
             : lbname //just lbname returned back
-            * e_tag  //the ML version of the effect label lbeff
-            * (typ   //just the source type lbtyp=t, after compression
-               * (S.binders //the erased type binders
-                  * mltyscheme)) //translation of the source type t as a ML type scheme
-            * bool   //whether or not to add a unit argument
-            * term   //the term e, maybe after some type binders have been erased
+            & e_tag  //the ML version of the effect label lbeff
+            & (typ   //just the source type lbtyp=t, after compression
+               & (S.binders //the erased type binders
+                  & mltyscheme)) //translation of the source type t as a ML type scheme
+            & bool   //whether or not to add a unit argument
+            & term   //the term e, maybe after some type binders have been erased
             =
               // begin match lbattrs with
               // | [] -> ()
@@ -1322,7 +1322,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
     snd lbs |> List.map maybe_generalize
 
 and extract_lb_iface (g:uenv) (lbs:letbindings)
-    : uenv * list (fv * exp_binding) =
+    : uenv & list (fv & exp_binding) =
     let is_top = FStar.Syntax.Syntax.is_top_level (snd lbs) in
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
@@ -1335,7 +1335,7 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
                 lbs
 
 //The main extraction function
-and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty) =
+and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty) =
     debug g
       (fun () -> BU.print3 "Checking %s at type %s and eff %s\n"
                         (Print.term_to_string e)
@@ -1355,13 +1355,13 @@ and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr * mlty
              err_unexpected_eff g e ty f tag;
              maybe_coerce e.pos g ml_e t ty, ty
 
-and term_as_mlexpr (g:uenv) (e:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr (g:uenv) (e:term) : (mlexpr & e_tag & mlty) =
     let e, f, t = term_as_mlexpr' g e in
     let e, f = maybe_promote_effect e f t in
     e, f, t
 
 
-and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
+and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
     let top = SS.compress top in
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
@@ -2001,7 +2001,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr * e_tag * mlty) =
                     let when_clause = conjoin_opt wopt when_opt in
                     p, (when_clause, f_when), (mlbranch, f_branch, t_branch)))
                 true in
-             let mlbranches : list (mlpattern * (option mlexpr * e_tag) * (mlexpr * e_tag * mlty))
+             let mlbranches : list (mlpattern & (option mlexpr & e_tag) & (mlexpr & e_tag & mlty))
                = List.flatten mlbranches in
              //if the type of the pattern isn't compatible with the type of the scrutinee
              //    insert a magic around the scrutinee

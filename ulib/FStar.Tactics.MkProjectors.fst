@@ -57,7 +57,7 @@ let mk_one_method (proj:string) (np:nat) : Tac unit =
   let proj = pack (Tv_FVar (pack_fv nm)) in
   exact (mk_app proj (params @ [(binding_to_term thing, Q_Explicit)]))
 
-let subst_map (ss : list (namedv * fv)) (r:term) (t : term) : Tac term =
+let subst_map (ss : list (namedv & fv)) (r:term) (t : term) : Tac term =
   let subst = List.Tot.map (fun (x, fv) -> NT (Reflection.V2.pack_namedv x) (mk_e_app (Tv_FVar fv) [r])) ss in
   subst_term subst t
 

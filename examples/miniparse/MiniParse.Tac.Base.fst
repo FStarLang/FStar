@@ -22,7 +22,7 @@ let pack_nat (n: nat) : T.Tac T.term =
   T.pack (T.Tv_Const (T.C_Int n))
 
 let rec app_head_rev_tail (t: T.term) :
-  T.Tac (T.term * list T.argv)
+  T.Tac (T.term & list T.argv)
 =
   let ins = T.inspect t in
   if T.Tv_App? ins
@@ -34,7 +34,7 @@ let rec app_head_rev_tail (t: T.term) :
     (t, [])
 
 let app_head_tail (t: T.term) :
-    T.Tac (T.term * list T.argv)
+    T.Tac (T.term & list T.argv)
 = let (x, l) = app_head_rev_tail t in
   (x, L.rev l)
 

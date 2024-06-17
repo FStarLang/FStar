@@ -105,7 +105,7 @@ val add_implicits : implicits -> tac unit
 
 (* Create a new uvar, and keep track of it in the proofstate to
  * ensure we solve it. *)
-val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term * ctx_uvar)
+val new_uvar : string -> env -> typ -> option should_check_uvar -> list ctx_uvar -> Range.range -> tac (term & ctx_uvar)
 
 (* Create a squashed goal from a given formula *)
 val mk_irrelevant_goal : string -> env -> typ -> option should_check_uvar -> Range.range -> O.optionstate -> string -> tac goal
@@ -158,7 +158,7 @@ val mk_tac : (proofstate -> __result 'a) -> tac 'a
 (* inform the core of a well-typed goal *)
 val register_goal (g:goal) : unit
 
-val divide (n:BigInt.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b)
+val divide (n:BigInt.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b)
 val focus (f:tac 'a) : tac 'a
 
 (* Internal utilities *)

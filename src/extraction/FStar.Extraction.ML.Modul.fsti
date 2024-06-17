@@ -39,5 +39,5 @@ val register_extension_extractor
          (extractor:extension_extractor)
   : unit
 
-val extract_iface: uenv -> modul -> uenv * iface
-val extract : uenv -> modul -> uenv * option mllib
+val extract_iface: uenv -> modul -> uenv & iface
+val extract : uenv -> modul -> uenv & option mllib

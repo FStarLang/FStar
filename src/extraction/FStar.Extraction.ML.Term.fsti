@@ -25,5 +25,5 @@ val normalize_for_extraction (env:uenv) (e:term) : term
 val is_arity: uenv -> term -> bool
 val ind_discriminator_body : env:uenv -> discName:lident -> constrName:lident -> mlmodule1
 val term_as_mlty: uenv -> term -> mlty
-val term_as_mlexpr: uenv -> term -> mlexpr * e_tag * mlty
-val extract_lb_iface : uenv -> letbindings -> uenv * list (fv * exp_binding)
+val term_as_mlexpr: uenv -> term -> mlexpr & e_tag & mlty
+val extract_lb_iface : uenv -> letbindings -> uenv & list (fv & exp_binding)

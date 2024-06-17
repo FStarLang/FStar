@@ -230,7 +230,7 @@ let rec embedding_for
     (tcenv:Env.env)
     (mutuals: list Ident.lid)
     (k: embedding_kind)
-    (env:list (bv * string))
+    (env:list (bv & string))
     (t: term)
 : mlexpr
 = let str_to_name s     = as_name ([], s) in
@@ -340,7 +340,7 @@ let rec embedding_for
   | _ ->
     raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
-type wrapped_term = mlexpr * mlexpr * int * bool
+type wrapped_term = mlexpr & mlexpr & int & bool
 
 let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
     : option wrapped_term =
@@ -489,7 +489,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list (bv * string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
+    let tvar_context : list (bv & string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
 
@@ -502,7 +502,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                  int,    //the arity of the compiled code (+1 for tactics)
                  bool)   //true if this is a tactic
     *)
-    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr * int * bool) =
+    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr & int & bool) =
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in

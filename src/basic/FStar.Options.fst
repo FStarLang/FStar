@@ -629,7 +629,7 @@ let abort_counter : ref int =
     mk_ref 0
 
 let interp_quake_arg (s:string)
-            : int * int * bool =
+            : int & int & bool =
            (* min,  max,  keep_going *)
   let ios = int_of_string in
   match split s "/" with
@@ -658,7 +658,7 @@ let set_option_warning_callback_aux,
     set, call
 let set_option_warning_callback f = set_option_warning_callback_aux f
 
-let rec specs_with_types warn_unsafe : list (char * string * opt_type * Pprint.document) =
+let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.document) =
   let open FStar.Pprint in
   let open FStar.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
@@ -1751,7 +1751,7 @@ let prepend_cache_dir fpath =
 //   --already_cached
 let path_of_text text = String.split ['.'] text
 
-let parse_settings ns : list (list string * bool) =
+let parse_settings ns : list (list string & bool) =
     let cache = Util.smap_create 31 in
     let with_cache f s =
       match Util.smap_try_find cache s with
@@ -2009,7 +2009,7 @@ let matches_namespace_filter_opt m =
   | Some filter -> module_matches_namespace_filter m filter
 
 type parsed_extract_setting = {
-  target_specific_settings: list (codegen_t * string);
+  target_specific_settings: list (codegen_t & string);
   default_settings:option string
 }
 
@@ -2026,7 +2026,7 @@ let print_pes pes =
              | None -> "None"
              | Some s -> s)
 
-let find_setting_for_target tgt (s:list (codegen_t * string))
+let find_setting_for_target tgt (s:list (codegen_t & string))
   : option string
   = match Util.try_find (fun (x, _) -> x = tgt) s with
     | Some (_, s) -> Some s
@@ -2034,7 +2034,7 @@ let find_setting_for_target tgt (s:list (codegen_t * string))
 
 let extract_settings
   : unit -> option parsed_extract_setting
-  = let memo:ref (option parsed_extract_setting * bool) = Util.mk_ref (None, false) in
+  = let memo:ref (option parsed_extract_setting & bool) = Util.mk_ref (None, false) in
     let merge_parsed_extract_settings p0 p1 : parsed_extract_setting =
       let merge_setting s0 s1 =
         match s0, s1 with

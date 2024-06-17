@@ -135,7 +135,7 @@ val reify_ : #a:Type ->
 		   #post:(timestamped_state (state) -> Tot (tsst_post state a)) ->
 		   e:(unit -> TSST a pre post) ->
 		   s0:timestamped_state state ->
-		   Pure (a * timestamped_state state) (pre s0)
+		   Pure (a & timestamped_state state) (pre s0)
 		                                      (fun xs1 -> (older_than (get_timestamp s0) (get_timestamp (snd xs1)) \/
 						                     get_timestamp s0 == get_timestamp (snd xs1)) /\
 						                  state_rel (get_state s0) (get_state (snd xs1)) /\

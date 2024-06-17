@@ -242,7 +242,7 @@ let rec extract_named_refinement (remove_parens:bool) (t1:term) : option (ident 
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (cur: (lid * decl) * list decl) (ds:list decl) : modul =
+let rec as_mlist (cur: (lid & decl) & list decl) (ds:list decl) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
     | [] -> Module(m_name, m_decl :: List.rev cur)

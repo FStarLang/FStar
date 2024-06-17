@@ -16,7 +16,7 @@
 module Bug707
 
 let stexn a =
-  int -> M (option a * int)
+  int -> M (option a & int)
 
 val return : (a:Type) -> (x:a) -> Tot (stexn a)
 let return a x = fun s -> Some x, s

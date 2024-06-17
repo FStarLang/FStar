@@ -52,8 +52,8 @@ let info_at_pos env file row col =
  * It will also prioritize them in that order, prefering to show
  * a discrepancy of implicits before one of universes, etc.
  *)
-let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b =
-    let print () : b * b * bool =
+let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b & b =
+    let print () : b & b & bool =
         let xs = f x in
         let ys = f y in
         xs, ys, xs <> ys
@@ -165,14 +165,14 @@ let log_issue env r (e, m) : unit =
 let log_issue_text env r (e, m) : unit =
   log_issue env r (e, [Errors.text m])
 
-let err_msg_type_strings env t1 t2 :(string * string) =
+let err_msg_type_strings env t1 t2 :(string & string) =
   print_discrepancy (N.term_to_string env) t1 t2
 
 // let err_msg_type_docs env t1 t2 :(Pprint.document * Pprint.document) =
 
 //   print_discrepancy (N.term_to_doc env) t1 t2
 
-let err_msg_comp_strings env c1 c2 :(string * string) =
+let err_msg_comp_strings env c1 c2 :(string & string) =
   print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)

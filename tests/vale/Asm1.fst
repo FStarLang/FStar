@@ -68,7 +68,7 @@ let lemma_load (b0:list ins) (s0:state
             valid_reg dst
          /\ valid_reg src
          /\ contains s0.mem (s0.regs.[src] + offset) | _ -> False)}) :
-  Tot (b1_s1:(list ins * state) {
+  Tot (b1_s1:(list ins & state) {
     let (b1, s1) = b1_s1 in
     let Cons i _ = b0 in
     let ILoad dst src offset = i in
@@ -87,7 +87,7 @@ let lemma_store (b0:list ins) (s0:state
            valid_reg dst
         /\ valid_reg src
         /\ contains s0.mem (s0.regs.[dst] + offset) | _ -> False)}) :
-  Tot (b1_s1:(list ins * state) {
+  Tot (b1_s1:(list ins & state) {
     let (b1, s1) = b1_s1 in
     let Cons i _ = b0 in
     let IStore dst offset src = i in

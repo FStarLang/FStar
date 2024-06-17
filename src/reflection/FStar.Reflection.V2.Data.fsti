@@ -69,7 +69,7 @@ type pattern =
  | Pat_Cons :
      head    : fv ->
      univs   : option universes ->
-     subpats : list (pattern * bool) ->
+     subpats : list (pattern & bool) ->
      pattern
 
  // A pattern-bound variable. It has a sealed sort in it (in userland).
@@ -87,14 +87,14 @@ type pattern =
      t : option term ->
      pattern
 
-type branch = pattern * term
+type branch = pattern & term
 
 type aqualv =
     | Q_Implicit
     | Q_Explicit
     | Q_Meta of term
 
-type argv = term * aqualv
+type argv = term & aqualv
 
 type namedv_view = {
   uniq   : Z.t;
@@ -135,19 +135,19 @@ type term_view =
     | Tv_Var       of namedv
     | Tv_BVar      of bv
     | Tv_FVar      of fv
-    | Tv_UInst     of fv * universes
-    | Tv_App       of term * argv
-    | Tv_Abs       of binder * term
-    | Tv_Arrow     of binder * comp
+    | Tv_UInst     of fv & universes
+    | Tv_App       of term & argv
+    | Tv_Abs       of binder & term
+    | Tv_Arrow     of binder & comp
     | Tv_Type      of universe
-    | Tv_Refine    of binder * term
+    | Tv_Refine    of binder & term
     | Tv_Const     of vconst
-    | Tv_Uvar      of Z.t * ctx_uvar_and_subst
-    | Tv_Let       of bool * list term * binder * term * term
-    | Tv_Match     of term * option match_returns_ascription * list branch
-    | Tv_AscribedT of term * term * option term * bool  //if the boolean flag is true, the ascription is an equality ascription
+    | Tv_Uvar      of Z.t & ctx_uvar_and_subst
+    | Tv_Let       of bool & list term & binder & term & term
+    | Tv_Match     of term & option match_returns_ascription & list branch
+    | Tv_AscribedT of term & term & option term & bool  //if the boolean flag is true, the ascription is an equality ascription
                                                          //see also Syntax
-    | Tv_AscribedC of term * comp * option term * bool  //bool is similar to Tv_AscribedT
+    | Tv_AscribedC of term & comp & option term & bool  //bool is similar to Tv_AscribedT
     | Tv_Unknown
     | Tv_Unsupp
 
@@ -156,10 +156,10 @@ val notAscription (t:term_view) : Tot bool
 type comp_view =
     | C_Total of typ
     | C_GTotal of typ
-    | C_Lemma of term * term * term
-    | C_Eff of universes * name * term * list argv * list term  // list term is the decreases clause
+    | C_Lemma of term & term & term
+    | C_Eff of universes & name & term & list argv & list term  // list term is the decreases clause
 
-type ctor = name * typ
+type ctor = name & typ
 
 type lb_view = {
     lb_fv : fv;
@@ -169,11 +169,11 @@ type lb_view = {
 }
 
 type sigelt_view =
-    | Sg_Let of bool * list letbinding
+    | Sg_Let of bool & list letbinding
         // The bool indicates if it's a let rec
         // Non-empty list of (possibly) mutually recursive let-bindings
-    | Sg_Inductive of name * list univ_name * list binder * typ * list ctor // name, params, type, constructors
-    | Sg_Val of name * list univ_name * typ
+    | Sg_Inductive of name & list univ_name & list binder & typ & list ctor // name, params, type, constructors
+    | Sg_Val of name & list univ_name & typ
     | Unk
 
 
@@ -195,9 +195,9 @@ type qualifier =
   | Reifiable
   | Reflectable of name
   | Discriminator of name
-  | Projector of name * ident
-  | RecordType of (list ident * list ident)
-  | RecordConstructor of (list ident * list ident)
+  | Projector of name & ident
+  | RecordType of (list ident & list ident)
+  | RecordConstructor of (list ident & list ident)
   | Action of name
   | ExceptionConstructor
   | HasMaskedEffect
@@ -211,7 +211,7 @@ type var = Z.t
 type exp =
     | Unit
     | Var of var
-    | Mult of exp * exp
+    | Mult of exp & exp
 
 (* Needed so this appears in the ocaml output for the fstar tactics library *)
 type decls = list sigelt

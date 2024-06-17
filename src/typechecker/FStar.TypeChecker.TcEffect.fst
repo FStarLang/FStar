@@ -60,7 +60,7 @@ let dmff_cps_and_elaborate env ed =
  * n is the number of universes that the combinator should be polymorphic in
  * (us, t) is the tscheme to check and generalize (us will be [] in the first phase)
  *)
-let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names * term * typ) =
+let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_names & term & typ) =
   Errors.with_ctx ("While checking combinator " ^ comb ^ " = " ^ show (us, t)) (fun () ->
   let us, t = SS.open_univ_vars us t in
   let t, ty =
@@ -93,7 +93,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
 (*
  * A small gadget to get a uvar for pure wp with given result type
  *)
-let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term * guard_t =
+let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term & guard_t =
   let pure_wp_t =
     let pure_wp_ts = Env.lookup_definition [Env.NoDelta] env PC.pure_wp_lid |> must in
     let _, pure_wp_t = Env.inst_tscheme pure_wp_ts in
@@ -1226,7 +1226,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         (Print.tscheme_to_string (us, t)) (Print.tscheme_to_string (us, ty)) in
 
   //helper function to get (a:Type ?u), returns the binder and ?u
-  let fresh_a_and_u_a (a:string) : binder * universe = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
+  let fresh_a_and_u_a (a:string) : binder & universe = U.type_u () |> (fun (t, u) -> S.gen_bv a None t |> S.mk_binder, u) in
   //helper function to get (x:a)
   let fresh_x_a (x:string) (a:binder) : binder = S.gen_bv x None (S.bv_to_name a.binder_bv) |> S.mk_binder in
 
@@ -1851,7 +1851,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       let err_msg t = BU.format3
         "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
         (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string t) in
-      let repr_args t : universes * term * args =
+      let repr_args t : universes & term & args =
         match (SS.compress t).n with
         | Tm_app {hd=head;args=a::is} ->
           (match (SS.compress head).n with

@@ -221,10 +221,10 @@ let l_remove_mid' (l:list 'a{L.length l > 0}) (i:nat{i < L.length l}) : GTot (li
 let l_append (l1 l2:list 'a) : GTot (list 'a) =
   l1 `L.append` l2
 
-let l_split_using (l:list 'a) (x:'a{x `L.memP` l}) : GTot (list 'a * list 'a) =
+let l_split_using (l:list 'a) (x:'a{x `L.memP` l}) : GTot (list 'a & list 'a) =
   L.split_using l x
 
-let l_split_using' (l:list 'a) (i:nat) : GTot (list 'a * list 'a) =
+let l_split_using' (l:list 'a) (i:nat) : GTot (list 'a & list 'a) =
   L.splitAt i l
 
 /// Useful "shortform" for equivalence of [loc]s

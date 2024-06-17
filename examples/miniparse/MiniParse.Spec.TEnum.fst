@@ -246,7 +246,7 @@ let synth_inverse_forall_bounded_u16_solve () : T.Tac unit =
   | _ -> tfail "Not enough arguments to squash"
   else tfail "Goal is not squash"
 
-let gen_enum_specs (enum: T.term) : T.Tac (T.term * T.term) =
+let gen_enum_specs (enum: T.term) : T.Tac (T.term & T.term) =
   let bound = tenum_bound' enum in
   let f = gen_synth_bounded' enum in
   let val_t = T.mk_app (`bounded_u16) [bound, T.Q_Explicit] in

@@ -131,7 +131,7 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
-let let_rec_arity (b:letbinding) : int * list bool =
+let let_rec_arity (b:letbinding) : int & list bool =
   let (ar, maybe_lst) = U.let_rec_arity b in
   match maybe_lst with
   | None ->
@@ -204,9 +204,9 @@ let rec unlazy_unmeta t =
       end
     | _ -> t
 
-let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term * list t) =
+let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term & list t) =
   let all_branches = branches in
-  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term * list t) =
+  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term & list t) =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
         : either (list t) bool =
@@ -239,7 +239,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
             if matches_const scrutinee s then Inl [] else Inr false
 
         | Pat_cons(fv, _us_opt, arg_pats) ->
-            let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
+            let rec matches_args out (a:list (t & aqual)) (p:list (pat & bool))
                 : either (list t) bool =
                 match a, p with
                 | [], [] -> Inl out
@@ -292,7 +292,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
 let should_reduce_recursive_definition
        (arguments:args)
        (formals_in_decreases:list bool)
-  : (bool * args * args) (* can unfold x full arg list x residual args *)
+  : (bool & args & args) (* can unfold x full arg list x residual args *)
   =
   let rec aux ts ar_list acc =
     match ts, ar_list with
@@ -560,7 +560,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list branch =
         let cfg = zeta_false cfg in
-        let rec process_pattern bs (p:pat) : list t * pat = (* returns new environment and pattern *)
+        let rec process_pattern bs (p:pat) : list t & pat = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)

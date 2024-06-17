@@ -317,7 +317,7 @@ type register_prim_step_t = primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let mk_extendable_primop_set ()
   : register_prim_step_t
-  * retrieve_prim_step_t =
+  & retrieve_prim_step_t =
   let steps = BU.mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;

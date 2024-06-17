@@ -113,8 +113,8 @@ let mklstr (f : unit -> string) =
 
 (* Instantiation of unification variables *)
 type uvi =
-    | TERM of ctx_uvar * term
-    | UNIV of S.universe_uvar * universe
+    | TERM of ctx_uvar & term
+    | UNIV of S.universe_uvar & universe
 
 type defer_ok_t =
   | NoDefer
@@ -128,8 +128,8 @@ instance _ : showable defer_ok_t = {
 (* The set of problems currently being addressed *)
 type worklist = {
     attempting:   probs;
-    wl_deferred:  list (int * deferred_reason * lstring * prob); //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
-    wl_deferred_to_tac: list (int * deferred_reason * lstring * prob); //problems that should be dispatched to a user-provided tactics
+    wl_deferred:  list (int & deferred_reason & lstring & prob); //flex-flex cases, non patterns, and subtyping constraints involving a unification variable,
+    wl_deferred_to_tac: list (int & deferred_reason & lstring & prob); //problems that should be dispatched to a user-provided tactics
     ctr:          int;                          //a counter incremented each time we extend subst, used to detect if we've made progress
     defer_ok:     defer_ok_t;                   //whether or not carrying constraints is ok---at the top-level, this flag is NoDefer
     smt_ok:       bool;                         //whether or not falling back to the SMT solver is permitted
@@ -166,16 +166,16 @@ with the problem being tackled. The uses of push_bv/push_binder should
 be few.
 *)
 
-let as_deferred (wl_def:list (int * deferred_reason * lstring * prob)) : deferred =
+let as_deferred (wl_def:list (int & deferred_reason & lstring & prob)) : deferred =
   List.map (fun (_, reason, m, p) -> reason, Thunk.force m, p) wl_def
 
-let as_wl_deferred wl (d:deferred): list (int * deferred_reason * lstring * prob) =
+let as_wl_deferred wl (d:deferred): list (int & deferred_reason & lstring & prob) =
   List.map (fun (reason, m, p) -> wl.ctr, reason, Thunk.mkv m, p) d
 
 (* --------------------------------------------------------- *)
 (* <new_uvar> Generating new unification variables/patterns  *)
 (* --------------------------------------------------------- *)
-let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar * term * worklist =
+let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar & term & worklist =
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
@@ -216,8 +216,8 @@ let copy_uvar u (bs:binders) t wl =
 (* Types used in the output of the solver *)
 
 type solution =
-  | Success of deferred * deferred * implicits
-  | Failed  of prob * lstring
+  | Success of deferred & deferred & implicits
+  | Failed  of prob & lstring
 
 let extend_wl (wl:worklist) (defers:deferred) (defer_to_tac:deferred) (imps:implicits) =
   {wl with wl_deferred=wl.wl_deferred@(as_wl_deferred wl defers);
@@ -438,7 +438,7 @@ let attempt probs wl             =
     List.iter (def_check_prob "attempt") probs;
     {wl with attempting=probs@wl.attempting}
 
-let mk_eq2 wl prob t1 t2 : term * worklist =
+let mk_eq2 wl prob t1 t2 : term & worklist =
     let env = p_env wl prob in
     def_check_scoped t1.pos "mk_eq2.t1" env t1;
     def_check_scoped t2.pos "mk_eq2.t2" env t2;
@@ -778,16 +778,16 @@ let base_and_refinement_maybe_delta should_delta env t1 =
 
    aux false (whnf env t1)
 
-let base_and_refinement env t : term * option (bv * term) =
+let base_and_refinement env t : term & option (bv & term) =
     base_and_refinement_maybe_delta false env t
 
 let unrefine env t : term =
     base_and_refinement env t |> fst
 
-let trivial_refinement t : bv * term =
+let trivial_refinement t : bv & term =
     S.null_bv t, U.t_true
 
-let as_refinement delta env t : bv * term =
+let as_refinement delta env t : bv & term =
     let t_base, refinement = base_and_refinement_maybe_delta delta env t in
     match refinement with
         | None -> trivial_refinement t_base
@@ -824,7 +824,7 @@ let wl_to_string wl =
  * its unification variable at the head,
  * and the arguments the uvar is applied to. *)
 type flex_t =
-  | Flex of (term * ctx_uvar * args)
+  | Flex of (term & ctx_uvar & args)
 
 let flex_reason (Flex (_, u, _)) = u.ctx_uvar_reason
 
@@ -884,7 +884,7 @@ let flex_uvar_head t =
  * so it's safe to pass wl.tcenv.
  *)
 let ensure_no_uvar_subst env (t0:term) (wl:worklist)
-  : term * worklist
+  : term & worklist
   = (* Returns true iff the variable x is not affected by substitution s *)
     let bv_not_affected_by (s:subst_ts) (x:bv) : bool =
       let t_x = S.bv_to_name x in
@@ -992,7 +992,7 @@ let destruct_flex_t' t : flex_t =
 
 (* Destruct a term into its uvar head and arguments. The wl is only
 used to track implicits. *)
-let destruct_flex_t (t:term) wl : flex_t * worklist =
+let destruct_flex_t (t:term) wl : flex_t & worklist =
   (* ensure_no_uvar_subst only uses the environment for debugging
    * flags, so it's safe to pass wl.tcenv *)
   let t, wl = ensure_no_uvar_subst wl.tcenv t wl in
@@ -1122,7 +1122,7 @@ let occurs_full (uk:ctx_uvar) t =
     in
     occurs
 
-let rec maximal_prefix (bs:binders) (bs':binders) : binders * (binders * binders) =
+let rec maximal_prefix (bs:binders) (bs':binders) : binders & (binders & binders) =
   match bs, bs' with
   | binder1::bs_tail,
     ({binder_bv=b';binder_qual=i'})::bs'_tail ->
@@ -1514,7 +1514,7 @@ let compress_prob wl p =
     | CProb p -> compress_cprob wl p |> CProb
 
 let rank wl pr : rank_t //the rank
-                * prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
+                & prob   //the input problem, pre-processed a bit (the wl is needed for the pre-processing)
                 =
    let prob = compress_prob wl pr |> maybe_invert_p in
    match prob with
@@ -1560,7 +1560,7 @@ let rank wl pr : rank_t //the rank
     | CProb cp ->
       Rigid_rigid, {cp with rank=Some Rigid_rigid} |> CProb
 
-let next_prob wl : option (prob * list prob * rank_t) =
+let next_prob wl : option (prob & list prob & rank_t) =
                   //a problem with the lowest rank, or a problem whose rank <= flex_rigid_eq, if any
                   //all the other problems in wl
                   //the rank of the first problem, or the minimum rank in the wl
@@ -1644,7 +1644,7 @@ let rec really_solve_universe_eq pid_orig wl u1 u2 =
                 | _ -> false)
         | _ -> occurs_univ v1 (U_max [u]) in
 
-    let rec filter_out_common_univs (u1:list universe) (u2:list universe) :(list universe * list universe) =
+    let rec filter_out_common_univs (u1:list universe) (u2:list universe) :(list universe & list universe) =
       let common_elts = u1 |> List.fold_left (fun uvs uv1 -> if u2 |> List.existsML (fun uv2 -> U.eq_univs uv1 uv2) then uv1::uvs else uvs) [] in
       let filter = List.filter (fun u -> not (common_elts |> List.existsML (fun u' -> U.eq_univs u u'))) in
       filter u1, filter u2
@@ -1758,12 +1758,12 @@ let solve_universe_eq orig wl u1 u2 =
  *
  * We could find the minimum of their lengths, split, and apply, but this is faster.
  *)
-let match_num_binders (bc1: (list 'a * (list 'a -> 'b)))
-                      (bc2: (list 'a * (list 'a -> 'b)))
-    : (list 'a * 'b) * (list 'a * 'b) =
+let match_num_binders (bc1: (list 'a & (list 'a -> 'b)))
+                      (bc2: (list 'a & (list 'a -> 'b)))
+    : (list 'a & 'b) & (list 'a & 'b) =
     let (bs1, mk_cod1) = bc1 in
     let (bs2, mk_cod2) = bc2 in
-    let rec aux (bs1 : list 'a) (bs2 : list 'a) : (list 'a * 'b) * (list 'a * 'b) =
+    let rec aux (bs1 : list 'a) (bs2 : list 'a) : (list 'a & 'b) & (list 'a & 'b) =
         match bs1, bs2 with
         | x::xs, y::ys ->
             let ((xs, xr), (ys, yr)) = aux xs ys in
@@ -1773,7 +1773,7 @@ let match_num_binders (bc1: (list 'a * (list 'a -> 'b)))
     in
     aux bs1 bs2
 
-let guard_of_prob (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : term * worklist =
+let guard_of_prob (wl:worklist) (problem:tprob) (t1 : term) (t2 : term) : term & worklist =
    def_check_prob "guard_of_prob" (TProb problem);
    let env = p_env wl (TProb problem) in
     let has_type_guard t1 t2 =
@@ -1817,7 +1817,7 @@ let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
             then xi = ei
             else xi is a fresh variable
     *)
-let quasi_pattern env (f:flex_t) : option (binders * typ) =
+let quasi_pattern env (f:flex_t) : option (binders & typ) =
     let (Flex (_, ctx_uvar, args)) = f in
     let t_hd = U.ctx_uvar_typ ctx_uvar in
     let ctx = ctx_uvar.ctx_uvar_binders in
@@ -2694,7 +2694,7 @@ and imitate_arrow (orig:prob) (wl:worklist)
          else aux [] [] formals wl
 
 and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
-                  (rhs:worklist -> binders -> list subst_elt -> (prob * worklist)) : solution =
+                  (rhs:worklist -> binders -> list subst_elt -> (prob & worklist)) : solution =
 
    if !dbg_Rel
    then BU.print3 "solve_binders\n\t%s\n%s\n\t%s\n"
@@ -2731,7 +2731,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
     *     so now we return the updated env, and the rhs is solved in that final env
     *     (see how `aux` is called after its definition below)
     *)
-   let rec aux wl scope subst (xs:binders) (ys:binders) : either (probs * formula) string * worklist =
+   let rec aux wl scope subst (xs:binders) (ys:binders) : either (probs & formula) string & worklist =
         match xs, ys with
         | [], [] ->
           let rhs_prob, wl = rhs wl scope subst in
@@ -2774,7 +2774,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
 and try_solve_without_smt_or_else
         (wl:worklist)
         (try_solve:  worklist -> solution)
-        (else_solve: worklist -> (prob * lstring) -> solution)
+        (else_solve: worklist -> (prob & lstring) -> solution)
     : solution =
     let wl' = {wl with defer_ok=NoDefer;
                        smt_ok=false;
@@ -2962,7 +2962,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
     *)
     let try_quasi_pattern (orig:prob) (env:Env.env) (wl:worklist)
                           (lhs:flex_t) (rhs:term)
-        : either string (list uvi) * worklist =
+        : either string (list uvi) & worklist =
         if !dbg_Rel then
           BU.print_string "try_quasi_pattern\n";
         match quasi_pattern env lhs with
@@ -4182,7 +4182,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
             let guard, wl = guard_of_prob wl problem t1 t2 in
             solve (solve_prob orig (Some guard) [] wl)
         in
-        let rec solve_branches wl brs1 brs2 : option (list (binders * prob) * worklist) =
+        let rec solve_branches wl brs1 brs2 : option (list (binders & prob) & worklist) =
             match brs1, brs2 with
             | br1::rs1, br2::rs2 ->
                 let (p1, w1, _) = br1 in
@@ -4353,7 +4353,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
     let c2 = problem.rhs in
     let orig = CProb problem in
     let env = p_env wl orig in
-    let sub_prob : worklist -> term -> rel -> term -> string -> prob * worklist =
+    let sub_prob : worklist -> term -> rel -> term -> string -> prob & worklist =
         fun wl t1 rel t2 reason -> mk_t_problem wl [] orig t1 rel t2 None reason in
 
     let solve_eq c1_comp c2_comp g_lift =
@@ -4441,7 +4441,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
             (c1.effect_name |> Ident.ident_of_lid |> Ident.string_of_id)
             (c2.effect_name |> Ident.ident_of_lid |> Ident.string_of_id) in
 
-          let lift_c1 (edge:edge) : comp_typ * guard_t =
+          let lift_c1 (edge:edge) : comp_typ & guard_t =
             c1 |> S.mk_Comp |> edge.mlift.mlift_wp env
                |> (fun (c, g) -> Env.comp_to_comp_typ env c, g) in
   
@@ -4776,7 +4776,7 @@ let new_t_prob wl env t1 rel t2 =
  p, x, wl
 
 let solve_and_commit wl err
-  : option (deferred * deferred * implicits) =
+  : option (deferred & deferred & implicits) =
   let tx = UF.new_transaction () in
 
   if !dbg_RelBench then
@@ -5279,7 +5279,7 @@ let get_subtyping_prop env t1 t2 =
  *   for inductives, this may later include implicits for pattern variables
  *)
 
-let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.implicits * bool =
+let try_solve_single_valued_implicits env is_tac (imps:Env.implicits) : Env.implicits & bool =
   (*
    * Get the value of the implicit imp
    * Going forward, it can also return new implicits for the pattern variables
@@ -5450,7 +5450,7 @@ let rec unresolved ctx_u : bool =
  *   force it, and then repeat the fixpoint loop
  *)
 let pick_a_univ_deffered_implicit (out : tagged_implicits)
-  : option Env.implicit * tagged_implicits
+  : option Env.implicit & tagged_implicits
   =
   let imps_with_deferred_univs, rest = List.partition
     (fun (_, status) -> status = Implicit_checking_defers_univ_constraint)
@@ -5472,7 +5472,7 @@ let is_tac_implicit_resolved (env:env) (i:implicit) : bool =
 //         implicits have a solution, and do not typecheck it. This still allows
 //         some implicits to remain unresolved, but those will remain in the guard.
 let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
-  : list (implicit * implicit_checking_status) =
+  : list (implicit & implicit_checking_status) =
   
   (* Meta argument cache: during a single run of this resolve_implicits' function
   we keep track of all results of the "cacheable" tactics that are used for meta

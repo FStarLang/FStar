@@ -98,7 +98,7 @@ type uenv = {
   env_fieldname_map:psmap mlident;
   mlpath_of_fieldname:psmap mlpath;
   tydefs:list tydef;
-  type_names:list (fv*mlpath);
+  type_names:list (fv&mlpath);
   tydef_declarations:psmap bool;
   currentModule: mlpath // needed to properly translate the definitions in the current file
 }
@@ -398,7 +398,7 @@ let mlns_of_lid (x:lident) =
     we'll generate [id] for the top-level name
     and then [id1] for the local variable
 *)
-let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath * uenv =
+let new_mlpath_of_lident (g:uenv) (x : lident) : mlpath & uenv =
   let mlp, g =
     if Ident.lid_equals x (FStar.Parser.Const.failwith_lid())
     then ([], string_of_id (ident_of_lid x)), g
@@ -436,8 +436,8 @@ let extend_ty (g:uenv) (a:bv) (map_to_top:bool) : uenv =
 let extend_bv (g:uenv) (x:bv) (t_x:mltyscheme) (add_unit:bool)
               (mk_unit:bool (*some pattern terms become unit while extracting*))
     : uenv
-    * mlident
-    * exp_binding =
+    & mlident
+    & exp_binding =
     let ml_ty = match t_x with
         | ([], t) -> t
         | _ -> MLTY_Top in
@@ -459,7 +459,7 @@ let burn_name (g:uenv) (i:mlident) : uenv =
 
 (** Generating a fresh local term variable *)
 let new_mlident (g:uenv)
-  : uenv * mlident
+  : uenv & mlident
   = let ml_ty = MLTY_Top in
     let x = FStar.Syntax.Syntax.new_bv None FStar.Syntax.Syntax.tun in
     let g, id, _ = extend_bv g x ([], MLTY_Top) false false in
@@ -468,8 +468,8 @@ let new_mlident (g:uenv)
 (** Similar to [extend_bv], except for top-level term identifiers *)
 let extend_fv (g:uenv) (x:fv) (t_x:mltyscheme) (add_unit:bool)
     : uenv
-    * mlident
-    * exp_binding =
+    & mlident
+    & exp_binding =
     let rec mltyFvars (t: mlty) : list mlident  =
       match t with
       | MLTY_Var  x -> [x]
@@ -509,8 +509,8 @@ let extend_erased_fv (g:uenv) (f:fv) : uenv =
 (** Extend with a let binding, either local or top-level *)
 let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
     : uenv
-    * mlident
-    * exp_binding =
+    & mlident
+    & exp_binding =
     match l with
     | Inl x ->
         // FIXME missing in lib; NS: what does this mean??
@@ -520,7 +520,7 @@ let extend_lb (g:uenv) (l:lbname) (t:typ) (t_x:mltyscheme) (add_unit:bool)
 
 (** Extend with an abbreviation [fv] for the type scheme [ts] *)
 let extend_tydef (g:uenv) (fv:fv) (ts:mltyscheme) (meta:FStar.Extraction.ML.Syntax.metadata)
-  : tydef * mlpath * uenv =
+  : tydef & mlpath & uenv =
     let name, g = new_mlpath_of_lident g fv.fv_name.v in
     let tydef = {
         tydef_fv = fv;
@@ -537,7 +537,7 @@ let extend_with_tydef_declaration u l =
   { u with tydef_declarations = BU.psmap_add u.tydef_declarations (Ident.string_of_lid l) true }
 
 (** Extend with [fv], the identifer for an F* inductive type *)
-let extend_type_name (g:uenv) (fv:fv) : mlpath * uenv =
+let extend_type_name (g:uenv) (fv:fv) : mlpath & uenv =
   let name, g = new_mlpath_of_lident g fv.fv_name.v in
   name,
   {g with type_names=(fv,name)::g.type_names}

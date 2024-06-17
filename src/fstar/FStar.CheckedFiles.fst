@@ -60,7 +60,7 @@ type checked_file_entry_stage2 =
   //digest is that of the corresponding checked file
   //except when the entries are for the current .fst and .fsti,
   //digest is that of the source file
-  deps_dig: list (string * string);
+  deps_dig: list (string & string);
 
   //typechecking result, including the smt encoding
   tc_res: tc_result
@@ -101,7 +101,7 @@ instance _ : showable tc_result_t = {
  * The cache of checked files
  *)
 type cache_t =
-  tc_result_t *  //tc data part
+  tc_result_t &  //tc data part
 
   //either: reason why this checked file is not valid for parsing data
   //or    : parsing_data
@@ -114,7 +114,7 @@ let mcache : smap cache_t = BU.smap_create 50
  * Either the reason because of which dependences are stale/invalid
  *   or the list of dep string, as defined in the checked_file_entry above
  *)
-let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string * string)) =
+let hash_dependences (deps:Dep.deps) (fn:string) :either string (list (string & string)) =
   let fn =
     match FStar.Options.find_file fn with
     | Some fn -> fn
@@ -243,8 +243,8 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
   if !dbg then
     BU.print1 "Trying to load checked file with tc result %s\n" checked_fn;
 
-  let load_tc_result (fn:string) :list (string * string) * tc_result =
-    let entry :option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
+  let load_tc_result (fn:string) :list (string & string) & tc_result =
+    let entry :option (checked_file_entry_stage1 & checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
     match entry with
      | Some ((_,s2)) -> s2.deps_dig, s2.tc_res
      | _ ->
@@ -474,7 +474,7 @@ let store_module_to_cache env fn parsing_data tc_result =
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string)
-  = let entry : option (checked_file_entry_stage1 * checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
+  = let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
     match entry with
      | Some ((s1,s2)) -> Some (s1.parsing_data, List.map fst s2.deps_dig, s2.tc_res)
      | _ -> None

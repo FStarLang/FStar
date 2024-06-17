@@ -30,7 +30,7 @@ module TcErr = FStar.TypeChecker.Err
 module TcEnv = FStar.TypeChecker.Env
 module CTable = FStar.Interactive.CompletionTable
 
-type position = string * int * int
+type position = string & int & int
 type sl_reponse = { slr_name: string;
                     slr_def_range: option Range.range;
                     slr_typ: option string;

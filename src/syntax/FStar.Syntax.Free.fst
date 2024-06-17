@@ -64,7 +64,7 @@ type use_cache_t =
 
 (* We use an RBSet for the fvars, as order definitely does not matter here
 and it's faster. *)
-type free_vars_and_fvars = free_vars * RBSet.t Ident.lident
+type free_vars_and_fvars = free_vars & RBSet.t Ident.lident
 
 (* Snoc without duplicates *)
 val snoc : #a:Type -> {| deq a |} -> list a -> a -> list a

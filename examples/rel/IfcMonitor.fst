@@ -77,7 +77,7 @@ type no_sensitive_upd (h:heap) (env:label_fun) (pc:label) (h':heap) =
 
 let rec interpret_exp_st (env:label_fun) (e:exp) 
   (* : INT_STORE_EXC int (fun s0 p -> forall x. p (Some x, s0)) *)
-  : ISFR.ISRNull (int * label)
+  : ISFR.ISRNull (int & label)
 =
   match e with
   | AInt i -> i, Low
@@ -89,7 +89,7 @@ let rec interpret_exp_st (env:label_fun) (e:exp)
 
 
 (* unfold *)
-let interpret_exp (h:heap) (env:label_fun) (e:exp)  : Tot (int * label) = reify (interpret_exp_st env e) h
+let interpret_exp (h:heap) (env:label_fun) (e:exp)  : Tot (int & label) = reify (interpret_exp_st env e) h
 
 let interpret_exp' (h:heap) (e:exp) : Tot nat =
   let n,_ = interpret_exp h (fun _ -> Low)  e in

@@ -111,7 +111,7 @@ val intro : unit -> Tac binding
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
-val intro_rec  : unit -> Tac (binding * binding)
+val intro_rec  : unit -> Tac (binding & binding)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
@@ -292,7 +292,7 @@ match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list
 with the fvars of each constructor and their arities, in the order
 they appear as goals. *)
-val t_destruct : term -> Tac (list (fv * nat))
+val t_destruct : term -> Tac (list (fv & nat))
 
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
@@ -400,7 +400,7 @@ val string_to_term : env -> string -> Tac term
 (** [push_bv_dsenv e id] pushes a identifier [id] into the parsing
 environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding binding. *)
-val push_bv_dsenv : env -> string -> Tac (env * binding)
+val push_bv_dsenv : env -> string -> Tac (env & binding)
 
 (** Print a term via the pretty printer. This is considered effectful
 since 1) setting options can change the behavior of this function, and

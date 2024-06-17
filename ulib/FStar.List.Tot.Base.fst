@@ -133,7 +133,7 @@ let op_At x y = append x y
     either be too restrictive or would lead to over-triggering. More
     context for this can be seen in the (collapsed and uncollapsed)
     comments at https://github.com/FStarLang/FStar/pull/1560 *)
-val snoc: (list 'a * 'a) -> Tot (list 'a)
+val snoc: (list 'a & 'a) -> Tot (list 'a)
 let snoc (l, x) = append l [x]
 
 (** [flatten l], where [l] is a list of lists, returns the list of the
@@ -364,7 +364,7 @@ elements [x] of [l] are in [l1] if [f x] holds, and in [l2]
 otherwise. Both [l1] and [l2] retain the original order of
 [l]. Requires, at type-checking time, [f] to be a pure total
 function. *)
-val partition: f:('a -> Tot bool) -> list 'a -> Tot (list 'a * list 'a)
+val partition: f:('a -> Tot bool) -> list 'a -> Tot (list 'a & list 'a)
 let rec partition f = function
   | [] -> [], []
   | hd::tl ->
@@ -406,7 +406,7 @@ let rec no_repeats_p #a la =
 of [l] whose first element is [x], or [None] only if no such element
 exists. Requires, at type-checking time, the type of [x] to have
 decidable equality. Named as in: OCaml. *)
-val assoc: #a:eqtype -> #b:Type -> a -> list (a * b) -> Tot (option b)
+val assoc: #a:eqtype -> #b:Type -> a -> list (a & b) -> Tot (option b)
 let rec assoc #a #b x = function
   | [] -> None
   | (x', y)::tl -> if x=x' then Some y else assoc x tl
@@ -414,7 +414,7 @@ let rec assoc #a #b x = function
 (** [split] takes a list of pairs [(x1, y1), ..., (xn, yn)] and
 returns the pair of lists ([x1, ..., xn], [y1, ..., yn]). Named as in:
 OCaml *)
-val split: list ('a * 'b) -> Tot (list 'a * list 'b)
+val split: list ('a & 'b) -> Tot (list 'a & list 'b)
 let rec split l = match l with
     | [] -> ([],[])
     | (hd1,hd2)::tl ->
@@ -429,7 +429,7 @@ let unzip l = split l
 (** [unzip3] takes a list of triples [(x1, y1, z1), ..., (xn, yn, zn)]
 and returns the triple of lists ([x1, ..., xn], [y1, ..., yn], [z1,
 ..., zn]). Named as in: Haskell *)
-val unzip3: list ('a * 'b * 'c) -> Tot (list 'a * list 'b * list 'c)
+val unzip3: list ('a & 'b & 'c) -> Tot (list 'a & list 'b & list 'c)
 let rec unzip3 l = match l with
     | [] -> ([],[],[])
     | (hd1,hd2,hd3)::tl ->
@@ -441,7 +441,7 @@ let rec unzip3 l = match l with
 (** [splitAt] takes a natural number n and a list and returns a pair
     of the maximal prefix of l of size smaller than n and the rest of
     the list *)
-let rec splitAt (#a:Type) (n:nat) (l:list a) : Tot (list a * list a) =
+let rec splitAt (#a:Type) (n:nat) (l:list a) : Tot (list a & list a) =
   if n = 0 then [], l
   else
     match l with
@@ -459,7 +459,7 @@ let rec lemma_splitAt_snd_length (#a:Type) (n:nat) (l:list a) :
 
 (** [unsnoc] is an inverse of [snoc]. It splits a list into
     all-elements-except-last and last element. *)
-val unsnoc: #a:Type -> l:list a{length l > 0} -> Tot (list a * a)
+val unsnoc: #a:Type -> l:list a{length l > 0} -> Tot (list a & a)
 let unsnoc #a l =
   let l1, l2 = splitAt (length l - 1) l in
   lemma_splitAt_snd_length (length l - 1) l;
@@ -468,7 +468,7 @@ let unsnoc #a l =
 (** [split3] splits a list into 3 parts. This allows easy access to
     the part of the list before and after the element, as well as the
     element itself. *)
-val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a * a * list a)
+val split3: #a:Type -> l:list a -> i:nat{i < length l} -> Tot (list a & a & list a)
 let split3 #a l i =
   let a, rest = splitAt i l in
   lemma_splitAt_snd_length i l;

@@ -41,7 +41,7 @@ let test1 tb  : Tac unit =
     then fail ("test failed: " ^ term_to_string (quote tb))
     else ()
 
-let tests () : Tac (list (term * term * bool)) = [
+let tests () : Tac (list (term & term & bool)) = [
   // These tests do not go through now, since we fail to
   // typecheck the when-clauses
   (* (`(fun (x:t) -> match x with | C x y when x > 0 -> y), *)

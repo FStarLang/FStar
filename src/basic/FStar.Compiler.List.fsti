@@ -54,26 +54,26 @@ val collect : ('a -> (list 'b)) -> (list 'a) -> (list 'b)
 val tryFind : ('a -> bool) -> (list 'a) -> (option 'a)
 val tryPick : ('a -> (option 'b)) -> (list 'a) -> (option 'b)
 val choose : ('a -> (option 'b)) -> (list 'a) -> (list 'b)
-val partition : ('a -> bool) -> (list 'a) -> ((list 'a) * (list 'a))
-val splitAt : int -> list 'a -> list 'a * list 'a
-val split : (list ('a * 'b)) -> Tot ((list 'a) * (list 'b))
-val unzip3 : list ('a * 'b * 'c) -> Tot ((list 'a) * (list 'b) * (list 'c))
-val zip : (list 'a) -> (list 'b) -> (list ('a * 'b))
-val zip3 : (list 'a) -> (list 'b) -> (list 'c) -> (list ('a * 'b * 'c))
+val partition : ('a -> bool) -> (list 'a) -> ((list 'a) & (list 'a))
+val splitAt : int -> list 'a -> list 'a & list 'a
+val split : (list ('a & 'b)) -> Tot ((list 'a) & (list 'b))
+val unzip3 : list ('a & 'b & 'c) -> Tot ((list 'a) & (list 'b) & (list 'c))
+val zip : (list 'a) -> (list 'b) -> (list ('a & 'b))
+val zip3 : (list 'a) -> (list 'b) -> (list 'c) -> (list ('a & 'b & 'c))
 val sortWith : ('a -> 'a -> int) -> (list 'a) -> (list 'a)
 val bool_of_compare : ('a -> 'a -> Tot int) -> 'a -> 'a -> Tot bool
 val tail : (list '_1225) -> (list '_1225)
 val tl : list '_1230 -> list '_1230
 val rev_append : (list '_5110) -> (list '_5110) -> Tot (list '_5110)
 val concat : (list (list '_6116)) -> Tot (list '_6116)
-val unzip : (list ('_36948 * '_36947)) -> Tot ((list '_36948) * (list '_36947))
+val unzip : (list ('_36948 & '_36947)) -> Tot ((list '_36948) & (list '_36947))
 val filter_map: ('a -> option 'b) -> list 'a -> list 'b
 val count: #a:eqtype -> a -> (list a) -> Tot nat
 val mem: #a:eqtype -> a -> (list a) -> Tot bool
-val assoc: #a:eqtype -> #b:Type -> a -> (list (a * b)) -> Tot (option b)
+val assoc: #a:eqtype -> #b:Type -> a -> (list (a & b)) -> Tot (option b)
 val contains: #a:eqtype -> a -> (list a) -> Tot bool
 val unique: #a:eqtype -> list a -> list a
 val index: #a:eqtype -> (a -> bool) -> list a -> int
-val span: #a:eqtype -> (a -> bool) -> list a -> Tot ((list a) * (list a))
+val span: #a:eqtype -> (a -> bool) -> list a -> Tot ((list a) & (list a))
 val deduplicate (f: 'a -> 'a -> bool) (s: list 'a) : list 'a
-val fold_left_map (f: 'a -> 'b -> 'a * 'c) (s: 'a) (l: list 'b) : 'a * list 'c
+val fold_left_map (f: 'a -> 'b -> 'a & 'c) (s: 'a) (l: list 'b) : 'a & list 'c

@@ -201,7 +201,7 @@ let fail2 msg x y   = fail (BU.format2 msg x y)
 let fail3 msg x y z = fail (BU.format3 msg x y z)
 let fail4 msg x y z w = fail (BU.format4 msg x y z w)
 
-let destruct_eq' (typ : typ) : option (term * term) =
+let destruct_eq' (typ : typ) : option (term & term) =
     let open FStar.Syntax.Formula in
     match destruct_typ_as_formula typ with
     | Some (BaseConn(l, [_; (e1, None); (e2, None)]))
@@ -221,7 +221,7 @@ let destruct_eq' (typ : typ) : option (term * term) =
         | _ -> None
         end
 
-let destruct_eq (env : Env.env) (typ : typ) : option (term * term) =
+let destruct_eq (env : Env.env) (typ : typ) : option (term & term) =
 // TODO: unascribe?
     let typ = whnf env typ in
     match destruct_eq' typ with
@@ -602,7 +602,7 @@ let curms () : tac Z.t =
     ret (BU.now_ms () |> Z.of_int_fs)
 
 (* Annoying duplication here *)
-let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
+let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
@@ -614,7 +614,7 @@ let __tc (e : env) (t : term) : tac (term * typ * guard_t) =
                                                   (Errors.rendermsg msg) // FIXME
            end))
 
-let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
+let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     bind get (fun ps ->
     mlog (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (show t)) (fun () ->
     let e = {e with uvar_subtyping=false} in
@@ -628,7 +628,7 @@ let __tc_ghost (e : env) (t : term) : tac (term * typ * guard_t) =
                                                   (Errors.rendermsg msg) // FIXME
            end))
 
-let __tc_lax (e : env) (t : term) : tac (term * lcomp * guard_t) =
+let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     bind get (fun ps ->
     mlog (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
@@ -656,7 +656,7 @@ let tcc (e : env) (t : term) : tac comp = wrap_err "tcc" <|
 let tc (e : env) (t : term) : tac typ = wrap_err "tc" <|
     bind (tcc e t) (fun c -> ret (U.comp_result c))
 
-let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a * 'b) =
+let divide (n:Z.t) (l : tac 'a) (r : tac 'b) : tac ('a & 'b) =
     bind get (fun p ->
     bind (try ret (List.splitAt (Z.to_int_fs n) p.goals) with | _ -> fail "divide: not enough goals") (fun (lgs, rgs) ->
     let lp = { p with goals = lgs; smt_goals = [] } in
@@ -774,7 +774,7 @@ let intro () : tac binder = wrap_err "intro" <| (
 
 
 // TODO: missing: precedes clause, and somehow disabling fixpoints only as needed
-let intro_rec () : tac (binder * binder) =
+let intro_rec () : tac (binder & binder) =
     let! goal = cur_goal in
     BU.print_string "WARNING (intro_rec): calling this is known to cause normalizer loops\n";
     BU.print_string "WARNING (intro_rec): proceed at your own risk...\n";
@@ -893,13 +893,13 @@ let try_unify_by_application (should_check:option should_check_uvar)
                              (ty1 : term)
                              (ty2 : term)
                              (rng:Range.range)
-   : tac (list (term * aqual * ctx_uvar))
+   : tac (list (term & aqual & ctx_uvar))
    = let f = if only_match then do_match else do_unify in
      let must_tot = true in
-     let rec aux (acc : list (term * aqual * ctx_uvar))
+     let rec aux (acc : list (term & aqual & ctx_uvar))
                  (typedness_deps : list ctx_uvar) //map proj_3 acc
                  (ty1:term)
-        : tac (list (term * aqual * ctx_uvar))
+        : tac (list (term & aqual & ctx_uvar))
         = match! f must_tot e ty2 ty1 with
           | true -> ret acc (* Done! *)
           | false ->
@@ -1018,7 +1018,7 @@ let t_apply (uopt:bool) (only_match:bool) (tc_resolved_uvars:bool) (tm:term) : t
   )
 
 // returns pre and post
-let lemma_or_sq (c : comp) : option (term * term) =
+let lemma_or_sq (c : comp) : option (term & term) =
     let eff_name, res, args = U.comp_eff_name_res_and_args c in
     if lid_equals eff_name PC.effect_Lemma_lid then
         let pre, post = match args with
@@ -1140,7 +1140,7 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
       )
     )
 
-let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
+let split_env (bvar : bv) (e : env) : option (env & bv & list bv) =
     let rec aux e =
         match Env.pop_bv e with
         | None -> None
@@ -1151,7 +1151,7 @@ let split_env (bvar : bv) (e : env) : option (env * bv * list bv) =
     in
     map_opt (aux e) (fun (e', bv, bvs) -> (e', bv, List.rev bvs))
 
-let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv * goal)) =
+let subst_goal (b1 : bv) (b2 : bv) (g:goal) : tac (option (bv & goal)) =
     match split_env b1 (goal_env g) with
     | Some (e0, b1, bvs) ->
         let bs = List.map S.mk_binder (b1::bvs) in
@@ -1521,7 +1521,7 @@ let dup () : tac unit =
   add_goals [g']
 
 // longest_prefix f l1 l2 = (p, r1, r2) ==> l1 = p@r1 /\ l2 = p@r2
-let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list 'a * list 'a * list 'a =
+let longest_prefix (f : 'a -> 'a -> bool) (l1 : list 'a) (l2 : list 'a) : list 'a & list 'a & list 'a =
     let rec aux acc l1 l2 =
         match l1, l2 with
         | x::xs, y::ys ->
@@ -1769,7 +1769,7 @@ let failwhen (b:bool) (msg:string) : tac unit =
     then fail msg
     else ret ()
 
-let t_destruct (s_tm : term) : tac (list (fv * Z.t)) = wrap_err "destruct" <| (
+let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
     let! g = cur_goal in
     let! s_tm, s_ty, guard = __tc (goal_env g) s_tm in
     proc_guard "destruct" (goal_env g) guard (Some (should_check_goal_uvar g)) (rangeof g) ;!
@@ -2216,7 +2216,7 @@ let string_to_term (e: Env.env) (s: string): tac term
     | ASTFragment _ -> fail ("string_to_term: expected a Term as a result, got an ASTFragment")
     | ParseError (_, err, _) -> fail ("string_to_term: got error " ^ Errors.rendermsg err) // FIXME
 
-let push_bv_dsenv (e: Env.env) (i: string): tac (env * bv)
+let push_bv_dsenv (e: Env.env) (i: string): tac (env & bv)
   = let ident = Ident.mk_ident (i, FStar.Compiler.Range.dummyRange) in
     let dsenv, bv = FStar.Syntax.DsEnv.push_bv e.dsenv ident in
     ret ({ e with dsenv }, bv)

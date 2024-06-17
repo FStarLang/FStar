@@ -25,7 +25,7 @@ module Seq = FStar.Seq
 
 val partition: #a:eqtype -> f:(a -> a -> Tot bool){total_order a f}
     -> s:seq a -> pivot:nat{pivot < length s} -> back:nat{pivot <= back /\ back < length s} ->
-       Pure (seq a * seq a)
+       Pure (seq a & seq a)
          (requires (forall (i:nat{i < length s}).
                                  ((i <= pivot ==> f (index s i) (index s pivot))
                                   /\ (back < i  ==> f (index s pivot) (index s i)))))

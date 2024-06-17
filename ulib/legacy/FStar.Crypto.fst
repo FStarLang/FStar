@@ -41,7 +41,7 @@ assume val aes_128_cbc_decrypt: aes_key -> aes_iv -> bytes -> Tot bytes
 assume val aes_128_cbc_encrypt: k:aes_key -> iv:aes_iv -> p:bytes -> c:bytes {aes_128_cbc_decrypt k iv c = p}
 
 type rsa_pkey = {modulus: bytes; exponent: bytes}
-type rsa_skey = rsa_pkey * bytes
+type rsa_skey = rsa_pkey & bytes
 
 assume val rsa_keygen: unit -> Tot rsa_skey
 assume val rsa_pk: rsa_skey -> Tot rsa_pkey

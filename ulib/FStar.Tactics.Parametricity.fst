@@ -4,7 +4,7 @@ open FStar.List
 open FStar.Tactics.V2
 
 type bvmap = list (namedv & (binder & binder & binder))
-let fvmap =  list (fv * fv)
+let fvmap =  list (fv & fv)
 
 noeq
 type param_state = {
@@ -19,7 +19,7 @@ let rec fold_right2 (f : 'a -> 'b -> 'c -> Tac 'c) (l1:list 'a) (l2:list 'b) (c:
   | [], [] -> c
   | _ -> fail "fold_right2"
 
-let rec zip3 (l1 : list 'a) (l2 : list 'b) (l3 : list 'c) : list ('a * 'b * 'c) =
+let rec zip3 (l1 : list 'a) (l2 : list 'b) (l3 : list 'c) : list ('a & 'b & 'c) =
   match l1, l2, l3 with
   | h1::t1, h2::t2, h3::t3 -> (h1, h2, h3) :: (zip3 t1 t2 t3)
   | _ -> []

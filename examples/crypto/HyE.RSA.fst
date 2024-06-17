@@ -42,7 +42,7 @@ assume val ciphersize : nat
 type plain   = lbytes plainsize
 type cipher  = lbytes ciphersize
 
-type keypair = pkey * skey
+type keypair = pkey & skey
 assume val generated : keypair -> Tot bool
 
 assume val gen: unit -> x:keypair{generated x}

@@ -42,7 +42,7 @@ assume val send: socket -> bytes -> EXT (optResult string unit)
 assume val close: socket -> EXT unit
 
 (* Helper functions *)
-assume val socket_split: socket -> EXT (sock_in_channel * sock_out_channel)
+assume val socket_split: socket -> EXT (sock_in_channel & sock_out_channel)
 assume val flush: sock_out_channel -> EXT unit
 
 (* Unimplemented *)

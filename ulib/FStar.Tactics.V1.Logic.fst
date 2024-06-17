@@ -244,7 +244,7 @@ let and_elim (t : term) : Tac unit =
      with | _ -> apply_lemma (`(__and_elim' (`#t)))
     end
 
-let destruct_and (t : term) : Tac (binder * binder) =
+let destruct_and (t : term) : Tac (binder & binder) =
     and_elim t;
     (implies_intro (), implies_intro ())
 
@@ -291,7 +291,7 @@ let sklem0 (#a:Type) (#p : a -> Type0) ($v : (exists (x:a). p x)) (phi:Type0) :
         (ensures phi) = ()
 
 private
-let rec sk_binder' (acc:binders) (b:binder) : Tac (binders * binder) =
+let rec sk_binder' (acc:binders) (b:binder) : Tac (binders & binder) =
   focus (fun () ->
     try
       apply_lemma (`(sklem0 (`#(binder_to_term b))));

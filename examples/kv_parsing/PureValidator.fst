@@ -42,8 +42,8 @@ let seq (#t:Type) (#t':Type) (p:parser t) (p': parser t') : parser t' =
           end
         | None -> None
 
-unfold let invalid (#b:bytes): option (unit * n:nat{n <= length b}) = None
-unfold let valid (#b:bytes) (n:nat{n <= length b}) : option (unit * n:nat{n <= length b}) = Some ((), n)
+unfold let invalid (#b:bytes): option (unit & n:nat{n <= length b}) = None
+unfold let valid (#b:bytes) (n:nat{n <= length b}) : option (unit & n:nat{n <= length b}) = Some ((), n)
 
 let skip_bytes (n:nat) : validator =
   fun b -> if length b < n then invalid
@@ -53,8 +53,8 @@ let skip_bytes (n:nat) : validator =
 // validators are a special case of parsers and don't return quite the same
 // thing
 let parser_validation_checks_parse #t (b: bytes)
-  (v: option (unit * n:nat{n <= length b}))
-  (p: option (t * n:nat{n <= length b})) : Type0 =
+  (v: option (unit & n:nat{n <= length b}))
+  (p: option (t & n:nat{n <= length b})) : Type0 =
   Some? v ==> (Some? p /\ snd (Some?.v v) == snd (Some?.v p))
 
 let validator_checks_on (v:validator) #t (p: parser t) (b:bytes{length b < pow2 32}) = parser_validation_checks_parse b (v b) (p b)

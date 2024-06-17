@@ -28,7 +28,7 @@ module FStar.DM4F.StExnC
 (* The underlying representation type. The two ints are
  * resulting state and exception count, respectively. *)
 let stexnc a =
-  int -> M (option a * (int * int))
+  int -> M (option a & (int & int))
 
 (* Monad definition *)
 val return : (a:Type) -> (x:a) -> stexnc a

@@ -57,7 +57,7 @@ let run_tactic_on_typ
         (rng_tac : Range.range) (rng_goal : Range.range)
         (tactic:term) (env:Env.env) (typ:term)
                     : list goal // remaining goals
-                    * term // witness
+                    & term // witness
                     =
     let rng = range_of_rng (use_range rng_tac) (use_range rng_goal) in
     let ps, w = FStar.Tactics.V2.Basic.proofstate_of_goal_ty rng env typ in
@@ -96,8 +96,8 @@ type pol =
 // Result of traversal
 type tres_m 'a =
     | Unchanged of 'a
-    | Simplified of 'a * list goal
-    | Dual of 'a * 'a * list goal
+    | Simplified of 'a & list goal
+    | Dual of 'a & 'a & list goal
 
 type tres = tres_m term
 
@@ -178,7 +178,7 @@ let by_tactic_interp (pol:pol) (e:Env.env) (t:term) : tres =
     | _ ->
         Unchanged t
 
-let explode (t : tres_m 'a) : 'a * 'a * list goal =
+let explode (t : tres_m 'a) : 'a & 'a & list goal =
     match t with
     | Unchanged t -> (t, t, [])
     | Simplified (t, gs) -> (t, t, gs)
@@ -304,7 +304,7 @@ let rec traverse (f: pol -> Env.env -> term -> tres) (pol:pol) (e:Env.env) (t:te
         Dual ({t with n = tn}, p', gs@gs')
 
 let preprocess (env:Env.env) (goal:term)
-  : bool & list (Env.env * term * O.optionstate)
+  : bool & list (Env.env & term & O.optionstate)
     (* bool=true iff any tactic actually ran *)
 =
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
@@ -634,7 +634,7 @@ let pol_to_string = function
   | Both -> "Both"
 
 let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
-  : list (Env.env * term)
+  : list (Env.env & term)
   = if !dbg_SpinoffAll then BU.print1 "spinoff_all called with %s\n" (show goal);
     Errors.with_ctx "While spinning off all goals" (fun () ->
       let initial = (1, []) in

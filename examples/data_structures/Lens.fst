@@ -158,7 +158,7 @@ let moveUp' (c:colored circle) (offset_y: int) =
 
 /// You can also build other kinds of lens combinator
 /// For example, focusing on two different parts of an object at once
-let ( || ) (l1:lens 'a 'b) (l2:lens 'a 'c) : lens 'a ('b * 'c) = {
+let ( || ) (l1:lens 'a 'b) (l2:lens 'a 'c) : lens 'a ('b & 'c) = {
   get = (fun a -> l1.get a, l2.get a);
   put = (fun (b, c) a -> l2.put c (l1.put b a))
 }

@@ -27,7 +27,7 @@ assume val reify_ : #a:Type ->
 	    #post:(heap -> Tot (st_post a)) ->
             e:(unit -> MRefST a pre post) ->
 	    h0:heap ->
-	    Pure (a * heap) (pre h0) (fun xh1 -> heap_rel h0 (snd xh1) /\ post h0 (fst xh1) (snd xh1))
+	    Pure (a & heap) (pre h0) (fun xh1 -> heap_rel h0 (snd xh1) /\ post h0 (fst xh1) (snd xh1))
 
 
 (* A small example program demonstrating the unsoundness of the combination of reify_ and recall. *)

@@ -252,7 +252,7 @@ let proc_check_with (attrs:list attribute) (kont : unit -> 'a) : 'a =
   | _ -> failwith "ill-formed `check_with`"
 
 let handle_postprocess_with_attr (env:Env.env) (ats:list attribute)
-    : (list attribute * option term)
+    : (list attribute & option term)
 =   (* Extract the postprocess_with *)
     match U.extract_attr' PC.postprocess_with ats with
     | None -> ats, None
@@ -269,7 +269,7 @@ let store_sigopts (se:sigelt) : sigelt =
   { se with sigopts = Some (Options.get_vconfig ()) }
 
 (* Alternative to making a huge let rec... knot is set below in this file *)
-let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt * Env.env)) =
+let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
   BU.mk_ref None
 
 let do_two_phases env : bool = Env.should_verify env
@@ -281,7 +281,7 @@ let run_phase1 (f:unit -> 'a) =
 
 
 (* The type checking rule for Sig_let (lbs, lids) *)
-let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
+let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
     let env0 = env in
     let env = Env.set_range env r in
     let check_quals_eq l qopt val_q = match qopt with
@@ -546,7 +546,7 @@ let tc_sig_let env r se lbs lids : list sigelt * list sigelt * Env.env =
 
     [se], [], env0
 
-let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
+let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
   let env = env0 in
   let se = match se.sigel with
          // Disable typechecking attributes for [Sig_fail] bundles, so
@@ -874,7 +874,7 @@ let tc_decl' env0 se: list sigelt * list sigelt * Env.env =
 (* [tc_decl env se] typechecks [se] in environment [env] and returns *
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
-let tc_decl env se: list sigelt * list sigelt * Env.env =
+let tc_decl env se: list sigelt & list sigelt & Env.env =
   let env = set_hint_correlator env se in
   if Debug.any () then
     BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
@@ -1121,7 +1121,7 @@ let tc_more_partial_modul env modul decls =
   let modul = {modul with declarations=modul.declarations@ses} in
   modul, ses, env
 
-let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul * env) =
+let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let env = Env.finish_module en m in
 
@@ -1138,7 +1138,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
 let deep_compress_modul (m:modul) : modul =
   { m with declarations = List.map (Compress.deep_compress_se false false) m.declarations }
 
-let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul * env) =
+let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in

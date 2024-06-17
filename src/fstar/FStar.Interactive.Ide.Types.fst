@@ -55,7 +55,7 @@ let initial_range =
 type completion_context =
 | CKCode
 | CKOption of bool (* #set-options (false) or #reset-options (true) *)
-| CKModuleOrNamespace of bool (* modules *) * bool (* namespaces *)
+| CKModuleOrNamespace of bool (* modules *) & bool (* namespaces *)
 
 type lookup_context =
 | LKSymbolOnly
@@ -63,7 +63,7 @@ type lookup_context =
 | LKOption
 | LKCode
 
-type position = string * int * int
+type position = string & int & int
 
 type push_kind = | SyntaxCheck | LaxCheck | FullCheck
 
@@ -75,7 +75,7 @@ type push_query =
     push_peek_only: bool;
     //Either a string: Just the raw content of a document fragment
     //Or a parsed document fragment and the raw content it corresponds to
-    push_code_or_decl: either string (FStar.Parser.AST.decl * PI.code_fragment)
+    push_code_or_decl: either string (FStar.Parser.AST.decl & PI.code_fragment)
   }
 
 type lookup_symbol_range = json
@@ -83,7 +83,7 @@ type lookup_symbol_range = json
 type query_status = | QueryOK | QueryNOK | QueryViolatesProtocol
 
 (* Types concerning repl *)
-type repl_depth_t = TcEnv.tcenv_depth_t * int
+type repl_depth_t = TcEnv.tcenv_depth_t & int
 type optmod_t = option Syntax.Syntax.modul
 
 type timed_fname =
@@ -95,12 +95,12 @@ type timed_fname =
 dependencies, as they carry enough information to determine whether a dependency
 is stale. **)
 type repl_task =
-  | LDInterleaved of timed_fname * timed_fname (* (interface * implementation) *)
+  | LDInterleaved of timed_fname & timed_fname (* (interface * implementation) *)
   | LDSingle of timed_fname (* interface or implementation *)
   | LDInterfaceOfCurrentFile of timed_fname (* interface *)
   | PushFragment of either PI.input_frag FStar.Parser.AST.decl (* code fragment *)
-                  * push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
-                  * list json (* any warnings that were raised while checking this fragment *)
+                  & push_kind (* FullCheck, LaxCheck, SyntaxCheck *)
+                  & list json (* any warnings that were raised while checking this fragment *)
   | Noop (* Used by compute, PushPartialCheckedFile *)
 
 type full_buffer_request_kind =
@@ -119,10 +119,10 @@ type query' =
 | Pop
 | Push of push_query
 | PushPartialCheckedFile of string (* long declaration name *)
-| VfsAdd of option string (* fname *) * string (* contents *)
-| AutoComplete of string * completion_context
-| Lookup of string * lookup_context * option position * list string * option lookup_symbol_range
-| Compute of string * option (list FStar.TypeChecker.Env.step)
+| VfsAdd of option string (* fname *) & string (* contents *)
+| AutoComplete of string & completion_context
+| Lookup of string & lookup_context & option position & list string & option lookup_symbol_range
+| Compute of string & option (list FStar.TypeChecker.Env.step)
 | Search of string
 | GenericError of string
 | ProtocolViolation of string
@@ -141,7 +141,7 @@ type query' =
 // Cancel all requests if the position is None
 | Cancel of option position
 and query = { qq: query'; qid: string }
-and callback_t = repl_state -> (query_status * list json) * either repl_state int
+and callback_t = repl_state -> (query_status & list json) & either repl_state int
 and repl_state = {
     repl_line: int;
     repl_column: int;
@@ -154,7 +154,7 @@ and repl_state = {
     repl_buffered_input_queries: list query
 }
 and repl_stack_t = list repl_stack_entry_t
-and repl_stack_entry_t  = repl_depth_t * (repl_task * repl_state)
+and repl_stack_entry_t  = repl_depth_t & (repl_task & repl_state)
 
 // Global repl_state, keeping state of different buffers
 type grepl_state = { grepl_repls: U.psmap repl_state; grepl_stdin: stream_reader }

@@ -212,7 +212,7 @@ val lemma_cmp_gt : s:va_state -> o1:va_operand -> o2:va_operand -> Lemma
   [SMTPat (eval_ocmp s (va_cmp_gt o1 o2))]
 
 val va_lemma_block : (b0:va_codes) -> (s0:va_state) -> (sN:va_state) ->
-  Ghost (va_state * va_code * va_codes)
+  Ghost (va_state & va_code & va_codes)
   (requires (Cons? b0 /\ eval_code (va_Block b0) s0 sN))
   (ensures  (fun (s1, c_1, b1) ->
     b0 == va_CCons c_1 b1 /\
@@ -223,7 +223,7 @@ val va_lemma_empty : (s0:va_state) -> (sN:va_state) -> Ghost va_state
   (requires (eval_code (va_Block (va_CNil ())) s0 sN))
   (ensures  (fun sM -> sM == s0 /\ sM == sN))
 
-val va_lemma_ifElse : ifb:ocmp -> ct:va_code -> cf:va_code -> s0:va_state -> sN:va_state -> Ghost (bool * va_state)
+val va_lemma_ifElse : ifb:ocmp -> ct:va_code -> cf:va_code -> s0:va_state -> sN:va_state -> Ghost (bool & va_state)
   (requires (eval_code (IfElse ifb ct cf) s0 sN))
   (ensures  (fun (cond, sM) ->
     cond == eval_ocmp s0 ifb /\
@@ -236,14 +236,14 @@ unfold let eval_while_va_code  (b:ocmp) (c:va_code) (n:nat) (s0:va_state) (sN:va
 let va_whileInv (b:ocmp) (c:va_code) (n:int) (s0:va_state) (sN:va_state) =
   n >= 0 /\ eval_while b c n s0 sN
 
-val va_lemma_while : b:ocmp -> c:va_code -> s0:va_state -> sN:va_state -> Ghost (nat * va_state)
+val va_lemma_while : b:ocmp -> c:va_code -> s0:va_state -> sN:va_state -> Ghost (nat & va_state)
   (requires (eval_code (While b c) s0 sN))
   (ensures  (fun (n, s1) ->
     eval_while b c n s0 sN /\
     s1 == s0
   ))
 
-val va_lemma_whileTrue : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> sN:va_state -> Ghost (va_state * va_state)
+val va_lemma_whileTrue : b:ocmp -> c:va_code -> n:nat -> s0:va_state -> sN:va_state -> Ghost (va_state & va_state)
   (requires
     n > 0 /\
     eval_while b c n s0 sN

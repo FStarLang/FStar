@@ -25,7 +25,7 @@ open FStar.Preorder
 
 module F = FStar.FunctionalExtensionality
 
-let heap = h:(nat * (F.restricted_t nat (fun _ -> (option (dtuple2 Type0 (fun a -> a))))))
+let heap = h:(nat & (F.restricted_t nat (fun _ -> (option (dtuple2 Type0 (fun a -> a))))))
 		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\ 
 			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 

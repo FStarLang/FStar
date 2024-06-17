@@ -30,7 +30,7 @@ type input_frag = {
     frag_col:int
 }
 
-val read_vfs_entry : string -> option (time * string)
+val read_vfs_entry : string -> option (time & string)
 // This lets the ide tell us about edits not (yet) reflected on disk.
 val add_vfs_entry: fname:string -> contents:string -> unit
 // This reads mtimes from the VFS as well
@@ -42,7 +42,7 @@ type parse_frag =
     | Incremental of input_frag
     | Fragment of input_frag
 
-type parse_error = (Errors.raw_error * error_message * Range.range)
+type parse_error = (Errors.raw_error & error_message & Range.range)
 
 type code_fragment = {
     code: string;
@@ -50,8 +50,8 @@ type code_fragment = {
 }
 
 type parse_result =
-    | ASTFragment of (AST.inputFragment * list (string * Range.range))
-    | IncrementalFragment of (list (AST.decl & code_fragment) & list (string * Range.range) & option parse_error)
+    | ASTFragment of (AST.inputFragment & list (string & Range.range))
+    | IncrementalFragment of (list (AST.decl & code_fragment) & list (string & Range.range) & option parse_error)
     | Term of AST.term
     | ParseError of parse_error
 

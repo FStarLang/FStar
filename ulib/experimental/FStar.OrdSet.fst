@@ -164,7 +164,7 @@ let self_is_subset #a #f (s:ordset a f)
   and (snd z) = (true if x was found in s, false otherwise)
 *)
 let rec remove_until_greater_than #a #f x (s: ordset a f)
-  : z:(ordset a f * bool) { (size' (fst z) <= size' s) &&
+  : z:(ordset a f & bool) { (size' (fst z) <= size' s) &&
                             (not(mem x (fst z))) &&
                             (subset' (fst z) s) &&
                             (snd z = mem x s) &&

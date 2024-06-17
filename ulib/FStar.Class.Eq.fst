@@ -58,7 +58,7 @@ instance eq_list (d : deq 'a) : deq (list 'a) = {
   eq_dec = eqList_ok d;
 }
 
-instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) = {
+instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a & 'b) = {
   raw = solve;
   eq_dec = ();
 }

@@ -107,7 +107,7 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     univs, ts
   )
 
-let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbname * list univ_name * term * comp * list binder)) =
+let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbname & list univ_name & term & comp & list binder)) =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
@@ -182,7 +182,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list ctx_uvar) : list (bv * bqual) =
+     let gen_types (uvs:list ctx_uvar) : list (bv & bqual) =
          uvs |> List.concatMap (fun u ->
          (* If this implicit has a meta, don't generalize it. Just leave it
          unresolved for the resolve_implicits phase to fill it in. *)
@@ -262,7 +262,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      in
      Some ecs
 
-let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname*univ_names*term*comp*list binder)) =
+let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname&univ_names&term&comp&list binder)) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if Debug.low () then
      BU.print1 "Generalizing: %s\n"

@@ -23,7 +23,7 @@ type label =
   | Low
   | High
 
-let ifc (a:Type) = label -> M (option (a * label))
+let ifc (a:Type) = label -> M (option (a & label))
 
 let return_ifc (a:Type) (x:a) : ifc a = fun l -> Some (x, l)
 let bind_ifc (a:Type) (b:Type) (f:ifc a) (g: a -> Tot (ifc b)) : ifc b
@@ -56,7 +56,7 @@ reifiable new_effect {
      ; write = write
 }
 
-effect Ifc (a:Type) (req:IFC?.pre) (ens:label -> option (a * label) -> GTot Type0) =
+effect Ifc (a:Type) (req:IFC?.pre) (ens:label -> option (a & label) -> GTot Type0) =
   IFC a (fun (h0:label) (p:IFC?.post a) -> req h0 /\
              (forall r. (req h0 /\ ens h0 r) ==> p r))
 

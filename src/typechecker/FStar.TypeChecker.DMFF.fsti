@@ -33,10 +33,10 @@ type env = {
 val empty : Env.env -> (sconst -> typ) -> env
 val get_env: env -> Env.env
 val set_env : env -> Env.env -> env
-val gen_wps_for_free: Env.env -> binders -> bv -> term -> eff_decl -> sigelts * eff_decl
+val gen_wps_for_free: Env.env -> binders -> bv -> term -> eff_decl -> sigelts & eff_decl
 val double_star: typ -> typ
 val star_type: env -> typ -> typ
-val star_expr: env -> term -> typ * term * term
+val star_expr: env -> term -> typ & term & term
 val trans_F  : env -> typ -> term -> term
 val recheck_debug : string -> FStar.TypeChecker.Env.env -> term -> term
-val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list sigelt * eff_decl * option sigelt)
+val cps_and_elaborate : FStar.TypeChecker.Env.env -> eff_decl -> (list sigelt & eff_decl & option sigelt)

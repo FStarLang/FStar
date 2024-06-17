@@ -492,7 +492,7 @@ let rec elab_typ (t:typ) : Type =
   | TUnit -> unit
   | TNat -> nat
   | TSum t1 t2 -> either (elab_typ t1) (elab_typ t2)
-  | TPair t1 t2 -> (elab_typ t1) * (elab_typ t2)
+  | TPair t1 t2 -> (elab_typ t1) & (elab_typ t2)
 
 type venv (g:env) = x:var{Some? (g x)} -> elab_typ (Some?.v (g x))
 
@@ -610,7 +610,7 @@ let rec naive_rel #ty fst_e hte =
     let fst_sum : either (elab_typ t1) (elab_typ t2) = fst_e in
     Inr? fst_sum /\ (Inr?.v fst_sum `naive_rel` ht2)
   | TyPair #_ #_ #_ #t1 #t2 ht1 ht2 ->
-    let fst_pair : (elab_typ t1 * elab_typ t2) = fst_e in
+    let fst_pair : (elab_typ t1 & elab_typ t2) = fst_e in
     let (fst_fst, fst_snd) = fst_pair in
     (fst_fst `naive_rel` ht1) /\ (fst_snd `naive_rel` ht2)
 

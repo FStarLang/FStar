@@ -29,15 +29,15 @@ open FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 
 exception Not_a_wp_implication of string
-let sort_labels (l:(list (error_label * bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
+let sort_labels (l:(list (error_label & bool))) = List.sortWith (fun ((_, _, r1), _) ((_, _, r2), _) -> Range.compare r1 r2) l
 let remove_dups (l:labels) = BU.remove_dups (fun (_, m1, r1) (_, m2, r2) -> r1=r2 && m1=m2) l
-type msg = string * Range.range
-type ranges = list (option string * Range.range)
+type msg = string & Range.range
+type ranges = list (option string & Range.range)
 
 //decorate a term with an error label
 let __ctr = BU.mk_ref 0
 
-let fresh_label : Errors.error_message -> Range.range -> term -> label * term =
+let fresh_label : Errors.error_message -> Range.range -> term -> label & term =
     fun message range t ->
         let l = incr __ctr; format1 "label_%s" (string_of_int !__ctr) in
         let lvar = mk_fv (l, Bool_sort) in
@@ -60,7 +60,7 @@ let label_goals use_env_msg  //when present, provides an alternate error message
                 (r:Range.range)            //the source range in which this query was asked
                 q            //the query
                : labels      //the labels themselves
-               * term        //the query, decorated with labels
+               & term        //the query, decorated with labels
                =
     let rec is_a_post_condition post_name_opt tm =
         match post_name_opt, tm.tm with

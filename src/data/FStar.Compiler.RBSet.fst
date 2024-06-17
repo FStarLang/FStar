@@ -28,7 +28,7 @@ type color = | R | B
 
 type rbset (a:Type0) : Type0 =
   | L
-  | N of color * rbset a * a * rbset a
+  | N of color & rbset a & a & rbset a
 
 let empty () = L
 

@@ -203,7 +203,7 @@ let list_rev_inv
   (#t: Type)
   (l: list t)
   (b: bool)
-  (x: list t * list t)
+  (x: list t & list t)
 : GTot Type0
 = let (rem, acc) = x in
   L.rev l == L.rev_acc rem acc /\
@@ -254,7 +254,7 @@ let parse_nlist_impl
   let l = BO.op_Bang_Star rr in
   let l' = list_rev l in
   let consumed = BO.op_Bang_Star rb in
-  let res : option (nlist n t * U32.t) =
+  let res : option (nlist n t & U32.t) =
     if stop
     then None
     else Some (l', consumed)

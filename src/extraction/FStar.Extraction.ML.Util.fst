@@ -109,7 +109,7 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
-let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
+let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     match t with
     | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
@@ -182,7 +182,7 @@ let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply
    erase e to unit right away.
 *)
-let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool * option mlexpr) =
+let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool & option mlexpr) =
     match t, t' with
     | MLTY_Var x, MLTY_Var y ->
         if x = y
@@ -373,7 +373,7 @@ let mlloc_of_range (r: Range.range) =
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r
 
-let rec doms_and_cod (t:mlty) : list mlty * mlty =
+let rec doms_and_cod (t:mlty) : list mlty & mlty =
     match t with
       | MLTY_Fun (a,_,b) ->
         let ds, c = doms_and_cod b in

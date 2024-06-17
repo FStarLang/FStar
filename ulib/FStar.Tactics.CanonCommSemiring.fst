@@ -368,7 +368,7 @@ let spolynomial_simplify #a r p =
  * The representation is inefficient. For large terms it might be worthwhile
  * using a better data structure.
 **)
-let vmap a = list (var * a) * a
+let vmap a = list (var & a) & a
 
 (** Add a new entry in a variable map *)
 let update (#a:Type) (x:var) (xa:a) (vm:vmap a) : vmap a =
@@ -385,7 +385,7 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a -> Tac term) (xs:list a) :
 
 (** Quotes a variable map *)
 let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term =
-  let quote_map_entry (p:(nat * a)) : Tac term =
+  let quote_map_entry (p:(nat & a)) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (ta, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quotea (snd p), Q_Explicit)] in
@@ -1509,7 +1509,7 @@ let rec find_aux (n:nat) (x:term) (xs:list term) : Tac (option nat) =
 let find = find_aux 0
 
 let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
-  (vm:vmap a) : Tac (polynomial a * list term * vmap a) =
+  (vm:vmap a) : Tac (polynomial a & list term & vmap a) =
   match find t ts with
   | Some v -> (Pvar v, ts, vm)
   | None ->
@@ -1518,7 +1518,7 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
     (Pvar vfresh, ts @ [t], update vfresh z vm)
 
 (** This expects that add, opp, mone mult, and t have already been normalized *)
-let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
+let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a & list term & vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
@@ -1526,7 +1526,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
     //ddump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
-    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e1, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       let (e2, ts, vm) = reification_aux unquotea ts vm add opp mone mult t2 in
       (op e1 e2, ts, vm)
@@ -1535,7 +1535,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     if term_eq (pack (Tv_FVar fv)) mult then binop Pmult else
     make_fvar t unquotea ts vm
   | Tv_FVar fv, [(t1, _)] ->
-    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       (op e, ts, vm)
       in
@@ -1576,7 +1576,7 @@ let steps =
 let canon_norm () : Tac unit = norm steps
 
 let reification (#a:Type)
-  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) * vmap a) =
+  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) & vmap a) =
   // Be careful not to normalize operations too much
   // E.g. we don't want to turn ( +% ) into (a + b) % prime
   // or we won't be able to spot ring operations

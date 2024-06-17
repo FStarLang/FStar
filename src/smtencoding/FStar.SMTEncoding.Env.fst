@@ -33,7 +33,7 @@ module U = FStar.Syntax.Util
 
 let dbg_PartialApp = Debug.get_toggle "PartialApp"
 
-exception Inner_let_rec of list (string * Range.range) //name of the inner let-rec(s) and their locations
+exception Inner_let_rec of list (string & Range.range) //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -65,7 +65,7 @@ let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    snapshot: unit -> (int * unit);
+    snapshot: unit -> (int & unit);
     rollback: option int -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
@@ -119,7 +119,7 @@ type fvar_binding = {
     smt_arity: int;
     smt_id:    string;
     smt_token: option term;
-    smt_fuel_partial_app:option (term * term);
+    smt_fuel_partial_app:option (term & term);
     fvb_thunked: bool
 }
 let fvb_to_string fvb =
@@ -158,8 +158,8 @@ let check_valid_fvb fvb =
 let binder_of_eithervar v = (v, None)
 
 type env_t = {
-    bvar_bindings: BU.psmap (BU.pimap (bv * term));
-    fvar_bindings: (BU.psmap fvar_binding * list fvar_binding);  //list of fvar bindings for the current module
+    bvar_bindings: BU.psmap (BU.pimap (bv & term));
+    fvar_bindings: (BU.psmap fvar_binding & list fvar_binding);  //list of fvar bindings for the current module
                                                                    //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;

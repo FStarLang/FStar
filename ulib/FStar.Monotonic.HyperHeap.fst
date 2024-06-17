@@ -24,9 +24,9 @@ open FStar.Ghost
 (*
  * This is a temporary assumption, we should fix the model to get rid of it
  *)
-assume HasEq_rid: hasEq (erased (list (int * int * bool)))
+assume HasEq_rid: hasEq (erased (list (int & int & bool)))
 
-let rid = erased (list (int * int * bool))
+let rid = erased (list (int & int & bool))
 
 let reveal r = FStar.List.Tot.map (fun (i, j, _) -> i, j) (reveal r)
 
