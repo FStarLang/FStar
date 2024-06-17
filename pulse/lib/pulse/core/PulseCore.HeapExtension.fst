@@ -1053,3 +1053,52 @@ let new_invariant
    assert (interp (p `star` frame `star` mem_invariant ex h0) (core_of h0)); 
   //  let h1' = H2.ghost_extend true 
    admit()
+
+let with_invariant
+    (#h:heap_sig u#a)
+    (#a:Type u#aa)
+    (#fp:ext_slprop h)
+    (#fp':(a -> ext_slprop h))
+    (#opened_invariants:inames (extend h))
+    (#p:ext_slprop h)
+    (#maybe_ghost:bool)
+    (i:ext_iref h{not (Set.mem (iname_of h i) opened_invariants)})
+    (f:_action_except (extend h) a maybe_ghost
+      (Set.add (iname_of h i) opened_invariants) 
+      (p `star` fp)
+      (fun x -> p `star` fp' x))
+: _action_except (extend h) a maybe_ghost opened_invariants 
+      (inv i p `star` fp)
+      (fun x -> inv i p `star` fp' x)
+= fun frame m0 -> 
+    assert (interpret ((inv i p `star` fp) `star` frame `star` mem_invariant opened_invariants m0) m0);
+    calc (==) {
+      inv i p `star` fp `star` frame `star` mem_invariant opened_invariants m0;
+    (==) { ac_lemmas_ext h }
+      (mem_invariant opened_invariants m0 `star` inv i p) `star` (fp `star` frame);
+    (==) { mem_invariant_equiv_ext #h opened_invariants m0 i p }
+      (mem_invariant (Set.add (iname_of h i) opened_invariants) m0 `star` p `star` inv i p) `star` (fp `star` frame);
+    (==) { ac_lemmas_ext h }
+      (p `star` fp) `star` (inv i p `star` frame) `star` mem_invariant (Set.add (iname_of h i) opened_invariants) m0;
+    };
+    iname_ok_ext #h i p m0;
+    let (x, m1) = f (inv i p `star` frame) m0 in
+    assert (interpret ((p `star` fp' x) `star`
+                       (inv i p `star` frame) `star`
+                       mem_invariant (Set.add (iname_of h i) opened_invariants) m1) m1);
+    calc (==) {
+      (p `star` fp' x) `star`
+      (inv i p `star` frame) `star`
+      mem_invariant (Set.add (iname_of h i) opened_invariants) m1;
+    (==) { ac_lemmas_ext h }
+      (fp' x) `star`
+      frame `star`
+      (mem_invariant (Set.add (iname_of h i) opened_invariants) m1 `star` p `star` inv i p);
+    (==) { mem_invariant_equiv_ext #h opened_invariants m1 i p }
+      (fp' x) `star`
+      frame `star`
+      (mem_invariant opened_invariants m1 `star` inv i p);
+    (==) { ac_lemmas_ext h }
+      (inv i p `star` fp' x) `star` frame `star` mem_invariant opened_invariants m1;
+    };
+    (x, m1)
