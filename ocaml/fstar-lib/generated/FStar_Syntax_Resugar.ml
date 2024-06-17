@@ -889,7 +889,212 @@ let rec (resugar_term' :
                         FStar_Parser_AST.Project uu___7 in
                       mk uu___6)
                else
-                 (let uu___5 = resugar_term_as_op e in
+                 (let unsnoc l =
+                    let rec unsnoc' acc uu___5 =
+                      match uu___5 with
+                      | [] ->
+                          FStar_Compiler_Effect.failwith "unsnoc: empty list"
+                      | x::[] -> ((FStar_Compiler_List.rev acc), x)
+                      | x::xs -> unsnoc' (x :: acc) xs in
+                    unsnoc' [] l in
+                  let resugar_tuple_type env1 args2 =
+                    let typs =
+                      FStar_Compiler_List.map
+                        (fun uu___5 ->
+                           match uu___5 with
+                           | (x, uu___6) -> resugar_term' env1 x) args2 in
+                    let uu___5 = unsnoc typs in
+                    match uu___5 with
+                    | (pre, last1) ->
+                        let uu___6 =
+                          let uu___7 =
+                            let uu___8 =
+                              FStar_Compiler_List.map
+                                (fun uu___9 -> FStar_Pervasives.Inr uu___9)
+                                pre in
+                            (uu___8, last1) in
+                          FStar_Parser_AST.Sum uu___7 in
+                        mk uu___6 in
+                  let resugar_dtuple_type env1 hd args2 =
+                    let fancy_resugar uu___5 =
+                      (fun uu___5 ->
+                         let n = FStar_Compiler_List.length args2 in
+                         let take n1 l =
+                           let uu___6 = FStar_Compiler_List.splitAt n1 l in
+                           FStar_Pervasives_Native.fst uu___6 in
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 = FStar_Compiler_List.last args2 in
+                             FStar_Pervasives_Native.fst uu___8 in
+                           FStar_Syntax_Util.abs_formals uu___7 in
+                         match uu___6 with
+                         | (bs, uu___7, uu___8) ->
+                             Obj.magic
+                               (FStar_Class_Monad.op_let_Bang
+                                  FStar_Class_Monad.monad_option () ()
+                                  (if
+                                     (FStar_Compiler_List.length bs) <
+                                       (n - Prims.int_one)
+                                   then FStar_Pervasives_Native.None
+                                   else FStar_Pervasives_Native.Some ())
+                                  (fun uu___9 ->
+                                     (fun uu___9 ->
+                                        let uu___9 = Obj.magic uu___9 in
+                                        let bs1 = take (n - Prims.int_one) bs in
+                                        let concatM uu___10 l =
+                                          FStar_Class_Monad.mapM uu___10 ()
+                                            ()
+                                            (fun uu___11 ->
+                                               (fun x ->
+                                                  let x = Obj.magic x in
+                                                  Obj.magic x) uu___11)
+                                            (Obj.magic l) in
+                                        let rec open_lambda_binders uu___11
+                                          uu___10 =
+                                          (fun t2 ->
+                                             fun bs2 ->
+                                               match bs2 with
+                                               | [] ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (FStar_Pervasives_Native.Some
+                                                           t2))
+                                               | b::bs3 ->
+                                                   Obj.magic
+                                                     (Obj.repr
+                                                        (let uu___10 =
+                                                           FStar_Syntax_Util.abs_one_ln
+                                                             t2 in
+                                                         FStar_Class_Monad.op_let_Bang
+                                                           FStar_Class_Monad.monad_option
+                                                           () ()
+                                                           (Obj.magic uu___10)
+                                                           (fun uu___11 ->
+                                                              (fun uu___11 ->
+                                                                 let uu___11
+                                                                   =
+                                                                   Obj.magic
+                                                                    uu___11 in
+                                                                 match uu___11
+                                                                 with
+                                                                 | (uu___12,
+                                                                    body) ->
+                                                                    let uu___13
+                                                                    =
+                                                                    FStar_Syntax_Subst.open_term
+                                                                    [b] body in
+                                                                    (match uu___13
+                                                                    with
+                                                                    | 
+                                                                    (uu___14,
+                                                                    body1) ->
+                                                                    Obj.magic
+                                                                    (open_lambda_binders
+                                                                    body1 bs3)))
+                                                                uu___11))))
+                                            uu___11 uu___10 in
+                                        let uu___10 =
+                                          Obj.magic
+                                            (FStar_Class_Monad.mapMi
+                                               FStar_Class_Monad.monad_option
+                                               () ()
+                                               (fun uu___12 ->
+                                                  fun uu___11 ->
+                                                    (fun i ->
+                                                       fun uu___11 ->
+                                                         let uu___11 =
+                                                           Obj.magic uu___11 in
+                                                         match uu___11 with
+                                                         | (t2, uu___12) ->
+                                                             let uu___13 =
+                                                               take i bs1 in
+                                                             Obj.magic
+                                                               (open_lambda_binders
+                                                                  t2 uu___13))
+                                                      uu___12 uu___11)
+                                               (Obj.magic args2)) in
+                                        Obj.magic
+                                          (FStar_Class_Monad.op_let_Bang
+                                             FStar_Class_Monad.monad_option
+                                             () () (Obj.magic uu___10)
+                                             (fun uu___11 ->
+                                                (fun opened_bs_types ->
+                                                   let opened_bs_types =
+                                                     Obj.magic
+                                                       opened_bs_types in
+                                                   let set_binder_sort t2 b =
+                                                     {
+                                                       FStar_Syntax_Syntax.binder_bv
+                                                         =
+                                                         (let uu___11 =
+                                                            b.FStar_Syntax_Syntax.binder_bv in
+                                                          {
+                                                            FStar_Syntax_Syntax.ppname
+                                                              =
+                                                              (uu___11.FStar_Syntax_Syntax.ppname);
+                                                            FStar_Syntax_Syntax.index
+                                                              =
+                                                              (uu___11.FStar_Syntax_Syntax.index);
+                                                            FStar_Syntax_Syntax.sort
+                                                              = t2
+                                                          });
+                                                       FStar_Syntax_Syntax.binder_qual
+                                                         =
+                                                         (b.FStar_Syntax_Syntax.binder_qual);
+                                                       FStar_Syntax_Syntax.binder_positivity
+                                                         =
+                                                         (b.FStar_Syntax_Syntax.binder_positivity);
+                                                       FStar_Syntax_Syntax.binder_attrs
+                                                         =
+                                                         (b.FStar_Syntax_Syntax.binder_attrs)
+                                                     } in
+                                                   let uu___11 =
+                                                     unsnoc opened_bs_types in
+                                                   match uu___11 with
+                                                   | (pre_bs_types,
+                                                      last_type) ->
+                                                       let bs2 =
+                                                         FStar_Compiler_List.map2
+                                                           (fun b ->
+                                                              fun t2 ->
+                                                                let b1 =
+                                                                  set_binder_sort
+                                                                    t2 b in
+                                                                let uu___12 =
+                                                                  resugar_binder'
+                                                                    env1 b1
+                                                                    t2.FStar_Syntax_Syntax.pos in
+                                                                FStar_Compiler_Util.must
+                                                                  uu___12)
+                                                           bs1 pre_bs_types in
+                                                       let uu___12 =
+                                                         let uu___13 =
+                                                           let uu___14 =
+                                                             let uu___15 =
+                                                               FStar_Compiler_List.map
+                                                                 (fun uu___16
+                                                                    ->
+                                                                    FStar_Pervasives.Inl
+                                                                    uu___16)
+                                                                 bs2 in
+                                                             let uu___16 =
+                                                               resugar_term'
+                                                                 env1
+                                                                 last_type in
+                                                             (uu___15,
+                                                               uu___16) in
+                                                           FStar_Parser_AST.Sum
+                                                             uu___14 in
+                                                         mk uu___13 in
+                                                       Obj.magic
+                                                         (FStar_Pervasives_Native.Some
+                                                            uu___12)) uu___11)))
+                                       uu___9))) uu___5 in
+                    let uu___5 = fancy_resugar () in
+                    match uu___5 with
+                    | FStar_Pervasives_Native.Some r -> r
+                    | FStar_Pervasives_Native.None -> resugar_as_app hd args2 in
+                  let uu___5 = resugar_term_as_op e in
                   match uu___5 with
                   | FStar_Pervasives_Native.None -> resugar_as_app e args1
                   | FStar_Pervasives_Native.Some ("calc_finish", uu___6) ->
@@ -897,31 +1102,16 @@ let rec (resugar_term' :
                       (match uu___7 with
                        | FStar_Pervasives_Native.Some r -> r
                        | uu___8 -> resugar_as_app e args1)
-                  | FStar_Pervasives_Native.Some ("tuple", uu___6) ->
-                      let out =
-                        FStar_Compiler_List.fold_left
-                          (fun out1 ->
-                             fun uu___7 ->
-                               match uu___7 with
-                               | (x, uu___8) ->
-                                   let x1 = resugar_term' env x in
-                                   (match out1 with
-                                    | FStar_Pervasives_Native.None ->
-                                        FStar_Pervasives_Native.Some x1
-                                    | FStar_Pervasives_Native.Some prefix ->
-                                        let uu___9 =
-                                          let uu___10 =
-                                            let uu___11 =
-                                              let uu___12 =
-                                                FStar_Ident.id_of_text "*" in
-                                              (uu___12, [prefix; x1]) in
-                                            FStar_Parser_AST.Op uu___11 in
-                                          mk uu___10 in
-                                        FStar_Pervasives_Native.Some uu___9))
-                          FStar_Pervasives_Native.None args1 in
-                      FStar_Compiler_Option.get out
-                  | FStar_Pervasives_Native.Some ("dtuple", uu___6) ->
-                      resugar_as_app e args1
+                  | FStar_Pervasives_Native.Some ("tuple", n) when
+                      (FStar_Pervasives_Native.Some
+                         (FStar_Compiler_List.length args1))
+                        = n
+                      -> resugar_tuple_type env args1
+                  | FStar_Pervasives_Native.Some ("dtuple", n) when
+                      (FStar_Pervasives_Native.Some
+                         (FStar_Compiler_List.length args1))
+                        = n
+                      -> resugar_dtuple_type env e args1
                   | FStar_Pervasives_Native.Some (ref_read, uu___6) when
                       let uu___7 =
                         FStar_Ident.string_of_lid
@@ -2077,40 +2267,60 @@ and (resugar_binder' :
       FStar_Compiler_Range_Type.range ->
         FStar_Parser_AST.binder FStar_Pervasives_Native.option)
   =
-  fun env ->
-    fun b ->
-      fun r ->
-        let uu___ = resugar_bqual env b.FStar_Syntax_Syntax.binder_qual in
-        FStar_Compiler_Util.map_opt uu___
-          (fun imp ->
-             let e =
-               resugar_term' env
-                 (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-             match e.FStar_Parser_AST.tm with
-             | FStar_Parser_AST.Wild ->
-                 let uu___1 =
-                   let uu___2 =
-                     bv_as_unique_ident b.FStar_Syntax_Syntax.binder_bv in
-                   FStar_Parser_AST.Variable uu___2 in
-                 FStar_Parser_AST.mk_binder uu___1 r
-                   FStar_Parser_AST.Type_level imp
-             | uu___1 ->
-                 let uu___2 =
-                   FStar_Syntax_Syntax.is_null_bv
-                     b.FStar_Syntax_Syntax.binder_bv in
-                 if uu___2
-                 then
-                   FStar_Parser_AST.mk_binder (FStar_Parser_AST.NoName e) r
-                     FStar_Parser_AST.Type_level imp
-                 else
-                   (let uu___4 =
-                      let uu___5 =
-                        let uu___6 =
-                          bv_as_unique_ident b.FStar_Syntax_Syntax.binder_bv in
-                        (uu___6, e) in
-                      FStar_Parser_AST.Annotated uu___5 in
-                    FStar_Parser_AST.mk_binder uu___4 r
-                      FStar_Parser_AST.Type_level imp))
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun env ->
+           fun b ->
+             fun r ->
+               let uu___ =
+                 resugar_bqual env b.FStar_Syntax_Syntax.binder_qual in
+               Obj.magic
+                 (FStar_Class_Monad.op_let_Bang
+                    FStar_Class_Monad.monad_option () () (Obj.magic uu___)
+                    (fun uu___1 ->
+                       (fun imp ->
+                          let imp = Obj.magic imp in
+                          let e =
+                            resugar_term' env
+                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
+                          match e.FStar_Parser_AST.tm with
+                          | FStar_Parser_AST.Wild ->
+                              let uu___1 =
+                                let uu___2 =
+                                  let uu___3 =
+                                    bv_as_unique_ident
+                                      b.FStar_Syntax_Syntax.binder_bv in
+                                  FStar_Parser_AST.Variable uu___3 in
+                                FStar_Parser_AST.mk_binder uu___2 r
+                                  FStar_Parser_AST.Type_level imp in
+                              Obj.magic (FStar_Pervasives_Native.Some uu___1)
+                          | uu___1 ->
+                              let uu___2 =
+                                FStar_Syntax_Syntax.is_null_bv
+                                  b.FStar_Syntax_Syntax.binder_bv in
+                              if uu___2
+                              then
+                                let uu___3 =
+                                  FStar_Parser_AST.mk_binder
+                                    (FStar_Parser_AST.NoName e) r
+                                    FStar_Parser_AST.Type_level imp in
+                                Obj.magic
+                                  (FStar_Pervasives_Native.Some uu___3)
+                              else
+                                (let uu___4 =
+                                   let uu___5 =
+                                     let uu___6 =
+                                       let uu___7 =
+                                         bv_as_unique_ident
+                                           b.FStar_Syntax_Syntax.binder_bv in
+                                       (uu___7, e) in
+                                     FStar_Parser_AST.Annotated uu___6 in
+                                   FStar_Parser_AST.mk_binder uu___5 r
+                                     FStar_Parser_AST.Type_level imp in
+                                 Obj.magic
+                                   (FStar_Pervasives_Native.Some uu___4)))
+                         uu___1))) uu___2 uu___1 uu___
 and (resugar_bv_as_pat' :
   FStar_Syntax_DsEnv.env ->
     FStar_Syntax_Syntax.bv ->

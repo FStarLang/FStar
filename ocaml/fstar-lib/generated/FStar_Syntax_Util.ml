@@ -2809,6 +2809,31 @@ let (arrow_one :
                         FStar_Compiler_Effect.failwith
                           "impossible: open_comp returned different amount of binders" in
                   FStar_Pervasives_Native.Some (b1, c1)))
+let (abs_one_ln :
+  FStar_Syntax_Syntax.typ ->
+    (FStar_Syntax_Syntax.binder * FStar_Syntax_Syntax.term)
+      FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = []; FStar_Syntax_Syntax.body = uu___1;
+          FStar_Syntax_Syntax.rc_opt = uu___2;_}
+        -> FStar_Compiler_Effect.failwith "fatal: empty binders on abs?"
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = b::[]; FStar_Syntax_Syntax.body = body;
+          FStar_Syntax_Syntax.rc_opt = uu___1;_}
+        -> FStar_Pervasives_Native.Some (b, body)
+    | FStar_Syntax_Syntax.Tm_abs
+        { FStar_Syntax_Syntax.bs = b::bs; FStar_Syntax_Syntax.body = body;
+          FStar_Syntax_Syntax.rc_opt = rc_opt;_}
+        ->
+        let uu___1 = let uu___2 = abs bs body rc_opt in (b, uu___2) in
+        FStar_Pervasives_Native.Some uu___1
+    | uu___1 -> FStar_Pervasives_Native.None
 let (is_free_in :
   FStar_Syntax_Syntax.bv -> FStar_Syntax_Syntax.term -> Prims.bool) =
   fun bv ->

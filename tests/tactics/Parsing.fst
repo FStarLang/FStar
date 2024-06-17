@@ -18,11 +18,10 @@ let _ = assert (equals 42 ())
 let _ = assert (equals (unit * unit) ())
 let _ = assert (equals (unit * (unit * unit)) ())
 let _ = assert (equals ((unit * unit) * unit) ())
+let _ = assert (equals (unit * unit * unit) ())
 
 let _ = assert (equals (fun x -> x + 3) ())
 
-[@expect_failure] // as issue #2245
-let _ = assert (equals (unit * unit * unit) ())
 
 [@expect_failure] // as issue #1865
 let _ = assert (equals (forall (x: (y: int{y>0})). True) ())
