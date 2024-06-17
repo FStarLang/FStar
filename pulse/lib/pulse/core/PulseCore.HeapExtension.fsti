@@ -57,10 +57,10 @@ val with_invariant
 : _action_except (extend h) a maybe_ghost opened_invariants 
       ((extend h).inv i p `(extend h).star` fp)
       (fun x -> (extend h).inv i p `(extend h).star` fp' x)
-(*
+
 val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
-
+(*
 open FStar.PCM
 open FStar.Ghost
 #push-options "--print_universes"

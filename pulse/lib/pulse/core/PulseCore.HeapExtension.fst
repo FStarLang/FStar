@@ -1102,3 +1102,154 @@ let with_invariant
       (inv i p `star` fp' x) `star` frame `star` mem_invariant opened_invariants m1;
     };
     (x, m1)
+
+let pure_ext (h:heap_sig u#a) (p q:prop)
+: Lemma ((p <==> q) ==> pure #h p == pure #h q)
+= FStar.PropositionalExtensionality.apply p q
+
+let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
+: Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
+= calc (==) {
+    inv (lift_iref i) (up p);
+  (==) {}
+    up (h.inv i (down (up p))) `star` pure (is_boxable #h (up p));
+  (==) { (extend h).up_down p }
+    up (h.inv i p) `star` pure (is_boxable #h (up p));
+  (==) { (extend h).up_down p; pure_ext h (is_boxable (up p)) True }
+    up (h.inv i p) `star` pure True;
+  (==) { (extend h).pure_true_emp (); (extend h).emp_unit (up (h.inv i p)) }
+    up (h.inv i p);
+  }
+
+#push-options "--fuel 0 --ifuel 0"
+let lower_frame
+      (#h:heap_sig u#a)
+      (p:base_slprop)
+      (frame:ext_slprop h)
+      (m:ext_mem h { interpret #(extend h) (lift h p `star` frame) m })
+: frame':base_slprop { interpret (p `H2.base_heap.star` frame') m.big } &
+  (q:base_slprop -> m':base_heap_mem -> 
+    Lemma (requires interpret  (q `H2.base_heap.star` frame') m')
+          (ensures interpret #(extend h) (lift h q `star` frame) ({m with big = m'})))
+= admit()
+
+let mem_invariant_rest (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
+: ext_slprop h
+= up (h.mem_invariant (down_inames e) m.small) `star`
+  istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big)
+
+let heap_cell_evolves (h0 h1:option H.cell)
+: prop
+= match h0, h1 with
+  | None, None -> True
+  | Some (H.Ref meta a p v), Some (H.Ref meta' a' p' v') ->
+    meta == meta' /\ (reveal meta ==> a==a' /\ p==p' /\ v==v')
+  | _, _ -> False
+
+let heaps_preserve_inames (m0 m1:H2.base_heap.mem) =
+  H2.ghost_ctr m0 == H2.ghost_ctr m1 /\
+  (forall (addr:nat).
+    heap_cell_evolves (H2.select_ghost addr (core_of m0)) (H2.select_ghost addr (core_of m1)))
+
+let preserves_inames 
+    (#a:Type u#a)
+    (#mg:bool)
+    (#pre:base_slprop u#h)
+    (#post:a -> base_slprop u#h)
+    (action:_action_except H2.base_heap a mg Set.empty pre post)
+= forall (m0:full_mem H2.base_heap) frame. 
+    interpret (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0) m0
+    ==> ( 
+    let x, m1 = action frame m0 in
+    heaps_preserve_inames m0 m1
+    )
+
+let istore_invariant_eq_frame
+    (#h:heap_sig u#h)
+    (ex:inames (extend h))
+    (m0 m1:ext_mem h)
+: Lemma 
+  (requires
+    heaps_preserve_inames m0.big m1.big /\
+    m0.small == m1.small)
+  (ensures 
+    (istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big) ==
+     istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big)) /\
+    (inames_ok ex m0 == inames_ok ex m1))
+= admit()
+
+let lift_base_heap_action
+    (#h:heap_sig u#h)
+    (#a:Type u#a)
+    (#mg:bool)
+    (#ex:inames (extend h))
+    (#pre:base_slprop)
+    (#post:a -> base_slprop)
+    (action:_action_except H2.base_heap a mg Set.empty pre post {
+      preserves_inames action
+    })
+: _action_except (extend h)
+    a mg ex
+    (lift h pre)
+    (fun x -> lift h (post x))
+= fun (frame:ext_slprop h) 
+      (m0:ext_mem h {
+        (extend h).full_mem_pred m0 /\
+        inames_ok ex m0 /\
+        interpret #(extend h) (lift h pre `star` frame `star` mem_invariant ex m0) m0
+       }) ->
+        calc (==) {
+          lift h pre `star` frame `star` mem_invariant ex m0;
+        (==) { ac_lemmas_ext h }
+          lift h pre `star`
+          lift h (H2.base_heap.mem_invariant Set.empty m0.big) `star`
+          (frame `star` mem_invariant_rest ex m0);
+        (==) { lift_star #h pre (H2.base_heap.mem_invariant Set.empty m0.big) }
+          lift h (pre `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0.big) `star`
+          (frame `star` mem_invariant_rest ex m0);
+        };
+        let (| frame', restore |) =
+          lower_frame
+            (pre `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0.big)
+            (frame `star` mem_invariant_rest ex m0)
+            m0
+        in
+        calc (==) {
+          (pre `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0.big) `H2.base_heap.star`
+          frame';
+        (==) { ac_lemmas H2.base_heap }
+          pre `H2.base_heap.star`
+          frame' `H2.base_heap.star`
+          H2.base_heap.mem_invariant Set.empty m0.big;
+        };
+        let (x, m1') = action frame' m0.big in
+        calc (==) {
+          post x `H2.base_heap.star`
+          frame' `H2.base_heap.star`
+          H2.base_heap.mem_invariant Set.empty m1';
+        (==) { ac_lemmas H2.base_heap }
+          (post x `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m1') `H2.base_heap.star`
+          frame';
+        };
+        restore (post x `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m1') m1';
+        let m1 = { m0 with big=m1'} in
+        calc (==) {
+          lift h (post x `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m1') `star`
+          (frame `star` mem_invariant_rest ex m0);
+        (==) { lift_star #h (post x) (H2.base_heap.mem_invariant Set.empty m1') }
+          (lift h (post x) `star`
+           lift h (H2.base_heap.mem_invariant Set.empty m1')) `star`
+          (frame  `star` mem_invariant_rest ex m0);
+        (==) { istore_invariant_eq_frame #h ex m0 m1 }
+          (lift h (post x) `star`
+           lift h (H2.base_heap.mem_invariant Set.empty m1')) `star`
+          (frame  `star` mem_invariant_rest ex m1);
+        (==) { ac_lemmas_ext h }
+          lift h (post x) `star`
+          frame `star`
+          mem_invariant ex m1;
+        };
+        h.is_ghost_action_refl m0.small;
+        istore_invariant_eq_frame ex m0 m1;
+        assert (inames_ok ex m1);
+        x, m1
