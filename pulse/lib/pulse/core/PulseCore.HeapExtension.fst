@@ -1130,6 +1130,7 @@ let heap_cell_evolves (h0 h1:option H.cell)
 : prop
 = match h0, h1 with
   | None, None -> True
+  | None, Some (H.Ref meta _ _ _) -> reveal meta == false
   | Some (H.Ref meta a p v), Some (H.Ref meta' a' p' v') ->
     meta == meta' /\ (reveal meta ==> a==a' /\ p==p' /\ v==v')
   | _, _ -> False
@@ -1143,7 +1144,7 @@ let preserves_inames
     (#a:Type u#a)
     (#mg:bool)
     (#pre:base_slprop u#h)
-    (#post:a -> base_slprop u#h)
+    (#post:a -> GTot (base_slprop u#h))
     (action:_action_except H2.base_heap a mg Set.empty pre post)
 = forall (m0:full_mem H2.base_heap) frame. 
     interpret (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0) m0
@@ -1162,7 +1163,7 @@ let sl_pure_imp_ext_aux
   (ensures forall m. interp (sl_pure_imp p q0) m ==>
                      interp (sl_pure_imp p q1) m)
 = ()
-  
+
 let sl_pure_imp_ext
        (#h:heap_sig u#h)
        (p:prop)
@@ -1176,6 +1177,29 @@ let sl_pure_imp_ext
     (sl_pure_imp p q0)
     (sl_pure_imp p q1)
 
+let sl_pure_imp_ext_trivial_aux
+       (#h:heap_sig u#h)
+       (p:prop)
+       (q: squash p -> ext_slprop h)
+: Lemma 
+  (requires ~p)
+  (ensures forall m. interp (sl_pure_imp p q) m)
+= ()
+
+let sl_pure_imp_ext_trivial
+       (#h:heap_sig u#h)
+       (p:prop)
+       (q: squash p -> ext_slprop h)
+: Lemma 
+  (requires ~p)
+  (ensures sl_pure_imp p q == emp)
+= sl_pure_imp_ext_trivial_aux #h p q;
+  FStar.Classical.forall_intro (pure_interp #h True); 
+  slprop_extensionality h
+    (sl_pure_imp p q)
+    (pure True);
+  (extend h).pure_true_emp ()
+  
 let istore_invariant_eq_frame
     (#h:heap_sig u#h)
     (ex:inames (extend h))
@@ -1208,6 +1232,8 @@ let istore_invariant_eq_frame
             (cell_pred_pre h cell0) 
             (cell_pred_post h cell0)
             (cell_pred_post h cell1)
+        | None, Some cell1 ->
+          sl_pure_imp_ext_trivial #h (cell_pred_pre h cell1) (cell_pred_post h cell1)
         | _ -> ()
       )
   in
@@ -1324,8 +1350,8 @@ let lift_base_heap_action
     (#a:Type u#a)
     (#mg:bool)
     (#ex:inames (extend h))
-    (#pre:base_slprop)
-    (#post:a -> base_slprop)
+    (#pre:erased base_slprop)
+    (#post:a -> GTot base_slprop)
     (action:_action_except H2.base_heap a mg Set.empty pre post {
       preserves_inames action
     })
@@ -1339,6 +1365,7 @@ let lift_base_heap_action
         inames_ok ex m0 /\
         interpret #(extend h) (lift h pre `star` frame `star` mem_invariant ex m0) m0
        }) ->
+        let pre = H2.base_heap.non_info_slprop pre in
         calc (==) {
           lift h pre `star` frame `star` mem_invariant ex m0;
         (==) { ac_lemmas_ext h }
@@ -1394,3 +1421,234 @@ let lift_base_heap_action
         istore_invariant_eq_frame ex m0 m1;
         assert (inames_ok ex m1);
         x, m1
+
+let select_refine
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (e:inames _)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: action_except
+    (extend h)
+    (v:a{compatible p x v /\ p.refine v}) e
+    ((extend h).pts_to r x)
+    (fun v -> (extend h).pts_to r (f v))
+= assume (preserves_inames (H2.read #Set.empty r x f));
+  lift_base_heap_action (H2.read r x f)
+
+
+let upd_gen
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (e:inames _) 
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: action_except
+    (extend h)
+    unit e
+    ((extend h).pts_to r x)
+    (fun _ -> (extend h).pts_to r y)
+= assume (preserves_inames (H2.write #Set.empty r x y f));
+  lift_base_heap_action (H2.write r x y f)
+
+let free_action
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (r:ref a pcm)
+    (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
+: action_except
+    (extend h)
+    unit e 
+    ((extend h).pts_to r x)
+    (fun _ -> (extend h).pts_to r pcm.FStar.PCM.p.one)
+= admit()
+
+let coerce_action (#h:heap_sig) #a #mg #e #pre (#post0:a -> GTot h.slprop)
+      (f:_action_except h a mg e pre post0)
+      (pre1:h.slprop)
+      (post1:a -> GTot h.slprop)
+      (_: squash (pre == pre1 /\ (forall x. post0 x == post1 x)))
+: _action_except h a mg e pre1 post1
+= f
+
+let split_action
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: ghost_action_except
+    (extend h)
+    unit e
+    ((extend h).pts_to r (v0 `op pcm` v1))
+    (fun _ -> (extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
+= assume (preserves_inames (H2.share #Set.empty r v0 v1));
+  let res
+    : ghost_action_except
+        (extend h)
+        unit e
+        ((extend h).pts_to r (v0 `op pcm` v1))
+        (fun _ -> lift h (H2.base_heap.pts_to r v0 `H2.base_heap.star`
+                          H2.base_heap.pts_to r v1))
+    = lift_base_heap_action #h #unit #true #e (H2.share #Set.empty r v0 v1) in
+  lift_star #h (H2.base_heap.pts_to r v0) (H2.base_heap.pts_to r v1);
+  coerce_action res _ _ ()
+
+(** Combining separate permissions into a single composite permission *)
+let gather_action
+  (#h:heap_sig u#h)
+  (#a:Type u#(h + 1))
+  (#pcm:pcm a)
+  (e:inames _)
+  (r:ref a pcm)
+  (v0:FStar.Ghost.erased a)
+  (v1:FStar.Ghost.erased a)
+: ghost_action_except
+    (extend h)
+    (squash (composable pcm v0 v1)) e
+    ((extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
+    (fun _ -> (extend h).pts_to r (op pcm v0 v1))
+= assume (preserves_inames (H2.gather #Set.empty r v0 v1));
+  let res = lift_base_heap_action #h #_ #true #e (H2.gather #Set.empty r v0 v1) in
+  lift_star #h (H2.base_heap.pts_to r v0) (H2.base_heap.pts_to r v1);
+  coerce_action res _ _ ()
+
+let alloc_action
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (x:a{pcm.refine x})
+: action_except
+    (extend h)
+    (ref a pcm) e
+    (extend h).emp
+    (fun r -> (extend h).pts_to r x)
+= assume (preserves_inames (H2.extend #Set.empty #a #pcm x));
+  let res = lift_base_heap_action #h #(ref a pcm) #false #e (H2.extend #Set.empty #a #pcm x) in
+  assume ((extend h).emp == lift h H2.base_heap.emp);
+  coerce_action res _ _ ()
+
+let pts_to_not_null_action 
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (r:erased (ref a pcm))
+    (v:Ghost.erased a)
+: ghost_action_except
+    (extend h)
+    (squash (not (is_null r))) e
+    ((extend h).pts_to r v)
+    (fun _ -> (extend h).pts_to r v)
+= admit()
+//  assume (preserves_inames (H2.pts_to_not_null #Set.empty r v));
+//   let res = lift_base_heap_action  (H2.pts_to_not_null r v) in
+//   coerce_action res _ _ ()
+
+// Ghost actions
+
+// Ghost operations
+let ghost_alloc
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (x:erased a{pcm.refine x})
+: ghost_action_except
+    (extend h)
+    (ghost_ref a pcm)
+    e
+    (extend h).emp 
+    (fun r -> (extend h).ghost_pts_to false r x)
+= assume (preserves_inames (H2.ghost_extend false #Set.empty #a #pcm x));
+  let res = lift_base_heap_action #h #(ghost_ref a pcm) #true #e (H2.ghost_extend false #Set.empty #a #pcm x) in
+  assume ((extend h).emp == lift h H2.base_heap.emp);
+  coerce_action res _ _ ()
+
+let ghost_read
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (r:ghost_ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: ghost_action_except
+    (extend h)
+    (erased (v:a{compatible p x v /\ p.refine v}))
+    o
+    ((extend h).ghost_pts_to false r x)
+    (fun v -> (extend h).ghost_pts_to false r (f v))
+= assume (preserves_inames (H2.ghost_read #Set.empty #false r x f));
+  let res = lift_base_heap_action 
+              #h #(erased (v:a{compatible p x v /\ p.refine v})) 
+              #true #o (H2.ghost_read #Set.empty #false r x f) in
+  coerce_action res _ _ ()
+
+let ghost_write
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (r:ghost_ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: ghost_action_except
+    (extend h)
+    unit o 
+    ((extend h).ghost_pts_to false r x)
+    (fun _ -> (extend h).ghost_pts_to false r y)
+= assume (preserves_inames (H2.ghost_write #Set.empty #false r x y f));
+  let res = lift_base_heap_action #h #unit #true #o (H2.ghost_write #Set.empty #false r x y f) in
+  coerce_action res _ _ ()
+
+let ghost_share
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (r:ghost_ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: ghost_action_except
+    (extend h)
+    unit o
+    ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
+    (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
+              (extend h).ghost_pts_to false r v1)
+= assume (preserves_inames (H2.ghost_share #Set.empty #false r v0 v1));
+  let res = lift_base_heap_action #h #unit #true #o (H2.ghost_share #Set.empty #false r v0 v1) in
+  lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
+  coerce_action res _ _ ()
+
+let ghost_gather
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (r:ghost_ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: ghost_action_except
+    (extend h)
+    (squash (composable pcm v0 v1)) o
+    ((extend h).ghost_pts_to false r v0 `(extend h).star`
+     (extend h).ghost_pts_to false r v1)
+    (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
+= assume (preserves_inames (H2.ghost_gather #Set.empty #false r v0 v1));
+  let res = lift_base_heap_action #h #_ #true #o (H2.ghost_gather #Set.empty #false r v0 v1) in
+  lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
+  coerce_action res _ _ ()

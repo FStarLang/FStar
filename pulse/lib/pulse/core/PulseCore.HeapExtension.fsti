@@ -60,37 +60,40 @@ val with_invariant
 
 val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
-(*
+
 open FStar.PCM
 open FStar.Ghost
-#push-options "--print_universes"
-val sel_action
+
+val select_refine
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
-    (#pcm:pcm a)
+    (#p:pcm a)
     (e:inames _)
-    (r:ref a pcm)
-    (v0:erased a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
 : action_except
     (extend h)
-    (v:a{compatible pcm v0 v}) e 
-    ((extend h).pts_to r v0) 
-    (fun _ -> (extend h).pts_to r v0)
+    (v:a{compatible p x v /\ p.refine v}) e
+    ((extend h).pts_to r x)
+    (fun v -> (extend h).pts_to r (f v))
 
-val upd_action
+val upd_gen
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
-    (#pcm:pcm a)
-    (e:inames _)
-    (r:ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
+    (#p:pcm a)
+    (e:inames _) 
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
 : action_except
     (extend h)
-    unit e 
-    ((extend h).pts_to r v0)
-    (fun _ -> (extend h).pts_to r v1)
-
+    unit e
+    ((extend h).pts_to r x)
+    (fun _ -> (extend h).pts_to r y)
+    
 val free_action
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
@@ -146,35 +149,6 @@ val alloc_action
     (extend h).emp
     (fun r -> (extend h).pts_to r x)
 
-val select_refine
-    (#h:heap_sig u#h)
-    (#a:Type u#(h + 1))
-    (#p:pcm a)
-    (e:inames _)
-    (r:ref a p)
-    (x:erased a)
-    (f:(v:a{compatible p x v}
-        -> GTot (y:a{compatible p y v /\
-                     FStar.PCM.frame_compatible p x v y})))
-: action_except
-    (extend h)
-    (v:a{compatible p x v /\ p.refine v}) e
-    ((extend h).pts_to r x)
-    (fun v -> (extend h).pts_to r (f v))
-
-val upd_gen
-    (#h:heap_sig u#h)
-    (#a:Type u#(h + 1))
-    (#p:pcm a)
-    (e:inames _) 
-    (r:ref a p)
-    (x y:Ghost.erased a)
-    (f:FStar.PCM.frame_preserving_upd p x y)
-: action_except
-    (extend h)
-    unit e
-    ((extend h).pts_to r x)
-    (fun _ -> (extend h).pts_to r y)
 
 val pts_to_not_null_action 
     (#h:heap_sig u#h)
@@ -189,4 +163,78 @@ val pts_to_not_null_action
     ((extend h).pts_to r v)
     (fun _ -> (extend h).pts_to r v)
 
-    *)
+// Ghost operations
+val ghost_alloc
+    (#h:heap_sig u#h)
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (e:inames _)
+    (x:erased a{pcm.refine x})
+: ghost_action_except
+    (extend h)
+    (ghost_ref a pcm)
+    e
+    (extend h).emp 
+    (fun r -> (extend h).ghost_pts_to false r x)
+
+val ghost_read
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (r:ghost_ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: ghost_action_except
+    (extend h)
+    (erased (v:a{compatible p x v /\ p.refine v}))
+    o
+    ((extend h).ghost_pts_to false r x)
+    (fun v -> (extend h).ghost_pts_to false r (f v))
+
+val ghost_write
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#p:pcm a)
+    (r:ghost_ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: ghost_action_except
+    (extend h)
+    unit o 
+    ((extend h).ghost_pts_to false r x)
+    (fun _ -> (extend h).ghost_pts_to false r y)
+
+val ghost_share
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (r:ghost_ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: ghost_action_except
+    (extend h)
+    unit o
+    ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
+    (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
+              (extend h).ghost_pts_to false r v1)
+
+val ghost_gather
+    (#h:heap_sig u#h)
+    #o
+    (#a:Type u#(h + 1))
+    (#pcm:pcm a)
+    (r:ghost_ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: ghost_action_except
+    (extend h)
+    (squash (composable pcm v0 v1)) o
+    ((extend h).ghost_pts_to false r v0 `(extend h).star`
+     (extend h).ghost_pts_to false r v1)
+    (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
+

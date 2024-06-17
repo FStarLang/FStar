@@ -165,7 +165,7 @@ val share
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: action_except base_heap unit ex
+: ghost_action_except base_heap unit ex
     (base_heap.pts_to r (v0 `op pcm` v1))
     (fun _ -> base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
 
@@ -176,6 +176,6 @@ val gather
     (r:ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
-: action_except base_heap (squash (composable pcm v0 v1)) ex
+: ghost_action_except base_heap (squash (composable pcm v0 v1)) ex
     (base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
     (fun _ -> base_heap.pts_to r (op pcm v0 v1))
