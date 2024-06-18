@@ -314,7 +314,7 @@ let down_up (p:big_slprop)
     ()
   );
   H2.slprop_extensionality (down (up p)) p
-let up_big_is_big b = ()
+let up_big_is_big b = down_up b
 
 let small_slprop = H2.small_slprop
 let cm_small_slprop = H2.cm_small_slprop

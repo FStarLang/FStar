@@ -3,6 +3,7 @@ open FStar.Ghost
 open FStar.PCM
 module H2 = PulseCore.Heap2
 module ST = PulseCore.HoareStateMonad
+module CM = FStar.Algebra.CommMonoid
 let eset (i:eqtype) = erased (Set.set i)
 
 let non_info (t:Type u#a) : Type u#a = x:erased t -> (y:t { y == reveal x })
@@ -85,9 +86,9 @@ type heap_sig : Type u#(a + 2) = {
     full_mem_pred : mem -> prop;
     
     is_ghost_action : mem -> mem -> prop;
-    is_ghost_action_refl : (
-      m0:mem ->
-      Lemma (is_ghost_action m0 m0)
+    is_ghost_action_preorder : (
+      unit ->
+      Lemma (FStar.Preorder.preorder_rel is_ghost_action)
     );
 
     slprop : Type u#(a + 1);
@@ -268,3 +269,6 @@ let exists_
     (p: a -> GTot chs.slprop)
 : chs.slprop
 = chs.as_slprop (fun m -> exists (x:a). chs.interp (p x) m)
+
+val cm_slprop (hs:heap_sig u#h) : CM.cm (hs.slprop)
+val cm_e_slprop (hs:heap_sig u#h) : CM.cm (erased hs.slprop)

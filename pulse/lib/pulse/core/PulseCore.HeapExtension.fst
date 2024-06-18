@@ -11,8 +11,6 @@ module PA = PulseCore.PCM.Agreement
 let base_heap_mem : Type u#(a + 1) = (H2.base_heap u#a).mem
 let base_heap_core : Type u#(a + 1) = (H2.base_heap u#a).sep.core
 let base_slprop : Type u#(a + 1) = (H2.base_heap u#a).slprop
-// assume
-// val select (i:nat) (m:H2.heap u#a) : GTot (option (H.cell u#a))
 
 noeq
 type core (h:heap_sig u#a) : Type u#(a + 2) = {
