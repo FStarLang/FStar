@@ -146,23 +146,29 @@ let check_no_escape (head_opt : option term)
    So, this function checks that the implicit flags match and takes
    the attributes from the binding site, i.e., expected_aq.
 *)
-let check_expected_aqual_for_binder aq b pos =
+let check_expected_aqual_for_binder (aq:aqual) (b:binder) (pos:Range.range) : aqual =
+  match
     let expected_aq = U.aqual_of_binder b in
     match aq, expected_aq with
-    | None, None -> aq
+    | None, None -> Inr aq
     | None, Some eaq ->
       if eaq.aqual_implicit //programmer should have written #
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                        "Inconsistent implicit qualifiers (expected implicit annotation on the argument)") pos
-      else expected_aq //keep the attributes
+      then Inl "expected implicit annotation on the argument"
+      else Inr expected_aq //keep the attributes
     | Some aq, None ->
-      raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                   "Inconsistent implicit qualifiers (did not expect argument aquals)") pos
+      Inl "expected an explicit argument (without annotation)"
     | Some aq, Some eaq ->
       if aq.aqual_implicit <> eaq.aqual_implicit
-      then raise_error (Errors.Fatal_InconsistentImplicitQualifier,
-                        "Inconsistent implicit qualifiers (mismatch)") pos
-      else expected_aq //keep the attributes
+      then Inl "mismatch"
+      else Inr expected_aq //keep the attributes
+  with
+  | Inl err ->
+    let open FStar.Pprint in
+    let msg = [
+      Errors.Msg.text ("Inconsistent argument qualifiers: " ^ err ^ ".");
+    ] in
+    raise_error_doc (Errors.Fatal_InconsistentImplicitQualifier, msg) pos
+  | Inr r -> r
 
 let check_erasable_binder_attributes env attrs (binder_ty:typ) =
     List.iter
