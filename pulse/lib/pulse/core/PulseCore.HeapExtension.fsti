@@ -8,6 +8,7 @@ val extend (h:heap_sig u#a) : h2:heap_sig u#(a + 1) { h2.bprop == h.slprop }
 val lift_iref (#h:heap_sig u#a) (i:h.iref) : (extend h).iref
 val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
 val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
+val lower_inames (#h:heap_sig u#a) (is:inames (extend h)) : inames h
 
 val lift_action
     (#h:heap_sig u#h)
@@ -22,7 +23,20 @@ val lift_action
     ((extend h).up pre)
     (fun x -> (extend h).up (post x))
 
- val dup_inv 
+val lift_action_alt
+    (#h:heap_sig u#h)
+    (#a:Type u#a)
+    (#mg:bool)
+    (#ex:inames (extend h))
+    (#pre:h.slprop)
+    (#post:a -> h.slprop)
+    (action:_action_except h a mg (lower_inames ex) pre post)
+: _action_except (extend h)
+    a mg ex 
+    ((extend h).up pre)
+    (fun x -> (extend h).up (post x))
+
+val dup_inv 
     (#h:heap_sig u#a)
     (e:inames (extend h))
     (i:(extend h).iref)

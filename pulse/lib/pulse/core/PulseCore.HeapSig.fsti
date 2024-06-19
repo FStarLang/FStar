@@ -247,6 +247,7 @@ let _action_except
  : Type u#(max a (m + 1)) 
  = frame:chs.slprop -> step_t chs a maybe_ghost except expects provides frame
 
+#push-options "--print_universes --print_implicits"
 let action_except
     (chs:heap_sig u#m)
     (a:Type u#a)

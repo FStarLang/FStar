@@ -169,7 +169,7 @@ let base_heap : heap_sig u#a =
     sep;
     full_mem_pred;
     is_ghost_action;
-    is_ghost_action_refl = (fun m -> ());
+    is_ghost_action_preorder= (fun _ -> ());
     slprop;
     interp;
     as_slprop;

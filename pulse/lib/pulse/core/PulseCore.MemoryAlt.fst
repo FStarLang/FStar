@@ -58,8 +58,9 @@ let small_is_also_big (s:slprop)
 : Lemma (is_small s ==> is_big s)
 = sig.up_down (small_sig.up (small_sig.down (down s)))
 
-let up2_small_is_small (s:small_slprop)
-: Lemma (is_small (up2 s))
+let up2_small_is_small_alt (s:small_slprop)
+: Lemma (ensures is_small (up2 s))
+        [SMTPat (is_small (up2 s))]
 = calc (==) {
     up2 (down2 (up2 s));
   (==) {}
@@ -71,7 +72,7 @@ let up2_small_is_small (s:small_slprop)
   (==) { small_sig.up_down s }
     up2 s;
   }
-
+let up2_small_is_small s = up2_small_is_small_alt s
 (** Interpreting mem assertions as memory predicates *)
 let interp (p:slprop u#a) (m:mem u#a) : prop = H.interpret p m
 
@@ -93,15 +94,15 @@ let slprop_equiv_refl (p:slprop)
 = ()
           
 (** A memory maps a [ref]erence to its associated value *)
-let core_ref : Type u#0 = PulseCore.Heap.core_ref
+let core_ref : Type u#0 = PulseCore.Heap2.core_ref
 
 (** [null] is a specific reference, that is not associated to any value
 *)
-let core_ref_null : core_ref = PulseCore.Heap.core_ref_null
+let core_ref_null : core_ref = PulseCore.Heap2.core_ref_null
 
 let core_ref_is_null (r:core_ref)
 : b:bool { b <==> r == core_ref_null }
-= PulseCore.Heap.core_ref_is_null r
+= PulseCore.Heap2.core_ref_is_null r
 
 assume
 val emp_up
@@ -340,51 +341,58 @@ val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
 
 (* Some generic actions and combinators *)
 
-val pst_frame (#a:Type)
+let pst_frame (#a:Type)
               (#maybe_ghost:bool)
               (#opened_invariants:inames)
               (#pre:slprop)
               (#post:a -> slprop)
               (frame:slprop)
               ($f:_pst_action_except a maybe_ghost opened_invariants pre post)
-  : _pst_action_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+: _pst_action_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
+= admit()
 
-
-val witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
-  : pst_ghost_action_except (erased a) opened_invariants
+let witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+: pst_ghost_action_except (erased a) opened_invariants
            (h_exists p)
            (fun x -> p x)
+= admit()
 
-val intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
+let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
   : pst_ghost_action_except unit opened_invariants
            (p x)
            (fun _ -> h_exists p)
+= admit ()
 
-val lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+let lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
   : pst_ghost_action_except unit opened_invariants
            (h_exists p)
            (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
+ = admit()
 
-val elim_pure (#opened_invariants:_) (p:prop)
+let elim_pure (#opened_invariants:_) (p:prop)
   : pst_ghost_action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
+  = admit()
 
-val intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
+let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
   : pst_ghost_action_except unit opened_invariants emp (fun _ -> pure p)
-
-val drop (#opened_invariants:_) (p:slprop)
+  = admit()
+  
+let drop (#opened_invariants:_) (p:slprop)
   : pst_ghost_action_except unit opened_invariants p (fun _ -> emp)
+  = admit()
 
-let non_info a = x:erased a -> y:a { reveal x == y}
-
-val lift_ghost
+let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
       (ni_a:non_info a)
       (f:erased (pst_ghost_action_except a opened_invariants p q))
   : pst_ghost_action_except a opened_invariants p q
+  = admit ()
 
 (* Concrete references to "small" types *)
-val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
+let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
+ = //up2_small_is_small (B.base_heap.pts_to #a #pcm r v);
+   up2 (B.base_heap.pts_to #a #pcm r v)
 
 val sel_action (#a:Type u#a) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
   : pst_action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
