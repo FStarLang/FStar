@@ -271,5 +271,5 @@ let exists_
 : chs.slprop
 = chs.as_slprop (fun m -> exists (x:a). chs.interp (p x) m)
 
-val cm_slprop (hs:heap_sig u#h) : CM.cm (hs.slprop)
+val cm_slprop (hs:heap_sig u#h)   : c:CM.cm (hs.slprop) { c.unit == hs.emp /\ c.mult == hs.star }
 val cm_e_slprop (hs:heap_sig u#h) : CM.cm (erased hs.slprop)

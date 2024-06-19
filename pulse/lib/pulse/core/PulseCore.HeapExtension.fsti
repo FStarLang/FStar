@@ -29,7 +29,7 @@ val lift_action_alt
     (#mg:bool)
     (#ex:inames (extend h))
     (#pre:h.slprop)
-    (#post:a -> h.slprop)
+    (#post:a -> GTot h.slprop)
     (action:_action_except h a mg (lower_inames ex) pre post)
 : _action_except (extend h)
     a mg ex 
@@ -107,19 +107,6 @@ val upd_gen
     unit e
     ((extend h).pts_to r x)
     (fun _ -> (extend h).pts_to r y)
-    
-val free_action
-    (#h:heap_sig u#h)
-    (#a:Type u#(h + 1))
-    (#pcm:pcm a)
-    (e:inames _)
-    (r:ref a pcm)
-    (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-: action_except
-    (extend h)
-    unit e 
-    ((extend h).pts_to r x)
-    (fun _ -> (extend h).pts_to r pcm.FStar.PCM.p.one)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action

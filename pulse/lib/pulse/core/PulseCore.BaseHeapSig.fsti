@@ -179,3 +179,13 @@ val gather
 : ghost_action_except base_heap (squash (composable pcm v0 v1)) ex
     (base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
     (fun _ -> base_heap.pts_to r (op pcm v0 v1))
+
+val pts_to_not_null_action 
+      (#ex:inames base_heap)
+      (#a:Type u#a)
+      (#pcm:pcm a)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: ghost_action_except base_heap (squash (not (is_null r))) ex
+    (base_heap.pts_to r v)
+    (fun _ -> base_heap.pts_to r v)

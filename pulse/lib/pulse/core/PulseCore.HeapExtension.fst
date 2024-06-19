@@ -1564,19 +1564,6 @@ let upd_gen
 = assume (preserves_inames (H2.write #Set.empty r x y f));
   lift_base_heap_action (H2.write r x y f)
 
-let free_action
-    (#h:heap_sig u#h)
-    (#a:Type u#(h + 1))
-    (#pcm:pcm a)
-    (e:inames _)
-    (r:ref a pcm)
-    (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-: action_except
-    (extend h)
-    unit e 
-    ((extend h).pts_to r x)
-    (fun _ -> (extend h).pts_to r pcm.FStar.PCM.p.one)
-= admit()
 
 let coerce_action (#h:heap_sig) #a #mg #e #pre (#post0:a -> GTot h.slprop)
       (f:_action_except h a mg e pre post0)

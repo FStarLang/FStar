@@ -379,19 +379,6 @@ val lift_ghost
 (* Concrete references to "small" types *)
 val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
 
-val sel_action (#a:Type u#a) (#pcm:_) (e:inames) (r:ref a pcm) (v0:erased a)
-  : pst_action_except (v:a{compatible pcm v0 v}) e (pts_to r v0) (fun _ -> pts_to r v0)
-
-val upd_action (#a:Type u#a) (#pcm:_) (e:inames)
-               (r:ref a pcm)
-               (v0:FStar.Ghost.erased a)
-               (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-  : pst_action_except unit e (pts_to r v0) (fun _ -> pts_to r v1)
-
-val free_action (#a:Type u#a) (#pcm:pcm a) (e:inames)
-                (r:ref a pcm) (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-  : pst_action_except unit e (pts_to r x) (fun _ -> pts_to r pcm.FStar.PCM.p.one)
-
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
   (#a:Type u#a)
