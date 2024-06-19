@@ -489,11 +489,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! b2 = desugar_stmt env b2 in
       return (SW.tm_par p1 p2 q1 q2 b1 b2 s.range)
 
-    | Rewrite { p1; p2 } ->
-      let! p1 = desugar_vprop env p1 in
-      let! p2 = desugar_vprop env p2 in
-      return (SW.tm_rewrite p1 p2 s.range)
-      
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
 

@@ -36,8 +36,6 @@ let tm_with_inv name body returns_inv = Tm_WithInv { name; body; returns_inv }
 let tm_add_inv names n r = tm_add_inv names n
 let tm_with_local binder initializer body = Tm_WithLocal { binder; initializer; body }
 let tm_with_local_array binder initializer length body = Tm_WithLocalArray { binder; initializer; length; body }
-let tm_rewrite t1 t2 = Tm_Rewrite { t1; t2 }
-let tm_rename pairs t = Tm_ProofHintWithBinders { hint_type = RENAME { pairs; goal=None}; binders=[]; t}
 let tm_admit ctag u typ post = Tm_Admit { ctag; u; typ; post }
 let tm_unreachable = Tm_Unreachable
 let with_range t r = { term = t; range = r; effect_tag = default_effect_hint }
