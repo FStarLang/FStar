@@ -275,8 +275,8 @@ let rec elab_st_typing (#g:env)
         (mk_abs raR R.Q_Explicit rpostR)
         reL reR
 
-				| T_Rewrite _ p q _ _ ->
-				  mk_rewrite p q
+		| T_Rewrite _ p q _ _ ->
+		  mk_rewrite p q
 
     | T_WithLocal _ _ init _ init_t c x _ _ _ body_typing ->
       let rret_u = comp_u c in

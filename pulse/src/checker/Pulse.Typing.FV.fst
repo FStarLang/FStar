@@ -106,9 +106,10 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | RENAME { pairs; goal } ->
       freevars_close_term_pairs' pairs x i;
       freevars_close_term_opt' goal x i
-    | REWRITE { t1; t2 } ->
+    | REWRITE { t1; t2; tac_opt } ->
       freevars_close_term' t1 x i;
-      freevars_close_term' t2 x i
+      freevars_close_term' t2 x i;
+      freevars_close_term_opt' tac_opt x i
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
@@ -184,9 +185,10 @@ let rec freevars_close_st_term' (t:st_term) (x:var) (i:index)
       freevars_close_st_term' body2 x i;
       freevars_close_term' post2 x (i + 1)
 
-    | Tm_Rewrite { t1; t2 } ->
+    | Tm_Rewrite { t1; t2; tac_opt } ->
       freevars_close_term' t1 x i;
-      freevars_close_term' t2 x i
+      freevars_close_term' t2 x i;
+      freevars_close_term_opt' tac_opt x i
 
     | Tm_WithLocal { binder; initializer; body } ->
       freevars_close_term' binder.binder_ty x i;

@@ -69,8 +69,9 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | UNFOLD { p } -> freevars p
   | RENAME { pairs; goal } ->
     Set.union (freevars_pairs pairs) (freevars_term_opt goal)
-  | REWRITE { t1; t2 } ->
-    Set.union (freevars t1) (freevars t2)
+  | REWRITE { t1; t2; tac_opt } ->
+    Set.union (Set.union (freevars t1) (freevars t2))
+              (freevars_term_opt tac_opt)
   | WILD
   | SHOW_PROOF_STATE _ -> Set.empty
 
@@ -139,8 +140,10 @@ let rec freevars_st (t:st_term)
                            (Set.union (freevars length)
                                       (freevars_st body)))
 
-    | Tm_Rewrite { t1; t2 } ->
-      Set.union (freevars t1) (freevars t2)
+    | Tm_Rewrite { t1; t2; tac_opt } ->
+      Set.union (
+        Set.union (freevars t1) (freevars t2)
+      ) (freevars_term_opt tac_opt)
 
     | Tm_Admit { typ; post } ->
       Set.union (freevars typ)
@@ -448,8 +451,11 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
     | RENAME { pairs; goal } -> RENAME { pairs=subst_term_pairs pairs ss;
                                          goal=subst_term_opt goal ss }
-    | REWRITE { t1; t2 } -> REWRITE { t1=subst_term t1 ss;
-                                      t2=subst_term t2 ss }
+    | REWRITE { t1; t2; tac_opt } ->
+      REWRITE { t1=subst_term t1 ss;
+                t2=subst_term t2 ss;
+                tac_opt = subst_term_opt tac_opt ss;
+              }
     | WILD
     | SHOW_PROOF_STATE _ -> ht
 
@@ -575,9 +581,10 @@ let rec subst_st_term (t:st_term) (ss:subst)
                           length = subst_term length ss;
                           body = subst_st_term body (shift_subst ss) }
 
-    | Tm_Rewrite { t1; t2 } ->
+    | Tm_Rewrite { t1; t2; tac_opt } ->
       Tm_Rewrite { t1 = subst_term t1 ss;
-                   t2 = subst_term t2 ss }
+                   t2 = subst_term t2 ss;
+                   tac_opt = subst_term_opt tac_opt ss }
 
     | Tm_Admit { ctag; u; typ; post } ->
       Tm_Admit { ctag;

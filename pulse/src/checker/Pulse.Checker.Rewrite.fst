@@ -76,9 +76,10 @@ let check
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = push_context "check_rewrite" t.range g in
-  let Tm_Rewrite {t1=p; t2=q} = t.term in
+  let Tm_Rewrite {t1=p; t2=q; tac_opt} = t.term in
   let (| p, p_typing |) = check_vprop g p in
   let (| q, q_typing |) = check_vprop g q in
+  (* FIXME: use tac_opt *)
   let equiv_p_q = check_vprop_equiv t.range g p q in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
 	prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
