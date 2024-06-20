@@ -13283,3 +13283,131 @@ let (call_subtac :
                                                (FStar_Pervasives_Native.None,
                                                  issues1))))) uu___1)))
             uu___3 uu___2 uu___1 uu___
+let run_tactic_on_ps_and_solve_remaining :
+  'a 'b .
+    FStar_Compiler_Range_Type.range ->
+      FStar_Compiler_Range_Type.range ->
+        Prims.bool ->
+          'a ->
+            FStar_Syntax_Syntax.term ->
+              FStar_Tactics_Types.proofstate -> unit
+  =
+  fun t_range ->
+    fun g_range ->
+      fun background ->
+        fun t ->
+          fun f_tm ->
+            fun ps ->
+              let uu___ =
+                FStar_Tactics_Interpreter.run_tactic_on_ps t_range g_range
+                  background FStar_Syntax_Embeddings.e_unit ()
+                  FStar_Syntax_Embeddings.e_unit f_tm false ps in
+              match uu___ with
+              | (remaining_goals, r) ->
+                  FStar_Compiler_List.iter
+                    (fun g ->
+                       let uu___2 =
+                         let uu___3 = FStar_Tactics_Types.goal_env g in
+                         let uu___4 = FStar_Tactics_Types.goal_type g in
+                         getprop uu___3 uu___4 in
+                       match uu___2 with
+                       | FStar_Pervasives_Native.Some vc ->
+                           let guard =
+                             {
+                               FStar_TypeChecker_Common.guard_f =
+                                 (FStar_TypeChecker_Common.NonTrivial vc);
+                               FStar_TypeChecker_Common.deferred_to_tac = [];
+                               FStar_TypeChecker_Common.deferred = [];
+                               FStar_TypeChecker_Common.univ_ineqs = ([], []);
+                               FStar_TypeChecker_Common.implicits = []
+                             } in
+                           let uu___3 = FStar_Tactics_Types.goal_env g in
+                           FStar_TypeChecker_Rel.force_trivial_guard uu___3
+                             guard
+                       | FStar_Pervasives_Native.None ->
+                           FStar_Errors.raise_error
+                             (FStar_Errors_Codes.Fatal_OpenGoalsInSynthesis,
+                               "tactic left a computationally-relevant goal unsolved")
+                             g_range) remaining_goals
+let (call_subtac_tm :
+  env ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.universe ->
+        FStar_Syntax_Syntax.typ ->
+          (FStar_Syntax_Syntax.term FStar_Pervasives_Native.option * issues)
+            FStar_Tactics_Monad.tac)
+  =
+  fun uu___3 ->
+    fun uu___2 ->
+      fun uu___1 ->
+        fun uu___ ->
+          (fun g ->
+             fun f_tm ->
+               fun _u ->
+                 fun goal_ty ->
+                   let uu___ =
+                     FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
+                       () (Obj.repr ()) in
+                   Obj.magic
+                     (FStar_Class_Monad.op_let_Bang
+                        FStar_Tactics_Monad.monad_tac () () uu___
+                        (fun uu___1 ->
+                           (fun uu___1 ->
+                              let uu___1 = Obj.magic uu___1 in
+                              let rng = FStar_TypeChecker_Env.get_range g in
+                              let uu___2 =
+                                proofstate_of_goal_ty rng g goal_ty in
+                              match uu___2 with
+                              | (ps, w) ->
+                                  let ps1 =
+                                    {
+                                      FStar_Tactics_Types.main_context =
+                                        (ps.FStar_Tactics_Types.main_context);
+                                      FStar_Tactics_Types.all_implicits =
+                                        (ps.FStar_Tactics_Types.all_implicits);
+                                      FStar_Tactics_Types.goals =
+                                        (ps.FStar_Tactics_Types.goals);
+                                      FStar_Tactics_Types.smt_goals =
+                                        (ps.FStar_Tactics_Types.smt_goals);
+                                      FStar_Tactics_Types.depth =
+                                        (ps.FStar_Tactics_Types.depth);
+                                      FStar_Tactics_Types.__dump =
+                                        (ps.FStar_Tactics_Types.__dump);
+                                      FStar_Tactics_Types.psc =
+                                        (ps.FStar_Tactics_Types.psc);
+                                      FStar_Tactics_Types.entry_range =
+                                        (ps.FStar_Tactics_Types.entry_range);
+                                      FStar_Tactics_Types.guard_policy =
+                                        (ps.FStar_Tactics_Types.guard_policy);
+                                      FStar_Tactics_Types.freshness =
+                                        (ps.FStar_Tactics_Types.freshness);
+                                      FStar_Tactics_Types.tac_verb_dbg =
+                                        (ps.FStar_Tactics_Types.tac_verb_dbg);
+                                      FStar_Tactics_Types.local_state =
+                                        (ps.FStar_Tactics_Types.local_state);
+                                      FStar_Tactics_Types.urgency =
+                                        (ps.FStar_Tactics_Types.urgency);
+                                      FStar_Tactics_Types.dump_on_failure =
+                                        false
+                                    } in
+                                  let uu___3 =
+                                    FStar_Errors.catch_errors_and_ignore_rest
+                                      (fun uu___4 ->
+                                         run_tactic_on_ps_and_solve_remaining
+                                           rng rng false () f_tm ps1) in
+                                  (match uu___3 with
+                                   | ([], FStar_Pervasives_Native.Some ()) ->
+                                       Obj.magic
+                                         (FStar_Class_Monad.return
+                                            FStar_Tactics_Monad.monad_tac ()
+                                            (Obj.magic
+                                               ((FStar_Pervasives_Native.Some
+                                                   w), [])))
+                                   | (issues1, uu___4) ->
+                                       Obj.magic
+                                         (FStar_Class_Monad.return
+                                            FStar_Tactics_Monad.monad_tac ()
+                                            (Obj.magic
+                                               (FStar_Pervasives_Native.None,
+                                                 issues1))))) uu___1)))
+            uu___3 uu___2 uu___1 uu___
