@@ -502,7 +502,7 @@ val ghost_gather
 
 (* Concrete references to "big" types *)
 val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
-
+(*
 val big_sel_action
       (#a:Type u#(a + 1))
       (#pcm:_)
@@ -531,6 +531,7 @@ val big_free_action
 : pst_action_except unit e
     (big_pts_to r x)
     (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
+*)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val big_split_action

@@ -180,9 +180,9 @@ val ghost_alloc
 
 val ghost_read
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#p:pcm a)
+    (e:inames _)
     (r:ghost_ref a p)
     (x:erased a)
     (f:(v:a{compatible p x v}
@@ -191,50 +191,50 @@ val ghost_read
 : ghost_action_except
     (extend h)
     (erased (v:a{compatible p x v /\ p.refine v}))
-    o
+    e
     ((extend h).ghost_pts_to false r x)
     (fun v -> (extend h).ghost_pts_to false r (f v))
 
 val ghost_write
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#p:pcm a)
+    (e:inames _)
     (r:ghost_ref a p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : ghost_action_except
     (extend h)
-    unit o 
+    unit e
     ((extend h).ghost_pts_to false r x)
     (fun _ -> (extend h).ghost_pts_to false r y)
 
 val ghost_share
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#pcm:pcm a)
+    (e:inames _)
     (r:ghost_ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : ghost_action_except
     (extend h)
-    unit o
+    unit e
     ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
     (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
               (extend h).ghost_pts_to false r v1)
 
 val ghost_gather
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#pcm:pcm a)
+    (e:inames _)
     (r:ghost_ref a pcm)
     (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+    (v1:FStar.Ghost.erased a)
 : ghost_action_except
     (extend h)
-    (squash (composable pcm v0 v1)) o
+    (squash (composable pcm v0 v1)) e
     ((extend h).ghost_pts_to false r v0 `(extend h).star`
      (extend h).ghost_pts_to false r v1)
     (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))

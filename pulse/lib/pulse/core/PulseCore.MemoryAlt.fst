@@ -48,7 +48,11 @@ let big_slprop : Type u#(a + 2) = sig.bprop
 let cm_big_slprop : CM.cm big_slprop = H.cm_slprop small_sig
 let down (s:slprop u#a) : big_slprop u#a = sig.down s
 let up (s:big_slprop u#a) : slprop u#a = sig.up s
-let up_big_is_big (b:big_slprop) : Lemma (is_big (up b)) = sig.up_down b
+let up_big_is_big_alt (b:big_slprop)
+: Lemma (is_big (up b))
+        [SMTPat (is_big (up b))]
+= sig.up_down b
+let up_big_is_big (b:big_slprop) : Lemma (is_big (up b)) = ()
 
 let small_slprop : Type u#(a + 1) = small_sig.bprop
 let cm_small_slprop : CM.cm small_slprop = H.cm_slprop B.base_heap
@@ -488,23 +492,28 @@ let pts_to_not_null_action
 
 (* Ghost references to "small" types *)
 [@@erasable]
-val core_ghost_ref : Type0
-let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = H.core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a
+let core_ghost_ref : Type0 = H.core_ghost_ref
+let ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a)
+: vprop u#a
+= up2 (B.base_heap.ghost_pts_to false #a #p r v)
 
-val ghost_alloc
-    (#o:_)
+let ghost_alloc
+    (#e:_)
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
     (ghost_ref pcm)
-    o
+    e
     emp 
     (fun r -> ghost_pts_to r x)
+= up2_emp ();
+  lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.ghost_extend false #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm x
 
-val ghost_read
-    #o
+let ghost_read
+    #e
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
@@ -514,78 +523,68 @@ val ghost_read
                      FStar.PCM.frame_compatible p x v y})))
 : pst_ghost_action_except
     (erased (v:a{compatible p x v /\ p.refine v}))
-    o
+    e
     (ghost_pts_to r x)
     (fun v -> ghost_pts_to r (f v))
+= lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.ghost_read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #p r x f
 
-val ghost_write
-    #o
+let ghost_write
+    #e
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
-: pst_ghost_action_except unit o 
+: pst_ghost_action_except unit e
     (ghost_pts_to r x)
     (fun _ -> ghost_pts_to r y)
+= lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.ghost_write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #p r x y f
 
-val ghost_share
-    #o
+
+let ghost_share
+    #e
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit o
+: pst_ghost_action_except unit e
     (ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
+= up2_star (B.base_heap.ghost_pts_to false #a #pcm r v0) (B.base_heap.ghost_pts_to false #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.ghost_share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #pcm r v0 v1
 
-val ghost_gather
-    #o
+
+let ghost_gather
+    #e
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : pst_ghost_action_except
-    (squash (composable pcm v0 v1)) o
+    (squash (composable pcm v0 v1)) e
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
+= up2_star (B.base_heap.ghost_pts_to false #a #pcm r v0) (B.base_heap.ghost_pts_to false #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.ghost_gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #pcm r v0 v1
+
 
 (* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
-
-val big_sel_action
-      (#a:Type u#(a + 1))
-      (#pcm:_)
-      (e:inames)
-      (r:ref a pcm)
-      (v0:erased a)
-: pst_action_except (v:a{compatible pcm v0 v}) e
-    (big_pts_to r v0)
-    (fun _ -> big_pts_to r v0)
-
-val big_upd_action
-      (#a:Type u#(a + 1)) (#pcm:_) (e:inames)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-: pst_action_except unit e
-    (big_pts_to r v0)
-    (fun _ -> big_pts_to r v1)
-
-val big_free_action
-      (#a:Type u#(a + 1))
-      (#pcm:pcm a)
-      (e:inames)
-      (r:ref a pcm)
-      (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-: pst_action_except unit e
-    (big_pts_to r x)
-    (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
+let big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a)
+: big_vprop u#a
+= up (small_sig.pts_to #a #pcm r v)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
-val big_split_action
+let big_split_action
       (#a:Type u#(a + 1))
       (#pcm:pcm a)
       (e:inames)
@@ -595,9 +594,11 @@ val big_split_action
 : pst_ghost_action_except unit e
     (big_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
+= up_star_big (small_sig.pts_to #a #pcm r v0) (small_sig.pts_to #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  E.split_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
 
-(** Combining separate permissions into a single composite permission *)
-val big_gather_action
+let big_gather_action
       (#a:Type u#(a + 1))
       (#pcm:pcm a)
       (e:inames)
@@ -607,8 +608,11 @@ val big_gather_action
 : pst_ghost_action_except (squash (composable pcm v0 v1)) e
     (big_pts_to r v0 `star` big_pts_to r v1)
     (fun _ -> big_pts_to r (op pcm v0 v1))
+= up_star_big (small_sig.pts_to #a #pcm r v0) (small_sig.pts_to #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  E.gather_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
 
-val big_alloc_action
+let big_alloc_action
       (#a:Type u#(a + 1))
       (#pcm:pcm a)
       (e:inames)
@@ -616,8 +620,11 @@ val big_alloc_action
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> big_pts_to r x)
+= up_emp_big ();
+  lift_action_alt #small_sig <|
+  E.alloc_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) x
 
-val big_select_refine
+let big_select_refine
       (#a:Type u#(a + 1))
       (#p:pcm a)
       (e:inames)
@@ -629,8 +636,10 @@ val big_select_refine
 : pst_action_except (v:a{compatible p x v /\ p.refine v}) e
     (big_pts_to r x)
     (fun v -> big_pts_to r (f v))
+= lift_action_alt #small_sig <|
+  E.select_refine #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) e) r x f
 
-val big_upd_gen
+let big_upd_gen
     (#a:Type u#(a + 1))
     (#p:pcm a)
     (e:inames)
@@ -640,8 +649,10 @@ val big_upd_gen
 : pst_action_except unit e
     (big_pts_to r x)
     (fun _ -> big_pts_to r y)
+= lift_action_alt #small_sig <|
+  E.upd_gen #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) e) r x y f
 
-val big_pts_to_not_null_action 
+let big_pts_to_not_null_action 
       (#a:Type u#(a + 1))
       (#pcm:pcm a)
       (e:inames)
@@ -650,11 +661,15 @@ val big_pts_to_not_null_action
 : pst_ghost_action_except (squash (not (is_null r))) e
     (big_pts_to r v)
     (fun _ -> big_pts_to r v)
+= lift_action_alt #small_sig <|
+  E.pts_to_not_null_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v
 
-(* Ghost references to "small" types *)
-val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop u#a
+(* Ghost references to "big" types *)
+let big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a)
+: big_vprop u#a
+= up (small_sig.ghost_pts_to false #a #p r v)
 
-val big_ghost_alloc
+let big_ghost_alloc
     (#o:_)
     (#a:Type u#(a + 1))
     (#pcm:pcm a)
@@ -664,8 +679,11 @@ val big_ghost_alloc
     o
     emp 
     (fun r -> big_ghost_pts_to r x)
+= up_emp_big ();
+  lift_action_alt #small_sig <|
+  E.ghost_alloc #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) o) x
 
-val big_ghost_read
+let big_ghost_read
     #o
     (#a:Type u#(a + 1))
     (#p:pcm a)
@@ -679,8 +697,10 @@ val big_ghost_read
     o
     (big_ghost_pts_to r x)
     (fun v -> big_ghost_pts_to r (f v))
+= lift_action_alt #small_sig <|
+  E.ghost_read #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) o) r x f
 
-val big_ghost_write
+let big_ghost_write
     #o
     (#a:Type u#(a + 1))
     (#p:pcm a)
@@ -690,27 +710,35 @@ val big_ghost_write
 : pst_ghost_action_except unit o 
     (big_ghost_pts_to r x)
     (fun _ -> big_ghost_pts_to r y)
+= lift_action_alt #small_sig <|
+  E.ghost_write #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) o) r x y f
 
-val big_ghost_share
-    #o
+let big_ghost_share
+    #e
     (#a:Type u#(a + 1))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
-: pst_ghost_action_except unit o
+: pst_ghost_action_except unit e
     (big_ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
+= up_star_big (small_sig.ghost_pts_to false #a #pcm r v0) (small_sig.ghost_pts_to false #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  E.ghost_share #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
 
-val big_ghost_gather
-    #o
+
+let big_ghost_gather
+    #e
     (#a:Type u#(a + 1))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : pst_ghost_action_except
-    (squash (composable pcm v0 v1)) o
+    (squash (composable pcm v0 v1)) e
     (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-
+= up_star_big (small_sig.ghost_pts_to false #a #pcm r v0) (small_sig.ghost_pts_to false #a #pcm r v1);
+  lift_action_alt #small_sig <|
+  E.ghost_gather #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
