@@ -457,3 +457,18 @@ let rec inspect_term (t:R.term)
   | Tv_Unknown -> Tm_Unknown
 
   | Tv_Unsupp -> default_view
+
+let rec vprop_as_list (vp:term)
+  : list term
+  = match inspect_term vp with
+    | Tm_Emp -> []
+    | Tm_Star vp0 vp1 ->
+      vprop_as_list vp0 @ vprop_as_list vp1
+    | _ -> [vp]
+
+let rec list_as_vprop (vps:list term)
+  : term
+  = match vps with
+    | [] -> tm_emp
+    | [hd] -> hd
+    | hd::tl -> tm_star hd (list_as_vprop tl)

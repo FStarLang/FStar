@@ -104,21 +104,6 @@ type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
   c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint } &
   st_typing g t c
 
-let rec vprop_as_list (vp:term)
-  : list term
-  = match inspect_term vp with
-    | Tm_Emp -> []
-    | Tm_Star vp0 vp1 ->
-      vprop_as_list vp0 @ vprop_as_list vp1
-    | _ -> [vp]
-
-let rec list_as_vprop (vps:list term)
-  : term
-  = match vps with
-    | [] -> tm_emp
-    | [hd] -> hd
-    | hd::tl -> tm_star hd (list_as_vprop tl)
-
 val comp_for_post_hint #g (#pre:vprop) (pre_typing:tot_typing g pre tm_vprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
