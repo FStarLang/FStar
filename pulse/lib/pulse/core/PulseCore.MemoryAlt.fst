@@ -259,11 +259,11 @@ let mem_invariant (e:inames) (m:mem u#a)
 
 let full_mem_pred: mem -> prop = sig.full_mem_pred 
 
-let iref : Type0 = sig.iref
-
+let iref : Type0 = erased sig.iref
+let reveal_iref (i:iref) : sig.iref = sig.iref_erasable i
 let iname_of (i:iref) : GTot iname = sig.iname_of i
 
-let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv i p
+let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv (reveal_iref i) p
 
 let coerce_action
     (#a:Type u#x)
@@ -282,13 +282,15 @@ let dup_inv (e:inames) (i:iref) (p:slprop u#a)
 : pst_ghost_action_except unit e 
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
-= E.dup_inv #(small_sig u#a) e i p
+= E.dup_inv #(small_sig u#a) e (reveal_iref i) p
 
 let new_invariant (e:inames) (p:slprop { is_big p })
 : pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
-= E.new_invariant #(small_sig u#a) e p 
+= fun frame m0 -> 
+    let i, m1 = E.new_invariant #(small_sig u#a) e p frame m0 in
+    hide i, m1
 
 let with_invariant (#a:Type u#x)
                    (#fp:slprop u#a)
@@ -304,7 +306,7 @@ let with_invariant (#a:Type u#x)
 : _pst_action_except a maybe_ghost opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
-= E.with_invariant #(small_sig u#a) #a #fp #fp' #opened_invariants #p #maybe_ghost i f
+= E.with_invariant #(small_sig u#a) #a #fp #fp' #opened_invariants #p #maybe_ghost (reveal_iref i) f
 
 (*
 val distinct_invariants_have_distinct_names

@@ -258,7 +258,7 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 (**** Invariants *)
 
-// [@@erasable]
+[@@erasable]
 val iref : Type0
 
 val iname_of (i:iref) : GTot iname
