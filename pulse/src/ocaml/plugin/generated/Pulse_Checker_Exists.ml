@@ -143,7 +143,7 @@ let (check_elim_exists :
                                                                (FStar_Tactics_Effect.lift_div_tac
                                                                   (fun uu___1
                                                                     ->
-                                                                    Pulse_Typing_Combinators.vprop_as_list
+                                                                    Pulse_Syntax_Pure.vprop_as_list
                                                                     pre))
                                                                (fun uu___1 ->
                                                                   (fun ts ->
