@@ -18,3 +18,20 @@ let (contains_r :
       FStar_Pervasives_Native.uu___is_Some
         (FStar_Reflection_Typing.lookup_bvar g x)
 type ('a, 'du) src_typing_freevars_t = unit
+type ('g0, 't0, 'c0, 'd0) st_typing_freevars_cb_t = unit
+type 'pred st_typing_freevars_case = unit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
