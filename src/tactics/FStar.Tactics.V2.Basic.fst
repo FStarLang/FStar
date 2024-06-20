@@ -59,6 +59,7 @@ module U      = FStar.Syntax.Util
 module Z      = FStar.BigInt
 module Core   = FStar.TypeChecker.Core
 module PO     = FStar.TypeChecker.Primops
+module TC     = FStar.Tactics.Typeclasses
 
 let dbg_Tac        = Debug.get_toggle "Tac"
 let dbg_TacUnify   = Debug.get_toggle "TacUnify"
@@ -2892,6 +2893,44 @@ let call_subtac (g:env) (f : tac unit) (_u:universe) (goal_ty : typ) : tac (opti
   let ps = { ps with dump_on_failure = false } in // subtacs can fail gracefully, do not dump the failed proofstate.
   match Errors.catch_errors_and_ignore_rest (fun () ->
           run_unembedded_tactic_on_ps_and_solve_remaining rng rng false () (fun () -> f) ps)
+  with
+  | [], Some () ->
+    return (Some w, [])
+  | issues, _ ->
+    return (None, issues)
+
+let run_tactic_on_ps_and_solve_remaining
+    (#a #b : Type)
+    (t_range g_range : Range.range)
+    (background : bool)
+    (t : a)
+    (f_tm : term)
+    (ps : proofstate)
+    : unit
+=
+  let remaining_goals, r = FStar.Tactics.Interpreter.run_tactic_on_ps #unit #unit t_range g_range background TC.solve () TC.solve f_tm false ps in
+  // Check that all goals left are irrelevant and provable
+  remaining_goals |> List.iter (fun g ->
+      match getprop (goal_env g) (goal_type g) with
+      | Some vc ->
+          let guard = { guard_f = NonTrivial vc
+                      ; deferred_to_tac = []
+                      ; deferred = []
+                      ; univ_ineqs = [], []
+                      ; implicits = [] } in
+          Rel.force_trivial_guard (goal_env g) guard
+      | None ->
+          Err.raise_error (Err.Fatal_OpenGoalsInSynthesis, "tactic left a computationally-relevant goal unsolved") g_range);
+  r
+
+(* One last primitive in this file *)
+let call_subtac_tm (g:env) (f_tm : term) (_u:universe) (goal_ty : typ) : tac (option term & issues) =
+  return ();! // thunk
+  let rng = Env.get_range g in
+  let ps, w = proofstate_of_goal_ty rng g goal_ty in
+  let ps = { ps with dump_on_failure = false } in // subtacs can fail gracefully, do not dump the failed proofstate.
+  match Errors.catch_errors_and_ignore_rest (fun () ->
+          run_tactic_on_ps_and_solve_remaining #unit #unit rng rng false () f_tm ps)
   with
   | [], Some () ->
     return (Some w, [])

@@ -149,3 +149,4 @@ val resolve_name                      : env -> list string -> tac (option (eithe
 val log_issues                        : list Errors.issue -> tac unit
 
 val call_subtac                       : env -> tac unit -> universe -> typ -> tac (option term & issues)
+val call_subtac_tm                    : env -> term     -> universe -> typ -> tac (option term & issues)
