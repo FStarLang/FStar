@@ -586,6 +586,11 @@ let mk_par (u:R.universe) (aL aR preL postL preR postR eL eR:R.term) =
   let t = pack_ln (Tv_App t (eL, Q_Explicit)) in
   pack_ln (Tv_App t (eR, Q_Explicit))
 
+let tm_rewrite_tactic_t =
+  let open R in
+  let fv = R.pack_fv (mk_pulse_lib_core_lid "rewrite_tactic_t") in
+  pack_ln (Tv_FVar fv)
+
 let mk_rewrite (p q:R.term) =
   let open R in
   let t = pack_ln (Tv_FVar (pack_fv (mk_pulse_lib_core_lid "rewrite"))) in

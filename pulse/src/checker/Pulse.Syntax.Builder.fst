@@ -17,6 +17,22 @@
 module Pulse.Syntax.Builder
 open Pulse.Syntax
 
+let map_opt o f =
+  match o with
+  | None -> None
+  | Some x -> Some (f x)
+
+let thunk (t:term) : term =
+  let open FStar.Reflection.V2 in
+  let b : binder = pack_binder {
+    sort = (`unit);
+    qual = Q_Explicit;
+    attrs = [];
+    ppname = seal "_";
+  }
+  in
+  pack_ln <| Tv_Abs b t
+
 let pat_var s = Pat_Var s
 let pat_const c = Pat_Constant c
 let pat_cons fv vs = Pat_Cons fv vs
@@ -44,6 +60,6 @@ let mk_assert_hint_type p = ASSERT { p }
 let mk_unfold_hint_type names p = UNFOLD { names; p }
 let mk_fold_hint_type names p = FOLD { names; p }
 let mk_rename_hint_type pairs goal = RENAME { pairs; goal }
-let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt }
+let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt=map_opt tac_opt thunk }
 let mk_fn_decl id isrec bs comp meas body : decl' = FnDecl { id; isrec; bs; comp; meas; body }
 let mk_decl d range : decl = {d; range}

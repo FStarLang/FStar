@@ -24,10 +24,11 @@ open Pulse.Checker.Prover
 open Pulse.PP
 module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
+module R = FStar.Reflection.V2
 
 let check_vprop_equiv_ext r (g:env) (p q:vprop)
 : T.Tac (vprop_equiv g p q)
-= let res, issues = T.check_equiv (elab_env g) p q in
+= let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
   T.log_issues issues;
   match res with
   | None -> 
@@ -37,6 +38,45 @@ let check_vprop_equiv_ext r (g:env) (p q:vprop)
             pp q]
   | Some token ->
     VE_Ext g p q token
+
+let check_vprop_equiv_tac r (g:env) (p q:vprop) (tac_tm : term)
+: T.Tac (vprop_equiv g p q)
+= let open FStar.Reflection.Typing in
+  let open FStar.Stubs.TypeChecker.Core in
+  begin match T.inspect tac_tm with
+  | _ -> ()
+  | T.Tv_FVar _ -> ()
+  | _ ->
+    fail_doc g (Some <| T.range_of_term tac_tm) [
+      text "Currently, tactics used in rewrite..by must be \
+            top-level names. Please hoist this tactic into a top-level
+            definition."
+    ]
+  end;
+  let u0 : R.universe = R.pack_universe R.Uv_Zero in
+  let goal = Pulse.Reflection.Util.stt_vprop_equiv p q in
+  let r_env = elab_env g in
+  let goal_typing :
+    my_erased (T.typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u0)))
+    = magic()
+  in
+  let goal_typing_tok : squash (T.typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u0))) =
+    match goal_typing with | E x -> ()
+  in
+  let res, issues = T.call_subtac_tm r_env tac_tm u0 goal in
+  match res with
+  | None -> 
+    T.log_issues issues;
+    fail_doc g (Some r)
+           [text "rewrite: could not prove equality of";
+            pp p;
+            pp q;
+            text "Using tactic:" ^/^ pp tac_tm]
+  | Some token ->
+    // Need a VE_ rule to turn an arbitrary proof into a vprop_equiv.
+    // Or use enough core lemmas to show that vprop_equiv implies equality here,
+    // and then use VE_Ext.
+    VE_Ext g p q (magic ())
 
 let rec check_vprop_equiv r (g:env) (p q:vprop)
 : T.Tac (vprop_equiv g p q)
@@ -79,7 +119,16 @@ let check
   let Tm_Rewrite {t1=p; t2=q; tac_opt} = t.term in
   let (| p, p_typing |) = check_vprop g p in
   let (| q, q_typing |) = check_vprop g q in
-  (* FIXME: use tac_opt *)
-  let equiv_p_q = check_vprop_equiv t.range g p q in
+
+  let equiv_p_q =
+    (* If we don't have a tactic, we just call the check_vprop_equiv
+    function which mostly goes to SMT. Otherwise, we just ask the tactic
+    and construct a vprop_equiv with it. *)
+    match tac_opt with
+    | None ->
+      check_vprop_equiv t.range g p q
+    | Some tac ->
+      check_vprop_equiv_tac t.range g p q tac
+  in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
 	prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range

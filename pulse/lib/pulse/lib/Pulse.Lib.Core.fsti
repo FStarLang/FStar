@@ -610,6 +610,9 @@ val invariant_name_identifies_invariant
 val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
 : stt_ghost unit emp_inames p (fun _ -> q)
 
+let rewrite_tactic_t = unit -> T.Tac unit
+
+[@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
 val rewrite_by (p:vprop) (q:vprop) 
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })
