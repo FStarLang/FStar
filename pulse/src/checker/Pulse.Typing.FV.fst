@@ -463,22 +463,44 @@ let freevars_array (t:term)
   : Lemma (freevars (mk_array t) == freevars t)
   = admit()
 
-// FIXME: tame this proof
-#push-options "--fuel 3 --ifuel 1 --z3rlimit_factor 15 --retry 5 --split_queries no"
-let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
-                           (d:st_typing g t c)
-: Lemma 
-  (ensures freevars_st t `Set.subset` vars_of_env g /\
-            freevars_comp c `Set.subset` vars_of_env g)
+
+(*****************************************************************************)
+
+(** Big lemma follows. We have to split it to make it digestible to SMT. *)
+
+let st_typing_freevars_cb_t
+  (#g0:_) (#t0:_) (#c0:_)
+  (d0:st_typing g0 t0 c0)
+=
+  (#g:_) -> (#t:_) -> (#c:_) ->
+  (d:st_typing g t c{d << d0}) ->
+  Lemma (ensures freevars_st t `Set.subset` vars_of_env g /\
+                 freevars_comp c `Set.subset` vars_of_env g)
   (decreases d)
-= match d with
+
+let st_typing_freevars_case
+  (pred : (
+    (#g:_) -> (#t:_) -> (#c:_) ->
+    st_typing g t c -> bool))
+  : Type =
+  (#g:_) -> (#t:_) -> (#c:_) ->
+  (d : st_typing g t c{pred d}) ->
+  (cb : st_typing_freevars_cb_t d) ->
+  Lemma (freevars_st t `Set.subset` vars_of_env g /\ freevars_comp c `Set.subset` vars_of_env g)
+
+let st_typing_freevars_abs : st_typing_freevars_case T_Abs? =
+fun d cb ->
+  match d with
   | T_Abs _  x q ty _ body cres dt db ->
     tot_or_ghost_typing_freevars dt;
-    st_typing_freevars db;
+    cb db;
     freevars_close_comp cres x 0;
     freevars_open_st_term_inv body x;
     freevars_tm_arrow ty q (close_comp cres x)
 
+let st_typing_freevars_stapp : st_typing_freevars_case (fun d -> T_STApp? d || T_STGhostApp? d) =
+fun d _cb ->
+  match d with
   | T_STApp _ head ty q res arg st at
   | T_STGhostApp _ head ty q res arg _ st _ at ->
     tot_or_ghost_typing_freevars st;
@@ -486,6 +508,10 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     freevars_open_comp res arg 0;
     freevars_tm_arrow (as_binder ty) q res
 
+#push-options "--z3rlimit 30"
+let st_typing_freevars_return : st_typing_freevars_case T_Return? =
+fun d cb ->
+  match d with
   | T_Return _ c use_eq u t e post x t_typing e_typing post_typing ->
     tot_or_ghost_typing_freevars t_typing;
     tot_or_ghost_typing_freevars e_typing;
@@ -504,24 +530,31 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       (tm_star (open_term' post (null_var x) 0) (tm_pure (mk_eq2 u t (null_var x) e)))
       x 0;
     freevars_open_term post e 0
+#pop-options
 
-  | T_Lift _ _ _ _ d1 l ->
-    st_typing_freevars d1
-
+let st_typing_freevars_bind : st_typing_freevars_case T_Bind? =
+fun d cb ->
+  match d with
   | T_Bind _ e1 e2 _ _ _ x c d1 dc1 d2 bc ->
-    st_typing_freevars d1;
+    cb d1;
     tot_or_ghost_typing_freevars dc1;
-    st_typing_freevars d2;
+    cb d2;
     bind_comp_freevars bc;
     freevars_open_st_term_inv e2 x
 
+let st_typing_freevars_bind_fn : st_typing_freevars_case T_BindFn? =
+fun d cb ->
+  match d with
   | T_BindFn _g _e1 e2 _c1 _c2 _b x d1 _u dc1 d2 c ->
-    st_typing_freevars d1;
+    cb d1;
     tot_or_ghost_typing_freevars dc1;
-    st_typing_freevars d2;
+    cb d2;
     comp_typing_freevars c;
     freevars_open_st_term_inv e2 x
 
+let st_typing_freevars_if : st_typing_freevars_case T_If? =
+fun #g #t #c d cb ->
+  match d with
   | T_If _ _b e1 e2 _c hyp tb d1 d2 (E ct) ->
     assert (t.term == (Tm_If { b = _b; then_=e1; else_=e2; post=None }));
     calc (Set.subset) {
@@ -533,21 +566,23 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       (freevars _b `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
     (Set.subset) { tot_or_ghost_typing_freevars tb }
       (vars_of_env g `Set.union` (freevars_st e1 `Set.union` freevars_st e2));
-    (Set.subset) { st_typing_freevars d1 ; st_typing_freevars d2 }
+    (Set.subset) { cb d1 ; cb d2 }
       vars_of_env g;
-  };
-  comp_typing_freevars ct
+    };
+    comp_typing_freevars ct
 
-  | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
-    admit ()
-
+#push-options "--z3rlimit 40"
+let st_typing_freevars_frame : st_typing_freevars_case T_Frame? =
+fun d cb ->
+  match d with
   | T_Frame _ _ _ _ df dc ->
     tot_or_ghost_typing_freevars df;
-    st_typing_freevars dc
+    cb dc
+#pop-options
 
-  | T_IntroPure _ p prop_typing _ ->
-    tot_or_ghost_typing_freevars prop_typing
-
+let st_typing_freevars_elimexists : st_typing_freevars_case T_ElimExists? =
+fun #g #t #c d cb ->
+  match d with
   | T_ElimExists _ u t p x dt dv ->
     let x_tm = tm_var {nm_index=x;nm_ppname=ppname_default} in
     tot_or_ghost_typing_freevars dt;
@@ -570,7 +605,9 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
               (vars_of_env g));
     freevars_mk_erased u t
 
-
+let st_typing_freevars_introexists : st_typing_freevars_case T_IntroExists? =
+fun #g #t #c d cb ->
+  match d with
   | T_IntroExists _ u b p w dt dv dw ->
     tot_or_ghost_typing_freevars dt;
     tot_or_ghost_typing_freevars dv;
@@ -585,37 +622,41 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
       (freevars tm_unit `Set.union`
       (freevars (open_term' p w 0) `Set.union`
         freevars (tm_exists_sl u b p)));
-    (Set.equal) {} 
+    (Set.equal) {}
       (freevars (open_term' p w 0) `Set.union`
         freevars (tm_exists_sl u b p));
     (Set.subset) { freevars_open_term p w 0 }
-      (freevars p `Set.union` 
+      (freevars p `Set.union`
         freevars w `Set.union`
         freevars_st t `Set.union`
         freevars p);
     }
 
-  | T_Equiv _ _ _ _ d2 deq ->
-    st_typing_freevars d2;
-    st_equiv_freevars deq
-
+#push-options "--z3rlimit 20"
+let st_typing_freevars_while : st_typing_freevars_case T_While? =
+fun d cb ->
+  match d with
   | T_While _ inv _ _ inv_typing cond_typing body_typing ->
     tot_or_ghost_typing_freevars inv_typing;
-    st_typing_freevars cond_typing;
-    st_typing_freevars body_typing;
+    cb cond_typing;
+    cb body_typing;
     assert (freevars tm_false `Set.equal` Set.empty);
     freevars_open_term inv tm_false 0;
     assert (freevars (open_term' inv tm_false 0) `Set.subset` freevars inv)
+#pop-options
 
-
+#push-options "--z3rlimit 40"
+let st_typing_freevars_par : st_typing_freevars_case T_Par? =
+fun d cb ->
+  match d with
   | T_Par _ _ cL _ cR x _ _ eL_typing eR_typing ->
     let x_tm = term_of_no_name_var x in
     let uL = comp_u cL in
     let uR = comp_u cR in
     let aL = comp_res cL in
     let aR = comp_res cR in
-    st_typing_freevars eL_typing;
-    st_typing_freevars eR_typing;
+    cb eL_typing;
+    cb eR_typing;
     freevars_mk_fst uL uR aL aR x_tm;
     freevars_mk_snd uL uR aL aR x_tm;
     freevars_open_term (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0;
@@ -623,31 +664,52 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     freevars_close_term (tm_star (open_term' (comp_post cL) (Pulse.Typing.mk_fst uL uR aL aR x_tm) 0)
                                 (open_term' (comp_post cR) (Pulse.Typing.mk_snd uL uR aL aR x_tm) 0)) x 0;
     freevars_mk_tuple2 uL uR aL aR
+#pop-options
 
-
+let st_typing_freevars_rewrite : st_typing_freevars_case T_Rewrite? =
+fun d cb ->
+  match d with
   | T_Rewrite _ _ _ p_typing equiv_p_q ->
     tot_or_ghost_typing_freevars p_typing;
     vprop_equiv_freevars equiv_p_q
 
-
+let st_typing_freevars_withlocal : st_typing_freevars_case T_WithLocal? =
+fun d cb ->
+  match d with
   | T_WithLocal _ _ init body init_t c x init_typing u_typing c_typing body_typing ->
     tot_or_ghost_typing_freevars init_typing;
-    st_typing_freevars body_typing;
+    cb body_typing;
     freevars_open_st_term_inv body x;
     comp_typing_freevars c_typing;
     tot_or_ghost_typing_freevars u_typing;
     freevars_ref init_t
 
+let st_typing_freevars_withlocalarray : st_typing_freevars_case T_WithLocalArray? =
+fun d cb ->
+  match d with
   | T_WithLocalArray _ _ init len body init_t c x init_typing len_typing u_typing c_typing body_typing ->
     tot_or_ghost_typing_freevars init_typing;
     tot_or_ghost_typing_freevars len_typing;
-    st_typing_freevars body_typing;
+    cb body_typing;
     freevars_open_st_term_inv body x;
     comp_typing_freevars c_typing;
     tot_or_ghost_typing_freevars u_typing;
     freevars_array init_t
 
-  | T_Admit _ c c_typing
+let st_typing_freevars_admit : st_typing_freevars_case T_Admit? =
+fun d cb ->
+  match d with
+  | T_Admit _ c c_typing ->
+    comp_typing_freevars c_typing;
+    let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
+    let STC _ _ x t_typing pre_typing post_typing = st_typing in
+    tot_or_ghost_typing_freevars t_typing;
+    tot_or_ghost_typing_freevars post_typing;
+    freevars_open_term (comp_post c) (term_of_no_name_var x) 0
+
+let st_typing_freevars_unreachable : st_typing_freevars_case T_Unreachable? =
+fun d cb ->
+  match d with
   | T_Unreachable _ c c_typing _ ->
     comp_typing_freevars c_typing;
     let st_typing, _ = Pulse.Typing.Metatheory.Base.comp_typing_inversion c_typing in
@@ -656,10 +718,58 @@ let rec st_typing_freevars (#g:_) (#t:_) (#c:_)
     tot_or_ghost_typing_freevars post_typing;
     freevars_open_term (comp_post c) (term_of_no_name_var x) 0
 
+let rec st_typing_freevars
+  (#g:_) (#t:_) (#c:_)
+  (d:st_typing g t c)
+: Lemma
+  (ensures freevars_st t `Set.subset` vars_of_env g /\
+           freevars_comp c `Set.subset` vars_of_env g)
+  (decreases d)
+= match d with
+  | T_Abs _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_abs d st_typing_freevars
+  | T_STApp _ _ _ _ _ _ _ _
+  | T_STGhostApp _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_stapp d st_typing_freevars
+  | T_Return _ _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_return d st_typing_freevars
+  | T_Lift _ _ _ _ d1 _ ->
+    st_typing_freevars d1
+  | T_Bind _ _ _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_bind d st_typing_freevars
+  | T_BindFn _ _ _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_bind_fn d st_typing_freevars
+  | T_If _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_if d st_typing_freevars
+  | T_Match _ _ _ _ _ _ _ _ _ _ _ ->
+    admit () // IOU
+  | T_Frame _ _ _ _ _ _ ->
+    st_typing_freevars_frame d st_typing_freevars
+  | T_IntroPure _ p prop_typing _ ->
+    tot_or_ghost_typing_freevars prop_typing
+  | T_ElimExists _ u t p x dt dv ->
+    st_typing_freevars_elimexists d st_typing_freevars
+  | T_IntroExists _ u b p w dt dv dw ->
+    st_typing_freevars_introexists d st_typing_freevars
+  | T_Equiv _ _ _ _ d2 deq ->
+    st_typing_freevars d2;
+    st_equiv_freevars deq
+  | T_While _ _ _ _ _ _ _ ->
+    st_typing_freevars_while d st_typing_freevars
+  | T_Par _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_par d st_typing_freevars
+  | T_Rewrite _ _ _ _ _ ->
+    st_typing_freevars_rewrite d st_typing_freevars
+  | T_WithLocal _ _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_withlocal d st_typing_freevars
+  | T_WithLocalArray _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+    st_typing_freevars_withlocalarray d st_typing_freevars
+  | T_Admit _ _ _ ->
+    st_typing_freevars_admit d st_typing_freevars
+  | T_Unreachable _ c c_typing _ ->
+    st_typing_freevars_unreachable d st_typing_freevars
   | T_WithInv _ _ _ _ _ _ _ _ _ ->
     admit () // IOU
-
   | T_Sub _ _ _ _ d_t d_sub ->
     st_typing_freevars d_t;
     st_sub_freevars d_sub
-#pop-options //takes about 12s
