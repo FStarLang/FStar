@@ -55,7 +55,7 @@ let rec collect_app_order' args tt t =
 val collect_app_order : (t:term) ->
             Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app_ln t ==>
                               (f << t /\ s <<: t)
-                            \/ (f == t /\ s == [])))
+                            \/ (f == t /\ s == [] /\ ~(Tv_App? (inspect_ln t)))))
 let collect_app_order t =
     match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' [r] t l

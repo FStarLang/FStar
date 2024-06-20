@@ -74,7 +74,7 @@ let rec compare_universe (u1 u2:universe) : order =
 let compare_universes (us1 us2:universes) : order =
   compare_list us1 us2 compare_universe
 
-let rec compare_term (s t : term) : Tot order (decreases s) =
+let rec compare_term (s t : term) : Tot order (decreases %[s;2]) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
         compare_namedv sv tv
@@ -88,8 +88,16 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_UInst sv sus, Tv_UInst tv tus ->
         lex (compare_fv sv tv) (fun _ -> compare_universes sus tus)
 
-    | Tv_App h1 a1, Tv_App h2 a2 ->
-        lex (compare_term h1 h2) (fun () -> compare_argv a1 a2)
+    | Tv_App _ _, Tv_App _ _ ->
+        (* We do something special here to first compare the heads,
+        then the arguments, as lists. Otherwise `f _ _` is always before `g _ _`,
+        regardless of `f` and `g`. *)
+        let open FStar.Reflection.V2.Derived.Lemmas in
+        let h1, aa1 = collect_app_ref s in
+        let h2, aa2 = collect_app_ref t in
+        Reflection.V2.Derived.Lemmas.collect_app_order s;
+        Reflection.V2.Derived.Lemmas.collect_app_order t;
+        lex (compare_term h1 h2) (fun () -> compare_argv_list s t aa1 aa2)
 
     | Tv_Abs b1 e1, Tv_Abs b2 e2 ->
         lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
@@ -159,6 +167,7 @@ let rec compare_term (s t : term) : Tot order (decreases s) =
     | Tv_AscribedC _ _ _ _, _  -> Lt | _, Tv_AscribedC _ _ _ _ -> Gt
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
     | Tv_Unsupp, _    -> Lt   | _, Tv_Unsupp    -> Gt
+
 and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   match l1, l2 with
   | [], [] -> Eq
@@ -167,14 +176,35 @@ and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   | hd1::tl1, hd2::tl2 ->
     lex (compare_term hd1 hd2) (fun () -> compare_term_list tl1 tl2)
 
-and compare_argv (a1 a2 : argv) : Tot order (decreases a1) =
-    let a1, q1 = a1 in
-    let a2, q2 = a2 in
+and compare_argv (b1 b2 : Ghost.erased term) // termination bounds
+     (a1 : argv{fst a1 << Ghost.reveal b1})
+     (a2 : argv{fst a2 << Ghost.reveal b2})
+: Tot order (decreases %[Ghost.reveal b1; 0]) =
+    let t1, q1 = a1 in
+    let t2, q2 = a2 in
+    assert (t1 << a1);
+    assert (t2 << a2);
     match q1, q2 with
     (* We should never see Q_Meta here *)
     | Q_Implicit, Q_Explicit -> Lt
     | Q_Explicit, Q_Implicit -> Gt
-    | _, _ -> compare_term a1 a2
+    | _, _ ->
+      assert (t1 << Ghost.reveal b1);
+      assert (t2 << Ghost.reveal b2);
+      compare_term t1 t2
+
+and compare_argv_list (b1 b2 : Ghost.erased term)
+     (l1 : list (a:argv{fst a << Ghost.reveal b1}))
+     (l2 : list (a:argv{fst a << Ghost.reveal b2}))
+: Tot order (decreases %[Ghost.reveal b1; 1; l1]) =
+  match l1, l2 with
+  | [], [] -> Eq
+  | [], _  -> Lt
+  | _, []  -> Gt
+  | hd1::tl1, hd2::tl2 ->
+    assert (fst hd1 << Ghost.reveal b1);
+    lex (compare_argv b1 b2 hd1 hd2) (fun () -> compare_argv_list b1 b2 tl1 tl2)
+
 and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
