@@ -3,6 +3,19 @@ type ('a, 'pred, 'l) allP0 = Obj.t
 type ('a, 'b, 'top, 'pred, 'l) allP = Obj.t
 type ('a, 'pred, 'o) optP0 = Obj.t
 type ('a, 'b, 'top, 'pred, 'o) optP = Obj.t
+type 'u faithful_univ = Obj.t
+type 'c faithful_const = unit
+type 't faithful = Obj.t
+type 'a faithful_arg = Obj.t
+type 'q faithful_qual = Obj.t
+type 'b faithful_binder = Obj.t
+type 'b faithful_branch = Obj.t
+type 'p faithful_pattern = Obj.t
+type 'pb faithful_pattern_arg = Obj.t
+type 'ats faithful_attrs = Obj.t
+type 'c faithful_comp = Obj.t
+type faithful_term = FStar_Reflection_Types.term
+type faithful_universe = FStar_Reflection_Types.universe
 type _cmpres =
   | Eq 
   | Neq 
@@ -475,27 +488,130 @@ and (pat_arg_cmp :
           op_Amp_Amp_Amp p1 p2 b1 b2 (pat_cmp p1 p2) (eq_cmp b1 b2)
 type 'r defined = unit
 type ('uuuuu, 'uuuuu1, 'f, 'l1, 'l2) def2 = unit
-type 'u faithful_univ = Obj.t
-type 'c faithful_const = unit
-type 't faithful = Obj.t
-type 'a faithful_arg = Obj.t
-type 'q faithful_qual = Obj.t
-type 'b faithful_binder = Obj.t
-type 'b faithful_branch = Obj.t
-type 'p faithful_pattern = Obj.t
-type 'pb faithful_pattern_arg = Obj.t
-type 'ats faithful_attrs = Obj.t
-type 'c faithful_comp = Obj.t
-type faithful_term = FStar_Reflection_Types.term
 let (term_eq :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
   fun t1 -> fun t2 -> uu___is_Eq (term_cmp t1 t2)
+let _ =
+  FStar_Tactics_Native.register_plugin "FStar.Reflection.V2.TermEq.term_eq"
+    (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.TermEq.term_eq"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Syntax_Embeddings.e_bool term_eq Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.TermEq.term_eq") cb us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.TermEq.term_eq"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   FStar_TypeChecker_NBETerm.e_bool term_eq Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.TermEq.term_eq") cb us) args))
 let (term_eq_dec : faithful_term -> faithful_term -> Prims.bool) =
   fun t1 -> fun t2 -> uu___is_Eq (term_cmp t1 t2)
-type faithful_universe = FStar_Reflection_Types.universe
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.TermEq.term_eq_dec" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.TermEq.term_eq_dec"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Syntax_Embeddings.e_bool term_eq_dec
+                     Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.TermEq.term_eq_dec") cb us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.TermEq.term_eq_dec"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   FStar_TypeChecker_NBETerm.e_bool term_eq_dec
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.TermEq.term_eq_dec") cb us) args))
 let (univ_eq :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe -> Prims.bool)
   = fun u1 -> fun u2 -> uu___is_Eq (univ_cmp u1 u2)
+let _ =
+  FStar_Tactics_Native.register_plugin "FStar.Reflection.V2.TermEq.univ_eq"
+    (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.TermEq.univ_eq"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Syntax_Embeddings.e_bool univ_eq Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.TermEq.univ_eq") cb us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.TermEq.univ_eq"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   FStar_TypeChecker_NBETerm.e_bool univ_eq Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.TermEq.univ_eq") cb us) args))
 let (univ_eq_dec : faithful_universe -> faithful_universe -> Prims.bool) =
   fun u1 -> fun u2 -> uu___is_Eq (univ_cmp u1 u2)
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.TermEq.univ_eq_dec" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.TermEq.univ_eq_dec"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Syntax_Embeddings.e_bool univ_eq_dec
+                     Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.TermEq.univ_eq_dec") cb us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.TermEq.univ_eq_dec"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   FStar_TypeChecker_NBETerm.e_bool univ_eq_dec
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.TermEq.univ_eq_dec") cb us) args))
