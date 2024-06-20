@@ -244,11 +244,11 @@ val dup_inv (i:iref) (p:slprop)
 val new_invariant (p:big_vprop)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_invariant (ctx:list iref) (p:big_vprop)
-: stt_ghost (i:iref { i `fresh_wrt` ctx })
-            emp_inames
-            (p ** all_live ctx)
-            (fun i -> inv i p)
+// val fresh_invariant (ctx:list iref) (p:big_vprop)
+// : stt_ghost (i:iref { i `fresh_wrt` ctx })
+//             emp_inames
+//             (p ** all_live ctx)
+//             (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -275,25 +275,25 @@ val with_invariant_g
                             (fun x -> p ** fp' x))
 : stt_ghost a (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
-val distinct_invariants_have_distinct_names
-    (#p #q:slprop)
-    (i j:iref)
-    (_:squash (p =!= q))
-: stt_ghost
-    (squash (iname_of i =!= iname_of j))
-    emp_inames
-    ((inv i p) ** (inv j q))
-    (fun _ -> (inv i p) ** (inv j q))
+// val distinct_invariants_have_distinct_names
+//     (#p #q:slprop)
+//     (i j:iref)
+//     (_:squash (p =!= q))
+// : stt_ghost
+//     (squash (iname_of i =!= iname_of j))
+//     emp_inames
+//     ((inv i p) ** (inv j q))
+//     (fun _ -> (inv i p) ** (inv j q))
 
-val invariant_name_identifies_invariant
-      (p q:slprop)
-      (i:iref)
-      (j:iref { iname_of i == iname_of j })
-: stt_ghost
-    (squash (p == q /\ i == j))
-    emp_inames
-    ((inv i p) ** (inv j q))
-    (fun _ -> (inv i p) ** (inv j q))
+// val invariant_name_identifies_invariant
+//       (p q:slprop)
+//       (i:iref)
+//       (j:iref { iname_of i == iname_of j })
+// : stt_ghost
+//     (squash (p == q /\ i == j))
+//     emp_inames
+//     ((inv i p) ** (inv j q))
+//     (fun _ -> (inv i p) ** (inv j q))
 
 ////////////////////////////////////////////////////////////////////////
 // References

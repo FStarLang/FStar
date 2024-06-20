@@ -17,7 +17,7 @@
 module PulseCore.Action
 
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.Memory
+module Mem = PulseCore.MemoryAlt
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module PST = PulseCore.HoareStateMonad
@@ -26,7 +26,7 @@ friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
 open FStar.Ghost
-open PulseCore.Memory
+open PulseCore.MemoryAlt
 open PulseCore.InstantiatedSemantics
 
 //////////////////////////////////////////////////////
@@ -388,23 +388,23 @@ let live_eq (i:iref)
   (==) { _ by (T.trefl ()) }
     Mem.live i;
   }
-let rec all_live_eq (ctx:list iref)
-: Lemma (all_live ctx == Mem.all_live ctx)
-= match ctx with
-  | [] -> ()
-  | hd::tl ->
-    live_eq hd;
-    all_live_eq tl
-let fresh_invariant ctx p = fun #ictx -> all_live_eq ctx; fresh_invariant ictx p ctx
+// let rec all_live_eq (ctx:list iref)
+// : Lemma (all_live ctx == Mem.all_live ctx)
+// = match ctx with
+//   | [] -> ()
+//   | hd::tl ->
+//     live_eq hd;
+//     all_live_eq tl
+// let fresh_invariant ctx p = fun #ictx -> all_live_eq ctx; fresh_invariant ictx p ctx
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
   let f : act a r f_opens (p `star` fp) (fun x -> p `star` fp' x) = f () in
   let ictx' = Mem.add_inv ictx i in
   with_invariant #a #fp #fp' #ictx i (f #ictx')
-let distinct_invariants_have_distinct_names #p #q i j _ =
-  fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
-let invariant_name_identifies_invariant p q i j =
-  fun #ictx -> invariant_name_identifies_invariant ictx p q i j
+// let distinct_invariants_have_distinct_names #p #q i j _ =
+//   fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
+// let invariant_name_identifies_invariant p q i j =
+//   fun #ictx -> invariant_name_identifies_invariant ictx p q i j
 
 ///////////////////////////////////////////////////////////////////
 // Core operations on references

@@ -279,7 +279,7 @@ let new_invariant (p:big_vprop)
 : stt_ghost iref emp_inames p (fun i -> inv i p)
 = A.new_invariant p
 
-let fresh_invariant ctx p = A.fresh_invariant ctx p
+// let fresh_invariant ctx p = A.fresh_invariant ctx p
 
 let with_invariant #a #fp #fp' #f_opens #p i $f =
   A.with_invariant i f
@@ -298,10 +298,10 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
   let g : unit -> act a Ghost f_opens (p ** fp) (fun x -> p ** fp' x) = pull_up_ghost g in
   A.with_invariant #a #Ghost #fp #fp' #f_opens #p i g
 
-let distinct_invariants_have_distinct_names i j _ =
-  A.distinct_invariants_have_distinct_names i j ()
-let invariant_name_identifies_invariant p q i j =
-  A.invariant_name_identifies_invariant p q i j
+// let distinct_invariants_have_distinct_names i j _ =
+//   A.distinct_invariants_have_distinct_names i j ()
+// let invariant_name_identifies_invariant p q i j =
+//   A.invariant_name_identifies_invariant p q i j
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)
 let alloc #a #pcm x = A.alloc x
