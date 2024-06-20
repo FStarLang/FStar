@@ -222,7 +222,7 @@ let _PST
   (maybe_ghost:bool)
   (except:inames)
   (expects:slprop u#m)
-  (provides: a -> GTot (slprop u#m))
+  (provides: a -> slprop u#m)
   (frame:slprop u#m)
 = PST.st #(full_mem u#m) a
     (requires fun m0 ->
@@ -245,14 +245,14 @@ let _pst_action_except
     (maybe_ghost:bool)
     (except:inames)
     (expects:slprop u#um)
-    (provides: a -> GTot (slprop u#um))
+    (provides: a -> slprop u#um)
  : Type u#(max a (um + 3)) 
  = frame:slprop -> _PST a maybe_ghost except expects provides frame
 
-let pst_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> GTot (slprop u#um)) =
+let pst_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a ->  slprop u#um) =
   _pst_action_except a false except expects provides
 
-let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> GTot (slprop u#um)) =
+let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um) =
   _pst_action_except a true except expects provides
 
 
