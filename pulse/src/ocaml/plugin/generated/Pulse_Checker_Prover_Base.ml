@@ -150,8 +150,7 @@ let (canon_right :
                        (Prims.of_int (75)) (Prims.of_int (3))
                        (Prims.of_int (80)) (Prims.of_int (110)))))
               (Obj.magic
-                 (canon_right_aux g
-                    (Pulse_Typing_Combinators.vprop_as_list ctxt) f))
+                 (canon_right_aux g (Pulse_Syntax_Pure.vprop_as_list ctxt) f))
               (fun uu___ ->
                  FStar_Tactics_Effect.lift_div_tac
                    (fun uu___1 ->
@@ -159,16 +158,16 @@ let (canon_right :
                       | FStar_Pervasives.Mkdtuple3 (vps', pures, veq) ->
                           FStar_Pervasives.Mkdtuple3
                             ((list_as_vprop'
-                                (Pulse_Typing_Combinators.list_as_vprop vps')
-                                pures), (),
+                                (Pulse_Syntax_Pure.list_as_vprop vps') pures),
+                              (),
                               (Pulse_Checker_Base.k_elab_equiv g g
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star
                                     (list_as_vprop'
-                                       (Pulse_Typing_Combinators.list_as_vprop
-                                          vps') pures) frame)
+                                       (Pulse_Syntax_Pure.list_as_vprop vps')
+                                       pures) frame)
                                  (Pulse_Checker_Base.k_elab_unit g
                                     (Pulse_Syntax_Pure.tm_star ctxt frame))
                                  () ()))))
