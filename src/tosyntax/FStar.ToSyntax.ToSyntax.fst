@@ -957,17 +957,16 @@ let rec desugar_data_pat
         let x = S.new_bv (Some p.prange) (tun_r p.prange) in
         loc, aqs, env, LocalBinder(x, None, []), pos <| Pat_cons(l, None, args), annots
 
-      | PatRecord ([]) ->
-        raise_error (Errors.Fatal_UnexpectedPattern, "Unexpected pattern") p.prange
-
       | PatRecord (fields) ->
         (* Record patterns have to wait for type information to be fully resolved *)
-        let (f, _) = List.hd fields in
         let field_names, pats = List.unzip fields in
         let typename, field_names =
-          match try_lookup_record_by_field_name env f with
-          | None -> None, field_names
-          | Some r -> Some r.typename, qualify_field_names r.typename field_names
+          match fields with
+          | [] -> None, field_names
+          | (f, _)::_ ->
+            match try_lookup_record_by_field_name env f with
+            | None -> None, field_names
+            | Some r -> Some r.typename, qualify_field_names r.typename field_names
         in
         (* Just build a candidate constructor, as we do for Record literals *)
         let candidate_constructor =
