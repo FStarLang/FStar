@@ -640,7 +640,7 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
-  | LBRACE record_pat=right_flexible_nonempty_list(SEMICOLON, fieldPattern) RBRACE
+  | LBRACE record_pat=right_flexible_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }

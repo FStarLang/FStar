@@ -2113,6 +2113,8 @@ let (wl_to_string : worklist -> Prims.string) =
       probs_to_string uu___2 in
     FStar_Compiler_Util.format2
       "{ attempting = [ %s ];\ndeferred = [ %s ] }\n" uu___ uu___1
+let (showable_wl : worklist FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = wl_to_string }
 type flex_t =
   | Flex of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.ctx_uvar *
   FStar_Syntax_Syntax.args) 
@@ -5904,7 +5906,9 @@ and (solve_rigid_flex_or_flex_rigid_subtyping :
                     if uu___5
                     then
                       let uu___6 =
-                        FStar_Compiler_Util.string_of_int
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.printableshow
+                             FStar_Class_Printable.printable_int)
                           tp.FStar_TypeChecker_Common.pid in
                       FStar_Compiler_Util.print1
                         "Trying to solve by meeting refinements:%s\n" uu___6
@@ -14524,9 +14528,11 @@ let (try_solve_deferred_constraints :
                              (FStar_Class_Show.printableshow
                                 FStar_Class_Printable.printable_bool)
                              deferred_to_tac_ok in
-                         let uu___7 = wl_to_string wl in
+                         let uu___7 = FStar_Class_Show.show showable_wl wl in
                          let uu___8 =
-                           FStar_Compiler_Util.string_of_int
+                           FStar_Class_Show.show
+                             (FStar_Class_Show.printableshow
+                                FStar_Class_Printable.printable_nat)
                              (FStar_Compiler_List.length
                                 g.FStar_TypeChecker_Common.implicits) in
                          FStar_Compiler_Util.print4

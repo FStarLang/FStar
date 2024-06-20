@@ -5,12 +5,12 @@
 >>]
 >> Got issues: [
 * Error 118 at RecordFields.fst(11,14-11,22):
-  - Field c of record type RecordFields.r is missing
+  - Field 'c' of record type 'RecordFields.r' is missing.
 
 >>]
 >> Got issues: [
 * Error 118 at RecordFields.fst(14,14-14,27):
-  - Field c of record type RecordFields.r is missing
+  - Field 'c' of record type 'RecordFields.r' is missing.
 
 >>]
 Verified module: RecordFields

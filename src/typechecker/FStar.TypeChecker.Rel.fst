@@ -816,6 +816,10 @@ let wl_to_string wl =
               (probs_to_string wl.attempting)
               (probs_to_string (List.map (fun (_, _, _, x) -> x) wl.wl_deferred))
 
+instance showable_wl : showable worklist = {
+  show = wl_to_string;
+}
+
 (* ------------------------------------------------ *)
 (* </printing worklists>                            *)
 (* ------------------------------------------------ *)
@@ -2300,12 +2304,19 @@ and maybe_defer_to_user_tac prob reason wl : solution =
 (******************************************************************************************************)
 (* The case where t1 < u, ..., tn < u: we solve this by taking u=t1\/...\/tn                          *)
 (* The case where u < t1, .... u < tn: we solve this by taking u=t1/\.../\tn                          *)
+(*                                                                                                    *)
+(* This will go through the worklist to find problems for the same uvar u and compute the composite   *)
+(* constraint as shown above.                                                                         *)
 (******************************************************************************************************)
 and solve_rigid_flex_or_flex_rigid_subtyping
     (rank:rank_t)
     (tp:tprob) (wl:worklist) : solution =
     def_check_prob "solve_rigid_flex_or_flex_rigid_subtyping" (TProb tp);
     let flip = rank = Flex_rigid in
+    (* flip is true when the flex is on the left, after inverting (done by the caller),
+       which means we have a problem of the shape ?u <: t
+
+       if flip is false, we are solving something of shape t <: ?u *)
     (*
         meet_or_join op [t1;..;tn] env wl:
             Informally, this computes `t1 op t2 ... op tn`
@@ -2385,7 +2396,7 @@ and solve_rigid_flex_or_flex_rigid_subtyping
                     UF.rollback tx;
                     None
               in
-              let combine t1 t2 wl =
+              let combine (t1 t2 : term) wl : term & list prob & worklist =
                   let env = p_env wl (TProb tp) in
                   let t1_base, p1_opt = base_and_refinement_maybe_delta false env t1 in
                   let t2_base, p2_opt = base_and_refinement_maybe_delta false env t2 in
@@ -2484,14 +2495,14 @@ and solve_rigid_flex_or_flex_rigid_subtyping
              solve (attempt [TProb ({tp with relation=EQ})] wl)
 
   | _ ->
-    if !dbg_Rel
-    then BU.print1 "Trying to solve by meeting refinements:%s\n" (string_of_int tp.pid);
+    if !dbg_Rel then
+      BU.print1 "Trying to solve by meeting refinements:%s\n" (show tp.pid);
     let u, _args = U.head_and_args this_flex in
     let env = p_env wl (TProb tp) in
     begin
     match (SS.compress u).n with
     | Tm_uvar(ctx_uvar, _subst) ->
-      let equiv t =
+      let equiv (t:term) : bool =
          let u', _ = U.head_and_args t in
          match (whnf env u').n with
          | Tm_uvar(ctx_uvar', _subst') ->
@@ -5001,14 +5012,12 @@ let try_solve_deferred_constraints (defer_ok:defer_ok_t) smt_ok deferred_to_tac_
       let msg = explain wl d s in
       raise_error (Errors.Fatal_ErrorInSolveDeferredConstraints, msg) (p_loc d)
    in
-   if !dbg_Rel
-   then begin
-         BU.print4 "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
-                  (show defer_ok)
-                  (show deferred_to_tac_ok)
-                  (wl_to_string wl)
-                  (string_of_int (List.length g.implicits))
-   end;
+   if !dbg_Rel then
+     BU.print4 "Trying to solve carried problems (defer_ok=%s) (deferred_to_tac_ok=%s): begin\n\t%s\nend\n and %s implicits\n"
+              (show defer_ok)
+              (show deferred_to_tac_ok)
+              (show wl)
+              (show (List.length g.implicits));
    let g =
      match solve_and_commit wl fail with
      | Some (_::_, _, _) when (defer_ok = NoDefer) ->

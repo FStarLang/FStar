@@ -3740,11 +3740,11 @@ let make_record_fields_in_order env uc topt
              match not_found field_name with
              | None ->
 //               debug();
-               raise_error
-                 (Errors.Fatal_MissingFieldInRecord,
-                   BU.format2 "Field %s of record type %s is missing"
-                     (string_of_id field_name)
-                     (string_of_lid rdc.typename))
+               raise_error_doc
+                 (Errors.Fatal_MissingFieldInRecord, [
+                   Errors.Msg.text <| BU.format2 "Field '%s' of record type '%s' is missing."
+                     (show field_name)
+                     (show rdc.typename)])
                  rng
              | Some a ->
                rest, a::as_rev

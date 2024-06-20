@@ -8503,18 +8503,25 @@ let make_record_fields_in_order :
                                             let uu___6 =
                                               let uu___7 =
                                                 let uu___8 =
-                                                  FStar_Ident.string_of_id
-                                                    field_name in
-                                                let uu___9 =
-                                                  FStar_Ident.string_of_lid
-                                                    rdc.FStar_Syntax_DsEnv.typename in
-                                                FStar_Compiler_Util.format2
-                                                  "Field %s of record type %s is missing"
-                                                  uu___8 uu___9 in
+                                                  let uu___9 =
+                                                    let uu___10 =
+                                                      FStar_Class_Show.show
+                                                        FStar_Ident.showable_ident
+                                                        field_name in
+                                                    let uu___11 =
+                                                      FStar_Class_Show.show
+                                                        FStar_Ident.showable_lident
+                                                        rdc.FStar_Syntax_DsEnv.typename in
+                                                    FStar_Compiler_Util.format2
+                                                      "Field '%s' of record type '%s' is missing."
+                                                      uu___10 uu___11 in
+                                                  FStar_Errors_Msg.text
+                                                    uu___9 in
+                                                [uu___8] in
                                               (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
                                                 uu___7) in
-                                            FStar_Errors.raise_error uu___6
-                                              rng
+                                            FStar_Errors.raise_error_doc
+                                              uu___6 rng
                                         | FStar_Pervasives_Native.Some a1 ->
                                             (rest, (a1 :: as_rev)))
                                    | uu___5 ->
