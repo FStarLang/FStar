@@ -9,8 +9,9 @@ let eset (i:eqtype) = erased (Set.set i)
 let non_info (t:Type u#a) : Type u#a = x:erased t -> (y:t { y == reveal x })
 
 let core_ref: Type u#0 = H2.core_ref
+let core_ref_null = H2.core_ref_null
+let is_null : core_ref -> GTot bool = H2.core_ref_is_null
 let ref (a:Type u#a) (p:pcm a) = core_ref
-val is_null (c:core_ref) : GTot bool
 
 let core_ghost_ref : Type u#0 = H2.core_ghost_ref
 let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref

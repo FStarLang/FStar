@@ -473,7 +473,7 @@ let upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
   lift_action_alt #B.base_heap <|
   B.write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #p r x y f
 
-val pts_to_not_null_action 
+let pts_to_not_null_action 
       (#a:Type u#a) (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -481,6 +481,10 @@ val pts_to_not_null_action
 : pst_ghost_action_except (squash (not (is_null r))) e
     (pts_to r v)
     (fun _ -> pts_to r v)
+= lift_action_alt #small_sig <|
+  lift_action_alt #B.base_heap <|
+  B.pts_to_not_null_action #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm r v 
+
 
 (* Ghost references to "small" types *)
 [@@erasable]
