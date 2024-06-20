@@ -86,7 +86,7 @@ let check
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^
-        indent (pp (VPropEquiv.canon_vprop pre))
+        indent (pp <| canon_vprop_print pre)
     ] in
     info_doc_env g (Some t0.range) msg
   end else ()) <: T.Tac unit;

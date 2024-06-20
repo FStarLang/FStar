@@ -336,7 +336,7 @@ let check
     let open Pulse.PP in
     let msg = [
       text "Current context:" ^^
-            indent (pp (VPropEquiv.canon_vprop pre))
+            indent (pp <| canon_vprop_print pre)
     ] in
     fail_doc_env true g (Some r) msg
   | RENAME { pairs; goal } ->

@@ -169,14 +169,14 @@ let rec prover
               let open Pulse.PP in
               let msg = [
                 text "Cannot prove:" ^^
-                    indent (pp pst.ss.(q));
+                    indent (pp <| canon_vprop_print pst.ss.(q));
                 text "In the context:" ^^
-                    indent (pp (list_as_vprop pst.remaining_ctxt))
+                    indent (pp <| canon_vprop_list_print pst.remaining_ctxt)
               ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
                     text "The prover was started with goal:" ^^
-                        indent (pp preamble.goals);
+                        indent (pp <| canon_vprop_print preamble.goals);
                     text "and initial context:" ^^
-                        indent (pp preamble.ctxt);
+                        indent (pp <| canon_vprop_print preamble.ctxt);
                    ] else [])
               in
               // GM: I feel I should use (Some q.range) instead of None, but that makes

@@ -121,6 +121,14 @@ and term_to_string' (level:string) (t:term) : T.Tac string
 
 let term_to_string t = term_to_string' "" t
 
+let star_doc = doc_of_string "**"
+
+val fold_right1: ('a -> 'a -> T.Tac 'a) -> list 'a -> T.Tac 'a
+let rec fold_right1 f l = match l with
+  | [] -> T.fail "fold_right1: empty list"
+  | [x] -> x
+  | hd::tl -> f hd (fold_right1 f tl)
+
 let rec binder_to_doc b : T.Tac document =
   parens (doc_of_string (T.unseal b.binder_ppname.name)
           ^^ doc_of_string ":"
@@ -131,14 +139,23 @@ and term_to_doc t : T.Tac document
     | Tm_Emp -> doc_of_string "emp"
 
     | Tm_Pure p -> doc_of_string "pure " ^^ parens (term_to_doc p)
-    | Tm_Star p1 p2 ->
-      // 0 below means we lay a non-flat sequence of stars in the same column, like:
-      // p **
-      // q **
-      // r
-      infix 0 1 (doc_of_string "**")
-                (term_to_doc p1)
-                (term_to_doc p2)
+    | Tm_Star _ _ ->
+      (* We gather all the components of the star so we can
+         print in fully-flat or fully-unflattened style (otherwise
+          we could get most of the vprops in different lines, except for
+          one or two lines which have >1, which is misleading). See #96.
+          Some callers to this module also canonicalize the expression
+          to put the vprops in order, but we MUST NOT do that here,
+          since we are recursively called on arguments,
+          and we must not confound pledge p (q ** r) with pledge p (r ** q),
+          etc. *)
+      let components = vprop_as_list t in
+      let docs = T.map term_to_doc components in
+      (* This makes sure to either print everything on a single line
+      or break after every **. The doc_of_string is a non-breakable space,
+      the one introduced by ^/^ is breakable. *)
+      group <|
+        fold_right1 (fun p q -> (p ^^ doc_of_string " " ^^ star_doc) ^/^ q) docs
 
     | Tm_ExistsSL _ _ _ ->
       let bs, body = collect_binders Tm_ExistsSL? t in
