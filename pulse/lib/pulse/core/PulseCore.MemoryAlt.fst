@@ -43,21 +43,21 @@ let ghost_action_preorder (_:unit)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 let slprop : Type u#(a + 3) = sig.slprop
-
-let big_slprop : Type u#(a + 2) = sig.bprop
-let cm_big_slprop : CM.cm big_slprop = H.cm_slprop small_sig
+let reveal_slprop (p:erased slprop) : slprop = sig.non_info_slprop p
+let big_slprop : Type u#(a + 2) = erased sig.bprop
+let cm_big_slprop : CM.cm big_slprop = H.cm_e_slprop small_sig
 let down (s:slprop u#a) : big_slprop u#a = sig.down s
-let up (s:big_slprop u#a) : slprop u#a = sig.up s
+let up (s:big_slprop u#a) : slprop u#a = reveal_slprop <| sig.up s
 let up_big_is_big_alt (b:big_slprop)
 : Lemma (is_big (up b))
         [SMTPat (is_big (up b))]
 = sig.up_down b
 let up_big_is_big (b:big_slprop) : Lemma (is_big (up b)) = ()
 
-let small_slprop : Type u#(a + 1) = small_sig.bprop
-let cm_small_slprop : CM.cm small_slprop = H.cm_slprop B.base_heap
+let small_slprop : Type u#(a + 1) = erased small_sig.bprop
+let cm_small_slprop : CM.cm small_slprop = H.cm_e_slprop B.base_heap
 let down2 (s:slprop u#a) : small_slprop u#a = small_sig.down (sig.down s)
-let up2 (s:small_slprop u#a) : slprop u#a = sig.up (small_sig.up s)
+let up2 (s:small_slprop u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
 let small_is_also_big (s:slprop)
 : Lemma (is_small s ==> is_big s)
 = sig.up_down (small_sig.up (small_sig.down (down s)))
@@ -265,7 +265,6 @@ let iname_of (i:iref) : GTot iname = sig.iname_of i
 
 let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv i p
 
-#push-options "--print_universes --print_implicits"
 let coerce_action
     (#a:Type u#x)
     (#mg:bool)
@@ -413,6 +412,19 @@ let lift_action_alt
     (fun x -> (E.extend h).up (post x))
 = E.lift_action_alt #h #a #mg #ex #(h.non_info_slprop pre) #post action
 
+let coerce_action_alt
+    (#a:Type u#x)
+    (#mg:bool)
+    (#ex:inames)
+    (#pre:erased (slprop u#a))
+    (#post:a -> GTot (slprop u#a))
+    (#pre':erased (slprop u#a))
+    (#post':a -> GTot (slprop u#a))
+    (_:squash (pre == pre' /\ (forall x. post x == post' x)))
+    ($act:_pst_action_except a mg ex pre post)
+: _pst_action_except a mg ex pre' post'
+= act
+
 (** Splitting a permission on a composite resource into two separate permissions *)
 let split_action
   (#a:Type u#a)
@@ -422,12 +434,13 @@ let split_action
   (v0:FStar.Ghost.erased a)
   (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : pst_ghost_action_except unit e
-    (pts_to r (v0 `op pcm` v1))
-    (fun _ -> pts_to r v0 `star` pts_to r v1)
+     (pts_to r (v0 `op pcm` v1))
+     (fun _ -> pts_to r v0 `star` pts_to r v1)
 = up2_star (B.base_heap.pts_to #a #pcm r v0) (B.base_heap.pts_to #a #pcm r v1);
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
   B.share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm r v0 v1
+  
 
 (** Combining separate permissions into a single composite permission*)
 let gather_action

@@ -50,7 +50,7 @@ val ghost_action_preorder (_:unit)
 // [@@erasable]
 val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
-// [@@erasable]
+[@@erasable]
 val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
 val cm_big_slprop : CM.cm big_slprop
 val down (s:slprop u#a) : big_slprop u#a
@@ -60,7 +60,7 @@ let big_vprop = s:slprop u#a { is_big s }
 val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
 //big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
-// [@@erasable]
+[@@erasable]
 val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
 //e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
 val cm_small_slprop : CM.cm small_slprop
