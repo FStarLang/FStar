@@ -4037,7 +4037,9 @@ let rec (st_term_to_string' :
                                      FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___2 -> uu___1 uu___)))) uu___)))
            | Pulse_Syntax_Base.Tm_Rewrite
-               { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;_} ->
+               { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;
+                 Pulse_Syntax_Base.tac_opt1 = uu___;_}
+               ->
                Obj.magic
                  (Obj.repr
                     (FStar_Tactics_Effect.tac_bind
@@ -4052,8 +4054,8 @@ let rec (st_term_to_string' :
                                 (Prims.of_int (349)) (Prims.of_int (7))
                                 (Prims.of_int (351)) (Prims.of_int (27)))))
                        (Obj.magic (term_to_string t2))
-                       (fun uu___ ->
-                          (fun uu___ ->
+                       (fun uu___1 ->
+                          (fun uu___1 ->
                              Obj.magic
                                (FStar_Tactics_Effect.tac_bind
                                   (FStar_Sealed.seal
@@ -4091,18 +4093,19 @@ let rec (st_term_to_string' :
                                                  (Prims.of_int (124))
                                                  (Prims.of_int (44)))))
                                         (Obj.magic (term_to_string t1))
-                                        (fun uu___1 ->
+                                        (fun uu___2 ->
                                            FStar_Tactics_Effect.lift_div_tac
-                                             (fun uu___2 ->
+                                             (fun uu___3 ->
                                                 fun x ->
                                                   Prims.strcat
                                                     (Prims.strcat "rewrite "
-                                                       (Prims.strcat uu___1
+                                                       (Prims.strcat uu___2
                                                           " "))
                                                     (Prims.strcat x "")))))
-                                  (fun uu___1 ->
+                                  (fun uu___2 ->
                                      FStar_Tactics_Effect.lift_div_tac
-                                       (fun uu___2 -> uu___1 uu___)))) uu___)))
+                                       (fun uu___3 -> uu___2 uu___1))))
+                            uu___1)))
            | Pulse_Syntax_Base.Tm_WithLocal
                { Pulse_Syntax_Base.binder2 = binder;
                  Pulse_Syntax_Base.initializer1 = initializer1;
@@ -5067,7 +5070,9 @@ let rec (st_term_to_string' :
                                                   {
                                                     Pulse_Syntax_Base.t1 =
                                                       t11;
-                                                    Pulse_Syntax_Base.t2 = t2;_}
+                                                    Pulse_Syntax_Base.t2 = t2;
+                                                    Pulse_Syntax_Base.tac_opt
+                                                      = uu___;_}
                                                   ->
                                                   Obj.magic
                                                     (Obj.repr
@@ -5109,9 +5114,10 @@ let rec (st_term_to_string' :
                                                                 (Obj.magic
                                                                    (term_to_string
                                                                     t2))
-                                                                (fun uu___ ->
-                                                                   (fun uu___
-                                                                    ->
+                                                                (fun uu___1
+                                                                   ->
+                                                                   (fun
+                                                                    uu___1 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -5152,31 +5158,32 @@ let rec (st_term_to_string' :
                                                                     (term_to_string
                                                                     t11))
                                                                     (fun
-                                                                    uu___1 ->
+                                                                    uu___2 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___2 ->
+                                                                    uu___3 ->
                                                                     fun x ->
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     "rewrite "
                                                                     (Prims.strcat
-                                                                    uu___1
+                                                                    uu___2
                                                                     " as "))
                                                                     (Prims.strcat
                                                                     x "")))))
                                                                     (fun
-                                                                    uu___1 ->
+                                                                    uu___2 ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___2 ->
-                                                                    uu___1
-                                                                    uu___))))
-                                                                    uu___)))
-                                                          (fun uu___ ->
+                                                                    uu___3 ->
+                                                                    uu___2
+                                                                    uu___1))))
+                                                                    uu___1)))
+                                                          (fun uu___1 ->
                                                              FStar_Tactics_Effect.lift_div_tac
-                                                               (fun uu___1 ->
-                                                                  (uu___, "")))))
+                                                               (fun uu___2 ->
+                                                                  (uu___1,
+                                                                    "")))))
                                               | Pulse_Syntax_Base.WILD ->
                                                   Obj.magic
                                                     (Obj.repr

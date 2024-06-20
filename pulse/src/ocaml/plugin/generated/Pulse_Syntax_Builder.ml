@@ -1,4 +1,29 @@
 open Prims
+let map_opt :
+  'uuuuu 'uuuuu1 .
+    'uuuuu FStar_Pervasives_Native.option ->
+      ('uuuuu -> 'uuuuu1) -> 'uuuuu1 FStar_Pervasives_Native.option
+  =
+  fun o ->
+    fun f ->
+      match o with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
+      | FStar_Pervasives_Native.Some x -> FStar_Pervasives_Native.Some (f x)
+let (thunk : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
+  fun t ->
+    let b =
+      FStar_Reflection_V2_Builtins.pack_binder
+        {
+          FStar_Reflection_V2_Data.sort2 =
+            (FStar_Reflection_V2_Builtins.pack_ln
+               (FStar_Reflection_V2_Data.Tv_FVar
+                  (FStar_Reflection_V2_Builtins.pack_fv ["Prims"; "unit"])));
+          FStar_Reflection_V2_Data.qual = FStar_Reflection_V2_Data.Q_Explicit;
+          FStar_Reflection_V2_Data.attrs = [];
+          FStar_Reflection_V2_Data.ppname2 = (FStar_Sealed.seal "_")
+        } in
+    FStar_Reflection_V2_Builtins.pack_ln
+      (FStar_Reflection_V2_Data.Tv_Abs (b, t))
 let (pat_var :
   FStar_Reflection_Typing.pp_name_t ->
     FStar_Reflection_Typing.sort_t -> Pulse_Syntax_Base.pattern)
@@ -217,31 +242,6 @@ let (tm_with_local_array :
               Pulse_Syntax_Base.length = length;
               Pulse_Syntax_Base.body5 = body
             }
-let (tm_rewrite :
-  Pulse_Syntax_Base.term ->
-    Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term')
-  =
-  fun t1 ->
-    fun t2 ->
-      Pulse_Syntax_Base.Tm_Rewrite
-        { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2 }
-let (tm_rename :
-  (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
-    Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
-  =
-  fun pairs ->
-    fun t ->
-      Pulse_Syntax_Base.Tm_ProofHintWithBinders
-        {
-          Pulse_Syntax_Base.hint_type =
-            (Pulse_Syntax_Base.RENAME
-               {
-                 Pulse_Syntax_Base.pairs = pairs;
-                 Pulse_Syntax_Base.goal = FStar_Pervasives_Native.None
-               });
-          Pulse_Syntax_Base.binders = [];
-          Pulse_Syntax_Base.t = t
-        }
 let (tm_admit :
   Pulse_Syntax_Base.ctag ->
     Pulse_Syntax_Base.universe ->
@@ -318,12 +318,19 @@ let (mk_rename_hint_type :
         { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal }
 let (mk_rewrite_hint_type :
   Pulse_Syntax_Base.vprop ->
-    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+    Pulse_Syntax_Base.vprop ->
+      Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.proof_hint_type)
   =
   fun t1 ->
     fun t2 ->
-      Pulse_Syntax_Base.REWRITE
-        { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2 }
+      fun tac_opt ->
+        Pulse_Syntax_Base.REWRITE
+          {
+            Pulse_Syntax_Base.t1 = t1;
+            Pulse_Syntax_Base.t2 = t2;
+            Pulse_Syntax_Base.tac_opt = (map_opt tac_opt thunk)
+          }
 let (mk_fn_decl :
   FStar_Reflection_Types.ident ->
     Prims.bool ->

@@ -1715,6 +1715,11 @@ let (mk_par :
                     FStar_Reflection_V2_Builtins.pack_ln
                       (FStar_Reflection_V2_Data.Tv_App
                          (t7, (eR, FStar_Reflection_V2_Data.Q_Explicit)))
+let (tm_rewrite_tactic_t : FStar_Reflection_Types.term) =
+  let fv =
+    FStar_Reflection_V2_Builtins.pack_fv
+      (mk_pulse_lib_core_lid "rewrite_tactic_t") in
+  FStar_Reflection_V2_Builtins.pack_ln (FStar_Reflection_V2_Data.Tv_FVar fv)
 let (mk_rewrite :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
