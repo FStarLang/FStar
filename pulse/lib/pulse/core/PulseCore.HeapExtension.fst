@@ -1032,7 +1032,7 @@ let lift_action_alt
     (#mg:bool)
     (#ex:inames (extend h))
     (#pre:h.slprop)
-    (#post:a -> h.slprop)
+    (#post:a -> GTot h.slprop)
     (action:_action_except h a mg (down_inames ex) pre post)
 : _action_except (extend h)
     a mg ex 
@@ -1672,9 +1672,9 @@ let ghost_alloc
 
 let ghost_read
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#p:pcm a)
+    o
     (r:ghost_ref a p)
     (x:erased a)
     (f:(v:a{compatible p x v}
@@ -1694,9 +1694,9 @@ let ghost_read
 
 let ghost_write
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#p:pcm a)
+    o
     (r:ghost_ref a p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
@@ -1711,9 +1711,9 @@ let ghost_write
 
 let ghost_share
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#pcm:pcm a)
+    o
     (r:ghost_ref a pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
@@ -1730,12 +1730,11 @@ let ghost_share
 
 let ghost_gather
     (#h:heap_sig u#h)
-    #o
     (#a:Type u#(h + 1))
     (#pcm:pcm a)
+    o
     (r:ghost_ref a pcm)
-    (v0:FStar.Ghost.erased a)
-    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+    (v0 v1:FStar.Ghost.erased a)
 : ghost_action_except
     (extend h)
     (squash (composable pcm v0 v1)) o
