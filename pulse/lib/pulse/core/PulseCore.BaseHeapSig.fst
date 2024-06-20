@@ -198,7 +198,7 @@ let base_heap : heap_sig u#a =
     ghost_pts_to=H2.ghost_pts_to;
     iname = unit;
     iref = unit;
-    iref_erasable = (fun x -> reveal x);
+    non_info_iref = (fun x -> reveal x);
     iname_of = (fun x -> ());
     inv;
     iname_ok = (fun _ _ -> True);

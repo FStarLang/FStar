@@ -177,7 +177,7 @@ type heap_sig : Type u#(a + 2) = {
 
     iname:eqtype;
     iref:Type0;
-    iref_erasable: non_info iref;
+    non_info_iref: non_info iref;
     iname_of: (i:iref -> GTot iname);
     inv : iref -> slprop -> slprop;
     iname_ok: iname -> mem -> prop;

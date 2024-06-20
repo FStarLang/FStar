@@ -47,7 +47,7 @@ val ghost_action_preorder (_:unit)
 (**** Separation logic *)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
-// [@@erasable]
+[@@erasable]
 val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]

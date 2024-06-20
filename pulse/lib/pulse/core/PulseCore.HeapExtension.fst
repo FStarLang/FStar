@@ -293,7 +293,7 @@ let ghost_pts_to (h:heap_sig u#a) (meta:bool) (#a:Type u#(a + 1)) (#p:pcm a) (r:
 
 let ext_iname (h:heap_sig u#a) : eqtype = either h.iname nat
 let ext_iref (h:heap_sig u#a) : Type0 = erased (either h.iref (ghost_ref _ (PA.pcm_agreement #h.slprop)))
-let iref_erasable (h:heap_sig u#a) : non_info (ext_iref h) = fun x -> reveal x
+let non_info_iref (h:heap_sig u#a) : non_info (ext_iref h) = fun x -> reveal x
 let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
   match r with
   | Inl i -> Inl (h.iname_of i)
@@ -749,7 +749,7 @@ let extend (h:heap_sig u#a) = {
     ghost_pts_to = ghost_pts_to h;
     iname = ext_iname h;
     iref = ext_iref h;
-    iref_erasable = iref_erasable h;
+    non_info_iref = non_info_iref h;
     iname_of = iname_of h;
     inv = inv #h;
     iname_ok = iname_ok h;
