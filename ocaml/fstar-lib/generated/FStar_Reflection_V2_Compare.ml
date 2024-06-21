@@ -141,10 +141,17 @@ let rec (compare_term :
          FStar_Reflection_V2_Data.Tv_UInst (tv, tus)) ->
           FStar_Order.lex (compare_fv sv tv)
             (fun uu___ -> compare_universes sus tus)
-      | (FStar_Reflection_V2_Data.Tv_App (h1, a1),
-         FStar_Reflection_V2_Data.Tv_App (h2, a2)) ->
-          FStar_Order.lex (compare_term h1 h2)
-            (fun uu___ -> compare_argv a1 a2)
+      | (FStar_Reflection_V2_Data.Tv_App (uu___, uu___1),
+         FStar_Reflection_V2_Data.Tv_App (uu___2, uu___3)) ->
+          let uu___4 = FStar_Reflection_V2_Derived_Lemmas.collect_app_ref s in
+          (match uu___4 with
+           | (h1, aa1) ->
+               let uu___5 =
+                 FStar_Reflection_V2_Derived_Lemmas.collect_app_ref t in
+               (match uu___5 with
+                | (h2, aa2) ->
+                    FStar_Order.lex (compare_term h1 h2)
+                      (fun uu___6 -> compare_argv_list () () aa1 aa2)))
       | (FStar_Reflection_V2_Data.Tv_Abs (b1, e1),
          FStar_Reflection_V2_Data.Tv_Abs (b2, e2)) ->
           FStar_Order.lex (compare_binder b1 b2)
@@ -277,23 +284,44 @@ and (compare_term_list :
           FStar_Order.lex (compare_term hd1 hd2)
             (fun uu___ -> compare_term_list tl1 tl2)
 and (compare_argv :
-  FStar_Reflection_V2_Data.argv ->
-    FStar_Reflection_V2_Data.argv -> FStar_Order.order)
+  unit ->
+    unit ->
+      FStar_Reflection_V2_Data.argv ->
+        FStar_Reflection_V2_Data.argv -> FStar_Order.order)
   =
-  fun a1 ->
-    fun a2 ->
-      let uu___ = a1 in
-      match uu___ with
-      | (a11, q1) ->
-          let uu___1 = a2 in
-          (match uu___1 with
-           | (a21, q2) ->
-               (match (q1, q2) with
-                | (FStar_Reflection_V2_Data.Q_Implicit,
-                   FStar_Reflection_V2_Data.Q_Explicit) -> FStar_Order.Lt
-                | (FStar_Reflection_V2_Data.Q_Explicit,
-                   FStar_Reflection_V2_Data.Q_Implicit) -> FStar_Order.Gt
-                | (uu___2, uu___3) -> compare_term a11 a21))
+  fun b1 ->
+    fun b2 ->
+      fun a1 ->
+        fun a2 ->
+          let uu___ = a1 in
+          match uu___ with
+          | (t1, q1) ->
+              let uu___1 = a2 in
+              (match uu___1 with
+               | (t2, q2) ->
+                   (match (q1, q2) with
+                    | (FStar_Reflection_V2_Data.Q_Implicit,
+                       FStar_Reflection_V2_Data.Q_Explicit) -> FStar_Order.Lt
+                    | (FStar_Reflection_V2_Data.Q_Explicit,
+                       FStar_Reflection_V2_Data.Q_Implicit) -> FStar_Order.Gt
+                    | (uu___2, uu___3) -> compare_term t1 t2))
+and (compare_argv_list :
+  unit ->
+    unit ->
+      FStar_Reflection_V2_Data.argv Prims.list ->
+        FStar_Reflection_V2_Data.argv Prims.list -> FStar_Order.order)
+  =
+  fun b1 ->
+    fun b2 ->
+      fun l1 ->
+        fun l2 ->
+          match (l1, l2) with
+          | ([], []) -> FStar_Order.Eq
+          | ([], uu___) -> FStar_Order.Lt
+          | (uu___, []) -> FStar_Order.Gt
+          | (hd1::tl1, hd2::tl2) ->
+              FStar_Order.lex (compare_argv () () hd1 hd2)
+                (fun uu___ -> compare_argv_list () () tl1 tl2)
 and (compare_comp :
   FStar_Reflection_Types.comp ->
     FStar_Reflection_Types.comp -> FStar_Order.order)
