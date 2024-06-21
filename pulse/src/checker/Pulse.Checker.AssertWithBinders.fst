@@ -247,13 +247,13 @@ let check_renaming
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let lhs, rhs = rewrite_all g pairs pre in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs } } in
+    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
     { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal in
       let lhs, rhs = rewrite_all g pairs goal in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs } } in
+      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
   )
 
@@ -343,14 +343,14 @@ let check
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
 
-  | REWRITE { t1; t2 } -> (
+  | REWRITE { t1; t2; tac_opt } -> (
     match bs with
     | [] -> 
-      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
       check g pre pre_typing post_hint res_ppname 
           { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
     | _ ->
-      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
       let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
       let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1 }; binders = bs; t = body } } in
       check g pre pre_typing post_hint res_ppname st
@@ -407,8 +407,11 @@ let check
     let rhs = subst_term rhs uvs_closing in
     let body = subst_st_term body_opened uvs_closing in
     let bs = close_binders uvs_bs in
+    (* Since this rewrite is easy enough to show by unification, we always
+    mark them with the vprop_equiv_norm tactic. *)
     let rw = { term = Tm_Rewrite { t1 = lhs;
-                                   t2 = rhs };
+                                   t2 = rhs;
+                                   tac_opt = Some Pulse.Reflection.Util.vprop_equiv_norm_tm };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
     let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);

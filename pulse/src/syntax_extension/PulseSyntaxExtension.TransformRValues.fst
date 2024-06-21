@@ -315,7 +315,6 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
       return (p, [], m)    
     
     | Introduce _ 
-    | Rewrite _
     | ProofHintWithBinders _ ->
       //This is a proof step; no implicit dereference
       return (p, [], m)

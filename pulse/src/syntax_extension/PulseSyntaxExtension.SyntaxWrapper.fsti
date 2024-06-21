@@ -72,7 +72,7 @@ val mk_assert_hint_type (vp:vprop) : hint_type
 val mk_unfold_hint_type (l:option (list string)) (vp:vprop) : hint_type
 val mk_fold_hint_type (l:option (list string)) (vp:vprop) : hint_type
 val mk_rename_hint_type (l:list (term & term)) (goal:option vprop) : hint_type
-val mk_rewrite_hint_type (p1:term) (p2:term) : hint_type
+val mk_rewrite_hint_type (p1:term) (p2:term) (tac_opt : option term) : hint_type
 
 new val constant : Type0
 val inspect_const : FStar.Const.sconst -> constant
@@ -99,8 +99,6 @@ val tm_intro_exists (vp:vprop) (witnesses:list term) (_:range) : st_term
 val is_tm_intro_exists (x:st_term) : bool
 val tm_protect (s:st_term) : st_term
 val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:range) : st_term
-val tm_rewrite (p1:term) (p2:term) (_:range) : st_term
-val tm_rename (pairs:list (term & term)) (_:range) : st_term
 val tm_admit (_:range) : st_term
 val tm_unreachable (_:range) : st_term
 val tm_proof_hint_with_binders (_:hint_type) (_:list binder) (body:st_term) (_:range) : st_term

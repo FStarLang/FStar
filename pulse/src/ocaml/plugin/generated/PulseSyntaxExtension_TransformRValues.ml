@@ -1225,9 +1225,6 @@ let rec (transform_stmt_with_reads :
            | PulseSyntaxExtension_Sugar.Introduce uu___ ->
                Obj.magic
                  (Obj.repr (PulseSyntaxExtension_Err.return (p, [], m)))
-           | PulseSyntaxExtension_Sugar.Rewrite uu___ ->
-               Obj.magic
-                 (Obj.repr (PulseSyntaxExtension_Err.return (p, [], m)))
            | PulseSyntaxExtension_Sugar.ProofHintWithBinders uu___ ->
                Obj.magic
                  (Obj.repr (PulseSyntaxExtension_Err.return (p, [], m))))

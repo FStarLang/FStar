@@ -102,9 +102,6 @@ ensures post x y
 }
 ```
 
-let vprop_equiv_norm (_:unit) : T.Tac unit =
-    T.mapply (`vprop_equiv_refl)
-
 ```pulse
 ghost
 fn elim_cond_true (b:bool) (p q:vprop)

@@ -1007,7 +1007,13 @@ type st_typing : env -> st_term -> comp -> Type =
       q:vprop ->
       tot_typing g p tm_vprop ->
       vprop_equiv g p q ->
-      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q } ))
+      (* Note: we always set the tactic to None. We already have a proof
+      of vprop_equiv so we don't need the tactic, and we can just elaborate
+      into a normal rewrite with the explicit proof that was constructed by the
+      tactic during Pulse checking time.
+
+      The alternative is taking an optional tactic + typing, which is quite annoying. *)
+      st_typing g (wtag (Some STT_Ghost) (Tm_Rewrite { t1=p; t2=q; tac_opt=None } ))
                   (comp_rewrite p q)
 
   | T_Admit:

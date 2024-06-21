@@ -64,7 +64,10 @@ type hint_type =
   | UNFOLD of option (list lident) & vprop
   | FOLD of option (list lident) & vprop
   | RENAME of list (A.term & A.term) & option vprop
-  | REWRITE of vprop & vprop
+  | REWRITE of
+      vprop &
+      vprop &
+      option A.term (* optional tactic *)
   | WILD
   | SHOW_PROOF_STATE of rng
 
@@ -143,11 +146,6 @@ type stmt' =
       b2:stmt;
     }
 
-  | Rewrite {
-      p1:vprop;
-      p2:vprop;
-    }
-    
   | ProofHintWithBinders {
       hint_type:hint_type;
       binders:binders;
@@ -217,7 +215,6 @@ let mk_stmt s range = { s; range }
 let mk_fn_decl id is_rec binders ascription measure body range = { id; is_rec; binders; ascription; measure; body; range }
 let mk_open lid = Open lid
 let mk_par p1 p2 q1 q2 b1 b2 = Parallel { p1; p2; q1; q2; b1; b2 }
-let mk_rewrite p1 p2 = Rewrite { p1; p2 }
 let mk_proof_hint_with_binders ht bs =  ProofHintWithBinders { hint_type=ht; binders=bs }
 let mk_lambda bs ascription body range : lambda = { binders=bs; ascription; body; range }
 let mk_with_invs names body returns_ = WithInvariants { names; body; returns_ }

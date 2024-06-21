@@ -92,14 +92,15 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
       is_list tail tl)
 {
 
-    rewrite_by (is_list x (head::tl))
-               (exists* (v:node_ptr t)
-                        (tail:llist t).
-                    pure (x == Some v) **
-                    pts_to v { head; tail } **
-                    is_list tail tl)
-                norm_tac
-                ();
+    rewrite
+      (is_list x (head::tl))
+    as
+      (exists* (v:node_ptr t)
+               (tail:llist t).
+           pure (x == Some v) **
+           pts_to v { head; tail } **
+           is_list tail tl)
+    by norm_tac ();
 }
 ```
 
@@ -110,14 +111,14 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     ensures is_list x (node.head::tl)
 {
     rewrite (pts_to v node) as (pts_to v { head=node.head; tail=node.tail });
-    rewrite_by
-         (exists* (v:node_ptr t) (tail:llist t).
-                pure (x == Some v) **
-                pts_to v { head=node.head; tail } **
-                is_list tail tl)
-        (is_list x (node.head::tl))
-        norm_tac
-        ()
+    rewrite
+      (exists* (v:node_ptr t) (tail:llist t).
+             pure (x == Some v) **
+             pts_to v { head=node.head; tail } **
+             is_list tail tl)
+    as
+      (is_list x (node.head::tl))
+    by norm_tac ();
 }
 ```
 

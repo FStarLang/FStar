@@ -920,7 +920,7 @@ let (desugar_hint_type :
                                         Obj.magic
                                           (PulseSyntaxExtension_Err.return
                                              uu___2)) uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.REWRITE (t1, t2) ->
+           | PulseSyntaxExtension_Sugar.REWRITE (t1, t2, tac_opt) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ = desugar_vprop env t1 in
@@ -939,11 +939,23 @@ let (desugar_hint_type :
                                      (fun t21 ->
                                         let t21 = Obj.magic t21 in
                                         let uu___2 =
-                                          PulseSyntaxExtension_SyntaxWrapper.mk_rewrite_hint_type
-                                            t11 t21 in
+                                          PulseSyntaxExtension_Err.map_err_opt
+                                            (desugar_term env) tac_opt in
                                         Obj.magic
-                                          (PulseSyntaxExtension_Err.return
-                                             uu___2)) uu___2))) uu___1)))
+                                          (FStar_Class_Monad.op_let_Bang
+                                             PulseSyntaxExtension_Err.err_monad
+                                             () () (Obj.magic uu___2)
+                                             (fun uu___3 ->
+                                                (fun tac_opt1 ->
+                                                   let tac_opt1 =
+                                                     Obj.magic tac_opt1 in
+                                                   let uu___3 =
+                                                     PulseSyntaxExtension_SyntaxWrapper.mk_rewrite_hint_type
+                                                       t11 t21 tac_opt1 in
+                                                   Obj.magic
+                                                     (PulseSyntaxExtension_Err.return
+                                                        uu___3)) uu___3)))
+                                       uu___2))) uu___1)))
            | PulseSyntaxExtension_Sugar.WILD ->
                Obj.magic
                  (Obj.repr
@@ -1579,34 +1591,6 @@ let rec (desugar_stmt :
                                                                     uu___5)))
                                                              uu___4))) uu___3)))
                                        uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.Rewrite
-               { PulseSyntaxExtension_Sugar.p11 = p1;
-                 PulseSyntaxExtension_Sugar.p21 = p2;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_vprop env p1 in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun p11 ->
-                             let p11 = Obj.magic p11 in
-                             let uu___1 = desugar_vprop env p2 in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun p21 ->
-                                        let p21 = Obj.magic p21 in
-                                        let uu___2 =
-                                          PulseSyntaxExtension_SyntaxWrapper.tm_rewrite
-                                            p11 p21
-                                            s.PulseSyntaxExtension_Sugar.range1 in
-                                        Obj.magic
-                                          (PulseSyntaxExtension_Err.return
-                                             uu___2)) uu___2))) uu___1)))
            | PulseSyntaxExtension_Sugar.LetBinding uu___ ->
                Obj.magic
                  (Obj.repr
