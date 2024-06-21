@@ -1,6 +1,8 @@
 {
-  "name": "Pulse devcontainer (from cached base container)",
-  "image": "mtzguido/pulse-devcontainer:latest",
+  "name": "Pulse devcontainer (from scratch)"
+  "build": {
+    "dockerfile": "minimal.Dockerfile"
+  },
   "customizations": {
     "vscode": {
       "extensions": [

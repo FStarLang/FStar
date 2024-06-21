@@ -21,13 +21,12 @@ open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
-
 open Pulse.Checker.Base
+module T = FStar.Tactics.V2
 
 let canon_vprop (vp:term)
   : term
   = list_as_vprop (vprop_as_list vp)
-
 
 val ve_unit_r (g:env) (p:term) : vprop_equiv g (tm_star p tm_emp) p
 

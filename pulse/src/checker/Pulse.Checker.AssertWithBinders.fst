@@ -163,7 +163,7 @@ let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (
   T.map (visit_and_rewrite p) tms
 
 let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
-  let tms = Pulse.Typing.Combinators.vprop_as_list goal in
+  let tms = vprop_as_list goal in
   let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
   assume (L.length tms' == L.length tms);
   let lhs, rhs =
@@ -174,8 +174,7 @@ let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.
       ([], [])
       tms tms'
   in
-  Pulse.Typing.Combinators.list_as_vprop lhs,
-  Pulse.Typing.Combinators.list_as_vprop rhs
+  list_as_vprop lhs, list_as_vprop rhs
   
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -270,7 +269,7 @@ let check_wild
     fail g (Some st.range) "A wildcard must have at least one binder"
 
   | _ ->
-    let vprops = Pulse.Typing.Combinators.vprop_as_list pre in
+    let vprops = vprop_as_list pre in
     let ex, rest = List.Tot.partition (fun (v:vprop) ->
                                        let vv = inspect_term v in
                                        Tm_ExistsSL? vv) vprops in
@@ -337,7 +336,7 @@ let check
     let open Pulse.PP in
     let msg = [
       text "Current context:" ^^
-            indent (pp (VPropEquiv.canon_vprop pre))
+            indent (pp <| canon_vprop_print pre)
     ] in
     fail_doc_env true g (Some r) msg
   | RENAME { pairs; goal } ->

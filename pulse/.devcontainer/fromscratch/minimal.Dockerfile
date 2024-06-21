@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:23.10
 
 SHELL ["/bin/bash", "-c"]
 
@@ -16,7 +16,6 @@ RUN apt-get update \
       sudo \
       python3 \
       python-is-python3 \
-      libicu70 \
       libgmp-dev \
       opam \
       vim \
@@ -37,11 +36,11 @@ RUN mkdir -p $HOME/bin
 RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install OCaml
-ARG OCAML_VERSION=4.12.0
+ARG OCAML_VERSION=4.12.1
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1
-RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson
+RUN opam install --yes batteries zarith stdint yojson dune menhir menhirLib pprint sedlex ppxlib process ppx_deriving ppx_deriving_yojson memtrace
 
 # Get compiled Z3
 RUN wget -nv https://github.com/Z3Prover/z3/releases/download/Z3-4.8.5/z3-4.8.5-x64-ubuntu-16.04.zip \
@@ -68,8 +67,11 @@ RUN eval $(opam env) \
 ENV FSTAR_HOME $HOME/FStar
 ENV KRML_HOME $HOME/karamel
 
-# Instrument .bashrc to set the opam switch. Note that this
+# Instrument .profile and .bashrc to set the opam switch. Note that this
 # just appends the *call* to eval $(opam env) in these files, so we
-# compute the new environments fter the fact. Calling opam env here
-# would perhaps thrash some variables set by the devcontainer infra.
+# compute the new environments after the fact.
+RUN echo 'eval $(opam env --set-switch)' | tee --append $HOME/.profile
 RUN echo 'eval $(opam env --set-switch)' | tee --append $HOME/.bashrc
+
+# We do not build Pulse itself, the devcontainer does that on spinup,
+# on the up-to-date files.

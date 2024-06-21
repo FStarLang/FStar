@@ -389,3 +389,8 @@ let comp_inames (c:comp { C_STAtomic? c || C_STGhost? c }) : term =
 let nvar = ppname & var 
 let v_as_nv x : nvar = ppname_default, x
 let as_binder (t:term) = null_binder t
+
+let ppname_for_uvar (p : ppname) : T.Tac ppname =
+  {
+    p with name = T.seal ("?" ^ T.unseal p.name);
+  }

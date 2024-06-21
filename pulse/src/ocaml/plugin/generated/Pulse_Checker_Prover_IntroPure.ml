@@ -1463,7 +1463,7 @@ let (intro_pure :
                                                                     uu___3 ->
                                                                     Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Typing_Combinators.list_as_vprop
+                                                                    (Pulse_Syntax_Pure.list_as_vprop
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
@@ -1510,7 +1510,7 @@ let (intro_pure :
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Typing_Combinators.list_as_vprop
+                                                                    (Pulse_Syntax_Pure.list_as_vprop
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
@@ -1518,7 +1518,7 @@ let (intro_pure :
                                                                     pst.Pulse_Checker_Prover_Base.solved))
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Typing_Combinators.list_as_vprop
+                                                                    (Pulse_Syntax_Pure.list_as_vprop
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Array_Access
@@ -1538,7 +1538,7 @@ let (intro_pure :
                                                                     t_ss1))
                                                                     (Pulse_Checker_Prover_Base.op_Star
                                                                     (Pulse_Checker_Prover_Base.op_Star
-                                                                    (Pulse_Typing_Combinators.list_as_vprop
+                                                                    (Pulse_Syntax_Pure.list_as_vprop
                                                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                                     preamble.Pulse_Checker_Prover_Base.frame)
                                                                     (Pulse_Checker_Prover_Base.op_Star

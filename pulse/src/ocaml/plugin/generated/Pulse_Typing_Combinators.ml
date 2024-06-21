@@ -3416,21 +3416,6 @@ let (apply_frame :
 type ('g, 'ctxt, 'postuhint) st_typing_in_ctxt =
   (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
-let rec (vprop_as_list :
-  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
-  fun vp ->
-    match Pulse_Syntax_Pure.inspect_term vp with
-    | Pulse_Syntax_Pure.Tm_Emp -> []
-    | Pulse_Syntax_Pure.Tm_Star (vp0, vp1) ->
-        FStar_List_Tot_Base.op_At (vprop_as_list vp0) (vprop_as_list vp1)
-    | uu___ -> [vp]
-let rec (list_as_vprop :
-  Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.term) =
-  fun vps ->
-    match vps with
-    | [] -> Pulse_Syntax_Pure.tm_emp
-    | hd::[] -> hd
-    | hd::tl -> Pulse_Syntax_Pure.tm_star hd (list_as_vprop tl)
 let (comp_for_post_hint :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.vprop ->

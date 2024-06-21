@@ -457,3 +457,39 @@ let rec inspect_term (t:R.term)
   | Tv_Unknown -> Tm_Unknown
 
   | Tv_Unsupp -> default_view
+
+let rec vprop_as_list (vp:term)
+  : list term
+  = match inspect_term vp with
+    | Tm_Emp -> []
+    | Tm_Star vp0 vp1 ->
+      vprop_as_list vp0 @ vprop_as_list vp1
+    | _ -> [vp]
+
+let rec list_as_vprop (vps:list term)
+  : term
+  = match vps with
+    | [] -> tm_emp
+    | [hd] -> hd
+    | hd::tl -> tm_star hd (list_as_vprop tl)
+
+let rec insert1 (t:term) (ts : list term) : T.Tac (list term) =
+  match ts with
+  | [] -> [t]
+  | t'::ts' ->
+    if Order.le (T.compare_term t t')
+    then t::ts
+    else t'::insert1 t ts'
+
+let sort_terms (ts : list term) : T.Tac (list term) =
+  T.fold_right insert1 ts []
+
+(* This does not have any useful lemmas, but can put the terms
+in order. It's useful to pretty-print contexts. See #96. *)
+let canon_vprop_list_print (vs : list term)
+  : T.Tac term
+  = list_as_vprop <| sort_terms vs
+
+let canon_vprop_print (vp:term)
+  : T.Tac term
+  = canon_vprop_list_print <| vprop_as_list vp

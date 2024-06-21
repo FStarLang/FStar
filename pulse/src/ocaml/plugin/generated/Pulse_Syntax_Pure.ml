@@ -675,3 +675,89 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
     | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) -> default_view
     | FStar_Reflection_V2_Data.Tv_Unknown -> Tm_Unknown
     | FStar_Reflection_V2_Data.Tv_Unsupp -> default_view
+let rec (vprop_as_list :
+  Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
+  fun vp ->
+    match inspect_term vp with
+    | Tm_Emp -> []
+    | Tm_Star (vp0, vp1) ->
+        FStar_List_Tot_Base.append (vprop_as_list vp0) (vprop_as_list vp1)
+    | uu___ -> [vp]
+let rec (list_as_vprop :
+  Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.term) =
+  fun vps ->
+    match vps with
+    | [] -> tm_emp
+    | hd::[] -> hd
+    | hd::tl -> tm_star hd (list_as_vprop tl)
+let rec (insert1 :
+  Pulse_Syntax_Base.term ->
+    Pulse_Syntax_Base.term Prims.list ->
+      (Pulse_Syntax_Base.term Prims.list, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun t ->
+         fun ts ->
+           match ts with
+           | [] ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> [t])))
+           | t'::ts' ->
+               Obj.magic
+                 (Obj.repr
+                    (if
+                       FStar_Order.le
+                         (FStar_Reflection_V2_Compare.compare_term t t')
+                     then
+                       Obj.repr
+                         (FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___ -> t :: ts))
+                     else
+                       Obj.repr
+                         (FStar_Tactics_Effect.tac_bind
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "Pulse.Syntax.Pure.fst"
+                                     (Prims.of_int (482)) (Prims.of_int (13))
+                                     (Prims.of_int (482)) (Prims.of_int (26)))))
+                            (FStar_Sealed.seal
+                               (Obj.magic
+                                  (FStar_Range.mk_range
+                                     "Pulse.Syntax.Pure.fst"
+                                     (Prims.of_int (482)) (Prims.of_int (9))
+                                     (Prims.of_int (482)) (Prims.of_int (26)))))
+                            (Obj.magic (insert1 t ts'))
+                            (fun uu___1 ->
+                               FStar_Tactics_Effect.lift_div_tac
+                                 (fun uu___2 -> t' :: uu___1)))))) uu___1
+        uu___
+let (sort_terms :
+  Pulse_Syntax_Base.term Prims.list ->
+    (Pulse_Syntax_Base.term Prims.list, unit) FStar_Tactics_Effect.tac_repr)
+  = fun ts -> FStar_Tactics_Util.fold_right insert1 ts []
+let (canon_vprop_list_print :
+  Pulse_Syntax_Base.term Prims.list ->
+    (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
+  =
+  fun vs ->
+    FStar_Tactics_Effect.tac_bind
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
+               (Prims.of_int (491)) (Prims.of_int (21)) (Prims.of_int (491))
+               (Prims.of_int (34)))))
+      (FStar_Sealed.seal
+         (Obj.magic
+            (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
+               (Prims.of_int (491)) (Prims.of_int (4)) (Prims.of_int (491))
+               (Prims.of_int (34))))) (Obj.magic (sort_terms vs))
+      (fun uu___ ->
+         FStar_Tactics_Effect.lift_div_tac
+           (fun uu___1 -> list_as_vprop uu___))
+let (canon_vprop_print :
+  Pulse_Syntax_Base.term ->
+    (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
+  = fun vp -> canon_vprop_list_print (vprop_as_list vp)
