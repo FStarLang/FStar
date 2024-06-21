@@ -69,6 +69,11 @@ let (seq_lid : Prims.string Prims.list) = ["FStar"; "Seq"; "Base"; "seq"]
 let (seq_create_lid : Prims.string Prims.list) =
   ["FStar"; "Seq"; "Base"; "create"]
 let (tot_lid : Prims.string Prims.list) = ["Prims"; "Tot"]
+let (vprop_equiv_norm_tm : FStar_Reflection_Types.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar
+       (FStar_Reflection_V2_Builtins.pack_fv
+          (mk_pulse_lib_core_lid "vprop_equiv_norm")))
 let (ex : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =
   fun t -> (t, FStar_Reflection_V2_Data.Q_Explicit)
 let (im : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =
