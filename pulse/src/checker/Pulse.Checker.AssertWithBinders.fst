@@ -276,7 +276,7 @@ let check_wild
     match ex with
     | []
     | _::_::_ ->
-      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal"
+      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal."
     | [ex] ->
       let k = List.Tot.length bs in
       let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
