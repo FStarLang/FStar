@@ -190,9 +190,9 @@ requires all_at_most l n ** pure (l == hd :: tl)
 ensures exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n
 {
   rewrite (all_at_most l n) as (all_at_most (hd :: tl) n);
-  rewrite_by (all_at_most (hd::tl) n)
-             (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
-             vprop_equiv_norm ();
+  rewrite (all_at_most (hd::tl) n)
+       as (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
+       by vprop_equiv_norm ();
 }
 ```
 
@@ -202,9 +202,9 @@ fn intro_all_at_most_cons (l:list (ref nat)) (hd:ref nat) (tl:list (ref nat)) (n
 requires pts_to hd 'i ** all_at_most tl n ** pure ('i <= n) ** pure (l == hd :: tl)
 ensures all_at_most l n
 {
-  rewrite_by (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
-             (all_at_most (hd::tl) n)
-             vprop_equiv_norm ();
+  rewrite (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
+       as (all_at_most (hd::tl) n)
+       by vprop_equiv_norm ();
   rewrite each (hd::tl) as l;
 }
 ```

@@ -80,14 +80,14 @@ ensures (
 )
 {
   rewrite each l as (head::tl);
-  rewrite_by
+  rewrite
     (is_list x (head::tl))
+  as
     (exists* (p:node_ptr t) (tail:llist t).
       pure (x == Some p) **
       pts_to p { head; tail } **
       is_list tail tl)
-    vprop_equiv_norm
-    ()
+  by vprop_equiv_norm ();
 }
 ```
     
@@ -103,14 +103,14 @@ ensures
   is_list x (node.head::tl)
 {
     rewrite (pts_to v node) as (pts_to v { head=node.head; tail=node.tail });
-    rewrite_by
-        (exists* (v:node_ptr t) (tail:llist t).
-          pure (x == Some v) **
-          pts_to v { head=node.head; tail } **
-          is_list tail tl)
-        (is_list x (node.head::tl))
-        vprop_equiv_norm
-        ()
+    rewrite
+      (exists* (v:node_ptr t) (tail:llist t).
+        pure (x == Some v) **
+        pts_to v { head=node.head; tail } **
+        is_list tail tl)
+    as
+      (is_list x (node.head::tl))
+    by vprop_equiv_norm ();
 }
 ```
 //boilerplate$
