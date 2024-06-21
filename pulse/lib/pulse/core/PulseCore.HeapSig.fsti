@@ -227,9 +227,11 @@ type heap_sig : Type u#(a + 2) = {
     );
 }
 
+val emp_trivial (h:heap_sig u#a)
+: Lemma (forall m. h.interp h.emp m)
+
 let is_boxable (#h:heap_sig u#a) (p:h.slprop) : prop = h.up (h.down p) == p 
 let boxable (h:heap_sig u#a) = p:h.slprop { is_boxable p }
-
 
 let core_of (#h:heap_sig) (m:h.mem)
 : h.sep.core

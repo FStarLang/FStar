@@ -766,7 +766,6 @@ let down_star_ext
     with _ . (
       h.star_equiv (down p) (down q) m;
       assert (h.interp (down p `h.star` down q) m);
-      // admit();
       eliminate exists m0 m1.
         h.sep.disjoint m0 m1 /\
         m == h.sep.join m0 m1 /\
@@ -1627,6 +1626,13 @@ let lift_base_heap_action
         assert (inames_ok ex m1);
         x, m1
 
+
+let up_emp_alt (h:heap_sig u#a)
+: Lemma ((extend h).emp == lift h (H2.base_heap.emp))
+= emp_trivial (extend h);
+  emp_trivial H2.base_heap;
+  (extend h).slprop_extensionality ((extend h).emp) (lift h (H2.base_heap.emp))
+
 let select_refine
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
@@ -1728,7 +1734,7 @@ let alloc_action
     (fun r -> (extend h).pts_to r x)
 = assume (preserves_inames (H2.extend #Set.empty #a #pcm x));
   let res = lift_base_heap_action #h #(ref a pcm) #false #e (H2.extend #Set.empty #a #pcm x) in
-  assume ((extend h).emp == lift h H2.base_heap.emp);
+  up_emp_alt h;
   coerce_action res _ _ ()
 
 let pts_to_not_null_action 
@@ -1743,10 +1749,9 @@ let pts_to_not_null_action
     (squash (not (is_null r))) e
     ((extend h).pts_to r v)
     (fun _ -> (extend h).pts_to r v)
-= admit()
-//  assume (preserves_inames (H2.pts_to_not_null #Set.empty r v));
-//   let res = lift_base_heap_action  (H2.pts_to_not_null r v) in
-//   coerce_action res _ _ ()
+= assume (preserves_inames (H2.pts_to_not_null_action #Set.empty r v));
+  let res = lift_base_heap_action  (H2.pts_to_not_null_action r v) in
+  coerce_action res _ _ ()
 
 // Ghost actions
 
@@ -1765,7 +1770,7 @@ let ghost_alloc
     (fun r -> (extend h).ghost_pts_to false r x)
 = assume (preserves_inames (H2.ghost_extend false #Set.empty #a #pcm x));
   let res = lift_base_heap_action #h #(ghost_ref a pcm) #true #e (H2.ghost_extend false #Set.empty #a #pcm x) in
-  assume ((extend h).emp == lift h H2.base_heap.emp);
+  up_emp_alt h;
   coerce_action res _ _ ()
 
 let ghost_read

@@ -5,6 +5,11 @@ module H2 = PulseCore.Heap2
 module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
 
+let emp_trivial (h:heap_sig u#a)
+: Lemma (forall m. h.interp h.emp m)
+= h.pure_true_emp ();
+  FStar.Classical.forall_intro (h.pure_interp True)
+
 let exists_ #h #a p = h.as_slprop (fun m -> exists (x:a). h.interp (p x) m)
 
 let interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> GTot h.slprop)
@@ -136,11 +141,6 @@ let lift_h_exists
     h.is_ghost_action_preorder ();
     (), m
 
-
-let emp_trivial (h:heap_sig u#a)
-: Lemma (forall m. h.interp h.emp m)
-= h.pure_true_emp ();
-  FStar.Classical.forall_intro (h.pure_interp True)
 
 let elim_pure_lemma (#h:heap_sig u#h) (p:prop) (frame:h.slprop) 
     (m:h.mem { interpret (h.pure p `h.star` frame) m })
