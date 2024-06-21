@@ -316,6 +316,13 @@ val cm_e_slprop (hs:heap_sig u#h)
   (forall x y. c.mult x y == hide (hs.star (reveal x) (reveal y)))
 }
 
+val ac_lemmas (h:heap_sig u#a)
+: Lemma (
+    (forall p q r. (p `h.star` q) `h.star` r == p `h.star` (q `h.star` r)) /\
+    (forall p q. p `h.star` q == q `h.star` p) /\
+    (forall p. p `h.star` h.emp == p)
+)
+
 (* Some heap generic actions *)
 
 val frame

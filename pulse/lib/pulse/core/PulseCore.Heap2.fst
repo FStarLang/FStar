@@ -90,7 +90,7 @@ let join_empty_inverse (m0 m1:heap)
   (ensures m0 == empty_heap /\ m1 == empty_heap)
 = H.join_empty_inverse m0.concrete m1.concrete;
   H.join_empty_inverse m0.ghost m1.ghost
-  
+
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f
@@ -202,7 +202,12 @@ let full_heap_pred h = H.full_heap_pred h.concrete /\ H.full_heap_pred h.ghost
 let heap_evolves (h0 h1:full_heap) =
   H.heap_evolves h0.concrete h1.concrete /\
   H.heap_evolves h0.ghost h1.ghost
+let select i m = H.select i m.concrete
+let select_ghost i m = H.select i m.ghost
 let free_above_addr tag h a = H.free_above_addr (get tag h) a
+let reveal_free_above_addr tag h a = 
+  H.interp_free_above h.concrete a;
+  H.interp_free_above h.ghost a
 let weaken_free_above tag h a b = H.weaken_free_above (get tag h) a b
 
 (** [sel_v] is a ghost read of the value contained in a heap reference *)
@@ -648,7 +653,6 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
   slprop_extensionality (llift GHOST H.emp) emp
 
 let core_ghost_ref_as_addr i = H.core_ref_as_addr i
-let select_ghost i m = H.select i m.ghost
 let interp_ghost_pts_to i #m #a #p v h = H.interp_pts_to i #m #a #p v h.ghost
 let ghost_pts_to_compatible_equiv #meta #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #meta #a #pcm r v0 v1;

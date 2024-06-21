@@ -410,8 +410,16 @@ val heap_evolves : FStar.Preorder.preorder full_heap
   This predicate allows us to maintain an allocation counter, as all references above [a]
   in [h] are free.
 *)
+val select (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+val select_ghost (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) = 
+  match t with
+  | CONCRETE -> select i h
+  | GHOST -> select_ghost i h
 val free_above_addr (t:tag) (h:heap u#a) (a:nat) : prop
-
+val reveal_free_above_addr (t:tag) (h:heap u#a) (a:nat)
+: Lemma (free_above_addr t h a <==>
+        (forall i. i >= a ==> None? (select_either t i h)))
 (** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
 val weaken_free_above (t:tag) (h:heap) (a b:nat)
   : Lemma (free_above_addr t h a /\ a <= b ==> free_above_addr t h b)
@@ -541,7 +549,6 @@ let action_framing
   affine_star fp frame h0;
   emp_unit fp
 
-val select (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
 
 (** [sel] is a ghost read of the value contained in a heap reference *)
 val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a
@@ -615,6 +622,8 @@ val upd_action
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action #MUTABLE #no_allocs (pts_to r v0) unit (fun _ -> pts_to r v1)
+
+
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
@@ -754,7 +763,6 @@ val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
-val select_ghost (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
 
 val interp_ghost_pts_to 
       (i:core_ghost_ref)

@@ -1,6 +1,7 @@
 module PulseCore.BaseHeapSig
 module H = PulseCore.Heap
 module H2 = PulseCore.Heap2
+open PulseCore.Tags
 open PulseCore.HeapSig
 
 noeq
@@ -115,9 +116,11 @@ let interp_as (p:affine_mem_prop sep)
     FStar.PropositionalExtensionality.apply (interp (as_slprop p) c) (p c)
   )
 
-let free_above (m:mem u#a) = 
-  (forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)) /\
-  (forall i. i >= m.ctr ==> None? (H2.select i m.heap))
+let free_above (m:mem u#a) =
+  H2.free_above_addr CONCRETE m.heap m.ctr /\
+  H2.free_above_addr GHOST m.heap m.ghost_ctr
+  // (forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)) /\
+  // (forall i. i >= m.ctr ==> None? (H2.select i m.heap))
 
 let mem_invariant (is:eset unit) (m:mem u#a)
 : slprop u#a
@@ -230,10 +233,11 @@ let core_ghost_ref_as_addr (r:core_ghost_ref)
 
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
-let mem_invariant_interp (ex:inames base_heap) (h0 h1:base_heap.mem)
-: Lemma (interpret (base_heap.mem_invariant ex h0) h1 ==>
+let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
+: Lemma (base_heap.interp (base_heap.mem_invariant ex h0) h1 ==>
          free_above_ghost_ctr h0)
-= base_heap.pure_interp (free_above h0) h1.heap
+= base_heap.pure_interp (free_above h0) h1;
+  H2.reveal_free_above_addr GHOST h0.heap h0.ghost_ctr
 let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 : Lemma (inames_ok ex h)
 = ()
@@ -246,15 +250,79 @@ let mg_of_mut (m:Tags.mutability) =
   | Tags.MUTABLE -> false
   | _ -> true
 
-assume
-val lift_heap_action
+let destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+: Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
+= admit()
+
+let elim_init (e:_) (fp frame:H2.slprop u#a) (m:base_heap.mem)
+: Lemma 
+  (requires interpret (fp `star` frame `star` mem_invariant e m) m)
+  (ensures interpret fp m /\ interpret (fp `star` frame) m /\ free_above m)
+= ac_lemmas base_heap;
+  destruct_star #base_heap (fp `star` frame) (mem_invariant e m) m.heap;
+  destruct_star #base_heap fp frame m.heap;
+  FStar.Classical.forall_intro (base_heap.pure_interp (free_above m))
+
+let intro_pure (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
+: Lemma
+  (requires h.interp p m)
+  (ensures h.interp (p `h.star` h.pure q) m)
+= admit()
+
+let intro_fin (e:_) (post frame:H2.slprop u#a) (m:base_heap.mem)
+: Lemma
+  (requires base_heap.interp (post `star` frame) m.heap /\ free_above m)
+  (ensures base_heap.interp (post `star` frame `star` mem_invariant e m) m.heap)
+= ac_lemmas base_heap;
+  intro_pure #base_heap (post `star` frame) (free_above m) () m.heap
+              
+let lift_heap_action
       (#fp:H2.slprop u#a)
       (#a:Type u#b)
       (#fp':a -> H2.slprop u#a)
       (#mut:_)
       (e:inames base_heap)
       ($f:H2.action #mut #None fp a fp')
-: _action_except base_heap a (mg_of_mut mut) e fp fp'
+: act:_action_except base_heap a (mg_of_mut mut) e fp fp'
+  {
+     mut == IMMUTABLE ==> preserves_inames act  
+  }
+= let act : _action_except base_heap a (mg_of_mut mut) e fp fp' =
+    fun frame m0 ->
+      elim_init e fp frame m0;
+      let h0 = m0.heap in
+      let (| x, h1 |) = f h0 in
+      assert (base_heap.interp (fp' x `star` frame) h1);
+      let m1 = {m0 with heap=h1} in
+      assert (H2.action_related_heaps #mut #None h0 h1);
+      assert (H2.does_not_allocate CONCRETE h0 h1);
+      assert (H2.does_not_allocate GHOST h0 h1);
+      assert (free_above m1);
+      intro_fin e (fp' x) frame m1;
+      assert (maybe_ghost_action base_heap (mg_of_mut mut) m0 m1);
+      assert (inames_ok e m1);
+      (x, m1)
+  in
+  match mut with
+  | IMMUTABLE ->
+    introduce forall (m0:full_mem base_heap) frame. 
+      interpret (fp `base_heap.star` frame `base_heap.star` base_heap.mem_invariant e m0) m0 /\
+      inames_ok e m0
+      ==> ( 
+      let x, m1 = act frame m0 in
+      heaps_preserve_inames m0 m1
+    )
+    with introduce _ ==> _ 
+    with _. ( 
+      let x, m1 = act frame m0 in
+      elim_init e fp frame m0;
+      H2.action_framing f frame m0.heap;
+      assert (H2.action_related_heaps #IMMUTABLE #None m0.heap m1.heap);
+      assert (m0 == m1);
+      assert (heaps_preserve_inames m0 m1)
+    );
+    act
+  | _ -> act
 
 let ghost_extend meta #ex #a #pcm x = admit()
 let ghost_extend_spec
@@ -270,13 +338,13 @@ let ghost_extend_spec
 = admit()
 
 let ghost_read #ex #meta #a #p r x f = lift_heap_action ex (H2.ghost_read #meta #a #p r x f)
-let ghost_write #ex #meta #a #p r x y f = lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
+let ghost_write #ex #meta #a #p r x y f = admit(); lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
 let ghost_share #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_share #meta #a #p r x y)
 let ghost_gather #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_gather #meta #a #p r x y)
 
 let extend #ex #a #pcm x = admit()
 let read #ex #a #p r x f = lift_heap_action ex (H2.select_refine #a #p r x f)
-let write #ex #a #p r x y f = lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
+let write #ex #a #p r x y f = admit(); lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
 let share #ex #a #p r x y = lift_heap_action ex (H2.split_action #a #p r x y)
 let gather #ex #a #p r x y = lift_heap_action ex (H2.gather_action #a #p r x y)
 let pts_to_not_null_action #ex #a #p r x = lift_heap_action ex (H2.pts_to_not_null_action #a #p r x)
