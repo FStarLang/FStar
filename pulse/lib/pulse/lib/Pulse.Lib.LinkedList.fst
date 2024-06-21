@@ -77,10 +77,6 @@ fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
 }
 ```
 
-
-let norm_tac (_:unit) : T.Tac unit =
-    T.mapply (`vprop_equiv_refl)
-    
 ```pulse
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
@@ -91,16 +87,7 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
       pts_to v { head; tail } **
       is_list tail tl)
 {
-
-    rewrite
-      (is_list x (head::tl))
-    as
-      (exists* (v:node_ptr t)
-               (tail:llist t).
-           pure (x == Some v) **
-           pts_to v { head; tail } **
-           is_list tail tl)
-    by norm_tac ();
+    unfold (is_list x (head::tl));
 }
 ```
 
@@ -111,14 +98,7 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
     ensures is_list x (node.head::tl)
 {
     rewrite (pts_to v node) as (pts_to v { head=node.head; tail=node.tail });
-    rewrite
-      (exists* (v:node_ptr t) (tail:llist t).
-             pure (x == Some v) **
-             pts_to v { head=node.head; tail } **
-             is_list tail tl)
-    as
-      (is_list x (node.head::tl))
-    by norm_tac ();
+    fold (is_list x (node.head::tl));
 }
 ```
 
