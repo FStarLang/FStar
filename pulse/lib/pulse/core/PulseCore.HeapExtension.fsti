@@ -254,3 +254,20 @@ val down_star
 val up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma ((extend h).up (p `h.star` q) ==
         ((extend h).up p `(extend h).star` (extend h).up q))
+
+val down_exists (#h:heap_sig) #a (p: a -> GTot (extend h).slprop)
+: Lemma 
+  (ensures (extend h).down (exists_ p) ==
+            exists_ #h (fun x -> (extend h).down (p x)))
+
+val down_emp
+    (h:heap_sig u#h)
+: Lemma ((extend h).down (extend h).emp == h.emp)
+
+val up_emp (h:heap_sig u#a)
+: Lemma ((extend h).up h.emp == (extend h).emp)
+
+val up_pure
+        (h:heap_sig u#a)
+        (p:prop)
+: Lemma ((extend h).pure p == (extend h).up (h.pure p))

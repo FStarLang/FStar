@@ -108,28 +108,18 @@ let core_ref_is_null (r:core_ref)
 : b:bool { b <==> r == core_ref_null }
 = PulseCore.Heap2.core_ref_is_null r
 
-assume
-val emp_up
-        (h:H.heap_sig)
-: Lemma ((E.extend h).emp == (E.extend h).up h.emp)
-
-assume
-val pure_up
-        (h:H.heap_sig)
-        (p:prop)
-: Lemma ((E.extend h).pure p == (E.extend h).up (h.pure p))
 
 let emp_is_small () 
 : Lemma (is_small sig.emp)
-= emp_up B.base_heap;
-  emp_up small_sig;
+= E.up_emp B.base_heap;
+  E.up_emp small_sig;
   small_sig.up_down B.base_heap.emp;
   sig.up_down small_sig.emp
 
 let pure_is_small (p:prop) 
 : Lemma (is_small (sig.pure p))
-= pure_up B.base_heap p;
-  pure_up small_sig p;
+= E.up_pure B.base_heap p;
+  E.up_pure small_sig p;
   small_sig.up_down (B.base_heap.pure p);
   sig.up_down (small_sig.pure p)
 
@@ -213,17 +203,24 @@ let small_star_congruence (p1 p2:vprop u#a)
     reveal_slprop (p1 `star` p2);
   }
 
+let reveal_bprop (x:big_slprop) : small_sig.slprop = small_sig.non_info_slprop x
+
 let down_exists_alt #a (p: a -> slprop)
 : Lemma 
-  (requires True) //forall x. is_big (p x))
   (ensures down (h_exists p) ==
            hide <| H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down (p x)))
-= admit()
+= calc (==) {
+    reveal_bprop (down (h_exists p));
+  (==) {}
+    sig.down (H.exists_ (fun x -> reveal_slprop (p x)));
+  (==) { _ by (T.mapply (`E.down_exists)) }
+    H.exists_ #small_sig (fun x -> sig.down (reveal_slprop (p x)));
+  (==) { H.exists_extensionality #small_sig
+          (fun x -> sig.down (reveal_slprop (p x)))
+          (fun x -> small_sig.non_info_slprop <| down (p x)) }
+    H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down (p x));
+  } 
 
-// let down_up_alt (p:big_slprop)
-// : Lemma (down (up p) == p)
-//         [SMTPat (down (up p))]
-// = sig.up_down p
 
 let split_small (p:slprop u#a)
 : Lemma (requires is_small p)
@@ -258,39 +255,67 @@ let h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
     (requires (forall x. p x `equiv` q x))
     (ensures (h_exists p == h_exists q))
-= admit()
+= calc (==) {
+    reveal_slprop <| h_exists p;
+  (==) {}
+    H.exists_ #sig #a (fun x -> reveal_slprop (p x));
+  // (==) { _ by (T.mapply (`H.exists_extensionality)) } //this fails
+  (==) { H.exists_extensionality #sig #a (fun x -> reveal_slprop (p x)) (fun x -> reveal_slprop (q x)) }
+    H.exists_ #sig #a (fun x -> reveal_slprop (q x));
+  (==) {}
+    reveal_slprop <| h_exists q;
+  }
 
 let up_emp_big ()
 : Lemma (up cm_big_slprop.unit == emp)
-= admit()
+= E.up_emp small_sig
 
 let down_emp_big ()
 : Lemma (down emp == cm_big_slprop.unit)
-= admit()
+= E.down_emp small_sig
 
 let up_star_big (p q:big_slprop)
 : Lemma (up (p `cm_big_slprop.mult` q) == up p `star` up q)
-= admit()
+= E.up_star #small_sig p q
 
 let down_star_big (p q:big_vprop)
 : Lemma (down (p `star` q) == down p `cm_big_slprop.mult` down q)
-= admit()
+= E.down_star #small_sig p q
 
 let up2_emp ()
 : Lemma (up2 cm_small_slprop.unit == emp)
-= admit()
+= E.up_emp B.base_heap;
+  E.up_emp small_sig
 
 let down2_emp ()
 : Lemma (down2 emp == cm_small_slprop.unit)
-= admit()
+= E.down_emp B.base_heap;
+  E.down_emp small_sig
 
 let up2_star (p q:small_slprop)
 : Lemma (up2 (p `cm_small_slprop.mult` q) == up2 p `star` up2 q)
-= admit()
+= calc (==) {
+    reveal_slprop <| up2 (p `cm_small_slprop.mult` q);
+  (==) {}
+    sig.up (small_sig.up (p `B.base_heap.star` q));
+  (==) { E.up_star #B.base_heap p q }
+    sig.up (small_sig.up p `small_sig.star` small_sig.up q);
+  (==) { E.up_star #small_sig (small_sig.up p) (small_sig.up q) }
+    reveal_slprop <| up2 p `star` up2 q;
+  }
 
+let reveal_sprop (b:small_slprop) : B.base_heap.slprop = B.base_heap.non_info_slprop b
 let down2_star (p q:vprop)
 : Lemma (down2 (p `star` q) == down2 p `cm_small_slprop.mult` down2 q)
-= admit()
+= calc (==) {
+    reveal_sprop <| down2 (p `star` q);
+  (==) {}
+    small_sig.down (sig.down (p `star` q));
+  (==) { E.down_star #small_sig p q }
+    small_sig.down ((down p) `small_sig.star` (down q));
+  (==) { E.down_star #B.base_heap (down p) (down q) }
+    reveal_sprop <| down2 p `B.base_heap.star` down2 q;
+  }
 
 (**** Memory invariants *)
 

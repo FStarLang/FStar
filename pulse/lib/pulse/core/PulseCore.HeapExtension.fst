@@ -1869,4 +1869,96 @@ let down_star
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
 = ()
-    
+
+let intro_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> GTot h.slprop) (m:_)
+: Lemma 
+  (requires (exists x. h.interp (p x) m))
+  (ensures h.interp (exists_ p) m)
+= HeapSig.interp_exists #h #a p
+
+
+let down_exists (#h:heap_sig) #a (p: a -> GTot (extend h).slprop)
+: Lemma 
+  (ensures (extend h).down (exists_ p) ==
+            exists_ #h (fun x -> (extend h).down (p x)))
+= introduce forall m. 
+    h.interp ((extend h).down (exists_ p)) m ==>
+    h.interp (exists_ #h (fun x -> (extend h).down (p x))) m
+  with introduce _ ==> _
+  with _ . (
+    down_p_affine (exists_ p);
+    h.interp_as (down_p (exists_ p));
+    assert (down_p (exists_ p) m);
+    let mm = { small_core=m; big_core=H2.base_heap.sep.empty } in
+    assert (interp (exists_ p) mm);
+    HeapSig.interp_exists #(extend h) p;
+    assert ((extend h).interp (exists_ p) mm);
+    eliminate exists x.
+      (extend h).interp (p x) mm
+    returns _
+    with _ . ( 
+      HeapSig.interp_exists #h (fun x -> (extend h).down (p x));
+      down_p_affine (p x);
+      h.interp_as (down_p (p x));
+      assert (h.interp (down (p x)) m);
+      assert (h.interp (exists_ #h (fun x -> (extend h).down (p x))) m)
+    )
+  );
+  introduce forall m. 
+    h.interp (exists_ #h (fun x -> (extend h).down (p x))) m ==>
+    h.interp ((extend h).down (exists_ p)) m
+  with introduce _ ==> _
+  with _ . ( 
+    HeapSig.interp_exists #h (fun x -> (extend h).down (p x));
+    eliminate exists x.
+      h.interp (down (p x)) m
+    returns _
+    with _ . (
+      down_p_affine (p x);
+      h.interp_as (down_p (p x));
+      let mm = { small_core=m; big_core=H2.base_heap.sep.empty } in
+      assert (interp (p x) mm);
+      HeapSig.interp_exists #(extend h) p;
+      calc (<==>) {
+        h.interp (down (exists_ p)) m;
+      (<==>) { down_p_affine (exists_ p);
+               h.interp_as (down_p (exists_ p)) }
+        interp (exists_ p) mm;
+      (<==>) {}
+        (extend h).interp (exists_ p) mm;
+      (<==>) { HeapSig.interp_exists #(extend h) p }
+        (exists x. interp (p x) mm);
+      }
+    )
+  );
+  h.slprop_extensionality
+      ((extend h).down (exists_ p))
+      (exists_ #h (fun x -> (extend h).down (p x)))
+
+let emp_trivial (h:heap_sig u#a)
+: Lemma (forall m. h.interp h.emp m)
+= h.pure_true_emp ();
+  FStar.Classical.forall_intro (h.pure_interp True)
+
+let down_emp
+    (h:heap_sig u#h)
+: Lemma ((extend h).down (extend h).emp == h.emp)
+= emp_trivial (extend h);
+  emp_trivial h;
+  down_p_affine (extend h).emp;
+  h.interp_as (down_p (extend h).emp);
+  h.slprop_extensionality ((extend h).down (extend h).emp) h.emp
+
+let up_emp (h:heap_sig u#a)
+: Lemma ((extend h).up h.emp == (extend h).emp)
+= emp_trivial (extend h);
+  emp_trivial h;
+  (extend h).slprop_extensionality ((extend h).up h.emp) (extend h).emp
+
+let up_pure
+        (h:heap_sig u#a)
+        (p:prop)
+: Lemma ((extend h).pure p == (extend h).up (h.pure p))
+= FStar.Classical.forall_intro (h.pure_interp p);
+  FStar.Classical.forall_intro ((extend h).pure_interp p);
+  (extend h).slprop_extensionality ((extend h).pure p) ((extend h).up (h.pure p))

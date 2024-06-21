@@ -6,9 +6,18 @@ module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
 
 let exists_ #h #a p = h.as_slprop (fun m -> exists (x:a). h.interp (p x) m)
-let interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> h.slprop)
+
+let interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> GTot h.slprop)
 : Lemma (forall m. h.interp (exists_ p) m <==> (exists x. h.interp (p x) m))
 = h.interp_as (fun m -> exists (x:a). h.interp (p x) m)
+
+let exists_extensionality (#h:heap_sig u#h) (#a:Type u#a) (p q:a -> GTot h.slprop)
+: Lemma
+    (requires forall x. p x == q x)
+    (ensures exists_ p == exists_ q)
+= interp_exists #h #a p;
+  interp_exists #h #a q;
+  h.slprop_extensionality (exists_ p) (exists_ q)
 
 let erase_cm (#a:Type) (c:CM.cm a)
 : CM.cm (erased a)

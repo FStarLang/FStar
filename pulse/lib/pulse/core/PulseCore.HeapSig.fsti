@@ -290,8 +290,18 @@ val exists_
     (p: a -> GTot chs.slprop)
 : chs.slprop
 
-val interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> h.slprop)
+
+val interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> GTot h.slprop)
 : Lemma (forall m. h.interp (exists_ p) m <==> (exists x. h.interp (p x) m))
+
+val exists_extensionality
+    (#chs:heap_sig u#m)
+    (#a:Type u#a)
+    (p: a -> GTot chs.slprop)
+    (q: a -> GTot chs.slprop)
+: Lemma 
+  (requires (forall x. p x == q x))
+  (ensures exists_ p == exists_ q)
 
 val cm_slprop (hs:heap_sig u#h)   : c:CM.cm (hs.slprop) { c.unit == hs.emp /\ c.mult == hs.star }
 val cm_e_slprop (hs:heap_sig u#h) 
