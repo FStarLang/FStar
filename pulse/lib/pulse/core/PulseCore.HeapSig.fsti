@@ -158,6 +158,13 @@ type heap_sig : Type u#(a + 2) = {
           interp p m0 /\
           interp q m1))
     );
+    star_congruence: (
+      p:slprop ->
+      q:slprop ->
+      Lemma 
+      (requires up (down p) == p /\ up (down q) == q)
+      (ensures up (down (p `star` q)) == p `star` q)
+    );
     pts_to: (
       #a:Type u#a ->
       #p:pcm a ->
@@ -208,6 +215,11 @@ type heap_sig : Type u#(a + 2) = {
           mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p)
     );
 }
+
+let is_boxable (#h:heap_sig u#a) (p:h.slprop) : prop = h.up (h.down p) == p 
+let boxable (h:heap_sig u#a) = p:h.slprop { is_boxable p }
+
+
 let core_of (#h:heap_sig) (m:h.mem)
 : h.sep.core
 = h.sep.lens_core.get m
@@ -265,12 +277,14 @@ let ghost_action_except
       (provides: a -> GTot chs.slprop)
 = _action_except chs a true except expects provides
 
-let exists_
-    (chs:heap_sig u#m)
+val exists_
+    (#chs:heap_sig u#m)
     (#a:Type u#a)
     (p: a -> GTot chs.slprop)
 : chs.slprop
-= chs.as_slprop (fun m -> exists (x:a). chs.interp (p x) m)
+
+val interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> h.slprop)
+: Lemma (forall m. h.interp (exists_ p) m <==> (exists x. h.interp (p x) m))
 
 val cm_slprop (hs:heap_sig u#h)   : c:CM.cm (hs.slprop) { c.unit == hs.emp /\ c.mult == hs.star }
 val cm_e_slprop (hs:heap_sig u#h) 

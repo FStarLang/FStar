@@ -189,3 +189,11 @@ val pts_to_not_null_action
 : ghost_action_except base_heap (squash (not (is_null r))) ex
     (base_heap.pts_to r v)
     (fun _ -> base_heap.pts_to r v)
+
+val exists_congruence 
+        (#a:Type u#a)
+        (w:a)
+        (p:a -> base_heap.slprop)
+: Lemma 
+    (requires forall x. is_boxable (p x))
+    (ensures is_boxable (exists_ base_heap p))

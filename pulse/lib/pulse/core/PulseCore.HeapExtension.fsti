@@ -1,8 +1,6 @@
 module PulseCore.HeapExtension
 open PulseCore.HeapSig
 
-let boxable (h:heap_sig u#a) = p:h.slprop { h.up (h.down p) == p }
-
 val extend (h:heap_sig u#a) : h2:heap_sig u#(a + 1) { h2.bprop == h.slprop }
 
 val lift_iref (#h:heap_sig u#a) (i:h.iref) : (extend h).iref
@@ -239,3 +237,10 @@ val ghost_gather
      (extend h).ghost_pts_to false r v1)
     (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
 
+val exists_congruence
+         (#h:heap_sig u#h)
+         (#a:Type u#a)
+         (p:a -> (extend h).slprop)
+: Lemma
+    (requires forall x. is_boxable (p x))
+    (ensures is_boxable (exists_ p))

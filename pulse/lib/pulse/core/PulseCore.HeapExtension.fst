@@ -298,15 +298,15 @@ let iname_of (h:heap_sig u#a) (r:ext_iref h) : GTot (ext_iname h) =
   match r with
   | Inl i -> Inl (h.iname_of i)
   | Inr r -> Inr (H2.core_ghost_ref_as_addr r)
-let is_boxable (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
+let is_boxable_ext (#h:heap_sig u#a) (p:ext_slprop h) = up (down p) == p
 let inv_core (#h:heap_sig u#a) (i:ghost_ref _ (PA.pcm_agreement #h.slprop)) (p:ext_slprop h)
 : ext_slprop h
 = lift h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p)))
 let inv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
 : ext_slprop h
 = match i with
-  | Inl i -> up (h.inv i (down p)) `star` pure (is_boxable p)
-  | Inr r -> inv_core r p `star` pure (is_boxable p)
+  | Inl i -> up (h.inv i (down p)) `star` pure (is_boxable_ext p)
+  | Inr r -> inv_core r p `star` pure (is_boxable_ext p)
 
 let iname_ok (h:heap_sig u#a) (i:ext_iname h) (m:ext_mem h) : prop =
   match i with
@@ -481,10 +481,10 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     calc (==) {
       inv i p;
     (==) { }
-      up (h.inv j (down p)) `star` pure (is_boxable p);
-    (==) {h.dup_inv_equiv j (down p); dup_pure #h (is_boxable p)}
+      up (h.inv j (down p)) `star` pure (is_boxable_ext p);
+    (==) {h.dup_inv_equiv j (down p); dup_pure #h (is_boxable_ext p)}
       (up (h.inv j (down p) `h.star` h.inv j (down p))) `star`
-      (pure (is_boxable p) `star` pure (is_boxable p));
+      (pure (is_boxable_ext p) `star` pure (is_boxable_ext p));
     (==) { up_star (h.inv j (down p)) (h.inv j (down p)); ac_lemmas_ext h}
       inv i p `star` inv i p;
     }
@@ -493,15 +493,15 @@ let dup_inv_equiv (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
     calc (==) {
       inv i p;
     (==) {}
-      inv_core j p `star` pure (is_boxable p);
+      inv_core j p `star` pure (is_boxable_ext p);
     (==) {  share_gather_equiv #true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) (Some (down p)) }
       lift h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)) `H2.base_heap.star`
-              H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable p);
+              H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) `star` pure (is_boxable_ext p);
     (==) { lift_star #h (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p)))
                         (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) j (Some (down p))) }
-      (inv_core j p `star` inv_core j p) `star` pure (is_boxable p);
-    (==) { dup_pure #( h) (is_boxable p) }
-      (inv_core j p `star` inv_core j p) `star` (pure (is_boxable p) `star` pure (is_boxable p));
+      (inv_core j p `star` inv_core j p) `star` pure (is_boxable_ext p);
+    (==) { dup_pure #( h) (is_boxable_ext p) }
+      (inv_core j p `star` inv_core j p) `star` (pure (is_boxable_ext p) `star` pure (is_boxable_ext p));
     (==) { ac_lemmas_ext h }
       inv i p `star` inv i p;
     }
@@ -533,7 +533,7 @@ let inv_i_p_property
 = let Inr i = i in
   H2.base_heap.interp
     (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
-  is_boxable p
+  is_boxable_ext p
 
 let istore_invariant_eq_aux
       (#h:heap_sig u#a)
@@ -580,14 +580,14 @@ let inv_boxes (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h)
       interp (p `star` inv i p) m
     with introduce _ ==> _
     with _ . (
-      pure_interp (is_boxable p) m
+      pure_interp (is_boxable_ext p) m
     );
     introduce forall m. 
       interp (p `star `inv i p) m ==> 
       interp (up (down p) `star` inv i p) m
     with introduce _ ==> _
     with _ . (
-      pure_interp (is_boxable p) m
+      pure_interp (is_boxable_ext p) m
     );
     slprop_extensionality h (up (down p) `star` inv i p) (p `star` inv i p)
 
@@ -623,7 +623,7 @@ let mem_invariant_equiv_ext_l
       istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
       lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) { }
-  (up (h.mem_invariant (down_inames e) m.small) `star` (up (h.inv j (down p)) `star` pure (is_boxable p))) `star`
+  (up (h.mem_invariant (down_inames e) m.small) `star` (up (h.inv j (down p)) `star` pure (is_boxable_ext p))) `star`
       istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) `star`
       lift h (H2.base_heap.mem_invariant Set.empty m.big);
   (==) {ac_lemmas_ext h}
@@ -631,20 +631,20 @@ let mem_invariant_equiv_ext_l
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
       `star` 
       lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
-      pure (is_boxable p));
+      pure (is_boxable_ext p));
   (==) { up_star (h.mem_invariant (down_inames e) m.small) (h.inv j (down p)) }
     (up (h.mem_invariant (down_inames e) m.small `h.star` h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big) 
       `star` 
       lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
-      pure (is_boxable p));
+      pure (is_boxable_ext p));
   (==) { h.mem_invariant_equiv (down_inames e) m.small j (down p) }
     (up (h.mem_invariant (Set.add (h.iname_of j) (down_inames e)) m.small 
           `h.star` down p `h.star` h.inv j (down p))) `star`
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
       `star` 
       lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
-      pure (is_boxable p));
+      pure (is_boxable_ext p));
   (==) { assert (Set.equal (Set.add (h.iname_of j) (down_inames e))
                             (down_inames (Set.add (iname_of h i) e))) }
     (up ((h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small 
@@ -652,7 +652,7 @@ let mem_invariant_equiv_ext_l
       (istore_invariant #h (ghost_ctr m) (Set.add (iname_of h i) e) (core_of m.big)
       `star` 
       lift h (H2.base_heap.mem_invariant Set.empty m.big) `star`
-      pure (is_boxable p));
+      pure (is_boxable_ext p));
   (==) { up_star (h.mem_invariant (down_inames (Set.add (iname_of h i) e)) m.small `h.star` down p)
                   (h.inv j (down p));
           ac_lemmas_ext h}
@@ -718,6 +718,12 @@ let mem_invariant_equiv_ext
   | Inl j -> mem_invariant_equiv_ext_l e m i p
   | Inr j -> mem_invariant_equiv_ext_r e m i p
 
+let star_congruence (#h:heap_sig u#a) (p q:ext_slprop h)
+: Lemma
+  (requires is_boxable_ext p /\ is_boxable_ext q)
+  (ensures is_boxable_ext (p `star` q))
+= admit()
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -745,6 +751,7 @@ let extend (h:heap_sig u#a) = {
     star_commutative = star_commutative;
     star_associative = star_associative;
     star_equiv = (fun p q m -> ());
+    star_congruence;
     pts_to = pts_to h;
     ghost_pts_to = ghost_pts_to h;
     iname = ext_iname h;
@@ -1219,10 +1226,10 @@ let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 = calc (==) {
     inv (lift_iref i) (up p);
   (==) {}
-    up (h.inv i (down (up p))) `star` pure (is_boxable #h (up p));
+    up (h.inv i (down (up p))) `star` pure (is_boxable_ext #h (up p));
   (==) { (extend h).up_down p }
-    up (h.inv i p) `star` pure (is_boxable #h (up p));
-  (==) { (extend h).up_down p; pure_ext h (is_boxable (up p)) True }
+    up (h.inv i p) `star` pure (is_boxable_ext #h (up p));
+  (==) { (extend h).up_down p; pure_ext h (is_boxable_ext (up p)) True }
     up (h.inv i p) `star` pure True;
   (==) { (extend h).pure_true_emp (); (extend h).emp_unit (up (h.inv i p)) }
     up (h.inv i p);
@@ -1745,3 +1752,41 @@ let ghost_gather
   let res = lift_base_heap_action #h #_ #true #o (H2.ghost_gather #Set.empty #false r v0 v1) in
   lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
   coerce_action res _ _ ()
+
+let interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> h.slprop)
+: Lemma (forall m. h.interp (exists_ h p) m <==> (exists x. h.interp (p x) m))
+= h.interp_as (fun m -> exists (x:a). h.interp (p x) m)
+
+let interp_up_down (#h:heap_sig u#h) (p:ext_slprop h)
+: Lemma (forall m. interp (up (down p)) m <==> interp p { m with big_core=H2.base_heap.sep.empty})
+= introduce forall m.
+      interp (up (down p)) m <==> interp p { m with big_core=H2.base_heap.sep.empty}
+  with (
+    calc (<==>) {
+      (up (down p)) m;
+        (<==>) {}
+      up_p (down p) m;
+        (<==>) {}
+      h.interp (down p) m.small_core;
+        (<==>) {  }
+      (down_p_affine p;
+       h.interp (h.as_slprop (down_p p)) m.small_core);
+        (<==>) { h.interp_as (down_p p) }
+      down_p p m.small_core;
+        (<==>) {}
+      p { m with big_core=H2.base_heap.sep.empty};
+    }
+  )
+
+let exists_congruence
+         (#h:heap_sig u#h)
+         (#a:Type u#a)
+         (p:a -> (extend h).slprop)
+: Lemma
+  (requires forall x. is_boxable (p x))
+  (ensures is_boxable (exists_ (extend h) p))
+= interp_exists p;
+  interp_up_down (exists_ (extend h) p);
+  slprop_extensionality h (exists_ (extend h) p) (up (down (exists_ (extend h) p)))
+
+let boxable_star #h p q = ( h).star_congruence p q

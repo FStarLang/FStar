@@ -163,6 +163,12 @@ let dup_inv_equiv (i:unit) (p:slprop)
 : Lemma (inv i p == inv i p `H2.star` inv i p)
 = dup_pure (p == H2.emp)
 
+let star_congruence (p q:slprop)
+: Lemma
+  (requires up (down p) == p /\ up (down q) == q)
+  (ensures up (down (p `star` q)) == p `star` q)
+= admit()
+
 let base_heap : heap_sig u#a =
   {
     mem;
@@ -194,6 +200,7 @@ let base_heap : heap_sig u#a =
     star_commutative=H2.star_commutative;
     star_associative=H2.star_associative;
     star_equiv;
+    star_congruence;
     pts_to=H2.pts_to;
     ghost_pts_to=H2.ghost_pts_to;
     iname = unit;
@@ -266,3 +273,23 @@ let write #ex #a #p r x y f = lift_heap_action ex (H2.upd_gen_action #a #p r x y
 let share #ex #a #p r x y = lift_heap_action ex (H2.split_action #a #p r x y)
 let gather #ex #a #p r x y = lift_heap_action ex (H2.gather_action #a #p r x y)
 let pts_to_not_null_action #ex #a #p r x = lift_heap_action ex (H2.pts_to_not_null_action #a #p r x)
+
+let interp_exists_sem (#a:Type) (p: a -> base_heap.slprop) (m:_)
+: Lemma (interp (exists_ base_heap p) m <==> (exists x. interp (p x) m))
+= admit()
+
+let exists_congruence (#a:Type) (witness:a) (p: a -> base_heap.slprop)
+: Lemma 
+  (requires forall x. is_boxable (p x))
+  (ensures is_boxable (exists_ base_heap p))
+= introduce forall m. interp (exists_ base_heap p) m ==> interp (up (down (exists_ base_heap p))) m
+  with introduce _ ==> _
+  with _ . (
+    interp_exists_sem p m
+  );
+  introduce forall m. interp (up (down (exists_ base_heap p))) m ==> interp (exists_ base_heap p) m
+  with introduce _ ==> _
+  with _ . ( 
+    interp_exists_sem p m 
+  );
+  slprop_extensionality (exists_ base_heap p) (up (down (exists_ base_heap p)))
