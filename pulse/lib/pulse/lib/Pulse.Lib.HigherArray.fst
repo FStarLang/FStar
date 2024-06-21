@@ -508,11 +508,10 @@ let token (x:'a) = emp
 
 let pts_to_range
   (#a:Type)
-  (x:array a)
-  ([@@@ equate_by_smt] i:nat)
-  ([@@@ equate_by_smt] j: nat)
+  ([@@@equate_strict] x:array a)
+  (i j : nat)
   (#[exact (`1.0R)] p:perm)
-  ([@@@ equate_by_smt] s: Seq.seq a)
+  (s : Seq.seq a)
 : vprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
 

@@ -25,10 +25,11 @@ val ref ([@@@unused] a:Type u#2) : Type u#0
 
 instance val non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref a)
 
-val pts_to (#a:Type)
-           (r:ref a)
-           (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
-           ([@@@equate_by_smt] n:a)
+val pts_to
+  (#a:Type)
+  ([@@@equate_strict] r:ref a)
+  (#[exact (`1.0R)] p:perm)
+  (n:a)
 : vprop
 
 val alloc (#a:Type) (x:a)

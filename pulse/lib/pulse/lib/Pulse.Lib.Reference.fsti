@@ -25,9 +25,10 @@ module U32 = FStar.UInt32
 val ref ([@@@unused] a:Type u#0) : Type u#0
 
 val pts_to
-    (#a:Type) (r:ref a) 
-    (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
-    ([@@@equate_by_smt] n:a)
+    (#a:Type)
+    ([@@@equate_strict] r:ref a)
+    (#[exact (`1.0R)] p:perm)
+    (n:a)
   : vprop
 
 val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)

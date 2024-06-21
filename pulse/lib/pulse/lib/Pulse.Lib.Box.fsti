@@ -29,9 +29,9 @@ module R = Pulse.Lib.Reference
 val box ([@@@strictly_positive] a:Type0) : Type0
 
 val pts_to (#a:Type0) 
-           (b:box a)
-           (#[T.exact (`1.0R)] [@@@equate_by_smt] p:perm)
-           ([@@@equate_by_smt] v:a) : vprop
+           ([@@@equate_strict] b:box a)
+           (#[T.exact (`1.0R)] p:perm)
+           (v:a) : vprop
 
 val pts_to_is_small (#a:Type) (r:box a) (p:perm) (x:a)
   : Lemma (is_small (pts_to r #p x))

@@ -22,7 +22,11 @@ module U32 = FStar.UInt32
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#2) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] [@@@equate_by_smt] p:perm) ([@@@equate_by_smt] n:a) : vprop
+val pts_to
+  (#a:Type)
+  ([@@@equate_strict] r:ref a)
+  (#[T.exact (`1.0R)] p:perm)
+  (n:a) : vprop
 
 val pts_to_is_big (#a:Type) (r:ref a) (p:perm) (x:a)
   : Lemma (is_big (pts_to r #p x))

@@ -178,11 +178,10 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
 
 let pts_to_range
   (#a:Type)
-  (x:array a)
-  ([@@@ equate_by_smt] i:nat)
-  ([@@@ equate_by_smt] j: nat)
+  ([@@@equate_strict] x:array a)
+  (i j : nat)
   (#[exact (`1.0R)] p:perm)
-  ([@@@ equate_by_smt] s: Seq.seq a)
+  (s : Seq.seq a)
 : vprop
 = H.pts_to_range x i j #p (raise_seq s)
 

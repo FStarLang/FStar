@@ -27,9 +27,9 @@ instance val non_informative_gref (a:Type0)
   : NonInformative.non_informative (ref a)
 
 val pts_to (#a:Type)
-           (r:ref a)
-           (#[exact (`1.0R)] [@@@equate_by_smt] p:perm)
-           ([@@@equate_by_smt] n:a)
+           ([@@@equate_strict] r:ref a)
+           (#[exact (`1.0R)] p:perm)
+           (n:a)
 : vprop
 
 val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)
