@@ -1882,7 +1882,37 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                                                                     FStar_TypeChecker_NBETerm.e_issue))
                                                                     FStar_Tactics_V2_Basic.call_subtac
                                                                     FStar_Tactics_V2_Basic.call_subtac in
-                                                                    [uu___220] in
+                                                                    let uu___221
+                                                                    =
+                                                                    let uu___222
+                                                                    =
+                                                                    FStar_Tactics_InterpFuns.mk_tac_step_4
+                                                                    Prims.int_zero
+                                                                    "call_subtac_tm"
+                                                                    FStar_Reflection_V2_Embeddings.e_env
+                                                                    uu___2
+                                                                    FStar_Reflection_V2_Embeddings.e_universe
+                                                                    uu___2
+                                                                    (FStar_Syntax_Embeddings.e_tuple2
+                                                                    (FStar_Syntax_Embeddings.e_option
+                                                                    uu___2)
+                                                                    (FStar_Syntax_Embeddings.e_list
+                                                                    FStar_Syntax_Embeddings.e_issue))
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_env
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_universe
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute
+                                                                    (FStar_TypeChecker_NBETerm.e_tuple2
+                                                                    (FStar_TypeChecker_NBETerm.e_option
+                                                                    FStar_Reflection_V2_NBEEmbeddings.e_attribute)
+                                                                    (FStar_TypeChecker_NBETerm.e_list
+                                                                    FStar_TypeChecker_NBETerm.e_issue))
+                                                                    FStar_Tactics_V2_Basic.call_subtac_tm
+                                                                    FStar_Tactics_V2_Basic.call_subtac_tm in
+                                                                    [uu___222] in
+                                                                    uu___220
+                                                                    ::
+                                                                    uu___221 in
                                                                     uu___218
                                                                     ::
                                                                     uu___219 in

@@ -610,3 +610,8 @@ that solves it. *)
 val call_subtac (g:env) (t : unit -> Tac unit) (u:universe)
                 (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
   : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+
+val call_subtac_tm
+    (g:env) (t : term) (u:universe)
+    (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
+  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
