@@ -106,6 +106,7 @@ val share
       (requires pts_to v #p s)
       (ensures fun _ -> pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s)
 
+[@@allow_ambiguous]
 val gather
   (#a:Type)
   (v:vec a)

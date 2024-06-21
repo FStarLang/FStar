@@ -77,6 +77,7 @@ val share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
       (requires mutex_live m #p v)
       (ensures fun _ -> mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v)
 
+[@@allow_ambiguous]
 val gather (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
   : stt_ghost unit emp_inames
       (requires mutex_live m #p1 v ** mutex_live m #p2 v)
