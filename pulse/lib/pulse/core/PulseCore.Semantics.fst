@@ -222,22 +222,6 @@ let rec step
     in
     weaken <| bind (flip()) choose 
 
-
-// type tape = nat -> bool
-// type ctr = nat
-
-// type npst' (#s:Type u#s)
-//            (a:Type u#a)
-//            (pre:req_t s)
-//            (post:ens_t s a) =
-//   s0:s { pre s0 } ->
-//   tape ->
-//   ctr ->
-//   Dv (res:(a & s & ctr) {
-//     post s0 res._1 res._2
-//   })
-// let repr #s #a #rel #pre #post (x:nst #s a pre post) : npst' #s a rel pre post = admit()
-
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    

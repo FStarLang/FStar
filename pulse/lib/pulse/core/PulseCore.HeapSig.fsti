@@ -98,7 +98,11 @@ type heap_sig : Type u#(a + 2) = {
       unit ->
       Lemma (FStar.Preorder.preorder_rel is_ghost_action)
     );
-
+    update_ghost : (
+      m0:mem ->
+      m1:erased mem { is_ghost_action m0 m1 } ->
+      m:mem { m == reveal m1 }
+    );
     slprop : Type u#(a + 1);
     interp: slprop -> affine_mem_prop sep;
     as_slprop: affine_mem_prop sep -> slprop;

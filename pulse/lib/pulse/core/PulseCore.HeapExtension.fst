@@ -728,6 +728,12 @@ let star_congruence (#h:heap_sig u#a) (p q:ext_slprop h)
   (ensures is_boxable_ext (p `star` q))
 = admit()
 
+let update_ghost (#h:heap_sig u#h) (m0:ext_mem h) (m1:erased (ext_mem h) { is_ghost_action h m0 m1 })
+: m:ext_mem h { m == reveal m1 }
+= { ctr=m0.ctr;
+    small = h.update_ghost m0.small m1.small; 
+    big = H2.base_heap.update_ghost m0.big m1.big }
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -739,6 +745,7 @@ let extend (h:heap_sig u#a) = {
     full_mem_pred = full_mem_pred h;
     is_ghost_action = is_ghost_action h;
     is_ghost_action_preorder = (fun m -> h.is_ghost_action_preorder (); H2.base_heap.is_ghost_action_preorder ());
+    update_ghost = update_ghost #h;
     non_info_slprop = non_info_slprop h;
     bprop = bprop h;
     up = up #h;

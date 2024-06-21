@@ -207,4 +207,14 @@ let lift_ghost
       (ni_a:non_info a)
       (f:erased (ghost_action_except h a opened_invariants p q))
 : ghost_action_except h a opened_invariants p q
-= admit()
+= fun frame m0 ->
+    let xm1 : erased (a * full_mem h) = 
+        let ff = reveal f in
+        let x, m1 = ff frame m0 in
+        hide (x, m1)
+    in
+    let x : erased a = fst (reveal xm1) in
+    let pre_m1 : erased h.mem = snd (reveal xm1) in
+    let m1 = h.update_ghost m0 pre_m1 in
+    let x = ni_a x in
+    x, m1

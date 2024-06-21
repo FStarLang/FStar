@@ -170,6 +170,10 @@ let star_congruence (p q:slprop)
   (ensures up (down (p `star` q)) == p `star` q)
 = admit()
 
+let update_ghost (m0:mem u#a) (m1:erased (mem u#a) { is_ghost_action m0 m1 })
+: m:mem u#a { m == reveal m1 }
+= { heap = H2.upd_ghost_heap m0.heap m1.heap; ctr = m0.ctr; ghost_ctr = m1.ghost_ctr }
+
 let base_heap : heap_sig u#a =
   {
     mem;
@@ -177,6 +181,7 @@ let base_heap : heap_sig u#a =
     full_mem_pred;
     is_ghost_action;
     is_ghost_action_preorder= (fun _ -> ());
+    update_ghost;
     slprop;
     interp;
     as_slprop;
