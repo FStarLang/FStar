@@ -35,6 +35,7 @@ val elim_exists_and_pure (#g:env) (#ctxt:vprop)
            continuation_elaborator g ctxt g' ctxt')
 
 val prove
+  (allow_ambiguous : bool)
   (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:tot_typing (push_env g uvs) goals tm_vprop)
@@ -45,14 +46,18 @@ val prove
            remaining_ctxt : vprop &
            continuation_elaborator g ctxt g1 ((PS.nt_subst_term goals nts) * remaining_ctxt))
 
-val try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+val try_frame_pre_uvs
+  (allow_ambiguous : bool)
+  (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
   (res_ppname:ppname)
 
   : T.Tac (checker_result_t g ctxt None)
 
-val try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+val try_frame_pre
+  (allow_ambiguous : bool)
+  (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (d:(t:st_term & c:comp_st & st_typing g t c))
   (res_ppname:ppname)
 

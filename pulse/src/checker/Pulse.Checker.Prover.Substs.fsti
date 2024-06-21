@@ -22,6 +22,7 @@ open Pulse.Syntax
 open Pulse.Typing.Env
 open Pulse.Typing
 open Pulse.PP
+open Pulse.Show
 
 module L = FStar.List.Tot
 module T = FStar.Tactics
@@ -32,6 +33,7 @@ module Env = Pulse.Typing.Env
 val ss_t : Type0
 
 instance val pp_ss_t : printable ss_t
+instance val showable_ss_t : tac_showable ss_t
 
 val ln_ss_t (s:ss_t) : bool
 val as_map (ss:ss_t) : Map.t var term
@@ -65,6 +67,10 @@ val ss_binder (b:binder) (ss:ss_t) : binder
 val ss_env (g:env) (ss:ss_t)
   : g':env { fstar_env g' == fstar_env g /\
              Env.dom g' == Env.dom g }
+
+val lemma_subst_empty_term (t:term)
+  : Lemma (ss_term t empty == t)
+          [SMTPat (ss_term t empty)]
 
 val ss_st_comp_commutes (s:st_comp) (ss:ss_t)
   : Lemma (ensures

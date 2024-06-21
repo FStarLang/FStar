@@ -14,12 +14,13 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.Match
+module Pulse.Checker.Prover.Explode
 
-open Pulse.Checker.Prover.Match.Comb
-open Pulse.Checker.Prover.Match.Matchers
+open Pulse.Checker.Prover.Base
+module T = FStar.Tactics
 
-let match_syntactic   = match_with "SYNTACTIC"      match_syntactic_11
-let match_fastunif    = match_with "FASTUNIF"       match_fastunif_11
-let match_fastunif_i  = match_with "FASTUNIF_INST"  match_fastunif_inst_11
-let match_full        = match_with "FULL"           match_full_11
+(* Explodes any stars in the unsolved field of the pst into
+its individual components. *)
+val explode
+  (#preamble:_) (pst:prover_state preamble)
+: T.Tac (pst':prover_state preamble {pst' `pst_extends` pst})

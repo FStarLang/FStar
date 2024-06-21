@@ -43,7 +43,11 @@ before the doc, so if you want to format something as
 let indent d =
   nest 2 (hardline ^^ align d)
 
-(* Repurposing a show instance *)
+let show_from_pp #a {| d : printable a |} : tac_showable a = {
+  show = (fun x -> render (pp x));
+}
+
+(* Repurposing a show instance, only used internally *)
 let from_show #a {| d : tac_showable a |} : printable a = {
   pp = (fun x -> arbitrary_string (show x));
 }

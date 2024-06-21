@@ -240,7 +240,7 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
                     (pp t_ss);]
   in
   let d = core_check_tot_term pst.pg t_ss tm_prop in
-  let d_valid = check_prop_validity pst.pg t_ss d in
+  let d_valid = T.with_policy T.ForceSMT (fun () -> check_prop_validity pst.pg t_ss d) in
 
   // let (| ss_new, t_ss, d, d_valid |) : ss_new:PS.ss_t { ss_new `ss_extends` pst.ss } &
   //                                      t_ss:term { t_ss == ss_new.(t) } &

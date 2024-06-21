@@ -98,11 +98,23 @@ type prover_state (preamble:preamble) = {
   solved : vprop;
   unsolved : list vprop;
 
+  (* Note: we substitute solved, as it can contain some of the uvars in
+     uvs, but not remaining_ctxt or preamble.frame which do not mention
+     them (see their typing hypotheses above, in pg, which is disjoint
+     from uvs. Substituting would not be wrong, just useless. *)
   k : continuation_elaborator preamble.g0 (preamble.ctxt * preamble.frame)
                               pg ((list_as_vprop remaining_ctxt * preamble.frame) * ss.(solved));
 
-  goals_inv : vprop_equiv (push_env pg uvs) preamble.goals (list_as_vprop unsolved * solved);
+  // GM: Why isn't the rhs substituted here?
+  goals_inv : vprop_equiv (push_env pg uvs)
+                preamble.goals
+                (list_as_vprop unsolved * solved);
   solved_inv : squash (freevars ss.(solved) `Set.subset` dom pg);
+  
+  progress : bool; (* used by prover and rules to check for progress and restart if so *)
+  allow_ambiguous : bool;
+  (* ^ true if we can skip the ambiguity check, used for functions like gather which
+  are inherently ambiguous, but safely so. *)
 }
 
 let is_terminal (#preamble:_) (st:prover_state preamble) =
@@ -123,7 +135,10 @@ let ss_extends (ss1 ss2:PS.ss_t) =
   Set.subset (PS.dom ss2) (PS.dom ss1) /\
   (forall (x:var). PS.contains ss2 x ==> PS.sel ss1 x == PS.sel ss2 x)
 
-let pst_extends (#preamble:_) (pst1 pst2:prover_state preamble) =
+let pst_extends (#preamble1 #preamble2:_)
+  (pst1 : prover_state preamble1)
+  (pst2 : prover_state preamble2)
+=
   pst1.pg `env_extends` pst2.pg /\
   pst1.uvs `env_extends` pst2.uvs /\
   pst1.ss `ss_extends` pst2.ss

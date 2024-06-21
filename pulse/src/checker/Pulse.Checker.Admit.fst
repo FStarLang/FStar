@@ -83,6 +83,7 @@ let check
     and environment. *)
     let open FStar.Stubs.Pprint in
     let open Pulse.PP in
+    let pre = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] pre in
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^

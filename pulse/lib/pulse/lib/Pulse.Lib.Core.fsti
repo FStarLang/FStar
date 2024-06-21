@@ -45,11 +45,14 @@ module T = FStar.Tactics.V2
   
      val pts_to (x:ref a) (v:a) : vprop
 *)
-val equate_by_smt : unit
+val equate_by_smt    : unit (* now meaningless. *)
+val equate_strict    : unit (* only use fastunif *)
+val equate_syntactic : unit (* only use term_eq *)
+
+(** This attribute allows to do ambiguous proving when calling a function. *)
+val allow_ambiguous : unit
+
 (***** begin vprop_equiv *****)
-
-#set-options "--print_implicits --ugly --print_universes"
-
 
 [@@erasable]
 val vprop : Type u#4

@@ -59,4 +59,4 @@ let check
   let (| p, p_typing |) = check_prop g p in
   let pv = check_prop_validity g p p_typing in
   let st_typing = T_IntroPure _ _ p_typing pv in
-  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint st_typing post_hint) res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint st_typing post_hint) res_ppname) post_hint t.range

@@ -40,6 +40,9 @@ class printable (a:Type) = {
   pp : a -> Tac document;
 }
 
+(* From a pp instance, we can get a free show instance. *)
+val show_from_pp (#a:Type) {| printable a |} : Pulse.Show.tac_showable a
+
 instance val printable_string : printable string
 instance val printable_unit   : printable unit
 instance val printable_bool   : printable bool

@@ -234,7 +234,7 @@ let check_effect_annotation g r (asc:comp_ascription) (c_computed:comp) : T.Tac 
       let typing = tm_inames_subset_typing g j i in
       // Or:
       // let typing = core_check_tot_term g phi tm_prop in
-      let tok = T.with_policy T.SMTSync (fun () -> try_check_prop_validity g phi typing) in
+      let tok = T.with_policy T.ForceSMT (fun () -> try_check_prop_validity g phi typing) in
       if None? tok then (
         let open Pulse.PP in
         fail_doc g (Some (RU.range_of_term i)) [

@@ -18,14 +18,18 @@ module Pulse.Checker.Prover.Match
 
 module T = FStar.Tactics
 
-open Pulse.Syntax
-open Pulse.Typing
-
-open Pulse.Checker.Base
 open Pulse.Checker.Prover.Base
 
-val match_q (#preamble:preamble) (pst:prover_state preamble)
-  (q:vprop) (unsolved':list vprop)
-  (_:squash (pst.unsolved == q::unsolved'))
-  (prover:prover_t)
-: T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst }))
+(* Full matching passes. *)
+
+val match_syntactic (#preamble:preamble) (pst:prover_state preamble)
+: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+
+val match_fastunif (#preamble:preamble) (pst:prover_state preamble)
+: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+
+val match_fastunif_i (#preamble:preamble) (pst:prover_state preamble)
+: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+
+val match_full (#preamble:preamble) (pst:prover_state preamble)
+: T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })

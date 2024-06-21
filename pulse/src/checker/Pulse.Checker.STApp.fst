@@ -67,18 +67,21 @@ let rec intro_uvars_for_logical_implicits (g:env) (uvs:env { disjoint g uvs }) (
   match ropt with
   | Some (b, Some Implicit, c_rest) ->
     let x = fresh (push_env g uvs) in
-    let uvs' = push_binding uvs x b.binder_ppname b.binder_ty in
-    let c_rest = open_comp_with c_rest (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in
+    let ppname = ppname_for_uvar b.binder_ppname in
+    let uvs' = push_binding uvs x ppname b.binder_ty in
+    let var = {nm_index = x; nm_ppname = ppname} in
+    let t_var = tm_var var in
+    let c_rest = open_comp_with c_rest t_var in
     begin
       match c_rest with
        | C_ST _
        | C_STAtomic _ _ _
        | C_STGhost _ _ ->
-         (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=null_var x};
+         (| uvs', push_env g uvs', {term=Tm_STApp {head=t;arg_qual=Some Implicit;arg=t_var};
                                     range=Pulse.RuntimeUtils.range_of_term t;
                                     effect_tag=as_effect_hint (ctag_of_comp_st c_rest) } |)
        | C_Tot ty ->
-         intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) (null_var x)) ty
+         intro_uvars_for_logical_implicits g uvs' (tm_pureapp t (Some Implicit) t_var) ty
     end
   | _ ->
     fail g None
@@ -108,6 +111,19 @@ let instantiate_implicits (g:env) (t:st_term { Tm_STApp? t.term })
         (Printf.sprintf "check_stapp.instantiate_implicits: expected an application term, found: %s"
            (show t))
 
+(* Should we allow ambiguous proving when calling [t]? (NB: [t]
+can be partially applied, hence we look at the head. *)
+let should_allow_ambiguous (t:term) : T.Tac bool =
+  let attr_name = "Pulse.Lib.Core.allow_ambiguous" in
+  match T.hua t with
+  | None -> false
+  | Some (hfv, _, _) ->
+    match T.lookup_typ (T.top_env ()) (T.inspect_fv hfv) with
+    | None -> false
+    | Some se ->
+      let attrs = T.sigelt_attrs se in
+      attrs |> T.tryFind (fun a -> T.is_fvar a attr_name)
+
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let apply_impure_function 
       (range:range)
@@ -129,6 +145,7 @@ let apply_impure_function
   = let {binder_ty=formal;binder_ppname=ppname}, bqual, comp_typ = b in
     assert (g `env_extends` g0);
     let post_hint : post_hint_opt g = post_hint in
+    let allow_ambiguous = should_allow_ambiguous head in
     is_arrow_tm_arrow ty_head;
     debug_log g (fun _ ->
       T.print (Printf.sprintf "st_app, head=%s, arg=%s, readback comp as %s\n"
@@ -201,9 +218,9 @@ let apply_impure_function
             "Expected an effectful application; got a pure term (could it be partially applied by mistake?)"
       in
       let (| st', c', st_typing' |) = match_comp_res_with_post_hint d post_hint in
-      debug_log g (fun _ -> T.print (Printf.sprintf "st_app: c' = %s\n"
-                                       (show #comp c')));
-      let framed = Prover.try_frame_pre_uvs ctxt_typing uvs (| st', c', st_typing' |)  res_ppname in
+      debug_log g (fun _ -> T.print (Printf.sprintf "st_app: c' = %s\n\tallow_ambiguous = %s\n"
+                                       (show #comp c') (show allow_ambiguous)));
+      let framed = Prover.try_frame_pre_uvs allow_ambiguous ctxt_typing uvs (| st', c', st_typing' |)  res_ppname in
       Prover.prove_post_hint framed post_hint range
     )
   

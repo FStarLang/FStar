@@ -14,12 +14,16 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.Match
+module Pulse.Checker.Prover.Match.Matchers
 
-open Pulse.Checker.Prover.Match.Comb
-open Pulse.Checker.Prover.Match.Matchers
+module T = FStar.Tactics
 
-let match_syntactic   = match_with "SYNTACTIC"      match_syntactic_11
-let match_fastunif    = match_with "FASTUNIF"       match_fastunif_11
-let match_fastunif_i  = match_with "FASTUNIF_INST"  match_fastunif_inst_11
-let match_full        = match_with "FULL"           match_full_11
+open Pulse.Checker.Prover.Base
+open Pulse.Checker.Prover.Match.Base
+
+(* The actual matchers, in 1-to-1 form. Usually called with Match.Comb.match_with *)
+
+val match_syntactic_11 : matcher_t
+val match_fastunif_11  : matcher_t
+val match_fastunif_inst_11 : matcher_t
+val match_full_11      : matcher_t

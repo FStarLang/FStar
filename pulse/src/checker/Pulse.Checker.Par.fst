@@ -63,5 +63,5 @@ let check
   let x = fresh g in
   assume (comp_u cL == comp_u cR);
   let d = T_Par _ _ _ _ _ x cL_typing cR_typing eL_typing eR_typing in
-  prove_post_hint (try_frame_pre pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
+  prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range
 #pop-options

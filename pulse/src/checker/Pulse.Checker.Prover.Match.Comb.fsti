@@ -14,12 +14,22 @@
    limitations under the License.
 *)
 
-module Pulse.Checker.Prover.Match
+module Pulse.Checker.Prover.Match.Comb
 
-open Pulse.Checker.Prover.Match.Comb
-open Pulse.Checker.Prover.Match.Matchers
+module T = FStar.Tactics
 
-let match_syntactic   = match_with "SYNTACTIC"      match_syntactic_11
-let match_fastunif    = match_with "FASTUNIF"       match_fastunif_11
-let match_fastunif_i  = match_with "FASTUNIF_INST"  match_fastunif_inst_11
-let match_full        = match_with "FULL"           match_full_11
+open Pulse.Syntax
+open Pulse.Typing
+
+open Pulse.Checker.Base
+open Pulse.Checker.Prover.Base
+open Pulse.Checker.Prover.Match.Base
+
+(* Combinators for matching passes (currently a single one) *)
+
+(* Do a pass over all unsolved goals to see if any can be matched with the given matcher. *)
+val match_with
+  (label : string)
+  (matcher : matcher_t)
+  (#preamble:_) (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
