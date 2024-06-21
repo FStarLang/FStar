@@ -662,4 +662,3 @@ val big_ghost_gather
     (squash (composable pcm v0 v1)) o
     (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-

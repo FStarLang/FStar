@@ -464,53 +464,87 @@ val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
 
 (* Some generic actions and combinators *)
 
-let pst_frame (#a:Type)
-              (#maybe_ghost:bool)
-              (#opened_invariants:inames)
-              (#pre:slprop)
-              (#post:a -> slprop)
-              (frame:slprop)
-              ($f:_pst_action_except a maybe_ghost opened_invariants pre post)
+let pst_frame
+      (#a:Type)
+      (#maybe_ghost:bool)
+      (#opened_invariants:inames)
+      (#pre:slprop)
+      (#post:a -> slprop)
+      (frame:slprop)
+      ($f:_pst_action_except a maybe_ghost opened_invariants pre post)
 : _pst_action_except a maybe_ghost opened_invariants (pre `star` frame) (fun x -> post x `star` frame)
-= admit()
+= coerce_action () <|
+  HeapSig.frame #_ #_ #_ #_
+      #(reveal_slprop pre)
+      #(fun x -> post x)
+      (reveal_slprop frame)
+      (coerce_action_back _ _ () f)
 
 let witness_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
 : pst_ghost_action_except (erased a) opened_invariants
            (h_exists p)
            (fun x -> p x)
-= admit()
+= calc (==) {
+    reveal (h_exists p);
+  (==) {}
+    reveal (H.exists_ (fun x -> reveal_slprop (p x)));
+  (==) { H.exists_extensionality (fun x -> reveal (p x)) (fun x -> reveal_slprop (p x)) }
+    H.exists_ (fun x -> reveal (p x));
+  };
+  coerce_action () <|
+  HeapSig.witness_exists #_ #_ #_ (fun x -> p x)
+
 
 let intro_exists (#opened_invariants:_) (#a:_) (p:a -> slprop) (x:erased a)
-  : pst_ghost_action_except unit opened_invariants
-           (p x)
-           (fun _ -> h_exists p)
-= admit ()
+: pst_ghost_action_except unit opened_invariants
+      (p x)
+      (fun _ -> h_exists p)
+= coerce_action () <|
+  HeapSig.intro_exists #_ #_ #_ (fun x -> reveal_slprop (p x)) x
 
-let lift_h_exists (#opened_invariants:_) (#a:_) (p:a -> slprop)
+let lift_h_exists (#opened_invariants:_) (#a:Type u#a) (p:a -> slprop u#m)
   : pst_ghost_action_except unit opened_invariants
            (h_exists p)
-           (fun _a -> h_exists #(U.raise_t a) (U.lift_dom p))
- = admit()
+           (fun _a -> h_exists #(U.raise_t u#a u#b a) (U.lift_dom p))
+ = calc (==) {
+    reveal_slprop <| h_exists #(U.raise_t u#a u#b a) (U.lift_dom p);
+  (==) { _ by (T.trefl()) }
+    reveal_slprop <| hide <| HeapSig.exists_ #sig #(U.raise_t u#a u#b a) (fun x -> reveal_slprop (U.lift_dom p x));
+  (==) {}
+    HeapSig.exists_ #sig #(U.raise_t u#a u#b a) (fun x -> reveal_slprop (U.lift_dom p x));
+  (==) { H.exists_extensionality #sig
+            (fun x -> reveal_slprop (U.lift_dom p x))
+            (HeapSig.lift_dom_ghost (fun x -> reveal_slprop (p x))) }
+    HeapSig.exists_ #sig #(U.raise_t u#a u#b a) (HeapSig.lift_dom_ghost (fun x -> reveal_slprop (p x)));
+   }; 
+   coerce_action () <|
+   HeapSig.lift_h_exists #_ #_ #_ (fun x -> reveal_slprop (p x))
+
 
 let elim_pure (#opened_invariants:_) (p:prop)
-  : pst_ghost_action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
-  = admit()
+: pst_ghost_action_except (u:unit{p}) opened_invariants (pure p) (fun _ -> emp)
+= coerce_action () <|
+  HeapSig.elim_pure #_ #_ p
 
-let intro_pure (#opened_invariants:_) (p:prop) (_:squash p)
-  : pst_ghost_action_except unit opened_invariants emp (fun _ -> pure p)
-  = admit()
+let intro_pure (#opened_invariants:_) (p:prop) (x:squash p)
+: pst_ghost_action_except unit opened_invariants emp (fun _ -> pure p)
+= coerce_action () <|
+  HeapSig.intro_pure #_ #_ p x
   
 let drop (#opened_invariants:_) (p:slprop)
-  : pst_ghost_action_except unit opened_invariants p (fun _ -> emp)
-  = admit()
+: pst_ghost_action_except unit opened_invariants p (fun _ -> emp)
+= coerce_action () <|
+  HeapSig.drop #_ #_ (reveal_slprop p)
 
 let lift_ghost
       (#a:Type)
       #opened_invariants #p #q
       (ni_a:non_info a)
       (f:erased (pst_ghost_action_except a opened_invariants p q))
-  : pst_ghost_action_except a opened_invariants p q
-  = admit ()
+: pst_ghost_action_except a opened_invariants p q
+= coerce_action () <|
+  HeapSig.lift_ghost #_ #_ #_ #(reveal_slprop p) #(fun x -> q x) ni_a
+    (coerce_action_back _ _ () f)
 
 (* Concrete references to "small" types *)
 let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a

@@ -309,3 +309,77 @@ val cm_e_slprop (hs:heap_sig u#h)
   c.unit == hide hs.emp /\
   (forall x y. c.mult x y == hide (hs.star (reveal x) (reveal y)))
 }
+
+(* Some heap generic actions *)
+
+val frame
+      (#h:heap_sig u#h)
+      (#opened_invariants:inames h)
+      (#maybe_ghost:bool)
+      (#a:Type u#a)
+      (#pre:h.slprop)
+      (#post:a -> GTot h.slprop)
+      (frame:h.slprop)
+      ($f:_action_except h a maybe_ghost opened_invariants pre post)
+: _action_except h a maybe_ghost opened_invariants (pre `h.star` frame) (fun x -> post x `h.star` frame)
+
+val witness_exists 
+      (#h:heap_sig u#h)
+      (#opened_invariants:inames h)
+      (#a:Type u#a)
+      (p:a -> GTot h.slprop)
+: ghost_action_except h (erased a) opened_invariants
+           (exists_ p)
+           (fun x -> p x)
+
+val intro_exists
+      (#h:heap_sig u#h)
+      (#opened_invariants:_)
+      (#a:Type u#a)
+      (p:a -> GTot h.slprop)
+      (x:erased a)
+: ghost_action_except h unit opened_invariants
+      (p x)
+      (fun _ -> exists_ p)
+
+module U = FStar.Universe
+let lift_dom_ghost #a #b (q:a -> GTot b) : U.raise_t a -> GTot b =
+  fun v -> q (U.downgrade_val v)
+
+val lift_h_exists
+      (#h:heap_sig u#h)
+      (#opened_invariants:_)
+      (#a:Type u#a)
+      (p:a -> GTot h.slprop)
+: ghost_action_except h unit opened_invariants
+    (exists_ p)
+    (fun _a -> exists_ #_ #(U.raise_t a) (lift_dom_ghost p))
+
+val elim_pure
+      (#h:heap_sig u#h)
+      (#opened_invariants:_)
+      (p:prop)
+: ghost_action_except h (squash p) opened_invariants (h.pure p) (fun _ -> h.emp)
+
+val intro_pure
+      (#h:heap_sig u#h)
+      (#opened_invariants:_)
+      (p:prop)
+      (_:squash p)
+: ghost_action_except h unit opened_invariants h.emp (fun _ -> h.pure p)
+  
+val drop 
+      (#h:heap_sig u#h)
+      (#opened_invariants:_)
+      (p:h.slprop)
+: ghost_action_except h unit opened_invariants p (fun _ -> h.emp)
+
+val lift_ghost
+      (#h:heap_sig u#h)
+      (#opened_invariants:inames h)
+      (#a:Type u#a)
+      (#p:h.slprop)
+      (#q:a -> GTot h.slprop)
+      (ni_a:non_info a)
+      (f:erased (ghost_action_except h a opened_invariants p q))
+: ghost_action_except h a opened_invariants p q
