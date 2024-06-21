@@ -168,7 +168,7 @@ let star_congruence (p q:slprop)
 : Lemma
   (requires up (down p) == p /\ up (down q) == q)
   (ensures up (down (p `star` q)) == p `star` q)
-= admit()
+= H2.emp_unit p; H2.emp_unit q
 
 let update_ghost (m0:mem u#a) (m1:erased (mem u#a) { is_ghost_action m0 m1 })
 : m:mem u#a { m == reveal m1 }

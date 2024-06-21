@@ -722,11 +722,91 @@ let mem_invariant_equiv_ext
   | Inl j -> mem_invariant_equiv_ext_l e m i p
   | Inr j -> mem_invariant_equiv_ext_r e m i p
 
+let down_star_ext
+    (#h:heap_sig u#h)
+    (p q:ext_slprop h)
+: Lemma (down (p `star` q) ==
+         down p `h.star` down q)
+= introduce
+    forall m. h.interp (down (p `star` q)) m <==>
+              h.interp (down p `h.star` down q) m
+  with ( 
+    introduce 
+       h.interp (down (p `star` q)) m ==> 
+       h.interp (down p `h.star` down q) m
+    with _ . (
+      assert (h.interp (down (p `star` q)) m);
+      down_p_affine (p `star` q);
+      h.interp_as (down_p (p `star` q));
+      let mm = { small_core=m; big_core = H2.base_heap.sep.empty } in
+      assert (down_p (p `star` q) m);
+      assert (interp (p `star` q) mm);
+      eliminate exists m0 m1.
+        disjoint m0 m1 /\
+        mm == join m0 m1 /\
+        interp p m0 /\
+        interp q m1
+      returns _
+      with _ . (
+        h.star_equiv (down p) (down q) m;
+        assert (H2.base_heap.sep.join m0.big_core m1.big_core == mm.big_core);
+        H2.base_heap.sep.join_empty_inverse m0.big_core m1.big_core;
+        assert (m0.big_core == mm.big_core);
+        assert (m1.big_core == mm.big_core);
+        assert (h.sep.disjoint m0.small_core m1.small_core);
+        down_p_affine p;
+        down_p_affine q;
+        h.interp_as (down_p p);
+        h.interp_as (down_p q)
+      )
+    );
+    introduce 
+       h.interp (down p `h.star` down q) m ==>
+       h.interp (down (p `star` q)) m
+    with _ . (
+      h.star_equiv (down p) (down q) m;
+      assert (h.interp (down p `h.star` down q) m);
+      // admit();
+      eliminate exists m0 m1.
+        h.sep.disjoint m0 m1 /\
+        m == h.sep.join m0 m1 /\
+        h.interp (down p) m0 /\
+        h.interp (down q) m1
+      returns _
+      with _ . (
+        down_p_affine (p `star` q);
+        h.interp_as (down_p (p `star` q));
+        let mm = { small_core = m; big_core = H2.base_heap.sep.empty } in
+        down_p_affine p;
+        down_p_affine q;
+        h.interp_as (down_p p);
+        h.interp_as (down_p q);
+        assert (down_p p m0);
+        assert (down_p q m1);
+        let mm0 = { small_core = m0; big_core = H2.base_heap.sep.empty } in
+        let mm1 = { small_core = m1; big_core = H2.base_heap.sep.empty } in
+        H2.base_heap.sep.join_empty H2.base_heap.sep.empty;
+        assert ((ext_sep h).disjoint mm0 mm1);
+        assert ((p `star` q) mm);
+        assert (down_p (p `star` q) m)
+      )
+    )
+  );
+  h.slprop_extensionality (down (p `star` q)) (down p `h.star` down q)
+
 let star_congruence (#h:heap_sig u#a) (p q:ext_slprop h)
 : Lemma
   (requires is_boxable_ext p /\ is_boxable_ext q)
   (ensures is_boxable_ext (p `star` q))
-= admit()
+= calc (==) {
+    up (down (p `star` q));
+  (==) { down_star_ext p q }
+    up (down p `h.star` down q);
+  (==) { up_star_ext (down p) (down q) }
+    up (down p) `star` up (down q);
+  (==) { }
+    p `star` q;
+  }
 
 let update_ghost (#h:heap_sig u#h) (m0:ext_mem h) (m1:erased (ext_mem h) { is_ghost_action h m0 m1 })
 : m:ext_mem h { m == reveal m1 }
@@ -1764,10 +1844,6 @@ let ghost_gather
   lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
   coerce_action res _ _ ()
 
-// let interp_exists (#h:heap_sig u#h) (#a:Type u#a) (p: a -> h.slprop)
-// : Lemma (forall m. h.interp (exists_ p) m <==> (exists x. h.interp (p x) m))
-// = admit() // h.interp_as (fun m -> exists (x:a). h.interp (p x) m)
-
 let interp_up_down (#h:heap_sig u#h) (p:ext_slprop h)
 : Lemma (forall m. interp (up (down p)) m <==> interp p { m with big_core=H2.base_heap.sep.empty})
 = introduce forall m.
@@ -1806,72 +1882,7 @@ let down_star
     (p q:(extend h).slprop)
 : Lemma ((extend h).down (p `(extend h).star` q) ==
          (extend h).down p `h.star` (extend h).down q)
-= introduce
-    forall m. h.interp (down (p `star` q)) m <==>
-              h.interp (down p `h.star` down q) m
-  with ( 
-    introduce 
-       h.interp (down (p `star` q)) m ==> 
-       h.interp (down p `h.star` down q) m
-    with _ . (
-      assert (h.interp (down (p `star` q)) m);
-      down_p_affine (p `star` q);
-      h.interp_as (down_p (p `star` q));
-      let mm = { small_core=m; big_core = H2.base_heap.sep.empty } in
-      assert (down_p (p `star` q) m);
-      assert (interp (p `star` q) mm);
-      eliminate exists m0 m1.
-        disjoint m0 m1 /\
-        mm == join m0 m1 /\
-        interp p m0 /\
-        interp q m1
-      returns _
-      with _ . (
-        h.star_equiv (down p) (down q) m;
-        assert (H2.base_heap.sep.join m0.big_core m1.big_core == mm.big_core);
-        H2.base_heap.sep.join_empty_inverse m0.big_core m1.big_core;
-        assert (m0.big_core == mm.big_core);
-        assert (m1.big_core == mm.big_core);
-        assert (h.sep.disjoint m0.small_core m1.small_core);
-        down_p_affine p;
-        down_p_affine q;
-        h.interp_as (down_p p);
-        h.interp_as (down_p q)
-      )
-    );
-    introduce 
-       h.interp (down p `h.star` down q) m ==>
-       h.interp (down (p `star` q)) m
-    with _ . (
-      h.star_equiv (down p) (down q) m;
-      assert (h.interp (down p `h.star` down q) m);
-      // admit();
-      eliminate exists m0 m1.
-        h.sep.disjoint m0 m1 /\
-        m == h.sep.join m0 m1 /\
-        h.interp (down p) m0 /\
-        h.interp (down q) m1
-      returns _
-      with _ . (
-        down_p_affine (p `star` q);
-        h.interp_as (down_p (p `star` q));
-        let mm = { small_core = m; big_core = H2.base_heap.sep.empty } in
-        down_p_affine p;
-        down_p_affine q;
-        h.interp_as (down_p p);
-        h.interp_as (down_p q);
-        assert (down_p p m0);
-        assert (down_p q m1);
-        let mm0 = { small_core = m0; big_core = H2.base_heap.sep.empty } in
-        let mm1 = { small_core = m1; big_core = H2.base_heap.sep.empty } in
-        H2.base_heap.sep.join_empty H2.base_heap.sep.empty;
-        assert ((ext_sep h).disjoint mm0 mm1);
-        assert ((p `star` q) mm);
-        assert (down_p (p `star` q) m)
-      )
-    )
-  );
-  h.slprop_extensionality (down (p `star` q)) (down p `h.star` down q)
+= down_star_ext p q
 
 let up_star (#h:heap_sig u#a) (p q:h.slprop)
 : Lemma (up (p `h.star` q) == (up p `star` up q))
