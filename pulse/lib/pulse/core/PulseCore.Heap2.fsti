@@ -541,6 +541,8 @@ let action_framing
   affine_star fp frame h0;
   emp_unit fp
 
+val select (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+
 (** [sel] is a ghost read of the value contained in a heap reference *)
 val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a
 

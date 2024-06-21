@@ -22,8 +22,6 @@ noeq
 type ext_mem (h:heap_sig u#a) : Type u#(a + 2) = {
     small : h.mem;
     big : base_heap_mem u#(a + 1);
-    ctr : nat;
-//    ghost_ctr: erased nat;
 }
 
 (* A lens between mem and core *)
@@ -35,8 +33,6 @@ let get_core (#h:heap_sig u#h) (m:ext_mem h) : core h = {
 let put_core (#h:heap_sig u#h) (c:core h) (m:ext_mem h) : ext_mem h = {
     small = h.sep.lens_core.put c.small_core m.small;
     big = H2.base_heap.sep.lens_core.put c.big_core m.big;
-    ctr = m.ctr;
-    // ghost_ctr = m.ghost_ctr;
 }
 
 let get_put (#h:heap_sig u#h) (m:ext_mem h)
@@ -159,8 +155,7 @@ let full_mem_pred (h:heap_sig u#a) (m:ext_mem h) : prop =
 
 let is_ghost_action (h:heap_sig u#a) (m0 m1:ext_mem h) : prop =
     h.is_ghost_action m0.small m1.small /\
-    H2.base_heap.is_ghost_action m0.big m1.big /\
-    m0.ctr == m1.ctr
+    H2.base_heap.is_ghost_action m0.big m1.big
 
 let ext_affine_mem_prop (#m:Type u#a) (sep:separable m)
 : Type u#(max 1 a)
@@ -809,8 +804,7 @@ let star_congruence (#h:heap_sig u#a) (p q:ext_slprop h)
 
 let update_ghost (#h:heap_sig u#h) (m0:ext_mem h) (m1:erased (ext_mem h) { is_ghost_action h m0 m1 })
 : m:ext_mem h { m == reveal m1 }
-= { ctr=m0.ctr;
-    small = h.update_ghost m0.small m1.small; 
+= { small = h.update_ghost m0.small m1.small; 
     big = H2.base_heap.update_ghost m0.big m1.big }
 
 let extend (h:heap_sig u#a) = {
@@ -1330,32 +1324,32 @@ let mem_invariant_rest (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 = up (h.mem_invariant (down_inames e) m.small) `star`
   istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big)
 
-let heap_cell_evolves (h0 h1:option H.cell)
-: prop
-= match h0, h1 with
-  | None, None -> True
-  | None, Some (H.Ref meta _ _ _) -> reveal meta == false
-  | Some (H.Ref meta a p v), Some (H.Ref meta' a' p' v') ->
-    meta == meta' /\ (reveal meta ==> a==a' /\ p==p' /\ v==v')
-  | _, _ -> False
+// let heap_cell_evolves (h0 h1:option H.cell)
+// : prop
+// = match h0, h1 with
+//   | None, None -> True
+//   | None, Some (H.Ref meta _ _ _) -> reveal meta == false
+//   | Some (H.Ref meta a p v), Some (H.Ref meta' a' p' v') ->
+//     meta == meta' /\ (reveal meta ==> a==a' /\ p==p' /\ v==v')
+//   | _, _ -> False
 
-let heaps_preserve_inames (m0 m1:H2.base_heap.mem) =
-  H2.ghost_ctr m0 == H2.ghost_ctr m1 /\
-  (forall (addr:nat).
-    heap_cell_evolves (H2.select_ghost addr (core_of m0)) (H2.select_ghost addr (core_of m1)))
+// let heaps_preserve_inames (m0 m1:H2.base_heap.mem) =
+//   H2.ghost_ctr m0 == H2.ghost_ctr m1 /\
+//   (forall (addr:nat).
+//     heap_cell_evolves (H2.select_ghost addr (core_of m0)) (H2.select_ghost addr (core_of m1)))
 
-let preserves_inames 
-    (#a:Type u#a)
-    (#mg:bool)
-    (#pre:base_slprop u#h)
-    (#post:a -> GTot (base_slprop u#h))
-    (action:_action_except H2.base_heap a mg Set.empty pre post)
-= forall (m0:full_mem H2.base_heap) frame. 
-    interpret (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0) m0
-    ==> ( 
-    let x, m1 = action frame m0 in
-    heaps_preserve_inames m0 m1
-    )
+// let preserves_inames 
+//     (#a:Type u#a)
+//     (#mg:bool)
+//     (#pre:base_slprop u#h)
+//     (#post:a -> GTot (base_slprop u#h))
+//     (action:_action_except H2.base_heap a mg Set.empty pre post)
+// = forall (m0:full_mem H2.base_heap) frame. 
+//     interpret (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0) m0
+//     ==> ( 
+//     let x, m1 = action frame m0 in
+//     heaps_preserve_inames m0 m1
+//     )
 
 #push-options "--ifuel 2 --fuel 1"
 let sl_pure_imp_ext_aux
@@ -1403,29 +1397,48 @@ let sl_pure_imp_ext_trivial
     (sl_pure_imp p q)
     (pure True);
   (extend h).pure_true_emp ()
-  
+
+let free_above_ghost_ctr (m:base_heap_mem u#a)
+= forall addr. addr >= H2.ghost_ctr m ==> H2.select_ghost addr (core_of m) == None
+
+let invariant_of_one_cell_trivial
+       (#h:heap_sig u#a)
+       (addr:nat)
+       (e:eset (ext_iname h))
+       (m:base_heap_mem u#(a + 1))
+: Lemma 
+  (requires (
+    match H2.select_ghost addr (core_of m) with
+    | None -> True
+    | Some (H.Ref meta _ _ _) -> reveal meta == false))
+  (ensures invariant_of_one_cell #h addr e (core_of m) == emp)
+= match H2.select_ghost addr (core_of m) with
+  | None -> ()
+  | Some cell1 -> sl_pure_imp_ext_trivial #h (cell_pred_pre h cell1) (cell_pred_post h cell1)
+
 let istore_invariant_eq_frame
     (#h:heap_sig u#h)
     (ex:inames (extend h))
     (m0 m1:ext_mem h)
 : Lemma 
   (requires
-    heaps_preserve_inames m0.big m1.big /\
+    H2.heaps_preserve_inames m0.big m1.big /\
     m0.small == m1.small /\
-    inames_ok ex m0)
+    inames_ok ex m0 /\
+    H2.free_above_ghost_ctr m0.big)
   (ensures 
     (istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big) ==
      istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big)) /\
     inames_ok ex m1)
 = assert (inames_ok ex m1);
-  let aux0 (c:nat)
+  let aux0 (c:nat { c <= H2.ghost_ctr m0.big })
     : Lemma (invariant_of_one_cell #h c ex (core_of m0.big)
               == invariant_of_one_cell #h c ex (core_of m1.big))
-    = let m0 = core_of m0.big in
-      let m1 = core_of m1.big in
+    = let core0 = core_of m0.big in
+      let core1 = core_of m1.big in
       if Inr c `Set.mem` ex then ()
       else (
-        match H2.select_ghost c m0, H2.select_ghost c m1 with
+        match H2.select_ghost c core0, H2.select_ghost c core1 with
         | Some cell0, Some cell1 -> 
           assert (cell_pred_pre h cell0 <==> cell_pred_pre h cell1);
           FStar.PropositionalExtensionality.apply
@@ -1436,18 +1449,38 @@ let istore_invariant_eq_frame
             (cell_pred_pre h cell0) 
             (cell_pred_post h cell0)
             (cell_pred_post h cell1)
-        | None, Some cell1 ->
-          sl_pure_imp_ext_trivial #h (cell_pred_pre h cell1) (cell_pred_post h cell1)
-        | _ -> ()
+        | _ ->
+          invariant_of_one_cell_trivial c ex m1.big
       )
   in
-  let rec aux (c:nat)
+  let rec aux (c:nat { c <= H2.ghost_ctr m0.big })
     : Lemma (istore_invariant #h c ex (core_of m0.big)
              == istore_invariant #h c ex (core_of m1.big))
     = aux0 c;
       if c = 0 then () else aux (c - 1)
   in
-  aux (H2.ghost_ctr m0.big)
+  let rec aux_diff (c:nat { H2.ghost_ctr m0.big <= c /\ c <= H2.ghost_ctr m1.big })
+    : Lemma (istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big)
+             == istore_invariant #h c ex (core_of m1.big))
+    = if c = H2.ghost_ctr m0.big
+      then aux c
+      else (
+        assert (H2.select_ghost c (core_of m0.big) == None);
+        invariant_of_one_cell_trivial #h c ex m1.big;
+        calc (==) {
+          istore_invariant #h c ex (core_of m1.big);
+        (==) {}
+          invariant_of_one_cell #h c ex (core_of m1.big) `star`
+          istore_invariant #h (c - 1) ex (core_of m1.big);
+        (==) { invariant_of_one_cell_trivial #h c ex m1.big }
+          emp `star`
+          istore_invariant #h (c - 1) ex (core_of m1.big);
+        (==) { ac_lemmas_ext h; aux_diff (c - 1) }
+          istore_invariant #h (H2.ghost_ctr (m0.big)) ex (core_of m0.big);
+        }
+      )
+  in
+  aux_diff (H2.ghost_ctr m1.big)
 #pop-options
 
 #push-options "--fuel 0 --ifuel 0"
@@ -1549,6 +1582,15 @@ let lower_frame
 = let frame' = lower_frame_core p frame m in
   (| frame', (fun q m' -> ()) |)
 
+let free_above_mem_invariant
+      (m:base_heap_mem)
+      (pre frame:base_slprop)
+: Lemma 
+  (requires interpret #H2.base_heap (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m) m)
+  (ensures H2.free_above_ghost_ctr m)
+= H2.base_heap.star_equiv (pre `H2.base_heap.star` frame) (H2.base_heap.mem_invariant Set.empty m) (core_of m);
+  FStar.Classical.forall_intro (H2.mem_invariant_interp Set.empty m)
+
 let lift_base_heap_action
     (#h:heap_sig u#h)
     (#a:Type u#a)
@@ -1557,7 +1599,7 @@ let lift_base_heap_action
     (#pre:erased base_slprop)
     (#post:a -> GTot base_slprop)
     (action:_action_except H2.base_heap a mg Set.empty pre post {
-      preserves_inames action
+      H2.preserves_inames action
     })
 : _action_except (extend h)
     a mg ex
@@ -1594,6 +1636,8 @@ let lift_base_heap_action
           frame' `H2.base_heap.star`
           H2.base_heap.mem_invariant Set.empty m0.big;
         };
+        free_above_mem_invariant m0.big pre frame';
+        assert (H2.free_above_ghost_ctr m0.big);
         let (x, m1') = action frame' m0.big in
         calc (==) {
           post x `H2.base_heap.star`
@@ -1648,8 +1692,7 @@ let select_refine
     (v:a{compatible p x v /\ p.refine v}) e
     ((extend h).pts_to r x)
     (fun v -> (extend h).pts_to r (f v))
-= assume (preserves_inames (H2.read #Set.empty r x f));
-  lift_base_heap_action (H2.read r x f)
+= lift_base_heap_action (H2.read r x f)
 
 
 let upd_gen
@@ -1665,8 +1708,7 @@ let upd_gen
     unit e
     ((extend h).pts_to r x)
     (fun _ -> (extend h).pts_to r y)
-= assume (preserves_inames (H2.write #Set.empty r x y f));
-  lift_base_heap_action (H2.write r x y f)
+= lift_base_heap_action (H2.write r x y f)
 
 
 let coerce_action (#h:heap_sig) #a #mg #e #pre (#post0:a -> GTot h.slprop)
@@ -1690,8 +1732,7 @@ let split_action
     unit e
     ((extend h).pts_to r (v0 `op pcm` v1))
     (fun _ -> (extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
-= assume (preserves_inames (H2.share #Set.empty r v0 v1));
-  let res
+= let res
     : ghost_action_except
         (extend h)
         unit e
@@ -1716,8 +1757,7 @@ let gather_action
     (squash (composable pcm v0 v1)) e
     ((extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
     (fun _ -> (extend h).pts_to r (op pcm v0 v1))
-= assume (preserves_inames (H2.gather #Set.empty r v0 v1));
-  let res = lift_base_heap_action #h #_ #true #e (H2.gather #Set.empty r v0 v1) in
+= let res = lift_base_heap_action #h #_ #true #e (H2.gather #Set.empty r v0 v1) in
   lift_star #h (H2.base_heap.pts_to r v0) (H2.base_heap.pts_to r v1);
   coerce_action res _ _ ()
 
@@ -1732,8 +1772,7 @@ let alloc_action
     (ref a pcm) e
     (extend h).emp
     (fun r -> (extend h).pts_to r x)
-= assume (preserves_inames (H2.extend #Set.empty #a #pcm x));
-  let res = lift_base_heap_action #h #(ref a pcm) #false #e (H2.extend #Set.empty #a #pcm x) in
+= let res = lift_base_heap_action #h #(ref a pcm) #false #e (H2.extend #Set.empty #a #pcm x) in
   up_emp_alt h;
   coerce_action res _ _ ()
 
@@ -1749,8 +1788,7 @@ let pts_to_not_null_action
     (squash (not (is_null r))) e
     ((extend h).pts_to r v)
     (fun _ -> (extend h).pts_to r v)
-= assume (preserves_inames (H2.pts_to_not_null_action #Set.empty r v));
-  let res = lift_base_heap_action  (H2.pts_to_not_null_action r v) in
+= let res = lift_base_heap_action  (H2.pts_to_not_null_action r v) in
   coerce_action res _ _ ()
 
 // Ghost actions
@@ -1768,7 +1806,7 @@ let ghost_alloc
     e
     (extend h).emp 
     (fun r -> (extend h).ghost_pts_to false r x)
-= assume (preserves_inames (H2.ghost_extend false #Set.empty #a #pcm x));
+= assume (H2.preserves_inames (H2.ghost_extend false #Set.empty #a #pcm x));
   let res = lift_base_heap_action #h #(ghost_ref a pcm) #true #e (H2.ghost_extend false #Set.empty #a #pcm x) in
   up_emp_alt h;
   coerce_action res _ _ ()
@@ -1789,8 +1827,7 @@ let ghost_read
     o
     ((extend h).ghost_pts_to false r x)
     (fun v -> (extend h).ghost_pts_to false r (f v))
-= assume (preserves_inames (H2.ghost_read #Set.empty #false r x f));
-  let res = lift_base_heap_action 
+= let res = lift_base_heap_action 
               #h #(erased (v:a{compatible p x v /\ p.refine v})) 
               #true #o (H2.ghost_read #Set.empty #false r x f) in
   coerce_action res _ _ ()
@@ -1808,8 +1845,7 @@ let ghost_write
     unit o 
     ((extend h).ghost_pts_to false r x)
     (fun _ -> (extend h).ghost_pts_to false r y)
-= assume (preserves_inames (H2.ghost_write #Set.empty #false r x y f));
-  let res = lift_base_heap_action #h #unit #true #o (H2.ghost_write #Set.empty #false r x y f) in
+= let res = lift_base_heap_action #h #unit #true #o (H2.ghost_write #Set.empty #false r x y f) in
   coerce_action res _ _ ()
 
 let ghost_share
@@ -1826,8 +1862,7 @@ let ghost_share
     ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
     (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
               (extend h).ghost_pts_to false r v1)
-= assume (preserves_inames (H2.ghost_share #Set.empty #false r v0 v1));
-  let res = lift_base_heap_action #h #unit #true #o (H2.ghost_share #Set.empty #false r v0 v1) in
+= let res = lift_base_heap_action #h #unit #true #o (H2.ghost_share #Set.empty #false r v0 v1) in
   lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
   coerce_action res _ _ ()
 
@@ -1844,8 +1879,7 @@ let ghost_gather
     ((extend h).ghost_pts_to false r v0 `(extend h).star`
      (extend h).ghost_pts_to false r v1)
     (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
-= assume (preserves_inames (H2.ghost_gather #Set.empty #false r v0 v1));
-  let res = lift_base_heap_action #h #_ #true #o (H2.ghost_gather #Set.empty #false r v0 v1) in
+= let res = lift_base_heap_action #h #_ #true #o (H2.ghost_gather #Set.empty #false r v0 v1) in
   lift_star #h (H2.base_heap.ghost_pts_to false r v0) (H2.base_heap.ghost_pts_to false r v1);
   coerce_action res _ _ ()
 

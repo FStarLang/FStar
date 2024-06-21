@@ -7,7 +7,7 @@ noeq
 type mem : Type u#(a + 1) = {
     heap: H2.heap u#a;
     ctr: nat;
-    ghost_ctr: erased nat
+    ghost_ctr: erased nat;
 }
 
 let lens_core : lens (mem u#a) (H2.heap u#a) = {
@@ -115,7 +115,10 @@ let interp_as (p:affine_mem_prop sep)
     FStar.PropositionalExtensionality.apply (interp (as_slprop p) c) (p c)
   )
 
-let free_above (m:mem u#a) = forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)
+let free_above (m:mem u#a) = 
+  (forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)) /\
+  (forall i. i >= m.ctr ==> None? (H2.select i m.heap))
+
 let mem_invariant (is:eset unit) (m:mem u#a)
 : slprop u#a
 = pure (free_above m)
@@ -227,12 +230,10 @@ let core_ghost_ref_as_addr (r:core_ghost_ref)
 
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
-let mem_invariant_interp (ex:inames base_heap) (h:base_heap.mem)
-: Lemma (interpret (base_heap.mem_invariant ex h) h <==>
-         (forall addr.
-            addr >= ghost_ctr h ==>
-            None? (select_ghost addr (core_of h))))
-= base_heap.pure_interp (free_above h) h.heap
+let mem_invariant_interp (ex:inames base_heap) (h0 h1:base_heap.mem)
+: Lemma (interpret (base_heap.mem_invariant ex h0) h1 ==>
+         free_above_ghost_ctr h0)
+= base_heap.pure_interp (free_above h0) h1.heap
 let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 : Lemma (inames_ok ex h)
 = ()
