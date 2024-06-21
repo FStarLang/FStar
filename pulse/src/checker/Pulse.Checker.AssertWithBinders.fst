@@ -407,9 +407,11 @@ let check
     let rhs = subst_term rhs uvs_closing in
     let body = subst_st_term body_opened uvs_closing in
     let bs = close_binders uvs_bs in
+    (* Since this rewrite is easy enough to show by unification, we always
+    mark them with the vprop_equiv_norm tactic. *)
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs;
-                                   tac_opt = None };
+                                   tac_opt = Some Pulse.Reflection.Util.vprop_equiv_norm_tm };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
     let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);

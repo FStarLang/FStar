@@ -61,6 +61,7 @@ let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
 
+let vprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "vprop_equiv_norm")))
 
 (* The "plicities" *)
 let ex t : R.argv = (t, R.Q_Explicit)
