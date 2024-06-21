@@ -148,7 +148,7 @@ let star  (p1 p2:slprop u#a)
 module F = FStar.FunctionalExtensionality
 let h_exists (#a:Type u#b) (f: (a -> slprop u#a))
 : slprop u#a
-= H.exists_ sig #a (fun x -> f x)
+= H.exists_ #sig #a (fun x -> reveal_slprop (f x))
 
 (***** Properties of separation logic equivalence *)
 let emp_unit (p:slprop)
@@ -181,24 +181,79 @@ let star_congruence (p1 p2 p3 p4:slprop)
 
 let big_star_congruence (p1 p2:big_vprop u#a)
 : Lemma (is_big (p1 `star` p2))
-= admit()
+= sig.star_congruence p1 p2
 
+module T = FStar.Tactics.V2
 let big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
   (requires forall x. is_big (p x))
   (ensures is_big (h_exists p))
-= admit()
+= introduce forall x. is_big (reveal_slprop (p x))
+  with (  
+    assert (is_big (p x))  
+  );
+  assert (H.is_boxable (H.exists_ #sig #a (fun x -> reveal_slprop (p x))))
+    by (T.mapply (`E.exists_congruence))
 
 let small_star_congruence (p1 p2:vprop u#a)
 : Lemma (is_small (p1 `star` p2))
+= small_is_also_big p1;
+  small_is_also_big p2;
+  calc (==) {
+    reveal_slprop <| up2 (down2 (p1 `star` p2));
+  (==) {}
+    sig.up (small_sig.up (small_sig.down (sig.down (p1 `star` p2))));
+  (==) { E.down_star p1 p2 }
+    sig.up (small_sig.up (small_sig.down (down p1 `small_sig.star` down p2)));
+  (==) { E.down_star #B.base_heap (down p1) (down p2) }
+    sig.up (small_sig.up (down2 p1 `B.base_heap.star` down2 p2));
+  (==) { E.up_star #B.base_heap (down2 p1) (down2 p2) }
+    sig.up (small_sig.up (down2 p1) `small_sig.star` (small_sig.up (down2 p2)));
+  (==) { E.up_star #small_sig (small_sig.up (down2 p1)) (small_sig.up (down2 p2)) }
+    reveal_slprop (p1 `star` p2);
+  }
+
+let down_exists_alt #a (p: a -> slprop)
+: Lemma 
+  (requires True) //forall x. is_big (p x))
+  (ensures down (h_exists p) ==
+           hide <| H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down (p x)))
 = admit()
+
+// let down_up_alt (p:big_slprop)
+// : Lemma (down (up p) == p)
+//         [SMTPat (down (up p))]
+// = sig.up_down p
+
+let split_small (p:slprop u#a)
+: Lemma (requires is_small p)
+        (ensures H.is_boxable #small_sig (small_sig.non_info_slprop (down p)))
+= small_is_also_big p;
+  calc (==) {
+   hide <| small_sig.up (small_sig.down (down p));
+  (==) {  sig.up_down (small_sig.up (small_sig.down (down p))) }
+   down (up (small_sig.up (small_sig.down (down p))));
+  (==) { }
+   down (up2 (down2 p));
+  (==) {}
+   down p;
+  }
 
 let small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
   (requires forall x. is_small (p x))
   (ensures is_small (h_exists p))
-= admit()
-
+= FStar.Classical.forall_intro small_is_also_big;
+  big_exists_congruence #a p;
+  assert (is_big (h_exists p));
+  down_exists_alt #a p;
+  assert (forall x. H.is_boxable #small_sig (small_sig.non_info_slprop (down (p x))))
+      by (let _ = T.forall_intro () in
+          T.mapply (`split_small));
+  assert (H.is_boxable #small_sig
+           (H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down (p x))))
+     by (T.mapply (`E.exists_congruence))
+     
 let h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
     (requires (forall x. p x `equiv` q x))

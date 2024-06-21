@@ -196,4 +196,4 @@ val exists_congruence
         (p:a -> base_heap.slprop)
 : Lemma 
     (requires forall x. is_boxable (p x))
-    (ensures is_boxable (exists_ base_heap p))
+    (ensures is_boxable (exists_ p))

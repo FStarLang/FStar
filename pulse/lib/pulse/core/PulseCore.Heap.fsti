@@ -129,7 +129,12 @@ val join_associative (h0 h1 h2:heap)
 val join_empty (h:heap)
   : Lemma (disjoint h empty_heap /\
            join h empty_heap == h)
-   
+
+val join_empty_inverse (m0 m1:heap)
+: Lemma 
+  (requires disjoint m0 m1 /\ join m0 m1 == empty_heap)
+  (ensures m0 == empty_heap /\ m1 == empty_heap)
+
 (**** Separation logic over heaps *)
 
 (**

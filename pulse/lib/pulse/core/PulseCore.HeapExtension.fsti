@@ -244,3 +244,13 @@ val exists_congruence
 : Lemma
     (requires forall x. is_boxable (p x))
     (ensures is_boxable (exists_ p))
+
+val down_star
+    (#h:heap_sig u#h)
+    (p q:(extend h).slprop)
+: Lemma ((extend h).down (p `(extend h).star` q) ==
+         (extend h).down p `h.star` (extend h).down q)
+
+val up_star (#h:heap_sig u#a) (p q:h.slprop)
+: Lemma ((extend h).up (p `h.star` q) ==
+        ((extend h).up p `(extend h).star` (extend h).up q))

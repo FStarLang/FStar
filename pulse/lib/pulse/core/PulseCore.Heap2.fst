@@ -83,6 +83,14 @@ let h_join_empty (h:H.heap)
   = H.join_empty h
 
 let join_empty h = ()
+
+let join_empty_inverse (m0 m1:heap)
+: Lemma 
+  (requires disjoint m0 m1 /\ join m0 m1 == empty_heap)
+  (ensures m0 == empty_heap /\ m1 == empty_heap)
+= H.join_empty_inverse m0.concrete m1.concrete;
+  H.join_empty_inverse m0.ghost m1.ghost
+  
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 let interp p m = p m
 let as_slprop f = F.on _ f

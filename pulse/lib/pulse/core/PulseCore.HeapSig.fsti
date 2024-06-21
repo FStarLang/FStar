@@ -70,6 +70,13 @@ type separable (mem:Type u#a) = {
     m0:core ->
     Lemma (disjoint m0 empty /\ join m0 empty == m0)
   );
+  join_empty_inverse : (
+    m0:core ->
+    m1:core ->
+    Lemma 
+    (requires disjoint m0 m1 /\ join m0 m1 == empty)
+    (ensures m0 == empty /\ m1 == empty)
+  )
 }
 
 let is_affine_mem_prop (#m:Type u#a) (sep:separable m) (p:sep.core -> prop)

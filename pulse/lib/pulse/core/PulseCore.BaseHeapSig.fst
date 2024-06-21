@@ -29,6 +29,7 @@ let sep : separable (mem u#a) = {
     disjoint_join = H2.disjoint_join;
     join_associative = (fun h0 h1 h2 -> H2.join_associative h0 h1 h2);
     join_empty = H2.join_empty;
+    join_empty_inverse = H2.join_empty_inverse
 }
 
 let full_mem_pred m = H2.full_heap_pred m.heap
@@ -275,21 +276,22 @@ let gather #ex #a #p r x y = lift_heap_action ex (H2.gather_action #a #p r x y)
 let pts_to_not_null_action #ex #a #p r x = lift_heap_action ex (H2.pts_to_not_null_action #a #p r x)
 
 let interp_exists_sem (#a:Type) (p: a -> base_heap.slprop) (m:_)
-: Lemma (interp (exists_ base_heap p) m <==> (exists x. interp (p x) m))
-= admit()
+: Lemma (interp (exists_ p) m <==> (exists x. interp (p x) m))
+= assert (interp (exists_ p) m == base_heap.interp (exists_ p) m);
+  interp_exists p
 
 let exists_congruence (#a:Type) (witness:a) (p: a -> base_heap.slprop)
 : Lemma 
   (requires forall x. is_boxable (p x))
-  (ensures is_boxable (exists_ base_heap p))
-= introduce forall m. interp (exists_ base_heap p) m ==> interp (up (down (exists_ base_heap p))) m
+  (ensures is_boxable (exists_ p))
+= introduce forall m. interp (exists_ p) m ==> interp (up (down (exists_ p))) m
   with introduce _ ==> _
   with _ . (
     interp_exists_sem p m
   );
-  introduce forall m. interp (up (down (exists_ base_heap p))) m ==> interp (exists_ base_heap p) m
+  introduce forall m. interp (up (down (exists_ p))) m ==> interp (exists_ p) m
   with introduce _ ==> _
   with _ . ( 
     interp_exists_sem p m 
   );
-  slprop_extensionality (exists_ base_heap p) (up (down (exists_ base_heap p)))
+  slprop_extensionality (exists_ p) (up (down (exists_ p)))

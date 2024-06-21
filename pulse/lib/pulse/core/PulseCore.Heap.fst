@@ -260,6 +260,13 @@ let join_associative2 (m0 m1 m2:heap)
     join_associative m2 m0 m1
 
 let join_empty h = assert (join h empty_heap `mem_equiv` h)
+
+let join_empty_inverse (m0 m1:heap)
+: Lemma 
+  (requires disjoint m0 m1 /\ join m0 m1 == empty_heap)
+  (ensures m0 == empty_heap /\ m1 == empty_heap)
+= assert (m0 `mem_equiv` empty_heap /\ m1 `mem_equiv` empty_heap)
+
 ////////////////////////////////////////////////////////////////////////////////
 let slprop = p:(heap ^-> prop) { heap_prop_is_affine p }
 
