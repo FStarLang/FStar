@@ -638,8 +638,13 @@ let inv_interp
       (i:ext_iref h { Inr? i })
       (p:ext_slprop h)
       (m:ext_mem h)
-: Lemma (interp (inv i p) (get_core m) <==> inv_i_p_property i p (core_of m.big))
-= admit()
+: Lemma (interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big))
+= let Inr r = i in
+  introduce interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big)
+  with _ . (
+    H2.interp_ghost_pts_to r #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) (core_of m.big);
+    pure_interp (is_boxable_ext p) (get_core m)
+  )
 
 let inv_boxes_interp 
       (#h:heap_sig u#a) 
@@ -647,7 +652,9 @@ let inv_boxes_interp
       (p:ext_slprop h)
       (m:ext_mem h { interp (inv i p) (get_core m) })
 : Lemma (is_boxable_ext p)
-= admit()
+= match i with
+  | Inl _ -> pure_interp (is_boxable_ext p) (get_core m)
+  | Inr _ -> inv_interp #h i p m
 
 let istore_invariant_eq
       (#h:heap_sig u#a)
@@ -748,7 +755,36 @@ let mem_invariant_equiv_ext_l
   }
 #pop-options
 
-let mem_invariant_equiv_ext_r
+let mem_invariant_free_above 
+      (#h:heap_sig)
+      (e:eset (ext_iname h))
+      (m:ext_mem h)
+      (n:core h)
+: Lemma 
+  (requires 
+    interp (mem_invariant e m) n)
+  (ensures H2.free_above_ghost_ctr m.big)
+= assert (interp (lift h (H2.base_heap.mem_invariant Set.empty m.big)) n);
+  assert (H2.base_heap.interp (H2.base_heap.mem_invariant Set.empty m.big) 
+                n.big_core);
+  H2.mem_invariant_interp Set.empty m.big n.big_core
+
+let get_inv_i_p
+      (#h:heap_sig)
+      (i:ext_iref h{ Inr? i })
+      (p:ext_slprop h)
+      (m:ext_mem h { H2.free_above_ghost_ctr m.big } )
+: Lemma 
+  (requires 
+    interp (inv i p) (get_core m))
+  (ensures 
+    inv_i_p i p m)
+= let Inr j = i in
+  H2.interp_ghost_pts_to j #true #_ 
+    #(PA.pcm_agreement #h.slprop) (Some (down p)) (core_of m.big);
+  inv_interp i p m
+
+let mem_invariant_equiv_ext_r_aux
       (#h:heap_sig)
       (e:eset (ext_iname h))
       (m:ext_mem h)
@@ -756,13 +792,13 @@ let mem_invariant_equiv_ext_r
       (p:ext_slprop h)
 : Lemma 
   (requires
+    H2.free_above_ghost_ctr m.big /\
     interp (inv i p) (get_core m) /\
     not (iname_of h i `Set.mem` e))
   (ensures
     mem_invariant e m ==
     mem_invariant (Set.add (iname_of h i) e) m `star` p)
-= let Inr j = i in
-  assume (inv_i_p i p m);
+= get_inv_i_p #h i p m;
   calc (==) {
     mem_invariant e m;
   (==) { }
@@ -780,6 +816,39 @@ let mem_invariant_equiv_ext_r
   (==) { ac_lemmas_ext h }
     mem_invariant (Set.add (iname_of h i) e) m `star` p;
   }
+
+let mem_invariant_equiv_ext_r
+      (#h:heap_sig)
+      (e:eset (ext_iname h))
+      (m:ext_mem h)
+      (i:ext_iref h { Inr? i }) 
+      (p:ext_slprop h)
+: Lemma 
+  (requires
+    interp (inv i p) (get_core m) /\
+    not (iname_of h i `Set.mem` e))
+  (ensures
+    mem_invariant e m ==
+    mem_invariant (Set.add (iname_of h i) e) m `star` p)
+= let Inr j = i in
+  introduce forall n. 
+    interp (mem_invariant e m) n ==>
+    interp (mem_invariant (Set.add (iname_of h i) e) m `star` p) n
+  with introduce _ ==> _
+  with _ . (
+    mem_invariant_free_above e m n;
+    mem_invariant_equiv_ext_r_aux #h e m i p
+  );
+  introduce forall n. 
+    interp (mem_invariant (Set.add (iname_of h i) e) m `star` p) n ==>
+    interp (mem_invariant e m) n 
+  with introduce _ ==> _
+  with _ . (
+    mem_invariant_free_above (Set.add (iname_of h i) e) m n;
+    mem_invariant_equiv_ext_r_aux #h e m i p
+  );
+  slprop_extensionality
+    h (mem_invariant e m) (mem_invariant (Set.add (iname_of h i) e) m `star` p)
 
 let mem_invariant_equiv_ext 
       (#h:heap_sig)
@@ -1330,6 +1399,7 @@ let new_invariant
     (fun i -> (extend h).inv i p)
 = fun frame h0 ->
    assert (interp (p `star` frame `star` mem_invariant ex h0) (core_of h0)); 
+   
   //  let h1' = H2.ghost_extend true 
    admit()
 
@@ -1895,8 +1965,7 @@ let ghost_alloc
     e
     (extend h).emp 
     (fun r -> (extend h).ghost_pts_to false r x)
-= assume (H2.preserves_inames (H2.ghost_extend false #Set.empty #a #pcm x));
-  let res = lift_base_heap_action #h #(ghost_ref a pcm) #true #e (H2.ghost_extend false #Set.empty #a #pcm x) in
+= let res = lift_base_heap_action #h #(ghost_ref a pcm) #true #e (H2.ghost_extend false #Set.empty #a #pcm x) in
   up_emp_alt h;
   coerce_action res _ _ ()
 
