@@ -784,3 +784,17 @@ val erase_action_result
       (#fp':a -> slprop)
       (act:action #immut #alloc #pre #post fp a fp')
 : action #immut #alloc #pre #post fp (erased a) (fun x -> fp' x)
+
+val erase_action_result_identity
+      (#pre #post:_)
+      (#immut #alloc:_)
+      (#fp:slprop)
+      (#a:Type)
+      (#fp':a -> slprop)
+      (act:action #immut #alloc #pre #post fp a fp')
+      (h:full_hheap fp { pre h})
+: Lemma (
+    let (| x, h1 |) = act h in
+    let (| y, h2 |) = erase_action_result act h in
+    x == reveal y /\ h1 == h2
+)

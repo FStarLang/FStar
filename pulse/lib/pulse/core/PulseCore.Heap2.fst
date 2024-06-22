@@ -656,10 +656,56 @@ let lift_action_ghost_sem
       (act:H.action #immut #allocs #pre #post fp a fp')
       (h:full_hheap (llift GHOST fp) { llift_pred GHOST pre h })
 : Lemma (
-    reveal (dsnd (lift_action_ghost ni_a act h)).ghost == dsnd (act h.ghost)
+    let (|x, h1|) = act h.ghost in
+    let (|y, h2|) = lift_action_ghost ni_a act h in
+    x==y /\
+    h2 == {h with ghost = h1}
   )
 = ()
 
+let action_framing_alt
+  (#a: Type u#a)
+  (#mut #allocates:_)
+  #hpre #hpost
+  (#fp: slprop u#b)
+  (#fp': a -> slprop u#b)
+  ($f:action #mut #allocates #hpre #hpost fp a fp')
+  (frame:slprop) (h0:full_hheap (fp `star` frame) { hpre h0 })
+    : Lemma (
+      affine_star fp frame h0;
+      let (| x, h1 |) = f h0 in
+      frame_related_heaps h0 h1 fp (fp' x) frame mut allocates
+    )
+  =
+  affine_star fp frame h0;
+  emp_unit fp
+
+let ghost_action_modifies
+          (#a:Type)
+          (#allocs:option tag)
+           #hpre #hpost
+          (#pre:slprop)
+          (#post:a -> slprop)
+          ($f:action #ONLY_GHOST #allocs #hpre #hpost pre a post)
+          (h:full_hheap pre { hpre h })
+: Lemma (
+   let (|x, h1|) = f h in
+   {h with ghost = h1.ghost} == h1 
+)
+= let (|x, h1|) = f h in
+  assert (is_frame_preserving ONLY_GHOST allocs f);
+  emp_unit pre;
+  action_framing_alt f emp h;
+  assert (action_related_heaps #ONLY_GHOST #allocs h h1)
+
+let action_result #a (#fp: a-> slprop)
+                  (r: (x:a & full_hheap (fp x)))
+: (a & full_heap)
+= let (|x,y|) = r in x,y
+let eq_pair (#a #b:Type)
+          (y:(a & b))
+          (x:(erased a & b))
+= reveal (fst x) == fst y /\ snd x == snd y
 let lift_erased_sem
           (#a:Type)
           (#ni_a:non_informative a)
@@ -669,10 +715,8 @@ let lift_erased_sem
           (#post:a -> slprop)
           ($f:erased (action #ONLY_GHOST #allocs #hpre #hpost pre a post))
           (h:full_hheap pre { hpre h })
-: Lemma (
-     (dsnd (lift_erased #a #ni_a f h)).ghost == (dsnd (reveal f h)).ghost
-  )
-= ()
+: Lemma (reveal f h == lift_erased #a #ni_a f h)
+= ghost_action_modifies f h
 
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
@@ -696,13 +740,41 @@ let ghost_extend
 = lift_erased #_ #(ni_erased H.core_ref)
     (Ghost.hide <|
       lift_action_ghost (ni_erased H.core_ref) (H.erase_action_result (H.extend #meta #a #pcm x addr)))
-
 let ghost_extend_spec
       (#meta:bool)
       #a #pcm (x:a { pcm.refine x })
       (addr:nat)
       (h:full_hheap emp { free_above_addr GHOST h addr })
-= H.extend_modifies_nothing #meta #a #pcm x addr h.ghost
+= 
+
+calc (==) {
+    (ghost_extend #meta #a #pcm x addr) h;
+  (==) { _ by (T.trefl()) }
+    lift_erased #(ghost_ref pcm) #(ni_erased H.core_ref) #(Some GHOST)
+       #(fun h -> free_above_addr GHOST h addr)
+       #(fun h -> free_above_addr GHOST h (addr + 1))          
+    (Ghost.hide <|
+      lift_action_ghost (ni_erased H.core_ref)
+       (H.erase_action_result (H.extend #meta #a #pcm x addr))) h;
+  (==) { 
+          lift_erased_sem
+            #(ghost_ref pcm)
+            #(ni_erased H.core_ref)
+            #(Some GHOST)
+            #(fun h -> free_above_addr GHOST h addr)
+            #(fun h -> free_above_addr GHOST h (addr + 1))          
+            (Ghost.hide <|
+              lift_action_ghost (ni_erased H.core_ref)
+              (H.erase_action_result (H.extend #meta #a #pcm x addr)))
+            h
+        }
+    lift_action_ghost (ni_erased H.core_ref)
+       (H.erase_action_result (H.extend #meta #a #pcm x addr)) h;
+}; 
+lift_action_ghost_sem (ni_erased H.core_ref)
+       (H.erase_action_result (H.extend #meta #a #pcm x addr)) h;
+H.erase_action_result_identity (H.extend #meta #a #pcm x addr) h.ghost;
+H.extend_modifies_nothing #meta #a #pcm x addr h.ghost
 
 let ghost_read
     #meta

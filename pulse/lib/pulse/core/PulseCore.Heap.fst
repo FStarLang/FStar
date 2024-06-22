@@ -1348,3 +1348,18 @@ let erase_action_result
     (| y, h1 |)
   in
   refined_pre_action_as_action g
+
+let erase_action_result_identity
+      (#pre #post:_)
+      (#immut #alloc:_)
+      (#fp:slprop)
+      (#a:Type)
+      (#fp':a -> slprop)
+      (act:action #immut #alloc #pre #post fp a fp')
+      (h:full_hheap fp { pre h})
+: Lemma (
+    let (| x, h1 |) = act h in
+    let (| y, h2 |) = erase_action_result act h in
+    x == reveal y /\ h1 == h2
+)
+= ()
