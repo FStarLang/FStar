@@ -690,7 +690,7 @@ let pcm_ref
 val pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    (r:pcm_ref p)
+    ([@@@equate_strict] r:pcm_ref p)
     (v:a)
 : vprop
 
@@ -794,7 +794,7 @@ instance val non_informative_ghost_pcm_ref
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    (r:ghost_pcm_ref p)
+    ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
 : vprop
 
@@ -867,7 +867,7 @@ val ghost_gather
 val big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    (r:pcm_ref p)
+    ([@@@equate_strict] r:pcm_ref p)
     (v:a)
 : vprop
 
@@ -945,7 +945,7 @@ val big_gather
 val big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    (r:ghost_pcm_ref p)
+    ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
 : vprop
 
