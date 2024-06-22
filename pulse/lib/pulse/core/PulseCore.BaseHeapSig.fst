@@ -241,7 +241,7 @@ let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.
 let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 : Lemma (inames_ok ex h)
 = ()
-let interp_ghost_pts_to i #meta #a #pcm v h0 = H2.interp_ghost_pts_to i #meta #a #pcm v h0.heap
+let interp_ghost_pts_to i #meta #a #pcm v h0 = H2.interp_ghost_pts_to i #meta #a #pcm v h0
 let ghost_pts_to_compatible_equiv = H2.ghost_pts_to_compatible_equiv
 
 (* Lifting H2 actions *)
@@ -427,7 +427,7 @@ let ghost_write #ex #meta #a #p r x y f =
         | Some (H.Ref meta' _ _ _) -> 
           assert (reveal meta == false);
           assert (base_heap.interp (base_heap.ghost_pts_to meta r x) m0.heap);
-          interp_ghost_pts_to r #meta #a #p x m0;
+          interp_ghost_pts_to r #meta #a #p x m0.heap;
           assert (reveal meta' == false)
       )
     );

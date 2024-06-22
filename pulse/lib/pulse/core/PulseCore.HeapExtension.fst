@@ -511,13 +511,18 @@ let iname_ok_ext (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
   (ensures iname_ok h (iname_of h i) m)
 = match i with
   | Inl j -> h.inv_iname_ok j (down p) m.small
-  | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) m.big
+  | Inr j -> H2.interp_ghost_pts_to j #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) (core_of m.big)
+
+
+let iname_index (#h:heap_sig u#a) (r:ext_iref h { Inr? r }) : GTot nat =
+  match r with
+  | Inr r -> H2.core_ghost_ref_as_addr r
 
 let rec istore_invariant_unchanged (#h:heap_sig u#a)
          (from:nat) 
          (e:eset (ext_iname h))
          (l:base_heap_core u#(a + 1))
-         (j:ext_iname h { Inl? j })
+         (j:ext_iname h { Inl? j \/ Inr?.v j > from })
 : Lemma
   (ensures
     istore_invariant #h from e l ==
@@ -534,11 +539,62 @@ let inv_i_p_property
     (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
   is_boxable_ext p
 
-let istore_invariant_eq_aux
+
+let istore_invariant_rest
+         (#h:heap_sig u#a)
+         (from:nat)
+         (e:eset (ext_iname h))
+         (l:base_heap_core u#(a + 1))
+: ext_slprop h
+= if from = 0 then emp else istore_invariant (from - 1) e l
+
+let sl_pure_imp_elim
+       (#h:heap_sig u#h)
+       (p:prop)
+       (q:squash p -> ext_slprop h)
+       (pf:squash p)
+: Lemma 
+  (ensures sl_pure_imp p q == q pf)
+= assert (forall m. interp (sl_pure_imp p q) m <==> interp (q pf) m);
+  slprop_extensionality h (sl_pure_imp p q) (q pf)
+
+let take_invariant_of_one_cell
+      (#h:heap_sig u#a)
+      (addr:nat)
+      (e:eset (ext_iname h))
+      (i:ext_iref h { Inr? i /\ iname_index i == addr})
+      (p:ext_slprop h)
+      (l:base_heap_core u#(a + 1) { inv_i_p_property i p l })
+: Lemma 
+(requires not (iname_of h i `Set.mem` e))
+(ensures (
+    invariant_of_one_cell addr e l ==
+    invariant_of_one_cell addr (Set.add (Inr addr) e) l `star` p))
+= let Inr r = i in
+  H2.interp_ghost_pts_to r 
+    #true #_ #(PA.pcm_agreement #h.slprop)
+    (Some (down p)) l;
+  let Some c = H2.select_ghost addr l in
+  assert (cell_pred_pre h c);
+  calc (==) {
+    invariant_of_one_cell addr e l;
+  (==) {}
+    sl_pure_imp (cell_pred_pre h c) (cell_pred_post h c);
+  (==) { sl_pure_imp_elim (cell_pred_pre h c) (cell_pred_post h c) () }
+    up (down p);
+  (==) {}
+    p;
+  (==) { ac_lemmas_ext h }
+    emp `star` p;
+  (==) {}
+   invariant_of_one_cell addr (Set.add (Inr addr) e) l `star` p;
+  }
+  
+let rec istore_invariant_eq_aux
       (#h:heap_sig u#a)
       (from:nat) 
       (e:eset (ext_iname h))
-      (i:ext_iref h { Inr? i })
+      (i:ext_iref h { Inr? i /\ iname_index i <= from})
       (p:ext_slprop h)
       (l:base_heap_core u#(a + 1) { inv_i_p_property i p l })
 : Lemma
@@ -546,7 +602,32 @@ let istore_invariant_eq_aux
   (ensures
     istore_invariant #h from e l ==
     istore_invariant #h from (Set.add (iname_of h i) e) l `star` p)
-= admit()
+= if iname_index i = from
+  then (
+    take_invariant_of_one_cell #h from e i p l;
+    if from = 0 
+    then ( ac_lemmas_ext h )
+    else (
+      istore_invariant_unchanged #h (from - 1) e l (iname_of h i);
+      ac_lemmas_ext h
+    )
+  )
+  else (
+    calc (==) {
+      istore_invariant #h from e l;
+    (==) {}
+      invariant_of_one_cell from e l `star`
+      istore_invariant_rest from e l;
+    (==) { }
+      invariant_of_one_cell from (Set.add (iname_of h i) e) l `star`
+      istore_invariant_rest from e l;
+    };
+    if from = 0 then ()
+    else (
+      istore_invariant_eq_aux (from - 1) e i p l;
+      ac_lemmas_ext h
+    )
+  )
 
 let istore_invariant_eq
       (#h:heap_sig u#a)

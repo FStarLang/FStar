@@ -23,11 +23,11 @@ val interp_ghost_pts_to
       (#a:Type u#a)
       (#pcm:FStar.PCM.pcm a)
       (v:a)
-      (h0:(base_heap u#a).mem)
+      (h0:(base_heap u#a).sep.core)
 : Lemma
-  (requires interpret (base_heap.ghost_pts_to meta #a #pcm i v) h0)
+  (requires base_heap.interp (base_heap.ghost_pts_to meta #a #pcm i v) h0)
   (ensures (
-    match select_ghost (core_ghost_ref_as_addr i) (base_heap.sep.lens_core.get h0) with
+    match select_ghost (core_ghost_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
       let H.Ref meta' a' pcm' v' = c in
