@@ -87,6 +87,20 @@ val ghost_extend
             reveal meta == false ==> preserves_inames act
         }
 
+let single_ghost_allocation
+        (meta:bool)
+        (#a:Type)
+        (#pcm:pcm a)
+        (x:a{pcm.refine x})
+        (r:ghost_ref a pcm)
+        (h h1:base_heap.mem)
+= (forall (a:nat).
+    a <> ghost_ctr h ==>
+    select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
+  ghost_ctr h1 == ghost_ctr h + 1 /\
+  select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
+  ghost_ctr h == core_ghost_ref_as_addr r
+  
 val ghost_extend_spec
       (#meta:bool)
       (#ex:inames base_heap)
@@ -99,13 +113,8 @@ val ghost_extend_spec
                    base_heap.mem_invariant ex h) h })      
 : Lemma (
       let (r, h1) = ghost_extend meta #ex #a #pcm x frame h in
-      (forall (a:nat).
-         a <> ghost_ctr h ==>
-         select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
-      ghost_ctr h1 == ghost_ctr h + 1 /\
-      select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
-      ghost_ctr h == core_ghost_ref_as_addr r
-  )
+      single_ghost_allocation meta #a #pcm x r h h1
+)
 
 val ghost_read
     (#ex:inames base_heap)
