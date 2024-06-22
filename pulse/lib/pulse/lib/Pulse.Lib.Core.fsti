@@ -602,6 +602,7 @@ val distinct_invariants_have_distinct_names
     (inv i p ** inv j q)
     (fun _ -> inv i p ** inv j q)
 
+[@@allow_ambiguous]
 val invariant_name_identifies_invariant
       (#p #q:vprop)
       (i:iref)
@@ -766,6 +767,7 @@ val share
     (pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> pcm_pts_to r v0 ** pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val gather
     (#a:Type)
     (#pcm:pcm a)
@@ -850,6 +852,7 @@ val ghost_share
     (ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val ghost_gather
     (#a:Type)
     (#pcm:pcm a)
@@ -931,6 +934,7 @@ val big_share
     (big_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val big_gather
     (#a:Type)
     (#pcm:pcm a)
@@ -1001,6 +1005,7 @@ val big_ghost_share
     (big_ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val big_ghost_gather
     (#a:Type)
     (#pcm:pcm a)
