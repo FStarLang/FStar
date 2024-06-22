@@ -135,36 +135,22 @@ let dup_pure (p:prop)
 
 let iname_of (i:unit) = i
 let inv (i:unit) (p:slprop) = pure (p == H2.emp)
-let inv_extract (i:unit) (p:slprop)
-: Lemma (inv i p == p `star` inv i p)
-= introduce forall m. interp (inv i p) m ==> interp (p `star` inv i p) m
-  with introduce _ ==> _
-  with _ . ( 
-    H2.pure_interp (p == H2.emp) m;
-    H2.emp_unit (inv i p);
-    H2.star_commutative p (inv i p)
-  );
-  introduce forall m. interp (p `star` inv i p) m ==> interp (inv i p) m
-  with introduce _ ==> _
-  with _ . (
-    H2.affine_star p (inv i p) m
-  );
-  assert (H2.equiv (inv i p) (p `star` inv i p))
-  
+let inv_extract (i:unit) (p:slprop u#a) (m:mem u#a)
+: Lemma 
+  (requires interp (inv i p) m.heap)
+  (ensures p == emp)
+= H2.pure_interp (p == H2.emp) m.heap
+
 let mem_invariant_equiv (e:eset unit) (m:mem u#a) (i:unit) (p:slprop u#a)
 : Lemma 
   (requires
+    interp (inv i p) m.heap /\
     not (iname_of i `Set.mem` e))
   (ensures
-    mem_invariant e m `star` inv i p ==
-    mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p)
-= calc (==) {
-    mem_invariant e m `star` inv i p;
-  (==) { inv_extract i p }
-   mem_invariant (Set.add (iname_of i) e) m `star` (p `star` inv i p);
-  (==) { H2.star_associative (mem_invariant (Set.add (iname_of i) e) m) p (inv i p) }
-   mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p;
-  }
+    mem_invariant e m ==
+    mem_invariant (Set.add (iname_of i) e) m `star` p)
+= inv_extract i p m;
+  H2.emp_unit (mem_invariant e m)
 
 let dup_inv_equiv (i:unit) (p:slprop)
 : Lemma (inv i p == inv i p `H2.star` inv i p)

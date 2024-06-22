@@ -220,10 +220,11 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       Lemma 
         (requires
+          interp (inv i p) (sep.lens_core.get m) /\
           not (iname_of i `Set.mem` e))
         (ensures
-          mem_invariant e m `star` inv i p ==
-          mem_invariant (Set.add (iname_of i) e) m `star` p `star` inv i p)
+          mem_invariant e m ==
+          mem_invariant (Set.add (iname_of i) e) m `star` p)
     );
 }
 
