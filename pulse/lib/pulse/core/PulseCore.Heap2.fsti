@@ -414,6 +414,8 @@ val heap_evolves : FStar.Preorder.preorder full_heap
 *)
 val select (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
 val select_ghost (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+val select_ghost_interp (i:nat) (h:heap u#a)
+: Lemma (select_ghost i h == H.select i (ghost h))
 let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) = 
   match t with
   | CONCRETE -> select i h
@@ -692,6 +694,17 @@ val extend
       (ref a pcm)
       (fun r -> pts_to r x)
 
+val extend_modifies
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (addr:nat)
+  (h:full_hheap emp { h `free_above_addr CONCRETE` addr })
+: Lemma (
+      let (| _, h1 |) = extend #a #pcm x addr h in
+      ghost h == ghost h1
+  )
+
 val frame (#a:Type)
           #immut #allocates #hpre #hpost
           (#pre:slprop)
@@ -820,6 +833,19 @@ val ghost_extend
       emp 
       (ghost_ref pcm)
       (fun r -> ghost_pts_to meta r x)
+
+
+val ghost_extend_spec
+      (#meta:bool)
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat)
+      (h:full_hheap emp { free_above_addr GHOST h addr })
+: Lemma (
+      let (| r, h1 |) = ghost_extend #meta #a #pcm x addr h in
+      (forall (a:nat). a <> addr ==> select_ghost a h == select_ghost a h1) /\
+      select_ghost addr h1 == Some (H.Ref meta a pcm x) /\
+      addr == core_ghost_ref_as_addr r
+  )
 
 val ghost_read
     (#meta:erased bool)

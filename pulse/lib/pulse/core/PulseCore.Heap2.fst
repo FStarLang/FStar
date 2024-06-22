@@ -205,6 +205,7 @@ let heap_evolves (h0 h1:full_heap) =
   H.heap_evolves h0.ghost h1.ghost
 let select i m = H.select i m.concrete
 let select_ghost i m = H.select i m.ghost
+let select_ghost_interp i m = ()
 let free_above_addr tag h a = H.free_above_addr (get tag h) a
 let reveal_free_above_addr tag h a = 
   H.interp_free_above h.concrete a;
@@ -384,6 +385,7 @@ let split_action #a #p r v0 v1 = lift_action (H.split_action #false #a #p r v0 v
 let gather_action #a #p r v0 v1 = lift_action (H.gather_action #false #a #p r v0 v1)
 let pts_to_not_null_action #a #p r v = lift_action (H.pts_to_not_null_action #false #a #p r v)
 let extend #a #pcm x addr = lift_action (H.extend #false #a #pcm x addr)
+let extend_modifies #a #pcm x addr h = ()
 
 let refined_pre_action (#mut:mutability) (#allocates:option tag)
                        (#[T.exact (`trivial_pre)]pre:heap ->prop)
@@ -695,6 +697,12 @@ let ghost_extend
     (Ghost.hide <|
       lift_action_ghost (ni_erased H.core_ref) (H.erase_action_result (H.extend #meta #a #pcm x addr)))
 
+let ghost_extend_spec
+      (#meta:bool)
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat)
+      (h:full_hheap emp { free_above_addr GHOST h addr })
+= H.extend_modifies_nothing #meta #a #pcm x addr h.ghost
 
 let ghost_read
     #meta

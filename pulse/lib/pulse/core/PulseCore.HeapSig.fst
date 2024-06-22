@@ -218,3 +218,39 @@ let lift_ghost
     let m1 = h.update_ghost m0 pre_m1 in
     let x = ni_a x in
     x, m1
+
+let destruct_star_l (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+: Lemma (h.interp (p `h.star` q) m ==> h.interp p m)
+= introduce h.interp (p `h.star` q) m ==> h.interp p m
+  with _ . (
+    h.star_equiv p q m;
+    eliminate exists c0 c1.
+        h.sep.disjoint c0 c1 /\
+        m == h.sep.join c0 c1 /\
+        h.interp p c0 /\
+        h.interp q c1
+    returns h.interp p m
+    with _ . (
+        h.star_equiv p h.emp m;
+        emp_trivial h;
+        assert (h.interp h.emp c1);
+        assert (h.interp (p `h.star` h.emp) m);
+        ac_lemmas h
+    )
+ )
+
+let destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+: Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
+= ac_lemmas h;
+  destruct_star_l p q m;
+  destruct_star_l q p m
+
+
+let intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
+: Lemma
+  (requires h.interp p m)
+  (ensures h.interp (p `h.star` h.pure q) m)
+= h.star_equiv p (h.pure q) m;
+  h.sep.join_empty m;
+  assert (h.sep.disjoint m h.sep.empty);
+  h.pure_interp q h.sep.empty

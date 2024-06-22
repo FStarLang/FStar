@@ -396,3 +396,11 @@ val lift_ghost
       (ni_a:non_info a)
       (f:erased (ghost_action_except h a opened_invariants p q))
 : ghost_action_except h a opened_invariants p q
+
+val destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
+: Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
+
+val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
+: Lemma
+  (requires h.interp p m)
+  (ensures h.interp (p `h.star` h.pure q) m)

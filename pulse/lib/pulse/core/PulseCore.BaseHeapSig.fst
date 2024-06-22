@@ -250,9 +250,6 @@ let mg_of_mut (m:Tags.mutability) =
   | Tags.MUTABLE -> false
   | _ -> true
 
-let destruct_star (#h:heap_sig u#h) (p q:h.slprop) (m:h.sep.core)
-: Lemma (h.interp (p `h.star` q) m ==> h.interp p m /\ h.interp q m)
-= admit()
 
 let elim_init (e:_) (fp frame:H2.slprop u#a) (m:base_heap.mem)
 : Lemma 
@@ -262,12 +259,6 @@ let elim_init (e:_) (fp frame:H2.slprop u#a) (m:base_heap.mem)
   destruct_star #base_heap (fp `star` frame) (mem_invariant e m) m.heap;
   destruct_star #base_heap fp frame m.heap;
   FStar.Classical.forall_intro (base_heap.pure_interp (free_above m))
-
-let intro_pure (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.sep.core)
-: Lemma
-  (requires h.interp p m)
-  (ensures h.interp (p `h.star` h.pure q) m)
-= admit()
 
 let intro_fin (e:_) (post frame:H2.slprop u#a) (m:base_heap.mem)
 : Lemma
@@ -324,7 +315,79 @@ let lift_heap_action
     act
   | _ -> act
 
-let ghost_extend meta #ex #a #pcm x = admit()
+let with_fresh_ghost_counter (#t:Type u#t) (#post:t -> slprop u#a) (e:inames base_heap)
+  (f: (addr:erased nat ->
+        H2.action #ONLY_GHOST #(Some GHOST)
+          #(fun h -> h `H2.free_above_addr GHOST` addr)
+          #(fun h -> h `H2.free_above_addr GHOST` (addr + 1))      
+          H2.emp 
+          t
+          post))
+: ghost_action_except base_heap t e emp post
+= fun frame m0 ->
+    elim_init e emp frame m0;
+    let h0 = m0.heap in
+    let (|r, h1|) = f m0.ghost_ctr h0 in
+    let m1 = {m0 with heap=h1; ghost_ctr=m0.ghost_ctr + 1} in
+    intro_fin e (post r) frame m1;
+    r, m1
+
+let ghost_extend_alt
+    (meta:erased bool)
+    (#ex:inames base_heap)
+    (#a:Type u#a)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: ghost_action_except base_heap (ghost_ref a pcm) ex    
+        base_heap.emp 
+        (fun r -> base_heap.ghost_pts_to meta r x)
+= with_fresh_ghost_counter ex (H2.ghost_extend #meta #a #pcm x)
+
+let ghost_extend_spec_alt
+      (#meta:bool)
+      (#ex:inames base_heap)
+      #a #pcm (x:a { pcm.refine x })
+      (frame:base_heap.slprop)
+      (h:full_mem base_heap { 
+        inames_ok ex h /\
+        interpret (base_heap.emp `base_heap.star`
+                   frame `base_heap.star`
+                   base_heap.mem_invariant ex h) h })      
+: Lemma (
+      let (r, h1) = ghost_extend_alt meta #ex #a #pcm x frame h in
+      (forall (a:nat).
+         a <> ghost_ctr h ==>
+         select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
+      ghost_ctr h1 == ghost_ctr h + 1 /\
+      select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
+      ghost_ctr h == core_ghost_ref_as_addr r
+  )
+= let act = ghost_extend_alt meta #ex #a #pcm x in
+  let _, m1 = act frame h in
+  elim_init ex emp frame h;
+  H2.ghost_extend_spec #meta #a #pcm x h.ghost_ctr h.heap
+
+let ghost_extend meta #ex #a #pcm x =
+  let act = ghost_extend_alt meta #ex #a #pcm x in
+  introduce reveal meta == false ==> preserves_inames act
+  with _ . (
+    introduce forall (m0:full_mem base_heap) frame. 
+      interpret (base_heap.emp `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+      inames_ok ex m0
+      ==> ( 
+      let r, m1 = act frame m0 in
+      heaps_preserve_inames m0 m1
+    )
+    with introduce _ ==> _
+    with _. (
+      ghost_extend_spec_alt #meta #ex #a #pcm x frame m0;
+      elim_init ex emp frame m0;
+      assert (free_above m0);
+      H2.reveal_free_above_addr GHOST m0.heap m0.ghost_ctr
+    )
+  );
+  act
+
 let ghost_extend_spec
       (#meta:bool)
       (#ex:inames base_heap)
@@ -335,7 +398,7 @@ let ghost_extend_spec
         interpret (base_heap.emp `base_heap.star`
                    frame `base_heap.star`
                    base_heap.mem_invariant ex h) h })      
-= admit()
+= ghost_extend_spec_alt #meta #ex #a #pcm x frame h
 
 let ghost_read #ex #meta #a #p r x f = lift_heap_action ex (H2.ghost_read #meta #a #p r x f)
 let ghost_write #ex #meta #a #p r x y f = 
@@ -372,7 +435,52 @@ let ghost_write #ex #meta #a #p r x y f =
 let ghost_share #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_share #meta #a #p r x y)
 let ghost_gather #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_gather #meta #a #p r x y)
 
-let extend #ex #a #pcm x = admit()
+let with_fresh_counter (#t:Type u#t) (#post:t -> slprop u#a) (e:inames base_heap)
+  (f: (addr:nat ->
+        H2.action #MUTABLE #(Some CONCRETE)
+          #(fun h -> h `H2.free_above_addr CONCRETE` addr)
+          #(fun h -> h `H2.free_above_addr CONCRETE` (addr + 1))      
+          H2.emp 
+          t
+          post))
+: action_except base_heap t e emp post
+= fun frame m0 ->
+    elim_init e emp frame m0;
+    let h0 = m0.heap in
+    let (|r, h1|) = f m0.ctr h0 in
+    let m1 = {m0 with heap=h1; ctr=m0.ctr + 1} in
+    intro_fin e (post r) frame m1;
+    r, m1
+
+let extend_alt #ex #a #pcm (x:a {pcm.refine x})
+  : action_except base_heap (ref a pcm) ex    
+        base_heap.emp 
+        (fun r -> base_heap.pts_to r x)
+  = with_fresh_counter ex (H2.extend #a #pcm x)
+let extend #ex #a #pcm (x:a {pcm.refine x})
+: act:action_except base_heap (ref a pcm) ex    
+          base_heap.emp 
+          (fun r -> base_heap.pts_to r x) {
+            preserves_inames act
+          }
+= let act = extend_alt #ex #a #pcm x in 
+  FStar.Classical.forall_intro_2 H2.select_ghost_interp;
+  introduce forall (m0:full_mem base_heap) frame. 
+      interpret (base_heap.emp `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+      inames_ok ex m0
+      ==> ( 
+      let r, m1 = act frame m0 in
+      heaps_preserve_inames m0 m1
+  )
+  with introduce _ ==> _ 
+  with _. ( 
+    let r, m1 = act frame m0 in
+    elim_init ex base_heap.emp frame m0;
+    H2.extend_modifies #a #pcm x m0.ctr m0.heap
+  );
+  act
+
+
 let read #ex #a #p r x f = lift_heap_action ex (H2.select_refine #a #p r x f)
 let write #ex #a #p r x y f = 
   let act
@@ -381,7 +489,7 @@ let write #ex #a #p r x y f =
         (fun _ -> base_heap.pts_to r y)
     = lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
   in
-  assume (forall i h. H2.select_ghost i h == H.select i (H2.ghost h)); //    assume (forall i. H2.select_ghost i m0.heap == H2.select_ghost i m1.heap);
+  FStar.Classical.forall_intro_2 H2.select_ghost_interp;
   introduce forall (m0:full_mem base_heap) frame. 
   interpret ((base_heap.pts_to r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
   inames_ok ex m0
