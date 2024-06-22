@@ -256,8 +256,8 @@ let elim_init (e:_) (fp frame:H2.slprop u#a) (m:base_heap.mem)
   (requires interpret (fp `star` frame `star` mem_invariant e m) m)
   (ensures interpret fp m /\ interpret (fp `star` frame) m /\ free_above m)
 = ac_lemmas base_heap;
-  destruct_star #base_heap (fp `star` frame) (mem_invariant e m) m.heap;
-  destruct_star #base_heap fp frame m.heap;
+  HeapSig.destruct_star #base_heap (fp `star` frame) (mem_invariant e m) m.heap;
+  HeapSig.destruct_star #base_heap fp frame m.heap;
   FStar.Classical.forall_intro (base_heap.pure_interp (free_above m))
 
 let intro_fin (e:_) (post frame:H2.slprop u#a) (m:base_heap.mem)
@@ -265,7 +265,7 @@ let intro_fin (e:_) (post frame:H2.slprop u#a) (m:base_heap.mem)
   (requires base_heap.interp (post `star` frame) m.heap /\ free_above m)
   (ensures base_heap.interp (post `star` frame `star` mem_invariant e m) m.heap)
 = ac_lemmas base_heap;
-  intro_pure #base_heap (post `star` frame) (free_above m) () m.heap
+  HeapSig.intro_pure_frame #base_heap (post `star` frame) (free_above m) () m.heap
               
 let lift_heap_action
       (#fp:H2.slprop u#a)
