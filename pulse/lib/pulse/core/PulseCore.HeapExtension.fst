@@ -1608,6 +1608,22 @@ let fold_new_istore_invariant
   )
 #pop-options
 
+#push-options "--ifuel 1"
+let frame_inames_ok_after_extend
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (p:boxable (extend h))
+    (r:ghost_ref _ (PA.pcm_agreement #h.slprop))
+    (m0:ext_mem h)
+    (m1:ext_mem h)
+: Lemma
+(requires
+   inames_ok ex m0 /\
+   m0.small == m1.small /\
+   H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big)
+(ensures inames_ok ex m1)
+= ()
+#pop-options
 
 let fold_new_invariant
     (#h:heap_sig u#a)
@@ -1625,8 +1641,7 @@ let fold_new_invariant
     ((p `star`
      mem_invariant_rest ex m0 `star` 
      lift h (H2.base_heap.mem_invariant Set.empty m1.big)) ==
-     mem_invariant ex m1) /\
-    inames_ok ex m1)
+     mem_invariant ex m1))
 = calc (==) {
     mem_invariant ex m1;
   (==) { }
@@ -1641,8 +1656,7 @@ let fold_new_invariant
     p `star`
     mem_invariant_rest ex m0 `star` 
     lift h (H2.base_heap.mem_invariant Set.empty m1.big);
-  };
-  assume (inames_ok ex m1)
+  }
 
 let new_invariant
     (#h:heap_sig u#a)
@@ -1731,7 +1745,7 @@ let new_invariant
       frame `star`
       mem_invariant ex m1;
     };
-    fold_new_invariant ex p r m0 m1;
+    frame_inames_ok_after_extend ex p r m0 m1;
     assert (inames_ok ex m1);
     h.is_ghost_action_preorder ();
     let i : ext_iref h = Inr r in
