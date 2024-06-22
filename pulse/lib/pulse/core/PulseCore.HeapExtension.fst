@@ -535,8 +535,8 @@ let inv_i_p_property
       (p:ext_slprop h)
       (l:base_heap_core u#(a + 1))
 = let Inr i = i in
-  H2.base_heap.interp
-    (H2.base_heap.ghost_pts_to true #_ #(PA.pcm_agreement #h.slprop) i (Some (down p))) l /\
+  H2.select_ghost (H2.core_ghost_ref_as_addr i) l ==
+  Some (H.Ref true _ (PA.pcm_agreement #h.slprop) (Some (down p))) /\
   is_boxable_ext p
 
 
@@ -558,6 +558,33 @@ let sl_pure_imp_elim
 = assert (forall m. interp (sl_pure_imp p q) m <==> interp (q pf) m);
   slprop_extensionality h (sl_pure_imp p q) (q pf)
 
+let intro_invariant_of_one_cell
+      (#h:heap_sig u#a)
+      (addr:nat)
+      (e:eset (ext_iname h))
+      (i:ext_iref h { Inr? i /\ iname_index i == addr})
+      (p:ext_slprop h)
+      (l:base_heap_core u#(a + 1) { inv_i_p_property i p l })
+: Lemma 
+(requires not (iname_of h i `Set.mem` e))
+(ensures (
+    invariant_of_one_cell addr e l == p))
+= let Inr r = i in
+  // H2.interp_ghost_pts_to r 
+  //   #true #_ #(PA.pcm_agreement #h.slprop)
+  //   (Some (down p)) l;
+  let Some c = H2.select_ghost addr l in
+  assert (cell_pred_pre h c);
+  calc (==) {
+    invariant_of_one_cell addr e l;
+  (==) {}
+    sl_pure_imp (cell_pred_pre h c) (cell_pred_post h c);
+  (==) { sl_pure_imp_elim (cell_pred_pre h c) (cell_pred_post h c) () }
+    up (down p);
+  (==) {}
+    p;
+  }
+
 let take_invariant_of_one_cell
       (#h:heap_sig u#a)
       (addr:nat)
@@ -570,19 +597,9 @@ let take_invariant_of_one_cell
 (ensures (
     invariant_of_one_cell addr e l ==
     invariant_of_one_cell addr (Set.add (Inr addr) e) l `star` p))
-= let Inr r = i in
-  H2.interp_ghost_pts_to r 
-    #true #_ #(PA.pcm_agreement #h.slprop)
-    (Some (down p)) l;
-  let Some c = H2.select_ghost addr l in
-  assert (cell_pred_pre h c);
-  calc (==) {
+= calc (==) {
     invariant_of_one_cell addr e l;
-  (==) {}
-    sl_pure_imp (cell_pred_pre h c) (cell_pred_post h c);
-  (==) { sl_pure_imp_elim (cell_pred_pre h c) (cell_pred_post h c) () }
-    up (down p);
-  (==) {}
+  (==) { intro_invariant_of_one_cell addr e i p l }
     p;
   (==) { ac_lemmas_ext h }
     emp `star` p;
@@ -1521,6 +1538,76 @@ let intro_inv (#h:heap_sig)
   slprop_extensionality h
     (lift h (H2.base_heap.ghost_pts_to true r (Some (down p))))
     (inv (Inr r) p)
+#push-options "--fuel 1"
+let rec istore_invariant_frame_after_extend
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (p:boxable (extend h))
+    (r:ghost_ref _ (PA.pcm_agreement #h.slprop))
+    (m0:ext_mem h) // { interp (mem_invariant ex m0) (get_core m0) })
+    (m1:ext_mem h)
+    (c:nat { c < H2.ghost_ctr m0.big })
+: Lemma
+  (requires
+    H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big)
+  (ensures
+    istore_invariant c ex (core_of m1.big) ==
+    istore_invariant c ex (core_of m0.big))
+  (decreases c)
+= if c = 0 then ()
+  else istore_invariant_frame_after_extend ex p r m0 m1 (c - 1)
+
+let fold_new_istore_invariant
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (p:boxable (extend h))
+    (r:ghost_ref _ (PA.pcm_agreement #h.slprop))
+    (m0:ext_mem h) // { interp (mem_invariant ex m0) (get_core m0) })
+    (m1:ext_mem h)
+: Lemma
+  (requires 
+    H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big /\
+    inames_ok ex m0)
+  (ensures 
+    (p `star`
+      istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big)) ==
+    istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big))
+= let l1 = core_of m1.big in
+  let l0 = core_of m0.big in
+  assert (not (Set.mem (iname_of h (Inr r)) ex));
+  calc (==) {
+    istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big);
+  (==) {}
+    invariant_of_one_cell (H2.ghost_ctr m1.big) ex l1 `star`
+    istore_invariant #h (H2.ghost_ctr m0.big) ex l1;
+  (==) { assert (H2.select_ghost (H2.ghost_ctr m1.big) l1 == None);
+         ac_lemmas_ext h }
+    istore_invariant #h (H2.ghost_ctr m0.big) ex l1;
+  (==) { }
+    invariant_of_one_cell (H2.ghost_ctr m0.big) ex l1 `star`
+    istore_invariant_rest (H2.ghost_ctr m0.big) ex l1;
+  (==) { intro_invariant_of_one_cell 
+            (H2.ghost_ctr m0.big)
+            ex (Inr r) p l1 }
+    p `star`
+    istore_invariant_rest (H2.ghost_ctr m0.big) ex l1;
+  };
+  calc (==) {
+    istore_invariant (H2.ghost_ctr m0.big) ex l0;
+  (==) { }
+    invariant_of_one_cell (H2.ghost_ctr m0.big) ex l0 `star`
+    istore_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
+  (==) { ac_lemmas_ext h }
+    istore_invariant_rest #h (H2.ghost_ctr m0.big) ex l0;
+  };
+  if H2.ghost_ctr m0.big = 0
+  then ()
+  else (
+    istore_invariant_frame_after_extend
+      ex p r m0 m1 (H2.ghost_ctr m0.big - 1)
+  )
+#pop-options
+
 
 let fold_new_invariant
     (#h:heap_sig u#a)
@@ -1532,12 +1619,30 @@ let fold_new_invariant
 : Lemma
   (requires 
     m0.small == m1.small /\
-    H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big)
-  (ensures (p `star`
+    H2.single_ghost_allocation true (Some (down p)) r m0.big m1.big /\
+    inames_ok ex m0)
+  (ensures 
+    ((p `star`
+     mem_invariant_rest ex m0 `star` 
+     lift h (H2.base_heap.mem_invariant Set.empty m1.big)) ==
+     mem_invariant ex m1) /\
+    inames_ok ex m1)
+= calc (==) {
+    mem_invariant ex m1;
+  (==) { }
+    up (h.mem_invariant (down_inames ex) m0.small) `star`
+    istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big) `star`
+    lift h (H2.base_heap.mem_invariant Set.empty m1.big);
+  (==) {fold_new_istore_invariant ex p r m0 m1 }
+    up (h.mem_invariant (down_inames ex) m0.small) `star`
+    (p `star` istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big)) `star`
+    lift h (H2.base_heap.mem_invariant Set.empty m1.big);
+  (==) { ac_lemmas_ext h }
+    p `star`
     mem_invariant_rest ex m0 `star` 
-    lift h (H2.base_heap.mem_invariant Set.empty m1.big)) ==
-    mem_invariant ex m1)
-= admit()
+    lift h (H2.base_heap.mem_invariant Set.empty m1.big);
+  };
+  assume (inames_ok ex m1)
 
 let new_invariant
     (#h:heap_sig u#a)
@@ -1626,7 +1731,8 @@ let new_invariant
       frame `star`
       mem_invariant ex m1;
     };
-    assume (inames_ok ex m1);
+    fold_new_invariant ex p r m0 m1;
+    assert (inames_ok ex m1);
     h.is_ghost_action_preorder ();
     let i : ext_iref h = Inr r in
     i, m1
