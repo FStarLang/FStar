@@ -551,10 +551,10 @@ val all_live_nil () : Lemma (all_live [] == emp)
 val all_live_cons (hd:iref) (tl:list iref)
   : Lemma (all_live (hd::tl) == (exists* p. inv hd p) ** all_live tl)
 
-// val fresh_invariant
-//     (ctx:list iref)
-//     (p:vprop { is_big p })
-// : stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> inv i p)
+val fresh_invariant
+    (ctx:list iref)
+    (p:vprop { is_big p })
+: stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -581,25 +581,25 @@ val with_invariant_g
                             (fun x -> p ** fp' x))
 : stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
-// val distinct_invariants_have_distinct_names
-//     (#p #q:vprop)
-//     (i j:iref)
-//     (_:squash (p =!= q))
-// : stt_ghost
-//     (_:squash (iname_of i =!= iname_of j))
-//     emp_inames
-//     (inv i p ** inv j q)
-//     (fun _ -> inv i p ** inv j q)
+val distinct_invariants_have_distinct_names
+    (#p #q:vprop)
+    (i j:iref)
+    (_:squash (p =!= q))
+: stt_ghost
+    (_:squash (iname_of i =!= iname_of j))
+    emp_inames
+    (inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q)
 
-// val invariant_name_identifies_invariant
-//       (#p #q:vprop)
-//       (i:iref)
-//       (j:iref { iname_of i == iname_of j } )
-// : stt_ghost
-//     (squash (p == q /\ i == j))
-//     emp_inames
-//     (inv i p ** inv j q)
-//     (fun _ -> inv i p ** inv j q)
+val invariant_name_identifies_invariant
+      (#p #q:vprop)
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
+: stt_ghost
+    (squash (p == q /\ i == j))
+    emp_inames
+    (inv i p ** inv j q)
+    (fun _ -> inv i p ** inv j q)
 
 (***** end computation types and combinators *****)
 

@@ -202,12 +202,13 @@ let live_eq (i:iref)
     exists* (p:vprop). inv i p;
   }
 let all_live_cons hd tl = live_eq hd
-// let fresh_invariant = A.fresh_invariant
+let fresh_invariant = admit() //A.fresh_invariant
 let with_invariant = A.with_invariant
 let with_invariant_g = A.with_invariant_g
-// let distinct_invariants_have_distinct_names #p #q i j _ =
+let distinct_invariants_have_distinct_names #p #q i j _ = admit()
 //   A.distinct_invariants_have_distinct_names #p #q i j _
-// let invariant_name_identifies_invariant #p #q i j = A.invariant_name_identifies_invariant p q i j
+let invariant_name_identifies_invariant #p #q i j = admit()
+//A.invariant_name_identifies_invariant p q i j
 
 //////////////////////////////////////////////////////////////////////////
 // Some basic actions and ghost operations
