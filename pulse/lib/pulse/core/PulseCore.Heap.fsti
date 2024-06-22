@@ -623,6 +623,26 @@ val upd_gen_action (#meta:erased bool) (#a:Type) (#p:pcm a) (r:ref a p) (x y:Gho
            unit
            (fun _ -> pts_to meta r y)
 
+let related_cells (c1 c2:option cell) : prop =
+  match c1, c2 with
+  | None, None -> True
+  | Some (Ref meta1 a1 p1 v1), Some (Ref meta2 a2 p2 v2) ->
+    meta1 == meta2 /\ a1 == a2 /\ p1 == p2
+  | _, _ -> False
+
+val upd_gen_modifies
+      (#meta:bool)
+      #a (#p:pcm a) 
+      (r:ref a p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (pts_to meta r x))
+: Lemma (
+      let (| _, h1 |) = upd_gen_action r x y f h in
+      (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
+      related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
+  )
+
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]

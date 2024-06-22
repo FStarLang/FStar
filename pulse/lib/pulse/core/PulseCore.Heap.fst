@@ -1071,6 +1071,22 @@ let upd_gen_action (#meta:erased bool) #a (#p:pcm a) (r:ref a p) (x y:Ghost.eras
     in
     refined_pre_action_as_action refined
 
+let upd_gen_modifies
+      (#meta:bool)
+      #a (#p:pcm a) 
+      (r:ref a p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (pts_to meta r x))
+: Lemma (
+      let (| _, h1 |) = upd_gen_action r x y f h in
+      (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
+      related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
+  )
+= let (| _, h1 |) = upd_gen_action r x y f h in
+  let (| _, h1'|) = upd_gen #meta #a #p r x y f h in
+  assert (h1 == h1')
+
 let upd_action (#meta:erased bool) (#a:_) (#pcm:_) (r:ref a pcm)
                (v0:FStar.Ghost.erased a) 
                (v1:a {frame_preserving pcm v0 v1 /\ pcm.refine v1})

@@ -51,6 +51,8 @@ val empty_heap : heap u#a
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
 
+val core_ref_as_addr (_:core_ref) : GTot nat
+
 (** We index a [core_ref] by the type of its heap contents
     and a [pcm] governing it, for ease of type inference *)
 let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
@@ -611,6 +613,19 @@ val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
            unit
            (fun _ -> pts_to r y)
 
+val upd_gen_modifies
+      #a (#p:pcm a) 
+      (r:ref a p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (pts_to r x))
+: Lemma (
+      let (| _, h1 |) = upd_gen_action r x y f h in
+      (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
+      ghost h == ghost h1 /\
+      H.related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
+  )
+
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
@@ -831,6 +846,20 @@ val ghost_write
     (ghost_pts_to meta r x)
     unit
     (fun _ -> ghost_pts_to meta r y)
+
+val ghost_write_modifies
+      (#meta:bool)
+      #a (#p:pcm a)
+      (r:ghost_ref p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (ghost_pts_to meta r x))
+: Lemma (
+      let (| _, h1 |) = ghost_write r x y f h in
+      (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
+      concrete h == concrete h1 /\
+      H.related_cells (select_ghost (core_ghost_ref_as_addr r) h) (select_ghost (core_ghost_ref_as_addr r) h1)
+  )
 
 val ghost_share
     (#meta:erased bool)

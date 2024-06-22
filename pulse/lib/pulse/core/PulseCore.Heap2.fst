@@ -29,6 +29,7 @@ let put (t:tag) (h':H.heap u#a) (h:heap u#a) : GTot (heap u#a) =
   | GHOST -> { h with ghost = h' }
 
 let core_ref = H.core_ref
+let core_ref_as_addr = H.core_ref_as_addr
 let core_ref_null = H.core_ref_null
 let core_ref_is_null = H.core_ref_is_null
 
@@ -376,6 +377,7 @@ let lift_action
 let sel_action #a #pcm r v0 = lift_action (H.sel_action #false #a #pcm r v0)
 let select_refine #a #p r x f = lift_action (H.select_refine #false #a #p r x f)
 let upd_gen_action #a #p r x y f = lift_action (H.upd_gen_action #false #a #p r x y f)
+let upd_gen_modifies #a #p r x y f h = H.upd_gen_modifies #false #a #p r x y f h.concrete
 let upd_action #a #p r x y = lift_action (H.upd_action #false #a #p r x y)
 let free_action #a #p r v0 = lift_action (H.free_action #false #a #p r v0)
 let split_action #a #p r v0 v1 = lift_action (H.split_action #false #a #p r v0 v1)
@@ -645,6 +647,31 @@ let lift_action_ghost
   p
 #pop-options
 
+let lift_action_ghost_sem
+      (#immut #allocs #pre #post:_)
+      (#fp:H.slprop) (#a:Type) (#fp':a -> H.slprop)
+      (ni_a:non_informative a)
+      (act:H.action #immut #allocs #pre #post fp a fp')
+      (h:full_hheap (llift GHOST fp) { llift_pred GHOST pre h })
+: Lemma (
+    reveal (dsnd (lift_action_ghost ni_a act h)).ghost == dsnd (act h.ghost)
+  )
+= ()
+
+let lift_erased_sem
+          (#a:Type)
+          (#ni_a:non_informative a)
+          (#allocs:option tag)
+           #hpre #hpost
+          (#pre:slprop)
+          (#post:a -> slprop)
+          ($f:erased (action #ONLY_GHOST #allocs #hpre #hpost pre a post))
+          (h:full_hheap pre { hpre h })
+: Lemma (
+     (dsnd (lift_erased #a #ni_a f h)).ghost == (dsnd (reveal f h)).ghost
+  )
+= ()
+
 let ni_erased a : non_informative (erased a) = fun x -> reveal x
 let ni_unit : non_informative unit = fun x -> reveal x
 
@@ -696,6 +723,31 @@ let ghost_write
 = lift_erased #_ #(ni_unit) #None
     (Ghost.hide <|
       lift_action_ghost ni_unit (H.upd_gen_action #meta #a #p r x y f))
+
+let ghost_write_modifies
+      (#meta:bool)
+      #a (#p:pcm a)
+      (r:ghost_ref p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (ghost_pts_to meta r x))
+: Lemma (
+      let (| _, h1 |) = ghost_write r x y f h in
+      (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
+      concrete h == concrete h1 /\
+      H.related_cells (select_ghost (core_ghost_ref_as_addr r) h) (select_ghost (core_ghost_ref_as_addr r) h1)
+  )
+= calc (==) {
+    (dsnd (ghost_write r x y f h)).ghost;
+  (==) { _ by (T.trefl()) }
+    (dsnd (lift_erased #_ #ni_unit #None 
+              (Ghost.hide <| lift_action_ghost ni_unit (H.upd_gen_action #meta #a #p r x y f)) h)).ghost;
+  (==) { lift_erased_sem #_ #ni_unit #None (Ghost.hide <| lift_action_ghost ni_unit (H.upd_gen_action #meta #a #p r x y f)) h }
+    (dsnd  (lift_action_ghost ni_unit (H.upd_gen_action #meta #a #p r x y f) h)).ghost;
+  (==) { lift_action_ghost_sem ni_unit (H.upd_gen_action #meta #a #p r x y f) h }
+    (hide (dsnd (H.upd_gen_action #meta #a #p r x y f h.ghost)));
+  };
+  H.upd_gen_modifies #meta #a #p r x y f h.ghost
 
 
 let ghost_share

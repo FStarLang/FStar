@@ -338,13 +338,66 @@ let ghost_extend_spec
 = admit()
 
 let ghost_read #ex #meta #a #p r x f = lift_heap_action ex (H2.ghost_read #meta #a #p r x f)
-let ghost_write #ex #meta #a #p r x y f = admit(); lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
+let ghost_write #ex #meta #a #p r x y f = 
+    let act 
+      : ghost_action_except base_heap unit ex
+          (base_heap.ghost_pts_to meta r x)
+          (fun _ -> base_heap.ghost_pts_to meta r y)
+      = lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
+    in
+    introduce reveal meta == false ==> preserves_inames act
+    with _ . (
+      introduce forall (m0:full_mem base_heap) frame. 
+        interpret ((base_heap.ghost_pts_to meta r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+        inames_ok ex m0
+          ==> ( 
+          let x, m1 = act frame m0 in
+          heaps_preserve_inames m0 m1
+        )
+      with introduce _ ==> _ 
+      with _. ( 
+        let _, m1 = act frame m0 in
+        elim_init ex (base_heap.ghost_pts_to meta r x) frame m0;
+        H2.ghost_write_modifies #meta #a #p r x y f m0.heap;
+        match (H2.select_ghost (H2.core_ghost_ref_as_addr r) m0.heap) with
+        | None -> ()
+        | Some (H.Ref meta' _ _ _) -> 
+          assert (reveal meta == false);
+          assert (base_heap.interp (base_heap.ghost_pts_to meta r x) m0.heap);
+          interp_ghost_pts_to r #meta #a #p x m0;
+          assert (reveal meta' == false)
+      )
+    );
+    act
 let ghost_share #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_share #meta #a #p r x y)
 let ghost_gather #ex #meta #a #p r x y = lift_heap_action ex (H2.ghost_gather #meta #a #p r x y)
 
 let extend #ex #a #pcm x = admit()
 let read #ex #a #p r x f = lift_heap_action ex (H2.select_refine #a #p r x f)
-let write #ex #a #p r x y f = admit(); lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
+let write #ex #a #p r x y f = 
+  let act
+    : action_except base_heap unit ex
+        (base_heap.pts_to r x)
+        (fun _ -> base_heap.pts_to r y)
+    = lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
+  in
+  assume (forall i h. H2.select_ghost i h == H.select i (H2.ghost h)); //    assume (forall i. H2.select_ghost i m0.heap == H2.select_ghost i m1.heap);
+  introduce forall (m0:full_mem base_heap) frame. 
+  interpret ((base_heap.pts_to r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+  inames_ok ex m0
+    ==> ( 
+    let x, m1 = act frame m0 in
+    heaps_preserve_inames m0 m1
+  )
+  with introduce _ ==> _ 
+  with _. ( 
+    let _, m1 = act frame m0 in
+    elim_init ex (base_heap.pts_to r x) frame m0;
+    H2.upd_gen_modifies #a #p r x y f m0.heap;
+    assert (H2.ghost m0.heap == H2.ghost m1.heap);
+    ()
+  );
+  act
 let share #ex #a #p r x y = lift_heap_action ex (H2.split_action #a #p r x y)
 let gather #ex #a #p r x y = lift_heap_action ex (H2.gather_action #a #p r x y)
 let pts_to_not_null_action #ex #a #p r x = lift_heap_action ex (H2.pts_to_not_null_action #a #p r x)
