@@ -30,7 +30,9 @@ val bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
     core_of m1 == core_of m0 /\
     ghost_ctr m1 >= ghost_ctr m0 /\
     ghost_ctr m1 >= x /\
-    (forall ex. interpret (base_heap.mem_invariant ex m0) m0 ==> interpret (base_heap.mem_invariant ex m1) m1)
+    (forall ex c0 c1. base_heap.interp (base_heap.mem_invariant ex m0) c0 ==> base_heap.interp (base_heap.mem_invariant ex m1) c1) /\
+    base_heap.is_ghost_action m0 m1 /\
+    (base_heap.full_mem_pred m0 ==> base_heap.full_mem_pred m1)
   }
 
 val interp_ghost_pts_to 

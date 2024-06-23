@@ -1671,17 +1671,124 @@ let injective_invariant
 : prop
 = Inr? i
 
-let new_invariant
+let bump_ghost_ctr (#h:heap_sig u#a) (m:ext_mem h) (ctx:erased nat) =
+  { m with big = H2.bump_ghost_ctr m.big ctx }
+
+#push-options "--fuel 1"
+let istore_invariant_bump
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (ctx:erased nat)
+    (m0:ext_mem h)
+    (c:core h)
+: Lemma
+  (requires
+    H2.free_above_ghost_ctr m0.big)
+  (ensures 
+    (let m1 = bump_ghost_ctr m0 ctx in
+     istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big) ==
+     istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big)))
+= let m1 = bump_ghost_ctr m0 ctx in
+  let rec aux (n:nat { H2.ghost_ctr m0.big <= n /\ n <= H2.ghost_ctr m1.big })
+    : Lemma 
+        (istore_invariant #h (H2.ghost_ctr m0.big) ex (core_of m0.big) ==
+         istore_invariant #h n ex (core_of m0.big))
+    = if n = H2.ghost_ctr m0.big then ()
+      else ( ac_lemmas_ext h; aux (n - 1) ) 
+  in
+  aux (H2.ghost_ctr m1.big)
+
+let mem_invariant_bump_aux
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (ctx:erased nat)
+    (m:ext_mem h)
+    (c:core h)
+: Lemma 
+  (requires 
+    interp (mem_invariant ex m) c)
+  (ensures
+    interp (mem_invariant ex (bump_ghost_ctr m ctx)) c)
+= let m1 = bump_ghost_ctr m ctx in
+  eliminate exists (c0 c1:core h).
+    disjoint c0 c1 /\
+    c == join c0 c1 /\
+    interp (
+        up (h.mem_invariant (down_inames ex) m.small) `star`
+        istore_invariant #h (H2.ghost_ctr m.big) ex (core_of m.big)
+    ) c0 /\
+    interp (lift h (H2.base_heap.mem_invariant Set.empty m.big)) c1
+  returns interp (mem_invariant ex m1) c
+  with _ . (
+    H2.mem_invariant_interp Set.empty m.big c1.big_core;
+    eliminate exists c00 c01.
+      disjoint c00 c01 /\
+      c0 == join c00 c01 /\
+      interp (up (h.mem_invariant (down_inames ex) m.small)) c00  /\
+      interp (istore_invariant #h (H2.ghost_ctr m.big) ex (core_of m.big)) c01
+    returns 
+        interp (
+          up (h.mem_invariant (down_inames ex) m1.small) `star`
+          istore_invariant #h (H2.ghost_ctr m1.big) ex (core_of m1.big)
+        ) c0
+    with _ . (
+      istore_invariant_bump ex ctx m c01
+    );
+   // assert (interpret (H2.base_heap.mem_invariant Set.empty m.big) c1);
+    assert (interp (lift h (H2.base_heap.mem_invariant Set.empty m1.big)) c1)
+  ) 
+
+let mem_invariant_bump 
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (ctx:erased nat)
+    (m0:ext_mem h)
+    (frame:ext_slprop h)
+: Lemma 
+  (requires 
+    interpret #(extend h) (frame `star` mem_invariant ex m0) m0)
+  (ensures
+    interpret #(extend h) (frame `star` mem_invariant ex (bump_ghost_ctr m0 ctx)) (bump_ghost_ctr m0 ctx) /\
+    (inames_ok ex m0 ==> inames_ok ex (bump_ghost_ctr m0 ctx)))
+= let m1 : ext_mem h = bump_ghost_ctr m0 ctx in
+  eliminate exists (c0 c1:core h).
+    disjoint c0 c1 /\
+    get_core m0 == join c0 c1 /\
+    interp #h frame c0 /\
+    interp #h (mem_invariant ex m0) c1
+  returns interp #h (frame `star` mem_invariant ex m1) (get_core m1)
+  with _ . (
+    mem_invariant_bump_aux ex ctx m0 c1
+  );
+  introduce inames_ok ex m0 ==> inames_ok ex (bump_ghost_ctr m0 ctx)
+  with _ . ()
+
+
+let is_ghost_action_trans
+    (#h:heap_sig u#a)
+    (m0:ext_mem h)
+    (m1:ext_mem h)
+    (m2:ext_mem h)
+: Lemma
+  (requires is_ghost_action h m0 m1 /\ is_ghost_action h m1 m2)
+  (ensures is_ghost_action h m0 m2)
+= (extend h).is_ghost_action_preorder ()
+
+#push-options "--query_stats --z3rlimit_factor 4"
+let new_invariant_alt
     (#h:heap_sig u#a)
     (ex:inames (extend h))
     (p:boxable (extend h))
+    (ctx:erased nat)
 : ghost_action_except (extend h) 
-    (iiref h)
+    (i:iiref h { iname_index #h i >= ctx })
     ex
     p
     (fun i -> (extend h).inv i p)
-= fun (frame:ext_slprop h) m0 ->
-    let m0:ext_mem h = m0 in
+=  fun (frame:ext_slprop h) m00 ->
+    let m0:ext_mem h = m00 in
+    mem_invariant_bump ex ctx m00 (p `star` frame);
+    let m0 = bump_ghost_ctr m00 ctx in
     calc (==) {
       p `star` frame `star` mem_invariant ex m0;
     (==) { ac_lemmas_ext h }
@@ -1761,8 +1868,26 @@ let new_invariant
     frame_inames_ok_after_extend ex p r m0 m1;
     assert (inames_ok ex m1);
     h.is_ghost_action_preorder ();
+    is_ghost_action_trans m00 m0 m1;
     let i : ext_iref h = Inr r in
+    assert (iname_index #h i >= ctx);
+//    let i : (i:iiref h { iname_index #h i >= ctx /\ iiref_not_null #h i }) = i in
     i, m1
+#pop-options
+
+
+let new_invariant
+    (#h:heap_sig u#a)
+    (ex:inames (extend h))
+    (p:boxable (extend h))
+: ghost_action_except (extend h) 
+    (iiref h)
+    ex
+    p
+    (fun i -> (extend h).inv i p)
+= fun (frame:ext_slprop h) m0 ->
+    let x, m1 = new_invariant_alt ex p (hide 0) frame m0 in
+    x, m1
 
 let with_invariant
     (#h:heap_sig u#a)
@@ -1881,6 +2006,28 @@ let invariant_name_identifies_invariant
     (), m0
 #pop-options
 
+let max (x y:nat) : nat = if x > y then x else y
+#push-options "--ifuel 1 --fuel 1"
+let rec max_l #h (ctx:(list (extend h).iref))
+: erased nat
+= match ctx with
+  | [] -> 0
+  | hd :: tl ->
+    let tl_max = max_l tl in
+    match hd with
+    | Inl _ -> tl_max
+    | Inr _ -> max (iname_index hd) tl_max
+let pick #h (ctx:(list (extend h).iref)) : erased nat = max_l ctx + 1
+let rec fresh_against_pick #h (ctx:list (extend h).iref) (i:iiref h)
+: Lemma
+  (requires iname_index #h i > max_l ctx)
+  (ensures fresh_wrt ctx i)
+= match ctx with
+  | [] -> ()
+  | hd :: tl -> 
+    fresh_against_pick tl i
+#pop-options
+
 let fresh_invariant
     (#h:heap_sig u#a) 
     (e:inames (extend h))
@@ -1891,7 +2038,10 @@ let fresh_invariant
     e
     p
     (fun i -> (extend h).inv i p)
-= admit()
+= fun frame m0 ->
+    let x, m1 = new_invariant_alt e p (pick ctx) frame m0 in
+    fresh_against_pick ctx x;
+    x, m1
 
 let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
