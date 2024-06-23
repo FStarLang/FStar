@@ -228,6 +228,27 @@ let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.
 let inames_ok_trivial (ex:inames base_heap) (h:base_heap.mem)
 : Lemma (inames_ok ex h)
 = ()
+let max (i j:nat) : nat = if i >= j then i else j
+let bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
+: m1:base_heap.mem {
+    core_of m1 == core_of m0 /\
+    ghost_ctr m1 >= ghost_ctr m0 /\
+    ghost_ctr m1 >= x /\
+    (forall ex. interpret (base_heap.mem_invariant ex m0) m0 ==> interpret (base_heap.mem_invariant ex m1) m1)
+
+  }
+= let ctr = hide (max m0.ghost_ctr x) in
+  let m1 = {m0 with ghost_ctr = ctr} in
+  introduce forall ex. interpret (base_heap.mem_invariant ex m0) m0 ==> interpret (base_heap.mem_invariant ex m1) m1
+  with introduce _ ==> _
+  with _ . (
+      base_heap.pure_interp (free_above m0) (core_of m0);
+      base_heap.pure_interp (free_above m1) (core_of m1);
+      H2.weaken_free_above GHOST m0.heap m0.ghost_ctr m1.ghost_ctr
+  );
+  m1
+
+
 let interp_ghost_pts_to i #meta #a #pcm v h0 = H2.interp_ghost_pts_to i #meta #a #pcm v h0
 let ghost_pts_to_compatible_equiv = H2.ghost_pts_to_compatible_equiv
 
