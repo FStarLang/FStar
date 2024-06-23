@@ -234,16 +234,19 @@ let bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
     core_of m1 == core_of m0 /\
     ghost_ctr m1 >= ghost_ctr m0 /\
     ghost_ctr m1 >= x /\
-    (forall ex. interpret (base_heap.mem_invariant ex m0) m0 ==> interpret (base_heap.mem_invariant ex m1) m1)
-
+    (forall ex c0 c1. base_heap.interp (base_heap.mem_invariant ex m0) c0 ==> base_heap.interp (base_heap.mem_invariant ex m1) c1) /\
+    base_heap.is_ghost_action m0 m1 /\
+    (base_heap.full_mem_pred m0 ==> base_heap.full_mem_pred m1)
   }
 = let ctr = hide (max m0.ghost_ctr x) in
   let m1 = {m0 with ghost_ctr = ctr} in
-  introduce forall ex. interpret (base_heap.mem_invariant ex m0) m0 ==> interpret (base_heap.mem_invariant ex m1) m1
+  introduce forall ex c0 c1. 
+    base_heap.interp (base_heap.mem_invariant ex m0) c0 ==>
+    base_heap.interp (base_heap.mem_invariant ex m1) c1
   with introduce _ ==> _
   with _ . (
-      base_heap.pure_interp (free_above m0) (core_of m0);
-      base_heap.pure_interp (free_above m1) (core_of m1);
+      base_heap.pure_interp (free_above m0) c0;
+      base_heap.pure_interp (free_above m1) c1;
       H2.weaken_free_above GHOST m0.heap m0.ghost_ctr m1.ghost_ctr
   );
   m1

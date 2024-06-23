@@ -1523,7 +1523,6 @@ let mem_invariant_rest (#h:heap_sig u#a) (e:eset (ext_iname h)) (m:ext_mem h)
 = up (h.mem_invariant (down_inames e) m.small) `star`
   istore_invariant #h (H2.ghost_ctr m.big) e (core_of m.big)
 
-#push-options "--query_stats"
 let intro_inv (#h:heap_sig)
               (r:ghost_ref _ (PA.pcm_agreement #h.slprop))
               (p:boxable (extend h))
@@ -1774,7 +1773,7 @@ let is_ghost_action_trans
   (ensures is_ghost_action h m0 m2)
 = (extend h).is_ghost_action_preorder ()
 
-#push-options "--query_stats --z3rlimit_factor 4"
+#push-options "--z3rlimit_factor 4"
 let new_invariant_alt
     (#h:heap_sig u#a)
     (ex:inames (extend h))
