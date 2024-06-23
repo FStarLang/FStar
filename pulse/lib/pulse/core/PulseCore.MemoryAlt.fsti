@@ -324,9 +324,9 @@ let fresh_wrt (ctx:list iref)
               (i:iref)
   = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
 
-val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
+val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
   : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
-       (p `star` all_live ctx)
+       p
        (fun i -> inv i p)
 
 (* Some generic actions and combinators *)

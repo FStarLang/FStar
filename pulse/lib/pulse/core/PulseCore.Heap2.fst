@@ -726,6 +726,16 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
   slprop_extensionality (llift GHOST H.emp) emp
 
 let core_ghost_ref_as_addr i = H.core_ref_as_addr i
+let core_ghost_ref_is_null c = H.core_ref_is_null c
+let core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+: Lemma 
+  (requires 
+    core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
+    not (core_ghost_ref_is_null c1) /\
+    not (core_ghost_ref_is_null c2))
+  (ensures c1 == c2)
+= H.addr_core_ref_injective_2 c1;
+  H.addr_core_ref_injective_2 c2
 let interp_ghost_pts_to i #m #a #p v h = H.interp_pts_to i #m #a #p v h.ghost
 let ghost_pts_to_compatible_equiv #meta #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #meta #a #pcm r v0 v1;

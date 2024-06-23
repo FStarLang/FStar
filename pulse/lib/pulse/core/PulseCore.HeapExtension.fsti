@@ -43,12 +43,19 @@ val dup_inv
     ((extend h).inv i p) 
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv i p)
 
+val injective_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: prop
+
+let iiref (h:heap_sig) = i:(extend h).iref { injective_invariant i }
+
 val new_invariant
     (#h:heap_sig u#a) 
     (e:inames (extend h))
     (p:boxable (extend h))
 : ghost_action_except (extend h) 
-    (extend h).iref
+    (iiref h)
     e
     p
     (fun i -> (extend h).inv i p)
@@ -69,6 +76,45 @@ val with_invariant
 : _action_except (extend h) a maybe_ghost opened_invariants 
       ((extend h).inv i p `(extend h).star` fp)
       (fun x -> (extend h).inv i p `(extend h).star` fp' x)
+
+val distinct_invariants_have_distinct_names
+      (#h:heap_sig u#a)
+      (e:inames (extend h))
+      (p:(extend h).slprop)
+      (q:(extend h).slprop { p =!= q })
+      (i j: iiref h)
+: ghost_action_except (extend h)
+    (squash ((extend h).iname_of i =!= (extend h).iname_of j))
+    e 
+    ((extend h).inv i p `(extend h).star` (extend h).inv j q)
+    (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
+
+val invariant_name_identifies_invariant
+      (#h:heap_sig u#a)
+      (e:inames (extend h))
+      (p q:(extend h).slprop)
+      (i:iiref h)
+      (j:iiref h{ (extend h).iname_of i == (extend h).iname_of j } )
+: ghost_action_except (extend h)
+   (squash (p == q /\ i == j)) e
+    ((extend h).inv i p `(extend h).star` (extend h).inv j q)
+    (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
+
+let fresh_wrt (#h:heap_sig u#h)
+              (ctx:list h.iref)
+              (i:h.iref)
+  = forall i'. List.Tot.memP i' ctx ==> h.iname_of i' <> h.iname_of i   
+
+val fresh_invariant
+    (#h:heap_sig u#a) 
+    (e:inames (extend h))
+    (p:boxable (extend h))
+    (ctx:FStar.Ghost.erased (list (extend h).iref))
+: ghost_action_except (extend h) 
+    (i:iiref h { fresh_wrt ctx i })
+    e
+    p
+    (fun i -> (extend h).inv i p)
 
 val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))

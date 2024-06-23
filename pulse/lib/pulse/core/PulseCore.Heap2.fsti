@@ -791,7 +791,15 @@ val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
-
+val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
+val core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+: Lemma 
+  (requires 
+    core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
+    not (core_ghost_ref_is_null c1) /\
+    not (core_ghost_ref_is_null c2))
+  (ensures c1 == c2)
+  
 val interp_ghost_pts_to 
       (i:core_ghost_ref)
       (#meta:bool)
@@ -802,6 +810,7 @@ val interp_ghost_pts_to
 : Lemma
   (requires interp (ghost_pts_to meta #a #pcm i v) h0)
   (ensures (
+    not (core_ghost_ref_is_null i) /\ (
     match select_ghost (core_ghost_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
@@ -809,7 +818,7 @@ val interp_ghost_pts_to
       meta == reveal meta' /\
       a == a' /\
       pcm == pcm' /\
-      compatible pcm v v'))
+      compatible pcm v v')))
       
 val ghost_pts_to_compatible_equiv 
       (#meta:bool)

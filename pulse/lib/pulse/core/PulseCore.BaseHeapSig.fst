@@ -216,7 +216,8 @@ let base_heap : heap_sig u#a =
 let core_ghost_ref_as_addr (r:core_ghost_ref)
 : GTot nat
 = H2.core_ghost_ref_as_addr r
-
+let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
+let core_ghost_ref_as_addr_injective r1 r2 = H2.core_ghost_ref_as_addr_injective r1 r2
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
 let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)

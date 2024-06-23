@@ -648,16 +648,23 @@ let rec istore_invariant_eq_aux
 
 let inv_i_p (#h:heap_sig u#a) (i:ext_iref h) (p:ext_slprop h) (m:ext_mem h)
 : prop 
-= Inr? i ==> inv_i_p_property i p (core_of m.big) /\ iname_index i <= H2.ghost_ctr m.big
+= Inr? i ==>
+  inv_i_p_property i p (core_of m.big) /\
+  iname_index i <= H2.ghost_ctr m.big
+
+
+let iiref_not_null (#h:heap_sig u#a) (i: ext_iref h { Inr? i })
+= let Inr i = i in
+  not (H2.core_ghost_ref_is_null i)
 
 let inv_interp
       (#h:heap_sig u#a) 
       (i:ext_iref h { Inr? i })
       (p:ext_slprop h)
       (m:ext_mem h)
-: Lemma (interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big))
+: Lemma (interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big) /\ iiref_not_null i)
 = let Inr r = i in
-  introduce interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big)
+  introduce interp (inv i p) (get_core m) ==> inv_i_p_property i p (core_of m.big) /\ iiref_not_null i
   with _ . (
     H2.interp_ghost_pts_to r #true #_ #(PA.pcm_agreement #h.slprop) (Some (down p)) (core_of m.big);
     pure_interp (is_boxable_ext p) (get_core m)
@@ -1658,12 +1665,18 @@ let fold_new_invariant
     lift h (H2.base_heap.mem_invariant Set.empty m1.big);
   }
 
+let injective_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: prop
+= Inr? i
+
 let new_invariant
     (#h:heap_sig u#a)
     (ex:inames (extend h))
     (p:boxable (extend h))
 : ghost_action_except (extend h) 
-    (extend h).iref
+    (iiref h)
     ex
     p
     (fun i -> (extend h).inv i p)
@@ -1812,6 +1825,74 @@ let pure_ext (h:heap_sig u#a) (p q:prop)
 : Lemma ((p <==> q) ==> pure #h p == pure #h q)
 = FStar.PropositionalExtensionality.apply p q
 
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+let distinct_invariants_have_distinct_names
+      (#h:heap_sig u#a)
+      (e:inames (extend h))
+      (p:ext_slprop h)
+      (q:ext_slprop h{ p =!= q })
+      (i j: iiref h)
+: ghost_action_except (extend h)
+    (squash (iname_of h i =!= iname_of h j))
+    e 
+    (inv i p `star` inv j q)
+    (fun _ -> inv i p `star` inv j q)
+= fun frame m0 ->
+    assert (interpret (inv i p) m0);
+    assert (interpret (inv j q) m0);
+    inv_interp i p m0;
+    inv_interp j q m0;
+    assert ((iname_of h i =!= iname_of h j));
+    h.is_ghost_action_preorder ();
+    H2.base_heap.is_ghost_action_preorder ();
+    (), m0
+#pop-options
+
+let iname_of_iref_injective (#h:heap_sig u#a) (i j: iiref h)
+: Lemma
+  (requires 
+    iname_of h i == iname_of h j /\
+    iiref_not_null #h i /\
+    iiref_not_null #h j)
+  (ensures i == j)
+= let Inr i = i in
+  let Inr j = j in
+  H2.core_ghost_ref_as_addr_injective i j
+
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
+let invariant_name_identifies_invariant
+      (#h:heap_sig u#a)
+      (e:inames (extend h))
+      (p q:ext_slprop h)
+      (i:iiref h)
+      (j:iiref h{ iname_of h i == iname_of h j } )
+: ghost_action_except (extend h)
+    (squash (p == q /\ i == j))
+    e
+    (inv i p `star` inv j q)
+    (fun _ -> inv i p `star` inv j q)
+= fun frame m0 -> 
+    inv_interp i p m0;
+    inv_interp j q m0;
+    h.is_ghost_action_preorder ();
+    H2.base_heap.is_ghost_action_preorder ();
+    iname_of_iref_injective i j;
+    (), m0
+#pop-options
+
+let fresh_invariant
+    (#h:heap_sig u#a) 
+    (e:inames (extend h))
+    (p:boxable (extend h))
+    (ctx:FStar.Ghost.erased (list (extend h).iref))
+: ghost_action_except (extend h) 
+    (i:iiref h { fresh_wrt ctx i })
+    e
+    p
+    (fun i -> (extend h).inv i p)
+= admit()
+
 let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
 = calc (==) {
@@ -1826,33 +1907,6 @@ let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
     up (h.inv i p);
   }
 
-
-// let heap_cell_evolves (h0 h1:option H.cell)
-// : prop
-// = match h0, h1 with
-//   | None, None -> True
-//   | None, Some (H.Ref meta _ _ _) -> reveal meta == false
-//   | Some (H.Ref meta a p v), Some (H.Ref meta' a' p' v') ->
-//     meta == meta' /\ (reveal meta ==> a==a' /\ p==p' /\ v==v')
-//   | _, _ -> False
-
-// let heaps_preserve_inames (m0 m1:H2.base_heap.mem) =
-//   H2.ghost_ctr m0 == H2.ghost_ctr m1 /\
-//   (forall (addr:nat).
-//     heap_cell_evolves (H2.select_ghost addr (core_of m0)) (H2.select_ghost addr (core_of m1)))
-
-// let preserves_inames 
-//     (#a:Type u#a)
-//     (#mg:bool)
-//     (#pre:base_slprop u#h)
-//     (#post:a -> GTot (base_slprop u#h))
-//     (action:_action_except H2.base_heap a mg Set.empty pre post)
-// = forall (m0:full_mem H2.base_heap) frame. 
-//     interpret (pre `H2.base_heap.star` frame `H2.base_heap.star` H2.base_heap.mem_invariant Set.empty m0) m0
-//     ==> ( 
-//     let x, m1 = action frame m0 in
-//     heaps_preserve_inames m0 m1
-//     )
 
 #push-options "--ifuel 2 --fuel 1"
 let sl_pure_imp_ext_aux

@@ -247,7 +247,7 @@ val new_invariant (p:big_vprop)
 val fresh_invariant (ctx:list iref) (p:big_vprop)
 : stt_ghost (i:iref { i `fresh_wrt` ctx })
             emp_inames
-            (p ** all_live ctx)
+            p
             (fun i -> inv i p)
 
 val with_invariant

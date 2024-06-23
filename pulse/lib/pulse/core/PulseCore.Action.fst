@@ -395,7 +395,7 @@ let rec all_live_eq (ctx:list iref)
   | hd::tl ->
     live_eq hd;
     all_live_eq tl
-let fresh_invariant ctx p = fun #ictx -> all_live_eq ctx; fresh_invariant ictx p ctx
+let fresh_invariant ctx p = fun #ictx -> fresh_invariant ictx p ctx
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
   let f : act a r f_opens (p `star` fp) (fun x -> p `star` fp' x) = f () in

@@ -554,7 +554,7 @@ val all_live_cons (hd:iref) (tl:list iref)
 val fresh_invariant
     (ctx:list iref)
     (p:vprop { is_big p })
-: stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames (p ** all_live ctx) (fun i -> inv i p)
+: stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)

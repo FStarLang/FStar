@@ -339,8 +339,10 @@ let mem_invariant (e:inames) (m:mem u#a)
 
 let full_mem_pred: mem -> prop = sig.full_mem_pred 
 
-let iref : Type0 = erased sig.iref
-let reveal_iref (i:iref) : sig.iref = sig.non_info_iref i
+let iref : Type0 = erased (E.iiref small_sig)
+let reveal_iref (i:iref) : sig.iref = 
+  let x : erased (sig.iref) = hide (reveal i) in
+  sig.non_info_iref x
 let iname_of (i:iref) : GTot iname = sig.iname_of i
 
 let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv (reveal_iref i) p
@@ -426,6 +428,20 @@ let with_invariant (#a:Type u#x)
     (reveal_iref i)
     (coerce_action_back _ (fun x -> p `star` reveal_slprop (fp' x)) () f)
 
+let lift_action_alt
+    (#h:H.heap_sig u#h)
+    (#a:Type u#a)
+    (#mg:bool)
+    (#ex:H.inames (E.extend h))
+    (#pre:erased h.slprop)
+    (#post:a -> GTot h.slprop)
+    (action:H._action_except h a mg (E.lower_inames ex) pre post)
+: H._action_except (E.extend h)
+    a mg ex 
+    ((E.extend h).up pre)
+    (fun x -> (E.extend h).up (post x))
+= E.lift_action_alt #h #a #mg #ex #(h.non_info_slprop pre) #post action
+
 let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
@@ -436,7 +452,35 @@ let distinct_invariants_have_distinct_names
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
-= admit()
+= coerce_action 
+    #_ 
+    #_
+    #_
+    #_
+    #_
+    #(inv i p `star` inv j q)
+    #(fun _ -> inv i p `star` inv j q)
+     () <|
+  E.distinct_invariants_have_distinct_names #(small_sig u#m) e (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
+
+let invariant_name_identifies_invariant_alt
+      (e:inames)
+      (p q:slprop u#m)
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
+: pst_ghost_action_except (squash (reveal_slprop p == reveal_slprop q /\ eq2 #(E.iiref small_sig) (reveal_iref i) (reveal_iref j))) e
+   (inv i p `star` inv j q)
+   (fun _ -> inv i p `star` inv j q)
+= coerce_action 
+    #(squash (reveal_slprop p == reveal_slprop q /\ reveal_iref i == reveal_iref j))
+    #_
+    #_
+    #_
+    #_
+    #(inv i p `star` inv j q)
+    #(fun _ -> inv i p `star` inv j q)
+     () <|
+  E.invariant_name_identifies_invariant #(small_sig u#m) e (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
 
 let invariant_name_identifies_invariant
       (e:inames)
@@ -446,13 +490,47 @@ let invariant_name_identifies_invariant
 : pst_ghost_action_except (squash (p == q /\ i == j)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
-= admit()
-   
-let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
-: pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
-       (p `star` all_live ctx)
+= fun frame m0 -> 
+    let x, m1 = invariant_name_identifies_invariant_alt e p q i j frame m0 in
+    (), m1
+
+let rec coerce_ctx (ctx:erased (list iref))
+: erased (list sig.iref)
+= match reveal ctx with
+  | [] -> []
+  | hd::tl -> hide (reveal hd :: coerce_ctx tl)
+
+let rec coerce_ctx_mem (ctx:erased (list iref))
+: Lemma (forall (i:E.iiref small_sig). List.Tot.memP i (coerce_ctx ctx) <==> List.Tot.memP (hide i) ctx)
+= match ctx with
+  | [] -> ()
+  | hd::tl -> 
+    let _ = coerce_ctx_mem tl in
+    ()
+
+let fresh_invariant_alt (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
+: pst_ghost_action_except (i:E.iiref small_sig { E.fresh_wrt (coerce_ctx ctx) i }) e
+       p
        (fun i -> inv i p)
-= admit()
+= coerce_action 
+    #(i:E.iiref small_sig { E.fresh_wrt (coerce_ctx ctx) i})
+    #_
+    #_
+    #(reveal_slprop p)
+    #(fun i -> sig.inv i (reveal_slprop p))
+    #p
+    #(fun i -> inv i p)
+  () <|
+  E.fresh_invariant #(small_sig u#m) e (reveal_slprop p) (coerce_ctx ctx)
+
+let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
+: pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
+       p
+       (fun i -> inv i p)
+= fun frame m0 -> 
+    let x, m1 = fresh_invariant_alt e p ctx frame m0 in
+    coerce_ctx_mem ctx;
+    hide x, m1
 
 (* Some generic actions and combinators *)
 
@@ -544,19 +622,6 @@ let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
 
 let wrap (#h:H.heap_sig u#a) (p:erased h.slprop) : h.slprop = h.non_info_slprop p
 
-let lift_action_alt
-    (#h:H.heap_sig u#h)
-    (#a:Type u#a)
-    (#mg:bool)
-    (#ex:H.inames (E.extend h))
-    (#pre:erased h.slprop)
-    (#post:a -> GTot h.slprop)
-    (action:H._action_except h a mg (E.lower_inames ex) pre post)
-: H._action_except (E.extend h)
-    a mg ex 
-    ((E.extend h).up pre)
-    (fun x -> (E.extend h).up (post x))
-= E.lift_action_alt #h #a #mg #ex #(h.non_info_slprop pre) #post action
 
 // let coerce_action_alt
 //     (#a:Type u#x)

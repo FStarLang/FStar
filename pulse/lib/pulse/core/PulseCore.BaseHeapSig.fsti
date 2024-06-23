@@ -5,6 +5,14 @@ open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
+val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
+val core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+: Lemma 
+    (requires 
+        core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
+        not (core_ghost_ref_is_null c1) /\
+        not (core_ghost_ref_is_null c2))
+    (ensures c1 == c2)
 val select_ghost (i:nat) (m:(base_heap u#a).sep.core) : GTot (option (H.cell u#a))
 val ghost_ctr (b:base_heap.mem) : GTot nat
 let free_above_ghost_ctr (m:base_heap.mem)
@@ -27,6 +35,7 @@ val interp_ghost_pts_to
 : Lemma
   (requires base_heap.interp (base_heap.ghost_pts_to meta #a #pcm i v) h0)
   (ensures (
+    not (core_ghost_ref_is_null i) /\ (
     match select_ghost (core_ghost_ref_as_addr i) h0 with
     | None -> False
     | Some c ->
@@ -34,7 +43,7 @@ val interp_ghost_pts_to
       meta == reveal meta' /\
       a == a' /\
       pcm == pcm' /\
-      compatible pcm v v'))
+      compatible pcm v v')))
       
 val ghost_pts_to_compatible_equiv 
       (#meta:bool)

@@ -161,7 +161,7 @@ let fresh_wrt (i:iref)
 = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
 
 val fresh_invariant (ctx:list iref) (p:big_vprop)
-: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> inv i p)
+: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
