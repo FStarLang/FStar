@@ -341,17 +341,18 @@ let ghost_extend_spec_alt
                    base_heap.mem_invariant ex h) h })      
 : Lemma (
       let (r, h1) = ghost_extend_alt meta #ex #a #pcm x frame h in
-      (forall (a:nat).
-         a <> ghost_ctr h ==>
-         select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
-      ghost_ctr h1 == ghost_ctr h + 1 /\
-      select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
-      ghost_ctr h == core_ghost_ref_as_addr r
-  )
+      single_ghost_allocation meta #a #pcm x r h h1)
 = let act = ghost_extend_alt meta #ex #a #pcm x in
   let _, m1 = act frame h in
   elim_init ex emp frame h;
-  H2.ghost_extend_spec #meta #a #pcm x h.ghost_ctr h.heap
+  H2.ghost_extend_spec #meta #a #pcm x h.ghost_ctr h.heap;
+  HeapSig.destruct_star
+    (base_heap.emp `base_heap.star` frame)
+    (base_heap.mem_invariant ex h) (core_of h);
+  assert (interpret (base_heap.mem_invariant ex h) h);
+  mem_invariant_interp ex h (core_of h);
+  assert (free_above_ghost_ctr h)
+  
 
 let ghost_extend meta #ex #a #pcm x =
   let act = ghost_extend_alt meta #ex #a #pcm x in

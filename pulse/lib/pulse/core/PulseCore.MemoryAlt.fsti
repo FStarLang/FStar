@@ -295,7 +295,6 @@ val with_invariant (#a:Type)
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
 
-(*
 val distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
@@ -329,7 +328,6 @@ val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
   : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
        (p `star` all_live ctx)
        (fun i -> inv i p)
-*)
 
 (* Some generic actions and combinators *)
 
@@ -502,36 +500,6 @@ val ghost_gather
 
 (* Concrete references to "big" types *)
 val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
-(*
-val big_sel_action
-      (#a:Type u#(a + 1))
-      (#pcm:_)
-      (e:inames)
-      (r:ref a pcm)
-      (v0:erased a)
-: pst_action_except (v:a{compatible pcm v0 v}) e
-    (big_pts_to r v0)
-    (fun _ -> big_pts_to r v0)
-
-val big_upd_action
-      (#a:Type u#(a + 1)) (#pcm:_) (e:inames)
-      (r:ref a pcm)
-      (v0:FStar.Ghost.erased a)
-      (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
-: pst_action_except unit e
-    (big_pts_to r v0)
-    (fun _ -> big_pts_to r v1)
-
-val big_free_action
-      (#a:Type u#(a + 1))
-      (#pcm:pcm a)
-      (e:inames)
-      (r:ref a pcm)
-      (x:FStar.Ghost.erased a{FStar.PCM.exclusive pcm x /\ pcm.refine pcm.FStar.PCM.p.one})
-: pst_action_except unit e
-    (big_pts_to r x)
-    (fun _ -> big_pts_to r pcm.FStar.PCM.p.one)
-*)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val big_split_action

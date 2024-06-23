@@ -75,18 +75,6 @@ let preserves_inames
     heaps_preserve_inames m0 m1
     )
 
-val ghost_extend
-    (meta:erased bool)
-    (#ex:inames base_heap)
-    (#a:Type u#a)
-    (#pcm:pcm a)
-    (x:erased a{pcm.refine x})
-: act:ghost_action_except base_heap (ghost_ref a pcm) ex    
-        base_heap.emp 
-        (fun r -> base_heap.ghost_pts_to meta r x) {
-            reveal meta == false ==> preserves_inames act
-        }
-
 let single_ghost_allocation
         (meta:bool)
         (#a:Type)
@@ -102,6 +90,19 @@ let single_ghost_allocation
   ghost_ctr h == core_ghost_ref_as_addr r /\
   free_above_ghost_ctr h /\
   free_above_ghost_ctr h1
+
+val ghost_extend
+    (meta:erased bool)
+    (#ex:inames base_heap)
+    (#a:Type u#a)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: act:ghost_action_except base_heap (ghost_ref a pcm) ex    
+        base_heap.emp 
+        (fun r -> base_heap.ghost_pts_to meta r x) {
+            reveal meta == false ==> preserves_inames act
+        }
+
 
   
 val ghost_extend_spec

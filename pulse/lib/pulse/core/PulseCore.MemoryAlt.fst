@@ -426,8 +426,7 @@ let with_invariant (#a:Type u#x)
     (reveal_iref i)
     (coerce_action_back _ (fun x -> p `star` reveal_slprop (fp' x)) () f)
 
-(*
-val distinct_invariants_have_distinct_names
+let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
@@ -437,8 +436,9 @@ val distinct_invariants_have_distinct_names
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
+= admit()
 
-val invariant_name_identifies_invariant
+let invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
@@ -446,21 +446,13 @@ val invariant_name_identifies_invariant
 : pst_ghost_action_except (squash (p == q /\ i == j)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
+= admit()
    
-let rec all_live (ctx:list iref) =
-  match ctx with
-  | [] -> emp
-  | hd::tl -> live hd `star` all_live tl
-
-let fresh_wrt (ctx:list iref)
-              (i:iref)
-  = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
-
-val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
-  : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
+let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:list iref)
+: pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
        (p `star` all_live ctx)
        (fun i -> inv i p)
-*)
+= admit()
 
 (* Some generic actions and combinators *)
 

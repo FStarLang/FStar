@@ -160,8 +160,8 @@ let fresh_wrt (i:iref)
 : prop
 = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
 
-// val fresh_invariant (ctx:list iref) (p:big_vprop)
-// : act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> inv i p)
+val fresh_invariant (ctx:list iref) (p:big_vprop)
+: act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames (p ** all_live ctx) (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -174,26 +174,26 @@ val with_invariant
     (f:unit -> act a r f_opens (p ** fp) (fun x -> p ** fp' x))
 : act a r (add_inv f_opens i) ((inv i p) ** fp) (fun x -> (inv i p) ** fp' x)
 
-// val distinct_invariants_have_distinct_names
-//     (#p:slprop)
-//     (#q:slprop)
-//     (i j:iref)
-//     (_:squash (p =!= q))
-// : act (squash (iname_of i =!= iname_of j))
-//       Ghost
-//       emp_inames 
-//       ((inv i p) ** (inv j q))
-//       (fun _ -> (inv i p) ** (inv j q))
+val distinct_invariants_have_distinct_names
+    (#p:slprop)
+    (#q:slprop)
+    (i j:iref)
+    (_:squash (p =!= q))
+: act (squash (iname_of i =!= iname_of j))
+      Ghost
+      emp_inames 
+      ((inv i p) ** (inv j q))
+      (fun _ -> (inv i p) ** (inv j q))
 
-// val invariant_name_identifies_invariant
-//       (p q:slprop)
-//       (i:iref)
-//       (j:iref { iname_of i == iname_of j } )
-// : act (squash (p == q /\ i == j))
-//       Ghost
-//       emp_inames
-//       ((inv i p) ** (inv j q))
-//       (fun _ -> (inv i p) ** (inv j q))
+val invariant_name_identifies_invariant
+      (p q:slprop)
+      (i:iref)
+      (j:iref { iname_of i == iname_of j } )
+: act (squash (p == q /\ i == j))
+      Ghost
+      emp_inames
+      ((inv i p) ** (inv j q))
+      (fun _ -> (inv i p) ** (inv j q))
 
 
 ////////////////////////////////////////////////////////////////////////
