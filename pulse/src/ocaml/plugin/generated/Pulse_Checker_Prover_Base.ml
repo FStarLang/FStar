@@ -886,21 +886,25 @@ type 'preamble1 prover_state =
   unsolved: Pulse_Syntax_Base.vprop Prims.list ;
   k: (unit, unit, unit, unit) Pulse_Checker_Base.continuation_elaborator ;
   goals_inv: unit ;
-  solved_inv: unit }
+  solved_inv: unit ;
+  progress: Prims.bool ;
+  allow_ambiguous: Prims.bool }
 let (__proj__Mkprover_state__item__pg :
   preamble -> unit prover_state -> Pulse_Typing_Env.env) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> pg
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> pg
 let (__proj__Mkprover_state__item__remaining_ctxt :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> remaining_ctxt
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> remaining_ctxt
 
 let (__proj__Mkprover_state__item__uvs :
   preamble -> unit prover_state -> Pulse_Typing_Env.env) =
@@ -908,14 +912,16 @@ let (__proj__Mkprover_state__item__uvs :
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> uvs
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> uvs
 let (__proj__Mkprover_state__item__ss :
   preamble -> unit prover_state -> Pulse_Checker_Prover_Substs.ss_t) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> ss
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> ss
 let (__proj__Mkprover_state__item__nts :
   preamble ->
     unit prover_state ->
@@ -927,21 +933,24 @@ let (__proj__Mkprover_state__item__nts :
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> nts
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> nts
 let (__proj__Mkprover_state__item__solved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> solved
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> solved
 let (__proj__Mkprover_state__item__unsolved :
   preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> unsolved
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> unsolved
 let (__proj__Mkprover_state__item__k :
   preamble ->
     unit prover_state ->
@@ -951,7 +960,24 @@ let (__proj__Mkprover_state__item__k :
     fun projectee ->
       match projectee with
       | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
-          solved; unsolved; k; goals_inv; solved_inv;_} -> k
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> k
+let (__proj__Mkprover_state__item__progress :
+  preamble -> unit prover_state -> Prims.bool) =
+  fun preamble1 ->
+    fun projectee ->
+      match projectee with
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> progress
+let (__proj__Mkprover_state__item__allow_ambiguous :
+  preamble -> unit prover_state -> Prims.bool) =
+  fun preamble1 ->
+    fun projectee ->
+      match projectee with
+      | { pg; remaining_ctxt; remaining_ctxt_frame_typing; uvs; ss; nts;
+          solved; unsolved; k; goals_inv; solved_inv; progress;
+          allow_ambiguous;_} -> allow_ambiguous
 type ('preamble1, 'st) is_terminal = unit
 let (extend_post_hint_opt_g :
   Pulse_Typing_Env.env ->
@@ -966,7 +992,7 @@ let (extend_post_hint_opt_g :
         | FStar_Pervasives_Native.Some post_hint1 ->
             FStar_Pervasives_Native.Some post_hint1
 type ('ss1, 'ss2) ss_extends = unit
-type ('preamble1, 'pst1, 'pst2) pst_extends = unit
+type ('preamble1, 'preamble2, 'pst1, 'pst2) pst_extends = unit
 type prover_t =
   preamble ->
     unit prover_state ->

@@ -870,7 +870,7 @@ let (check_core :
                                                                     (Prims.of_int (136))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (136))
-                                                                    (Prims.of_int (48)))))
+                                                                    (Prims.of_int (54)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -881,8 +881,9 @@ let (check_core :
                                                                     (Prims.of_int (40)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.try_frame_pre
-                                                                    g1 ctxt
-                                                                    () dd
+                                                                    false g1
+                                                                    ctxt ()
+                                                                    dd
                                                                     res_ppname))
                                                                     (fun
                                                                     uu___6 ->

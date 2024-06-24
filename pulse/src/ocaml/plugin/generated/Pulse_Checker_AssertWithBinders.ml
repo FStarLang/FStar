@@ -2768,7 +2768,7 @@ let (check :
                                                                     (Prims.of_int (409))
                                                                     (Prims.of_int (42))
                                                                     (Prims.of_int (409))
-                                                                    (Prims.of_int (71)))))
+                                                                    (Prims.of_int (77)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2779,7 +2779,8 @@ let (check :
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Prover.prove
-                                                                    g pre ()
+                                                                    false g
+                                                                    pre ()
                                                                     uvs v2 ()))
                                                                     (fun
                                                                     uu___5 ->
@@ -2810,7 +2811,7 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.AssertWithBinders.fst"
                                                                     (Prims.of_int (409))
-                                                                    (Prims.of_int (74))
+                                                                    (Prims.of_int (80))
                                                                     (Prims.of_int (420))
                                                                     (Prims.of_int (52)))))
                                                                     (Obj.magic

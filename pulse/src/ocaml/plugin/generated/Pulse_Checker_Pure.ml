@@ -1925,7 +1925,7 @@ let (rtb_check_prop_validity :
                                                       if sync
                                                       then
                                                         FStar_Tactics_V2_Derived.with_policy
-                                                          FStar_Tactics_Types.SMTSync
+                                                          FStar_Tactics_Types.ForceSMT
                                                           (fun uu___3 ->
                                                              FStar_Tactics_V2_Builtins.check_prop_validity
                                                                f sp)
@@ -4925,7 +4925,7 @@ let (check_subtyping :
   fun g ->
     fun t1 ->
       fun t2 ->
-        FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.SMTSync
+        FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.ForceSMT
           (fun uu___ ->
              FStar_Tactics_Effect.tac_bind
                (FStar_Sealed.seal
@@ -4936,7 +4936,7 @@ let (check_subtyping :
                (FStar_Sealed.seal
                   (Obj.magic
                      (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
-                        (Prims.of_int (522)) (Prims.of_int (34))
+                        (Prims.of_int (522)) (Prims.of_int (35))
                         (Prims.of_int (531)) (Prims.of_int (47)))))
                (Obj.magic (rtb_check_subtyping g t1 t2))
                (fun uu___1 ->

@@ -2174,7 +2174,7 @@ let (main :
                          (Obj.magic
                             (FStar_Range.mk_range "Pulse.Main.fst"
                                (Prims.of_int (216)) (Prims.of_int (5))
-                               (Prims.of_int (216)) (Prims.of_int (46)))))
+                               (Prims.of_int (216)) (Prims.of_int (47)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range "Pulse.Main.fst"
@@ -2191,20 +2191,20 @@ let (main :
                                (Obj.magic
                                   (FStar_Range.mk_range "Pulse.Main.fst"
                                      (Prims.of_int (216)) (Prims.of_int (5))
-                                     (Prims.of_int (216)) (Prims.of_int (46)))))
+                                     (Prims.of_int (216)) (Prims.of_int (47)))))
                             (Obj.magic
                                (FStar_Tactics_V2_Builtins.ext_getv
                                   "pulse:guard_policy"))
                             (fun uu___1 ->
                                FStar_Tactics_Effect.lift_div_tac
-                                 (fun uu___2 -> uu___1 = "SMTSync"))))
+                                 (fun uu___2 -> uu___1 = "ForceSMT"))))
                       (fun uu___1 ->
                          (fun uu___1 ->
                             if uu___1
                             then
                               Obj.magic
                                 (FStar_Tactics_V2_Builtins.set_guard_policy
-                                   FStar_Tactics_Types.SMTSync)
+                                   FStar_Tactics_Types.ForceSMT)
                             else
                               Obj.magic
                                 (FStar_Tactics_V2_Builtins.set_guard_policy

@@ -1319,19 +1319,23 @@ let (intro_pure :
                                                                     (Prims.of_int (243))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (49)))))
+                                                                    (Prims.of_int (86)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Prover.IntroPure.fst"
                                                                     (Prims.of_int (243))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (89))
                                                                     (Prims.of_int (360))
                                                                     (Prims.of_int (14)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_prop_validity
+                                                                    (FStar_Tactics_V2_Derived.with_policy
+                                                                    FStar_Tactics_Types.ForceSMT
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    Pulse_Checker_Pure.check_prop_validity
                                                                     pst.Pulse_Checker_Prover_Base.pg
-                                                                    t_ss1 ()))
+                                                                    t_ss1 ())))
                                                                     (fun
                                                                     uu___3 ->
                                                                     (fun
@@ -1583,7 +1587,13 @@ let (intro_pure :
                                                                     Pulse_Checker_Prover_Base.goals_inv
                                                                     = ();
                                                                     Pulse_Checker_Prover_Base.solved_inv
-                                                                    = ()
+                                                                    = ();
+                                                                    Pulse_Checker_Prover_Base.progress
+                                                                    =
+                                                                    (pst.Pulse_Checker_Prover_Base.progress);
+                                                                    Pulse_Checker_Prover_Base.allow_ambiguous
+                                                                    =
+                                                                    (pst.Pulse_Checker_Prover_Base.allow_ambiguous)
                                                                     }))))
                                                                     uu___3)))
                                                                     uu___3)))
