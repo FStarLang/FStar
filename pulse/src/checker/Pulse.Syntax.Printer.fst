@@ -129,6 +129,11 @@ let rec fold_right1 f l = match l with
   | [x] -> x
   | hd::tl -> f hd (fold_right1 f tl)
 
+let should_paren_term (t:term) : T.Tac bool =
+  match t with
+  | T.Tv_Match _ _ _ -> true
+  | _ -> false
+
 let rec binder_to_doc b : T.Tac document =
   parens (doc_of_string (T.unseal b.binder_ppname.name)
           ^^ doc_of_string ":"
@@ -150,7 +155,12 @@ and term_to_doc t : T.Tac document
           and we must not confound pledge p (q ** r) with pledge p (r ** q),
           etc. *)
       let components = vprop_as_list t in
-      let docs = T.map term_to_doc components in
+      let term_to_doc_paren (t:term) : T.Tac document =
+        if should_paren_term t
+        then parens (term_to_doc t)
+        else term_to_doc t
+      in
+      let docs = T.map term_to_doc_paren components in
       (* This makes sure to either print everything on a single line
       or break after every **. The doc_of_string is a non-breakable space,
       the one introduced by ^/^ is breakable. *)

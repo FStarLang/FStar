@@ -141,9 +141,10 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
     | RENAME { pairs=ps1; goal=p1 }, RENAME { pairs=ps2; goal=p2 } ->
       eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
       eq_opt eq_tm p1 p2
-    | REWRITE { t1; t2 }, REWRITE { t1=s1; t2=s2 } ->
+    | REWRITE { t1; t2; tac_opt }, REWRITE { t1=s1; t2=s2; tac_opt=tac_opt2 } ->
       eq_tm t1 s1 &&
-      eq_tm t2 s2
+      eq_tm t2 s2 &&
+      eq_opt eq_tm tac_opt tac_opt2
     | WILD, WILD
     | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
     | _ -> false
@@ -241,10 +242,11 @@ let rec eq_st_term (t1 t2:st_term)
       eq_tm n1 n2 &&
       eq_st_term b1 b2
 
-    | Tm_Rewrite { t1=l1; t2=r1 },
-      Tm_Rewrite { t1=l2; t2=r2 } ->
+    | Tm_Rewrite { t1=l1; t2=r1; tac_opt=tac1 },
+      Tm_Rewrite { t1=l2; t2=r2; tac_opt=tac2 } ->
       eq_tm l1 l2 &&
-      eq_tm r1 r2
+      eq_tm r1 r2 &&
+      eq_tm_opt tac1 tac2
 
     | Tm_Admit { ctag=c1; u=u1; typ=t1; post=post1 }, 
       Tm_Admit { ctag=c2; u=u2; typ=t2; post=post2 } ->

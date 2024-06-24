@@ -359,10 +359,11 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
       in
       let! goal = map_err_opt (desugar_vprop env) goal in
       return (SW.mk_rename_hint_type pairs goal)
-    | REWRITE (t1, t2) ->
+    | REWRITE (t1, t2, tac_opt) ->
       let! t1 = desugar_vprop env t1 in
       let! t2 = desugar_vprop env t2 in
-      return (SW.mk_rewrite_hint_type t1 t2)
+      let! tac_opt = map_err_opt (desugar_term env) tac_opt in
+      return (SW.mk_rewrite_hint_type t1 t2 tac_opt)
     | WILD ->
       return (SW.mk_wild_hint_type)
     | SHOW_PROOF_STATE r ->
@@ -489,11 +490,6 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! b2 = desugar_stmt env b2 in
       return (SW.tm_par p1 p2 q1 q2 b1 b2 s.range)
 
-    | Rewrite { p1; p2 } ->
-      let! p1 = desugar_vprop env p1 in
-      let! p2 = desugar_vprop env p2 in
-      return (SW.tm_rewrite p1 p2 s.range)
-      
     | LetBinding _ -> 
       fail "Terminal let binding" s.range
 

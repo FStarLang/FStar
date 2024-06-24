@@ -218,8 +218,8 @@ pulseLambda:
 rewriteBody:
   | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
     { RENAME(pairs, goal) }
-  | p1=pulseVprop AS p2=pulseVprop
-    { PulseSyntaxExtension_Sugar.REWRITE(p1, p2) }
+  | p1=pulseVprop AS p2=pulseVprop tac_opt=option(BY tac=noSeqTerm {tac})
+    { PulseSyntaxExtension_Sugar.REWRITE(p1, p2, tac_opt) }
 
 names:
   | LBRACK l=separated_nonempty_list(SEMICOLON, qlident) RBRACK

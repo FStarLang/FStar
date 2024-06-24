@@ -37,7 +37,6 @@ assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
 #set-options "--print_implicits"
 
-[@@expect_failure]
 ```pulse
 fn tuple ()
   requires emp
@@ -45,9 +44,11 @@ fn tuple ()
 {
   get_v global_tup._2;
   assert (exists_n global_tup._1);
-  unfold exists_n global_tup._1;  // this unfold affects the type of the dependent 
-                                  // tuple, so we lost syntactic equality and the 
-                                  // following assertion fails
+  unfold exists_n global_tup._1;
+   (* THIS NOW WORKS FINE *)
+   // this unfold affects the type of the dependent
+   // tuple, so we lost syntactic equality and the
+   // following assertion fails
   assert ((exists* n. pts_to global_tup._1 n));
   admit()
 }

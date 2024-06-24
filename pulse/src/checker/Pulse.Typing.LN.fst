@@ -260,6 +260,8 @@ let rec open_st_term_ln' (e:st_term)
     | Tm_Rewrite { t1; t2 } ->
       open_term_ln' t1 x i;
       open_term_ln' t2 x i
+      (* Note: we don't say anything about the tactic. We do not
+      use it for elaboration, so it does not really matter. *)
 
     | Tm_WithLocal { binder; initializer; body } ->
       open_term_ln' binder.binder_ty x i;

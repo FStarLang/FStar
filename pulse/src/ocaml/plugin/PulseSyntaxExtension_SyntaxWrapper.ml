@@ -163,7 +163,7 @@ let mk_assert_hint_type vp = PSB.mk_assert_hint_type vp
 let mk_unfold_hint_type names vp = PSB.mk_unfold_hint_type names vp
 let mk_fold_hint_type names vp = PSB.mk_fold_hint_type names vp
 let mk_rename_hint_type pairs goal = PSB.mk_rename_hint_type pairs goal
-let mk_rewrite_hint_type p1 p2 = PSB.mk_rewrite_hint_type p1 p2
+let mk_rewrite_hint_type p1 p2 tac_opt = PSB.mk_rewrite_hint_type p1 p2 tac_opt
 
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =
   PSB.(with_range (Tm_ProofHintWithBinders { hint_type=ht;
@@ -175,12 +175,6 @@ let tm_with_inv (name:term) (body:st_term) returns_inv r : st_term =
 
 let tm_par p1 p2 q1 q2 b1 b2 r : st_term =
   PSB.(with_range (tm_par p1 b1 q1 p2 b2 q2) r)
-
-let tm_rewrite p1 p2 r : st_term =
-  PSB.(with_range (tm_rewrite p1 p2) r)
-
-let tm_rename ps r : st_term = failwith ""
-(*  PSB.(with_range (tm_rename ps) r) *)
 
 let tm_admit r : st_term =
   PSB.(with_range (tm_admit STT u_zero (tm_unknown r) None) r)

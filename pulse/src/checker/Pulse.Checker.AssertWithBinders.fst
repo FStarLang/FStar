@@ -115,25 +115,68 @@ let rec close_binders (bs:list (ppname & var & typ))
     assume (L.length bss == L.length bs);
     b::(close_binders bss)
 
-let unfold_defs (g:env) (defs:option (list string)) (t:term) 
+let unfold_all (g : env) (names : list string) (t:term)
   : T.Tac term
-  = let head, _ = T.collect_app t in
-    match R.inspect_ln head with
-    | R.Tv_FVar fv
-    | R.Tv_UInst fv _ -> (
-        let head = String.concat "." (R.inspect_fv fv) in
-        let fully = 
-          match defs with
-          | Some defs -> defs
-          | None -> []
-        in
-        let rt = RU.unfold_def (fstar_env g) head fully t in
-        option_must rt
-          (Printf.sprintf "unfolding %s returned None" (T.term_to_string t))
+  = let rg = elab_env g in
+    let t = T.norm_term_env rg [primops; iota; delta_only names] t in
+    t
+
+(* unused *)
+let def_of_fv (g:T.env) (fv:R.fv)
+  : T.Tac (option R.term)
+  = let n = R.inspect_fv fv in
+    match R.lookup_typ g n with
+    | None -> None
+    | Some se ->
+      match R.inspect_sigelt se with
+      | R.Unk -> None
+      | R.Sg_Let _ lbs -> (
+        L.tryPick
+          (fun lb ->
+            let lbv = R.inspect_lb lb in
+            if R.inspect_fv lbv.lb_fv = n
+            then Some lbv.lb_def
+            else None)
+          lbs
       )
-    | _ ->
+      | R.Sg_Val _ _ t -> Some t
+      | R.Sg_Inductive _nm _univs params typ _ -> None
+
+let unfold_head (g : env) (t:term)
+  : T.Tac term
+  = let rg = elab_env g in
+    match T.hua t with
+    | Some (fv, u, args) -> (
+      (* zeta to allow unfolding recursive definitions. Should be only once
+      unless it appears on the head of its own definition.. which should be impossible? *)
+      let t = T.norm_term_env rg [hnf; zeta; delta_only [T.implode_qn (T.inspect_fv fv)]] t in
+      t
+      (* Something like this would be better, but we need to instantiate
+         the universes, and we don't have a good way to do that yet.
+      match def_of_fv rg fv with
+      | None ->
+        fail g (Some (RU.range_of_term t))
+          (Printf.sprintf "Cannot unfold %s, the head is not a defined symbol" (show t))
+
+      | Some (us, fv_def) ->
+          let tm = T.mk_app fv_def args in
+          T.norm_term_env rg [hnf] tm
+    *)
+    )
+    | None ->
       fail g (Some (RU.range_of_term t))
         (Printf.sprintf "Cannot unfold %s, the head is not an fvar" (T.term_to_string t))
+
+let unfold_defs (g:env) (defs:option (list string)) (t:term)
+  : T.Tac term
+  = let t = unfold_head g t in
+    let t =
+      match defs with
+      | None -> t
+      | Some defs -> unfold_all g defs t
+    in
+    let t = T.norm_term_env (elab_env g) [hnf; iota; primops] t in
+    t
 
 let check_unfoldable g (v:term) : T.Tac unit =
   match inspect_term v with
@@ -247,13 +290,13 @@ let check_renaming
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let lhs, rhs = rewrite_all g pairs pre in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs } } in
+    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
     { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal in
       let lhs, rhs = rewrite_all g pairs goal in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs } } in
+      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
   )
 
@@ -276,7 +319,7 @@ let check_wild
     match ex with
     | []
     | _::_::_ ->
-      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal"
+      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal."
     | [ex] ->
       let k = List.Tot.length bs in
       let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
@@ -343,14 +386,14 @@ let check
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
 
-  | REWRITE { t1; t2 } -> (
+  | REWRITE { t1; t2; tac_opt } -> (
     match bs with
     | [] -> 
-      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
       check g pre pre_typing post_hint res_ppname 
           { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } 
     | _ ->
-      let t = { st with term = Tm_Rewrite { t1; t2 } } in
+      let t = { st with term = Tm_Rewrite { t1; t2; tac_opt } } in
       let body = { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } } in
       let st = { st with term = Tm_ProofHintWithBinders { hint_type = ASSERT { p = t1 }; binders = bs; t = body } } in
       check g pre pre_typing post_hint res_ppname st
@@ -407,8 +450,24 @@ let check
     let rhs = subst_term rhs uvs_closing in
     let body = subst_st_term body_opened uvs_closing in
     let bs = close_binders uvs_bs in
+    (* Since this rewrite is easy enough to show by unification, we always
+    mark them with the vprop_equiv_norm tactic. *)
+    FStar.Tactics.BreakVC.break_vc ();
+    if RU.debug_at_level (fstar_env g) "fold" then begin
+      (* If we're running interactively, print out the context
+      and environment. *)
+      let open FStar.Stubs.Pprint in
+      let open Pulse.PP in
+      let msg = [
+        text "Elaborated fold/unfold to rewrite";
+        prefix 2 1 (text "lhs:") (pp lhs);
+        prefix 2 1 (text "rhs:") (pp rhs);
+      ] in
+      info_doc_env g (Some st.range) msg
+    end;
     let rw = { term = Tm_Rewrite { t1 = lhs;
-                                   t2 = rhs };
+                                   t2 = rhs;
+                                   tac_opt = Some Pulse.Reflection.Util.vprop_equiv_norm_tm };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
     let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);

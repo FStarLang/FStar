@@ -610,6 +610,14 @@ val invariant_name_identifies_invariant
 val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
 : stt_ghost unit emp_inames p (fun _ -> q)
 
+let rewrite_tactic_t = unit -> T.Tac unit
+
+(* Useful for rewrites that are easier to prove by normalization/unification
+than SMT. This tactic is also used by the checker when elaborating fold/unfold. *)
+let vprop_equiv_norm (_:unit) : T.Tac unit =
+    T.mapply (`vprop_equiv_refl)
+
+[@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
 val rewrite_by (p:vprop) (q:vprop) 
                (t:unit -> T.Tac unit)
                (_:unit { T.with_tactic t (vprop_equiv p q) })

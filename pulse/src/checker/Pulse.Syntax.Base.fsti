@@ -178,7 +178,11 @@ type proof_hint_type =
   | REWRITE {
       t1:vprop;
       t2:vprop;
+      tac_opt : option term; (* optional tactic *)
     }
+    (* NB: A REWRITE proof hint will elaborate to a Tm_Rewrite
+    after solving all of the binders (if any). Tm_Rewrite is what
+    really changes the context. *)
   | WILD //with p q r. _
   | SHOW_PROOF_STATE of range //print the proof state and exit
 
@@ -268,6 +272,7 @@ type st_term' =
   | Tm_Rewrite {
       t1:term;
       t2:term;
+      tac_opt : option term;
     } 
   | Tm_Admit {
       ctag:ctag;
