@@ -367,7 +367,8 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
         { 
           elim_cond_true b _ _;
           elim_cond_true true _ _;
-          f _ _;
+          with vv. assert (refine vv);
+          f vv _;
           intro_cond_false (aspec 'i) (aspec ('i + 1));
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           false

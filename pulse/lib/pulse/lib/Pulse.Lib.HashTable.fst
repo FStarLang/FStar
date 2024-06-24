@@ -140,6 +140,7 @@ fn lookup
       b == (voff <=^ ht.sz && vcont = true && verr = false)
     ))
   {
+    with verr. assert (pts_to err verr);
     let voff = !off;
     if (voff = ht.sz)
     {
@@ -205,7 +206,9 @@ fn lookup
         None ->
         { 
           // ERROR - add failed
-          err := true; 
+          err := true;
+          rewrite each verr as true; // this is relying on #110 to disambiguate, verr is definitely not necessarily equal to true here
+          ()
         }
       }
     }
@@ -629,10 +632,12 @@ fn delete
       b == (vcont = true && verr = false)
     ))
   {
+    with vcont. assert (R.pts_to cont vcont);
     let voff = !off;
     if (voff = ht.sz)
     {
       cont := false;
+      rewrite each vcont as false; // also relying on #110
     }
     else
     {
@@ -664,6 +669,7 @@ fn delete
             {
               cont := false;
               assert (pure (pht.repr == (PHT.delete pht k).repr));
+              rewrite each vcont as false; // also relying on #110
             }
             Zombie ->
             {

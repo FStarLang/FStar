@@ -8,7 +8,8 @@ assume val p : int -> vprop
 assume val foo () (#x:erased int)
   : stt unit (p x) (fun _ -> emp)
 
-(* lucky *)
+(* unlucky *)
+[@@expect_failure]
 ```pulse
 fn ambig1 ()
   requires p 1 ** p 2
@@ -19,8 +20,7 @@ fn ambig1 ()
 }
 ```
 
-(* unlucky *)
-[@@expect_failure]
+(* lucky *)
 ```pulse
 fn ambig2 ()
   requires p 1 ** p 2
