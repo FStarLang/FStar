@@ -306,6 +306,7 @@ let check_wild
       (st:st_term { head_wild st })
 : T.Tac st_term
 = let Tm_ProofHintWithBinders ht = st.term in
+  let open Pulse.PP in
   let { binders=bs; t=body } = ht in
   match bs with
   | [] ->
@@ -319,7 +320,12 @@ let check_wild
     match ex with
     | []
     | _::_::_ ->
-      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal."
+      fail_doc g (Some st.range) [
+        text "Binding names with a wildcard requires exactly one existential quantifier in the goal.";
+        text "The context was:" ^^
+          indent (pp <| canon_vprop_print pre)
+      ]
+
     | [ex] ->
       let k = List.Tot.length bs in
       let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
@@ -332,9 +338,12 @@ let check_wild
           match inspect_term t with
           | Tm_ExistsSL u b body -> peel_binders (n-1) body
           | _ -> 
-            fail g (Some st.range)
-               (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
-                  k (show ex) (k - n))
+            fail_doc g (Some st.range) [
+              text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+                  k (show ex) (k - n));
+              text "The context was:" ^^
+                indent (pp <| canon_vprop_print pre)
+            ]
         )
       in
       peel_binders k ex
