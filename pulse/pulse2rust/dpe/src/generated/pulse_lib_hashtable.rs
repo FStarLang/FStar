@@ -107,7 +107,9 @@ pub fn lookup<KT: Copy + PartialEq + Clone, VT: Clone>(
                         }
                     }
                 }
-                None => err = true,
+                None => {
+                    err = true;
+                }
             }
         };
     }
