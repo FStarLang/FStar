@@ -656,8 +656,8 @@ fn incr_pcm (r:ref int) (#n:erased int)
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
-  unfold t1_perm;
-  unfold t1_perm;
+  unfold (t1_perm ghost_r (add_one zero1) true);
+  unfold (t1_perm ghost_r (add_one zero1) false);
   gather ghost_r;
   L.free l;
   drop_ (ghost_pcm_pts_to ghost_r _)

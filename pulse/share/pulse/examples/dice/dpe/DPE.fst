@@ -157,8 +157,8 @@ fn upd_sid_pts_to
           sid_pts_to r sid (next_trace t0 s) **
           pure (t0 == t1)
 {
-  unfold sid_pts_to;
-  unfold sid_pts_to;
+  unfold (sid_pts_to r sid t0);
+  unfold (sid_pts_to r sid t1);
 
   gather_v r (singleton sid 0.5R t0)
              (singleton sid 0.5R t1)
@@ -420,6 +420,7 @@ fn open_session ()
 }
 ```
 
+[@@allow_ambiguous]
 ```pulse
 ghost
 fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
@@ -428,8 +429,8 @@ fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
   ensures ghost_pcm_pts_to trace_ref (singleton sid 1.0R t0) **
           pure (t0 == t1)
 {
-  unfold sid_pts_to;
-  unfold sid_pts_to;
+  unfold (sid_pts_to trace_ref sid t0);
+  unfold (sid_pts_to trace_ref sid t1);
   gather_ trace_ref (singleton sid 0.5R t0) (singleton sid 0.5R t1);
   with v. assert (ghost_pcm_pts_to trace_ref v);
   assert (pure (Map.equal v (singleton sid 1.0R t0)));
@@ -544,8 +545,13 @@ fn replace_session
               rewrite each
                 fst ret as tbl,
                 snd ret as st;
-              with _s. rewrite (session_state_related _s (current_state t1)) as
-                               (session_state_related st (current_state t1));
+              assert (session_state_related sst gsst);
+              with sst' gsst'. assert (
+                session_state_related sst' gsst' **
+                session_state_related sst gsst
+              );
+              rewrite (session_state_related sst' gsst')
+                   as (session_state_related st (current_state t1));
               with pht. assert (models tbl pht);
               upd_singleton sid #t1 gsst;
               share_sid_pts_to sid;

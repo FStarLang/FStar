@@ -117,6 +117,17 @@ ensures inv i (owns r)
 
 let readable (r:ref U32.t) : v:vprop { is_big v } = exists* p v. pts_to r #p v
 
+
+```pulse
+ghost
+fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
+  requires pts_to r #p v
+  ensures  readable r
+{
+  fold readable
+}
+```
+
 ```pulse //split_readable$
 ghost
 fn split_readable (r:ref U32.t) (i:iref)
@@ -126,9 +137,13 @@ opens (singleton i)
 {
     with_invariants i {
         unfold readable;
+        with p v. assert (pts_to r #p v);
         share r;
-        fold readable;
-        fold readable;
+        (* just folding readable would now be ambiguous, need the explicit intro. *)
+        // fold readable;
+        // fold readable;
+        intro_readable r (p /. 2.0R) _;
+        intro_readable r (p /. 2.0R) _;
     };
 }
 ```

@@ -134,7 +134,10 @@ fn next ()
   acquire global_locked_state.lk;
   unfold (lock_inv global_locked_state.h global_locked_state.ph);
   with s. assert (handle_has_state global_locked_state.h s);
-  with ps. assert (pure_handle_has_state global_locked_state.ph ps);
+  with ps. assert (
+    pure_handle_has_state global_locked_state.ph Init **
+    pure_handle_has_state global_locked_state.ph ps
+  );
   unfold handle_has_state global_locked_state.h s;
   unfold pure_handle_has_state global_locked_state.ph Init;
   unfold pure_handle_has_state global_locked_state.ph ps;
@@ -169,7 +172,10 @@ fn close ()
   acquire global_locked_state.lk;
   unfold (lock_inv global_locked_state.h global_locked_state.ph);
   with s. assert (handle_has_state global_locked_state.h s);
-  with ps. assert (pure_handle_has_state global_locked_state.ph ps);
+  with ps. assert (
+    pure_handle_has_state global_locked_state.ph Next **
+    pure_handle_has_state global_locked_state.ph ps
+  );
   unfold handle_has_state global_locked_state.h s;
   unfold pure_handle_has_state global_locked_state.ph Next;
   unfold pure_handle_has_state global_locked_state.ph ps;

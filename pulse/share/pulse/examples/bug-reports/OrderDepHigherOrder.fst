@@ -33,6 +33,7 @@ fn test2 (m:mutex int)
 ```
 
 
+[@@allow_ambiguous]
 ```pulse
 fn flip (#p #q : vprop) (_:unit)
   requires p ** q

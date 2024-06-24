@@ -245,11 +245,11 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         let i0 = cbor_array_index c.cbor_read_payload 0sz;
         let cbor_int = cbor_destr_int64 i0;
         let sid = cbor_int.cbor_int_value;
-        elim_implies ();
+        elim_implies #(raw_data_item_match 1.0R i0 _) ();
         let i1 = cbor_array_index c.cbor_read_payload 1sz;
-        stick_trans ();
+        stick_trans () #_ #_ #(A.pts_to input #p s);
         let cbor_str = cbor_destr_string i1;
-        stick_trans ();
+        stick_trans () #_ #_ #(A.pts_to input #p s);
         with cs ps . assert (A.pts_to cbor_str.cbor_string_payload #ps cs);
         let msg = cbor_read_deterministically_encoded_with_typ impl_command_message cbor_str.cbor_string_payload (SZ.of_u64 cbor_str.cbor_string_length);
         if (not msg.cbor_read_is_success) {
@@ -269,7 +269,7 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               #(A.pts_to msg.cbor_read_remainder #ps vrem2)
               #(A.pts_to cbor_str.cbor_string_payload #ps cs)
             ;
-            stick_trans ();
+            stick_trans () #_ #_ #(A.pts_to input #p s);
             if (msg.cbor_read_remainder_length <> 0sz) {
               elim_implies ();
               serialize_cbor_inj' vmsg vrem2;
@@ -280,9 +280,9 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
               let cmd_id_cbor = cbor_array_index msg.cbor_read_payload 0sz;
               let cmd_id_int = cbor_destr_int64 cmd_id_cbor;
               let cmd_id = cmd_id_int.cbor_int_value;
-              elim_implies ();
+              elim_implies #(raw_data_item_match 1.0R cmd_id_cbor _) ();
               let cmd_args = cbor_array_index msg.cbor_read_payload 1sz;
-              stick_trans ();
+              stick_trans () #_ #_ #(A.pts_to input #p s);
               with vargs . assert (raw_data_item_match 1.0R cmd_args vargs);
 
               let res = {

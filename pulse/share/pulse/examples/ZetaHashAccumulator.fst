@@ -366,8 +366,8 @@ fn aggregate (b1 b2: ha_core)
     ha_val_core b1 (if ok then aggregate_hashes 'h1 'h2 else 'h1) **
     ha_val_core b2 'h2
 {
-  unfold ha_val_core;
-  unfold ha_val_core;
+  unfold (ha_val_core b1 'h1);
+  unfold (ha_val_core b2 'h2);
   let ctr1 = !b1.ctr;
   let ctr2 = !b2.ctr;
   match (safe_add ctr1 ctr2) {
@@ -399,8 +399,8 @@ fn compare (b1 b2:ha)
     ha_val b2 'h2 **
     pure (b <==> ('h1 == 'h2))
 { 
-  unfold ha_val; unfold ha_val_core;
-  unfold ha_val; unfold ha_val_core;
+  unfold (ha_val b1 'h1); unfold ha_val_core;
+  unfold (ha_val b2 'h2); unfold ha_val_core;
   let ctr1 = !b1.core.ctr;
   let ctr2 = !b2.core.ctr;
   if (ctr1 <> ctr2)

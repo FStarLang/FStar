@@ -213,14 +213,14 @@ ensures
             let s2 = cbor_destr_string a2;
             let c = impl_compare_u64 s1.cbor_string_length s2.cbor_string_length;
             if (i16_neq_0 c) {
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 c
             } else {
                 A.pts_to_len s1.cbor_string_payload;
                 A.pts_to_len s2.cbor_string_payload;
                 let test = byte_array_compare (SZ.uint64_to_sizet s1.cbor_string_length) s1.cbor_string_payload s2.cbor_string_payload;
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 test
             }
@@ -282,7 +282,7 @@ ensures
                         pres := res
                     }
                 };
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 !pres
             }
@@ -291,14 +291,14 @@ ensures
             let tg2 = cbor_destr_tagged a2;
             let c = impl_compare_u64 tg1.cbor_tagged_tag tg2.cbor_tagged_tag;
             if (i16_neq_0 c) {
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 c
             } else {
                 with v1' . assert (raw_data_item_match p1 tg1.cbor_tagged_payload v1');
                 with v2' . assert (raw_data_item_match p2 tg2.cbor_tagged_payload v2');
                 let test = cbor_compare tg1.cbor_tagged_payload tg2.cbor_tagged_payload;
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 test
             }
@@ -380,7 +380,7 @@ ensures
                         pdone := done
                     }
                 };
-                elim_stick0 ();
+                elim_stick0 () #_ #(raw_data_item_match p1 a1 v1);
                 elim_stick0 ();
                 !pres
             }
@@ -588,7 +588,7 @@ ensures
         rewrite each gres as NotFound;
         unfold (cbor_map_get_invariant pmap vkey vmap map NotFound gi l);
         let x = cbor_map_iterator_next pi;
-        stick_trans ();
+        stick_trans () #_ #_ #(raw_data_item_match pmap map (reveal vmap));
         with gi' l'. assert (cbor_map_iterator_match pmap gi' l');
         with vx . assert (raw_data_item_map_entry_match pmap x vx);
         rewrite_with_implies

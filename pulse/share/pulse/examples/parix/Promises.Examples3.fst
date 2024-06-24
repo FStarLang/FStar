@@ -34,6 +34,23 @@ let inv_p : v:vprop { is_big v } =
     ** pure (v_claimed ==> v_done)
     ** pure (v_done ==> Some? v_res)
 
+(* Explicit introduction for inv_p, sometimes needed to disambiguate. *)
+```pulse
+ghost
+fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
+  requires
+       pts_to done #0.5R v_done
+    ** pts_to res #0.5R v_res
+    ** GR.pts_to claimed #0.5R v_claimed
+    ** (if not v_claimed then pts_to res #0.5R v_res else emp)
+    ** pure (v_claimed ==> v_done)
+    ** pure (v_done ==> Some? v_res)
+  ensures inv_p
+{
+  fold inv_p;
+}
+```
+
 let goal : vprop =
   exists* v_res. pts_to res #0.5R v_res ** pure (Some? v_res)
 
@@ -50,6 +67,7 @@ fn proof
     unfold inv_p;
     with v_done v_res v_claimed.
       assert (pts_to done #0.5R v_done
+              ** pts_to done #0.5R true
               ** pts_to res #0.5R v_res
               ** GR.pts_to claimed #0.5R v_claimed
               ** (if not v_claimed then pts_to res #0.5R v_res else emp)
@@ -74,7 +92,20 @@ fn proof
     
     GR.share2 #_ claimed;
     
-    fold inv_p;
+    // If we just try to:
+    //   fold inv_p;
+    // we get:
+    //   - Cannot prove:
+    //       pts_to done ?v_done
+    //   - In the context:
+    //       goal **
+    //       pts_to done (reveal v_done) **
+    //       pts_to done true **
+    //       GR.pts_to claimed true
+    // since the choice of ?v_done is ambiguous. Further, we don't have a
+    // way of saying "fold using the (pts_to done v_done)", or "fold ignoring
+    // the pts_to done true". So we use the explicit introduction.
+    intro_inv_p v_done v_res true;
     
     drop_ (GR.pts_to claimed #0.5R true);
 
@@ -129,14 +160,15 @@ fn setup (_:unit)
 
 [@@expect_failure] // block is not atomic/ghost
 ```pulse
-fn worker (i : inv inv_p) (_:unit)
-   requires pts_to done #0.5R false
-   ensures pts_to done #0.5R true
+fn worker (i : iref) (_:unit)
+   requires inv i inv_p ** pts_to done #0.5R false
+   ensures  inv i inv_p ** pts_to done #0.5R true
 {
   with_invariants i {
     unfold inv_p;
     with v_done v_res v_claimed.
       assert (pts_to done #0.5R v_done
+              ** pts_to done #0.5R false
               ** pts_to res #0.5R v_res
               ** GR.pts_to claimed #0.5R v_claimed
               ** (if not v_claimed then pts_to res #0.5R v_res else emp)
