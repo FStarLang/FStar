@@ -98,6 +98,15 @@ val lift_atomic2
     (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
+val lift_atomic3
+    (#a:Type u#3)
+    (#obs:_)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_atomic a #obs opens pre post)
+: stt a pre post
+
 val frame_atomic
     (#a:Type u#a)
     (#obs: observability)
@@ -553,6 +562,135 @@ val big_ghost_gather
     emp_inames
     (big_ghost_pts_to r v0 ** big_ghost_pts_to r v1)
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
+
+
+////////////////////////////////////////////////////////////////////////
+// Non-boxable References
+////////////////////////////////////////////////////////////////////////
+
+val nb_pts_to_not_null
+    (#a:Type)
+    (#p:FStar.PCM.pcm a)
+    (r:ref a p)
+    (v:a)
+: stt_ghost (squash (not (is_ref_null r)))
+    emp_inames
+    (nb_pts_to r v)
+    (fun _ -> nb_pts_to r v)
+
+val nb_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt_atomic (ref a pcm)
+    #Observable
+    emp_inames
+    emp
+    (fun r -> nb_pts_to r x)
+
+val nb_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_atomic (v:a{compatible p x v /\ p.refine v})
+    #Observable
+    emp_inames
+    (nb_pts_to r x)
+    (fun v -> nb_pts_to r (f v))
+
+val nb_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_atomic unit
+    #Observable
+    emp_inames
+    (nb_pts_to r x)
+    (fun _ -> nb_pts_to r y)
+
+val nb_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    emp_inames
+    (nb_pts_to r (v0 `op pcm` v1))
+    (fun _ -> nb_pts_to r v0 ** nb_pts_to r v1)
+
+val nb_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
+    (nb_pts_to r v0 ** nb_pts_to r v1)
+    (fun _ -> nb_pts_to r (op pcm v0 v1))
+
+val nb_ghost_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: stt_ghost (ghost_ref pcm)
+    emp_inames
+    emp
+    (fun r -> nb_ghost_pts_to r x)
+
+val nb_ghost_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt_ghost (erased (v:a{compatible p x v /\ p.refine v}))
+    emp_inames
+    (nb_ghost_pts_to r x)
+    (fun v -> nb_ghost_pts_to r (f v))
+
+val nb_ghost_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt_ghost unit
+    emp_inames
+    (nb_ghost_pts_to r x)
+    (fun _ -> nb_ghost_pts_to r y)
+
+val nb_ghost_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: stt_ghost unit
+    emp_inames
+    (nb_ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> nb_ghost_pts_to r v0 ** nb_ghost_pts_to r v1)
+
+val nb_ghost_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: stt_ghost (squash (composable pcm v0 v1))
+    emp_inames
+    (nb_ghost_pts_to r v0 ** nb_ghost_pts_to r v1)
+    (fun _ -> nb_ghost_pts_to r (op pcm v0 v1))
+
 
 val drop (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> emp)

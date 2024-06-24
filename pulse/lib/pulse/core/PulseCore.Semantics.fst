@@ -349,6 +349,24 @@ let act_as_m2
   in
   mbind (act (raise_action a)) k
 
+noeq
+type liftable : Type u#(1 + (max a b)) = {
+  downgrade_val : (t:Type u#a -> U.raise_t u#a u#(max a b) t -> t);
+  laws : squash (forall (t:Type u#a) (x:t). downgrade_val t (U.raise_val x) == x)
+}
+
+let act_as_m_poly
+    (#st:state u#s)
+    (#t:Type u#a)
+    (l:liftable u#a u#b)
+    (a:action st t)
+: Dv (m u#s u#a u#(max a b) t a.pre a.post)
+= let k (x:U.raise_t u#a u#(max a b) t)
+    : Dv (m t (a.post (l.downgrade_val _ x)) a.post) 
+    = Ret (l.downgrade_val _ x)
+  in
+  mbind (act (raise_action a)) k
+
 (* Next, a main property of this semantics is that it supports the
    frame rule. Here's a proof of it *)
 

@@ -170,6 +170,7 @@ let sub_invs_atomic = A.sub_invs_stt_atomic
 let lift_atomic0 = A.lift_atomic0
 let lift_atomic1 = A.lift_atomic1
 let lift_atomic2 = A.lift_atomic2
+let lift_atomic3 = A.lift_atomic3
 
 ////////////////////////////////////////////////////////////////////
 // Ghost computations
@@ -398,5 +399,54 @@ let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write
 let big_ghost_share = A.big_ghost_share
 let big_ghost_gather = A.big_ghost_gather
+
+////////////////////////////////////////////////////////
+// non-boxable refs
+////////////////////////////////////////////////////////
+let nb_pcm_pts_to #a #p r v = PulseCore.Action.nb_pts_to #a #p r v
+let nb_pts_to_not_null #a #p r v = A.nb_pts_to_not_null #a #p r v
+
+let nb_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: stt (pcm_ref pcm)
+    emp
+    (fun r -> nb_pcm_pts_to r x)
+= A.lift_atomic0 (A.nb_alloc #a #pcm x)
+
+let nb_read
+    (#a:Type u#3)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: stt (v:a{compatible p x v /\ p.refine v})
+    (nb_pcm_pts_to r x)
+    (fun v -> nb_pcm_pts_to r (f v))
+= A.lift_atomic3 (A.nb_read #a #p r x f)
+
+let nb_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:pcm_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: stt unit
+    (nb_pcm_pts_to r x)
+    (fun _ -> nb_pcm_pts_to r y)
+= A.lift_atomic0 (A.nb_write r x y f)
+
+let nb_share = A.nb_share
+let nb_gather = A.nb_gather
+
+let nb_ghost_pcm_pts_to #a #p r v = PulseCore.Action.nb_ghost_pts_to #a #p r v
+let nb_ghost_alloc = A.nb_ghost_alloc
+let nb_ghost_read = A.nb_ghost_read
+let nb_ghost_write = A.nb_ghost_write
+let nb_ghost_share = A.nb_ghost_share
+let nb_ghost_gather = A.nb_ghost_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it is an assumption
