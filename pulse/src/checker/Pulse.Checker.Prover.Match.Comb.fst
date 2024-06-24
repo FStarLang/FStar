@@ -151,8 +151,12 @@ let rec match_f_nn
     (* Try to match the tail. We get back some possibly reduced ctxt. *)
     let mpr = match_f_nn label matcher_f pst ctxt qs in
     (* Now, try to match q, in the reduced context. *)
-    admit();
-    let pst' = { pst with ss = mpr.ss' } in
+    let pst' = { pst with
+      ss = mpr.ss';
+      nts = None;
+      k = coerce_eq (magic()) pst.k;
+      solved_inv = magic();
+    } in
     if RU.debug_at_level (fstar_env pst.pg) "prover.match" then
       T.print ("Trying to match goal " ^ show q ^ " from context");
     match
@@ -167,6 +171,7 @@ let rec match_f_nn
           T.print ("p' = " ^ show p')
         );
         None
+      | e -> raise e
     with
     | None ->
       (* If that fails we're done, just adding q as unsolved. *)
