@@ -28,19 +28,18 @@ open Pulse.Typing.Combinators
 
 let has_structure (q:vprop) : bool =
   match inspect_term q with
-  // | Tm_Pure _
-  | Tm_Star _ _
-  // | Tm_ExistsSL _ _ _
-  -> true
+  | Tm_Star _ _ -> true
   | _ -> false
-  
-let explode1
-  (#preamble:_)
-  (pst:prover_state preamble)
+
+val vprop_as_list_roundtrip (g:env) (v:vprop)
+  : vprop_equiv g v (list_as_vprop (vprop_as_list v))
+let vprop_as_list_roundtrip g v = admit()
+
+let __explode1
+  (g:env)
   (q:vprop)
-: T.Tac (option (qs: list vprop & vprop_equiv (push_env pst.pg pst.uvs) (list_as_vprop qs) q))
+: T.Tac (option (qs: list vprop & vprop_equiv g q (list_as_vprop qs)))
 =
-  let q_ss = pst.ss.(q) in
   // info_doc pst.pg None [
   //   text "Trying to explode" ^/^ pp q_ss;
   //   text "pst.ss = " ^/^ pp pst.ss;
@@ -48,14 +47,23 @@ let explode1
   //   text "q= " ^/^ pp q;
   //   text "q_ss= " ^/^ pp q_ss;
   // ];
-  if has_structure q_ss
+  if has_structure q
   then (
-    info_doc pst.pg None [
-      text "Exploding" ^/^ pp q_ss;
-      text "into" ^/^ pp (vprop_as_list q_ss);
-    ];
-    Some (| vprop_as_list q_ss, magic () |)
+    // info_doc pst.pg None [
+    //   text "Exploding" ^/^ pp q_ss;
+    //   text "into" ^/^ pp (vprop_as_list q_ss);
+    // ];
+    Some (| vprop_as_list q, vprop_as_list_roundtrip _ _ |)
   ) else None
+
+let explode1
+  (#preamble:_)
+  (pst:prover_state preamble)
+  (q:vprop)
+: T.Tac (option (qs: list vprop & vprop_equiv (push_env pst.pg pst.uvs) pst.ss.(q) (list_as_vprop qs)))
+=
+  let q_ss = pst.ss.(q) in
+  __explode1 (push_env pst.pg pst.uvs) q_ss
 
 let rec explode_aux
   (#preamble:_)
