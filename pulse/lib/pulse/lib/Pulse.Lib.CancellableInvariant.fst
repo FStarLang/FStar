@@ -120,8 +120,8 @@ fn gather (#p1 #p2:perm) (c:cinv)
   requires active c p1 ** active c p2
   ensures active c (p1 +. p2)
 {
-  unfold active;
-  unfold active;
+  unfold (active c p1);
+  unfold (active c p2);
   GR.gather c.r #_ #_ #(p1 /. 2.0R) #(p2 /. 2.0R);
   fold active c (p1 +. p2);
 }

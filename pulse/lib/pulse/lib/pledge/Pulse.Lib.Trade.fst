@@ -206,7 +206,7 @@ fn __trade_compose
     ensures  r
     opens is
   {
-    elim_trade #is _ _;
+    elim_trade #is p _;
     elim_trade #is _ _;
   };
   intro_trade #is p r (trade #is p q ** trade #is q r) aux;

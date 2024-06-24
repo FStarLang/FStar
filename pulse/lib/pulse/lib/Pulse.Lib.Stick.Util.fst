@@ -93,7 +93,7 @@ fn trans (p q r:vprop)
    requires ((p @==> q) ** (q @==> r)) ** p
    ensures r
    { 
-      elim _ _;
+      elim p _;
       elim _ _;
    };
    intro _ _ _ aux;

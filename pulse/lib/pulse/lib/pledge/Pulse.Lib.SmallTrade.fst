@@ -214,7 +214,7 @@ fn trade_compose
     ensures  (invlist_inv os ** r)
     opens (invlist_names os)
   {
-    elim_trade #os _ _;
+    elim_trade #os p _;
     elim_trade #os _ _;
   };
   small_star (trade #os p q) (trade #os q r);
