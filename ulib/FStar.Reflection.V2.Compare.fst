@@ -21,6 +21,10 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Reflection.V2.Derived
 open FStar.Order
 
+(* Many warnings about types SMT maybe not being able to prove
+types are equal, but all spurious. *)
+#set-options "--warn_error -290"
+
 let compare_name (n1 n2 : name) : order =
     compare_list n1 n2 (fun s1 s2 -> order_from_int (compare_string s1 s2))
 
@@ -74,7 +78,7 @@ let rec compare_universe (u1 u2:universe) : order =
 let compare_universes (us1 us2:universes) : order =
   compare_list us1 us2 compare_universe
 
-let rec compare_term (s t : term) : Tot order (decreases %[s;2]) =
+let rec __compare_term (s t : term) : Tot order (decreases %[s;2]) =
     match inspect_ln s, inspect_ln t with
     | Tv_Var sv, Tv_Var tv ->
         compare_namedv sv tv
@@ -97,17 +101,17 @@ let rec compare_term (s t : term) : Tot order (decreases %[s;2]) =
         let h2, aa2 = collect_app_ref t in
         Reflection.V2.Derived.Lemmas.collect_app_order s;
         Reflection.V2.Derived.Lemmas.collect_app_order t;
-        lex (compare_term h1 h2) (fun () -> compare_argv_list s t aa1 aa2)
+        lex (__compare_term h1 h2) (fun () -> compare_argv_list s t aa1 aa2)
 
     | Tv_Abs b1 e1, Tv_Abs b2 e2 ->
-        lex (compare_binder b1 b2) (fun () -> compare_term e1 e2)
+        lex (__compare_binder b1 b2) (fun () -> __compare_term e1 e2)
 
     | Tv_Refine b1 e1, Tv_Refine b2 e2 ->
-        lex (compare_binder b1 b2) (fun () ->
-             compare_term e1 e2)
+        lex (__compare_binder b1 b2) (fun () ->
+             __compare_term e1 e2)
 
     | Tv_Arrow b1 e1, Tv_Arrow b2 e2 ->
-        lex (compare_binder b1 b2) (fun () -> compare_comp e1 e2)
+        lex (__compare_binder b1 b2) (fun () -> __compare_comp e1 e2)
 
     | Tv_Type su, Tv_Type tu -> compare_universe su tu
 
@@ -118,30 +122,30 @@ let rec compare_term (s t : term) : Tot order (decreases %[s;2]) =
         compare_int u1 u2
 
     | Tv_Let _r1 _attrs1 b1 t1 t1', Tv_Let _r2 _attrs2 b2 t2 t2' ->
-        lex (compare_binder b1 b2) (fun () ->
-        lex (compare_term t1 t2) (fun () ->
-             compare_term t1' t2'))
+        lex (__compare_binder b1 b2) (fun () ->
+        lex (__compare_term t1 t2) (fun () ->
+             __compare_term t1' t2'))
 
     | Tv_Match _ _ _, Tv_Match _ _ _ ->
         Eq // TODO
 
     | Tv_AscribedT e1 t1 tac1 _, Tv_AscribedT e2 t2 tac2 _ ->
-        lex (compare_term e1 e2) (fun () ->
-        lex (compare_term t1 t2) (fun () ->
+        lex (__compare_term e1 e2) (fun () ->
+        lex (__compare_term t1 t2) (fun () ->
         match tac1, tac2 with
         | None, None -> Eq
         | None, _  -> Lt
         | _, None -> Gt
-        | Some e1, Some e2 -> compare_term e1 e2))
+        | Some e1, Some e2 -> __compare_term e1 e2))
 
     | Tv_AscribedC e1 c1 tac1 _, Tv_AscribedC e2 c2 tac2 _ ->
-        lex (compare_term e1 e2) (fun () ->
-        lex (compare_comp c1 c2) (fun () ->
+        lex (__compare_term e1 e2) (fun () ->
+        lex (__compare_comp c1 c2) (fun () ->
         match tac1, tac2 with
         | None, None -> Eq
         | None, _  -> Lt
         | _, None -> Gt
-        | Some e1, Some e2 -> compare_term e1 e2))
+        | Some e1, Some e2 -> __compare_term e1 e2))
 
     | Tv_Unknown, Tv_Unknown ->
         Eq
@@ -168,13 +172,13 @@ let rec compare_term (s t : term) : Tot order (decreases %[s;2]) =
     | Tv_Unknown, _    -> Lt   | _, Tv_Unknown    -> Gt
     | Tv_Unsupp, _    -> Lt   | _, Tv_Unsupp    -> Gt
 
-and compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
+and __compare_term_list (l1 l2:list term) : Tot order (decreases l1) =
   match l1, l2 with
   | [], [] -> Eq
   | [], _ -> Lt
   | _, [] -> Gt
   | hd1::tl1, hd2::tl2 ->
-    lex (compare_term hd1 hd2) (fun () -> compare_term_list tl1 tl2)
+    lex (__compare_term hd1 hd2) (fun () -> __compare_term_list tl1 tl2)
 
 and compare_argv (b1 b2 : Ghost.erased term) // termination bounds
      (a1 : argv{fst a1 << Ghost.reveal b1})
@@ -191,7 +195,7 @@ and compare_argv (b1 b2 : Ghost.erased term) // termination bounds
     | _, _ ->
       assert (t1 << Ghost.reveal b1);
       assert (t2 << Ghost.reveal b2);
-      compare_term t1 t2
+      __compare_term t1 t2
 
 and compare_argv_list (b1 b2 : Ghost.erased term)
      (l1 : list (a:argv{fst a << Ghost.reveal b1}))
@@ -205,19 +209,19 @@ and compare_argv_list (b1 b2 : Ghost.erased term)
     assert (fst hd1 << Ghost.reveal b1);
     lex (compare_argv b1 b2 hd1 hd2) (fun () -> compare_argv_list b1 b2 tl1 tl2)
 
-and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
+and __compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
     let cv1 = inspect_comp c1 in
     let cv2 = inspect_comp c2 in
     match cv1, cv2 with
     | C_Total t1, C_Total t2
 
-    | C_GTotal t1, C_GTotal t2 -> compare_term t1 t2
+    | C_GTotal t1, C_GTotal t2 -> __compare_term t1 t2
 
     | C_Lemma p1 q1 s1, C_Lemma p2 q2 s2 ->
-      lex (compare_term p1 p2)
+      lex (__compare_term p1 p2)
           (fun () ->
-            lex (compare_term q1 q2)
-                (fun () -> compare_term s1 s2)
+            lex (__compare_term q1 q2)
+                (fun () -> __compare_term s1 s2)
           )
 
     | C_Eff us1 eff1 res1 args1 _decrs1,
@@ -225,14 +229,21 @@ and compare_comp (c1 c2 : comp) : Tot order (decreases c1) =
         (* This could be more complex, not sure it is worth it *)
         lex (compare_universes us1 us2)
             (fun _ -> lex (compare_name eff1 eff2)
-                       (fun _ -> compare_term res1 res2))
+                       (fun _ -> __compare_term res1 res2))
 
     | C_Total _, _  -> Lt     | _, C_Total _ -> Gt
     | C_GTotal _, _  -> Lt    | _, C_GTotal _ -> Gt
     | C_Lemma _ _ _, _  -> Lt   | _, C_Lemma _ _ _ -> Gt
     | C_Eff _ _ _ _ _, _ -> Lt    | _, C_Eff _ _ _ _ _ -> Gt
 
-and compare_binder (b1 b2 : binder) : order =
+and __compare_binder (b1 b2 : binder) : order =
     let bview1 = inspect_binder b1 in
     let bview2 = inspect_binder b2 in
-    compare_term bview1.sort bview2.sort
+    __compare_term bview1.sort bview2.sort
+
+(* We need this indirection since otherwise the plugin attribute
+"leaks" into compare_argv and friends, which take an erased termination
+bound, for which we do not have a plugin. *)
+let compare_term = __compare_term
+let compare_comp = __compare_comp
+let compare_binder = __compare_binder
