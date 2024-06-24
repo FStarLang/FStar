@@ -54,6 +54,7 @@ is used to pretty-print pulse terms and fstar terms. Its implementation is Pulse
 however, and will use the view to show the pulse term structure. *)
 instance val printable_term     : printable term
 
+instance val printable_binder   : printable binder
 instance val printable_st_term  : printable st_term
 instance val printable_universe : printable universe
 instance val printable_comp     : printable comp
