@@ -349,9 +349,10 @@ let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
   | None -> (| uvs, v |)
   | Some (b, qopt, c) ->
     let x = fresh (push_env g uvs) in
-    let ct = open_comp_nv c (b.binder_ppname, x) in
-    let uvs = Env.push_binding uvs x b.binder_ppname b.binder_ty in
-    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = b.binder_ppname}) in 
+    let ppname = ppname_for_uvar b.binder_ppname in
+    let ct = open_comp_nv c (ppname, x) in
+    let uvs = Env.push_binding uvs x ppname b.binder_ty in
+    let v = tm_pureapp v qopt (tm_var {nm_index = x; nm_ppname = ppname}) in
     add_rem_uvs g (comp_res ct) uvs v
 
 let check
