@@ -1003,3 +1003,179 @@ let big_ghost_gather
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   E.ghost_gather #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
+
+  (* References for objects in universes a+2, "non-boxable" pts_to *)
+let nb_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a)
+: slprop u#a
+= sig.pts_to #a #pcm r v
+
+(** Splitting a permission on a composite resource into two separate permissions *)
+let nb_split_action
+      (#a:Type u#(a + 2))
+      (#pcm:pcm a)
+      (e:inames)
+      (r:ref a pcm)
+      (v0:FStar.Ghost.erased a)
+      (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: pst_ghost_action_except unit e
+    (nb_pts_to r (v0 `op pcm` v1))
+    (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r (v0 `op pcm` v1))) () <|
+  E.split_action #small_sig #_ #pcm e r v0 v1
+
+
+(** Combining separate permissions into a single composite permission *)
+let nb_gather_action
+      (#a:Type u#(a + 2))
+      (#pcm:pcm a)
+      (e:inames)
+      (r:ref a pcm)
+      (v0:FStar.Ghost.erased a)
+      (v1:FStar.Ghost.erased a)
+: pst_ghost_action_except (squash (composable pcm v0 v1)) e
+    (nb_pts_to r v0 `star` nb_pts_to r v1)
+    (fun _ -> nb_pts_to r (op pcm v0 v1))
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r v0 `star` nb_pts_to r v1)) () <|
+  E.gather_action #small_sig #_ #pcm e r v0 v1
+
+let nb_alloc_action
+      (#a:Type u#(a + 2))
+      (#pcm:pcm a)
+      (e:inames)
+      (x:a{pcm.refine x})
+: pst_action_except (ref a pcm) e
+    emp
+    (fun r -> nb_pts_to r x)
+= coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> sig.pts_to #a #pcm r x) () <|
+  E.alloc_action #small_sig #_ #pcm e x
+
+
+let nb_select_refine
+      (#a:Type u#(a + 2))
+      (#p:pcm a)
+      (e:inames)
+      (r:ref a p)
+      (x:erased a)
+      (f:(v:a{compatible p x v}
+          -> GTot (y:a{compatible p y v /\
+                      FStar.PCM.frame_compatible p x v y})))
+: pst_action_except (v:a{compatible p x v /\ p.refine v}) e
+    (nb_pts_to r x)
+    (fun v -> nb_pts_to r (f v))
+= coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_
+      #(reveal_slprop (nb_pts_to r x))
+      #(fun v -> nb_pts_to #a #p r (f v))
+      #(nb_pts_to r x)
+      #(fun v -> nb_pts_to r (f v))
+      () <|
+  E.select_refine #small_sig #_ #p e r x f
+
+let nb_upd_gen
+    (#a:Type u#(a + 2))
+    (#p:pcm a)
+    (e:inames)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: pst_action_except unit e
+    (nb_pts_to r x)
+    (fun _ -> nb_pts_to r y)
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r x)) () <|
+  E.upd_gen #small_sig #_ #p e r x y f
+
+
+let nb_pts_to_not_null_action 
+      (#a:Type u#(a + 2))
+      (#pcm:pcm a)
+      (e:inames)
+      (r:erased (ref a pcm))
+      (v:Ghost.erased a)
+: pst_ghost_action_except (squash (not (is_null r))) e
+    (nb_pts_to r v)
+    (fun _ -> nb_pts_to r v)
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r v)) () <|
+  E.pts_to_not_null_action #small_sig #_ #pcm e r v
+
+let nb_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a)
+: slprop u#a
+= sig.ghost_pts_to false #a #p r v
+
+let nb_ghost_alloc
+    (#o:_)
+    (#a:Type u#(a + 2))
+    (#pcm:pcm a)
+    (x:erased a{pcm.refine x})
+: pst_ghost_action_except
+    (ghost_ref pcm)
+    o
+    emp 
+    (fun r -> nb_ghost_pts_to r x)
+= coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> sig.ghost_pts_to false #a #pcm r x) () <|
+  E.ghost_alloc #small_sig #_ #pcm o x
+
+let nb_ghost_read
+    #o
+    (#a:Type u#(a + 2))
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: pst_ghost_action_except
+    (erased (v:a{compatible p x v /\ p.refine v}))
+    o
+    (nb_ghost_pts_to r x)
+    (fun v -> nb_ghost_pts_to r (f v))
+= coerce_action #(erased (v:a{compatible p x v /\ p.refine v})) #_ #_
+                #(reveal_slprop (nb_ghost_pts_to r x)) 
+                #(fun v -> (sig.ghost_pts_to false #a #p r (f v)))
+                #(nb_ghost_pts_to r x)
+                #(fun v -> nb_ghost_pts_to r (f v))
+                () <|
+  E.ghost_read #small_sig #_ #p o r x f
+
+
+let nb_ghost_write
+    #o
+    (#a:Type u#(a + 2))
+    (#p:pcm a)
+    (r:ghost_ref p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: pst_ghost_action_except unit o 
+    (nb_ghost_pts_to r x)
+    (fun _ -> nb_ghost_pts_to r y)
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r x)) () <|
+  E.ghost_write #small_sig #_ #p o r x y f
+
+
+let nb_ghost_share
+    #o
+    (#a:Type u#(a + 2))
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: pst_ghost_action_except unit o
+    (nb_ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r (v0 `op pcm` v1))) () <|
+  E.ghost_share #small_sig #_ #pcm o r v0 v1
+
+
+let nb_ghost_gather
+    #o
+    (#a:Type u#(a + 2))
+    (#pcm:pcm a)
+    (r:ghost_ref pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: pst_ghost_action_except
+    (squash (composable pcm v0 v1)) o
+    (nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
+    (fun _ -> nb_ghost_pts_to r (op pcm v0 v1))
+= coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)) () <|
+  E.ghost_gather #small_sig #_ #pcm o r v0 v1
+
+
