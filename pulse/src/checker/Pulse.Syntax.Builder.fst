@@ -59,7 +59,7 @@ let tm_assert_with_binders bs p t = Tm_ProofHintWithBinders { hint_type=ASSERT {
 let mk_assert_hint_type p = ASSERT { p }
 let mk_unfold_hint_type names p = UNFOLD { names; p }
 let mk_fold_hint_type names p = FOLD { names; p }
-let mk_rename_hint_type pairs goal = RENAME { pairs; goal }
+let mk_rename_hint_type pairs goal tac_opt = RENAME { pairs; goal; tac_opt=map_opt tac_opt thunk }
 let mk_rewrite_hint_type t1 t2 tac_opt = REWRITE { t1; t2; tac_opt=map_opt tac_opt thunk }
 let mk_fn_decl id isrec bs comp meas body : decl' = FnDecl { id; isrec; bs; comp; meas; body }
 let mk_decl d range : decl = {d; range}

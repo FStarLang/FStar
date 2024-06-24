@@ -63,7 +63,10 @@ type hint_type =
   | ASSERT of vprop
   | UNFOLD of option (list lident) & vprop
   | FOLD of option (list lident) & vprop
-  | RENAME of list (A.term & A.term) & option vprop
+  | RENAME of
+      list (A.term & A.term) &
+      option vprop & (* in goal *)
+      option A.term (* optional tactic *)
   | REWRITE of
       vprop &
       vprop &

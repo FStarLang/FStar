@@ -348,7 +348,7 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
       let! ns = resolve_names env ns in
       let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
       return (SW.mk_fold_hint_type ns vp)
-    | RENAME (pairs, goal) ->
+    | RENAME (pairs, goal, tac_opt) ->
       let! pairs =
         pairs |>
         mapM 
@@ -358,7 +358,8 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
             return (t1, t2))
       in
       let! goal = map_err_opt (desugar_vprop env) goal in
-      return (SW.mk_rename_hint_type pairs goal)
+      let! tac_opt = map_err_opt (desugar_term env) tac_opt in
+      return (SW.mk_rename_hint_type pairs goal tac_opt)
     | REWRITE (t1, t2, tac_opt) ->
       let! t1 = desugar_vprop env t1 in
       let! t2 = desugar_vprop env t2 in

@@ -162,7 +162,7 @@ let mk_show_proof_state_hint_type r = Pulse_Syntax_Base.SHOW_PROOF_STATE r
 let mk_assert_hint_type vp = PSB.mk_assert_hint_type vp
 let mk_unfold_hint_type names vp = PSB.mk_unfold_hint_type names vp
 let mk_fold_hint_type names vp = PSB.mk_fold_hint_type names vp
-let mk_rename_hint_type pairs goal = PSB.mk_rename_hint_type pairs goal
+let mk_rename_hint_type pairs goal tac_opt = PSB.mk_rename_hint_type pairs goal tac_opt
 let mk_rewrite_hint_type p1 p2 tac_opt = PSB.mk_rewrite_hint_type p1 p2 tac_opt
 
 let tm_proof_hint_with_binders (ht:_) (binders: binder list)  (s:st_term) r : st_term =

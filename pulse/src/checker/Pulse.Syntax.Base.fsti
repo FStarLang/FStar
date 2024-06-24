@@ -173,7 +173,8 @@ type proof_hint_type =
     }
   | RENAME { //rename e as e' [in p]
       pairs:list (term & term);
-      goal: option term
+      goal: option term;
+      tac_opt : option term; (* optional tactic *)
     }
   | REWRITE {
       t1:vprop;
