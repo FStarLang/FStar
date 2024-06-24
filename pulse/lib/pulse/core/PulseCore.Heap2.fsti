@@ -51,6 +51,8 @@ val empty_heap : heap u#a
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
 
+val core_ref_as_addr (_:core_ref) : GTot nat
+
 (** We index a [core_ref] by the type of its heap contents
     and a [pcm] governing it, for ease of type inference *)
 let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
@@ -112,6 +114,11 @@ val join_associative (h0 h1 h2:heap)
 val join_empty (h:heap)
   : Lemma (disjoint h empty_heap /\
            join h empty_heap == h)
+
+val join_empty_inverse (m0 m1:heap)
+: Lemma 
+  (requires disjoint m0 m1 /\ join m0 m1 == empty_heap)
+  (ensures m0 == empty_heap /\ m1 == empty_heap)
 
 (**** Separation logic over heaps *)
 
@@ -405,8 +412,18 @@ val heap_evolves : FStar.Preorder.preorder full_heap
   This predicate allows us to maintain an allocation counter, as all references above [a]
   in [h] are free.
 *)
+val select (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+val select_ghost (i:nat) (m:heap u#a) : GTot (option (H.cell u#a))
+val select_ghost_interp (i:nat) (h:heap u#a)
+: Lemma (select_ghost i h == H.select i (ghost h))
+let select_either (t:tag) (i:nat) (h:heap) : GTot (option H.cell) = 
+  match t with
+  | CONCRETE -> select i h
+  | GHOST -> select_ghost i h
 val free_above_addr (t:tag) (h:heap u#a) (a:nat) : prop
-
+val reveal_free_above_addr (t:tag) (h:heap u#a) (a:nat)
+: Lemma (free_above_addr t h a <==>
+        (forall i. i >= a ==> None? (select_either t i h)))
 (** [free_above_addr] is abstract but can be weakened consistently with its intended behavior *)
 val weaken_free_above (t:tag) (h:heap) (a b:nat)
   : Lemma (free_above_addr t h a /\ a <= b ==> free_above_addr t h b)
@@ -536,6 +553,7 @@ let action_framing
   affine_star fp frame h0;
   emp_unit fp
 
+
 (** [sel] is a ghost read of the value contained in a heap reference *)
 val sel (#a:Type u#h) (#pcm:pcm a) (r:ref a pcm) (m:full_hheap (ptr r)) : a
 
@@ -597,6 +615,19 @@ val upd_gen_action (#a:Type) (#p:pcm a) (r:ref a p) (x y:Ghost.erased a)
            unit
            (fun _ -> pts_to r y)
 
+val upd_gen_modifies
+      #a (#p:pcm a) 
+      (r:ref a p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (pts_to r x))
+: Lemma (
+      let (| _, h1 |) = upd_gen_action r x y f h in
+      (forall (a:nat). a <> core_ref_as_addr r ==> select a h == select a h1) /\
+      ghost h == ghost h1 /\
+      H.related_cells (select (core_ref_as_addr r) h) (select (core_ref_as_addr r) h1)
+  )
+
 (**
   The update action needs you to prove that the mutation from [v0] to [v1] is frame-preserving
   with respect to the individual PCM governing the reference [r]. See [FStar.PCM.frame_preserving]
@@ -608,6 +639,8 @@ val upd_action
   (v0:FStar.Ghost.erased a)
   (v1:a {FStar.PCM.frame_preserving pcm v0 v1 /\ pcm.refine v1})
   : action #MUTABLE #no_allocs (pts_to r v0) unit (fun _ -> pts_to r v1)
+
+
 
 (** Deallocating a reference, by actually replacing its value by the unit of the PCM *)
 val free_action
@@ -660,6 +693,17 @@ val extend
       emp 
       (ref a pcm)
       (fun r -> pts_to r x)
+
+val extend_modifies
+  (#a:Type u#a)
+  (#pcm:pcm a)
+  (x:a{pcm.refine x})
+  (addr:nat)
+  (h:full_hheap emp { h `free_above_addr CONCRETE` addr })
+: Lemma (
+      let (| _, h1 |) = extend #a #pcm x addr h in
+      ghost h == ghost h1
+  )
 
 val frame (#a:Type)
           #immut #allocates #hpre #hpost
@@ -745,9 +789,49 @@ val lift_erased
 [@@erasable]
 val core_ghost_ref : Type0
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
+val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
+val core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+: Lemma 
+  (requires 
+    core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
+    not (core_ghost_ref_is_null c1) /\
+    not (core_ghost_ref_is_null c2))
+  (ensures c1 == c2)
+  
+val interp_ghost_pts_to 
+      (i:core_ghost_ref)
+      (#meta:bool)
+      (#a:Type)
+      (#pcm:FStar.PCM.pcm a)
+      (v:a)
+      (h0:heap)
+: Lemma
+  (requires interp (ghost_pts_to meta #a #pcm i v) h0)
+  (ensures (
+    not (core_ghost_ref_is_null i) /\ (
+    match select_ghost (core_ghost_ref_as_addr i) h0 with
+    | None -> False
+    | Some c ->
+      let H.Ref meta' a' pcm' v' = c in
+      meta == reveal meta' /\
+      a == a' /\
+      pcm == pcm' /\
+      compatible pcm v v')))
+      
+val ghost_pts_to_compatible_equiv 
+      (#meta:bool)
+      (#a:Type)
+      (#pcm:_)
+      (x:ghost_ref #a pcm)
+      (v0:a)
+      (v1:a{composable pcm v0 v1})
+: Lemma (equiv (ghost_pts_to meta x v0 `star` ghost_pts_to meta x v1)
+               (ghost_pts_to meta x (op pcm v0 v1)))
 
 val ghost_extend
+    (#meta:erased bool)
     (#a:Type u#a)
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
@@ -757,9 +841,23 @@ val ghost_extend
       #(fun h -> h `free_above_addr GHOST` (addr + 1))      
       emp 
       (ghost_ref pcm)
-      (fun r -> ghost_pts_to r x)
+      (fun r -> ghost_pts_to meta r x)
+
+
+val ghost_extend_spec
+      (#meta:bool)
+      #a #pcm (x:a { pcm.refine x })
+      (addr:nat)
+      (h:full_hheap emp { free_above_addr GHOST h addr })
+: Lemma (
+      let (| r, h1 |) = ghost_extend #meta #a #pcm x addr h in
+      (forall (a:nat). a <> addr ==> select_ghost a h == select_ghost a h1) /\
+      select_ghost addr h1 == Some (H.Ref meta a pcm x) /\
+      addr == core_ghost_ref_as_addr r
+  )
 
 val ghost_read
+    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
@@ -768,39 +866,56 @@ val ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : action #IMMUTABLE
-    (ghost_pts_to r x)
+    (ghost_pts_to meta r x)
     (erased (v:a{compatible p x v /\ p.refine v}))
-    (fun v -> ghost_pts_to r (f v))
+    (fun v -> ghost_pts_to meta r (f v))
 
 val ghost_write
+    (#meta:erased bool)
     (#a:Type)
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : action #ONLY_GHOST 
-    (ghost_pts_to r x)
+    (ghost_pts_to meta r x)
     unit
-    (fun _ -> ghost_pts_to r y)
+    (fun _ -> ghost_pts_to meta r y)
+
+val ghost_write_modifies
+      (#meta:bool)
+      #a (#p:pcm a)
+      (r:ghost_ref p)
+      (x y:Ghost.erased a)
+      (f:FStar.PCM.frame_preserving_upd p x y)
+      (h:full_hheap (ghost_pts_to meta r x))
+: Lemma (
+      let (| _, h1 |) = ghost_write r x y f h in
+      (forall (a:nat). a <> core_ghost_ref_as_addr r ==> select_ghost a h == select_ghost a h1) /\
+      concrete h == concrete h1 /\
+      H.related_cells (select_ghost (core_ghost_ref_as_addr r) h) (select_ghost (core_ghost_ref_as_addr r) h1)
+  )
 
 val ghost_share
+    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : action #IMMUTABLE
-    (ghost_pts_to r (v0 `op pcm` v1))
+    (ghost_pts_to meta r (v0 `op pcm` v1))
     unit
-    (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
 
 val ghost_gather
+    (#meta:erased bool)
     (#a:Type)
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : action #IMMUTABLE 
-    (ghost_pts_to r v0 `star` ghost_pts_to r v1)
+    (ghost_pts_to meta r v0 `star` ghost_pts_to meta r v1)
     (squash (composable pcm v0 v1))
-    (fun _ -> ghost_pts_to r (op pcm v0 v1))
+    (fun _ -> ghost_pts_to meta r (op pcm v0 v1))

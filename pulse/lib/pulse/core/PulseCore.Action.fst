@@ -17,7 +17,7 @@
 module PulseCore.Action
 
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.Memory
+module Mem = PulseCore.MemoryAlt
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module PST = PulseCore.HoareStateMonad
@@ -26,7 +26,7 @@ friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
 open FStar.Ghost
-open PulseCore.Memory
+open PulseCore.MemoryAlt
 open PulseCore.InstantiatedSemantics
 
 //////////////////////////////////////////////////////
@@ -106,6 +106,19 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
   in
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m2 u#_ u#100 action
+
+let stt_of_action3 (#a:Type u#3) #pre #post (m:action a Set.empty pre post)
+: stt a pre post
+= let step (frame:slprop)
+    : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
+    = m frame
+  in
+  let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
+  let lift : Sem.liftable u#3 u#100 = {
+    downgrade_val = (fun t x -> FStar.Universe.downgrade_val x);
+    laws = ()
+  } in
+  fun _ -> Sem.act_as_m_poly u#_ u#3 u#100 lift action
 
 let iname = iname
 
@@ -355,6 +368,11 @@ let lift2 (#a:Type u#2) #r #opens #pre #post
           (m:act a r opens pre post)
 : stt a pre post
 = stt_of_action2 (action_of_act m)
+
+let lift3 (#a:Type u#3) #r #opens #pre #post
+          (m:act a r opens pre post)
+: stt a pre post
+= stt_of_action3 (action_of_act m)
 ///////////////////////////////////////////////////////
 // invariants
 ///////////////////////////////////////////////////////
@@ -395,7 +413,7 @@ let rec all_live_eq (ctx:list iref)
   | hd::tl ->
     live_eq hd;
     all_live_eq tl
-let fresh_invariant ctx p = fun #ictx -> all_live_eq ctx; fresh_invariant ictx p ctx
+let fresh_invariant ctx p = fun #ictx -> fresh_invariant ictx p ctx
 let with_invariant #a #r #fp #fp' #f_opens #p i f =
   fun #ictx ->
   let f : act a r f_opens (p `star` fp) (fun x -> p `star` fp' x) = f () in
@@ -543,6 +561,72 @@ let big_gather
       (fun _ -> big_pts_to r (op pcm v0 v1))
 = fun #ictx -> big_gather_action ictx r v0 v1
 
+
+let nb_pts_to = Mem.nb_pts_to
+let nb_pts_to_not_null #a #p r v #ictx = nb_pts_to_not_null_action ictx r v
+
+let nb_alloc
+    (#a:Type)
+    (#pcm:pcm a)
+    (x:a{pcm.refine x})
+: act (ref a pcm) Reifiable emp_inames emp (fun r -> nb_pts_to r x)
+= fun #ictx -> nb_alloc_action ictx x
+
+let nb_read
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x:erased a)
+    (f:(v:a{compatible p x v}
+        -> GTot (y:a{compatible p y v /\
+                     FStar.PCM.frame_compatible p x v y})))
+: act (v:a{compatible p x v /\ p.refine v})
+      Reifiable
+      emp_inames
+      (nb_pts_to r x)
+      (fun v -> nb_pts_to r (f v))
+= fun #ictx -> nb_select_refine ictx r x f
+
+let nb_write
+    (#a:Type)
+    (#p:pcm a)
+    (r:ref a p)
+    (x y:Ghost.erased a)
+    (f:FStar.PCM.frame_preserving_upd p x y)
+: act unit
+      Reifiable 
+      emp_inames
+      (nb_pts_to r x)
+      (fun _ -> nb_pts_to r y)
+= fun #ictx -> nb_upd_gen ictx r x y f
+
+let nb_share
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a{composable pcm v0 v1})
+: act unit
+      Ghost
+      emp_inames
+      (nb_pts_to r (v0 `op pcm` v1))
+      (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
+= fun #ictx -> nb_split_action ictx r v0 v1
+
+let nb_gather
+    (#a:Type)
+    (#pcm:pcm a)
+    (r:ref a pcm)
+    (v0:FStar.Ghost.erased a)
+    (v1:FStar.Ghost.erased a)
+: act (squash (composable pcm v0 v1))
+      Ghost
+      emp_inames
+      (nb_pts_to r v0 `star` nb_pts_to r v1)
+      (fun _ -> nb_pts_to r (op pcm v0 v1))
+= fun #ictx -> nb_gather_action ictx r v0 v1
+
+
 ///////////////////////////////////////////////////////////////////
 // pure
 ///////////////////////////////////////////////////////////////////
@@ -602,6 +686,13 @@ let big_ghost_read #a #p r x f = fun #ictx -> big_ghost_read #ictx #a #p r x f
 let big_ghost_write #a #p r x y f = fun #ictx -> big_ghost_write #ictx #a #p r x y f
 let big_ghost_share #a #pcm r v0 v1 = fun #ictx -> big_ghost_share #ictx #a #pcm r v0 v1
 let big_ghost_gather #a #pcm r v0 v1 = fun #ictx -> big_ghost_gather #ictx #a #pcm r v0 v1
+
+let nb_ghost_pts_to = Mem.nb_ghost_pts_to
+let nb_ghost_alloc #a #pcm x = fun #ictx -> nb_ghost_alloc #ictx #a #pcm x
+let nb_ghost_read #a #p r x f = fun #ictx -> nb_ghost_read #ictx #a #p r x f
+let nb_ghost_write #a #p r x y f = fun #ictx -> nb_ghost_write #ictx #a #p r x y f
+let nb_ghost_share #a #pcm r v0 v1 = fun #ictx -> nb_ghost_share #ictx #a #pcm r v0 v1
+let nb_ghost_gather #a #pcm r v0 v1 = fun #ictx -> nb_ghost_gather #ictx #a #pcm r v0 v1
 
 
 let lift_erased #a ni_a #opens #pre #post f =

@@ -16,11 +16,11 @@
 module PulseCore.InstantiatedSemantics
 
 module Sem = PulseCore.Semantics
-module Mem = PulseCore.Memory
+module Mem = PulseCore.MemoryAlt
 module U = FStar.Universe
 module F = FStar.FunctionalExtensionality
 
-open PulseCore.Memory
+open PulseCore.MemoryAlt
 
 let laws ()
 : squash (

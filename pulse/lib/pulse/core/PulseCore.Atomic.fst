@@ -141,6 +141,16 @@ let lift_atomic2
 : stt a pre post
 = A.lift2 e
 
+let lift_atomic3
+    (#a:Type u#3)
+    (#obs:_)
+    (#opens:inames)
+    (#pre:slprop)
+    (#post:a -> slprop)
+    (e:stt_atomic a #obs opens pre post)
+: stt a pre post
+= A.lift3 e
+
 let frame_atomic
     (#a:Type u#a)
     (#obs: observability)
@@ -342,5 +352,19 @@ let big_ghost_read #a #p r x f = Ghost.hide <| A.big_ghost_read r x f
 let big_ghost_write r x y f = Ghost.hide (A.big_ghost_write r x y f)
 let big_ghost_share r v0 v1 = Ghost.hide (A.big_ghost_share r v0 v1)
 let big_ghost_gather r v0 v1 = Ghost.hide (A.big_ghost_gather r v0 v1) 
+
+let nb_pts_to_not_null #a #p r v = Ghost.hide (A.nb_pts_to_not_null #a #p r v)
+let nb_alloc #a #pcm x = A.nb_alloc x
+let nb_read r x f = A.nb_read r x f
+let nb_write r x y f = A.nb_write r x y f
+let nb_share #a #pcm r v0 v1 = Ghost.hide (A.nb_share r v0 v1)
+let nb_gather #a #pcm r v0 v1 = Ghost.hide (A.nb_gather r v0 v1)
+
+
+let nb_ghost_alloc #a #pcm x = Ghost.hide <| A.nb_ghost_alloc #a #pcm x
+let nb_ghost_read #a #p r x f = Ghost.hide <| A.nb_ghost_read r x f
+let nb_ghost_write r x y f = Ghost.hide (A.nb_ghost_write r x y f)
+let nb_ghost_share r v0 v1 = Ghost.hide (A.nb_ghost_share r v0 v1)
+let nb_ghost_gather r v0 v1 = Ghost.hide (A.nb_ghost_gather r v0 v1) 
 
 let drop p = Ghost.hide (A.drop p)

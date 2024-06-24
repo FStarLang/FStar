@@ -222,22 +222,6 @@ let rec step
     in
     weaken <| bind (flip()) choose 
 
-
-// type tape = nat -> bool
-// type ctr = nat
-
-// type npst' (#s:Type u#s)
-//            (a:Type u#a)
-//            (pre:req_t s)
-//            (post:ens_t s a) =
-//   s0:s { pre s0 } ->
-//   tape ->
-//   ctr ->
-//   Dv (res:(a & s & ctr) {
-//     post s0 res._1 res._2
-//   })
-// let repr #s #a #rel #pre #post (x:nst #s a pre post) : npst' #s a rel pre post = admit()
-
 (** The main partial correctness result:
  *    m computations can be interpreted into nmst_sep computations 
  *)    
@@ -362,6 +346,24 @@ let act_as_m2
 = let k (x:U.raise_t t)
     : Dv (m t (a.post (U.downgrade_val x)) a.post) 
     = Ret (U.downgrade_val x)
+  in
+  mbind (act (raise_action a)) k
+
+noeq
+type liftable : Type u#(1 + (max a b)) = {
+  downgrade_val : (t:Type u#a -> U.raise_t u#a u#(max a b) t -> t);
+  laws : squash (forall (t:Type u#a) (x:t). downgrade_val t (U.raise_val x) == x)
+}
+
+let act_as_m_poly
+    (#st:state u#s)
+    (#t:Type u#a)
+    (l:liftable u#a u#b)
+    (a:action st t)
+: Dv (m u#s u#a u#(max a b) t a.pre a.post)
+= let k (x:U.raise_t u#a u#(max a b) t)
+    : Dv (m t (a.post (l.downgrade_val _ x)) a.post) 
+    = Ret (l.downgrade_val _ x)
   in
   mbind (act (raise_action a)) k
 
