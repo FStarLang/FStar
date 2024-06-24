@@ -320,20 +320,13 @@ let match_fastunif_inst_11
 = let g = pst.pg in
   let q0 = q in
 
-  (* If q is just a unification variable, skip this, it is most definitely
-  ambiguous to try to solve it. *)
-  // if head_is_uvar pst.uvs q then
-  //   raise (NoMatch "head of q is uvar");
-
   (* If the heads of p and q differ, skip. *)
   if not <| same_head pst.pg p q then
     raise (NoMatch "head mismatch");
 
   (* Try to instantiate q's uvars by matching it to p. We do not trust
   this call so we then typecheck the result (and normalize it too). *)
-  // T.dump "GG1";
   let ss' = try_solve_uvars pst.pg pst.uvs p q in
-  // T.dump "GG2";
   let q_subst = ss'.(q) in
   let q_norm =
     (* First typecheck q_subst and then normalize it. If it
@@ -348,6 +341,7 @@ let match_fastunif_inst_11
       // bad uvars, just ignore
       raise (NoMatch "uvar solution did not check")
   in
+  let q_subst_eq_q_norm : erased (equiv_token (elab_env g) q_subst q_norm) = magic () in
 
   if RU.debug_at_level (fstar_env g) "ggg" then
     info_doc g (Some <| range_of_env g) [
@@ -359,9 +353,14 @@ let match_fastunif_inst_11
     ];
 
   match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q_norm with
-  | Some tok, _ ->
-    (| ss', VE_Ext _ _ _ (RU.magic ()) |)
   | None, _ -> raise (NoMatch "no unif")
+  | Some token, _ ->
+    // (| ss', VE_Ext _ _ _ (RU.magic ()) |)
+    let p_eq_q_norm : vprop_equiv g p q_norm  = VE_Ext _ _ _ token in
+    let p_eq_q      : vprop_equiv g p q_subst =
+      p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
+    in
+    (| ss', p_eq_q |)
 
 (* Full unification with SMT. Also can instantiate uvars (strict should maybe
 also do this?). *)
@@ -371,11 +370,6 @@ let match_full_11
   : T.Tac (match_success_t pst p q)
 = let g = pst.pg in
   let q0 = q in
-
-  (* If q is just a unification variable, skip this, it is most definitely
-  ambiguous to try to solve it. *)
-  // if head_is_uvar pst.uvs q then
-  //   raise (NoMatch "head of q is uvar");
 
   (* If the heads of p and q differ, skip. *)
   if not <| same_head pst.pg p q then
