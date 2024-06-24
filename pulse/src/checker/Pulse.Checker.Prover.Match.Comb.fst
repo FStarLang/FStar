@@ -215,9 +215,9 @@ let match_with
   (matcher : matcher_t)
   (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
-  = admit();
+  =
     // try
-      let mpr : mpr_t pst = match_f_nn label matcher pst (List.rev pst.remaining_ctxt) (List.rev pst.unsolved) in
+      let mpr : mpr_t pst = match_f_nn label matcher pst pst.remaining_ctxt pst.unsolved in
       apply_mpr pst mpr
     // with
     // | Ambig (q, p, p') ->
