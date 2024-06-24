@@ -3,6 +3,29 @@ type order =
   | Lt 
   | Eq 
   | Gt 
+let rec __knot_e_order _ =
+  FStar_Syntax_Embeddings_Base.mk_extracted_embedding "FStar.Order.order"
+    (fun tm_0 ->
+       match tm_0 with
+       | ("FStar.Order.Lt", []) -> FStar_Pervasives_Native.Some Lt
+       | ("FStar.Order.Eq", []) -> FStar_Pervasives_Native.Some Eq
+       | ("FStar.Order.Gt", []) -> FStar_Pervasives_Native.Some Gt
+       | _ -> FStar_Pervasives_Native.None)
+    (fun tm_4 ->
+       match tm_4 with
+       | Lt ->
+           FStar_Syntax_Util.mk_app
+             (FStar_Syntax_Syntax.tdataconstr
+                (FStar_Ident.lid_of_str "FStar.Order.Lt")) []
+       | Eq ->
+           FStar_Syntax_Util.mk_app
+             (FStar_Syntax_Syntax.tdataconstr
+                (FStar_Ident.lid_of_str "FStar.Order.Eq")) []
+       | Gt ->
+           FStar_Syntax_Util.mk_app
+             (FStar_Syntax_Syntax.tdataconstr
+                (FStar_Ident.lid_of_str "FStar.Order.Gt")) [])
+let e_order = __knot_e_order ()
 let (uu___is_Lt : order -> Prims.bool) =
   fun projectee -> match projectee with | Lt -> true | uu___ -> false
 let (uu___is_Eq : order -> Prims.bool) =

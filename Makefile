@@ -40,6 +40,8 @@ clean-snapshot: clean-intermediate
 	$(call msg, "CLEAN SNAPSHOT")
 	$(Q)cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
 	$(Q)rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
+	$(Q)rm -f src/ocaml-output/fstarc/*
+	$(Q)rm -f src/ocaml-output/fstarlib/*
 
 .PHONY: dune-snapshot
 dune-snapshot:
