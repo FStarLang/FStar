@@ -62,11 +62,15 @@ let (freevars_proof_hint :
         { Pulse_Syntax_Base.names1 = uu___; Pulse_Syntax_Base.p2 = p;_} ->
         freevars p
     | Pulse_Syntax_Base.RENAME
-        { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
-        -> FStar_Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+        { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;
+          Pulse_Syntax_Base.tac_opt = tac_opt;_}
+        ->
+        FStar_Set.union
+          (FStar_Set.union (freevars_pairs pairs) (freevars_term_opt goal))
+          (freevars_term_opt tac_opt)
     | Pulse_Syntax_Base.REWRITE
         { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;
-          Pulse_Syntax_Base.tac_opt = tac_opt;_}
+          Pulse_Syntax_Base.tac_opt1 = tac_opt;_}
         ->
         FStar_Set.union (FStar_Set.union (freevars t1) (freevars t2))
           (freevars_term_opt tac_opt)
@@ -171,7 +175,7 @@ let rec (freevars_st :
              (FStar_Set.union (freevars length) (freevars_st body)))
     | Pulse_Syntax_Base.Tm_Rewrite
         { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;
-          Pulse_Syntax_Base.tac_opt1 = tac_opt;_}
+          Pulse_Syntax_Base.tac_opt2 = tac_opt;_}
         ->
         FStar_Set.union (FStar_Set.union (freevars t1) (freevars t2))
           (freevars_term_opt tac_opt)
@@ -260,11 +264,12 @@ let (ln_proof_hint' :
           { Pulse_Syntax_Base.names = uu___; Pulse_Syntax_Base.p1 = p;_} ->
           ln' p i
       | Pulse_Syntax_Base.RENAME
-          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
+          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;
+            Pulse_Syntax_Base.tac_opt = uu___;_}
           -> (ln_terms' pairs i) && (ln_opt' ln' goal i)
       | Pulse_Syntax_Base.REWRITE
           { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;
-            Pulse_Syntax_Base.tac_opt = uu___;_}
+            Pulse_Syntax_Base.tac_opt1 = uu___;_}
           -> (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.WILD -> true
       | Pulse_Syntax_Base.SHOW_PROOF_STATE uu___ -> true
@@ -401,7 +406,7 @@ let rec (ln_st' : Pulse_Syntax_Base.st_term -> Prims.int -> Prims.bool) =
             && (ln_st' body (i + Prims.int_one))
       | Pulse_Syntax_Base.Tm_Rewrite
           { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;
-            Pulse_Syntax_Base.tac_opt1 = uu___;_}
+            Pulse_Syntax_Base.tac_opt2 = uu___;_}
           -> (ln' t1 i) && (ln' t2 i)
       | Pulse_Syntax_Base.Tm_Admit
           { Pulse_Syntax_Base.ctag = uu___; Pulse_Syntax_Base.u1 = uu___1;
@@ -624,22 +629,24 @@ let (subst_proof_hint :
               Pulse_Syntax_Base.p1 = (subst_term p ss)
             }
       | Pulse_Syntax_Base.RENAME
-          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;_}
+          { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal;
+            Pulse_Syntax_Base.tac_opt = tac_opt;_}
           ->
           Pulse_Syntax_Base.RENAME
             {
               Pulse_Syntax_Base.pairs = (subst_term_pairs pairs ss);
-              Pulse_Syntax_Base.goal = (subst_term_opt goal ss)
+              Pulse_Syntax_Base.goal = (subst_term_opt goal ss);
+              Pulse_Syntax_Base.tac_opt = (subst_term_opt tac_opt ss)
             }
       | Pulse_Syntax_Base.REWRITE
           { Pulse_Syntax_Base.t1 = t1; Pulse_Syntax_Base.t2 = t2;
-            Pulse_Syntax_Base.tac_opt = tac_opt;_}
+            Pulse_Syntax_Base.tac_opt1 = tac_opt;_}
           ->
           Pulse_Syntax_Base.REWRITE
             {
               Pulse_Syntax_Base.t1 = (subst_term t1 ss);
               Pulse_Syntax_Base.t2 = (subst_term t2 ss);
-              Pulse_Syntax_Base.tac_opt = (subst_term_opt tac_opt ss)
+              Pulse_Syntax_Base.tac_opt1 = (subst_term_opt tac_opt ss)
             }
       | Pulse_Syntax_Base.WILD -> ht
       | Pulse_Syntax_Base.SHOW_PROOF_STATE uu___ -> ht
@@ -895,13 +902,13 @@ let rec (subst_st_term :
               }
         | Pulse_Syntax_Base.Tm_Rewrite
             { Pulse_Syntax_Base.t11 = t1; Pulse_Syntax_Base.t21 = t2;
-              Pulse_Syntax_Base.tac_opt1 = tac_opt;_}
+              Pulse_Syntax_Base.tac_opt2 = tac_opt;_}
             ->
             Pulse_Syntax_Base.Tm_Rewrite
               {
                 Pulse_Syntax_Base.t11 = (subst_term t1 ss);
                 Pulse_Syntax_Base.t21 = (subst_term t2 ss);
-                Pulse_Syntax_Base.tac_opt1 = (subst_term_opt tac_opt ss)
+                Pulse_Syntax_Base.tac_opt2 = (subst_term_opt tac_opt ss)
               }
         | Pulse_Syntax_Base.Tm_Admit
             { Pulse_Syntax_Base.ctag = ctag; Pulse_Syntax_Base.u1 = u;

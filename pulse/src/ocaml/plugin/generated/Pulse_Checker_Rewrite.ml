@@ -853,7 +853,7 @@ let (check :
                                  | Pulse_Syntax_Base.Tm_Rewrite
                                      { Pulse_Syntax_Base.t11 = p;
                                        Pulse_Syntax_Base.t21 = q;
-                                       Pulse_Syntax_Base.tac_opt1 = tac_opt;_}
+                                       Pulse_Syntax_Base.tac_opt2 = tac_opt;_}
                                      ->
                                      Obj.magic
                                        (FStar_Tactics_Effect.tac_bind
@@ -1026,7 +1026,7 @@ let (check :
                                                                     = p1;
                                                                     Pulse_Syntax_Base.t21
                                                                     = q1;
-                                                                    Pulse_Syntax_Base.tac_opt1
+                                                                    Pulse_Syntax_Base.tac_opt2
                                                                     =
                                                                     FStar_Pervasives_Native.None
                                                                     }))
