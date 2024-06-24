@@ -83,10 +83,12 @@ instance pp_ss_t : printable ss_t = {
         //  doc_of_string "dom="
         //  pp (l <: list int) ^^
         //  doc_of_string " |-> " ^^
-        l |> separate_map comma (fun k ->
+        l |> separate_map (comma ^^ break_ 1) (fun k ->
                pp (k <: int) ^^ doc_of_string " -> " ^^ pp (Map.sel m k))
+          |> brackets
         );
 }
+instance showable_ss_t : tac_showable ss_t = show_from_pp
 
 let ln_ss_t (s:ss_t) =
   List.Tot.for_all (fun x -> ln (Map.sel s.m x)) s.l
@@ -239,6 +241,10 @@ let rec ss_env (g:env) (ss:ss_t)
   match ss.l with
   | [] -> g
   | y::tl -> ss_env (subst_env g [ RT.NT y (Map.sel ss.m y) ]) (tail ss)
+
+let lemma_subst_empty_term (t:term)
+  : Lemma (ss_term t empty == t)
+  = ()
 
 let rec ss_st_comp_commutes (s:st_comp) (ss:ss_t)
   : Lemma (ensures

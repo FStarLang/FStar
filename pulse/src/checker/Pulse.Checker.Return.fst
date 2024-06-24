@@ -133,7 +133,7 @@ let check_core
     Printf.sprintf "Return comp is: %s"
       (Pulse.Syntax.Printer.comp_to_string c));
   prove_post_hint #g
-    (try_frame_pre #g ctxt_typing dd res_ppname)
+    (try_frame_pre false #g ctxt_typing dd res_ppname)
     post_hint
     (Pulse.RuntimeUtils.range_of_term t)
 #pop-options

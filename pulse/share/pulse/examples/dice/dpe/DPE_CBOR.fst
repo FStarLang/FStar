@@ -129,8 +129,9 @@ fn initialize_context (len:SZ.t)
                                   pure (DPE.trace_valid_for_initialize_context t));
               with t. assert (DPE.sid_pts_to DPE.trace_ref sid t);
               DPE.initialize_context sid t uds.cbor_string_payload;
-              elim_stick0 ();
-              elim_stick0 ();
+              with p' _vv. assert (A.pts_to uds.cbor_string_payload #p' _vv);
+              elim_stick0 () #(A.pts_to uds.cbor_string_payload #p' _);
+              elim_stick0 () #(raw_data_item_match 1.0R _ _);
               elim_stick0 ();
               drop_ (initialize_context_client_perm sid _);
               true

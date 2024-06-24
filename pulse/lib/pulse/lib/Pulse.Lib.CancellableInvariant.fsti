@@ -42,16 +42,16 @@ val new_cancellable_invariant (v:vprop { is_big v })
       v
       (fun c -> inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
 
-val unpacked (c:cinv) : vprop
+val unpacked (c:cinv) (v:vprop) : vprop
 
 val unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
       (cinv_vp c v ** active c p)
-      (fun _ -> v ** unpacked c ** active c p)
+      (fun _ -> v ** unpacked c v ** active c p)
 
 val pack_cinv_vp (#v:vprop) (c:cinv)
   : stt_ghost unit emp_inames
-      (v ** unpacked c)
+      (v ** unpacked c v)
       (fun _ -> cinv_vp c v)
 
 val share (#p:perm) (c:cinv)
@@ -64,11 +64,13 @@ val share2 (c:cinv)
       (active c 1.0R)
       (fun _ -> active c 0.5R ** active c 0.5R)
 
+[@@allow_ambiguous]
 val gather (#p1 #p2 :perm) (c:cinv)
   : stt_ghost unit emp_inames
       (active c p1 ** active c p2)
       (fun _ -> active c (p1 +. p2))
 
+[@@allow_ambiguous]
 val gather2 (c:cinv)
   : stt_ghost unit emp_inames
       (active c 0.5R ** active c 0.5R)

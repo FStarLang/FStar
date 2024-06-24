@@ -102,6 +102,7 @@ ensures
 ```
 
 // Ownership of tank units can be combined additively
+[@@allow_ambiguous]
 ```pulse
 ghost
 fn gather_tank_units (#n:nat) (g:tank n) (#i #j:erased nat)
@@ -114,8 +115,8 @@ ensures
 {
   extract_tank_bound g #i;
   extract_tank_bound g #j;
-  unfold owns_tank_units;
-  unfold owns_tank_units;
+  unfold (owns_tank_units g i);
+  unfold (owns_tank_units g j);
   GPR.gather g _ _;
   fold owns_tank_units;
   extract_tank_bound g;
@@ -212,14 +213,15 @@ ensures can_give gs (i - 1) ** can_give gs 1
 ```
 
 // A utility to gather has_given units
+[@@allow_ambiguous]
 ```pulse
 ghost
 fn gather_has_given (#n:nat) (gs:ghost_state n) (#i #j:nat)
 requires has_given gs i ** has_given gs j
 ensures has_given gs (i + j)
 {
-  unfold has_given;
-  unfold has_given;
+  unfold (has_given gs i);
+  unfold (has_given gs j);
   gather_tank_units gs.to_give;
   fold (has_given gs (i + j));
 }

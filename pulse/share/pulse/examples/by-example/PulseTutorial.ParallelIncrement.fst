@@ -367,7 +367,8 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
         { 
           elim_cond_true b _ _;
           elim_cond_true true _ _;
-          f _ _;
+          with vv. assert (refine vv);
+          f vv _;
           intro_cond_false (aspec 'i) (aspec ('i + 1));
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
           false
@@ -656,8 +657,8 @@ fn incr_pcm (r:ref int) (#n:erased int)
   L.acquire l;
   unfold lock_inv_pcm;
   unfold lock_inv_ghost;
-  unfold t1_perm;
-  unfold t1_perm;
+  unfold (t1_perm ghost_r (add_one zero1) true);
+  unfold (t1_perm ghost_r (add_one zero1) false);
   gather ghost_r;
   L.free l;
   drop_ (ghost_pcm_pts_to ghost_r _)

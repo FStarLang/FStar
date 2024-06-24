@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Recursion
+module Test.Recursion
 
 open Pulse.Lib.Pervasives
 

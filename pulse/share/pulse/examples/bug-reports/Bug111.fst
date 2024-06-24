@@ -19,6 +19,8 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 
 //works, lucky, because it appears in the right order in the precondition
+// Not anymore: rejected due to ambiguity (there is no backtracking)
+[@@expect_failure]
 ```pulse
 ghost
 fn test_trans (p q r:vprop)
@@ -29,6 +31,7 @@ ensures (p @==> r)
 }
 ```
 
+// Also ambiguous.
 [@@expect_failure]
 ```pulse
 ghost
@@ -37,6 +40,17 @@ requires (q @==> r) ** (p @==> q)
 ensures (p @==> r)
 {
     trans _ _ _;
+}
+```
+
+// Providing any implicit is enough to make it work
+```pulse
+ghost
+fn test_trans_3 (p q r:vprop)
+requires (q @==> r) ** (p @==> q)
+ensures (p @==> r)
+{
+    trans p _ _;
 }
 ```
 

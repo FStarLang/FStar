@@ -130,6 +130,8 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     k = k_sub;
     goals_inv = RU.magic ();
     solved_inv = ();
+    progress = false;
+    allow_ambiguous = pst.allow_ambiguous;
   } in
   let pst_sub = prover pst_sub in
   let pst_sub_goals_inv
@@ -345,6 +347,8 @@ let intro_exists (#preamble:_) (pst:prover_state preamble)
     k;
     goals_inv = RU.magic ();
     solved_inv = RU.magic ();
+    progress = false;
+    allow_ambiguous = pst_sub.allow_ambiguous;
   } in
 
   pst'

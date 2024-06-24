@@ -23,9 +23,9 @@ module T = FStar.Tactics.V2
 val lock : Type0
 
 val lock_alive
-      (l:lock)
-      (#[T.exact (`1.0R)] [@@@equate_by_smt] p:perm)
-      ([@@@equate_by_smt] v:vprop)
+      ([@@@equate_strict] l:lock)
+      (#[T.exact (`1.0R)] p:perm)
+      (v:vprop)
   : vprop
 
 val lock_acquired (l:lock) : vprop
@@ -49,11 +49,13 @@ val share2 (#v:vprop) (l:lock)
       (lock_alive l v)
       (fun _ -> lock_alive l #0.5R v ** lock_alive l #0.5R v)
 
+[@@allow_ambiguous]
 val gather (#v:vprop) (#p1 #p2:perm) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #p1 v ** lock_alive l #p2 v)
       (fun _ -> lock_alive l #(p1 +. p2) v)
 
+[@@allow_ambiguous]
 val gather2 (#v:vprop) (l:lock)
   : stt_ghost unit emp_inames
       (lock_alive l #0.5R v ** lock_alive l #0.5R v)

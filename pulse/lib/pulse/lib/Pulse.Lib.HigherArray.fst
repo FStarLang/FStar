@@ -437,7 +437,7 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
   unfold pts_to arr #p0 s0;
   with w0. assert (pcm_pts_to (lptr_of arr) w0);
   unfold pts_to arr #p1 s1;
-  with w1. assert (pcm_pts_to (lptr_of arr) w1);
+  with w1. assert (pcm_pts_to (lptr_of arr) w0 ** pcm_pts_to (lptr_of arr) w1);
   Pulse.Lib.Core.gather (lptr_of arr) w0 w1;
   of_squash (mk_carrier_gather (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 s1 p0 p1 ());
   of_squash (mk_carrier_valid_sum_perm (SZ.v (ptr_of arr).base_len) ((ptr_of arr).offset) s0 p0 p1);
@@ -508,11 +508,10 @@ let token (x:'a) = emp
 
 let pts_to_range
   (#a:Type)
-  (x:array a)
-  ([@@@ equate_by_smt] i:nat)
-  ([@@@ equate_by_smt] j: nat)
+  ([@@@equate_strict] x:array a)
+  (i j : nat)
   (#[exact (`1.0R)] p:perm)
-  ([@@@ equate_by_smt] s: Seq.seq a)
+  (s : Seq.seq a)
 : vprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
 

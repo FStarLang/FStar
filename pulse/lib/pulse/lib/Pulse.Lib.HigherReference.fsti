@@ -51,6 +51,7 @@ val share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
        pts_to r #(p /. 2.0R) v **
        pts_to r #(p /. 2.0R) v)
 
+[@@allow_ambiguous]
 val gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
@@ -62,6 +63,7 @@ val share2 (#a:Type) (r:ref a) (#v:erased a)
       (pts_to r v)
       (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
 
+[@@allow_ambiguous]
 val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
   : stt_ghost unit emp_inames
       (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
@@ -77,6 +79,7 @@ val with_local
                                (fun v -> post v ** (exists* (x:a). pts_to r x)))
   : stt ret_t pre post
 
+[@@allow_ambiguous]
 val pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)

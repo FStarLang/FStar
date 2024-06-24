@@ -1601,7 +1601,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (237))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (237))
-                                                                    (Prims.of_int (88)))))
+                                                                    (Prims.of_int (89)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1612,7 +1612,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.SMTSync
+                                                                    FStar_Tactics_Types.ForceSMT
                                                                     (fun
                                                                     uu___1 ->
                                                                     Pulse_Checker_Pure.try_check_prop_validity
@@ -1976,7 +1976,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (237))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (237))
-                                                                    (Prims.of_int (88)))))
+                                                                    (Prims.of_int (89)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1987,7 +1987,7 @@ let (check_effect_annotation :
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.with_policy
-                                                                    FStar_Tactics_Types.SMTSync
+                                                                    FStar_Tactics_Types.ForceSMT
                                                                     (fun
                                                                     uu___1 ->
                                                                     Pulse_Checker_Pure.try_check_prop_validity

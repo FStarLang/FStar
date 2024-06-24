@@ -18,9 +18,9 @@ module Pulse.Lib.OnRange
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
-val on_range (p: (nat -> vprop))
-             ([@@@equate_by_smt] i:nat)
-             ([@@@equate_by_smt] j:nat)
+val on_range ([@@@equate_strict] p: (nat -> vprop))
+             (i:nat)
+             (j:nat)
   : vprop
 
 val on_range_eq_false (p:nat -> vprop) (i j:nat)

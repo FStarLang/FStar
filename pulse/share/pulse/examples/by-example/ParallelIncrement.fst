@@ -342,7 +342,8 @@ ensures inv l invp ** qpred ('i + 1)
         {
           elim_cond_true b _ _;
           elim_cond_true true _ _;
-          f _ _;
+          with vv. assert (pred vv);
+          f vv _;
           intro_cond_false (qpred 'i) (qpred ('i + 1));
           intro_inv ();
           false

@@ -86,12 +86,13 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
       unpack_cinv_vp l.i;
       unfold lock_inv;
       unfold lock_inv_aux;
+      with i. assert (B.pts_to l.r i);
       let b = cas_box l.r 0ul 1ul;
       if b {
         elim_cond_true _ _ _;
+        rewrite each i as 0ul;
         GR.(l.gr := 1ul);
         GR.share2 l.gr;
-        rewrite emp as (if (1ul = 0ul) then v else emp);
         fold (lock_inv_aux l.r l.gr v);
         fold (lock_inv l.r l.gr v);
         pack_cinv_vp l.i;

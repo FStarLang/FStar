@@ -141,7 +141,7 @@ let rtb_check_prop_validity (g:env) (sync:bool) (f:_) (p:_) =
     RU.with_context (get_context g) 
     (fun _ -> 
       if sync
-      then T.with_policy T.SMTSync (fun _ -> RTB.check_prop_validity f sp)
+      then T.with_policy T.ForceSMT (fun _ -> RTB.check_prop_validity f sp)
       else RTB.check_prop_validity f sp)
   in
   match res with
@@ -519,7 +519,7 @@ let is_non_informative g c =
   ropt
 
 let check_subtyping g t1 t2 =
-  T.with_policy SMTSync (fun () ->
+  T.with_policy ForceSMT (fun () ->
   let res, issues = rtb_check_subtyping g t1 t2 in
   T.log_issues issues;
   match res with

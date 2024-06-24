@@ -211,10 +211,10 @@ let join_smt_goals () : Tac unit =
 let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   (* We use the SMT policy by default, to collect goals in the
   proofstate and discharge them all at the end, potentially joining
-  them (see below). But it can be overriden to SMTSync by `--ext
-  pulse:guard_policy=SMTSync`. *)
-  if ext_getv "pulse:guard_policy" = "SMTSync" then
-    set_guard_policy SMTSync
+  them (see below). But it can be overriden to ForceSMT by `--ext
+  pulse:guard_policy=ForceSMT`. *)
+  if ext_getv "pulse:guard_policy" = "ForceSMT" then
+    set_guard_policy ForceSMT
   else
     set_guard_policy SMT;
 

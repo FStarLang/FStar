@@ -75,8 +75,8 @@ fn join_pledge (#f v1 v2:vprop)
   requires pledge f v1 ** pledge f v2
   ensures pledge f (v1 ** v2)
 {
-  unfold pledge;
-  unfold pledge;
+  unfold (pledge f v1);
+  unfold (pledge f v2);
   with is1. assert (P.pledge is1 f v1);
   with is2. assert (P.pledge is2 f v2);
   P.pledge_sub_inv is1 (join_inames is1 is2) f v1;

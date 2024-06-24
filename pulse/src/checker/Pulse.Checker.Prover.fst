@@ -22,6 +22,8 @@ open Pulse.Syntax
 open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Base
+open Pulse.PP
+open Pulse.Show
 
 module RU = Pulse.RuntimeUtils
 module L = FStar.List.Tot
@@ -30,14 +32,25 @@ module P = Pulse.Syntax.Printer
 module Pprint = FStar.Stubs.Pprint
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
-module ElimExists = Pulse.Checker.Prover.ElimExists
-module ElimPure =  Pulse.Checker.Prover.ElimPure
-module Match = Pulse.Checker.Prover.Match
-module IntroExists = Pulse.Checker.Prover.IntroExists
-module IntroPure = Pulse.Checker.Prover.IntroPure
 
+module ElimExists  = Pulse.Checker.Prover.ElimExists
+module ElimPure    =  Pulse.Checker.Prover.ElimPure
+module Match       = Pulse.Checker.Prover.Match
+module IntroExists = Pulse.Checker.Prover.IntroExists
+module IntroPure   = Pulse.Checker.Prover.IntroPure
+module Explode     = Pulse.Checker.Prover.Explode
 
 let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
+
+(* Checks if `p` is equivalent to emp, using the core checker. *)
+let check_equiv_emp' (g:env) (p:vprop) : T.Tac (option (vprop_equiv g p tm_emp)) =
+  match check_equiv_emp g p with
+  | Some t -> Some t
+  | None ->
+    match Pulse.Typing.Util.check_equiv_now_nosmt (elab_env g) p tm_emp with
+    | Some tok, _ ->
+      Some (VE_Ext _ _ _ tok)
+    | None, _ -> None
 
 let elim_exists_and_pure (#g:env) (#ctxt:vprop)
   (ctxt_typing:tot_typing g ctxt tm_vprop)
@@ -94,7 +107,6 @@ let rec prove_pures #preamble (pst:prover_state preamble)
       let pst_opt = IntroPure.intro_pure pst p unsolved' () in
       (match pst_opt with
        | None ->
-         let open Pulse.PP in
          fail_doc pst.pg None [
            text "Cannot prove pure proposition" ^/^
              pp p
@@ -110,79 +122,226 @@ let rec prove_pures #preamble (pst:prover_state preamble)
         (Printf.sprintf "Impossible! prover.prove_pures: %s is not a pure, please file a bug-report"
            (P.term_to_string (L.hd pst.unsolved)))
 
-#push-options "--z3rlimit_factor 8 --fuel 1 --ifuel 1"
+let normalize_vprop
+  (g:env)
+  (v:vprop)
+  : T.Tac (v':vprop & Ghost.erased (vprop_equiv g v v'))
+=
+  let v' = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] v in
+  let v_equiv_v' : Ghost.erased _ = VE_Ext _ _ _ (RU.magic ()) in
+  (| v', v_equiv_v' |)
+
+(* normalizes ctx and unsolved *)
+let normalize_vprop_context
+  (#preamble:_)
+  (pst:prover_state preamble)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+  let ctxt = pst.remaining_ctxt in
+  let ctxt' = ctxt |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+
+  let unsolved = pst.unsolved in
+  let unsolved' = unsolved |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+
+  if RU.debug_at_level (fstar_env pst.pg) "ggg" then
+  info_doc pst.pg None [
+    text "PROVER Normalized context";
+    pp ctxt;
+    pp ctxt';
+  ];
+
+  { pst with
+      remaining_ctxt = ctxt';
+      remaining_ctxt_frame_typing = magic ();
+      k = k_elab_equiv pst.k (VE_Refl _ _) (RU.magic ());
+      
+      unsolved = unsolved';
+      goals_inv = RU.magic ();
+  }
+
+let rec __intro_any_exists (n:nat)
+  (#preamble:_)
+  (pst:prover_state preamble)
+  (prover:prover_t)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst })
+=
+  if n = 0 then pst else (
+    match pst.unsolved with
+    | [] -> pst
+    | hd::unsolved' ->
+      // info_doc pst.pg None [
+      //   text "Trying to introduce existential quantifier:" ^/^
+      //     pp hd;
+      // ];
+      assume (hd == pst.ss.(hd));
+      let hd = pst.ss.(hd) in
+      match inspect_term hd with
+      | Tm_ExistsSL u b body ->
+        // info_doc pst.pg (Some (RU.range_of_term hd)) [
+        //   text "Introducing existential quantifier:" ^/^
+        //     pp hd;
+        // ];
+        IntroExists.intro_exists pst u b body unsolved' () prover
+      | _ ->
+        let pst = {
+          pst with
+          unsolved = unsolved'@[hd];
+          goals_inv = magic();
+        } in
+        __intro_any_exists (n-1) pst prover
+  )
+
+let intro_any_exists 
+  (#preamble:_)
+  (pst:prover_state preamble)
+  (prover:prover_t)
+  : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+  __intro_any_exists (List.length pst.unsolved) pst prover
+
+#push-options "--z3rlimit_factor 20 --fuel 1 --ifuel 1 --split_queries no --retry 3" // fixme
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst0 /\
-                                        is_terminal pst' }) =
+                                        is_terminal pst' })
+= debug_prover pst0.pg (fun _ ->
+    Printf.sprintf "At the prover top-level with remaining_ctxt: %s\n  unsolved: %s\n  allow_ambiguous: %s\n"
+      (show (list_as_vprop pst0.remaining_ctxt))
+      (show (list_as_vprop pst0.unsolved))
+      (show pst0.allow_ambiguous));
+  
+  let pst = pst0 in
+  let pst = { pst with progress = false } in
+  match pst.unsolved with
+  | [] ->
+    (* We happen to be called on a fully-solved pst, do nothing. *)
+    pst0
 
-  debug_prover pst0.pg (fun _ ->
-    Printf.sprintf "At the prover top-level with remaining_ctxt: %s\nunsolved: %s"
-      (P.term_to_string (list_as_vprop pst0.remaining_ctxt))
-      (P.term_to_string (list_as_vprop pst0.unsolved)));
-
-  match pst0.unsolved with
-  | [] -> pst0
   | _ ->
-    let pst = ElimExists.elim_exists_pst pst0 in
+    (* Beta/iota/primops normalization in the context and goals.
+       FIXME: do this incrementally instead of on every entry to the
+       prover. *)
+    let pst = normalize_vprop_context pst in
 
+    (* Eliminate existentials from context, extend pst with new variables and resources. *)
+    let pst = ElimExists.elim_exists_pst pst in
     debug_prover pst.pg (fun _ ->
       Printf.sprintf "prover: remaining_ctxt after elim exists: %s\n"
         (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
 
+    if pst.progress then prover pst else let () = () in
+
+    (* Eliminate pure vprops in context, extend pst with new squash bindings. *)
     let pst = ElimPure.elim_pure_pst pst in
 
     debug_prover pst.pg (fun _ ->
       Printf.sprintf "prover: remaining_ctxt after elim pure: %s\n"
         (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
+    if pst.progress then prover pst else let () = () in
 
     let (| exs, rest, d |) = collect_exists (push_env pst.pg pst.uvs) pst.unsolved in
 
     debug_prover pst.pg (fun _ ->
       Printf.sprintf "prover: tried to pull exists: exs: %s and rest: %s\n"
         (P.term_to_string (list_as_vprop exs)) (P.term_to_string (list_as_vprop rest)));
+    if pst.progress then prover pst else let () = () in
 
     let pst = unsolved_equiv_pst pst (exs@rest) d in
 
     debug_prover pst.pg (fun _ ->
       Printf.sprintf "prover: unsolved after pulling exists at the top: %s\n"
         (P.term_to_string (list_as_vprop pst.unsolved)));
+    if pst.progress then prover pst else let () = () in
+        
+    (* Always explode the unsolved set into atoms. This should be done
+    after normalization. *)
+    let pst = Explode.explode pst in
+ 
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after exploding: %s /// (%s)\n"
+        (P.term_to_string (list_as_vprop pst.unsolved))
+        (P.term_to_string (pst.ss.(list_as_vprop pst.unsolved))));
+    if pst.progress then prover pst else let () = () in
+
+    (* Try to syntactically match some goals from the context. *)   
+    let pst = Match.match_syntactic pst in
+    
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after syntactic match: %s\n"
+        (show (list_as_vprop pst.unsolved)));
+    if pst.progress then prover pst else let () = () in
+
+    (* Whatever remains, try fastpath unification (no smt, no unfolding). *)
+    let pst = Match.match_fastunif pst in
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after fastunif: %s\n"
+        (show (list_as_vprop pst.unsolved)));
+    if pst.progress then prover pst else let () = () in
+
+    (* Whatever remains, try fastpath unification (no smt, no unfolding). *)
+    let pst = Match.match_fastunif_i pst in
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after fastunif_inst: %s\n"
+        (show (list_as_vprop pst.unsolved)));
+    if pst.progress then prover pst else let () = () in
+
+    (* Go into full blown unification + SMT, with limitations
+    such as the strict_match attribute. *)
+    let pst = Match.match_full pst in
+    
+    debug_prover pst.pg (fun _ ->
+      Printf.sprintf "prover: unsolved after full match: %s\n"
+        (P.term_to_string (list_as_vprop pst.unsolved)));
+    if pst.progress then prover pst else let () = () in
+
+    let pst = intro_any_exists pst prover in
+    if pst.progress then prover pst else let () = () in
 
     match pst.unsolved with
+    | [] -> pst
     | hd::unsolved' ->
-      match inspect_term hd with
-      | Tm_ExistsSL u b body ->
-        IntroExists.intro_exists pst u b body unsolved' () prover
-      | _ ->
+      // match inspect_term hd with
+      // | Tm_ExistsSL u b body ->
+      //   IntroExists.intro_exists pst u b body unsolved' () prover
+      // | _ ->
+        (* Push all pures to the back. We try them last. *)
+        (* TODO: can't we just call prove_pures and be done? *)
         let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
         let pst = unsolved_equiv_pst pst (rest@pures) d in
         match pst.unsolved with
+        | [] -> pst
         | q::tl ->
           match inspect_term q with
           | Tm_Pure _ -> prove_pures pst
           | _ ->
-            let pst_opt = Match.match_q pst q tl () prover in
-            match pst_opt with
+            (* We have a first unsolved goal that is not a pure, we fail right 
+            now, reporting all non-pure goals. *)
+            let non_pures = T.filter (fun t -> not (Tm_Pure? (inspect_term t))) pst.unsolved in
+            let non_pures = T.map (fun q -> pst.ss.(q)) non_pures in
+            let q_norm : vprop = pst.ss.(q) in
+            match check_equiv_emp' pst.pg q_norm with // MOVE BEFORE, filter all emps before trying fastunif
+            | Some tok ->
+              (* It's emp, so just prove it here. *)
+              let pst' = { pst with
+                unsolved = unsolved';
+                goals_inv = magic();
+              } in
+              prover pst'
             | None ->
-              let open Pprint in
-              let open Pulse.PP in
               let msg = [
                 text "Cannot prove:" ^^
-                    indent (pp <| canon_vprop_print pst.ss.(q));
+                    indent (pp (list_as_vprop non_pures));
                 text "In the context:" ^^
-                    indent (pp <| canon_vprop_list_print pst.remaining_ctxt)
+                    indent (pp (list_as_vprop pst.remaining_ctxt))
               ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
                     text "The prover was started with goal:" ^^
-                        indent (pp <| canon_vprop_print preamble.goals);
+                        indent (pp preamble.goals);
                     text "and initial context:" ^^
-                        indent (pp <| canon_vprop_print preamble.ctxt);
-                   ] else [])
+                        indent (pp preamble.ctxt);
+                  ] else [])
               in
               // GM: I feel I should use (Some q.range) instead of None, but that makes
               // several error locations worse.
               fail_doc pst.pg None msg
-            | Some pst -> prover pst  // a little wasteful?
 #pop-options
 
 let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm v q) l })
@@ -195,8 +354,9 @@ let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm 
     else let (| tl', _ |) = get_q_at_hd g tl q in
          (| hd::tl', RU.magic #(vprop_equiv _ _ _) () |)
 
-#push-options "--z3rlimit_factor 4 --ifuel 2 --fuel 1 --split_queries no"
+#push-options "--z3rlimit_factor 8 --ifuel 2 --fuel 1 --split_queries no"
 let prove
+  (allow_ambiguous : bool)
   (#g:env) (#ctxt:vprop) (ctxt_typing:vprop_typing g ctxt)
   (uvs:env { disjoint g uvs })
   (#goals:vprop) (goals_typing:vprop_typing (push_env g uvs) goals)
@@ -247,7 +407,9 @@ let prove
       unsolved = vprop_as_list goals;
       k = k_elab_equiv (k_elab_unit g ctxt) (RU.magic ()) (RU.magic ());
       goals_inv = RU.magic ();
-      solved_inv = ()
+      solved_inv = ();
+      progress = false;
+      allow_ambiguous = allow_ambiguous;
     } in
 
     let pst = prover pst0 in
@@ -261,11 +423,25 @@ let prove
       match pst.nts with
       | Some nts -> nts
       | None ->
+        // warn_doc pst.pg None [
+        //   text <| Printf.sprintf "About to translate prover state to nts (nts is None)";
+        //   prefix 2 1 (text "pst.pg =") (pp pst.pg);
+        //   prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
+        //   prefix 2 1 (text "pst.ss =") (pp pst.ss);
+        //   prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
+        //   prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
+        // ];
         let r = PS.ss_to_nt_substs pst.pg pst.uvs pst.ss in
         match r with
         | Inr msg ->
-          fail pst.pg None
-            (Printf.sprintf "prover error: ill-typed substitutions (%s)" msg)
+          fail_doc pst.pg None [
+            text <| Printf.sprintf "Prover error: ill-typed substitutions (%s)" msg;
+            prefix 2 1 (text "pst.pg =") (pp pst.pg);
+            prefix 2 1 (text "pst.uvs =") (pp pst.uvs);
+            prefix 2 1 (text "pst.ss =") (pp pst.ss);
+            prefix 2 1 (text "pst.remaining_ctxt =") (pp pst.remaining_ctxt);
+            prefix 2 1 (text "pst.unsolved =") (pp pst.unsolved);
+          ]
         | Inl nts -> nts in
     let nts_uvs, nts_uvs_effect_labels =
       PS.well_typed_nt_substs_prefix pst.pg pst.uvs nts effect_labels uvs in
@@ -305,7 +481,9 @@ let typing_canon #g #t (#c:comp_st) (d:st_typing g t c) : st_typing g t (canon_p
   d
 
 #push-options "--z3rlimit_factor 8 --fuel 0 --ifuel 1 --retry 5"
-let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+let try_frame_pre_uvs
+  (allow_ambiguous : bool)
+  (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (uvs:env { disjoint g uvs })
   (d:(t:st_term & c:comp_st & st_typing (push_env g uvs) t c))
   (res_ppname:ppname)
@@ -317,7 +495,7 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   let g = push_context g "try_frame_pre" t.range in
 
   let (| g1, nts, effect_labels, remaining_ctxt, k_frame |) =
-    prove #g #_ ctxt_typing uvs #(comp_pre c) (RU.magic ()) in
+    prove allow_ambiguous #g #_ ctxt_typing uvs #(comp_pre c) (RU.magic ()) in
   // assert (nts == []);
 
   let d : st_typing (push_env g1 uvs) t c =
@@ -386,7 +564,9 @@ let try_frame_pre_uvs (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_v
   (| x, g2, (| comp_u c, ty, d_ty |), (| ctxt', RU.magic #(tot_typing _ _ _) () |), k |)
 #pop-options
 
-let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
+let try_frame_pre
+  (allow_ambiguous : bool)
+  (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop)
   (d:(t:st_term & c:comp_st & st_typing g t c))
   (res_ppname:ppname)
 
@@ -394,17 +574,7 @@ let try_frame_pre (#g:env) (#ctxt:vprop) (ctxt_typing:tot_typing g ctxt tm_vprop
 
   let uvs = mk_env (fstar_env g) in
   assert (equal g (push_env g uvs));
-  try_frame_pre_uvs ctxt_typing uvs d res_ppname
-
-(* Checks if `p` is equivalent to emp, using the core checker. *)
-let check_equiv_emp' (g:env) (p:vprop) : T.Tac (option (vprop_equiv g p tm_emp)) =
-  match check_equiv_emp g p with
-  | Some t -> Some t
-  | None ->
-    match Pulse.Typing.Util.check_equiv_now_nosmt (elab_env g) p tm_emp with
-    | Some tok, _ ->
-      Some (VE_Ext _ _ _ tok)
-    | None, _ -> None
+  try_frame_pre_uvs allow_ambiguous ctxt_typing uvs d res_ppname
 
 let prove_post_hint (#g:env) (#ctxt:vprop)
   (r:checker_result_t g ctxt None)
@@ -426,7 +596,6 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
     // TODO: subtyping
     if not (eq_tm ty post_hint.ret_ty)
     then
-      let open Pulse.PP in
       fail_doc g (Some rng) [
         text "Error in proving postcondition";
         text "The return type" ^^
@@ -438,7 +607,7 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
     then (| x, g2, (| u_ty, ty, ty_typing |), (| ctxt', ctxt'_typing |), k |)
     else
       let (| g3, nts, _, remaining_ctxt, k_post |) =
-        prove #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (RU.magic ()) in
+        prove false #g2 #ctxt' ctxt'_typing (mk_env (fstar_env g2)) #post_hint_opened (RU.magic ()) in
           
       assert (nts == []);
       let k_post
@@ -447,7 +616,6 @@ let prove_post_hint (#g:env) (#ctxt:vprop)
 
       match check_equiv_emp' g3 remaining_ctxt with
       | None -> 
-        let open Pulse.PP in
         fail_doc g (Some rng) [
           text "Error in proving postcondition";
           prefix 2 1 (text "Inferred postcondition additionally contains")

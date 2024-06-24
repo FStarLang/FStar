@@ -102,6 +102,7 @@ val share
       (requires pts_to arr #p s)
       (ensures fun _ -> pts_to arr #(p /. 2.0R) s ** pts_to arr #(p /. 2.0R) s)
 
+[@@allow_ambiguous]
 val gather
   (#a:Type)
   (arr:array a)
@@ -113,11 +114,10 @@ val gather
 
 val pts_to_range
   (#a:Type u#0)
-  (x:array a)
-  ([@@@ equate_by_smt] i:nat)
-  ([@@@ equate_by_smt] j: nat)
+  ([@@@equate_strict] x:array a)
+  (i j : nat)
   (#[exact (`1.0R)] p:perm)
-  ([@@@ equate_by_smt] s: Seq.seq a) : vprop
+  (s: Seq.seq a) : vprop
 
 val pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
   : Lemma (is_small (pts_to_range x i j #p s))

@@ -270,5 +270,9 @@ let (elim_pure_pst :
                                     pst.Pulse_Checker_Prover_Base.solved)) k
                               () ()));
                       Pulse_Checker_Prover_Base.goals_inv = ();
-                      Pulse_Checker_Prover_Base.solved_inv = ()
+                      Pulse_Checker_Prover_Base.solved_inv = ();
+                      Pulse_Checker_Prover_Base.progress =
+                        (pst.Pulse_Checker_Prover_Base.progress);
+                      Pulse_Checker_Prover_Base.allow_ambiguous =
+                        (pst.Pulse_Checker_Prover_Base.allow_ambiguous)
                     }))

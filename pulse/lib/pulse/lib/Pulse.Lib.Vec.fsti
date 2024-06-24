@@ -36,7 +36,12 @@ type lvec (a:Type0) (n:nat) = v:vec a { length v == n }
 
 val is_full_vec (#a:Type0) (v:vec a) : prop
 
-val pts_to (#a:Type0) (v:vec a) (#[T.exact (`1.0R)] p:perm) (s:Seq.seq a) : vprop
+val pts_to
+  (#a:Type0)
+  ([@@@equate_strict] v:vec a)
+  (#[T.exact (`1.0R)] p:perm)
+  (s:Seq.seq a)
+: vprop
 
 val pts_to_is_small (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
   : Lemma (is_small (pts_to v #p s))
@@ -101,6 +106,7 @@ val share
       (requires pts_to v #p s)
       (ensures fun _ -> pts_to v #(p /. 2.0R) s ** pts_to v #(p /. 2.0R) s)
 
+[@@allow_ambiguous]
 val gather
   (#a:Type)
   (v:vec a)

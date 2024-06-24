@@ -67,6 +67,7 @@ val share
     (pts_to r (v0 `op pcm` v1))
     (fun _ -> pts_to r v0 ** pts_to r v1)
 
+[@@allow_ambiguous]
 val gather
     (#a:Type)
     (#pcm:pcm a)

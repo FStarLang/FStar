@@ -64,14 +64,14 @@ fn new_cancellable_invariant (v:vprop { is_big v })
 }
 ```
 
-let unpacked c = GR.pts_to c.r #0.5R true
+let unpacked c _v = GR.pts_to c.r #0.5R true
 
 
 ```pulse
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   requires cinv_vp c v ** active c p
-  ensures v ** unpacked c ** active c p
+  ensures v ** unpacked c v ** active c p
   opens emp_inames
 {
   unfold cinv_vp;
@@ -80,14 +80,14 @@ fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
   GR.pts_to_injective_eq c.r;
   rewrite (if true then v else emp) as v;
   fold (active c p);
-  fold (unpacked c)
+  fold (unpacked c v)
 }
 ```
 
 ```pulse
 ghost
 fn pack_cinv_vp (#v:vprop) (c:cinv)
-  requires v ** unpacked c
+  requires v ** unpacked c v
   ensures cinv_vp c v
   opens emp_inames
 {
@@ -120,8 +120,8 @@ fn gather (#p1 #p2:perm) (c:cinv)
   requires active c p1 ** active c p2
   ensures active c (p1 +. p2)
 {
-  unfold active;
-  unfold active;
+  unfold (active c p1);
+  unfold (active c p2);
   GR.gather c.r #_ #_ #(p1 /. 2.0R) #(p2 /. 2.0R);
   fold active c (p1 +. p2);
 }

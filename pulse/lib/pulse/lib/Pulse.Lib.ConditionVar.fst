@@ -410,7 +410,7 @@ ensures
         (forall j. n <= j ==> Map.sel m j == None))
 {
   map_invariant_all_perms v m n p;
-  composable_three _ _ _ _;
+  composable_three _ (empty_map_below n) m _; (* disambig *)
   predicate_at_i_is_q_lemma m i n q;
   ()
 }
@@ -472,7 +472,11 @@ ensures
   OR.on_range (predicate_at m') 0 n **
   pure (all_perms m' 0 n 0.5R)
 {
-  big_ghost_gather gref _ _;
+  (* big_ghost_gather is ambiguous, but we need
+  to gather in this order, so make it explicit. Maybe
+  pcm ops should not be allow_ambiguous? It's commutative,
+  of course, but the expressions are different. *)
+  big_ghost_gather gref (singleton i #0.5R q) m;
   big_ghost_write gref _ _
     (PM.lift_frame_preserving_upd
         _ _
@@ -569,7 +573,7 @@ ensures
   big_ghost_pcm_pts_to gref m' **
   pure (m' == Map.upd m i (Some (down2 emp, 0.5R)))
 {
-  big_ghost_gather gref _ _;
+  big_ghost_gather gref (singleton i #0.5R q) m;
   big_ghost_write gref _ _
     (PM.lift_frame_preserving_upd
         _ _
@@ -608,7 +612,10 @@ ensures  GR.pts_to b.ctr (n + 1) **
         (PF.mk_frame_preserving_upd (down2 emp) (down2 q))
         (singleton n #1.0R emp)
         n);
-  with m. assert (big_ghost_pcm_pts_to b.gref m);
+  with m. assert (
+    big_ghost_pcm_pts_to b.gref (empty_map_below (n + 1)) ** (* frame *)
+    big_ghost_pcm_pts_to b.gref m
+  );
   assert pure (Map.equal m
                          (comp (singleton n #0.5R q) (singleton n #0.5R q)));
   rewrite (big_ghost_pcm_pts_to b.gref m)
@@ -666,8 +673,8 @@ ensures  cvar_inv b.core p ** split_aux_post b q r
 {
   unfold cvar_inv;
   q_at_i ();
-  let m' = upd_i ();
   with v m n. assert (map_invariant v m n p);
+  let m' = upd_i #_ #m #_ ();
   alloc q;
   alloc r;
   big_ghost_gather b.core.gref m' (singleton n #0.5R q);

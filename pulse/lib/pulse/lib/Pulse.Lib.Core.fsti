@@ -45,11 +45,14 @@ module T = FStar.Tactics.V2
   
      val pts_to (x:ref a) (v:a) : vprop
 *)
-val equate_by_smt : unit
+val equate_by_smt    : unit (* now meaningless. *)
+val equate_strict    : unit (* only use fastunif *)
+val equate_syntactic : unit (* only use term_eq *)
+
+(** This attribute allows to do ambiguous proving when calling a function. *)
+val allow_ambiguous : unit
+
 (***** begin vprop_equiv *****)
-
-#set-options "--print_implicits --ugly --print_universes"
-
 
 [@@erasable]
 val vprop : Type u#4
@@ -599,6 +602,7 @@ val distinct_invariants_have_distinct_names
     (inv i p ** inv j q)
     (fun _ -> inv i p ** inv j q)
 
+[@@allow_ambiguous]
 val invariant_name_identifies_invariant
       (#p #q:vprop)
       (i:iref)
@@ -687,7 +691,7 @@ let pcm_ref
 val pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    (r:pcm_ref p)
+    ([@@@equate_strict] r:pcm_ref p)
     (v:a)
 : vprop
 
@@ -763,6 +767,7 @@ val share
     (pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> pcm_pts_to r v0 ** pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val gather
     (#a:Type)
     (#pcm:pcm a)
@@ -791,7 +796,7 @@ instance val non_informative_ghost_pcm_ref
 val ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
-    (r:ghost_pcm_ref p)
+    ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
 : vprop
 
@@ -847,6 +852,7 @@ val ghost_share
     (ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pcm_pts_to r v0 ** ghost_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val ghost_gather
     (#a:Type)
     (#pcm:pcm a)
@@ -864,7 +870,7 @@ val ghost_gather
 val big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    (r:pcm_ref p)
+    ([@@@equate_strict] r:pcm_ref p)
     (v:a)
 : vprop
 
@@ -928,6 +934,7 @@ val big_share
     (big_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pcm_pts_to r v0 ** big_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val big_gather
     (#a:Type)
     (#pcm:pcm a)
@@ -942,7 +949,7 @@ val big_gather
 val big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
-    (r:ghost_pcm_ref p)
+    ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
 : vprop
 
@@ -998,6 +1005,7 @@ val big_ghost_share
     (big_ghost_pcm_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pcm_pts_to r v0 ** big_ghost_pcm_pts_to r v1)
 
+[@@allow_ambiguous]
 val big_ghost_gather
     (#a:Type)
     (#pcm:pcm a)

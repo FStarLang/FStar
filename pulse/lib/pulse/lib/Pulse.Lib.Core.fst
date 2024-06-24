@@ -24,6 +24,11 @@ open PulseCore.FractionalPermission
 open PulseCore.Observability
 
 let equate_by_smt = ()
+let equate_strict = ()
+let equate_syntactic = ()
+
+let allow_ambiguous = ()
+
 let vprop = slprop
 let big_vprop = big_slprop
 let cm_big_vprop = cm_big_slprop

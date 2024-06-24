@@ -272,7 +272,7 @@ fn impl_array_group3_concat
     let test1 = f1 pi;
     if (test1) {
         let test2 = f2 pi;
-        stick_trans ();
+        stick_trans () #_ #_ #(cbor_array_iterator_match p gi l);
         test2
     } else {
         false
@@ -353,7 +353,7 @@ fn impl_t_array
         rewrite (cbor_array_iterator_match p gi' l') as (cbor_array_iterator_match p i' l');
         let b_end = cbor_array_iterator_is_done i';
         rewrite (cbor_array_iterator_match p i' l') as (cbor_array_iterator_match p gi' l');
-        elim_stick0 ();
+        elim_stick0 () #(cbor_array_iterator_match p i' l');
         rewrite (cbor_array_iterator_match p (Ghost.reveal (Ghost.hide i)) l) as (cbor_array_iterator_match p i l);
         elim_stick0 ();
         (b_success && b_end)
@@ -921,7 +921,7 @@ fn impl_matches_map_group_no_restricted
     )
     {   
         let x = cbor_map_iterator_next pi;
-        stick_trans ();
+        stick_trans () #_ #_ #(raw_data_item_match p c v);
         let res = ig x;
         with vx gi l . assert (pts_to pi gi ** raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l ** ((raw_data_item_map_entry_match p x vx ** cbor_map_iterator_match p gi l) @==> raw_data_item_match p c v)) ;
         stick_consume_l ()

@@ -12,7 +12,8 @@ let (check_equiv_now :
       fun t1 ->
         Pulse_RuntimeUtils.disable_admit_smt_queries
           (fun uu___ ->
-             FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.SMTSync
+             FStar_Tactics_V2_Derived.with_policy
+               FStar_Tactics_Types.ForceSMT
                (fun uu___1 ->
                   FStar_Tactics_V2_Derived.check_equiv tcenv t0 t1))
 let (check_equiv_now_nosmt :
@@ -38,5 +39,5 @@ let (universe_of_now :
   =
   fun g ->
     fun e ->
-      FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.SMTSync
+      FStar_Tactics_V2_Derived.with_policy FStar_Tactics_Types.ForceSMT
         (fun uu___ -> FStar_Tactics_V2_Builtins.universe_of g e)

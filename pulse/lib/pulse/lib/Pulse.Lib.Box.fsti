@@ -29,9 +29,9 @@ module R = Pulse.Lib.Reference
 val box ([@@@strictly_positive] a:Type0) : Type0
 
 val pts_to (#a:Type0) 
-           (b:box a)
-           (#[T.exact (`1.0R)] [@@@equate_by_smt] p:perm)
-           ([@@@equate_by_smt] v:a) : vprop
+           ([@@@equate_strict] b:box a)
+           (#[T.exact (`1.0R)] p:perm)
+           (v:a) : vprop
 
 val pts_to_is_small (#a:Type) (r:box a) (p:perm) (x:a)
   : Lemma (is_small (pts_to r #p x))
@@ -60,6 +60,7 @@ val share (#a:Type) (r:box a) (#v:erased a) (#p:perm)
        pts_to r #(p /. 2.0R) v **
        pts_to r #(p /. 2.0R) v)
 
+[@@allow_ambiguous]
 val gather (#a:Type) (r:box a) (#x0 #x1:erased a) (#p0 #p1:perm)
   : stt_ghost unit emp_inames
       (pts_to r #p0 x0 ** pts_to r #p1 x1)
@@ -71,11 +72,13 @@ val share2 (#a:Type) (r:box a) (#v:erased a)
       (pts_to r v)
       (fun _ -> pts_to r #0.5R v ** pts_to r #0.5R v)
 
+[@@allow_ambiguous]
 val gather2 (#a:Type) (r:box a) (#x0 #x1:erased a)
   : stt_ghost unit emp_inames
       (pts_to r #0.5R x0 ** pts_to r #0.5R x1)
       (fun _ -> pts_to r x0 ** pure (x0 == x1))
 
+[@@allow_ambiguous]
 val pts_to_injective_eq (#a:_)
                         (#p #q:_)
                         (#v0 #v1:a)
