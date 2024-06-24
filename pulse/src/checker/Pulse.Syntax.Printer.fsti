@@ -26,6 +26,7 @@ val name_to_string (f:R.name) : string
 val univ_to_string (u:universe) : string
 val qual_to_string (q:option qualifier) : string
 val term_to_string (t:term) : T.Tac string
+val binder_to_doc (b:binder) : T.Tac document
 val term_to_doc (t:term) : T.Tac document
 val binder_to_string (b:binder) : T.Tac string
 val ctag_to_string (c:ctag) : string

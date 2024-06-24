@@ -73,6 +73,7 @@ instance printable_list (a:Type) (_ : printable a) : printable (list a) = {
 }
 
 instance printable_term     : printable term = { pp = term_to_doc; }
+instance printable_binder   : printable binder  = { pp = binder_to_doc; }
 instance printable_st_term  : printable st_term = from_show
 instance printable_universe : printable universe = from_show
 instance printable_comp     : printable comp = from_show
