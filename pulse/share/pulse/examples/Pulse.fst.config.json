@@ -30,6 +30,7 @@
     "dice/external",
     "dice/external/hacl",
     "dice/external/l0",
-    "dice/cbor"
+    "dice/cbor",
+    "dice/_output/cache"
   ]
 }
