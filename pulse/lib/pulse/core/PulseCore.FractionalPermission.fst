@@ -27,5 +27,8 @@ include FStar.Real
 /// We do not in fact restrict to <= 1 here, so there are no additional constraints
 /// when writing something like `p1+p2`, but every library does in fact limit
 /// permissions to 1.0R.
+///
+/// Note: it's important to use a literal 0.0R to enable normalizer simplifications
+/// to kick in. See Pulse PR #83 and F* PR #3305.
 [@@ erasable]
-type perm : Type0 = r:real { r >. zero }
+type perm : Type0 = r:real { r >. 0.0R }
