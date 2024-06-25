@@ -35,6 +35,7 @@ assume val bar:
   unit
 
 let the_proof (): Tac unit =
+  compute();
   apply (`arrow_to_forall);
   compute();
   let x_term = binding_to_term (forall_intro ()) in
@@ -59,5 +60,18 @@ let _: unit =
               | TestDependentSum1 n1 n2 tdn1 ->
                 (| 0, (| n1, (| n2, tdn1 |) |) |)
               | TestDependentSum2 _0 -> (| 1, _0 |)))
-        (synth_by_tactic the_proof))
+        (fun _ -> ()))
 
+let _: unit =
+    (bar
+        (id #(encoded_type -> test_dependent_sum)
+            (fun x -> match x with
+              | (| 0, (| n1, (| n2, tdn1|)|)|) ->
+                TestDependentSum1 n1 n2 tdn1
+              | (| 1, _0|) -> TestDependentSum2 _0))
+        (id #(test_dependent_sum -> encoded_type)
+            (fun x -> match x with
+              | TestDependentSum1 n1 n2 tdn1 ->
+                (| 0, (| n1, (| n2, tdn1 |) |) |)
+              | TestDependentSum2 _0 -> (| 1, _0 |)))
+        (synth_by_tactic the_proof))
