@@ -591,9 +591,13 @@ let tadmit_t (t:term) : tac unit = wrap_err "tadmit_t" <| (
   let! ps = get in
   let! g = cur_goal in
   // should somehow taint the state instead of just printing a warning
-  Err.log_issue (pos (goal_type g))
-      (Errors.Warning_TacAdmit, BU.format1 "Tactics admitted goal <%s>\n\n"
-                  (goal_to_string "" None ps g));
+  let open FStar.Errors.Msg in
+  let open FStar.Pprint in
+  Err.log_issue_doc (pos (goal_type g)) (Errors.Warning_TacAdmit, [
+      text "Tactics admitted goal.";
+      prefix 2 1 (text "Goal")
+                 (arbitrary_string <| goal_to_string "" None ps g);
+    ]);
   solve' g t)
 
 let fresh () : tac Z.t =
