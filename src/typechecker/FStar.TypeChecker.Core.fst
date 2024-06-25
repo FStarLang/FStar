@@ -958,7 +958,24 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
 
       | Tm_refine {b=x0; phi=f0}, _ ->
         if head_matches x0.sort t1
-        then check_relation g rel x0.sort t1
+        then (
+          (* For subtyping, we just check that x0.sort <: t1. But for equality,
+          we must show that the refinement on the LHS is constantly true. *)
+          if rel = EQUALITY then (
+            let! u0 = universe_of g x0.sort in
+            let g, b0, f0 = open_term g (S.mk_binder x0) f0 in
+            if! guard_not_allowed then
+              with_binders [b0] [u0]
+                (check_relation g EQUALITY U.t_true f0)
+            else (
+              with_binders [b0] [u0]
+                (handle_with
+                    (check_relation g EQUALITY U.t_true f0)
+                    (fun _ -> guard f0))
+            )
+          ) else return ();!
+          check_relation g rel x0.sort t1
+        )
         else (
           match! maybe_unfold x0.sort t1 with
           | None -> fallback t0 t1
@@ -967,19 +984,16 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
             check_relation g rel (U.flatten_refinement lhs) t1
         )
 
-
       | _, Tm_refine {b=x1; phi=f1} ->
         if head_matches t0 x1.sort
         then (
           let! u1 = universe_of g x1.sort in
           check_relation g EQUALITY t0 x1.sort ;!
           let g, b1, f1 = open_term g (S.mk_binder x1) f1 in
-          match! guard_not_allowed with
-          | true ->
+          if! guard_not_allowed then
             with_binders [b1] [u1]
               (check_relation g EQUALITY U.t_true f1)
-
-          | _ ->
+          else (
             match rel with
             | EQUALITY ->
               with_binders [b1] [u1]
@@ -992,6 +1006,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
 
             | SUBTYPING None ->
                  guard (U.mk_forall u1 b1.binder_bv f1)
+          )
         )
         else (
           match! maybe_unfold t0 x1.sort with

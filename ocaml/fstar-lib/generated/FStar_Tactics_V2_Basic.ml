@@ -1895,12 +1895,22 @@ let (tadmit_t : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                           let uu___3 =
                             let uu___4 =
                               let uu___5 =
-                                FStar_Tactics_Printing.goal_to_string ""
-                                  FStar_Pervasives_Native.None ps g in
-                              FStar_Compiler_Util.format1
-                                "Tactics admitted goal <%s>\n\n" uu___5 in
+                                FStar_Errors_Msg.text
+                                  "Tactics admitted goal." in
+                              let uu___6 =
+                                let uu___7 =
+                                  let uu___8 = FStar_Errors_Msg.text "Goal" in
+                                  let uu___9 =
+                                    let uu___10 =
+                                      FStar_Tactics_Printing.goal_to_string
+                                        "" FStar_Pervasives_Native.None ps g in
+                                    FStar_Pprint.arbitrary_string uu___10 in
+                                  FStar_Pprint.prefix (Prims.of_int (2))
+                                    Prims.int_one uu___8 uu___9 in
+                                [uu___7] in
+                              uu___5 :: uu___6 in
                             (FStar_Errors_Codes.Warning_TacAdmit, uu___4) in
-                          FStar_Errors.log_issue uu___2 uu___3);
+                          FStar_Errors.log_issue_doc uu___2 uu___3);
                          Obj.magic (solve' g t)) uu___1))) uu___1) in
     FStar_Tactics_Monad.wrap_err "tadmit_t" uu___
 let (fresh : unit -> FStar_BigInt.t FStar_Tactics_Monad.tac) =
