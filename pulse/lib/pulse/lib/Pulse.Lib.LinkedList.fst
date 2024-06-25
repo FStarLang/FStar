@@ -56,48 +56,12 @@ let is_list_cases #t (x:llist t) (l:list t)
         pure (l == n.head::tl) **
         is_list n.tail tl
 
-
-```pulse
-ghost
-fn elim_is_list_nil (#t:Type0) (x:llist t) 
-  requires is_list x []
-  ensures pure(x == None)
-{
-   unfold (is_list x [])
-}
-```
-
-```pulse
-ghost
-fn intro_is_list_nil (#t:Type0) (x:(x:llist t { x == None }))
-    requires emp
-    ensures is_list x []
-{
-    fold (is_list x [])
-}
-```
-
-```pulse
-ghost
-fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
-  requires is_list x (head::tl)
-  ensures (
-    exists* (v:node_ptr t) (tail:llist t).
-      pure (x == Some v) **
-      pts_to v { head; tail } **
-      is_list tail tl)
-{
-    unfold (is_list x (head::tl));
-}
-```
-
 ```pulse
 ghost
 fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:list t)
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
     ensures is_list x (node.head::tl)
 {
-    rewrite (pts_to v node) as (pts_to v { head=node.head; tail=node.tail });
     fold (is_list x (node.head::tl));
 }
 ```
@@ -110,13 +74,11 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
 {
     match l {
         Nil -> { 
-            rewrite (is_list x l) as (is_list x []);
-            elim_is_list_nil x;
-            rewrite (pure (l == [])) as (is_list_cases x l);
+            unfold (is_list x []);
+            fold (is_list_cases None l);
         }
         Cons head tl -> { 
-            rewrite (is_list x l) as (is_list x (head::tl));
-            elim_is_list_cons x head tl;
+            unfold (is_list x (head::tl));
             with w tail. _;
             let v = Some?.v x;
             rewrite each w as v;
@@ -137,8 +99,8 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
 {
     match x {
         None -> { 
-            rewrite (is_list_cases x l) as pure (l==[]);
-            rewrite (pure (x == None)) as (is_list x []);
+            unfold (is_list_cases None l);
+            fold (is_list x []);
         }
         Some vl -> {
             rewrite (is_list_cases x l) as (is_list_cases (Some vl) l);
@@ -158,7 +120,7 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
 {
     cases_of_is_list x l;
     rewrite (is_list_cases x l) as pure (l == []);
-    intro_is_list_nil x;
+    fold (is_list x []);
 }
 ```
 
@@ -233,7 +195,7 @@ fn create (t:Type)
     returns x:llist t
     ensures is_list x []
 {
-    intro_is_list_nil #t null_llist;
+    fold (is_list null_llist ([] <: list t));
     null_llist #t
 }
 ```
@@ -246,7 +208,7 @@ fn cons (#t:Type) (v:t) (x:llist t)
 {
     let y = alloc { head=v; tail=x };
     rewrite each x as ({head=v; tail=x}).tail in (is_list x 'l);
-    intro_is_list_cons (Some y) y;
+    fold (is_list (Some y) (v::'l));
     Some y
 }
 ```
@@ -264,7 +226,7 @@ ensures is_list x ('l1 @ 'l2)
   match node.tail {
     None -> {
       is_list_cases_none node.tail;
-      elim_is_list_nil node.tail;
+      unfold (is_list node.tail []);
       np := { node with tail = y };
       rewrite each y as ({ node with tail = y }).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
@@ -411,7 +373,7 @@ ensures
   match node.tail {
     None -> {
       is_list_cases_none node.tail;
-      elim_is_list_nil node.tail;
+      unfold (is_list node.tail []);
       np := { node with tail = y };
       rewrite each y as ({node with tail = y}).tail in (is_list y 'l2);
       intro_is_list_cons x np; 
@@ -430,7 +392,7 @@ fn non_empty_list (#t:Type0) (x:llist t)
     requires is_list x 'l ** pure (Cons? 'l)
     ensures is_list x 'l ** pure (Some? x)
 {
-    elim_is_list_cons x (Cons?.hd 'l) (Cons?.tl 'l);
+    unfold (is_list x (Cons?.hd 'l :: Cons?.tl 'l));
     with v tail. _;
     with n tl. assert (pts_to v n ** is_list tail tl);
     rewrite each tail as n.tail;
@@ -561,7 +523,7 @@ ensures exists* hd tl.
   let nodev = !v;
   rewrite each node as nodev;
   let node' = { nodev with tail = None};
-  intro_is_list_nil node'.tail;
+  fold (is_list node'.tail []);
   v := node';
   intro_is_list_cons x v;
   nodev.tail
