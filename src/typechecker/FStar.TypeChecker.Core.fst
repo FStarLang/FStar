@@ -984,19 +984,16 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
             check_relation g rel (U.flatten_refinement lhs) t1
         )
 
-
       | _, Tm_refine {b=x1; phi=f1} ->
         if head_matches t0 x1.sort
         then (
           let! u1 = universe_of g x1.sort in
           check_relation g EQUALITY t0 x1.sort ;!
           let g, b1, f1 = open_term g (S.mk_binder x1) f1 in
-          match! guard_not_allowed with
-          | true ->
+          if! guard_not_allowed then
             with_binders [b1] [u1]
               (check_relation g EQUALITY U.t_true f1)
-
-          | _ ->
+          else (
             match rel with
             | EQUALITY ->
               with_binders [b1] [u1]
@@ -1009,6 +1006,7 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
 
             | SUBTYPING None ->
                  guard (U.mk_forall u1 b1.binder_bv f1)
+          )
         )
         else (
           match! maybe_unfold t0 x1.sort with
