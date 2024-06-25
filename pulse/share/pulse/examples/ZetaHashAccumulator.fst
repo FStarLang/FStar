@@ -136,11 +136,11 @@ val blake2b:
   -> d:A.array U8.t { SZ.v ll ≤ A.length d}
   -> kk: SZ.t { kk == 0sz }                        //We do not use blake2 in keyed mode
   -> _dummy: A.array U8.t // this really should be a NULL, but krml doesn't extract Steel's null pointers yet
-  -> #sout:Ghost.erased (Seq.lseq U8.t 32)
+  -> #sout:Ghost.erased (Seq.seq U8.t)
   -> #p:perm
   -> #sd:Ghost.erased (Seq.seq U8.t) { Seq.length sd == SZ.v ll}
   -> stt unit
-    (A.pts_to output sout ** A.pts_to d #p sd)
+    (A.pts_to output sout ** A.pts_to d #p sd ** pure (Seq.length sout == 32))
     (λ _ → A.pts_to output (blake_spec (Seq.slice sd 0 (SZ.v ll)))
            **
            A.pts_to d #p sd)
@@ -227,7 +227,7 @@ type ha = {
 // A representation predicate for ha, encapsulating an ha_val_core
 let ha_val (h:ha) (s:hash_value_t) =
   ha_val_core h.core s **
-  (exists* (s:Seq.lseq U8.t 32). A.pts_to h.tmp s) **
+  (exists* (s:Seq.seq U8.t). A.pts_to h.tmp s ** pure (Seq.length s == 32)) **
   A.pts_to h.dummy (Seq.create 1 0uy)
 
 // A ghost function to package up a ha_val predicate
