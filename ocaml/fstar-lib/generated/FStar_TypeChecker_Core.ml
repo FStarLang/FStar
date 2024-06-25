@@ -2312,8 +2312,110 @@ let rec (check_relation :
                               head_matches x0.FStar_Syntax_Syntax.sort t11 in
                             if uu___7
                             then
-                              check_relation1 g rel
-                                x0.FStar_Syntax_Syntax.sort t11
+                              let uu___8 =
+                                if rel = EQUALITY
+                                then
+                                  let uu___9 =
+                                    universe_of g x0.FStar_Syntax_Syntax.sort in
+                                  fun ctx01 ->
+                                    let uu___10 = uu___9 ctx01 in
+                                    match uu___10 with
+                                    | Success (x1, g11) ->
+                                        let uu___11 =
+                                          let uu___12 =
+                                            let uu___13 =
+                                              let uu___14 =
+                                                FStar_Syntax_Syntax.mk_binder
+                                                  x0 in
+                                              open_term g uu___14 f0 in
+                                            match uu___13 with
+                                            | (g2, b0, f01) ->
+                                                (fun ctx02 ->
+                                                   let uu___14 =
+                                                     guard_not_allowed ctx02 in
+                                                   match uu___14 with
+                                                   | Success (x2, g12) ->
+                                                       let uu___15 =
+                                                         let uu___16 =
+                                                           if x2
+                                                           then
+                                                             let uu___17 =
+                                                               check_relation1
+                                                                 g2 EQUALITY
+                                                                 FStar_Syntax_Util.t_true
+                                                                 f01 in
+                                                             with_binders
+                                                               [b0] [x1]
+                                                               uu___17
+                                                           else
+                                                             (let uu___18 =
+                                                                let uu___19 =
+                                                                  check_relation1
+                                                                    g2
+                                                                    EQUALITY
+                                                                    FStar_Syntax_Util.t_true
+                                                                    f01 in
+                                                                fun ctx ->
+                                                                  let uu___20
+                                                                    =
+                                                                    uu___19
+                                                                    ctx in
+                                                                  match uu___20
+                                                                  with
+                                                                  | Error
+                                                                    uu___21
+                                                                    ->
+                                                                    let uu___22
+                                                                    =
+                                                                    guard f01 in
+                                                                    uu___22
+                                                                    ctx
+                                                                  | res ->
+                                                                    res in
+                                                              with_binders
+                                                                [b0] 
+                                                                [x1] uu___18) in
+                                                         uu___16 ctx02 in
+                                                       (match uu___15 with
+                                                        | Success (y, g21) ->
+                                                            let uu___16 =
+                                                              let uu___17 =
+                                                                and_pre g12
+                                                                  g21 in
+                                                              ((), uu___17) in
+                                                            Success uu___16
+                                                        | err1 -> err1)
+                                                   | Error err1 -> Error err1) in
+                                          uu___12 ctx01 in
+                                        (match uu___11 with
+                                         | Success (y, g2) ->
+                                             let uu___12 =
+                                               let uu___13 = and_pre g11 g2 in
+                                               ((), uu___13) in
+                                             Success uu___12
+                                         | err1 -> err1)
+                                    | Error err1 -> Error err1
+                                else
+                                  (fun uu___10 ->
+                                     Success
+                                       ((), FStar_Pervasives_Native.None)) in
+                              (fun ctx01 ->
+                                 let uu___9 = uu___8 ctx01 in
+                                 match uu___9 with
+                                 | Success (x1, g11) ->
+                                     let uu___10 =
+                                       let uu___11 =
+                                         check_relation1 g rel
+                                           x0.FStar_Syntax_Syntax.sort t11 in
+                                       uu___11 ctx01 in
+                                     (match uu___10 with
+                                      | Success (y, g2) ->
+                                          let uu___11 =
+                                            let uu___12 = and_pre g11 g2 in
+                                            ((), uu___12) in
+                                          Success uu___11
+                                      | err1 -> err1)
+                                 | Error err1 -> Error err1)
                             else
                               (let uu___9 =
                                  maybe_unfold x0.FStar_Syntax_Syntax.sort t11 in
