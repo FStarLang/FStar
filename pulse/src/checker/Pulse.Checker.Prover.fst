@@ -329,9 +329,9 @@ let rec prover
             | None ->
               let msg = [
                 text "Cannot prove:" ^^
-                    indent (pp (list_as_vprop non_pures));
+                    indent (pp <| canon_vprop_list_print non_pures);
                 text "In the context:" ^^
-                    indent (pp (list_as_vprop pst.remaining_ctxt))
+                    indent (pp <| canon_vprop_list_print pst.remaining_ctxt)
               ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
                     text "The prover was started with goal:" ^^
                         indent (pp preamble.goals);

@@ -113,7 +113,8 @@ type hint_type =
   | FOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
   vprop) 
   | RENAME of ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list *
-  vprop FStar_Pervasives_Native.option) 
+  vprop FStar_Pervasives_Native.option * FStar_Parser_AST.term
+  FStar_Pervasives_Native.option) 
   | REWRITE of (vprop * vprop * FStar_Parser_AST.term
   FStar_Pervasives_Native.option) 
   | WILD 
@@ -139,6 +140,7 @@ let (uu___is_RENAME : hint_type -> Prims.bool) =
 let (__proj__RENAME__item___0 :
   hint_type ->
     ((FStar_Parser_AST.term * FStar_Parser_AST.term) Prims.list * vprop
+      FStar_Pervasives_Native.option * FStar_Parser_AST.term
       FStar_Pervasives_Native.option))
   = fun projectee -> match projectee with | RENAME _0 -> _0
 let (uu___is_REWRITE : hint_type -> Prims.bool) =

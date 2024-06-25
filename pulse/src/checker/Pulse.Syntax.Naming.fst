@@ -104,9 +104,10 @@ let close_open_inverse_proof_hint_type' (ht:proof_hint_type)
     | ASSERT { p }
     | FOLD { p }
     | UNFOLD { p } -> close_open_inverse' p x i
-    | RENAME { pairs; goal } ->
+    | RENAME { pairs; goal; tac_opt } ->
       close_open_inverse_pairs' pairs x i;
-      close_open_inverse_opt' goal x i
+      close_open_inverse_opt' goal x i;
+      close_open_inverse_opt' tac_opt x i
     | REWRITE { t1; t2; tac_opt } ->
       close_open_inverse' t1 x i;
       close_open_inverse' t2 x i;

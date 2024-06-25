@@ -217,7 +217,8 @@ pulseLambda:
 
 rewriteBody:
   | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
-    { RENAME(pairs, goal) }
+         tac_opt=option(BY tac=noSeqTerm {tac})
+    { RENAME(pairs, goal, tac_opt) }
   | p1=pulseVprop AS p2=pulseVprop tac_opt=option(BY tac=noSeqTerm {tac})
     { PulseSyntaxExtension_Sugar.REWRITE(p1, p2, tac_opt) }
 

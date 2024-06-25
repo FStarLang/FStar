@@ -67,8 +67,9 @@ let freevars_proof_hint (ht:proof_hint_type) : Set.set var =
   | ASSERT { p }
   | FOLD { p }
   | UNFOLD { p } -> freevars p
-  | RENAME { pairs; goal } ->
-    Set.union (freevars_pairs pairs) (freevars_term_opt goal)
+  | RENAME { pairs; goal; tac_opt } ->
+    Set.union (Set.union (freevars_pairs pairs) (freevars_term_opt goal))
+              (freevars_term_opt tac_opt)
   | REWRITE { t1; t2; tac_opt } ->
     Set.union (Set.union (freevars t1) (freevars t2))
               (freevars_term_opt tac_opt)
@@ -449,8 +450,11 @@ let subst_proof_hint (ht:proof_hint_type) (ss:subst)
     | ASSERT { p } -> ASSERT { p=subst_term p ss }
     | UNFOLD { names; p } -> UNFOLD {names; p=subst_term p ss}
     | FOLD { names; p } -> FOLD { names; p=subst_term p ss }
-    | RENAME { pairs; goal } -> RENAME { pairs=subst_term_pairs pairs ss;
-                                         goal=subst_term_opt goal ss }
+    | RENAME { pairs; goal; tac_opt } ->
+      RENAME { pairs=subst_term_pairs pairs ss;
+               goal=subst_term_opt goal ss;
+               tac_opt=subst_term_opt tac_opt ss;
+             }
     | REWRITE { t1; t2; tac_opt } ->
       REWRITE { t1=subst_term t1 ss;
                 t2=subst_term t2 ss;

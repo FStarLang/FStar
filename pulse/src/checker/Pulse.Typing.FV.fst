@@ -103,9 +103,10 @@ let freevars_close_proof_hint' (ht:proof_hint_type) (x:var) (i:index)
     | FOLD { p }
     | UNFOLD { p } ->
       freevars_close_term' p x i
-    | RENAME { pairs; goal } ->
+    | RENAME { pairs; goal; tac_opt } ->
       freevars_close_term_pairs' pairs x i;
-      freevars_close_term_opt' goal x i
+      freevars_close_term_opt' goal x i;
+      freevars_close_term_opt' tac_opt x i
     | REWRITE { t1; t2; tac_opt } ->
       freevars_close_term' t1 x i;
       freevars_close_term' t2 x i;

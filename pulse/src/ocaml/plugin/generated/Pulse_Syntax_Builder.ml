@@ -310,12 +310,18 @@ let (mk_fold_hint_type :
 let (mk_rename_hint_type :
   (Pulse_Syntax_Base.term * Pulse_Syntax_Base.term) Prims.list ->
     Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
-      Pulse_Syntax_Base.proof_hint_type)
+      Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.proof_hint_type)
   =
   fun pairs ->
     fun goal ->
-      Pulse_Syntax_Base.RENAME
-        { Pulse_Syntax_Base.pairs = pairs; Pulse_Syntax_Base.goal = goal }
+      fun tac_opt ->
+        Pulse_Syntax_Base.RENAME
+          {
+            Pulse_Syntax_Base.pairs = pairs;
+            Pulse_Syntax_Base.goal = goal;
+            Pulse_Syntax_Base.tac_opt = (map_opt tac_opt thunk)
+          }
 let (mk_rewrite_hint_type :
   Pulse_Syntax_Base.vprop ->
     Pulse_Syntax_Base.vprop ->
@@ -329,7 +335,7 @@ let (mk_rewrite_hint_type :
           {
             Pulse_Syntax_Base.t1 = t1;
             Pulse_Syntax_Base.t2 = t2;
-            Pulse_Syntax_Base.tac_opt = (map_opt tac_opt thunk)
+            Pulse_Syntax_Base.tac_opt1 = (map_opt tac_opt thunk)
           }
 let (mk_fn_decl :
   FStar_Reflection_Types.ident ->

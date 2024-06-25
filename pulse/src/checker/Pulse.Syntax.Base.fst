@@ -138,13 +138,14 @@ let eq_hint_type (ht1 ht2:proof_hint_type)
     | UNFOLD { names=ns1; p=p1}, UNFOLD { names=ns2; p=p2 } ->
       eq_opt (eq_list (fun n1 n2 -> n1 = n2)) ns1 ns2 &&
       eq_tm p1 p2
-    | RENAME { pairs=ps1; goal=p1 }, RENAME { pairs=ps2; goal=p2 } ->
+    | RENAME { pairs=ps1; goal=p1; tac_opt=t1 }, RENAME { pairs=ps2; goal=p2; tac_opt=t2 } ->
       eq_list (fun (x1, y1) (x2, y2) -> eq_tm x1 x2 && eq_tm y1 y2) ps1 ps2 &&
-      eq_opt eq_tm p1 p2
+      eq_opt eq_tm p1 p2 &&
+      eq_tm_opt t1 t2
     | REWRITE { t1; t2; tac_opt }, REWRITE { t1=s1; t2=s2; tac_opt=tac_opt2 } ->
       eq_tm t1 s1 &&
       eq_tm t2 s2 &&
-      eq_opt eq_tm tac_opt tac_opt2
+      eq_tm_opt tac_opt tac_opt2
     | WILD, WILD
     | SHOW_PROOF_STATE _, SHOW_PROOF_STATE _ -> true
     | _ -> false

@@ -273,7 +273,7 @@ let check_renaming
     })
 : T.Tac st_term
 = let Tm_ProofHintWithBinders ht = st.term in
-  let { hint_type=RENAME { pairs; goal }; binders=bs; t=body } = ht in
+  let { hint_type=RENAME { pairs; goal; tac_opt }; binders=bs; t=body } = ht in
   match bs, goal with
   | _::_, None ->
    //if there are binders, we must have a goal
@@ -290,13 +290,13 @@ let check_renaming
   | [], None ->
     // if there is no goal, take the goal to be the full current pre
     let lhs, rhs = rewrite_all g pairs pre in
-    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
+    let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt} } in
     { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
 
   | [], Some goal -> (
       let goal, _ = PC.instantiate_term_implicits g goal in
       let lhs, rhs = rewrite_all g pairs goal in
-      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt = None } } in
+      let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt } } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
   )
 
@@ -306,6 +306,7 @@ let check_wild
       (st:st_term { head_wild st })
 : T.Tac st_term
 = let Tm_ProofHintWithBinders ht = st.term in
+  let open Pulse.PP in
   let { binders=bs; t=body } = ht in
   match bs with
   | [] ->
@@ -319,7 +320,12 @@ let check_wild
     match ex with
     | []
     | _::_::_ ->
-      fail g (Some st.range) "Binding names with a wildcard requires exactly one existential quantifier in the goal."
+      fail_doc g (Some st.range) [
+        text "Binding names with a wildcard requires exactly one existential quantifier in the goal.";
+        text "The context was:" ^^
+          indent (pp <| canon_vprop_print pre)
+      ]
+
     | [ex] ->
       let k = List.Tot.length bs in
       let rec peel_binders (n:nat) (t:term) : T.Tac st_term =
@@ -332,9 +338,12 @@ let check_wild
           match inspect_term t with
           | Tm_ExistsSL u b body -> peel_binders (n-1) body
           | _ -> 
-            fail g (Some st.range)
-               (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
-                  k (show ex) (k - n))
+            fail_doc g (Some st.range) [
+              text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
+                  k (show ex) (k - n));
+              text "The context was:" ^^
+                indent (pp <| canon_vprop_print pre)
+            ]
         )
       in
       peel_binders k ex
@@ -383,7 +392,8 @@ let check
             indent (pp <| canon_vprop_print pre)
     ] in
     fail_doc_env true g (Some r) msg
-  | RENAME { pairs; goal } ->
+
+  | RENAME {} ->
     let st = check_renaming g pre st in
     check g pre pre_typing post_hint res_ppname st
 

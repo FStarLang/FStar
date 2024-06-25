@@ -862,7 +862,7 @@ let (desugar_hint_type :
                                         Obj.magic
                                           (PulseSyntaxExtension_Err.return
                                              uu___2)) uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.RENAME (pairs, goal) ->
+           | PulseSyntaxExtension_Sugar.RENAME (pairs, goal, tac_opt) ->
                Obj.magic
                  (Obj.repr
                     (let uu___ =
@@ -915,11 +915,23 @@ let (desugar_hint_type :
                                      (fun goal1 ->
                                         let goal1 = Obj.magic goal1 in
                                         let uu___2 =
-                                          PulseSyntaxExtension_SyntaxWrapper.mk_rename_hint_type
-                                            pairs1 goal1 in
+                                          PulseSyntaxExtension_Err.map_err_opt
+                                            (desugar_term env) tac_opt in
                                         Obj.magic
-                                          (PulseSyntaxExtension_Err.return
-                                             uu___2)) uu___2))) uu___1)))
+                                          (FStar_Class_Monad.op_let_Bang
+                                             PulseSyntaxExtension_Err.err_monad
+                                             () () (Obj.magic uu___2)
+                                             (fun uu___3 ->
+                                                (fun tac_opt1 ->
+                                                   let tac_opt1 =
+                                                     Obj.magic tac_opt1 in
+                                                   let uu___3 =
+                                                     PulseSyntaxExtension_SyntaxWrapper.mk_rename_hint_type
+                                                       pairs1 goal1 tac_opt1 in
+                                                   Obj.magic
+                                                     (PulseSyntaxExtension_Err.return
+                                                        uu___3)) uu___3)))
+                                       uu___2))) uu___1)))
            | PulseSyntaxExtension_Sugar.REWRITE (t1, t2, tac_opt) ->
                Obj.magic
                  (Obj.repr

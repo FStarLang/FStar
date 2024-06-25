@@ -251,12 +251,13 @@ and proof_hint_type__UNFOLD__payload =
 and proof_hint_type__RENAME__payload =
   {
   pairs: (term * term) Prims.list ;
-  goal: term FStar_Pervasives_Native.option }
+  goal: term FStar_Pervasives_Native.option ;
+  tac_opt: term FStar_Pervasives_Native.option }
 and proof_hint_type__REWRITE__payload =
   {
   t1: vprop ;
   t2: vprop ;
-  tac_opt: term FStar_Pervasives_Native.option }
+  tac_opt1: term FStar_Pervasives_Native.option }
 and proof_hint_type =
   | ASSERT of proof_hint_type__ASSERT__payload 
   | FOLD of proof_hint_type__FOLD__payload 
@@ -286,19 +287,26 @@ let (__proj__Mkproof_hint_type__UNFOLD__payload__item__p :
   fun projectee -> match projectee with | { names1 = names; p2 = p;_} -> p
 let (__proj__Mkproof_hint_type__RENAME__payload__item__pairs :
   proof_hint_type__RENAME__payload -> (term * term) Prims.list) =
-  fun projectee -> match projectee with | { pairs; goal;_} -> pairs
+  fun projectee -> match projectee with | { pairs; goal; tac_opt;_} -> pairs
 let (__proj__Mkproof_hint_type__RENAME__payload__item__goal :
   proof_hint_type__RENAME__payload -> term FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | { pairs; goal;_} -> goal
+  fun projectee -> match projectee with | { pairs; goal; tac_opt;_} -> goal
+let (__proj__Mkproof_hint_type__RENAME__payload__item__tac_opt :
+  proof_hint_type__RENAME__payload -> term FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with | { pairs; goal; tac_opt;_} -> tac_opt
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__t1 :
   proof_hint_type__REWRITE__payload -> vprop) =
-  fun projectee -> match projectee with | { t1; t2; tac_opt;_} -> t1
+  fun projectee ->
+    match projectee with | { t1; t2; tac_opt1 = tac_opt;_} -> t1
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__t2 :
   proof_hint_type__REWRITE__payload -> vprop) =
-  fun projectee -> match projectee with | { t1; t2; tac_opt;_} -> t2
+  fun projectee ->
+    match projectee with | { t1; t2; tac_opt1 = tac_opt;_} -> t2
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__tac_opt :
   proof_hint_type__REWRITE__payload -> term FStar_Pervasives_Native.option) =
-  fun projectee -> match projectee with | { t1; t2; tac_opt;_} -> tac_opt
+  fun projectee ->
+    match projectee with | { t1; t2; tac_opt1 = tac_opt;_} -> tac_opt
 let (uu___is_ASSERT : proof_hint_type -> Prims.bool) =
   fun projectee -> match projectee with | ASSERT _0 -> true | uu___ -> false
 let (__proj__ASSERT__item___0 :
@@ -422,7 +430,7 @@ and st_term'__Tm_Rewrite__payload =
   {
   t11: term ;
   t21: term ;
-  tac_opt1: term FStar_Pervasives_Native.option }
+  tac_opt2: term FStar_Pervasives_Native.option }
 and st_term'__Tm_Admit__payload =
   {
   ctag: ctag ;
@@ -683,18 +691,19 @@ let (eq_hint_type : proof_hint_type -> proof_hint_type -> Prims.bool) =
       | (UNFOLD { names1 = ns1; p2 = p1;_}, UNFOLD { names1 = ns2; p2;_}) ->
           (eq_opt (eq_list (fun n1 -> fun n2 -> n1 = n2)) ns1 ns2) &&
             (eq_tm p1 p2)
-      | (RENAME { pairs = ps1; goal = p1;_}, RENAME
-         { pairs = ps2; goal = p2;_}) ->
-          (eq_list
-             (fun uu___ ->
-                fun uu___1 ->
-                  match (uu___, uu___1) with
-                  | ((x1, y1), (x2, y2)) -> (eq_tm x1 x2) && (eq_tm y1 y2))
-             ps1 ps2)
-            && (eq_opt eq_tm p1 p2)
-      | (REWRITE { t1; t2; tac_opt;_}, REWRITE
-         { t1 = s1; t2 = s2; tac_opt = tac_opt2;_}) ->
-          ((eq_tm t1 s1) && (eq_tm t2 s2)) && (eq_opt eq_tm tac_opt tac_opt2)
+      | (RENAME { pairs = ps1; goal = p1; tac_opt = t1;_}, RENAME
+         { pairs = ps2; goal = p2; tac_opt = t2;_}) ->
+          ((eq_list
+              (fun uu___ ->
+                 fun uu___1 ->
+                   match (uu___, uu___1) with
+                   | ((x1, y1), (x2, y2)) -> (eq_tm x1 x2) && (eq_tm y1 y2))
+              ps1 ps2)
+             && (eq_opt eq_tm p1 p2))
+            && (eq_tm_opt t1 t2)
+      | (REWRITE { t1; t2; tac_opt1 = tac_opt;_}, REWRITE
+         { t1 = s1; t2 = s2; tac_opt1 = tac_opt2;_}) ->
+          ((eq_tm t1 s1) && (eq_tm t2 s2)) && (eq_tm_opt tac_opt tac_opt2)
       | (WILD, WILD) -> true
       | (SHOW_PROOF_STATE uu___, SHOW_PROOF_STATE uu___1) -> true
       | uu___ -> false
@@ -772,8 +781,8 @@ let rec (eq_st_term : st_term -> st_term -> Prims.bool) =
           (((eq_tm x1.binder_ty x2.binder_ty) && (eq_tm e1 e2)) &&
              (eq_tm n1 n2))
             && (eq_st_term b1 b2)
-      | (Tm_Rewrite { t11 = l1; t21 = r1; tac_opt1 = tac1;_}, Tm_Rewrite
-         { t11 = l2; t21 = r2; tac_opt1 = tac2;_}) ->
+      | (Tm_Rewrite { t11 = l1; t21 = r1; tac_opt2 = tac1;_}, Tm_Rewrite
+         { t11 = l2; t21 = r2; tac_opt2 = tac2;_}) ->
           ((eq_tm l1 l2) && (eq_tm r1 r2)) && (eq_tm_opt tac1 tac2)
       | (Tm_Admit { ctag = c1; u1; typ = t11; post3 = post1;_}, Tm_Admit
          { ctag = c2; u1 = u2; typ = t21; post3 = post2;_}) ->
@@ -854,32 +863,32 @@ let (ppname_for_uvar :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (400)) (Prims.of_int (18)) (Prims.of_int (400))
+               (Prims.of_int (401)) (Prims.of_int (18)) (Prims.of_int (401))
                (Prims.of_int (48)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (400)) (Prims.of_int (4)) (Prims.of_int (400))
+               (Prims.of_int (401)) (Prims.of_int (4)) (Prims.of_int (401))
                (Prims.of_int (49)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (400)) (Prims.of_int (25))
-                     (Prims.of_int (400)) (Prims.of_int (48)))))
+                     (Prims.of_int (401)) (Prims.of_int (25))
+                     (Prims.of_int (401)) (Prims.of_int (48)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (400)) (Prims.of_int (18))
-                     (Prims.of_int (400)) (Prims.of_int (48)))))
+                     (Prims.of_int (401)) (Prims.of_int (18))
+                     (Prims.of_int (401)) (Prims.of_int (48)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                           (Prims.of_int (400)) (Prims.of_int (32))
-                           (Prims.of_int (400)) (Prims.of_int (47)))))
+                           (Prims.of_int (401)) (Prims.of_int (32))
+                           (Prims.of_int (401)) (Prims.of_int (47)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "prims.fst"
