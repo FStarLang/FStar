@@ -465,8 +465,9 @@ let get_non_informative_witness g u t t_typing
       T.log_issues issues;
       let open Pulse.PP in
       fail_doc g (Some (RU.range_of_term t)) [
-        text "Expected a term with a non-informative (e.g., erased) type; got"
-          ^/^ pp t
+        text "Expected a term with a non-informative (e.g., erased) type.";
+        prefix 2 1 (text "Got:")
+          (pp t);
       ]
     | Some e, issues ->
       T.log_issues issues;

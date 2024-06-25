@@ -229,8 +229,9 @@ let lift_ghost_atomic (#g:env) (#e:st_term) (#c:comp_st { C_STGhost? c }) (d:st_
     let open Pulse.PP in
     let t = comp_res c in
     fail_doc g (Some (RU.range_of_term t)) [
-        text "Expected a term with a non-informative (e.g., erased) type; got"
-          ^/^ pp t
+        text "Expected a term with a non-informative (e.g., erased) type.";
+        prefix 2 1 (text "Got:")
+          (pp t);
     ]
   | Some d ->
     d
