@@ -52,8 +52,6 @@ let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   | None -> c
   | Some t -> { c with tag = t }
 
-let rng p1 p2 = FStar_Parser_Util.mksyn_range p1 p2
-let r p = rng (fst p) (snd p)
 let mk_fn_decl q id is_rec bs body range = 
     match body with
     | Inl (ascription, measure, body) ->

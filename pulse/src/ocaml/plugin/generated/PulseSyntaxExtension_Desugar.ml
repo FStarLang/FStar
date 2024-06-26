@@ -777,6 +777,41 @@ let (as_qual : FStar_Parser_AST.aqual -> qual) =
     | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
         PulseSyntaxExtension_SyntaxWrapper.as_qual true
     | uu___ -> PulseSyntaxExtension_SyntaxWrapper.as_qual false
+let (desugar_tac_opt :
+  PulseSyntaxExtension_Env.env_t ->
+    FStar_Parser_AST.term FStar_Pervasives_Native.option ->
+      PulseSyntaxExtension_SyntaxWrapper.term FStar_Pervasives_Native.option
+        PulseSyntaxExtension_Err.err)
+  =
+  fun uu___1 ->
+    fun uu___ ->
+      (fun env ->
+         fun topt ->
+           match topt with
+           | FStar_Pervasives_Native.None ->
+               Obj.magic
+                 (Obj.repr
+                    (PulseSyntaxExtension_Err.return
+                       FStar_Pervasives_Native.None))
+           | FStar_Pervasives_Native.Some t ->
+               Obj.magic
+                 (Obj.repr
+                    (let tactics_module_lid =
+                       FStar_Ident.lid_of_str "FStar.Tactics.V2" in
+                     let env1 =
+                       PulseSyntaxExtension_Env.push_namespace env
+                         tactics_module_lid in
+                     let uu___ = desugar_term env1 t in
+                     FStar_Class_Monad.op_let_Bang
+                       PulseSyntaxExtension_Err.err_monad () ()
+                       (Obj.magic uu___)
+                       (fun uu___1 ->
+                          (fun t1 ->
+                             let t1 = Obj.magic t1 in
+                             Obj.magic
+                               (PulseSyntaxExtension_Err.return
+                                  (FStar_Pervasives_Native.Some t1))) uu___1))))
+        uu___1 uu___
 let (desugar_hint_type :
   PulseSyntaxExtension_Env.env_t ->
     PulseSyntaxExtension_Sugar.hint_type ->
@@ -915,8 +950,7 @@ let (desugar_hint_type :
                                      (fun goal1 ->
                                         let goal1 = Obj.magic goal1 in
                                         let uu___2 =
-                                          PulseSyntaxExtension_Err.map_err_opt
-                                            (desugar_term env) tac_opt in
+                                          desugar_tac_opt env tac_opt in
                                         Obj.magic
                                           (FStar_Class_Monad.op_let_Bang
                                              PulseSyntaxExtension_Err.err_monad
@@ -951,8 +985,7 @@ let (desugar_hint_type :
                                      (fun t21 ->
                                         let t21 = Obj.magic t21 in
                                         let uu___2 =
-                                          PulseSyntaxExtension_Err.map_err_opt
-                                            (desugar_term env) tac_opt in
+                                          desugar_tac_opt env tac_opt in
                                         Obj.magic
                                           (FStar_Class_Monad.op_let_Bang
                                              PulseSyntaxExtension_Err.err_monad
@@ -1236,7 +1269,7 @@ let rec (desugar_stmt :
                  (Obj.repr
                     (desugar_proof_hint_with_binders env s1
                        (FStar_Pervasives_Native.Some s2)
-                       s.PulseSyntaxExtension_Sugar.range1))
+                       s1.PulseSyntaxExtension_Sugar.range1))
            | PulseSyntaxExtension_Sugar.Sequence
                { PulseSyntaxExtension_Sugar.s1 = s1;
                  PulseSyntaxExtension_Sugar.s2 = s2;_}

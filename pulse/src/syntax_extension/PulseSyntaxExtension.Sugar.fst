@@ -188,6 +188,23 @@ and let_init =
   | Lambda_initializer of fn_decl
   | Stmt_initializer of stmt
 
+let tag_of_stmt (s:stmt) : string =
+  match s.s with
+  | Open _ -> "Open"
+  | Expr {} -> "Expr"
+  | Assignment {} -> "Assignment"
+  | ArrayAssignment {} -> "ArrayAssignment"
+  | LetBinding {} -> "LetBinding"
+  | Block {} -> "Block"
+  | If {} -> "If"
+  | Match {} -> "Match"
+  | While {} -> "While"
+  | Introduce {} -> "Introduce"
+  | Sequence {} -> "Sequence"
+  | Parallel {} -> "Parallel"
+  | ProofHintWithBinders {} -> "ProofHintWithBinders"
+  | WithInvariants {} -> "WithInvariants"
+
 type decl =
   | FnDecl of fn_decl
   
