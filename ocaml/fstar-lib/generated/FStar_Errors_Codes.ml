@@ -375,6 +375,7 @@ type raw_error =
   | Warning_SolverMismatch 
   | Warning_SolverVersionMismatch 
   | Warning_ProofRecovery 
+  | Error_CannotResolveRecord 
 let (uu___is_Error_DependencyAnalysisFailed : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -1923,6 +1924,9 @@ let (uu___is_Warning_SolverVersionMismatch : raw_error -> Prims.bool) =
 let (uu___is_Warning_ProofRecovery : raw_error -> Prims.bool) =
   fun projectee ->
     match projectee with | Warning_ProofRecovery -> true | uu___ -> false
+let (uu___is_Error_CannotResolveRecord : raw_error -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Error_CannotResolveRecord -> true | uu___ -> false
 type error_setting = (raw_error * error_flag * Prims.int)
 let (default_settings : error_setting Prims.list) =
   [(Error_DependencyAnalysisFailed, CAlwaysError, Prims.int_zero);
@@ -2289,4 +2293,5 @@ let (default_settings : error_setting Prims.list) =
   (Warning_UnexpectedZ3Stderr, CWarning, (Prims.of_int (356)));
   (Warning_SolverMismatch, CError, (Prims.of_int (357)));
   (Warning_SolverVersionMismatch, CError, (Prims.of_int (358)));
-  (Warning_ProofRecovery, CWarning, (Prims.of_int (359)))]
+  (Warning_ProofRecovery, CWarning, (Prims.of_int (359)));
+  (Error_CannotResolveRecord, CAlwaysError, (Prims.of_int (360)))]
