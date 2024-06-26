@@ -235,6 +235,7 @@ let defaults =
       ("quake_lo"                     , Int 1);
       ("quake_hi"                     , Int 1);
       ("quake_keep"                   , Bool false);
+      ("query_cache"                  , Bool false);
       ("query_stats"                  , Bool false);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
@@ -420,6 +421,7 @@ let get_proof_recovery          ()      = lookup_opt "proof_recovery"           
 let get_quake_lo                ()      = lookup_opt "quake_lo"                 as_int
 let get_quake_hi                ()      = lookup_opt "quake_hi"                 as_int
 let get_quake_keep              ()      = lookup_opt "quake_keep"               as_bool
+let get_query_cache             ()      = lookup_opt "query_cache"              as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
@@ -1128,6 +1130,16 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
           '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested.");
 
   ( noshort,
+    "query_cache",
+    Const (Bool true),
+    text "Keep a running cache of SMT queries to make verification faster. \
+          Only available in the interactive mode. \
+          NOTE: This feature is experimental and potentially unsound! Hence why
+          it is not allowed in batch mode (where it is also less useful). If you
+          find a query that is mistakenly accepted with the cache, please
+          report a bug to the F* issue tracker on GitHub.");
+
+  ( noshort,
     "query_stats",
     Const (Bool true),
     text "Print SMT query statistics");
@@ -1516,6 +1528,7 @@ let settable = function
     | "quake_hi"
     | "quake_keep"
     | "quake"
+    | "query_cache"
     | "query_stats"
     | "record_options"
     | "retry"
@@ -1904,6 +1917,7 @@ let proof_recovery               () = get_proof_recovery              ()
 let quake_lo                     () = get_quake_lo                    ()
 let quake_hi                     () = get_quake_hi                    ()
 let quake_keep                   () = get_quake_keep                  ()
+let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
