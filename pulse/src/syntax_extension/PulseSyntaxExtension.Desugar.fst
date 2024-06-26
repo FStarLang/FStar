@@ -331,6 +331,16 @@ let as_qual (q:A.aqual) : qual =
   | _ -> SW.as_qual false
 
 
+(* We open FStar.Tactics.V2 in the scope of every `by` as a convenience. *)
+let desugar_tac_opt (env:env_t) (topt : option A.term) : err (option SW.term) =
+  match topt with
+  | None -> return None
+  | Some t ->
+    let tactics_module_lid = Ident.lid_of_str "FStar.Tactics.V2" in
+    let env = push_namespace env tactics_module_lid in
+    let! t = desugar_term env t in
+    return (Some t)
+
 let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
   : err SW.hint_type
   = let open Sugar in
@@ -358,12 +368,12 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
             return (t1, t2))
       in
       let! goal = map_err_opt (desugar_vprop env) goal in
-      let! tac_opt = map_err_opt (desugar_term env) tac_opt in
+      let! tac_opt = desugar_tac_opt env tac_opt in
       return (SW.mk_rename_hint_type pairs goal tac_opt)
     | REWRITE (t1, t2, tac_opt) ->
       let! t1 = desugar_vprop env t1 in
       let! t2 = desugar_vprop env t2 in
-      let! tac_opt = map_err_opt (desugar_term env) tac_opt in
+      let! tac_opt = desugar_tac_opt env tac_opt in
       return (SW.mk_rewrite_hint_type t1 t2 tac_opt)
     | WILD ->
       return (SW.mk_wild_hint_type)
