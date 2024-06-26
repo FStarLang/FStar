@@ -31,6 +31,8 @@ open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
 open FStar.Class.Show
 open FStar.Class.PP
+open FStar.Class.Hashable
+open FStar.Compiler.RBSet
 
 module BU       = FStar.Compiler.Util
 module Env      = FStar.TypeChecker.Env
@@ -746,7 +748,7 @@ let fold_queries (qs:list query_settings)
 let full_query_id settings =
     "(" ^ settings.query_name ^ ", " ^ (BU.string_of_int settings.query_index) ^ ")"
 
-let collect (l : list 'a) : list ('a & int) =
+let collect_dups (l : list 'a) : list ('a & int) =
     let acc : list ('a & int) = [] in
     let rec add_one acc x =
         match acc with
@@ -763,18 +765,34 @@ let collect (l : list 'a) : list ('a & int) =
 it succeeded or not. The rest is only used for error reporting. *)
 type answer = {
     ok                  : bool;
-    nsuccess            : int;
-    lo                  : int;
-    hi                  : int;
-    errs                : list (list errors); // mmm... list list?
+    (* ^ Query was proven *)
+    cache_hit           : bool;
+    (* ^ Got result from cache. Currently, this also implies
+    ok=true (we don't cache failed queries), but don't count
+    on it. *)
+
     quaking             : bool;
+    (* ^ Were we quake testing? *)
     quaking_or_retrying : bool;
+    (* ^ Were we quake testing *or* retrying? *)
+    lo                  : int;
+    (* ^ Lower quake bound. *)
+    hi                  : int;
+    (* ^ Higher quake bound. *)
+    nsuccess            : int;
+    (* ^ Number of successful attempts. Can be >1 when quaking. *)
     total_ran           : int;
+    (* ^ Total number of queries made. *)
     tried_recovery      : bool;
+    (* ^ Did we try using --proof_recovery for this? *)
+
+    errs                : list (list errors); // mmm... list list?
+    (* ^ Errors from SMT solver. *)
 }
 
 let ans_ok : answer = {
     ok                  = true;
+    cache_hit           = false;
     nsuccess            = 1;
     lo                  = 1;
     hi                  = 1;
@@ -1020,6 +1038,7 @@ let ask_solver_quake
     in
     (* Return answer *)
     { ok                  = nsuccess >= lo
+    ; cache_hit           = false
     ; nsuccess            = nsuccess
     ; lo                  = lo
     ; hi                  = hi
@@ -1208,7 +1227,7 @@ let report (env:Env.env) (default_settings : query_settings) (a : answer) : unit
         (* Obtain all errors that would have been reported *)
         let errs = List.map errors_to_report all_errs in
         (* Summarize them *)
-        let errs = errs |> List.flatten |> collect in
+        let errs = errs |> List.flatten |> collect_dups in
         (* Show the amount on each error *)
         let errs = errs |> List.map (fun ((e, m, r, ctx), n) ->
             let m =
@@ -1300,6 +1319,7 @@ let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
 
 (* The query_settings list is non-empty unless the query was trivial. *)
 let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
+  let do () : list query_settings & answer =
     maybe_refresh_solver tcenv;
     Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
     let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
@@ -1329,6 +1349,15 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
 
       | _ -> failwith "Impossible"
     )
+  in
+  if Solver.Cache.try_find_query_cache tcenv q then (
+    ([], { ans_ok with cache_hit = true })
+  ) else (
+    let (cfgs, ans) = do () in
+    if ans.ok then
+      Solver.Cache.query_cache_add tcenv q;
+    (cfgs, ans)
+  )
 
 (* Asks the solver and reports errors. Does quake if needed. *)
 let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
