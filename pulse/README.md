@@ -1,6 +1,6 @@
 # The Pulse separation logic DSL for F*
 
-TODO: write the corresponding Part 8 in https://fstar-lang.org/tutorial
+For documentation on how to use Pulse, see https://fstar-lang.org/tutorial/book/pulse/pulse.html#pulse-proof-oriented-programming-in-concurrent-separation-logic
 
 ## Layout
 
