@@ -430,7 +430,7 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       desugar_proof_hint_with_binders env s None s.range
 
     | Sequence { s1; s2 } when ProofHintWithBinders? s1.s ->
-      desugar_proof_hint_with_binders env s1 (Some s2) s.range
+      desugar_proof_hint_with_binders env s1 (Some s2) s1.range
 
     | Sequence { s1; s2 } -> 
       desugar_sequence env s1 s2 s.range
