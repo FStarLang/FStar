@@ -8292,31 +8292,45 @@ let (find_record_or_dc_from_typ :
       fun uc ->
         fun rng ->
           let default_rdc uu___ =
-            match uc.FStar_Syntax_Syntax.uc_typename with
-            | FStar_Pervasives_Native.None ->
-                let f =
-                  FStar_Compiler_List.hd uc.FStar_Syntax_Syntax.uc_fields in
+            match ((uc.FStar_Syntax_Syntax.uc_typename),
+                    (uc.FStar_Syntax_Syntax.uc_fields))
+            with
+            | (FStar_Pervasives_Native.None, []) ->
                 let uu___1 =
                   let uu___2 =
-                    let uu___3 = FStar_Ident.string_of_lid f in
-                    FStar_Compiler_Util.format1
-                      "Field name %s could not be resolved" uu___3 in
-                  (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___2) in
-                let uu___2 = FStar_Ident.range_of_lid f in
-                FStar_Errors.raise_error uu___1 uu___2
-            | FStar_Pervasives_Native.Some tn ->
-                let uu___1 = try_lookup_record_type env tn in
-                (match uu___1 with
+                    let uu___3 =
+                      FStar_Errors_Msg.text
+                        "Could not resolve the type for this record." in
+                    [uu___3] in
+                  (FStar_Errors_Codes.Error_CannotResolveRecord, uu___2) in
+                FStar_Errors.raise_error_doc uu___1 rng
+            | (FStar_Pervasives_Native.None, f::uu___1) ->
+                let f1 =
+                  FStar_Compiler_List.hd uc.FStar_Syntax_Syntax.uc_fields in
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 = FStar_Ident.string_of_lid f1 in
+                        FStar_Compiler_Util.format1
+                          "Field name %s could not be resolved." uu___6 in
+                      FStar_Errors_Msg.text uu___5 in
+                    [uu___4] in
+                  (FStar_Errors_Codes.Error_CannotResolveRecord, uu___3) in
+                FStar_Errors.raise_error_doc uu___2 rng
+            | (FStar_Pervasives_Native.Some tn, uu___1) ->
+                let uu___2 = try_lookup_record_type env tn in
+                (match uu___2 with
                  | FStar_Pervasives_Native.Some rdc -> rdc
                  | FStar_Pervasives_Native.None ->
-                     let uu___2 =
-                       let uu___3 =
-                         let uu___4 = FStar_Ident.string_of_lid tn in
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Ident.string_of_lid tn in
                          FStar_Compiler_Util.format1
-                           "Record name %s not found" uu___4 in
-                       (FStar_Errors_Codes.Fatal_NameNotFound, uu___3) in
-                     let uu___3 = FStar_Ident.range_of_lid tn in
-                     FStar_Errors.raise_error uu___2 uu___3) in
+                           "Record name %s not found." uu___5 in
+                       (FStar_Errors_Codes.Fatal_NameNotFound, uu___4) in
+                     let uu___4 = FStar_Ident.range_of_lid tn in
+                     FStar_Errors.raise_error uu___3 uu___4) in
           let rdc =
             match t with
             | FStar_Pervasives_Native.None -> default_rdc ()
