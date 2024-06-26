@@ -565,6 +565,37 @@ let (uu___is_Stmt_initializer : let_init -> Prims.bool) =
     match projectee with | Stmt_initializer _0 -> true | uu___ -> false
 let (__proj__Stmt_initializer__item___0 : let_init -> stmt) =
   fun projectee -> match projectee with | Stmt_initializer _0 -> _0
+let (tag_of_stmt : stmt -> Prims.string) =
+  fun s ->
+    match s.s with
+    | Open uu___ -> "Open"
+    | Expr { e = uu___;_} -> "Expr"
+    | Assignment { lhs = uu___; value = uu___1;_} -> "Assignment"
+    | ArrayAssignment { arr = uu___; index = uu___1; value1 = uu___2;_} ->
+        "ArrayAssignment"
+    | LetBinding
+        { qualifier = uu___; id = uu___1; typ = uu___2; init1 = uu___3;_} ->
+        "LetBinding"
+    | Block { stmt = uu___;_} -> "Block"
+    | If
+        { head1 = uu___; join_vprop = uu___1; then_ = uu___2;
+          else_opt = uu___3;_}
+        -> "If"
+    | Match { head2 = uu___; returns_annot = uu___1; branches = uu___2;_} ->
+        "Match"
+    | While
+        { guard = uu___; id1 = uu___1; invariant = uu___2; body = uu___3;_}
+        -> "While"
+    | Introduce { vprop = uu___; witnesses = uu___1;_} -> "Introduce"
+    | Sequence { s1 = uu___; s2 = uu___1;_} -> "Sequence"
+    | Parallel
+        { p1 = uu___; p2 = uu___1; q1 = uu___2; q2 = uu___3; b1 = uu___4;
+          b2 = uu___5;_}
+        -> "Parallel"
+    | ProofHintWithBinders { hint_type = uu___; binders = uu___1;_} ->
+        "ProofHintWithBinders"
+    | WithInvariants { names = uu___; body1 = uu___1; returns_ = uu___2;_} ->
+        "WithInvariants"
 type decl =
   | FnDecl of fn_decl 
 let (uu___is_FnDecl : decl -> Prims.bool) = fun projectee -> true

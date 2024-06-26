@@ -1046,533 +1046,545 @@ let rec (desugar_stmt :
     fun uu___ ->
       (fun env ->
          fun s ->
-           match s.PulseSyntaxExtension_Sugar.s with
-           | PulseSyntaxExtension_Sugar.Expr
-               { PulseSyntaxExtension_Sugar.e = e;_} ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = tosyntax env e in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun tm ->
-                             let tm = Obj.magic tm in
-                             let uu___1 =
-                               let uu___2 = admit_or_return env tm in
-                               st_term_of_admit_or_return uu___2 in
-                             Obj.magic
-                               (PulseSyntaxExtension_Err.return uu___1))
-                            uu___1)))
-           | PulseSyntaxExtension_Sugar.Assignment
-               { PulseSyntaxExtension_Sugar.lhs = lhs;
-                 PulseSyntaxExtension_Sugar.value = value;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = tosyntax env lhs in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun lhs1 ->
-                             let lhs1 = Obj.magic lhs1 in
-                             let uu___1 = tosyntax env value in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun rhs ->
-                                        let rhs = Obj.magic rhs in
-                                        let uu___2 =
-                                          let uu___3 =
-                                            PulseSyntaxExtension_Env.op_colon_equals_lid
-                                              s.PulseSyntaxExtension_Sugar.range1 in
-                                          PulseSyntaxExtension_Env.resolve_lid
-                                            env uu___3 in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun assignment_lid ->
-                                                   let assignment_lid =
-                                                     Obj.magic assignment_lid in
-                                                   let uu___3 =
-                                                     stapp_assignment
-                                                       assignment_lid 
-                                                       [lhs1] rhs
-                                                       s.PulseSyntaxExtension_Sugar.range1 in
-                                                   Obj.magic
-                                                     (PulseSyntaxExtension_Err.return
-                                                        uu___3)) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.ArrayAssignment
-               { PulseSyntaxExtension_Sugar.arr = arr;
-                 PulseSyntaxExtension_Sugar.index = index;
-                 PulseSyntaxExtension_Sugar.value1 = value;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = tosyntax env arr in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun arr1 ->
-                             let arr1 = Obj.magic arr1 in
-                             let uu___1 = tosyntax env index in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun index1 ->
-                                        let index1 = Obj.magic index1 in
-                                        let uu___2 = tosyntax env value in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun value1 ->
-                                                   let value1 =
-                                                     Obj.magic value1 in
-                                                   let uu___3 =
-                                                     let uu___4 =
-                                                       PulseSyntaxExtension_Env.op_array_assignment_lid
-                                                         s.PulseSyntaxExtension_Sugar.range1 in
-                                                     PulseSyntaxExtension_Env.resolve_lid
-                                                       env uu___4 in
-                                                   Obj.magic
-                                                     (FStar_Class_Monad.op_let_Bang
-                                                        PulseSyntaxExtension_Err.err_monad
-                                                        () ()
-                                                        (Obj.magic uu___3)
-                                                        (fun uu___4 ->
-                                                           (fun
-                                                              array_assignment_lid
-                                                              ->
-                                                              let array_assignment_lid
-                                                                =
-                                                                Obj.magic
-                                                                  array_assignment_lid in
-                                                              let uu___4 =
-                                                                stapp_assignment
-                                                                  array_assignment_lid
-                                                                  [arr1;
-                                                                  index1]
-                                                                  value1
-                                                                  s.PulseSyntaxExtension_Sugar.range1 in
-                                                              Obj.magic
-                                                                (PulseSyntaxExtension_Err.return
-                                                                   uu___4))
-                                                             uu___4))) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.Sequence
-               {
-                 PulseSyntaxExtension_Sugar.s1 =
-                   {
-                     PulseSyntaxExtension_Sugar.s =
-                       PulseSyntaxExtension_Sugar.Open l;
-                     PulseSyntaxExtension_Sugar.range1 = range;_};
-                 PulseSyntaxExtension_Sugar.s2 = s2;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ =
-                       try
-                         (fun uu___1 ->
-                            match () with
-                            | () ->
-                                let env1 =
-                                  PulseSyntaxExtension_Env.push_namespace env
-                                    l in
-                                PulseSyntaxExtension_Err.return env1) ()
-                       with
-                       | FStar_Errors.Error (e, msg, r, ctx) ->
-                           let uu___2 =
-                             let uu___3 = FStar_Ident.string_of_lid l in
-                             let uu___4 = FStar_Ident.string_of_lid l in
-                             FStar_Compiler_Util.format2
-                               "Failed to open namespace %s; You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, e.g., write ``module _X = %s`` in F*"
-                               uu___3 uu___4 in
-                           PulseSyntaxExtension_Err.fail uu___2 range in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun env1 ->
-                             let env1 = Obj.magic env1 in
-                             Obj.magic (desugar_stmt env1 s2)) uu___1)))
-           | PulseSyntaxExtension_Sugar.Sequence
-               {
-                 PulseSyntaxExtension_Sugar.s1 =
-                   {
-                     PulseSyntaxExtension_Sugar.s =
-                       PulseSyntaxExtension_Sugar.LetBinding lb;
-                     PulseSyntaxExtension_Sugar.range1 = uu___;_};
-                 PulseSyntaxExtension_Sugar.s2 = s2;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (desugar_bind env lb s2
-                       s.PulseSyntaxExtension_Sugar.range1))
-           | PulseSyntaxExtension_Sugar.ProofHintWithBinders uu___ ->
-               Obj.magic
-                 (Obj.repr
-                    (desugar_proof_hint_with_binders env s
-                       FStar_Pervasives_Native.None
-                       s.PulseSyntaxExtension_Sugar.range1))
-           | PulseSyntaxExtension_Sugar.Sequence
-               { PulseSyntaxExtension_Sugar.s1 = s1;
-                 PulseSyntaxExtension_Sugar.s2 = s2;_}
-               when
-               PulseSyntaxExtension_Sugar.uu___is_ProofHintWithBinders
-                 s1.PulseSyntaxExtension_Sugar.s
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (desugar_proof_hint_with_binders env s1
-                       (FStar_Pervasives_Native.Some s2)
-                       s.PulseSyntaxExtension_Sugar.range1))
-           | PulseSyntaxExtension_Sugar.Sequence
-               { PulseSyntaxExtension_Sugar.s1 = s1;
-                 PulseSyntaxExtension_Sugar.s2 = s2;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (desugar_sequence env s1 s2
-                       s.PulseSyntaxExtension_Sugar.range1))
-           | PulseSyntaxExtension_Sugar.Block
-               { PulseSyntaxExtension_Sugar.stmt = stmt;_} ->
-               Obj.magic (Obj.repr (desugar_stmt env stmt))
-           | PulseSyntaxExtension_Sugar.If
-               { PulseSyntaxExtension_Sugar.head1 = head;
-                 PulseSyntaxExtension_Sugar.join_vprop = join_vprop;
-                 PulseSyntaxExtension_Sugar.then_ = then_;
-                 PulseSyntaxExtension_Sugar.else_opt = else_opt;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_term env head in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun head1 ->
-                             let head1 = Obj.magic head1 in
-                             let uu___1 =
-                               match join_vprop with
-                               | FStar_Pervasives_Native.None ->
-                                   Obj.magic
-                                     (Obj.repr
-                                        (PulseSyntaxExtension_Err.return
-                                           FStar_Pervasives_Native.None))
-                               | FStar_Pervasives_Native.Some
-                                   (FStar_Pervasives_Native.None, t, _opens)
-                                   ->
-                                   Obj.magic
-                                     (Obj.repr
-                                        (let uu___2 = desugar_vprop env t in
-                                         FStar_Class_Monad.op_let_Bang
-                                           PulseSyntaxExtension_Err.err_monad
-                                           () () (Obj.magic uu___2)
-                                           (fun uu___3 ->
-                                              (fun vp ->
-                                                 let vp = Obj.magic vp in
-                                                 Obj.magic
-                                                   (PulseSyntaxExtension_Err.return
-                                                      (FStar_Pervasives_Native.Some
-                                                         vp))) uu___3))) in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun join_vprop1 ->
-                                        let join_vprop1 =
-                                          Obj.magic join_vprop1 in
-                                        let uu___2 = desugar_stmt env then_ in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun then_1 ->
-                                                   let then_1 =
-                                                     Obj.magic then_1 in
-                                                   let uu___3 =
-                                                     match else_opt with
-                                                     | FStar_Pervasives_Native.None
-                                                         ->
-                                                         let uu___4 =
-                                                           let uu___5 =
-                                                             PulseSyntaxExtension_SyntaxWrapper.tm_expr
-                                                               FStar_Syntax_Syntax.unit_const
-                                                               FStar_Compiler_Range_Type.dummyRange in
-                                                           PulseSyntaxExtension_SyntaxWrapper.tm_return
-                                                             uu___5
-                                                             FStar_Compiler_Range_Type.dummyRange in
-                                                         PulseSyntaxExtension_Err.return
-                                                           uu___4
-                                                     | FStar_Pervasives_Native.Some
-                                                         e ->
-                                                         desugar_stmt env e in
-                                                   Obj.magic
-                                                     (FStar_Class_Monad.op_let_Bang
-                                                        PulseSyntaxExtension_Err.err_monad
-                                                        () ()
-                                                        (Obj.magic uu___3)
-                                                        (fun uu___4 ->
-                                                           (fun else_ ->
-                                                              let else_ =
-                                                                Obj.magic
-                                                                  else_ in
-                                                              let uu___4 =
-                                                                PulseSyntaxExtension_SyntaxWrapper.tm_if
-                                                                  head1
-                                                                  join_vprop1
-                                                                  then_1
-                                                                  else_
-                                                                  s.PulseSyntaxExtension_Sugar.range1 in
-                                                              Obj.magic
-                                                                (PulseSyntaxExtension_Err.return
-                                                                   uu___4))
-                                                             uu___4))) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.Match
-               { PulseSyntaxExtension_Sugar.head2 = head;
-                 PulseSyntaxExtension_Sugar.returns_annot = returns_annot;
-                 PulseSyntaxExtension_Sugar.branches = branches;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_term env head in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun head1 ->
-                             let head1 = Obj.magic head1 in
-                             let uu___1 =
-                               PulseSyntaxExtension_Err.map_err_opt
-                                 (fun uu___2 ->
-                                    match uu___2 with
-                                    | (uu___3, t, _opens) ->
-                                        desugar_vprop env t) returns_annot in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun returns_annot1 ->
-                                        let returns_annot1 =
-                                          Obj.magic returns_annot1 in
-                                        let uu___2 =
-                                          Obj.magic
-                                            (FStar_Class_Monad.mapM
-                                               PulseSyntaxExtension_Err.err_monad
-                                               () ()
-                                               (fun uu___3 ->
-                                                  (Obj.magic
-                                                     (desugar_branch env))
-                                                    uu___3)
-                                               (Obj.magic branches)) in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun branches1 ->
-                                                   let branches1 =
-                                                     Obj.magic branches1 in
-                                                   let uu___3 =
-                                                     PulseSyntaxExtension_SyntaxWrapper.tm_match
-                                                       head1 returns_annot1
-                                                       branches1
-                                                       s.PulseSyntaxExtension_Sugar.range1 in
-                                                   Obj.magic
-                                                     (PulseSyntaxExtension_Err.return
-                                                        uu___3)) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.While
-               { PulseSyntaxExtension_Sugar.guard = guard;
-                 PulseSyntaxExtension_Sugar.id1 = id;
-                 PulseSyntaxExtension_Sugar.invariant = invariant;
-                 PulseSyntaxExtension_Sugar.body = body;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_stmt env guard in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun guard1 ->
-                             let guard1 = Obj.magic guard1 in
-                             let uu___1 =
-                               let uu___2 =
-                                 PulseSyntaxExtension_Env.push_bv env id in
-                               match uu___2 with
-                               | (env1, bv) ->
-                                   let uu___3 = desugar_vprop env1 invariant in
-                                   Obj.magic
-                                     (FStar_Class_Monad.op_let_Bang
-                                        PulseSyntaxExtension_Err.err_monad ()
-                                        () (Obj.magic uu___3)
-                                        (fun uu___4 ->
-                                           (fun inv ->
-                                              let inv = Obj.magic inv in
-                                              let uu___4 =
-                                                PulseSyntaxExtension_SyntaxWrapper.close_term
-                                                  inv
-                                                  bv.FStar_Syntax_Syntax.index in
-                                              Obj.magic
-                                                (PulseSyntaxExtension_Err.return
-                                                   uu___4)) uu___4)) in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun invariant1 ->
-                                        let invariant1 = Obj.magic invariant1 in
-                                        let uu___2 = desugar_stmt env body in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun body1 ->
-                                                   let body1 =
-                                                     Obj.magic body1 in
-                                                   let uu___3 =
-                                                     PulseSyntaxExtension_SyntaxWrapper.tm_while
-                                                       guard1
-                                                       (id, invariant1) body1
-                                                       s.PulseSyntaxExtension_Sugar.range1 in
-                                                   Obj.magic
-                                                     (PulseSyntaxExtension_Err.return
-                                                        uu___3)) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.Introduce
-               { PulseSyntaxExtension_Sugar.vprop = vprop;
-                 PulseSyntaxExtension_Sugar.witnesses = witnesses;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_vprop env vprop in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun vp ->
-                             let vp = Obj.magic vp in
-                             let uu___1 =
-                               let uu___2 =
-                                 let uu___3 =
-                                   PulseSyntaxExtension_SyntaxWrapper.is_tm_exists
-                                     vp in
-                                 Prims.op_Negation uu___3 in
-                               PulseSyntaxExtension_Err.fail_if uu___2
-                                 "introduce expects an existential formula"
-                                 s.PulseSyntaxExtension_Sugar.range1 in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  uu___1
-                                  (fun uu___2 ->
-                                     (fun uu___2 ->
-                                        let uu___2 = Obj.magic uu___2 in
-                                        let uu___3 =
-                                          Obj.magic
-                                            (FStar_Class_Monad.mapM
-                                               PulseSyntaxExtension_Err.err_monad
-                                               () ()
-                                               (fun uu___4 ->
-                                                  (Obj.magic
-                                                     (desugar_term env))
-                                                    uu___4)
-                                               (Obj.magic witnesses)) in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___3)
-                                             (fun uu___4 ->
-                                                (fun witnesses1 ->
-                                                   let witnesses1 =
-                                                     Obj.magic witnesses1 in
-                                                   let uu___4 =
-                                                     PulseSyntaxExtension_SyntaxWrapper.tm_intro_exists
-                                                       vp witnesses1
-                                                       s.PulseSyntaxExtension_Sugar.range1 in
-                                                   Obj.magic
-                                                     (PulseSyntaxExtension_Err.return
-                                                        uu___4)) uu___4)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.Parallel
-               { PulseSyntaxExtension_Sugar.p1 = p1;
-                 PulseSyntaxExtension_Sugar.p2 = p2;
-                 PulseSyntaxExtension_Sugar.q1 = q1;
-                 PulseSyntaxExtension_Sugar.q2 = q2;
-                 PulseSyntaxExtension_Sugar.b1 = b1;
-                 PulseSyntaxExtension_Sugar.b2 = b2;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = desugar_vprop env p1 in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun p11 ->
-                             let p11 = Obj.magic p11 in
-                             let uu___1 = desugar_vprop env p2 in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun p21 ->
-                                        let p21 = Obj.magic p21 in
-                                        let uu___2 = desugar_vprop env q1 in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun q11 ->
-                                                   let q11 = Obj.magic q11 in
-                                                   let uu___3 =
-                                                     desugar_vprop env q2 in
-                                                   Obj.magic
-                                                     (FStar_Class_Monad.op_let_Bang
-                                                        PulseSyntaxExtension_Err.err_monad
-                                                        () ()
-                                                        (Obj.magic uu___3)
-                                                        (fun uu___4 ->
-                                                           (fun q21 ->
-                                                              let q21 =
-                                                                Obj.magic q21 in
-                                                              let uu___4 =
-                                                                desugar_stmt
-                                                                  env b1 in
-                                                              Obj.magic
-                                                                (FStar_Class_Monad.op_let_Bang
-                                                                   PulseSyntaxExtension_Err.err_monad
-                                                                   () ()
-                                                                   (Obj.magic
-                                                                    uu___4)
-                                                                   (fun
-                                                                    uu___5 ->
+           (let uu___1 = PulseSyntaxExtension_Sugar.tag_of_stmt s in
+            let uu___2 =
+              FStar_Compiler_Range_Ops.string_of_range
+                s.PulseSyntaxExtension_Sugar.range1 in
+            FStar_Compiler_Util.print2 "GG desugaring %s at %s\n" uu___1
+              uu___2);
+           (match s.PulseSyntaxExtension_Sugar.s with
+            | PulseSyntaxExtension_Sugar.Expr
+                { PulseSyntaxExtension_Sugar.e = e;_} ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = tosyntax env e in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun tm ->
+                              let tm = Obj.magic tm in
+                              let uu___2 =
+                                let uu___3 = admit_or_return env tm in
+                                st_term_of_admit_or_return uu___3 in
+                              Obj.magic
+                                (PulseSyntaxExtension_Err.return uu___2))
+                             uu___2)))
+            | PulseSyntaxExtension_Sugar.Assignment
+                { PulseSyntaxExtension_Sugar.lhs = lhs;
+                  PulseSyntaxExtension_Sugar.value = value;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = tosyntax env lhs in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun lhs1 ->
+                              let lhs1 = Obj.magic lhs1 in
+                              let uu___2 = tosyntax env value in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun rhs ->
+                                         let rhs = Obj.magic rhs in
+                                         let uu___3 =
+                                           let uu___4 =
+                                             PulseSyntaxExtension_Env.op_colon_equals_lid
+                                               s.PulseSyntaxExtension_Sugar.range1 in
+                                           PulseSyntaxExtension_Env.resolve_lid
+                                             env uu___4 in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun assignment_lid ->
+                                                    let assignment_lid =
+                                                      Obj.magic
+                                                        assignment_lid in
+                                                    let uu___4 =
+                                                      stapp_assignment
+                                                        assignment_lid 
+                                                        [lhs1] rhs
+                                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                                    Obj.magic
+                                                      (PulseSyntaxExtension_Err.return
+                                                         uu___4)) uu___4)))
+                                        uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.ArrayAssignment
+                { PulseSyntaxExtension_Sugar.arr = arr;
+                  PulseSyntaxExtension_Sugar.index = index;
+                  PulseSyntaxExtension_Sugar.value1 = value;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = tosyntax env arr in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun arr1 ->
+                              let arr1 = Obj.magic arr1 in
+                              let uu___2 = tosyntax env index in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun index1 ->
+                                         let index1 = Obj.magic index1 in
+                                         let uu___3 = tosyntax env value in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun value1 ->
+                                                    let value1 =
+                                                      Obj.magic value1 in
+                                                    let uu___4 =
+                                                      let uu___5 =
+                                                        PulseSyntaxExtension_Env.op_array_assignment_lid
+                                                          s.PulseSyntaxExtension_Sugar.range1 in
+                                                      PulseSyntaxExtension_Env.resolve_lid
+                                                        env uu___5 in
+                                                    Obj.magic
+                                                      (FStar_Class_Monad.op_let_Bang
+                                                         PulseSyntaxExtension_Err.err_monad
+                                                         () ()
+                                                         (Obj.magic uu___4)
+                                                         (fun uu___5 ->
+                                                            (fun
+                                                               array_assignment_lid
+                                                               ->
+                                                               let array_assignment_lid
+                                                                 =
+                                                                 Obj.magic
+                                                                   array_assignment_lid in
+                                                               let uu___5 =
+                                                                 stapp_assignment
+                                                                   array_assignment_lid
+                                                                   [arr1;
+                                                                   index1]
+                                                                   value1
+                                                                   s.PulseSyntaxExtension_Sugar.range1 in
+                                                               Obj.magic
+                                                                 (PulseSyntaxExtension_Err.return
+                                                                    uu___5))
+                                                              uu___5)))
+                                                   uu___4))) uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.Sequence
+                {
+                  PulseSyntaxExtension_Sugar.s1 =
+                    {
+                      PulseSyntaxExtension_Sugar.s =
+                        PulseSyntaxExtension_Sugar.Open l;
+                      PulseSyntaxExtension_Sugar.range1 = range;_};
+                  PulseSyntaxExtension_Sugar.s2 = s2;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 =
+                        try
+                          (fun uu___2 ->
+                             match () with
+                             | () ->
+                                 let env1 =
+                                   PulseSyntaxExtension_Env.push_namespace
+                                     env l in
+                                 PulseSyntaxExtension_Err.return env1) ()
+                        with
+                        | FStar_Errors.Error (e, msg, r, ctx) ->
+                            let uu___3 =
+                              let uu___4 = FStar_Ident.string_of_lid l in
+                              let uu___5 = FStar_Ident.string_of_lid l in
+                              FStar_Compiler_Util.format2
+                                "Failed to open namespace %s; You may need to bind this namespace outside Pulse for the F* dependency scanner to pick it up, e.g., write ``module _X = %s`` in F*"
+                                uu___4 uu___5 in
+                            PulseSyntaxExtension_Err.fail uu___3 range in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun env1 ->
+                              let env1 = Obj.magic env1 in
+                              Obj.magic (desugar_stmt env1 s2)) uu___2)))
+            | PulseSyntaxExtension_Sugar.Sequence
+                {
+                  PulseSyntaxExtension_Sugar.s1 =
+                    {
+                      PulseSyntaxExtension_Sugar.s =
+                        PulseSyntaxExtension_Sugar.LetBinding lb;
+                      PulseSyntaxExtension_Sugar.range1 = uu___1;_};
+                  PulseSyntaxExtension_Sugar.s2 = s2;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (desugar_bind env lb s2
+                        s.PulseSyntaxExtension_Sugar.range1))
+            | PulseSyntaxExtension_Sugar.ProofHintWithBinders uu___1 ->
+                Obj.magic
+                  (Obj.repr
+                     (desugar_proof_hint_with_binders env s
+                        FStar_Pervasives_Native.None
+                        s.PulseSyntaxExtension_Sugar.range1))
+            | PulseSyntaxExtension_Sugar.Sequence
+                { PulseSyntaxExtension_Sugar.s1 = s1;
+                  PulseSyntaxExtension_Sugar.s2 = s2;_}
+                when
+                PulseSyntaxExtension_Sugar.uu___is_ProofHintWithBinders
+                  s1.PulseSyntaxExtension_Sugar.s
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (desugar_proof_hint_with_binders env s1
+                        (FStar_Pervasives_Native.Some s2)
+                        s1.PulseSyntaxExtension_Sugar.range1))
+            | PulseSyntaxExtension_Sugar.Sequence
+                { PulseSyntaxExtension_Sugar.s1 = s1;
+                  PulseSyntaxExtension_Sugar.s2 = s2;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (desugar_sequence env s1 s2
+                        s.PulseSyntaxExtension_Sugar.range1))
+            | PulseSyntaxExtension_Sugar.Block
+                { PulseSyntaxExtension_Sugar.stmt = stmt;_} ->
+                Obj.magic (Obj.repr (desugar_stmt env stmt))
+            | PulseSyntaxExtension_Sugar.If
+                { PulseSyntaxExtension_Sugar.head1 = head;
+                  PulseSyntaxExtension_Sugar.join_vprop = join_vprop;
+                  PulseSyntaxExtension_Sugar.then_ = then_;
+                  PulseSyntaxExtension_Sugar.else_opt = else_opt;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = desugar_term env head in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun head1 ->
+                              let head1 = Obj.magic head1 in
+                              let uu___2 =
+                                match join_vprop with
+                                | FStar_Pervasives_Native.None ->
+                                    Obj.magic
+                                      (Obj.repr
+                                         (PulseSyntaxExtension_Err.return
+                                            FStar_Pervasives_Native.None))
+                                | FStar_Pervasives_Native.Some
+                                    (FStar_Pervasives_Native.None, t, _opens)
+                                    ->
+                                    Obj.magic
+                                      (Obj.repr
+                                         (let uu___3 = desugar_vprop env t in
+                                          FStar_Class_Monad.op_let_Bang
+                                            PulseSyntaxExtension_Err.err_monad
+                                            () () (Obj.magic uu___3)
+                                            (fun uu___4 ->
+                                               (fun vp ->
+                                                  let vp = Obj.magic vp in
+                                                  Obj.magic
+                                                    (PulseSyntaxExtension_Err.return
+                                                       (FStar_Pervasives_Native.Some
+                                                          vp))) uu___4))) in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun join_vprop1 ->
+                                         let join_vprop1 =
+                                           Obj.magic join_vprop1 in
+                                         let uu___3 = desugar_stmt env then_ in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun then_1 ->
+                                                    let then_1 =
+                                                      Obj.magic then_1 in
+                                                    let uu___4 =
+                                                      match else_opt with
+                                                      | FStar_Pervasives_Native.None
+                                                          ->
+                                                          let uu___5 =
+                                                            let uu___6 =
+                                                              PulseSyntaxExtension_SyntaxWrapper.tm_expr
+                                                                FStar_Syntax_Syntax.unit_const
+                                                                FStar_Compiler_Range_Type.dummyRange in
+                                                            PulseSyntaxExtension_SyntaxWrapper.tm_return
+                                                              uu___6
+                                                              FStar_Compiler_Range_Type.dummyRange in
+                                                          PulseSyntaxExtension_Err.return
+                                                            uu___5
+                                                      | FStar_Pervasives_Native.Some
+                                                          e ->
+                                                          desugar_stmt env e in
+                                                    Obj.magic
+                                                      (FStar_Class_Monad.op_let_Bang
+                                                         PulseSyntaxExtension_Err.err_monad
+                                                         () ()
+                                                         (Obj.magic uu___4)
+                                                         (fun uu___5 ->
+                                                            (fun else_ ->
+                                                               let else_ =
+                                                                 Obj.magic
+                                                                   else_ in
+                                                               let uu___5 =
+                                                                 PulseSyntaxExtension_SyntaxWrapper.tm_if
+                                                                   head1
+                                                                   join_vprop1
+                                                                   then_1
+                                                                   else_
+                                                                   s.PulseSyntaxExtension_Sugar.range1 in
+                                                               Obj.magic
+                                                                 (PulseSyntaxExtension_Err.return
+                                                                    uu___5))
+                                                              uu___5)))
+                                                   uu___4))) uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.Match
+                { PulseSyntaxExtension_Sugar.head2 = head;
+                  PulseSyntaxExtension_Sugar.returns_annot = returns_annot;
+                  PulseSyntaxExtension_Sugar.branches = branches;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = desugar_term env head in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun head1 ->
+                              let head1 = Obj.magic head1 in
+                              let uu___2 =
+                                PulseSyntaxExtension_Err.map_err_opt
+                                  (fun uu___3 ->
+                                     match uu___3 with
+                                     | (uu___4, t, _opens) ->
+                                         desugar_vprop env t) returns_annot in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun returns_annot1 ->
+                                         let returns_annot1 =
+                                           Obj.magic returns_annot1 in
+                                         let uu___3 =
+                                           Obj.magic
+                                             (FStar_Class_Monad.mapM
+                                                PulseSyntaxExtension_Err.err_monad
+                                                () ()
+                                                (fun uu___4 ->
+                                                   (Obj.magic
+                                                      (desugar_branch env))
+                                                     uu___4)
+                                                (Obj.magic branches)) in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun branches1 ->
+                                                    let branches1 =
+                                                      Obj.magic branches1 in
+                                                    let uu___4 =
+                                                      PulseSyntaxExtension_SyntaxWrapper.tm_match
+                                                        head1 returns_annot1
+                                                        branches1
+                                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                                    Obj.magic
+                                                      (PulseSyntaxExtension_Err.return
+                                                         uu___4)) uu___4)))
+                                        uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.While
+                { PulseSyntaxExtension_Sugar.guard = guard;
+                  PulseSyntaxExtension_Sugar.id1 = id;
+                  PulseSyntaxExtension_Sugar.invariant = invariant;
+                  PulseSyntaxExtension_Sugar.body = body;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = desugar_stmt env guard in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun guard1 ->
+                              let guard1 = Obj.magic guard1 in
+                              let uu___2 =
+                                let uu___3 =
+                                  PulseSyntaxExtension_Env.push_bv env id in
+                                match uu___3 with
+                                | (env1, bv) ->
+                                    let uu___4 = desugar_vprop env1 invariant in
+                                    Obj.magic
+                                      (FStar_Class_Monad.op_let_Bang
+                                         PulseSyntaxExtension_Err.err_monad
+                                         () () (Obj.magic uu___4)
+                                         (fun uu___5 ->
+                                            (fun inv ->
+                                               let inv = Obj.magic inv in
+                                               let uu___5 =
+                                                 PulseSyntaxExtension_SyntaxWrapper.close_term
+                                                   inv
+                                                   bv.FStar_Syntax_Syntax.index in
+                                               Obj.magic
+                                                 (PulseSyntaxExtension_Err.return
+                                                    uu___5)) uu___5)) in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun invariant1 ->
+                                         let invariant1 =
+                                           Obj.magic invariant1 in
+                                         let uu___3 = desugar_stmt env body in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun body1 ->
+                                                    let body1 =
+                                                      Obj.magic body1 in
+                                                    let uu___4 =
+                                                      PulseSyntaxExtension_SyntaxWrapper.tm_while
+                                                        guard1
+                                                        (id, invariant1)
+                                                        body1
+                                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                                    Obj.magic
+                                                      (PulseSyntaxExtension_Err.return
+                                                         uu___4)) uu___4)))
+                                        uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.Introduce
+                { PulseSyntaxExtension_Sugar.vprop = vprop;
+                  PulseSyntaxExtension_Sugar.witnesses = witnesses;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = desugar_vprop env vprop in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun vp ->
+                              let vp = Obj.magic vp in
+                              let uu___2 =
+                                let uu___3 =
+                                  let uu___4 =
+                                    PulseSyntaxExtension_SyntaxWrapper.is_tm_exists
+                                      vp in
+                                  Prims.op_Negation uu___4 in
+                                PulseSyntaxExtension_Err.fail_if uu___3
+                                  "introduce expects an existential formula"
+                                  s.PulseSyntaxExtension_Sugar.range1 in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   uu___2
+                                   (fun uu___3 ->
+                                      (fun uu___3 ->
+                                         let uu___3 = Obj.magic uu___3 in
+                                         let uu___4 =
+                                           Obj.magic
+                                             (FStar_Class_Monad.mapM
+                                                PulseSyntaxExtension_Err.err_monad
+                                                () ()
+                                                (fun uu___5 ->
+                                                   (Obj.magic
+                                                      (desugar_term env))
+                                                     uu___5)
+                                                (Obj.magic witnesses)) in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___4)
+                                              (fun uu___5 ->
+                                                 (fun witnesses1 ->
+                                                    let witnesses1 =
+                                                      Obj.magic witnesses1 in
+                                                    let uu___5 =
+                                                      PulseSyntaxExtension_SyntaxWrapper.tm_intro_exists
+                                                        vp witnesses1
+                                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                                    Obj.magic
+                                                      (PulseSyntaxExtension_Err.return
+                                                         uu___5)) uu___5)))
+                                        uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.Parallel
+                { PulseSyntaxExtension_Sugar.p1 = p1;
+                  PulseSyntaxExtension_Sugar.p2 = p2;
+                  PulseSyntaxExtension_Sugar.q1 = q1;
+                  PulseSyntaxExtension_Sugar.q2 = q2;
+                  PulseSyntaxExtension_Sugar.b1 = b1;
+                  PulseSyntaxExtension_Sugar.b2 = b2;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = desugar_vprop env p1 in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun p11 ->
+                              let p11 = Obj.magic p11 in
+                              let uu___2 = desugar_vprop env p2 in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun p21 ->
+                                         let p21 = Obj.magic p21 in
+                                         let uu___3 = desugar_vprop env q1 in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun q11 ->
+                                                    let q11 = Obj.magic q11 in
+                                                    let uu___4 =
+                                                      desugar_vprop env q2 in
+                                                    Obj.magic
+                                                      (FStar_Class_Monad.op_let_Bang
+                                                         PulseSyntaxExtension_Err.err_monad
+                                                         () ()
+                                                         (Obj.magic uu___4)
+                                                         (fun uu___5 ->
+                                                            (fun q21 ->
+                                                               let q21 =
+                                                                 Obj.magic
+                                                                   q21 in
+                                                               let uu___5 =
+                                                                 desugar_stmt
+                                                                   env b1 in
+                                                               Obj.magic
+                                                                 (FStar_Class_Monad.op_let_Bang
+                                                                    PulseSyntaxExtension_Err.err_monad
+                                                                    () ()
+                                                                    (
+                                                                    Obj.magic
+                                                                    uu___5)
+                                                                    (
+                                                                    fun
+                                                                    uu___6 ->
                                                                     (fun b11
                                                                     ->
                                                                     let b11 =
                                                                     Obj.magic
                                                                     b11 in
-                                                                    let uu___5
+                                                                    let uu___6
                                                                     =
                                                                     desugar_stmt
                                                                     env b2 in
@@ -1581,15 +1593,15 @@ let rec (desugar_stmt :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___5)
+                                                                    uu___6)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun b21
                                                                     ->
                                                                     let b21 =
                                                                     Obj.magic
                                                                     b21 in
-                                                                    let uu___6
+                                                                    let uu___7
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_par
                                                                     p11 p21
@@ -1598,103 +1610,105 @@ let rec (desugar_stmt :
                                                                     s.PulseSyntaxExtension_Sugar.range1 in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
-                                                                    uu___6))
+                                                                    uu___7))
+                                                                    uu___7)))
                                                                     uu___6)))
-                                                                    uu___5)))
-                                                             uu___4))) uu___3)))
-                                       uu___2))) uu___1)))
-           | PulseSyntaxExtension_Sugar.LetBinding uu___ ->
-               Obj.magic
-                 (Obj.repr
-                    (PulseSyntaxExtension_Err.fail "Terminal let binding"
-                       s.PulseSyntaxExtension_Sugar.range1))
-           | PulseSyntaxExtension_Sugar.WithInvariants
-               { PulseSyntaxExtension_Sugar.names = n1::names;
-                 PulseSyntaxExtension_Sugar.body1 = body;
-                 PulseSyntaxExtension_Sugar.returns_ = returns_;_}
-               ->
-               Obj.magic
-                 (Obj.repr
-                    (let uu___ = tosyntax env n1 in
-                     FStar_Class_Monad.op_let_Bang
-                       PulseSyntaxExtension_Err.err_monad () ()
-                       (Obj.magic uu___)
-                       (fun uu___1 ->
-                          (fun n11 ->
-                             let n11 = Obj.magic n11 in
-                             let uu___1 =
-                               Obj.magic
-                                 (FStar_Class_Monad.mapM
-                                    PulseSyntaxExtension_Err.err_monad () ()
-                                    (fun uu___2 ->
-                                       (Obj.magic (tosyntax env)) uu___2)
-                                    (Obj.magic names)) in
-                             Obj.magic
-                               (FStar_Class_Monad.op_let_Bang
-                                  PulseSyntaxExtension_Err.err_monad () ()
-                                  (Obj.magic uu___1)
-                                  (fun uu___2 ->
-                                     (fun names1 ->
-                                        let names1 = Obj.magic names1 in
-                                        let uu___2 = desugar_stmt env body in
-                                        Obj.magic
-                                          (FStar_Class_Monad.op_let_Bang
-                                             PulseSyntaxExtension_Err.err_monad
-                                             () () (Obj.magic uu___2)
-                                             (fun uu___3 ->
-                                                (fun body1 ->
-                                                   let body1 =
-                                                     Obj.magic body1 in
-                                                   let uu___3 =
-                                                     let opens_tm opens_opt =
-                                                       match opens_opt with
-                                                       | FStar_Pervasives_Native.Some
-                                                           opens ->
-                                                           desugar_term env
-                                                             opens
-                                                       | FStar_Pervasives_Native.None
-                                                           ->
-                                                           let all_names =
-                                                             n11 :: names1 in
-                                                           let opens_tm1 =
-                                                             FStar_Compiler_List.fold_left
-                                                               (fun names2 ->
-                                                                  fun n ->
-                                                                    let uu___4
+                                                              uu___5)))
+                                                   uu___4))) uu___3))) uu___2)))
+            | PulseSyntaxExtension_Sugar.LetBinding uu___1 ->
+                Obj.magic
+                  (Obj.repr
+                     (PulseSyntaxExtension_Err.fail "Terminal let binding"
+                        s.PulseSyntaxExtension_Sugar.range1))
+            | PulseSyntaxExtension_Sugar.WithInvariants
+                { PulseSyntaxExtension_Sugar.names = n1::names;
+                  PulseSyntaxExtension_Sugar.body1 = body;
+                  PulseSyntaxExtension_Sugar.returns_ = returns_;_}
+                ->
+                Obj.magic
+                  (Obj.repr
+                     (let uu___1 = tosyntax env n1 in
+                      FStar_Class_Monad.op_let_Bang
+                        PulseSyntaxExtension_Err.err_monad () ()
+                        (Obj.magic uu___1)
+                        (fun uu___2 ->
+                           (fun n11 ->
+                              let n11 = Obj.magic n11 in
+                              let uu___2 =
+                                Obj.magic
+                                  (FStar_Class_Monad.mapM
+                                     PulseSyntaxExtension_Err.err_monad () ()
+                                     (fun uu___3 ->
+                                        (Obj.magic (tosyntax env)) uu___3)
+                                     (Obj.magic names)) in
+                              Obj.magic
+                                (FStar_Class_Monad.op_let_Bang
+                                   PulseSyntaxExtension_Err.err_monad () ()
+                                   (Obj.magic uu___2)
+                                   (fun uu___3 ->
+                                      (fun names1 ->
+                                         let names1 = Obj.magic names1 in
+                                         let uu___3 = desugar_stmt env body in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              PulseSyntaxExtension_Err.err_monad
+                                              () () (Obj.magic uu___3)
+                                              (fun uu___4 ->
+                                                 (fun body1 ->
+                                                    let body1 =
+                                                      Obj.magic body1 in
+                                                    let uu___4 =
+                                                      let opens_tm opens_opt
+                                                        =
+                                                        match opens_opt with
+                                                        | FStar_Pervasives_Native.Some
+                                                            opens ->
+                                                            desugar_term env
+                                                              opens
+                                                        | FStar_Pervasives_Native.None
+                                                            ->
+                                                            let all_names =
+                                                              n11 :: names1 in
+                                                            let opens_tm1 =
+                                                              FStar_Compiler_List.fold_left
+                                                                (fun names2
+                                                                   ->
+                                                                   fun n ->
+                                                                    let uu___5
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_expr
                                                                     n
                                                                     s.PulseSyntaxExtension_Sugar.range1 in
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_add_inv
                                                                     names2
-                                                                    uu___4
+                                                                    uu___5
                                                                     s.PulseSyntaxExtension_Sugar.range1)
-                                                               PulseSyntaxExtension_SyntaxWrapper.tm_emp_inames
-                                                               all_names in
-                                                           PulseSyntaxExtension_Err.return
-                                                             opens_tm1 in
-                                                     match returns_ with
-                                                     | FStar_Pervasives_Native.None
-                                                         ->
-                                                         Obj.magic
-                                                           (Obj.repr
-                                                              (PulseSyntaxExtension_Err.return
-                                                                 FStar_Pervasives_Native.None))
-                                                     | FStar_Pervasives_Native.Some
-                                                         (FStar_Pervasives_Native.None,
-                                                          v, opens_opt)
-                                                         ->
-                                                         Obj.magic
-                                                           (Obj.repr
-                                                              (let uu___4 =
-                                                                 desugar_vprop
-                                                                   env v in
-                                                               FStar_Class_Monad.op_let_Bang
-                                                                 PulseSyntaxExtension_Err.err_monad
-                                                                 () ()
-                                                                 (Obj.magic
-                                                                    uu___4)
-                                                                 (fun uu___5
+                                                                PulseSyntaxExtension_SyntaxWrapper.tm_emp_inames
+                                                                all_names in
+                                                            PulseSyntaxExtension_Err.return
+                                                              opens_tm1 in
+                                                      match returns_ with
+                                                      | FStar_Pervasives_Native.None
+                                                          ->
+                                                          Obj.magic
+                                                            (Obj.repr
+                                                               (PulseSyntaxExtension_Err.return
+                                                                  FStar_Pervasives_Native.None))
+                                                      | FStar_Pervasives_Native.Some
+                                                          (FStar_Pervasives_Native.None,
+                                                           v, opens_opt)
+                                                          ->
+                                                          Obj.magic
+                                                            (Obj.repr
+                                                               (let uu___5 =
+                                                                  desugar_vprop
+                                                                    env v in
+                                                                FStar_Class_Monad.op_let_Bang
+                                                                  PulseSyntaxExtension_Err.err_monad
+                                                                  () ()
+                                                                  (Obj.magic
+                                                                    uu___5)
+                                                                  (fun uu___6
                                                                     ->
                                                                     (fun v1
                                                                     ->
@@ -1702,18 +1716,18 @@ let rec (desugar_stmt :
                                                                     Obj.magic
                                                                     v1 in
                                                                     let b =
-                                                                    let uu___5
+                                                                    let uu___6
                                                                     =
                                                                     FStar_Ident.id_of_text
                                                                     "_" in
-                                                                    let uu___6
+                                                                    let uu___7
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.tm_unknown
                                                                     s.PulseSyntaxExtension_Sugar.range1 in
                                                                     PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                                    uu___5
-                                                                    uu___6 in
-                                                                    let uu___5
+                                                                    uu___6
+                                                                    uu___7 in
+                                                                    let uu___6
                                                                     =
                                                                     opens_tm
                                                                     opens_opt in
@@ -1722,9 +1736,9 @@ let rec (desugar_stmt :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___5)
+                                                                    uu___6)
                                                                     (fun
-                                                                    uu___6 ->
+                                                                    uu___7 ->
                                                                     (fun
                                                                     opens ->
                                                                     let opens
@@ -1736,40 +1750,40 @@ let rec (desugar_stmt :
                                                                     (FStar_Pervasives_Native.Some
                                                                     (b, v1,
                                                                     opens))))
+                                                                    uu___7)))
                                                                     uu___6)))
-                                                                    uu___5)))
-                                                     | FStar_Pervasives_Native.Some
-                                                         (FStar_Pervasives_Native.Some
-                                                          (x, t), v,
-                                                          opens_opt)
-                                                         ->
-                                                         Obj.magic
-                                                           (Obj.repr
-                                                              (let uu___4 =
-                                                                 desugar_term
-                                                                   env t in
-                                                               FStar_Class_Monad.op_let_Bang
-                                                                 PulseSyntaxExtension_Err.err_monad
-                                                                 () ()
-                                                                 (Obj.magic
-                                                                    uu___4)
-                                                                 (fun uu___5
+                                                      | FStar_Pervasives_Native.Some
+                                                          (FStar_Pervasives_Native.Some
+                                                           (x, t), v,
+                                                           opens_opt)
+                                                          ->
+                                                          Obj.magic
+                                                            (Obj.repr
+                                                               (let uu___5 =
+                                                                  desugar_term
+                                                                    env t in
+                                                                FStar_Class_Monad.op_let_Bang
+                                                                  PulseSyntaxExtension_Err.err_monad
+                                                                  () ()
+                                                                  (Obj.magic
+                                                                    uu___5)
+                                                                  (fun uu___6
                                                                     ->
                                                                     (fun t1
                                                                     ->
                                                                     let t1 =
                                                                     Obj.magic
                                                                     t1 in
-                                                                    let uu___5
+                                                                    let uu___6
                                                                     =
                                                                     PulseSyntaxExtension_Env.push_bv
                                                                     env x in
-                                                                    match uu___5
+                                                                    match uu___6
                                                                     with
                                                                     | 
                                                                     (env1,
                                                                     bv) ->
-                                                                    let uu___6
+                                                                    let uu___7
                                                                     =
                                                                     desugar_vprop
                                                                     env1 v in
@@ -1778,9 +1792,9 @@ let rec (desugar_stmt :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___6)
+                                                                    uu___7)
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun v1
                                                                     ->
                                                                     let v1 =
@@ -1793,7 +1807,7 @@ let rec (desugar_stmt :
                                                                     let b =
                                                                     PulseSyntaxExtension_SyntaxWrapper.mk_binder
                                                                     x t1 in
-                                                                    let uu___7
+                                                                    let uu___8
                                                                     =
                                                                     opens_tm
                                                                     opens_opt in
@@ -1802,9 +1816,9 @@ let rec (desugar_stmt :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___7)
+                                                                    uu___8)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     (fun
                                                                     opens ->
                                                                     let opens
@@ -1816,22 +1830,23 @@ let rec (desugar_stmt :
                                                                     (FStar_Pervasives_Native.Some
                                                                     (b, v2,
                                                                     opens))))
+                                                                    uu___9)))
                                                                     uu___8)))
-                                                                    uu___7)))
-                                                                    uu___5))) in
-                                                   Obj.magic
-                                                     (FStar_Class_Monad.op_let_Bang
-                                                        PulseSyntaxExtension_Err.err_monad
-                                                        () ()
-                                                        (Obj.magic uu___3)
-                                                        (fun uu___4 ->
-                                                           (fun returns_1 ->
-                                                              let returns_1 =
-                                                                Obj.magic
-                                                                  returns_1 in
-                                                              let tt =
-                                                                FStar_Compiler_List.fold_right
-                                                                  (fun nm ->
+                                                                    uu___6))) in
+                                                    Obj.magic
+                                                      (FStar_Class_Monad.op_let_Bang
+                                                         PulseSyntaxExtension_Err.err_monad
+                                                         () ()
+                                                         (Obj.magic uu___4)
+                                                         (fun uu___5 ->
+                                                            (fun returns_1 ->
+                                                               let returns_1
+                                                                 =
+                                                                 Obj.magic
+                                                                   returns_1 in
+                                                               let tt =
+                                                                 FStar_Compiler_List.fold_right
+                                                                   (fun nm ->
                                                                     fun body2
                                                                     ->
                                                                     let nm1 =
@@ -1842,22 +1857,23 @@ let rec (desugar_stmt :
                                                                     nm1 body2
                                                                     FStar_Pervasives_Native.None
                                                                     s.PulseSyntaxExtension_Sugar.range1)
-                                                                  names1
-                                                                  body1 in
-                                                              let n12 =
-                                                                PulseSyntaxExtension_SyntaxWrapper.tm_expr
-                                                                  n11
-                                                                  s.PulseSyntaxExtension_Sugar.range1 in
-                                                              let uu___4 =
-                                                                PulseSyntaxExtension_SyntaxWrapper.tm_with_inv
-                                                                  n12 tt
-                                                                  returns_1
-                                                                  s.PulseSyntaxExtension_Sugar.range1 in
-                                                              Obj.magic
-                                                                (PulseSyntaxExtension_Err.return
-                                                                   uu___4))
-                                                             uu___4))) uu___3)))
-                                       uu___2))) uu___1)))) uu___1 uu___
+                                                                   names1
+                                                                   body1 in
+                                                               let n12 =
+                                                                 PulseSyntaxExtension_SyntaxWrapper.tm_expr
+                                                                   n11
+                                                                   s.PulseSyntaxExtension_Sugar.range1 in
+                                                               let uu___5 =
+                                                                 PulseSyntaxExtension_SyntaxWrapper.tm_with_inv
+                                                                   n12 tt
+                                                                   returns_1
+                                                                   s.PulseSyntaxExtension_Sugar.range1 in
+                                                               Obj.magic
+                                                                 (PulseSyntaxExtension_Err.return
+                                                                    uu___5))
+                                                              uu___5)))
+                                                   uu___4))) uu___3))) uu___2)))))
+        uu___1 uu___
 and (desugar_branch :
   PulseSyntaxExtension_Env.env_t ->
     (FStar_Parser_AST.pattern * PulseSyntaxExtension_Sugar.stmt) ->
@@ -2550,17 +2566,25 @@ and (desugar_proof_hint_with_binders :
                                                                let ht1 =
                                                                  PulseSyntaxExtension_SyntaxWrapper.subst_proof_hint
                                                                    sub ht in
-                                                               let uu___4 =
-                                                                 let uu___5 =
-                                                                   PulseSyntaxExtension_SyntaxWrapper.close_binders
+                                                               (let uu___5 =
+                                                                  FStar_Compiler_Range_Ops.string_of_range
+                                                                    r in
+                                                                FStar_Compiler_Util.print1
+                                                                  "range r = %s\n"
+                                                                  uu___5);
+                                                               (let uu___5 =
+                                                                  let uu___6
+                                                                    =
+                                                                    PulseSyntaxExtension_SyntaxWrapper.close_binders
                                                                     binders1
                                                                     vars in
-                                                                 PulseSyntaxExtension_SyntaxWrapper.tm_proof_hint_with_binders
-                                                                   ht1 uu___5
-                                                                   s21 r in
-                                                               Obj.magic
-                                                                 (PulseSyntaxExtension_Err.return
-                                                                    uu___4))
+                                                                  PulseSyntaxExtension_SyntaxWrapper.tm_proof_hint_with_binders
+                                                                    ht1
+                                                                    uu___6
+                                                                    s21 r in
+                                                                Obj.magic
+                                                                  (PulseSyntaxExtension_Err.return
+                                                                    uu___5)))
                                                               uu___4)))
                                                    uu___3))) uu___1)))
                    | uu___ ->
