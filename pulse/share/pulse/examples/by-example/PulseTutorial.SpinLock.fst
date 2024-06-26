@@ -37,8 +37,9 @@ type lock = {
 
 let lock_alive (l:lock) (p:vprop) =
   inv l.i (lock_inv l.r p)
+//lock$
 
-```pulse
+```pulse //dup_lock_alive$
 ghost
 fn dup_lock_alive (l:lock) (p:vprop)
   requires lock_alive l p
@@ -50,7 +51,6 @@ fn dup_lock_alive (l:lock) (p:vprop)
   fold lock_alive
 }
 ```
-//lock$
 
 ```pulse //new_lock$
 fn new_lock (p:vprop { is_big p })

@@ -121,12 +121,12 @@ ensures is_list_cases x l
 {
   match l {
     Nil -> { 
-      elim_is_list_nil x;
+      unfold (is_list x []);
       fold (is_list_cases None l);
       rewrite each (None #(ref (node t))) as x;
     }
     Cons head tl -> { 
-      elim_is_list_cons x l head tl;
+      unfold (is_list x (head::tl));
       with w tail. _;
       let v = Some?.v x;
       rewrite each w as v;
@@ -147,7 +147,7 @@ ensures is_list x l ** pure (l == [])
   cases_of_is_list x l;
   rewrite each x as (None #(ref (node t)));
   unfold (is_list_cases None l);
-  intro_is_list_nil x;
+  fold (is_list x []);
 }
 ```
 
