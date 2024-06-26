@@ -608,3 +608,7 @@ and equal_subst_elt s1 s2 =
   | UD (un1, i1), UD (un2, i2) ->
     i1 = i2 &&
     Ident.ident_equals un1 un2
+
+instance hashable_term : hashable term = {
+  hash = ext_hash_term;
+}
