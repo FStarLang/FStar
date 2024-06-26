@@ -160,55 +160,6 @@ let rec all_at_most (l:list (ref nat)) (n:nat)
   | hd::tl -> exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n
 //all_at_most$
 
-```pulse  //elim_all_at_most_nil$
-ghost
-fn elim_all_at_most_nil (l:list (ref nat)) (n:nat)
-requires all_at_most l n ** pure (l == [])
-ensures emp
-{
-  rewrite (all_at_most l n) as (all_at_most [] n);
-  unfold (all_at_most [] n);
-}
-```
-
-```pulse //intro_all_at_most_nil$
-ghost 
-fn intro_all_at_most_nil (l:list (ref nat)) (n:nat)
-requires pure (l == [])
-ensures all_at_most l n
-{
-  fold (all_at_most [] n);
-  rewrite each (Nil #(ref nat)) as l;
-}
-```
-
-
-```pulse //elim_all_at_most_cons$
-ghost
-fn elim_all_at_most_cons (l:list (ref nat)) (hd:ref nat) (tl:list (ref nat)) (n:nat)
-requires all_at_most l n ** pure (l == hd :: tl)
-ensures exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n
-{
-  rewrite (all_at_most l n) as (all_at_most (hd :: tl) n);
-  rewrite (all_at_most (hd::tl) n)
-       as (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
-       by vprop_equiv_norm ();
-}
-```
-
-```pulse //intro_all_at_most_cons$
-ghost
-fn intro_all_at_most_cons (l:list (ref nat)) (hd:ref nat) (tl:list (ref nat)) (n:nat)
-requires pts_to hd 'i ** all_at_most tl n ** pure ('i <= n) ** pure (l == hd :: tl)
-ensures all_at_most l n
-{
-  rewrite (exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n)
-       as (all_at_most (hd::tl) n)
-       by vprop_equiv_norm ();
-  rewrite each (hd::tl) as l;
-}
-```
-
 
 ```pulse //weaken_at_most$
 ghost
@@ -219,13 +170,13 @@ decreases l
 {
   match l {
     Nil -> {
-      elim_all_at_most_nil l n;
-      intro_all_at_most_nil l m
+      unfold (all_at_most [] n);
+      fold (all_at_most [] n);
     }
     Cons hd tl -> {
-      elim_all_at_most_cons l hd tl n;
+      unfold (all_at_most (hd::tl) n);
       weaken_at_most tl n m;
-      intro_all_at_most_cons l hd tl m
+      fold (all_at_most (hd::tl) m);
     }
   }
 }
