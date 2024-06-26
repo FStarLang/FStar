@@ -3611,19 +3611,25 @@ let try_lookup_record_type env (typename:lident)
  *)
 let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rng =
     let default_rdc () =
-      match uc.uc_typename with
-      | None ->
+      let open FStar.Errors.Msg in
+      match uc.uc_typename, uc.uc_fields with
+      | None, [] ->
+        raise_error_doc (Errors.Error_CannotResolveRecord, [
+            text "Could not resolve the type for this record.";
+          ]) rng
+
+      | None, f::_ ->
         let f = List.hd uc.uc_fields in
-        raise_error (Errors.Fatal_IdentifierNotFound,
-                     BU.format1 "Field name %s could not be resolved"
-                                (string_of_lid f))
-                     (range_of_lid f)
-      | Some tn ->
+        raise_error_doc (Errors.Error_CannotResolveRecord, [
+            text <| BU.format1 "Field name %s could not be resolved." (string_of_lid f);
+          ]) rng
+
+      | Some tn, _ ->
         match try_lookup_record_type env tn with
         | Some rdc -> rdc
         | None ->
           raise_error (Errors.Fatal_NameNotFound,
-                       BU.format1 "Record name %s not found" (string_of_lid tn))
+                       BU.format1 "Record name %s not found." (string_of_lid tn))
                       (range_of_lid tn)
     in
     let rdc : DsEnv.record_or_dc =
