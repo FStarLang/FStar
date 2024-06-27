@@ -208,15 +208,26 @@ let join_smt_goals () : Tac unit =
 
   ()
 
+let parse_guard_policy (s:string) : Tac guard_policy =
+  match s with
+  | "Goal" -> Goal
+  | "SMT" -> SMT
+  | "SMTSync" -> SMTSync
+  | "Force" -> Force
+  | "ForceSMT" -> ForceSMT
+  // | "Drop" -> Drop (* terribly unsound, so not even allowing it here *)
+  | _ -> Tactics.fail ("Unknown guard policy: " ^ s)
+
 let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
-  (* We use the SMT policy by default, to collect goals in the
+  (* We use the ForceSMT policy by default, to discharge guards
+  immediately when they show, allowing SMT. This
   proofstate and discharge them all at the end, potentially joining
-  them (see below). But it can be overriden to ForceSMT by `--ext
-  pulse:guard_policy=ForceSMT`. *)
-  if ext_getv "pulse:guard_policy" = "ForceSMT" then
-    set_guard_policy ForceSMT
-  else
-    set_guard_policy SMT;
+  them (see below).
+  This can be overriden to others by `--ext pulse:guard_policy=<guard>`
+  where <guard> is one of of the above (see parse_guard_policy). *)
+  set_guard_policy ForceSMT;
+  if ext_getv "pulse:guard_policy" <> "" then
+    set_guard_policy (parse_guard_policy (ext_getv "pulse:guard_policy"));
 
   let res = main' nm t pre g expected_t in
 
