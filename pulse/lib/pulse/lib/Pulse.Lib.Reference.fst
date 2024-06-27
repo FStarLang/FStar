@@ -31,23 +31,26 @@ let pts_to
 let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
 
 ```pulse
-fn alloc' (#a:Type u#0) (v:a)
-requires emp
-returns r:ref a
-ensures pts_to r v
+fn alloc (#a:Type u#0) (v:a)
+  requires emp
+  returns r:ref a
+  ensures pts_to r v
 {
   let r = H.alloc (U.raise_val v);
   fold (pts_to r #1.0R v);
   r
 }
 ```
-let alloc v = alloc' v
 
 ```pulse
-fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
-requires pts_to r #p n
-returns x:a
-ensures pts_to r #p n ** pure (eq2 #a (reveal n) x)
+fn op_Bang
+  (#a:Type)
+  (r:ref a)
+  (#n:erased a)
+  (#p:perm)
+  requires pts_to r #p n
+  returns x:a
+  ensures pts_to r #p n ** pure (eq2 #a (reveal n) x)
 {
   unfold (pts_to r #p n);
   let k = H.( !r );
@@ -55,22 +58,24 @@ ensures pts_to r #p n ** pure (eq2 #a (reveal n) x)
   U.downgrade_val k
 }
 ```
-let ( ! ) #a r #n #p = read #a r #n #p
 
 ```pulse
-fn write (#a:Type) (r:ref a) (x:a) (#n:erased a)
-requires pts_to r #1.0R n
-ensures pts_to r #1.0R x
+fn op_Colon_Equals
+  (#a:Type)
+  (r:ref a)
+  (x:a)
+  (#n:erased a)
+  requires pts_to r #1.0R n
+  ensures pts_to r #1.0R x
 {
   unfold (pts_to r #1.0R n);
   H.(r := (U.raise_val x));
   fold (pts_to r #1.0R x)
 }
 ```
-let ( := ) #a r x #n = write #a r x #n
 
 ```pulse
-fn free' #a (r:ref a) (#n:erased a)
+fn free #a (r:ref a) (#n:erased a)
 requires pts_to r #1.0R n
 ensures emp
 {
@@ -78,11 +83,10 @@ ensures emp
   H.free r;
 }
 ```
-let free = free'
 
 ```pulse
 ghost
-fn share' (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
+fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
 ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
 {
@@ -92,7 +96,6 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
   fold pts_to r #(p /. 2.0R) v
 }
 ```
-let share = share'
 
 ```pulse
 ghost
@@ -107,7 +110,7 @@ ensures pure (x0 == x1)
 
 ```pulse
 ghost
-fn gather' (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
+fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
 ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
 {
@@ -118,7 +121,6 @@ ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
   raise_inj a x0 x1;
 }
 ```
-let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a)
 : stt_ghost unit emp_inames
@@ -172,7 +174,7 @@ let with_local
 
 ```pulse
 ghost
-fn pts_to_injective_eq'
+fn pts_to_injective_eq
   (#a:Type0)
   (#p #q:perm)
   (#v0 #v1:a)
@@ -190,11 +192,10 @@ ensures
   raise_inj _ v0 v1;
 }
 ```
-let pts_to_injective_eq = pts_to_injective_eq'
 
 ```pulse
 ghost
-fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
+fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
 ensures pts_to r #p v ** pure (p <=. 1.0R)
 {
@@ -203,10 +204,9 @@ ensures pts_to r #p v ** pure (p <=. 1.0R)
   fold pts_to r #p v;
 }
 ```
-let pts_to_perm_bound = pts_to_perm_bound'
 
 ```pulse
-fn replace' (#a:Type0) (r:ref a) (x:a) (#v:erased a)
+fn replace (#a:Type0) (r:ref a) (x:a) (#v:erased a)
   requires pts_to r v
   returns y:a
   ensures pts_to r x ** pure (y == reveal v)
@@ -216,5 +216,3 @@ fn replace' (#a:Type0) (r:ref a) (x:a) (#v:erased a)
   y
 }
 ```
-
-let replace = replace'
