@@ -318,7 +318,7 @@ type fn_decl = {
   (* A function declaration, without a body. *)
   id : R.ident;
   bs : list (option qualifier & binder & bv);
-  comp : comp; (* bs in scope *)
+  comp : comp_st; (* bs in scope *)
 }
 
 noeq
