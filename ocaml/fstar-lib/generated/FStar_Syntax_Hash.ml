@@ -1248,3 +1248,5 @@ and (equal_subst_elt :
           (i1 = i2) && (equal_universe u1 u2)
       | (FStar_Syntax_Syntax.UD (un1, i1), FStar_Syntax_Syntax.UD (un2, i2))
           -> (i1 = i2) && (FStar_Ident.ident_equals un1 un2)
+let (hashable_term : FStar_Syntax_Syntax.term FStar_Class_Hashable.hashable)
+  = { FStar_Class_Hashable.hash = ext_hash_term }

@@ -1,5 +1,5 @@
-(*
-   Copyright 2022 Microsoft Research
+﻿(*
+   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -9,25 +9,18 @@
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impliedmk_
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-   Author: N. Swamy
 *)
-module FStar.Syntax.Hash
+
+module FStar.SMTEncoding.Solver.Cache
+
 open FStar
 open FStar.Compiler
 open FStar.Compiler.Effect
-open FStar.Compiler.Util
+open FStar.TypeChecker.Env
 open FStar.Syntax.Syntax
-open FStar.Const
-module H = FStar.Hash
-open FStar.Class.Hashable
 
-val ext_hash_term (t:term) : H.hash_code
-val ext_hash_term_no_memo (t:term) : H.hash_code
-val equal_term (t0 t1:term) : bool
-
-(* uses ext_hash_term (with memo) *)
-instance val hashable_term : hashable term
+val query_cache_add (g:env) (q:term) : unit
+val try_find_query_cache (g:env) (q:term) : bool

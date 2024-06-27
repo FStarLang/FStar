@@ -180,6 +180,7 @@ val proof_recovery              : unit    -> bool
 val quake_lo                    : unit    -> int
 val quake_hi                    : unit    -> int
 val quake_keep                  : unit    -> bool
+val query_cache                 : unit    -> bool
 val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
