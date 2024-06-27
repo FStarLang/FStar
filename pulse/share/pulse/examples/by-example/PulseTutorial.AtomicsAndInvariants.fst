@@ -34,7 +34,7 @@ ensures inv i (owns r)
 }
 ```
 
-[@@expect_failure [19]]
+[@@expect_failure [228; 19]]
 ```pulse //create_non_boxable$
 ghost
 fn create_non_boxable_inv (p:vprop)
