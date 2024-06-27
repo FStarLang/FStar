@@ -818,6 +818,11 @@ and p_rawDecl d = match d.d with
     str "%splice" ^^
     (if is_typed then str "_t" else empty) ^^
     p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | DeclSyntaxExtension (tag, blob, blob_rng, start_rng) ->
+    // NB: using ^^ since the blob also contains the newlines
+    doc_of_string ("```"^tag) ^^
+    arbitrary_string blob ^^
+    doc_of_string "```"
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
