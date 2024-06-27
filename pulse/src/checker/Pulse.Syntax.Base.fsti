@@ -302,18 +302,21 @@ and st_term = {
 and branch = pattern & st_term
 
 noeq
+type fn_defn = {
+  (* A function definition. This will be mostly checked as a nested
+  Tm_Abs with bs and body, especially if non-recursive. *)
+  id : R.ident;
+  isrec : bool;
+  bs : list (option qualifier & binder & bv);
+  comp : comp; (* bs in scope *)
+  meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
+  body : st_term; (* bs in scope *)
+}
+
+noeq
 type decl' =
-  | FnDecl {
-      (* A function declaration, currently the only Pulse
-      top-level decl. This will be mostly checked as a nested
-      Tm_Abs with bs and body, especially if non-recursive. *)
-      id : R.ident;
-      isrec : bool;
-      bs : list (option qualifier & binder & bv);
-      comp : comp; (* bs in scope *)
-      meas : (meas:option term{Some? meas ==> isrec}); (* bs in scope *)
-      body : st_term; (* bs in scope *)
-  }
+  | FnDefn of fn_defn
+
 and decl = {
   d : decl';
   range : range;

@@ -129,7 +129,7 @@ new
 val decl : Type0
 val decl_to_string (env:FStar.TypeChecker.Env.env) (_:decl) : string
 
-val fn_decl :
+val fn_defn :
   range ->
   name:ident ->
   isrec:bool ->

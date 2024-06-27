@@ -24,8 +24,8 @@ open Pulse.Syntax
 open Pulse.Typing
 
 val add_knot (g : env)  (rng : R.range)
-             (d : decl)
-: Tac decl
+             (d : decl{FnDefn? d.d})
+: Tac (d:decl{FnDefn? d.d})
 
 val tie_knot (g : env)  (rng : R.range)
              (nm_orig : string) (nm_aux : string)
