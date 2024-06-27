@@ -2519,3 +2519,5 @@ let (idents_of_binders :
   binder Prims.list ->
     FStar_Compiler_Range_Type.range -> FStar_Ident.ident Prims.list)
   = fun bs -> fun r -> FStar_Compiler_List.map (ident_of_binder r) bs
+let (showable_decl : decl FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = decl_to_string }

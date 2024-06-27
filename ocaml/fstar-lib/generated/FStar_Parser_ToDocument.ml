@@ -1398,6 +1398,14 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
             FStar_Pprint.op_Hat_Hat uu___4 uu___5 in
           FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
+    | FStar_Parser_AST.DeclSyntaxExtension (tag, blob, blob_rng, start_rng)
+        ->
+        let uu___ = FStar_Pprint.doc_of_string (Prims.strcat "```" tag) in
+        let uu___1 =
+          let uu___2 = FStar_Pprint.arbitrary_string blob in
+          let uu___3 = FStar_Pprint.doc_of_string "```" in
+          FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
+        FStar_Pprint.op_Hat_Hat uu___ uu___1
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with
@@ -1864,7 +1872,8 @@ and (p_effectDecl :
           let uu___2 = p_simpleTerm ps false e in prefix2 uu___1 uu___2
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Parser_AST.decl_to_string d in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Parser_AST.showable_decl d in
             FStar_Compiler_Util.format1
               "Not a declaration of an effect member... or at least I hope so : %s"
               uu___2 in
