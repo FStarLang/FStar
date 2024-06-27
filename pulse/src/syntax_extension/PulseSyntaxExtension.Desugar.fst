@@ -789,6 +789,11 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     return (SW.fn_defn range id false qbs comp None body)
 
+  | Sugar.FnDecl { id; binders; ascription=Inl ascription; range } ->
+    let! env, bs, bvs = desugar_binders env binders in
+    let! comp = desugar_computation_type env ascription in
+    let! qbs = map2 faux bs bvs in
+    return (SW.fn_decl range id qbs comp)
 
 let initialize_env (env:TcEnv.env)
                    (open_namespaces: list name)

@@ -84,6 +84,8 @@ maybeRec:
 peekFnId:
   | q=option(qual) FN maybeRec id=lident
       { FStar_Ident.string_of_id id }
+  | q=option(qual) VAL FN id=lident
+      { FStar_Ident.string_of_id id }
 
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
@@ -96,6 +98,15 @@ pulseDecl:
     body=fnBody EOF
     {
       PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body (rr $loc))
+    }
+  | q=option(qual)
+    VAL FN lid=lident bs=pulseBinderList
+    ascription=pulseComputationType
+    EOF
+    {
+      let open PulseSyntaxExtension_Sugar in
+      let ascription = with_computation_tag ascription q in
+      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) (rr $loc))
     }
 
 pulseBinderList:

@@ -166,6 +166,14 @@ let check_fndefn
     [], main_decl, []
   end
 
+let check_fndecl
+    (d : decl{FnDecl? d.d})
+    (g : Soundness.Common.stt_env{bindings g == []})
+    (expected_t : option term)
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
+=
+  T.fail "FnDecl not implemented yet"
+
 let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
   = match Pulse.Soundness.Common.check_top_level_environment g with
@@ -178,8 +186,8 @@ let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:optio
         fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type vprop"; //fix range
       let pre_typing : tot_typing g pre tm_vprop = pre_typing in
       match d.d with
-      | FnDefn _ ->
-        check_fndefn d g expected_t pre pre_typing
+      | FnDefn {} -> check_fndefn d g expected_t pre pre_typing
+      | FnDecl {} -> check_fndecl d g expected_t
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in

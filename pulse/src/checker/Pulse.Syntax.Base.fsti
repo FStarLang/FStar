@@ -314,8 +314,17 @@ type fn_defn = {
 }
 
 noeq
+type fn_decl = {
+  (* A function declaration, without a body. *)
+  id : R.ident;
+  bs : list (option qualifier & binder & bv);
+  comp : comp; (* bs in scope *)
+}
+
+noeq
 type decl' =
   | FnDefn of fn_defn
+  | FnDecl of fn_decl
 
 and decl = {
   d : decl';

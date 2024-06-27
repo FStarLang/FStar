@@ -138,3 +138,10 @@ val fn_defn :
   meas:option term ->
   body:st_term ->
   decl
+
+val fn_decl :
+  range ->
+  name:ident ->
+  bs:list (option qualifier & binder & bv) ->
+  comp:comp ->
+  decl
