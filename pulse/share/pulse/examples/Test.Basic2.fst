@@ -18,8 +18,8 @@ module Test.Basic2
 
 open Pulse.Lib.Pervasives
 
-#set-options "--debug ggg"
-#set-options "--debug pulse,prover,ggg --print_full_names --print_implicits"
+// #set-options "--debug ggg"
+// #set-options "--debug pulse,prover,ggg --print_full_names --print_implicits"
 
 open Pulse.Lib.Stick.Util
 
