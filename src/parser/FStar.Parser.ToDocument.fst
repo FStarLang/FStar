@@ -28,6 +28,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.Pprint
 open FStar.Compiler.Range
+open FStar.Class.Show
 
 module C = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -997,7 +998,7 @@ and p_effectDecl ps d = match d.d with
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
-                              (decl_to_string d))
+                              (show d))
 
 and p_subEffect lift =
   let lift_op_doc =

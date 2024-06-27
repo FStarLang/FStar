@@ -21,6 +21,7 @@ open FStar.Compiler.Effect
 open FStar.Compiler.Range
 open FStar.Const
 open FStar.Ident
+open FStar.Class.Show
 
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
@@ -316,7 +317,6 @@ val id_of_tycon : tycon -> string
 val string_of_pragma : pragma -> string
 val pat_to_string : pattern -> string
 val binder_to_string : binder -> string
-val decl_to_string : decl -> string
 val modul_to_string : modul -> string
 
 val decl_is_val : ident -> decl -> bool
@@ -327,3 +327,5 @@ val check_id : ident -> unit
 
 val ident_of_binder : range -> binder -> ident
 val idents_of_binders : list binder -> range -> list ident
+
+instance val showable_decl : showable decl

@@ -32,6 +32,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 open FStar.Interactive
 open FStar.Parser.ParseIt
+open FStar.Class.Show
 
 module SS = FStar.Syntax.Syntax
 module DsEnv = FStar.Syntax.DsEnv
@@ -185,7 +186,7 @@ let string_of_repl_task = function
   | PushFragment (Inl frag, _, _) ->
     Util.format1 "PushFragment { code = %s }" frag.frag_text
   | PushFragment (Inr d, _, _) ->
-    Util.format1 "PushFragment { decl = %s }" (FStar.Parser.AST.decl_to_string d)
+    Util.format1 "PushFragment { decl = %s }" (show d)
   | Noop -> "Noop {}"
 
 module BU = FStar.Compiler.Util
