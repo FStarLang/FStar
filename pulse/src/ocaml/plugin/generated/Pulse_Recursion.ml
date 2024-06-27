@@ -230,7 +230,7 @@ let (add_knot :
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
-                | Pulse_Syntax_Base.FnDecl
+                | Pulse_Syntax_Base.FnDefn
                     { Pulse_Syntax_Base.id = id;
                       Pulse_Syntax_Base.isrec = isrec;
                       Pulse_Syntax_Base.bs = bs;
@@ -257,7 +257,7 @@ let (add_knot :
                                  (Pulse_Typing_Env.fail g
                                     (FStar_Pervasives_Native.Some
                                        (d.Pulse_Syntax_Base.range2))
-                                    "main: FnDecl does not have binders"))
+                                    "main: FnDefn does not have binders"))
                           else
                             Obj.magic
                               (Obj.repr
@@ -804,7 +804,7 @@ let (add_knot :
                                                                     {
                                                                     Pulse_Syntax_Base.d
                                                                     =
-                                                                    (Pulse_Syntax_Base.FnDecl
+                                                                    (Pulse_Syntax_Base.FnDefn
                                                                     {
                                                                     Pulse_Syntax_Base.id
                                                                     =
