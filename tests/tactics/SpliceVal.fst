@@ -21,3 +21,6 @@ let mk_stringlb (nm:string) : Tac (list sigelt) =
 %splice[test2] (mk_stringlb "test2")
 
 %splice[test3] (mk_stringlb "test3")
+
+
+let use_x = x
