@@ -173,7 +173,8 @@ let rec prefix_with_iface_decls
             text "Interface contains an abstract 'type' declaration; use 'val' instead."
           ]) impl.drange
 
-     | Val(x, t) ->
+     | Splice (_, [x], _)
+     | Val(x, _) ->
        //we have a 'val x' in the interface
        //take impl as is, unless it is a
        //       let x (or a `type abbreviation x`)
@@ -382,12 +383,6 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
 
 let fixup_interleaved_decls (iface : list decl) : list decl =
   let fix1 (d : decl) : decl =
-    let d =
-      if Splice? d.d
-      then let Splice (is_typed, _, tau) = d.d in
-           { d with d = Splice (is_typed, [], tau) }
-      else d
-    in
     let d = { d with interleaved = true } in
     d
   in
