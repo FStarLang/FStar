@@ -34,6 +34,18 @@ ensures inv i (owns r)
 }
 ```
 
+[@@expect_failure [19]]
+```pulse //create_non_boxable$
+ghost
+fn create_non_boxable_inv (p:vprop)
+requires p
+returns i:iref
+ensures inv i p
+{
+  new_invariant p;
+}
+```
+
 let singleton (i:iref) = add_inv emp_inames i
 
 ```pulse //update_ref_atomic$
