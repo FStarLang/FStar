@@ -169,10 +169,41 @@ let check_fndefn
 let check_fndecl
     (d : decl{FnDecl? d.d})
     (g : Soundness.Common.stt_env{bindings g == []})
-    (expected_t : option term)
-  : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
+  : T.Tac (RT.dsl_tac_result_t (fstar_env g) None)
 =
-  T.fail "FnDecl not implemented yet"
+  let FnDecl { id; bs; comp } = d.d in
+  if Nil? bs then
+    fail g (Some d.range) "main: FnDecl does not have binders";
+
+  let nm = fst (inspect_ident id) in
+  let stc = st_comp_of_comp comp in
+
+  (* We make a dummy FnDefn setting the body to a Tm_Admit, and
+  call the checker to elaborate its actual type. *)
+  let body : st_term = {
+    term = Tm_Admit {
+      ctag   = ctag_of_comp_st comp;
+      u      = stc.u;
+      typ    = stc.res;
+      post   = None; // Some stc.post?
+    };
+    range = d.range;
+    effect_tag = seal None;
+  }
+  in
+  let body = mk_abs g bs body comp in
+  let rng = body.range in
+  let (| _, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
+  let typ = elab_comp c in
+  let se : sigelt =
+    pack_sigelt <|
+    Sg_Val {
+      nm = cur_module () @ [nm];
+      univs = [];
+      typ = typ
+    }
+  in
+  ([], (false, se, None), [])
 
 let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
@@ -187,7 +218,11 @@ let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:optio
       let pre_typing : tot_typing g pre tm_vprop = pre_typing in
       match d.d with
       | FnDefn {} -> check_fndefn d g expected_t pre pre_typing
-      | FnDecl {} -> check_fndecl d g expected_t
+      | FnDecl {} ->
+        if None? expected_t then
+          check_fndecl d g
+        else
+          fail g (Some d.range) "pulse main: expected type provided for a FnDecl?"
 
 let join_smt_goals () : Tac unit =
   let open FStar.Tactics.V2 in
