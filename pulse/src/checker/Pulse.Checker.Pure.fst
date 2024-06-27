@@ -485,13 +485,16 @@ let check_prop_validity (g:env) (p:term) (_:tot_typing g p tm_prop)
     match t_opt with
     | None -> 
       let open Pulse.PP in
-      maybe_fail_doc issues g (RU.range_of_term p)
-                     [text "Failed to prove property:" ^/^ pp p]
+      maybe_fail_doc issues g (RU.range_of_term p) [
+        prefix 2 1 (text "Failed to prove pure property:") (pp p);
+      ]
     | Some tok -> tok
 
 let fail_expected_tot_found_ghost (g:env) (t:term) =
-  fail g (Some (RU.range_of_term t))
-    (Printf.sprintf "Expected a total term, found ghost term %s" (P.term_to_string t))
+  fail_doc g (Some (RU.range_of_term t)) [
+    prefix 2 1 (text "Expected a total term, got found ghost term:")
+      (pp t);
+  ]
 
 let compute_tot_term_type g t =
   let (| t, eff, ty, t_typing |) = compute_term_type g t in

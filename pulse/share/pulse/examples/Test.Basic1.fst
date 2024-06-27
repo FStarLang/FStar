@@ -18,7 +18,7 @@ module Test.Basic1
 
 open Pulse.Lib.Pervasives
 
-#set-options "--debug ggg"
+// #set-options "--debug ggg"
 
 assume val foo1 : vprop
 assume val foo2 : vprop
@@ -66,7 +66,7 @@ fn test_fastunif (x:erased int)
 
 module SZ = FStar.SizeT
 
-#set-options "--debug pulse,prover,ggg --ugly --print_full_names"
+// #set-options "--debug pulse,prover,ggg --ugly --print_full_names"
 
 ```pulse
 fn test1 (n:SZ.t)
