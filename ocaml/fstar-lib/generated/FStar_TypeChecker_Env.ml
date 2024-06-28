@@ -1994,7 +1994,7 @@ type env_t = env
 type sigtable = FStar_Syntax_Syntax.sigelt FStar_Compiler_Util.smap
 let (should_verify : env -> Prims.bool) =
   fun env1 ->
-    ((Prims.op_Negation env1.lax) && (Prims.op_Negation env1.admit)) &&
+    (Prims.op_Negation env1.admit) &&
       (let uu___ = FStar_Ident.string_of_lid env1.curmodule in
        FStar_Options.should_verify uu___)
 let (visible_at : delta_level -> FStar_Syntax_Syntax.qualifier -> Prims.bool)
