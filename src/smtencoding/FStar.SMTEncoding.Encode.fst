@@ -400,7 +400,7 @@ let encode_free_var uninterpreted env fv tt t_norm quals :decls_t & env_t =
                 let tcenv_comp = Env.push_binders env.tcenv args in
                 let comp =
                   if is_smt_reifiable_comp env.tcenv comp
-                  then S.mk_Total (reify_comp ({tcenv_comp with lax=true}) comp U_unknown)
+                  then S.mk_Total (reify_comp ({tcenv_comp with admit=true}) comp U_unknown)
                   else comp
                 in
                 if encode_non_total_function_typ
@@ -626,7 +626,7 @@ let encode_top_level_let :
     =
       (* The input type [t_norm] might contain reifiable computation type which must be reified at this point *)
 
-      let tcenv = {env.tcenv with lax=true} in
+      let tcenv = {env.tcenv with admit=true} in
 
       let subst_comp formals actuals comp =
           let subst = List.map2 (fun ({binder_bv=x}) ({binder_bv=b}) -> NT(x, S.bv_to_name b)) formals actuals in

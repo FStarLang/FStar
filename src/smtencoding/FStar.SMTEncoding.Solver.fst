@@ -1175,7 +1175,7 @@ let ask_solver
     (Though all other configs also contain it.) *)
     let default_settings = List.hd configs in
     let skip : bool =
-        Options.admit_smt_queries () ||
+        env.admit ||
         Env.too_early_in_prims env   ||
         (match Options.admit_except () with
          | Some id ->
@@ -1429,7 +1429,7 @@ sync SMT queries do not pass via this function. *)
 let do_solve_maybe_split use_env_msg tcenv q : unit =
   (* If we are admiting queries, don't do anything, and bail out
   right now to save time/memory *)
-  if Options.admit_smt_queries () then () else begin
+  if tcenv.admit then () else begin
     match Options.split_queries () with
     | Options.No -> do_solve false false use_env_msg tcenv q
     | Options.OnFailure ->
