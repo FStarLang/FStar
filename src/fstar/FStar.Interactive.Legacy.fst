@@ -64,7 +64,7 @@ let pop env msg =
     Options.pop()
 
 let push_with_kind env lax restore_cmd_line_options msg =
-    let env = { env with lax = lax } in
+    let env = { env with admit = lax } in
     let res = TypeChecker.Tc.push_context env msg in
     Options.push();
     if restore_cmd_line_options then Options.restore_cmd_line_options false |> ignore;

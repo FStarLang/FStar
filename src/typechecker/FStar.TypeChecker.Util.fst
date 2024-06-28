@@ -539,7 +539,7 @@ let mk_wp_return env (ed:S.eff_decl) (u_a:universe) (a:typ) (e:term) (r:Range.ra
     else if U.is_unit a
     then S.mk_Total a
     else let wp =
-           if env.lax
+           if Options.lax()
            && Options.ml_ish() //NS: Disabling this optimization temporarily
            then S.tun
            else let ret_wp = ed |> U.get_return_vc_combinator in
@@ -665,7 +665,7 @@ let is_function t = match (compress t).n with
 let close_wp_comp env bvs (c:comp) =
     def_check_scoped c.pos "close_wp_comp" (Env.push_bvs env bvs) c;
     if U.is_ml_comp c then c
-    else if env.lax
+    else if Options.lax()
     && Options.ml_ish() //NS: disabling this optimization temporarily
     then c
     else begin
@@ -1317,7 +1317,7 @@ let mk_bind env
     c, Env.conj_guard g_lift g_bind
 
 let strengthen_comp env (reason:option (unit -> list Pprint.document)) (c:comp) (f:formula) flags : comp & guard_t =
-    if env.lax || Env.too_early_in_prims env
+    if env.phase1 || Env.too_early_in_prims env
     then c, Env.trivial_guard
     else let r = Env.get_range env in
          (*
@@ -1417,7 +1417,7 @@ let weaken_comp env (c:comp) (formula:term) : comp & guard_t =
 let weaken_precondition env lc (f:guard_formula) : lcomp =
   let weaken () =
       let c, g_c = TcComm.lcomp_comp lc in
-      if env.lax
+      if Options.lax ()
       && Options.ml_ish() //NS: Disabling this optimization temporarily
       then c, g_c
       else match f with
@@ -1455,7 +1455,7 @@ let strengthen_precondition
          in
          let strengthen () =
             let c, g_c = TcComm.lcomp_comp lc in
-            if env.lax
+            if Options.lax ()
             then c, g_c
             else let g0 = Rel.simplify_guard env g0 in
                  match guard_form g0 with
@@ -1536,7 +1536,7 @@ let bind (r1:Range.range) (env:Env.env) (e1opt:option term) (lc1:lcomp) ((b, lc2
           else flags
   in
   let bind_it () =
-      if env.lax
+      if Options.lax ()
       && Options.ml_ish() //NS: disabling this optimization temporarily
       then
          let u_t = env.universe_of env lc2.res_typ in
@@ -1779,7 +1779,7 @@ let assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp
 
 let maybe_assume_result_eq_pure_term_in_m env (m_opt:option lident) (e:term) (lc:lcomp) : lcomp =
   let should_return =
-      not (env.lax)
+      not env.phase1
    && not (Env.too_early_in_prims env) //we're not too early in prims
    && should_return env (Some e) lc
    && not (TcComm.is_lcomp_partial_return lc)
@@ -2121,7 +2121,7 @@ let bind_cases env0 (res_t:typ)
     in
     let bind_cases () =
         let u_res_t = env.universe_of env res_t in
-        if env.lax
+        if Options.lax()
         && Options.ml_ish() //NS: Disabling this optimization temporarily
         then
              lax_mk_tot_or_comp_l eff u_res_t res_t [], Env.trivial_guard
@@ -2547,7 +2547,7 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 
       let f_tm = S.fvar f_name None in
       let tt = U.mk_app f_tm [S.as_arg e] in
-      Some (env.tc_term { env with nocoerce=true; lax=true; expected_typ = Some (exp_t, false) } tt)
+      Some (env.tc_term { env with nocoerce=true; admit=true; expected_typ = Some (exp_t, false) } tt)
       // NB: tc_term returns exactly elaborated term, lcomp, and guard, so we just return that.
     )
 )
@@ -2555,7 +2555,6 @@ let find_coercion (env:Env.env) (checked: lcomp) (exp_t: typ) (e:term)
 let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_t =
   let should_coerce =
       (env.phase1
-    || env.lax
     || Options.lax ()) && not env.nocoerce
   in
   if not should_coerce then (
@@ -2705,7 +2704,7 @@ let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lco
         | NonTrivial f ->
           let g = {g with guard_f=Trivial} in
           let strengthen () =
-              if env.lax
+              if Options.lax()
               && Options.ml_ish() //NS: disabling this optimization temporarily
               then
                 TcComm.lcomp_comp lc

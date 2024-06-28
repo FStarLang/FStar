@@ -176,7 +176,7 @@ let missing_definition_list (e:env) : list lident =
 type sigtable = BU.smap sigelt
 
 let should_verify env =
-    not env.lax
+    not (Options.lax ())
     && not env.admit
     && Options.should_verify (string_of_lid env.curmodule)
 
@@ -220,7 +220,6 @@ let initial_env deps
     use_eq_strict=false;
     is_iface=false;
     admit=false;
-    lax=false;
     lax_universes=false;
     phase1=false;
     nocoerce=false;

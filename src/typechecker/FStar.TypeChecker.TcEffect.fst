@@ -2238,7 +2238,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
                         (S.mk_Total res) in
         let k, _, _ = tc_tot_or_gtot_term env k in
         let env = Env.set_range env (snd bind_repr_ts).pos in
-        let env = {env with lax=true} |> Some in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
+        let env = {env with admit = true} |> Some in //we do not expect the bind to verify, since that requires internalizing monotonicity of WPs
         check_and_gen' "bind_repr" 2 env bind_repr_ts (Some k) in
 
       log_combinator "bind_repr" bind_repr;
@@ -2320,7 +2320,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
                           BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
                             (Print.term_to_string act_typ)) act_defn.pos
            | Trivial ->
-             Rel.force_trivial_guard {env with lax=true} (Env.conj_guards [g_k; g]));
+             Rel.force_trivial_guard {env with admit=true} (Env.conj_guards [g_k; g]));
 
           // 4) Do a bunch of plumbing to assign a type in the new monad to
           //    the action
@@ -2540,7 +2540,7 @@ let tc_lift env sub r =
     in
     (* we do not expect the lift to verify, *)
     (* since that requires internalizing monotonicity of WPs *)
-    let env = {env with lax=true} in
+    let env = {env with admit=true} in
     let lift = match lift with
     | None -> None
     | Some (uvs, lift) ->
