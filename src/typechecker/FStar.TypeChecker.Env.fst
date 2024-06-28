@@ -176,8 +176,7 @@ let missing_definition_list (e:env) : list lident =
 type sigtable = BU.smap sigelt
 
 let should_verify env =
-    not env.lax
-    && not env.admit
+    not env.admit
     && Options.should_verify (string_of_lid env.curmodule)
 
 let visible_at d q = match d, q with
