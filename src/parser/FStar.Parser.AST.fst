@@ -792,3 +792,7 @@ let ident_of_binder r b =
                  "Wildcard binders in quantifiers are not allowed") r
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
+
+instance showable_decl : showable decl = {
+  show = decl_to_string;
+}
