@@ -250,7 +250,7 @@ and lambda =
   ascription: computation_type FStar_Pervasives_Native.option ;
   body2: stmt ;
   range2: rng }
-and fn_decl =
+and fn_defn =
   {
   id2: FStar_Ident.ident ;
   is_rec: Prims.bool ;
@@ -265,7 +265,7 @@ and fn_decl =
 and let_init =
   | Array_initializer of array_init 
   | Default_initializer of FStar_Parser_AST.term 
-  | Lambda_initializer of fn_decl 
+  | Lambda_initializer of fn_defn 
   | Stmt_initializer of stmt 
 let (__proj__Mkstmt'__Expr__payload__item__e :
   stmt'__Expr__payload -> FStar_Parser_AST.term) =
@@ -503,23 +503,23 @@ let (__proj__Mklambda__item__range : lambda -> rng) =
   fun projectee ->
     match projectee with
     | { binders1; ascription; body2 = body; range2 = range;_} -> range
-let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Ident.ident) =
+let (__proj__Mkfn_defn__item__id : fn_defn -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> id
-let (__proj__Mkfn_decl__item__is_rec : fn_decl -> Prims.bool) =
+let (__proj__Mkfn_defn__item__is_rec : fn_defn -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> is_rec
-let (__proj__Mkfn_decl__item__binders : fn_decl -> binders) =
+let (__proj__Mkfn_defn__item__binders : fn_defn -> binders) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> binders1
-let (__proj__Mkfn_decl__item__ascription :
-  fn_decl ->
+let (__proj__Mkfn_defn__item__ascription :
+  fn_defn ->
     (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
       FStar_Pervasives.either)
   =
@@ -527,19 +527,19 @@ let (__proj__Mkfn_decl__item__ascription :
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> ascription
-let (__proj__Mkfn_decl__item__measure :
-  fn_decl -> FStar_Parser_AST.term FStar_Pervasives_Native.option) =
+let (__proj__Mkfn_defn__item__measure :
+  fn_defn -> FStar_Parser_AST.term FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> measure
-let (__proj__Mkfn_decl__item__body :
-  fn_decl -> (stmt, lambda) FStar_Pervasives.either) =
+let (__proj__Mkfn_defn__item__body :
+  fn_defn -> (stmt, lambda) FStar_Pervasives.either) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; range3 = range;_} -> body
-let (__proj__Mkfn_decl__item__range : fn_decl -> rng) =
+let (__proj__Mkfn_defn__item__range : fn_defn -> rng) =
   fun projectee ->
     match projectee with
     | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
@@ -558,13 +558,46 @@ let (__proj__Default_initializer__item___0 :
 let (uu___is_Lambda_initializer : let_init -> Prims.bool) =
   fun projectee ->
     match projectee with | Lambda_initializer _0 -> true | uu___ -> false
-let (__proj__Lambda_initializer__item___0 : let_init -> fn_decl) =
+let (__proj__Lambda_initializer__item___0 : let_init -> fn_defn) =
   fun projectee -> match projectee with | Lambda_initializer _0 -> _0
 let (uu___is_Stmt_initializer : let_init -> Prims.bool) =
   fun projectee ->
     match projectee with | Stmt_initializer _0 -> true | uu___ -> false
 let (__proj__Stmt_initializer__item___0 : let_init -> stmt) =
   fun projectee -> match projectee with | Stmt_initializer _0 -> _0
+type fn_decl =
+  {
+  id3: FStar_Ident.ident ;
+  binders3: binders ;
+  ascription2:
+    (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
+      FStar_Pervasives.either
+    ;
+  range4: rng }
+let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Ident.ident) =
+  fun projectee ->
+    match projectee with
+    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+        range4 = range;_} -> id
+let (__proj__Mkfn_decl__item__binders : fn_decl -> binders) =
+  fun projectee ->
+    match projectee with
+    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+        range4 = range;_} -> binders1
+let (__proj__Mkfn_decl__item__ascription :
+  fn_decl ->
+    (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
+      FStar_Pervasives.either)
+  =
+  fun projectee ->
+    match projectee with
+    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+        range4 = range;_} -> ascription
+let (__proj__Mkfn_decl__item__range : fn_decl -> rng) =
+  fun projectee ->
+    match projectee with
+    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+        range4 = range;_} -> range
 let (tag_of_stmt : stmt -> Prims.string) =
   fun s ->
     match s.s with
@@ -597,8 +630,14 @@ let (tag_of_stmt : stmt -> Prims.string) =
     | WithInvariants { names = uu___; body1 = uu___1; returns_ = uu___2;_} ->
         "WithInvariants"
 type decl =
+  | FnDefn of fn_defn 
   | FnDecl of fn_decl 
-let (uu___is_FnDecl : decl -> Prims.bool) = fun projectee -> true
+let (uu___is_FnDefn : decl -> Prims.bool) =
+  fun projectee -> match projectee with | FnDefn _0 -> true | uu___ -> false
+let (__proj__FnDefn__item___0 : decl -> fn_defn) =
+  fun projectee -> match projectee with | FnDefn _0 -> _0
+let (uu___is_FnDecl : decl -> Prims.bool) =
+  fun projectee -> match projectee with | FnDecl _0 -> true | uu___ -> false
 let (__proj__FnDecl__item___0 : decl -> fn_decl) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
 let (mk_comp :
@@ -672,7 +711,7 @@ let (mk_sequence : stmt -> stmt -> stmt') =
   fun s1 -> fun s2 -> Sequence { s1; s2 }
 let (mk_stmt : stmt' -> rng -> stmt) =
   fun s -> fun range -> { s; range1 = range }
-let (mk_fn_decl :
+let (mk_fn_defn :
   FStar_Ident.ident ->
     Prims.bool ->
       binders ->
@@ -680,7 +719,7 @@ let (mk_fn_decl :
           FStar_Parser_AST.term FStar_Pervasives_Native.option)
           FStar_Pervasives.either ->
           FStar_Parser_AST.term FStar_Pervasives_Native.option ->
-            (stmt, lambda) FStar_Pervasives.either -> rng -> fn_decl)
+            (stmt, lambda) FStar_Pervasives.either -> rng -> fn_defn)
   =
   fun id ->
     fun is_rec ->
@@ -698,6 +737,23 @@ let (mk_fn_decl :
                   body3 = body;
                   range3 = range
                 }
+let (mk_fn_decl :
+  FStar_Ident.ident ->
+    binders ->
+      (computation_type,
+        FStar_Parser_AST.term FStar_Pervasives_Native.option)
+        FStar_Pervasives.either -> rng -> fn_decl)
+  =
+  fun id ->
+    fun binders1 ->
+      fun ascription ->
+        fun range ->
+          {
+            id3 = id;
+            binders3 = binders1;
+            ascription2 = ascription;
+            range4 = range
+          }
 let (mk_open : FStar_Ident.lident -> stmt') = fun lid -> Open lid
 let (mk_par : vprop -> vprop -> vprop -> vprop -> stmt -> stmt -> stmt') =
   fun p1 ->

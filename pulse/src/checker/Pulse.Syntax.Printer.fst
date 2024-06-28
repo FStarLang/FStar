@@ -562,8 +562,12 @@ let rec print_skel (t:st_term) =
 
 let decl_to_string (d:decl) : T.Tac string =
   match d.d with
-  | FnDecl {id; isrec; bs; body} ->
+  | FnDefn {id; isrec; bs; body} ->
     "fn " ^ (if isrec then "rec " else "") ^
      fst (R.inspect_ident id) ^ " " ^ 
      String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs) ^
       " { " ^ st_term_to_string body ^ "}"
+  | FnDecl {id; bs} ->
+    "val fn " ^
+    fst (R.inspect_ident id) ^ " " ^
+    String.concat " " (T.map (fun (_, b, _) -> binder_to_string b) bs)

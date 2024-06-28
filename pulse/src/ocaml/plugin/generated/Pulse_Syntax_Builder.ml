@@ -337,7 +337,7 @@ let (mk_rewrite_hint_type :
             Pulse_Syntax_Base.t2 = t2;
             Pulse_Syntax_Base.tac_opt1 = (map_opt tac_opt thunk)
           }
-let (mk_fn_decl :
+let (mk_fn_defn :
   FStar_Reflection_Types.ident ->
     Prims.bool ->
       (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
@@ -352,7 +352,7 @@ let (mk_fn_decl :
         fun comp ->
           fun meas ->
             fun body ->
-              Pulse_Syntax_Base.FnDecl
+              Pulse_Syntax_Base.FnDefn
                 {
                   Pulse_Syntax_Base.id = id;
                   Pulse_Syntax_Base.isrec = isrec;
@@ -361,6 +361,21 @@ let (mk_fn_decl :
                   Pulse_Syntax_Base.meas = meas;
                   Pulse_Syntax_Base.body7 = body
                 }
+let (mk_fn_decl :
+  FStar_Reflection_Types.ident ->
+    (Pulse_Syntax_Base.qualifier FStar_Pervasives_Native.option *
+      Pulse_Syntax_Base.binder * Pulse_Syntax_Base.bv) Prims.list ->
+      Pulse_Syntax_Base.comp_st -> Pulse_Syntax_Base.decl')
+  =
+  fun id ->
+    fun bs ->
+      fun comp ->
+        Pulse_Syntax_Base.FnDecl
+          {
+            Pulse_Syntax_Base.id1 = id;
+            Pulse_Syntax_Base.bs1 = bs;
+            Pulse_Syntax_Base.comp1 = comp
+          }
 let (mk_decl :
   Pulse_Syntax_Base.decl' ->
     Pulse_Syntax_Base.range -> Pulse_Syntax_Base.decl)

@@ -78,7 +78,9 @@ let check
   FStar.Tactics.BreakVC.break_vc ();
   // ^ This makes a big difference! Would be good to distill into
   // a smaller F*-only example and file an issue.
-  (if T.ide () then begin
+  let ide = T.ide () in
+  let no_admit_diag = T.ext_getv "pulse:no_admit_diag" = "1" in
+  (if ide && not no_admit_diag then begin
     (* If we're running interactively, print out the context
     and environment. *)
     let open FStar.Stubs.Pprint in

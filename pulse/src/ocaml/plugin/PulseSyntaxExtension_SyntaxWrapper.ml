@@ -251,5 +251,7 @@ let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
 let subst_proof_hint s t = Pulse_Syntax_Naming.subst_proof_hint t s
 
 
-let fn_decl rng id isrec bs comp meas body =
-  PSB.mk_decl (PSB.mk_fn_decl id isrec bs comp meas body) rng
+let fn_defn rng id isrec bs comp meas body =
+  PSB.mk_decl (PSB.mk_fn_defn id isrec bs comp meas body) rng
+let fn_decl rng id bs comp =
+  PSB.mk_decl (PSB.mk_fn_decl id bs comp) rng
