@@ -193,7 +193,12 @@ let check_fndecl
   in
   let body = mk_abs g bs body comp in
   let rng = body.range in
-  let (| _, c, t_typing |) = Pulse.Checker.Abs.check_abs g body Pulse.Checker.check in
+  let (| _, c, t_typing |) =
+    (* We don't want to print the diagnostic for the admit in the body. *)
+    RU.with_extv "pulse:no_admit_diag" "1" (fun () ->
+      Pulse.Checker.Abs.check_abs g body Pulse.Checker.check
+    )
+  in
   let typ = elab_comp c in
   let se : sigelt =
     pack_sigelt <|
