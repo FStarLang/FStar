@@ -31,5 +31,11 @@
   - NegativeTests.Set.should_fail3 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.Set.fst(37,0-38,52):
+  - Missing definitions in module NegativeTests.Set:
+      should_fail1
+      should_fail2
+      should_fail3
+
 Verified module: NegativeTests.Set
 All verification conditions discharged successfully

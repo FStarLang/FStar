@@ -26,5 +26,10 @@
   - NegativeTests.False.absurd is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.False.fst(30,0-30,66):
+  - Missing definitions in module NegativeTests.False:
+      absurd
+      bar
+
 Verified module: NegativeTests.False
 All verification conditions discharged successfully

@@ -11,5 +11,8 @@
   - NegativeTests.ZZImplicitFalse.test is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.ZZImplicitFalse.fst(20,0-20,34):
+  - Missing definitions in module NegativeTests.ZZImplicitFalse: test
+
 Verified module: NegativeTests.ZZImplicitFalse
 All verification conditions discharged successfully
