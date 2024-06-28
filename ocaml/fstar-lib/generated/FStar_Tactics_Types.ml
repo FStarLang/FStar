@@ -340,7 +340,9 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.erase_erasable_args =
             (env.FStar_TypeChecker_Env.erase_erasable_args);
           FStar_TypeChecker_Env.core_check =
-            (env.FStar_TypeChecker_Env.core_check)
+            (env.FStar_TypeChecker_Env.core_check);
+          FStar_TypeChecker_Env.missing_decl =
+            (env.FStar_TypeChecker_Env.missing_decl)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
 let (decr_depth : proofstate -> proofstate) =

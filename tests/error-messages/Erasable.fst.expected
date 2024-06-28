@@ -47,5 +47,10 @@
   - Erasable.e_nat_3 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at Erasable.fst(73,0-73,19):
+  - Missing definitions in module Erasable:
+      e_nat_2
+      e_nat_3
+
 Verified module: Erasable
 All verification conditions discharged successfully

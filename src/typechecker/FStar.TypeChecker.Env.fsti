@@ -24,6 +24,7 @@ open FStar.TypeChecker.Common
 open FStar.Class.Binders
 open FStar.Class.Deq
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 module BU = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
@@ -223,6 +224,12 @@ and env = {
   erase_erasable_args: bool;                      (* This flag is set when running normalize_for_extraction, see Extraction.ML.Modul *)
 
   core_check: core_check_t;
+
+  (* A set of names for which we are missing a declaration.
+  Every val (Sig_declare_typ) is added here and removed
+  only when a definition for it is checked. At the of checking a module,
+  if anything remains here, we fail. *)
+  missing_decl : RBSet.t lident;
 }
 
 and solver_depth_t = int & int & int
@@ -246,6 +253,12 @@ and tcenv_hooks =
 
 and core_check_t =
   env -> term -> typ -> bool -> either (option typ) (bool -> string)
+
+(* Keeping track of declarations and definitions. This operates
+over the missing_decl field. *)
+val record_val_for (e:env) (l:lident) : env
+val record_definition_for (e:env) (l:lident) : env
+val missing_definition_list (e:env) : list lident
 
 type implicit = TcComm.implicit
 type implicits = TcComm.implicits

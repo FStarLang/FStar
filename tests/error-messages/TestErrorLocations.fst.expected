@@ -137,5 +137,11 @@
   - TestErrorLocations.test7 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at TestErrorLocations.fst(113,0-117,17):
+  - Missing definitions in module TestErrorLocations:
+      test5
+      test6
+      test7
+
 Verified module: TestErrorLocations
 All verification conditions discharged successfully

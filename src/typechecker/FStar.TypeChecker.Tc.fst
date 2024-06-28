@@ -719,13 +719,14 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
       [], [], env0
 
   | Sig_declare_typ {lid; us=uvs; t} -> //NS: No checks on the qualifiers?
+
+    if lid_exists env lid then
+      raise_error_doc (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, [
+        text (BU.format1 "Top-level declaration %s for a name that is already used in this module." (show lid));
+        text "Top-level declarations must be unique in their module."
+      ]) r;
+
     let env = Env.set_range env r in
-
-    if lid_exists env lid
-    then raise_error (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
-                                   top-level declarations must be unique in their module"
-                                   (Ident.string_of_lid lid))) r;
-
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in

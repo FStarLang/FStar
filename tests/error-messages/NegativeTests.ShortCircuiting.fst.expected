@@ -23,5 +23,10 @@
   - NegativeTests.ShortCircuiting.ff is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.ShortCircuiting.fst(25,0-25,36):
+  - Missing definitions in module NegativeTests.ShortCircuiting:
+      bad
+      ff
+
 Verified module: NegativeTests.ShortCircuiting
 All verification conditions discharged successfully

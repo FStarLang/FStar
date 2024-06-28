@@ -366,7 +366,9 @@ let solve_goals_with_tac :
                    FStar_TypeChecker_Env.erase_erasable_args =
                      (env.FStar_TypeChecker_Env.erase_erasable_args);
                    FStar_TypeChecker_Env.core_check =
-                     (env.FStar_TypeChecker_Env.core_check)
+                     (env.FStar_TypeChecker_Env.core_check);
+                   FStar_TypeChecker_Env.missing_decl =
+                     (env.FStar_TypeChecker_Env.missing_decl)
                  } in
                env1.FStar_TypeChecker_Env.try_solve_implicits_hook env1
                  resolve_tac deferred_goals) uu___
@@ -498,7 +500,9 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env1.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env1.FStar_TypeChecker_Env.core_check)
+                               (env1.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env1.FStar_TypeChecker_Env.missing_decl)
                            } in
                          let env_lax =
                            {
@@ -605,7 +609,9 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env2.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env2.FStar_TypeChecker_Env.core_check)
+                               (env2.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env2.FStar_TypeChecker_Env.missing_decl)
                            } in
                          let uu___5 =
                            let t =
