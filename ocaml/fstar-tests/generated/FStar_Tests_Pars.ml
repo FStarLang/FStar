@@ -193,7 +193,9 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
              FStar_TypeChecker_Env.core_check =
-               (env.FStar_TypeChecker_Env.core_check)
+               (env.FStar_TypeChecker_Env.core_check);
+             FStar_TypeChecker_Env.missing_decl =
+               (env.FStar_TypeChecker_Env.missing_decl)
            } in
          let uu___3 = FStar_TypeChecker_Tc.check_module env1 prims_mod false in
          (match uu___3 with
@@ -302,7 +304,9 @@ let (init_once : unit -> unit) =
                   FStar_TypeChecker_Env.erase_erasable_args =
                     (env2.FStar_TypeChecker_Env.erase_erasable_args);
                   FStar_TypeChecker_Env.core_check =
-                    (env2.FStar_TypeChecker_Env.core_check)
+                    (env2.FStar_TypeChecker_Env.core_check);
+                  FStar_TypeChecker_Env.missing_decl =
+                    (env2.FStar_TypeChecker_Env.missing_decl)
                 } in
               let env4 =
                 FStar_TypeChecker_Env.set_current_module env3 test_lid in
@@ -454,7 +458,9 @@ let (tc' :
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (tcenv.FStar_TypeChecker_Env.core_check)
+          (tcenv.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.missing_decl =
+          (tcenv.FStar_TypeChecker_Env.missing_decl)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with
@@ -555,7 +561,9 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.erase_erasable_args =
           (tcenv.FStar_TypeChecker_Env.erase_erasable_args);
         FStar_TypeChecker_Env.core_check =
-          (tcenv.FStar_TypeChecker_Env.core_check)
+          (tcenv.FStar_TypeChecker_Env.core_check);
+        FStar_TypeChecker_Env.missing_decl =
+          (tcenv.FStar_TypeChecker_Env.missing_decl)
       } in
     let uu___ = FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term tcenv1 tm in
     match uu___ with

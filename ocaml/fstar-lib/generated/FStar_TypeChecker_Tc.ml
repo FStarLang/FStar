@@ -164,7 +164,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.erase_erasable_args =
               (env.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env.FStar_TypeChecker_Env.core_check)
+              (env.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.missing_decl =
+              (env.FStar_TypeChecker_Env.missing_decl)
           }
       | FStar_Pervasives_Native.None ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
@@ -275,7 +277,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.erase_erasable_args =
               (env.FStar_TypeChecker_Env.erase_erasable_args);
             FStar_TypeChecker_Env.core_check =
-              (env.FStar_TypeChecker_Env.core_check)
+              (env.FStar_TypeChecker_Env.core_check);
+            FStar_TypeChecker_Env.missing_decl =
+              (env.FStar_TypeChecker_Env.missing_decl)
           }
 let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
   fun env ->
@@ -1143,7 +1147,9 @@ let (tc_sig_let :
                           FStar_TypeChecker_Env.erase_erasable_args =
                             (env1.FStar_TypeChecker_Env.erase_erasable_args);
                           FStar_TypeChecker_Env.core_check =
-                            (env1.FStar_TypeChecker_Env.core_check)
+                            (env1.FStar_TypeChecker_Env.core_check);
+                          FStar_TypeChecker_Env.missing_decl =
+                            (env1.FStar_TypeChecker_Env.missing_decl)
                         } in
                       let e1 =
                         let uu___3 = do_two_phases env' in
@@ -1380,7 +1386,10 @@ let (tc_sig_let :
                                               (env'.FStar_TypeChecker_Env.erase_erasable_args);
                                             FStar_TypeChecker_Env.core_check
                                               =
-                                              (env'.FStar_TypeChecker_Env.core_check)
+                                              (env'.FStar_TypeChecker_Env.core_check);
+                                            FStar_TypeChecker_Env.missing_decl
+                                              =
+                                              (env'.FStar_TypeChecker_Env.missing_decl)
                                           } e in
                                       match uu___7 with
                                       | (e3, uu___8, uu___9) -> e3) uu___5
@@ -1643,7 +1652,9 @@ let (tc_sig_let :
                                           =
                                           (env'1.FStar_TypeChecker_Env.erase_erasable_args);
                                         FStar_TypeChecker_Env.core_check =
-                                          (env'1.FStar_TypeChecker_Env.core_check)
+                                          (env'1.FStar_TypeChecker_Env.core_check);
+                                        FStar_TypeChecker_Env.missing_decl =
+                                          (env'1.FStar_TypeChecker_Env.missing_decl)
                                       } e1) uu___5
                                  "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2" in
                              let uu___5 =
@@ -1848,7 +1859,9 @@ let (tc_sig_let :
                                            =
                                            (env'1.FStar_TypeChecker_Env.erase_erasable_args);
                                          FStar_TypeChecker_Env.core_check =
-                                           (env'1.FStar_TypeChecker_Env.core_check)
+                                           (env'1.FStar_TypeChecker_Env.core_check);
+                                         FStar_TypeChecker_Env.missing_decl =
+                                           (env'1.FStar_TypeChecker_Env.missing_decl)
                                        } in
                                      let err s pos =
                                        FStar_Errors.raise_error
@@ -2130,7 +2143,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.erase_erasable_args =
                        (env.FStar_TypeChecker_Env.erase_erasable_args);
                      FStar_TypeChecker_Env.core_check =
-                       (env.FStar_TypeChecker_Env.core_check)
+                       (env.FStar_TypeChecker_Env.core_check);
+                     FStar_TypeChecker_Env.missing_decl =
+                       (env.FStar_TypeChecker_Env.missing_decl)
                    }
                  else env in
                let env'1 = FStar_TypeChecker_Env.push env' "expect_failure" in
@@ -2351,7 +2366,9 @@ let (tc_decl' :
                                       =
                                       (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (env1.FStar_TypeChecker_Env.core_check)
+                                      (env1.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.missing_decl =
+                                      (env1.FStar_TypeChecker_Env.missing_decl)
                                   } ses se2.FStar_Syntax_Syntax.sigquals
                                   se2.FStar_Syntax_Syntax.sigattrs lids in
                               FStar_Pervasives_Native.fst uu___6 in
@@ -2643,7 +2660,9 @@ let (tc_decl' :
                                          =
                                          (env.FStar_TypeChecker_Env.erase_erasable_args);
                                        FStar_TypeChecker_Env.core_check =
-                                         (env.FStar_TypeChecker_Env.core_check)
+                                         (env.FStar_TypeChecker_Env.core_check);
+                                       FStar_TypeChecker_Env.missing_decl =
+                                         (env.FStar_TypeChecker_Env.missing_decl)
                                      } ne se2.FStar_Syntax_Syntax.sigquals
                                      se2.FStar_Syntax_Syntax.sigattrs in
                                  {
@@ -2861,7 +2880,9 @@ let (tc_decl' :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (env.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (env.FStar_TypeChecker_Env.core_check)
+                                    (env.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.missing_decl =
+                                    (env.FStar_TypeChecker_Env.missing_decl)
                                 } (lid, uvs, tps, c) r in
                             match uu___7 with
                             | (lid1, uvs1, tps1, c1) ->
@@ -2951,21 +2972,32 @@ let (tc_decl' :
                { FStar_Syntax_Syntax.lid2 = lid;
                  FStar_Syntax_Syntax.us2 = uvs; FStar_Syntax_Syntax.t2 = t;_}
                ->
-               let env1 = FStar_TypeChecker_Env.set_range env r in
-               ((let uu___3 = FStar_TypeChecker_Env.lid_exists env1 lid in
+               ((let uu___3 = FStar_TypeChecker_Env.lid_exists env lid in
                  if uu___3
                  then
                    let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Ident.string_of_lid lid in
-                       FStar_Compiler_Util.format1
-                         "Top-level declaration %s for a name that is already used in this module; top-level declarations must be unique in their module"
-                         uu___6 in
+                       let uu___6 =
+                         let uu___7 =
+                           let uu___8 =
+                             FStar_Class_Show.show
+                               FStar_Ident.showable_lident lid in
+                           FStar_Compiler_Util.format1
+                             "Top-level declaration %s for a name that is already used in this module."
+                             uu___8 in
+                         FStar_Errors_Msg.text uu___7 in
+                       let uu___7 =
+                         let uu___8 =
+                           FStar_Errors_Msg.text
+                             "Top-level declarations must be unique in their module." in
+                         [uu___8] in
+                       uu___6 :: uu___7 in
                      (FStar_Errors_Codes.Fatal_AlreadyDefinedTopLevelDeclaration,
                        uu___5) in
-                   FStar_Errors.raise_error uu___4 r
+                   FStar_Errors.raise_error_doc uu___4 r
                  else ());
-                (let uu___3 =
+                (let env1 = FStar_TypeChecker_Env.set_range env r in
+                 let uu___3 =
                    let uu___4 = do_two_phases env1 in
                    if uu___4
                    then
@@ -3078,7 +3110,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.erase_erasable_args =
                                   (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                 FStar_TypeChecker_Env.core_check =
-                                  (env1.FStar_TypeChecker_Env.core_check)
+                                  (env1.FStar_TypeChecker_Env.core_check);
+                                FStar_TypeChecker_Env.missing_decl =
+                                  (env1.FStar_TypeChecker_Env.missing_decl)
                               } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                           match uu___6 with
                           | (uvs1, t1) ->
@@ -3262,7 +3296,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.erase_erasable_args =
                                   (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                 FStar_TypeChecker_Env.core_check =
-                                  (env1.FStar_TypeChecker_Env.core_check)
+                                  (env1.FStar_TypeChecker_Env.core_check);
+                                FStar_TypeChecker_Env.missing_decl =
+                                  (env1.FStar_TypeChecker_Env.missing_decl)
                               } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                           match uu___6 with
                           | (uvs1, t1) ->
@@ -3534,7 +3570,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.erase_erasable_args =
                        (env.FStar_TypeChecker_Env.erase_erasable_args);
                      FStar_TypeChecker_Env.core_check =
-                       (env.FStar_TypeChecker_Env.core_check)
+                       (env.FStar_TypeChecker_Env.core_check);
+                     FStar_TypeChecker_Env.missing_decl =
+                       (env.FStar_TypeChecker_Env.missing_decl)
                    } in
                  (let uu___4 = FStar_Compiler_Debug.low () in
                   if uu___4
@@ -3690,7 +3728,9 @@ let (tc_decl' :
                                       =
                                       (env.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (env.FStar_TypeChecker_Env.core_check)
+                                      (env.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.missing_decl =
+                                      (env.FStar_TypeChecker_Env.missing_decl)
                                   } m n p t in
                               match uu___9 with
                               | (t2, ty, uu___10) ->
@@ -3935,7 +3975,9 @@ let (tc_decl' :
                                       =
                                       (env.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (env.FStar_TypeChecker_Env.core_check)
+                                      (env.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.missing_decl =
+                                      (env.FStar_TypeChecker_Env.missing_decl)
                                   } m n t in
                               match uu___9 with
                               | (t2, ty, uu___10) ->
@@ -4254,7 +4296,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erase_erasable_args =
                          (env1.FStar_TypeChecker_Env.erase_erasable_args);
                        FStar_TypeChecker_Env.core_check =
-                         (env1.FStar_TypeChecker_Env.core_check)
+                         (env1.FStar_TypeChecker_Env.core_check);
+                       FStar_TypeChecker_Env.missing_decl =
+                         (env1.FStar_TypeChecker_Env.missing_decl)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PopOptions) ->
@@ -4366,7 +4410,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erase_erasable_args =
                          (env1.FStar_TypeChecker_Env.erase_erasable_args);
                        FStar_TypeChecker_Env.core_check =
-                         (env1.FStar_TypeChecker_Env.core_check)
+                         (env1.FStar_TypeChecker_Env.core_check);
+                       FStar_TypeChecker_Env.missing_decl =
+                         (env1.FStar_TypeChecker_Env.missing_decl)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.SetOptions uu___2) ->
@@ -4478,7 +4524,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erase_erasable_args =
                          (env1.FStar_TypeChecker_Env.erase_erasable_args);
                        FStar_TypeChecker_Env.core_check =
-                         (env1.FStar_TypeChecker_Env.core_check)
+                         (env1.FStar_TypeChecker_Env.core_check);
+                       FStar_TypeChecker_Env.missing_decl =
+                         (env1.FStar_TypeChecker_Env.missing_decl)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.ResetOptions uu___2) ->
@@ -4590,7 +4638,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.erase_erasable_args =
                          (env1.FStar_TypeChecker_Env.erase_erasable_args);
                        FStar_TypeChecker_Env.core_check =
-                         (env1.FStar_TypeChecker_Env.core_check)
+                         (env1.FStar_TypeChecker_Env.core_check);
+                       FStar_TypeChecker_Env.missing_decl =
+                         (env1.FStar_TypeChecker_Env.missing_decl)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.RestartSolver) ->
@@ -4992,7 +5042,9 @@ let (tc_partial_modul :
            FStar_TypeChecker_Env.erase_erasable_args =
              (env.FStar_TypeChecker_Env.erase_erasable_args);
            FStar_TypeChecker_Env.core_check =
-             (env.FStar_TypeChecker_Env.core_check)
+             (env.FStar_TypeChecker_Env.core_check);
+           FStar_TypeChecker_Env.missing_decl =
+             (env.FStar_TypeChecker_Env.missing_decl)
          } in
        let env2 =
          FStar_TypeChecker_Env.set_current_module env1
@@ -5279,7 +5331,9 @@ let (check_module :
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
              FStar_TypeChecker_Env.core_check =
-               (env.FStar_TypeChecker_Env.core_check)
+               (env.FStar_TypeChecker_Env.core_check);
+             FStar_TypeChecker_Env.missing_decl =
+               (env.FStar_TypeChecker_Env.missing_decl)
            } in
          let uu___2 = tc_modul env1 m b in
          match uu___2 with

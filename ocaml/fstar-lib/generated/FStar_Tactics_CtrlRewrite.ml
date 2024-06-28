@@ -181,7 +181,10 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.erase_erasable_args);
                                             FStar_TypeChecker_Env.core_check
                                               =
-                                              (env.FStar_TypeChecker_Env.core_check)
+                                              (env.FStar_TypeChecker_Env.core_check);
+                                            FStar_TypeChecker_Env.missing_decl
+                                              =
+                                              (env.FStar_TypeChecker_Env.missing_decl)
                                           } tm in
                                       FStar_Pervasives_Native.Some uu___3))
                             ()

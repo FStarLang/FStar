@@ -146,7 +146,9 @@ let (push_with_kind :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (env.FStar_TypeChecker_Env.core_check)
+                (env.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.missing_decl =
+                (env.FStar_TypeChecker_Env.missing_decl)
             } in
           let res = FStar_TypeChecker_Tc.push_context env1 msg in
           FStar_Options.push ();
