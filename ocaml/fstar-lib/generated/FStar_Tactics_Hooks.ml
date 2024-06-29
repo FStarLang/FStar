@@ -1893,10 +1893,8 @@ let (splice :
                                            (env.FStar_TypeChecker_Env.use_eq_strict);
                                          FStar_TypeChecker_Env.is_iface =
                                            (env.FStar_TypeChecker_Env.is_iface);
-                                         FStar_TypeChecker_Env.admit =
-                                           (env.FStar_TypeChecker_Env.admit);
-                                         FStar_TypeChecker_Env.lax =
-                                           (env.FStar_TypeChecker_Env.lax);
+                                         FStar_TypeChecker_Env.admit = false;
+                                         FStar_TypeChecker_Env.lax = false;
                                          FStar_TypeChecker_Env.lax_universes
                                            =
                                            (env.FStar_TypeChecker_Env.lax_universes);
