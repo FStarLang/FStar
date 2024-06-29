@@ -225,7 +225,7 @@ let initial_env deps
     phase1=false;
     nocoerce=false;
     failhard=false;
-    nosynth=false;
+    flychecking=false;
     uvar_subtyping=true;
     intactics=false;
 

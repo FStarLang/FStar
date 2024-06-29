@@ -188,7 +188,7 @@ and env = {
   lax_universes  :bool;                         (* don't check universe constraints *)
   phase1         :bool;                         (* running in phase 1, phase 2 to come after *)
   failhard       :bool;                         (* don't try to carry on after a typechecking error *)
-  nosynth        :bool;                         (* don't run synth tactics *)
+  flychecking    :bool;                         (* currently flychecking in IDE, used to for example not run synth tactics *)
   uvar_subtyping :bool;
   intactics      :bool;                         (* we are currently running a tactic *)
   nocoerce       :bool;                         (* do not apply any coercions *)

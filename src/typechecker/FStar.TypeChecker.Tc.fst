@@ -932,10 +932,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         ({ env with proof_ns = Options.using_facts_from () })
 
     | Sig_pragma RestartSolver ->
-      (* `nosynth` actually marks when fstar-mode is peeking via flycheck,
+      (* `flychecking` marks when an interactive F* is peeking via flycheck,
        * we shouldn't reset the solver at that point, only when the user
        * advances over the pragma. *)
-      if from_cache || env.nosynth then env
+      if from_cache || env.flychecking then env
       else begin
         env.solver.refresh ();
         env
@@ -981,7 +981,7 @@ let tc_decls env ses =
     (* If emacs is peeking, and debugging is on, don't do anything,
      * otherwise the user will see a bunch of output from typechecking
      * definitions that were not yet advanced over. *)
-    if env.nosynth && Debug.any ()
+    if env.flychecking && Debug.any ()
     then (ses, env), []
     else begin
     if Debug.low ()
