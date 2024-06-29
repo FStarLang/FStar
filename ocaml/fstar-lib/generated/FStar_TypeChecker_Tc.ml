@@ -2031,7 +2031,16 @@ let (tc_decl' :
                (let uu___4 = FStar_TypeChecker_Env.should_verify env in
                 Prims.op_Negation uu___4) ||
                  (FStar_Options.admit_smt_queries ())
-               -> ([], [], env)
+               ->
+               ((let uu___5 = FStar_Compiler_Debug.any () in
+                 if uu___5
+                 then
+                   let uu___6 = FStar_Syntax_Print.sigelt_to_string_short se2 in
+                   FStar_Compiler_Util.print1
+                     "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
+                     uu___6
+                 else ());
+                ([], [], env))
            | FStar_Syntax_Syntax.Sig_fail
                { FStar_Syntax_Syntax.errs = expected_errors;
                  FStar_Syntax_Syntax.fail_in_lax = lax;
@@ -4871,7 +4880,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___873 : unit) =
+let (uu___875 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :

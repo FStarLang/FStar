@@ -572,6 +572,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
   (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
   | Sig_fail {fail_in_lax=false} when not (Env.should_verify env) || Options.admit_smt_queries () ->
+    if Debug.any () then
+      BU.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
+        (Print.sigelt_to_string_short se);
     [], [], env
 
   | Sig_fail {errs=expected_errors; fail_in_lax=lax; ses} ->
