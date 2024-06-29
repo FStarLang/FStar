@@ -34,6 +34,7 @@ open FStar.Const
 open FStar.TypeChecker.TcTerm
 
 open FStar.Class.Show
+open FStar.Class.PP
 open FStar.Class.Setlike
 
 module S  = FStar.Syntax.Syntax
@@ -1125,6 +1126,15 @@ let tc_more_partial_modul env modul decls =
 let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let env = Env.finish_module en m in
+
+  if not loading_from_cache then (
+    let missing = missing_definition_list env in
+    if Cons? missing then
+      log_issue_doc env.range (Errors.Error_AdmitWithoutDefinition, [
+          Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
+            (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
+        ])
+  );
 
   //we can clear the lid to query index table
   env.qtbl_name_and_index |> snd |> BU.smap_clear;

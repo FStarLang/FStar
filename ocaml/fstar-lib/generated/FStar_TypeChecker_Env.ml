@@ -6467,98 +6467,73 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
     FStar_Ident.lid_of_ids uu___ in
   fun env1 ->
     fun m ->
-      let missing = missing_definition_list env1 in
-      if Prims.uu___is_Cons missing
-      then
-        (let uu___1 =
-           let uu___2 =
-             let uu___3 =
-               let uu___4 =
-                 let uu___5 =
-                   let uu___6 =
-                     FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-                   FStar_Compiler_Util.format1
-                     "Missing definitions in module %s:" uu___6 in
-                 FStar_Errors_Msg.text uu___5 in
-               let uu___5 =
-                 FStar_Pprint.separate_map FStar_Pprint.hardline
-                   (fun l ->
-                      let uu___6 = FStar_Ident.ident_of_lid l in
-                      FStar_Class_PP.pp FStar_Ident.pretty_ident uu___6)
-                   missing in
-               FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
-                 uu___5 in
-             [uu___3] in
-           (FStar_Errors_Codes.Error_AdmitWithoutDefinition, uu___2) in
-         FStar_Errors.log_issue_doc env1.range uu___1)
-      else ();
-      (let sigs =
-         let uu___1 =
-           FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name
-             FStar_Parser_Const.prims_lid in
-         if uu___1
-         then
-           let uu___2 =
-             FStar_Compiler_List.map FStar_Pervasives_Native.snd
-               env1.gamma_sig in
-           FStar_Compiler_List.rev uu___2
-         else m.FStar_Syntax_Syntax.declarations in
-       {
-         solver = (env1.solver);
-         range = (env1.range);
-         curmodule = empty_lid;
-         gamma = [];
-         gamma_sig = [];
-         gamma_cache = (env1.gamma_cache);
-         modules = (m :: (env1.modules));
-         expected_typ = (env1.expected_typ);
-         sigtab = (env1.sigtab);
-         attrtab = (env1.attrtab);
-         instantiate_imp = (env1.instantiate_imp);
-         effects = (env1.effects);
-         generalize = (env1.generalize);
-         letrecs = (env1.letrecs);
-         top_level = (env1.top_level);
-         check_uvars = (env1.check_uvars);
-         use_eq_strict = (env1.use_eq_strict);
-         is_iface = (env1.is_iface);
-         admit = (env1.admit);
-         lax = (env1.lax);
-         lax_universes = (env1.lax_universes);
-         phase1 = (env1.phase1);
-         failhard = (env1.failhard);
-         nosynth = (env1.nosynth);
-         uvar_subtyping = (env1.uvar_subtyping);
-         intactics = (env1.intactics);
-         nocoerce = (env1.nocoerce);
-         tc_term = (env1.tc_term);
-         typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-         universe_of = (env1.universe_of);
-         typeof_well_typed_tot_or_gtot_term =
-           (env1.typeof_well_typed_tot_or_gtot_term);
-         teq_nosmt_force = (env1.teq_nosmt_force);
-         subtype_nosmt_force = (env1.subtype_nosmt_force);
-         qtbl_name_and_index = (env1.qtbl_name_and_index);
-         normalized_eff_names = (env1.normalized_eff_names);
-         fv_delta_depths = (env1.fv_delta_depths);
-         proof_ns = (env1.proof_ns);
-         synth_hook = (env1.synth_hook);
-         try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-         splice = (env1.splice);
-         mpreprocess = (env1.mpreprocess);
-         postprocess = (env1.postprocess);
-         identifier_info = (env1.identifier_info);
-         tc_hooks = (env1.tc_hooks);
-         dsenv = (env1.dsenv);
-         nbe = (env1.nbe);
-         strict_args_tab = (env1.strict_args_tab);
-         erasable_types_tab = (env1.erasable_types_tab);
-         enable_defer_to_tac = (env1.enable_defer_to_tac);
-         unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-         erase_erasable_args = (env1.erase_erasable_args);
-         core_check = (env1.core_check);
-         missing_decl = (env1.missing_decl)
-       })
+      let sigs =
+        let uu___ =
+          FStar_Ident.lid_equals m.FStar_Syntax_Syntax.name
+            FStar_Parser_Const.prims_lid in
+        if uu___
+        then
+          let uu___1 =
+            FStar_Compiler_List.map FStar_Pervasives_Native.snd
+              env1.gamma_sig in
+          FStar_Compiler_List.rev uu___1
+        else m.FStar_Syntax_Syntax.declarations in
+      {
+        solver = (env1.solver);
+        range = (env1.range);
+        curmodule = empty_lid;
+        gamma = [];
+        gamma_sig = [];
+        gamma_cache = (env1.gamma_cache);
+        modules = (m :: (env1.modules));
+        expected_typ = (env1.expected_typ);
+        sigtab = (env1.sigtab);
+        attrtab = (env1.attrtab);
+        instantiate_imp = (env1.instantiate_imp);
+        effects = (env1.effects);
+        generalize = (env1.generalize);
+        letrecs = (env1.letrecs);
+        top_level = (env1.top_level);
+        check_uvars = (env1.check_uvars);
+        use_eq_strict = (env1.use_eq_strict);
+        is_iface = (env1.is_iface);
+        admit = (env1.admit);
+        lax = (env1.lax);
+        lax_universes = (env1.lax_universes);
+        phase1 = (env1.phase1);
+        failhard = (env1.failhard);
+        nosynth = (env1.nosynth);
+        uvar_subtyping = (env1.uvar_subtyping);
+        intactics = (env1.intactics);
+        nocoerce = (env1.nocoerce);
+        tc_term = (env1.tc_term);
+        typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+        universe_of = (env1.universe_of);
+        typeof_well_typed_tot_or_gtot_term =
+          (env1.typeof_well_typed_tot_or_gtot_term);
+        teq_nosmt_force = (env1.teq_nosmt_force);
+        subtype_nosmt_force = (env1.subtype_nosmt_force);
+        qtbl_name_and_index = (env1.qtbl_name_and_index);
+        normalized_eff_names = (env1.normalized_eff_names);
+        fv_delta_depths = (env1.fv_delta_depths);
+        proof_ns = (env1.proof_ns);
+        synth_hook = (env1.synth_hook);
+        try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+        splice = (env1.splice);
+        mpreprocess = (env1.mpreprocess);
+        postprocess = (env1.postprocess);
+        identifier_info = (env1.identifier_info);
+        tc_hooks = (env1.tc_hooks);
+        dsenv = (env1.dsenv);
+        nbe = (env1.nbe);
+        strict_args_tab = (env1.strict_args_tab);
+        erasable_types_tab = (env1.erasable_types_tab);
+        enable_defer_to_tac = (env1.enable_defer_to_tac);
+        unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+        erase_erasable_args = (env1.erase_erasable_args);
+        core_check = (env1.core_check);
+        missing_decl = (env1.missing_decl)
+      }
 let (uvars_in_env : env -> FStar_Syntax_Syntax.uvars) =
   fun env1 ->
     let no_uvs =

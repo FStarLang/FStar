@@ -510,8 +510,8 @@ let (has_implementation : files_for_module_name -> module_name -> Prims.bool)
       FStar_Compiler_Option.isSome uu___
 let (cache_file_name : Prims.string -> Prims.string) =
   let checked_file_and_exists_flag fn =
-    let lax = FStar_Options.lax () in
     let cache_fn =
+      let lax = FStar_Options.lax () in
       if lax
       then Prims.strcat fn ".checked.lax"
       else Prims.strcat fn ".checked" in
