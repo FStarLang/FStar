@@ -11,7 +11,7 @@
   - NegativeTests.Bug260.bad is declared but no definition was found
   - Add an 'assume' if this is intentional
 
-* Warning 240 at NegativeTests.Bug260.fst(26,0-26,19):
+* Warning 240 at NegativeTests.Bug260.fst(36,0-36,34):
   - Missing definitions in module NegativeTests.Bug260: bad
 
 Verified module: NegativeTests.Bug260

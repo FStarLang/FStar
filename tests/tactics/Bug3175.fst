@@ -2,7 +2,7 @@ module Bug3175
 
 open FStar.Tactics.V2
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 [@@expect_failure [217]]
 let aux2 (p:Type0)
