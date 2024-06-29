@@ -1789,12 +1789,6 @@ let clear_expected_typ (env_: env): env & option (typ & bool) =
 let finish_module =
     let empty_lid = lid_of_ids [id_of_text ""] in
     fun env m ->
-      let missing = missing_definition_list env in
-      if Cons? missing then
-        log_issue_doc env.range (Errors.Error_AdmitWithoutDefinition, [
-            Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
-              (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
-          ]);
       let sigs =
         if lid_equals m.name Const.prims_lid
         then env.gamma_sig |> List.map snd |> List.rev
