@@ -48,7 +48,7 @@ let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 ////////////////////////////////////////////////////////////////////////////////
 // Something a bit more involved, but more representative of Vale's quick code
 ////////////////////////////////////////////////////////////////////////////////
-//#reset-options "--z3rlimit 10 --lax"
+//#reset-options "--z3rlimit 10 --admit_smt_queries true"
 
 #set-options "--debug NBE"
 //#set-options "--debug print_normalized_terms,NBE"
