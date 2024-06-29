@@ -56,7 +56,7 @@ module E = Crypto.AEAD.Encrypt
 
 module L = FStar.List.Tot
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 
 let mk_buf_t (len:nat) =
@@ -85,7 +85,7 @@ let mk_ivBuffer : mk_buf_t 12
   = fun () ->
     Buffer.createL [0x07uy; 0x00uy; 0x00uy; 0x00uy; 0x40uy; 0x41uy; 0x42uy; 0x43uy; 0x44uy; 0x45uy; 0x46uy; 0x47uy ]
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 let mk_expected_cipher : mk_buf_t 130
   = fun () ->
     Buffer.createL [0xd3uy; 0x1auy; 0x8duy; 0x34uy; 0x64uy; 0x8euy; 0x60uy; 0xdbuy; 0x7buy; 0x86uy; 0xafuy; 0xbcuy; 0x53uy; 0xefuy; 0x7euy; 0xc2uy;

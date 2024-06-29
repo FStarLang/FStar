@@ -23,7 +23,7 @@ open FStar.Int.Cast
 open FStar.Buffer
 open Messages2
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 
 (* Returns the length as a UInt32 *)

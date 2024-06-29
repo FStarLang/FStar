@@ -76,7 +76,7 @@ let multiply a b =
   ^^ (xtime (xtime (xtime (xtime (xtime (xtime a))))) *%^ ((b >>^ 6ul) &^ 1uy))
   ^^ (xtime (xtime (xtime (xtime (xtime (xtime (xtime a)))))) *%^ ((b >>^ 7ul) &^ 1uy)))
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 // tables for S-box and inv-S-box, derived from GF256 specification.
 
 type sbox  = lbytes 256
