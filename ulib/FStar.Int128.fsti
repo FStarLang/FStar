@@ -160,7 +160,7 @@ val to_string: t -> Tot string
 
 val of_string: string -> Tot t
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 //This private primitive is used internally by the
 //compiler to translate bounded integer constants
 //with a desugaring-time check of the size of the number,

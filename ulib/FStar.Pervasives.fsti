@@ -892,7 +892,7 @@ val dm4f_bind_range : unit
     specified multiplicity, but order does not matter. *)
 val expect_failure (errs: list int) : Tot unit
 
-(** When --lax is present, with the previous attribute since some
+(** When --admit_smt_queries true is present, with the previous attribute since some
   definitions only fail when verification is turned on. With this
   attribute, one can ensure that a definition fails while lax-checking
   too. Same semantics as above, but lax mode will be turned on for the
