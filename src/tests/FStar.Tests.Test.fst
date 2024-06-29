@@ -43,6 +43,11 @@ let main argv =
           Norm.run_all ();
           if Unif.run_all () then () else exit 1;
           Data.run_all ();
+
+          FStar.Errors.report_all () |> ignore;
+          let nerrs = FStar.Errors.get_err_count() in
+          if nerrs > 0 then
+            exit 1;
           exit 0
     with 
       | Error(err, msg, r, _ctx) when not <| O.trace_error() ->
