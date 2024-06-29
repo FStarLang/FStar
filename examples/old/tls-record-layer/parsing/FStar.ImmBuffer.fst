@@ -246,7 +246,7 @@ let cast (#t:sizeof_t) (ty:serializable t) (#t':sizeof_t) (#ty':serializable t')
 (**           Concrete parser and serializers for basetypes          **)
 (** **************************************************************** **)
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 assume val le_uint8_serializer: serializer byte
 (* let le_uint8_serializer = *)

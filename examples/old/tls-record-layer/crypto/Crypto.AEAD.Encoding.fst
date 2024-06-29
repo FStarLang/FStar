@@ -421,7 +421,7 @@ val accumulate:
 
 // 20170313 JP: this verifies on my OSX laptop but not on the CI machine. See
 // #893
-#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 2048 --lax"
+#reset-options "--initial_fuel 0 --max_fuel 0 --initial_ifuel 0 --max_ifuel 0 --z3rlimit 2048 --admit_smt_queries true"
 let accumulate #i st aadlen aad txtlen cipher  = 
   let h = ST.get() in 
   let acc = CMA.start st in
