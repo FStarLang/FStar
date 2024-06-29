@@ -288,7 +288,8 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
           FStar_TypeChecker_Env.failhard =
             (env.FStar_TypeChecker_Env.failhard);
-          FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
+          FStar_TypeChecker_Env.flychecking =
+            (env.FStar_TypeChecker_Env.flychecking);
           FStar_TypeChecker_Env.uvar_subtyping =
             (env.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =

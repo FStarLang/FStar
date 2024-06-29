@@ -138,8 +138,8 @@ let (init_once : unit -> unit) =
                (env.FStar_TypeChecker_Env.phase1);
              FStar_TypeChecker_Env.failhard =
                (env.FStar_TypeChecker_Env.failhard);
-             FStar_TypeChecker_Env.nosynth =
-               (env.FStar_TypeChecker_Env.nosynth);
+             FStar_TypeChecker_Env.flychecking =
+               (env.FStar_TypeChecker_Env.flychecking);
              FStar_TypeChecker_Env.uvar_subtyping =
                (env.FStar_TypeChecker_Env.uvar_subtyping);
              FStar_TypeChecker_Env.intactics =
@@ -248,8 +248,8 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.phase1);
                   FStar_TypeChecker_Env.failhard =
                     (env2.FStar_TypeChecker_Env.failhard);
-                  FStar_TypeChecker_Env.nosynth =
-                    (env2.FStar_TypeChecker_Env.nosynth);
+                  FStar_TypeChecker_Env.flychecking =
+                    (env2.FStar_TypeChecker_Env.flychecking);
                   FStar_TypeChecker_Env.uvar_subtyping =
                     (env2.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
@@ -406,7 +406,8 @@ let (tc' :
         FStar_TypeChecker_Env.phase1 = (tcenv.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (tcenv.FStar_TypeChecker_Env.failhard);
-        FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.flychecking =
+          (tcenv.FStar_TypeChecker_Env.flychecking);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.intactics =
@@ -509,7 +510,8 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.phase1 = (tcenv.FStar_TypeChecker_Env.phase1);
         FStar_TypeChecker_Env.failhard =
           (tcenv.FStar_TypeChecker_Env.failhard);
-        FStar_TypeChecker_Env.nosynth = (tcenv.FStar_TypeChecker_Env.nosynth);
+        FStar_TypeChecker_Env.flychecking =
+          (tcenv.FStar_TypeChecker_Env.flychecking);
         FStar_TypeChecker_Env.uvar_subtyping =
           (tcenv.FStar_TypeChecker_Env.uvar_subtyping);
         FStar_TypeChecker_Env.intactics =

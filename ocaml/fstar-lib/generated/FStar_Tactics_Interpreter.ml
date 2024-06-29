@@ -698,8 +698,8 @@ let run_unembedded_tactic_on_ps :
                          (uu___.FStar_TypeChecker_Env.phase1);
                        FStar_TypeChecker_Env.failhard =
                          (uu___.FStar_TypeChecker_Env.failhard);
-                       FStar_TypeChecker_Env.nosynth =
-                         (uu___.FStar_TypeChecker_Env.nosynth);
+                       FStar_TypeChecker_Env.flychecking =
+                         (uu___.FStar_TypeChecker_Env.flychecking);
                        FStar_TypeChecker_Env.uvar_subtyping =
                          (uu___.FStar_TypeChecker_Env.uvar_subtyping);
                        FStar_TypeChecker_Env.intactics = true;
@@ -833,8 +833,8 @@ let run_unembedded_tactic_on_ps :
                          (uu___.FStar_TypeChecker_Env.phase1);
                        FStar_TypeChecker_Env.failhard =
                          (uu___.FStar_TypeChecker_Env.failhard);
-                       FStar_TypeChecker_Env.nosynth =
-                         (uu___.FStar_TypeChecker_Env.nosynth);
+                       FStar_TypeChecker_Env.flychecking =
+                         (uu___.FStar_TypeChecker_Env.flychecking);
                        FStar_TypeChecker_Env.uvar_subtyping =
                          (uu___.FStar_TypeChecker_Env.uvar_subtyping);
                        FStar_TypeChecker_Env.intactics =

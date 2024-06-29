@@ -1610,7 +1610,7 @@ let (run_push_without_deps :
   =
   fun st ->
     fun query ->
-      let set_nosynth_flag st1 flag =
+      let set_flychecking_flag st1 flag =
         {
           FStar_Interactive_Ide_Types.repl_line =
             (st1.FStar_Interactive_Ide_Types.repl_line);
@@ -1670,7 +1670,7 @@ let (run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.phase1);
                FStar_TypeChecker_Env.failhard =
                  (uu___.FStar_TypeChecker_Env.failhard);
-               FStar_TypeChecker_Env.nosynth = flag;
+               FStar_TypeChecker_Env.flychecking = flag;
                FStar_TypeChecker_Env.uvar_subtyping =
                  (uu___.FStar_TypeChecker_Env.uvar_subtyping);
                FStar_TypeChecker_Env.intactics =
@@ -1763,7 +1763,7 @@ let (run_push_without_deps :
                     }
               | FStar_Pervasives.Inr (decl, _code) ->
                   FStar_Pervasives.Inr decl in
-            let st1 = set_nosynth_flag st peek_only in
+            let st1 = set_flychecking_flag st peek_only in
             let uu___2 =
               run_repl_transaction st1
                 (FStar_Pervasives_Native.Some push_kind) peek_only
@@ -1771,7 +1771,7 @@ let (run_push_without_deps :
                    (frag, push_kind, [])) in
             match uu___2 with
             | (success, st2) ->
-                let st3 = set_nosynth_flag st2 false in
+                let st3 = set_flychecking_flag st2 false in
                 let status =
                   if success || peek_only
                   then FStar_Interactive_Ide_Types.QueryOK
