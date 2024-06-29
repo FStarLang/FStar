@@ -391,7 +391,7 @@ and env =
   lax_universes: Prims.bool ;
   phase1: Prims.bool ;
   failhard: Prims.bool ;
-  nosynth: Prims.bool ;
+  flychecking: Prims.bool ;
   uvar_subtyping: Prims.bool ;
   intactics: Prims.bool ;
   nocoerce: Prims.bool ;
@@ -605,8 +605,9 @@ let (__proj__Mkenv__item__solver : env -> solver_t) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -620,8 +621,9 @@ let (__proj__Mkenv__item__range : env -> FStar_Compiler_Range_Type.range) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -635,8 +637,9 @@ let (__proj__Mkenv__item__curmodule : env -> FStar_Ident.lident) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -651,8 +654,9 @@ let (__proj__Mkenv__item__gamma :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -666,8 +670,9 @@ let (__proj__Mkenv__item__gamma_sig : env -> sig_binding Prims.list) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -682,8 +687,9 @@ let (__proj__Mkenv__item__gamma_cache :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -698,8 +704,9 @@ let (__proj__Mkenv__item__modules :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -716,8 +723,9 @@ let (__proj__Mkenv__item__expected_typ :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -732,8 +740,9 @@ let (__proj__Mkenv__item__sigtab :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -748,8 +757,9 @@ let (__proj__Mkenv__item__attrtab :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -763,8 +773,9 @@ let (__proj__Mkenv__item__instantiate_imp : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -778,8 +789,9 @@ let (__proj__Mkenv__item__effects : env -> effects) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -793,8 +805,9 @@ let (__proj__Mkenv__item__generalize : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -812,8 +825,9 @@ let (__proj__Mkenv__item__letrecs :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -827,8 +841,9 @@ let (__proj__Mkenv__item__top_level : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -842,8 +857,9 @@ let (__proj__Mkenv__item__check_uvars : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -857,8 +873,9 @@ let (__proj__Mkenv__item__use_eq_strict : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -872,8 +889,9 @@ let (__proj__Mkenv__item__is_iface : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -887,8 +905,9 @@ let (__proj__Mkenv__item__admit : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -902,8 +921,9 @@ let (__proj__Mkenv__item__lax : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -917,8 +937,9 @@ let (__proj__Mkenv__item__lax_universes : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -932,8 +953,9 @@ let (__proj__Mkenv__item__phase1 : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -947,8 +969,9 @@ let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -956,29 +979,31 @@ let (__proj__Mkenv__item__failhard : env -> Prims.bool) =
         dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
         unif_allow_ref_guards; erase_erasable_args; core_check;
         missing_decl;_} -> failhard
-let (__proj__Mkenv__item__nosynth : env -> Prims.bool) =
+let (__proj__Mkenv__item__flychecking : env -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
         splice; mpreprocess; postprocess; identifier_info; tc_hooks; 
         dsenv; nbe; strict_args_tab; erasable_types_tab; enable_defer_to_tac;
         unif_allow_ref_guards; erase_erasable_args; core_check;
-        missing_decl;_} -> nosynth
+        missing_decl;_} -> flychecking
 let (__proj__Mkenv__item__uvar_subtyping : env -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -992,8 +1017,9 @@ let (__proj__Mkenv__item__intactics : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1007,8 +1033,9 @@ let (__proj__Mkenv__item__nocoerce : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1028,8 +1055,9 @@ let (__proj__Mkenv__item__tc_term :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1050,8 +1078,9 @@ let (__proj__Mkenv__item__typeof_tot_or_gtot_term :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1066,8 +1095,9 @@ let (__proj__Mkenv__item__universe_of :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1087,8 +1117,9 @@ let (__proj__Mkenv__item__typeof_well_typed_tot_or_gtot_term :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1105,8 +1136,9 @@ let (__proj__Mkenv__item__teq_nosmt_force :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1123,8 +1155,9 @@ let (__proj__Mkenv__item__subtype_nosmt_force :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1142,8 +1175,9 @@ let (__proj__Mkenv__item__qtbl_name_and_index :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1158,8 +1192,9 @@ let (__proj__Mkenv__item__normalized_eff_names :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1174,8 +1209,9 @@ let (__proj__Mkenv__item__fv_delta_depths :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1189,8 +1225,9 @@ let (__proj__Mkenv__item__proof_ns : env -> proof_namespace) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1209,8 +1246,9 @@ let (__proj__Mkenv__item__synth_hook :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1228,8 +1266,9 @@ let (__proj__Mkenv__item__try_solve_implicits_hook :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1251,8 +1290,9 @@ let (__proj__Mkenv__item__splice :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1271,8 +1311,9 @@ let (__proj__Mkenv__item__mpreprocess :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1292,8 +1333,9 @@ let (__proj__Mkenv__item__postprocess :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1308,8 +1350,9 @@ let (__proj__Mkenv__item__identifier_info :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1323,8 +1366,9 @@ let (__proj__Mkenv__item__tc_hooks : env -> tcenv_hooks) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1338,8 +1382,9 @@ let (__proj__Mkenv__item__dsenv : env -> FStar_Syntax_DsEnv.env) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1357,8 +1402,9 @@ let (__proj__Mkenv__item__nbe :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1376,8 +1422,9 @@ let (__proj__Mkenv__item__strict_args_tab :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1392,8 +1439,9 @@ let (__proj__Mkenv__item__erasable_types_tab :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1407,8 +1455,9 @@ let (__proj__Mkenv__item__enable_defer_to_tac : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1422,8 +1471,9 @@ let (__proj__Mkenv__item__unif_allow_ref_guards : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1437,8 +1487,9 @@ let (__proj__Mkenv__item__erase_erasable_args : env -> Prims.bool) =
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1460,8 +1511,9 @@ let (__proj__Mkenv__item__core_check :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1476,8 +1528,9 @@ let (__proj__Mkenv__item__missing_decl :
     | { solver; range; curmodule; gamma; gamma_sig; gamma_cache; modules;
         expected_typ; sigtab; attrtab; instantiate_imp; effects = effects1;
         generalize; letrecs; top_level; check_uvars; use_eq_strict; is_iface;
-        admit; lax; lax_universes; phase1; failhard; nosynth; uvar_subtyping;
-        intactics; nocoerce; tc_term; typeof_tot_or_gtot_term; universe_of;
+        admit; lax; lax_universes; phase1; failhard; flychecking;
+        uvar_subtyping; intactics; nocoerce; tc_term;
+        typeof_tot_or_gtot_term; universe_of;
         typeof_well_typed_tot_or_gtot_term; teq_nosmt_force;
         subtype_nosmt_force; qtbl_name_and_index; normalized_eff_names;
         fv_delta_depths; proof_ns; synth_hook; try_solve_implicits_hook;
@@ -1688,7 +1741,7 @@ let (rename_env : FStar_Syntax_Syntax.subst_t -> env -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -1750,7 +1803,7 @@ let (set_tc_hooks : env -> tcenv_hooks -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -1810,7 +1863,7 @@ let (set_dep_graph : env -> FStar_Parser_Dep.deps -> env) =
         lax_universes = (e.lax_universes);
         phase1 = (e.phase1);
         failhard = (e.failhard);
-        nosynth = (e.nosynth);
+        flychecking = (e.flychecking);
         uvar_subtyping = (e.uvar_subtyping);
         intactics = (e.intactics);
         nocoerce = (e.nocoerce);
@@ -1877,7 +1930,7 @@ let (record_val_for : env -> FStar_Ident.lident -> env) =
         lax_universes = (e.lax_universes);
         phase1 = (e.phase1);
         failhard = (e.failhard);
-        nosynth = (e.nosynth);
+        flychecking = (e.flychecking);
         uvar_subtyping = (e.uvar_subtyping);
         intactics = (e.intactics);
         nocoerce = (e.nocoerce);
@@ -1942,7 +1995,7 @@ let (record_definition_for : env -> FStar_Ident.lident -> env) =
         lax_universes = (e.lax_universes);
         phase1 = (e.phase1);
         failhard = (e.failhard);
-        nosynth = (e.nosynth);
+        flychecking = (e.flychecking);
         uvar_subtyping = (e.uvar_subtyping);
         intactics = (e.intactics);
         nocoerce = (e.nocoerce);
@@ -2118,7 +2171,7 @@ let (initial_env :
                           lax_universes = false;
                           phase1 = false;
                           failhard = false;
-                          nosynth = false;
+                          flychecking = false;
                           uvar_subtyping = true;
                           intactics = false;
                           nocoerce = false;
@@ -2290,7 +2343,7 @@ let (push_stack : env -> env) =
        lax_universes = (env1.lax_universes);
        phase1 = (env1.phase1);
        failhard = (env1.failhard);
-       nosynth = (env1.nosynth);
+       flychecking = (env1.flychecking);
        uvar_subtyping = (env1.uvar_subtyping);
        intactics = (env1.intactics);
        nocoerce = (env1.nocoerce);
@@ -2375,7 +2428,7 @@ let (snapshot : env -> Prims.string -> (tcenv_depth_t * env)) =
                                   lax_universes = (env2.lax_universes);
                                   phase1 = (env2.phase1);
                                   failhard = (env2.failhard);
-                                  nosynth = (env2.nosynth);
+                                  flychecking = (env2.flychecking);
                                   uvar_subtyping = (env2.uvar_subtyping);
                                   intactics = (env2.intactics);
                                   nocoerce = (env2.nocoerce);
@@ -2503,7 +2556,7 @@ let (incr_query_index : env -> env) =
                 lax_universes = (env1.lax_universes);
                 phase1 = (env1.phase1);
                 failhard = (env1.failhard);
-                nosynth = (env1.nosynth);
+                flychecking = (env1.flychecking);
                 uvar_subtyping = (env1.uvar_subtyping);
                 intactics = (env1.intactics);
                 nocoerce = (env1.nocoerce);
@@ -2565,7 +2618,7 @@ let (incr_query_index : env -> env) =
                 lax_universes = (env1.lax_universes);
                 phase1 = (env1.phase1);
                 failhard = (env1.failhard);
-                nosynth = (env1.nosynth);
+                flychecking = (env1.flychecking);
                 uvar_subtyping = (env1.uvar_subtyping);
                 intactics = (env1.intactics);
                 nocoerce = (env1.nocoerce);
@@ -2628,7 +2681,7 @@ let (set_range : env -> FStar_Compiler_Range_Type.range -> env) =
           lax_universes = (e.lax_universes);
           phase1 = (e.phase1);
           failhard = (e.failhard);
-          nosynth = (e.nosynth);
+          flychecking = (e.flychecking);
           uvar_subtyping = (e.uvar_subtyping);
           intactics = (e.intactics);
           nocoerce = (e.nocoerce);
@@ -2728,7 +2781,7 @@ let (set_current_module : env -> FStar_Ident.lident -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -5392,7 +5445,7 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
             lax_universes = (env1.lax_universes);
             phase1 = (env1.phase1);
             failhard = (env1.failhard);
-            nosynth = (env1.nosynth);
+            flychecking = (env1.flychecking);
             uvar_subtyping = (env1.uvar_subtyping);
             intactics = (env1.intactics);
             nocoerce = (env1.nocoerce);
@@ -5474,7 +5527,7 @@ let (push_new_effect :
             lax_universes = (env1.lax_universes);
             phase1 = (env1.phase1);
             failhard = (env1.failhard);
-            nosynth = (env1.nosynth);
+            flychecking = (env1.flychecking);
             uvar_subtyping = (env1.uvar_subtyping);
             intactics = (env1.intactics);
             nocoerce = (env1.nocoerce);
@@ -5899,7 +5952,7 @@ let (update_effect_lattice :
              lax_universes = (env1.lax_universes);
              phase1 = (env1.phase1);
              failhard = (env1.failhard);
-             nosynth = (env1.nosynth);
+             flychecking = (env1.flychecking);
              uvar_subtyping = (env1.uvar_subtyping);
              intactics = (env1.intactics);
              nocoerce = (env1.nocoerce);
@@ -5974,7 +6027,7 @@ let (add_polymonadic_bind :
               lax_universes = (env1.lax_universes);
               phase1 = (env1.phase1);
               failhard = (env1.failhard);
-              nosynth = (env1.nosynth);
+              flychecking = (env1.flychecking);
               uvar_subtyping = (env1.uvar_subtyping);
               intactics = (env1.intactics);
               nocoerce = (env1.nocoerce);
@@ -6052,7 +6105,7 @@ let (add_polymonadic_subcomp :
                 lax_universes = (env1.lax_universes);
                 phase1 = (env1.phase1);
                 failhard = (env1.failhard);
-                nosynth = (env1.nosynth);
+                flychecking = (env1.flychecking);
                 uvar_subtyping = (env1.uvar_subtyping);
                 intactics = (env1.intactics);
                 nocoerce = (env1.nocoerce);
@@ -6111,7 +6164,7 @@ let (push_local_binding : env -> FStar_Syntax_Syntax.binding -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -6182,7 +6235,7 @@ let (pop_bv :
               lax_universes = (env1.lax_universes);
               phase1 = (env1.phase1);
               failhard = (env1.failhard);
-              nosynth = (env1.nosynth);
+              flychecking = (env1.flychecking);
               uvar_subtyping = (env1.uvar_subtyping);
               intactics = (env1.intactics);
               nocoerce = (env1.nocoerce);
@@ -6297,7 +6350,7 @@ let (set_expected_typ : env -> FStar_Syntax_Syntax.typ -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -6358,7 +6411,7 @@ let (set_expected_typ_maybe_eq :
           lax_universes = (env1.lax_universes);
           phase1 = (env1.phase1);
           failhard = (env1.failhard);
-          nosynth = (env1.nosynth);
+          flychecking = (env1.flychecking);
           uvar_subtyping = (env1.uvar_subtyping);
           intactics = (env1.intactics);
           nocoerce = (env1.nocoerce);
@@ -6429,7 +6482,7 @@ let (clear_expected_typ :
        lax_universes = (env_.lax_universes);
        phase1 = (env_.phase1);
        failhard = (env_.failhard);
-       nosynth = (env_.nosynth);
+       flychecking = (env_.flychecking);
        uvar_subtyping = (env_.uvar_subtyping);
        intactics = (env_.intactics);
        nocoerce = (env_.nocoerce);
@@ -6502,7 +6555,7 @@ let (finish_module : env -> FStar_Syntax_Syntax.modul -> env) =
         lax_universes = (env1.lax_universes);
         phase1 = (env1.phase1);
         failhard = (env1.failhard);
-        nosynth = (env1.nosynth);
+        flychecking = (env1.flychecking);
         uvar_subtyping = (env1.uvar_subtyping);
         intactics = (env1.intactics);
         nocoerce = (env1.nocoerce);
@@ -6715,7 +6768,7 @@ let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
           lax_universes = (e.lax_universes);
           phase1 = (e.phase1);
           failhard = (e.failhard);
-          nosynth = (e.nosynth);
+          flychecking = (e.flychecking);
           uvar_subtyping = (e.uvar_subtyping);
           intactics = (e.intactics);
           nocoerce = (e.nocoerce);
@@ -6779,7 +6832,7 @@ let (set_proof_ns : proof_namespace -> env -> env) =
         lax_universes = (e.lax_universes);
         phase1 = (e.phase1);
         failhard = (e.failhard);
-        nosynth = (e.nosynth);
+        flychecking = (e.flychecking);
         uvar_subtyping = (e.uvar_subtyping);
         intactics = (e.intactics);
         nocoerce = (e.nocoerce);

@@ -692,8 +692,8 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
 
 let run_push_without_deps st query
   : (query_status & json) & either repl_state int =
-  let set_nosynth_flag st flag =
-    { st with repl_env = { st.repl_env with nosynth = flag } } in
+  let set_flychecking_flag st flag =
+    { st with repl_env = { st.repl_env with flychecking = flag } } in
 
   let { push_code_or_decl = code_or_decl;
         push_line = line;
@@ -714,9 +714,9 @@ let run_push_without_deps st query
     | Inr (decl, _code) -> 
       Inr decl
     in
-  let st = set_nosynth_flag st peek_only in
+  let st = set_flychecking_flag st peek_only in
   let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
-  let st = set_nosynth_flag st false in
+  let st = set_flychecking_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
   let errs = collect_errors () in

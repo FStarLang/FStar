@@ -1535,8 +1535,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.phase1);
                             FStar_TypeChecker_Env.failhard =
                               (uu___6.FStar_TypeChecker_Env.failhard);
-                            FStar_TypeChecker_Env.nosynth =
-                              (uu___6.FStar_TypeChecker_Env.nosynth);
+                            FStar_TypeChecker_Env.flychecking =
+                              (uu___6.FStar_TypeChecker_Env.flychecking);
                             FStar_TypeChecker_Env.uvar_subtyping =
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
                             FStar_TypeChecker_Env.intactics =
