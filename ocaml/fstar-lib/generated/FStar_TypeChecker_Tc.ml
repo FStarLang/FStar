@@ -5109,15 +5109,45 @@ let (finish_partial_modul :
       fun en ->
         fun m ->
           let env = FStar_TypeChecker_Env.finish_module en m in
+          if Prims.op_Negation loading_from_cache
+          then
+            (let missing = FStar_TypeChecker_Env.missing_definition_list env in
+             if Prims.uu___is_Cons missing
+             then
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 =
+                           FStar_Ident.string_of_lid
+                             m.FStar_Syntax_Syntax.name in
+                         FStar_Compiler_Util.format1
+                           "Missing definitions in module %s:" uu___6 in
+                       FStar_Errors_Msg.text uu___5 in
+                     let uu___5 =
+                       FStar_Pprint.separate_map FStar_Pprint.hardline
+                         (fun l ->
+                            let uu___6 = FStar_Ident.ident_of_lid l in
+                            FStar_Class_PP.pp FStar_Ident.pretty_ident uu___6)
+                         missing in
+                     FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                       uu___4 uu___5 in
+                   [uu___3] in
+                 (FStar_Errors_Codes.Error_AdmitWithoutDefinition, uu___2) in
+               FStar_Errors.log_issue_doc env.FStar_TypeChecker_Env.range
+                 uu___1
+             else ())
+          else ();
           FStar_Compiler_Util.smap_clear
             (FStar_Pervasives_Native.snd
                env.FStar_TypeChecker_Env.qtbl_name_and_index);
-          (let uu___2 =
-             let uu___3 =
-               let uu___4 =
+          (let uu___3 =
+             let uu___4 =
+               let uu___5 =
                  FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
-               Prims.strcat "Ending modul " uu___4 in
-             pop_context env uu___3 in
+               Prims.strcat "Ending modul " uu___5 in
+             pop_context env uu___4 in
            ());
           (m, env)
 let (deep_compress_modul :
