@@ -5707,19 +5707,43 @@ let (maybe_coerce_lc :
                || (FStar_Options.lax ()))
               && (Prims.op_Negation env.FStar_TypeChecker_Env.nocoerce) in
           if Prims.op_Negation should_coerce
-          then (e, lc, FStar_TypeChecker_Env.trivial_guard)
+          then
+            ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Coercions in
+              if uu___1
+              then
+                let uu___2 =
+                  FStar_Class_Show.show
+                    FStar_Compiler_Range_Ops.showable_range
+                    e.FStar_Syntax_Syntax.pos in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    lc.FStar_TypeChecker_Common.res_typ in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    exp_t in
+                FStar_Compiler_Util.print4
+                  "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
+                  uu___2 uu___3 uu___4 uu___5
+              else ());
+             (e, lc, FStar_TypeChecker_Env.trivial_guard))
           else
             ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Coercions in
               if uu___2
               then
                 let uu___3 =
-                  FStar_Compiler_Range_Ops.string_of_range
+                  FStar_Class_Show.show
+                    FStar_Compiler_Range_Ops.showable_range
                     e.FStar_Syntax_Syntax.pos in
-                let uu___4 = FStar_Syntax_Print.term_to_string e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                 let uu___5 =
-                  FStar_Syntax_Print.term_to_string
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
                     lc.FStar_TypeChecker_Common.res_typ in
-                let uu___6 = FStar_Syntax_Print.term_to_string exp_t in
+                let uu___6 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    exp_t in
                 FStar_Compiler_Util.print4
                   "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
                   uu___3 uu___4 uu___5 uu___6
