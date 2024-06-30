@@ -2836,7 +2836,7 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
   | Some (Implicit _), _::_ -> true
   | _ -> false
 
-let maybe_instantiate (env:Env.env) e t =
+let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, Env.trivial_guard
