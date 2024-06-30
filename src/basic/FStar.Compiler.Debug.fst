@@ -64,6 +64,11 @@ let list_all_toggles () : list string =
   List.map fst !toggle_list
 
 let any () = !anyref || !_debug_all
+
+let tag (s:string) =
+  if any () then
+    BU.print_string ("DEBUG:" ^  s ^ "\n")
+
 let enable () = anyref := true
 
 let dbg_level = BU.mk_ref 0

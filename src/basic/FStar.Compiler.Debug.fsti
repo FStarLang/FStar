@@ -33,6 +33,10 @@ val enable () : unit
 (* Are we doing *any* kind of debugging? *)
 val any () : bool
 
+(* Print a quick message on stdout whenever debug is on. If the string
+is not a constant, put this under an if to thunk it. *)
+val tag (s : string) : unit
+
 (* Obtain the toggle for a given debug key *)
 val get_toggle (k : string) : ref bool
 
