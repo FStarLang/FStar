@@ -76,6 +76,14 @@ let (any : unit -> Prims.bool) =
   fun uu___ ->
     (FStar_Compiler_Effect.op_Bang anyref) ||
       (FStar_Compiler_Effect.op_Bang _debug_all)
+let (tag : Prims.string -> unit) =
+  fun s ->
+    let uu___ = any () in
+    if uu___
+    then
+      FStar_Compiler_Util.print_string
+        (Prims.strcat "DEBUG:" (Prims.strcat s "\n"))
+    else ()
 let (enable : unit -> unit) =
   fun uu___ -> FStar_Compiler_Effect.op_Colon_Equals anyref true
 let (dbg_level : Prims.int FStar_Compiler_Effect.ref) =
