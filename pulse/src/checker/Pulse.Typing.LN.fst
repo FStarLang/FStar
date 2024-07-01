@@ -605,7 +605,7 @@ let open_proof_hint_ln_inv (ht:proof_hint_type) (x:term { ln x }) (i:index)
     | WILD
     | SHOW_PROOF_STATE _ -> ()
 
-#push-options "--z3rlimit_factor 2 --fuel 2 --ifuel 2"
+#push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 2"
 let rec open_term_ln_inv_st' (t:st_term)
                              (x:term { ln x })
                              (i:index)
