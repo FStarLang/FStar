@@ -51,7 +51,7 @@ endif
 extract-ocaml: extract-extraction extract-syntax-extension extract-checker $(fstar_parser_parse)
 
 .PHONY: extract-checker
-extract-checker: build-lib-core
+extract-checker:
 	+$(MAKE) -C checker
 
 .PHONY: extract-extraction
@@ -72,7 +72,7 @@ boot:
 
 .PHONY: boot-checker
 boot-checker:
-	+$(MAKE) extract-checker
+	+$(MAKE) extract-syntax-extension extract-checker
 	+$(MAKE) build-ocaml
 
 .PHONY: clean-snapshot

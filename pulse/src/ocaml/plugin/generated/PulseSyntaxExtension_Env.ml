@@ -126,8 +126,8 @@ let (push_bv :
                 (uu___1.FStar_TypeChecker_Env.phase1);
               FStar_TypeChecker_Env.failhard =
                 (uu___1.FStar_TypeChecker_Env.failhard);
-              FStar_TypeChecker_Env.nosynth =
-                (uu___1.FStar_TypeChecker_Env.nosynth);
+              FStar_TypeChecker_Env.flychecking =
+                (uu___1.FStar_TypeChecker_Env.flychecking);
               FStar_TypeChecker_Env.uvar_subtyping =
                 (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.intactics =
@@ -181,7 +181,9 @@ let (push_bv :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (uu___1.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (uu___1.FStar_TypeChecker_Env.core_check)
+                (uu___1.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.missing_decl =
+                (uu___1.FStar_TypeChecker_Env.missing_decl)
             } in
           let env1 = { tcenv; local_refs = (env.local_refs) } in (env1, bv)
 let rec (push_bvs :
@@ -247,8 +249,8 @@ let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
           FStar_TypeChecker_Env.phase1 = (uu___.FStar_TypeChecker_Env.phase1);
           FStar_TypeChecker_Env.failhard =
             (uu___.FStar_TypeChecker_Env.failhard);
-          FStar_TypeChecker_Env.nosynth =
-            (uu___.FStar_TypeChecker_Env.nosynth);
+          FStar_TypeChecker_Env.flychecking =
+            (uu___.FStar_TypeChecker_Env.flychecking);
           FStar_TypeChecker_Env.uvar_subtyping =
             (uu___.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
@@ -301,7 +303,9 @@ let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
           FStar_TypeChecker_Env.erase_erasable_args =
             (uu___.FStar_TypeChecker_Env.erase_erasable_args);
           FStar_TypeChecker_Env.core_check =
-            (uu___.FStar_TypeChecker_Env.core_check)
+            (uu___.FStar_TypeChecker_Env.core_check);
+          FStar_TypeChecker_Env.missing_decl =
+            (uu___.FStar_TypeChecker_Env.missing_decl)
         } in
       let env1 = { tcenv; local_refs = (env.local_refs) } in env1
 let (resolve_lid :

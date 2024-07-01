@@ -40,7 +40,11 @@ let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
     match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
-let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
+  | TcArg 
+let (uu___is_Implicit : qualifier -> Prims.bool) =
+  fun projectee -> match projectee with | Implicit -> true | uu___ -> false
+let (uu___is_TcArg : qualifier -> Prims.bool) =
+  fun projectee -> match projectee with | TcArg -> true | uu___ -> false
 type fv = {
   fv_name: FStar_Reflection_Types.name ;
   fv_range: range }
@@ -506,7 +510,7 @@ let uu___is_Tm_ProofHintWithBinders uu___ =
 let uu___is_Tm_WithInv uu___ =
   match uu___ with | Tm_WithInv _ -> true | _ -> false
 type branch = (pattern * st_term)
-type decl'__FnDecl__payload =
+type fn_defn =
   {
   id: FStar_Reflection_Types.ident ;
   isrec: Prims.bool ;
@@ -514,45 +518,64 @@ type decl'__FnDecl__payload =
   comp: comp ;
   meas: term FStar_Pervasives_Native.option ;
   body7: st_term }
-and decl' =
-  | FnDecl of decl'__FnDecl__payload 
-and decl = {
-  d: decl' ;
-  range2: range }
-let (__proj__Mkdecl'__FnDecl__payload__item__id :
-  decl'__FnDecl__payload -> FStar_Reflection_Types.ident) =
+let (__proj__Mkfn_defn__item__id : fn_defn -> FStar_Reflection_Types.ident) =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> id
-let (__proj__Mkdecl'__FnDecl__payload__item__isrec :
-  decl'__FnDecl__payload -> Prims.bool) =
+let (__proj__Mkfn_defn__item__isrec : fn_defn -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> isrec
-let (__proj__Mkdecl'__FnDecl__payload__item__bs :
-  decl'__FnDecl__payload ->
+let (__proj__Mkfn_defn__item__bs :
+  fn_defn ->
     (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
   =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> bs
-let (__proj__Mkdecl'__FnDecl__payload__item__comp :
-  decl'__FnDecl__payload -> comp) =
+let (__proj__Mkfn_defn__item__comp : fn_defn -> comp) =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> comp1
-let (__proj__Mkdecl'__FnDecl__payload__item__meas :
-  decl'__FnDecl__payload -> term FStar_Pervasives_Native.option) =
+let (__proj__Mkfn_defn__item__meas :
+  fn_defn -> term FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> meas
-let (__proj__Mkdecl'__FnDecl__payload__item__body :
-  decl'__FnDecl__payload -> st_term) =
+let (__proj__Mkfn_defn__item__body : fn_defn -> st_term) =
   fun projectee ->
     match projectee with
     | { id; isrec; bs; comp = comp1; meas; body7 = body;_} -> body
-let (uu___is_FnDecl : decl' -> Prims.bool) = fun projectee -> true
-let (__proj__FnDecl__item___0 : decl' -> decl'__FnDecl__payload) =
+type fn_decl =
+  {
+  id1: FStar_Reflection_Types.ident ;
+  bs1: (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list ;
+  comp1: comp_st }
+let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Reflection_Types.ident) =
+  fun projectee ->
+    match projectee with | { id1 = id; bs1 = bs; comp1;_} -> id
+let (__proj__Mkfn_decl__item__bs :
+  fn_decl ->
+    (qualifier FStar_Pervasives_Native.option * binder * bv) Prims.list)
+  =
+  fun projectee ->
+    match projectee with | { id1 = id; bs1 = bs; comp1;_} -> bs
+let (__proj__Mkfn_decl__item__comp : fn_decl -> comp_st) =
+  fun projectee ->
+    match projectee with | { id1 = id; bs1 = bs; comp1;_} -> comp1
+type decl' =
+  | FnDefn of fn_defn 
+  | FnDecl of fn_decl 
+and decl = {
+  d: decl' ;
+  range2: range }
+let (uu___is_FnDefn : decl' -> Prims.bool) =
+  fun projectee -> match projectee with | FnDefn _0 -> true | uu___ -> false
+let (__proj__FnDefn__item___0 : decl' -> fn_defn) =
+  fun projectee -> match projectee with | FnDefn _0 -> _0
+let (uu___is_FnDecl : decl' -> Prims.bool) =
+  fun projectee -> match projectee with | FnDecl _0 -> true | uu___ -> false
+let (__proj__FnDecl__item___0 : decl' -> fn_decl) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee -> match projectee with | { d; range2 = range1;_} -> d
@@ -863,32 +886,32 @@ let (ppname_for_uvar :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (401)) (Prims.of_int (18)) (Prims.of_int (401))
+               (Prims.of_int (414)) (Prims.of_int (18)) (Prims.of_int (414))
                (Prims.of_int (48)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (401)) (Prims.of_int (4)) (Prims.of_int (401))
+               (Prims.of_int (414)) (Prims.of_int (4)) (Prims.of_int (414))
                (Prims.of_int (49)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (401)) (Prims.of_int (25))
-                     (Prims.of_int (401)) (Prims.of_int (48)))))
+                     (Prims.of_int (414)) (Prims.of_int (25))
+                     (Prims.of_int (414)) (Prims.of_int (48)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (401)) (Prims.of_int (18))
-                     (Prims.of_int (401)) (Prims.of_int (48)))))
+                     (Prims.of_int (414)) (Prims.of_int (18))
+                     (Prims.of_int (414)) (Prims.of_int (48)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                           (Prims.of_int (401)) (Prims.of_int (32))
-                           (Prims.of_int (401)) (Prims.of_int (47)))))
+                           (Prims.of_int (414)) (Prims.of_int (32))
+                           (Prims.of_int (414)) (Prims.of_int (47)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "prims.fst"

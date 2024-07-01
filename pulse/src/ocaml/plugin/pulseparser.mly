@@ -52,14 +52,14 @@ let with_computation_tag (c:PulseSyntaxExtension_Sugar.computation_type) t =
   | None -> c
   | Some t -> { c with tag = t }
 
-let mk_fn_decl q id is_rec bs body range = 
+let mk_fn_defn q id is_rec bs body range =
     match body with
     | Inl (ascription, measure, body) ->
       let ascription = with_computation_tag ascription q in 
-      PulseSyntaxExtension_Sugar.mk_fn_decl id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
+      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec (List.flatten bs) (Inl ascription) measure (Inl body) range
 
     | Inr (lambda, typ) ->
-      PulseSyntaxExtension_Sugar.mk_fn_decl id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
+      PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
 
 %}
 
@@ -84,6 +84,8 @@ maybeRec:
 peekFnId:
   | q=option(qual) FN maybeRec id=lident
       { FStar_Ident.string_of_id id }
+  | q=option(qual) VAL FN id=lident
+      { FStar_Ident.string_of_id id }
 
 qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
@@ -95,7 +97,16 @@ pulseDecl:
     FN isRec=maybeRec lid=lident bs=pulseBinderList
     body=fnBody EOF
     {
-      PulseSyntaxExtension_Sugar.FnDecl (mk_fn_decl q lid isRec bs body (rr $loc))
+      PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body (rr $loc))
+    }
+  | q=option(qual)
+    VAL FN lid=lident bs=pulseBinderList
+    ascription=pulseComputationType
+    EOF
+    {
+      let open PulseSyntaxExtension_Sugar in
+      let ascription = with_computation_tag ascription q in
+      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) (rr $loc))
     }
 
 pulseBinderList:
@@ -103,12 +114,12 @@ pulseBinderList:
   | bs=nonempty_list(multiBinder)
     {  bs }
 
-localFnDecl:
+localFnDefn:
   | q=option(qual) FN lid=lident
     bs=pulseBinderList
     body=fnBody
     {
-      lid, mk_fn_decl q lid false bs body (rr $loc)
+      lid, mk_fn_defn q lid false bs body (rr $loc)
     }
 
 fnBody:
@@ -183,10 +194,10 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
   | SHOW_PROOF_STATE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (SHOW_PROOF_STATE (rr $loc)) [] }
-  | f=localFnDecl
+  | f=localFnDefn
     {
-      let id, fndecl = f in
-      PulseSyntaxExtension_Sugar.mk_let_binding None id None (Some (Lambda_initializer fndecl))
+      let id, fndefn = f in
+      PulseSyntaxExtension_Sugar.mk_let_binding None id None (Some (Lambda_initializer fndefn))
     }
   | p=ifStmt { p }
   | p=matchStmt { p }

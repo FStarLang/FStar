@@ -13,6 +13,7 @@ let u_unknown : universe = U.u_unknown
 
 type qualifier = Pulse_Syntax_Base.qualifier
 let as_qual (imp:bool) = if imp then Some Pulse_Syntax_Base.Implicit else None
+let tc_qual = Some Pulse_Syntax_Base.TcArg
 type bv = Pulse_Syntax_Base.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
  let pp = { name; range=r} in
@@ -251,5 +252,7 @@ let subst_st_term s t = Pulse_Syntax_Naming.subst_st_term t s
 let subst_proof_hint s t = Pulse_Syntax_Naming.subst_proof_hint t s
 
 
-let fn_decl rng id isrec bs comp meas body =
-  PSB.mk_decl (PSB.mk_fn_decl id isrec bs comp meas body) rng
+let fn_defn rng id isrec bs comp meas body =
+  PSB.mk_decl (PSB.mk_fn_defn id isrec bs comp meas body) rng
+let fn_decl rng id bs comp =
+  PSB.mk_decl (PSB.mk_fn_decl id bs comp) rng

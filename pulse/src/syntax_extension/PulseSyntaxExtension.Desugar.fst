@@ -328,8 +328,8 @@ let qual = option SW.qualifier
 let as_qual (q:A.aqual) : qual =
   match q with
   | Some A.Implicit -> SW.as_qual true
+  | Some A.TypeClassArg -> SW.tc_qual
   | _ -> SW.as_qual false
-
 
 (* We open FStar.Tactics.V2 in the scope of every `by` as a convenience. *)
 let desugar_tac_opt (env:env_t) (topt : option A.term) : err (option SW.term) =
@@ -749,7 +749,7 @@ and desugar_decl (env:env_t)
     return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
   in
   match d with
-  | Sugar.FnDecl { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
+  | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let fvs = free_vars_comp env ascription in
     let! env, bs', bvs' = idents_as_binders env fvs in
@@ -776,9 +776,9 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
-    return (SW.fn_decl range id is_rec qbs comp meas body)
+    return (SW.fn_defn range id is_rec qbs comp meas body)
 
-  | Sugar.FnDecl { id; is_rec=false; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
+  | Sugar.FnDefn { id; is_rec=false; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! comp = 
       match ascription with
@@ -787,8 +787,13 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_lambda env body in
     let! qbs = map2 faux bs bvs in
-    return (SW.fn_decl range id false qbs comp None body)
+    return (SW.fn_defn range id false qbs comp None body)
 
+  | Sugar.FnDecl { id; binders; ascription=Inl ascription; range } ->
+    let! env, bs, bvs = desugar_binders env binders in
+    let! comp = desugar_computation_type env ascription in
+    let! qbs = map2 faux bs bvs in
+    return (SW.fn_decl range id qbs comp)
 
 let initialize_env (env:TcEnv.env)
                    (open_namespaces: list name)
