@@ -13,6 +13,7 @@ let u_unknown : universe = U.u_unknown
 
 type qualifier = Pulse_Syntax_Base.qualifier
 let as_qual (imp:bool) = if imp then Some Pulse_Syntax_Base.Implicit else None
+let tc_qual = Some Pulse_Syntax_Base.TcArg
 type bv = Pulse_Syntax_Base.bv
 let mk_bv (i:index) (name:string) (r:range) : bv =
  let pp = { name; range=r} in

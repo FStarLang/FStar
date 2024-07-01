@@ -328,8 +328,8 @@ let qual = option SW.qualifier
 let as_qual (q:A.aqual) : qual =
   match q with
   | Some A.Implicit -> SW.as_qual true
+  | Some A.TypeClassArg -> SW.tc_qual
   | _ -> SW.as_qual false
-
 
 (* We open FStar.Tactics.V2 in the scope of every `by` as a convenience. *)
 let desugar_tac_opt (env:env_t) (topt : option A.term) : err (option SW.term) =

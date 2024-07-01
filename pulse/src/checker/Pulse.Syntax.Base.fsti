@@ -73,6 +73,7 @@ type nm = {
 
 type qualifier =
   | Implicit
+  | TcArg
 
 
 noeq

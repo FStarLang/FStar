@@ -37,7 +37,8 @@ new val fv : Type0
 val mk_fv (nm:lident) (r:range) : fv
 
 new val qualifier : Type0
-val as_qual (imp:bool) : option qualifier
+val as_qual (imp:bool)  : option qualifier
+val tc_qual : option qualifier
 new val term : Type0
 new val binder : Type0
 new val comp : Type0
