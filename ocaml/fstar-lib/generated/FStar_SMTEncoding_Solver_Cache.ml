@@ -324,11 +324,8 @@ let (hashable_env : FStar_TypeChecker_Env.env FStar_Class_Hashable.hashable)
                e.FStar_TypeChecker_Env.proof_ns in
            FStar_Hash.mix uu___1 uu___2 in
          let uu___1 =
-           FStar_Class_Hashable.hash
-             (FStar_Class_Hashable.hashable_tuple2
-                FStar_Class_Hashable.hashable_bool
-                FStar_Class_Hashable.hashable_bool)
-             ((e.FStar_TypeChecker_Env.admit), (e.FStar_TypeChecker_Env.lax)) in
+           FStar_Class_Hashable.hash FStar_Class_Hashable.hashable_bool
+             e.FStar_TypeChecker_Env.admit in
          FStar_Hash.mix uu___ uu___1)
   }
 let (query_cache_ref :

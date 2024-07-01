@@ -302,8 +302,6 @@ let solve_goals_with_tac :
                      (env.FStar_TypeChecker_Env.is_iface);
                    FStar_TypeChecker_Env.admit =
                      (env.FStar_TypeChecker_Env.admit);
-                   FStar_TypeChecker_Env.lax =
-                     (env.FStar_TypeChecker_Env.lax);
                    FStar_TypeChecker_Env.lax_universes =
                      (env.FStar_TypeChecker_Env.lax_universes);
                    FStar_TypeChecker_Env.phase1 =
@@ -434,8 +432,6 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStar_TypeChecker_Env.is_iface);
                              FStar_TypeChecker_Env.admit =
                                (env1.FStar_TypeChecker_Env.admit);
-                             FStar_TypeChecker_Env.lax =
-                               (env1.FStar_TypeChecker_Env.lax);
                              FStar_TypeChecker_Env.lax_universes =
                                (env1.FStar_TypeChecker_Env.lax_universes);
                              FStar_TypeChecker_Env.phase1 =
@@ -542,9 +538,7 @@ let (solve_deferred_to_tactic_goals :
                                (env2.FStar_TypeChecker_Env.use_eq_strict);
                              FStar_TypeChecker_Env.is_iface =
                                (env2.FStar_TypeChecker_Env.is_iface);
-                             FStar_TypeChecker_Env.admit =
-                               (env2.FStar_TypeChecker_Env.admit);
-                             FStar_TypeChecker_Env.lax = true;
+                             FStar_TypeChecker_Env.admit = true;
                              FStar_TypeChecker_Env.lax_universes =
                                (env2.FStar_TypeChecker_Env.lax_universes);
                              FStar_TypeChecker_Env.phase1 =

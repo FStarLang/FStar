@@ -888,8 +888,6 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.is_iface =
                                (env2.FStar_TypeChecker_Env.is_iface);
                              FStar_TypeChecker_Env.admit = true;
-                             FStar_TypeChecker_Env.lax =
-                               (env2.FStar_TypeChecker_Env.lax);
                              FStar_TypeChecker_Env.lax_universes =
                                (env2.FStar_TypeChecker_Env.lax_universes);
                              FStar_TypeChecker_Env.phase1 =
@@ -1624,13 +1622,11 @@ let (solve_implicits :
                                    FStar_Compiler_Util.print1
                                      "Synthesis left a goal: %s\n" uu___9
                                  else ());
-                                (let uu___8 =
-                                   let uu___9 =
-                                     FStar_Options.admit_smt_queries () in
-                                   Prims.op_Negation uu___9 in
-                                 if uu___8
-                                 then
-                                   let guard =
+                                if
+                                  Prims.op_Negation
+                                    env.FStar_TypeChecker_Env.admit
+                                then
+                                  (let guard =
                                      {
                                        FStar_TypeChecker_Common.guard_f =
                                          (FStar_TypeChecker_Common.NonTrivial
@@ -1644,14 +1640,14 @@ let (solve_implicits :
                                          []
                                      } in
                                    FStar_Profiling.profile
-                                     (fun uu___9 ->
-                                        let uu___10 =
+                                     (fun uu___8 ->
+                                        let uu___9 =
                                           FStar_Tactics_Types.goal_env g in
                                         FStar_TypeChecker_Rel.force_trivial_guard
-                                          uu___10 guard)
+                                          uu___9 guard)
                                      FStar_Pervasives_Native.None
-                                     "FStar.TypeChecker.Hooks.force_trivial_guard"
-                                 else ()))
+                                     "FStar.TypeChecker.Hooks.force_trivial_guard")
+                                else ())
                            | FStar_Pervasives_Native.None ->
                                let uu___7 =
                                  FStar_TypeChecker_Env.get_range env in
@@ -1894,7 +1890,6 @@ let (splice :
                                          FStar_TypeChecker_Env.is_iface =
                                            (env.FStar_TypeChecker_Env.is_iface);
                                          FStar_TypeChecker_Env.admit = false;
-                                         FStar_TypeChecker_Env.lax = false;
                                          FStar_TypeChecker_Env.lax_universes
                                            =
                                            (env.FStar_TypeChecker_Env.lax_universes);

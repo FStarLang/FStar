@@ -1,6 +1,6 @@
 module Bug3286a
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 class machin (a:eqtype) = {
   chose: unit;

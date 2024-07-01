@@ -151,7 +151,7 @@ let rec bytes_of_uint32s output m len =
       bytes_of_uint32s output m l
     end
 
-#set-options "--lax" // TODO
+#set-options "--admit_smt_queries true" // TODO
 
 val xor_bytes: output:bytes -> in1:bytes -> in2:bytes{disjoint in1 in2 /\ disjoint in1 output /\ disjoint in2 output} -> len:u32{v len <= length output /\ v len <= length in1 /\ v len <= length in2} -> STL unit
   (requires (fun h -> live h output /\ live h in1 /\ live h in2))

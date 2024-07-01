@@ -2604,8 +2604,6 @@ and (extract_sig_let :
                        (env.FStar_TypeChecker_Env.is_iface);
                      FStar_TypeChecker_Env.admit =
                        (env.FStar_TypeChecker_Env.admit);
-                     FStar_TypeChecker_Env.lax =
-                       (env.FStar_TypeChecker_Env.lax);
                      FStar_TypeChecker_Env.lax_universes =
                        (env.FStar_TypeChecker_Env.lax_universes);
                      FStar_TypeChecker_Env.phase1 =

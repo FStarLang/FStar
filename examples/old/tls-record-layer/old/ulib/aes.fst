@@ -22,7 +22,7 @@ open SInt
 open SInt.UInt8
 open FStar.Buffer
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 (* JK: bug, it is necessary to add this type abbreviation to make things typecheck *)
 type suint8 = uint8   // 

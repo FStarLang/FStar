@@ -139,7 +139,9 @@ let pars s =
 let tc' s =
     let tm = pars s in
     let tcenv = init() in
-    let tcenv = {tcenv with top_level=false} in
+    (* We set phase1=true to allow the typechecker to insert
+    coercions. *)
+    let tcenv = {tcenv with phase1=true; top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
     let tm = FStar.Syntax.Compress.deep_compress false false tm in

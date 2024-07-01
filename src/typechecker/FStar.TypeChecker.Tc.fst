@@ -273,7 +273,7 @@ let store_sigopts (se:sigelt) : sigelt =
 let tc_decls_knot : ref (option (Env.env -> list sigelt -> list sigelt & Env.env)) =
   BU.mk_ref None
 
-let do_two_phases env : bool = Env.should_verify env
+let do_two_phases env : bool = not (Options.lax ())
 let run_phase1 (f:unit -> 'a) =
   FStar.TypeChecker.Core.clear_memo_table();
   let r = f () in
@@ -430,7 +430,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         in
         let e =
           Profiling.profile (fun () ->
-              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; lax = true }) e in
+              let (e, _, _) = tc_maybe_toplevel_term ({ env' with phase1 = true; admit = true }) e in
               e)
               (Some (Ident.string_of_lid (Env.current_module env)))
               "FStar.TypeChecker.Tc.tc_sig_let-tc-phase1"
@@ -571,14 +571,14 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     failwith "Impossible bare data-constructor"
 
   (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
-  | Sig_fail {fail_in_lax=false} when not (Env.should_verify env) || Options.admit_smt_queries () ->
+  | Sig_fail {fail_in_lax=false} when env.admit ->
     if Debug.any () then
       BU.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
         (Print.sigelt_to_string_short se);
     [], [], env
 
   | Sig_fail {errs=expected_errors; fail_in_lax=lax; ses} ->
-    let env' = if lax then { env with lax = true } else env in
+    let env' = if lax then { env with admit = true } else env in
     let env' = Env.push env' "expect_failure" in
     (* We need to call push since tc_decls will encode the sigelts that
      * succeed to SMT, which may be relevant in checking the ones that
@@ -633,7 +633,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
         //we generate extra sigelts even in the first phase and then throw them away
         //would be nice to not generate them at all
         let ses =
-          tc_inductive ({ env with phase1 = true; lax = true }) ses se.sigquals se.sigattrs lids
+          tc_inductive ({ env with phase1 = true; admit = true }) ses se.sigquals se.sigattrs lids
           |> fst
           |> N.elim_uvars env
           |> U.ses_of_sigbundle in
@@ -675,7 +675,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
       let ne =
         if do_two_phases env then run_phase1 (fun _ ->
           let ne =
-            TcEff.tc_eff_decl ({ env with phase1 = true; lax = true }) ne se.sigquals se.sigattrs
+            TcEff.tc_eff_decl ({ env with phase1 = true; admit = true }) ne se.sigquals se.sigattrs
             |> (fun ne -> { se with sigel = Sig_new_effect ne })
             |> N.elim_uvars env |> U.eff_decl_of_new_effect in
           if Debug.medium () || !dbg_TwoPhases
@@ -696,7 +696,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let lid, uvs, tps, c =
       if do_two_phases env
       then run_phase1 (fun _ ->
-        TcEff.tc_effect_abbrev ({ env with phase1 = true; lax = true }) (lid, uvs, tps, c) r
+        TcEff.tc_effect_abbrev ({ env with phase1 = true; admit = true }) (lid, uvs, tps, c) r
         |> (fun (lid, uvs, tps, c) -> { se with sigel = Sig_effect_abbrev {lid;
                                                                            us=uvs;
                                                                            bs=tps;
@@ -733,7 +733,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let env = Env.set_range env r in
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
-        let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
+        let uvs, t = tc_declare_typ ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
         if Debug.medium () || !dbg_TwoPhases then BU.print2 "Val declaration after phase 1: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
       else uvs, t
@@ -751,7 +751,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
-        let uvs, t = tc_assume ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in
+        let uvs, t = tc_assume ({ env with phase1 = true; admit = true }) (uvs, t) se.sigrng in
         if Debug.medium () || !dbg_TwoPhases then BU.print2 "Assume after phase 1: %s and uvs: %s\n" (show t) (show uvs);
         uvs, t)
       else uvs, t
@@ -812,7 +812,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
-          TcEff.tc_polymonadic_bind ({ env with phase1 = true; lax = true }) m n p t
+          TcEff.tc_polymonadic_bind ({ env with phase1 = true; admit = true }) m n p t
           |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_bind {m_lid=m;
                                                                         n_lid=n;
                                                                         p_lid=p;
@@ -847,7 +847,7 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     let t =
       if do_two_phases env then run_phase1 (fun _ ->
         let t, ty =
-          TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; lax = true }) m n t
+          TcEff.tc_polymonadic_subcomp ({ env with phase1 = true; admit = true }) m n t
           |> (fun (t, ty, _) -> { se with sigel = Sig_polymonadic_subcomp {m_lid=m;
                                                                            n_lid=n;
                                                                            tm=t;
@@ -880,19 +880,24 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
  * the list of typechecked sig_elts, and a list of new sig_elts elaborated
  * during typechecking but not yet typechecked *)
 let tc_decl env se: list sigelt & list sigelt & Env.env =
+  let env0 = env in
   let env = set_hint_correlator env se in
+  let env =
+    (* This is the SINGLE point where we read admit_smt_queries
+    and pass it through into the .admit field. *)
+    if Options.admit_smt_queries ()
+    then { env with admit = true }
+    else env
+  in
   if Debug.any () then
     BU.print1 "Processing %s\n" (Print.sigelt_to_string_short se);
   if Debug.low () then
-    BU.print1 ">>>>>>>>>>>>>>tc_decl %s\n" (show se);
+    BU.print2 ">>>>>>>>>>>>>>tc_decl admit=%s %s\n" (show env.admit) (show se);
   let result =
     if se.sigmeta.sigmeta_already_checked then
       [se], [], env
     else if se.sigmeta.sigmeta_admit then (
-      let old = Options.admit_smt_queries () in
-      Options.set_admit_smt_queries true;
-      let result = tc_decl' env se in
-      Options.set_admit_smt_queries old;
+      let result = tc_decl' { env with admit = true } se in
       result
     ) else
       tc_decl' env se
@@ -901,6 +906,11 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
     (* Do the post-tc attribute/qualifier check. *)
     let (ses, _, _) = result in
     List.iter (Quals.check_sigelt_quals_post env) ses
+  in
+  (* Restore admit *)
+  let result =
+    let ses, ses_e, env = result in
+    ses, ses_e, { env with admit = env0.admit }
   in
   result
 
@@ -1203,14 +1213,16 @@ let load_partial_checked_module (en:env) (m:modul) : env =
   let m = deep_compress_modul m in
   load_checked_module_sigelts en m
 
-let check_module env m b =
+let check_module env0 m b =
   if Debug.any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
   if Options.dump_module (string_of_lid m.name)
   then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
 
-  let env = {env with lax=not (Options.should_verify (string_of_lid m.name))} in
+  let env = {env0 with admit = not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
+  (* restore admit *)
+  let env = { env with admit = env0.admit } in
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module (string_of_lid m.name)

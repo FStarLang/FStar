@@ -88,7 +88,7 @@ let mk_ivBuffer : mk_buf_t 12
       0x07uy; 0x00uy; 0x00uy; 0x00uy; 0x40uy; 0x41uy; 0x42uy; 0x43uy; 
       0x44uy; 0x45uy; 0x46uy; 0x47uy ]
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 let mk_expected_cipher : mk_buf_t 130
   = fun () -> 
     createL 130 [

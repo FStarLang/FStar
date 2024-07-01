@@ -28,8 +28,8 @@ let ist_wp   (state:Type) (a:Type) = ist_post state a -> Tot (ist_pre state)
 
 (* A WP-style preorder-indexed state monad. *)
 
-new_effect  ISTATE (state:Type0) (rel:relation state{preorder rel}) = STATE_h state //typechecks with --lax flag on
-//new_effect  ISTATE (state:Type) (rel:relation state{preorder rel}) = STATE_h state //does not typecheck with --lax flag on
+new_effect  ISTATE (state:Type0) (rel:relation state{preorder rel}) = STATE_h state //typechecks with --admit_smt_queries true flag on
+//new_effect  ISTATE (state:Type) (rel:relation state{preorder rel}) = STATE_h state //does not typecheck with --admit_smt_queries true flag on
 
 
 (* Currently not possible, but at this point one would like to show that 
