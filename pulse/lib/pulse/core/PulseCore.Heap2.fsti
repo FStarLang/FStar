@@ -788,6 +788,7 @@ val lift_erased
 
 [@@erasable]
 val core_ghost_ref : Type0
+val core_ghost_ref_eq (x y:core_ghost_ref) : GTot (b:bool{b <==> (x==y)})
 let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghost_ref
 val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat

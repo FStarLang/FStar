@@ -61,6 +61,7 @@ val sel_empty (i:nat)
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
 
+val core_ref_eq (x y:core_ref) : GTot (b:bool { b <==> (x==y) })
 (** We index a [core_ref] by the type of its heap contents
     and a [pcm] governing it, for ease of type inference *)
 let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref

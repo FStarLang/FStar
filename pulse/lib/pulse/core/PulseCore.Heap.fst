@@ -80,7 +80,7 @@ let disjoint_addr (m0 m1:heap u#h) (a:addr)
 type core_ref : Type u#0 =
   | Null
   | Addr of addr
-
+let core_ref_eq x y = x=y
 let core_ref_null = Null
 
 let core_ref_is_null (r:core_ref) = Null? r
