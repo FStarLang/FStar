@@ -19,6 +19,12 @@ let (elab_qual :
     | FStar_Pervasives_Native.None -> FStar_Reflection_V2_Data.Q_Explicit
     | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.Implicit) ->
         FStar_Reflection_V2_Data.Q_Implicit
+    | FStar_Pervasives_Native.Some (Pulse_Syntax_Base.TcArg) ->
+        FStar_Reflection_V2_Data.Q_Meta
+          (FStar_Reflection_V2_Builtins.pack_ln
+             (FStar_Reflection_V2_Data.Tv_FVar
+                (FStar_Reflection_V2_Builtins.pack_fv
+                   ["FStar"; "Tactics"; "Typeclasses"; "tcresolve"])))
 let (elab_observability :
   Pulse_Syntax_Base.observability -> FStar_Reflection_Types.term) =
   fun uu___ ->

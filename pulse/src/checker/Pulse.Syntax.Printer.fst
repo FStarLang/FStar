@@ -57,6 +57,7 @@ let univ_to_string u = sprintf "u#%s" (universe_to_string 0 u)
 let qual_to_string = function
   | None -> ""
   | Some Implicit -> "#"
+  | Some TcArg -> "#[tcresolve]"
 
 let indent (level:string) = level ^ "\t"
 

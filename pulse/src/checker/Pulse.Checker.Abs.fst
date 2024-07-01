@@ -118,6 +118,7 @@ let qualifier_compat g r (q:option qualifier) (q':T.aqualv) : T.Tac unit =
   | None, T.Q_Explicit -> ()
   | Some Implicit, T.Q_Implicit 
   | Some Implicit, T.Q_Meta _ -> ()
+  | Some TcArg, T.Q_Meta _ -> ()
   | _ -> Env.fail g (Some r) "Unexpected binder qualifier"
 
 let rec rebuild_abs (g:env) (t:st_term) (annot:T.term)

@@ -32,6 +32,7 @@ let (let!) (f:option 'a) (g: 'a -> option 'b) : option 'b =
 let elab_qual = function
   | None -> R.Q_Explicit
   | Some Implicit -> R.Q_Implicit
+  | Some TcArg -> R.Q_Meta (`FStar.Tactics.Typeclasses.tcresolve)
 
 let elab_observability =
   let open R in
