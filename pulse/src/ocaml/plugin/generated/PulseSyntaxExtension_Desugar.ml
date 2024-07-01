@@ -776,6 +776,8 @@ let (as_qual : FStar_Parser_AST.aqual -> qual) =
     match q with
     | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
         PulseSyntaxExtension_SyntaxWrapper.as_qual true
+    | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg) ->
+        PulseSyntaxExtension_SyntaxWrapper.tc_qual
     | uu___ -> PulseSyntaxExtension_SyntaxWrapper.as_qual false
 let (desugar_tac_opt :
   PulseSyntaxExtension_Env.env_t ->

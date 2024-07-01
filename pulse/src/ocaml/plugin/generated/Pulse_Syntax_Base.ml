@@ -40,7 +40,11 @@ let (__proj__Mknm__item__nm_ppname : nm -> ppname) =
     match projectee with | { nm_index; nm_ppname;_} -> nm_ppname
 type qualifier =
   | Implicit 
-let (uu___is_Implicit : qualifier -> Prims.bool) = fun projectee -> true
+  | TcArg 
+let (uu___is_Implicit : qualifier -> Prims.bool) =
+  fun projectee -> match projectee with | Implicit -> true | uu___ -> false
+let (uu___is_TcArg : qualifier -> Prims.bool) =
+  fun projectee -> match projectee with | TcArg -> true | uu___ -> false
 type fv = {
   fv_name: FStar_Reflection_Types.name ;
   fv_range: range }
@@ -882,32 +886,32 @@ let (ppname_for_uvar :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (413)) (Prims.of_int (18)) (Prims.of_int (413))
+               (Prims.of_int (414)) (Prims.of_int (18)) (Prims.of_int (414))
                (Prims.of_int (48)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-               (Prims.of_int (413)) (Prims.of_int (4)) (Prims.of_int (413))
+               (Prims.of_int (414)) (Prims.of_int (4)) (Prims.of_int (414))
                (Prims.of_int (49)))))
       (Obj.magic
          (FStar_Tactics_Effect.tac_bind
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (413)) (Prims.of_int (25))
-                     (Prims.of_int (413)) (Prims.of_int (48)))))
+                     (Prims.of_int (414)) (Prims.of_int (25))
+                     (Prims.of_int (414)) (Prims.of_int (48)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                     (Prims.of_int (413)) (Prims.of_int (18))
-                     (Prims.of_int (413)) (Prims.of_int (48)))))
+                     (Prims.of_int (414)) (Prims.of_int (18))
+                     (Prims.of_int (414)) (Prims.of_int (48)))))
             (Obj.magic
                (FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "Pulse.Syntax.Base.fsti"
-                           (Prims.of_int (413)) (Prims.of_int (32))
-                           (Prims.of_int (413)) (Prims.of_int (47)))))
+                           (Prims.of_int (414)) (Prims.of_int (32))
+                           (Prims.of_int (414)) (Prims.of_int (47)))))
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "prims.fst"
