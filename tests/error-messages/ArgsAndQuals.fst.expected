@@ -7,5 +7,8 @@
   - ArgsAndQuals.test1 is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at ArgsAndQuals.fst(25,0-25,29):
+  - Missing definitions in module ArgsAndQuals: test1
+
 Verified module: ArgsAndQuals
 All verification conditions discharged successfully

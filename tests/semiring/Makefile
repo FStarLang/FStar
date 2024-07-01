@@ -19,11 +19,13 @@ all: CanonCommSemiring.interpreted CanonCommSemiring.native
 	$(OCAMLOPT) -shared -package fstar.lib -o $@ $*.ml
 
 # REMARK: --load will compile $*.ml if $*.cmxs does not exist, but we compile it before
-%.native: %.cmxs
+%.native: %.cmxs %.fst %.Test.fst
 	$(FSTAR) --load $* $*.Test.fst
+	@touch $@
 
-%.interpreted: %.fst.checked
+%.interpreted: %.fst.checked %.Test.fst
 	$(FSTAR) $*.Test.fst
+	@touch $@
 
 clean:
 	rm -f *.checked *.ml *.o *.cm[ix] *.cmxs *~

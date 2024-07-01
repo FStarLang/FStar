@@ -103,8 +103,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                    (env.FStar_TypeChecker_Env.phase1);
                  FStar_TypeChecker_Env.failhard =
                    (env.FStar_TypeChecker_Env.failhard);
-                 FStar_TypeChecker_Env.nosynth =
-                   (env.FStar_TypeChecker_Env.nosynth);
+                 FStar_TypeChecker_Env.flychecking =
+                   (env.FStar_TypeChecker_Env.flychecking);
                  FStar_TypeChecker_Env.uvar_subtyping =
                    (env.FStar_TypeChecker_Env.uvar_subtyping);
                  FStar_TypeChecker_Env.intactics =
@@ -159,7 +159,9 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.erase_erasable_args =
                    (env.FStar_TypeChecker_Env.erase_erasable_args);
                  FStar_TypeChecker_Env.core_check =
-                   (env.FStar_TypeChecker_Env.core_check)
+                   (env.FStar_TypeChecker_Env.core_check);
+                 FStar_TypeChecker_Env.missing_decl =
+                   (env.FStar_TypeChecker_Env.missing_decl)
                } in
              (let uu___6 = FStar_Compiler_Effect.op_Bang dbg_CoreEq in
               if uu___6

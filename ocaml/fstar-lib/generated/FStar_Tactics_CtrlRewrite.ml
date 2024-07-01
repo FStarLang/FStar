@@ -104,8 +104,9 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.phase1);
                                             FStar_TypeChecker_Env.failhard =
                                               (env.FStar_TypeChecker_Env.failhard);
-                                            FStar_TypeChecker_Env.nosynth =
-                                              (env.FStar_TypeChecker_Env.nosynth);
+                                            FStar_TypeChecker_Env.flychecking
+                                              =
+                                              (env.FStar_TypeChecker_Env.flychecking);
                                             FStar_TypeChecker_Env.uvar_subtyping
                                               =
                                               (env.FStar_TypeChecker_Env.uvar_subtyping);
@@ -181,7 +182,10 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.erase_erasable_args);
                                             FStar_TypeChecker_Env.core_check
                                               =
-                                              (env.FStar_TypeChecker_Env.core_check)
+                                              (env.FStar_TypeChecker_Env.core_check);
+                                            FStar_TypeChecker_Env.missing_decl
+                                              =
+                                              (env.FStar_TypeChecker_Env.missing_decl)
                                           } tm in
                                       FStar_Pervasives_Native.Some uu___3))
                             ()

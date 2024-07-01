@@ -701,8 +701,8 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
 
 let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
   Errors.with_ctx "While synthesizing term with a tactic" (fun () ->
-    // Don't run the tactic (and end with a magic) when nosynth is set, cf. issue #73 in fstar-mode.el
-    if env.nosynth
+    // Don't run the tactic (and end with a magic) when flychecking is set, cf. issue #73 in fstar-mode.el
+    if env.flychecking
     then mk_Tm_app (TcUtil.fvar_env env PC.magic_lid) [S.as_arg U.exp_unit] typ.pos
     else begin
 
@@ -731,7 +731,7 @@ let synthesize (env:Env.env) (typ:typ) (tau:term) : term =
 
 let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
   Errors.with_ctx "While solving implicits with a tactic" (fun () ->
-    if env.nosynth then () else
+    if env.flychecking then () else
     begin
 
     let gs = run_tactic_on_all_implicits tau.pos (Env.get_range env) tau env imps in
@@ -837,7 +837,7 @@ let splice
   (rng:Range.range) : list sigelt =
   
   Errors.with_ctx "While running splice with a tactic" (fun () ->
-    if env.nosynth then [] else begin
+    if env.flychecking then [] else begin
 
     let tau, _, g =
       if is_typed
@@ -891,7 +891,7 @@ let splice
             : list goal & dsl_tac_result_t =
             run_tactic_on_ps tau.pos tau.pos false
               FStar.Tactics.Typeclasses.solve
-              ({env with gamma=[]}, val_t)
+              ({env with lax=false; admit=false; gamma=[]}, val_t)
               FStar.Tactics.Typeclasses.solve
               tau
               tactic_already_typed
@@ -952,9 +952,9 @@ let splice
     let lids' = List.collect U.lids_of_sigelt sigelts in
     List.iter (fun lid ->
       match List.tryFind (Ident.lid_equals lid) lids' with
-      (* If env.nosynth is on, nothing will be generated, so don't raise an error
+      (* If env.flychecking is on, nothing will be generated, so don't raise an error
        * so flycheck does spuriously not mark the line red *)
-      | None when not env.nosynth ->
+      | None when not env.flychecking ->
         Err.raise_error
           (Errors.Fatal_SplicedUndef,
            BU.format2 "Splice declared the name %s but it was not defined.\nThose defined were: %s"
@@ -997,7 +997,7 @@ let splice
 
 let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
   Errors.with_ctx "While preprocessing a definition with a tactic" (fun () ->
-    if env.nosynth then tm else begin
+    if env.flychecking then tm else begin
     let ps = FStar.Tactics.V2.Basic.proofstate_of_goals tm.pos env [] [] in
     let tactic_already_typed = false in
     let gs, tm = run_tactic_on_ps tau.pos tm.pos false RE.e_term tm RE.e_term tau tactic_already_typed ps in
@@ -1007,7 +1007,7 @@ let mpreprocess (env:Env.env) (tau:term) (tm:term) : term =
 
 let postprocess (env:Env.env) (tau:term) (typ:term) (tm:term) : term =
   Errors.with_ctx "While postprocessing a definition with a tactic" (fun () ->
-    if env.nosynth then tm else begin
+    if env.flychecking then tm else begin
     //we know that tm:typ
     //and we have a goal that u == tm
     //so if we solve that equality, we don't need to retype the solution of `u : typ`

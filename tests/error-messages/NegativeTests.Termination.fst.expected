@@ -120,5 +120,18 @@
   - NegativeTests.Termination.xxx is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.Termination.fst(93,0-96,26):
+  - Missing definitions in module NegativeTests.Termination:
+      ackermann_bad
+      bug15
+      length_bad
+      minus
+      plus
+      plus'
+      repeat_diverge
+      strangeZeroBad
+      t1
+      xxx
+
 Verified module: NegativeTests.Termination
 All verification conditions discharged successfully

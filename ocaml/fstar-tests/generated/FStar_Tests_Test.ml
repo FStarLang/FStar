@@ -27,7 +27,12 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                           then ()
                           else FStar_Compiler_Effect.exit Prims.int_one);
                          FStar_Tests_Data.run_all ();
-                         FStar_Compiler_Effect.exit Prims.int_zero)
+                         (let uu___10 = FStar_Errors.report_all () in ());
+                         (let nerrs = FStar_Errors.get_err_count () in
+                          if nerrs > Prims.int_zero
+                          then FStar_Compiler_Effect.exit Prims.int_one
+                          else ();
+                          FStar_Compiler_Effect.exit Prims.int_zero))
                     | FStar_Getopt.Success ->
                         (FStar_Main.setup_hooks ();
                          (let uu___5 = FStar_Tests_Pars.init () in ());
@@ -38,7 +43,12 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                           then ()
                           else FStar_Compiler_Effect.exit Prims.int_one);
                          FStar_Tests_Data.run_all ();
-                         FStar_Compiler_Effect.exit Prims.int_zero)))) ()
+                         (let uu___10 = FStar_Errors.report_all () in ());
+                         (let nerrs = FStar_Errors.get_err_count () in
+                          if nerrs > Prims.int_zero
+                          then FStar_Compiler_Effect.exit Prims.int_one
+                          else ();
+                          FStar_Compiler_Effect.exit Prims.int_zero))))) ()
      with
      | FStar_Errors.Error (err, msg, r, _ctx) when
          let uu___2 = FStar_Options.trace_error () in

@@ -164,6 +164,15 @@ let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
 let dep_graph e = DsEnv.dep_graph e.dsenv
 
+let record_val_for (e:env) (l:lident) : env =
+  { e with missing_decl = add l e.missing_decl }
+
+let record_definition_for (e:env) (l:lident) : env =
+  { e with missing_decl = remove l e.missing_decl }
+
+let missing_definition_list (e:env) : list lident =
+  elems e.missing_decl
+
 type sigtable = BU.smap sigelt
 
 let should_verify env =
@@ -216,7 +225,7 @@ let initial_env deps
     phase1=false;
     nocoerce=false;
     failhard=false;
-    nosynth=false;
+    flychecking=false;
     uvar_subtyping=true;
     intactics=false;
 
@@ -251,7 +260,9 @@ let initial_env deps
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
 
-    core_check
+    core_check;
+
+    missing_decl = empty();
   }
 
 let dsenv env = env.dsenv
@@ -1426,6 +1437,26 @@ let reify_comp env c u_c : term =
 //  env.tc_hooks.tc_push_in_gamma_hook env s;
 //  { env with gamma = push s env.gamma }
 
+let rec record_vals_and_defns (g:env) (se:sigelt) : env =
+  match se.sigel with
+  | Sig_declare_typ _
+  | Sig_let _
+      when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) ->
+      g
+  | Sig_declare_typ {lid} ->
+    if se.sigquals |> List.contains Assumption || g.is_iface
+    then g
+    else record_val_for g lid
+  | Sig_let {lids} ->
+    List.fold_left record_definition_for g lids
+  | Sig_datacon {lid} ->
+    record_definition_for g lid
+  | Sig_inductive_typ {lid} ->
+    record_definition_for g lid
+  | Sig_bundle {ses} ->
+    List.fold_left record_vals_and_defns g ses
+  | _ -> g
+
 // This function assumes that, in the case that the environment contains local
 // bindings _and_ we push a top-level binding, then the top-level binding does
 // not capture any of the local bindings (duh).
@@ -1434,6 +1465,7 @@ let push_sigelt' (force:bool) env s =
   let env = {env with gamma_sig = sb::env.gamma_sig} in
   add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
+  let env = record_vals_and_defns env s in
   env
 
 let push_sigelt = push_sigelt' false

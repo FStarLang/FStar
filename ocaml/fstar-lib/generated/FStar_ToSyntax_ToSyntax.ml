@@ -9038,7 +9038,8 @@ and (desugar_decl_core :
                  ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_attrs in
                    if uu___2
                    then
-                     let uu___3 = FStar_Parser_AST.decl_to_string d in
+                     let uu___3 =
+                       FStar_Class_Show.show FStar_Parser_AST.showable_decl d in
                      let uu___4 =
                        let uu___5 =
                          FStar_Compiler_List.map

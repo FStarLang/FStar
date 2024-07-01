@@ -34,6 +34,7 @@ open FStar.Const
 open FStar.TypeChecker.TcTerm
 
 open FStar.Class.Show
+open FStar.Class.PP
 open FStar.Class.Setlike
 
 module S  = FStar.Syntax.Syntax
@@ -571,6 +572,9 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
 
   (* If we're --laxing, and this is not an `expect_lax_failure`, then just ignore the definition *)
   | Sig_fail {fail_in_lax=false} when not (Env.should_verify env) || Options.admit_smt_queries () ->
+    if Debug.any () then
+      BU.print1 "Skipping %s since env.admit=true and this is not an expect_lax_failure\n"
+        (Print.sigelt_to_string_short se);
     [], [], env
 
   | Sig_fail {errs=expected_errors; fail_in_lax=lax; ses} ->
@@ -719,13 +723,14 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
       [], [], env0
 
   | Sig_declare_typ {lid; us=uvs; t} -> //NS: No checks on the qualifiers?
+
+    if lid_exists env lid then
+      raise_error_doc (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, [
+        text (BU.format1 "Top-level declaration %s for a name that is already used in this module." (show lid));
+        text "Top-level declarations must be unique in their module."
+      ]) r;
+
     let env = Env.set_range env r in
-
-    if lid_exists env lid
-    then raise_error (Errors.Fatal_AlreadyDefinedTopLevelDeclaration, (BU.format1 "Top-level declaration %s for a name that is already used in this module; \
-                                   top-level declarations must be unique in their module"
-                                   (Ident.string_of_lid lid))) r;
-
     let uvs, t =
       if do_two_phases env then run_phase1 (fun _ ->
         let uvs, t = tc_declare_typ ({ env with phase1 = true; lax = true }) (uvs, t) se.sigrng in //|> N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env in
@@ -930,10 +935,10 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
         ({ env with proof_ns = Options.using_facts_from () })
 
     | Sig_pragma RestartSolver ->
-      (* `nosynth` actually marks when fstar-mode is peeking via flycheck,
+      (* `flychecking` marks when an interactive F* is peeking via flycheck,
        * we shouldn't reset the solver at that point, only when the user
        * advances over the pragma. *)
-      if from_cache || env.nosynth then env
+      if from_cache || env.flychecking then env
       else begin
         env.solver.refresh ();
         env
@@ -979,7 +984,7 @@ let tc_decls env ses =
     (* If emacs is peeking, and debugging is on, don't do anything,
      * otherwise the user will see a bunch of output from typechecking
      * definitions that were not yet advanced over. *)
-    if env.nosynth && Debug.any ()
+    if env.flychecking && Debug.any ()
     then (ses, env), []
     else begin
     if Debug.low ()
@@ -1124,6 +1129,15 @@ let tc_more_partial_modul env modul decls =
 let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) (m:modul) : (modul & env) =
   //AR: do we ever call finish_partial_modul for current buffer in the interactive mode?
   let env = Env.finish_module en m in
+
+  if not loading_from_cache then (
+    let missing = missing_definition_list env in
+    if Cons? missing then
+      log_issue_doc env.range (Errors.Error_AdmitWithoutDefinition, [
+          Pprint.prefix 2 1 (text <| BU.format1 "Missing definitions in module %s:" (string_of_lid m.name))
+            (Pprint.separate_map Pprint.hardline (fun l -> pp (ident_of_lid l)) missing)
+        ])
+  );
 
   //we can clear the lid to query index table
   env.qtbl_name_and_index |> snd |> BU.smap_clear;

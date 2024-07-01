@@ -8734,8 +8734,8 @@ let (eta_expand :
                                     (env1.FStar_TypeChecker_Env.phase1);
                                   FStar_TypeChecker_Env.failhard =
                                     (env1.FStar_TypeChecker_Env.failhard);
-                                  FStar_TypeChecker_Env.nosynth =
-                                    (env1.FStar_TypeChecker_Env.nosynth);
+                                  FStar_TypeChecker_Env.flychecking =
+                                    (env1.FStar_TypeChecker_Env.flychecking);
                                   FStar_TypeChecker_Env.uvar_subtyping =
                                     (env1.FStar_TypeChecker_Env.uvar_subtyping);
                                   FStar_TypeChecker_Env.intactics =
@@ -8796,7 +8796,9 @@ let (eta_expand :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (env1.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (env1.FStar_TypeChecker_Env.core_check)
+                                    (env1.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.missing_decl =
+                                    (env1.FStar_TypeChecker_Env.missing_decl)
                                 } t true in
                             match uu___5 with
                             | (uu___6, ty, uu___7) ->
@@ -8850,8 +8852,8 @@ let (eta_expand :
                             (env1.FStar_TypeChecker_Env.phase1);
                           FStar_TypeChecker_Env.failhard =
                             (env1.FStar_TypeChecker_Env.failhard);
-                          FStar_TypeChecker_Env.nosynth =
-                            (env1.FStar_TypeChecker_Env.nosynth);
+                          FStar_TypeChecker_Env.flychecking =
+                            (env1.FStar_TypeChecker_Env.flychecking);
                           FStar_TypeChecker_Env.uvar_subtyping =
                             (env1.FStar_TypeChecker_Env.uvar_subtyping);
                           FStar_TypeChecker_Env.intactics =
@@ -8908,7 +8910,9 @@ let (eta_expand :
                           FStar_TypeChecker_Env.erase_erasable_args =
                             (env1.FStar_TypeChecker_Env.erase_erasable_args);
                           FStar_TypeChecker_Env.core_check =
-                            (env1.FStar_TypeChecker_Env.core_check)
+                            (env1.FStar_TypeChecker_Env.core_check);
+                          FStar_TypeChecker_Env.missing_decl =
+                            (env1.FStar_TypeChecker_Env.missing_decl)
                         } t true in
                     (match uu___4 with
                      | (uu___5, ty, uu___6) -> eta_expand_with_type env1 t ty)))

@@ -608,6 +608,39 @@ let explain wl d (s : lstring) =
 (* <uvi ops> Instantiating unification variables   *)
 (* ------------------------------------------------*)
 
+let occurs (uk:ctx_uvar) t =
+    let uvars =
+        Free.uvars t
+        |> elems // Bad: order dependent
+    in
+    let occurs =
+        (uvars
+        |> BU.for_some (fun uv ->
+           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    in
+    uvars, occurs
+
+let occurs_check (uk:ctx_uvar) t =
+    let uvars, occurs = occurs uk t in
+    let msg =
+        if not occurs then None
+        else Some (BU.format2 "occurs-check failed (%s occurs in %s)"
+                        (show uk.ctx_uvar_head)
+                        (show t)) in
+    uvars, not occurs, msg
+
+let occurs_full (uk:ctx_uvar) t =
+    let uvars =
+        Free.uvars_full t
+        |> elems // Bad: order dependent
+    in
+    let occurs =
+        (uvars
+        |> BU.for_some (fun uv ->
+           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
+    in
+    occurs
+
 let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
   // Useful for debugging uvars setting bugs
   // if !dbg_Rel
@@ -629,6 +662,11 @@ let set_uvar env u (should_check_opt:option S.should_check_uvar) t =
    | Some should_check ->
      UF.change_decoration u.ctx_uvar_head
        ({UF.find_decoration u.ctx_uvar_head with uvar_decoration_should_check=should_check}));
+
+  if Options.defensive () then (
+    if snd (occurs u t) then
+      failwith "OCCURS BUG!"
+  );
 
   U.set_uvar u.ctx_uvar_head t
 
@@ -1095,36 +1133,6 @@ let solve_prob (prob : prob) (logical_guard : option term) (uvis : list uvi) (wl
 (* ------------------------------------------------ *)
 (* <variable ops> common ops on variables           *)
 (* ------------------------------------------------ *)
-let occurs (uk:ctx_uvar) t =
-    let uvars =
-        Free.uvars t
-        |> elems // Bad: order dependent
-    in
-    let occurs =
-        (uvars
-        |> BU.for_some (fun uv ->
-           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
-    in
-    uvars, occurs
-let occurs_check (uk:ctx_uvar) t =
-    let uvars, occurs = occurs uk t in
-    let msg =
-        if not occurs then None
-        else Some (BU.format2 "occurs-check failed (%s occurs in %s)"
-                        (Print.uvar_to_string uk.ctx_uvar_head)
-                        (show t)) in
-    uvars, not occurs, msg
-let occurs_full (uk:ctx_uvar) t =
-    let uvars =
-        Free.uvars_full t
-        |> elems // Bad: order dependent
-    in
-    let occurs =
-        (uvars
-        |> BU.for_some (fun uv ->
-           UF.equiv uv.ctx_uvar_head uk.ctx_uvar_head))
-    in
-    occurs
 
 let rec maximal_prefix (bs:binders) (bs':binders) : binders & (binders & binders) =
   match bs, bs' with
@@ -3366,9 +3374,19 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
       then run_meta_arg_tac_and_try_again rhs
 
       else
+          let rec occurs_bs u bs =
+            match bs with
+            | [] -> false
+            | b::bs -> snd (occurs u b.binder_bv.sort) || occurs_bs u bs
+          in
           match quasi_pattern env lhs, quasi_pattern env rhs with
           | Some (binders_lhs, t_res_lhs), Some (binders_rhs, t_res_rhs) ->
             let (Flex ({pos=range}, u_lhs, _)) = lhs in
+            if occurs_bs u_lhs binders_lhs then
+              (* Fix for #2583 *)
+              giveup_or_defer orig wl Deferred_flex_flex_nonpattern
+                (Thunk.mkv "flex-flex: occurs check failed on the LHS flex quasi-pattern")
+            else
             let (Flex (_, u_rhs, _)) = rhs in
             if UF.equiv u_lhs.ctx_uvar_head u_rhs.ctx_uvar_head
             && binders_eq binders_lhs binders_rhs

@@ -110,5 +110,13 @@
   - NegativeTests.Neg.bad_projector is declared but no definition was found
   - Add an 'assume' if this is intentional
 
+* Warning 240 at NegativeTests.Neg.fst(63,0-63,32):
+  - Missing definitions in module NegativeTests.Neg:
+      bad_projector
+      test_postcondition_label
+      test_precondition_label
+      x
+      y
+
 Verified module: NegativeTests.Neg
 All verification conditions discharged successfully

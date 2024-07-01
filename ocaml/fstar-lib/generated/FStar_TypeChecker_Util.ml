@@ -5596,9 +5596,9 @@ let (find_coercion :
                                                                     FStar_TypeChecker_Env.failhard
                                                                     =
                                                                     (env.FStar_TypeChecker_Env.failhard);
-                                                                    FStar_TypeChecker_Env.nosynth
+                                                                    FStar_TypeChecker_Env.flychecking
                                                                     =
-                                                                    (env.FStar_TypeChecker_Env.nosynth);
+                                                                    (env.FStar_TypeChecker_Env.flychecking);
                                                                     FStar_TypeChecker_Env.uvar_subtyping
                                                                     =
                                                                     (env.FStar_TypeChecker_Env.uvar_subtyping);
@@ -5681,7 +5681,10 @@ let (find_coercion :
                                                                     (env.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (env.FStar_TypeChecker_Env.core_check)
+                                                                    (env.FStar_TypeChecker_Env.core_check);
+                                                                    FStar_TypeChecker_Env.missing_decl
+                                                                    =
+                                                                    (env.FStar_TypeChecker_Env.missing_decl)
                                                                     } tt in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___21)))))))))
@@ -5704,19 +5707,43 @@ let (maybe_coerce_lc :
                || (FStar_Options.lax ()))
               && (Prims.op_Negation env.FStar_TypeChecker_Env.nocoerce) in
           if Prims.op_Negation should_coerce
-          then (e, lc, FStar_TypeChecker_Env.trivial_guard)
+          then
+            ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Coercions in
+              if uu___1
+              then
+                let uu___2 =
+                  FStar_Class_Show.show
+                    FStar_Compiler_Range_Ops.showable_range
+                    e.FStar_Syntax_Syntax.pos in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    lc.FStar_TypeChecker_Common.res_typ in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    exp_t in
+                FStar_Compiler_Util.print4
+                  "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
+                  uu___2 uu___3 uu___4 uu___5
+              else ());
+             (e, lc, FStar_TypeChecker_Env.trivial_guard))
           else
             ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Coercions in
               if uu___2
               then
                 let uu___3 =
-                  FStar_Compiler_Range_Ops.string_of_range
+                  FStar_Class_Show.show
+                    FStar_Compiler_Range_Ops.showable_range
                     e.FStar_Syntax_Syntax.pos in
-                let uu___4 = FStar_Syntax_Print.term_to_string e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                 let uu___5 =
-                  FStar_Syntax_Print.term_to_string
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
                     lc.FStar_TypeChecker_Common.res_typ in
-                let uu___6 = FStar_Syntax_Print.term_to_string exp_t in
+                let uu___6 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    exp_t in
                 FStar_Compiler_Util.print4
                   "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
                   uu___3 uu___4 uu___5 uu___6
@@ -8017,8 +8044,8 @@ let (update_env_sub_eff :
                 (env.FStar_TypeChecker_Env.phase1);
               FStar_TypeChecker_Env.failhard =
                 (env.FStar_TypeChecker_Env.failhard);
-              FStar_TypeChecker_Env.nosynth =
-                (env.FStar_TypeChecker_Env.nosynth);
+              FStar_TypeChecker_Env.flychecking =
+                (env.FStar_TypeChecker_Env.flychecking);
               FStar_TypeChecker_Env.uvar_subtyping =
                 (env.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.intactics =
@@ -8072,7 +8099,9 @@ let (update_env_sub_eff :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (env.FStar_TypeChecker_Env.core_check)
+                (env.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.missing_decl =
+                (env.FStar_TypeChecker_Env.missing_decl)
             } sub.FStar_Syntax_Syntax.source sub.FStar_Syntax_Syntax.target
             uu___ in
         {
@@ -8115,8 +8144,8 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.phase1 = (env1.FStar_TypeChecker_Env.phase1);
           FStar_TypeChecker_Env.failhard =
             (env1.FStar_TypeChecker_Env.failhard);
-          FStar_TypeChecker_Env.nosynth =
-            (env1.FStar_TypeChecker_Env.nosynth);
+          FStar_TypeChecker_Env.flychecking =
+            (env1.FStar_TypeChecker_Env.flychecking);
           FStar_TypeChecker_Env.uvar_subtyping =
             (env1.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
@@ -8169,7 +8198,9 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.erase_erasable_args =
             (env1.FStar_TypeChecker_Env.erase_erasable_args);
           FStar_TypeChecker_Env.core_check =
-            (env1.FStar_TypeChecker_Env.core_check)
+            (env1.FStar_TypeChecker_Env.core_check);
+          FStar_TypeChecker_Env.missing_decl =
+            (env1.FStar_TypeChecker_Env.missing_decl)
         }
 let (update_env_polymonadic_bind :
   FStar_TypeChecker_Env.env ->

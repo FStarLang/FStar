@@ -1513,8 +1513,8 @@ let (encode_free_var :
                                       (tcenv_comp.FStar_TypeChecker_Env.phase1);
                                     FStar_TypeChecker_Env.failhard =
                                       (tcenv_comp.FStar_TypeChecker_Env.failhard);
-                                    FStar_TypeChecker_Env.nosynth =
-                                      (tcenv_comp.FStar_TypeChecker_Env.nosynth);
+                                    FStar_TypeChecker_Env.flychecking =
+                                      (tcenv_comp.FStar_TypeChecker_Env.flychecking);
                                     FStar_TypeChecker_Env.uvar_subtyping =
                                       (tcenv_comp.FStar_TypeChecker_Env.uvar_subtyping);
                                     FStar_TypeChecker_Env.intactics =
@@ -1580,7 +1580,9 @@ let (encode_free_var :
                                       =
                                       (tcenv_comp.FStar_TypeChecker_Env.erase_erasable_args);
                                     FStar_TypeChecker_Env.core_check =
-                                      (tcenv_comp.FStar_TypeChecker_Env.core_check)
+                                      (tcenv_comp.FStar_TypeChecker_Env.core_check);
+                                    FStar_TypeChecker_Env.missing_decl =
+                                      (tcenv_comp.FStar_TypeChecker_Env.missing_decl)
                                   } comp FStar_Syntax_Syntax.U_unknown in
                               FStar_Syntax_Syntax.mk_Total uu___7
                             else comp in
@@ -2399,8 +2401,8 @@ let (encode_top_level_let :
                     (uu___1.FStar_TypeChecker_Env.phase1);
                   FStar_TypeChecker_Env.failhard =
                     (uu___1.FStar_TypeChecker_Env.failhard);
-                  FStar_TypeChecker_Env.nosynth =
-                    (uu___1.FStar_TypeChecker_Env.nosynth);
+                  FStar_TypeChecker_Env.flychecking =
+                    (uu___1.FStar_TypeChecker_Env.flychecking);
                   FStar_TypeChecker_Env.uvar_subtyping =
                     (uu___1.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
@@ -2456,7 +2458,9 @@ let (encode_top_level_let :
                   FStar_TypeChecker_Env.erase_erasable_args =
                     (uu___1.FStar_TypeChecker_Env.erase_erasable_args);
                   FStar_TypeChecker_Env.core_check =
-                    (uu___1.FStar_TypeChecker_Env.core_check)
+                    (uu___1.FStar_TypeChecker_Env.core_check);
+                  FStar_TypeChecker_Env.missing_decl =
+                    (uu___1.FStar_TypeChecker_Env.missing_decl)
                 } in
               let subst_comp formals actuals comp =
                 let subst =

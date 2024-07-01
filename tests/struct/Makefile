@@ -1,23 +1,14 @@
-# Test the 'include' functionality
+# Test the 'struct' functionality
 
 FSTAR_HOME=../..
 include $(FSTAR_HOME)/ulib/gmake/fstar.mk
 include $(FSTAR_HOME)/.common.mk
 
-# was: $(wildcard *.pos)
-POSTESTS=\
-  array.pos \
-  disjoint.pos \
-  point.pos \
-  point-with-nesting.pos \
-  nested.pos \
-  union.pos \
-  taggedunion.pos \
-
+POSTESTS=$(wildcard *.pos)
+POSTESTS:=$(filter-out jsonparser.pos, $(POSTESTS))
 POSTARGETS=$(addsuffix .pver,$(POSTESTS))
 
-# was: $(wildcard *.neg)
-NEGTESTS=
+NEGTESTS=$(wildcard *.neg)
 NEGTARGETS=$(addsuffix .nver,$(NEGTESTS))
 
 all: uall
@@ -25,14 +16,12 @@ all: uall
 uall: $(POSTARGETS) $(NEGTARGETS)
 
 $(POSTARGETS): %.pver: %
-	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(Q)$(FSTAR) $(SIL) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst
+	$(MAKE) -C $< check-pos
 
 $(NEGTARGETS): %.nver: %
-	$(call msg, "CHECKFAIL", $(basename $(notdir $@)))
-	$(Q)! $(FSTAR) $(SIL) --include $(FSTAR_HOME)/ulib --include $^ --odir $^ Test.fst > $^/error.log 2>&1
-	@echo $^ failed as expected
+	$(MAKE) -C $< check-neg
 
 clean:
 	$(call msg, "CLEAN")
-	$(Q)for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done
+	$(Q)for f in $(NEGTESTS) ; do $(MAKE) -C $$f clean; done
+	$(Q)for f in $(POSTESTS) ; do $(MAKE) -C $$f clean; done

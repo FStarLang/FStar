@@ -31,6 +31,7 @@ open FStar.Const
 open FStar.Errors
 open FStar.Syntax
 open FStar.Class.Setlike
+open FStar.Class.Show
 
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
@@ -3744,7 +3745,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     if !dbg_attrs
     then (
       BU.print2 "Desugared tycon from {%s} to {%s}\n"
-                (FStar.Parser.AST.decl_to_string d)
+                (show d)
                 (String.concat "\n" (List.map FStar.Syntax.Print.sigelt_to_string ses))
     );
     (* Handling typeclasses: we typecheck the tcs as usual, and then need to add

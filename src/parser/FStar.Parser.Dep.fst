@@ -289,8 +289,8 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
  *)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
-      let lax = Options.lax () in
       let cache_fn =
+        let lax = Options.lax () in
         if lax then fn ^".checked.lax"
         else fn ^".checked"
       in

@@ -896,8 +896,8 @@ let rec (traverse_for_spinoff :
                                (env2.FStar_TypeChecker_Env.phase1);
                              FStar_TypeChecker_Env.failhard =
                                (env2.FStar_TypeChecker_Env.failhard);
-                             FStar_TypeChecker_Env.nosynth =
-                               (env2.FStar_TypeChecker_Env.nosynth);
+                             FStar_TypeChecker_Env.flychecking =
+                               (env2.FStar_TypeChecker_Env.flychecking);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env2.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
@@ -954,7 +954,9 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env2.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env2.FStar_TypeChecker_Env.core_check)
+                               (env2.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env2.FStar_TypeChecker_Env.missing_decl)
                            } e1 in
                        (match uu___4 with
                         | (e2, lc) ->
@@ -1515,7 +1517,7 @@ let (synthesize :
       fun tau ->
         FStar_Errors.with_ctx "While synthesizing term with a tactic"
           (fun uu___ ->
-             if env.FStar_TypeChecker_Env.nosynth
+             if env.FStar_TypeChecker_Env.flychecking
              then
                let uu___1 =
                  FStar_TypeChecker_Util.fvar_env env
@@ -1579,7 +1581,7 @@ let (solve_implicits :
       fun imps ->
         FStar_Errors.with_ctx "While solving implicits with a tactic"
           (fun uu___ ->
-             if env.FStar_TypeChecker_Env.nosynth
+             if env.FStar_TypeChecker_Env.flychecking
              then ()
              else
                (let gs =
@@ -1770,7 +1772,7 @@ let (splice :
           fun rng ->
             FStar_Errors.with_ctx "While running splice with a tactic"
               (fun uu___ ->
-                 if env.FStar_TypeChecker_Env.nosynth
+                 if env.FStar_TypeChecker_Env.flychecking
                  then []
                  else
                    (let uu___2 =
@@ -1891,10 +1893,8 @@ let (splice :
                                            (env.FStar_TypeChecker_Env.use_eq_strict);
                                          FStar_TypeChecker_Env.is_iface =
                                            (env.FStar_TypeChecker_Env.is_iface);
-                                         FStar_TypeChecker_Env.admit =
-                                           (env.FStar_TypeChecker_Env.admit);
-                                         FStar_TypeChecker_Env.lax =
-                                           (env.FStar_TypeChecker_Env.lax);
+                                         FStar_TypeChecker_Env.admit = false;
+                                         FStar_TypeChecker_Env.lax = false;
                                          FStar_TypeChecker_Env.lax_universes
                                            =
                                            (env.FStar_TypeChecker_Env.lax_universes);
@@ -1902,8 +1902,8 @@ let (splice :
                                            (env.FStar_TypeChecker_Env.phase1);
                                          FStar_TypeChecker_Env.failhard =
                                            (env.FStar_TypeChecker_Env.failhard);
-                                         FStar_TypeChecker_Env.nosynth =
-                                           (env.FStar_TypeChecker_Env.nosynth);
+                                         FStar_TypeChecker_Env.flychecking =
+                                           (env.FStar_TypeChecker_Env.flychecking);
                                          FStar_TypeChecker_Env.uvar_subtyping
                                            =
                                            (env.FStar_TypeChecker_Env.uvar_subtyping);
@@ -1974,7 +1974,9 @@ let (splice :
                                            =
                                            (env.FStar_TypeChecker_Env.erase_erasable_args);
                                          FStar_TypeChecker_Env.core_check =
-                                           (env.FStar_TypeChecker_Env.core_check)
+                                           (env.FStar_TypeChecker_Env.core_check);
+                                         FStar_TypeChecker_Env.missing_decl =
+                                           (env.FStar_TypeChecker_Env.missing_decl)
                                        }, val_t)
                                       (FStar_Syntax_Embeddings.e_tuple3
                                          (FStar_Syntax_Embeddings.e_list
@@ -2217,7 +2219,7 @@ let (splice :
                                      match uu___8 with
                                      | FStar_Pervasives_Native.None when
                                          Prims.op_Negation
-                                           env.FStar_TypeChecker_Env.nosynth
+                                           env.FStar_TypeChecker_Env.flychecking
                                          ->
                                          let uu___9 =
                                            let uu___10 =
@@ -2342,7 +2344,7 @@ let (mpreprocess :
         FStar_Errors.with_ctx
           "While preprocessing a definition with a tactic"
           (fun uu___ ->
-             if env.FStar_TypeChecker_Env.nosynth
+             if env.FStar_TypeChecker_Env.flychecking
              then tm
              else
                (let ps =
@@ -2369,7 +2371,7 @@ let (postprocess :
           FStar_Errors.with_ctx
             "While postprocessing a definition with a tactic"
             (fun uu___ ->
-               if env.FStar_TypeChecker_Env.nosynth
+               if env.FStar_TypeChecker_Env.flychecking
                then tm
                else
                  (let uu___2 =

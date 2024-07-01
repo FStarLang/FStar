@@ -28,6 +28,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.Pprint
 open FStar.Compiler.Range
+open FStar.Class.Show
 
 module C = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -818,6 +819,11 @@ and p_rawDecl d = match d.d with
     str "%splice" ^^
     (if is_typed then str "_t" else empty) ^^
     p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | DeclSyntaxExtension (tag, blob, blob_rng, start_rng) ->
+    // NB: using ^^ since the blob also contains the newlines
+    doc_of_string ("```"^tag) ^^
+    arbitrary_string blob ^^
+    doc_of_string "```"
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
@@ -992,7 +998,7 @@ and p_effectDecl ps d = match d.d with
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
-                              (decl_to_string d))
+                              (show d))
 
 and p_subEffect lift =
   let lift_op_doc =

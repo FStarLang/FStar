@@ -2612,8 +2612,8 @@ and (extract_sig_let :
                        (env.FStar_TypeChecker_Env.phase1);
                      FStar_TypeChecker_Env.failhard =
                        (env.FStar_TypeChecker_Env.failhard);
-                     FStar_TypeChecker_Env.nosynth =
-                       (env.FStar_TypeChecker_Env.nosynth);
+                     FStar_TypeChecker_Env.flychecking =
+                       (env.FStar_TypeChecker_Env.flychecking);
                      FStar_TypeChecker_Env.uvar_subtyping =
                        (env.FStar_TypeChecker_Env.uvar_subtyping);
                      FStar_TypeChecker_Env.intactics =
@@ -2669,7 +2669,9 @@ and (extract_sig_let :
                        (env.FStar_TypeChecker_Env.unif_allow_ref_guards);
                      FStar_TypeChecker_Env.erase_erasable_args = true;
                      FStar_TypeChecker_Env.core_check =
-                       (env.FStar_TypeChecker_Env.core_check)
+                       (env.FStar_TypeChecker_Env.core_check);
+                     FStar_TypeChecker_Env.missing_decl =
+                       (env.FStar_TypeChecker_Env.missing_decl)
                    } in
                  let lbd =
                    let uu___3 =

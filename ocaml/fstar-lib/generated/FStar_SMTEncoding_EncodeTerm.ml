@@ -1535,8 +1535,8 @@ and (encode_term :
                               (uu___6.FStar_TypeChecker_Env.phase1);
                             FStar_TypeChecker_Env.failhard =
                               (uu___6.FStar_TypeChecker_Env.failhard);
-                            FStar_TypeChecker_Env.nosynth =
-                              (uu___6.FStar_TypeChecker_Env.nosynth);
+                            FStar_TypeChecker_Env.flychecking =
+                              (uu___6.FStar_TypeChecker_Env.flychecking);
                             FStar_TypeChecker_Env.uvar_subtyping =
                               (uu___6.FStar_TypeChecker_Env.uvar_subtyping);
                             FStar_TypeChecker_Env.intactics =
@@ -1593,7 +1593,9 @@ and (encode_term :
                             FStar_TypeChecker_Env.erase_erasable_args =
                               (uu___6.FStar_TypeChecker_Env.erase_erasable_args);
                             FStar_TypeChecker_Env.core_check =
-                              (uu___6.FStar_TypeChecker_Env.core_check)
+                              (uu___6.FStar_TypeChecker_Env.core_check);
+                            FStar_TypeChecker_Env.missing_decl =
+                              (uu___6.FStar_TypeChecker_Env.missing_decl)
                           } in
                         let uu___6 =
                           FStar_TypeChecker_Util.pure_or_ghost_pre_and_post

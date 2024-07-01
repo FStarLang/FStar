@@ -2558,16 +2558,15 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
     || env.lax
     || Options.lax ()) && not env.nocoerce
   in
-  if not should_coerce
-  then (e, lc, Env.trivial_guard)
-  else
-    let _ = if !dbg_Coercions then
-            BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
-                    (Range.string_of_range e.pos)
-                    (Print.term_to_string e)
-                    (Print.term_to_string lc.res_typ)
-                    (Print.term_to_string exp_t)
-    in
+  if not should_coerce then (
+    if !dbg_Coercions then
+      BU.print4 "(%s) NOT Trying to coerce %s from type (%s) to type (%s)\n"
+              (show e.pos) (show e) (show lc.res_typ) (show exp_t);
+    (e, lc, Env.trivial_guard)
+  ) else (
+    if !dbg_Coercions then
+      BU.print4 "(%s) Trying to coerce %s from type (%s) to type (%s)\n"
+              (show e.pos) (show e) (show lc.res_typ) (show exp_t);
     match find_coercion env lc exp_t e with
     | Some (coerced, lc, g) ->
       let _ = if !dbg_Coercions then
@@ -2625,6 +2624,7 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
 
       | _ ->
         e, lc, Env.trivial_guard
+  )
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lcomp & guard_t =
   if Debug.high () then
@@ -2836,7 +2836,7 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
   | Some (Implicit _), _::_ -> true
   | _ -> false
 
-let maybe_instantiate (env:Env.env) e t =
+let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
   then e, torig, Env.trivial_guard
