@@ -1678,7 +1678,7 @@ let fold_new_invariant
 let injective_invariant 
         (#h:heap_sig u#a) 
         (i:(extend h).iref)
-: prop
+: GTot bool
 = Inr? i
 
 let bump_ghost_ctr (#h:heap_sig u#a) (m:ext_mem h) (ctx:erased nat) =

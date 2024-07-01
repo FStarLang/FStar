@@ -192,19 +192,21 @@ val down2_star (p q:vprop)
 : Lemma (down2 (p `star` q) == down2 p `cm_small_slprop.mult` down2 q)
 
 (**** Memory invariants *)
+[@@erasable]
+val iref : Type0
+
+val deq_iref : FStar.GhostSet.decide_eq iref
 
 (** Invariants have a name *)
-val iname : eqtype
-
-let inames = erased (S.set iname)
+let inames = FStar.GhostSet.set iref
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val inames_ok (e:inames) (m:mem) : prop
 
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
-  : Lemma (ensures inames_ok Set.empty m)
-          [SMTPat (inames_ok Set.empty m)]
+  : Lemma (ensures inames_ok GhostSet.empty m)
+          [SMTPat (inames_ok GhostSet.empty m)]
 
 (**
   This separation logic proposition asserts that all the invariants whose names are in [e]
@@ -234,10 +236,6 @@ let _PST
         interp (expects `star` frame `star` mem_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` mem_invariant except m1) m1)
 
-// (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
-// let action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um)
-//   : Type u#(max a (um + 3)) =
-//   frame:slprop -> _MstTot a except expects provides frame
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let _pst_action_except 
@@ -257,18 +255,12 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 
 (**** Invariants *)
-
-[@@erasable]
-val iref : Type0
-
-val iname_of (i:iref) : GTot iname
-
 val inv (i:iref) (p:slprop u#a) : slprop u#a
 
 let live (i:iref) = h_exists (fun p -> inv i p)
 
-let add_inv (e:inames) (i:iref) : inames = S.add (iname_of i) e
-let mem_inv (e:inames) (i:iref) : GTot bool = S.mem (iname_of i) e
+let add_inv (e:inames) (i:iref) : inames = FStar.GhostSet.(union (singleton deq_iref i) e)
+let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
 val dup_inv (e:inames) (i:iref) (p:slprop u#a)
 : pst_ghost_action_except unit e 
@@ -301,7 +293,7 @@ val distinct_invariants_have_distinct_names
       (q:slprop u#m { p =!= q })
       (i j: iref)
 : pst_ghost_action_except u#0 u#m 
-    (squash (iname_of i =!= iname_of j))
+    (squash (i =!= j))
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
@@ -310,8 +302,8 @@ val invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { iname_of i == iname_of j } )
-: pst_ghost_action_except (squash (p == q /\ i == j)) e
+      (j:iref { i == j } )
+: pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
    
@@ -322,7 +314,7 @@ let rec all_live (ctx:list iref) =
 
 let fresh_wrt (ctx:list iref)
               (i:iref)
-  = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
+  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
 val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
   : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e

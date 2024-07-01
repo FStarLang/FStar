@@ -318,15 +318,17 @@ let down2_star (p q:vprop)
   }
 
 (**** Memory invariants *)
-
-(** Invariants have a name *)
-let iname : eqtype = sig.iname
-let inames_ok (e:inames) (m:mem) : prop = H.inames_ok e m
+let iref : Type0 = i:erased sig.iref { E.injective_invariant i }
+let deq_iref : FStar.GhostSet.decide_eq iref = fun x y -> sig.deq_iref x y
+let down_inames (e:inames)
+: GhostSet.set sig.iref
+= GhostSet.comprehend (fun (i:sig.iref) -> if E.injective_invariant i then GhostSet.mem (hide i) e else false)
+let inames_ok (e:inames) (m:mem) : prop = H.inames_ok (down_inames e) m
 
 (** The empty set of invariants is always empty *)
 let inames_ok_empty (m:mem)
-: Lemma (ensures inames_ok Set.empty m)
-          [SMTPat (inames_ok Set.empty m)]
+: Lemma (ensures inames_ok GhostSet.empty m)
+        [SMTPat (inames_ok GhostSet.empty m)]
 = ()
 
 (**
@@ -335,15 +337,13 @@ let inames_ok_empty (m:mem)
 *)
 let mem_invariant (e:inames) (m:mem u#a)
 : slprop u#a
-= sig.mem_invariant e m
+= sig.mem_invariant (down_inames e) m
 
 let full_mem_pred: mem -> prop = sig.full_mem_pred 
 
-let iref : Type0 = erased (E.iiref small_sig)
 let reveal_iref (i:iref) : sig.iref = 
   let x : erased (sig.iref) = hide (reveal i) in
   sig.non_info_iref x
-let iname_of (i:iref) : GTot iname = sig.iname_of i
 
 let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv (reveal_iref i) p
 
@@ -356,7 +356,7 @@ let coerce_action
     (#pre':slprop u#a)
     (#post':a -> slprop u#a)
     (_:squash (pre == reveal pre' /\ (forall x. post x == reveal (post' x))))
-    ($act:H._action_except (sig u#a) a mg ex pre post)
+    ($act:H._action_except (sig u#a) a mg (down_inames ex) pre post)
 : _pst_action_except a mg ex pre' post'
 = fun frame m0 -> act (reveal_slprop frame) m0 
 
@@ -370,21 +370,21 @@ let coerce_action_back
     (post:a -> GTot (sig.slprop))
     (_:squash (pre == reveal pre' /\ (forall x. post x == reveal (post' x))))
     ($act:_pst_action_except a mg ex pre' post')
-: H._action_except (sig u#a) a mg ex pre post
+: H._action_except (sig u#a) a mg (down_inames ex) pre post
 = fun frame m0 -> act frame m0 
 
 let dup_inv (e:inames) (i:iref) (p:slprop u#a)
 : pst_ghost_action_except unit e 
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
-= coerce_action () <| E.dup_inv #(small_sig u#a) e (reveal_iref i) (reveal_slprop p)
+= coerce_action () <| E.dup_inv #(small_sig u#a) (down_inames e) (reveal_iref i) (reveal_slprop p)
 
 let new_invariant (e:inames) (p:slprop { is_big p })
 : pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
 = fun frame m0 -> 
-    let i, m1 = E.new_invariant #(small_sig u#a) e (reveal_slprop p) (reveal_slprop frame) m0 in
+    let i, m1 = E.new_invariant #(small_sig u#a) (down_inames e) (reveal_slprop p) (reveal_slprop frame) m0 in
     hide i, m1
 
 let with_invariant_alt
@@ -395,9 +395,9 @@ let with_invariant_alt
     (#opened_invariants:H.inames (E.extend h))
     (#p:(E.extend h).slprop)
     (#maybe_ghost:bool)
-    (i:(E.extend h).iref{not (Set.mem ((E.extend h).iname_of i) opened_invariants)})
+    (i:(E.extend h).iref{not (GhostSet.mem i opened_invariants)})
     ($f:H._action_except (E.extend h) a maybe_ghost
-      (Set.add ((E.extend h).iname_of i) opened_invariants) 
+      (HeapSig.add_iref i opened_invariants)
       (p `(E.extend h).star` fp)
       (fun x -> p `(E.extend h).star` fp' x))
 : H._action_except (E.extend h) a maybe_ghost opened_invariants 
@@ -419,12 +419,16 @@ let with_invariant (#a:Type u#x)
 : _pst_action_except a maybe_ghost opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
-= coerce_action () <|
+= assert (GhostSet.equal
+    (down_inames (add_inv opened_invariants i))
+    (H.add_iref (reveal_iref i) (down_inames opened_invariants)));
+  coerce_action () <|
   with_invariant_alt 
     #(small_sig u#a) #a
     #(reveal_slprop fp) 
     #(fun x -> reveal_slprop (fp' x)) 
-    #opened_invariants #(reveal_slprop p) #maybe_ghost
+    #(down_inames opened_invariants)
+    #(reveal_slprop p) #maybe_ghost
     (reveal_iref i)
     (coerce_action_back _ (fun x -> p `star` reveal_slprop (fp' x)) () f)
 
@@ -442,13 +446,14 @@ let lift_action_alt
     (fun x -> (E.extend h).up (post x))
 = E.lift_action_alt #h #a #mg #ex #(h.non_info_slprop pre) #post action
 
-let distinct_invariants_have_distinct_names
+#push-options "--print_implicits"
+let distinct_invariants_have_distinct_names_alt
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
       (i j: iref)
 : pst_ghost_action_except u#0 u#m 
-    (squash (iname_of i =!= iname_of j))
+    (squash (~(eq2 #(E.iiref small_sig) (reveal_iref i) (reveal_iref j))))
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
@@ -461,18 +466,30 @@ let distinct_invariants_have_distinct_names
     #(inv i p `star` inv j q)
     #(fun _ -> inv i p `star` inv j q)
      () <|
-  E.distinct_invariants_have_distinct_names #(small_sig u#m) e (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
+  E.distinct_invariants_have_distinct_names #(small_sig u#m) (down_inames e) (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
+
+let distinct_invariants_have_distinct_names
+      (e:inames)
+      (p:slprop u#m)
+      (q:slprop u#m { p =!= q })
+      (i j: iref)
+: pst_ghost_action_except u#0 u#m 
+    (squash (i =!= j))
+    e 
+    (inv i p `star` inv j q)
+    (fun _ -> inv i p `star` inv j q)
+= fun frame m0 -> let x, y = distinct_invariants_have_distinct_names_alt e p q i j frame m0 in x, y
 
 let invariant_name_identifies_invariant_alt
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { iname_of i == iname_of j } )
-: pst_ghost_action_except (squash (reveal_slprop p == reveal_slprop q /\ eq2 #(E.iiref small_sig) (reveal_iref i) (reveal_iref j))) e
+      (j:iref { i == j } )
+: pst_ghost_action_except (squash (reveal_slprop p == reveal_slprop q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
 = coerce_action 
-    #(squash (reveal_slprop p == reveal_slprop q /\ reveal_iref i == reveal_iref j))
+    #(squash (reveal_slprop p == reveal_slprop q))
     #_
     #_
     #_
@@ -480,14 +497,14 @@ let invariant_name_identifies_invariant_alt
     #(inv i p `star` inv j q)
     #(fun _ -> inv i p `star` inv j q)
      () <|
-  E.invariant_name_identifies_invariant #(small_sig u#m) e (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
+  E.invariant_name_identifies_invariant #(small_sig u#m) (down_inames e) (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
 
 let invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { iname_of i == iname_of j } )
-: pst_ghost_action_except (squash (p == q /\ i == j)) e
+      (j:iref { i == j } )
+: pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
 = fun frame m0 -> 
@@ -521,7 +538,7 @@ let fresh_invariant_alt (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
     #p
     #(fun i -> inv i p)
   () <|
-  E.fresh_invariant #(small_sig u#m) e (reveal_slprop p) (coerce_ctx ctx)
+  E.fresh_invariant #(small_sig u#m) (down_inames e) (reveal_slprop p) (coerce_ctx ctx)
 
 let fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
 : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
@@ -651,7 +668,7 @@ let split_action
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm r v0 v1
+  B.share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v0 v1
   
 
 (** Combining separate permissions into a single composite permission*)
@@ -669,7 +686,7 @@ let gather_action
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r v0 `star` pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm r v0 v1
+  B.gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v0 v1
 
 let alloc_action (#a:Type u#a) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm) e
@@ -679,7 +696,7 @@ let alloc_action (#a:Type u#a) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
   coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (B.base_heap.pts_to #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.extend #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm x
+  B.extend #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm x
 
 let select_refine (#a:Type u#a) (#p:pcm a)
                   (e:inames)
@@ -694,7 +711,7 @@ let select_refine (#a:Type u#a) (#p:pcm a)
 = coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_ #(reveal_slprop (pts_to r x)) #(fun v -> up2 (B.base_heap.pts_to #a #p r (f v))) #(pts_to r x) #(fun v -> pts_to r (f v)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #p r x f
+  B.read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #p r x f
 
 let upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
@@ -704,7 +721,7 @@ let upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
 = coerce_action #_ #_ #_ #(reveal_slprop (pts_to r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #p r x y f
+  B.write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #p r x y f
 
 let pts_to_not_null_action 
       (#a:Type u#a) (#pcm:pcm a)
@@ -717,7 +734,7 @@ let pts_to_not_null_action
 = coerce_action #_ #_ #_ #(reveal_slprop (pts_to r v)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.pts_to_not_null_action #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm r v 
+  B.pts_to_not_null_action #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v 
 
 
 (* Ghost references to "small" types *)
@@ -741,7 +758,7 @@ let ghost_alloc
   coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (B.base_heap.ghost_pts_to false #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.ghost_extend false #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #a #pcm x
+  B.ghost_extend false #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm x
 
 let ghost_read
     #e
@@ -765,7 +782,7 @@ let ghost_read
                 () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.ghost_read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #p r x f
+  B.ghost_read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #p r x f
 
 let ghost_write
     #e
@@ -780,7 +797,7 @@ let ghost_write
 = coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.ghost_write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #p r x y f
+  B.ghost_write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #p r x y f
 
 
 let ghost_share
@@ -797,7 +814,7 @@ let ghost_share
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.ghost_share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #pcm r v0 v1
+  B.ghost_share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #pcm r v0 v1
 
 
 let ghost_gather
@@ -815,7 +832,7 @@ let ghost_gather
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r v0 `star` ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #B.base_heap <|
-  B.ghost_gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) e)) #false #a #pcm r v0 v1
+  B.ghost_gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #pcm r v0 v1
 
 
 (* Concrete references to "big" types *)
@@ -837,7 +854,7 @@ let big_split_action
 = up_star_big (small_sig.pts_to #a #pcm r v0) (small_sig.pts_to #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  E.split_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
+  E.split_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 let big_gather_action
       (#a:Type u#(a + 1))
@@ -852,7 +869,7 @@ let big_gather_action
 = up_star_big (small_sig.pts_to #a #pcm r v0) (small_sig.pts_to #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r v0 `star` big_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  E.gather_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
+  E.gather_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 let big_alloc_action
       (#a:Type u#(a + 1))
@@ -865,7 +882,7 @@ let big_alloc_action
 = up_emp_big ();
   coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up (small_sig.pts_to #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  E.alloc_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) x
+  E.alloc_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) x
 
 let big_select_refine
       (#a:Type u#(a + 1))
@@ -886,7 +903,7 @@ let big_select_refine
       #(fun v -> big_pts_to r (f v))
       () <|
   lift_action_alt #small_sig <|
-  E.select_refine #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) e) r x f
+  E.select_refine #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x f
 
 let big_upd_gen
     (#a:Type u#(a + 1))
@@ -900,7 +917,7 @@ let big_upd_gen
     (fun _ -> big_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  E.upd_gen #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) e) r x y f
+  E.upd_gen #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x y f
 
 let big_pts_to_not_null_action 
       (#a:Type u#(a + 1))
@@ -913,7 +930,7 @@ let big_pts_to_not_null_action
     (fun _ -> big_pts_to r v)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r v)) () <|
   lift_action_alt #small_sig <|
-  E.pts_to_not_null_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v
+  E.pts_to_not_null_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v
 
 (* Ghost references to "big" types *)
 let big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a)
@@ -933,7 +950,7 @@ let big_ghost_alloc
 = up_emp_big ();
   coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up (small_sig.ghost_pts_to false #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_alloc #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) o) x
+  E.ghost_alloc #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames o)) x
 
 let big_ghost_read
     #o
@@ -956,7 +973,7 @@ let big_ghost_read
                 #(fun v -> big_ghost_pts_to r (f v))
                 () <|
   lift_action_alt #small_sig <|
-  E.ghost_read #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) o) r x f
+  E.ghost_read #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x f
 
 let big_ghost_write
     #o
@@ -970,7 +987,7 @@ let big_ghost_write
     (fun _ -> big_ghost_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_write #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) o) r x y f
+  E.ghost_write #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x y f
 
 let big_ghost_share
     #e
@@ -985,7 +1002,7 @@ let big_ghost_share
 = up_star_big (small_sig.ghost_pts_to false #a #pcm r v0) (small_sig.ghost_pts_to false #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  E.ghost_share #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
+  E.ghost_share #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 
 let big_ghost_gather
@@ -1002,7 +1019,7 @@ let big_ghost_gather
 = up_star_big (small_sig.ghost_pts_to false #a #pcm r v0) (small_sig.ghost_pts_to false #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_gather #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) e) r v0 v1
+  E.ghost_gather #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
   (* References for objects in universes a+2, "non-boxable" pts_to *)
 let nb_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a)
@@ -1021,7 +1038,7 @@ let nb_split_action
     (nb_pts_to r (v0 `op pcm` v1))
     (fun _ -> nb_pts_to r v0 `star` nb_pts_to r v1)
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r (v0 `op pcm` v1))) () <|
-  E.split_action #small_sig #_ #pcm e r v0 v1
+  E.split_action #small_sig #_ #pcm (down_inames e) r v0 v1
 
 
 (** Combining separate permissions into a single composite permission *)
@@ -1036,7 +1053,7 @@ let nb_gather_action
     (nb_pts_to r v0 `star` nb_pts_to r v1)
     (fun _ -> nb_pts_to r (op pcm v0 v1))
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r v0 `star` nb_pts_to r v1)) () <|
-  E.gather_action #small_sig #_ #pcm e r v0 v1
+  E.gather_action #small_sig #_ #pcm (down_inames e) r v0 v1
 
 let nb_alloc_action
       (#a:Type u#(a + 2))
@@ -1047,7 +1064,7 @@ let nb_alloc_action
     emp
     (fun r -> nb_pts_to r x)
 = coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> sig.pts_to #a #pcm r x) () <|
-  E.alloc_action #small_sig #_ #pcm e x
+  E.alloc_action #small_sig #_ #pcm (down_inames e) x
 
 
 let nb_select_refine
@@ -1068,7 +1085,7 @@ let nb_select_refine
       #(nb_pts_to r x)
       #(fun v -> nb_pts_to r (f v))
       () <|
-  E.select_refine #small_sig #_ #p e r x f
+  E.select_refine #small_sig #_ #p (down_inames e) r x f
 
 let nb_upd_gen
     (#a:Type u#(a + 2))
@@ -1081,7 +1098,7 @@ let nb_upd_gen
     (nb_pts_to r x)
     (fun _ -> nb_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r x)) () <|
-  E.upd_gen #small_sig #_ #p e r x y f
+  E.upd_gen #small_sig #_ #p (down_inames e) r x y f
 
 
 let nb_pts_to_not_null_action 
@@ -1094,7 +1111,7 @@ let nb_pts_to_not_null_action
     (nb_pts_to r v)
     (fun _ -> nb_pts_to r v)
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r v)) () <|
-  E.pts_to_not_null_action #small_sig #_ #pcm e r v
+  E.pts_to_not_null_action #small_sig #_ #pcm (down_inames e) r v
 
 let nb_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a)
 : slprop u#a
@@ -1111,7 +1128,7 @@ let nb_ghost_alloc
     emp 
     (fun r -> nb_ghost_pts_to r x)
 = coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> sig.ghost_pts_to false #a #pcm r x) () <|
-  E.ghost_alloc #small_sig #_ #pcm o x
+  E.ghost_alloc #small_sig #_ #pcm (down_inames o) x
 
 let nb_ghost_read
     #o
@@ -1133,7 +1150,7 @@ let nb_ghost_read
                 #(nb_ghost_pts_to r x)
                 #(fun v -> nb_ghost_pts_to r (f v))
                 () <|
-  E.ghost_read #small_sig #_ #p o r x f
+  E.ghost_read #small_sig #_ #p (down_inames o) r x f
 
 
 let nb_ghost_write
@@ -1147,7 +1164,7 @@ let nb_ghost_write
     (nb_ghost_pts_to r x)
     (fun _ -> nb_ghost_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r x)) () <|
-  E.ghost_write #small_sig #_ #p o r x y f
+  E.ghost_write #small_sig #_ #p (down_inames o) r x y f
 
 
 let nb_ghost_share
@@ -1161,7 +1178,7 @@ let nb_ghost_share
     (nb_ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r (v0 `op pcm` v1))) () <|
-  E.ghost_share #small_sig #_ #pcm o r v0 v1
+  E.ghost_share #small_sig #_ #pcm (down_inames o) r v0 v1
 
 
 let nb_ghost_gather
@@ -1176,6 +1193,6 @@ let nb_ghost_gather
     (nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)
     (fun _ -> nb_ghost_pts_to r (op pcm v0 v1))
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_ghost_pts_to r v0 `star` nb_ghost_pts_to r v1)) () <|
-  E.ghost_gather #small_sig #_ #pcm o r v0 v1
+  E.ghost_gather #small_sig #_ #pcm (down_inames o) r v0 v1
 
 

@@ -21,7 +21,7 @@ module Mem = PulseCore.MemoryAlt
 module I = PulseCore.InstantiatedSemantics
 module F = FStar.FunctionalExtensionality
 module PST = PulseCore.HoareStateMonad
-
+module Set = FStar.GhostSet
 friend PulseCore.InstantiatedSemantics
 
 open FStar.PCM
@@ -70,7 +70,7 @@ let action_as_mem_action
     in
     PST.weaken m
  
-let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
+let stt_of_action (#a:Type u#100) #pre #post (m:action a GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
@@ -80,7 +80,7 @@ let stt_of_action (#a:Type u#100) #pre #post (m:action a Set.empty pre post)
   let m : Sem.m a pre _ = Sem.act action in
   fun _ -> m
 
-let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
+let stt_of_action0 (#a:Type u#0) #pre #post (m:action a GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
@@ -89,7 +89,7 @@ let stt_of_action0 (#a:Type u#0) #pre #post (m:action a Set.empty pre post)
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m0 action
   
-let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
+let stt_of_action1 (#a:Type u#1) #pre #post (m:action a GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
@@ -98,7 +98,7 @@ let stt_of_action1 (#a:Type u#1) #pre #post (m:action a Set.empty pre post)
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m1 u#_ u#100 action
 
-let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
+let stt_of_action2 (#a:Type u#2) #pre #post (m:action a GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
@@ -107,7 +107,7 @@ let stt_of_action2 (#a:Type u#2) #pre #post (m:action a Set.empty pre post)
   let action : Sem.action state a = {pre=pre; post=F.on_dom _ post; step} in
   fun _ -> Sem.act_as_m2 u#_ u#100 action
 
-let stt_of_action3 (#a:Type u#3) #pre #post (m:action a Set.empty pre post)
+let stt_of_action3 (#a:Type u#3) #pre #post (m:action a GhostSet.empty pre post)
 : stt a pre post
 = let step (frame:slprop)
     : Sem.pst_sep state a (pre `star` frame) (fun x -> post x `star` frame)
@@ -120,7 +120,6 @@ let stt_of_action3 (#a:Type u#3) #pre #post (m:action a Set.empty pre post)
   } in
   fun _ -> Sem.act_as_m_poly u#_ u#3 u#100 lift action
 
-let iname = iname
 
 let maybe_ghost (r:reifiability) = r = Ghost
 
@@ -166,6 +165,9 @@ let action_of_pre_act
     (f:pre_act a r opens pre post)
 : action a opens pre post
 = f
+
+let iref = iref
+let deq_iref = deq_iref
 
 let act 
     (a:Type u#a)
@@ -376,10 +378,6 @@ let lift3 (#a:Type u#3) #r #opens #pre #post
 ///////////////////////////////////////////////////////
 // invariants
 ///////////////////////////////////////////////////////
-
-let iref = iref
-let iname_of = iname_of
-
 let inv i p = inv i p
 
 let dup_inv (i:iref) (p:slprop) =

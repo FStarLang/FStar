@@ -46,7 +46,7 @@ val dup_inv
 val injective_invariant 
         (#h:heap_sig u#a) 
         (i:(extend h).iref)
-: prop
+: GTot bool
 
 let iiref (h:heap_sig) = i:(extend h).iref { injective_invariant i }
 
