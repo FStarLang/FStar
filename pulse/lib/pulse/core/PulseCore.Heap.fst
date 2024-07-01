@@ -1224,7 +1224,8 @@ let extend_modifies_nothing
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
       select addr h1 == Some (Ref meta a pcm x) /\
       not (core_ref_is_null r) /\
-      addr == core_ref_as_addr r
+      addr == core_ref_as_addr r /\
+      addr_as_core_ref addr == r
   )
 = ()
 

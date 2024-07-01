@@ -4,22 +4,22 @@ open PulseCore.HeapSig
 val extend (h:heap_sig u#a) : h2:heap_sig u#(a + 1) { h2.bprop == h.slprop }
 
 val lift_iref (#h:heap_sig u#a) (i:h.iref) : (extend h).iref
-val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
-val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
+// val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
+// val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
 val lower_inames (#h:heap_sig u#a) (is:inames (extend h)) : inames h
 
-val lift_action
-    (#h:heap_sig u#h)
-    (#a:Type u#a)
-    (#mg:bool)
-    (#ex:inames h)
-    (#pre:h.slprop)
-    (#post:a -> h.slprop)
-    (action:_action_except h a mg ex pre post)
-: _action_except (extend h)
-    a mg (lift_inames ex) 
-    ((extend h).up pre)
-    (fun x -> (extend h).up (post x))
+// val lift_action
+//     (#h:heap_sig u#h)
+//     (#a:Type u#a)
+//     (#mg:bool)
+//     (#ex:inames h)
+//     (#pre:h.slprop)
+//     (#post:a -> h.slprop)
+//     (action:_action_except h a mg ex pre post)
+// : _action_except (extend h)
+//     a mg (lift_inames ex) 
+//     ((extend h).up pre)
+//     (fun x -> (extend h).up (post x))
 
 val lift_action_alt
     (#h:heap_sig u#h)
@@ -68,9 +68,9 @@ val with_invariant
     (#opened_invariants:inames (extend h))
     (#p:(extend h).slprop)
     (#maybe_ghost:bool)
-    (i:(extend h).iref{not (Set.mem ((extend h).iname_of i) opened_invariants)})
+    (i:(extend h).iref{~ (GhostSet.mem i opened_invariants)})
     (f:_action_except (extend h) a maybe_ghost
-      (Set.add ((extend h).iname_of i) opened_invariants) 
+      (add_iref #(extend h) i opened_invariants) 
       (p `(extend h).star` fp)
       (fun x -> p `(extend h).star` fp' x))
 : _action_except (extend h) a maybe_ghost opened_invariants 
@@ -84,7 +84,7 @@ val distinct_invariants_have_distinct_names
       (q:(extend h).slprop { p =!= q })
       (i j: iiref h)
 : ghost_action_except (extend h)
-    (squash ((extend h).iname_of i =!= (extend h).iname_of j))
+    (squash (i =!= j))
     e 
     ((extend h).inv i p `(extend h).star` (extend h).inv j q)
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
@@ -94,16 +94,16 @@ val invariant_name_identifies_invariant
       (e:inames (extend h))
       (p q:(extend h).slprop)
       (i:iiref h)
-      (j:iiref h{ (extend h).iname_of i == (extend h).iname_of j } )
+      (j:iiref h{ i == j } )
 : ghost_action_except (extend h)
-   (squash (p == q /\ i == j)) e
+   (squash (p == q)) e
     ((extend h).inv i p `(extend h).star` (extend h).inv j q)
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
 
 let fresh_wrt (#h:heap_sig u#h)
               (ctx:list h.iref)
               (i:h.iref)
-  = forall i'. List.Tot.memP i' ctx ==> h.iname_of i' <> h.iname_of i   
+  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
 val fresh_invariant
     (#h:heap_sig u#a) 

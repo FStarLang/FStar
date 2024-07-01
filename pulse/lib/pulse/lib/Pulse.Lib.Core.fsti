@@ -335,11 +335,6 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    - Observable:
      The computation has observable atomic effects on the physical state
 
-   - Unobservable:
-     
-     Has no observable effects, but may allocate or open invariants---will
-     be erased by the compiler if the result type is also non-informative
-
    - Neutral:
 
      Has no observable effects and does not allocate or open invariants
@@ -347,7 +342,7 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    The indexes are ordered as follows, including in relation to the
    ghost effect:
 
-   observable > unobservable
+   observable >...
                  |
                  v
        ghost > neutral > ghost non_info

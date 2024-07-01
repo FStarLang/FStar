@@ -4,15 +4,17 @@ open FStar.Ghost
 open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
-val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
 val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
-val core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+let non_null_core_ghost_ref = r:core_ghost_ref { not (core_ghost_ref_is_null r) }
+val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
+val addr_as_core_ghost_ref (addr:nat) : non_null_core_ghost_ref
+val core_ghost_ref_as_addr_injective (c1:core_ghost_ref)
 : Lemma 
-    (requires 
-        core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
-        not (core_ghost_ref_is_null c1) /\
-        not (core_ghost_ref_is_null c2))
-    (ensures c1 == c2)
+  (requires not (core_ghost_ref_is_null c1))
+  (ensures addr_as_core_ghost_ref (core_ghost_ref_as_addr c1) == c1)
+val addr_as_core_ghost_ref_injective (a:nat)
+: Lemma 
+  (ensures core_ghost_ref_as_addr (addr_as_core_ghost_ref a) == a)
 val select_ghost (i:nat) (m:(base_heap u#a).sep.core) : GTot (option (H.cell u#a))
 val ghost_ctr (b:base_heap.mem) : GTot nat
 let free_above_ghost_ctr (m:base_heap.mem)
@@ -106,7 +108,7 @@ let single_ghost_allocation
     select_ghost a (core_of h) == select_ghost a (core_of h1)) /\
   ghost_ctr h1 == ghost_ctr h + 1 /\
   select_ghost (ghost_ctr h) (core_of h1) == Some (H.Ref meta a pcm x) /\
-  ghost_ctr h == core_ghost_ref_as_addr r /\
+  addr_as_core_ghost_ref (ghost_ctr h) == r /\
   free_above_ghost_ctr h /\
   free_above_ghost_ctr h1
 

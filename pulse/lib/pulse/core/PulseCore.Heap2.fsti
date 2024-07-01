@@ -793,14 +793,17 @@ let ghost_ref (#[@@@unused] a:Type u#a) ([@@@unused]p:pcm a) : Type0 = core_ghos
 val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
 val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
-val core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
+val addr_as_core_ghost_ref (_:nat) : r:core_ghost_ref { not <| core_ghost_ref_is_null r }
+val core_ghost_ref_as_addr_injective (c1:core_ghost_ref)
 : Lemma 
   (requires 
-    core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
-    not (core_ghost_ref_is_null c1) /\
-    not (core_ghost_ref_is_null c2))
-  (ensures c1 == c2)
-  
+    not (core_ghost_ref_is_null c1))
+  (ensures
+    addr_as_core_ghost_ref (core_ghost_ref_as_addr c1) == c1)
+val addr_as_core_ghost_ref_injective (a:nat)
+: Lemma 
+  (ensures
+    core_ghost_ref_as_addr (addr_as_core_ghost_ref a) == a)
 val interp_ghost_pts_to 
       (i:core_ghost_ref)
       (#meta:bool)
@@ -854,7 +857,7 @@ val ghost_extend_spec
       let (| r, h1 |) = ghost_extend #meta #a #pcm x addr h in
       (forall (a:nat). a <> addr ==> select_ghost a h == select_ghost a h1) /\
       select_ghost addr h1 == Some (H.Ref meta a pcm x) /\
-      addr == core_ghost_ref_as_addr r
+      addr_as_core_ghost_ref addr == r
   )
 
 val ghost_read

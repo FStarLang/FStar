@@ -122,7 +122,7 @@ let free_above (m:mem u#a) =
   // (forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)) /\
   // (forall i. i >= m.ctr ==> None? (H2.select i m.heap))
 
-let mem_invariant (is:eset unit) (m:mem u#a)
+let mem_invariant (is:GhostSet.set unit) (m:mem u#a)
 : slprop u#a
 = pure (free_above m)
 
@@ -141,14 +141,15 @@ let inv_extract (i:unit) (p:slprop u#a) (m:mem u#a)
   (ensures p == emp)
 = H2.pure_interp (p == H2.emp) m.heap
 
-let mem_invariant_equiv (e:eset unit) (m:mem u#a) (i:unit) (p:slprop u#a)
+let deq_iref : GhostSet.decide_eq unit = fun x y -> true
+let mem_invariant_equiv (e:GhostSet.set unit) (m:mem u#a) (i:unit) (p:slprop u#a)
 : Lemma 
   (requires
     interp (inv i p) m.heap /\
-    not (iname_of i `Set.mem` e))
+    ~ (i `GhostSet.mem` e))
   (ensures
     mem_invariant e m ==
-    mem_invariant (Set.add (iname_of i) e) m `star` p)
+    mem_invariant (HeapSig.add deq_iref i e) m `star` p)
 = inv_extract i p m;
   H2.emp_unit (mem_invariant e m)
 
@@ -201,10 +202,9 @@ let base_heap : heap_sig u#a =
     star_congruence;
     pts_to=H2.pts_to;
     ghost_pts_to=H2.ghost_pts_to;
-    iname = unit;
     iref = unit;
+    deq_iref;
     non_info_iref = (fun x -> reveal x);
-    iname_of = (fun x -> ());
     inv;
     iname_ok = (fun _ _ -> True);
     dup_inv_equiv;
@@ -213,11 +213,15 @@ let base_heap : heap_sig u#a =
     mem_invariant_equiv;
 }
 
+let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
 let core_ghost_ref_as_addr (r:core_ghost_ref)
 : GTot nat
 = H2.core_ghost_ref_as_addr r
-let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
-let core_ghost_ref_as_addr_injective r1 r2 = H2.core_ghost_ref_as_addr_injective r1 r2
+let addr_as_core_ghost_ref (a:nat)
+: GTot core_ghost_ref
+= H2.addr_as_core_ghost_ref a
+let core_ghost_ref_as_addr_injective r1 = H2.core_ghost_ref_as_addr_injective r1
+let addr_as_core_ghost_ref_injective a = H2.addr_as_core_ghost_ref_injective a
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
 let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
