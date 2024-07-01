@@ -45,7 +45,6 @@ let (instantiate_both :
         (env.FStar_TypeChecker_Env.use_eq_strict);
       FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
       FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-      FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
       FStar_TypeChecker_Env.lax_universes =
         (env.FStar_TypeChecker_Env.lax_universes);
       FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -130,7 +129,6 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (env.FStar_TypeChecker_Env.use_eq_strict);
       FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
       FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-      FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
       FStar_TypeChecker_Env.lax_universes =
         (env.FStar_TypeChecker_Env.lax_universes);
       FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -656,8 +654,7 @@ let (check_expected_effect :
                           FStar_Ident.lid_equals uu___3
                             (FStar_Syntax_Util.comp_effect_name c)))
                         ||
-                        (((FStar_Options.ml_ish ()) &&
-                            env.FStar_TypeChecker_Env.lax)
+                        (((FStar_Options.ml_ish ()) && (FStar_Options.lax ()))
                            &&
                            (let uu___3 =
                               FStar_Syntax_Util.is_pure_or_ghost_comp c in
@@ -1237,7 +1234,6 @@ let (guard_letrecs :
                   (env.FStar_TypeChecker_Env.is_iface);
                 FStar_TypeChecker_Env.admit =
                   (env.FStar_TypeChecker_Env.admit);
-                FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
                 FStar_TypeChecker_Env.lax_universes =
                   (env.FStar_TypeChecker_Env.lax_universes);
                 FStar_TypeChecker_Env.phase1 =
@@ -1893,7 +1889,6 @@ let rec (tc_term :
                     (env.FStar_TypeChecker_Env.is_iface);
                   FStar_TypeChecker_Env.admit =
                     (env.FStar_TypeChecker_Env.admit);
-                  FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
                   FStar_TypeChecker_Env.lax_universes =
                     (env.FStar_TypeChecker_Env.lax_universes);
                   FStar_TypeChecker_Env.phase1 =
@@ -2214,9 +2209,7 @@ and (tc_maybe_toplevel_term :
                             (env'.FStar_TypeChecker_Env.use_eq_strict);
                           FStar_TypeChecker_Env.is_iface =
                             (env'.FStar_TypeChecker_Env.is_iface);
-                          FStar_TypeChecker_Env.admit =
-                            (env'.FStar_TypeChecker_Env.admit);
-                          FStar_TypeChecker_Env.lax = true;
+                          FStar_TypeChecker_Env.admit = true;
                           FStar_TypeChecker_Env.lax_universes =
                             (env'.FStar_TypeChecker_Env.lax_universes);
                           FStar_TypeChecker_Env.phase1 =
@@ -3655,7 +3648,8 @@ and (tc_maybe_toplevel_term :
                    | (chead1, g_head1) ->
                        let uu___5 =
                          let uu___6 =
-                           ((Prims.op_Negation env2.FStar_TypeChecker_Env.lax)
+                           ((Prims.op_Negation
+                               env2.FStar_TypeChecker_Env.admit)
                               &&
                               (let uu___7 = FStar_Options.lax () in
                                Prims.op_Negation uu___7))
@@ -3681,12 +3675,7 @@ and (tc_maybe_toplevel_term :
                                 (FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
                                    c)
                                   ||
-                                  ((env2.FStar_TypeChecker_Env.phase1 ||
-                                      (let uu___8 =
-                                         FStar_TypeChecker_Env.should_verify
-                                           env2 in
-                                       Prims.op_Negation uu___8))
-                                     &&
+                                  (env2.FStar_TypeChecker_Env.phase1 &&
                                      (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
                                         c)) in
                               if uu___7
@@ -4490,7 +4479,6 @@ and (tc_tactic :
               FStar_TypeChecker_Env.is_iface =
                 (env.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (env.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -5191,7 +5179,6 @@ and (tc_comp :
                   (env.FStar_TypeChecker_Env.is_iface);
                 FStar_TypeChecker_Env.admit =
                   (env.FStar_TypeChecker_Env.admit);
-                FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
                 FStar_TypeChecker_Env.lax_universes =
                   (env.FStar_TypeChecker_Env.lax_universes);
                 FStar_TypeChecker_Env.phase1 =
@@ -5690,8 +5677,6 @@ and (tc_abs_expected_function_typ :
                                  (envbody.FStar_TypeChecker_Env.is_iface);
                                FStar_TypeChecker_Env.admit =
                                  (envbody.FStar_TypeChecker_Env.admit);
-                               FStar_TypeChecker_Env.lax =
-                                 (envbody.FStar_TypeChecker_Env.lax);
                                FStar_TypeChecker_Env.lax_universes =
                                  (envbody.FStar_TypeChecker_Env.lax_universes);
                                FStar_TypeChecker_Env.phase1 =
@@ -5850,8 +5835,6 @@ and (tc_abs_expected_function_typ :
                                (env.FStar_TypeChecker_Env.is_iface);
                              FStar_TypeChecker_Env.admit =
                                (env.FStar_TypeChecker_Env.admit);
-                             FStar_TypeChecker_Env.lax =
-                               (env.FStar_TypeChecker_Env.lax);
                              FStar_TypeChecker_Env.lax_universes =
                                (env.FStar_TypeChecker_Env.lax_universes);
                              FStar_TypeChecker_Env.phase1 =
@@ -5965,8 +5948,6 @@ and (tc_abs_expected_function_typ :
                                     (envbody1.FStar_TypeChecker_Env.is_iface);
                                   FStar_TypeChecker_Env.admit =
                                     (envbody1.FStar_TypeChecker_Env.admit);
-                                  FStar_TypeChecker_Env.lax =
-                                    (envbody1.FStar_TypeChecker_Env.lax);
                                   FStar_TypeChecker_Env.lax_universes =
                                     (envbody1.FStar_TypeChecker_Env.lax_universes);
                                   FStar_TypeChecker_Env.phase1 =
@@ -6555,8 +6536,6 @@ and (tc_abs :
                                     (envbody2.FStar_TypeChecker_Env.is_iface);
                                   FStar_TypeChecker_Env.admit =
                                     (envbody2.FStar_TypeChecker_Env.admit);
-                                  FStar_TypeChecker_Env.lax =
-                                    (envbody2.FStar_TypeChecker_Env.lax);
                                   FStar_TypeChecker_Env.lax_universes =
                                     (envbody2.FStar_TypeChecker_Env.lax_universes);
                                   FStar_TypeChecker_Env.phase1 =
@@ -10208,9 +10187,6 @@ and (tc_eqn :
                                                                     =
                                                                     (uu___16.FStar_TypeChecker_Env.is_iface);
                                                                     FStar_TypeChecker_Env.admit
-                                                                    =
-                                                                    (uu___16.FStar_TypeChecker_Env.admit);
-                                                                    FStar_TypeChecker_Env.lax
                                                                     = true;
                                                                     FStar_TypeChecker_Env.lax_universes
                                                                     =
@@ -10731,7 +10707,6 @@ and (check_inner_let :
                 (env1.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit =
                 (env1.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (env1.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -11517,7 +11492,6 @@ and (build_let_rec_env :
                   (env01.FStar_TypeChecker_Env.is_iface);
                 FStar_TypeChecker_Env.admit =
                   (env01.FStar_TypeChecker_Env.admit);
-                FStar_TypeChecker_Env.lax = (env01.FStar_TypeChecker_Env.lax);
                 FStar_TypeChecker_Env.lax_universes =
                   (env01.FStar_TypeChecker_Env.lax_universes);
                 FStar_TypeChecker_Env.phase1 =
@@ -11702,8 +11676,6 @@ and (build_let_rec_env :
                                              (env2.FStar_TypeChecker_Env.is_iface);
                                            FStar_TypeChecker_Env.admit =
                                              (env2.FStar_TypeChecker_Env.admit);
-                                           FStar_TypeChecker_Env.lax =
-                                             (env2.FStar_TypeChecker_Env.lax);
                                            FStar_TypeChecker_Env.lax_universes
                                              =
                                              (env2.FStar_TypeChecker_Env.lax_universes);
@@ -12006,8 +11978,6 @@ and (check_let_bound_def :
                            (env11.FStar_TypeChecker_Env.is_iface);
                          FStar_TypeChecker_Env.admit =
                            (env11.FStar_TypeChecker_Env.admit);
-                         FStar_TypeChecker_Env.lax =
-                           (env11.FStar_TypeChecker_Env.lax);
                          FStar_TypeChecker_Env.lax_universes =
                            (env11.FStar_TypeChecker_Env.lax_universes);
                          FStar_TypeChecker_Env.phase1 =
@@ -12533,7 +12503,6 @@ let (typeof_tot_or_gtot_term :
              FStar_TypeChecker_Env.is_iface =
                (env.FStar_TypeChecker_Env.is_iface);
              FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-             FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
              FStar_TypeChecker_Env.lax_universes =
                (env.FStar_TypeChecker_Env.lax_universes);
              FStar_TypeChecker_Env.phase1 =
@@ -12720,9 +12689,7 @@ let (level_of_type :
                            (env.FStar_TypeChecker_Env.use_eq_strict);
                          FStar_TypeChecker_Env.is_iface =
                            (env.FStar_TypeChecker_Env.is_iface);
-                         FStar_TypeChecker_Env.admit =
-                           (env.FStar_TypeChecker_Env.admit);
-                         FStar_TypeChecker_Env.lax = true;
+                         FStar_TypeChecker_Env.admit = true;
                          FStar_TypeChecker_Env.lax_universes =
                            (env.FStar_TypeChecker_Env.lax_universes);
                          FStar_TypeChecker_Env.phase1 =
@@ -13135,9 +13102,7 @@ let rec (universe_of_aux :
                            (env2.FStar_TypeChecker_Env.use_eq_strict);
                          FStar_TypeChecker_Env.is_iface =
                            (env2.FStar_TypeChecker_Env.is_iface);
-                         FStar_TypeChecker_Env.admit =
-                           (env2.FStar_TypeChecker_Env.admit);
-                         FStar_TypeChecker_Env.lax = true;
+                         FStar_TypeChecker_Env.admit = true;
                          FStar_TypeChecker_Env.lax_universes =
                            (env2.FStar_TypeChecker_Env.lax_universes);
                          FStar_TypeChecker_Env.phase1 =

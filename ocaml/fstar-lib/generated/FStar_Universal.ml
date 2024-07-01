@@ -54,7 +54,6 @@ let with_dsenv_of_tcenv :
                 (tcenv.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit =
                 (tcenv.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (tcenv.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (tcenv.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -314,7 +313,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (env.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -403,7 +401,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env1.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env1.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env1.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env1.FStar_TypeChecker_Env.phase1);
@@ -497,7 +494,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env2.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env2.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env2.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env2.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env2.FStar_TypeChecker_Env.phase1);
@@ -591,7 +587,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env3.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env3.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env3.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env3.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env3.FStar_TypeChecker_Env.phase1);
@@ -684,7 +679,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env4.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env4.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env4.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env4.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env4.FStar_TypeChecker_Env.phase1);
