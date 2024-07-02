@@ -1,0 +1,70 @@
+[
+  "Ã’„\u0006à„È,?¸3/\u0017 ®‰",
+  [
+    [
+      "Pulse.Checker.Prover.Match.Base.mpr_zero",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Set.subset", "equation_Prims.nat",
+        "equation_Pulse.Checker.Prover.Base.ss_extends",
+        "equation_Pulse.Syntax.Base.var"
+      ],
+      0,
+      "6e0e2dd3637439885e3b8c0d629ca42a"
+    ],
+    [
+      "Pulse.Checker.Prover.Match.Base.mpr_t",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "equation_FStar.Set.disjoint",
+        "equation_FStar.Stubs.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.var",
+        "equation_Pulse.Typing.Env.disjoint",
+        "equation_Pulse.Typing.Env.dom", "lemma_FStar.Set.lemma_equal_elim",
+        "lemma_FStar.Set.lemma_equal_intro", "lemma_FStar.Set.mem_empty",
+        "lemma_FStar.Set.mem_intersect", "primitive_Prims.op_AmpAmp",
+        "proj_equation_Pulse.Checker.Prover.Base.Mkprover_state_pg",
+        "proj_equation_Pulse.Checker.Prover.Base.Mkprover_state_uvs",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_3201114dc2ece82edbaf3a0633f82db7",
+        "refinement_interpretation_Tm_refine_998f5317571047eba4128227bc054984",
+        "typing_FStar.Set.empty", "typing_FStar.Set.intersect",
+        "typing_FStar.Set.mem", "typing_FStar.Stubs.Reflection.V2.Data.var",
+        "typing_Pulse.Checker.Prover.Base.__proj__Mkprover_state__item__pg",
+        "typing_Pulse.Checker.Prover.Base.__proj__Mkprover_state__item__uvs",
+        "typing_Pulse.Typing.Env.dom"
+      ],
+      0,
+      "96569335e72c1dea5e047a754db36ec3"
+    ],
+    [
+      "Pulse.Checker.Prover.Match.Base.__proj__NoMatch__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6468de15e6767c77e1c7e7809dc66d6d"
+      ],
+      0,
+      "a52f2937b394c59a11b3a57614bbc754"
+    ],
+    [
+      "Pulse.Checker.Prover.Match.Base.__proj__Ambig__item__uu___",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b154ca69e093b83395d4c5e3388a996b"
+      ],
+      0,
+      "844c3da8458b5708238a1c67ee91068d"
+    ]
+  ]
+]

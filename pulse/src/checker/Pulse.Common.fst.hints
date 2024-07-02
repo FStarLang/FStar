@@ -1,5 +1,5 @@
 [
-  "NQ\u0010Krí¿•\t\u0010Ø\tž†\u000eì",
+  "iè\"¡2Ý¶¹“‰Ê.õx¢&",
   [
     [
       "Pulse.Common.op_let_Question",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "467d6121d35a151a51b2cb680dea86ee"
+      "a1ae45bada44e4272dd047a1ba328f66"
     ],
     [
       "Pulse.Common.for_all_dec",
@@ -19,14 +19,13 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_652f4e4a575e8821fc336b216aa5924b_5",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_3e1bb647f12ec6b42d061204098b4e44",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "afcdc75add08344b9a7529257297c504"
+      "588bea57600cea3d5f3317a1d96e74bb"
     ],
     [
       "Pulse.Common.map_dec",
@@ -37,14 +36,13 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_87ee995c600a802bda98b813a7e13db0_7",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_2e74550fdbd5b7dcaa400fdb1bcb3170",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c357252564dbdd4053996b06389f1dcf"
+      "16cf52c185b6505d18685037cbb46024"
     ],
     [
       "Pulse.Common.zipWith",
@@ -55,14 +53,14 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@query", "constructor_distinct_FStar.Tactics.Result.Success",
+        "@query", "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
-        "data_elim_FStar.Tactics.Result.Success",
+        "data_elim_FStar.Stubs.Tactics.Result.Success",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Prims.Cons",
         "equation_Prims.min",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "fuel_guarded_inversion_FStar.Tactics.Result.__result",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "primitive_Prims.op_Addition", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
@@ -70,16 +68,16 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
-        "projection_inverse_FStar.Tactics.Result.Success_a",
-        "projection_inverse_FStar.Tactics.Result.Success_ps",
-        "projection_inverse_FStar.Tactics.Result.Success_v",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
         "projection_inverse_Prims.Cons_a",
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_2c4be05c1b74a68da7602e6178acbf47"
       ],
       0,
-      "65558c9aec76861d164417e53c8135e7"
+      "487cb400a7d9fdef5a49683d50a80463"
     ],
     [
       "Pulse.Common.zip",
@@ -118,7 +116,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "69fcac07e3e4d4aa50fc5ac6e7832414"
+      "d91e1f23950c7752b8f8001a0199236f"
     ],
     [
       "Pulse.Common.map_opt",
@@ -133,7 +131,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f70b54d495da78d946131a65eb23fa36"
+      "80fd8a66a06ee6d161f6d49a9f95f455"
     ],
     [
       "Pulse.Common.map_opt_dec",
@@ -144,14 +142,13 @@
         "@MaxIFuel_assumption", "@query",
         "binder_x_6c50b6a78a5d5fe006e018a5fd13eaaf_8",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals",
         "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_da1abf8c1e8d764f88ea1963b9cbf32a",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f9a3836db708c8f850343a1a0cfd23a2"
+      "61aa580182a2dc9fa6f8081a8ec33ff5"
     ],
     [
       "Pulse.Common.concat_map_opt",
@@ -166,23 +163,11 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f6b0e7289f9db61ee6c05fca0821d663"
+      "9801ecf6b0606a9bdd7e229400c94a4e"
     ],
     [
       "Pulse.Common.lemma_map_opt_dec_len",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "3a49aa35b8b24417f2e0fd3ef010a25c"
-    ],
-    [
-      "Pulse.Common.lemma_map_opt_dec_len",
-      2,
       2,
       1,
       [
@@ -209,8 +194,7 @@
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals", "equation_Prims.squash",
-        "equation_Pulse.Common.op_let_Question",
+        "equation_Prims.squash", "equation_Pulse.Common.op_let_Question",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Pulse.Common.map_opt_dec.fuel_instrumented",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
@@ -232,20 +216,23 @@
         "subterm_ordering_Prims.Cons", "typing_Pulse.Common.map_opt_dec"
       ],
       0,
-      "9d1793a5cd03bd520adbae7c4fa9a6a1"
+      "6c4ff983f556272a3e0fa9b4ce4c4154"
     ],
     [
-      "Pulse.Common.dec_index",
-      1,
+      "Pulse.Common.lemma_map_opt_dec_len",
+      2,
       2,
       1,
-      [ "@query" ],
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
       0,
-      "64a46c08f9379794944254db2a7b36d6"
+      "a3b66485904f74755b4fb629f6d59bd2"
     ],
     [
       "Pulse.Common.dec_index",
-      2,
+      1,
       2,
       1,
       [
@@ -261,7 +248,6 @@
         "disc_equation_Prims.Cons", "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -282,23 +268,20 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1277815adcd9af52fa11acc3aa232999"
+      "ea087495757c5d6a60f91669630333b1"
     ],
     [
-      "Pulse.Common.lemma_map_dec_len",
-      1,
+      "Pulse.Common.dec_index",
+      2,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "refinement_interpretation_Tm_refine_4d08f8b7c33e9b91d1fd5a3dcb8d32da"
-      ],
+      [ "@query" ],
       0,
-      "dad9aeaad1119691fbb30f6d6f8ec152"
+      "e55ed87291900a743e77d6e638162a54"
     ],
     [
       "Pulse.Common.lemma_map_dec_len",
-      2,
+      1,
       2,
       1,
       [
@@ -317,7 +300,6 @@
         "binder_x_fe28d8bcde588226b4e538b35321de05_5",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Pulse.Common.map_dec.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list",
@@ -332,36 +314,23 @@
         "subterm_ordering_Prims.Cons", "typing_Pulse.Common.map_dec"
       ],
       0,
-      "c8a21eed0e59e58cc691d7d71a35feda"
+      "24f99b1842cba91916335c8f2e857a9f"
     ],
     [
-      "Pulse.Common.__lemma_map_dec_index",
-      1,
+      "Pulse.Common.lemma_map_dec_len",
+      2,
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
-        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
-        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_correspondence_Pulse.Common.map_dec.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
-        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
-        "@fuel_irrelevance_Pulse.Common.map_dec.fuel_instrumented", "@query",
-        "equation_Prims.nat", "int_inversion",
-        "lemma_Pulse.Common.dec_index",
-        "lemma_Pulse.Common.lemma_map_dec_len",
-        "refinement_interpretation_Tm_refine_012d84ab711a5da18390cc5d5e8f4433",
-        "refinement_interpretation_Tm_refine_240252e5fc8433e2ded321d56eeb6aed",
-        "refinement_interpretation_Tm_refine_445797a27cd7a6e51a310e67a09dd697",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_bf2fa1226f2c9a0f6671df3e80ddcb8e"
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_be34884a876b94bf6eae7624eca43866"
       ],
       0,
-      "fd05fc60ecf8f6f25a19af801215eb8c"
+      "ff0d35656a043f64b928a78cf516bd3e"
     ],
     [
       "Pulse.Common.__lemma_map_dec_index",
-      2,
+      1,
       2,
       1,
       [
@@ -388,7 +357,6 @@
         "equation_FStar.List.Tot.Base.hd",
         "equation_FStar.List.Tot.Base.tail",
         "equation_FStar.List.Tot.Base.tl", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_FStar.List.Tot.Base.index.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Pulse.Common.map_dec.fuel_instrumented",
@@ -421,7 +389,32 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "5156912d931afdcf1f10cd34bc54381e"
+      "8641c84f4cab14490bf0bcfbeda966c7"
+    ],
+    [
+      "Pulse.Common.__lemma_map_dec_index",
+      2,
+      2,
+      1,
+      [
+        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@fuel_correspondence_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_correspondence_Pulse.Common.map_dec.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.index.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
+        "@fuel_irrelevance_Pulse.Common.map_dec.fuel_instrumented", "@query",
+        "equation_Prims.nat", "int_inversion",
+        "lemma_Pulse.Common.dec_index",
+        "lemma_Pulse.Common.lemma_map_dec_len",
+        "refinement_interpretation_Tm_refine_012d84ab711a5da18390cc5d5e8f4433",
+        "refinement_interpretation_Tm_refine_240252e5fc8433e2ded321d56eeb6aed",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_83c9a48f3252e3463a3a8e5593822ffe",
+        "refinement_interpretation_Tm_refine_bf2fa1226f2c9a0f6671df3e80ddcb8e"
+      ],
+      0,
+      "88955385c9bd3dfcafd384e7726c3145"
     ],
     [
       "Pulse.Common.lemma_map_dec_index",
@@ -446,7 +439,7 @@
         "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0"
       ],
       0,
-      "0e33d26e88f5d33fb75dac5713a1ef93"
+      "b55e0b6baa62d027455ed45caa33669e"
     ],
     [
       "Pulse.Common.lemma_map_dec_index_i",
@@ -471,7 +464,7 @@
         "refinement_interpretation_Tm_refine_c86aba5c6243e6b7f9a4b0ad41b4e9a0"
       ],
       0,
-      "79460f9946ed013f9a61217218e15bbc"
+      "3ffb8eb2d6a3bd420d56b22904ab91d3"
     ]
   ]
 ]
