@@ -440,6 +440,15 @@ let (e_vconst :
             [uu___1] in
           FStar_Syntax_Syntax.mk_Tm_app
             FStar_Reflection_V2_Constants.ref_C_Reflect.FStar_Reflection_V2_Constants.t
+            uu___ FStar_Compiler_Range_Type.dummyRange
+      | FStar_Reflection_V2_Data.C_Real s ->
+          let uu___ =
+            let uu___1 =
+              let uu___2 = embed FStar_Syntax_Embeddings.e_string rng s in
+              FStar_Syntax_Syntax.as_arg uu___2 in
+            [uu___1] in
+          FStar_Syntax_Syntax.mk_Tm_app
+            FStar_Reflection_V2_Constants.ref_C_Real.FStar_Reflection_V2_Constants.t
             uu___ FStar_Compiler_Range_Type.dummyRange in
     {
       FStar_Syntax_Syntax.n = (r.FStar_Syntax_Syntax.n);
@@ -533,7 +542,19 @@ let (e_vconst :
                                        uu___3)
                                   FStar_Syntax_Embeddings.e_string_list in
                               FStar_Syntax_Embeddings_AppEmb.run args uu___2)
-                           else FStar_Pervasives_Native.None) in
+                           else
+                             if
+                               FStar_Syntax_Syntax.fv_eq_lid fv
+                                 FStar_Reflection_V2_Constants.ref_C_Real.FStar_Reflection_V2_Constants.lid
+                             then
+                               (let uu___2 =
+                                  FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                                    (fun uu___3 ->
+                                       FStar_Reflection_V2_Data.C_Real uu___3)
+                                    FStar_Syntax_Embeddings.e_string in
+                                FStar_Syntax_Embeddings_AppEmb.run args
+                                  uu___2)
+                             else FStar_Pervasives_Native.None) in
   mk_emb embed_const unembed_const
     FStar_Reflection_V2_Constants.fstar_refl_vconst
 let rec e_pattern_aq :
