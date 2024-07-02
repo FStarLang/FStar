@@ -197,7 +197,84 @@ let intro_any_exists
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
   __intro_any_exists (List.length pst.unsolved) pst prover
 
-#push-options "--z3rlimit_factor 20 --fuel 1 --ifuel 1 --split_queries no --retry 3" // fixme
+noeq
+type prover_iteration_res_t (#preamble:_) (pst0:prover_state preamble) =
+  | Stepped of pst':prover_state preamble { pst' `pst_extends` pst0 }
+  | NoProgress
+
+(* a "subtyping" in the pst for the type above. *)
+let res_advance (#preamble:_)
+   (#pst0 : prover_state preamble)
+   (#pst1 : prover_state preamble{ pst1 `pst_extends` pst0 })
+   (ir : prover_iteration_res_t pst1)
+    : prover_iteration_res_t pst0 =
+  match ir with
+  | Stepped pst1' -> Stepped pst1'
+  | NoProgress -> NoProgress
+
+let prover_pass_t : Type =
+  (#preamble:_) ->
+  (pst0:prover_state preamble) ->
+  T.Tac (pst:prover_state preamble{ pst `pst_extends` pst0 })
+
+(* A helper to avoid F* issue #3339. *)
+noeq
+type prover_pass =
+  | P : string -> prover_pass_t -> prover_pass
+
+(* Going over the passes, stopping as soon as one makes progress. *)
+let rec prover_iteration_loop
+  (#preamble:_)
+  (pst0:prover_state preamble)
+  (passes : list prover_pass)
+  : T.Tac (prover_iteration_res_t pst0)
+=
+  match passes with
+  | [] -> NoProgress
+  | (P name pass)::passes' ->
+    let pst = pass pst0 in
+    if pst.progress then (
+      debug_prover pst.pg (fun _ ->
+        Printf.sprintf "prover: %s: made progress, remaining_ctxt after pass = %s\n"
+          name (show pst.remaining_ctxt));
+      Stepped pst
+    ) else (
+      debug_prover pst.pg (fun _ ->
+        Printf.sprintf "prover: %s: no progress\n" name);
+      (* TODO: start from pst0? *)
+      // res_advance <| prover_iteration_loop pst passes'
+      prover_iteration_loop pst0 passes'
+    )
+
+
+let prover_pass_collect_exists (#preamble:_) (pst0:prover_state preamble)
+  : T.Tac (pst:prover_state preamble{ pst `pst_extends` pst0 })
+=
+  let (| exs, rest, d |) = collect_exists (push_env pst0.pg pst0.uvs) pst0.unsolved in
+  unsolved_equiv_pst pst0 (exs@rest) d
+
+(* One prover iteration is applying these passes until one succeeds.
+If so, we return a "Stepped" with the new pst (and the prover starts
+from the beginning again). If none succeeds, we return "NoProgress". *)
+let prover_iteration
+  (#preamble:_)
+  (pst0:prover_state preamble)
+  : T.Tac (prover_iteration_res_t pst0)
+= let pst = pst0 in
+  let pst = { pst with progress = false } in
+
+  res_advance <| prover_iteration_loop pst [
+    // P "elim_pure_pst"     ElimPure.elim_pure_pst;
+    P "elim_exists"       ElimExists.elim_exists_pst;
+    P "collect_exists"    prover_pass_collect_exists;
+    P "explode"           Explode.explode;
+    P "match_syntactic"   Match.match_syntactic;
+    P "match_fastunif"    Match.match_fastunif;
+    P "match_fastunif_i"  Match.match_fastunif_i;
+    P "match_full"        Match.match_full;
+  ]
+
+#push-options "--z3rlimit_factor 4"
 let rec prover
   (#preamble:_)
   (pst0:prover_state preamble)
@@ -208,10 +285,12 @@ let rec prover
       (show (list_as_vprop pst0.remaining_ctxt))
       (show (list_as_vprop pst0.unsolved))
       (show pst0.allow_ambiguous));
-  
-  let pst = pst0 in
-  let pst = { pst with progress = false } in
-  match pst.unsolved with
+  (* Always eagerly eliminate pure, even if the goals are empty,
+  so we don't complain about a possible "leak". I think it'd be nicer
+  to use a typeclass for safely-droppable resources. *)
+  let pst0 = ElimPure.elim_pure_pst pst0 in
+
+  match pst0.unsolved with
   | [] ->
     (* We happen to be called on a fully-solved pst, do nothing. *)
     pst0
@@ -220,128 +299,57 @@ let rec prover
     (* Beta/iota/primops normalization in the context and goals.
        FIXME: do this incrementally instead of on every entry to the
        prover. *)
-    let pst = normalize_vprop_context pst in
+    let pst = normalize_vprop_context pst0 in
+    let pst = { pst with progress = false } in
 
-    (* Eliminate existentials from context, extend pst with new variables and resources. *)
-    let pst = ElimExists.elim_exists_pst pst in
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: remaining_ctxt after elim exists: %s\n"
-        (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
+    match prover_iteration pst with
+    | Stepped pst' -> prover pst'
+    | NoProgress ->
+      let pst = intro_any_exists pst prover in
+      if pst.progress then prover pst else let () = () in
 
-    if pst.progress then prover pst else let () = () in
-
-    (* Eliminate pure vprops in context, extend pst with new squash bindings. *)
-    let pst = ElimPure.elim_pure_pst pst in
-
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: remaining_ctxt after elim pure: %s\n"
-        (P.term_to_string (list_as_vprop pst.remaining_ctxt)));
-    if pst.progress then prover pst else let () = () in
-
-    let (| exs, rest, d |) = collect_exists (push_env pst.pg pst.uvs) pst.unsolved in
-
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: tried to pull exists: exs: %s and rest: %s\n"
-        (P.term_to_string (list_as_vprop exs)) (P.term_to_string (list_as_vprop rest)));
-    if pst.progress then prover pst else let () = () in
-
-    let pst = unsolved_equiv_pst pst (exs@rest) d in
-
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after pulling exists at the top: %s\n"
-        (P.term_to_string (list_as_vprop pst.unsolved)));
-    if pst.progress then prover pst else let () = () in
-        
-    (* Always explode the unsolved set into atoms. This should be done
-    after normalization. *)
-    let pst = Explode.explode pst in
- 
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after exploding: %s /// (%s)\n"
-        (P.term_to_string (list_as_vprop pst.unsolved))
-        (P.term_to_string (pst.ss.(list_as_vprop pst.unsolved))));
-    if pst.progress then prover pst else let () = () in
-
-    (* Try to syntactically match some goals from the context. *)   
-    let pst = Match.match_syntactic pst in
-    
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after syntactic match: %s\n"
-        (show (list_as_vprop pst.unsolved)));
-    if pst.progress then prover pst else let () = () in
-
-    (* Whatever remains, try fastpath unification (no smt, no unfolding). *)
-    let pst = Match.match_fastunif pst in
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after fastunif: %s\n"
-        (show (list_as_vprop pst.unsolved)));
-    if pst.progress then prover pst else let () = () in
-
-    (* Whatever remains, try fastpath unification (no smt, no unfolding). *)
-    let pst = Match.match_fastunif_i pst in
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after fastunif_inst: %s\n"
-        (show (list_as_vprop pst.unsolved)));
-    if pst.progress then prover pst else let () = () in
-
-    (* Go into full blown unification + SMT, with limitations
-    such as the strict_match attribute. *)
-    let pst = Match.match_full pst in
-    
-    debug_prover pst.pg (fun _ ->
-      Printf.sprintf "prover: unsolved after full match: %s\n"
-        (P.term_to_string (list_as_vprop pst.unsolved)));
-    if pst.progress then prover pst else let () = () in
-
-    let pst = intro_any_exists pst prover in
-    if pst.progress then prover pst else let () = () in
-
-    match pst.unsolved with
-    | [] -> pst
-    | hd::unsolved' ->
-      // match inspect_term hd with
-      // | Tm_ExistsSL u b body ->
-      //   IntroExists.intro_exists pst u b body unsolved' () prover
-      // | _ ->
-        (* Push all pures to the back. We try them last. *)
-        (* TODO: can't we just call prove_pures and be done? *)
-        let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
-        let pst = unsolved_equiv_pst pst (rest@pures) d in
-        match pst.unsolved with
-        | [] -> pst
-        | q::tl ->
-          match inspect_term q with
-          | Tm_Pure _ -> prove_pures pst
-          | _ ->
-            (* We have a first unsolved goal that is not a pure, we fail right 
-            now, reporting all non-pure goals. *)
-            let non_pures = T.filter (fun t -> not (Tm_Pure? (inspect_term t))) pst.unsolved in
-            let non_pures = T.map (fun q -> pst.ss.(q)) non_pures in
-            let q_norm : vprop = pst.ss.(q) in
-            match check_equiv_emp' pst.pg q_norm with // MOVE BEFORE, filter all emps before trying fastunif
-            | Some tok ->
-              (* It's emp, so just prove it here. *)
-              let pst' = { pst with
-                unsolved = unsolved';
-                goals_inv = magic();
-              } in
-              prover pst'
-            | None ->
-              let msg = [
-                text "Cannot prove:" ^^
-                    indent (pp <| canon_vprop_list_print non_pures);
-                text "In the context:" ^^
-                    indent (pp <| canon_vprop_list_print pst.remaining_ctxt)
-              ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
-                    text "The prover was started with goal:" ^^
-                        indent (pp preamble.goals);
-                    text "and initial context:" ^^
-                        indent (pp preamble.ctxt);
-                  ] else [])
-              in
-              // GM: I feel I should use (Some q.range) instead of None, but that makes
-              // several error locations worse.
-              fail_doc pst.pg None msg
+      match pst.unsolved with
+      | [] -> pst
+      | hd::unsolved' ->
+          (* Push all pures to the back. We try them last. *)
+          (* TODO: can't we just call prove_pures and be done? *)
+          let (| pures, rest, d |) = collect_pures (push_env pst.pg pst.uvs) pst.unsolved in
+          let pst = unsolved_equiv_pst pst (rest@pures) d in
+          match pst.unsolved with
+          | [] -> pst
+          | q::tl ->
+            match inspect_term q with
+            | Tm_Pure _ -> prove_pures pst
+            | _ ->
+              (* We have a first unsolved goal that is not a pure, we fail right
+              now, reporting all non-pure goals. *)
+              let non_pures = T.filter (fun t -> not (Tm_Pure? (inspect_term t))) pst.unsolved in
+              let non_pures = T.map (fun q -> pst.ss.(q)) non_pures in
+              let q_norm : vprop = pst.ss.(q) in
+              match check_equiv_emp' pst.pg q_norm with // MOVE BEFORE, filter all emps before trying fastunif
+              | Some tok ->
+                (* It's emp, so just prove it here. *)
+                let pst' = { pst with
+                  unsolved = unsolved';
+                  goals_inv = magic();
+                } in
+                prover pst'
+              | None ->
+                let msg = [
+                  text "Cannot prove:" ^^
+                      indent (pp <| canon_vprop_list_print non_pures);
+                  text "In the context:" ^^
+                      indent (pp <| canon_vprop_list_print pst.remaining_ctxt)
+                ] @ (if Pulse.Config.debug_flag "initial_solver_state" then [
+                      text "The prover was started with goal:" ^^
+                          indent (pp preamble.goals);
+                      text "and initial context:" ^^
+                          indent (pp preamble.ctxt);
+                    ] else [])
+                in
+                // GM: I feel I should use (Some q.range) instead of None, but that makes
+                // several error locations worse.
+                fail_doc pst.pg None msg
 #pop-options
 
 let rec get_q_at_hd (g:env) (l:list vprop) (q:vprop { L.existsb (fun v -> eq_tm v q) l })
