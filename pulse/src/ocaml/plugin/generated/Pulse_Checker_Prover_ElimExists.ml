@@ -139,108 +139,132 @@ let (elim_exists_pst :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                 (Prims.of_int (79)) (Prims.of_int (4)) (Prims.of_int (84))
-                 (Prims.of_int (13)))))
+                 (Prims.of_int (80)) (Prims.of_int (13)) (Prims.of_int (80))
+                 (Prims.of_int (89)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                 (Prims.of_int (76)) (Prims.of_int (74)) (Prims.of_int (115))
+                 (Prims.of_int (80)) (Prims.of_int (92)) (Prims.of_int (120))
                  (Prims.of_int (3)))))
-        (Obj.magic
-           (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
-              (Pulse_Syntax_Pure.list_as_vprop
-                 pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-              (Pulse_Checker_Prover_Base.op_Star
-                 preamble.Pulse_Checker_Prover_Base.frame
-                 (Pulse_Checker_Prover_Base.op_Array_Access
-                    pst.Pulse_Checker_Prover_Base.ss
-                    pst.Pulse_Checker_Prover_Base.solved)) ()
-              pst.Pulse_Checker_Prover_Base.uvs))
+        (FStar_Tactics_Effect.lift_div_tac
+           (fun uu___ ->
+              FStar_List_Tot_Base.existsb
+                (fun t ->
+                   Pulse_Syntax_Pure.uu___is_Tm_ExistsSL
+                     (Pulse_Syntax_Pure.inspect_term t))
+                pst.Pulse_Checker_Prover_Base.remaining_ctxt))
         (fun uu___ ->
-           FStar_Tactics_Effect.lift_div_tac
-             (fun uu___1 ->
-                match uu___ with
-                | FStar_Pervasives.Mkdtuple4 (g', remaining_ctxt', ty, k) ->
-                    {
-                      Pulse_Checker_Prover_Base.pg = g';
-                      Pulse_Checker_Prover_Base.remaining_ctxt =
-                        (Pulse_Syntax_Pure.vprop_as_list remaining_ctxt');
-                      Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing =
-                        ();
-                      Pulse_Checker_Prover_Base.uvs =
-                        (pst.Pulse_Checker_Prover_Base.uvs);
-                      Pulse_Checker_Prover_Base.ss =
-                        (pst.Pulse_Checker_Prover_Base.ss);
-                      Pulse_Checker_Prover_Base.nts =
-                        FStar_Pervasives_Native.None;
-                      Pulse_Checker_Prover_Base.solved =
-                        (pst.Pulse_Checker_Prover_Base.solved);
-                      Pulse_Checker_Prover_Base.unsolved =
-                        (pst.Pulse_Checker_Prover_Base.unsolved);
-                      Pulse_Checker_Prover_Base.k =
-                        (Pulse_Checker_Base.k_elab_trans
-                           preamble.Pulse_Checker_Prover_Base.g0
-                           (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__pg
-                              preamble pst) g'
-                           (Pulse_Checker_Prover_Base.op_Star
-                              preamble.Pulse_Checker_Prover_Base.ctxt
-                              preamble.Pulse_Checker_Prover_Base.frame)
-                           (Pulse_Checker_Prover_Base.op_Star
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Syntax_Pure.list_as_vprop
-                                    (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
-                                       preamble pst))
-                                 preamble.Pulse_Checker_Prover_Base.frame)
-                              (Pulse_Checker_Prover_Base.op_Array_Access
-                                 (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__ss
-                                    preamble pst)
-                                 (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__solved
-                                    preamble pst)))
-                           (Pulse_Checker_Prover_Base.op_Star
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 remaining_ctxt'
-                                 preamble.Pulse_Checker_Prover_Base.frame)
-                              (Pulse_Checker_Prover_Base.op_Array_Access
-                                 pst.Pulse_Checker_Prover_Base.ss
-                                 pst.Pulse_Checker_Prover_Base.solved))
-                           pst.Pulse_Checker_Prover_Base.k
-                           (Pulse_Checker_Base.k_elab_equiv
-                              pst.Pulse_Checker_Prover_Base.pg g'
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Syntax_Pure.list_as_vprop
-                                    pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-                                 (Pulse_Checker_Prover_Base.op_Star
-                                    preamble.Pulse_Checker_Prover_Base.frame
-                                    (Pulse_Checker_Prover_Base.op_Array_Access
-                                       pst.Pulse_Checker_Prover_Base.ss
-                                       pst.Pulse_Checker_Prover_Base.solved)))
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Checker_Prover_Base.op_Star
-                                    (Pulse_Syntax_Pure.list_as_vprop
-                                       pst.Pulse_Checker_Prover_Base.remaining_ctxt)
-                                    preamble.Pulse_Checker_Prover_Base.frame)
-                                 (Pulse_Checker_Prover_Base.op_Array_Access
-                                    pst.Pulse_Checker_Prover_Base.ss
-                                    pst.Pulse_Checker_Prover_Base.solved))
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 remaining_ctxt'
-                                 (Pulse_Checker_Prover_Base.op_Star
-                                    preamble.Pulse_Checker_Prover_Base.frame
-                                    (Pulse_Checker_Prover_Base.op_Array_Access
-                                       pst.Pulse_Checker_Prover_Base.ss
-                                       pst.Pulse_Checker_Prover_Base.solved)))
-                              (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Checker_Prover_Base.op_Star
-                                    remaining_ctxt'
-                                    preamble.Pulse_Checker_Prover_Base.frame)
-                                 (Pulse_Checker_Prover_Base.op_Array_Access
-                                    pst.Pulse_Checker_Prover_Base.ss
-                                    pst.Pulse_Checker_Prover_Base.solved)) k
-                              () ()));
-                      Pulse_Checker_Prover_Base.goals_inv = ();
-                      Pulse_Checker_Prover_Base.solved_inv = ();
-                      Pulse_Checker_Prover_Base.progress =
-                        (pst.Pulse_Checker_Prover_Base.progress);
-                      Pulse_Checker_Prover_Base.allow_ambiguous =
-                        (pst.Pulse_Checker_Prover_Base.allow_ambiguous)
-                    }))
+           (fun prog ->
+              Obj.magic
+                (FStar_Tactics_Effect.tac_bind
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "Pulse.Checker.Prover.ElimExists.fst"
+                            (Prims.of_int (83)) (Prims.of_int (4))
+                            (Prims.of_int (88)) (Prims.of_int (13)))))
+                   (FStar_Sealed.seal
+                      (Obj.magic
+                         (FStar_Range.mk_range
+                            "Pulse.Checker.Prover.ElimExists.fst"
+                            (Prims.of_int (80)) (Prims.of_int (92))
+                            (Prims.of_int (120)) (Prims.of_int (3)))))
+                   (Obj.magic
+                      (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
+                         (Pulse_Syntax_Pure.list_as_vprop
+                            pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                         (Pulse_Checker_Prover_Base.op_Star
+                            preamble.Pulse_Checker_Prover_Base.frame
+                            (Pulse_Checker_Prover_Base.op_Array_Access
+                               pst.Pulse_Checker_Prover_Base.ss
+                               pst.Pulse_Checker_Prover_Base.solved)) ()
+                         pst.Pulse_Checker_Prover_Base.uvs))
+                   (fun uu___ ->
+                      FStar_Tactics_Effect.lift_div_tac
+                        (fun uu___1 ->
+                           match uu___ with
+                           | FStar_Pervasives.Mkdtuple4
+                               (g', remaining_ctxt', ty, k) ->
+                               {
+                                 Pulse_Checker_Prover_Base.pg = g';
+                                 Pulse_Checker_Prover_Base.remaining_ctxt =
+                                   (Pulse_Syntax_Pure.vprop_as_list
+                                      remaining_ctxt');
+                                 Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing
+                                   = ();
+                                 Pulse_Checker_Prover_Base.uvs =
+                                   (pst.Pulse_Checker_Prover_Base.uvs);
+                                 Pulse_Checker_Prover_Base.ss =
+                                   (pst.Pulse_Checker_Prover_Base.ss);
+                                 Pulse_Checker_Prover_Base.nts =
+                                   FStar_Pervasives_Native.None;
+                                 Pulse_Checker_Prover_Base.solved =
+                                   (pst.Pulse_Checker_Prover_Base.solved);
+                                 Pulse_Checker_Prover_Base.unsolved =
+                                   (pst.Pulse_Checker_Prover_Base.unsolved);
+                                 Pulse_Checker_Prover_Base.k =
+                                   (Pulse_Checker_Base.k_elab_trans
+                                      preamble.Pulse_Checker_Prover_Base.g0
+                                      (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__pg
+                                         preamble pst) g'
+                                      (Pulse_Checker_Prover_Base.op_Star
+                                         preamble.Pulse_Checker_Prover_Base.ctxt
+                                         preamble.Pulse_Checker_Prover_Base.frame)
+                                      (Pulse_Checker_Prover_Base.op_Star
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            (Pulse_Syntax_Pure.list_as_vprop
+                                               (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
+                                                  preamble pst))
+                                            preamble.Pulse_Checker_Prover_Base.frame)
+                                         (Pulse_Checker_Prover_Base.op_Array_Access
+                                            (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__ss
+                                               preamble pst)
+                                            (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__solved
+                                               preamble pst)))
+                                      (Pulse_Checker_Prover_Base.op_Star
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            remaining_ctxt'
+                                            preamble.Pulse_Checker_Prover_Base.frame)
+                                         (Pulse_Checker_Prover_Base.op_Array_Access
+                                            pst.Pulse_Checker_Prover_Base.ss
+                                            pst.Pulse_Checker_Prover_Base.solved))
+                                      pst.Pulse_Checker_Prover_Base.k
+                                      (Pulse_Checker_Base.k_elab_equiv
+                                         pst.Pulse_Checker_Prover_Base.pg g'
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            (Pulse_Syntax_Pure.list_as_vprop
+                                               pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                            (Pulse_Checker_Prover_Base.op_Star
+                                               preamble.Pulse_Checker_Prover_Base.frame
+                                               (Pulse_Checker_Prover_Base.op_Array_Access
+                                                  pst.Pulse_Checker_Prover_Base.ss
+                                                  pst.Pulse_Checker_Prover_Base.solved)))
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            (Pulse_Checker_Prover_Base.op_Star
+                                               (Pulse_Syntax_Pure.list_as_vprop
+                                                  pst.Pulse_Checker_Prover_Base.remaining_ctxt)
+                                               preamble.Pulse_Checker_Prover_Base.frame)
+                                            (Pulse_Checker_Prover_Base.op_Array_Access
+                                               pst.Pulse_Checker_Prover_Base.ss
+                                               pst.Pulse_Checker_Prover_Base.solved))
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            remaining_ctxt'
+                                            (Pulse_Checker_Prover_Base.op_Star
+                                               preamble.Pulse_Checker_Prover_Base.frame
+                                               (Pulse_Checker_Prover_Base.op_Array_Access
+                                                  pst.Pulse_Checker_Prover_Base.ss
+                                                  pst.Pulse_Checker_Prover_Base.solved)))
+                                         (Pulse_Checker_Prover_Base.op_Star
+                                            (Pulse_Checker_Prover_Base.op_Star
+                                               remaining_ctxt'
+                                               preamble.Pulse_Checker_Prover_Base.frame)
+                                            (Pulse_Checker_Prover_Base.op_Array_Access
+                                               pst.Pulse_Checker_Prover_Base.ss
+                                               pst.Pulse_Checker_Prover_Base.solved))
+                                         k () ()));
+                                 Pulse_Checker_Prover_Base.goals_inv = ();
+                                 Pulse_Checker_Prover_Base.solved_inv = ();
+                                 Pulse_Checker_Prover_Base.progress = prog;
+                                 Pulse_Checker_Prover_Base.allow_ambiguous =
+                                   (pst.Pulse_Checker_Prover_Base.allow_ambiguous)
+                               })))) uu___)
