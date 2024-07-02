@@ -227,6 +227,10 @@ let e_vconst =
             S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed rng ns)]
                         Range.dummyRange
 
+        | C_Real s ->
+            S.mk_Tm_app ref_C_Real.t [S.as_arg (embed rng s)]
+                        Range.dummyRange
+
         in { r with pos = rng }
     in
     let unembed_const (t:term) : option vconst =
@@ -240,6 +244,7 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Range.lid -> run args (C_Range <$$> e_range)
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)
       | _ when S.fv_eq_lid fv ref_C_Reflect.lid -> run args (C_Reflect <$$> e_string_list)
+      | _ when S.fv_eq_lid fv ref_C_Real.lid -> run args (C_Real <$$> e_string)
       | _ -> None
     in
     mk_emb embed_const unembed_const fstar_refl_vconst
