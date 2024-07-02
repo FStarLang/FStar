@@ -68,24 +68,30 @@ let explode1
 let rec explode_aux
   (#preamble:_)
   (pst:prover_state preamble)
-  (acc : list vprop) (todo : list vprop) : T.Tac (list vprop)
+  (prog : bool)
+  (acc : list vprop) (todo : list vprop) : T.Tac (list vprop & bool)
 =
   match todo with
-  | [] -> acc
+  | [] -> acc, prog
   | q::qs ->
-    let acc = acc @ (match explode1 pst q with | Some (|qs, _|) -> qs | None -> [q]) in
-    explode_aux pst acc qs
+    let acc', prog' =
+      match explode1 pst q with
+      | Some (|qs, _|) -> qs, true
+      | None -> [q], false
+    in
+    explode_aux pst (prog || prog') (acc @ acc') qs
 
 let explode
   (#preamble:_) (pst:prover_state preamble)
 : T.Tac (pst':prover_state preamble {pst' `pst_extends` pst})
 =
-  let remaining_ctxt = explode_aux pst [] pst.remaining_ctxt in
-  let unsolved' = explode_aux pst [] pst.unsolved in
+  let remaining_ctxt, p1 = explode_aux pst false [] pst.remaining_ctxt in
+  let unsolved', p2 = explode_aux pst false [] pst.unsolved in
   { pst with
     unsolved = unsolved';
     goals_inv = magic();
     remaining_ctxt = remaining_ctxt;
     remaining_ctxt_frame_typing = magic();
     k = (admit(); pst.k);
+    progress = p1 || p2;
   }
