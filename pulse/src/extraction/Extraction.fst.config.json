@@ -11,6 +11,7 @@
     ".",
     "${FSTAR_HOME}/src/basic",
     "${FSTAR_HOME}/src/class",
+    "${FSTAR_HOME}/src/data",
     "${FSTAR_HOME}/src/extraction",
     "${FSTAR_HOME}/src/fstar",
     "${FSTAR_HOME}/src/parser",
