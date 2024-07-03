@@ -902,3 +902,43 @@ ensures
 }
 ```
 let pts_to_range_upd = pts_to_range_upd'
+
+```pulse
+ghost
+fn pts_to_range_share
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s:Seq.seq a)
+  (#p:perm)
+      requires pts_to_range arr l r #p s
+      ensures pts_to_range arr l r #(p /. 2.0R) s ** pts_to_range arr l r #(p /. 2.0R) s
+{
+  pts_to_range_prop arr;
+  unfold (pts_to_range arr l r #p s);
+  unfold (token #(in_bounds l r arr) _);
+  share (array_slice arr l r);
+  pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
+  pts_to_range_intro_ij arr (p /. 2.0R) s l r ();
+}
+```
+
+```pulse
+ghost
+fn pts_to_range_gather
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s0 #s1: Seq.seq a)
+  (#p0 #p1:perm)
+      requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1
+      ensures pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1)
+{
+  pts_to_range_prop arr #l #r #p0;
+  unfold (pts_to_range arr l r #p0 s0);
+  unfold (token #(in_bounds l r arr) _);
+  unfold (pts_to_range arr l r #p1 s1);
+  gather (array_slice arr l r);
+  fold (pts_to_range arr l r #(p0 +. p1) s0)
+}
+```

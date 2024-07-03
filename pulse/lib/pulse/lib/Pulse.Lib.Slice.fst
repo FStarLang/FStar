@@ -6,7 +6,7 @@ noeq
 type slice t = {
     elt: AP.ptr t;
     len: SZ.t;
-    fp: AP.footprint;
+    fp: AP.footprint t;
 }
 
 let len s = s.len
