@@ -3,8 +3,8 @@ module Test.RewriteBy
 open Pulse.Lib.Pervasives
 open FStar.Tactics.V2
 
-assume val p : vprop
-assume val q : vprop
+assume val p : slprop
+assume val q : slprop
 
 let tac () : Tac unit =
    dump "test";
@@ -39,7 +39,7 @@ fn test ()
 
 let dump_trefl (s:string) : Tac unit =
   dump s;
-  vprop_equiv_norm ()
+  slprop_equiv_norm ()
 
 ```pulse
 fn test ()

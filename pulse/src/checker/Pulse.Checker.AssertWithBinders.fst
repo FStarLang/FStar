@@ -53,7 +53,7 @@ let rec refl_abs_binders (t:R.term) (acc:list binder) : T.Tac (list binder) =
      ((mk_binder_ppname sort (mk_ppname ppname (RU.range_of_term t)))::acc)
   | _ -> L.rev acc  
 
-let infer_binder_types (g:env) (bs:list binder) (v:vprop)
+let infer_binder_types (g:env) (bs:list binder) (v:slprop)
   : T.Tac (list binder) =
   match bs with
   | [] -> []
@@ -206,7 +206,7 @@ let visit_and_rewrite_conjuncts (p: (R.term & R.term)) (tms:list term) : T.Tac (
   T.map (visit_and_rewrite p) tms
 
 let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.Tac (term & term) =
-  let tms = vprop_as_list goal in
+  let tms = slprop_as_list goal in
   let tms' = T.fold_left (fun tms p -> visit_and_rewrite_conjuncts p tms) tms p in
   assume (L.length tms' == L.length tms);
   let lhs, rhs =
@@ -217,7 +217,7 @@ let visit_and_rewrite_conjuncts_all (p: list (R.term & R.term)) (goal:term) : T.
       ([], [])
       tms tms'
   in
-  list_as_vprop lhs, list_as_vprop rhs
+  list_as_slprop lhs, list_as_slprop rhs
   
 
 let disjoint (dom:list var) (cod:Set.set var) =
@@ -313,17 +313,17 @@ let check_wild
     fail g (Some st.range) "A wildcard must have at least one binder"
 
   | _ ->
-    let vprops = vprop_as_list pre in
-    let ex, rest = List.Tot.partition (fun (v:vprop) ->
+    let slprops = slprop_as_list pre in
+    let ex, rest = List.Tot.partition (fun (v:slprop) ->
                                        let vv = inspect_term v in
-                                       Tm_ExistsSL? vv) vprops in
+                                       Tm_ExistsSL? vv) slprops in
     match ex with
     | []
     | _::_::_ ->
       fail_doc g (Some st.range) [
         text "Binding names with a wildcard requires exactly one existential quantifier in the goal.";
         text "The context was:" ^^
-          indent (pp <| canon_vprop_print pre)
+          indent (pp <| canon_slprop_print pre)
       ]
 
     | [ex] ->
@@ -342,18 +342,18 @@ let check_wild
               text <| (Printf.sprintf "Expected an existential quantifier with at least %d binders; but only found %s with %d binders"
                   k (show ex) (k - n));
               text "The context was:" ^^
-                indent (pp <| canon_vprop_print pre)
+                indent (pp <| canon_slprop_print pre)
             ]
         )
       in
       peel_binders k ex
 
 //
-// v is a partially applied vprop with type t
+// v is a partially applied slprop with type t
 // add uvars for the remaining arguments
 //
-let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
-  : T.Tac (uvs:env { Env.disjoint g uvs } & vprop) =
+let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:slprop)
+  : T.Tac (uvs:env { Env.disjoint g uvs } & slprop) =
   match is_arrow t with
   | None -> (| uvs, v |)
   | Some (b, qopt, c) ->
@@ -367,7 +367,7 @@ let rec add_rem_uvs (g:env) (t:typ) (uvs:env { Env.disjoint g uvs }) (v:vprop)
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })
@@ -389,7 +389,7 @@ let check
     let open Pulse.PP in
     let msg = [
       text "Current context:" ^^
-            indent (pp <| canon_vprop_print pre)
+            indent (pp <| canon_slprop_print pre)
     ] in
     fail_doc_env true g (Some r) msg
 
@@ -415,7 +415,7 @@ let check
     let bs = infer_binder_types g bs v in
     let (| uvs, v_opened, body_opened |) = open_binders g bs (mk_env (fstar_env g)) v body in
     let v, body = v_opened, body_opened in
-    let (| v, d |) = PC.check_vprop (push_env g uvs) v in
+    let (| v, d |) = PC.check_slprop (push_env g uvs) v in
     let (| g1, nts, _, pre', k_frame |) = Prover.prove false pre_typing uvs d in
     //
     // No need to check effect labels for the uvs solution here,
@@ -462,7 +462,7 @@ let check
     let body = subst_st_term body_opened uvs_closing in
     let bs = close_binders uvs_bs in
     (* Since this rewrite is easy enough to show by unification, we always
-    mark them with the vprop_equiv_norm tactic. *)
+    mark them with the slprop_equiv_norm tactic. *)
     FStar.Tactics.BreakVC.break_vc ();
     if RU.debug_at_level (fstar_env g) "fold" then begin
       (* If we're running interactively, print out the context
@@ -478,7 +478,7 @@ let check
     end;
     let rw = { term = Tm_Rewrite { t1 = lhs;
                                    t2 = rhs;
-                                   tac_opt = Some Pulse.Reflection.Util.vprop_equiv_norm_tm };
+                                   tac_opt = Some Pulse.Reflection.Util.slprop_equiv_norm_tm };
                range = st.range;
                effect_tag = as_effect_hint STT_Ghost } in
     let st = { term = Tm_Bind { binder = as_binder (wr (`unit) st.range);

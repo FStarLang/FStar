@@ -27,9 +27,9 @@ let st_comp_with_pre (st:st_comp) (pre:term) : st_comp = { st with pre }
 let nvar_as_binder (x:nvar) (t:term) : binder =
   mk_binder_ppname t (fst x)
 
-val vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
-          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
+val slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
+  : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
+          (tot_typing g t1 tm_slprop -> tot_typing g t0 tm_slprop))
 
 let st_ghost_as_atomic (c:comp_st { C_STGhost? c }) = 
   C_STAtomic (comp_inames c) Neutral (st_comp_of_comp c)
@@ -50,7 +50,7 @@ val mk_bind (g:env)
             (res_typing:universe_of g (comp_res c2) (comp_u c2))
             (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                      (open_term_nv (comp_post c2) px)
-                                     tm_vprop)
+                                     tm_slprop)
             (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre /\
@@ -69,19 +69,19 @@ val mk_bind (g:env)
 val bind_res_and_post_typing (g:env) (s2:comp_st) (x:var { fresh_wrt x g (freevars (comp_post s2)) })
                              (post_hint:post_hint_opt g { comp_post_matches_hint s2 post_hint })
   : T.Tac (universe_of g (comp_res s2) (comp_u s2) &
-           tot_typing (push_binding g x ppname_default (comp_res s2)) (open_term_nv (comp_post s2) (v_as_nv x)) tm_vprop)
+           tot_typing (push_binding g x ppname_default (comp_res s2)) (open_term_nv (comp_post s2) (v_as_nv x)) tm_slprop)
 
 val add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
-  (#frame:vprop)
-  (frame_typing:tot_typing g frame tm_vprop)
+  (#frame:slprop)
+  (frame_typing:tot_typing g frame tm_slprop)
   : t':st_term &
     c':comp_st { c' == add_frame c frame } &
     st_typing g t' c'
 
 let frame_for_req_in_ctxt (g:env) (ctxt:term) (req:term)
    = (frame:term &
-      tot_typing g frame tm_vprop &
-      vprop_equiv g (tm_star req frame) ctxt)
+      tot_typing g frame tm_slprop &
+      slprop_equiv g (tm_star req frame) ctxt)
 
 let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
   let (| frame, _, _ |) = f in frame
@@ -89,7 +89,7 @@ let frame_of #g #ctxt #req (f:frame_for_req_in_ctxt g ctxt req) =
 val apply_frame (#g:env)
                 (#t:st_term)
                 (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt tm_vprop)
+                (ctxt_typing: tot_typing g ctxt tm_slprop)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
@@ -99,12 +99,12 @@ val apply_frame (#g:env)
                       comp_post c' == tm_star (comp_post c) (frame_of frame_t) } &
          st_typing g t c')
 
-type st_typing_in_ctxt (g:env) (ctxt:vprop) (post_hint:post_hint_opt g) =
+type st_typing_in_ctxt (g:env) (ctxt:slprop) (post_hint:post_hint_opt g) =
   t:st_term &
   c:comp_st { comp_pre c == ctxt /\ comp_post_matches_hint c post_hint } &
   st_typing g t c
 
-val comp_for_post_hint #g (#pre:vprop) (pre_typing:tot_typing g pre tm_vprop)
+val comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &

@@ -272,11 +272,11 @@ noeq
 type term_view =
   | Tm_Emp        : term_view
   | Tm_Pure       : p:term -> term_view
-  | Tm_Star       : l:vprop -> r:vprop -> term_view
-  | Tm_ExistsSL   : u:universe -> b:binder -> body:vprop -> term_view
-  | Tm_ForallSL   : u:universe -> b:binder -> body:vprop -> term_view
-  | Tm_VProp      : term_view
-  | Tm_Inv        : iref:term -> p:vprop -> term_view
+  | Tm_Star       : l:slprop -> r:slprop -> term_view
+  | Tm_ExistsSL   : u:universe -> b:binder -> body:slprop -> term_view
+  | Tm_ForallSL   : u:universe -> b:binder -> body:slprop -> term_view
+  | Tm_SLProp      : term_view
+  | Tm_Inv        : iref:term -> p:slprop -> term_view
   | Tm_Inames     : term_view  // type inames
   | Tm_EmpInames  : term_view
   | Tm_Unknown    : term_view
@@ -289,8 +289,8 @@ let pack_term_view (top:term_view) (r:range)
   = let open R in
     let w t' = wr t' r in
     match top with
-    | Tm_VProp ->
-      w (pack_ln (Tv_FVar (pack_fv vprop_lid)))
+    | Tm_SLProp ->
+      w (pack_ln (Tv_FVar (pack_fv slprop_lid)))
 
     | Tm_Emp ->
       w (pack_ln (Tv_FVar (pack_fv emp_lid)))
@@ -328,19 +328,19 @@ let pack_term_view (top:term_view) (r:range)
 
 let term_range (t:term) = range_of_term t
 let pack_term_view_wr (t:term_view) (r:range) = pack_term_view t r
-let tm_vprop = pack_term_view_wr Tm_VProp FStar.Range.range_0
+let tm_slprop = pack_term_view_wr Tm_SLProp FStar.Range.range_0
 let tm_inames = pack_term_view_wr Tm_Inames FStar.Range.range_0
 let tm_emp = pack_term_view_wr Tm_Emp FStar.Range.range_0
 let tm_emp_inames = pack_term_view_wr Tm_EmpInames FStar.Range.range_0
 let tm_unknown = pack_term_view_wr Tm_Unknown FStar.Range.range_0
 let tm_pure (p:term) : term = pack_term_view (Tm_Pure p) (range_of_term p)
-let tm_star (l:vprop) (r:vprop) : term =
+let tm_star (l:slprop) (r:slprop) : term =
   pack_term_view (Tm_Star l r)
                  (union_ranges (range_of_term l) (range_of_term r))
-let tm_exists_sl (u:universe) (b:binder) (body:vprop) : term =
+let tm_exists_sl (u:universe) (b:binder) (body:slprop) : term =
   pack_term_view (Tm_ExistsSL u b body)
                  (union_ranges (range_of_term b.binder_ty) (range_of_term body))
-let tm_forall_sl (u:universe) (b:binder) (body:vprop) : term =
+let tm_forall_sl (u:universe) (b:binder) (body:slprop) : term =
   pack_term_view (Tm_ForallSL u b body)
                  (union_ranges (range_of_term b.binder_ty) (range_of_term body))
 let tm_iname_ref = tm_fvar (as_fv iname_ref_lid)
@@ -357,7 +357,7 @@ let tm_full_perm = tm_constant (R.C_Real "1.0")
 let is_view_of (tv:term_view) (t:term) : prop =
   match tv with
   | Tm_Emp -> t == tm_emp
-  | Tm_VProp -> t == tm_vprop
+  | Tm_SLProp -> t == tm_slprop
   | Tm_Inames -> t == tm_inames
   | Tm_EmpInames -> t == tm_emp_inames
   | Tm_Star t1 t2 ->
@@ -391,8 +391,8 @@ let rec inspect_term (t:R.term)
   match inspect_ln t with
   | Tv_FVar fv ->
     let fv_lid = inspect_fv fv in
-    if fv_lid = vprop_lid
-    then Tm_VProp
+    if fv_lid = slprop_lid
+    then Tm_SLProp
     else if fv_lid = emp_lid
     then Tm_Emp
     else if fv_lid = inames_lid
@@ -458,20 +458,20 @@ let rec inspect_term (t:R.term)
 
   | Tv_Unsupp -> default_view
 
-let rec vprop_as_list (vp:term)
+let rec slprop_as_list (vp:term)
   : list term
   = match inspect_term vp with
     | Tm_Emp -> []
     | Tm_Star vp0 vp1 ->
-      vprop_as_list vp0 @ vprop_as_list vp1
+      slprop_as_list vp0 @ slprop_as_list vp1
     | _ -> [vp]
 
-let rec list_as_vprop (vps:list term)
+let rec list_as_slprop (vps:list term)
   : term
   = match vps with
     | [] -> tm_emp
     | [hd] -> hd
-    | hd::tl -> tm_star hd (list_as_vprop tl)
+    | hd::tl -> tm_star hd (list_as_slprop tl)
 
 let rec insert1 (t:term) (ts : list term) : T.Tac (list term) =
   match ts with
@@ -486,10 +486,10 @@ let sort_terms (ts : list term) : T.Tac (list term) =
 
 (* This does not have any useful lemmas, but can put the terms
 in order. It's useful to pretty-print contexts. See #96. *)
-let canon_vprop_list_print (vs : list term)
+let canon_slprop_list_print (vs : list term)
   : T.Tac term
-  = list_as_vprop <| sort_terms vs
+  = list_as_slprop <| sort_terms vs
 
-let canon_vprop_print (vp:term)
+let canon_slprop_print (vp:term)
   : T.Tac term
-  = canon_vprop_list_print <| vprop_as_list vp
+  = canon_slprop_list_print <| slprop_as_list vp

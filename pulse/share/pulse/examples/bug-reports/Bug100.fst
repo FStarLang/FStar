@@ -12,7 +12,7 @@ assume
 val array (t:Type0) : Type0
 
 assume
-val pts_to (a:Type u#0) (x:array a) (s: Seq.seq a) : vprop
+val pts_to (a:Type u#0) (x:array a) (s: Seq.seq a) : slprop
 
 [@@expect_failure [19]]
 let tst (a : array int) (s : Seq.seq nat) = pts_to int a s

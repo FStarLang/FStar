@@ -30,11 +30,11 @@ val pts_to (#a:Type)
            ([@@@equate_strict] r:ref a)
            (#[exact (`1.0R)] p:perm)
            (n:a)
-: vprop
+: slprop
 
-val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_small (pts_to r #p x))
-          [SMTPat (is_small (pts_to r #p x))]
+val pts_to_is_slprop1 (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_slprop1 (pts_to r #p x))
+          [SMTPat (is_slprop1 (pts_to r #p x))]
 
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)

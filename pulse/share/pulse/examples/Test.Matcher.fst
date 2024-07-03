@@ -14,7 +14,7 @@ assume val dpts_to
   (r:dref a)
   (#[exact (`1.0R)] p : perm)
   (v : erased a)
-  : vprop
+  : slprop
 
 ```pulse
 fn d_basic_self (r:dref int)
@@ -44,7 +44,7 @@ assume val fpts_to
   (r:fref a)
   (#[exact (`1.0R)][@@@equate_strict]  p : perm)
   (v : erased a)
-  : vprop
+  : slprop
 
 ```pulse
 fn f_basic_self (r:fref int)
@@ -78,7 +78,7 @@ assume val spts_to
   (r:sref a)
   (#[exact (`1.0R)][@@@equate_syntactic]  p : perm)
   (v : erased a)
-  : vprop
+  : slprop
 
 ```pulse
 fn s_basic_self (r:sref int)

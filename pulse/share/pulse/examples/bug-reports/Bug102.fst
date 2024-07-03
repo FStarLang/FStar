@@ -2,9 +2,9 @@ module Bug102
 
 open Pulse.Lib.Pervasives
 
-assume val p : vprop
+assume val p : slprop
 
-let rec foo (x:nat) : vprop =
+let rec foo (x:nat) : slprop =
   if x = 0 then
     emp
   else

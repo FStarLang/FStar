@@ -146,17 +146,17 @@ and free_vars_binders (env:env_t) (bs:Sugar.binders)
       let env', res = free_vars_binders (fst (push_bv env x)) bs in
       env', fvs@fvs_attrs@res
 
-let free_vars_vprop (env:env_t) (t:Sugar.vprop) =
+let free_vars_slprop (env:env_t) (t:Sugar.slprop) =
   let open PulseSyntaxExtension.Sugar in
   match t.v with
-  | VPropTerm t -> free_vars_term env t
+  | SLPropTerm t -> free_vars_term env t
 
 let free_vars_comp (env:env_t) (c:Sugar.computation_type)
   : list ident
   = let ids =
-        free_vars_vprop env c.precondition @
+        free_vars_slprop env c.precondition @
         free_vars_term env c.return_type @
-        free_vars_vprop (fst (push_bv env c.return_name)) c.postcondition
+        free_vars_slprop (fst (push_bv env c.return_name)) c.postcondition
     in
     L.deduplicate Ident.ident_equals ids
 

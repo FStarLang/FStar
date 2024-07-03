@@ -30,23 +30,23 @@ instance non_informative_cinv = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
 }
 
-let cinv_vp_aux (r:GR.ref bool) (v:vprop) : (w:vprop { is_big v ==> is_big w }) =
+let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_slprop2 v ==> is_slprop2 w }) =
   exists* (b:bool). GR.pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
 
-let is_big_cinv_vp _ _ = ()
+let is_slprop2_cinv_vp _ _ = ()
 
 let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
-let active_is_small p c = ()
+let active_is_slprop1 p c = ()
 
 let iref_of c = c.i
 
 ```pulse
 ghost
-fn new_cancellable_invariant (v:vprop { is_big v })
+fn new_cancellable_invariant (v:slprop { is_slprop2 v })
   requires v
   returns c:cinv
   ensures inv (iref_of c) (cinv_vp c v) ** active c 1.0R
@@ -69,7 +69,7 @@ let unpacked c _v = GR.pts_to c.r #0.5R true
 
 ```pulse
 ghost
-fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
+fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p
   ensures v ** unpacked c v ** active c p
   opens emp_inames
@@ -86,7 +86,7 @@ fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
 
 ```pulse
 ghost
-fn pack_cinv_vp (#v:vprop) (c:cinv)
+fn pack_cinv_vp (#v:slprop) (c:cinv)
   requires v ** unpacked c v
   ensures cinv_vp c v
   opens emp_inames
@@ -131,7 +131,7 @@ let gather2 c = gather #0.5R #0.5R c
 
 ```pulse
 ghost
-fn cancel_ (#v:vprop) (c:cinv)
+fn cancel_ (#v:slprop) (c:cinv)
 requires cinv_vp c v **
          active c 1.0R
 ensures cinv_vp c v ** v
@@ -154,7 +154,7 @@ opens emp_inames
 
 ```pulse
 ghost
-fn cancel (#v:vprop) (c:cinv)
+fn cancel (#v:slprop) (c:cinv)
   requires inv (iref_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
   opens (add_inv emp_inames (iref_of c))

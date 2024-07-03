@@ -126,7 +126,7 @@ let lptr_of (#elt:Type u#1) (a:array elt)
   : Tot (l_pcm_ref elt ( (ptr_of a).base_len))
   = (ptr_of a).base
 
-let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vprop =
+let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot slprop =
   pcm_pts_to
     (lptr_of a)
     (mk_carrier (SZ.v (ptr_of a).base_len) (ptr_of a).offset s p) **
@@ -135,7 +135,7 @@ let pts_to (#elt: Type u#1) (a: array elt) (#p: perm) (s: Seq.seq elt) : Tot vpr
     Seq.length s == length a
   )
 
-let pts_to_is_small _ _ _ = ()
+let pts_to_is_slprop1 _ _ _ = ()
 
 let mk_array
     (#elt: Type u#1)
@@ -512,14 +512,14 @@ let pts_to_range
   (i j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a)
-: vprop
+: slprop
 = exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q
 
-let pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
-  : Lemma (is_small (pts_to_range x i j #p s))
-          [SMTPat (is_small (pts_to_range x i j #p s))]
+let pts_to_range_is_slprop1 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop1 (pts_to_range x i j #p s))
+          [SMTPat (is_slprop1 (pts_to_range x i j #p s))]
   =
-    let aux (q:in_bounds i j x) : Lemma (is_small (pts_to (array_slice x i j) #p s ** token q))
+    let aux (q:in_bounds i j x) : Lemma (is_slprop1 (pts_to (array_slice x i j) #p s ** token q))
     =
       ()
     in
@@ -645,12 +645,12 @@ ensures
 }
 ```
 
-let vprop_equiv_refl_eq (v0 v1:vprop) (_:squash (v0 == v1)) : vprop_equiv v0 v1 = 
-  vprop_equiv_refl v0
+let slprop_equiv_refl_eq (v0 v1:slprop) (_:squash (v0 == v1)) : slprop_equiv v0 v1 = 
+  slprop_equiv_refl v0
 
 let equiv () : FStar.Tactics.Tac unit =
   let open FStar.Tactics in
-  mapply (`vprop_equiv_refl_eq);
+  mapply (`slprop_equiv_refl_eq);
   smt()
 
 ```pulse

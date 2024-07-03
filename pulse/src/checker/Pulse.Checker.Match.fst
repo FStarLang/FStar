@@ -216,7 +216,7 @@ let rec bindings_to_string (bs : list binding) : T.Tac string =
 let check_branch
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_vprop)
+        (pre_typing: tot_typing g pre tm_slprop)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -273,7 +273,7 @@ let check_branches_aux_t
 let check_branches_aux
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_vprop)
+        (pre_typing: tot_typing g pre tm_slprop)
         (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
@@ -368,7 +368,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
 let check_branches
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_vprop)
+        (pre_typing: tot_typing g pre tm_slprop)
         (post_hint:post_hint_for_env g { ~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot) })
         (check:check_t)
         (sc_u : universe)
@@ -397,7 +397,7 @@ let check_branches
 let check
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_vprop)
+        (pre_typing: tot_typing g pre tm_slprop)
         (post_hint:post_hint_for_env g)
         (res_ppname:ppname)
         (sc:term)

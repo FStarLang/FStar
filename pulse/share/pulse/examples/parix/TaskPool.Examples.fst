@@ -21,7 +21,7 @@ open Pulse.Lib.Pledge
 open Pulse.Lib.Task
 
 assume
-val qsv : nat -> vprop
+val qsv : nat -> slprop
 assume
 val qsc : n:nat -> stt unit emp (fun _ -> qsv n)
 
@@ -120,7 +120,7 @@ fn qsh_par (n:nat)
   let p = setup_pool 42;
   spawn p (fun () -> qs12_par p);
   (* Ah! This cannot work right now since we need to share part
-  of the pool_alive vprop to the spawned task, so we have
+  of the pool_alive slprop to the spawned task, so we have
   to index pool_alive with a permission, and allow
   share/gather. *)
   

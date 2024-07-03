@@ -20,16 +20,16 @@ open Pulse.Lib.Pervasives
 
 // #set-options "--debug ggg"
 
-assume val foo1 : vprop
-assume val foo2 : vprop
-assume val foo3 : vprop
-assume val foo4 : vprop
-assume val foo5 : vprop
-assume val foo6 : vprop
-assume val foo7 : vprop
-assume val foo8 : vprop
-assume val foo9 : vprop
-assume val foo10 : vprop
+assume val foo1 : slprop
+assume val foo2 : slprop
+assume val foo3 : slprop
+assume val foo4 : slprop
+assume val foo5 : slprop
+assume val foo6 : slprop
+assume val foo7 : slprop
+assume val foo8 : slprop
+assume val foo9 : slprop
+assume val foo10 : slprop
 
 ```pulse
 fn test_synt ()
@@ -42,7 +42,7 @@ fn test_synt ()
 
 (* Similar example, but all the heads match so we would attempt to use SMT if we didn't
 just match everything syntactically. *)
-assume val foo : int -> vprop
+assume val foo : int -> slprop
 
 ```pulse
 fn test_synt2 ()
@@ -53,7 +53,7 @@ fn test_synt2 ()
 }
 ```
 
-assume val fooparam : erased int -> vprop
+assume val fooparam : erased int -> slprop
 
 ```pulse
 fn test_fastunif (x:erased int)

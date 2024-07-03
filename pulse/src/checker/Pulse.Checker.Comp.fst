@@ -25,7 +25,7 @@ module P = Pulse.Syntax.Printer
 
 let check (g:env) 
           (c:comp_st)
-          (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+          (pre_typing:tot_typing g (comp_pre c) tm_slprop)
   : T.Tac (comp_typing g c (universe_of_comp c))
   = let g = Pulse.Typing.Env.push_context_no_range g "check_comp"  in
   
@@ -48,11 +48,11 @@ let check (g:env)
           assume (~(x `Set.mem` freevars (comp_post c)));
           let gx = push_binding g x (fst px) st.res in
           let (| ty, post_typing |) = core_compute_tot_term_type gx (open_term_nv (comp_post c) px) in
-          if not (eq_tm ty tm_vprop)
+          if not (eq_tm ty tm_slprop)
           then fail g None
                  (Printf.sprintf "check_comp: ill-typed postcondition %s" (P.term_to_string (comp_post c)))
           else (
-            assert (ty == tm_vprop);
+            assert (ty == tm_slprop);
             STC g st x t_u pre_typing post_typing
           )
         )

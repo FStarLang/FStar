@@ -45,7 +45,7 @@ ensures (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** pts_to x #0.5R ('i 
 ```pulse
 fn increment_f (x: ref nat)
                (#p:perm)
-               (#pred #qpred: nat -> vprop)
+               (#pred #qpred: nat -> slprop)
                (l:L.lock)
                (f: (v:nat -> stt_ghost unit
                         emp_inames
@@ -73,7 +73,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** pts_to x #0
 ```pulse
 fn increment_f2 (x: ref int)
                 (#p:perm)
-                (#pred #qpred: int -> vprop)
+                (#pred #qpred: int -> slprop)
                 (l:L.lock)
                 (f: (v:int -> vq:int -> stt_ghost unit
                         emp_inames
@@ -185,11 +185,11 @@ val atomic_increment (r:ref int) (#i:erased int)
 module F = Pulse.Lib.FlippableInv
 
 let test (l:iref) = assert (not (mem_inv emp_inames l))
-let pts_to_refine #a (x:ref a) (p:a -> vprop) = exists* v. pts_to x v ** p v 
+let pts_to_refine #a (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
 ```pulse
 fn atomic_increment_f2
         (x: ref int)
-        (#pred #qpred: int -> vprop)
+        (#pred #qpred: int -> slprop)
         (l:iref)
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
@@ -213,7 +213,7 @@ module I = Pulse.Lib.Stick.Util
 ```pulse
 fn atomic_increment_f3
         (x: ref int)
-        (#pred #qpred: int -> vprop)
+        (#pred #qpred: int -> slprop)
         (l:iref)
 requires
   inv l (pts_to_refine x pred) **
@@ -241,8 +241,8 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 ```pulse
 fn atomic_increment_f4
         (x: ref int)
-        (#invp : vprop)
-        (#pred #qpred: int -> vprop)
+        (#invp : slprop)
+        (#pred #qpred: int -> slprop)
         (l:iref)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
@@ -283,8 +283,8 @@ val cas (r:ref int) (u v:int) (#i:erased int)
 ```pulse
 fn atomic_increment_f5
         (x: ref int)
-        (#invp #tok : vprop)
-        (#pred #qpred: int -> vprop)
+        (#invp #tok : slprop)
+        (#pred #qpred: int -> slprop)
         (l:iref)
         (elim_inv: 
           (_:unit -> stt_ghost unit emp_inames invp (fun _ ->
@@ -368,7 +368,7 @@ module C = Pulse.Lib.CancellableInvariant
 fn atomic_increment_f6
         (x: ref int)
         (#p:_)
-        (#pred #qpred: int -> vprop)
+        (#pred #qpred: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames

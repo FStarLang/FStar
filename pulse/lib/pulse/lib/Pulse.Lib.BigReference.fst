@@ -24,7 +24,7 @@ let ref (a:Type u#2) = pcm_ref (pcm_frac #a)
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = big_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
-let pts_to_is_big (#a:Type) (r:ref a) (p:perm) (x:a) = ()
+let pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (x:a) = ()
 
 ```pulse
 fn alloc (#a:Type u#2) (x:a)
@@ -117,7 +117,7 @@ let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
 
 ```pulse
-fn free_with_frame #a (r:ref a) (frame:vprop)
+fn free_with_frame #a (r:ref a) (frame:slprop)
 requires frame ** (exists* (x:a). pts_to r x)
 ensures frame
 {
@@ -129,20 +129,20 @@ ensures frame
 let with_local
     (#a:Type u#2)
     (init:a)
-    (#pre:vprop)
+    (#pre:slprop)
     (#ret_t:Type u#a)
-    (#post:ret_t -> vprop) 
+    (#post:ret_t -> slprop) 
     (body: (r:ref a -> stt ret_t (pre ** pts_to r init) (fun v -> post v ** (exists* (x:a). pts_to r x))))
 = let m1
     : stt (ref a) (emp ** pre) (fun r -> pts_to r init ** pre)
     = frame_stt pre (alloc init)
   in
-  let pf_post : vprop_post_equiv (fun r -> pts_to r init ** pre) (fun r -> pre ** pts_to r init)
-    = intro_vprop_post_equiv _ _ (fun r -> vprop_equiv_comm (pts_to r #1.0R init) pre)
+  let pf_post : slprop_post_equiv (fun r -> pts_to r init ** pre) (fun r -> pre ** pts_to r init)
+    = intro_slprop_post_equiv _ _ (fun r -> slprop_equiv_comm (pts_to r #1.0R init) pre)
   in
   let m1 
     : stt (ref a) pre (fun r -> pre ** pts_to r init)
-    = sub_stt _ _ (vprop_equiv_unit pre) pf_post m1
+    = sub_stt _ _ (slprop_equiv_unit pre) pf_post m1
   in
   let body (r:ref a)
     : stt ret_t (pre ** pts_to r init) post

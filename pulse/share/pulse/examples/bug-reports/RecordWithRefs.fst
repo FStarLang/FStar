@@ -32,7 +32,7 @@ let fst (p:u8_pair_repr) : U8.t =
 let snd (p:u8_pair_repr) : U8.t =
   let (_, x) = p in x
   
-let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : vprop = 
+let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : slprop = 
     R.pts_to p.a (fst v) **
     R.pts_to p.b (snd v)
 

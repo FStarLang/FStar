@@ -454,8 +454,8 @@ fn quicksort_proof
 }
 ```
 
-let quicksort_pre a lo hi s0 lb rb : vprop =
+let quicksort_pre a lo hi s0 lb rb : slprop =
   A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
 
-let quicksort_post a lo hi s0 lb rb : vprop =
+let quicksort_post a lo hi s0 lb rb : slprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))

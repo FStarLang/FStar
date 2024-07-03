@@ -21,16 +21,16 @@ open Pulse.Lib.BigReference
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
 
-let thunk (p q : small_vprop) = unit -> stt unit (up2 p) (fun _ -> up2 q)
-let closure = (p:small_vprop & q:small_vprop & thunk p q)
+let thunk (p q : slprop1_repr) = unit -> stt unit (up1 p) (fun _ -> up1 q)
+let closure = (p:slprop1_repr & q:slprop1_repr & thunk p q)
 let closure_list = B.ref (list closure)
-let vprop0 = v:vprop { is_small v }
+let slprop0 = v:slprop { is_slprop1 v }
 
 //
 // This is proven in memory, needs to be propagated up to core
 //
-assume val _small_is_small
-  : squash (forall (v:small_vprop).{:pattern is_small (up2 v) } is_small (up2 v))
+assume val _small_is_slprop1
+  : squash (forall (v:slprop1_repr).{:pattern is_slprop1 (up1 v) } is_slprop1 (up1 v))
 
 ```pulse
 fn mk_closure_list ()
@@ -43,15 +43,15 @@ ensures B.pts_to r []
 ```
 
 let mk_closure
-    (#p #q:vprop0)
+    (#p #q:slprop0)
     (f: unit -> stt unit p (fun _ -> q))
 : closure
-= (| down2 p, down2 q, f |)
+= (| down1 p, down1 q, f |)
 
 
 ```pulse
 fn push (l:closure_list)
-        (#p #q:vprop0)
+        (#p #q:slprop0)
         (f: unit -> stt unit p (fun _ -> q))
 requires B.pts_to l 'xs
 ensures B.pts_to l (mk_closure f :: 'xs)
@@ -64,9 +64,9 @@ ensures B.pts_to l (mk_closure f :: 'xs)
 
 let pre_of (c:closure) =
   let (| p, _, _ |) = c in
-  up2 p
+  up1 p
 
-let rec inv (l:list closure) : v:vprop { is_small v } =
+let rec inv (l:list closure) : v:slprop { is_slprop1 v } =
   match l with
   | [] -> emp
   | hd :: tl -> pre_of hd ** inv tl
@@ -117,7 +117,7 @@ ensures pre_of c ** inv tl
 }
 ```
 
-let lock_inv (r:closure_list) : v:vprop { is_big v } =
+let lock_inv (r:closure_list) : v:slprop { is_slprop2 v } =
   exists* (l:list closure). 
     B.pts_to r l **
     inv l
@@ -147,7 +147,7 @@ ensures L.lock_alive t.lock (lock_inv t.task_list)
 
 let post_of (c:closure) =
   let (| _, q, _ |) = c in
-  up2 q
+  up1 q
 
 let run_thunk_of_closure (c:closure) 
 : unit -> stt unit (pre_of c) (fun _ -> post_of c)

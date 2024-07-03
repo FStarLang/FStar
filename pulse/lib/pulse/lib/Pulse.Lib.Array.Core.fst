@@ -55,7 +55,7 @@ let pts_to #a
     (v:FStar.Seq.seq a)
 = H.pts_to r #p (raise_seq v)
 
-let pts_to_is_small _ _ _ = ()
+let pts_to_is_slprop1 _ _ _ = ()
 
 ```pulse
 ghost
@@ -182,10 +182,10 @@ let pts_to_range
   (i j : nat)
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a)
-: vprop
+: slprop
 = H.pts_to_range x i j #p (raise_seq s)
 
-let pts_to_range_is_small _ _ _ _ _ = ()
+let pts_to_range_is_slprop1 _ _ _ _ _ = ()
 
 ```pulse
 ghost
@@ -327,20 +327,20 @@ ensures
 }
 ```
 
-let with_pre (pre:vprop) (#a:Type) (#post:a -> vprop)(m:stt a emp post)
+let with_pre (pre:slprop) (#a:Type) (#post:a -> slprop)(m:stt a emp post)
 : stt a pre (fun v -> pre ** post v)
 = let m1 = frame_stt pre m in
-  let pf_post : vprop_post_equiv (fun r -> post r ** pre) (fun r -> pre ** post r)
-    = intro_vprop_post_equiv _ _ (fun r -> vprop_equiv_comm (post r) pre)
+  let pf_post : slprop_post_equiv (fun r -> post r ** pre) (fun r -> pre ** post r)
+    = intro_slprop_post_equiv _ _ (fun r -> slprop_equiv_comm (post r) pre)
   in
-  sub_stt _ _ (vprop_equiv_unit pre) pf_post m1
+  sub_stt _ _ (slprop_equiv_unit pre) pf_post m1
 
 ```pulse
 fn alloc_with_pre
     (#a:Type u#0)
     (init:a)
     (len:SZ.t)
-    (pre:vprop)
+    (pre:slprop)
 requires pre
 returns arr:array a
 ensures (pre **
@@ -354,7 +354,7 @@ ensures (pre **
 ```
 
 ```pulse
-fn free_with_post (#a:Type u#0) (arr:array a) (post:vprop)
+fn free_with_post (#a:Type u#0) (arr:array a) (post:slprop)
 requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
 ensures post
 {
@@ -368,9 +368,9 @@ let with_local'
     (#a:Type u#0)
     (init:a)
     (len:SZ.t)
-    (#pre:vprop)
+    (#pre:slprop)
     (ret_t:Type u#a)
-    (#post:ret_t -> vprop) 
+    (#post:ret_t -> slprop) 
       (body:(arr:array a) -> stt ret_t (pre **
                                     (pts_to arr (Seq.create (SZ.v len) init) ** (
                                      pure (is_full_array arr) **

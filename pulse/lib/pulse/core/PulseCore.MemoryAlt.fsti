@@ -51,30 +51,30 @@ val ghost_action_preorder (_:unit)
 val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]
-val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
-val cm_big_slprop : CM.cm big_slprop
-val down (s:slprop u#a) : big_slprop u#a
-val up (s:big_slprop u#a) : slprop u#a
-let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
-let big_vprop = s:slprop u#a { is_big s }
-val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
+val slprop2_repr : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val cm_slprop2 : CM.cm slprop2_repr
+val down2 (s:slprop u#a) : slprop2_repr u#a
+val up2 (s:slprop2_repr u#a) : slprop u#a
+let is_slprop2 (s:slprop u#a) = s == up2 (down2 s) //any slprop that has no invariants in it, satisfies is_slprop2
+let slprop2 = s:slprop u#a { is_slprop2 s }
+val up2_is_slprop2 (b:slprop2_repr) : Lemma (is_slprop2 (up2 b))
 //big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
-val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
+val slprop1_repr : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
 //e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
-val cm_small_slprop : CM.cm small_slprop
-val down2 (s:slprop u#a) : small_slprop u#a
-val up2 (s:small_slprop u#a) : slprop u#a
-let is_small (s:slprop u#a) = s == up2 (down2 s)
-val small_is_also_big (s:slprop)
-  : Lemma (is_small s ==> is_big s)
-let vprop = s:slprop u#a { is_small s }
-val up2_small_is_small (s:small_slprop) : Lemma (is_small (up2 s))
+val cm_slprop1 : CM.cm slprop1_repr
+val down1 (s:slprop u#a) : slprop1_repr u#a
+val up1 (s:slprop1_repr u#a) : slprop u#a
+let is_slprop1 (s:slprop u#a) = s == up1 (down1 s)
+let slprop1 = s:slprop u#a { is_slprop1 s }
+val up1_is_slprop1 (s:slprop1_repr) : Lemma (is_slprop1 (up1 s))
+
+val slprop_1_is_2 (s:slprop)
+  : Lemma (is_slprop1 s ==> is_slprop2 s)
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
-
 
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
 val equiv (p1 p2:slprop u#a) : prop
@@ -112,8 +112,8 @@ val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
-val emp : vprop u#a
-val pure (p:prop) : vprop u#a
+val emp : slprop1 u#a
+val pure (p:prop) : slprop1 u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 
@@ -151,21 +151,21 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-val big_star_congruence (p1 p2:big_vprop u#a)
-  : Lemma (is_big (p1 `star` p2))
+val big_star_congruence (p1 p2:slprop2 u#a)
+  : Lemma (is_slprop2 (p1 `star` p2))
 
 val big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (h_exists p))
+    (requires forall x. is_slprop2 (p x))
+    (ensures is_slprop2 (h_exists p))
 
-val small_star_congruence (p1 p2:vprop u#a)
-  : Lemma (is_small (p1 `star` p2))
+val small_star_congruence (p1 p2:slprop1 u#a)
+  : Lemma (is_slprop1 (p1 `star` p2))
 
 val small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
-    (requires forall x. is_small (p x))
-    (ensures is_small (h_exists p))
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (h_exists p))
 
 val h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
@@ -173,23 +173,15 @@ val h_exists_equiv (#a:Type) (p q : a -> slprop)
     (ensures (h_exists p == h_exists q))
 
 
-val up_emp_big ()
-: Lemma (up cm_big_slprop.unit == emp)
-val down_emp_big ()
-: Lemma (down emp == cm_big_slprop.unit)
-val up_star_big (p q:big_slprop)
-: Lemma (up (p `cm_big_slprop.mult` q) == up p `star` up q)
-val down_star_big (p q:big_vprop)
-: Lemma (down (p `star` q) == down p `cm_big_slprop.mult` down q)
+val up2_emp    ()      : Lemma (up2 cm_slprop2.unit == emp)
+val down2_emp  ()      : Lemma (down2 emp == cm_slprop2.unit)
+val up2_star   (p q:_) : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
+val down2_star (p q:_) : Lemma (down2 (p `star` q) == down2 p `cm_slprop2.mult` down2 q)
 
-val up2_emp ()
-: Lemma (up2 cm_small_slprop.unit == emp)
-val down2_emp ()
-: Lemma (down2 emp == cm_small_slprop.unit)
-val up2_star (p q:small_slprop)
-: Lemma (up2 (p `cm_small_slprop.mult` q) == up2 p `star` up2 q)
-val down2_star (p q:vprop)
-: Lemma (down2 (p `star` q) == down2 p `cm_small_slprop.mult` down2 q)
+val up1_emp    ()      : Lemma (up1 cm_slprop1.unit == emp)
+val down1_emp  ()      : Lemma (down1 emp == cm_slprop1.unit)
+val up1_star   (p q:_) : Lemma (up1 (p `cm_slprop1.mult` q) == up1 p `star` up1 q)
+val down1_star (p q:_) : Lemma (down1 (p `star` q) == down1 p `cm_slprop1.mult` down1 q)
 
 (**** Memory invariants *)
 
@@ -275,7 +267,7 @@ val dup_inv (e:inames) (i:iref) (p:slprop u#a)
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
 
-val new_invariant (e:inames) (p:slprop { is_big p })
+val new_invariant (e:inames) (p:slprop { is_slprop2 p })
   : pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
@@ -324,7 +316,7 @@ let fresh_wrt (ctx:list iref)
               (i:iref)
   = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
 
-val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
+val fresh_invariant (e:inames) (p:slprop2 u#m) (ctx:erased (list iref))
   : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
        p
        (fun i -> inv i p)
@@ -375,7 +367,7 @@ val lift_ghost
   : pst_ghost_action_except a opened_invariants p q
 
 (* Concrete references to "small" types *)
-val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
+val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop1 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
@@ -436,7 +428,7 @@ val pts_to_not_null_action
 [@@erasable]
 val core_ghost_ref : Type0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a
+val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop1 u#a
 
 val ghost_alloc
     (#o:_)
@@ -499,7 +491,7 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 (* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
+val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop2 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val big_split_action
@@ -568,7 +560,7 @@ val big_pts_to_not_null_action
     (big_pts_to r v)
     (fun _ -> big_pts_to r v)
 
-val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop u#a
+val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2 u#a
 
 val big_ghost_alloc
     (#o:_)

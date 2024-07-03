@@ -25,7 +25,7 @@ open Pulse.Checker.Base
 val check
   (g:env)
   (pre:term)
-  (pre_typing: tot_typing g pre tm_vprop)
+  (pre_typing: tot_typing g pre tm_slprop)
   (post_hint:post_hint_for_env g)
   (res_ppname:ppname)
   (b:term)

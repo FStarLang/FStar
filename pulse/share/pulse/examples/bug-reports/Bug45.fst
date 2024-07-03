@@ -19,15 +19,15 @@ module Bug45
 open Pulse.Main
 open Pulse.Lib.Pervasives
 
-assume val domain : a:Type -> (a -> vprop) -> Type
+assume val domain : a:Type -> (a -> slprop) -> Type
 
 assume val spawn :
- (#a:Type) -> (#pre : vprop) -> (#post : (a -> vprop)) ->
+ (#a:Type) -> (#pre : slprop) -> (#post : (a -> slprop)) ->
  ($f : unit -> stt a pre post) ->
  stt (domain a post) pre (fun _ -> emp)
 
 assume val join :
-  (#a:Type) -> (#post : (a -> vprop)) ->
+  (#a:Type) -> (#post : (a -> slprop)) ->
   domain a post ->
   stt a emp post
 

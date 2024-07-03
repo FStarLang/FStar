@@ -2,7 +2,7 @@ module RevealHide
 
 open Pulse.Lib.Pervasives
 
-assume val p : int -> vprop
+assume val p : int -> slprop
 
 ```pulse
 fn test0 (x:int)

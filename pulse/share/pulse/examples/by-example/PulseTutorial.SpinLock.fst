@@ -23,10 +23,10 @@ module B = Pulse.Lib.Box
 module U32 = FStar.UInt32
 
 //lock$
-let maybe (b:bool) (p:vprop) =
+let maybe (b:bool) (p:slprop) =
   if b then p else emp
 
-let lock_inv (r:B.box U32.t) (p:vprop) : v:vprop { is_big p ==> is_big v } =
+let lock_inv (r:B.box U32.t) (p:slprop) : v:slprop { is_slprop2 p ==> is_slprop2 v } =
   exists* v. B.pts_to r v ** maybe (v = 0ul) p
 
 noeq
@@ -35,13 +35,13 @@ type lock = {
   i:iref;
 }
 
-let lock_alive (l:lock) (p:vprop) =
+let lock_alive (l:lock) (p:slprop) =
   inv l.i (lock_inv l.r p)
 //lock$
 
 ```pulse //dup_lock_alive$
 ghost
-fn dup_lock_alive (l:lock) (p:vprop)
+fn dup_lock_alive (l:lock) (p:slprop)
   requires lock_alive l p
   ensures lock_alive l p ** lock_alive l p
 {
@@ -53,7 +53,7 @@ fn dup_lock_alive (l:lock) (p:vprop)
 ```
 
 ```pulse //new_lock$
-fn new_lock (p:vprop { is_big p })
+fn new_lock (p:slprop { is_slprop2 p })
 requires p
 returns l:lock
 ensures lock_alive l p
@@ -72,7 +72,7 @@ ensures lock_alive l p
 
 ```pulse
 //acquire_sig$
-fn rec acquire (#p:vprop) (l:lock)
+fn rec acquire (#p:slprop) (l:lock)
 requires lock_alive l p
 ensures lock_alive l p ** p
 //acquire_sig$
@@ -111,7 +111,7 @@ ensures lock_alive l p ** p
 ```
 
 ```pulse //release$
-fn release (#p:vprop) (l:lock)
+fn release (#p:slprop) (l:lock)
 requires lock_alive l p ** p
 ensures lock_alive l p
 {

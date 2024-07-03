@@ -17,21 +17,21 @@ module Pulse.Lib.SpinLockToken
 
 open Pulse.Lib.Pervasives
 
-val lock (v:vprop) : Type u#4
+val lock (v:slprop) : Type u#4
 
-val new_lock (v:vprop { is_big v })
+val new_lock (v:slprop { is_slprop2 v })
   : stt (lock v)
         (requires v)
         (ensures fun _ -> emp)
 
-val lock_acquired (#v:vprop) (l:lock v) : vprop
+val lock_acquired (#v:slprop) (l:lock v) : slprop
 
-val acquire (#v:vprop) (l:lock v)
+val acquire (#v:slprop) (l:lock v)
   : stt unit
         (requires emp)
         (ensures fun _ -> v ** lock_acquired l)
        
-val release (#v:vprop) (l:lock v)
+val release (#v:slprop) (l:lock v)
   : stt unit
         (requires v ** lock_acquired l)
         (ensures fun _ -> emp)

@@ -39,7 +39,7 @@ module R = Pulse.Lib.Reference
 *)
 
 assume
-val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
 
 type pure_st_t =
   | Init
@@ -59,9 +59,9 @@ type pure_handle_t = ref pure_st_t
 
 type handle_t = ref st_t
 
-let pure_handle_has_state (h:pure_handle_t) (s:pure_st_t) : vprop = pts_to h #0.5R s
+let pure_handle_has_state (h:pure_handle_t) (s:pure_st_t) : slprop = pts_to h #0.5R s
 
-let handle_has_state (h:handle_t) (s:st_t) : vprop = pts_to h s
+let handle_has_state (h:handle_t) (s:st_t) : slprop = pts_to h s
 
 let states_correspond (s:st_t) (ps:pure_st_t) : prop
   = (CInit? s) /\ (Init? ps)
@@ -77,7 +77,7 @@ type locked_state_t =
   lk:lock }
 let mk_locked_st h ph lk = {h; ph; lk;}
 
-let lock_inv (h:handle_t) (ph:pure_handle_t) : v:vprop { is_big v } =
+let lock_inv (h:handle_t) (ph:pure_handle_t) : v:slprop { is_slprop2 v } =
   exists* s ps. 
   handle_has_state h s **
   pure_handle_has_state ph ps **

@@ -83,9 +83,9 @@ let st_typing_weakening_end
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
-  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (#v1 #v2:slprop) (d:slprop_equiv (push_env g g') v1 v2)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : vprop_equiv (push_env g1 g') v1 v2 =
+  : slprop_equiv (push_env g1 g') v1 v2 =
 
   let g2 = diff g1 g in
   let d = Pulse.Typing.Metatheory.Base.veq_weakening g g' d g2 in

@@ -33,8 +33,8 @@ type mutex (a:Type0) : Type0 = {
 
 let mutex_guard a = R.ref a
 
-let lock_inv (#a:Type0) (r:B.box a) (v:a -> vprop)
-  : (w:vprop { (forall x. is_big (v x)) ==> is_big w }) =
+let lock_inv (#a:Type0) (r:B.box a) (v:a -> slprop)
+  : (w:slprop { (forall x. is_slprop2 (v x)) ==> is_slprop2 w }) =
   exists* x. B.pts_to r x ** v x
 
 let mutex_live #a m #p v = lock_alive m.l #p (lock_inv m.r v)
@@ -46,7 +46,7 @@ let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
 let replace #a r y #x = R.replace #a r y #x
 
 ```pulse
-fn new_mutex (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
+fn new_mutex (#a:Type0) (v:a -> slprop { forall x. is_slprop2 (v x) }) (x:a)
   requires v x
   returns m:mutex a
   ensures mutex_live m v
@@ -62,11 +62,11 @@ fn new_mutex (#a:Type0) (v:a -> vprop { forall x. is_big (v x) }) (x:a)
 }
 ```
 
-let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : vprop =
+let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
   pure (r == B.box_to_ref m.r) ** lock_acquired m.l
 
 ```pulse
-fn lock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
   returns r:mutex_guard a
   ensures mutex_live m #p v ** r `belongs_to` m ** (exists* x. pts_to r x ** v x)
@@ -84,7 +84,7 @@ fn lock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 ```
 
 ```pulse
-fn unlock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
+fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   requires mutex_live m #p v ** mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures mutex_live m #p v
 {
@@ -100,7 +100,7 @@ fn unlock (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
 
 ```pulse
 ghost
-fn share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
+fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
   ensures mutex_live m #(p /. 2.0R) v ** mutex_live m #(p /. 2.0R) v
 {
@@ -113,7 +113,7 @@ fn share (#a:Type0) (#v:a -> vprop) (#p:perm) (m:mutex a)
 
 ```pulse
 ghost
-fn gather (#a:Type0) (#v:a -> vprop) (#p1 #p2:perm) (m:mutex a)
+fn gather (#a:Type0) (#v:a -> slprop) (#p1 #p2:perm) (m:mutex a)
   requires mutex_live m #p1 v ** mutex_live m #p2 v
   ensures mutex_live m #(p1 +. p2) v
 {

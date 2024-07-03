@@ -3,12 +3,12 @@ module Pulse.Lib.WithPure
 open Pulse.Lib.Core
 open Pulse.Main
 
-// let tag (v:vprop) : vprop = v
+// let tag (v:slprop) : slprop = v
 
 let with_pure
   (p : prop)
-  (v : squash p -> vprop)
-: vprop
+  (v : squash p -> slprop)
+: slprop
 = op_exists_Star v
 // Alternative definition:
 // = exists* v'. tag v' ** pure (p /\ v' == v ())
@@ -16,45 +16,45 @@ let with_pure
 
 let size_small
   (p : prop)
-  (v : squash p -> vprop)
-: Lemma (requires forall s. is_small (v s))
-        (ensures  is_small (with_pure p v))
-        [SMTPat (is_small (with_pure p v))]
+  (v : squash p -> slprop)
+: Lemma (requires forall s. is_slprop1 (v s))
+        (ensures  is_slprop1 (with_pure p v))
+        [SMTPat (is_slprop1 (with_pure p v))]
 = ()
 
 let size_boxable
   (p : prop)
-  (v : squash p -> vprop)
-: Lemma (requires forall s. is_big (v s))
-        (ensures  is_big (with_pure p v))
-        [SMTPat (is_big (with_pure p v))]
+  (v : squash p -> slprop)
+: Lemma (requires forall s. is_slprop2 (v s))
+        (ensures  is_slprop2 (with_pure p v))
+        [SMTPat (is_slprop2 (with_pure p v))]
 = ()
 
 let eta_exists_aux 
   (#a : Type0)
-  (p : a -> vprop)
-: vprop_equiv (op_exists_Star p) (op_exists_Star (fun (x:a) -> p x))
-= let aux (x:a) : Lemma (vprop_equiv (p x) (p x)) =
-    Squash.return_squash (vprop_equiv_refl (p x))
+  (p : a -> slprop)
+: slprop_equiv (op_exists_Star p) (op_exists_Star (fun (x:a) -> p x))
+= let aux (x:a) : Lemma (slprop_equiv (p x) (p x)) =
+    Squash.return_squash (slprop_equiv_refl (p x))
   in
   Classical.forall_intro aux;
-  vprop_equiv_exists p (fun x -> p x) ()
+  slprop_equiv_exists p (fun x -> p x) ()
 
 let uneta_exists_aux 
   (#a : Type0)
-  (p : a -> vprop)
-: vprop_equiv (op_exists_Star (fun (x:a) -> p x)) (op_exists_Star p)
-= let aux (x:a) : Lemma (vprop_equiv (p x) (p x)) =
-    Squash.return_squash (vprop_equiv_refl (p x))
+  (p : a -> slprop)
+: slprop_equiv (op_exists_Star (fun (x:a) -> p x)) (op_exists_Star p)
+= let aux (x:a) : Lemma (slprop_equiv (p x) (p x)) =
+    Squash.return_squash (slprop_equiv_refl (p x))
   in
   Classical.forall_intro aux;
-  vprop_equiv_exists (fun x -> p x) p ()
+  slprop_equiv_exists (fun x -> p x) p ()
 
 ```pulse
 ghost
 fn eta_exists
   (a : Type0)
-  (p : a -> vprop)
+  (p : a -> slprop)
   requires op_exists_Star p
   ensures  op_exists_Star (fun (x:a) -> p x)
 {
@@ -68,7 +68,7 @@ fn eta_exists
 ghost
 fn uneta_exists
   (a : Type0)
-  (p : a -> vprop)
+  (p : a -> slprop)
   requires op_exists_Star (fun (x:a) -> p x)
   ensures  op_exists_Star p
 {
@@ -82,7 +82,7 @@ fn uneta_exists
 ghost
 fn intro_with_pure
   (p : prop)
-  (v : squash p -> vprop)
+  (v : squash p -> slprop)
   (_ : squash p)
   requires pure p ** v ()
   ensures  with_pure p v
@@ -98,7 +98,7 @@ fn intro_with_pure
 ghost
 fn squash_single_coerce
   (p : prop)
-  (v : squash p -> vprop)
+  (v : squash p -> slprop)
   (s : squash p)
   requires v s
   ensures  pure p ** v ()
@@ -112,7 +112,7 @@ fn squash_single_coerce
 ghost
 fn elim_with_pure
   (p : prop)
-  (v : squash p -> vprop)
+  (v : squash p -> slprop)
   requires with_pure p v
   returns  s : squash p
   ensures  v ()

@@ -22,28 +22,28 @@ open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
-type small_vprop = v:vprop { is_small v }
+type small_slprop = v:slprop { is_slprop1 v }
 
-let trade_elim_t (is:invlist) (hyp:vprop) (extra:small_vprop) (concl:vprop) : Type u#4 =
+let trade_elim_t (is:invlist) (hyp:slprop) (extra:small_slprop) (concl:slprop) : Type u#4 =
   unit -> stt_ghost unit (invlist_names is) (invlist_inv is ** extra ** hyp) (fun _ -> invlist_inv is ** concl)
 
-let trade_elim_exists (is:invlist) (hyp:vprop) (extra:small_vprop) (concl:vprop) : vprop =
+let trade_elim_exists (is:invlist) (hyp:slprop) (extra:small_slprop) (concl:slprop) : slprop =
   pure (squash (trade_elim_t is hyp extra concl))
 
-let __trade (#is:invlist) (hyp concl:vprop) : small_vprop =
-  exists* (extra:small_vprop). extra ** trade_elim_exists is hyp extra concl
+let __trade (#is:invlist) (hyp concl:slprop) : small_slprop =
+  exists* (extra:small_slprop). extra ** trade_elim_exists is hyp extra concl
 
-let trade #is hyp concl : vprop = __trade #is hyp concl
+let trade #is hyp concl : slprop = __trade #is hyp concl
 
-let trade_is_small (#is:invlist) (hyp concl:vprop)
-  : Lemma (is_small (trade #is hyp concl)) = ()
+let trade_is_slprop1 (#is:invlist) (hyp concl:slprop)
+  : Lemma (is_slprop1 (trade #is hyp concl)) = ()
 
 ```pulse
 ghost
 fn intro_trade
   (#is:invlist)
-  (hyp concl:vprop)
-  (extra:vprop { is_small extra })
+  (hyp concl:slprop)
+  (extra:slprop { is_slprop1 extra })
   (f_elim:unit -> (
     stt_ghost unit (invlist_names is)
     (invlist_inv is ** extra ** hyp)
@@ -63,8 +63,8 @@ fn intro_trade
 ghost
 fn intro_trade_invs
   (#is:invlist)
-  (hyp concl:vprop)
-  (extra:vprop { is_small extra })
+  (hyp concl:slprop)
+  (extra:slprop { is_slprop1 extra })
   (f_elim:unit -> (
     stt_ghost unit emp_inames
       (invlist_v is ** extra ** hyp)
@@ -115,14 +115,14 @@ ensures emp
 
 ```pulse
 ghost
-fn deconstruct_trade (is:invlist) (hyp concl:vprop)
+fn deconstruct_trade (is:invlist) (hyp concl:slprop)
   requires trade #is hyp concl
-  returns res:(extra:erased small_vprop & trade_elim_t is hyp (reveal extra) concl)
+  returns res:(extra:erased small_slprop & trade_elim_t is hyp (reveal extra) concl)
   ensures reveal (dfst res)
 {
   unfold (trade #is hyp concl);
   unfold (__trade #is hyp concl);
-  with (extra:small_vprop). assert (extra ** trade_elim_exists is hyp extra concl);
+  with (extra:small_slprop). assert (extra ** trade_elim_exists is hyp extra concl);
   unfold (trade_elim_exists is hyp (reveal extra) concl);
   let pf : squash (psquash (trade_elim_t is hyp (reveal extra) concl)) =
     elim_pure_explicit (psquash (trade_elim_t is hyp (reveal extra) concl));
@@ -130,7 +130,7 @@ fn deconstruct_trade (is:invlist) (hyp concl:vprop)
     FStar.Squash.join_squash pf;
   let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
   let res =
-    (| (extra <: erased small_vprop), f |) <: (p:erased small_vprop & trade_elim_t is hyp (reveal p) concl);
+    (| (extra <: erased small_slprop), f |) <: (p:erased small_slprop & trade_elim_t is hyp (reveal p) concl);
   rewrite (reveal extra) as (reveal (dfst res));
   res
 }
@@ -140,7 +140,7 @@ fn deconstruct_trade (is:invlist) (hyp concl:vprop)
 ghost
 fn elim_trade
   (#is:invlist)
-  (hyp concl:vprop)
+  (hyp concl:slprop)
   requires invlist_inv is ** trade #is hyp concl ** hyp
   ensures invlist_inv is ** concl
   opens (invlist_names is)
@@ -156,7 +156,7 @@ ghost
 fn trade_sub_inv
   (#is1:invlist)
   (#is2:invlist { invlist_sub is1 is2 })
-  (hyp concl:vprop)
+  (hyp concl:slprop)
   requires trade #is1 hyp concl
   ensures trade #is2 hyp concl
 {
@@ -182,7 +182,7 @@ fn trade_sub_inv
 ghost
 fn trade_map
   (#os : invlist)
-  (p q r : vprop)
+  (p q r : slprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
   requires trade #os p q
   ensures trade #os p r
@@ -204,7 +204,7 @@ fn trade_map
 ghost
 fn trade_compose
   (#os : invlist)
-  (p q r : vprop)
+  (p q r : slprop)
   requires trade #os p q ** trade #os q r
   ensures trade #os p r
 {

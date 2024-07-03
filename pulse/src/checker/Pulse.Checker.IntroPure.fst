@@ -28,14 +28,14 @@ let check_prop (g:env) (p:term)
   : T.Tac (p:term & tot_typing g p tm_prop) =
   
   let p0 = p in
-  let (| p, p_typing |) = Pulse.Checker.Pure.check_vprop g (tm_pure p) in
+  let (| p, p_typing |) = Pulse.Checker.Pure.check_slprop g (tm_pure p) in
   match inspect_term p with
   | Tm_Pure pp ->
     let prop_typing = Pulse.Typing.Metatheory.pure_typing_inversion #_ #pp p_typing in
     (| pp, prop_typing |)
   | _ ->
     fail g None
-      (Printf.sprintf "Impossible: check_intro_pure: checking a pure vprop %s returned a non-pure vprop %s,\
+      (Printf.sprintf "Impossible: check_intro_pure: checking a pure slprop %s returned a non-pure slprop %s,\
                        please file a bug-report"
          (P.term_to_string (tm_pure p0))
          (P.term_to_string p))
@@ -46,7 +46,7 @@ let check_prop_validity (g:env) (p:term) (typing:tot_typing g p tm_prop): T.Tac 
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_IntroPure? t.term })

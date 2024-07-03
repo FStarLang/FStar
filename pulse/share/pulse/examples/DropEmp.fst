@@ -3,7 +3,7 @@ module DropEmp
 open Pulse.Lib.Pervasives
 
 ```pulse
-fn test0 (p:vprop)
+fn test0 (p:slprop)
   requires (if true then emp else p)
   ensures emp
 {
@@ -12,7 +12,7 @@ fn test0 (p:vprop)
 ```
 
 ```pulse
-fn test1 (p:vprop)
+fn test1 (p:slprop)
   requires (if false then emp else p)
   ensures p
 {
@@ -22,7 +22,7 @@ fn test1 (p:vprop)
 
 [@@expect_failure]
 ```pulse
-fn test2 (p:vprop)
+fn test2 (p:slprop)
   requires (if true then emp else p)
   ensures p
 {
@@ -32,7 +32,7 @@ fn test2 (p:vprop)
 
 [@@expect_failure]
 ```pulse
-fn test3 (p:vprop)
+fn test3 (p:slprop)
   requires (if false then emp else p)
   ensures emp
 {

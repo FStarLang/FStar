@@ -27,13 +27,13 @@ module A = Pulse.Lib.Array
 #push-options "--ext 'pulse:env_on_err'"
 
 assume
-val dbg : vprop
+val dbg : slprop
 
 open Pulse.Lib.Stick
 
 ```pulse
 ghost
-fn elim_implies (#p #q:vprop) ()
+fn elim_implies (#p #q:slprop) ()
    requires (p @==> q) ** p
    ensures q
 {
@@ -200,7 +200,7 @@ let parse_dpe_cmd_post
   (s:erased (Seq.seq U8.t))
   (p:perm)
   (res: option dpe_cmd)
-: vprop
+: slprop
 = match res with
   | None -> A.pts_to input #p s ** pure (parse_dpe_cmd_failure_postcond s)
   | Some cmd -> exists* vargs.

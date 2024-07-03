@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 
-module Pulse.Soundness.VPropEquiv
+module Pulse.Soundness.SLPropEquiv
 module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module L = FStar.List.Tot
@@ -27,8 +27,8 @@ open Pulse.Typing
 open Pulse.Elaborate
 open Pulse.Soundness.Common
 
-val vprop_equiv_unit_soundness (#g:stt_env) (#v0 #v1:term) 
-                               (d0:tot_typing g v0 tm_vprop)
-                               (eq:vprop_equiv g v0 v1)
+val slprop_equiv_unit_soundness (#g:stt_env) (#v0 #v1:term) 
+                               (d0:tot_typing g v0 tm_slprop)
+                               (eq:slprop_equiv g v0 v1)
   : GTot (RT.tot_typing (elab_env g) (`())
-            (stt_vprop_equiv v0 v1))
+            (stt_slprop_equiv v0 v1))

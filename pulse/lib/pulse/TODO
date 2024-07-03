@@ -1,10 +1,10 @@
 TODOs:
 
-1. add uinst and implicit args in the DSL syntax and remove hacks like meq2, erased, ref, vprop_eq ... 
+1. add uinst and implicit args in the DSL syntax and remove hacks like meq2, erased, ref, slprop_eq ... 
     e.g., (reveal #nat v)
 
 2. instantiation of implicit args (calling the unifier to figure out implicit args)
-    - for indexes of vprops
+    - for indexes of slprops
     - but also regular type arguments, e.g., id #nat x 
 
 -------------------------------------------------------------------------------

@@ -2,7 +2,7 @@ module Ambig.Attr
 
 open Pulse.Lib.Pervasives
 
-assume val p : int -> vprop
+assume val p : int -> slprop
 
 [@@allow_ambiguous]
 assume val foo () (#x:erased int)

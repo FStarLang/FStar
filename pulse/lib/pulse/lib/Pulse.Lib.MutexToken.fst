@@ -24,14 +24,14 @@ module B = Pulse.Lib.Box
 module L = Pulse.Lib.SpinLockToken
 
 noeq
-type mutex (#a:Type0) (p:a -> vprop) = {
+type mutex (#a:Type0) (p:a -> slprop) = {
   r : B.box a;
   l : L.lock (exists* v. B.pts_to r v ** p v)
 }
 
 let mutex_guard (a:Type0) : Type0 = R.ref a
 
-let pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : vprop =
+let pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slprop =
   R.pts_to mg #p x
 
 let ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
@@ -56,7 +56,7 @@ let replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   R.replace #a mg y #x
 
 ```pulse
-fn new_mutex (#a:Type0) (v:a -> vprop { forall (x:a). is_big (v x) }) (x:a)
+fn new_mutex (#a:Type0) (v:a -> slprop { forall (x:a). is_slprop2 (v x) }) (x:a)
   requires v x
   returns _:mutex v
   ensures emp
@@ -68,11 +68,11 @@ fn new_mutex (#a:Type0) (v:a -> vprop { forall (x:a). is_big (v x) }) (x:a)
 }
 ```
 
-let belongs_to (#a:Type0) (#v:a -> vprop) (mg:mutex_guard a) (m:mutex v) : vprop =
+let belongs_to (#a:Type0) (#v:a -> slprop) (mg:mutex_guard a) (m:mutex v) : slprop =
   pure (mg == B.box_to_ref m.r) ** L.lock_acquired m.l
 
 ```pulse
-fn lock (#a:Type0) (#v:a -> vprop) (m:mutex v)
+fn lock (#a:Type0) (#v:a -> slprop) (m:mutex v)
   requires emp
   returns mg:mutex_guard a
   ensures mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
@@ -87,7 +87,7 @@ fn lock (#a:Type0) (#v:a -> vprop) (m:mutex v)
 ```
 
 ```pulse
-fn unlock (#a:Type0) (#v:a -> vprop) (m:mutex v) (mg:mutex_guard a)
+fn unlock (#a:Type0) (#v:a -> slprop) (m:mutex v) (mg:mutex_guard a)
   requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures emp
 {
