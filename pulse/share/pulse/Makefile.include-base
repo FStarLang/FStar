@@ -10,6 +10,17 @@ SRC_DIRS += .
 # List additional include paths
 INCLUDE_PATHS += $(SRC_DIRS)
 
+# Use hints by default, can be overriden
+HINTS_ENABLED?=y
+
+ifeq ($(HINTS_ENABLED),y)
+USE_HINTS:=--use_hints
+else
+USE_HINTS:=
+endif
+
+FSTAR_OPTIONS += $(USE_HINTS)
+
 # A place to put all build artifacts
 ifneq (,$(OUTPUT_DIRECTORY))
   FSTAR_OPTIONS += --odir $(OUTPUT_DIRECTORY)

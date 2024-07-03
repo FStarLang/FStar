@@ -75,6 +75,10 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst /\
                                         pst'.unsolved == pst.unsolved }) =
 
+  (* Hacking progress checking: we eliminate all exists, so if
+  there's any in the ctxt then we will make progress. *)
+  let prog = List.Tot.existsb (fun t -> Tm_ExistsSL? (inspect_term t)) pst.remaining_ctxt in
+
   let (| g', remaining_ctxt', ty, k |) =
     elim_exists_frame
       #pst.pg
@@ -105,6 +109,7 @@ let elim_exists_pst (#preamble:_) (pst:prover_state preamble)
   assume (list_as_vprop (vprop_as_list remaining_ctxt') == remaining_ctxt');
 
   { pst with
+    progress = prog;
     pg = g';
     remaining_ctxt = vprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();
