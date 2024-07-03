@@ -732,24 +732,24 @@ let mk_observability_lid l = ["PulseCore"; "Observability"; l]
 let observable_lid = mk_observability_lid "Observable"
 let neutral_lid = mk_observability_lid "Neutral"
 
+let iname_lid = mk_pulse_lib_core_lid "iname"
 let inames_lid = mk_pulse_lib_core_lid "inames"
-let iname_ref_lid = mk_pulse_lib_core_lid "iref"
 let inv_lid = mk_pulse_lib_core_lid "inv"
 let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
 let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
 let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
 let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
 
-let remove_inv_tm (is iref:R.term) : R.term =
+let remove_inv_tm (is iname:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
-  R.mk_app h [ex is; ex iref]
-let mk_mem_inv (is iref:R.term) : R.term =
+  R.mk_app h [ex is; ex iname]
+let mk_mem_inv (is iname:R.term) : R.term =
   let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
   let t = R.pack_ln (R.Tv_FVar (R.pack_fv mem_inv_tm)) in
-  R.mk_app t [ ex is; ex iref ]
+  R.mk_app t [ ex is; ex iname ]
 
-let inv_disjointness_goal (is iref:R.term) : R.term =
-  let p = mk_mem_inv is iref in
+let inv_disjointness_goal (is iname:R.term) : R.term =
+  let p = mk_mem_inv is iname in
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p
