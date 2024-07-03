@@ -6,9 +6,10 @@ let (pulse_translate_type_without_decay :
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let p1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          ((p1 = "Pulse.Lib.Reference.ref") ||
-             (p1 = "Pulse.Lib.Array.Core.array"))
-            || (p1 = "Pulse.Lib.Vec.vec")
+          (((p1 = "Pulse.Lib.Reference.ref") ||
+              (p1 = "Pulse.Lib.Array.Core.array"))
+             || (p1 = "Pulse.Lib.Vec.vec"))
+            || (p1 = "Pulse.Lib.Box.box")
           ->
           let uu___ =
             FStar_Extraction_Krml.translate_type_without_decay env arg in
@@ -173,8 +174,11 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
               FStar_Extraction_ML_Syntax.loc = uu___9;_},
             _perm::[])
            when
-           let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___10 = "Pulse.Lib.Reference.op_Bang" ->
+           (let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___10 = "Pulse.Lib.Reference.op_Bang") ||
+             (let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___10 = "Pulse.Lib.Box.op_Bang")
+           ->
            let uu___10 =
              let uu___11 = FStar_Extraction_Krml.translate_expr env e2 in
              (uu___11,
@@ -194,8 +198,11 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
               FStar_Extraction_ML_Syntax.loc = uu___5;_},
             e2::_v::_perm::[])
            when
-           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Reference.op_Bang" ->
+           (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Reference.op_Bang") ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Box.op_Bang")
+           ->
            let uu___6 =
              let uu___7 = FStar_Extraction_Krml.translate_expr env e2 in
              (uu___7,
@@ -227,8 +234,11 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
               FStar_Extraction_ML_Syntax.loc = uu___9;_},
             _e3::[])
            when
-           let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___10 = "Pulse.Lib.Reference.op_Colon_Equals" ->
+           (let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___10 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+             (let uu___10 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___10 = "Pulse.Lib.Box.op_Colon_Equals")
+           ->
            let uu___10 =
              let uu___11 = FStar_Extraction_Krml.translate_expr env e11 in
              let uu___12 = FStar_Extraction_Krml.translate_expr env e2 in
@@ -250,8 +260,11 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
               FStar_Extraction_ML_Syntax.loc = uu___5;_},
             e11::e2::_e3::[])
            when
-           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-           uu___6 = "Pulse.Lib.Reference.op_Colon_Equals" ->
+           (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+            uu___6 = "Pulse.Lib.Reference.op_Colon_Equals") ||
+             (let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+              uu___6 = "Pulse.Lib.Box.op_Colon_Equals")
+           ->
            let uu___6 =
              let uu___7 = FStar_Extraction_Krml.translate_expr env e11 in
              let uu___8 = FStar_Extraction_Krml.translate_expr env e2 in
