@@ -59,7 +59,6 @@ val slprop : Type u#4
 
 [@@erasable]
 val slprop2_repr : Type u#3
-val cm_slprop2 : CM.cm slprop2_repr
 val down2 (p:slprop) : slprop2_repr
 val up2 (p:slprop2_repr) : slprop
 let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
@@ -67,7 +66,6 @@ val up2_is_slprop2 (p:slprop2_repr) : Lemma (is_slprop2 (up2 p))
 
 [@@erasable]
 val slprop1_repr : Type u#2
-val cm_slprop1 : CM.cm slprop1_repr
 val down1 (p:slprop) : slprop1_repr
 val up1 (p:slprop1_repr) : slprop
 let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
@@ -126,16 +124,6 @@ val small_exists (#a:Type u#a) (p: a -> slprop)
     (requires forall x. is_slprop1 (p x))
     (ensures is_slprop1 (op_exists_Star p))
     [SMTPat (is_slprop1 (op_exists_Star p))]
-
-val up2_emp    ()      : Lemma (up2 cm_slprop2.unit == emp)
-val down2_emp  ()      : Lemma (down2 emp == cm_slprop2.unit)
-val up2_star   (p q:_) : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p ** up2 q)
-val down2_star (p q:_) : Lemma (down2 (p ** q) == down2 p `cm_slprop2.mult` down2 q)
-
-val up1_emp    ()      : Lemma (up1 cm_slprop1.unit == emp)
-val down1_emp  ()      : Lemma (down1 emp == cm_slprop1.unit)
-val up1_star   (p q:_) : Lemma (up1 (p `cm_slprop1.mult` q) == up1 p ** up1 q)
-val down1_star (p q:_) : Lemma (down1 (p ** q) == down1 p `cm_slprop1.mult` down1 q)
 
 val slprop_equiv (p q:slprop) : prop
 val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
