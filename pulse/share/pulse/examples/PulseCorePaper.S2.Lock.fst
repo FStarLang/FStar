@@ -6,7 +6,7 @@ let storable = is_big
 let sprop = s:vprop { storable s }
 
 noeq
-type lock = { r:Pulse.Lib.Box.box U32.t; i:iref }
+type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
 let maybe b p = if b then p else emp
 let lock_inv r p : v:vprop { storable p ==> storable v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 let protects l p = inv l.i (lock_inv l.r p)

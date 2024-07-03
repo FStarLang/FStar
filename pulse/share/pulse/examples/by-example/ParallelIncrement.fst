@@ -184,13 +184,13 @@ val atomic_increment (r:ref int) (#i:erased int)
      
 module F = Pulse.Lib.FlippableInv
 
-let test (l:iref) = assert (not (mem_inv emp_inames l))
+let test (l:iname) = assert (not (mem_inv emp_inames l))
 let pts_to_refine #a (x:ref a) (p:a -> vprop) = exists* v. pts_to x v ** p v 
 ```pulse
 fn atomic_increment_f2
         (x: ref int)
         (#pred #qpred: int -> vprop)
-        (l:iref)
+        (l:iname)
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
@@ -214,7 +214,7 @@ module I = Pulse.Lib.Stick.Util
 fn atomic_increment_f3
         (x: ref int)
         (#pred #qpred: int -> vprop)
-        (l:iref)
+        (l:iname)
 requires
   inv l (pts_to_refine x pred) **
   qpred 'i **
@@ -243,7 +243,7 @@ fn atomic_increment_f4
         (x: ref int)
         (#invp : vprop)
         (#pred #qpred: int -> vprop)
-        (l:iref)
+        (l:iname)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
@@ -285,7 +285,7 @@ fn atomic_increment_f5
         (x: ref int)
         (#invp #tok : vprop)
         (#pred #qpred: int -> vprop)
-        (l:iref)
+        (l:iname)
         (elim_inv: 
           (_:unit -> stt_ghost unit emp_inames invp (fun _ ->
                     ((exists* v. pts_to x v ** pred v) ** tok))))
@@ -374,10 +374,10 @@ fn atomic_increment_f6
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
+ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
-  with_invariants (C.iref_of c) {
+  with_invariants (C.iname_of c) {
     C.unpack_cinv_vp c;
     atomic_increment x;
     f _ 'i;
@@ -447,27 +447,27 @@ ensures pts_to x ('i + 2)
     };
 
     C.share2 c;
-    with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
-    dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
+    with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
     parallel
     requires GR.pts_to left #0.5R 0 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 0 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     ensures  GR.pts_to left #0.5R 1 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 1 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
     C.gather2 c;
-    drop_ (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     C.cancel c;
     GR.gather left;
     GR.gather right;

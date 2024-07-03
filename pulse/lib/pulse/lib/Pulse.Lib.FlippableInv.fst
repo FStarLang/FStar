@@ -25,7 +25,7 @@ let finv_p (p:vprop { is_big p }) (r : GR.ref bool) : v:vprop { is_big v } =
 noeq
 type finv (p:vprop) = {
   r : GR.ref bool;
-  i : iref;
+  i : iname;
   p_big : squash (is_big p);
 }
 
@@ -57,14 +57,14 @@ fn mk_finv (p:vprop { is_big p })
 ```
 
 
-let iname_of #p (f : finv p) : erased iname = iname_of f.i
+let iname_of #p (f : finv p) : erased iname = f.i
 
 ```pulse
 atomic
 fn flip_on (#p:vprop) (fi:finv p)
    requires off fi ** p
    ensures on fi
-   opens add_iname emp_inames (iname_of fi)
+   opens add_inv emp_inames (iname_of fi)
 {
   open Pulse.Lib.GhostReference;
   unfold off;
@@ -90,7 +90,7 @@ atomic
 fn flip_off (#p:vprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
-   opens add_iname emp_inames (iname_of fi)
+   opens add_inv emp_inames (iname_of fi)
 {
   open Pulse.Lib.GhostReference;
   unfold on;

@@ -316,19 +316,19 @@ fn incr_atomic
                   emp_inames
                   (refine v ** aspec vq ** pts_to x (v + 1))
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
+ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
+  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   returns v:int
-  ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
-  opens (add_inv emp_inames (C.iref_of c))
+  ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
+  opens (add_inv emp_inames (C.iname_of c))
   {
-    with_invariants (C.iref_of c)
+    with_invariants (C.iname_of c)
     {
         C.unpack_cinv_vp #p c;
         let v = atomic_read x;
@@ -347,16 +347,16 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
     b
   )
   invariant b.
-    inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
+    inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
     C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
     let v = read ();
     let next = 
-      with_invariants (C.iref_of c)
+      with_invariants (C.iname_of c)
       returns b1:bool
-      ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+      ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active c p
@@ -438,8 +438,8 @@ ensures pts_to x ('i + 2)
       }
     };
     C.share2 c;
-    with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
-    dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
+    with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     

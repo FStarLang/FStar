@@ -45,7 +45,7 @@ type lock = {
 }
 
 let lock_alive l #p v =
-  inv (iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
+  inv (iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) ** active l.i p
 
 let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
@@ -78,9 +78,9 @@ fn rec acquire (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #p v);
   let b =
-    with_invariants (CInv.iref_of l.i)
+    with_invariants (CInv.iname_of l.i)
       returns b:bool
-      ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+      ensures inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
               active l.i p **
               (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
@@ -140,9 +140,9 @@ fn release (#v:vprop) (#p:perm) (l:lock)
   unfold (lock_alive l #p v);
   unfold (lock_acquired l);
 
-  with_invariants (CInv.iref_of l.i)
+  with_invariants (CInv.iname_of l.i)
     returns _:unit
-    ensures inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+    ensures inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
             active l.i p {
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
@@ -169,7 +169,7 @@ fn share (#v:vprop) (#p:perm) (l:lock)
 {
   unfold (lock_alive l #p v);
   CInv.share l.i;
-  dup_inv (CInv.iref_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
+  dup_inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v));  // make this arg implicit
   fold (lock_alive l #(p /. 2.0R) v);
   fold (lock_alive l #(p /. 2.0R) v)
 } 
@@ -220,7 +220,7 @@ fn lock_alive_inj
   unfold (lock_alive l #p1 v1);
   unfold (lock_alive l #p2 v2);
   invariant_name_identifies_invariant
-    (CInv.iref_of l.i) (CInv.iref_of l.i);
+    (CInv.iname_of l.i) (CInv.iname_of l.i);
   assert (
     pure (
       cinv_vp l.i (lock_inv l.r l.gr v1)
@@ -233,8 +233,8 @@ fn lock_alive_inj
 }
 ```
 
-let iref_of l = CInv.iref_of l.i
-let iref_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
+let iname_of l = CInv.iname_of l.i
+let iname_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
 let lock_active #p l = active l.i p
 
 ```pulse
@@ -267,16 +267,16 @@ fn gather_lock_active (#p1 #p2:perm) (l:lock)
 ghost
 fn elim_inv_and_active_into_alive (l:lock) (v:vprop) (#p:perm)
   requires emp
-  ensures (inv (iref_of l) (iref_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
+  ensures (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v
 {
   ghost
   fn aux ()
-    requires emp ** (inv (iref_of l) (iref_v_of l v) ** lock_active #p l)
+    requires emp ** (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
     ensures lock_alive l #p v
   {
     rewrite each
-      iref_of l as CInv.iref_of l.i,
-      iref_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
+      iname_of l as CInv.iname_of l.i,
+      iname_v_of l v as cinv_vp l.i (lock_inv l.r l.gr v);
     unfold (lock_active #p l);
     fold (lock_alive l #p v)
   };
@@ -289,18 +289,18 @@ fn elim_inv_and_active_into_alive (l:lock) (v:vprop) (#p:perm)
 ghost
 fn elim_alive_into_inv_and_active (l:lock) (v:vprop) (#p:perm)
   requires emp
-  ensures lock_alive l #p v @==> (inv (iref_of l) (iref_v_of l v) ** lock_active #p l)
+  ensures lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l)
 {
   ghost
   fn aux ()
     requires emp ** lock_alive l #p v
-    ensures inv (iref_of l) (iref_v_of l v) ** lock_active #p l
+    ensures inv (iname_of l) (iname_v_of l v) ** lock_active #p l
   {
     unfold (lock_alive l #p v);
     fold (lock_active #p l);
     rewrite each
-      CInv.iref_of l.i as iref_of l,
-      cinv_vp l.i (lock_inv l.r l.gr v) as iref_v_of l v
+      CInv.iname_of l.i as iname_of l,
+      cinv_vp l.i (lock_inv l.r l.gr v) as iname_v_of l v
   };
   intro_stick _ _ _ aux
 }

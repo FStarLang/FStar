@@ -32,7 +32,7 @@ let lock_inv (r:B.box U32.t) (p:vprop) : v:vprop { is_big p ==> is_big v } =
 noeq
 type lock = {
   r:B.box U32.t;
-  i:iref;
+  i:iname;
 }
 
 let lock_alive (l:lock) (p:vprop) =

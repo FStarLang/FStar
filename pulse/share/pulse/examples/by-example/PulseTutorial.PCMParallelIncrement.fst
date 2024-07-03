@@ -284,16 +284,16 @@ fn increment
 requires
     can_give gs 1 **     //we have permission to add one to the reference
     CI.active i p **     //the invariant is active
-    inv (CI.iref_of i)   //the invariant itself
+    inv (CI.iname_of i)   //the invariant itself
         (CI.cinv_vp i (contributions n initial gs r))
 ensures
     has_given gs 1 **    //we have contributed 1 unit to the reference
     CI.active i p **     //and the invariant remains ...
-    inv (CI.iref_of i) 
+    inv (CI.iname_of i) 
         (CI.cinv_vp i (contributions n initial gs r))
-opens (add_inv emp_inames (CI.iref_of i)) //we used the invariant
+opens (add_inv emp_inames (CI.iname_of i)) //we used the invariant
 { 
-  with_invariants (CI.iref_of i)
+  with_invariants (CI.iname_of i)
   {
     CI.unpack_cinv_vp i;
     unfold contributions;
@@ -367,16 +367,16 @@ fn has_given_zero
         (ci:CI.cinv)
 requires
     CI.active ci p **
-    inv (CI.iref_of ci) 
+    inv (CI.iname_of ci) 
         (CI.cinv_vp ci (contributions capacity initial gs r))
 ensures
    has_given gs 0 **
    CI.active ci p **
-   inv (CI.iref_of ci) 
+   inv (CI.iname_of ci) 
        (CI.cinv_vp ci (contributions capacity initial gs r))
-opens (add_inv emp_inames (CI.iref_of ci))
+opens (add_inv emp_inames (CI.iname_of ci))
 {
-  with_invariants (CI.iref_of ci)
+  with_invariants (CI.iname_of ci)
   {
     CI.unpack_cinv_vp ci;
     unfold contributions;
@@ -403,12 +403,12 @@ fn rec incr_n_aux
 requires
     can_give gs remaining ** // if we have permission to add remaining to r
     CI.active ci p **        // and the invariant ...
-    inv (CI.iref_of ci) 
+    inv (CI.iname_of ci) 
         (CI.cinv_vp ci (contributions capacity initial gs r))
 ensures
    has_given gs remaining ** // we have added remaining to r
    CI.active ci p **         // and retain the invariant ... 
-   inv (CI.iref_of ci) 
+   inv (CI.iname_of ci) 
        (CI.cinv_vp ci (contributions capacity initial gs r))
 decreases remaining
 {
