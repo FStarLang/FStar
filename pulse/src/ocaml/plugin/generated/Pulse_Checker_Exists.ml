@@ -108,7 +108,7 @@ let (check_elim_exists :
                                                               (Prims.of_int (58))
                                                               (Prims.of_int (4))
                                                               (Prims.of_int (76))
-                                                              (Prims.of_int (21)))))
+                                                              (Prims.of_int (22)))))
                                                      (FStar_Sealed.seal
                                                         (Obj.magic
                                                            (FStar_Range.mk_range
@@ -131,19 +131,19 @@ let (check_elim_exists :
                                                                     (Prims.of_int (61))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (61))
-                                                                    (Prims.of_int (32)))))
+                                                                    (Prims.of_int (33)))))
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Exists.fst"
                                                                     (Prims.of_int (61))
-                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (36))
                                                                     (Prims.of_int (72))
                                                                     (Prims.of_int (41)))))
                                                                (FStar_Tactics_Effect.lift_div_tac
                                                                   (fun uu___1
                                                                     ->
-                                                                    Pulse_Syntax_Pure.vprop_as_list
+                                                                    Pulse_Syntax_Pure.slprop_as_list
                                                                     pre))
                                                                (fun uu___1 ->
                                                                   (fun ts ->
@@ -283,7 +283,7 @@ let (check_elim_exists :
                                                                     (Prims.of_int (74))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (76))
-                                                                    (Prims.of_int (21)))))
+                                                                    (Prims.of_int (22)))))
                                                                (Obj.magic
                                                                   (Pulse_Checker_Pure.instantiate_term_implicits
                                                                     g1 t1))
@@ -297,7 +297,7 @@ let (check_elim_exists :
                                                                     uu___3)
                                                                     ->
                                                                     Obj.magic
-                                                                    (Pulse_Checker_Pure.check_vprop
+                                                                    (Pulse_Checker_Pure.check_slprop
                                                                     g1 t2))
                                                                     uu___2)))
                                                      (fun uu___1 ->
@@ -699,8 +699,8 @@ let (intro_exists_witness_singleton :
           Pulse_Syntax_Base.witnesses = uu___1::[];_}
         -> true
     | uu___ -> false
-let (intro_exists_vprop :
-  Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.vprop) =
+let (intro_exists_slprop :
+  Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.slprop) =
   fun st ->
     match st.Pulse_Syntax_Base.term1 with
     | Pulse_Syntax_Base.Tm_IntroExists
@@ -723,7 +723,7 @@ let (check_intro_exists :
         fun post_hint ->
           fun res_ppname ->
             fun st ->
-              fun vprop_typing ->
+              fun slprop_typing ->
                 FStar_Tactics_Effect.tac_bind
                   (FStar_Sealed.seal
                      (Obj.magic
@@ -779,7 +779,7 @@ let (check_intro_exists :
                                                      (Prims.of_int (112))
                                                      (Prims.of_int (4))
                                                      (Prims.of_int (114))
-                                                     (Prims.of_int (26)))))
+                                                     (Prims.of_int (27)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -788,7 +788,7 @@ let (check_intro_exists :
                                                      (Prims.of_int (62))
                                                      (Prims.of_int (133))
                                                      (Prims.of_int (54)))))
-                                            (match vprop_typing with
+                                            (match slprop_typing with
                                              | FStar_Pervasives_Native.Some
                                                  typing ->
                                                  Obj.magic
@@ -800,7 +800,7 @@ let (check_intro_exists :
                                              | uu___1 ->
                                                  Obj.magic
                                                    (Obj.repr
-                                                      (Pulse_Checker_Pure.check_vprop
+                                                      (Pulse_Checker_Pure.check_slprop
                                                          g1 t)))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
@@ -900,7 +900,7 @@ let (check_intro_exists :
                                                                     (fun
                                                                     uu___3 ->
                                                                     Prims.strcat
-                                                                    "check_intro_exists_non_erased: vprop "
+                                                                    "check_intro_exists_non_erased: slprop "
                                                                     (Prims.strcat
                                                                     uu___2
                                                                     " is not an existential")))))

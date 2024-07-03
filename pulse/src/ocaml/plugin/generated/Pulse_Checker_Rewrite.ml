@@ -1,9 +1,10 @@
 open Prims
-let (check_vprop_equiv_ext :
+let (check_slprop_equiv_ext :
   Pulse_Syntax_Base.range ->
     Pulse_Typing_Env.env ->
-      Pulse_Syntax_Base.vprop ->
-        Pulse_Syntax_Base.vprop -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+      Pulse_Syntax_Base.slprop ->
+        Pulse_Syntax_Base.slprop ->
+          (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun r ->
     fun g ->
@@ -185,11 +186,11 @@ let (check_vprop_equiv_ext :
                                           (FStar_Tactics_Effect.lift_div_tac
                                              (fun uu___2 -> ())))) uu___1)))
                  uu___)
-let (check_vprop_equiv_tac :
+let (check_slprop_equiv_tac :
   Pulse_Syntax_Base.range ->
     Pulse_Typing_Env.env ->
-      Pulse_Syntax_Base.vprop ->
-        Pulse_Syntax_Base.vprop ->
+      Pulse_Syntax_Base.slprop ->
+        Pulse_Syntax_Base.slprop ->
           Pulse_Syntax_Base.term ->
             (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -255,18 +256,18 @@ let (check_vprop_equiv_tac :
                                              (Prims.of_int (57))
                                              (Prims.of_int (13))
                                              (Prims.of_int (57))
-                                             (Prims.of_int (54)))))
+                                             (Prims.of_int (55)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "Pulse.Checker.Rewrite.fst"
                                              (Prims.of_int (57))
-                                             (Prims.of_int (57))
+                                             (Prims.of_int (58))
                                              (Prims.of_int (79))
                                              (Prims.of_int (27)))))
                                     (FStar_Tactics_Effect.lift_div_tac
                                        (fun uu___1 ->
-                                          Pulse_Reflection_Util.stt_vprop_equiv
+                                          Pulse_Reflection_Util.stt_slprop_equiv
                                             p q))
                                     (fun uu___1 ->
                                        (fun goal ->
@@ -608,11 +609,12 @@ let (check_vprop_equiv_tac :
                                                                uu___1)))
                                                     uu___1))) uu___1)))
                               uu___1))) uu___)
-let rec (check_vprop_equiv :
+let rec (check_slprop_equiv :
   Pulse_Syntax_Base.range ->
     Pulse_Typing_Env.env ->
-      Pulse_Syntax_Base.vprop ->
-        Pulse_Syntax_Base.vprop -> (unit, unit) FStar_Tactics_Effect.tac_repr)
+      Pulse_Syntax_Base.slprop ->
+        Pulse_Syntax_Base.slprop ->
+          (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___3 ->
     fun uu___2 ->
@@ -723,7 +725,7 @@ let rec (check_vprop_equiv :
                                                                     (Prims.of_int (96))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (96))
-                                                                    (Prims.of_int (82)))))
+                                                                    (Prims.of_int (83)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
@@ -735,7 +737,7 @@ let rec (check_vprop_equiv :
                                                                     (Prims.of_int (33)))))
                                                                     (
                                                                     Obj.magic
-                                                                    (check_vprop_equiv
+                                                                    (check_slprop_equiv
                                                                     r g'
                                                                     (Pulse_Syntax_Naming.open_term_nv
                                                                     t1 nx)
@@ -750,7 +752,7 @@ let rec (check_vprop_equiv :
                                                                     ()))))
                                                               uu___1)))
                                                    uu___1))) uu___1)
-                               else check_vprop_equiv_ext r g p q
+                               else check_slprop_equiv_ext r g p q
                            | (Pulse_Syntax_Pure.Tm_Star (p1, p2),
                               Pulse_Syntax_Pure.Tm_Star (q1, q2)) ->
                                FStar_Tactics_Effect.tac_bind
@@ -761,16 +763,16 @@ let rec (check_vprop_equiv :
                                           (Prims.of_int (101))
                                           (Prims.of_int (17))
                                           (Prims.of_int (101))
-                                          (Prims.of_int (44)))))
+                                          (Prims.of_int (45)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range
                                           "Pulse.Checker.Rewrite.fst"
                                           (Prims.of_int (101))
-                                          (Prims.of_int (47))
+                                          (Prims.of_int (48))
                                           (Prims.of_int (103))
                                           (Prims.of_int (37)))))
-                                 (Obj.magic (check_vprop_equiv r g p1 q1))
+                                 (Obj.magic (check_slprop_equiv r g p1 q1))
                                  (fun uu___1 ->
                                     (fun ext1 ->
                                        Obj.magic
@@ -782,7 +784,7 @@ let rec (check_vprop_equiv :
                                                      (Prims.of_int (102))
                                                      (Prims.of_int (17))
                                                      (Prims.of_int (102))
-                                                     (Prims.of_int (44)))))
+                                                     (Prims.of_int (45)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -792,11 +794,11 @@ let rec (check_vprop_equiv :
                                                      (Prims.of_int (103))
                                                      (Prims.of_int (37)))))
                                             (Obj.magic
-                                               (check_vprop_equiv r g p2 q2))
+                                               (check_slprop_equiv r g p2 q2))
                                             (fun ext2 ->
                                                FStar_Tactics_Effect.lift_div_tac
                                                  (fun uu___1 -> ())))) uu___1)
-                           | uu___1 -> check_vprop_equiv_ext r g p q)))
+                           | uu___1 -> check_slprop_equiv_ext r g p q)))
             uu___3 uu___2 uu___1 uu___
 let (check :
   Pulse_Typing_Env.env ->
@@ -864,7 +866,7 @@ let (check :
                                                    (Prims.of_int (120))
                                                    (Prims.of_int (26))
                                                    (Prims.of_int (120))
-                                                   (Prims.of_int (41)))))
+                                                   (Prims.of_int (42)))))
                                           (FStar_Sealed.seal
                                              (Obj.magic
                                                 (FStar_Range.mk_range
@@ -874,7 +876,7 @@ let (check :
                                                    (Prims.of_int (134))
                                                    (Prims.of_int (122)))))
                                           (Obj.magic
-                                             (Pulse_Checker_Pure.check_vprop
+                                             (Pulse_Checker_Pure.check_slprop
                                                 g1 p))
                                           (fun uu___1 ->
                                              (fun uu___1 ->
@@ -890,17 +892,17 @@ let (check :
                                                                   (Prims.of_int (121))
                                                                   (Prims.of_int (26))
                                                                   (Prims.of_int (121))
-                                                                  (Prims.of_int (41)))))
+                                                                  (Prims.of_int (42)))))
                                                          (FStar_Sealed.seal
                                                             (Obj.magic
                                                                (FStar_Range.mk_range
                                                                   "Pulse.Checker.Rewrite.fst"
                                                                   (Prims.of_int (120))
-                                                                  (Prims.of_int (44))
+                                                                  (Prims.of_int (45))
                                                                   (Prims.of_int (134))
                                                                   (Prims.of_int (122)))))
                                                          (Obj.magic
-                                                            (Pulse_Checker_Pure.check_vprop
+                                                            (Pulse_Checker_Pure.check_slprop
                                                                g1 q))
                                                          (fun uu___2 ->
                                                             (fun uu___2 ->
@@ -919,7 +921,7 @@ let (check :
                                                                     (Prims.of_int (127))
                                                                     (Prims.of_int (4))
                                                                     (Prims.of_int (131))
-                                                                    (Prims.of_int (45)))))
+                                                                    (Prims.of_int (46)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -934,14 +936,14 @@ let (check :
                                                                     FStar_Pervasives_Native.None
                                                                     ->
                                                                     Obj.magic
-                                                                    (check_vprop_equiv
+                                                                    (check_slprop_equiv
                                                                     t.Pulse_Syntax_Base.range1
                                                                     g1 p1 q1)
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     tac ->
                                                                     Obj.magic
-                                                                    (check_vprop_equiv_tac
+                                                                    (check_slprop_equiv_tac
                                                                     t.Pulse_Syntax_Base.range1
                                                                     g1 p1 q1
                                                                     tac))

@@ -27,14 +27,14 @@ let (check_prop :
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
                             (Prims.of_int (31)) (Prims.of_int (26))
-                            (Prims.of_int (31)) (Prims.of_int (70)))))
+                            (Prims.of_int (31)) (Prims.of_int (71)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Checker.IntroPure.fst"
                             (Prims.of_int (30)) (Prims.of_int (15))
                             (Prims.of_int (41)) (Prims.of_int (30)))))
                    (Obj.magic
-                      (Pulse_Checker_Pure.check_vprop g
+                      (Pulse_Checker_Pure.check_slprop g
                          (Pulse_Syntax_Pure.tm_pure p)))
                    (fun uu___ ->
                       (fun uu___ ->
@@ -141,10 +141,10 @@ let (check_prop :
                                                                     fun x ->
                                                                     Prims.strcat
                                                                     (Prims.strcat
-                                                                    "Impossible: check_intro_pure: checking a pure vprop "
+                                                                    "Impossible: check_intro_pure: checking a pure slprop "
                                                                     (Prims.strcat
                                                                     uu___3
-                                                                    " returned a non-pure vprop "))
+                                                                    " returned a non-pure slprop "))
                                                                     (Prims.strcat
                                                                     x
                                                                     ",please file a bug-report")))))

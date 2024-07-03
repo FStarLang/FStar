@@ -74,7 +74,7 @@ let (is_elim_pure :
                | uu___1 -> false))) uu___
 let (mk :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
            Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
@@ -141,7 +141,7 @@ let (elim_pure :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimPure.fst"
-                   (Prims.of_int (121)) (Prims.of_int (84))
+                   (Prims.of_int (121)) (Prims.of_int (85))
                    (Prims.of_int (126)) (Prims.of_int (62)))))
           (Obj.magic
              (elim_pure_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
@@ -180,7 +180,7 @@ let (elim_pure_pst :
                  (Prims.of_int (171)) (Prims.of_int (3)))))
         (Obj.magic
            (elim_pure_frame pst.Pulse_Checker_Prover_Base.pg
-              (Pulse_Syntax_Pure.list_as_vprop
+              (Pulse_Syntax_Pure.list_as_slprop
                  pst.Pulse_Checker_Prover_Base.remaining_ctxt)
               (Pulse_Checker_Prover_Base.op_Star
                  preamble.Pulse_Checker_Prover_Base.frame
@@ -196,7 +196,7 @@ let (elim_pure_pst :
                     {
                       Pulse_Checker_Prover_Base.pg = g';
                       Pulse_Checker_Prover_Base.remaining_ctxt =
-                        (Pulse_Syntax_Pure.vprop_as_list remaining_ctxt');
+                        (Pulse_Syntax_Pure.slprop_as_list remaining_ctxt');
                       Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing =
                         ();
                       Pulse_Checker_Prover_Base.uvs =
@@ -219,7 +219,7 @@ let (elim_pure_pst :
                               preamble.Pulse_Checker_Prover_Base.frame)
                            (Pulse_Checker_Prover_Base.op_Star
                               (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Syntax_Pure.list_as_vprop
+                                 (Pulse_Syntax_Pure.list_as_slprop
                                     (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
                                        preamble pst))
                                  preamble.Pulse_Checker_Prover_Base.frame)
@@ -239,7 +239,7 @@ let (elim_pure_pst :
                            (Pulse_Checker_Base.k_elab_equiv
                               pst.Pulse_Checker_Prover_Base.pg g'
                               (Pulse_Checker_Prover_Base.op_Star
-                                 (Pulse_Syntax_Pure.list_as_vprop
+                                 (Pulse_Syntax_Pure.list_as_slprop
                                     pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                  (Pulse_Checker_Prover_Base.op_Star
                                     preamble.Pulse_Checker_Prover_Base.frame
@@ -248,7 +248,7 @@ let (elim_pure_pst :
                                        pst.Pulse_Checker_Prover_Base.solved)))
                               (Pulse_Checker_Prover_Base.op_Star
                                  (Pulse_Checker_Prover_Base.op_Star
-                                    (Pulse_Syntax_Pure.list_as_vprop
+                                    (Pulse_Syntax_Pure.list_as_slprop
                                        pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                     preamble.Pulse_Checker_Prover_Base.frame)
                                  (Pulse_Checker_Prover_Base.op_Array_Access

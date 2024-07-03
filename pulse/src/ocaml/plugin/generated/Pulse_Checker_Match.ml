@@ -1090,7 +1090,7 @@ let (comp_observability :
 let (weaken_branch_observability :
   Pulse_Syntax_Base.observability ->
     Pulse_Typing_Env.env ->
-      Pulse_Syntax_Base.vprop ->
+      Pulse_Syntax_Base.slprop ->
         unit Pulse_Typing.post_hint_for_env ->
           Pulse_Syntax_Base.universe ->
             Pulse_Syntax_Base.typ ->

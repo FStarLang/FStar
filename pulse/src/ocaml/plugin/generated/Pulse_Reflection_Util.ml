@@ -30,12 +30,12 @@ let (int_lid : Prims.string Prims.list) = FStar_Reflection_Const.int_lid
 let (erased_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "erased"]
 let (hide_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "hide"]
 let (reveal_lid : Prims.string Prims.list) = ["FStar"; "Ghost"; "reveal"]
-let (vprop_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "vprop"
-let (vprop_fv : FStar_Reflection_Types.fv) =
-  FStar_Reflection_V2_Builtins.pack_fv vprop_lid
-let (vprop_tm : FStar_Reflection_Types.term) =
+let (slprop_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "slprop"
+let (slprop_fv : FStar_Reflection_Types.fv) =
+  FStar_Reflection_V2_Builtins.pack_fv slprop_lid
+let (slprop_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar vprop_fv)
+    (FStar_Reflection_V2_Data.Tv_FVar slprop_fv)
 let (emp_lid : Prims.string Prims.list) = mk_pulse_lib_core_lid "emp"
 let (unit_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv unit_lid
@@ -69,11 +69,11 @@ let (seq_lid : Prims.string Prims.list) = ["FStar"; "Seq"; "Base"; "seq"]
 let (seq_create_lid : Prims.string Prims.list) =
   ["FStar"; "Seq"; "Base"; "create"]
 let (tot_lid : Prims.string Prims.list) = ["Prims"; "Tot"]
-let (vprop_equiv_norm_tm : FStar_Reflection_Types.term) =
+let (slprop_equiv_norm_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
     (FStar_Reflection_V2_Data.Tv_FVar
        (FStar_Reflection_V2_Builtins.pack_fv
-          (mk_pulse_lib_core_lid "vprop_equiv_norm")))
+          (mk_pulse_lib_core_lid "slprop_equiv_norm")))
 let (ex : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =
   fun t -> (t, FStar_Reflection_V2_Data.Q_Explicit)
 let (im : FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.argv) =
@@ -763,7 +763,7 @@ let (mk_while :
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_App
              (t2, (body, FStar_Reflection_V2_Data.Q_Explicit)))
-let (vprop_eq_tm :
+let (slprop_eq_tm :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
@@ -787,7 +787,7 @@ let (vprop_eq_tm :
              (t,
                ((FStar_Reflection_V2_Builtins.pack_ln
                    (FStar_Reflection_V2_Data.Tv_FVar
-                      (FStar_Reflection_V2_Builtins.pack_fv vprop_lid))),
+                      (FStar_Reflection_V2_Builtins.pack_fv slprop_lid))),
                  FStar_Reflection_V2_Data.Q_Implicit))) in
       let t4 =
         FStar_Reflection_V2_Builtins.pack_ln
@@ -816,12 +816,12 @@ let (non_informative_rt :
           (FStar_Reflection_V2_Data.Tv_App
              (t, (a, FStar_Reflection_V2_Data.Q_Explicit))) in
       t1
-let (stt_vprop_equiv_fv : FStar_Reflection_Types.fv) =
-  FStar_Reflection_V2_Builtins.pack_fv (mk_pulse_lib_core_lid "vprop_equiv")
-let (stt_vprop_equiv_tm : FStar_Reflection_Types.term) =
+let (stt_slprop_equiv_fv : FStar_Reflection_Types.fv) =
+  FStar_Reflection_V2_Builtins.pack_fv (mk_pulse_lib_core_lid "slprop_equiv")
+let (stt_slprop_equiv_tm : FStar_Reflection_Types.term) =
   FStar_Reflection_V2_Builtins.pack_ln
-    (FStar_Reflection_V2_Data.Tv_FVar stt_vprop_equiv_fv)
-let (stt_vprop_equiv :
+    (FStar_Reflection_V2_Data.Tv_FVar stt_slprop_equiv_fv)
+let (stt_slprop_equiv :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
@@ -830,7 +830,7 @@ let (stt_vprop_equiv :
       let t =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_App
-             (stt_vprop_equiv_tm, (t1, FStar_Reflection_V2_Data.Q_Explicit))) in
+             (stt_slprop_equiv_tm, (t1, FStar_Reflection_V2_Data.Q_Explicit))) in
       FStar_Reflection_V2_Builtins.pack_ln
         (FStar_Reflection_V2_Data.Tv_App
            (t, (t2, FStar_Reflection_V2_Data.Q_Explicit)))

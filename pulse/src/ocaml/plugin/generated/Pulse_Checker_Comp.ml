@@ -302,7 +302,7 @@ let (check :
                                                                     Prims.op_Negation
                                                                     (Pulse_Syntax_Base.eq_tm
                                                                     ty
-                                                                    Pulse_Syntax_Pure.tm_vprop)
+                                                                    Pulse_Syntax_Pure.tm_slprop)
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr

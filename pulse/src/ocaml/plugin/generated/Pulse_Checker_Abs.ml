@@ -3619,7 +3619,7 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (383))
                                                                     (Prims.of_int (41))
                                                                     (Prims.of_int (383))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (67)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -3629,7 +3629,7 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (430))
                                                                     (Prims.of_int (29)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_vprop
+                                                                    (Pulse_Checker_Pure.check_slprop
                                                                     g'
                                                                     pre_opened))
                                                                     (fun

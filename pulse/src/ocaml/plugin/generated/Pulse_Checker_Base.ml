@@ -671,7 +671,7 @@ let (intro_post_hint :
                                                                     (Prims.of_int (113))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (113))
-                                                                    (Prims.of_int (119)))))
+                                                                    (Prims.of_int (120)))))
                                                                 (FStar_Sealed.seal
                                                                    (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -681,7 +681,7 @@ let (intro_post_hint :
                                                                     (Prims.of_int (124))
                                                                     (Prims.of_int (72)))))
                                                                 (Obj.magic
-                                                                   (Pulse_Checker_Pure.check_vprop
+                                                                   (Pulse_Checker_Pure.check_slprop
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g x
                                                                     Pulse_Syntax_Base.ppname_default
@@ -1043,13 +1043,13 @@ let (st_equiv_trans :
           fun d01 ->
             fun d12 ->
               match d01 with
-              | Pulse_Typing.ST_VPropEquiv
+              | Pulse_Typing.ST_SLPropEquiv
                   (_f, _c0, _c1, x, c0_pre_typing, c0_res_typing,
                    c0_post_typing, eq_res_01, eq_pre_01, eq_post_01)
                   ->
                   let uu___ = d12 in
                   (match uu___ with
-                   | Pulse_Typing.ST_VPropEquiv
+                   | Pulse_Typing.ST_SLPropEquiv
                        (_f1, _c11, _c2, y, c1_pre_typing, c1_res_typing,
                         c1_post_typing, eq_res_12, eq_pre_12, eq_post_12)
                        ->
@@ -1060,7 +1060,7 @@ let (st_equiv_trans :
                               (Pulse_Syntax_Base.comp_res c1))
                        then
                          FStar_Pervasives_Native.Some
-                           (Pulse_Typing.ST_VPropEquiv
+                           (Pulse_Typing.ST_SLPropEquiv
                               (g, c0, c2, x, (), (), (),
                                 (FStar_Reflection_Typing.Rel_trans
                                    ((Pulse_Typing.elab_env _f),
@@ -1132,7 +1132,7 @@ let (st_equiv_post :
                  | FStar_Pervasives.Mkdtuple4
                      (u_of, pre_typing, x, post_typing) ->
                      let st_equiv =
-                       Pulse_Typing.ST_VPropEquiv
+                       Pulse_Typing.ST_SLPropEquiv
                          (g, c, c', x, (), (), (),
                            (FStar_Reflection_Typing.Rel_refl
                               ((Pulse_Typing.elab_env g),
@@ -1212,7 +1212,7 @@ let (st_equiv_pre :
                  | FStar_Pervasives.Mkdtuple4
                      (u_of, pre_typing, x, post_typing) ->
                      let st_equiv =
-                       Pulse_Typing.ST_VPropEquiv
+                       Pulse_Typing.ST_SLPropEquiv
                          (g, c, c', x, (), (), (),
                            (FStar_Reflection_Typing.Rel_refl
                               ((Pulse_Typing.elab_env g),
@@ -2077,12 +2077,12 @@ type ('g, 'ctxt, 'postuhint) checker_result_t =
   (Pulse_Syntax_Base.var, Pulse_Typing_Env.env,
     (Pulse_Syntax_Base.universe, Pulse_Syntax_Base.typ, unit)
       FStar_Pervasives.dtuple3,
-    (Pulse_Syntax_Base.vprop, unit) Prims.dtuple2,
+    (Pulse_Syntax_Base.slprop, unit) Prims.dtuple2,
     (unit, unit, unit, unit) continuation_elaborator)
     FStar_Pervasives.dtuple5
 type check_t =
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         unit Pulse_Typing.post_hint_opt ->
           Pulse_Syntax_Base.ppname ->
@@ -2096,7 +2096,7 @@ let (return_in_ctxt :
       Pulse_Syntax_Base.ppname ->
         Pulse_Syntax_Base.universe ->
           Pulse_Syntax_Base.term ->
-            Pulse_Syntax_Base.vprop ->
+            Pulse_Syntax_Base.slprop ->
               unit ->
                 unit Pulse_Typing.post_hint_opt ->
                   (unit, unit, unit)
@@ -2533,7 +2533,7 @@ let (match_comp_res_with_post_hint :
                                                                     ((Pulse_Syntax_Base.st_comp_of_comp
                                                                     c).Pulse_Syntax_Base.post)
                                                                     }), d,
-                                                                    (Pulse_Typing.ST_VPropEquiv
+                                                                    (Pulse_Typing.ST_SLPropEquiv
                                                                     (g, c,
                                                                     (Pulse_Syntax_Base.with_st_comp
                                                                     c
@@ -2565,7 +2565,7 @@ let (match_comp_res_with_post_hint :
               uu___4 uu___3 uu___2 uu___1 uu___
 let (apply_checker_result_k :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit Pulse_Typing.post_hint_for_env ->
         (unit, unit, unit) checker_result_t ->
           Pulse_Syntax_Base.ppname ->
@@ -2655,7 +2655,7 @@ let (apply_checker_result_k :
                                                  uu___3))) uu___2))) uu___)
 let (checker_result_for_st_typing :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit Pulse_Typing.post_hint_opt ->
         (unit, unit, unit) Pulse_Typing_Combinators.st_typing_in_ctxt ->
           Pulse_Syntax_Base.ppname ->
