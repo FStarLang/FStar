@@ -159,8 +159,8 @@ let is_split #t s p i s1 s2 =
 let is_split_is_small s p i s1 s2 = ()
 
 ```pulse
-fn split (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    requires pts_to s #p v ** pure (SZ.v i <= Seq.length v)
+fn split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
+    requires pts_to s #p v ** pure (split_precond mutb p v i)
     returns res : (slice t & slice t)
     ensures (split_post s p v i res)
 {
