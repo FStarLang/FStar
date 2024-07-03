@@ -97,18 +97,23 @@ val merge_assoc: (fp1: footprint) -> (fp2: footprint) -> (fp3: footprint) -> Lem
         [SMTPat (adjacent fp1 fp2); SMTPat (adjacent fp2 fp3)];
     ]]
 
+let split_postcond
+    (#t: Type) (fp: footprint) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
+    (v1: Seq.seq t) (v2: Seq.seq t) (fp1: footprint) (fp2: footprint)
+: Tot prop
+=
+                adjacent fp1 fp2 /\
+                merge fp1 fp2 == fp /\
+                SZ.v i <= Seq.length v /\
+                (v1, v2) == Seq.split v (SZ.v i)
+
 val split (#t: Type) (s: ptr t) (#p: perm) (#fp: footprint) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (ptr t)
     (requires pts_to s #p fp v ** pure (SZ.v i <= Seq.length v))
     (ensures fun s' ->
         exists* v1 v2 fp1 fp2 .
             pts_to s #p fp1 v1 **
             pts_to s' #p fp2 v2 **
-            pure (
-                adjacent fp1 fp2 /\
-                merge fp1 fp2 == fp /\
-                SZ.v i <= Seq.length v /\
-                (v1, v2) == Seq.split v (SZ.v i)
-            )
+            pure (split_postcond fp v i v1 v2 fp1 fp2)
     )
 
 val join (#t: Type) (s1: ptr t) (#p: perm) (#fp1: footprint) (#v1: Seq.seq t) (s2: ptr t) (#fp2: footprint {adjacent fp1 fp2}) (#v2: Seq.seq t) : stt_ghost unit emp_inames

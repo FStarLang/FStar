@@ -152,41 +152,51 @@ let is_split #t s p i s1 s2 =
     pure (
         s1.elt == s.elt /\
         AP.adjacent s1.fp s2.fp /\
-        AP.merge s1.fp s2.fp == s.fp
+        AP.merge s1.fp s2.fp == s.fp /\
+        SZ.v s.len == SZ.v s1.len + SZ.v s2.len
     )
 
-val split0 (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice t & slice t)
-    (requires pts_to s #p v ** pure (SZ.v i <= Seq.length v))
-    (ensures fun res -> let (s1, s2) = res in
-        exists* v1 v2 .
-            pts_to s1 #p v1 **
-            pts_to s2 #p v2 **
-            is_split s p i s1 s2 **
-            pure (
-                SZ.v i <= Seq.length v /\
-                (v1, v2) == Seq.split v (SZ.v i)
-            )
-    )
-
+let is_split_is_small s p i s1 s2 = ()
 
 ```pulse
-ghost
-fn split0 (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
+fn split (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires pts_to s #p v ** pure (SZ.v i <= Seq.length v)
     returns res : (slice t & slice t)
-    ensures (let (s1, s2) = res in
-        exists* v1 v2 .
-            pts_to s1 #p v1 **
-            pts_to s2 #p v2 **
-            is_split s p i s1 s2 **
-            pure (
-                SZ.v i <= Seq.length v /\
-                (v1, v2) == Seq.split v (SZ.v i)
-            )
-    )
+    ensures (split_post s p v i res)
 {
-    admit ()
+    unfold (pts_to s #p v);
+    Seq.lemma_split v (SZ.v i);
+    let elt' = AP.split s.elt i;
+    with fp1 _v1 fp2 _v2 . assert (AP.pts_to s.elt #p fp1 _v1 ** AP.pts_to elt' #p fp2 _v2 ** pure (AP.split_postcond s.fp v i _v1 _v2 fp1 fp2));
+    let s1 = {
+        elt = s.elt;
+        len = i;
+        fp = fp1;
+    };
+    fold (pts_to s1 #p _v1);
+    let s2 = {
+        elt = elt';
+        len = s.len `SZ.sub` i;
+        fp = fp2;
+    };
+    fold (pts_to s2 #p _v2);
+    fold (is_split s p i s1 s2);
+    fold (split_post' s p v i s1 s2);
+    fold (split_post s p v i (s1, s2));
+    (s1, s2)
 }
 ```
 
-let split s #p #v i = split0 s #p #v i
+```pulse
+ghost
+fn join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (#i: SZ.t) (s: slice t)
+    requires pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s p i s1 s2
+    ensures pts_to s #p (Seq.append v1 v2)
+{
+    unfold (is_split s p i s1 s2);
+    unfold (pts_to s1 #p v1);
+    unfold (pts_to s2 #p v2);
+    AP.join s1.elt s2.elt;
+    fold (pts_to s #p (Seq.append v1 v2))
+}
+```

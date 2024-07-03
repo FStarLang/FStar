@@ -83,10 +83,16 @@ val gather
 
 val is_split (#t: Type) (s: slice t) (p: perm) (i: SZ.t) (left: slice t) (right: slice t) : vprop
 
-val split (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice t & slice t)
-    (requires pts_to s #p v ** pure (SZ.v i <= Seq.length v))
-    (ensures fun (s1, s2) ->
-        exists* v1 v2 .
+val is_split_is_small (#t: Type) (s: slice t) (p: perm) (i: SZ.t) (left: slice t) (right: slice t)
+  : Lemma (is_small (is_split s p i left right))
+          [SMTPat (is_small (is_split s p i left right))]
+
+let split_post'
+    (#t: Type) (s: slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
+    (s1: slice t)
+    (s2: slice t)
+: Tot vprop
+=       exists* v1 v2 .
             pts_to s1 #p v1 **
             pts_to s2 #p v2 **
             is_split s p i s1 s2 **
@@ -94,7 +100,17 @@ val split (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: 
                 SZ.v i <= Seq.length v /\
                 (v1, v2) == Seq.split v (SZ.v i)
             )
-    )
+
+let split_post
+    (#t: Type) (s: slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
+    (res: (slice t & slice t))
+: Tot vprop
+= let (s1, s2) = res in
+    split_post' s p v i s1 s2
+
+val split (#t: Type) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice t & slice t)
+    (requires pts_to s #p v ** pure (SZ.v i <= Seq.length v))
+    (ensures fun res -> split_post s p v i res)
 
 val join (#t: Type) (s1: slice t) (#p: perm) (#v1: Seq.seq t) (s2: slice t) (#v2: Seq.seq t) (#i: SZ.t) (s: slice t) : stt_ghost unit emp_inames
     (pts_to s1 #p v1 ** pts_to s2 #p v2 ** is_split s p i s1 s2)
