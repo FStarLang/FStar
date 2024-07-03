@@ -20,23 +20,23 @@ val slprop : Type u#4
 
 (* Previously "big" *)
 [@@erasable]
-val slprop2_repr : Type u#3
-val cm_slprop2 : FStar.Algebra.CommMonoid.cm slprop2_repr
-val down2 (s:slprop) : slprop2_repr
-val up2 (s:slprop2_repr) : slprop
+val slprop2_base : Type u#3
+val cm_slprop2 : FStar.Algebra.CommMonoid.cm slprop2_base
+val down2 (s:slprop) : slprop2_base
+val up2 (s:slprop2_base) : slprop
 let is_slprop2 (s:slprop) = s == up2 (down2 s)
 let slprop2 = s:slprop { is_slprop2 s }
-val up2_is_slprop2 (b:slprop2_repr) : Lemma (is_slprop2 (up2 b))
+val up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b))
 
 (* Previously "small" *)
 [@@erasable]
-val slprop1_repr : Type u#2
-val cm_slprop1 : FStar.Algebra.CommMonoid.cm slprop1_repr
-val down1 (s:slprop) : slprop1_repr
-val up1 (s:slprop1_repr) : slprop
+val slprop1_base : Type u#2
+val cm_slprop1 : FStar.Algebra.CommMonoid.cm slprop1_base
+val down1 (s:slprop) : slprop1_base
+val up1 (s:slprop1_base) : slprop
 let is_slprop1 (s:slprop) = s == up1 (down1 s)
 let slprop1 = s:slprop { is_slprop1 s }
-val up1_is_slprop1 (b:slprop1_repr) : Lemma (is_slprop1 (up1 b))
+val up1_is_slprop1 (b:slprop1_base) : Lemma (is_slprop1 (up1 b))
 
 val slprop_1_is_2 (s:slprop)
   : Lemma (is_slprop1 s ==> is_slprop2 s)

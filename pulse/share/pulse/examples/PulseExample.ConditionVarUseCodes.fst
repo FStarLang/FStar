@@ -3,7 +3,7 @@ open Pulse.Lib.Pervasives
 module CV = Pulse.Lib.ConditionVarWithCodes
 
 let free_code : CV.code = {
-  t = slprop1_repr;
+  t = slprop1_base;
   emp = down1 emp;
   up = (fun x -> up1_is_slprop1 x; up1 x);
   laws = ()

@@ -24,7 +24,7 @@ let decode (#code:vcode) (c:code.t) : slprop =
 
 (* Small slprops (slprop1) form a trivial code by lifting with up2. *)
 let small_code : vcode = {
-  t = slprop1_repr;
+  t = slprop1_base;
   up = (fun c -> up1_is_slprop1 c; Pulse.Lib.Core.up1 c);
 }
 

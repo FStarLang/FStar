@@ -74,13 +74,13 @@ let state : Sem.state = state0 Set.empty
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
 
-let slprop2_repr = slprop2_repr
+let slprop2_base = slprop2_base
 let cm_slprop2 = cm_slprop2
 let down2 = down2
 let up2 = up2
 let up2_is_slprop2 = up2_is_slprop2
 
-let slprop1_repr = slprop1_repr
+let slprop1_base = slprop1_base
 let cm_slprop1 = cm_slprop1
 let down1 = down1
 let up1 = up1

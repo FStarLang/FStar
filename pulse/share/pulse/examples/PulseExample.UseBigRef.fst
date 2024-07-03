@@ -21,8 +21,8 @@ open Pulse.Lib.BigReference
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
 
-let thunk (p q : slprop1_repr) = unit -> stt unit (up1 p) (fun _ -> up1 q)
-let closure = (p:slprop1_repr & q:slprop1_repr & thunk p q)
+let thunk (p q : slprop1_base) = unit -> stt unit (up1 p) (fun _ -> up1 q)
+let closure = (p:slprop1_base & q:slprop1_base & thunk p q)
 let closure_list = B.ref (list closure)
 let slprop0 = v:slprop { is_slprop1 v }
 
@@ -30,7 +30,7 @@ let slprop0 = v:slprop { is_slprop1 v }
 // This is proven in memory, needs to be propagated up to core
 //
 assume val _small_is_slprop1
-  : squash (forall (v:slprop1_repr).{:pattern is_slprop1 (up1 v) } is_slprop1 (up1 v))
+  : squash (forall (v:slprop1_base).{:pattern is_slprop1 (up1 v) } is_slprop1 (up1 v))
 
 ```pulse
 fn mk_closure_list ()

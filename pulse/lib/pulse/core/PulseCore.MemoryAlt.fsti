@@ -51,24 +51,24 @@ val ghost_action_preorder (_:unit)
 val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
 
 [@@erasable]
-val slprop2_repr : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
-val cm_slprop2 : CM.cm slprop2_repr
-val down2 (s:slprop u#a) : slprop2_repr u#a
-val up2 (s:slprop2_repr u#a) : slprop u#a
+val slprop2_base : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val cm_slprop2 : CM.cm slprop2_base
+val down2 (s:slprop u#a) : slprop2_base u#a
+val up2 (s:slprop2_base u#a) : slprop u#a
 let is_slprop2 (s:slprop u#a) = s == up2 (down2 s) //any slprop that has no invariants in it, satisfies is_slprop2
 let slprop2 = s:slprop u#a { is_slprop2 s }
-val up2_is_slprop2 (b:slprop2_repr) : Lemma (is_slprop2 (up2 b))
+val up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b))
 //big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
-val slprop1_repr : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
+val slprop1_base : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
 //e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
-val cm_slprop1 : CM.cm slprop1_repr
-val down1 (s:slprop u#a) : slprop1_repr u#a
-val up1 (s:slprop1_repr u#a) : slprop u#a
+val cm_slprop1 : CM.cm slprop1_base
+val down1 (s:slprop u#a) : slprop1_base u#a
+val up1 (s:slprop1_base u#a) : slprop u#a
 let is_slprop1 (s:slprop u#a) = s == up1 (down1 s)
 let slprop1 = s:slprop u#a { is_slprop1 s }
-val up1_is_slprop1 (s:slprop1_repr) : Lemma (is_slprop1 (up1 s))
+val up1_is_slprop1 (s:slprop1_base) : Lemma (is_slprop1 (up1 s))
 
 val slprop_1_is_2 (s:slprop)
   : Lemma (is_slprop1 s ==> is_slprop2 s)

@@ -45,22 +45,22 @@ let ghost_action_preorder (_:unit)
 let slprop : Type u#(a + 3) = erased sig.slprop
 let reveal_slprop (p:slprop) : sig.slprop = sig.non_info_slprop p
 
-let slprop2_repr : Type u#(a + 2) = erased sig.bprop
-let cm_slprop2 : CM.cm slprop2_repr = H.cm_e_slprop small_sig
-let down2 (s:slprop u#a) : slprop2_repr u#a = sig.down s
-let up2 (s:slprop2_repr u#a) : slprop u#a = reveal_slprop <| sig.up s
-let up2_is_slprop2_alt (b:slprop2_repr)
+let slprop2_base : Type u#(a + 2) = erased sig.bprop
+let cm_slprop2 : CM.cm slprop2_base = H.cm_e_slprop small_sig
+let down2 (s:slprop u#a) : slprop2_base u#a = sig.down s
+let up2 (s:slprop2_base u#a) : slprop u#a = reveal_slprop <| sig.up s
+let up2_is_slprop2_alt (b:slprop2_base)
 : Lemma (is_slprop2 (up2 b))
         [SMTPat (is_slprop2 (up2 b))]
 = sig.up_down b
-let up2_is_slprop2 (b:slprop2_repr) : Lemma (is_slprop2 (up2 b)) = ()
+let up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b)) = ()
 
-let slprop1_repr : Type u#(a + 1) = erased small_sig.bprop
-let cm_slprop1 : CM.cm slprop1_repr = H.cm_e_slprop B.base_heap
-let down1 (s:slprop u#a) : slprop1_repr u#a = small_sig.down (sig.down s)
-let up1 (s:slprop1_repr u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
+let slprop1_base : Type u#(a + 1) = erased small_sig.bprop
+let cm_slprop1 : CM.cm slprop1_base = H.cm_e_slprop B.base_heap
+let down1 (s:slprop u#a) : slprop1_base u#a = small_sig.down (sig.down s)
+let up1 (s:slprop1_base u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
 
-let up1_is_slprop1_alt (s:slprop1_repr)
+let up1_is_slprop1_alt (s:slprop1_base)
 : Lemma (ensures is_slprop1 (up1 s))
         [SMTPat (is_slprop1 (up1 s))]
 = calc (==) {
@@ -212,7 +212,7 @@ let small_star_congruence (p1 p2:slprop1 u#a)
     reveal_slprop (p1 `star` p2);
   }
 
-let reveal_bprop (x:slprop2_repr) : small_sig.slprop = small_sig.non_info_slprop x
+let reveal_bprop (x:slprop2_base) : small_sig.slprop = small_sig.non_info_slprop x
 
 let down_exists_alt #a (p: a -> slprop)
 : Lemma 
@@ -281,7 +281,7 @@ let up2_emp ()
 let down2_emp ()
 : Lemma (down2 emp == cm_slprop2.unit)
 = E.down_emp small_sig
-let up2_star  (p q:slprop2_repr)
+let up2_star  (p q:slprop2_base)
 : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
 = E.up_star #small_sig p q
 let down2_star (p q:slprop)
@@ -296,7 +296,7 @@ let down1_emp ()
 : Lemma (down1 emp == cm_slprop1.unit)
 = E.down_emp B.base_heap;
   E.down_emp small_sig
-let up1_star (p q:slprop1_repr)
+let up1_star (p q:slprop1_base)
 : Lemma (up1 (p `cm_slprop1.mult` q) == up1 p `star` up1 q)
 = calc (==) {
     reveal_slprop <| up1 (p `cm_slprop1.mult` q);
@@ -308,7 +308,7 @@ let up1_star (p q:slprop1_repr)
     reveal_slprop <| up1 p `star` up1 q;
   }
 
-let reveal_slprop1 (b:slprop1_repr) : B.base_heap.slprop = B.base_heap.non_info_slprop b
+let reveal_slprop1 (b:slprop1_base) : B.base_heap.slprop = B.base_heap.non_info_slprop b
 let down1_star (p q:slprop)
 : Lemma (down1 (p `star` q) == down1 p `cm_slprop1.mult` down1 q)
 = calc (==) {
