@@ -25,6 +25,7 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
     (let p = Syntax.string_of_mlpath p in
      p = "Pulse.Lib.Reference.ref" ||
      p = "Pulse.Lib.Array.Core.array" ||
+     p = "Pulse.Lib.ArrayPtr.ptr" ||
      p = "Pulse.Lib.Vec.vec")
     ->
       TBuf (translate_type_without_decay env arg)
@@ -93,21 +94,31 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ->
     EBufRead (translate_expr env e, translate_expr env i)
 
-  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; v; _w ])
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Assignment" ->
-    EBufWrite (translate_expr env e, translate_expr env i, translate_expr env v)
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; i; _p; _fp; _w ])
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Array_Access" ->
+    EBufRead (translate_expr env e, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, (e :: i :: _))
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_index" ->
+    when string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_index" ||
+      string_of_mlpath p = "Pulse.Lib.Array.Core.op_Array_Access" ->
     EBufRead (translate_expr env e, translate_expr env i)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, (e :: i :: v :: _))
-    when string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_upd" ->
+    when string_of_mlpath p = "Pulse.Lib.Array.Core.pts_to_range_upd" ||
+      string_of_mlpath p = "Pulse.Lib.ArrayPtr.op_Array_Assignment" ->
     EBufWrite (translate_expr env e, translate_expr env i, translate_expr env v)
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _w ])
     when string_of_mlpath p = "Pulse.Lib.Array.Core.free" ->
     EBufFree (translate_expr env x)
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ x; _p; _w ])
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.from_array" ->
+    translate_expr env x
+
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ a; _p; _fp; _w; i ])
+    when string_of_mlpath p = "Pulse.Lib.ArrayPtr.split" ->
+    EBufSub (translate_expr env a, translate_expr env i)
 
   (* Pulse control, while etc *)
   | MLE_App ({expr=MLE_Name p}, [{expr=MLE_Fun (_, test)}; {expr=MLE_Fun(_, body)}])
