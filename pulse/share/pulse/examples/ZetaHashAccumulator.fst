@@ -170,7 +170,7 @@ type ha_core = {
 // level we connect the nat and the concrete counter, indicating that 
 // the counter hasn't overflowed yet.
 let ha_val_core (core:ha_core) (h:hash_value_t) 
-  : vprop
+  : slprop
   = A.pts_to core.acc (fst h) **
     (exists* (n:U32.t).
       pure (U32.v n == snd h) **

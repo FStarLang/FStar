@@ -52,7 +52,7 @@ let canonicalize_st_typing (#g:env) (#t:st_term) (#c:comp_st) (d:st_typing g t c
     assume (st_equiv_pre c c');
     let st_eq 
       : st_equiv g c c'
-      = ST_VPropEquiv g c c' x (RU.magic ()) (RU.magic()) (RU.magic()) (canon_comp_eq_res g c) (RU.magic()) (RU.magic())
+      = ST_SLPropEquiv g c c' x (RU.magic ()) (RU.magic()) (RU.magic()) (canon_comp_eq_res g c) (RU.magic()) (RU.magic())
     in
     T_Equiv _ _ _ _ d st_eq
 
@@ -130,8 +130,8 @@ let apply_impure_function
       (g0:env)
       (uvs:_)
       (g:env { extends_with g g0 uvs })
-      (ctxt:vprop)
-      (ctxt_typing:tot_typing g0 ctxt tm_vprop)
+      (ctxt:slprop)
+      (ctxt_typing:tot_typing g0 ctxt tm_slprop)
       (post_hint:post_hint_opt g0)
       (res_ppname:ppname)
       (head:term)
@@ -227,8 +227,8 @@ let apply_impure_function
 
 let check
   (g0:env)
-  (ctxt:vprop)
-  (ctxt_typing:tot_typing g0 ctxt tm_vprop)
+  (ctxt:slprop)
+  (ctxt_typing:tot_typing g0 ctxt tm_slprop)
   (post_hint:post_hint_opt g0)
   (res_ppname:ppname)
   (t:st_term { Tm_STApp? t.term })

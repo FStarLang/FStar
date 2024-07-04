@@ -7,7 +7,7 @@ open Pulse.Lib.Mutex
 should not affect the result. *)
 
 assume
-val p : int -> vprop
+val p : int -> slprop
 ```pulse
 fn test (m:mutex int)
   requires mutex_live m p
@@ -35,7 +35,7 @@ fn test2 (m:mutex int)
 
 [@@allow_ambiguous]
 ```pulse
-fn flip (#p #q : vprop) (_:unit)
+fn flip (#p #q : slprop) (_:unit)
   requires p ** q
   ensures  q ** p
 {

@@ -35,15 +35,15 @@ let extend_post_hint_for_local (g:env) (p:post_hint_for_env g)
       })
   = let conjunct = tm_exists_sl u0 (as_binder init_t) (mk_pts_to init_t (null_var x) (null_bvar 0)) in
     let g' = push_binding g x ppname_default (mk_ref init_t) in
-    let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_vprop in
+    let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
     let res = Pulse.Checker.Base.extend_post_hint g p x (mk_ref init_t) _ c_typing in
     res
 
-let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop)
+let with_local_pre_typing (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_slprop)
                           (init_t:term) (x:var { ~ (Set.mem x (dom g)) }) (i:term)
   : tot_typing (push_binding g x ppname_default (mk_ref init_t))
                (comp_withlocal_body_pre pre init_t (null_var x) i)
-               tm_vprop
+               tm_slprop
   = admit()
 
 #push-options "--z3rlimit_factor 4 --fuel 0 --ifuel 1"
@@ -54,7 +54,7 @@ let head_range (t:st_term {Tm_WithLocal? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocal? t.term })

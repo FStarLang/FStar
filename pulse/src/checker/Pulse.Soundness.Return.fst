@@ -49,7 +49,7 @@ let return_soundness
     | _ -> tot_typing_soundness e_typing in
   let rpost_abs_typing
     : RT.tot_typing _ rpost_abs
-                      (mk_arrow (t, R.Q_Explicit) vprop_tm) =
+                      (mk_arrow (t, R.Q_Explicit) slprop_tm) =
     mk_t_abs_tot g #_ #None ppname_default t_typing post_typing in
   
   let rx_tm = RT.var_as_term x in

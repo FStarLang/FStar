@@ -18,7 +18,7 @@ module Pulse.Lib.InvList
 
 open Pulse.Lib.Pervasives
 
-let invlist_elem = vprop & iref
+let invlist_elem = slprop & iref
 let invlist0 = list invlist_elem
 
 let rec invlist_names (is : invlist0) : inames =
@@ -39,12 +39,12 @@ let invlist_empty : invlist = []
 let add_one (h : invlist_elem) (t : invlist{not (mem_inv (invlist_names t) (snd h))}) : invlist =
   h :: t
 
-let rec invlist_v (is : invlist) : vprop =
+let rec invlist_v (is : invlist) : slprop =
   match is with
   | [] -> emp
   | i :: is -> fst i ** invlist_v is
 
-let rec invlist_inv (is:invlist) : vprop =
+let rec invlist_inv (is:invlist) : slprop =
   match is with
   | [] -> emp
   | i :: is -> inv (snd i) (fst i) ** invlist_inv is
@@ -56,22 +56,22 @@ val dup_invlist_inv (is:invlist)
 
 val shift_invlist_one
   (#a:Type0)
-  (p : vprop)
+  (p : slprop)
   (i : iref)
   (is : invlist{not (mem_inv (invlist_names is) i)})
-  (#pre:vprop)
-  (#post : a -> vprop)
+  (#pre:slprop)
+  (#post : a -> slprop)
   (f : unit -> stt_ghost a emp_inames (invlist_v (( p, i ) :: is) ** pre) (fun v -> invlist_v (( p, i ) :: is) ** post v))
   
   : unit -> stt_ghost a emp_inames (invlist_v is ** (p ** pre)) (fun v -> invlist_v is ** (p ** post v))
 
-val with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
+val with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
   : stt_ghost a (invlist_names is) (invlist_inv is ** pre) (fun v -> invlist_inv is ** post v)
 
 (* A helper for a ghost-unit function. *)
-// val with_invlist_ghost (#pre : vprop) (#post : vprop)
+// val with_invlist_ghost (#pre : slprop) (#post : slprop)
 //   (is : invlist)
 //   (f : unit -> stt_ghost unit (invlist_v is ** pre) (fun _ -> invlist_v is ** post))
 //   : stt_atomic unit #Unobservable (invlist_names is) pre (fun _ -> post)

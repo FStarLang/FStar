@@ -233,13 +233,13 @@ let fp_upd_rem #a
   v_new
 #pop-options
 
-let gbag #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) : vprop =
+let gbag #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) : slprop =
   exists* (m:map a).
           ghost_pcm_pts_to r (F m) **
           (pure (forall (x:a). (~ (Set.mem x s)) ==> Map.sel m x == None)) **
           (pure (forall (x:a). Set.mem x s ==> Map.sel m x == Some 0.5R))
 
-let gbagh #a (r:ghost_pcm_ref (gbag_pcm a)) (x:a) : vprop =
+let gbagh #a (r:ghost_pcm_ref (gbag_pcm a)) (x:a) : slprop =
   ghost_pcm_pts_to r (P (Map.upd (Map.const None) x (Some 0.5R)))
 
 

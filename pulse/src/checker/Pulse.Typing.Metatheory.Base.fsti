@@ -61,23 +61,23 @@ val comp_typing_inversion (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
 
 val st_comp_typing_inversion_cofinite (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre tm_vprop &
+     tot_typing g st.pre tm_slprop &
      (x:var{fresh_wrt x g (freevars st.post)} -> //this part is tricky, to get the quantification on x
-       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop))
+       tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop))
 
 val st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st)
   : (universe_of g st.res st.u &
-     tot_typing g st.pre tm_vprop &
+     tot_typing g st.pre tm_slprop &
      x:var{fresh_wrt x g (freevars st.post)} &
-     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_vprop)
+     tot_typing (push_binding g x ppname_default st.res) (open_term st.post x) tm_slprop)
 
 val tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
+                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_slprop)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p tm_vprop
+    tot_typing (push_binding g x ppname_default ty) p tm_slprop
 
-val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
+val pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_slprop)
    : tot_typing g p (S.wr FStar.Reflection.Typing.tm_prop Range.range_0)
 
 module RT = FStar.Reflection.Typing
@@ -113,9 +113,9 @@ val st_typing_weakening
 
 let veq_weakening
   (g:env) (g':env { disjoint g g' })
-  (#v1 #v2:vprop) (_:vprop_equiv (push_env g g') v1 v2)
+  (#v1 #v2:slprop) (_:slprop_equiv (push_env g g') v1 v2)
   (g1:env { pairwise_disjoint g g1 g' })
-  : vprop_equiv (push_env (push_env g g1) g') v1 v2 = RU.magic ()
+  : slprop_equiv (push_env (push_env g g1) g') v1 v2 = RU.magic ()
 
 let nt (x:var) (t:term) = [ RT.NT x t ]
 
@@ -132,15 +132,15 @@ val st_typing_subst
               (subst_st_term e1 (nt x e))
               (subst_comp c1 (nt x e))
 
-let vprop_equiv_subst
+let slprop_equiv_subst
   (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (singleton_env (fstar_env g) x t) g' })
   (#e:term)
   (#eff:T.tot_or_ghost)
   (e_typing:typing g e eff t)
   (#p1:term) (#p2:term)
-  (veq:vprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
+  (veq:slprop_equiv (push_env g (push_env (singleton_env (fstar_env g) x t) g')) p1 p2)
 
-: vprop_equiv (push_env g (subst_env g' (nt x e)))
+: slprop_equiv (push_env g (subst_env g' (nt x e)))
               (subst_term p1 (nt x e))
               (subst_term p2 (nt x e)) =
   admit ()

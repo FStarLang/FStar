@@ -4260,7 +4260,7 @@ let (core_check_term_at_type :
                                                          Prims.Mkdtuple2
                                                            (eff, ())))))
                                          uu___1))) uu___))) uu___)
-let (check_vprop :
+let (check_slprop :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       ((Pulse_Syntax_Base.term, unit) Prims.dtuple2, unit)
@@ -4268,17 +4268,17 @@ let (check_vprop :
   =
   fun g ->
     fun t ->
-      check_term (Pulse_Typing_Env.push_context_no_range g "check_vprop") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_vprop
-let (check_vprop_with_core :
+      check_term (Pulse_Typing_Env.push_context_no_range g "check_slprop") t
+        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
+let (check_slprop_with_core :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun g ->
     fun t ->
       core_check_term
-        (Pulse_Typing_Env.push_context_no_range g "check_vprop_with_core") t
-        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_vprop
+        (Pulse_Typing_Env.push_context_no_range g "check_slprop_with_core") t
+        FStar_TypeChecker_Core.E_Total Pulse_Syntax_Pure.tm_slprop
 let (try_get_non_informative_witness_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.universe ->

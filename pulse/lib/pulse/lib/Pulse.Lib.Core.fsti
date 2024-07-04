@@ -19,31 +19,29 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
-module CM = FStar.Algebra.CommMonoid
-module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
 
-(* This attribute can be used on the indexes of a vprop
+(* This attribute can be used on the indexes of a slprop
    to instruct the checker to call the SMT solver to relate
    occurrences of that index.
 
    For example, if you have
 
-     val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : vprop
+     val pts_to (x:ref a) ([@@@equate_by_smt] v:a) : slprop
 
    Then `pts_to x (a + b)` and `pts_to x (b + a)` will be
    matched by the prover by emitting an SMT query (a + b) == (b + a). Of course, 
    `pts_to x a` and `pts_to x a` will be matched purely by unification without
    emitted a trivial SMT query (a == a).
 
-   By default, if none of the indexes of a vprop are marked with "equate_by_smt", 
-   the _last_ argument of a vprop is considered to be equated by SMT. This makes 
-   it convenient to write vprops like the one below, without paying special
+   By default, if none of the indexes of a slprop are marked with "equate_by_smt", 
+   the _last_ argument of a slprop is considered to be equated by SMT. This makes 
+   it convenient to write slprops like the one below, without paying special
    heed to this attribute.
   
-     val pts_to (x:ref a) (v:a) : vprop
+     val pts_to (x:ref a) (v:a) : slprop
 *)
 val equate_by_smt    : unit (* now meaningless. *)
 val equate_strict    : unit (* only use fastunif *)
@@ -52,154 +50,152 @@ val equate_syntactic : unit (* only use term_eq *)
 (** This attribute allows to do ambiguous proving when calling a function. *)
 val allow_ambiguous : unit
 
-(***** begin vprop_equiv *****)
+(***** begin slprop_equiv *****)
 
 [@@erasable]
-val vprop : Type u#4
+val slprop : Type u#4
 
 [@@erasable]
-val big_vprop : Type u#3
-val cm_big_vprop : CM.cm big_vprop
-val down (p:vprop) : big_vprop
-val up (p:big_vprop) : vprop
-let is_big (v:vprop) : prop = up (down v) == v
-val up_is_big (p:big_vprop) : Lemma (is_big (up p))
+val slprop2_base : Type u#3
+val down2 (p:slprop) : slprop2_base
+val up2 (p:slprop2_base) : slprop
+let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
+val up2_is_slprop2 (p:slprop2_base) : Lemma (is_slprop2 (up2 p))
 
 [@@erasable]
-val small_vprop : Type u#2
-val cm_small_vprop : CM.cm small_vprop
-val down2 (p:vprop) : small_vprop
-val up2 (p:small_vprop) : vprop
-let is_small (v:vprop) : prop = up2 (down2 v) == v
-val up2_is_small (p:small_vprop) : Lemma (is_small (up2 p))
+val slprop1_base : Type u#2
+val down1 (p:slprop) : slprop1_base
+val up1 (p:slprop1_base) : slprop
+let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
+val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
+
+let slprop2 = s:slprop { is_slprop2 s }
+let slprop1 = s:slprop { is_slprop1 s }
+
+(* Storable slprops: a storable0 (or storable) can be stored in the heap
+(made into an invariant), and obtain an slprop asserting this fact.
+A storable1, can be stored "twice", in the sense that it can be stored
+in the heap, obtain a pts_to for it, and that pts_to can in turn be stored
+as an invariant.
+
+As the heap stack is extended, these names retain their meaning as being
+"N+1" away from the top of the stack. *)
+
+let storable0    = slprop2
+let is_storable0 = is_slprop2
+let storable1    = slprop1
+let is_storable1 = is_slprop1
+
+let storable    = storable0
+let is_storable = is_storable0
+
 
 //
-// A note on smt patterns on is_small and is_big lemmas:
+// A note on smt patterns on is_slprop1 and is_slprop2 lemmas:
 //
 // While the patterns on the individual lemmas are goal-directed,
-//   there are multiple ways to prove, say, is_big (p ** q)
+//   there are multiple ways to prove, say, is_slprop2 (p ** q)
 //
-// Either via, is_big p /\ is_big q ==> is_big (p ** q)
-// or via, is_small p /\ is_small q ==> is_small (p ** q) ==> is_big (p ** q)
+// Either via, is_slprop2 p /\ is_slprop2 q ==> is_slprop2 (p ** q)
+// or via, is_slprop1 p /\ is_slprop1 q ==> is_slprop1 (p ** q) ==> is_slprop2 (p ** q)
 //
 // This is a bit suboptimal
 //
-val small_is_also_big (v:vprop)
-  : Lemma (is_small v ==> is_big v)
-          [SMTPat (is_big v)]
+val slprop_1_is_2 (v:slprop)
+  : Lemma (is_slprop1 v ==> is_slprop2 v)
+          [SMTPat (is_slprop2 v)]
 
-val emp : vprop
-val emp_is_small : squash (is_small emp)
+val emp : slprop
+val emp_is_slprop1 : squash (is_slprop1 emp)
 
-val pure (p:prop) : vprop
-val pure_is_small (p:prop)
-  : Lemma (is_small (pure p))
-          [SMTPat (is_small (pure p))]
+val pure (p:prop) : slprop
+val pure_is_slprop1 (p:prop)
+  : Lemma (is_slprop1 (pure p))
+          [SMTPat (is_slprop1 (pure p))]
 
-val ( ** ) (p q:vprop) : vprop
+val ( ** ) (p q:slprop) : slprop
 
-val big_star (p q : vprop)
+val slprop2_star (p q : slprop)
 : Lemma
-    (requires is_big p /\ is_big q)
-    (ensures is_big (p ** q))
-    [SMTPat (is_big (p ** q))]
+    (requires is_slprop2 p /\ is_slprop2 q)
+    (ensures is_slprop2 (p ** q))
+    [SMTPat (is_slprop2 (p ** q))]
 
-val small_star (p q : vprop)
+val slprop1_star (p q : slprop)
 : Lemma
-    (requires is_small p /\ is_small q)
-    (ensures is_small (p ** q))
-    [SMTPat (is_small (p ** q))]
+    (requires is_slprop1 p /\ is_slprop1 q)
+    (ensures is_slprop1 (p ** q))
+    [SMTPat (is_slprop1 (p ** q))]
 
-val ( exists* ) (#a:Type) (p:a -> vprop) : vprop
+val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
-val big_exists (#a:Type u#a) (p: a -> vprop)
+val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (op_exists_Star p))
-    [SMTPat (is_big (op_exists_Star p))]
+    (requires forall x. is_slprop2 (p x))
+    (ensures is_slprop2 (op_exists_Star p))
+    [SMTPat (is_slprop2 (op_exists_Star p))]
 
-val small_exists (#a:Type u#a) (p: a -> vprop)
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma
-    (requires forall x. is_small (p x))
-    (ensures is_small (op_exists_Star p))
-    [SMTPat (is_small (op_exists_Star p))]
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (op_exists_Star p))
+    [SMTPat (is_slprop1 (op_exists_Star p))]
 
-let boxable = v:vprop { is_big v }
-let storable = v:vprop { is_small v }
+val slprop_equiv (p q:slprop) : prop
+val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
+val slprop_post_equiv (#t:Type u#a) (p q: t -> slprop) : prop
 
-val up_emp ()
-: Lemma (up cm_big_vprop.unit == emp)
-val down_emp ()
-: Lemma (down emp == cm_big_vprop.unit)
-val up_star (p q:big_vprop)
-: Lemma (up (p `cm_big_vprop.mult` q) == up p ** up q)
-val down_star (p q:boxable)
-: Lemma (down (p ** q) == down p `cm_big_vprop.mult` down q)
-
-val up2_emp ()
-: Lemma (up2 cm_small_vprop.unit == emp)
-val down2_emp ()
-: Lemma (down2 emp == cm_small_vprop.unit)
-val up2_star (p q:small_vprop)
-: Lemma (up2 (p `cm_small_vprop.mult` q) == up2 p ** up2 q)
-val down2_star (p q:storable)
-: Lemma (down2 (p ** q) == down2 p `cm_small_vprop.mult` down2 q)
-
-val vprop_equiv (p q:vprop) : prop
-val elim_vprop_equiv (#p #q:_) (_:vprop_equiv p q) : squash (p == q)
-val vprop_post_equiv (#t:Type u#a) (p q: t -> vprop) : prop
-
-val intro_vprop_post_equiv
+val intro_slprop_post_equiv
        (#t:Type u#a) 
-       (p q: t -> vprop)
-       (pf: (x:t -> vprop_equiv (p x) (q x)))
-  : vprop_post_equiv p q
+       (p q: t -> slprop)
+       (pf: (x:t -> slprop_equiv (p x) (q x)))
+  : slprop_post_equiv p q
 
-val elim_vprop_post_equiv (#t:Type u#a)
-                          (p q: t -> vprop) 
-                          (pf:vprop_post_equiv p q)
+val elim_slprop_post_equiv (#t:Type u#a)
+                          (p q: t -> slprop) 
+                          (pf:slprop_post_equiv p q)
                           (x:t) 
-    : vprop_equiv (p x) (q x)
+    : slprop_equiv (p x) (q x)
 
-val vprop_equiv_refl (v0:vprop) : vprop_equiv v0 v0
+val slprop_equiv_refl (v0:slprop) : slprop_equiv v0 v0
 
-val vprop_equiv_sym (v0 v1:vprop) (_:vprop_equiv v0 v1)
-  : vprop_equiv v1 v0
+val slprop_equiv_sym (v0 v1:slprop) (_:slprop_equiv v0 v1)
+  : slprop_equiv v1 v0
 
-val vprop_equiv_trans (v0 v1 v2:vprop) (_:vprop_equiv v0 v1) (_:vprop_equiv v1 v2)
-  : vprop_equiv v0 v2
+val slprop_equiv_trans (v0 v1 v2:slprop) (_:slprop_equiv v0 v1) (_:slprop_equiv v1 v2)
+  : slprop_equiv v0 v2
 
-val vprop_equiv_unit (x:vprop) : vprop_equiv (emp ** x) x
+val slprop_equiv_unit (x:slprop) : slprop_equiv (emp ** x) x
 
-val vprop_equiv_comm (p1 p2:vprop)
-  : vprop_equiv (p1 ** p2) (p2 ** p1)
+val slprop_equiv_comm (p1 p2:slprop)
+  : slprop_equiv (p1 ** p2) (p2 ** p1)
 
-val vprop_equiv_assoc (p1 p2 p3:vprop)
-  : vprop_equiv (p1 ** p2 ** p3) (p1 ** (p2 ** p3))
+val slprop_equiv_assoc (p1 p2 p3:slprop)
+  : slprop_equiv (p1 ** p2 ** p3) (p1 ** (p2 ** p3))
 
-val vprop_equiv_exists (#a:Type) (p q : a -> vprop)
-  (_ : squash (forall x. vprop_equiv (p x) (q x)))
-  : vprop_equiv (op_exists_Star p) (op_exists_Star q)
+val slprop_equiv_exists (#a:Type) (p q : a -> slprop)
+  (_ : squash (forall x. slprop_equiv (p x) (q x)))
+  : slprop_equiv (op_exists_Star p) (op_exists_Star q)
 
-val vprop_equiv_cong (p1 p2 p3 p4:vprop)
-                     (_: vprop_equiv p1 p3)
-                     (_: vprop_equiv p2 p4)
-  : vprop_equiv (p1 ** p2) (p3 ** p4)
+val slprop_equiv_cong (p1 p2 p3 p4:slprop)
+                     (_: slprop_equiv p1 p3)
+                     (_: slprop_equiv p2 p4)
+  : slprop_equiv (p1 ** p2) (p3 ** p4)
 
-val vprop_equiv_ext (p1 p2:vprop) (_:p1 == p2)
-  : vprop_equiv p1 p2
+val slprop_equiv_ext (p1 p2:slprop) (_:p1 == p2)
+  : slprop_equiv p1 p2
 
 
-let star_assoc (p q r:vprop)
+let star_assoc (p q r:slprop)
 : Lemma (p ** (q ** r) == (p ** q) ** r)
-= elim_vprop_equiv (vprop_equiv_assoc p q r)
-let star_comm (p q:vprop)
+= elim_slprop_equiv (slprop_equiv_assoc p q r)
+let star_comm (p q:slprop)
 : Lemma (p ** q == q ** p)
-= elim_vprop_equiv (vprop_equiv_comm p q)
-let emp_unit (p:vprop)
+= elim_slprop_equiv (slprop_equiv_comm p q)
+let emp_unit (p:slprop)
 : Lemma (emp ** p == p)
-= elim_vprop_equiv (vprop_equiv_unit p)
-let vprop_equivs () 
+= elim_slprop_equiv (slprop_equiv_unit p)
+let slprop_equivs () 
 : Lemma (
       (forall p q r. p ** (q ** r) == (p ** q) ** r) /\
       (forall p q. p ** q == q ** p) /\
@@ -211,7 +207,7 @@ let vprop_equivs ()
     forall_intro emp_unit
   )
 
-(***** end vprop_equiv *****)
+(***** end slprop_equiv *****)
 
 ////////////////////////////////////////////////////////////////////
 // Invariants names and tokens
@@ -263,33 +259,33 @@ val add_already_there (i:iname) (is:inames)
 //  such that the final state satisfies `post x
 ////////////////////////////////////////////////////////////////////
 [@@extract_as_impure_effect]
-val stt (a:Type u#a) (pre:vprop) (post:a -> vprop) : Type0
+val stt (a:Type u#a) (pre:slprop) (post:a -> slprop) : Type0
 
 val return_stt_noeq
     (#a:Type u#a)
     (x:a)
-    (p:a -> vprop)
+    (p:a -> slprop)
 : stt a (p x) p
 
 val bind_stt
   (#a:Type u#a) (#b:Type u#b)
-  (#pre1:vprop) (#post1:a -> vprop) (#post2:b -> vprop)
+  (#pre1:slprop) (#post1:a -> slprop) (#post2:b -> slprop)
   (e1:stt a pre1 post1)
   (e2:(x:a -> stt b (post1 x) post2))
 : stt b pre1 post2
 
 val frame_stt
   (#a:Type u#a)
-  (#pre:vprop) (#post:a -> vprop)
-  (frame:vprop)
+  (#pre:slprop) (#post:a -> slprop)
+  (frame:slprop)
   (e:stt a pre post)
 : stt a (pre ** frame) (fun x -> post x ** frame)
 
 val par_stt
-  (#preL:vprop)
-  (#postL:vprop) 
-  (#preR:vprop)
-  (#postR:vprop)
+  (#preL:slprop)
+  (#postL:slprop) 
+  (#preR:slprop)
+  (#postR:slprop)
   (f:stt unit preL (fun _ -> postL))
   (g:stt unit preR (fun _ -> postR))
 : stt unit
@@ -297,22 +293,22 @@ val par_stt
       (fun _ -> postL ** postR)
 
 val sub_stt (#a:Type u#a)
-            (#pre1:vprop)
-            (pre2:vprop)
-            (#post1:a -> vprop)
-            (post2:a -> vprop)
-            (pf1 : vprop_equiv pre1 pre2)
-            (pf2 : vprop_post_equiv post1 post2)
+            (#pre1:slprop)
+            (pre2:slprop)
+            (#post1:a -> slprop)
+            (post2:a -> slprop)
+            (pf1 : slprop_equiv pre1 pre2)
+            (pf2 : slprop_post_equiv post1 post2)
             (e:stt a pre1 post1)
 : stt a pre2 post2
 
 val conv_stt (#a:Type u#a)
-            (#pre1:vprop)
-            (#pre2:vprop)
-            (#post1:a -> vprop)
-            (#post2:a -> vprop)
-            (pf1 : vprop_equiv pre1 pre2)
-            (pf2 : vprop_post_equiv post1 post2)
+            (#pre1:slprop)
+            (#pre2:slprop)
+            (#post1:a -> slprop)
+            (#post2:a -> slprop)
+            (pf1 : slprop_equiv pre1 pre2)
+            (pf2 : slprop_post_equiv post1 post2)
 : Lemma (stt a pre1 post1 == stt a pre2 post2)
 
 val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
@@ -352,29 +348,29 @@ val stt_atomic
     (a:Type u#a)
     (#[T.exact (`Observable)] obs:observability)
     (opens:inames)
-    (pre:vprop)
-    (post:a -> vprop)
+    (pre:slprop)
+    (post:a -> slprop)
 : Type u#(max 4 a)
 
 val lift_observability
     (#a:Type u#a)
     (#obs #obs':_)
     (#opens:inames)
-    (#pre:vprop)
-    (#post:a -> vprop)
+    (#pre:slprop)
+    (#post:a -> slprop)
     (e:stt_atomic a #obs opens pre post)
 : stt_atomic a #(join_obs obs obs') opens pre post
 
 val return_neutral
     (#a:Type u#a)
     (x:a)
-    (p:a -> vprop)
+    (p:a -> slprop)
 : stt_atomic a #Neutral emp_inames (p x) (fun r -> p r ** pure (r == x))
 
 val return_neutral_noeq
     (#a:Type u#a)
     (x:a)
-    (p:a -> vprop)
+    (p:a -> slprop)
 : stt_atomic a #Neutral emp_inames (p x) p
 
 val bind_atomic
@@ -383,9 +379,9 @@ val bind_atomic
     (#obs1:_)
     (#obs2:observability { at_most_one_observable obs1 obs2 })
     (#opens:inames)
-    (#pre1:vprop)
-    (#post1:a -> vprop)
-    (#post2:b -> vprop)
+    (#pre1:slprop)
+    (#post1:a -> slprop)
+    (#post2:b -> slprop)
     (e1:stt_atomic a #obs1 opens pre1 post1)
     (e2:(x:a -> stt_atomic b #obs2 opens (post1 x) post2))
 : stt_atomic b #(join_obs obs1 obs2) opens pre1 post2
@@ -394,8 +390,8 @@ val frame_atomic
     (#a:Type u#a)
     (#obs:_)
     (#opens:inames)
-    (#pre:vprop) (#post:a -> vprop)
-    (frame:vprop)
+    (#pre:slprop) (#post:a -> slprop)
+    (frame:slprop)
     (e:stt_atomic a #obs opens pre post)
 : stt_atomic a #obs opens (pre ** frame) (fun x -> post x ** frame)
 
@@ -403,12 +399,12 @@ val sub_atomic
     (#a:Type u#a)
     (#obs:_)
     (#opens:inames)
-    (#pre1:vprop)
-    (pre2:vprop)
-    (#post1:a -> vprop)
-    (post2:a -> vprop)
-    (pf1 : vprop_equiv pre1 pre2)
-    (pf2 : vprop_post_equiv post1 post2)
+    (#pre1:slprop)
+    (pre2:slprop)
+    (#post1:a -> slprop)
+    (post2:a -> slprop)
+    (pf1 : slprop_equiv pre1 pre2)
+    (pf2 : slprop_post_equiv post1 post2)
     (e:stt_atomic a #obs opens pre1 post1)
 : stt_atomic a #obs opens pre2 post2
 
@@ -416,8 +412,8 @@ val sub_invs_atomic
     (#a:Type u#a)
     (#obs:_)
     (#opens1 #opens2:inames)
-    (#pre:vprop)
-    (#post:a -> vprop)
+    (#pre:slprop)
+    (#post:a -> slprop)
     (e:stt_atomic a #obs opens1 pre post)
     (_ : squash (inames_subset opens1 opens2))
 : stt_atomic a #obs opens2 pre post
@@ -426,8 +422,8 @@ val lift_atomic0
   (#a:Type u#0)
   (#obs:_)
   (#opens:inames)
-  (#pre:vprop)
-  (#post:a -> vprop)
+  (#pre:slprop)
+  (#post:a -> slprop)
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
@@ -435,8 +431,8 @@ val lift_atomic1
   (#a:Type u#1)
   (#obs:_)
   (#opens:inames)
-  (#pre:vprop)
-  (#post:a -> vprop)
+  (#pre:slprop)
+  (#post:a -> slprop)
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
@@ -444,8 +440,8 @@ val lift_atomic2
   (#a:Type u#2)
   (#obs:_)
   (#opens:inames)
-  (#pre:vprop)
-  (#post:a -> vprop)
+  (#pre:slprop)
+  (#post:a -> slprop)
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 
@@ -453,8 +449,8 @@ val lift_atomic3
   (#a:Type u#3)
   (#obs:_)
   (#opens:inames)
-  (#pre:vprop)
-  (#post:a -> vprop)
+  (#pre:slprop)
+  (#post:a -> slprop)
   (e:stt_atomic a #obs opens pre post)
 : stt a pre post
 //////////////////////////////////////////////////////////////////////////
@@ -471,17 +467,17 @@ val lift_atomic3
 val stt_ghost
     (a:Type u#a)
     (opens:inames)
-    (pre:vprop)
-    (post:a -> vprop)
+    (pre:slprop)
+    (post:a -> slprop)
 : Type u#(max 4 a)
 
 val bind_ghost
     (#a:Type u#a)
     (#b:Type u#b)
     (#opens:inames)
-    (#pre1:vprop)
-    (#post1:a -> vprop)
-    (#post2:b -> vprop)
+    (#pre1:slprop)
+    (#post1:a -> slprop)
+    (#post2:b -> slprop)
     (e1:stt_ghost a opens pre1 post1)
     (e2:(x:a -> stt_ghost b opens (post1 x) post2))
 : stt_ghost b opens pre1 post2
@@ -489,8 +485,8 @@ val bind_ghost
 val lift_ghost_neutral
     (#a:Type u#a)
     (#opens:inames)
-    (#pre:vprop)
-    (#post:a -> vprop)
+    (#pre:slprop)
+    (#post:a -> slprop)
     (e:stt_ghost a opens pre post)
     (ni_a:NonInformative.non_informative a)
 : stt_atomic a #Neutral opens pre post
@@ -498,36 +494,36 @@ val lift_ghost_neutral
 val lift_neutral_ghost
     (#a:Type u#a)
     (#opens:inames)
-    (#pre:vprop)
-    (#post:a -> vprop)
+    (#pre:slprop)
+    (#post:a -> slprop)
     (e:stt_atomic a #Neutral opens pre post)
 : stt_ghost a opens pre post
 
 val frame_ghost
     (#a:Type u#a)
     (#opens:inames)
-    (#pre:vprop) (#post:a -> vprop)
-    (frame:vprop)
+    (#pre:slprop) (#post:a -> slprop)
+    (frame:slprop)
     (e:stt_ghost a opens pre post)
 : stt_ghost a opens (pre ** frame) (fun x -> post x ** frame)
 
 val sub_ghost
     (#a:Type u#a)
     (#opens:inames)
-    (#pre1:vprop)
-    (pre2:vprop)
-    (#post1:a -> vprop)
-    (post2:a -> vprop)
-    (pf1 : vprop_equiv pre1 pre2)
-    (pf2 : vprop_post_equiv post1 post2)
+    (#pre1:slprop)
+    (pre2:slprop)
+    (#post1:a -> slprop)
+    (post2:a -> slprop)
+    (pf1 : slprop_equiv pre1 pre2)
+    (pf2 : slprop_post_equiv post1 post2)
     (e:stt_ghost a opens pre1 post1)
 : stt_ghost a opens pre2 post2
 
 val sub_invs_ghost
     (#a:Type u#a)
     (#opens1 #opens2:inames)
-    (#pre:vprop)
-    (#post:a -> vprop)
+    (#pre:slprop)
+    (#post:a -> slprop)
     (e:stt_ghost a opens1 pre post)
     (_ : squash (inames_subset opens1 opens2))
 : stt_ghost a opens2 pre post
@@ -536,10 +532,10 @@ val sub_invs_ghost
 // Invariants
 //////////////////////////////////////////////////////////////////////////
 
-val dup_inv (i:iname) (p:vprop)
+val dup_inv (i:iname) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
-val new_invariant (p:vprop { is_big p })
+val new_invariant (p:storable)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
 
 val fresh_wrt (i:iname) (c:list iname)
@@ -553,16 +549,16 @@ val fresh_wrt_def (i:iname) (c:list iname)
 
 val fresh_invariant
     (ctx:list iname)
-    (p:vprop { is_big p })
+    (p:storable)
 : stt_ghost (i:iname { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
     (#obs:_)
-    (#fp:vprop)
-    (#fp':a -> vprop)
+    (#fp:slprop)
+    (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:vprop)
+    (#p:slprop)
     (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
@@ -571,10 +567,10 @@ val with_invariant
 
 val with_invariant_g
     (#a:Type)
-    (#fp:vprop)
-    (#fp':a -> vprop)
+    (#fp:slprop)
+    (#fp':a -> slprop)
     (#f_opens:inames)
-    (#p:vprop)
+    (#p:slprop)
     (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)
@@ -582,7 +578,7 @@ val with_invariant_g
 : stt_ghost a (add_inv f_opens i) (inv i p ** fp) (fun x -> inv i p ** fp' x)
 
 val distinct_invariants_have_distinct_names
-    (#p #q:vprop)
+    (#p #q:slprop)
     (i j:iname)
     (_:squash (p =!= q))
 : stt_ghost
@@ -593,7 +589,7 @@ val distinct_invariants_have_distinct_names
 
 [@@allow_ambiguous]
 val invariant_name_identifies_invariant
-      (#p #q:vprop)
+      (#p #q:slprop)
       (i:iname)
       (j:iname { i == j } )
 : stt_ghost
@@ -608,20 +604,20 @@ val invariant_name_identifies_invariant
 // Some basic actions and ghost operations
 //////////////////////////////////////////////////////////////////////////
 
-val rewrite (p:vprop) (q:vprop) (_:vprop_equiv p q)
+val rewrite (p:slprop) (q:slprop) (_:slprop_equiv p q)
 : stt_ghost unit emp_inames p (fun _ -> q)
 
 let rewrite_tactic_t = unit -> T.Tac unit
 
 (* Useful for rewrites that are easier to prove by normalization/unification
 than SMT. This tactic is also used by the checker when elaborating fold/unfold. *)
-let vprop_equiv_norm (_:unit) : T.Tac unit =
-    T.mapply (`vprop_equiv_refl)
+let slprop_equiv_norm (_:unit) : T.Tac unit =
+    T.mapply (`slprop_equiv_refl)
 
 [@@deprecated "Use (rewrite .. as .. by ..) syntax instead!"]
-val rewrite_by (p:vprop) (q:vprop) 
+val rewrite_by (p:slprop) (q:slprop) 
                (t:unit -> T.Tac unit)
-               (_:unit { T.with_tactic t (vprop_equiv p q) })
+               (_:unit { T.with_tactic t (slprop_equiv p q) })
 : stt_ghost unit emp_inames p (fun _ -> q)
 
 val elim_pure_explicit (p:prop)
@@ -633,34 +629,34 @@ val elim_pure () (#p:prop)
 val intro_pure (p:prop) (_:squash p)
 : stt_ghost unit emp_inames emp (fun _ -> pure p)
 
-val elim_exists (#a:Type) (p:a -> vprop)
+val elim_exists (#a:Type) (p:a -> slprop)
 : stt_ghost (erased a) emp_inames (exists* x. p x) (fun x -> p (reveal x))
 
-val intro_exists (#a:Type) (p:a -> vprop) (e:a)
+val intro_exists (#a:Type) (p:a -> slprop) (e:a)
 : stt_ghost unit emp_inames (p e) (fun _ -> exists* x. p x)
 
-val intro_exists_erased (#a:Type) (p:a -> vprop) (e:erased a)
+val intro_exists_erased (#a:Type) (p:a -> slprop) (e:erased a)
 : stt_ghost unit emp_inames (p (reveal e)) (fun _ -> exists* x. p x)
 
 val stt_ghost_reveal (a:Type) (x:erased a)
 : stt_ghost a emp_inames emp (fun y -> pure (reveal x == y))
 
-val stt_admit (a:Type) (p:vprop) (q:a -> vprop)
+val stt_admit (a:Type) (p:slprop) (q:a -> slprop)
 : stt_atomic a #Neutral emp_inames p q
 
-val assert_ (p:vprop)
+val assert_ (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> p)
 
-val assume_ (p:vprop)
+val assume_ (p:slprop)
 : stt_ghost unit emp_inames emp (fun _ -> p)
 
-val drop_ (p:vprop)
+val drop_ (p:slprop)
 : stt_ghost unit emp_inames p (fun _ -> emp)
 
-val unreachable (#a:Type) (#p:vprop) (#q:a -> vprop) (_:squash False)
+val unreachable (#a:Type) (#p:slprop) (#q:a -> slprop) (_:squash False)
 : stt_ghost a emp_inames p q
 
-val elim_false (a:Type) (p:a -> vprop)
+val elim_false (a:Type) (p:a -> slprop)
 : stt_ghost a emp_inames (pure False) p
 
 ////////////////////////////////////////////////////////
@@ -682,15 +678,15 @@ val pcm_pts_to
     (#p:pcm a)
     ([@@@equate_strict] r:pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
-val is_small_pcm_pts_to
+val is_slprop1_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
     (r:pcm_ref p)
     (v:a)
-: Lemma (is_small (pcm_pts_to r v))
-        [SMTPat (is_small (pcm_pts_to r v))]
+: Lemma (is_slprop1 (pcm_pts_to r v))
+        [SMTPat (is_slprop1 (pcm_pts_to r v))]
 
 let pcm_ref_null
     (#a:Type)
@@ -787,15 +783,15 @@ val ghost_pcm_pts_to
     (#p:pcm a)
     ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
-val is_small_ghost_pcm_pts_to
+val is_slprop1_ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: Lemma (is_small (ghost_pcm_pts_to r v))
-        [SMTPat (is_small (ghost_pcm_pts_to r v))]
+: Lemma (is_slprop1 (ghost_pcm_pts_to r v))
+        [SMTPat (is_slprop1 (ghost_pcm_pts_to r v))]
 
 val ghost_alloc
     (#a:Type u#1)
@@ -861,16 +857,16 @@ val big_pcm_pts_to
     (#p:pcm a)
     ([@@@equate_strict] r:pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
 
-val is_big_big_pcm_pts_to
+val is_slprop2_big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
     (r:pcm_ref p)
     (v:a)
-: Lemma (is_big (big_pcm_pts_to r v))
-        [SMTPat (is_big (big_pcm_pts_to r v))]
+: Lemma (is_slprop2 (big_pcm_pts_to r v))
+        [SMTPat (is_slprop2 (big_pcm_pts_to r v))]
 
 val big_pts_to_not_null
     (#a:Type)
@@ -940,15 +936,15 @@ val big_ghost_pcm_pts_to
     (#p:pcm a)
     ([@@@equate_strict] r:ghost_pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
-val is_big_big_ghost_pcm_pts_to
+val is_slprop2_big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: Lemma (is_big (big_ghost_pcm_pts_to r v))
-        [SMTPat (is_big (big_ghost_pcm_pts_to r v))]
+: Lemma (is_slprop2 (big_ghost_pcm_pts_to r v))
+        [SMTPat (is_slprop2 (big_ghost_pcm_pts_to r v))]
 
 val big_ghost_alloc
     (#a:Type)
@@ -1014,7 +1010,7 @@ val nb_pcm_pts_to
     (#p:pcm a)
     (r:pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
 val nb_pts_to_not_null
     (#a:Type)
@@ -1083,7 +1079,7 @@ val nb_ghost_pcm_pts_to
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: vprop
+: slprop
 
 
 val nb_ghost_alloc
@@ -1145,6 +1141,6 @@ val nb_ghost_gather
 // Finally, a big escape hatch for introducing architecture/backend-specific
 // atomic operations from proven stt specifications
 [@@warn_on_use "as_atomic is a an assumption"]
-val as_atomic (#a:Type u#0) (pre:vprop) (post:a -> vprop)
+val as_atomic (#a:Type u#0) (pre:slprop) (post:a -> slprop)
               (pf:stt a pre post)
 : stt_atomic a emp_inames pre post

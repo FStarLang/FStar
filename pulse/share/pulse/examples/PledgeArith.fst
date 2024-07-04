@@ -25,7 +25,7 @@ open Pulse.Lib.Pledge
 
 ```pulse
 ghost
-fn pledge_return_now (f:vprop) (r : ref int)
+fn pledge_return_now (f:slprop) (r : ref int)
   requires pts_to r 123
   ensures pledge emp_inames f (pts_to r 123)
 {
@@ -35,7 +35,7 @@ fn pledge_return_now (f:vprop) (r : ref int)
 
 ```pulse
 ghost
-fn pledge_join (f:vprop) (v1 v2 : vprop)
+fn pledge_join (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f v1 ** pledge emp_inames f v2
   ensures pledge emp_inames f (v1 ** v2)
 {
@@ -44,13 +44,13 @@ fn pledge_join (f:vprop) (v1 v2 : vprop)
 ```
 
 ```pulse
-fn pledge_comm (f:vprop) (v1 v2 : vprop)
+fn pledge_comm (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (v2 ** v1)
   ensures pledge emp_inames f (v1 ** v2)
 {
   // this one can also be proved by relying on the equality between v1**v2 and v2**v1,
   // but that's not a scalable solution
-  // let _ = elim_vprop_equiv (vprop_equiv_comm v1 v2);
+  // let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
   ghost
   fn pf (_:unit)
     (* a nested function may make this more convenient *)
@@ -74,7 +74,7 @@ fn pledge_comm (f:vprop) (v1 v2 : vprop)
 
 ```pulse
 ghost
-fn pledge_squash (f:vprop) (v1 v2 : vprop)
+fn pledge_squash (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (pledge emp_inames f v1)
   ensures pledge emp_inames f v1
 {
@@ -84,7 +84,7 @@ fn pledge_squash (f:vprop) (v1 v2 : vprop)
 
 ```pulse
 ghost
-fn pledge_squash_and_join (f:vprop) (v1 v2 : vprop)
+fn pledge_squash_and_join (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (pledge emp_inames f v1) ** pledge emp_inames f v2
   ensures pledge emp_inames f (v1 ** v2)
 {

@@ -35,7 +35,7 @@ let stc_soundness
                         (RT.tm_type st.u) &
           RT.tot_typing (elab_env g)
                         st.pre
-                        vprop_tm &
+                        slprop_tm &
           RT.tot_typing (elab_env g)
                         (mk_abs st.res R.Q_Explicit st.post)
                         (post1_type_bind st.res)) =

@@ -131,7 +131,7 @@ let id p = p
 ```pulse
 //__rewrite_sig$
 ghost
-fn __rewrite (p q:vprop)
+fn __rewrite (p q:slprop)
 requires p ** pure (p == q)
 ensures q
 //__rewrite_sig$
@@ -143,7 +143,7 @@ ensures q
 ```pulse
 //intro_exists_sig$
 ghost
-fn intro_exists (#a:Type0) (p:a -> vprop) (x:erased a)
+fn intro_exists (#a:Type0) (p:a -> slprop) (x:erased a)
 requires p x
 ensures exists* x. p x
 //intro_exists_sig$
@@ -154,7 +154,7 @@ ensures exists* x. p x
 
 //all_at_most$
 let rec all_at_most (l:list (ref nat)) (n:nat)
-: vprop
+: slprop
 = match l with
   | [] -> emp
   | hd::tl -> exists* (i:nat). pts_to hd i ** pure (i <= n) ** all_at_most tl n

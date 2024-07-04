@@ -29,7 +29,7 @@ module P = Pulse.Syntax.Printer
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_Admit? t.term })
@@ -60,7 +60,7 @@ let check
         let (| u, t_typing |) = check_universe g t in    
         let post_opened = open_term_nv post px in      
         let (| post_opened, post_typing |) = 
-          check_tot_term (push_binding g x (fst px) t) post_opened tm_vprop
+          check_tot_term (push_binding g x (fst px) t) post_opened tm_slprop
         in
         let post = close_term post_opened x in
         let s : st_comp = {u;res=t;pre;post} in
@@ -89,7 +89,7 @@ let check
     let msg = [
       text "Admitting continuation.";
       text "Current context:" ^^
-        indent (pp <| canon_vprop_print pre)
+        indent (pp <| canon_slprop_print pre)
     ] in
     info_doc_env g (Some t0.range) msg
   end else ()) <: T.Tac unit;

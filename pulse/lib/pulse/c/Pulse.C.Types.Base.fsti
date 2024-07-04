@@ -114,10 +114,10 @@ let null (#t: Type) (td: typedef t) : Tot (ptr td) = null_gen t
 inline_for_extraction [@@noextract_to "krml"]
 let ref (#t: Type) (td: typedef t) : Tot Type0 = (p: ptr td { ~ (p == null td) })
 
-val pts_to (#t: Type) (#[@@@equate_by_smt]td: typedef t) (r: ref td) ([@@@equate_by_smt] v: Ghost.erased t) : vprop
+val pts_to (#t: Type) (#[@@@equate_by_smt]td: typedef t) (r: ref td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
 
 let pts_to_or_null
-  (#t: Type) (#[@@@equate_by_smt]td: typedef t) (p: ptr td) ([@@@equate_by_smt] v: Ghost.erased t) : vprop
+  (#t: Type) (#[@@@equate_by_smt]td: typedef t) (p: ptr td) ([@@@equate_by_smt] v: Ghost.erased t) : slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (p == null _)
   then emp
   else pts_to p v
@@ -232,7 +232,7 @@ val ref_equiv
   (#t: Type)
   (#td: typedef t)
   (r1 r2: ref td)
-: Tot vprop
+: Tot slprop
 
 val pts_to_equiv
   (#t: Type)
@@ -247,7 +247,7 @@ val freeable
   (#t: Type)
   (#td: typedef t)
   (r: ref td)
-: Tot vprop
+: Tot slprop
 
 val freeable_dup
   (#t: Type)
@@ -269,7 +269,7 @@ let freeable_or_null
   (#t: Type)
   (#td: typedef t)
   (r: ptr td)
-: Tot vprop
+: Tot slprop
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)
   then emp
   else freeable r
@@ -280,7 +280,7 @@ let freeable_or_null_dup
   (#t: Type)
   (#td: typedef t)
   (r: ptr td)
-: SteelGhostT vprop opened
+: SteelGhostT slprop opened
     (freeable_or_null r)
     (fun _ -> freeable_or_null r ** freeable_or_null r)
 = if FStar.StrongExcludedMiddle.strong_excluded_middle (r == null _)

@@ -33,8 +33,8 @@ module Abs = Pulse.Checker.Abs
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
   (g:env)
-  (ctxt:vprop)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
@@ -52,7 +52,7 @@ let check_bind_fn
     let x = fresh g in
     let b = { binder with binder_ty = comp_res c } in
     let g' = push_binding g x (binder.binder_ppname) b.binder_ty in
-    let ctxt_typing' : tot_typing g' ctxt tm_vprop =
+    let ctxt_typing' : tot_typing g' ctxt tm_slprop =
       Metatheory.tot_typing_weakening_single ctxt_typing x b.binder_ty in
     let r = check g' _ ctxt_typing' post_hint res_ppname (open_st_term_nv body (binder.binder_ppname, x)) in
     let body_typing = apply_checker_result_k #_ #_ #(Some?.v post_hint) r res_ppname in
@@ -66,8 +66,8 @@ let check_bind_fn
 #push-options "--z3rlimit_factor 4 --fuel 1 --ifuel 1"
 let check_bind
   (g:env)
-  (ctxt:vprop)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt:slprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
@@ -130,7 +130,7 @@ let check_bind
 let check_tot_bind
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })

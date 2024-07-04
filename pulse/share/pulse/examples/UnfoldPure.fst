@@ -19,7 +19,7 @@ open Pulse.Lib.Pervasives
 module US = FStar.SizeT
 
 //Some examples illustrating how Pulse eliminates pure predicates
-//automatically, but requires vprops to be explicitly unfolded
+//automatically, but requires slprops to be explicitly unfolded
 
 let pre0 (x:nat) : prop = x > 2
 let pre1 (x:nat) : prop = pre0 x (* unnecessarily-nested props to test this *)
@@ -40,16 +40,16 @@ fn unfold_pure1 (#x:nat)
 ```
 
 
-(* unfold necessary - pulse won't automatically unfold a vprop *)
+(* unfold necessary - pulse won't automatically unfold a slprop *)
 
-let pre2 (x:nat) : vprop = pure (x > 2)
+let pre2 (x:nat) : slprop = pure (x > 2)
 
 ```pulse
 fn unfold_pure2 (#x:nat)
   requires pre2 x
   ensures pure (x > 1)
 {
-  //However, if the pure vprop is "hidden" behind a definition
+  //However, if the pure slprop is "hidden" behind a definition
   //Pulse requires it to be explicitly unfolded first
   unfold (pre2 x);
   //now things work as in the previous example

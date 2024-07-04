@@ -27,7 +27,7 @@ val open_st_term_bs (t:st_term) (bs:list binding) : st_term
 val check
         (g:env)
         (pre:term)
-        (pre_typing: tot_typing g pre tm_vprop)
+        (pre_typing: tot_typing g pre tm_slprop)
         (post_hint:post_hint_for_env g)
         (res_ppname:ppname)
         (sc:term)

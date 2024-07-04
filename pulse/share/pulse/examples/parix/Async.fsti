@@ -18,32 +18,32 @@ module Async
 
 open Pulse.Lib.Pervasives
 
-val asynch (a:Type0) (post : a -> vprop) : Type0
+val asynch (a:Type0) (post : a -> slprop) : Type0
 
 val async_joinable
   (#a : Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (h : asynch a post)
-  : vprop
+  : slprop
 
 val async
   (#a : Type0)
-  (#pre : vprop)
-  (#post : (a -> vprop))
+  (#pre : slprop)
+  (#post : (a -> slprop))
   (f : (unit -> stt a pre post))
   : stt (asynch a post) pre (fun h -> async_joinable h)
 
 val await
   (#a : Type0)
-  (#post : (a -> vprop))
+  (#post : (a -> slprop))
   (h : asynch a post)
   : stt a (async_joinable h) (fun x -> post x)
 
 val map
   (#a : Type0)
   (#b : Type0)
-  (#post1 : (a -> vprop))
-  (#post2 : (b -> vprop))
+  (#post1 : (a -> slprop))
+  (#post2 : (b -> slprop))
   (f : (x:a -> stt b (post1 x) post2))
   (h : asynch a post1)
   : stt (asynch b post2) (async_joinable h) (fun x -> async_joinable x)

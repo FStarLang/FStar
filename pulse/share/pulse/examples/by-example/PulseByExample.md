@@ -9,9 +9,9 @@ Pulse programs accept one or more arguments, where the `unit` type can be used t
 The specification of a Pulse program includes a precondition (`requires ...`), postcondition (`ensures ...`), and (optional) return type. 
 The pre- and post-conditions are propositions, like F* propositions but with a twise: Pulse leverages [separation logic](https://en.wikipedia.org/wiki/Separation_logic) to simplify reasoning about heap mutation. 
 
-Propositions in Pulse (called `vprop`s) enjoy separation logic operators like `**`, the separating conjunction. 
-A `vprop` may include a traditional F* `prop` by surrounding it with the `pure` keyword. 
-Generally, pure `prop`s are used to specify mathematical/logical constraints and anything having to do with references or memory sits outside in the surrounding `vprop`. 
+Propositions in Pulse (called `slprop`s) enjoy separation logic operators like `**`, the separating conjunction. 
+A `slprop` may include a traditional F* `prop` by surrounding it with the `pure` keyword. 
+Generally, pure `prop`s are used to specify mathematical/logical constraints and anything having to do with references or memory sits outside in the surrounding `slprop`. 
 
 Returning to our code snippet, the separation logic proposition `emp` means that the program does not own any resources or have any knowledge. 
 So the Pulse program `five` begins with no resources/knowledge and returns with the knowledge that the return value is logically equal to 5. 

@@ -103,7 +103,7 @@ let pts_to_or_null #a
         (x:nullable_ref a) 
         (#[default_arg (`1.0R)] p:perm) //implicit argument with a default
         (v:option a)
-: vprop
+: slprop
 = match x with
   | None -> pure (v == None)
   | Some x -> exists* w. pts_to x #p w ** pure (v == Some w)

@@ -24,5 +24,5 @@ open Pulse.Typing.Metatheory.Base
 
 val check (g:env) 
           (c:comp_st)
-          (pre_typing:tot_typing g (comp_pre c) tm_vprop)
+          (pre_typing:tot_typing g (comp_pre c) tm_slprop)
   : T.Tac (comp_typing g c (universe_of_comp c))

@@ -47,11 +47,11 @@ fn rec dup_invlist_inv (is:invlist)
 ghost
 fn shift_invlist_one
   (#a:Type0)
-  (p : vprop)
+  (p : slprop)
   (i : iref)
   (is : invlist{not (mem_inv (invlist_names is) i)})
-  (#pre:vprop)
-  (#post : a -> vprop)
+  (#pre:slprop)
+  (#post : a -> slprop)
   (f : unit -> stt_ghost a emp_inames
                  (invlist_v (add_one ( p, i ) is) ** pre)
                  (fun v -> invlist_v (add_one ( p, i ) is) ** post v))
@@ -76,7 +76,7 @@ fn shift_invlist_one
 
 ```pulse
 ghost
-fn rec with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
+fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
   requires invlist_inv is ** pre
@@ -116,7 +116,7 @@ let invlist_reveal = admit()
 ```pulse
 ghost
 fn iname_inj
-  (p1 p2 : vprop)
+  (p1 p2 : slprop)
   (i1 i2 : iref)
   requires (inv i1 p1 ** inv i2 p2 ** pure (iname_of i1 = iname_of i2))
   ensures (inv i1 p1 ** inv i2 p2 ** pure (p1 == p2))

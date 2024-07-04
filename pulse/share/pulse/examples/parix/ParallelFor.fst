@@ -28,7 +28,7 @@ module P = Pulse.Lib.Pledge
 
 ```pulse
 ghost
-fn aux_squash_pledge (f v : vprop) (_:unit)
+fn aux_squash_pledge (f v : slprop) (_:unit)
   requires f ** pledge emp_inames f (pledge emp_inames f v)
   ensures  f ** v
 {
@@ -39,7 +39,7 @@ fn aux_squash_pledge (f v : vprop) (_:unit)
 
 ```pulse
 ghost
-fn squash_pledge (f v : vprop)
+fn squash_pledge (f v : slprop)
   requires pledge emp_inames f (pledge emp_inames f v)
   ensures pledge emp_inames f v
 {
@@ -59,7 +59,7 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 
 // ```pulse
 // ghost
-// fn p_join (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+// fn p_join (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 //   requires on_range p i j ** on_range p j k
 //   ensures  on_range p i k
 // {
@@ -68,27 +68,27 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 // ```
 
 // ```pulse
-// fn p_split (p : (nat->vprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
+// fn p_split (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 //   requires on_range p i k
 //   ensures on_range p i j ** on_range p j k
 // {
-//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_equiv p i j k ()))
+//   rewrite_ _ _ (slprop_equiv_sym _ _ (p_join_equiv p i j k ()))
 // }
 // ```
 
 // ```pulse
 // ghost
-// fn p_join_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
+// fn p_join_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
 //   requires on_range p 0 (n-1) ** p (n-1)
 //   ensures on_range p 0 n
 // {
-//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_join_last_equiv p n))
+//   rewrite_ _ _ (slprop_equiv_sym _ _ (p_join_last_equiv p n))
 // }
 // ```
 
 // ```pulse
 // ghost
-// fn p_split_last (p : (nat->vprop)) (n : nat) (_ : squash (n > 0))
+// fn p_split_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
 //   requires on_range p 0 n
 //   ensures on_range p 0 (n-1) ** p (n-1)
 // {
@@ -98,30 +98,30 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 
 // ```pulse
 // ghost
-// fn p_combine (p1 p2 : (nat->vprop)) (i j : nat)
+// fn p_combine (p1 p2 : (nat->slprop)) (i j : nat)
 //   requires on_range p1 i j ** on_range p2 i j
 //   ensures on_range (fun i -> p1 i ** p2 i) i j
 // {
 //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
-// //   rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
+// //   rewrite_ _ _ (slprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
 // }
 // ```
 
 // ```pulse
 // ghost
-// fn p_uncombine (p1 p2 : (nat->vprop)) (i j : nat)
+// fn p_uncombine (p1 p2 : (nat->slprop)) (i j : nat)
 //   requires on_range (fun i -> p1 i ** p2 i) i j
 //   ensures on_range p1 i j ** on_range p2 i j
 // {
 // //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
-//   rewrite_ _ _ (vprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
+//   rewrite_ _ _ (slprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
 // }
 // ```
 
 ```pulse
 fn rec simple_for
-   (pre post : (nat -> vprop))
-   (r : vprop) // This resource is passed around through iterations.
+   (pre post : (nat -> slprop))
+   (r : slprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (n : nat)
    requires r ** on_range pre 0 n
@@ -144,16 +144,16 @@ fn rec simple_for
 
 ```pulse
 fn for_loop
-   (pre post : (nat -> vprop))
-   (r : vprop) // This resource is passed around through iterations.
+   (pre post : (nat -> slprop))
+   (r : slprop) // This resource is passed around through iterations.
    (f : (i:nat -> stt unit (r ** pre i) (fun () -> (r ** post i))))
    (lo hi : nat)
    requires r ** on_range pre lo hi
    ensures r ** on_range post lo hi
 {
   on_range_le pre;
-  let pre'  : (nat -> vprop) = (fun (i:nat) -> pre  (i + lo));
-  let post' : (nat -> vprop) = (fun (i:nat) -> post (i + lo));
+  let pre'  : (nat -> slprop) = (fun (i:nat) -> pre  (i + lo));
+  let post' : (nat -> slprop) = (fun (i:nat) -> post (i + lo));
   ghost
   fn shift_back (k : nat{lo <= k /\ k < hi})
     requires pre k
@@ -213,8 +213,8 @@ assume val unfrac_n (n:pos) (p:pool) (e:perm)
 ```pulse
 fn spawned_f_i
   (p:pool)
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (e:perm)
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (i:nat)
@@ -228,8 +228,8 @@ fn spawned_f_i
 // In pulse, using fixpoint combinator below. Should be a ghost step eventually
 ```pulse
 fn rec redeem_range
-  (p : (nat -> vprop))
-  (f : vprop)
+  (p : (nat -> slprop))
+  (f : slprop)
   (n : nat)
   requires f ** on_range (fun i -> pledge emp_inames f (p i)) 0 n
   ensures f ** on_range p 0 n
@@ -254,8 +254,8 @@ fn rec redeem_range
 ```pulse
 fn
 parallel_for
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n
@@ -300,8 +300,8 @@ parallel_for
 ```pulse
 fn spawned_f_i_alt
   (p:pool)
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (i:nat)
   requires pool_alive p ** pre i
@@ -316,8 +316,8 @@ spawning sequentially. *)
 ```pulse
 fn
 parallel_for_alt
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n
@@ -340,13 +340,13 @@ parallel_for_alt
 ```
 
 let wsr_loop_inv_f
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
-  (full_post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
+  (full_post : (nat -> slprop))
   (n : pos)
   (i : ref int)
   (b:bool)
-  : Tot vprop
+  : Tot slprop
   =
   exists* (ii:nat).
        pts_to i ii
@@ -355,19 +355,19 @@ let wsr_loop_inv_f
     ** pure (b == (Prims.op_LessThan ii n))
 
 let wsr_loop_inv_tf
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
-  (full_post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
+  (full_post : (nat -> slprop))
   (n : pos)
   (i : ref int)
-  : Tot vprop =
+  : Tot slprop =
   exists* (b:bool). wsr_loop_inv_f pre post full_post n i b
 
 (* This can be ghost. *)
 ```pulse
 fn rec ffold
-  (p : (nat -> vprop))
-  (fp : (nat -> vprop))
+  (p : (nat -> slprop))
+  (fp : (nat -> slprop))
   (ss : (i:nat -> stt_ghost unit emp_inames (p i ** fp i) (fun () -> fp (i+1))))
   (n : nat)
   (i : nat)
@@ -391,8 +391,8 @@ fn rec ffold
 (* This can be ghost. *)
 ```pulse
 fn rec funfold
-  (p : (nat -> vprop))
-  (fp : (nat -> vprop))
+  (p : (nat -> slprop))
+  (fp : (nat -> slprop))
   (ss : (i:nat -> stt_ghost unit emp_inames (fp (i+1)) (fun () -> p i ** fp i)))
   (n : nat)
   requires fp n
@@ -416,10 +416,10 @@ fn rec funfold
 ```pulse
 fn
 parallel_for_wsr
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
-  (full_pre : (nat -> vprop))
-  (full_post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
+  (full_pre : (nat -> slprop))
+  (full_post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (unfold_pre : (i:nat -> stt_ghost unit emp_inames (full_pre (i+1)) (fun () -> pre i ** full_pre i)))
   (fold_post : (i:nat -> stt_ghost unit emp_inames (post i ** full_post i) (fun () -> full_post (i+1))))
@@ -436,8 +436,8 @@ parallel_for_wsr
 assume
 val frame_stt_left
   (#a:Type u#a)
-  (#pre:vprop) (#post:a -> vprop)
-  (frame:vprop)
+  (#pre:slprop) (#post:a -> slprop)
+  (frame:slprop)
   (e:stt a pre post)
   : stt a (frame ** pre) (fun x -> frame ** post x)
 
@@ -445,8 +445,8 @@ val frame_stt_left
 fn rec h_for_task
   (p:pool)
   (e:perm)
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> post i)))
   (lo hi : nat)
   (_:unit)
@@ -520,8 +520,8 @@ val wait_pool
 ```pulse
 fn
 parallel_for_hier
-  (pre : (nat -> vprop))
-  (post : (nat -> vprop))
+  (pre : (nat -> slprop))
+  (post : (nat -> slprop))
   (f : (i:nat -> stt unit (pre i) (fun () -> (post i))))
   (n : pos)
   requires on_range pre 0 n

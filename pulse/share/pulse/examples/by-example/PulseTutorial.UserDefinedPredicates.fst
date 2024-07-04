@@ -22,7 +22,7 @@ let pts_to_diag
         #a 
         (r:ref (a & a))
         (v:a)
-: vprop
+: slprop
 = pts_to r (v, v)
 //SNIPPET_END: pts_to_diag$
 

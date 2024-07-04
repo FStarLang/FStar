@@ -24,15 +24,15 @@ let dummyRange = FStar.Compiler.Range.dummyRange
 type binder = A.binder
 type binders = list binder
 
-type vprop' =
-  | VPropTerm of A.term
+type slprop' =
+  | SLPropTerm of A.term
 
-and vprop = {
-  v:vprop';
+and slprop = {
+  v:slprop';
   vrange:rng
 }
 
-let as_vprop (v:vprop') (r:rng) = { v; vrange=r}
+let as_slprop (v:slprop') (r:rng) = { v; vrange=r}
 
 type st_comp_tag = 
   | ST
@@ -41,10 +41,10 @@ type st_comp_tag =
 
 type computation_type = {
      tag: st_comp_tag;
-     precondition:vprop;
+     precondition:slprop;
      return_name:ident;
      return_type:A.term;
-     postcondition:vprop;
+     postcondition:slprop;
      opens:option A.term;
      range:rng
 }
@@ -60,16 +60,16 @@ type pat =
     }
 
 type hint_type =
-  | ASSERT of vprop
-  | UNFOLD of option (list lident) & vprop
-  | FOLD of option (list lident) & vprop
+  | ASSERT of slprop
+  | UNFOLD of option (list lident) & slprop
+  | FOLD of option (list lident) & slprop
   | RENAME of
       list (A.term & A.term) &
-      option vprop & (* in goal *)
+      option slprop & (* in goal *)
       option A.term (* optional tactic *)
   | REWRITE of
-      vprop &
-      vprop &
+      slprop &
+      slprop &
       option A.term (* optional tactic *)
   | WILD
   | SHOW_PROOF_STATE of rng
@@ -79,7 +79,7 @@ type array_init = {
   len : A.term;
 }
 
-let ensures_vprop = option (ident & A.term) & vprop & option A.term
+let ensures_slprop = option (ident & A.term) & slprop & option A.term
 
 type stmt' =
   | Open of lident
@@ -112,26 +112,26 @@ type stmt' =
     
   | If {
       head:A.term;
-      join_vprop:option ensures_vprop;
+      join_slprop:option ensures_slprop;
       then_:stmt;
       else_opt:option stmt;
     }
 
   | Match {
       head:A.term;
-      returns_annot:option ensures_vprop;
+      returns_annot:option ensures_slprop;
       branches:list (A.pattern & stmt);
     }
 
   | While {
       guard: stmt;
       id: ident;
-      invariant: vprop;
+      invariant: slprop;
       body: stmt;
     }
 
   | Introduce {
-      vprop:vprop;
+      slprop:slprop;
       witnesses:list A.term
     }
       
@@ -141,10 +141,10 @@ type stmt' =
     }
 
   | Parallel {
-      p1:vprop;
-      p2:vprop;
-      q1:vprop;
-      q2:vprop;
+      p1:slprop;
+      p2:slprop;
+      q1:slprop;
+      q2:slprop;
       b1:stmt;
       b2:stmt;
     }
@@ -157,7 +157,7 @@ type stmt' =
   | WithInvariants {
       names : list A.term;
       body  : stmt;
-      returns_ : option ensures_vprop;
+      returns_ : option ensures_slprop;
     }
 
 and stmt = {
@@ -228,16 +228,16 @@ let mk_comp tag precondition return_name return_type postcondition opens range =
      range
   }
 
-// let mk_vprop_exists binders body = VPropExists { binders; body }
+// let mk_slprop_exists binders body = SLPropExists { binders; body }
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
 let mk_let_binding qualifier id typ init = LetBinding { qualifier; id; typ; init }
 let mk_block stmt = Block { stmt }
-let mk_if head join_vprop then_ else_opt = If { head; join_vprop; then_; else_opt }
+let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
 let mk_while guard id invariant body = While { guard; id; invariant; body }
-let mk_intro vprop witnesses = Introduce { vprop; witnesses }
+let mk_intro slprop witnesses = Introduce { slprop; witnesses }
 let mk_sequence s1 s2 = Sequence { s1; s2 }
 let mk_stmt s range = { s; range }
 let mk_fn_defn id is_rec binders ascription measure body range : fn_defn = { id; is_rec; binders; ascription; measure; body; range }

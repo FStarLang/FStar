@@ -70,20 +70,20 @@ val raw_data_item_match
   (p: perm)
   (c: cbor)
   (v: Cbor.raw_data_item)
-: Tot vprop
+: Tot slprop
 
 let raw_data_item_array_match
   (p: perm)
   (c: Seq.seq cbor)
   (v: list Cbor.raw_data_item)
-: Tot vprop
+: Tot slprop
 = SM.seq_list_match c v (raw_data_item_match p)
 
 let raw_data_item_map_entry_match
   (p: perm)
   (c1: cbor_map_entry)
   (v1: (Cbor.raw_data_item & Cbor.raw_data_item))
-: Tot vprop
+: Tot slprop
 = raw_data_item_match p (cbor_map_entry_key c1) (fstp v1) **
   raw_data_item_match p (cbor_map_entry_value c1) (sndp v1)
 
@@ -91,7 +91,7 @@ let raw_data_item_map_match
   (p: perm)
   (c: Seq.seq cbor_map_entry)
   (v: list (Cbor.raw_data_item & Cbor.raw_data_item))
-: Tot vprop
+: Tot slprop
   (decreases v)
 = SM.seq_list_match c v (raw_data_item_map_entry_match p)
 
@@ -121,7 +121,7 @@ let cbor_read_success_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
@@ -140,7 +140,7 @@ let cbor_read_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-: Tot vprop
+: Tot slprop
 = A.pts_to a #p va ** pure (cbor_read_error_postcond va)
 
 let cbor_read_post
@@ -148,7 +148,7 @@ let cbor_read_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = if res.cbor_read_is_success
   then cbor_read_success_post a p va res
   else cbor_read_error_post a p va
@@ -179,7 +179,7 @@ let cbor_read_deterministically_encoded_success_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = ((exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
@@ -198,7 +198,7 @@ let cbor_read_deterministically_encoded_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-: Tot vprop
+: Tot slprop
 = A.pts_to a #p va ** pure (cbor_read_deterministically_encoded_error_postcond va)
 
 let cbor_read_deterministically_encoded_post
@@ -206,7 +206,7 @@ let cbor_read_deterministically_encoded_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = if res.cbor_read_is_success
   then cbor_read_deterministically_encoded_success_post a p va res
   else cbor_read_deterministically_encoded_error_post a p va
@@ -372,7 +372,7 @@ val cbor_array_iterator_match
   (p: perm)
   (i: cbor_array_iterator_t)
   (l: list Cbor.raw_data_item)
-: Tot vprop
+: Tot slprop
 
 val cbor_array_iterator_init
   (a: cbor)
@@ -545,7 +545,7 @@ val cbor_map_iterator_match
   (p: perm)
   (i: cbor_map_iterator_t)
   (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
-: Tot vprop
+: Tot slprop
 
 val cbor_map_iterator_init
   (a: cbor)
@@ -647,7 +647,7 @@ let cbor_write_post
   (out: A.array U8.t)
   (res: SZ.t)
   (vout': Seq.seq U8.t)
-: Tot vprop
+: Tot slprop
 = 
   A.pts_to out vout' **
   pure (cbor_write_postcond va out vout' res)

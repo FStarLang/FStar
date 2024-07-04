@@ -19,7 +19,7 @@ module Bug113
 open Pulse.Lib.Core
 
 assume
-val p : nat -> vprop
+val p : nat -> slprop
 assume
 val f : (x:bool -> #index:nat -> stt bool (p index) (fun _ -> emp))
 

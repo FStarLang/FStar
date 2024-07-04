@@ -20,13 +20,13 @@ open Pulse.Lib.Pervasives
 
 module P = Pulse.Lib.Pledge
 
-let pledge (f:vprop) (v:vprop) : vprop =
+let pledge (f:slprop) (v:slprop) : slprop =
   exists* is. P.pledge is f v
 
 (* Anything that holds now holds in the future too. *)
 ```pulse
 ghost
-fn return_pledge (f v : vprop)
+fn return_pledge (f v : slprop)
   requires v
   ensures pledge f v
 {
@@ -39,7 +39,7 @@ fn return_pledge (f v : vprop)
 ghost
 fn make_pledge
   (#is:inames)
-  (f v extra:vprop)
+  (f v extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
   requires extra
   ensures pledge f v
@@ -60,7 +60,7 @@ fn make_pledge
 //   >>>> app arg (_)
 //   Variable not found: _#6
 ```pulse
-fn redeem_pledge (f v:vprop)
+fn redeem_pledge (f v:slprop)
   requires f ** pledge f v
   ensures f ** v
 {
@@ -71,7 +71,7 @@ fn redeem_pledge (f v:vprop)
 
 ```pulse
 ghost
-fn join_pledge (#f v1 v2:vprop)
+fn join_pledge (#f v1 v2:slprop)
   requires pledge f v1 ** pledge f v2
   ensures pledge f (v1 ** v2)
 {
@@ -89,7 +89,7 @@ fn join_pledge (#f v1 v2:vprop)
 ```pulse
 ghost
 fn rewrite_pledge
-  (#f v1 v2:vprop)
+  (#f v1 v2:slprop)
   (#is_k:inames)
   (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
   requires pledge f v1

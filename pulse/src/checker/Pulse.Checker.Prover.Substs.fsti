@@ -210,9 +210,9 @@ val st_typing_nt_substs_derived
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
 : either (st_typing g (nt_subst_st_term t ss) (nt_subst_comp c ss)) (var & term)
 
-val vprop_equiv_nt_substs_derived
+val slprop_equiv_nt_substs_derived
   (g:env) (uvs:env { disjoint g uvs })
-  (#p1 #p2:vprop) (veq:vprop_equiv (push_env g uvs) p1 p2)
+  (#p1 #p2:slprop) (veq:slprop_equiv (push_env g uvs) p1 p2)
   (ss:nt_substs)
   (effect_labels:list T.tot_or_ghost { well_typed_nt_substs g uvs ss effect_labels })
-: vprop_equiv g (nt_subst_term p1 ss) (nt_subst_term p2 ss)
+: slprop_equiv g (nt_subst_term p1 ss) (nt_subst_term p2 ss)

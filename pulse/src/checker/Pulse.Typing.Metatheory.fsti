@@ -52,12 +52,12 @@ val st_typing_weakening_end
 
 val veq_weakening
   (g:env) (g':env { disjoint g g' })
-  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (#v1 #v2:slprop) (d:slprop_equiv (push_env g g') v1 v2)
   (g1:env { g1 `env_extends` g /\ disjoint g1 g' })
-  : vprop_equiv (push_env g1 g') v1 v2
+  : slprop_equiv (push_env g1 g') v1 v2
 
 val veq_weakening_end
   (g:env) (g':env { disjoint g g' })
-  (#v1 #v2:vprop) (d:vprop_equiv (push_env g g') v1 v2)
+  (#v1 #v2:slprop) (d:slprop_equiv (push_env g g') v1 v2)
   (g'':env { g'' `env_extends` g' /\ disjoint g'' g })
-  : vprop_equiv (push_env g g'') v1 v2
+  : slprop_equiv (push_env g g'') v1 v2

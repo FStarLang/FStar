@@ -19,12 +19,12 @@ open Pulse.Lib.Core
 
 val ( forall* )
     (#a:Type u#a)
-    (p:a -> vprop)
-: vprop
+    (p:a -> slprop)
+: slprop
 
 val elim_forall
     (#a:Type)
-    (#p:a->vprop)
+    (#p:a->slprop)
     (x:a)
 : stt_ghost unit emp_inames
     (forall* x. p x)
@@ -32,15 +32,15 @@ val elim_forall
 
 val intro_forall
     (#a:Type)
-    (#p:a->vprop)
-    (v:vprop)
+    (#p:a->slprop)
+    (v:slprop)
     (f_elim : (x:a -> stt_ghost unit emp_inames v (fun _ -> p x)))
 : stt_ghost unit emp_inames
     v
     (fun _ -> forall* x. p x)
 
-val vprop_equiv_forall
+val slprop_equiv_forall
     (#a:Type)
-    (p q: a -> vprop)
+    (p q: a -> slprop)
     (_:squash (forall x. p x == q x))
-: vprop_equiv (op_forall_Star p) (op_forall_Star q)
+: slprop_equiv (op_forall_Star p) (op_forall_Star q)

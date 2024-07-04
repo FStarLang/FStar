@@ -18,53 +18,53 @@ module Pulse.Lib.OnRange
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
-val on_range ([@@@equate_strict] p: (nat -> vprop))
+val on_range ([@@@equate_strict] p: (nat -> slprop))
              (i:nat)
              (j:nat)
-  : vprop
+  : slprop
 
-val on_range_eq_false (p:nat -> vprop) (i j:nat)
+val on_range_eq_false (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i > j)
   (ensures on_range p i j == pure False)
 
-val on_range_eq_emp (p:nat -> vprop) (i j:nat)
+val on_range_eq_emp (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i == j)
   (ensures on_range p i j == emp)
 
-val on_range_eq_cons (p:nat -> vprop) (i j:nat)
+val on_range_eq_cons (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i < j)
   (ensures on_range p i j == (p i ** on_range p (i + 1) j))
 
-val on_range_eq_get (p:nat -> vprop) (i j k:nat)
+val on_range_eq_get (p:nat -> slprop) (i j k:nat)
 : Lemma 
   (requires i <= j /\ j < k)
   (ensures on_range p i k == (on_range p i j ** p j ** on_range p (j + 1) k))
 
-val on_range_eq_snoc (p:nat -> vprop) (i j:nat)
+val on_range_eq_snoc (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i <= j)
   (ensures on_range p i (j + 1) == on_range p i j ** p j)
 
-val on_range_frame (p q:nat -> vprop) (i j:nat)
+val on_range_frame (p q:nat -> slprop) (i j:nat)
 : Lemma 
   (requires forall k. i <= k /\ k < j ==> p k == q k)
   (ensures on_range p i j == on_range q i j)
 
-val on_range_is_small (p:nat -> vprop) (i:nat) (j:nat)
-  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_small (p k))
-          (ensures is_small (on_range p i j))
+val on_range_is_slprop1 (p:nat -> slprop) (i:nat) (j:nat)
+  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop1 (p k))
+          (ensures is_slprop1 (on_range p i j))
           [SMTPat (on_range p i j)]
 
-val on_range_is_big (p:nat -> vprop) (i:nat) (j:nat)
-  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_big (p k))
-          (ensures is_big (on_range p i j))
+val on_range_is_slprop2 (p:nat -> slprop) (i:nat) (j:nat)
+  : Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop2 (p k))
+          (ensures is_slprop2 (on_range p i j))
           [SMTPat (on_range p i j)]
 
 val on_range_le
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (#i:nat)
   (#j:nat)
 : stt_ghost unit emp_inames
@@ -72,21 +72,21 @@ val on_range_le
     (ensures fun _ -> on_range p i j ** pure (i <= j))
 
 val on_range_empty
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 : stt_ghost unit emp_inames
     (requires emp)
     (ensures fun _ -> on_range p i i)
 
 val on_range_empty_elim
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 : stt_ghost unit emp_inames
     (requires on_range p i i)
     (ensures fun _ -> emp)
 
 val on_range_singleton_intro
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 : stt_ghost unit emp_inames
     (requires (p i))
@@ -94,7 +94,7 @@ val on_range_singleton_intro
 
 val on_range_singleton_elim
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat { j == i + 1 })
 : stt_ghost unit emp_inames
@@ -103,7 +103,7 @@ val on_range_singleton_elim
 
 val on_range_split
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j <= k })
 : stt_ghost unit emp_inames
@@ -112,14 +112,14 @@ val on_range_split
 
 val on_range_join
   (i j k: nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
 : stt_ghost unit emp_inames
     (requires on_range p i j ** on_range p j k)
     (ensures fun _ -> on_range p i k)
 
 val on_range_cons
   (i:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#j:nat{j == i + 1})
   (#k: nat)
 : stt_ghost unit emp_inames
@@ -128,7 +128,7 @@ val on_range_cons
 
 val on_range_uncons
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat { i < k })
 : stt_ghost unit emp_inames
@@ -137,7 +137,7 @@ val on_range_uncons
 
 val on_range_cons_with_implies
   (i:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#k: nat)
 : stt_ghost unit emp_inames
     (p i ** on_range p (i + 1) k)
@@ -148,7 +148,7 @@ val on_range_cons_with_implies
 
 val on_range_snoc
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i #j:nat)
 : stt_ghost unit emp_inames
     (on_range p i j ** p j)
@@ -156,7 +156,7 @@ val on_range_snoc
 
 val on_range_unsnoc
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat{ i < k })
 : stt_ghost unit emp_inames
@@ -165,7 +165,7 @@ val on_range_unsnoc
 
 val on_range_snoc_with_implies
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat)
 : stt_ghost unit emp_inames
@@ -174,7 +174,7 @@ val on_range_snoc_with_implies
 
 val on_range_get
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{i <= j})
   (#k:nat{j < k})
 : stt_ghost unit emp_inames
@@ -185,14 +185,14 @@ val on_range_put
   (i:nat)
   (j:nat{ i <= j })
   (k:nat{ j < k })
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
 : stt_ghost unit emp_inames
     (on_range p i j ** p j ** on_range p (j + 1) k)
     (fun _ -> on_range p i k)
  
 val on_range_focus
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j < k })
 : stt_ghost unit emp_inames
@@ -200,7 +200,7 @@ val on_range_focus
     (fun _ -> p j ** (p j @==> on_range p i k))
 
 val on_range_weaken_and_shift
-  (p p': (nat -> vprop))
+  (p p': (nat -> slprop))
   (delta: int)
   (i: nat { i + delta >= 0 })
   (j: nat { j + delta >= 0 })
@@ -211,7 +211,7 @@ val on_range_weaken_and_shift
     (fun _ -> on_range p' (i + delta) (j + delta))
 
 val on_range_weaken
-  (p p': (nat -> vprop))
+  (p p': (nat -> slprop))
   (i: nat)
   (j: nat)
   (phi: (k: nat { i <= k /\ k < j }) -> stt_ghost unit emp_inames (p k) (fun _ -> p' k))
@@ -219,12 +219,12 @@ val on_range_weaken
     (on_range p i j)
     (fun _ -> on_range p' i j)
 
-val on_range_zip (p q:nat -> vprop) (i j:nat)
+val on_range_zip (p q:nat -> slprop) (i j:nat)
   : stt_ghost unit emp_inames
       (on_range p i j ** on_range q i j)
       (fun _ -> on_range (fun k -> p k ** q k) i j)
 
-val on_range_unzip (p q:nat -> vprop) (i j:nat)
+val on_range_unzip (p q:nat -> slprop) (i j:nat)
   : stt_ghost unit emp_inames
       (on_range (fun k -> p k ** q k) i j)
       (fun _ -> on_range p i j ** on_range q i j)
