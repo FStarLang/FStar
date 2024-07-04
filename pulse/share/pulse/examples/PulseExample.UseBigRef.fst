@@ -26,12 +26,6 @@ let closure = (p:slprop1_base & q:slprop1_base & thunk p q)
 let closure_list = B.ref (list closure)
 let slprop0 = v:slprop { is_slprop1 v }
 
-//
-// This is proven in memory, needs to be propagated up to core
-//
-assume val _small_is_slprop1
-  : squash (forall (v:slprop1_base).{:pattern is_slprop1 (up1 v) } is_slprop1 (up1 v))
-
 ```pulse
 fn mk_closure_list ()
 requires emp
@@ -62,8 +56,9 @@ ensures B.pts_to l (mk_closure f :: 'xs)
 }
 ```
 
-let pre_of (c:closure) =
+let pre_of (c:closure) : slprop1 =
   let (| p, _, _ |) = c in
+  up1_is_slprop1 p;
   up1 p
 
 let rec inv (l:list closure) : v:slprop { is_slprop1 v } =
