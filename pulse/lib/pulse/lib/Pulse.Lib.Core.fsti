@@ -74,6 +74,24 @@ val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
 let slprop2 = s:slprop { is_slprop2 s }
 let slprop1 = s:slprop { is_slprop1 s }
 
+(* Storable slprops: a storable0 (or storable) can be stored in the heap
+(made into an invariant), and obtain an slprop asserting this fact.
+A storable1, can be stored "twice", in the sense that it can be stored
+in the heap, obtain a pts_to for it, and that pts_to can in turn be stored
+as an invariant.
+
+As the heap stack is extended, these names retain their meaning as being
+"N+1" away from the top of the stack. *)
+
+let storable0    = slprop2
+let is_storable0 = is_slprop2
+let storable1    = slprop1
+let is_storable1 = is_slprop1
+
+let storable    = storable0
+let is_storable = is_storable0
+
+
 //
 // A note on smt patterns on is_slprop1 and is_slprop2 lemmas:
 //
@@ -524,7 +542,7 @@ val sub_invs_ghost
 val dup_inv (i:iref) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
-val new_invariant (p:slprop { is_slprop2 p })
+val new_invariant (p:storable)
 : stt_ghost iref emp_inames p (fun i -> inv i p)
 
 val fresh_wrt (i:iref) (c:list iref)
@@ -544,7 +562,7 @@ val all_live_cons (hd:iref) (tl:list iref)
 
 val fresh_invariant
     (ctx:list iref)
-    (p:slprop { is_slprop2 p })
+    (p:storable)
 : stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
 
 val with_invariant
