@@ -19,8 +19,6 @@ open FStar.Ghost
 open PulseCore.FractionalPermission
 open PulseCore.Observability
 open FStar.PCM
-module CM = FStar.Algebra.CommMonoid
-module U32 = FStar.UInt32
 module G = FStar.Ghost
 module Set = FStar.Set
 module T = FStar.Tactics.V2
