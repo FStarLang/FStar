@@ -151,18 +151,18 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-val big_star_congruence (p1 p2:slprop2 u#a)
+val slprop2_star_congruence (p1 p2:slprop2 u#a)
   : Lemma (is_slprop2 (p1 `star` p2))
 
-val big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+val slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
     (requires forall x. is_slprop2 (p x))
     (ensures is_slprop2 (h_exists p))
 
-val small_star_congruence (p1 p2:slprop1 u#a)
+val slprop1_star_congruence (p1 p2:slprop1 u#a)
   : Lemma (is_slprop1 (p1 `star` p2))
 
-val small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+val slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
     (requires forall x. is_slprop1 (p x))
     (ensures is_slprop1 (h_exists p))

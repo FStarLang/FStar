@@ -6,7 +6,7 @@ instance small_emp : small emp = {
   pf = ();
 }
 
-instance small_star
+instance slprop1_star
   (p q : slprop)
   (sp : small p)
   (sq : small q)

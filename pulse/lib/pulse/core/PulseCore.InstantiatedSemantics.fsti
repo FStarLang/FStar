@@ -46,13 +46,13 @@ val pure (p:prop) : slprop1
 val ( ** ) (p q : slprop) : slprop
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
 
-val big_star (p q:slprop2) : squash (is_slprop2 (p ** q))
-val big_exists (#a:Type u#a) (p: a -> slprop)
+val slprop2_star (p q:slprop2) : squash (is_slprop2 (p ** q))
+val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_slprop2 (p x))
         (ensures is_slprop2 (op_exists_Star p))
 
-val small_star (p q:slprop1) : squash (is_slprop1 (p ** q))
-val small_exists (#a:Type u#a) (p: a -> slprop)
+val slprop1_star (p q:slprop1) : squash (is_slprop1 (p ** q))
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_slprop1 (p x))
         (ensures is_slprop1 (op_exists_Star p))
 

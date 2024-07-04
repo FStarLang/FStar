@@ -217,7 +217,7 @@ fn trade_compose
     elim_trade #os p _;
     elim_trade #os _ _;
   };
-  small_star (trade #os p q) (trade #os q r);
+  slprop1_star (trade #os p q) (trade #os q r);
   intro_trade #os p r (trade #os p q ** trade #os q r) aux;
 }
 ```

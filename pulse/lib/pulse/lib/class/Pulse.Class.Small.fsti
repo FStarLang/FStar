@@ -8,7 +8,7 @@ class small (v : slprop) = {
 
 instance val small_emp : small emp
 
-instance val small_star
+instance val slprop1_star
   (p q : slprop)
   (sp : small p)
   (sq : small q) : small (p ** q)

@@ -117,13 +117,13 @@ val pure_is_slprop1 (p:prop)
 
 val ( ** ) (p q:slprop) : slprop
 
-val big_star (p q : slprop)
+val slprop2_star (p q : slprop)
 : Lemma
     (requires is_slprop2 p /\ is_slprop2 q)
     (ensures is_slprop2 (p ** q))
     [SMTPat (is_slprop2 (p ** q))]
 
-val small_star (p q : slprop)
+val slprop1_star (p q : slprop)
 : Lemma
     (requires is_slprop1 p /\ is_slprop1 q)
     (ensures is_slprop1 (p ** q))
@@ -131,13 +131,13 @@ val small_star (p q : slprop)
 
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
-val big_exists (#a:Type u#a) (p: a -> slprop)
+val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma
     (requires forall x. is_slprop2 (p x))
     (ensures is_slprop2 (op_exists_Star p))
     [SMTPat (is_slprop2 (op_exists_Star p))]
 
-val small_exists (#a:Type u#a) (p: a -> slprop)
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma
     (requires forall x. is_slprop1 (p x))
     (ensures is_slprop1 (op_exists_Star p))

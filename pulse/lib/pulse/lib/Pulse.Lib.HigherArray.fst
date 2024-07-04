@@ -525,7 +525,7 @@ let pts_to_range_is_slprop1 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.se
     in
     Classical.forall_intro aux;
     assert_norm (pts_to_range x i j #p s == (exists* (q:in_bounds i j x). pts_to (array_slice x i j) #p s ** token q));
-    small_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
+    slprop1_exists (fun (q: in_bounds i j x) -> pts_to (array_slice x i j) #p s ** token q)
 
 ```pulse
 ghost

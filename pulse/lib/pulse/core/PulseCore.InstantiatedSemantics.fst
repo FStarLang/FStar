@@ -96,10 +96,10 @@ let pure p = pure p
 let ( ** ) p q = p `star` q
 let ( exists* ) #a p = h_exists (F.on_dom a p)
 
-let big_star p q = big_star_congruence p q
-let big_exists #a p = big_exists_congruence #a (F.on_dom a p)
-let small_star p q = small_star_congruence p q
-let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
+let slprop2_star p q = slprop2_star_congruence p q
+let slprop2_exists #a p = slprop2_exists_congruence #a (F.on_dom a p)
+let slprop1_star p q = slprop1_star_congruence p q
+let slprop1_exists #a p = slprop1_exists_congruence #a (F.on_dom a p)
 
 let up2_emp    = up2_emp
 let down2_emp  = down2_emp

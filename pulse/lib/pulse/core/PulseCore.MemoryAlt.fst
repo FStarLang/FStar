@@ -172,12 +172,12 @@ let star_congruence (p1 p2 p3 p4:slprop)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 = ()
 
-let big_star_congruence (p1 p2:slprop2 u#a)
+let slprop2_star_congruence (p1 p2:slprop2 u#a)
 : Lemma (is_slprop2 (p1 `star` p2))
 = sig.star_congruence p1 p2
 
 module T = FStar.Tactics.V2
-let big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+let slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
   (requires forall x. is_slprop2 (p x))
   (ensures is_slprop2 (h_exists p))
@@ -188,7 +188,7 @@ let big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   assert (H.is_boxable (H.exists_ #sig #a (fun x -> reveal_slprop (p x))))
     by (T.mapply (`E.exists_congruence))
 
-let small_star_congruence (p1 p2:slprop1 u#a)
+let slprop1_star_congruence (p1 p2:slprop1 u#a)
 : Lemma (is_slprop1 (p1 `star` p2))
 = slprop_1_is_2 p1;
   slprop_1_is_2 p2;
@@ -245,12 +245,12 @@ let split_small (p:slprop u#a)
    down2 p;
   }
 
-let small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+let slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
   (requires forall x. is_slprop1 (p x))
   (ensures is_slprop1 (h_exists p))
 = FStar.Classical.forall_intro slprop_1_is_2;
-  big_exists_congruence #a p;
+  slprop2_exists_congruence #a p;
   assert (is_slprop2 (h_exists p));
   down_exists_alt #a p;
   assert (forall x. H.is_boxable #small_sig (small_sig.non_info_slprop (down2 (p x))))
