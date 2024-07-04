@@ -58,18 +58,18 @@ val allow_ambiguous : unit
 val slprop : Type u#4
 
 [@@erasable]
-val slprop2_repr : Type u#3
-val down2 (p:slprop) : slprop2_repr
-val up2 (p:slprop2_repr) : slprop
+val slprop2_base : Type u#3
+val down2 (p:slprop) : slprop2_base
+val up2 (p:slprop2_base) : slprop
 let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
-val up2_is_slprop2 (p:slprop2_repr) : Lemma (is_slprop2 (up2 p))
+val up2_is_slprop2 (p:slprop2_base) : Lemma (is_slprop2 (up2 p))
 
 [@@erasable]
-val slprop1_repr : Type u#2
-val down1 (p:slprop) : slprop1_repr
-val up1 (p:slprop1_repr) : slprop
+val slprop1_base : Type u#2
+val down1 (p:slprop) : slprop1_base
+val up1 (p:slprop1_base) : slprop
 let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
-val up1_is_slprop1 (p:slprop1_repr) : Lemma (is_slprop1 (up1 p))
+val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
 
 let slprop2 = s:slprop { is_slprop2 s }
 let slprop1 = s:slprop { is_slprop1 s }
