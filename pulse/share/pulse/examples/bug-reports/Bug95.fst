@@ -15,7 +15,7 @@ and node_ptr (t:Type0) = ref (node t)
 
 let rec is_list_suffix
   #t (x:node_ptr t) (l:list t {Cons? l}) (prev:option (node_ptr t)) (tail:node_ptr t)
-  : Tot vprop (decreases l)
+  : Tot slprop (decreases l)
   = match l with
     | [] -> emp
     | [n] ->

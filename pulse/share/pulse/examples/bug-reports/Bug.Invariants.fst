@@ -94,7 +94,7 @@ ensures emp
 
 ```pulse
 fn return_with_invariant
-      (p:vprop)
+      (p:slprop)
       (i:iref)
 requires inv i p
 returns x:bool

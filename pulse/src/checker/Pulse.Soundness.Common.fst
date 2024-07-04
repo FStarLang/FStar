@@ -181,7 +181,7 @@ let bind_type_t1_t2_pre_post1_post2 (u1 u2:R.universe) (t1 t2 pre post1 post2:R.
   mk_arrow (f_type, R.Q_Explicit)
            (bind_type_t1_t2_pre_post1_post2_f u1 u2 t1 t2 pre post1 post2)
 
-let post2_type_bind t2 = mk_arrow (t2, R.Q_Explicit) vprop_tm
+let post2_type_bind t2 = mk_arrow (t2, R.Q_Explicit) slprop_tm
 let bind_type_t1_t2_pre_post1 (u1 u2:R.universe) (t1 t2 pre post1:R.term) =
   let var = 0 in
   let post2 = mk_name var in
@@ -189,7 +189,7 @@ let bind_type_t1_t2_pre_post1 (u1 u2:R.universe) (t1 t2 pre post1:R.term) =
            (RT.subst_term (bind_type_t1_t2_pre_post1_post2 u1 u2 t1 t2 pre post1 post2)
                           [ RT.ND var 0 ])
 
-let post1_type_bind t1 = mk_arrow (t1, R.Q_Explicit) vprop_tm
+let post1_type_bind t1 = mk_arrow (t1, R.Q_Explicit) slprop_tm
 let bind_type_t1_t2_pre (u1 u2:R.universe) (t1 t2 pre:R.term) =
   let var = 1 in
   let post1 = mk_name var in
@@ -200,7 +200,7 @@ let bind_type_t1_t2_pre (u1 u2:R.universe) (t1 t2 pre:R.term) =
 let bind_type_t1_t2 (u1 u2:R.universe) (t1 t2:R.term) =
   let var = 2 in
   let pre = mk_name var in
-  let pre_type = vprop_tm in
+  let pre_type = slprop_tm in
   mk_arrow (pre_type, R.Q_Implicit)
            (RT.subst_term (bind_type_t1_t2_pre u1 u2 t1 t2 pre)
                           [ RT.ND var 0 ])
@@ -242,20 +242,20 @@ let frame_type_t_pre_post_frame (u:R.universe) (t pre post frame:R.term) =
 let frame_type_t_pre_post (u:R.universe) (t pre post:R.term) =
   let var = 0 in
   let frame = mk_name var in
-  mk_arrow (vprop_tm, R.Q_Explicit)
+  mk_arrow (slprop_tm, R.Q_Explicit)
            (RT.close_term (frame_res u t pre post frame) var)
 
 let frame_type_t_pre (u:R.universe) (t pre:R.term) =
   let var = 1 in
   let post = mk_name var in
-  let post_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  let post_type = mk_arrow (t, R.Q_Explicit) slprop_tm in
   mk_arrow (post_type, R.Q_Implicit)
            (RT.close_term (frame_type_t_pre_post u t pre post) var)
 
 let frame_type_t (u:R.universe) (t:R.term) =
   let var = 2 in
   let pre = mk_name var in
-  let pre_type = vprop_tm in
+  let pre_type = slprop_tm in
   mk_arrow (pre_type, R.Q_Implicit)
            (RT.close_term (frame_type_t_pre u t pre) var)
 
@@ -269,47 +269,47 @@ let frame_type (u:R.universe) =
 
 (** Type of sub_stt **)
 
-let stt_vprop_post_equiv_fv = R.pack_fv (mk_pulse_lib_core_lid "vprop_post_equiv")
-let stt_vprop_post_equiv_univ_inst u = R.pack_ln (R.Tv_UInst stt_vprop_post_equiv_fv [u])
-let stt_vprop_post_equiv (u:R.universe) (t t1 t2:R.term) = 
-  R.mk_app (stt_vprop_post_equiv_univ_inst u) 
+let stt_slprop_post_equiv_fv = R.pack_fv (mk_pulse_lib_core_lid "slprop_post_equiv")
+let stt_slprop_post_equiv_univ_inst u = R.pack_ln (R.Tv_UInst stt_slprop_post_equiv_fv [u])
+let stt_slprop_post_equiv (u:R.universe) (t t1 t2:R.term) = 
+  R.mk_app (stt_slprop_post_equiv_univ_inst u) 
            [(t, R.Q_Implicit); (t1, R.Q_Explicit); (t2, R.Q_Explicit)]
 
 let sub_stt_res u t pre post = mk_stt_comp u t pre post
 
 let sub_stt_equiv_post u t pre1 post1 pre2 post2 = 
-  mk_arrow (stt_vprop_post_equiv u t post1 post2, R.Q_Explicit)
+  mk_arrow (stt_slprop_post_equiv u t post1 post2, R.Q_Explicit)
            (sub_stt_res u t pre2 post2)
 
 let sub_stt_equiv_pre u t pre1 post1 pre2 post2 = 
-  mk_arrow (stt_vprop_equiv pre1 pre2, R.Q_Explicit)
+  mk_arrow (stt_slprop_equiv pre1 pre2, R.Q_Explicit)
            (sub_stt_equiv_post u t pre1 pre2 post1 post2)
 
 let sub_stt_post2 u t pre1 post1 pre2 = 
   let var = 0 in
   let post2 = mk_name var in
-  let post2_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  let post2_type = mk_arrow (t, R.Q_Explicit) slprop_tm in
   mk_arrow (post2_type, R.Q_Explicit)
            (RT.close_term (sub_stt_equiv_pre u t pre1 pre2 post1 post2) var)
 
 let sub_stt_pre2 u t pre1 post1 = 
   let var = 1 in
   let pre2 = mk_name var in
-  let pre2_type = vprop_tm in
+  let pre2_type = slprop_tm in
   mk_arrow (pre2_type, R.Q_Explicit)
            (RT.close_term (sub_stt_post2 u t pre1 post1 pre2) var)
 
 let sub_stt_post1 u t pre1 = 
   let var = 2 in
   let post1 = mk_name var in
-  let post1_type = mk_arrow (t, R.Q_Explicit) vprop_tm in
+  let post1_type = mk_arrow (t, R.Q_Explicit) slprop_tm in
   mk_arrow (post1_type, R.Q_Explicit)
            (RT.close_term (sub_stt_pre2 u t pre1 post1) var)
 
 let sub_stt_pre1 u t = 
   let var = 3 in
   let pre1 = mk_name var in
-  let pre1_type = vprop_tm in
+  let pre1_type = slprop_tm in
   mk_arrow (pre1_type, R.Q_Explicit)
            (RT.close_term (sub_stt_post1 u t pre1) var)
 
@@ -324,7 +324,7 @@ let sub_stt_type u =
 
 let has_stt_bindings (f:RT.fstar_top_env) =
     RT.lookup_fvar f RT.bool_fv == Some (RT.tm_type RT.u_zero) /\
-    RT.lookup_fvar f vprop_fv == Some (RT.tm_type u2) /\ True
+    RT.lookup_fvar f slprop_fv == Some (RT.tm_type u2) /\ True
     //(forall (u1 u2:R.universe). RT.lookup_fvar_uinst f bind_fv [u1; u2] == Some (bind_type u1 u2)) /\
     //(forall (u:R.universe). RT.lookup_fvar_uinst f frame_fv [u] == Some (frame_type u)) /\
     //(forall (u:R.universe). RT.lookup_fvar_uinst f subsumption_fv [u] == Some (sub_stt_type u))        
@@ -342,7 +342,7 @@ let elab_comp_post (c:comp_st) : R.term =
 
 let comp_post_type (c:comp_st) : R.term = 
   let t = comp_res c in
-  mk_arrow (t, R.Q_Explicit) vprop_tm
+  mk_arrow (t, R.Q_Explicit) slprop_tm
 
 assume
 val inversion_of_stt_typing (g:env) (c:comp_st)
@@ -353,14 +353,14 @@ val inversion_of_stt_typing (g:env) (c:comp_st)
           RT.tot_typing (elab_env g)
                         (comp_res c)
                         (RT.tm_type (comp_u c)) &
-          // _ |- pre : vprop
+          // _ |- pre : slprop
           RT.tot_typing (elab_env g)
                         (comp_pre c)
-                        tm_vprop &
-          // _ |- (fun (x:t) -> post) : t -> vprop
+                        tm_slprop &
+          // _ |- (fun (x:t) -> post) : t -> slprop
           RT.tot_typing (elab_env g)
                         (elab_comp_post c)
-                        (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_vprop))){ u == universe_of_comp c })
+                        (tm_arrow (null_binder (comp_res c)) None (C_Tot tm_slprop))){ u == universe_of_comp c })
 
 let soundness_t (d:'a) = 
     g:stt_env ->

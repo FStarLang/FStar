@@ -16,7 +16,7 @@
 
 module EngineTypes
 
-let uds_is_enabled : vprop 
+let uds_is_enabled : slprop 
 = admit()
 
 let uds_len : hashable_len 

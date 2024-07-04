@@ -35,7 +35,7 @@ and llist (t:Type0) = option (node_ptr t)
 
 
 let rec is_list #t (x:llist t) (l:list t)
-  : Tot vprop (decreases l)
+  : Tot slprop (decreases l)
   = match l with
     | [] -> pure (x == None)
     | head::tl -> 
@@ -47,7 +47,7 @@ let rec is_list #t (x:llist t) (l:list t)
 
 
 let is_list_cases #t (x:llist t) (l:list t)
-  : Tot vprop 
+  : Tot slprop 
   = match x with
     | None -> pure (l == [])
     | Some v -> 
@@ -449,7 +449,7 @@ let append_assoc_singleton (l1 l2:list 'a) (x:'a)
     [SMTPat (l1@(x::l2))]
 = List.Tot.Properties.append_assoc l1 [x] l2
 
-let trigger (x:'a) : vprop = emp
+let trigger (x:'a) : slprop = emp
 
 ```pulse
 fn append_iter (#t:Type) (x y:llist t)

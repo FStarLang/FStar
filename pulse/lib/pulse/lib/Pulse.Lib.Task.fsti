@@ -21,29 +21,29 @@ open Pulse.Lib.Pledge
 module T = FStar.Tactics
 
 val pool : Type0
-val pool_alive : (#[T.exact (`1.0R)]p : perm) -> pool -> vprop
-val pool_done : pool -> vprop
+val pool_alive : (#[T.exact (`1.0R)]p : perm) -> pool -> slprop
+val pool_done : pool -> slprop
 
 val setup_pool (n:pos)
   : stt pool emp (fun p -> pool_alive #1.0R p)
 
-val task_handle : pool -> a:Type0 -> (a -> vprop) -> Type0
-val joinable : #p:pool -> #a:Type0 -> #post:_ -> th:(task_handle p a post) -> vprop
-val joined   : #p:pool -> #a:Type0 -> #post:_ -> th:(task_handle p a post) -> vprop
+val task_handle : pool -> a:Type0 -> (a -> slprop) -> Type0
+val joinable : #p:pool -> #a:Type0 -> #post:_ -> th:(task_handle p a post) -> slprop
+val joined   : #p:pool -> #a:Type0 -> #post:_ -> th:(task_handle p a post) -> slprop
 
 val handle_solved
   (#p : pool) 
   (#a : Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (th : task_handle p a post)
-  : vprop
+  : slprop
 
 (* NOTE! Spawn only requires an *epsilon* of permission over the pool.
 We do not have to be exclusive owners of it in order to queue a job,
 even if that modifies it. How to model this under the hood? *)
 val spawn
   (#a : Type0)
-  (#pre : vprop) (#post : a -> vprop)
+  (#pre : slprop) (#post : a -> slprop)
   (p : pool)
   (#[T.exact (`1.0R)] e : perm)
   ($f : unit -> stt a pre (fun (x:a) -> post x))
@@ -64,21 +64,21 @@ val spawn_
 val must_be_done
   (#p : pool)
   (#a: Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (th : task_handle p a post)
   : stt_ghost unit emp_inames (pool_done p ** joinable th) (fun () -> pool_done p ** handle_solved th)
 
 val join0
   (#p:pool)
   (#a:Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (th : task_handle p a post)
   : stt unit (joinable th) (fun () -> handle_solved th)
 
 val extract
   (#p:pool)
   (#a:Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (th : task_handle p a post)
   : stt a (handle_solved th) (fun x -> post x)
   
@@ -101,7 +101,7 @@ val gather_alive
 val join
   (#p:pool)
   (#a:Type0)
-  (#post : a -> vprop)
+  (#post : a -> slprop)
   (th : task_handle p a post)
   : stt a (joinable th) (fun x -> post x)
 

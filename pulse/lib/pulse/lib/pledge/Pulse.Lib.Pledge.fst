@@ -23,19 +23,19 @@ module GR = Pulse.Lib.GhostReference
 
 open FStar.Tactics.V2
 
-let vprop_equiv_refl_eq (v1 v2 : vprop) (_ : squash (v1 == v2)) : vprop_equiv v1 v2 =
-  vprop_equiv_refl v1
+let slprop_equiv_refl_eq (v1 v2 : slprop) (_ : squash (v1 == v2)) : slprop_equiv v1 v2 =
+  slprop_equiv_refl v1
 
 let __tac () : Tac unit =
-  apply (`vprop_equiv_refl_eq)
+  apply (`slprop_equiv_refl_eq)
 
 let pledge is f v = (==>*) #is f (f ** v)
 
-let pledge_sub_inv is1 is2 (f:vprop) (v:vprop) = trade_sub_inv _ _
+let pledge_sub_inv is1 is2 (f:slprop) (v:slprop) = trade_sub_inv _ _
 
 ```pulse
 ghost
-fn return_pledge (f v : vprop)
+fn return_pledge (f v : slprop)
   requires v
   ensures pledge emp_inames f v
 {
@@ -55,7 +55,7 @@ fn return_pledge (f v : vprop)
 ```pulse
 ghost
 fn make_pledge
-  (is:inames) (f v extra:vprop)
+  (is:inames) (f v extra:slprop)
   ($k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
   requires extra
   ensures pledge is f v
@@ -79,7 +79,7 @@ fn make_pledge
 ghost
 fn make_pledge_invs
   (is:invlist)
-  (f v extra:vprop)
+  (f v extra:slprop)
   (k:unit -> stt_ghost unit emp_inames (invlist_v is ** f ** extra) (fun _ -> invlist_v is ** f ** v))
   requires invlist_inv is ** extra
   ensures pledge (invlist_names is) f v
@@ -99,7 +99,7 @@ fn make_pledge_invs
 
 ```pulse
 ghost
-fn redeem_pledge (is:inames) (f v:vprop)
+fn redeem_pledge (is:inames) (f v:slprop)
   requires f ** pledge is f v
   ensures f ** v
   opens is
@@ -112,7 +112,7 @@ fn redeem_pledge (is:inames) (f v:vprop)
 
 // ```pulse
 // ghost
-// fn pledge_invs_aux (is:invlist) (f:vprop) (v:vprop)
+// fn pledge_invs_aux (is:invlist) (f:slprop) (v:slprop)
 //   requires pledge is f v
 //   ensures pledge is f v ** invlist_inv is
 // {
@@ -128,7 +128,7 @@ fn redeem_pledge (is:inames) (f v:vprop)
 
 ```pulse
 ghost
-fn squash_pledge (is:inames) (f:vprop) (v1:vprop)
+fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   requires pledge is f (pledge is f v1)
   ensures pledge is f v1
 {
@@ -149,7 +149,7 @@ fn squash_pledge (is:inames) (f:vprop) (v1:vprop)
 ghost
 fn bind_pledge
   (#is:inames)
-  (#f #v1 #v2 extra:vprop)
+  (#f #v1 #v2 extra:slprop)
   (#is_k:inames { inames_subset is_k is })
   (k:unit -> stt_ghost unit is_k (f ** extra ** v1) (fun _ -> f ** pledge is f v2))
   requires pledge is f v1 ** extra
@@ -174,7 +174,7 @@ fn bind_pledge
 ghost
 fn bind_pledge'
   (#is:inames)
-  (#f #v1 #v2 extra:vprop)
+  (#f #v1 #v2 extra:slprop)
   (#is_k:inames { inames_subset is_k is })
   (k:unit -> stt_ghost unit is_k (extra ** v1) (fun _ -> pledge is f v2))
   requires pledge is f v1 ** extra
@@ -196,7 +196,7 @@ fn bind_pledge'
 ghost
 fn rewrite_pledge_full
   (#is:inames)
-  (#f v1 v2:vprop)
+  (#f v1 v2:slprop)
   (#is_k:inames { inames_subset is_k is })
   (k:unit -> stt_ghost unit is_k (f ** v1) (fun _ -> f ** v2))
   requires pledge is f v1
@@ -220,7 +220,7 @@ fn rewrite_pledge_full
 ghost
 fn rewrite_pledge
   (#is:inames)
-  (#f v1 v2:vprop)
+  (#f v1 v2:slprop)
   (#is_k:inames { inames_subset is_k is })
   (k:unit -> stt_ghost unit is_k v1 (fun _ -> v2))
   requires pledge is f v1
@@ -243,7 +243,7 @@ fn rewrite_pledge
 ghost
 fn join_pledge
   (#is:inames)
-  (#f v1 v2:vprop)
+  (#f v1 v2:slprop)
   requires pledge is f v1 ** pledge is f v2
   ensures pledge is f (v1 ** v2)
 {
@@ -265,7 +265,7 @@ fn join_pledge
 ghost
 fn squash_pledge'
   (is1 is2 is:inames)
-  (f v1:vprop)
+  (f v1:slprop)
   requires pure (inames_subset is1 is) **
            pure (inames_subset is2 is) **
            pledge is1 f (pledge is2 f v1)
@@ -291,7 +291,7 @@ fn squash_pledge'
 
 (* A big chunk follows for split_pledge *)
 
-// let inv_p' (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
+// let inv_p' (is:invlist) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) (b1 b2 : bool) =
 //      GR.pts_to r1 #0.5R b1
 //   ** GR.pts_to r2 #0.5R b2
 //   ** (match b1, b2 with
@@ -300,13 +300,13 @@ fn squash_pledge'
 //       | true, false -> v2
 //       | true, true -> emp)
 
-// let inv_p (is:invlist) (f v1 v2 : vprop) (r1 r2 : GR.ref bool) : vprop =
+// let inv_p (is:invlist) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
 //   exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
 
 // ```pulse
 // ghost
 // fn elim_body_l
-//   (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+//   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
 //   ()
 //   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r1 #0.5R false)
 //   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v1)
@@ -384,7 +384,7 @@ fn squash_pledge'
 // ```pulse
 // ghost
 // fn flip_invp
-//   (is:invlist) (f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+//   (is:invlist) (f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
 //   requires inv_p is f v1 v2 r1 r2
 //   ensures  inv_p is f v2 v1 r2 r1
 // {
@@ -395,7 +395,7 @@ fn squash_pledge'
 //   unfold inv_p';
 
 //   (* This is now true with PulseCore. *)
-//   let _ = elim_vprop_equiv (vprop_equiv_comm v1 v2);
+//   let _ = elim_slprop_equiv (slprop_equiv_comm v1 v2);
 //   assert (pure (v1 ** v2 == v2 ** v1));
 
 //   rewrite_by
@@ -420,7 +420,7 @@ fn squash_pledge'
 // ```pulse
 // ghost
 // fn elim_body_r
-//   (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop) (r1 r2 : GR.ref bool)
+//   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
 //   ()
 //   requires (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** GR.pts_to r2 #0.5R false)
 //   ensures  (inv_p is f v1 v2 r1 r2 ** invlist_v is) ** (f ** v2)
@@ -434,7 +434,7 @@ fn squash_pledge'
 
 // ```pulse
 // ghost
-// fn __split_pledge (#is:invlist) (#f:vprop) (v1:vprop) (v2:vprop)
+// fn __split_pledge (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop)
 //   requires pledge is f (v1 ** v2)
 //   returns r : (e : invlist_elem { not (mem_inv (invlist_names is) (snd e)) })
 //   ensures pledge (add_one r is) f v1 ** pledge (add_one r is) f v2
@@ -452,7 +452,7 @@ fn squash_pledge'
 //   // FIXME: should follow from freshness
 //   assume_ (pure (not (mem_inv (invlist_names is) i)));
   
-//   // let pi : invlist_elem = Mkdtuple2 #vprop #(fun p -> inv p) (inv_p is f v1 v2 r1 r2) i;
+//   // let pi : invlist_elem = Mkdtuple2 #slprop #(fun p -> inv p) (inv_p is f v1 v2 r1 r2) i;
 
 //   // let is' : invlist = add_one pi is;
 

@@ -35,11 +35,11 @@ type rec_array_repr = {
 }
 
 let rec_array_perm (r:rec_array) (v:rec_array_repr)
-  : vprop = 
+  : slprop = 
   A.pts_to r.r1 v.v1 **
   A.pts_to r.r2 v.v2
 
-//Using record syntax directly in Pulse vprops
+//Using record syntax directly in Pulse slprops
 //leads to strange type inference errors
 let mk_rec_array_repr (v1 v2:Seq.seq U8.t) = { v1=v1; v2=v2 }
 

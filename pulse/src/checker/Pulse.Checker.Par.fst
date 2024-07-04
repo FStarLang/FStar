@@ -32,7 +32,7 @@ module MT = Pulse.Typing.Metatheory
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_Par? t.term})
@@ -41,8 +41,8 @@ let check
 = let g = push_context "check_par" t.range g in
   let Tm_Par {pre1=preL; body1=eL; post1=postL;
               pre2=preR; body2=eR; post2=postR} = t.term in
-  let (| preL, preL_typing |) = check_tot_term g preL tm_vprop in
-  let (| preR, preR_typing |) = check_tot_term g preR tm_vprop in
+  let (| preL, preL_typing |) = check_tot_term g preL tm_slprop in
+  let (| preR, preR_typing |) = check_tot_term g preR tm_slprop in
 
   let postL_hint = intro_post_hint g EffectAnnotSTT None postL in
   let (| eL, cL, eL_typing |) =

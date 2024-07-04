@@ -23,7 +23,7 @@ open Pulse.Typing.Combinators
 open Pulse.Elaborate.Pure
 open Pulse.Elaborate.Core
 open Pulse.Soundness.Common
-open Pulse.Checker.VPropEquiv
+open Pulse.Checker.SLPropEquiv
 
 module RT = FStar.Reflection.Typing
 module WT = Pulse.Lib.Core.Typing
@@ -38,13 +38,13 @@ let rewrite_soundness
 							  (elab_comp c)) =
 		
 		let T_Rewrite _ p q p_typing equiv_p_q = d in
-		let rp_typing : RT.tot_typing _ p vprop_tm =
+		let rp_typing : RT.tot_typing _ p slprop_tm =
 		  tot_typing_soundness p_typing in
-		let rq_typing : RT.tot_typing _ q vprop_tm =
-		  tot_typing_soundness (let f, _ = vprop_equiv_typing equiv_p_q in
+		let rq_typing : RT.tot_typing _ q slprop_tm =
+		  tot_typing_soundness (let f, _ = slprop_equiv_typing equiv_p_q in
 				                      f p_typing) in
-		let d_stt_vprop_equiv =
-		  Pulse.Soundness.VPropEquiv.vprop_equiv_unit_soundness
+		let d_stt_slprop_equiv =
+		  Pulse.Soundness.SLPropEquiv.slprop_equiv_unit_soundness
 				  p_typing equiv_p_q in
 		
-		WT.rewrite_typing rp_typing rq_typing d_stt_vprop_equiv
+		WT.rewrite_typing rp_typing rq_typing d_stt_slprop_equiv

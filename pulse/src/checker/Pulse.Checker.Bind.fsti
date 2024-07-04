@@ -25,7 +25,7 @@ open Pulse.Checker.Base
 val check_bind
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_Bind? t.term})
@@ -35,7 +35,7 @@ val check_bind
 val check_tot_bind
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })

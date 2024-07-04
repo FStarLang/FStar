@@ -21,14 +21,14 @@ open Pulse.Lib.Pledge
 open UnixFork
 module Box = Pulse.Lib.Box
 
-let box_solves_post (#a:Type0) (r:Box.box (option a)) (post : a -> vprop) : vprop =
+let box_solves_post (#a:Type0) (r:Box.box (option a)) (post : a -> slprop) : slprop =
   exists* (v:a). Box.pts_to r (Some v) ** post v
 
-(* NB: The vprop is not used here, so why the index? Only to make
+(* NB: The slprop is not used here, so why the index? Only to make
 it easier for users to call await, as the post should be unified
 and hence the user would not need to explicitly repeat it. Unless
 we can fill it from the context...? *)
-let asynch (a:Type0) (post : a -> vprop) : Type0 =
+let asynch (a:Type0) (post : a -> slprop) : Type0 =
   Box.box (option a) & thread
 
 let async_joinable #a #post h =
@@ -39,15 +39,15 @@ let eta_post #a #b #pre #post (f : (x:a -> stt b (pre x) (post x)))
   : x:a -> stt b (pre x) (fun y -> post x y)
   = fun x ->
       sub_stt _ _
-        (vprop_equiv_refl _)
-        (intro_vprop_post_equiv _ _ (fun y -> vprop_equiv_refl _))
+        (slprop_equiv_refl _)
+        (intro_slprop_post_equiv _ _ (fun y -> slprop_equiv_refl _))
         (f x)
 
 ```pulse
 fn async_fill
   (#a : Type0)
-  (#pre : vprop)
-  (#post : (a -> vprop))
+  (#pre : slprop)
+  (#post : (a -> slprop))
   (f : (unit -> stt a pre post))
   (r : Box.box (option a))
   (_:unit)
@@ -66,8 +66,8 @@ fn async_fill
 ```pulse
 fn __async
   (#a : Type0)
-  (#pre : vprop)
-  (#post : (a -> vprop))
+  (#pre : slprop)
+  (#post : (a -> slprop))
   (f : (unit -> stt a pre post))
   requires pre
   returns h : asynch a post
@@ -90,7 +90,7 @@ let async = __async
 ```pulse
 fn __await
   (#a : Type0)
-  (#post : (a -> vprop))
+  (#post : (a -> slprop))
   (h : asynch a post)
   requires async_joinable h
   returns x:a
@@ -129,8 +129,8 @@ let await = __await
 fn __map
   (#a : Type0)
   (#b : Type0)
-  (#post1 : (a -> vprop))
-  (#post2 : (b -> vprop))
+  (#post1 : (a -> slprop))
+  (#post2 : (b -> slprop))
   (f : (x:a -> stt b (post1 x) post2))
   (h : asynch a post1)
   requires async_joinable h

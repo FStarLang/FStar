@@ -34,11 +34,11 @@ open Pulse.Checker.Pure
 assume
 val invert_forall_typing
         (#g #u #b #body:_)
-        (d:tot_typing g (tm_forall_sl u b body) tm_vprop)
+        (d:tot_typing g (tm_forall_sl u b body) tm_slprop)
         (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
   : GTot (
     tot_typing g b.binder_ty (tm_type u) &
-    tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop
+    tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop
   )
 
 assume
@@ -46,39 +46,39 @@ val construct_forall_typing
         (#g #u #b #body:_)
         (x:var { None? (lookup g x) /\ ~ (x `Set.mem` freevars body) })
         (dt:tot_typing g b.binder_ty (tm_type u))
-        (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_vprop)
-  : GTot (tot_typing g (tm_forall_sl u b body) tm_vprop)
+        (db:tot_typing (push_binding g x ppname_default b.binder_ty) (open_term body x) tm_slprop)
+  : GTot (tot_typing g (tm_forall_sl u b body) tm_slprop)
    
 
-let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
-  : GTot ((tot_typing g t0 tm_vprop -> tot_typing g t1 tm_vprop) &
-          (tot_typing g t1 tm_vprop -> tot_typing g t0 tm_vprop))
+let rec slprop_equiv_typing (#g:_) (#t0 #t1:term) (v:slprop_equiv g t0 t1)
+  : GTot ((tot_typing g t0 tm_slprop -> tot_typing g t1 tm_slprop) &
+          (tot_typing g t1 tm_slprop -> tot_typing g t0 tm_slprop))
         (decreases v)
   = match v with
     | VE_Refl _ _ -> (fun x -> x), (fun x -> x)
 
     | VE_Sym _ _ _ v' -> 
-      let f, g = vprop_equiv_typing v' in
+      let f, g = slprop_equiv_typing v' in
       g, f
 
     | VE_Trans g t0 t2 t1 v02 v21 ->
-      let f02, f20 = vprop_equiv_typing v02 in
-      let f21, f12 = vprop_equiv_typing v21 in
+      let f02, f20 = slprop_equiv_typing v02 in
+      let f21, f12 = slprop_equiv_typing v21 in
       (fun x -> f21 (f02 x)), 
       (fun x -> f20 (f12 x))
 
     | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      let f0, f0' = vprop_equiv_typing v0 in
-      let f1, f1' = vprop_equiv_typing v1 in      
-      let ff (x:tot_typing g (tm_star s0 s1) tm_vprop)
-        : tot_typing g (tm_star s0' s1') tm_vprop
+      let f0, f0' = slprop_equiv_typing v0 in
+      let f1, f1' = slprop_equiv_typing v1 in      
+      let ff (x:tot_typing g (tm_star s0 s1) tm_slprop)
+        : tot_typing g (tm_star s0' s1') tm_slprop
         = let s0_typing = star_typing_inversion_l x in
           let s1_typing = star_typing_inversion_r x in
           let s0'_typing, s1'_typing = f0 s0_typing, f1 s1_typing in
           star_typing s0'_typing s1'_typing
       in
-      let gg (x:tot_typing g (tm_star s0' s1') tm_vprop)
-        : tot_typing g (tm_star s0 s1) tm_vprop
+      let gg (x:tot_typing g (tm_star s0' s1') tm_slprop)
+        : tot_typing g (tm_star s0 s1) tm_slprop
         = let s0'_typing = star_typing_inversion_l x in
           let s1'_typing = star_typing_inversion_r x in
           star_typing (f0' s0'_typing) (f1' s1'_typing)        
@@ -86,20 +86,20 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       ff, gg
 
     | VE_Unit g t ->
-      let fwd (x:tot_typing g (tm_star tm_emp t) tm_vprop)
-        : tot_typing g t tm_vprop
+      let fwd (x:tot_typing g (tm_star tm_emp t) tm_slprop)
+        : tot_typing g t tm_slprop
         = let r = star_typing_inversion_r x in
           r
       in
-      let bk (x:tot_typing g t tm_vprop)
-        : tot_typing g (tm_star tm_emp t) tm_vprop
+      let bk (x:tot_typing g t tm_slprop)
+        : tot_typing g (tm_star tm_emp t) tm_slprop
         = star_typing emp_typing x
       in
       fwd, bk
 
     | VE_Comm g t0 t1 ->
-      let f t0 t1 (x:tot_typing g (tm_star t0 t1) tm_vprop)
-        : tot_typing g (tm_star t1 t0) tm_vprop
+      let f t0 t1 (x:tot_typing g (tm_star t0 t1) tm_slprop)
+        : tot_typing g (tm_star t1 t0) tm_slprop
         = let tt0 = star_typing_inversion_l x in
           let tt1 = star_typing_inversion_r x in
           star_typing tt1 tt0
@@ -107,16 +107,16 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       f t0 t1, f t1 t0
 
     | VE_Assoc g t0 t1 t2 ->
-      let fwd (x:tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop)
-        : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop
+      let fwd (x:tot_typing g (tm_star t0 (tm_star t1 t2)) tm_slprop)
+        : tot_typing g (tm_star (tm_star t0 t1) t2) tm_slprop
         = let tt0 = star_typing_inversion_l x in
           let tt12 = star_typing_inversion_r x in
           let tt1 = star_typing_inversion_l tt12 in
           let tt2 = star_typing_inversion_r tt12 in
           star_typing (star_typing tt0 tt1) tt2
       in
-      let bk (x : tot_typing g (tm_star (tm_star t0 t1) t2) tm_vprop)
-        : tot_typing g (tm_star t0 (tm_star t1 t2)) tm_vprop
+      let bk (x : tot_typing g (tm_star (tm_star t0 t1) t2) tm_slprop)
+        : tot_typing g (tm_star t0 (tm_star t1 t2)) tm_slprop
         = let tt01 = star_typing_inversion_l x in
           let tt2 = star_typing_inversion_r x in
           let tt0 = star_typing_inversion_l tt01 in
@@ -126,12 +126,12 @@ let rec vprop_equiv_typing (#g:_) (#t0 #t1:term) (v:vprop_equiv g t0 t1)
       fwd, bk
    
     | VE_Ext g t0 t1 token ->
-      let d1, d2 = vprop_eq_typing_inversion g t0 t1 token in
+      let d1, d2 = slprop_eq_typing_inversion g t0 t1 token in
       (fun _ -> d2),
       (fun _ -> d1)
     
     | VE_Fa g x u b t0 t1 d ->
-      let d0, d1 = vprop_equiv_typing d in
+      let d0, d1 = slprop_equiv_typing d in
       (fun fa0_typing ->
         let b_typing, t0_typing = invert_forall_typing fa0_typing x in
         let t1_typing = d0 t0_typing in
@@ -157,7 +157,7 @@ let bind_t (case_c1 case_c2:comp_st -> bool) =
       (res_typing:universe_of g (comp_res c2) (comp_u c2)) ->
       (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                               (open_term_nv (comp_post c2) px)
-                                      tm_vprop) ->
+                                      tm_slprop) ->
       (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint }) ->
     T.TacH (t:st_term &
             c:comp_st { st_comp_of_comp c == st_comp_with_pre (st_comp_of_comp c2) pre  /\
@@ -313,7 +313,7 @@ let rec mk_bind (g:env)
                 (res_typing:universe_of g (comp_res c2) (comp_u c2))
                 (post_typing:tot_typing (push_binding g (snd px) (fst px) (comp_res c2))
                                         (open_term_nv (comp_post c2) px)
-                                        tm_vprop)
+                                        tm_slprop)
                 (post_hint:post_hint_opt g { comp_post_matches_hint c2 post_hint })
   : T.TacH (t:st_term &
             c:comp_st {
@@ -431,7 +431,7 @@ let bind_res_and_post_typing g c2 x post_hint
         let y = x in //fresh g in
         let s2_post_opened = open_term_nv s2.post (v_as_nv y) in
         let post_typing =
-          check_vprop_with_core (push_binding g y ppname_default s2.res) s2_post_opened in
+          check_slprop_with_core (push_binding g y ppname_default s2.res) s2_post_opened in
         res_typing, post_typing
       )
     | Some post -> 
@@ -443,8 +443,8 @@ let bind_res_and_post_typing g c2 x post_hint
       )
 
 let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
-  (#frame:vprop)
-  (frame_typing:tot_typing g frame tm_vprop)
+  (#frame:slprop)
+  (frame_typing:tot_typing g frame tm_slprop)
   : t':st_term &
     c':comp_st { c' == add_frame c frame } &
     st_typing g t' c' =
@@ -454,7 +454,7 @@ let add_frame (#g:env) (#t:st_term) (#c:comp_st) (t_typing:st_typing g t c)
 let apply_frame (#g:env)
                 (#t:st_term)
                 (#ctxt:term)
-                (ctxt_typing: tot_typing g ctxt tm_vprop)
+                (ctxt_typing: tot_typing g ctxt tm_slprop)
                 (#c:comp { stateful_comp c })
                 (t_typing: st_typing g t c)
                 (frame_t:frame_for_req_in_ctxt g ctxt (comp_pre c))
@@ -471,18 +471,18 @@ let apply_frame (#g:env)
     let c' = Pulse.Typing.add_frame c frame in
     let c'_typing = Metatheory.st_typing_correctness t_typing in
     let s' = st_comp_of_comp c' in
-    let ve: vprop_equiv g s'.pre ctxt = ve in
+    let ve: slprop_equiv g s'.pre ctxt = ve in
     let s'' = { s' with pre = ctxt } in
     let c'' = c' `with_st_comp` s'' in
     assert (comp_post c' == comp_post c'');
-    let ve: vprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
+    let ve: slprop_equiv g (comp_pre c') (comp_pre c'') = ve in    
     let st_typing = fst <| Metatheory.comp_typing_inversion c'_typing in
     let (| res_typing, pre_typing, x, post_typing |) = Metatheory.st_comp_typing_inversion st_typing in
-    let st_equiv = ST_VPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
+    let st_equiv = ST_SLPropEquiv g c' c'' x pre_typing res_typing post_typing (RT.Rel_refl _ _ _) ve (VE_Refl _ _) in
     let t_typing = T_Equiv _ _ _ _ t_typing st_equiv in
     (| c'', t_typing |)
 
-let comp_for_post_hint #g (#pre:vprop) (pre_typing:tot_typing g pre tm_vprop)
+let comp_for_post_hint #g (#pre:slprop) (pre_typing:tot_typing g pre tm_slprop)
   (post:post_hint_t { g `env_extends` post.g })
   (x:var { lookup g x == None })
   : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post) } &

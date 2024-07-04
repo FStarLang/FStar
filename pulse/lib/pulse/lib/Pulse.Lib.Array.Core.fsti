@@ -33,11 +33,11 @@ type larray t (n:nat) = a:array t { length a == n }
 
 val is_full_array (#a:Type u#0) (x:array a) : prop
 
-val pts_to (#a:Type u#0) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : vprop
+val pts_to (#a:Type u#0) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
-val pts_to_is_small (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_small (pts_to x #p s))
-          [SMTPat (is_small (pts_to x #p s))]
+val pts_to_is_slprop1 (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop1 (pts_to x #p s))
+          [SMTPat (is_slprop1 (pts_to x #p s))]
 
 val pts_to_len (#t:Type0) (a:array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
@@ -117,11 +117,11 @@ val pts_to_range
   ([@@@equate_strict] x:array a)
   (i j : nat)
   (#[exact (`1.0R)] p:perm)
-  (s: Seq.seq a) : vprop
+  (s: Seq.seq a) : slprop
 
-val pts_to_range_is_small (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
-  : Lemma (is_small (pts_to_range x i j #p s))
-          [SMTPat (is_small (pts_to_range x i j #p s))]
+val pts_to_range_is_slprop1 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop1 (pts_to_range x i j #p s))
+          [SMTPat (is_slprop1 (pts_to_range x i j #p s))]
 
 val pts_to_range_prop
   (#elt: Type0) (a: array elt) (#i #j: nat)
@@ -217,9 +217,9 @@ val with_local
   (#a:Type0)
   (init:a)
   (len:SZ.t)
-  (#pre:vprop)
+  (#pre:slprop)
   (ret_t:Type)
-  (#post:ret_t -> vprop)
+  (#post:ret_t -> slprop)
   (body:(arr:array a) -> stt ret_t (pre **
                                     (pts_to arr (Seq.create (SZ.v len) init) **
                                      (pure (is_full_array arr) **

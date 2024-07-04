@@ -43,7 +43,7 @@ val return_stt_typing
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (e_typing:RT.tot_typing g e a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_return u a e p)
@@ -60,7 +60,7 @@ val return_stt_noeq_typing
   (#p:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (x_typing:RT.tot_typing g x a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_return_noeq u a x p)
@@ -81,7 +81,7 @@ val return_stt_atomic_typing
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (e_typing:RT.tot_typing g e a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_atomic_return u a e p)
@@ -98,7 +98,7 @@ val return_stt_atomic_noeq_typing
   (#p:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (x_typing:RT.tot_typing g x a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_atomic_return_noeq u a x p)
@@ -118,7 +118,7 @@ val return_stt_ghost_typing
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (e_typing:RT.ghost_typing g e a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_ghost_return u a e p)
@@ -135,7 +135,7 @@ val return_stt_ghost_noeq_typing
   (#p:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
   (x_typing:RT.ghost_typing g x a)
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_ghost_return_noeq u a x p)
@@ -144,7 +144,7 @@ val return_stt_ghost_noeq_typing
 
 (*
 
- g |- inv  : bool -> vprop
+ g |- inv  : bool -> slprop
  g |- cond : stt<0> bool (exists_ inv) inv
  g |- body : stt<0> unit (inv true) (fun _ -> exists_ inv)
  -------------------------------------------------------------------------
@@ -159,7 +159,7 @@ val while_typing
   (#body:term)
   (inv_typing:RT.tot_typing g
                 inv
-                (mk_arrow (bool_tm, Q_Explicit) vprop_tm))
+                (mk_arrow (bool_tm, Q_Explicit) slprop_tm))
   (cond_typing:RT.tot_typing g
                  cond
                  (mk_stt_comp uzero bool_tm (mk_exists uzero bool_tm inv) inv))
@@ -190,10 +190,10 @@ val par_typing
   (x:var{None? (RT.lookup_bvar g x)})
   (aL_typing:RT.tot_typing g aL (pack_ln (Tv_Type u)))
   (aR_typing:RT.tot_typing g aR (pack_ln (Tv_Type u)))
-  (preL_typing:RT.tot_typing g preL vprop_tm)
-  (postL_typing:RT.tot_typing g postL (mk_arrow (aL, Q_Explicit) vprop_tm))
-  (preR_typing:RT.tot_typing g preR vprop_tm)
-  (postR_typing:RT.tot_typing g postR (mk_arrow (aR, Q_Explicit) vprop_tm))
+  (preL_typing:RT.tot_typing g preL slprop_tm)
+  (postL_typing:RT.tot_typing g postL (mk_arrow (aL, Q_Explicit) slprop_tm))
+  (preR_typing:RT.tot_typing g preR slprop_tm)
+  (postR_typing:RT.tot_typing g postR (mk_arrow (aR, Q_Explicit) slprop_tm))
   (eL_typing:RT.tot_typing g eL (mk_stt_comp u aL preL postL))
   (eR_typing:RT.tot_typing g eR (mk_stt_comp u aR preR postR))
 
@@ -210,15 +210,15 @@ val exists_inversion
   (#p:term)
   (e_typing:RT.tot_typing g
               (mk_exists u a p)
-              vprop_tm)
+              slprop_tm)
   : GTot (RT.tot_typing g
             p
-            (mk_arrow (a, Q_Explicit) vprop_tm))
+            (mk_arrow (a, Q_Explicit) slprop_tm))
 
 (*
 
  g |- a : Type u
- g |- p : a -> vprop
+ g |- p : a -> slprop
  ----------------------------------------------------------------
  g |- elim_exists<u> #a p : stt_ghost<u> a empty (exists_<u> p) (fun x -> p (reveal x))
 
@@ -241,7 +241,7 @@ val elim_exists_typing
   (#p:term)
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
   : GTot (RT.tot_typing g
             (mk_elim_exists u a p)
             (mk_stt_ghost_comp
@@ -254,8 +254,8 @@ val elim_exists_typing
 (*
 
  g |- a : Type u
- g |- p : a -> vprop
- g |- e : vprop
+ g |- p : a -> slprop
+ g |- e : slprop
  -------------------------------------------------------------------------
  g |- intro_exists<u> #a p e : stt_ghost<0> unit empty (p e) (fun _ -> exists_ p)
 
@@ -267,7 +267,7 @@ val intro_exists_typing
   (#p:term)
   (#e:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p (mk_arrow (a, Q_Explicit) slprop_tm))
   (e_typing:RT.ghost_typing g e a)
   : GTot (RT.tot_typing g
             (mk_intro_exists u a p e)
@@ -278,8 +278,8 @@ val intro_exists_typing
 (*
 
  g |- a : Type u
- g |- p : vprop
- g |- q : a -> vprop
+ g |- p : slprop
+ g |- q : a -> slprop
  ------------------------------------------
  g |- stt_admit a p q : stt a p q
 
@@ -292,8 +292,8 @@ val stt_admit_typing
   (#p:term)
   (#q:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (p_typing:RT.tot_typing g p vprop_tm)
-  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p slprop_tm)
+  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_admit u a p q)
@@ -306,8 +306,8 @@ val stt_atomic_admit_typing
   (#p:term)
   (#q:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (p_typing:RT.tot_typing g p vprop_tm)
-  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p slprop_tm)
+  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_atomic_admit u a p q)
@@ -320,8 +320,8 @@ val stt_ghost_admit_typing
   (#p:term)
   (#q:term)
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type u)))
-  (p_typing:RT.tot_typing g p vprop_tm)
-  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) vprop_tm))
+  (p_typing:RT.tot_typing g p slprop_tm)
+  (q_typing:RT.tot_typing g q (mk_arrow (a, Q_Explicit) slprop_tm))
 
   : GTot (RT.tot_typing g
             (mk_stt_ghost_admit u a p q)
@@ -331,9 +331,9 @@ val rewrite_typing
   (#g:env)
   (#p:term)
   (#q:term)
-  (p_typing:RT.tot_typing g p vprop_tm)
-  (q_typing:RT.tot_typing g q vprop_tm)
-  (equiv:RT.tot_typing g (`()) (stt_vprop_equiv p q))
+  (p_typing:RT.tot_typing g p slprop_tm)
+  (q_typing:RT.tot_typing g q slprop_tm)
+  (equiv:RT.tot_typing g (`()) (stt_slprop_equiv p q))
 
 		: GTot (RT.tot_typing g
               (mk_rewrite p q)
@@ -376,10 +376,10 @@ val with_local_typing
   (x:var{None? (RT.lookup_bvar g x)})
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type (pack_universe Uv_Zero))))
   (init_typing:RT.tot_typing g init a)
-  (pre_typing:RT.tot_typing g pre vprop_tm)
+  (pre_typing:RT.tot_typing g pre slprop_tm)
   (ret_t_typing:RT.tot_typing g ret_t (pack_ln (Tv_Type u)))
   (post_typing:RT.tot_typing g (RT.mk_abs ret_t Q_Explicit post)
-                               (mk_arrow (ret_t, Q_Explicit) vprop_tm))
+                               (mk_arrow (ret_t, Q_Explicit) slprop_tm))
   (body_typing:RT.tot_typing (RT.extend_env g x (mk_ref a)) 
                  body
                  (mk_stt_comp u ret_t
@@ -425,9 +425,9 @@ val with_localarray_typing
   (a_typing:RT.tot_typing g a (pack_ln (Tv_Type (pack_universe Uv_Zero))))
   (init_typing:RT.tot_typing g init a)
   (len_typing:RT.tot_typing g len szt_tm)
-  (pre_typing:RT.tot_typing g pre vprop_tm)
+  (pre_typing:RT.tot_typing g pre slprop_tm)
   (ret_t_typing:RT.tot_typing g ret_t (pack_ln (Tv_Type u)))
-  (post_typing:RT.tot_typing g (RT.mk_abs ret_t Q_Explicit post) (mk_arrow (ret_t, Q_Explicit) vprop_tm))
+  (post_typing:RT.tot_typing g (RT.mk_abs ret_t Q_Explicit post) (mk_arrow (ret_t, Q_Explicit) slprop_tm))
   (body_typing:RT.tot_typing (RT.extend_env g x (mk_array a))
                              body
                              (mk_stt_comp u ret_t

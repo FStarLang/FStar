@@ -546,7 +546,7 @@ let (check_core :
                                                                     (Prims.of_int (113))
                                                                     (Prims.of_int (26))
                                                                     (Prims.of_int (113))
-                                                                    (Prims.of_int (87)))))
+                                                                    (Prims.of_int (88)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -562,7 +562,7 @@ let (check_core :
                                                                     (FStar_Pervasives_Native.fst
                                                                     px) ty)
                                                                     Pulse_Syntax_Pure.tm_emp
-                                                                    Pulse_Syntax_Pure.tm_vprop))
+                                                                    Pulse_Syntax_Pure.tm_slprop))
                                                                     (fun
                                                                     uu___3 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

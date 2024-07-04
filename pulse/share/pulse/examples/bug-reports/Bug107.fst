@@ -2,7 +2,7 @@ module Bug107
 
 open Pulse.Lib.Pervasives
 
-val foo : int -> int -> vprop
+val foo : int -> int -> slprop
 let foo x y = emp
 
 ```pulse

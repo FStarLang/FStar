@@ -32,7 +32,7 @@ ensures exists* q. q ** pure (Some? x)
 // but then that's very ambiguous. I think this captures the idea
 // of the test anyway.
 ```pulse
-fn test_elim_pure2 (x:option bool) (p q : vprop)
+fn test_elim_pure2 (x:option bool) (p q : slprop)
 requires p ** (exists* r. r ** pure (Some? x)) ** q
 ensures  p ** q ** (exists* r. r ** pure (Some? x))
 {

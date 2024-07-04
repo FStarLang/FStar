@@ -72,7 +72,7 @@ let compute_tot_or_ghost_term_type_and_u (g:env) (e:term) (c:option ctag)
 let check_core
   (g:env)
   (ctxt:term)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })
@@ -107,10 +107,10 @@ let check_core
   in
   let x = fresh g in
   let px = res_ppname, x in
-  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_vprop =
+  let (| post_opened, post_typing |) : t:term & tot_typing (push_binding g x (fst px) ty)  t tm_slprop =
       match post_hint with
       | None -> 
-        let (| t, ty |) = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_vprop in
+        let (| t, ty |) = check_tot_term (push_binding g x (fst px) ty) tm_emp tm_slprop in
         (| t, ty |)
         
       | Some post ->
@@ -141,7 +141,7 @@ let check_core
 let check
   (g:env)
   (ctxt:term)
-  (ctxt_typing:tot_typing g ctxt tm_vprop)
+  (ctxt_typing:tot_typing g ctxt tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_Return? st.term })

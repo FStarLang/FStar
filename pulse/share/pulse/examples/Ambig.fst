@@ -2,7 +2,7 @@ module Ambig
 
 open Pulse.Lib.Pervasives
 
-assume val p : int -> vprop
+assume val p : int -> slprop
 
 (* An example of ambiguity in Pulse. Note: if the foo
 function instead took an existential as a precondition,
@@ -86,7 +86,7 @@ fn ok4 ()
 ```
 
 (* This one is awkward due to the existentials. It can work
-by asserting a _syntactically equal_ vprop to obtain one of the two
+by asserting a _syntactically equal_ slprop to obtain one of the two
 variables and then disambiguate. *)
 ```pulse
 fn ok5 ()

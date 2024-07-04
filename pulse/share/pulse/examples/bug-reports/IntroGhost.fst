@@ -24,7 +24,7 @@ module R = Pulse.Lib.Reference
   entry condition to the loop because the condition
   var outside the loop is not ghost
 *)
-let my_inv (b:bool) (r:R.ref int) : vprop
+let my_inv (b:bool) (r:R.ref int) : slprop
   = exists* v.
       R.pts_to r v ** 
       pure ( b == (v = 0) )

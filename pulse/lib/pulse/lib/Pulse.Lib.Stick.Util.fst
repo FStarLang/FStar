@@ -21,8 +21,8 @@ include Pulse.Lib.Stick
 ```pulse
 ghost
 fn intro
-  (hyp concl: vprop)
-  (v: vprop)
+  (hyp concl: slprop)
+  (v: slprop)
   (f_elim: (unit -> (
     stt_ghost unit emp_inames
     (v ** hyp)
@@ -37,7 +37,7 @@ ensures hyp @==> concl
 
 ```pulse
 ghost
-fn elim (p q:vprop)
+fn elim (p q:slprop)
    requires (p @==> q) ** p
    ensures q
 {
@@ -48,7 +48,7 @@ fn elim (p q:vprop)
 
 ```pulse
 ghost
-fn refl (p:vprop)
+fn refl (p:slprop)
    requires emp
    ensures p @==> p
 {
@@ -62,7 +62,7 @@ fn refl (p:vprop)
 
 ```pulse
 ghost
-fn curry (p q r:vprop)
+fn curry (p q r:slprop)
    requires (p ** q) @==> r
    ensures p @==> (q @==> r)
 {
@@ -85,7 +85,7 @@ fn curry (p q r:vprop)
 
 ```pulse
 ghost
-fn trans (p q r:vprop)
+fn trans (p q r:slprop)
     requires (p @==> q) ** (q @==> r)
     ensures p @==> r
 {
@@ -102,7 +102,7 @@ fn trans (p q r:vprop)
 
 ```pulse
 ghost
-fn comm_l (p q r:vprop)
+fn comm_l (p q r:slprop)
    requires (p ** q) @==> r
    ensures (q ** p) @==> r
 {
@@ -118,7 +118,7 @@ fn comm_l (p q r:vprop)
 
 ```pulse
 ghost
-fn comm_r (p q r:vprop)
+fn comm_r (p q r:slprop)
    requires p @==> (q ** r)
    ensures p @==> (r ** q)
 {
@@ -134,7 +134,7 @@ fn comm_r (p q r:vprop)
 
 ```pulse
 ghost
-fn assoc_l (p q r s:vprop)
+fn assoc_l (p q r s:slprop)
    requires (p ** (q ** r)) @==> s
    ensures ((p ** q) ** r) @==> s
 {
@@ -150,7 +150,7 @@ fn assoc_l (p q r s:vprop)
 
 ```pulse
 ghost
-fn assoc_r (p q r s:vprop)
+fn assoc_r (p q r s:slprop)
    requires p @==> ((q ** r) ** s)
    ensures p @==> (q ** (r ** s))
 {
@@ -166,7 +166,7 @@ fn assoc_r (p q r s:vprop)
 
 ```pulse
 ghost
-fn elim_hyp_l (p q r:vprop)
+fn elim_hyp_l (p q r:slprop)
     requires ((p ** q) @==> r) ** p
     ensures (q @==> r)
 {
@@ -177,7 +177,7 @@ fn elim_hyp_l (p q r:vprop)
 
 ```pulse
 ghost
-fn elim_hyp_r (p q r:vprop)
+fn elim_hyp_r (p q r:slprop)
     requires ((p ** q) @==> r) ** q
     ensures (p @==> r)
 {

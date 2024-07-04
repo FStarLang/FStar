@@ -47,12 +47,12 @@ let while_soundness
   let rinv_typing
     : RT.tot_typing _
         (mk_exists uzero bool_tm rinv)
-        vprop_tm =
+        slprop_tm =
     tot_typing_soundness inv_typing in
   let rinv_typing
     : RT.tot_typing _
         rinv
-        (mk_arrow (bool_tm, R.Q_Explicit) vprop_tm) =
+        (mk_arrow (bool_tm, R.Q_Explicit) slprop_tm) =
     WT.exists_inversion rinv_typing in
   let rcond_typing
     : RT.tot_typing _ (elab_st_typing cond_typing)

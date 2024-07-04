@@ -48,7 +48,7 @@ let (canonicalize_st_typing :
           let c' = canon_comp c in
           let x = Pulse_Typing_Env.fresh g in
           let st_eq =
-            Pulse_Typing.ST_VPropEquiv
+            Pulse_Typing.ST_SLPropEquiv
               (g, c, c', x, (), (), (), (canon_comp_eq_res g c), (), ()) in
           Pulse_Typing.T_Equiv (g, t, c, c', d, st_eq)
 let coerce_eq : 'a 'b . 'a -> unit -> 'b =
@@ -774,7 +774,7 @@ let (apply_impure_function :
     Pulse_Typing_Env.env ->
       Pulse_Typing_Env.env ->
         Pulse_Typing_Env.env ->
-          Pulse_Syntax_Base.vprop ->
+          Pulse_Syntax_Base.slprop ->
             unit ->
               unit Pulse_Typing.post_hint_opt ->
                 Pulse_Syntax_Base.ppname ->

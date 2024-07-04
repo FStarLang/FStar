@@ -41,11 +41,11 @@ val pts_to
   ([@@@equate_strict] v:vec a)
   (#[T.exact (`1.0R)] p:perm)
   (s:Seq.seq a)
-: vprop
+: slprop
 
-val pts_to_is_small (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_small (pts_to v #p s))
-          [SMTPat (is_small (pts_to v #p s))]
+val pts_to_is_slprop1 (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop1 (pts_to v #p s))
+          [SMTPat (is_slprop1 (pts_to v #p s))]
 
 val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   : stt_ghost unit emp_inames

@@ -37,7 +37,7 @@ let handle_head_immediately st = head_wild st || head_show_proof_state st
 val check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { Tm_ProofHintWithBinders? st.term })

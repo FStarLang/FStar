@@ -28,20 +28,20 @@ module SZ = FStar.SizeT
 #push-options "--fuel 2 --ifuel 2"
 assume val elim_stick0
   (_: unit)
-  (#hyp #concl: vprop)
+  (#hyp #concl: slprop)
 : stt_ghost unit emp_inames
     ((hyp @==> concl) ** hyp)
     (fun _ -> concl)
 
 assume val stick_refl0
-    (p: vprop)
+    (p: slprop)
 : stt_ghost unit emp_inames
     (emp)
     (fun _ -> p @==> p)
 assume
 val stick_consume_l
     (_: unit)
-    (#p #q #r: vprop)
+    (#p #q #r: slprop)
 : stt_ghost unit emp_inames
     (p ** ((p ** q) @==> r))
     (fun _ -> q @==> r)
@@ -49,7 +49,7 @@ val stick_consume_l
 assume
 val stick_consume_r
     (_: unit)
-    (#q #p #r: vprop)
+    (#q #p #r: slprop)
 : stt_ghost unit emp_inames
     (p ** ((q ** p) @==> r))
     (fun _ -> q @==> r)
@@ -57,28 +57,28 @@ val stick_consume_r
 assume
 val stick_trans
     (_: unit)
-    (#p #q #r: vprop)
+    (#p #q #r: slprop)
 : stt_ghost unit emp_inames
     ((p @==> q) ** (q @==> r))
     (fun _ -> p @==> r)
 
 assume
 val rewrite_with_implies
-    (p q: vprop)
+    (p q: slprop)
 : stt_ghost unit emp_inames
     (p ** pure (p == q))
     (fun _ -> q ** (q @==> p))
 
 assume
 val stick_weaken_hyp_r
-    (hl hr #hr' #c: vprop)
+    (hl hr #hr' #c: slprop)
 : stt_ghost unit emp_inames
     ((hr' @==> hr) ** ((hl ** hr) @==> c))
     (fun _ -> (hl ** hr') @==> c)
 
 assume
 val stick_weaken_hyp_l
-    (hl hr #hl' #c: vprop)
+    (hl hr #hl' #c: slprop)
 : stt_ghost unit emp_inames
     ((hl' @==> hl) ** ((hl ** hr) @==> c))
     (fun _ -> (hl' ** hr) @==> c)
@@ -440,7 +440,7 @@ let cbor_map_get_post_not_found
   (vkey: Cbor.raw_data_item)
   (vmap: Cbor.raw_data_item)
   (map: cbor)
-: Tot vprop
+: Tot slprop
 = raw_data_item_match p map vmap ** pure (
     Cbor.Map? vmap /\
     list_ghost_assoc vkey (Cbor.Map?.v vmap) == None
@@ -452,7 +452,7 @@ let cbor_map_get_post_found
   (vmap: Cbor.raw_data_item)
   (map: cbor)
   (value: cbor)
-: Tot vprop
+: Tot slprop
 = exists* vvalue.
     raw_data_item_match p value vvalue **
     (raw_data_item_match p value vvalue @==> raw_data_item_match p map vmap) **
@@ -467,7 +467,7 @@ let cbor_map_get_post
   (vmap: Cbor.raw_data_item)
   (map: cbor)
   (res: cbor_map_get_t)
-: Tot vprop
+: Tot slprop
 = match res with
   | NotFound -> cbor_map_get_post_not_found p vkey vmap map
   | Found value -> cbor_map_get_post_found p vkey vmap map value
@@ -480,7 +480,7 @@ let cbor_map_get_invariant
   (res: cbor_map_get_t)
   (i: cbor_map_iterator_t)
   (l: list (Cbor.raw_data_item & Cbor.raw_data_item))
-: Tot vprop
+: Tot slprop
 = match res with
   | Found value -> cbor_map_get_post_found pmap vkey vmap map value ** pure (
       Cbor.Map? vmap /\
@@ -663,7 +663,7 @@ let cbor_map_sort_merge_invariant // FIXME: WHY WHY WHY?
     (pres: ref bool)
     (cont: bool)
     i1 i2 (res: bool) c c1 c2 accu l1 l2
-: Tot vprop
+: Tot slprop
 =
         pts_to pi1 i1 ** pts_to pi2 i2 ** pts_to pres res **
         A.pts_to_range a (SZ.v lo) (SZ.v i1) c **

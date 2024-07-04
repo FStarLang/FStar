@@ -42,7 +42,7 @@ val tc_qual : option qualifier
 new val term : Type0
 new val binder : Type0
 new val comp : Type0
-let vprop = term
+let slprop = term
 val mk_binder (x:ident) (t:term) : binder
 val mk_binder_with_attrs (x:ident) (t:term) (attrs:list term) : binder
 
@@ -53,8 +53,8 @@ val tm_uinst (l:fv) (us:list universe) : term
 val tm_emp (_:range) : term
 val tm_pure (p:term) (_:range) : term
 val tm_star (p0 p1:term) (_:range) : term
-val tm_exists (b:binder) (body:vprop) (_:range)  : term
-val tm_forall (b:binder) (body:vprop) (_:range)  : term
+val tm_exists (b:binder) (body:slprop) (_:range)  : term
+val tm_forall (b:binder) (body:slprop) (_:range)  : term
 val tm_arrow (b:binder) (q:FStar.Syntax.Syntax.aqual) (body:comp) (_:range)  : term
 val tm_expr (t:FStar.Syntax.Syntax.term) (_:range) : term
 val tm_unknown (_:range)  : term
@@ -69,10 +69,10 @@ val is_tm_exists (x:term) : bool
 val hint_type : Type0
 val mk_wild_hint_type : hint_type
 val mk_show_proof_state_hint_type (r:range) : hint_type
-val mk_assert_hint_type (vp:vprop) : hint_type
-val mk_unfold_hint_type (l:option (list string)) (vp:vprop) : hint_type
-val mk_fold_hint_type (l:option (list string)) (vp:vprop) : hint_type
-val mk_rename_hint_type (l:list (term & term)) (goal:option vprop) (tac_opt : option term) : hint_type
+val mk_assert_hint_type (vp:slprop) : hint_type
+val mk_unfold_hint_type (l:option (list string)) (vp:slprop) : hint_type
+val mk_fold_hint_type (l:option (list string)) (vp:slprop) : hint_type
+val mk_rename_hint_type (l:list (term & term)) (goal:option slprop) (tac_opt : option term) : hint_type
 val mk_rewrite_hint_type (p1:term) (p2:term) (tac_opt : option term) : hint_type
 
 new val constant : Type0
@@ -93,10 +93,10 @@ val tm_bind (x:binder) (e1:st_term) (e2:st_term) (_:range) : st_term
 val tm_totbind (x:binder) (e1:term) (e2:st_term) (_:range) : st_term
 val tm_let_mut (x:binder) (v:term) (k:st_term) (_:range) : st_term
 val tm_let_mut_array (x:binder) (v:term) (n:term) (k:st_term) (_:range) : st_term
-val tm_while (head:st_term) (invariant: (ident & vprop)) (body:st_term) (_:range) : st_term 
-val tm_if (head:term) (returns_annot:option vprop) (then_ else_:st_term) (_:range) : st_term
-val tm_match (head:term) (returns_:option vprop) (brs:list branch) (_:range) : st_term
-val tm_intro_exists (vp:vprop) (witnesses:list term) (_:range) : st_term
+val tm_while (head:st_term) (invariant: (ident & slprop)) (body:st_term) (_:range) : st_term 
+val tm_if (head:term) (returns_annot:option slprop) (then_ else_:st_term) (_:range) : st_term
+val tm_match (head:term) (returns_:option slprop) (brs:list branch) (_:range) : st_term
+val tm_intro_exists (vp:slprop) (witnesses:list term) (_:range) : st_term
 val is_tm_intro_exists (x:st_term) : bool
 val tm_protect (s:st_term) : st_term
 val tm_par (p1:term) (p2:term) (q1:term) (q2:term) (b1:st_term) (b2:st_term) (_:range) : st_term

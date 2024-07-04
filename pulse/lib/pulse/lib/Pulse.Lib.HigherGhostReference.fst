@@ -29,7 +29,7 @@ instance non_informative_gref (a:Type u#1) : NonInformative.non_informative (ref
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = ghost_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
-let pts_to_is_small _ _ _ = ()
+let pts_to_is_slprop1 _ _ _ = ()
 
 ```pulse
 ghost

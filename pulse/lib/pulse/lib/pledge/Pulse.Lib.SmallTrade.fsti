@@ -23,17 +23,17 @@ module T = FStar.Tactics
 
 val trade :
   (#[T.exact (`[])] is:invlist) ->
-  (hyp:vprop) ->
-  (concl:vprop) ->
-  vprop
+  (hyp:slprop) ->
+  (concl:slprop) ->
+  slprop
 
-val trade_is_small (#is:invlist) (hyp concl:vprop)
-  : Lemma (is_small (trade #is hyp concl))
+val trade_is_slprop1 (#is:invlist) (hyp concl:slprop)
+  : Lemma (is_slprop1 (trade #is hyp concl))
 
 val intro_trade
   (#is:invlist)
-  (hyp concl:vprop)
-  (extra:vprop { is_small extra })
+  (hyp concl:slprop)
+  (extra:slprop { is_slprop1 extra })
   (f_elim:unit -> (
     stt_ghost unit (invlist_names is)
     (invlist_inv is ** extra ** hyp)
@@ -43,8 +43,8 @@ val intro_trade
 
 val intro_trade_invs
   (#is:invlist)
-  (hyp concl:vprop)
-  (extra:vprop { is_small extra })
+  (hyp concl:slprop)
+  (extra:slprop { is_slprop1 extra })
   (f_elim:unit -> (
     stt_ghost unit emp_inames
       (invlist_v is ** extra ** hyp)
@@ -54,7 +54,7 @@ val intro_trade_invs
 
 val elim_trade
   (#is:invlist)
-  (hyp concl:vprop)
+  (hyp concl:slprop)
 : stt_ghost unit (invlist_names is)
     (invlist_inv is ** trade #is hyp concl ** hyp)
     (fun _ -> invlist_inv is ** concl)
@@ -62,7 +62,7 @@ val elim_trade
 val trade_sub_inv
   (#is1:invlist)
   (#is2:invlist { invlist_sub is1 is2 })
-  (hyp concl:vprop)
+  (hyp concl:slprop)
 : stt_ghost unit emp_inames
     (trade #is1 hyp concl)
     (fun _ -> trade #is2 hyp concl)
@@ -71,7 +71,7 @@ val trade_sub_inv
 // (f : unit -> stt_ghost unit (invlist_names os) (invlist_inv os ** q) (fun _ -> invlist_inv os ** r))
 val trade_map
   (#os : invlist)
-  (p q r : vprop)
+  (p q r : slprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
 : stt_ghost unit emp_inames
     (trade #os p q)
@@ -79,7 +79,7 @@ val trade_map
 
 val trade_compose
   (#os : invlist)
-  (p q r : vprop)
+  (p q r : slprop)
 : stt_ghost unit emp_inames
     (trade #os p q ** trade #os q r)
     (fun _ -> trade #os p r)

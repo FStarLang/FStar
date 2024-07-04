@@ -31,11 +31,11 @@ let implication p q : Type u#4 =
 let exists_implication p q : Type u#0 =
   squash (implication p q)
 
-let ctx (v:vprop) : vprop = v
+let ctx (v:slprop) : slprop = v
 
-let stick (p q:vprop)
-: vprop
-= exists* (v:vprop). ctx v ** pure (exists_implication (v ** p) q)
+let stick (p q:slprop)
+: slprop
+= exists* (v:slprop). ctx v ** pure (exists_implication (v ** p) q)
 
 ```pulse
 fn return (#a:Type u#2) (x:a)
@@ -52,7 +52,7 @@ let psquash (a:Type u#a) : prop = squash a
 
 ```pulse
 ghost
-fn elim_stick (hyp concl: vprop)
+fn elim_stick (hyp concl: slprop)
 requires stick hyp concl ** hyp
 ensures concl
 {
@@ -71,8 +71,8 @@ ensures concl
 ```pulse
 ghost
 fn intro_stick
-  (hyp concl: vprop)
-  (v: vprop)
+  (hyp concl: slprop)
+  (v: slprop)
   (f_elim: unit -> (
     stt_ghost unit emp_inames
     (v ** hyp)
@@ -90,8 +90,8 @@ ensures stick hyp concl
 ```pulse
 ghost
 fn frame_stick
-  (hyp concl: vprop)
-  (f: vprop)
+  (hyp concl: slprop)
+  (f: slprop)
 requires stick hyp concl
 ensures stick (hyp ** f) (concl ** f)
 {

@@ -3,14 +3,14 @@ open Pulse.Lib.Pervasives
 module CV = Pulse.Lib.ConditionVarWithCodes
 
 let free_code : CV.code = {
-  t = small_vprop;
-  emp = down2 emp;
-  up = (fun x -> up2_is_small x; up2 x);
+  t = slprop1_base;
+  emp = down1 emp;
+  up = (fun x -> up1_is_slprop1 x; up1 x);
   laws = ()
 }
 
-let free_code_of (p:storable) : CV.codeable free_code p = {
-  c = down2 p;
+let free_code_of (p:slprop1) : CV.codeable free_code p = {
+  c = down1 p;
   laws = ()
 }
 
@@ -29,7 +29,7 @@ type cc (c:CV.code) : Type u#2 =
 | Recv : CV.cvar_t c -> c.t -> cc c
 
 let rec up_cc #c (t:cc c)
-: boxable
+: slprop2
 = match t with
   | Small s -> c.up s
   | Star c1 c2 ->
@@ -53,7 +53,7 @@ let code_of_send_core #c (cv:CV.cvar_t c) : CV.codeable cc_code (CV.send_core cv
 
 let code_of_recv_core #c 
     (cv:CV.cvar_t c)
-    (s:vprop)
+    (s:slprop)
     (code_of_s:CV.codeable c s) 
 : CV.codeable cc_code (CV.recv_core cv s) = {
   c = Recv cv code_of_s.c;
@@ -61,7 +61,7 @@ let code_of_recv_core #c
 }
 
 ```pulse
-fn wait_indirect #c1 #c2 (cv1:CV.cvar_t c1) (cv2:CV.cvar_t c2) (#p:vprop)
+fn wait_indirect #c1 #c2 (cv1:CV.cvar_t c1) (cv2:CV.cvar_t c2) (#p:slprop)
 requires
   CV.cvinv cv1 p **
   CV.recv cv2 (CV.send_core cv1) **
@@ -76,7 +76,7 @@ ensures
 ```
 
 ```pulse
-fn wait_direct #c (cv:CV.cvar_t c) (#p:storable)
+fn wait_direct #c (cv:CV.cvar_t c) (#p:slprop2)
 requires CV.recv cv p
 ensures p
 {
@@ -85,7 +85,7 @@ ensures p
 ```
 
 ```pulse
-fn test_two (p:storable)
+fn test_two (p:slprop1)
 requires p
 ensures p
 {

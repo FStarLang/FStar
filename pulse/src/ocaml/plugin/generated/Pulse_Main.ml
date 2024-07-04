@@ -1977,20 +1977,20 @@ let (main' :
                                                                     (Prims.of_int (221))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (222))
-                                                                    (Prims.of_int (109)))))
+                                                                    (Prims.of_int (110)))))
                                                              (FStar_Sealed.seal
                                                                 (Obj.magic
                                                                    (FStar_Range.mk_range
                                                                     "Pulse.Main.fst"
                                                                     (Prims.of_int (222))
-                                                                    (Prims.of_int (110))
+                                                                    (Prims.of_int (111))
                                                                     (Prims.of_int (230))
                                                                     (Prims.of_int (82)))))
                                                              (if
                                                                 Prims.op_Negation
                                                                   (Pulse_Syntax_Base.eq_tm
                                                                     ty
-                                                                    Pulse_Syntax_Pure.tm_vprop)
+                                                                    Pulse_Syntax_Pure.tm_slprop)
                                                               then
                                                                 Obj.magic
                                                                   (Obj.repr
@@ -1999,7 +1999,7 @@ let (main' :
                                                                     (FStar_Pervasives_Native.Some
                                                                     (Pulse_RuntimeUtils.range_of_term
                                                                     pre1))
-                                                                    "pulse main: cannot typecheck pre at type vprop"))
+                                                                    "pulse main: cannot typecheck pre at type slprop"))
                                                               else
                                                                 Obj.magic
                                                                   (Obj.repr
@@ -2017,9 +2017,9 @@ let (main' :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Main.fst"
                                                                     (Prims.of_int (223))
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (52))
                                                                     (Prims.of_int (223))
-                                                                    (Prims.of_int (61)))))
+                                                                    (Prims.of_int (62)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

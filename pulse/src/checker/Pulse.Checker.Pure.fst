@@ -406,17 +406,17 @@ let core_check_term_at_type g e t =
   | Some eff ->
     (| eff, E (RT.T_Token _ _ _ (FStar.Squash.get_proof _)) |)
 
-let check_vprop (g:env)
+let check_slprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t tm_vprop) =
-  check_term (push_context_no_range g "check_vprop") t T.E_Total tm_vprop
+  : T.Tac (t:term & tot_typing g t tm_slprop) =
+  check_term (push_context_no_range g "check_slprop") t T.E_Total tm_slprop
 
-let check_vprop_with_core (g:env)
+let check_slprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t tm_vprop) =
+  : T.Tac (tot_typing g t tm_slprop) =
 
   core_check_term
-    (push_context_no_range g "check_vprop_with_core") t T.E_Total tm_vprop
+    (push_context_no_range g "check_slprop_with_core") t T.E_Total tm_slprop
 
   
 module WT = Pulse.Lib.Core.Typing

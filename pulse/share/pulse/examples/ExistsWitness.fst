@@ -67,7 +67,7 @@ ensures exists* y. R.pts_to x #p y ** pure (y == 17)
 }
 ```
 
-assume val drop (p:vprop) : stt unit p (fun _ -> emp)
+assume val drop (p:slprop) : stt unit p (fun _ -> emp)
 
 ```pulse
 fn sample3 (x0:R.ref int) (x1:R.ref bool) (#p0 #p1:perm)

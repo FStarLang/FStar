@@ -26,8 +26,8 @@ module T = FStar.Tactics.V2
 module P = Pulse.Syntax.Printer
 module R = FStar.Reflection.V2
 
-let check_vprop_equiv_ext r (g:env) (p q:vprop)
-: T.Tac (vprop_equiv g p q)
+let check_slprop_equiv_ext r (g:env) (p q:slprop)
+: T.Tac (slprop_equiv g p q)
 = let res, issues = Pulse.Typing.Util.check_equiv_now (elab_env g) p q in
   T.log_issues issues;
   match res with
@@ -39,8 +39,8 @@ let check_vprop_equiv_ext r (g:env) (p q:vprop)
   | Some token ->
     VE_Ext g p q token
 
-let check_vprop_equiv_tac r (g:env) (p q:vprop) (tac_tm : term)
-: T.Tac (vprop_equiv g p q)
+let check_slprop_equiv_tac r (g:env) (p q:slprop) (tac_tm : term)
+: T.Tac (slprop_equiv g p q)
 = let open FStar.Reflection.Typing in
   let open FStar.Stubs.TypeChecker.Core in
   begin match T.inspect tac_tm with
@@ -54,7 +54,7 @@ let check_vprop_equiv_tac r (g:env) (p q:vprop) (tac_tm : term)
     ]
   end;
   let u0 : R.universe = R.pack_universe R.Uv_Zero in
-  let goal = Pulse.Reflection.Util.stt_vprop_equiv p q in
+  let goal = Pulse.Reflection.Util.stt_slprop_equiv p q in
   let r_env = elab_env g in
   let goal_typing :
     my_erased (T.typing_token r_env goal (E_Total, R.pack_ln (R.Tv_Type u0)))
@@ -73,13 +73,13 @@ let check_vprop_equiv_tac r (g:env) (p q:vprop) (tac_tm : term)
             pp q;
             text "Using tactic:" ^/^ pp tac_tm]
   | Some token ->
-    // Need a VE_ rule to turn an arbitrary proof into a vprop_equiv.
-    // Or use enough core lemmas to show that vprop_equiv implies equality here,
+    // Need a VE_ rule to turn an arbitrary proof into a slprop_equiv.
+    // Or use enough core lemmas to show that slprop_equiv implies equality here,
     // and then use VE_Ext.
     VE_Ext g p q (magic ())
 
-let rec check_vprop_equiv r (g:env) (p q:vprop)
-: T.Tac (vprop_equiv g p q)
+let rec check_slprop_equiv r (g:env) (p q:slprop)
+: T.Tac (slprop_equiv g p q)
 = if eq_tm p q
   then VE_Refl g p
   else (
@@ -93,22 +93,22 @@ let rec check_vprop_equiv r (g:env) (p q:vprop)
         assume (~(x `Set.mem` freevars t2));
         let g' = push_binding g x b1.binder_ppname b1.binder_ty in
         let nx = b1.binder_ppname, x in
-        let ext = check_vprop_equiv r g' (open_term_nv t1 nx) (open_term_nv t2 nx) in
+        let ext = check_slprop_equiv r g' (open_term_nv t1 nx) (open_term_nv t2 nx) in
         VE_Fa g x u1 b1 t1 t2 ext
       )
-      else check_vprop_equiv_ext r g p q
+      else check_slprop_equiv_ext r g p q
     | Tm_Star p1 p2, Tm_Star q1 q2 ->
-      let ext1 = check_vprop_equiv r g p1 q1 in
-      let ext2 = check_vprop_equiv r g p2 q2 in
+      let ext1 = check_slprop_equiv r g p1 q1 in
+      let ext2 = check_slprop_equiv r g p2 q2 in
       VE_Ctxt g p1 p2 q1 q2 ext1 ext2
     | _ -> 
-      check_vprop_equiv_ext r g p q
+      check_slprop_equiv_ext r g p q
   )
   
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_Rewrite? t.term})
@@ -117,18 +117,18 @@ let check
 
   let g = push_context "check_rewrite" t.range g in
   let Tm_Rewrite {t1=p; t2=q; tac_opt} = t.term in
-  let (| p, p_typing |) = check_vprop g p in
-  let (| q, q_typing |) = check_vprop g q in
+  let (| p, p_typing |) = check_slprop g p in
+  let (| q, q_typing |) = check_slprop g q in
 
   let equiv_p_q =
-    (* If we don't have a tactic, we just call the check_vprop_equiv
+    (* If we don't have a tactic, we just call the check_slprop_equiv
     function which mostly goes to SMT. Otherwise, we just ask the tactic
-    and construct a vprop_equiv with it. *)
+    and construct a slprop_equiv with it. *)
     match tac_opt with
     | None ->
-      check_vprop_equiv t.range g p q
+      check_slprop_equiv t.range g p q
     | Some tac ->
-      check_vprop_equiv_tac t.range g p q tac
+      check_slprop_equiv_tac t.range g p q tac
   in
 	let d = T_Rewrite _ p q p_typing equiv_p_q in
 	prove_post_hint (try_frame_pre false pre_typing (match_comp_res_with_post_hint d post_hint) res_ppname) post_hint t.range

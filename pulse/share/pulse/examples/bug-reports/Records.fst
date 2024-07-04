@@ -33,7 +33,7 @@ type rec_repr = {
 }
 
 let rec_perm (r:rec2) (v:rec_repr)
-  : vprop
+  : slprop
   = R.pts_to r.r1 v.v1 **
     R.pts_to r.r2 v.v2
 

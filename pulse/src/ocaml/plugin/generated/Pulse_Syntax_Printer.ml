@@ -697,10 +697,11 @@ and (term_to_string' :
                                                       (fun uu___3 ->
                                                          uu___2 uu___1))))
                                            uu___1))) uu___)))
-           | Pulse_Syntax_Pure.Tm_VProp ->
+           | Pulse_Syntax_Pure.Tm_SLProp ->
                Obj.magic
                  (Obj.repr
-                    (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> "vprop")))
+                    (FStar_Tactics_Effect.lift_div_tac
+                       (fun uu___ -> "slprop")))
            | Pulse_Syntax_Pure.Tm_Inames ->
                Obj.magic
                  (Obj.repr
@@ -999,14 +1000,14 @@ and (term_to_doc :
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
                             (Prims.of_int (158)) (Prims.of_int (23))
-                            (Prims.of_int (158)) (Prims.of_int (38)))))
+                            (Prims.of_int (158)) (Prims.of_int (39)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range "Pulse.Syntax.Printer.fst"
-                            (Prims.of_int (158)) (Prims.of_int (41))
+                            (Prims.of_int (158)) (Prims.of_int (42))
                             (Prims.of_int (169)) (Prims.of_int (80)))))
                    (FStar_Tactics_Effect.lift_div_tac
-                      (fun uu___2 -> Pulse_Syntax_Pure.vprop_as_list t))
+                      (fun uu___2 -> Pulse_Syntax_Pure.slprop_as_list t))
                    (fun uu___2 ->
                       (fun components ->
                          Obj.magic
@@ -1494,11 +1495,11 @@ and (term_to_doc :
                                                      FStar_Pprint.parens
                                                        uu___4)))) uu___4)))
                         uu___3)))
-       | Pulse_Syntax_Pure.Tm_VProp ->
+       | Pulse_Syntax_Pure.Tm_SLProp ->
            Obj.magic
              (Obj.repr
                 (FStar_Tactics_Effect.lift_div_tac
-                   (fun uu___ -> FStar_Pprint.doc_of_string "vprop")))
+                   (fun uu___ -> FStar_Pprint.doc_of_string "slprop")))
        | Pulse_Syntax_Pure.Tm_Inames ->
            Obj.magic
              (Obj.repr
@@ -5823,7 +5824,7 @@ let (tag_of_term : Pulse_Syntax_Base.term -> Prims.string) =
     | Pulse_Syntax_Pure.Tm_Star (uu___, uu___1) -> "Tm_Star"
     | Pulse_Syntax_Pure.Tm_ExistsSL (uu___, uu___1, uu___2) -> "Tm_ExistsSL"
     | Pulse_Syntax_Pure.Tm_ForallSL (uu___, uu___1, uu___2) -> "Tm_ForallSL"
-    | Pulse_Syntax_Pure.Tm_VProp -> "Tm_VProp"
+    | Pulse_Syntax_Pure.Tm_SLProp -> "Tm_SLProp"
     | Pulse_Syntax_Pure.Tm_Inames -> "Tm_Inames"
     | Pulse_Syntax_Pure.Tm_EmpInames -> "Tm_EmpInames"
     | Pulse_Syntax_Pure.Tm_Unknown -> "Tm_Unknown"

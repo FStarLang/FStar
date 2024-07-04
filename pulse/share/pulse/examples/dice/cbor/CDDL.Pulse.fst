@@ -385,7 +385,7 @@ let cbor_read_with_typ_success_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (c: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = exists* v rem.
     raw_data_item_match 1.0R c.cbor_read_payload v **
     A.pts_to c.cbor_read_remainder #p rem **
@@ -423,7 +423,7 @@ let cbor_read_with_typ_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-: Tot vprop
+: Tot slprop
 = A.pts_to a #p va ** pure (cbor_read_with_typ_error_postcond t va)
 
 let cbor_read_with_typ_post
@@ -432,7 +432,7 @@ let cbor_read_with_typ_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = if res.cbor_read_is_success
   then cbor_read_with_typ_success_post t a p va res
   else cbor_read_with_typ_error_post t a p va
@@ -535,7 +535,7 @@ let cbor_read_deterministically_encoded_with_typ_success_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
-: Tot vprop
+: Tot slprop
 =   exists* v rem.
         raw_data_item_match 1.0R res.cbor_read_payload v **
         A.pts_to res.cbor_read_remainder #p rem **
@@ -548,7 +548,7 @@ let cbor_read_deterministically_encoded_with_typ_error_post
   (a: A.array U8.t)
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
-: Tot vprop
+: Tot slprop
 = A.pts_to a #p va ** pure (cbor_read_deterministically_encoded_with_typ_error_postcond t va)
 
 let cbor_read_deterministically_encoded_with_typ_post
@@ -557,7 +557,7 @@ let cbor_read_deterministically_encoded_with_typ_post
   (p: perm)
   (va: Ghost.erased (Seq.seq U8.t))
   (res: cbor_read_t)
-: Tot vprop
+: Tot slprop
 = if res.cbor_read_is_success
   then cbor_read_deterministically_encoded_with_typ_success_post t a p va res
   else cbor_read_deterministically_encoded_with_typ_error_post t a p va
@@ -629,7 +629,7 @@ let cbor_map_get_with_typ_post
   (vmap: raw_data_item)
   (map: cbor)
   (res: cbor_map_get_t)
-: Tot vprop
+: Tot slprop
 = match res with
   | NotFound ->
     raw_data_item_match p map vmap ** pure (
@@ -663,7 +663,7 @@ let cbor_map_get_post_eq_found
 ```pulse
 ghost
 fn manurewrite
-    (pre post: vprop)
+    (pre post: slprop)
 requires
     pre ** pure (pre == post)
 ensures

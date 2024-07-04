@@ -26,7 +26,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Checker.Pure
 open Pulse.Checker.Bind
-open Pulse.Checker.VPropEquiv
+open Pulse.Checker.SLPropEquiv
 open Pulse.Checker.Base
 
 module P = Pulse.Syntax.Printer
@@ -58,7 +58,7 @@ let default_binder_annot = mk_binder_ppname tm_unknown ppname_default
 
 let rec gen_names_for_unknowns (g:env) (t:term) (ws:list term)
   : T.Tac (list (nvar & term) &  // new names with their types
-           term &  // opened vprop                                             
+           term &  // opened slprop                                             
            list term)  // new list of witnesses with _ replaced with corresponding new names
   = match ws with
     | [] -> [], t, []
@@ -141,7 +141,7 @@ let rec transform_to_unary_intro_exists (g:env) (t:term) (ws:list term)
 let rec check
   (g0:env)
   (pre0:term)
-  (pre0_typing: tot_typing g0 pre0 tm_vprop)
+  (pre0_typing: tot_typing g0 pre0 tm_slprop)
   (post_hint:post_hint_opt g0)
   (res_ppname:ppname)
   (t:st_term)

@@ -22,19 +22,19 @@ implementation of the InvList. *)
 open Pulse.Lib.Core
 
 val stick  :
-  (hyp : vprop) ->
-  (concl : vprop) ->
-  vprop
+  (hyp : slprop) ->
+  (concl : slprop) ->
+  slprop
 
 val elim_stick
-  (hyp concl: vprop)
+  (hyp concl: slprop)
 : stt_ghost unit emp_inames
     ((stick hyp concl) ** hyp)
     (fun _ -> concl)
 
 val intro_stick
-  (hyp concl: vprop)
-  (v: vprop)
+  (hyp concl: slprop)
+  (v: slprop)
   (f_elim: unit -> (
     stt_ghost unit emp_inames
     (v ** hyp)
@@ -45,8 +45,8 @@ val intro_stick
     (fun _ -> stick hyp concl)
 
 val frame_stick
-  (hyp concl: vprop)
-  (f: vprop)
+  (hyp concl: slprop)
+  (f: slprop)
 : stt_ghost unit emp_inames
     (stick hyp concl)
     (fun _ -> stick (hyp ** f) (concl ** f))

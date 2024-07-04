@@ -17,7 +17,7 @@
 module BugWhileInv
 open Pulse.Lib.Pervasives
 
-let workaround (b:bool) (v:nat) : vprop =
+let workaround (b:bool) (v:nat) : slprop =
     pure (not b ==> v == 0)
 
 ```pulse

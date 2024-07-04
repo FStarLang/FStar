@@ -23,7 +23,7 @@ module T = FStar.Tactics.V2
 open FStar.List.Tot
 open Pulse.Syntax
 open Pulse.Checker.Pure
-open Pulse.Checker.VPropEquiv
+open Pulse.Checker.SLPropEquiv
 
 open Pulse.Typing
 open Pulse.Typing.Combinators
@@ -89,7 +89,7 @@ let is_elim_pure (vp:term) : T.Tac bool =
   | Tm_Pure _ -> true
   | _ -> false
 
-let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
+let mk (#g:env) (#v:slprop) (v_typing:tot_typing g v tm_slprop)
   : T.Tac (option (x:ppname &
                    t:st_term &
                    c:comp { stateful_comp c /\ comp_pre c == v } &
@@ -105,20 +105,20 @@ let mk (#g:env) (#v:vprop) (v_typing:tot_typing g v tm_vprop)
   | _ -> None
 
 let elim_pure_frame (#g:env) (#ctxt:term) (#frame:term)
-  (ctxt_frame_typing:tot_typing g (ctxt * frame) tm_vprop)
+  (ctxt_frame_typing:tot_typing g (ctxt * frame) tm_slprop)
   (uvs:env { disjoint uvs g })
   : T.Tac (g':env { env_extends g' g /\ disjoint uvs g' } &
            ctxt':term &
-           tot_typing g' (ctxt' * frame) tm_vprop &
+           tot_typing g' (ctxt' * frame) tm_slprop &
            continuation_elaborator g (ctxt * frame) g' (ctxt' * frame)) =
   add_elims is_elim_pure mk ctxt_frame_typing uvs
 
-let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
+let elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_slprop)
   : T.Tac (g':env { env_extends g' g } &
            ctxt':term &
-           tot_typing g' ctxt' tm_vprop &
+           tot_typing g' ctxt' tm_slprop &
            continuation_elaborator g ctxt g' ctxt') =
-  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_vprop = RU.magic () in
+  let ctxt_emp_typing : tot_typing g (tm_star ctxt tm_emp) tm_slprop = RU.magic () in
   let (| g', ctxt', ctxt'_emp_typing, k |) =
     elim_pure_frame ctxt_emp_typing (mk_env (fstar_env g)) in
   let k = k_elab_equiv k (VE_Trans _ _ _ _ (VE_Comm _ _ _) (VE_Unit _ _))
@@ -134,20 +134,20 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
   let (| g', remaining_ctxt', ty, k |) =
     elim_pure_frame
       #pst.pg
-      #(list_as_vprop pst.remaining_ctxt)
+      #(list_as_slprop pst.remaining_ctxt)
       #(preamble.frame * pst.ss.(pst.solved))
       (RU.magic ())
       pst.uvs in
 
   let k
     : continuation_elaborator
-        pst.pg (list_as_vprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
+        pst.pg (list_as_slprop pst.remaining_ctxt * (preamble.frame * pst.ss.(pst.solved)))
         g' (remaining_ctxt' * (preamble.frame * pst.ss.(pst.solved))) = k in
   
   // some *s
   let k
     : continuation_elaborator
-        pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
+        pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved))
         g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     
     k_elab_equiv k (RU.magic ()) (RU.magic ()) in
@@ -158,11 +158,11 @@ let elim_pure_pst (#preamble:_) (pst:prover_state preamble)
         g' ((remaining_ctxt' * preamble.frame) * pst.ss.(pst.solved)) =
     k_elab_trans pst.k k in
   
-  assume (list_as_vprop (vprop_as_list remaining_ctxt') == remaining_ctxt');
+  assume (list_as_slprop (slprop_as_list remaining_ctxt') == remaining_ctxt');
 
   { pst with
     pg = g';
-    remaining_ctxt = vprop_as_list remaining_ctxt';
+    remaining_ctxt = slprop_as_list remaining_ctxt';
     remaining_ctxt_frame_typing = RU.magic ();
     nts = None;
     k = k_new;

@@ -137,7 +137,7 @@ val has_struct_field
   (#t': Type0)
   (#td': typedef t')
   (r': ref td')
-: Tot vprop
+: Tot slprop
 
 val has_struct_field_prop
   (#tn: Type0)
