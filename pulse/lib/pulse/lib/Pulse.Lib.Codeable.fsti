@@ -22,7 +22,7 @@ let encode (#code:vcode) (v:vprop) {| d : codeable code v |} : code.t =
 let decode (#code:vcode) (c:code.t) : vprop =
   code.up c
 
-(* Small vprops for a trivial code by lifting with up2. *)
+(* Small vprops form a trivial code by lifting with up2. *)
 let small_code : vcode = {
   t = Pulse.Lib.Core.small_vprop;
   up = (fun c -> up2_is_small c; Pulse.Lib.Core.up2 c);

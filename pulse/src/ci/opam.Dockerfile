@@ -18,7 +18,7 @@ RUN sudo apt-get update && \
 RUN eval $(opam env) && \
     opam install -j $opamthreads -v -v -v pulse/pulse.opam
 
-ARG OTHERFLAGS=--use_hints
+ARG OTHERFLAGS
 
 RUN cp -p -r pulse/share/pulse /tmp/pulse-share && \
     rm -rf pulse /tmp/pulse-share/Makefile.include && \

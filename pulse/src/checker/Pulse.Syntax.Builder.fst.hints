@@ -1,1 +1,25 @@
-[ "ÜF \u00049ÛGí[õ‰q¶t", [] ]
+[
+  "¿œ%ÒÍ&°OE b‹„’çÂ",
+  [
+    [
+      "Pulse.Syntax.Builder.map_opt",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "75085fa1f760586cff5d3fc359f30c58"
+    ],
+    [
+      "Pulse.Syntax.Builder.thunk",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "e9cdab9e43e1e04823f89c783aa5773b"
+    ]
+  ]
+]
