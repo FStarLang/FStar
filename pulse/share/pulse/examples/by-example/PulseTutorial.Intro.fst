@@ -78,7 +78,7 @@ ensures pts_to x ('i + 1) ** pts_to y 'j
 ```
 
 ```pulse //incr_frame_any
-fn incr_frame_any (x:ref int) (f:vprop)
+fn incr_frame_any (x:ref int) (f:slprop)
 requires pts_to x 'i ** f
 ensures pts_to x ('i + 1) ** f
 {

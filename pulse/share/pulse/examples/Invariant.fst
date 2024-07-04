@@ -26,9 +26,9 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
 open Pulse.Lib
 
-assume val p : vprop
-assume val q : vprop
-assume val r : vprop
+assume val p : slprop
+assume val q : slprop
+assume val r : slprop
 
 assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 

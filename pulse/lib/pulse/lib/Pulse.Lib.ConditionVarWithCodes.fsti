@@ -23,11 +23,11 @@ noeq
 type code : Type u#4 = {
   t    : Type u#2;
   emp  : t;
-  up   : t -> boxable;
+  up   : t -> slprop2;
   laws : squash ( up emp == Pulse.Lib.Pervasives.emp )
 }
 
-class codeable (code:code) (v:vprop) = {
+class codeable (code:code) (v:slprop) = {
   c : code.t;
   laws : squash (code.up c == v)
 }
@@ -36,45 +36,45 @@ val cvar_t (c:code) : Type0
 
 val inv_name #c (cv:cvar_t c) : iname
 
-val send #c (cv:cvar_t c) (p:vprop) : vprop
+val send #c (cv:cvar_t c) (p:slprop) : slprop
 
-val recv #c (cv:cvar_t c) (p:vprop) : vprop
+val recv #c (cv:cvar_t c) (p:slprop) : slprop
 
-val create #c (p:vprop) (pf: codeable c p)
+val create #c (p:slprop) (pf: codeable c p)
 : stt (cvar_t c) emp (fun b -> send b p ** recv b p)
 
-val signal #c (cv:cvar_t c) (#p:vprop)
+val signal #c (cv:cvar_t c) (#p:slprop)
 : stt unit (send cv p ** p) (fun _ -> emp)
 
-val wait #c (cv:cvar_t c) (#p:vprop)
+val wait #c (cv:cvar_t c) (#p:slprop)
 : stt unit (recv cv p) (fun _ -> p)
 
-val split #c (cv:cvar_t c) (#p #q:vprop) (cq:codeable c p) (cr:codeable c q)
+val split #c (cv:cvar_t c) (#p #q:slprop) (cq:codeable c p) (cr:codeable c q)
 : stt_ghost unit (add_inv emp_inames (inv_name cv))
   (recv cv (p ** q)) (fun _ -> recv cv p ** recv cv q)
 
 
 
-val cvinv #c (cv:cvar_t c) (p:vprop) : vprop
+val cvinv #c (cv:cvar_t c) (p:slprop) : slprop
 
-val dup_cvinv #c (cv:cvar_t c) (#p:vprop)
+val dup_cvinv #c (cv:cvar_t c) (#p:slprop)
 : stt_ghost unit emp_inames (cvinv cv p) (fun _ -> cvinv cv p ** cvinv cv p)
 
-val send_core #c (cv:cvar_t c) : boxable
+val send_core #c (cv:cvar_t c) : slprop2
 
-val decompose_send #c (cv:cvar_t c) (p:vprop)
+val decompose_send #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames (send cv p) (fun _ -> cvinv cv p ** send_core cv)
 
-val recompose_send #c (cv:cvar_t c) (p:vprop)
+val recompose_send #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames (cvinv cv p ** send_core cv) (fun _ -> send cv p)
 
-val recv_core #c (cv:cvar_t c) (q:vprop)
-: boxable
+val recv_core #c (cv:cvar_t c) (q:slprop)
+: slprop2
 
-val decompose_recv #c (cv:cvar_t c) (p:vprop)
+val decompose_recv #c (cv:cvar_t c) (p:slprop)
 : stt_ghost unit emp_inames 
   (recv cv p) (fun _ ->  (exists* q. cvinv cv q) ** recv_core cv p)
   
-val recompose_recv #c (cv:cvar_t c) (p:vprop) (#q:_)
+val recompose_recv #c (cv:cvar_t c) (p:slprop) (#q:_)
 : stt_ghost unit emp_inames
   (cvinv cv q ** recv_core cv p) (fun _ -> recv cv p)

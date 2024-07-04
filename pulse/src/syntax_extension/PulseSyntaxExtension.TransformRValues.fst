@@ -273,7 +273,7 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
       let p = { p with s=Block { stmt } } in
       return (p, [], m)
 
-    | If { head; join_vprop; then_; else_opt } ->
+    | If { head; join_slprop; then_; else_opt } ->
       let! head, needs, m = transform_term m head in
       let! then_ = transform_stmt m then_ in
       let! else_opt =
@@ -284,7 +284,7 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
           let! else_ = transform_stmt m else_ in
           return (Some else_)
       in
-      let p = { p with s=If {head;join_vprop;then_;else_opt} } in
+      let p = { p with s=If {head;join_slprop;then_;else_opt} } in
       return (p, needs, m)
 
     | Match { head; returns_annot; branches } ->

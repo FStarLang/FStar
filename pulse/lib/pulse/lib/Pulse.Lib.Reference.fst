@@ -28,7 +28,7 @@ let pts_to
     (v:a)
   = H.pts_to r #p (U.raise_val v)
 
-let pts_to_is_small r p x = H.pts_to_is_small r p (U.raise_val x)
+let pts_to_is_slprop1 r p x = H.pts_to_is_slprop1 r p (U.raise_val x)
 
 ```pulse
 fn alloc (#a:Type u#0) (v:a)
@@ -136,7 +136,7 @@ let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 
 ```pulse
 fn
-raise_exists (#a:Type u#0) (frame:vprop) (p: U.raise_t u#0 u#1 a -> vprop)
+raise_exists (#a:Type u#0) (frame:slprop) (p: U.raise_t u#0 u#1 a -> slprop)
 requires frame ** (exists* (x:a). p (U.raise_val x))
 ensures frame ** (exists* (x:U.raise_t a). p x)
 {
@@ -147,9 +147,9 @@ ensures frame ** (exists* (x:U.raise_t a). p x)
 let with_local
     (#a:Type0)
     (init:a)
-    (#pre:vprop)
+    (#pre:slprop)
     (#ret_t:Type)
-    (#post:ret_t -> vprop)
+    (#post:ret_t -> slprop)
     (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                                  (fun v -> post v ** op_exists_Star (pts_to r #1.0R)))
 : stt ret_t pre post

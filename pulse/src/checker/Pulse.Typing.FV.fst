@@ -302,7 +302,7 @@ let bind_comp_freevars (#g:_) (#x:_) (#c1 #c2 #c:_)
   = match d with
     | Bind_comp _ _ _ _ dt _ _ -> tot_or_ghost_typing_freevars dt
 
-let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
+let rec slprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures (freevars t0 `Set.subset` vars_of_env g) <==>
                    (freevars t1 `Set.subset` vars_of_env g))
           (decreases v)
@@ -310,22 +310,22 @@ let rec vprop_equiv_freevars (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
     match v with
     | VE_Refl _ _ -> ()
     | VE_Sym _ _ _ v' -> 
-      vprop_equiv_freevars v'
+      slprop_equiv_freevars v'
     | VE_Trans g t0 t2 t1 v02 v21 ->
-      vprop_equiv_freevars v02;
-      vprop_equiv_freevars v21
+      slprop_equiv_freevars v02;
+      slprop_equiv_freevars v21
     | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      vprop_equiv_freevars v0;
-      vprop_equiv_freevars v1
+      slprop_equiv_freevars v0;
+      slprop_equiv_freevars v1
     | VE_Unit g t -> ()
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
+      let d0, d1 = slprop_eq_typing_inversion _ _ _ token in
       tot_or_ghost_typing_freevars d0;
       tot_or_ghost_typing_freevars d1
     | VE_Fa g x u b t0 t1 d ->
-      vprop_equiv_freevars d;
+      slprop_equiv_freevars d;
       close_open_inverse t0 x
 
 
@@ -336,9 +336,9 @@ let st_equiv_freevars #g (#c1 #c2:_)
     (requires freevars_comp c1 `Set.subset` vars_of_env g)
     (ensures freevars_comp c2 `Set.subset` vars_of_env g)    
   = match d with
-    | ST_VPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post -> (
-      vprop_equiv_freevars eq_pre;
-      vprop_equiv_freevars eq_post;
+    | ST_SLPropEquiv _ _ _ x _ _ _ eq_res eq_pre eq_post -> (
+      slprop_equiv_freevars eq_pre;
+      slprop_equiv_freevars eq_post;
       freevars_open_term_inv (comp_post c1) x;
       freevars_open_term_inv (comp_post c2) x;
       refl_equiv_freevars eq_res
@@ -674,7 +674,7 @@ fun d cb ->
   match d with
   | T_Rewrite _ _ _ p_typing equiv_p_q ->
     tot_or_ghost_typing_freevars p_typing;
-    vprop_equiv_freevars equiv_p_q
+    slprop_equiv_freevars equiv_p_q
 
 let st_typing_freevars_withlocal : st_typing_freevars_case T_WithLocal? =
 fun d cb ->

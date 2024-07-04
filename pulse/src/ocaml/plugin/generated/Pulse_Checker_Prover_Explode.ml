@@ -1,13 +1,13 @@
 open Prims
-let (has_structure : Pulse_Syntax_Base.vprop -> Prims.bool) =
+let (has_structure : Pulse_Syntax_Base.slprop -> Prims.bool) =
   fun q ->
     match Pulse_Syntax_Pure.inspect_term q with
     | Pulse_Syntax_Pure.Tm_Star (uu___, uu___1) -> true
     | uu___ -> false
 let (__explode1 :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
-      ((Pulse_Syntax_Base.vprop Prims.list, unit) Prims.dtuple2
+    Pulse_Syntax_Base.slprop ->
+      ((Pulse_Syntax_Base.slprop Prims.list, unit) Prims.dtuple2
          FStar_Pervasives_Native.option,
         unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -22,13 +22,13 @@ let (__explode1 :
                    then
                      FStar_Pervasives_Native.Some
                        (Prims.Mkdtuple2
-                          ((Pulse_Syntax_Pure.vprop_as_list q), ()))
+                          ((Pulse_Syntax_Pure.slprop_as_list q), ()))
                    else FStar_Pervasives_Native.None))) uu___1 uu___
 let (explode1 :
   Pulse_Checker_Prover_Base.preamble ->
     unit Pulse_Checker_Prover_Base.prover_state ->
-      Pulse_Syntax_Base.vprop ->
-        ((Pulse_Syntax_Base.vprop Prims.list, unit) Prims.dtuple2
+      Pulse_Syntax_Base.slprop ->
+        ((Pulse_Syntax_Base.slprop Prims.list, unit) Prims.dtuple2
            FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -61,9 +61,9 @@ let rec (explode_aux :
   Pulse_Checker_Prover_Base.preamble ->
     unit Pulse_Checker_Prover_Base.prover_state ->
       Prims.bool ->
-        Pulse_Syntax_Base.vprop Prims.list ->
-          Pulse_Syntax_Base.vprop Prims.list ->
-            ((Pulse_Syntax_Base.vprop Prims.list * Prims.bool), unit)
+        Pulse_Syntax_Base.slprop Prims.list ->
+          Pulse_Syntax_Base.slprop Prims.list ->
+            ((Pulse_Syntax_Base.slprop Prims.list * Prims.bool), unit)
               FStar_Tactics_Effect.tac_repr)
   =
   fun uu___4 ->

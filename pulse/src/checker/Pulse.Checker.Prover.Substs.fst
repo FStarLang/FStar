@@ -464,4 +464,4 @@ let st_typing_nt_substs_derived
   assert (equal (push_env g (nt_subst_env g' ss)) g);
   d
 
-let vprop_equiv_nt_substs_derived _ _ _ _ _ = admit ()
+let slprop_equiv_nt_substs_derived _ _ _ _ _ = admit ()

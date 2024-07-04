@@ -61,20 +61,20 @@ let (extend_post_hint_for_local :
                                            (Prims.of_int (38))
                                            (Prims.of_int (19))
                                            (Prims.of_int (38))
-                                           (Prims.of_int (84)))))
+                                           (Prims.of_int (85)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "Pulse.Checker.WithLocal.fst"
                                            (Prims.of_int (38))
-                                           (Prims.of_int (87))
+                                           (Prims.of_int (88))
                                            (Prims.of_int (40))
                                            (Prims.of_int (7)))))
                                   (Obj.magic
                                      (Pulse_Checker_Pure.core_check_term g'
                                         conjunct
                                         FStar_TypeChecker_Core.E_Total
-                                        Pulse_Syntax_Pure.tm_vprop))
+                                        Pulse_Syntax_Pure.tm_slprop))
                                   (fun uu___ ->
                                      (fun c_typing ->
                                         Obj.magic

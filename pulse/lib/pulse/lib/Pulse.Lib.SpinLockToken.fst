@@ -22,7 +22,7 @@ module T = Pulse.Lib.InvToken
 module L = Pulse.Lib.SpinLock
 
 noeq
-type lock (v:vprop) : Type u#4 = {
+type lock (v:slprop) : Type u#4 = {
   l : L.lock;
 
   i : iname;
@@ -32,7 +32,7 @@ type lock (v:vprop) : Type u#4 = {
 }
 
 ```pulse
-fn new_lock (v:vprop { is_big v })
+fn new_lock (v:slprop { is_storable v })
   requires v
   returns _:lock v
   ensures emp
@@ -48,11 +48,11 @@ fn new_lock (v:vprop { is_big v })
 }
 ```
 
-let lock_acquired (#v:vprop) (l:lock v) : vprop =
+let lock_acquired (#v:slprop) (l:lock v) : slprop =
   L.lock_acquired l.l
 
 ```pulse
-fn lock_alive (#v:vprop) (l:lock v)
+fn lock_alive (#v:slprop) (l:lock v)
   requires emp
   ensures exists* (p:perm). L.lock_alive l.l #p v
 {
@@ -73,7 +73,7 @@ fn lock_alive (#v:vprop) (l:lock v)
 ```
 
 ```pulse
-fn acquire (#v:vprop) (l:lock v)
+fn acquire (#v:slprop) (l:lock v)
   requires emp
   ensures v ** lock_acquired l
 {
@@ -86,7 +86,7 @@ fn acquire (#v:vprop) (l:lock v)
 ```
 
 ```pulse
-fn release (#v:vprop) (l:lock v)
+fn release (#v:slprop) (l:lock v)
   requires v ** lock_acquired l
   ensures emp
 {

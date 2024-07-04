@@ -42,9 +42,9 @@ let mk_ht
   : ht_t k v
   = { sz; hashf; contents; }
 
-let models_is_small #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
-  : Lemma (is_small (models ht pht))
-          [SMTPat (is_small (models ht pht))] = ()
+let models_is_slprop1 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+  : Lemma (is_slprop1 (models ht pht))
+          [SMTPat (is_slprop1 (models ht pht))] = ()
 
 ```pulse
 fn alloc

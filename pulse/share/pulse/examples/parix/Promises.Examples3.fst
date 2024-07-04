@@ -25,7 +25,7 @@ assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : v:vprop { is_big v } =
+let inv_p : v:slprop { is_slprop2 v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
@@ -51,7 +51,7 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
 }
 ```
 
-let goal : vprop =
+let goal : slprop =
   exists* v_res. pts_to res #0.5R v_res ** pure (Some? v_res)
 
 
@@ -114,7 +114,7 @@ fn proof
 }
 ```
 
-let is (i:iname) : invlist = [(inv_p <: vprop), i]
+let is (i:iname) : invlist = [(inv_p <: slprop), i]
 
 let cheat_proof (i:iname)
   : (_:unit) ->

@@ -4,6 +4,11 @@ open FStar.Ghost
 open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
+val join_empty_inverse (m0 m1:base_heap.sep.core)
+: Lemma 
+    (requires base_heap.sep.disjoint m0 m1 /\ base_heap.sep.join m0 m1 == base_heap.sep.empty)
+    (ensures m0 == base_heap.sep.empty /\ m1 == base_heap.sep.empty)
+
 val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
 let non_null_core_ghost_ref = r:core_ghost_ref { not (core_ghost_ref_is_null r) }
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat
@@ -37,6 +42,8 @@ val bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
     (base_heap.full_mem_pred m0 ==> base_heap.full_mem_pred m1)
   }
 
+val pts_to (#a:Type u#a) (#p:pcm a) (r:ref a p) (x:a) : (base_heap u#a).slprop
+val ghost_pts_to (meta:bool) (#a:Type u#a) (#p:pcm a) (r:ghost_ref a p) (x:a) : (base_heap u#a).slprop
 val interp_ghost_pts_to 
       (i:core_ghost_ref)
       (#meta:bool)
@@ -45,7 +52,7 @@ val interp_ghost_pts_to
       (v:a)
       (h0:(base_heap u#a).sep.core)
 : Lemma
-  (requires base_heap.interp (base_heap.ghost_pts_to meta #a #pcm i v) h0)
+  (requires base_heap.interp (ghost_pts_to meta #a #pcm i v) h0)
   (ensures (
     not (core_ghost_ref_is_null i) /\ (
     match select_ghost (core_ghost_ref_as_addr i) h0 with
@@ -64,8 +71,8 @@ val ghost_pts_to_compatible_equiv
       (x:ghost_ref a pcm)
       (v0:a)
       (v1:a{composable pcm v0 v1})
-: Lemma ((base_heap.ghost_pts_to meta x v0 `base_heap.star` base_heap.ghost_pts_to meta x v1) ==
-         (base_heap.ghost_pts_to meta x (op pcm v0 v1)))
+: Lemma ((ghost_pts_to meta x v0 `base_heap.star` ghost_pts_to meta x v1) ==
+         (ghost_pts_to meta x (op pcm v0 v1)))
 
 let heap_cell_evolves (h0 h1:option H.cell)
 : prop
@@ -120,7 +127,7 @@ val ghost_extend
     (x:erased a{pcm.refine x})
 : act:ghost_action_except base_heap (ghost_ref a pcm) ex    
         base_heap.emp 
-        (fun r -> base_heap.ghost_pts_to meta r x) {
+        (fun r -> ghost_pts_to meta r x) {
             reveal meta == false ==> preserves_inames act
         }
 
@@ -129,7 +136,7 @@ val ghost_extend
 val ghost_extend_spec
       (#meta:bool)
       (#ex:inames base_heap)
-      #a #pcm (x:a { pcm.refine x })
+      (#a:Type u#a) #pcm (x:a { pcm.refine x })
       (frame:base_heap.slprop)
       (h:full_mem base_heap { 
         inames_ok ex h /\
@@ -152,8 +159,8 @@ val ghost_read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : act:ghost_action_except base_heap (erased (v:a{compatible p x v /\ p.refine v})) ex
-        (base_heap.ghost_pts_to meta r x)
-        (fun v -> base_heap.ghost_pts_to meta r (f v)) {
+        (ghost_pts_to meta r x)
+        (fun v -> ghost_pts_to meta r (f v)) {
             preserves_inames act
         }
 
@@ -166,8 +173,8 @@ val ghost_write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : act:ghost_action_except base_heap unit ex
-        (base_heap.ghost_pts_to meta r x)
-        (fun _ -> base_heap.ghost_pts_to meta r y) {
+        (ghost_pts_to meta r x)
+        (fun _ -> ghost_pts_to meta r y) {
             reveal meta == false ==> preserves_inames act
         }
 
@@ -180,8 +187,8 @@ val ghost_share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : act:ghost_action_except base_heap unit ex
-    (base_heap.ghost_pts_to meta r (v0 `op pcm` v1))
-    (fun _ -> base_heap.ghost_pts_to meta r v0 `base_heap.star` base_heap.ghost_pts_to meta r v1) {
+    (ghost_pts_to meta r (v0 `op pcm` v1))
+    (fun _ -> ghost_pts_to meta r v0 `base_heap.star` ghost_pts_to meta r v1) {
         preserves_inames act
     }
 
@@ -195,8 +202,8 @@ val ghost_gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : act:ghost_action_except base_heap (squash (composable pcm v0 v1)) ex
-    (base_heap.ghost_pts_to meta r v0 `base_heap.star` base_heap.ghost_pts_to meta r v1)
-    (fun _ -> base_heap.ghost_pts_to meta r (op pcm v0 v1)) {
+    (ghost_pts_to meta r v0 `base_heap.star` ghost_pts_to meta r v1)
+    (fun _ -> ghost_pts_to meta r (op pcm v0 v1)) {
         preserves_inames act
     }
 
@@ -207,7 +214,7 @@ val extend
     (x:a{pcm.refine x})
 : act:action_except base_heap (ref a pcm) ex    
         base_heap.emp 
-        (fun r -> base_heap.pts_to r x) {
+        (fun r -> pts_to r x) {
             preserves_inames act
         }
 
@@ -221,8 +228,8 @@ val read
         -> GTot (y:a{compatible p y v /\
                      FStar.PCM.frame_compatible p x v y})))
 : act:action_except base_heap (v:a{compatible p x v /\ p.refine v}) ex
-    (base_heap.pts_to r x)
-    (fun v -> base_heap.pts_to r (f v)) {
+    (pts_to r x)
+    (fun v -> pts_to r (f v)) {
         preserves_inames act
     }
 
@@ -234,8 +241,8 @@ val write
     (x y:Ghost.erased a)
     (f:FStar.PCM.frame_preserving_upd p x y)
 : act:action_except base_heap unit ex
-    (base_heap.pts_to r x)
-    (fun _ -> base_heap.pts_to r y) {
+    (pts_to r x)
+    (fun _ -> pts_to r y) {
         preserves_inames act
     }
 
@@ -247,8 +254,8 @@ val share
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a{composable pcm v0 v1})
 : act:ghost_action_except base_heap unit ex
-    (base_heap.pts_to r (v0 `op pcm` v1))
-    (fun _ -> base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1) {
+    (pts_to r (v0 `op pcm` v1))
+    (fun _ -> pts_to r v0 `base_heap.star` pts_to r v1) {
         preserves_inames act
     }
 
@@ -260,8 +267,8 @@ val gather
     (v0:FStar.Ghost.erased a)
     (v1:FStar.Ghost.erased a)
 : act:ghost_action_except base_heap (squash (composable pcm v0 v1)) ex
-    (base_heap.pts_to r v0 `base_heap.star` base_heap.pts_to r v1)
-    (fun _ -> base_heap.pts_to r (op pcm v0 v1)) {
+    (pts_to r v0 `base_heap.star` pts_to r v1)
+    (fun _ -> pts_to r (op pcm v0 v1)) {
         preserves_inames act
     }
 
@@ -272,8 +279,8 @@ val pts_to_not_null_action
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
 : act:ghost_action_except base_heap (squash (not (is_null r))) ex
-    (base_heap.pts_to r v)
-    (fun _ -> base_heap.pts_to r v) {
+    (pts_to r v)
+    (fun _ -> pts_to r v) {
         preserves_inames act
     }
 

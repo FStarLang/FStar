@@ -28,12 +28,12 @@ module Metatheory = Pulse.Typing.Metatheory
 module RU = Pulse.RuntimeUtils
 
 let while_cond_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
+                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
   : comp_typing_u g (comp_while_cond x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_cond x inv_body)
 
 let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:term)
-                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_vprop)
+                           (inv_typing:tot_typing g (tm_exists_sl u (as_binder ty) inv_body) tm_slprop)
   : comp_typing_u g (comp_while_body x inv_body)
   = Metatheory.admit_comp_typing g (comp_while_body x inv_body)
 
@@ -41,7 +41,7 @@ let while_body_comp_typing (#g:env) (u:universe) (x:ppname) (ty:term) (inv_body:
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_While? t.term})
@@ -51,7 +51,7 @@ let check
   let g = push_context "while loop" t.range g in
   let Tm_While { invariant=inv; condition=cond; body; condition_var } = t.term in
   let (| ex_inv, inv_typing |) =
-    check_vprop (push_context "invariant" (term_range inv) g) 
+    check_slprop (push_context "invariant" (term_range inv) g) 
                 (tm_exists_sl u0 (mk_binder_ppname tm_bool condition_var) inv)
   in
 

@@ -3305,7 +3305,7 @@ let (bind_res_and_post_typing :
                                                                     (Prims.of_int (434))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (434))
-                                                                    (Prims.of_int (87)))))
+                                                                    (Prims.of_int (88)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -3315,7 +3315,7 @@ let (bind_res_and_post_typing :
                                                                     (Prims.of_int (435))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
-                                                                    (Pulse_Checker_Pure.check_vprop_with_core
+                                                                    (Pulse_Checker_Pure.check_slprop_with_core
                                                                     (Pulse_Typing_Env.push_binding
                                                                     g y
                                                                     Pulse_Syntax_Base.ppname_default
@@ -3351,7 +3351,7 @@ let (add_frame :
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.comp_st ->
         (unit, unit, unit) Pulse_Typing.st_typing ->
-          Pulse_Syntax_Base.vprop ->
+          Pulse_Syntax_Base.slprop ->
             unit ->
               (Pulse_Syntax_Base.st_term, Pulse_Syntax_Base.comp_st,
                 (unit, unit, unit) Pulse_Typing.st_typing)
@@ -3430,7 +3430,7 @@ let (apply_frame :
                      | FStar_Pervasives.Mkdtuple4
                          (res_typing, pre_typing, x, post_typing) ->
                          let st_equiv =
-                           Pulse_Typing.ST_VPropEquiv
+                           Pulse_Typing.ST_SLPropEquiv
                              (g, c', c'', x, (), (), (),
                                (FStar_Reflection_Typing.Rel_refl
                                   ((Pulse_Typing.elab_env g),
@@ -3446,7 +3446,7 @@ type ('g, 'ctxt, 'postuhint) st_typing_in_ctxt =
     (unit, unit, unit) Pulse_Typing.st_typing) FStar_Pervasives.dtuple3
 let (comp_for_post_hint :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         Pulse_Typing.post_hint_t ->
           Pulse_Syntax_Base.var ->

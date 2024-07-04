@@ -33,7 +33,7 @@ let mk_fv (nm:lident) (r:range) : fv =
 type term = Pulse_Syntax_Base.term
 type binder = Pulse_Syntax_Base.binder
 type comp = Pulse_Syntax_Base.comp
-type vprop = term
+type slprop = term
 
 let ppname_of_id (i:ident) : ppname = { name = FStar_Ident.string_of_id i; range = i.idRange }
 
@@ -53,8 +53,8 @@ let wr r t = Pulse_Syntax_Pure.pack_term_view_wr t r
 let tm_emp r : term = wr r Tm_Emp
 let tm_pure (p:term) r : term = wr r (Tm_Pure p)
 let tm_star (p0:term) (p1:term) r : term = wr r (Tm_Star (p0, p1))
-let tm_exists (b:binder) (body:vprop) r : term = wr r (Tm_ExistsSL (U_unknown, b, body))
-let tm_forall (b:binder) (body:vprop) r : term = wr r (Tm_ForallSL (U_unknown, b, body))
+let tm_exists (b:binder) (body:slprop) r : term = wr r (Tm_ExistsSL (U_unknown, b, body))
+let tm_forall (b:binder) (body:slprop) r : term = wr r (Tm_ForallSL (U_unknown, b, body))
 let map_aqual (q:S.aqual) =
   match q with
   | Some { S.aqual_implicit = true } -> Some Implicit
@@ -135,16 +135,16 @@ let tm_let_mut_array (x:binder) (v:term) (n:term) (k:st_term) (r:range) : st_ter
   PSB.(with_range (tm_with_local_array x v n k) r)
 
   
-let tm_while (head:st_term) (invariant: (ident * vprop)) (body:st_term) r : st_term =
+let tm_while (head:st_term) (invariant: (ident * slprop)) (body:st_term) r : st_term =
   PSB.(with_range (tm_while (snd invariant) head (ppname_of_id (fst invariant)) body) r)
    
-let tm_if (head:term) (returns_annot:vprop option) (then_:st_term) (else_:st_term) r : st_term =
+let tm_if (head:term) (returns_annot:slprop option) (then_:st_term) (else_:st_term) r : st_term =
   PSB.(with_range (tm_if head then_ else_ returns_annot) r)
 
-let tm_match (sc:term) (returns_:vprop option) (brs:branch list) r : st_term =
+let tm_match (sc:term) (returns_:slprop option) (brs:branch list) r : st_term =
   PSB.(with_range (tm_match sc returns_ brs) r)
 
-let tm_intro_exists (p:vprop) (witnesses:term list) r : st_term =
+let tm_intro_exists (p:slprop) (witnesses:term list) r : st_term =
   PSB.(with_range (tm_intro_exists p witnesses) r)
 
 let is_tm_intro_exists (s:st_term) : bool =

@@ -18,7 +18,7 @@ module Pulse.Class.Duplicable
 
 open Pulse.Lib.Core
 
-instance dup_inv (i : iname) (p : vprop)
+instance dup_inv (i : iname) (p : slprop)
   : duplicable (inv i p) = {
   dup_f = (fun () -> dup_inv i p);
 }

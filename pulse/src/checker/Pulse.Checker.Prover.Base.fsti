@@ -25,12 +25,12 @@ open Pulse.Checker.Base
 module T = FStar.Tactics.V2
 module PS = Pulse.Checker.Prover.Substs
 
-let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
+let slprop_typing (g:env) (t:term) = tot_typing g t tm_slprop
 
 //
 // Scaffolding for adding elims
 //
-// Given a function f : vprop -> T.Tac bool that decides whether a vprop
+// Given a function f : slprop -> T.Tac bool that decides whether a slprop
 //   should be elim-ed,
 //   and an mk function to create the elim term, comp, and typing,
 //   add_elims will create a continuation_elaborator
@@ -38,21 +38,21 @@ let vprop_typing (g:env) (t:term) = tot_typing g t tm_vprop
 
 type mk_t =
   #g:env ->
-  #v:vprop ->
-  tot_typing g v tm_vprop ->
+  #v:slprop ->
+  tot_typing g v tm_slprop ->
   T.Tac (option (x:ppname &
                  t:st_term &
                  c:comp { stateful_comp c /\ comp_pre c == v } &
                  st_typing g t c))
 
 val add_elims (#g:env) (#ctxt:term) (#frame:term)
-  (f:vprop -> T.Tac bool)
+  (f:slprop -> T.Tac bool)
   (mk:mk_t)
-  (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_vprop)
+  (ctxt_typing:tot_typing g (tm_star ctxt frame) tm_slprop)
   (uvs:env { disjoint uvs g })
    : T.Tac (g':env { env_extends g' g /\ disjoint uvs g' } &
             ctxt':term &
-            tot_typing g' (tm_star ctxt' frame) tm_vprop &
+            tot_typing g' (tm_star ctxt' frame) tm_slprop &
             continuation_elaborator g (tm_star ctxt frame) g' (tm_star ctxt' frame))
 
 //
@@ -62,11 +62,11 @@ val add_elims (#g:env) (#ctxt:term) (#frame:term)
 noeq type preamble = {
   g0 : env;
   
-  ctxt : vprop;
-  frame : vprop;
-  ctxt_frame_typing : vprop_typing g0 (tm_star ctxt frame);
+  ctxt : slprop;
+  frame : slprop;
+  ctxt_frame_typing : slprop_typing g0 (tm_star ctxt frame);
 
-  goals : vprop;
+  goals : slprop;
 }
 
 let op_Array_Access (ss:PS.ss_t) (t:term) =
@@ -78,8 +78,8 @@ noeq
 type prover_state (preamble:preamble) = {
   pg : g:env { g `env_extends` preamble.g0 };
 
-  remaining_ctxt : list vprop;
-  remaining_ctxt_frame_typing : vprop_typing pg (list_as_vprop remaining_ctxt * preamble.frame);
+  remaining_ctxt : list slprop;
+  remaining_ctxt_frame_typing : slprop_typing pg (list_as_slprop remaining_ctxt * preamble.frame);
 
   uvs : uvs:env { disjoint uvs pg };
   ss : PS.ss_t;
@@ -95,20 +95,20 @@ type prover_state (preamble:preamble) = {
     PS.is_permutation nts ss
   });
 
-  solved : vprop;
-  unsolved : list vprop;
+  solved : slprop;
+  unsolved : list slprop;
 
   (* Note: we substitute solved, as it can contain some of the uvars in
      uvs, but not remaining_ctxt or preamble.frame which do not mention
      them (see their typing hypotheses above, in pg, which is disjoint
      from uvs. Substituting would not be wrong, just useless. *)
   k : continuation_elaborator preamble.g0 (preamble.ctxt * preamble.frame)
-                              pg ((list_as_vprop remaining_ctxt * preamble.frame) * ss.(solved));
+                              pg ((list_as_slprop remaining_ctxt * preamble.frame) * ss.(solved));
 
   // GM: Why isn't the rhs substituted here?
-  goals_inv : vprop_equiv (push_env pg uvs)
+  goals_inv : slprop_equiv (push_env pg uvs)
                 preamble.goals
-                (list_as_vprop unsolved * solved);
+                (list_as_slprop unsolved * solved);
   solved_inv : squash (freevars ss.(solved) `Set.subset` dom pg);
   
   progress : bool; (* used by prover and rules to check for progress and restart if so *)

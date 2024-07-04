@@ -950,7 +950,7 @@ let rec (transform_stmt_with_reads :
                             uu___1)))
            | PulseSyntaxExtension_Sugar.If
                { PulseSyntaxExtension_Sugar.head1 = head;
-                 PulseSyntaxExtension_Sugar.join_vprop = join_vprop;
+                 PulseSyntaxExtension_Sugar.join_slprop = join_slprop;
                  PulseSyntaxExtension_Sugar.then_ = then_;
                  PulseSyntaxExtension_Sugar.else_opt = else_opt;_}
                ->
@@ -1018,9 +1018,9 @@ let rec (transform_stmt_with_reads :
                                                                 {
                                                                   PulseSyntaxExtension_Sugar.head1
                                                                     = head1;
-                                                                  PulseSyntaxExtension_Sugar.join_vprop
+                                                                  PulseSyntaxExtension_Sugar.join_slprop
                                                                     =
-                                                                    join_vprop;
+                                                                    join_slprop;
                                                                   PulseSyntaxExtension_Sugar.then_
                                                                     = then_1;
                                                                   PulseSyntaxExtension_Sugar.else_opt

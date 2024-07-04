@@ -529,9 +529,9 @@ let (find_inv_post :
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.WithInv.fst"
                                                           (Prims.of_int (177))
-                                                          (Prims.of_int (53))
+                                                          (Prims.of_int (54))
                                                           (Prims.of_int (177))
-                                                          (Prims.of_int (65)))))
+                                                          (Prims.of_int (66)))))
                                                  (FStar_Sealed.seal
                                                     (Obj.magic
                                                        (FStar_Range.mk_range
@@ -551,9 +551,9 @@ let (find_inv_post :
                                                                   (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (179))
-                                                                    (Prims.of_int (61))
+                                                                    (Prims.of_int (62))
                                                                     (Prims.of_int (179))
-                                                                    (Prims.of_int (71)))))
+                                                                    (Prims.of_int (72)))))
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
@@ -566,7 +566,7 @@ let (find_inv_post :
                                                                (recheck g
                                                                   (Pulse_Syntax_Pure.tm_inv
                                                                     i p)
-                                                                  Pulse_Syntax_Pure.tm_vprop
+                                                                  Pulse_Syntax_Pure.tm_slprop
                                                                   ()))
                                                             (fun
                                                                tm_inv_typing
@@ -1263,15 +1263,15 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (25))
+                                                                    (Prims.of_int (26))
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (44)))))
+                                                                    (Prims.of_int (45)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (234))
-                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (48))
                                                                     (Prims.of_int (396))
                                                                     (Prims.of_int (57)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1292,15 +1292,15 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (241))
-                                                                    (Prims.of_int (57))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (241))
-                                                                    (Prims.of_int (65)))))
+                                                                    (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (241))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (69))
                                                                     (Prims.of_int (396))
                                                                     (Prims.of_int (57)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -1422,7 +1422,7 @@ let (check :
                                                                     post_hint1.Pulse_Typing.post
                                                                     (Pulse_Syntax_Base.ppname_default,
                                                                     x))
-                                                                    Pulse_Syntax_Pure.tm_vprop
+                                                                    Pulse_Syntax_Pure.tm_slprop
                                                                     ()))
                                                                     (fun
                                                                     uu___5 ->
@@ -1861,7 +1861,7 @@ let (check :
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     (Prims.strcat
-                                                                    "Inconsistent vprops for iname "
+                                                                    "Inconsistent slprops for iname "
                                                                     (Prims.strcat
                                                                     uu___10
                                                                     " in pre ("))
@@ -2496,7 +2496,7 @@ let (check :
                                                                     (), (),
                                                                     body_typing,
                                                                     ())),
-                                                                    (Pulse_Typing.ST_VPropEquiv
+                                                                    (Pulse_Typing.ST_SLPropEquiv
                                                                     (g,
                                                                     (atomic_or_ghost_with_inames_and_pre_post
                                                                     c_body

@@ -29,11 +29,11 @@ val pts_to
     ([@@@equate_strict] r:ref a)
     (#[exact (`1.0R)] p:perm)
     (n:a)
-  : vprop
+  : slprop
 
-val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_small (pts_to r #p x))
-          [SMTPat (is_small (pts_to r #p x))]
+val pts_to_is_slprop1 (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_slprop1 (pts_to r #p x))
+          [SMTPat (is_slprop1 (pts_to r #p x))]
 
 [@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
 ```pulse
@@ -123,14 +123,14 @@ val fn gather2
   ensures  pts_to r x0 ** pure (x0 == x1)
 ```
 
-let cond b (p q:vprop) = if b then p else q
+let cond b (p q:slprop) = if b then p else q
 
 val with_local
   (#a:Type0)
   (init:a)
-  (#pre:vprop)
+  (#pre:slprop)
   (#ret_t:Type)
-  (#post:ret_t -> vprop)
+  (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                               (fun v -> post v ** op_exists_Star (pts_to r)))
   : stt ret_t pre post
@@ -142,9 +142,9 @@ fix a universe for ret_t. *)
 // val fn with_local
 //   (#a:Type0)
 //   (init:a)
-//   (#pre:vprop)
+//   (#pre:slprop)
 //   (#ret_t:Type u#0)
-//   (#post:ret_t -> vprop)
+//   (#post:ret_t -> slprop)
 //   (body : (r:ref a) -> stt ret_t (pre ** pts_to r init)
 //                                  (fun v -> post v ** op_exists_Star (pts_to r)))
 //   requires pre

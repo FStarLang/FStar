@@ -85,20 +85,20 @@ let (extend_post_hint :
                                                       (Prims.of_int (42))
                                                       (Prims.of_int (17))
                                                       (Prims.of_int (42))
-                                                      (Prims.of_int (82)))))
+                                                      (Prims.of_int (83)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "Pulse.Checker.WithLocalArray.fst"
                                                       (Prims.of_int (42))
-                                                      (Prims.of_int (85))
+                                                      (Prims.of_int (86))
                                                       (Prims.of_int (44))
                                                       (Prims.of_int (5)))))
                                              (Obj.magic
                                                 (Pulse_Checker_Pure.core_check_term
                                                    g' conjunct
                                                    FStar_TypeChecker_Core.E_Total
-                                                   Pulse_Syntax_Pure.tm_vprop))
+                                                   Pulse_Syntax_Pure.tm_slprop))
                                              (fun uu___ ->
                                                 (fun c_typing ->
                                                    Obj.magic

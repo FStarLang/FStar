@@ -20,10 +20,10 @@ module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #push-options "--ide_id_info_off"
 
-assume val p : vprop
+assume val p : slprop
 assume val g : unit -> stt unit emp (fun _ -> p)
 
-let folded_pts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
+let folded_pts_to (r:ref U32.t) (n:erased U32.t) : slprop = pts_to r n
 
 ```pulse
 fn unfold_test (r:ref U32.t) 
@@ -152,7 +152,7 @@ fn elim_intro_exists2 (r:ref U32.t)
 ```
 
 assume
-val pred (b:bool) : vprop
+val pred (b:bool) : slprop
 assume
 val read_pred () (#b:erased bool)
     : stt bool (pred b) (fun r -> pred r)
@@ -237,7 +237,7 @@ fn test_par (r1 r2:ref U32.t)
 ```
 
 // A test for rewrite
-let mpts_to (r:ref U32.t) (n:erased U32.t) : vprop = pts_to r n
+let mpts_to (r:ref U32.t) (n:erased U32.t) : slprop = pts_to r n
 
 ```pulse
 fn rewrite_test (r:ref U32.t)

@@ -5,7 +5,7 @@ open Pulse.Lib.Pervasives
 
 [@@fundeps [0]]
 class reflike (vt:Type) (rt:Type) = {
-  ( |-> ) : rt -> vt -> vprop;
+  ( |-> ) : rt -> vt -> slprop;
   alloc   : v:vt -> stt rt emp (fun r -> r |-> v);
   read    : r:rt -> #v0:erased vt ->
             stt vt (r |-> v0) (fun v -> (r |-> v0) ** pure (Ghost.reveal v0 == v));

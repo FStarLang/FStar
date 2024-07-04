@@ -18,7 +18,7 @@ module BugUnificationUnderBinder
 open Pulse.Lib.Pervasives
 
 assume
-val p (x:int) (y:int) : vprop
+val p (x:int) (y:int) : slprop
 
 ```pulse
 fn test (_:unit)
@@ -41,7 +41,7 @@ ensures emp
 ```
 
 assume
-val is_list (l:list int) : vprop
+val is_list (l:list int) : slprop
 open FStar.List.Tot
 
 let aux (l1 l2:list 'a) (x:'a) 

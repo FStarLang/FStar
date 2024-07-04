@@ -54,11 +54,11 @@ let as_term (t:S.term)
 let desugar_const (c:FStar.Const.sconst) : SW.constant =
   SW.inspect_const c
 
-let vprop_to_ast_term (v:Sugar.vprop)
+let slprop_to_ast_term (v:Sugar.slprop)
   : err A.term
   = let open FStar.Parser.AST in
     match v.v with
-    | Sugar.VPropTerm t -> return t
+    | Sugar.SLPropTerm t -> return t
 
 let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
   let open FStar.Parser.AST in
@@ -82,8 +82,8 @@ let comp_to_ast_term (c:Sugar.computation_type) : err A.term =
       let h = mk_term (App (h, return_ty, Nothing)) r Expr in
       h
   in
-  let! pre = vprop_to_ast_term c.precondition in
-  let! post = vprop_to_ast_term c.postcondition in
+  let! pre = slprop_to_ast_term c.precondition in
+  let! post = slprop_to_ast_term c.postcondition in
   let post =
     let pat = mk_pattern (PatVar (c.return_name, None, [])) r in
     let pat = mk_pattern (PatAscribed (pat, (return_ty, None))) r in
@@ -216,7 +216,7 @@ let idents_as_binders (env:env_t) (l:list ident)
       aux env [] [] l
     end
 
-let rec interpret_vprop_constructors (env:env_t) (v:S.term)
+let rec interpret_slprop_constructors (env:env_t) (v:S.term)
   : err SW.term
   = let head, args = U.head_and_args_full v in
     match head.n, args with
@@ -231,8 +231,8 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
       
     | S.Tm_fvar fv, [(l, _); (r, _)]
       when S.fv_eq_lid fv star_lid ->
-      let! l = interpret_vprop_constructors env l in
-      let! r = interpret_vprop_constructors env r in
+      let! l = interpret_slprop_constructors env l in
+      let! r = interpret_slprop_constructors env r in
       return <| SW.tm_star l r v.pos
 
     | S.Tm_fvar fv, [(l, _)]
@@ -240,7 +240,7 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
         match (SS.compress l).n with
         | S.Tm_abs {bs=[b]; body } ->
           let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_vprop_constructors env body in
+          let! body = interpret_slprop_constructors env body in
           return <| SW.tm_exists b body v.pos
         | _ ->
           return <| as_term v
@@ -251,7 +251,7 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
         match (SS.compress l).n with
         | S.Tm_abs {bs=[b]; body } ->
           let b = SW.mk_binder b.S.binder_bv.ppname (as_term b.S.binder_bv.sort) in
-          let! body = interpret_vprop_constructors env body in
+          let! body = interpret_slprop_constructors env body in
           return <| SW.tm_forall b body v.pos
         | _ ->
           return <| as_term v
@@ -266,18 +266,18 @@ let rec interpret_vprop_constructors (env:env_t) (v:S.term)
     | _ ->
       return <| as_term v
   
-let desugar_vprop (env:env_t) (v:Sugar.vprop)
-  : err SW.vprop
+let desugar_slprop (env:env_t) (v:Sugar.slprop)
+  : err SW.slprop
   = match v.v with
-    | Sugar.VPropTerm t -> 
+    | Sugar.SLPropTerm t -> 
       let! t = tosyntax env t in
-      interpret_vprop_constructors env t
+      interpret_slprop_constructors env t
 
 let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
   : err SW.comp
-  = //let! pres = map_err (desugar_vprop env) c.preconditions in
+  = //let! pres = map_err (desugar_slprop env) c.preconditions in
     //let pre = fold_right1 (fun a b -> SW.tm_star a b c.range) pres in
-    let! pre = desugar_vprop env c.precondition in
+    let! pre = desugar_slprop env c.precondition in
 
     let! ret = desugar_term env c.return_type in
 
@@ -296,9 +296,9 @@ let desugar_computation_type (env:env_t) (c:Sugar.computation_type)
     // let opens = L.fold_right (fun i is -> SW.tm_add_inv i is c.range) openss SW.tm_emp_inames in
 
     let env1, bv = push_bv env c.return_name in
-    // let! posts = map_err (desugar_vprop env1) c.postconditions in
+    // let! posts = map_err (desugar_slprop env1) c.postconditions in
     // let post = fold_right1 (fun a b -> SW.tm_star a b c.range) posts in
-    let! post = desugar_vprop env1 c.postcondition in
+    let! post = desugar_slprop env1 c.postcondition in
     let post = SW.close_term post bv.index in
 
     match c.tag with
@@ -346,15 +346,15 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
   = let open Sugar in
     match ht with
     | ASSERT vp ->
-      let! vp = desugar_vprop env vp in
+      let! vp = desugar_slprop env vp in
       return (SW.mk_assert_hint_type vp)
     | UNFOLD (ns, vp) -> 
-      let! vp = desugar_vprop env vp in
+      let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
       let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
       return (SW.mk_unfold_hint_type ns vp)
     | FOLD (ns, vp) -> 
-      let! vp = desugar_vprop env vp in
+      let! vp = desugar_slprop env vp in
       let! ns = resolve_names env ns in
       let ns = BU.map_opt ns (L.map FStar.Ident.string_of_lid) in
       return (SW.mk_fold_hint_type ns vp)
@@ -367,12 +367,12 @@ let desugar_hint_type (env:env_t) (ht:Sugar.hint_type)
             let! t2 = desugar_term env t2 in
             return (t1, t2))
       in
-      let! goal = map_err_opt (desugar_vprop env) goal in
+      let! goal = map_err_opt (desugar_slprop env) goal in
       let! tac_opt = desugar_tac_opt env tac_opt in
       return (SW.mk_rename_hint_type pairs goal tac_opt)
     | REWRITE (t1, t2, tac_opt) ->
-      let! t1 = desugar_vprop env t1 in
-      let! t2 = desugar_vprop env t2 in
+      let! t1 = desugar_slprop env t1 in
+      let! t2 = desugar_slprop env t2 in
       let! tac_opt = desugar_tac_opt env tac_opt in
       return (SW.mk_rewrite_hint_type t1 t2 tac_opt)
     | WILD ->
@@ -448,13 +448,13 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     | Block { stmt } ->
       desugar_stmt env stmt
 
-    | If { head; join_vprop; then_; else_opt } -> 
+    | If { head; join_slprop; then_; else_opt } -> 
       let! head = desugar_term env head in
-      let! join_vprop =
-        match join_vprop with
+      let! join_slprop =
+        match join_slprop with
         | None -> return None
         | Some (None, t, _opens) -> 
-          let! vp = desugar_vprop env t in
+          let! vp = desugar_slprop env t in
           return (Some vp)
       in
       let! then_ = desugar_stmt env then_ in
@@ -465,11 +465,11 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         | Some e -> 
           desugar_stmt env e
       in
-      return (SW.tm_if head join_vprop then_ else_ s.range)
+      return (SW.tm_if head join_slprop then_ else_ s.range)
 
     | Match { head; returns_annot; branches } ->
       let! head = desugar_term env head in
-      let! returns_annot = map_err_opt (fun (_, t, _opens) -> desugar_vprop env t) returns_annot in
+      let! returns_annot = map_err_opt (fun (_, t, _opens) -> desugar_slprop env t) returns_annot in
       let! branches = branches |> mapM (desugar_branch env) in
       return (SW.tm_match head returns_annot branches s.range)
 
@@ -477,14 +477,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
       let! guard = desugar_stmt env guard in
       let! invariant = 
         let env, bv = push_bv env id in
-        let! inv = desugar_vprop env invariant in
+        let! inv = desugar_slprop env invariant in
         return (SW.close_term inv bv.index)
       in
       let! body = desugar_stmt env body in
       return (SW.tm_while guard (id, invariant) body s.range)
 
-    | Introduce { vprop; witnesses } -> (
-      let! vp = desugar_vprop env vprop in
+    | Introduce { slprop; witnesses } -> (
+      let! vp = desugar_slprop env slprop in
       fail_if (not (SW.is_tm_exists vp))
              "introduce expects an existential formula"
              s.range ;!
@@ -493,10 +493,10 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
     )
 
     | Parallel { p1; p2; q1; q2; b1; b2 } ->
-      let! p1 = desugar_vprop env p1 in
-      let! p2 = desugar_vprop env p2 in
-      let! q1 = desugar_vprop env q1 in
-      let! q2 = desugar_vprop env q2 in      
+      let! p1 = desugar_slprop env p1 in
+      let! p2 = desugar_slprop env p2 in
+      let! q1 = desugar_slprop env q1 in
+      let! q2 = desugar_slprop env q2 in      
       let! b1 = desugar_stmt env b1 in
       let! b2 = desugar_stmt env b2 in
       return (SW.tm_par p1 p2 q1 q2 b1 b2 s.range)
@@ -520,14 +520,14 @@ let rec desugar_stmt (env:env_t) (s:Sugar.stmt)
         match returns_ with
         | None -> return None
         | Some (None, v, opens_opt) -> 
-          let! v = desugar_vprop env v in
+          let! v = desugar_slprop env v in
           let b = SW.mk_binder (Ident.id_of_text "_") (SW.tm_unknown s.range) in
           let! opens = opens_tm opens_opt in
           return (Some (b, v, opens))
         | Some (Some (x, t), v, opens_opt) ->
           let! t = desugar_term env t in
           let env, bv = push_bv env x in
-          let! v = desugar_vprop env v in
+          let! v = desugar_slprop env v in
           let v = SW.close_term v bv.index in
           let b = SW.mk_binder x t in
           let! opens = opens_tm opens_opt in
@@ -658,7 +658,7 @@ and desugar_sequence (env:env_t) (s1 s2:Sugar.stmt) r
 and desugar_proof_hint_with_binders (env:env_t) (s1:Sugar.stmt) (k:option Sugar.stmt) r
   : err SW.st_term
   = match s1.s with
-    | Sugar.ProofHintWithBinders { hint_type; binders=bs } -> //; vprop=v } ->
+    | Sugar.ProofHintWithBinders { hint_type; binders=bs } -> //; slprop=v } ->
       let! env, binders, bvs = desugar_binders env bs in
       let vars = L.map #_ #nat (fun bv -> bv.S.index) bvs in
       let! ht = desugar_hint_type env hint_type in

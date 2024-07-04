@@ -25,7 +25,7 @@ open EngineTypes
 open HACL
 
 assume
-val stack_is_erased : vprop
+val stack_is_erased : slprop
 
 let l0_is_authentic (repr:engine_record_repr) 
   : prop

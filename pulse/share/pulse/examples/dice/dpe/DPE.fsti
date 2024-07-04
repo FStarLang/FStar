@@ -273,7 +273,7 @@ let singleton (sid:sid_t) (p:perm) (t:trace) : GTot pcm_t =
 //   to capture the session history for a sid
 //
 noextract
-let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : vprop =
+let sid_pts_to (r:gref) (sid:sid_t) (t:trace) : slprop =
   ghost_pcm_pts_to r (singleton sid 0.5R t)
 
 noextract
@@ -283,7 +283,7 @@ type pht_t = PHT.pht_t sid_t session_state
 // Towards the global state invariant
 //
 
-let session_state_related (s:session_state) (gs:g_session_state) : v:vprop { is_small v } =
+let session_state_related (s:session_state) (gs:g_session_state) : v:slprop { is_slprop1 v } =
   match s, gs with
   | SessionStart, G_SessionStart
   | InUse, G_InUse _
@@ -297,7 +297,7 @@ let session_state_related (s:session_state) (gs:g_session_state) : v:vprop { is_
 //
 // Invariant for sessions that have been started
 //
-let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:vprop { is_small v } =
+let session_state_perm (r:gref) (pht:pht_t) (sid:sid_t) : v:slprop { is_slprop1 v } =
   exists* (s:session_state) (t:trace).
     pure (PHT.lookup pht sid == Some s) **
     sid_pts_to r sid t **
@@ -326,7 +326,7 @@ let sids_above_unused (s:sid_t) : GTot pcm_t = map_literal (fun sid ->
 //
 // Main invariant
 //
-let dpe_inv (r:gref) (s:option st) : vprop =
+let dpe_inv (r:gref) (s:option st) : slprop =
   match s with
   //
   // Global state is not initialized,
@@ -349,9 +349,9 @@ let dpe_inv (r:gref) (s:option st) : vprop =
     (exists* pht. models s.st_tbl pht **
                   on_range (session_perm r pht) 0 (U16.v s.st_ctr))
 
-let inv_is_small (r:gref) (s:option st)
-  : Lemma (is_small (dpe_inv r s))
-          [SMTPat (is_small (dpe_inv r s))] = ()
+let inv_is_slprop1 (r:gref) (s:option st)
+  : Lemma (is_slprop1 (dpe_inv r s))
+          [SMTPat (is_slprop1 (dpe_inv r s))] = ()
 
 val trace_ref : gref
 
@@ -359,7 +359,7 @@ val trace_ref : gref
 // The DPE API
 //
 
-let open_session_client_perm (s:option sid_t) : vprop =
+let open_session_client_perm (s:option sid_t) : slprop =
   match s with
   | None -> emp
   | Some s ->
@@ -405,7 +405,7 @@ let derive_child_post_trace (r:repr_t) (t:trace) =
   | _ -> False
 
 let derive_child_client_perm (sid:sid_t) (t0:trace) (repr:repr_t) (res:bool)
-  : vprop =
+  : slprop =
   match res with
   | false ->
     exists* t1. sid_pts_to trace_ref sid t1 **
@@ -452,7 +452,7 @@ let trace_valid_for_certify_key (t:trace) : prop =
   | G_Available (L1_context_repr _) -> True
   | _ -> False
 
-let certify_key_client_perm (sid:sid_t) (t0:trace) : vprop =
+let certify_key_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 
@@ -479,7 +479,7 @@ let trace_valid_for_sign (t:trace) : prop =
   | G_Available (L1_context_repr _) -> True
   | _ -> False
 
-let sign_client_perm (sid:sid_t) (t0:trace) : vprop =
+let sign_client_perm (sid:sid_t) (t0:trace) : slprop =
   exists* t1. sid_pts_to trace_ref sid t1 **
               pure (current_state t1 == current_state t0)
 

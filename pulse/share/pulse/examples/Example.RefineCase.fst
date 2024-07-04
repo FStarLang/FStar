@@ -26,7 +26,7 @@ type t_rep =
   | AR of int
   | BR of bool
 
-let t_perm (x:t) (v:t_rep) : vprop =
+let t_perm (x:t) (v:t_rep) : slprop =
     match x with
     | A r -> (
       match v with
@@ -41,7 +41,7 @@ let t_perm (x:t) (v:t_rep) : vprop =
 
 ```pulse
 ghost
-fn elim_false (#a:Type0) (p: (a -> vprop))
+fn elim_false (#a:Type0) (p: (a -> slprop))
     requires pure False
     returns x:a
     ensures p x

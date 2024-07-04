@@ -40,7 +40,7 @@ fn apply2 (#a #b:Type0) (f: (x:a -> stt b emp (fun _ -> emp))) (x:a)
 ```
 
 ```pulse
-fn apply_with_imps (#a #b:Type0) (#p:(a -> vprop)) (#q:(a -> b -> vprop))
+fn apply_with_imps (#a #b:Type0) (#p:(a -> slprop)) (#q:(a -> b -> slprop))
                   (f: (x:a -> stt b (p x) (fun y -> q x y)))
                   (x:a)
     requires p x
@@ -53,7 +53,7 @@ fn apply_with_imps (#a #b:Type0) (#p:(a -> vprop)) (#q:(a -> b -> vprop))
 
 ```pulse
 fn apply_with_imps_inst
-    (#a #b:Type0) (#p:(a -> nat -> vprop)) (#q:(a -> nat -> b -> vprop))
+    (#a #b:Type0) (#p:(a -> nat -> slprop)) (#q:(a -> nat -> b -> slprop))
     (f: (x:a -> #index:nat -> stt b (p x index) (fun y -> q x index y)))
     (x:a)
   requires p x 0
@@ -68,7 +68,7 @@ fn apply_with_imps_inst
 
 ```pulse
 fn apply_with_imps_explicit 
-    (#a #b:Type0) (#p:(a -> nat -> vprop)) (#q:(a -> nat -> b -> vprop))
+    (#a #b:Type0) (#p:(a -> nat -> slprop)) (#q:(a -> nat -> b -> slprop))
     (f: (x:a -> #index:erased nat -> stt b (p x index) (fun y -> q x index y)))
     (x:a) (#i:erased nat)
   requires p x i

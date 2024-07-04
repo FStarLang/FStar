@@ -17,18 +17,9 @@ let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref
 let add (#a:Type) (f:Set.decide_eq a) (x:a) (y:Set.set a) = Set.union (Set.singleton f x) y
 
 noeq
-type lens (mem:Type u#a) (core:Type u#b) = {
-  get: mem -> core;
-  put: core -> mem -> mem;
-  get_put : (m:mem -> Lemma (put (get m) m == m));
-  put_get : (c:core -> m:mem -> Lemma (get (put c m) == c));
-  put_put : (c0:core -> c1:core -> m:mem -> Lemma (put c1 (put c0 m) == put c1 m));
-}
-
-noeq
 type separable (mem:Type u#a) = {
   core: Type u#a;
-  lens_core: lens mem core;
+  core_of: mem -> core;
   empty : core;
   disjoint : core -> core -> prop;
   join : (
@@ -70,13 +61,6 @@ type separable (mem:Type u#a) = {
     m0:core ->
     Lemma (disjoint m0 empty /\ join m0 empty == m0)
   );
-  join_empty_inverse : (
-    m0:core ->
-    m1:core ->
-    Lemma 
-    (requires disjoint m0 m1 /\ join m0 m1 == empty)
-    (ensures m0 == empty /\ m1 == empty)
-  )
 }
 
 let is_affine_mem_prop (#m:Type u#a) (sep:separable m) (p:sep.core -> prop)
@@ -176,22 +160,22 @@ type heap_sig : Type u#(a + 2) = {
       (requires up (down p) == p /\ up (down q) == q)
       (ensures up (down (p `star` q)) == p `star` q)
     );
-    pts_to: (
-      #a:Type u#a ->
-      #p:pcm a ->
-      ref a p ->
-      a ->
-      slprop
-    );
+    // pts_to: (
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
-    ghost_pts_to: (
-      meta:bool ->
-      #a:Type u#a ->
-      #p:pcm a ->
-      ghost_ref a p ->
-      a ->
-      slprop
-    );
+    // ghost_pts_to: (
+    //   meta:bool ->
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ghost_ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
     iref:Type0;
     deq_iref:FStar.GhostSet.decide_eq iref;
@@ -209,7 +193,7 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       m:mem ->
       Lemma 
-        (requires interp (inv i p) (sep.lens_core.get m))
+        (requires interp (inv i p) (sep.core_of m))
         (ensures iname_ok i m)
     );
     mem_invariant_equiv : (
@@ -219,7 +203,7 @@ type heap_sig : Type u#(a + 2) = {
       p:slprop ->
       Lemma 
         (requires
-          interp (inv i p) (sep.lens_core.get m) /\
+          interp (inv i p) (sep.core_of m) /\
           ~(i `Set.mem` e))
         (ensures
           mem_invariant e m ==
@@ -235,9 +219,9 @@ let boxable (h:heap_sig u#a) = p:h.slprop { is_boxable p }
 
 let core_of (#h:heap_sig) (m:h.mem)
 : h.sep.core
-= h.sep.lens_core.get m
+= h.sep.core_of m
 
-let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)
+let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.core_of m)
 let inames (hs:heap_sig u#h) = Set.set hs.iref
 let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem)
 : prop

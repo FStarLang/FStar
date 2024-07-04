@@ -110,7 +110,7 @@ and term_to_string' (level:string) (t:term) : T.Tac string
               level
               (term_to_string' (indent level) body)
                           
-    | Tm_VProp -> "vprop"
+    | Tm_SLProp -> "slprop"
     | Tm_Inames -> "inames"
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
@@ -148,14 +148,14 @@ and term_to_doc t : T.Tac document
     | Tm_Star _ _ ->
       (* We gather all the components of the star so we can
          print in fully-flat or fully-unflattened style (otherwise
-          we could get most of the vprops in different lines, except for
+          we could get most of the slprops in different lines, except for
           one or two lines which have >1, which is misleading). See #96.
           Some callers to this module also canonicalize the expression
-          to put the vprops in order, but we MUST NOT do that here,
+          to put the slprops in order, but we MUST NOT do that here,
           since we are recursively called on arguments,
           and we must not confound pledge p (q ** r) with pledge p (r ** q),
           etc. *)
-      let components = vprop_as_list t in
+      let components = slprop_as_list t in
       let term_to_doc_paren (t:term) : T.Tac document =
         if should_paren_term t
         then parens (term_to_doc t)
@@ -185,7 +185,7 @@ and term_to_doc t : T.Tac document
         prefix 2 1 (prefix 2 1 (doc_of_string "forall*") bs_doc ^^ dot)
                    (term_to_doc body)
 
-    | Tm_VProp -> doc_of_string "vprop"
+    | Tm_SLProp -> doc_of_string "slprop"
     | Tm_Inames -> doc_of_string "inames"
     | Tm_EmpInames -> doc_of_string "emp_inames"
     | Tm_Inv i p ->
@@ -471,7 +471,7 @@ let tag_of_term (t:term) =
   | Tm_Star _ _ -> "Tm_Star"
   | Tm_ExistsSL _ _ _ -> "Tm_ExistsSL"
   | Tm_ForallSL _ _ _ -> "Tm_ForallSL"
-  | Tm_VProp -> "Tm_VProp"
+  | Tm_SLProp -> "Tm_SLProp"
   | Tm_Inames -> "Tm_Inames"
   | Tm_EmpInames -> "Tm_EmpInames"
   | Tm_Unknown -> "Tm_Unknown"

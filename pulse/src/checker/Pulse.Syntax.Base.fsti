@@ -84,7 +84,7 @@ type fv = {
 let as_fv l = { fv_name = l; fv_range = FStar.Range.range_0 }
 
 type term = R.term
-type vprop = term
+type slprop = term
 type typ = term
 
 noeq
@@ -98,8 +98,8 @@ noeq
 type st_comp = { (* ST pre (x:res) post ... x is free in post *)
   u:universe;
   res:term;
-  pre:vprop;
-  post:vprop
+  pre:slprop;
+  post:slprop
 }
 
 type observability =
@@ -162,15 +162,15 @@ let ctag_of_effect_annot (x:effect_annot) : option ctag =
 noeq
 type proof_hint_type =
   | ASSERT {
-      p:vprop
+      p:slprop
     }
   | FOLD { 
       names:option (list string);
-      p:vprop;
+      p:slprop;
     }
   | UNFOLD {
       names:option (list string);
-      p:vprop
+      p:slprop
     }
   | RENAME { //rename e as e' [in p]
       pairs:list (term & term);
@@ -178,8 +178,8 @@ type proof_hint_type =
       tac_opt : option term; (* optional tactic *)
     }
   | REWRITE {
-      t1:vprop;
-      t2:vprop;
+      t1:slprop;
+      t2:slprop;
       tac_opt : option term; (* optional tactic *)
     }
     (* NB: A REWRITE proof hint will elaborate to a Tm_Rewrite
@@ -229,21 +229,21 @@ type st_term' =
       b:term;
       then_:st_term;
       else_:st_term;
-      post:option vprop;
+      post:option slprop;
     }
   | Tm_Match {
       sc:term;
-      returns_:option vprop;
+      returns_:option slprop;
       brs: list branch;
     }
   | Tm_IntroPure {
       p:term;
     }
   | Tm_ElimExists {
-      p:vprop;
+      p:slprop;
     }
   | Tm_IntroExists {
-      p:vprop;
+      p:slprop;
       witnesses:list term;
     }
   | Tm_While {
@@ -291,7 +291,7 @@ type st_term' =
   | Tm_WithInv {
       name : term; // invariant name is an F* term that is an Tm_fvar or Tm_name
       body : st_term;
-      returns_inv : option (binder & vprop & term);  // returns _:t ensures p opens is
+      returns_inv : option (binder & slprop & term);  // returns _:t ensures p opens is
     }
 
 and st_term = {

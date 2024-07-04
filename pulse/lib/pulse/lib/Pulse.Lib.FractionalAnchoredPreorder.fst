@@ -571,7 +571,7 @@ let perm_ok #v #p #s (a:avalue #v #p s)
   = perm_opt_composable (fst (avalue_perm a)) None
 
 /// You can take a snapshot of any knowledge
-///   - perm_ok is a side-condition. Any vprop defined on top of this
+///   - perm_ok is a side-condition. Any slprop defined on top of this
 ///     will ensure that the permissions are always <= 1.0
 let snapshot_lemma (#v:Type)
                    (#p:preorder v)

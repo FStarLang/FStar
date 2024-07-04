@@ -25,7 +25,8 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
     (let p = Syntax.string_of_mlpath p in
      p = "Pulse.Lib.Reference.ref" ||
      p = "Pulse.Lib.Array.Core.array" ||
-     p = "Pulse.Lib.Vec.vec")
+     p = "Pulse.Lib.Vec.vec" ||
+     p = "Pulse.Lib.Box.box")
     ->
       TBuf (translate_type_without_decay env arg)
 
@@ -75,12 +76,14 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
 
   | MLE_App({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e ])}, [_v])}, [_perm])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e; _v; _perm ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang" ->
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Bang"
+      || string_of_mlpath p = "Pulse.Lib.Box.op_Bang" ->
     EBufRead (translate_expr env e, EQualified (["C"], "_zero_for_deref"))
 
   | MLE_App ({expr=MLE_App({expr=MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1 ])}, [e2])}, [_e3])
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ e1; e2; _e3 ])
-    when string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals" ->
+    when string_of_mlpath p = "Pulse.Lib.Reference.op_Colon_Equals"
+      || string_of_mlpath p = "Pulse.Lib.Box.op_Colon_Equals" ->
     EBufWrite (translate_expr env e1, EQualified (["C"], "_zero_for_deref"), translate_expr env e2)
 
   (* Pulse arrays *)

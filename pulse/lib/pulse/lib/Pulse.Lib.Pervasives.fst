@@ -90,8 +90,8 @@ ghost
 fn call_ghost 
       (#a:Type0)
       (#b: a -> Type0)
-      (#pre: a -> vprop)
-      (#post: (x:a -> b x -> vprop))
+      (#pre: a -> slprop)
+      (#post: (x:a -> b x -> slprop))
       (f:(x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
       (x:a)
 requires pre x
@@ -106,7 +106,7 @@ ensures post x y
 
 ```pulse
 ghost
-fn elim_cond_true (b:bool) (p q:vprop)
+fn elim_cond_true (b:bool) (p q:slprop)
 requires (cond b p q ** pure (b == true))
 ensures p
 {
@@ -126,7 +126,7 @@ ensures q
 
 ```pulse
 ghost
-fn intro_cond_true (p q:vprop)
+fn intro_cond_true (p q:slprop)
 requires p
 ensures cond true p q
 {
@@ -136,7 +136,7 @@ ensures cond true p q
 
 ```pulse
 ghost
-fn intro_cond_false (p q:vprop)
+fn intro_cond_false (p q:slprop)
 requires q
 ensures cond false p q
 {

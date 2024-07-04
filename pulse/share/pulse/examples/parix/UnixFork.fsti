@@ -24,11 +24,11 @@ open Pulse.Lib.Pledge
 new
 val thread : Type0
 
-val joinable : thread -> vprop
-val done     : thread -> vprop (* i.e. reapable/zombie *)
+val joinable : thread -> slprop
+val done     : thread -> slprop (* i.e. reapable/zombie *)
 
 val fork 
-  (#pre #post : vprop)
+  (#pre #post : slprop)
   (f : unit -> stt unit pre (fun () -> post))
   : stt thread pre (fun th -> joinable th ** pledge emp_inames (done th) post)
 

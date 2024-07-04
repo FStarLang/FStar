@@ -134,9 +134,9 @@ fnBody:
     { Inr (lambda, typ) }
 
 pulseComputationType:
-  | REQUIRES t=pulseVprop
+  | REQUIRES t=pulseSLProp
     ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) })
-    ENSURES t2=pulseVprop
+    ENSURES t2=pulseSLProp
     maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
     {
         let i, r =
@@ -171,12 +171,12 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
-  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseVprop LBRACE body=pulseStmt RBRACE
+  | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseSLProp LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_while tm i v body }
-  | INTRO p=pulseVprop WITH ws=nonempty_list(indexingTerm)
+  | INTRO p=pulseSLProp WITH ws=nonempty_list(indexingTerm)
     { PulseSyntaxExtension_Sugar.mk_intro p ws }
-  | PARALLEL REQUIRES p1=pulseVprop AND p2=pulseVprop
-             ENSURES q1=pulseVprop AND q2=pulseVprop
+  | PARALLEL REQUIRES p1=pulseSLProp AND p2=pulseSLProp
+             ENSURES q1=pulseSLProp AND q2=pulseSLProp
              LBRACE b1=pulseStmt RBRACE
              LBRACE b2=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_par p1 p2 q1 q2 b1 b2 }
@@ -184,11 +184,11 @@ pulseStmtNoSeq:
     {
         PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders body bs
     }
-  | bs=withBindersOpt ASSERT p=pulseVprop
+  | bs=withBindersOpt ASSERT p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (ASSERT p) bs }
-  | bs=withBindersOpt UNFOLD ns=option(names) p=pulseVprop
+  | bs=withBindersOpt UNFOLD ns=option(names) p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (UNFOLD (ns,p)) bs }
-  | bs=withBindersOpt FOLD ns=option(names) p=pulseVprop
+  | bs=withBindersOpt FOLD ns=option(names) p=pulseSLProp
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders (FOLD (ns,p)) bs }
   | bs=withBinders UNDERSCORE
     { PulseSyntaxExtension_Sugar.mk_proof_hint_with_binders WILD bs }
@@ -205,7 +205,7 @@ pulseStmtNoSeq:
     { PulseSyntaxExtension_Sugar.mk_block s }
 
 matchStmt:
-  | MATCH tm=appTermNoRecordExp c=option(ensuresVprop) LBRACE brs=list(pulseMatchBranch) RBRACE
+  | MATCH tm=appTermNoRecordExp c=option(ensuresSLProp) LBRACE brs=list(pulseMatchBranch) RBRACE
     { PulseSyntaxExtension_Sugar.mk_match tm c brs }
 
 bindableTerm:
@@ -213,7 +213,7 @@ bindableTerm:
   | s=noSeqTerm { Default_initializer s }
   
 pulseBindableTerm:
-  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresVprop) LBRACE body=pulseStmt RBRACE
+  | WITH_INVS names=nonempty_list(atomicTerm) r=option(ensuresSLProp) LBRACE body=pulseStmt RBRACE
     { PulseSyntaxExtension_Sugar.mk_with_invs names body r }
   
 pulseLambda:
@@ -225,10 +225,10 @@ pulseLambda:
     }
 
 rewriteBody:
-  | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseVprop { t })
+  | EACH pairs=separated_nonempty_list (COMMA, x=appTerm AS y=appTerm { (x, y)}) goal=option(IN t=pulseSLProp { t })
          tac_opt=option(BY tac=noSeqTerm {tac})
     { RENAME(pairs, goal, tac_opt) }
-  | p1=pulseVprop AS p2=pulseVprop tac_opt=option(BY tac=noSeqTerm {tac})
+  | p1=pulseSLProp AS p2=pulseSLProp tac_opt=option(BY tac=noSeqTerm {tac})
     { PulseSyntaxExtension_Sugar.REWRITE(p1, p2, tac_opt) }
 
 names:
@@ -244,8 +244,8 @@ withBindersOpt:
     { w }
   | { [] }
 
-ensuresVprop:
-  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseVprop maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
+ensuresSLProp:
+  | ret=option(RETURNS i=lidentOrUnderscore COLON r=term { (i, r) }) ENSURES s=pulseSLProp maybe_opens=option(OPENS inv=appTermNoRecordExp { inv })
     { ret, s, maybe_opens }
 
 pulseMatchBranch:
@@ -267,7 +267,7 @@ pulseStmt:
     }
 
 ifStmt:
-  | IF tm=appTermNoRecordExp vp=option(ensuresVprop) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
+  | IF tm=appTermNoRecordExp vp=option(ensuresSLProp) LBRACE th=pulseStmt RBRACE e=option(elseBlock)
     { PulseSyntaxExtension_Sugar.mk_if tm vp th e }
 
 elseBlock:
@@ -280,6 +280,6 @@ mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
-pulseVprop:
+pulseSLProp:
   | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
-    { PulseSyntaxExtension_Sugar.(as_vprop (VPropTerm p) (rr $loc)) }
+    { PulseSyntaxExtension_Sugar.(as_slprop (SLPropTerm p) (rr $loc)) }

@@ -1,30 +1,31 @@
 open Prims
-type ('g, 't) vprop_typing = unit
+type ('g, 't) slprop_typing = unit
 type mk_t =
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
            Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
            FStar_Pervasives.dtuple4 FStar_Pervasives_Native.option,
           unit) FStar_Tactics_Effect.tac_repr
-let rec (list_as_vprop' :
-  Pulse_Syntax_Base.vprop ->
-    Pulse_Syntax_Base.vprop Prims.list -> Pulse_Syntax_Base.vprop)
+let rec (list_as_slprop' :
+  Pulse_Syntax_Base.slprop ->
+    Pulse_Syntax_Base.slprop Prims.list -> Pulse_Syntax_Base.slprop)
   =
   fun vp ->
     fun fvps ->
       match fvps with
       | [] -> vp
-      | hd::tl -> list_as_vprop' (Pulse_Syntax_Pure.tm_star vp hd) tl
+      | hd::tl -> list_as_slprop' (Pulse_Syntax_Pure.tm_star vp hd) tl
 let rec (canon_right_aux :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop Prims.list ->
-      (Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop Prims.list ->
+      (Pulse_Syntax_Base.slprop ->
          (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
         ->
-        ((Pulse_Syntax_Base.vprop Prims.list,
-           Pulse_Syntax_Base.vprop Prims.list, unit) FStar_Pervasives.dtuple3,
+        ((Pulse_Syntax_Base.slprop Prims.list,
+           Pulse_Syntax_Base.slprop Prims.list, unit)
+           FStar_Pervasives.dtuple3,
           unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___2 ->
@@ -124,7 +125,7 @@ let (canon_right :
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
         unit ->
-          (Pulse_Syntax_Base.vprop ->
+          (Pulse_Syntax_Base.slprop ->
              (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
             ->
             ((Pulse_Syntax_Base.term, unit,
@@ -143,30 +144,30 @@ let (canon_right :
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.Prover.Base.fst"
                        (Prims.of_int (75)) (Prims.of_int (33))
-                       (Prims.of_int (75)) (Prims.of_int (73)))))
+                       (Prims.of_int (75)) (Prims.of_int (74)))))
               (FStar_Sealed.seal
                  (Obj.magic
                     (FStar_Range.mk_range "Pulse.Checker.Prover.Base.fst"
                        (Prims.of_int (75)) (Prims.of_int (3))
-                       (Prims.of_int (80)) (Prims.of_int (110)))))
+                       (Prims.of_int (80)) (Prims.of_int (111)))))
               (Obj.magic
-                 (canon_right_aux g (Pulse_Syntax_Pure.vprop_as_list ctxt) f))
+                 (canon_right_aux g (Pulse_Syntax_Pure.slprop_as_list ctxt) f))
               (fun uu___ ->
                  FStar_Tactics_Effect.lift_div_tac
                    (fun uu___1 ->
                       match uu___ with
                       | FStar_Pervasives.Mkdtuple3 (vps', pures, veq) ->
                           FStar_Pervasives.Mkdtuple3
-                            ((list_as_vprop'
-                                (Pulse_Syntax_Pure.list_as_vprop vps') pures),
+                            ((list_as_slprop'
+                                (Pulse_Syntax_Pure.list_as_slprop vps') pures),
                               (),
                               (Pulse_Checker_Base.k_elab_equiv g g
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star ctxt frame)
                                  (Pulse_Syntax_Pure.tm_star
-                                    (list_as_vprop'
-                                       (Pulse_Syntax_Pure.list_as_vprop vps')
+                                    (list_as_slprop'
+                                       (Pulse_Syntax_Pure.list_as_slprop vps')
                                        pures) frame)
                                  (Pulse_Checker_Base.k_elab_unit g
                                     (Pulse_Syntax_Pure.tm_star ctxt frame))
@@ -174,8 +175,8 @@ let (canon_right :
 let (elim_one :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
-      Pulse_Syntax_Base.vprop ->
-        Pulse_Syntax_Base.vprop ->
+      Pulse_Syntax_Base.slprop ->
+        Pulse_Syntax_Base.slprop ->
           unit ->
             Pulse_Syntax_Base.ppname ->
               Pulse_Syntax_Base.st_term ->
@@ -310,7 +311,7 @@ let (elim_one :
                              uu___)
 let rec (elim_all :
   Pulse_Typing_Env.env ->
-    (Pulse_Syntax_Base.vprop ->
+    (Pulse_Syntax_Base.slprop ->
        (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
       ->
       mk_t ->
@@ -639,7 +640,7 @@ let (add_elims_aux :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        (Pulse_Syntax_Base.vprop ->
+        (Pulse_Syntax_Base.slprop ->
            (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
           ->
           mk_t ->
@@ -720,7 +721,7 @@ let rec (add_elims :
   Pulse_Typing_Env.env ->
     Pulse_Syntax_Base.term ->
       Pulse_Syntax_Base.term ->
-        (Pulse_Syntax_Base.vprop ->
+        (Pulse_Syntax_Base.slprop ->
            (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
           ->
           mk_t ->
@@ -841,24 +842,26 @@ let rec (add_elims :
 type preamble =
   {
   g0: Pulse_Typing_Env.env ;
-  ctxt: Pulse_Syntax_Base.vprop ;
-  frame: Pulse_Syntax_Base.vprop ;
+  ctxt: Pulse_Syntax_Base.slprop ;
+  frame: Pulse_Syntax_Base.slprop ;
   ctxt_frame_typing: unit ;
-  goals: Pulse_Syntax_Base.vprop }
+  goals: Pulse_Syntax_Base.slprop }
 let (__proj__Mkpreamble__item__g0 : preamble -> Pulse_Typing_Env.env) =
   fun projectee ->
     match projectee with
     | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> g0
-let (__proj__Mkpreamble__item__ctxt : preamble -> Pulse_Syntax_Base.vprop) =
+let (__proj__Mkpreamble__item__ctxt : preamble -> Pulse_Syntax_Base.slprop) =
   fun projectee ->
     match projectee with
     | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> ctxt
-let (__proj__Mkpreamble__item__frame : preamble -> Pulse_Syntax_Base.vprop) =
+let (__proj__Mkpreamble__item__frame : preamble -> Pulse_Syntax_Base.slprop)
+  =
   fun projectee ->
     match projectee with
     | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> frame
 
-let (__proj__Mkpreamble__item__goals : preamble -> Pulse_Syntax_Base.vprop) =
+let (__proj__Mkpreamble__item__goals : preamble -> Pulse_Syntax_Base.slprop)
+  =
   fun projectee ->
     match projectee with
     | { g0; ctxt; frame; ctxt_frame_typing; goals;_} -> goals
@@ -867,13 +870,13 @@ let (op_Array_Access :
     Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   = fun ss -> fun t -> Pulse_Checker_Prover_Substs.ss_term t ss
 let (op_Star :
-  Pulse_Syntax_Base.vprop ->
-    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
+  Pulse_Syntax_Base.slprop ->
+    Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.term)
   = Pulse_Syntax_Pure.tm_star
 type 'preamble1 prover_state =
   {
   pg: Pulse_Typing_Env.env ;
-  remaining_ctxt: Pulse_Syntax_Base.vprop Prims.list ;
+  remaining_ctxt: Pulse_Syntax_Base.slprop Prims.list ;
   remaining_ctxt_frame_typing: unit ;
   uvs: Pulse_Typing_Env.env ;
   ss: Pulse_Checker_Prover_Substs.ss_t ;
@@ -882,8 +885,8 @@ type 'preamble1 prover_state =
       FStar_TypeChecker_Core.tot_or_ghost Prims.list) Prims.dtuple2
       FStar_Pervasives_Native.option
     ;
-  solved: Pulse_Syntax_Base.vprop ;
-  unsolved: Pulse_Syntax_Base.vprop Prims.list ;
+  solved: Pulse_Syntax_Base.slprop ;
+  unsolved: Pulse_Syntax_Base.slprop Prims.list ;
   k: (unit, unit, unit, unit) Pulse_Checker_Base.continuation_elaborator ;
   goals_inv: unit ;
   solved_inv: unit ;
@@ -898,7 +901,7 @@ let (__proj__Mkprover_state__item__pg :
           solved; unsolved; k; goals_inv; solved_inv; progress;
           allow_ambiguous;_} -> pg
 let (__proj__Mkprover_state__item__remaining_ctxt :
-  preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
+  preamble -> unit prover_state -> Pulse_Syntax_Base.slprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
@@ -936,7 +939,7 @@ let (__proj__Mkprover_state__item__nts :
           solved; unsolved; k; goals_inv; solved_inv; progress;
           allow_ambiguous;_} -> nts
 let (__proj__Mkprover_state__item__solved :
-  preamble -> unit prover_state -> Pulse_Syntax_Base.vprop) =
+  preamble -> unit prover_state -> Pulse_Syntax_Base.slprop) =
   fun preamble1 ->
     fun projectee ->
       match projectee with
@@ -944,7 +947,7 @@ let (__proj__Mkprover_state__item__solved :
           solved; unsolved; k; goals_inv; solved_inv; progress;
           allow_ambiguous;_} -> solved
 let (__proj__Mkprover_state__item__unsolved :
-  preamble -> unit prover_state -> Pulse_Syntax_Base.vprop Prims.list) =
+  preamble -> unit prover_state -> Pulse_Syntax_Base.slprop Prims.list) =
   fun preamble1 ->
     fun projectee ->
       match projectee with

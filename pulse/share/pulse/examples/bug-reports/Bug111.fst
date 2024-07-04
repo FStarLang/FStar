@@ -23,7 +23,7 @@ open Pulse.Lib.Stick.Util
 [@@expect_failure]
 ```pulse
 ghost
-fn test_trans (p q r:vprop)
+fn test_trans (p q r:slprop)
 requires (p @==> q) ** (q @==> r)
 ensures (p @==> r)
 {
@@ -35,7 +35,7 @@ ensures (p @==> r)
 [@@expect_failure]
 ```pulse
 ghost
-fn test_trans_2 (p q r:vprop)
+fn test_trans_2 (p q r:slprop)
 requires (q @==> r) ** (p @==> q)
 ensures (p @==> r)
 {
@@ -46,7 +46,7 @@ ensures (p @==> r)
 // Providing any implicit is enough to make it work
 ```pulse
 ghost
-fn test_trans_3 (p q r:vprop)
+fn test_trans_3 (p q r:slprop)
 requires (q @==> r) ** (p @==> q)
 ensures (p @==> r)
 {
@@ -56,7 +56,7 @@ ensures (p @==> r)
 
 ```pulse
 ghost
-fn test_elim (p q:vprop)
+fn test_elim (p q:slprop)
 requires (p @==> q) ** p
 ensures q
 {
@@ -69,7 +69,7 @@ ensures q
 [@@expect_failure]
 ```pulse
 ghost
-fn test_elim_fails (p q r:vprop)
+fn test_elim_fails (p q r:slprop)
 requires (r @==> r) ** p ** (p @==> q)
 ensures q ** (r @==> r)
 {
@@ -80,7 +80,7 @@ ensures q ** (r @==> r)
 //this is the main report in Bug 111
 ```pulse
 ghost
-fn test_elim_2 (p q r:vprop)
+fn test_elim_2 (p q r:slprop)
 requires ((p ** q) @==> r) ** p
 ensures q @==> r
 {
@@ -90,7 +90,7 @@ ensures q @==> r
 
 ```pulse
 ghost
-fn test_elim_3 (p q r:vprop)
+fn test_elim_3 (p q r:slprop)
 requires ((p ** q) @==> r) ** p ** q
 ensures r
 {
@@ -100,17 +100,17 @@ ensures r
 
 ```pulse
 ghost
-fn test_elim_3' (p q r:vprop)
+fn test_elim_3' (p q r:slprop)
 requires ((p ** q) @==> r) ** p ** q
 ensures r
 {
-    elim _ _; //unifier doesn't work when solving uvars to non-atomic vprops
+    elim _ _; //unifier doesn't work when solving uvars to non-atomic slprops
 }
 ```
 
 
 ```pulse
-ghost fn test_elim_4 (p q r:vprop)
+ghost fn test_elim_4 (p q r:slprop)
 requires (p @==> (q ** r)) ** p
 ensures r ** q
 { 

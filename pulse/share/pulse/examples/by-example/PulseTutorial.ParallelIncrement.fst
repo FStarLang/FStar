@@ -95,13 +95,13 @@ ensures exists* v. pts_to x v
 ```
 
 //lock_inv$
-let contributions (left right: GR.ref int) (i v:int) : v:vprop { is_big v }=
+let contributions (left right: GR.ref int) (i v:int) : v:slprop { is_slprop2 v }=
   exists* (vl vr:int).
     GR.pts_to left #0.5R vl **
     GR.pts_to right #0.5R vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:vprop { is_big v } =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:slprop { is_slprop2 v } =
   exists* v. 
     pts_to x v **
     contributions left right init v
@@ -192,7 +192,7 @@ ensures  pts_to x ('i + 2)
 ```pulse //incr$
 fn incr (x: ref int)
         (#p:perm)
-        (#refine #aspec: int -> vprop)
+        (#refine #aspec: int -> slprop)
         (l:L.lock)
         (ghost_steps: 
           (v:int -> vq:int -> stt_ghost unit
@@ -310,7 +310,7 @@ module C = Pulse.Lib.CancellableInvariant
 fn incr_atomic
         (x: ref int)
         (#p:perm)
-        (#refine #aspec: int -> vprop)
+        (#refine #aspec: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
@@ -548,11 +548,11 @@ fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
 }
 ```
 
-let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:vprop { is_big v } =
+let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:slprop { is_slprop2 v } =
   exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
                  pure (n == U.downgrade_val n1 + U.downgrade_val n2)
 
-let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:vprop { is_big v } =
+let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:slprop { is_slprop2 v } =
   exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
 let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =
@@ -671,9 +671,9 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
 ```pulse
 fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
-  (#ghost_inv:int -> vprop)
-  (#ghost_pre:vprop)
-  (#ghost_post:vprop)
+  (#ghost_inv:int -> slprop)
+  (#ghost_pre:slprop)
+  (#ghost_post:slprop)
   ($ghost_steps:
      (v:int ->
       stt_ghost unit emp_inames

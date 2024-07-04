@@ -111,7 +111,7 @@ let (tm_if :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
       Pulse_Syntax_Base.st_term ->
-        Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
+        Pulse_Syntax_Base.slprop FStar_Pervasives_Native.option ->
           Pulse_Syntax_Base.st_term')
   =
   fun b ->
@@ -127,7 +127,7 @@ let (tm_if :
             }
 let (tm_match :
   Pulse_Syntax_Base.term ->
-    Pulse_Syntax_Base.vprop FStar_Pervasives_Native.option ->
+    Pulse_Syntax_Base.slprop FStar_Pervasives_Native.option ->
       (Pulse_Syntax_Base.pattern * Pulse_Syntax_Base.st_term) Prims.list ->
         Pulse_Syntax_Base.st_term')
   =
@@ -140,10 +140,10 @@ let (tm_match :
             Pulse_Syntax_Base.returns_ = returns_;
             Pulse_Syntax_Base.brs = brs
           }
-let (tm_elim_exists : Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.st_term')
+let (tm_elim_exists : Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.st_term')
   = fun p -> Pulse_Syntax_Base.Tm_ElimExists { Pulse_Syntax_Base.p4 = p }
 let (tm_intro_exists :
-  Pulse_Syntax_Base.vprop ->
+  Pulse_Syntax_Base.slprop ->
     Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.st_term')
   =
   fun p ->
@@ -193,7 +193,7 @@ let (tm_par :
 let (tm_with_inv :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.st_term ->
-      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.vprop *
+      (Pulse_Syntax_Base.binder * Pulse_Syntax_Base.slprop *
         Pulse_Syntax_Base.term) FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.st_term')
   =
@@ -275,7 +275,7 @@ let (with_range :
       }
 let (tm_assert_with_binders :
   Pulse_Syntax_Base.binder Prims.list ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       Pulse_Syntax_Base.st_term -> Pulse_Syntax_Base.st_term')
   =
   fun bs ->
@@ -289,11 +289,11 @@ let (tm_assert_with_binders :
             Pulse_Syntax_Base.t = t
           }
 let (mk_assert_hint_type :
-  Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type) =
+  Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.proof_hint_type) =
   fun p -> Pulse_Syntax_Base.ASSERT { Pulse_Syntax_Base.p = p }
 let (mk_unfold_hint_type :
   Prims.string Prims.list FStar_Pervasives_Native.option ->
-    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+    Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.proof_hint_type)
   =
   fun names ->
     fun p ->
@@ -301,7 +301,7 @@ let (mk_unfold_hint_type :
         { Pulse_Syntax_Base.names1 = names; Pulse_Syntax_Base.p2 = p }
 let (mk_fold_hint_type :
   Prims.string Prims.list FStar_Pervasives_Native.option ->
-    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.proof_hint_type)
+    Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.proof_hint_type)
   =
   fun names ->
     fun p ->
@@ -323,8 +323,8 @@ let (mk_rename_hint_type :
             Pulse_Syntax_Base.tac_opt = (map_opt tac_opt thunk)
           }
 let (mk_rewrite_hint_type :
-  Pulse_Syntax_Base.vprop ->
-    Pulse_Syntax_Base.vprop ->
+  Pulse_Syntax_Base.slprop ->
+    Pulse_Syntax_Base.slprop ->
       Pulse_Syntax_Base.term FStar_Pervasives_Native.option ->
         Pulse_Syntax_Base.proof_hint_type)
   =

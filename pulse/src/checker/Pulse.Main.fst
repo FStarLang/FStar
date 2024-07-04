@@ -60,7 +60,7 @@ let check_fndefn
     (g : Soundness.Common.stt_env{bindings g == []})
     (expected_t : option term)
     (* Both of these unused: *)
-    (pre : term) (pre_typing : tot_typing g pre tm_vprop)
+    (pre : term) (pre_typing : tot_typing g pre tm_slprop)
   : T.Tac (RT.dsl_tac_result_t (fstar_env g) expected_t)
 = 
 
@@ -218,9 +218,9 @@ let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:optio
       if RU.debug_at_level (fstar_env g) "Pulse" then 
         T.print (Printf.sprintf "About to check pulse decl:\n%s\n" (P.decl_to_string d));
       let (| pre, ty, pre_typing |) = Pulse.Checker.Pure.compute_tot_term_type g pre in
-      if not (eq_tm ty tm_vprop) then
-        fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type vprop"; //fix range
-      let pre_typing : tot_typing g pre tm_vprop = pre_typing in
+      if not (eq_tm ty tm_slprop) then
+        fail g (Some (Pulse.RuntimeUtils.range_of_term pre)) "pulse main: cannot typecheck pre at type slprop"; //fix range
+      let pre_typing : tot_typing g pre tm_slprop = pre_typing in
       match d.d with
       | FnDefn {} -> check_fndefn d g expected_t pre pre_typing
       | FnDecl {} ->

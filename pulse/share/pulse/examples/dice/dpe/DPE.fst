@@ -45,7 +45,7 @@ open Pulse.Lib.HashTable
 open Pulse.Lib.MutexToken
 
 assume
-val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 

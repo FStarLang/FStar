@@ -14,7 +14,7 @@ and node_ptr (t:Type0) = ref (node t)
 and llist (t:Type0) = option (node_ptr t)
 
 let rec is_list #t (x:llist t) (l:list t)
-  : Tot vprop (decreases l)
+  : Tot slprop (decreases l)
   = match l with
     | [] -> pure (x == None)
     | head::tl -> 

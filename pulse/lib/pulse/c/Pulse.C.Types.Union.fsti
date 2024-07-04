@@ -248,7 +248,7 @@ val has_union_field
   (#t': Type0)
   (#td': typedef t')
   (r': ref td')
-: Tot vprop
+: Tot slprop
 
 val has_union_field_prop
   (#tn: Type0)

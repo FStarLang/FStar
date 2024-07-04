@@ -380,7 +380,7 @@ let rec check_abs_core
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in
-      let (| pre_opened, pre_typing |) = check_vprop g' pre_opened in
+      let (| pre_opened, pre_typing |) = check_slprop g' pre_opened in
       let pre = close_term pre_opened x in
       let post : post_hint_opt g' =
         match post_hint_body with
