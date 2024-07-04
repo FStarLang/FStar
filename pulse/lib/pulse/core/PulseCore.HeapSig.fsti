@@ -160,22 +160,22 @@ type heap_sig : Type u#(a + 2) = {
       (requires up (down p) == p /\ up (down q) == q)
       (ensures up (down (p `star` q)) == p `star` q)
     );
-    pts_to: (
-      #a:Type u#a ->
-      #p:pcm a ->
-      ref a p ->
-      a ->
-      slprop
-    );
+    // pts_to: (
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
-    ghost_pts_to: (
-      meta:bool ->
-      #a:Type u#a ->
-      #p:pcm a ->
-      ghost_ref a p ->
-      a ->
-      slprop
-    );
+    // ghost_pts_to: (
+    //   meta:bool ->
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ghost_ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
     iref:Type0;
     deq_iref:FStar.GhostSet.decide_eq iref;

@@ -122,6 +122,9 @@ val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 open FStar.PCM
 open FStar.Ghost
 
+val pts_to (#h:heap_sig u#a) (#a:Type u#(a + 1)) (#pcm:pcm a) (r:ref a pcm) (v:a) : (extend h).slprop
+val ghost_pts_to (#h:heap_sig u#a) (#a:Type u#(a + 1)) (#pcm:pcm a) (r:ghost_ref a pcm) (v:a) : (extend h).slprop
+
 val select_refine
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
@@ -135,8 +138,8 @@ val select_refine
 : action_except
     (extend h)
     (v:a{compatible p x v /\ p.refine v}) e
-    ((extend h).pts_to r x)
-    (fun v -> (extend h).pts_to r (f v))
+    (pts_to r x)
+    (fun v -> pts_to r (f v))
 
 val upd_gen
     (#h:heap_sig u#h)
@@ -149,8 +152,8 @@ val upd_gen
 : action_except
     (extend h)
     unit e
-    ((extend h).pts_to r x)
-    (fun _ -> (extend h).pts_to r y)
+    (pts_to r x)
+    (fun _ -> pts_to r y)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
@@ -164,8 +167,8 @@ val split_action
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).pts_to r (v0 `op pcm` v1))
-    (fun _ -> (extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
+    (pts_to r (v0 `op pcm` v1))
+    (fun _ -> pts_to r v0 `(extend h).star` pts_to r v1)
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
@@ -179,8 +182,8 @@ val gather_action
 : ghost_action_except
     (extend h)
     (squash (composable pcm v0 v1)) e
-    ((extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
-    (fun _ -> (extend h).pts_to r (op pcm v0 v1))
+    (pts_to r v0 `(extend h).star` pts_to r v1)
+    (fun _ -> pts_to r (op pcm v0 v1))
 
 val alloc_action
     (#h:heap_sig u#h)
@@ -192,7 +195,7 @@ val alloc_action
     (extend h)
     (ref a pcm) e
     (extend h).emp
-    (fun r -> (extend h).pts_to r x)
+    (fun r -> pts_to r x)
 
 
 val pts_to_not_null_action 
@@ -205,8 +208,8 @@ val pts_to_not_null_action
 : ghost_action_except
     (extend h)
     (squash (not (is_null r))) e
-    ((extend h).pts_to r v)
-    (fun _ -> (extend h).pts_to r v)
+    (pts_to r v)
+    (fun _ -> pts_to r v)
 
 // Ghost operations
 val ghost_alloc
@@ -220,7 +223,7 @@ val ghost_alloc
     (ghost_ref a pcm)
     e
     (extend h).emp 
-    (fun r -> (extend h).ghost_pts_to false r x)
+    (fun r -> ghost_pts_to r x)
 
 val ghost_read
     (#h:heap_sig u#h)
@@ -236,8 +239,8 @@ val ghost_read
     (extend h)
     (erased (v:a{compatible p x v /\ p.refine v}))
     e
-    ((extend h).ghost_pts_to false r x)
-    (fun v -> (extend h).ghost_pts_to false r (f v))
+    (ghost_pts_to r x)
+    (fun v -> ghost_pts_to r (f v))
 
 val ghost_write
     (#h:heap_sig u#h)
@@ -250,8 +253,8 @@ val ghost_write
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).ghost_pts_to false r x)
-    (fun _ -> (extend h).ghost_pts_to false r y)
+    (ghost_pts_to r x)
+    (fun _ -> ghost_pts_to r y)
 
 val ghost_share
     (#h:heap_sig u#h)
@@ -264,9 +267,9 @@ val ghost_share
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
-    (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
-              (extend h).ghost_pts_to false r v1)
+    (ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> ghost_pts_to r v0 `(extend h).star` 
+              ghost_pts_to r v1)
 
 val ghost_gather
     (#h:heap_sig u#h)
@@ -279,9 +282,9 @@ val ghost_gather
 : ghost_action_except
     (extend h)
     (squash (composable pcm v0 v1)) e
-    ((extend h).ghost_pts_to false r v0 `(extend h).star`
-     (extend h).ghost_pts_to false r v1)
-    (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
+    (ghost_pts_to r v0 `(extend h).star`
+     ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 val exists_congruence
          (#h:heap_sig u#h)
