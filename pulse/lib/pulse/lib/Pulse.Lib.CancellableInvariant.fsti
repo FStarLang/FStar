@@ -26,8 +26,8 @@ instance val non_informative_cinv
 
 val cinv_vp (c:cinv) (v:slprop) : slprop
 
-val is_slprop2_cinv_vp (c:cinv) (v:slprop)
-  : Lemma (is_slprop2 v ==> is_slprop2 (cinv_vp c v))
+val is_storable_cinv_vp (c:cinv) (v:slprop)
+  : Lemma (is_storable v ==> is_storable (cinv_vp c v))
 
 val active (c:cinv) (p:perm) : slprop
 
@@ -37,7 +37,7 @@ val active_is_slprop1 (c:cinv) (p:perm)
 
 val iref_of (c:cinv) : GTot iref
 
-val new_cancellable_invariant (v:slprop { is_slprop2 v })
+val new_cancellable_invariant (v:slprop { is_storable v })
   : stt_ghost cinv emp_inames
       v
       (fun c -> inv (iref_of c) (cinv_vp c v) ** active c 1.0R)

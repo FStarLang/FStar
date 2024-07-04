@@ -24,7 +24,7 @@ module B = Pulse.Lib.Box
 module GR = Pulse.Lib.GhostReference
 module CInv = Pulse.Lib.CancellableInvariant
 
-let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_slprop2 v ==> is_slprop2 w })  =
+let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_storable v ==> is_storable w })  =
   exists* i p. B.pts_to r #1.0R i **
                GR.pts_to gr #p i **
                (if i = 0ul then v else emp) **
@@ -34,8 +34,8 @@ let lock_inv_aux (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : (w:slprop { is_s
 let lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop) : slprop =
   lock_inv_aux r gr v
 
-let is_slprop2_lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop)
-  : Lemma (is_slprop2 v ==> is_slprop2 (lock_inv r gr v)) = ()
+let is_storable_lock_inv (r:B.box U32.t) (gr:GR.ref U32.t) (v:slprop)
+  : Lemma (is_storable v ==> is_storable (lock_inv r gr v)) = ()
 
 noeq
 type lock = {
@@ -50,7 +50,7 @@ let lock_alive l #p v =
 let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
 ```pulse
-fn new_lock (v:slprop { is_slprop2 v })
+fn new_lock (v:slprop { is_storable v })
   requires v
   returns l:lock
   ensures lock_alive l v
@@ -60,7 +60,7 @@ fn new_lock (v:slprop { is_slprop2 v })
   rewrite v as (if 0ul = 0ul then v else emp);
   fold (lock_inv_aux r gr v);
   fold (lock_inv r gr v);
-  is_slprop2_lock_inv r gr v;
+  is_storable_lock_inv r gr v;
   let i = new_cancellable_invariant (lock_inv r gr v);
   let l = { r; gr; i };
   rewrite each r as l.r;

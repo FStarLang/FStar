@@ -19,14 +19,14 @@ module Pulse.Lib.FlippableInv
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
-let finv_p (p:slprop { is_slprop2 p }) (r : GR.ref bool) : v:slprop { is_slprop2 v } =
+let finv_p (p:slprop { is_storable p }) (r : GR.ref bool) : v:slprop { is_storable v } =
   exists* (b:bool). GR.pts_to r #0.5R b ** (if b then p else emp)
 
 noeq
 type finv (p:slprop) = {
   r : GR.ref bool;
   i : iref;
-  p_big : squash (is_slprop2 p);
+  p_big : squash (is_storable p);
 }
 
 let off #p (fi : finv p) : slprop =
@@ -35,7 +35,7 @@ let on  #p (fi : finv p) : slprop =
   GR.pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 ```pulse
-fn mk_finv (p:slprop { is_slprop2 p })
+fn mk_finv (p:slprop { is_storable p })
    requires emp
    returns f:(finv p)
    ensures off f
@@ -46,7 +46,7 @@ fn mk_finv (p:slprop { is_slprop2 p })
         as (if false then p else emp);
    fold finv_p p r;
    let i = new_invariant (finv_p p r);
-   let fi = Mkfinv r i (() <: squash (is_slprop2 p)); // See #121
+   let fi = Mkfinv r i (() <: squash (is_storable p)); // See #121
    rewrite (GR.pts_to r #0.5R false)
         as (GR.pts_to fi.r #0.5R false);
    rewrite (inv i (finv_p p r))

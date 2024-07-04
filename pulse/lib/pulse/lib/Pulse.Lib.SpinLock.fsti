@@ -30,7 +30,7 @@ val lock_alive
 
 val lock_acquired (l:lock) : slprop
 
-val new_lock (v:slprop { is_slprop2 v })
+val new_lock (v:slprop { is_storable v })
   : stt lock v (fun l -> lock_alive l v)
 
 val acquire (#v:slprop) (#p:perm) (l:lock)

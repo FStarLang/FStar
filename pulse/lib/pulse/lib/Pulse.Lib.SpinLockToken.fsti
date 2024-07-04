@@ -19,7 +19,7 @@ open Pulse.Lib.Pervasives
 
 val lock (v:slprop) : Type u#4
 
-val new_lock (v:slprop { is_slprop2 v })
+val new_lock (v:slprop { is_storable v })
   : stt (lock v)
         (requires v)
         (ensures fun _ -> emp)

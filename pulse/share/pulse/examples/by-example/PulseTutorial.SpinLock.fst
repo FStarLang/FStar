@@ -26,7 +26,7 @@ module U32 = FStar.UInt32
 let maybe (b:bool) (p:slprop) =
   if b then p else emp
 
-let lock_inv (r:B.box U32.t) (p:slprop) : v:slprop { is_slprop2 p ==> is_slprop2 v } =
+let lock_inv (r:B.box U32.t) (p:slprop) : v:slprop { is_storable p ==> is_storable v } =
   exists* v. B.pts_to r v ** maybe (v = 0ul) p
 
 noeq
@@ -53,7 +53,7 @@ fn dup_lock_alive (l:lock) (p:slprop)
 ```
 
 ```pulse //new_lock$
-fn new_lock (p:slprop { is_slprop2 p })
+fn new_lock (p:slprop { is_storable p })
 requires p
 returns l:lock
 ensures lock_alive l p

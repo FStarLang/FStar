@@ -55,7 +55,7 @@ val replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
       (requires mg `pts_to` x)
       (ensures fun r -> mg `pts_to` y ** pure (r == reveal x))
 
-val new_mutex (#a:Type0) (v:a -> slprop { forall x. is_slprop2 (v x) }) (x:a)
+val new_mutex (#a:Type0) (v:a -> slprop { forall x. is_storable (v x) }) (x:a)
   : stt (mutex a)
       (requires v x)
       (ensures fun m -> mutex_live m v)

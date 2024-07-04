@@ -32,7 +32,7 @@ type lock (v:slprop) : Type u#4 = {
 }
 
 ```pulse
-fn new_lock (v:slprop { is_slprop2 v })
+fn new_lock (v:slprop { is_storable v })
   requires v
   returns _:lock v
   ensures emp

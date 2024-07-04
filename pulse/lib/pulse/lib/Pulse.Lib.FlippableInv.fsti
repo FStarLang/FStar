@@ -23,7 +23,7 @@ val finv (p:slprop) : Type0
 val off #p (fi : finv p) : slprop
 val on  #p (fi : finv p) : slprop
 
-val mk_finv (p:slprop { is_slprop2 p }) : stt (finv p) emp (fun x -> off x)
+val mk_finv (p:slprop { is_storable p }) : stt (finv p) emp (fun x -> off x)
 
 val iname_of #p (f : finv p) : erased iname
 

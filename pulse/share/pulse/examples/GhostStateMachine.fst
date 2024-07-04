@@ -77,7 +77,7 @@ type locked_state_t =
   lk:lock }
 let mk_locked_st h ph lk = {h; ph; lk;}
 
-let lock_inv (h:handle_t) (ph:pure_handle_t) : v:slprop { is_slprop2 v } =
+let lock_inv (h:handle_t) (ph:pure_handle_t) : v:slprop { is_storable v } =
   exists* s ps. 
   handle_has_state h s **
   pure_handle_has_state ph ps **

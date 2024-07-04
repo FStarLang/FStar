@@ -30,13 +30,13 @@ instance non_informative_cinv = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
 }
 
-let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_slprop2 v ==> is_slprop2 w }) =
+let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_storable v ==> is_storable w }) =
   exists* (b:bool). GR.pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
 
-let is_slprop2_cinv_vp _ _ = ()
+let is_storable_cinv_vp _ _ = ()
 
 let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
@@ -46,7 +46,7 @@ let iref_of c = c.i
 
 ```pulse
 ghost
-fn new_cancellable_invariant (v:slprop { is_slprop2 v })
+fn new_cancellable_invariant (v:slprop { is_storable v })
   requires v
   returns c:cinv
   ensures inv (iref_of c) (cinv_vp c v) ** active c 1.0R
