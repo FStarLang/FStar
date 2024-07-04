@@ -30,33 +30,33 @@ let get_core (#h:heap_sig u#h) (m:ext_mem h) : core h = {
     big_core = core_of m.big;
 }
 
-let put_core (#h:heap_sig u#h) (c:core h) (m:ext_mem h) : ext_mem h = {
-    small = h.sep.lens_core.put c.small_core m.small;
-    big = H2.base_heap.sep.lens_core.put c.big_core m.big;
-}
+// let put_core (#h:heap_sig u#h) (c:core h) (m:ext_mem h) : ext_mem h = {
+//     small = h.sep.lens_core.put c.small_core m.small;
+//     big = H2.base_heap.sep.lens_core.put c.big_core m.big;
+// }
 
-let get_put (#h:heap_sig u#h) (m:ext_mem h)
-: Lemma (put_core (get_core m) m == m)
-= h.sep.lens_core.get_put m.small;
-  H2.base_heap.sep.lens_core.get_put m.big
+// let get_put (#h:heap_sig u#h) (m:ext_mem h)
+// : Lemma (put_core (get_core m) m == m)
+// = h.sep.lens_core.get_put m.small;
+//   H2.base_heap.sep.lens_core.get_put m.big
 
-let put_get (#h:heap_sig u#h) (c:core h) (m:ext_mem h)
-: Lemma (get_core (put_core c m) == c)
-= h.sep.lens_core.put_get c.small_core m.small;
-  H2.base_heap.sep.lens_core.put_get c.big_core m.big
+// let put_get (#h:heap_sig u#h) (c:core h) (m:ext_mem h)
+// : Lemma (get_core (put_core c m) == c)
+// = h.sep.lens_core.put_get c.small_core m.small;
+//   H2.base_heap.sep.lens_core.put_get c.big_core m.big
 
-let put_put (#h:heap_sig u#h) (c1 c2:core h) (m:ext_mem h)
-: Lemma (put_core c2 (put_core c1 m) == put_core c2 m)
-= h.sep.lens_core.put_put c1.small_core c2.small_core m.small;
-  H2.base_heap.sep.lens_core.put_put c1.big_core c2.big_core m.big
+// let put_put (#h:heap_sig u#h) (c1 c2:core h) (m:ext_mem h)
+// : Lemma (put_core c2 (put_core c1 m) == put_core c2 m)
+// = h.sep.lens_core.put_put c1.small_core c2.small_core m.small;
+//   H2.base_heap.sep.lens_core.put_put c1.big_core c2.big_core m.big
 
-let lens_core (h:heap_sig u#a) : lens (ext_mem h) (core h) = {
-    get = get_core #h;
-    put = put_core #h;
-    get_put = get_put #h;
-    put_get = put_get #h;
-    put_put = put_put #h;
-}
+// let lens_core (h:heap_sig u#a) : lens (ext_mem h) (core h) = {
+//     get = get_core #h;
+//     // put = put_core #h;
+//     // get_put = get_put #h;
+//     // put_get = put_get #h;
+//     // put_put = put_put #h;
+// }
 
 let empty (#h:heap_sig u#a) : core h = {
     small_core = h.sep.empty;
@@ -134,7 +134,7 @@ let ext_sep (h:heap_sig u#a)
 : separable (ext_mem h)
 = {
     core = core h;
-    lens_core = lens_core h;
+    core_of = (fun m -> get_core m);
     empty = empty #h;
     disjoint = disjoint #h;
     join = join #h;
@@ -143,10 +143,6 @@ let ext_sep (h:heap_sig u#a)
     disjoint_join = disjoint_join #h;
     join_associative = join_associative #h;
     join_empty = join_empty #h;
-    join_empty_inverse = (fun m0 m1 ->
-      h.sep.join_empty_inverse m0.small_core m1.small_core;
-      H2.base_heap.sep.join_empty_inverse m0.big_core m1.big_core
-    )
   }
 
 let full_mem_pred (h:heap_sig u#a) (m:ext_mem h) : prop =
@@ -931,7 +927,7 @@ let down_star_ext
       with _ . (
         h.star_equiv (down p) (down q) m;
         assert (H2.base_heap.sep.join m0.big_core m1.big_core == mm.big_core);
-        H2.base_heap.sep.join_empty_inverse m0.big_core m1.big_core;
+        H2.join_empty_inverse m0.big_core m1.big_core;
         assert (m0.big_core == mm.big_core);
         assert (m1.big_core == mm.big_core);
         assert (h.sep.disjoint m0.small_core m1.small_core);

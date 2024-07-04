@@ -4,6 +4,11 @@ open FStar.Ghost
 open FStar.PCM
 module H = PulseCore.Heap
 val base_heap : heap_sig u#a
+val join_empty_inverse (m0 m1:base_heap.sep.core)
+: Lemma 
+    (requires base_heap.sep.disjoint m0 m1 /\ base_heap.sep.join m0 m1 == base_heap.sep.empty)
+    (ensures m0 == base_heap.sep.empty /\ m1 == base_heap.sep.empty)
+
 val core_ghost_ref_is_null (c:core_ghost_ref) : GTot bool
 let non_null_core_ghost_ref = r:core_ghost_ref { not (core_ghost_ref_is_null r) }
 val core_ghost_ref_as_addr (_:core_ghost_ref) : GTot nat

@@ -11,17 +11,9 @@ type mem : Type u#(a + 1) = {
     ghost_ctr: erased nat;
 }
 
-let lens_core : lens (mem u#a) (H2.heap u#a) = {
-    get = (fun s -> s.heap);
-    put = (fun v s -> {s with heap = v});
-    get_put = (fun m -> ());
-    put_get = (fun c m -> ());
-    put_put = (fun c1 c2 m -> ())
-}
-
 let sep : separable (mem u#a) = {
     core = H2.heap u#a;
-    lens_core = lens_core;
+    core_of = (fun m -> m.heap);
     empty = H2.empty_heap;
     disjoint = H2.disjoint;
     join = H2.join;
@@ -30,7 +22,6 @@ let sep : separable (mem u#a) = {
     disjoint_join = H2.disjoint_join;
     join_associative = (fun h0 h1 h2 -> H2.join_associative h0 h1 h2);
     join_empty = H2.join_empty;
-    join_empty_inverse = H2.join_empty_inverse
 }
 
 let full_mem_pred m = H2.full_heap_pred m.heap
@@ -212,7 +203,7 @@ let base_heap : heap_sig u#a =
     inv_iname_ok = (fun _ _ _ -> ());
     mem_invariant_equiv;
 }
-
+let join_empty_inverse m0 m1 = H2.join_empty_inverse m0 m1
 let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
 let core_ghost_ref_as_addr (r:core_ghost_ref)
 : GTot nat
