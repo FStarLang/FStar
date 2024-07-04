@@ -1,18 +1,34 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module PulseCorePaper.S2.Lock
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module Box = Pulse.Lib.Box
-let storable = is_big
-let sprop = s:vprop { storable s }
+// let storable = is_big
+// let sprop = s:slprop { storable s }
 
 noeq
 type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
 let maybe b p = if b then p else emp
-let lock_inv r p : v:vprop { storable p ==> storable v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+let lock_inv r p : v:slprop { is_slprop2 p ==> is_slprop2 v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 let protects l p = inv l.i (lock_inv l.r p)
 
 ```pulse
-fn create (p:sprop)
+fn create (p:storable)
 requires p
 returns l:lock
 ensures protects l p
@@ -29,7 +45,7 @@ ensures protects l p
 ```
 
 ```pulse
-fn release (#p:vprop) (l:lock)
+fn release (#p:slprop) (l:lock)
 requires protects l p ** p
 ensures protects l p
 {
