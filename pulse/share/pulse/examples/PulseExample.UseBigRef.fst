@@ -24,7 +24,6 @@ module L = Pulse.Lib.SpinLock
 let thunk (p q : slprop1_base) = unit -> stt unit (up1 p) (fun _ -> up1 q)
 let closure = (p:slprop1_base & q:slprop1_base & thunk p q)
 let closure_list = B.ref (list closure)
-let slprop0 = v:slprop { is_slprop1 v }
 
 ```pulse
 fn mk_closure_list ()
@@ -37,7 +36,7 @@ ensures B.pts_to r []
 ```
 
 let mk_closure
-    (#p #q:slprop0)
+    (#p #q:slprop1)
     (f: unit -> stt unit p (fun _ -> q))
 : closure
 = (| down1 p, down1 q, f |)
@@ -45,7 +44,7 @@ let mk_closure
 
 ```pulse
 fn push (l:closure_list)
-        (#p #q:slprop0)
+        (#p #q:slprop1)
         (f: unit -> stt unit p (fun _ -> q))
 requires B.pts_to l 'xs
 ensures B.pts_to l (mk_closure f :: 'xs)
