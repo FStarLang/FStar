@@ -9,6 +9,15 @@ type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = {  }
+
+let test2 r = ff r 5
+noeq
+type boxfi (a: Type) = {  }
+
+let test3 r = ff r
+let test4 r x = ff r x <: a
 ]
 Exports: [
 type box (a: Type) = {  }
@@ -19,6 +28,15 @@ type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = {  }
+
+let test2 r = ff r 5
+noeq
+type boxfi (a: Type) = {  }
+
+let test3 r = ff r
+let test4 r x = ff r x <: a
 ]
 
 Module before type checking:
@@ -32,6 +50,15 @@ type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = {  }
+
+let test2 r = ff r 5
+noeq
+type boxfi (a: Type) = {  }
+
+let test3 r = ff r
+let test4 r x = ff r x <: a
 ]
 Exports: [
 type box (a: Type) = {  }
@@ -42,6 +69,15 @@ type box2 (a: Type) = | Box2 : x: a -> Bug3227.box2 a
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = {  }
+
+let test2 r = ff r 5
+noeq
+type boxfi (a: Type) = {  }
+
+let test3 r = ff r
+let test4 r x = ff r x <: a
 ]
 
 Module after type checking:
@@ -61,6 +97,17 @@ val box2__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box2 a)}
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = { ff:_: a -> a }
+
+
+let test2 r = r.ff 5
+noeq
+type boxfi (a: Type) = { ff:a }
+
+
+let test3 r = r.ff
+let test4 r x = r.ff x <: a
 ]
 Exports: [
 type box (a: Type) = { x:a }
@@ -77,6 +124,17 @@ val box2__uu___haseq: forall (a: Type). {:pattern Prims.hasEq (Bug3227.box2 a)}
 
 
 let test b = Box2? b && Box2? b.x
+noeq
+type boxf (a: Type) = { ff:_: a -> a }
+
+
+let test2 r = r.ff 5
+noeq
+type boxfi (a: Type) = { ff:a }
+
+
+let test3 r = r.ff
+let test4 r x = r.ff x <: a
 ]
 
 Verified module: Bug3227

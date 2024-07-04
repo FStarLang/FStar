@@ -470,10 +470,19 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
           else None
         | _ -> None
       in
-      if Some? (is_projector e) && List.length args = 1 then
+      (* We have a projector, applied to at least one argument, and the first argument
+      is explicit (so not one of the parameters of the type). In this case we resugar nicely. *)
+      if Some? (is_projector e) && List.length args >= 1 && None? (snd (List.hd args)) then
+        let arg1 :: rest_args = args in
         let (_, fi) = Some?.v (is_projector e) in
-        let arg = resugar_term' env (fst (List.hd args)) in
-        mk <| Project (arg, Ident.lid_of_ids [fi])
+        let arg = resugar_term' env (fst arg1) in
+        let h = mk <| Project (arg, Ident.lid_of_ids [fi]) in
+        (* Add remaining args if any. *)
+        rest_args |> List.fold_left (fun acc (a, q) ->
+                       let aa = resugar_term' env a in
+                       let qq = resugar_aqual env q in
+                       mk (A.App (acc, aa, qq)))
+                     h
       else
       let unsnoc (#a:Type) (l : list a) : (list a & a) =
         let rec unsnoc' acc = function

@@ -867,27 +867,43 @@ let rec (resugar_term' :
                      else FStar_Pervasives_Native.None
                  | uu___4 -> FStar_Pervasives_Native.None in
                let uu___3 =
-                 (let uu___4 = is_projector e in
-                  FStar_Pervasives_Native.uu___is_Some uu___4) &&
-                   ((FStar_Compiler_List.length args1) = Prims.int_one) in
+                 ((let uu___4 = is_projector e in
+                   FStar_Pervasives_Native.uu___is_Some uu___4) &&
+                    ((FStar_Compiler_List.length args1) >= Prims.int_one))
+                   &&
+                   (let uu___4 =
+                      let uu___5 = FStar_Compiler_List.hd args1 in
+                      FStar_Pervasives_Native.snd uu___5 in
+                    FStar_Pervasives_Native.uu___is_None uu___4) in
                if uu___3
                then
-                 let uu___4 =
-                   let uu___5 = is_projector e in
-                   FStar_Pervasives_Native.__proj__Some__item__v uu___5 in
+                 let uu___4 = args1 in
                  (match uu___4 with
-                  | (uu___5, fi) ->
-                      let arg =
-                        let uu___6 =
-                          let uu___7 = FStar_Compiler_List.hd args1 in
-                          FStar_Pervasives_Native.fst uu___7 in
-                        resugar_term' env uu___6 in
-                      let uu___6 =
-                        let uu___7 =
-                          let uu___8 = FStar_Ident.lid_of_ids [fi] in
-                          (arg, uu___8) in
-                        FStar_Parser_AST.Project uu___7 in
-                      mk uu___6)
+                  | arg1::rest_args ->
+                      let uu___5 =
+                        let uu___6 = is_projector e in
+                        FStar_Pervasives_Native.__proj__Some__item__v uu___6 in
+                      (match uu___5 with
+                       | (uu___6, fi) ->
+                           let arg =
+                             resugar_term' env
+                               (FStar_Pervasives_Native.fst arg1) in
+                           let h =
+                             let uu___7 =
+                               let uu___8 =
+                                 let uu___9 = FStar_Ident.lid_of_ids [fi] in
+                                 (arg, uu___9) in
+                               FStar_Parser_AST.Project uu___8 in
+                             mk uu___7 in
+                           FStar_Compiler_List.fold_left
+                             (fun acc ->
+                                fun uu___7 ->
+                                  match uu___7 with
+                                  | (a, q) ->
+                                      let aa = resugar_term' env a in
+                                      let qq = resugar_aqual env q in
+                                      mk (FStar_Parser_AST.App (acc, aa, qq)))
+                             h rest_args))
                else
                  (let unsnoc l =
                     let rec unsnoc' acc uu___5 =
