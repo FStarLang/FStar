@@ -20,6 +20,7 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
+module GSet = FStar.GhostSet
 
 open Pulse.Lib.InvList
 
@@ -105,7 +106,7 @@ assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   : stt_atomic (pi:invlist_elem { not (mem_inv is (snd pi)) })
                is
                (pledge is f (v1 ** v2))
-               (fun pi -> pledge (Set.add (iname_of (snd pi)) is) f v1 ** pledge (Set.add (iname_of (snd pi)) is) f v2)
+               (fun pi -> pledge (add_inv is (snd pi)) f v1 ** pledge (add_inv is (snd pi)) f v2)
 
 ```pulse
 fn rec quicksort

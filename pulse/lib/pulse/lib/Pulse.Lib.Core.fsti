@@ -212,40 +212,40 @@ let slprop_equivs ()
 ////////////////////////////////////////////////////////////////////
 // Invariants names and tokens
 ////////////////////////////////////////////////////////////////////
-val iname : eqtype
-let inames = erased (FStar.Set.set iname)
-let emp_inames : inames = Ghost.hide Set.empty
+[@@ erasable]
+val iname : Type0
+val deq_iname : FStar.GhostSet.decide_eq iname
+instance val non_informative_iname
+  : NonInformative.non_informative iname
+
+let inames = FStar.GhostSet.set iname
+let emp_inames : inames = GhostSet.empty
 
 let join_inames (is1 is2 : inames) : inames =
-  Set.union is1 is2
+  GhostSet.union is1 is2
 
 let inames_subset (is1 is2 : inames) : Type0 =
-  Set.subset is1 is2
+  GhostSet.subset is1 is2
 
 let (/!) (is1 is2 : inames) : Type0 =
-  Set.disjoint is1 is2
+  GhostSet.disjoint is1 is2
 
-[@@ erasable]
-val iref : Type0
-instance val non_informative_iref
-  : NonInformative.non_informative iref
-val inv (i:iref) (p:slprop) : slprop
-val iname_of (i:iref) : GTot iname
+val inv (i:iname) (p:slprop) : slprop
 
-let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> Set.mem i e) e i
-let mem_inv (e:inames) (i:iref) : GTot bool = mem_iname e (iname_of i)
+let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
+let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
 
-let add_iname (e:inames) (i:iname) : inames = Set.add i (reveal e)
-let add_inv (e:inames) (i:iref) : inames = Set.add (iname_of i) e
-let remove_inv (e:inames) (i:iref) : inames = Set.remove (iname_of i) e
-let all_inames : inames = Set.complement Set.empty
-let inv_disjointness_remove_i_i (e:inames) (i:iref)
+let single (i:iname) : inames = GhostSet.singleton deq_iname i
+let add_inv (e:inames) (i:iname) : inames = GhostSet.union (single i) e
+let remove_inv (e:inames) (i:iname) : inames = FStar.GhostSet.(intersect (complement (single i)) e)
+let all_inames : inames = GhostSet.complement GhostSet.empty
+let inv_disjointness_remove_i_i (e:inames) (i:iname)
   : Lemma (not (mem_inv (remove_inv e i) i)) = ()
 
 (* Useful for reasoning about inames equalities. TODO: We need a decent
 set of patterns. *)
-val add_already_there (i:iref) (is:inames)
-  : Lemma (requires Set.mem (iname_of i) is)
+val add_already_there (i:iname) (is:inames)
+  : Lemma (requires GhostSet.mem i is)
           (ensures add_inv is i == is)
           [SMTPat (add_inv is i)]
 
@@ -331,11 +331,6 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    - Observable:
      The computation has observable atomic effects on the physical state
 
-   - Unobservable:
-     
-     Has no observable effects, but may allocate or open invariants---will
-     be erased by the compiler if the result type is also non-informative
-
    - Neutral:
 
      Has no observable effects and does not allocate or open invariants
@@ -343,7 +338,7 @@ val hide_div #a #pre #post (f:unit -> Dv (stt a pre post))
    The indexes are ordered as follows, including in relation to the
    ghost effect:
 
-   observable > unobservable
+   observable >...
                  |
                  v
        ghost > neutral > ghost non_info
@@ -537,31 +532,25 @@ val sub_invs_ghost
 // Invariants
 //////////////////////////////////////////////////////////////////////////
 
-val dup_inv (i:iref) (p:slprop)
+val dup_inv (i:iname) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> inv i p ** inv i p)
 
 val new_invariant (p:storable)
-: stt_ghost iref emp_inames p (fun i -> inv i p)
+: stt_ghost iname emp_inames p (fun i -> inv i p)
 
-val fresh_wrt (i:iref) (c:list iref)
+val fresh_wrt (i:iname) (c:list iname)
 : prop
 
-val fresh_wrt_def (i:iref) (c:list iref)
+val fresh_wrt_def (i:iname) (c:list iname)
 : Lemma
     (fresh_wrt i c <==>
-    (forall i'. List.Tot.memP i' c ==> iname_of i' =!= iname_of i))
+    (forall i'. List.Tot.memP i' c ==> i' =!= i))
     [SMTPat (fresh_wrt i c)]
 
-val all_live (ctx:list iref) : slprop
-
-val all_live_nil () : Lemma (all_live [] == emp)
-val all_live_cons (hd:iref) (tl:list iref)
-  : Lemma (all_live (hd::tl) == (exists* p. inv hd p) ** all_live tl)
-
 val fresh_invariant
-    (ctx:list iref)
+    (ctx:list iname)
     (p:storable)
-: stt_ghost (i:iref { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
+: stt_ghost (i:iname { i `fresh_wrt` ctx }) emp_inames p (fun i -> inv i p)
 
 val with_invariant
     (#a:Type)
@@ -570,7 +559,7 @@ val with_invariant
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
-    (i:iref { not (mem_inv f_opens i) })
+    (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_atomic a #obs f_opens
                            (p ** fp)
                            (fun x -> p ** fp' x))
@@ -582,7 +571,7 @@ val with_invariant_g
     (#fp':a -> slprop)
     (#f_opens:inames)
     (#p:slprop)
-    (i:iref { not (mem_inv f_opens i) })
+    (i:iname { not (mem_inv f_opens i) })
     ($f:unit -> stt_ghost a f_opens
                             (p ** fp)
                             (fun x -> p ** fp' x))
@@ -590,10 +579,10 @@ val with_invariant_g
 
 val distinct_invariants_have_distinct_names
     (#p #q:slprop)
-    (i j:iref)
+    (i j:iname)
     (_:squash (p =!= q))
 : stt_ghost
-    (_:squash (iname_of i =!= iname_of j))
+    (_:squash (i =!= j))
     emp_inames
     (inv i p ** inv j q)
     (fun _ -> inv i p ** inv j q)
@@ -601,10 +590,10 @@ val distinct_invariants_have_distinct_names
 [@@allow_ambiguous]
 val invariant_name_identifies_invariant
       (#p #q:slprop)
-      (i:iref)
-      (j:iref { iname_of i == iname_of j } )
+      (i:iname)
+      (j:iname { i == j } )
 : stt_ghost
-    (squash (p == q /\ i == j))
+    (squash (p == q))
     emp_inames
     (inv i p ** inv j q)
     (fun _ -> inv i p ** inv j q)

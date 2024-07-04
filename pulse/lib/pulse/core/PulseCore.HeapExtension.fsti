@@ -4,22 +4,22 @@ open PulseCore.HeapSig
 val extend (h:heap_sig u#a) : h2:heap_sig u#(a + 1) { h2.bprop == h.slprop }
 
 val lift_iref (#h:heap_sig u#a) (i:h.iref) : (extend h).iref
-val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
-val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
+// val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
+// val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
 val lower_inames (#h:heap_sig u#a) (is:inames (extend h)) : inames h
 
-val lift_action
-    (#h:heap_sig u#h)
-    (#a:Type u#a)
-    (#mg:bool)
-    (#ex:inames h)
-    (#pre:h.slprop)
-    (#post:a -> h.slprop)
-    (action:_action_except h a mg ex pre post)
-: _action_except (extend h)
-    a mg (lift_inames ex) 
-    ((extend h).up pre)
-    (fun x -> (extend h).up (post x))
+// val lift_action
+//     (#h:heap_sig u#h)
+//     (#a:Type u#a)
+//     (#mg:bool)
+//     (#ex:inames h)
+//     (#pre:h.slprop)
+//     (#post:a -> h.slprop)
+//     (action:_action_except h a mg ex pre post)
+// : _action_except (extend h)
+//     a mg (lift_inames ex) 
+//     ((extend h).up pre)
+//     (fun x -> (extend h).up (post x))
 
 val lift_action_alt
     (#h:heap_sig u#h)
@@ -46,7 +46,7 @@ val dup_inv
 val injective_invariant 
         (#h:heap_sig u#a) 
         (i:(extend h).iref)
-: prop
+: GTot bool
 
 let iiref (h:heap_sig) = i:(extend h).iref { injective_invariant i }
 
@@ -68,9 +68,9 @@ val with_invariant
     (#opened_invariants:inames (extend h))
     (#p:(extend h).slprop)
     (#maybe_ghost:bool)
-    (i:(extend h).iref{not (Set.mem ((extend h).iname_of i) opened_invariants)})
+    (i:(extend h).iref{~ (GhostSet.mem i opened_invariants)})
     (f:_action_except (extend h) a maybe_ghost
-      (Set.add ((extend h).iname_of i) opened_invariants) 
+      (add_iref #(extend h) i opened_invariants) 
       (p `(extend h).star` fp)
       (fun x -> p `(extend h).star` fp' x))
 : _action_except (extend h) a maybe_ghost opened_invariants 
@@ -84,7 +84,7 @@ val distinct_invariants_have_distinct_names
       (q:(extend h).slprop { p =!= q })
       (i j: iiref h)
 : ghost_action_except (extend h)
-    (squash ((extend h).iname_of i =!= (extend h).iname_of j))
+    (squash (i =!= j))
     e 
     ((extend h).inv i p `(extend h).star` (extend h).inv j q)
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
@@ -94,16 +94,16 @@ val invariant_name_identifies_invariant
       (e:inames (extend h))
       (p q:(extend h).slprop)
       (i:iiref h)
-      (j:iiref h{ (extend h).iname_of i == (extend h).iname_of j } )
+      (j:iiref h{ i == j } )
 : ghost_action_except (extend h)
-   (squash (p == q /\ i == j)) e
+   (squash (p == q)) e
     ((extend h).inv i p `(extend h).star` (extend h).inv j q)
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv j q)
 
 let fresh_wrt (#h:heap_sig u#h)
               (ctx:list h.iref)
               (i:h.iref)
-  = forall i'. List.Tot.memP i' ctx ==> h.iname_of i' <> h.iname_of i   
+  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
 val fresh_invariant
     (#h:heap_sig u#a) 
@@ -122,6 +122,9 @@ val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 open FStar.PCM
 open FStar.Ghost
 
+val pts_to (#h:heap_sig u#a) (#a:Type u#(a + 1)) (#pcm:pcm a) (r:ref a pcm) (v:a) : (extend h).slprop
+val ghost_pts_to (#h:heap_sig u#a) (#a:Type u#(a + 1)) (#pcm:pcm a) (r:ghost_ref a pcm) (v:a) : (extend h).slprop
+
 val select_refine
     (#h:heap_sig u#h)
     (#a:Type u#(h + 1))
@@ -135,8 +138,8 @@ val select_refine
 : action_except
     (extend h)
     (v:a{compatible p x v /\ p.refine v}) e
-    ((extend h).pts_to r x)
-    (fun v -> (extend h).pts_to r (f v))
+    (pts_to r x)
+    (fun v -> pts_to r (f v))
 
 val upd_gen
     (#h:heap_sig u#h)
@@ -149,8 +152,8 @@ val upd_gen
 : action_except
     (extend h)
     unit e
-    ((extend h).pts_to r x)
-    (fun _ -> (extend h).pts_to r y)
+    (pts_to r x)
+    (fun _ -> pts_to r y)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
@@ -164,8 +167,8 @@ val split_action
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).pts_to r (v0 `op pcm` v1))
-    (fun _ -> (extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
+    (pts_to r (v0 `op pcm` v1))
+    (fun _ -> pts_to r v0 `(extend h).star` pts_to r v1)
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
@@ -179,8 +182,8 @@ val gather_action
 : ghost_action_except
     (extend h)
     (squash (composable pcm v0 v1)) e
-    ((extend h).pts_to r v0 `(extend h).star` (extend h).pts_to r v1)
-    (fun _ -> (extend h).pts_to r (op pcm v0 v1))
+    (pts_to r v0 `(extend h).star` pts_to r v1)
+    (fun _ -> pts_to r (op pcm v0 v1))
 
 val alloc_action
     (#h:heap_sig u#h)
@@ -192,7 +195,7 @@ val alloc_action
     (extend h)
     (ref a pcm) e
     (extend h).emp
-    (fun r -> (extend h).pts_to r x)
+    (fun r -> pts_to r x)
 
 
 val pts_to_not_null_action 
@@ -205,8 +208,8 @@ val pts_to_not_null_action
 : ghost_action_except
     (extend h)
     (squash (not (is_null r))) e
-    ((extend h).pts_to r v)
-    (fun _ -> (extend h).pts_to r v)
+    (pts_to r v)
+    (fun _ -> pts_to r v)
 
 // Ghost operations
 val ghost_alloc
@@ -220,7 +223,7 @@ val ghost_alloc
     (ghost_ref a pcm)
     e
     (extend h).emp 
-    (fun r -> (extend h).ghost_pts_to false r x)
+    (fun r -> ghost_pts_to r x)
 
 val ghost_read
     (#h:heap_sig u#h)
@@ -236,8 +239,8 @@ val ghost_read
     (extend h)
     (erased (v:a{compatible p x v /\ p.refine v}))
     e
-    ((extend h).ghost_pts_to false r x)
-    (fun v -> (extend h).ghost_pts_to false r (f v))
+    (ghost_pts_to r x)
+    (fun v -> ghost_pts_to r (f v))
 
 val ghost_write
     (#h:heap_sig u#h)
@@ -250,8 +253,8 @@ val ghost_write
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).ghost_pts_to false r x)
-    (fun _ -> (extend h).ghost_pts_to false r y)
+    (ghost_pts_to r x)
+    (fun _ -> ghost_pts_to r y)
 
 val ghost_share
     (#h:heap_sig u#h)
@@ -264,9 +267,9 @@ val ghost_share
 : ghost_action_except
     (extend h)
     unit e
-    ((extend h).ghost_pts_to false r (v0 `op pcm` v1))
-    (fun _ -> (extend h).ghost_pts_to false r v0 `(extend h).star` 
-              (extend h).ghost_pts_to false r v1)
+    (ghost_pts_to r (v0 `op pcm` v1))
+    (fun _ -> ghost_pts_to r v0 `(extend h).star` 
+              ghost_pts_to r v1)
 
 val ghost_gather
     (#h:heap_sig u#h)
@@ -279,9 +282,9 @@ val ghost_gather
 : ghost_action_except
     (extend h)
     (squash (composable pcm v0 v1)) e
-    ((extend h).ghost_pts_to false r v0 `(extend h).star`
-     (extend h).ghost_pts_to false r v1)
-    (fun _ -> (extend h).ghost_pts_to false r (op pcm v0 v1))
+    (ghost_pts_to r v0 `(extend h).star`
+     ghost_pts_to r v1)
+    (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 val exists_congruence
          (#h:heap_sig u#h)

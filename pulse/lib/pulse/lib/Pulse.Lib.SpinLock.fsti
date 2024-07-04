@@ -71,8 +71,8 @@ val lock_alive_inj (l:lock) (#p1 #p2 : perm) (#v1 #v2 : slprop)
               (lock_alive l #p1 v1 ** lock_alive l #p2 v2)
               (fun _ -> lock_alive l #p1 v1 ** lock_alive l #p2 v1)
 
-val iref_of (l:lock) : iref
-val iref_v_of (l:lock) (v:slprop) : slprop
+val iname_of (l:lock) : iname
+val iname_v_of (l:lock) (v:slprop) : slprop
 val lock_active (#[T.exact (`1.0R)] p:perm) (l:lock) : v:slprop { is_slprop1 v }
 
 val share_lock_active (#p:perm) (l:lock)
@@ -88,9 +88,9 @@ val gather_lock_active (#p1 #p2:perm) (l:lock)
 val elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
   : stt_ghost unit emp_inames
       (requires emp)
-      (ensures fun _ -> (inv (iref_of l) (iref_v_of l v) ** lock_active #p l) @==> lock_alive l #p v)
+      (ensures fun _ -> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l) @==> lock_alive l #p v)
 
 val elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
   : stt_ghost unit emp_inames
       (requires emp)
-      (ensures fun _ -> lock_alive l #p v @==> (inv (iref_of l) (iref_v_of l v) ** lock_active #p l))
+      (ensures fun _ -> lock_alive l #p v @==> (inv (iname_of l) (iname_v_of l v) ** lock_active #p l))

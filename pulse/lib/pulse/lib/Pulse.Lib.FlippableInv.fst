@@ -25,7 +25,7 @@ let finv_p (p:slprop { is_storable p }) (r : GR.ref bool) : v:slprop { is_storab
 noeq
 type finv (p:slprop) = {
   r : GR.ref bool;
-  i : iref;
+  i : iname;
   p_big : squash (is_storable p);
 }
 
@@ -57,14 +57,14 @@ fn mk_finv (p:slprop { is_storable p })
 ```
 
 
-let iname_of #p (f : finv p) : erased iname = iname_of f.i
+let iname_of #p (f : finv p) : erased iname = f.i
 
 ```pulse
 atomic
 fn flip_on (#p:slprop) (fi:finv p)
    requires off fi ** p
    ensures on fi
-   opens add_iname emp_inames (iname_of fi)
+   opens add_inv emp_inames (iname_of fi)
 {
   open Pulse.Lib.GhostReference;
   unfold off;
@@ -90,7 +90,7 @@ atomic
 fn flip_off (#p:slprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
-   opens add_iname emp_inames (iname_of fi)
+   opens add_inv emp_inames (iname_of fi)
 {
   open Pulse.Lib.GhostReference;
   unfold on;

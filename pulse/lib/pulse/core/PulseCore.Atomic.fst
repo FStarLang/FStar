@@ -18,7 +18,7 @@ module PulseCore.Atomic
 
 module A = PulseCore.Action
 module I = PulseCore.InstantiatedSemantics
-
+module Set = FStar.GhostSet
 open PulseCore.InstantiatedSemantics
 open PulseCore.Action
 

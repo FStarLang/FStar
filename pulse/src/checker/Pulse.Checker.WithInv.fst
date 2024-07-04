@@ -63,14 +63,14 @@ let all_inames_typing (g:env)
 let remove_iname_typing
     (g:env) (#inames #i:term)
     (_:tot_typing g inames tm_inames)
-    (_:tot_typing g i tm_iname_ref)
+    (_:tot_typing g i tm_iname)
 : tot_typing g (remove_iname inames i) tm_inames
 = RU.magic()
 
 let add_iname_typing
     (g:env) (#inames #i:term)
     (_:tot_typing g inames tm_inames)
-    (_:tot_typing g i tm_iname_ref)
+    (_:tot_typing g i tm_iname)
 : tot_typing g (add_iname inames i) tm_inames
 = RU.magic()
 
@@ -88,7 +88,7 @@ let disjointness_remove_i_i (g:env) (inames i:term)
 let add_remove_inverse (g:env)
      (inames i:term)
      (inames_typing:tot_typing g inames tm_inames)
-     (i_typing:tot_typing g i tm_iname_ref)
+     (i_typing:tot_typing g i tm_iname)
 : T.Tac 
     (prop_validity g (tm_inames_subset (add_iname (remove_iname inames i) i) inames))
 = let typing
@@ -200,12 +200,12 @@ let check
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = let Tm_WithInv {name=i; returns_inv; body} = t.term in
-  let (| i, _ |) = check_tot_term g i tm_iname_ref in
+  let (| i, _ |) = check_tot_term g i tm_iname in
   let i_range = Pulse.RuntimeUtils.range_of_term i in
   let res = find_inv pre_typing i in
   if None? res then
     fail_doc g (Some i_range) [
-        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
         prefix 2 1 (text " in the precondition ") (pp pre)
       ];
     
@@ -263,7 +263,7 @@ let check
 
   if None? res then
     fail_doc g (Some i_range) [
-        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
         prefix 2 1 (text " in the postcondition ") (pp post_hint.post)
       ];
          
@@ -271,7 +271,7 @@ let check
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
   if not (eq_tm p p')
   then fail g (Some i_range)
-         (FStar.Printf.sprintf "Inconsistent slprops for iref %s in pre (%s) and post (%s)"
+         (FStar.Printf.sprintf "Inconsistent slprops for iname %s in pre (%s) and post (%s)"
             (show i) (show p) (show p'));
   assert (p == p');
   let post_body = tm_star p post_frame in

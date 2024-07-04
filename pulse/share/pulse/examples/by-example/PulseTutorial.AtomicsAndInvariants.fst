@@ -26,7 +26,7 @@ let owns (x:ref U32.t) : v:slprop { is_slprop2 v }= exists* v. pts_to x v
 ghost
 fn create_invariant (r:ref U32.t) (v:erased U32.t)
 requires pts_to r v
-returns i:iref
+returns i:iname
 ensures inv i (owns r)
 {
     fold owns;
@@ -39,18 +39,18 @@ ensures inv i (owns r)
 ghost
 fn create_non_boxable_inv (p:slprop)
 requires p
-returns i:iref
+returns i:iname
 ensures inv i p
 {
   new_invariant p;
 }
 ```
 
-let singleton (i:iref) = add_inv emp_inames i
+let singleton (i:iname) = add_inv emp_inames i
 
 ```pulse //update_ref_atomic$
 atomic
-fn update_ref_atomic (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 opens (singleton i)
@@ -97,7 +97,7 @@ ensures pure False
 
 
 ```pulse //update_ref$
-fn update_ref (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 {                    
@@ -112,7 +112,7 @@ ensures inv i (owns r)
 //update_ref_fail$
 [@@expect_failure]
 ```pulse 
-fn update_ref_fail (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 {
@@ -142,7 +142,7 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 
 ```pulse //split_readable$
 ghost
-fn split_readable (r:ref U32.t) (i:iref)
+fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
 ensures inv i (readable r) ** readable r
 opens (singleton i)

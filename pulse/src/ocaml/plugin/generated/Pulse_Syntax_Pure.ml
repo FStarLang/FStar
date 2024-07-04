@@ -553,8 +553,8 @@ let (tm_forall_sl :
           (Pulse_RuntimeUtils.union_ranges
              (Pulse_RuntimeUtils.range_of_term b.Pulse_Syntax_Base.binder_ty)
              (Pulse_RuntimeUtils.range_of_term body))
-let (tm_iname_ref : Pulse_Syntax_Base.term) =
-  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.iname_ref_lid)
+let (tm_iname : Pulse_Syntax_Base.term) =
+  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.iname_lid)
 let (tm_inv :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -570,14 +570,14 @@ let (tm_add_inv :
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
   fun is ->
-    fun iref ->
+    fun iname ->
       let h =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_FVar
              (FStar_Reflection_V2_Builtins.pack_fv
                 Pulse_Reflection_Util.add_inv_lid)) in
       FStar_Reflection_V2_Derived.mk_app h
-        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iref]
+        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iname]
 let (tm_full_perm : Pulse_Syntax_Base.term) =
   tm_constant (FStar_Reflection_V2_Data.C_Real "1.0")
 type ('tv, 't) is_view_of = Obj.t

@@ -22,7 +22,7 @@ module GR = Pulse.Lib.GhostReference
 
 noeq
 type cinv = {
-  i:iref;
+  i:iname;
   r:GR.ref bool;
 }
 
@@ -42,14 +42,14 @@ let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
 let active_is_slprop1 p c = ()
 
-let iref_of c = c.i
+let iname_of c = c.i
 
 ```pulse
 ghost
 fn new_cancellable_invariant (v:slprop { is_storable v })
   requires v
   returns c:cinv
-  ensures inv (iref_of c) (cinv_vp c v) ** active c 1.0R
+  ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
   opens emp_inames
 {
   let r = GR.alloc true;
@@ -58,7 +58,7 @@ fn new_cancellable_invariant (v:slprop { is_storable v })
   fold (cinv_vp_aux r v);
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
-  rewrite (inv i (cinv_vp_aux r v)) as (inv (iref_of c) (cinv_vp c v));
+  rewrite (inv i (cinv_vp_aux r v)) as (inv (iname_of c) (cinv_vp c v));
   with _p _v. rewrite (GR.pts_to r #_p _v) as (active c 1.0R);
   c
 }
@@ -155,16 +155,16 @@ opens emp_inames
 ```pulse
 ghost
 fn cancel (#v:slprop) (c:cinv)
-  requires inv (iref_of c) (cinv_vp c v) ** active c 1.0R
+  requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
-  opens (add_inv emp_inames (iref_of c))
+  opens (add_inv emp_inames (iname_of c))
 {
-  with_invariants (iref_of c)
+  with_invariants (iname_of c)
     returns _:unit
-    ensures inv (iref_of c) (cinv_vp c v) ** v
-    opens (add_inv emp_inames (iref_of c)) {
+    ensures inv (iname_of c) (cinv_vp c v) ** v
+    opens (add_inv emp_inames (iname_of c)) {
     cancel_ c
   };
-  drop_ (inv (iref_of c) _)
+  drop_ (inv (iname_of c) _)
 }
 ```

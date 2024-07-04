@@ -275,8 +275,8 @@ type term_view =
   | Tm_Star       : l:slprop -> r:slprop -> term_view
   | Tm_ExistsSL   : u:universe -> b:binder -> body:slprop -> term_view
   | Tm_ForallSL   : u:universe -> b:binder -> body:slprop -> term_view
-  | Tm_SLProp      : term_view
-  | Tm_Inv        : iref:term -> p:slprop -> term_view
+  | Tm_SLProp     : term_view
+  | Tm_Inv        : iname:term -> p:slprop -> term_view
   | Tm_Inames     : term_view  // type inames
   | Tm_EmpInames  : term_view
   | Tm_Unknown    : term_view
@@ -343,14 +343,14 @@ let tm_exists_sl (u:universe) (b:binder) (body:slprop) : term =
 let tm_forall_sl (u:universe) (b:binder) (body:slprop) : term =
   pack_term_view (Tm_ForallSL u b body)
                  (union_ranges (range_of_term b.binder_ty) (range_of_term body))
-let tm_iname_ref = tm_fvar (as_fv iname_ref_lid)
+let tm_iname = tm_fvar (as_fv iname_lid)
 let tm_inv (i p:term) : term =
   pack_term_view (Tm_Inv i p)
                  (union_ranges (range_of_term i) (range_of_term p))
 let tm_all_inames = tm_fvar (as_fv all_inames_lid)
-let tm_add_inv (is iref:R.term) : R.term =
+let tm_add_inv (is iname:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv add_inv_lid)) in
-  R.mk_app h [ex is; ex iref]
+  R.mk_app h [ex is; ex iname]
 let tm_full_perm = tm_constant (R.C_Real "1.0")
 
 

@@ -48,7 +48,7 @@ ghost
 fn shift_invlist_one
   (#a:Type0)
   (p : slprop)
-  (i : iref)
+  (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:slprop)
   (#post : a -> slprop)
@@ -117,8 +117,8 @@ let invlist_reveal = admit()
 ghost
 fn iname_inj
   (p1 p2 : slprop)
-  (i1 i2 : iref)
-  requires (inv i1 p1 ** inv i2 p2 ** pure (iname_of i1 = iname_of i2))
+  (i1 i2 : iname)
+  requires (inv i1 p1 ** inv i2 p2 ** pure (i1 == i2))
   ensures (inv i1 p1 ** inv i2 p2 ** pure (p1 == p2))
 {
   invariant_name_identifies_invariant #p1 #p2 i1 i2;
@@ -127,9 +127,9 @@ fn iname_inj
 ```
 
 let invlist_mem_split (i : iname) (is : invlist)
-    (_ : squash (Set.mem i (invlist_names is)))
-    : squash (exists l r p (ii : iref).
-              iname_of ii == i /\
+    (_ : squash (FStar.GhostSet.mem i (invlist_names is)))
+    : squash (exists l r p (ii : iname).
+              ii == i /\
               is == l @ [( p, ii )] @ r)
   = admit()
 
@@ -156,7 +156,6 @@ fn __invlist_sub_split
     Cons h t -> {
       let p = fst h;
       let i = snd h;
-      let name = iname_of i;
       (* This is the interesting case, but it's rather hard to prove right now
       due to some pulse limitations (#151, #163). The idea is that (p, i) must
       also be in is2, so we can rewrite

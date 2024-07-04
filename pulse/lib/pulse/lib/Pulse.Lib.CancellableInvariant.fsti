@@ -35,12 +35,12 @@ val active_is_slprop1 (c:cinv) (p:perm)
   : Lemma (is_slprop1 (active c p))
           [SMTPat (is_slprop1 (active c p))]
 
-val iref_of (c:cinv) : GTot iref
+val iname_of (c:cinv) : GTot iname
 
 val new_cancellable_invariant (v:slprop { is_storable v })
   : stt_ghost cinv emp_inames
       v
-      (fun c -> inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
+      (fun c -> inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
 
 val unpacked (c:cinv) (v:slprop) : slprop
 
@@ -77,6 +77,6 @@ val gather2 (c:cinv)
       (fun _ -> active c 1.0R)
 
 val cancel (#v:slprop) (c:cinv)
-  : stt_ghost unit (add_inv emp_inames (iref_of c))
-      (inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
+  : stt_ghost unit (add_inv emp_inames (iname_of c))
+      (inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
       (fun _ -> v)

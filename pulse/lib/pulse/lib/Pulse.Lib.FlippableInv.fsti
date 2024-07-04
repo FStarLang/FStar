@@ -27,5 +27,5 @@ val mk_finv (p:slprop { is_storable p }) : stt (finv p) emp (fun x -> off x)
 
 val iname_of #p (f : finv p) : erased iname
 
-val flip_on  (#p:slprop) (fi : finv p) : stt_atomic unit (add_iname emp_inames (iname_of fi)) (off fi ** p) (fun () -> on fi)
-val flip_off (#p:slprop) (fi : finv p) : stt_atomic unit (add_iname emp_inames (iname_of fi)) (on fi) (fun () -> off fi ** p)
+val flip_on  (#p:slprop) (fi : finv p) : stt_atomic unit (add_inv emp_inames (iname_of fi)) (off fi ** p) (fun () -> on fi)
+val flip_off (#p:slprop) (fi : finv p) : stt_atomic unit (add_inv emp_inames (iname_of fi)) (on fi) (fun () -> off fi ** p)

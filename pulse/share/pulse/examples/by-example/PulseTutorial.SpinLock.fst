@@ -32,7 +32,7 @@ let lock_inv (r:B.box U32.t) (p:slprop) : v:slprop { is_storable p ==> is_storab
 noeq
 type lock = {
   r:B.box U32.t;
-  i:iref;
+  i:iname;
 }
 
 let lock_alive (l:lock) (p:slprop) =

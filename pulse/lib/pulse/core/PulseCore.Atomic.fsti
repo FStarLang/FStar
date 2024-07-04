@@ -289,7 +289,7 @@ val distinct_invariants_have_distinct_names
     (i j:iref)
     (_:squash (p =!= q))
 : stt_ghost
-    (squash (iname_of i =!= iname_of j))
+    (squash (i =!= j))
     emp_inames
     ((inv i p) ** (inv j q))
     (fun _ -> (inv i p) ** (inv j q))
@@ -297,9 +297,9 @@ val distinct_invariants_have_distinct_names
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { iname_of i == iname_of j })
+      (j:iref { i == j })
 : stt_ghost
-    (squash (p == q /\ i == j))
+    (squash (p == q))
     emp_inames
     ((inv i p) ** (inv j q))
     (fun _ -> (inv i p) ** (inv j q))

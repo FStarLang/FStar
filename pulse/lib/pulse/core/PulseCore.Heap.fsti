@@ -61,6 +61,7 @@ val sel_empty (i:nat)
 (** A [core_ref] is a key into the [heap] or [null] *)
 val core_ref : Type u#0
 
+val core_ref_eq (x y:core_ref) : GTot (b:bool { b <==> (x==y) })
 (** We index a [core_ref] by the type of its heap contents
     and a [pcm] governing it, for ease of type inference *)
 let ref (a:Type u#a) (pcm:pcm a) : Type u#0 = core_ref
@@ -75,7 +76,7 @@ let null (#a:Type u#a) (#pcm:pcm a) : ref a pcm = core_ref_null
 *)
 val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 
-val addr_as_core_ref (n:nat) : GTot core_ref
+val addr_as_core_ref (n:nat) : GTot (r:core_ref { not <| core_ref_is_null r })
 val core_ref_as_addr (c:core_ref) : GTot nat
 val addr_core_ref_injective (n:nat)
 : Lemma (core_ref_as_addr (addr_as_core_ref n) == n)
@@ -731,7 +732,8 @@ val extend_modifies_nothing
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
       select addr h1 == Some (Ref meta a pcm x) /\
       not (core_ref_is_null r) /\
-      addr == core_ref_as_addr r
+      addr == core_ref_as_addr r /\
+      addr_as_core_ref addr == r
   )
 
 val frame (#a:Type)

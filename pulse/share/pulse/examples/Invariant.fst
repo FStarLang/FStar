@@ -34,7 +34,7 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 atomic
-fn g (i:iref)
+fn g (i:iname)
   requires (inv i p ** q)
   ensures (r ** inv i p)
   opens (add_inv emp_inames i)
@@ -49,7 +49,7 @@ assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 ghost
-fn g_ghost (i:iref)
+fn g_ghost (i:iname)
   requires (inv i p ** q)
   ensures (r ** inv i p)
   opens (add_inv emp_inames i)
@@ -60,7 +60,7 @@ fn g_ghost (i:iref)
 }
 ```
 
-let test (i:iref) = assert (
+let test (i:iname) = assert (
   add_inv emp_inames i
   ==
   join_inames (add_inv emp_inames i) emp_inames
@@ -83,7 +83,7 @@ fn test_atomic (r : ref int)
 ```pulse
 fn package (r:ref int)
    requires pts_to r 123
-   returns i : iref
+   returns i : iname
    ensures inv i (pts_to r 123)
 {
   let i = new_invariant (pts_to r 123);
@@ -131,7 +131,7 @@ fn test3 ()
 //
 ```pulse
  ghost
- fn t00 () (i:iref)
+ fn t00 () (i:iname)
    requires (inv i emp)
    ensures (inv i emp)
    opens (add_inv emp_inames i)
@@ -142,7 +142,7 @@ fn test3 ()
 
 ```pulse
 atomic
-fn t0 () (i:iref)
+fn t0 () (i:iname)
   requires inv i emp
   ensures inv i emp
   opens (add_inv emp_inames i)
@@ -154,8 +154,8 @@ fn t0 () (i:iref)
 ```
 
 
-assume val i : iref
-assume val i2 : iref
+assume val i : iname
+assume val i2 : iname
 
 ```pulse
 ghost
@@ -217,11 +217,11 @@ fn t2 ()
 assume val p_to_q : unit -> stt_atomic unit emp_inames p (fun _ -> p ** q)
 assume val ghost_p_to_q : unit -> stt_ghost unit emp_inames p (fun _ -> p ** q)
 
-let folded_inv (i:iref) = inv i p
+let folded_inv (i:iname) = inv i p
 
 ```pulse
 atomic
-fn test_returns0 (i:iref) (b:bool)
+fn test_returns0 (i:iname) (b:bool)
   requires folded_inv i
   ensures folded_inv i ** q
   opens (add_inv emp_inames i)
@@ -242,7 +242,7 @@ fn test_returns0 (i:iref) (b:bool)
 
 ```pulse
 ghost
-fn test_returns1 (i:iref)
+fn test_returns1 (i:iname)
   requires folded_inv i
   ensures folded_inv i ** q
   opens (add_inv emp_inames i)

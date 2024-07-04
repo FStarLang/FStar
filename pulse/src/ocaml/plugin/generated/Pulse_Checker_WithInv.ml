@@ -660,7 +660,7 @@ let (check :
                                           (Prims.of_int (203))
                                           (Prims.of_int (19))
                                           (Prims.of_int (203))
-                                          (Prims.of_int (50)))))
+                                          (Prims.of_int (46)))))
                                  (FStar_Sealed.seal
                                     (Obj.magic
                                        (FStar_Range.mk_range
@@ -671,7 +671,7 @@ let (check :
                                           (Prims.of_int (57)))))
                                  (Obj.magic
                                     (Pulse_Checker_Pure.check_tot_term g i
-                                       Pulse_Syntax_Pure.tm_iname_ref))
+                                       Pulse_Syntax_Pure.tm_iname))
                                  (fun uu___1 ->
                                     (fun uu___1 ->
                                        match uu___1 with
@@ -791,7 +791,7 @@ let (check :
                                                                     (Prims.of_int (208))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (208))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -807,9 +807,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (208))
-                                                                    (Prims.of_int (69))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (208))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -817,7 +817,7 @@ let (check :
                                                                     (Prims.of_int (208))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (208))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
                                                                     Pulse_PP.printable_term
@@ -831,7 +831,7 @@ let (check :
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
-                                                                    "Cannot find invariant resource for iref ")
+                                                                    "Cannot find invariant resource for iname ")
                                                                     uu___3))))
                                                                     (fun
                                                                     uu___3 ->
@@ -1526,7 +1526,7 @@ let (check :
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (266))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1542,9 +1542,9 @@ let (check :
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.WithInv.fst"
                                                                     (Prims.of_int (266))
-                                                                    (Prims.of_int (69))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (266))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -1552,7 +1552,7 @@ let (check :
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (266))
-                                                                    (Prims.of_int (75)))))
+                                                                    (Prims.of_int (76)))))
                                                                     (Obj.magic
                                                                     (Pulse_PP.pp
                                                                     Pulse_PP.printable_term
@@ -1566,7 +1566,7 @@ let (check :
                                                                     (Prims.of_int (2))
                                                                     Prims.int_one
                                                                     (Pulse_PP.text
-                                                                    "Cannot find invariant resource for iref ")
+                                                                    "Cannot find invariant resource for iname ")
                                                                     uu___5))))
                                                                     (fun
                                                                     uu___5 ->
@@ -1861,7 +1861,7 @@ let (check :
                                                                     Prims.strcat
                                                                     (Prims.strcat
                                                                     (Prims.strcat
-                                                                    "Inconsistent slprops for iref "
+                                                                    "Inconsistent slprops for iname "
                                                                     (Prims.strcat
                                                                     uu___10
                                                                     " in pre ("))

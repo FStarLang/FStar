@@ -18,13 +18,13 @@ module Pulse.Lib.InvList
 
 open Pulse.Lib.Pervasives
 
-let invlist_elem = slprop & iref
+let invlist_elem = slprop & iname
 let invlist0 = list invlist_elem
 
 let rec invlist_names (is : invlist0) : inames =
   match is with
   | [] -> emp_inames
-  | i :: is -> add_iname (invlist_names is) (iname_of <| snd i)
+  | i :: is -> add_inv (invlist_names is) (snd i)
 
 let rec invlist_nodups (is : invlist0) : prop =
   match is with
@@ -57,7 +57,7 @@ val dup_invlist_inv (is:invlist)
 val shift_invlist_one
   (#a:Type0)
   (p : slprop)
-  (i : iref)
+  (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
   (#pre:slprop)
   (#post : a -> slprop)

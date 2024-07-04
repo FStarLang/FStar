@@ -1040,7 +1040,7 @@ type st_typing : env -> st_term -> comp -> Type =
       p:term ->
       body:st_term ->
       c:comp_st { C_STAtomic? c || C_STGhost? c } ->
-      tot_typing g i tm_iname_ref ->
+      tot_typing g i tm_iname ->
       tot_typing g p tm_slprop ->
       body_typing : st_typing g body (add_frame_l c p) ->
       inv_disjointness_token:prop_validity g (inv_disjointness (comp_inames c) i) ->

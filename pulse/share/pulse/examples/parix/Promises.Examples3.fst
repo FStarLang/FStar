@@ -58,7 +58,7 @@ let goal : slprop =
 ```pulse
 atomic
 fn proof
-   (i : iref) (_:unit)
+   (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R true ** GR.pts_to claimed #0.5R false
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
    opens add_inv emp_inames i
@@ -114,9 +114,9 @@ fn proof
 }
 ```
 
-let is (i:iref) : invlist = [(inv_p <: slprop), i]
+let is (i:iname) : invlist = [(inv_p <: slprop), i]
 
-let cheat_proof (i:iref)
+let cheat_proof (i:iname)
   : (_:unit) ->
       stt_ghost unit (add_inv emp_inames i)
         (requires pts_to done #0.5R true ** (inv i inv_p ** GR.pts_to claimed #0.5R false))
@@ -128,7 +128,7 @@ let cheat_proof (i:iref)
 ```pulse
 fn setup (_:unit)
    requires pts_to done 'v_done ** pts_to res 'v_res ** GR.pts_to claimed 'v_claimed
-   returns i:iref
+   returns i:iname
    ensures pts_to done #0.5R false **
            pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal
 {
@@ -160,7 +160,7 @@ fn setup (_:unit)
 
 [@@expect_failure] // block is not atomic/ghost
 ```pulse
-fn worker (i : iref) (_:unit)
+fn worker (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R false
    ensures  inv i inv_p ** pts_to done #0.5R true
 {

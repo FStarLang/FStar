@@ -25,9 +25,9 @@ noeq
 type lock (v:slprop) : Type u#4 = {
   l : L.lock;
 
-  i : iref;
+  i : iname;
 
-  t1 : T.token (L.iref_of l) (L.iref_v_of l v);
+  t1 : T.token (L.iname_of l) (L.iname_v_of l v);
   t2 : T.token i (exists* (p:perm). L.lock_active #p l)
 }
 
@@ -40,7 +40,7 @@ fn new_lock (v:slprop { is_storable v })
   let l = L.new_lock v;
   L.elim_alive_into_inv_and_active l v #1.0R;
   elim_stick _ _;
-  let t1 = T.witness (L.iref_of l);
+  let t1 = T.witness (L.iname_of l);
   let i = new_invariant (exists* (p:perm). L.lock_active #p l);
   let t2 = T.witness i;
   let l = { l; i; t1; t2 };

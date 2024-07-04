@@ -135,20 +135,20 @@ let slprop_equiv_ext p1 p2 _ = slprop_equiv_refl p1
 
 (* Invariants, just reexport *)
 module Act = PulseCore.Action
-let iname = Act.iname
+
+let iname = Act.iref
+let deq_iname = Act.deq_iref
+instance non_informative_iname = {
+  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iname;
+}
 
 let join_sub _ _ = ()
 let join_emp is =
-  Set.lemma_equal_intro (join_inames is emp_inames) (reveal is);
-  Set.lemma_equal_intro (join_inames emp_inames is) (reveal is)
+  GhostSet.lemma_equal_intro (join_inames is emp_inames) is;
+  GhostSet.lemma_equal_intro (join_inames emp_inames is) is
 
-let iref = Act.iref
-instance non_informative_iref = {
-  reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer iref;
-}
 let inv i p = Act.(inv i p)
-let iname_of i = Act.iname_of i
-let add_already_there i is = Set.lemma_equal_intro (add_inv is i) is
+let add_already_there i is = GhostSet.lemma_equal_intro (add_inv is i) is
 
 ////////////////////////////////////////////////////////////////////
 // stt a pre post: The main type of a pulse computation
@@ -198,17 +198,6 @@ let dup_inv = A.dup_inv
 let new_invariant = A.new_invariant
 let fresh_wrt = PulseCore.Action.fresh_wrt
 let fresh_wrt_def i c = ()
-let all_live = Act.all_live
-let all_live_nil () = ()
-
-let live_eq (i:iref)
-  : Lemma (Act.live i == (exists* (p:slprop). inv i p)) =
-  calc (==) {
-    Act.live i;
-  (==) { _ by (T.trefl ()) }
-    exists* (p:slprop). inv i p;
-  }
-let all_live_cons hd tl = live_eq hd
 let fresh_invariant = A.fresh_invariant
 let with_invariant = A.with_invariant
 let with_invariant_g = A.with_invariant_g
