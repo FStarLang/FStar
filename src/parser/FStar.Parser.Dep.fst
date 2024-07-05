@@ -39,7 +39,8 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
-let dbg = Debug.get_toggle "Dep"
+let dbg              = Debug.get_toggle "Dep"
+let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
 
 let profile f c = Profiling.profile f None c
 
@@ -323,12 +324,13 @@ let cache_file_name =
         then expected_cache_file
         else path
       | None ->
-          if mname |> Options.should_be_already_cached
-          then
-            FStar.Errors.raise_err
-              (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-               BU.format1 "Expected %s to be already checked but could not find it" mname)
-          else FStar.Options.prepend_cache_dir cache_fn
+        if !dbg_CheckedFiles then
+          BU.print1 "find_file(%s) returned None\n" (cache_fn |> Util.basename);
+        if mname |> Options.should_be_already_cached then
+          FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+             text (BU.format1 "Expected %s to be already checked but could not find it." mname)
+           ]);
+        FStar.Options.prepend_cache_dir cache_fn
     in
     let memo = Util.smap_create 100 in
     let memo f x =

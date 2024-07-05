@@ -444,16 +444,16 @@ let tc_one_file
       match r with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Expected %s to already be checked" fn);
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text <| BU.format1 "Expected %s to already be checked." fn
+               ]);
 
         if (Option.isSome (Options.codegen())
         && Options.cmi())
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
-                            fn);
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text "Cross-module inlining expects all modules to be checked first.";
+                 text <| BU.format1 "Module %s was not checked." fn;
+               ]);
 
         let tc_result, mllib, env = tc_source_file () in
 
