@@ -19,7 +19,7 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 
 //owns$
-let owns (x:ref U32.t) : v:slprop { is_slprop2 v }= exists* v. pts_to x v
+let owns (x:ref U32.t) : v:slprop { is_slprop3 v }= exists* v. pts_to x v
 //owns$
 
 ```pulse //create_invariant$
@@ -125,7 +125,7 @@ ensures inv i (owns r)
 
 
 
-let readable (r:ref U32.t) : v:slprop { is_slprop2 v } = exists* p v. pts_to r #p v
+let readable (r:ref U32.t) : v:slprop { is_slprop3 v } = exists* p v. pts_to r #p v
 
 
 ```pulse

@@ -29,37 +29,37 @@ let equate_syntactic = ()
 let allow_ambiguous = ()
 
 let slprop = slprop
+let slprop3_base = slprop3_base
+let cm_slprop3 = cm_slprop3
+let down3 = down3
+let up3 = up3
+let up3_is_slprop3 = up3_is_slprop3
 let slprop2_base = slprop2_base
 let cm_slprop2 = cm_slprop2
 let down2 = down2
 let up2 = up2
 let up2_is_slprop2 = up2_is_slprop2
-let slprop1_base = slprop1_base
-let cm_slprop1 = cm_slprop1
-let down1 = down1
-let up1 = up1
-let up1_is_slprop1 = up1_is_slprop1
 
 let slprop_1_is_2 = slprop_1_is_2
 
 let emp = emp
-let emp_is_slprop1 = ()
+let emp_is_slprop2 = ()
 let pure = pure
-let pure_is_slprop1 p = ()
+let pure_is_slprop2 p = ()
 let op_Star_Star = op_Star_Star
+let slprop3_star p q = slprop3_star p q
 let slprop2_star p q = slprop2_star p q
-let slprop1_star p q = slprop1_star p q
 let op_exists_Star = op_exists_Star
+let slprop3_exists #a p = slprop3_exists #a p
 let slprop2_exists #a p = slprop2_exists #a p
-let slprop1_exists #a p = slprop1_exists #a p
+let up3_emp    = up3_emp
+let down3_emp  = down3_emp
+let up3_star   = up3_star
+let down3_star = down3_star
 let up2_emp    = up2_emp
 let down2_emp  = down2_emp
 let up2_star   = up2_star
 let down2_star = down2_star
-let up1_emp    = up1_emp
-let down1_emp  = down1_emp
-let up1_star   = up1_star
-let down1_star = down1_star
 let slprop_equiv = slprop_equiv
 let elim_slprop_equiv #p #q pf = slprop_equiv_elim p q
 let slprop_post_equiv = slprop_post_equiv
@@ -260,7 +260,7 @@ let is_null_core_pcm_ref r = PulseCore.Action.is_core_ref_null r
 
 let pcm_pts_to (#a:Type u#1) (#p:pcm a) (r:pcm_ref p) (v:a) =
   PulseCore.Action.pts_to #a #p r v
-let is_slprop1_pcm_pts_to #a #p r v = ()
+let is_slprop2_pcm_pts_to #a #p r v = ()
 let pts_to_not_null #a #p r v = A.pts_to_not_null #a #p r v
 
 let alloc
@@ -309,7 +309,7 @@ instance non_informative_ghost_pcm_ref a p = {
 }
 
 let ghost_pcm_pts_to #a #p r v = PulseCore.Action.ghost_pts_to #a #p r v
-let is_slprop1_ghost_pcm_pts_to #a #p r v = ()
+let is_slprop2_ghost_pcm_pts_to #a #p r v = ()
 let ghost_alloc = A.ghost_alloc
 let ghost_read = A.ghost_read
 let ghost_write = A.ghost_write
@@ -348,7 +348,7 @@ let return_stt (#a:Type u#a) (x:a) (p:a -> slprop)
 // big refs
 ////////////////////////////////////////////////////////
 let big_pcm_pts_to #a #p r v = PulseCore.Action.big_pts_to #a #p r v
-let is_slprop2_big_pcm_pts_to _ _ = ()
+let is_slprop3_big_pcm_pts_to _ _ = ()
 let big_pts_to_not_null #a #p r v = A.big_pts_to_not_null #a #p r v
 
 let big_alloc
@@ -388,7 +388,7 @@ let big_share = A.big_share
 let big_gather = A.big_gather
 
 let big_ghost_pcm_pts_to #a #p r v = PulseCore.Action.big_ghost_pts_to #a #p r v
-let is_slprop2_big_ghost_pcm_pts_to _ _ = ()
+let is_slprop3_big_ghost_pcm_pts_to _ _ = ()
 let big_ghost_alloc = A.big_ghost_alloc
 let big_ghost_read = A.big_ghost_read
 let big_ghost_write = A.big_ghost_write

@@ -56,21 +56,21 @@ val allow_ambiguous : unit
 val slprop : Type u#4
 
 [@@erasable]
-val slprop2_base : Type u#3
+val slprop3_base : Type u#3
+val down3 (p:slprop) : slprop3_base
+val up3 (p:slprop3_base) : slprop
+let is_slprop3 (v:slprop) : prop = up3 (down3 v) == v
+val up3_is_slprop3 (p:slprop3_base) : Lemma (is_slprop3 (up3 p))
+
+[@@erasable]
+val slprop2_base : Type u#2
 val down2 (p:slprop) : slprop2_base
 val up2 (p:slprop2_base) : slprop
 let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
 val up2_is_slprop2 (p:slprop2_base) : Lemma (is_slprop2 (up2 p))
 
-[@@erasable]
-val slprop1_base : Type u#2
-val down1 (p:slprop) : slprop1_base
-val up1 (p:slprop1_base) : slprop
-let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
-val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
-
+let slprop3 = s:slprop { is_slprop3 s }
 let slprop2 = s:slprop { is_slprop2 s }
-let slprop1 = s:slprop { is_slprop1 s }
 
 (* Storable slprops: a storable0 (or storable) can be stored in the heap
 (made into an invariant), and obtain an slprop asserting this fact.
@@ -81,39 +81,45 @@ as an invariant.
 As the heap stack is extended, these names retain their meaning as being
 "N+1" away from the top of the stack. *)
 
-let storable0    = slprop2
-let is_storable0 = is_slprop2
-let storable1    = slprop1
-let is_storable1 = is_slprop1
+let storable0    = slprop3
+let is_storable0 = is_slprop3
+let storable1    = slprop2
+let is_storable1 = is_slprop2
 
 let storable    = storable0
 let is_storable = is_storable0
 
 
 //
-// A note on smt patterns on is_slprop1 and is_slprop2 lemmas:
+// A note on smt patterns on is_slprop2 and is_slprop3 lemmas:
 //
 // While the patterns on the individual lemmas are goal-directed,
-//   there are multiple ways to prove, say, is_slprop2 (p ** q)
+//   there are multiple ways to prove, say, is_slprop3 (p ** q)
 //
-// Either via, is_slprop2 p /\ is_slprop2 q ==> is_slprop2 (p ** q)
-// or via, is_slprop1 p /\ is_slprop1 q ==> is_slprop1 (p ** q) ==> is_slprop2 (p ** q)
+// Either via, is_slprop3 p /\ is_slprop3 q ==> is_slprop3 (p ** q)
+// or via, is_slprop2 p /\ is_slprop2 q ==> is_slprop2 (p ** q) ==> is_slprop3 (p ** q)
 //
 // This is a bit suboptimal
 //
 val slprop_1_is_2 (v:slprop)
-  : Lemma (is_slprop1 v ==> is_slprop2 v)
-          [SMTPat (is_slprop2 v)]
+  : Lemma (is_slprop2 v ==> is_slprop3 v)
+          [SMTPat (is_slprop3 v)]
 
 val emp : slprop
-val emp_is_slprop1 : squash (is_slprop1 emp)
+val emp_is_slprop2 : squash (is_slprop2 emp)
 
 val pure (p:prop) : slprop
-val pure_is_slprop1 (p:prop)
-  : Lemma (is_slprop1 (pure p))
-          [SMTPat (is_slprop1 (pure p))]
+val pure_is_slprop2 (p:prop)
+  : Lemma (is_slprop2 (pure p))
+          [SMTPat (is_slprop2 (pure p))]
 
 val ( ** ) (p q:slprop) : slprop
+
+val slprop3_star (p q : slprop)
+: Lemma
+    (requires is_slprop3 p /\ is_slprop3 q)
+    (ensures is_slprop3 (p ** q))
+    [SMTPat (is_slprop3 (p ** q))]
 
 val slprop2_star (p q : slprop)
 : Lemma
@@ -121,25 +127,19 @@ val slprop2_star (p q : slprop)
     (ensures is_slprop2 (p ** q))
     [SMTPat (is_slprop2 (p ** q))]
 
-val slprop1_star (p q : slprop)
-: Lemma
-    (requires is_slprop1 p /\ is_slprop1 q)
-    (ensures is_slprop1 (p ** q))
-    [SMTPat (is_slprop1 (p ** q))]
-
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
+
+val slprop3_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. is_slprop3 (p x))
+    (ensures is_slprop3 (op_exists_Star p))
+    [SMTPat (is_slprop3 (op_exists_Star p))]
 
 val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma
     (requires forall x. is_slprop2 (p x))
     (ensures is_slprop2 (op_exists_Star p))
     [SMTPat (is_slprop2 (op_exists_Star p))]
-
-val slprop1_exists (#a:Type u#a) (p: a -> slprop)
-: Lemma
-    (requires forall x. is_slprop1 (p x))
-    (ensures is_slprop1 (op_exists_Star p))
-    [SMTPat (is_slprop1 (op_exists_Star p))]
 
 val slprop_equiv (p q:slprop) : prop
 val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
@@ -680,13 +680,13 @@ val pcm_pts_to
     (v:a)
 : slprop
 
-val is_slprop1_pcm_pts_to
+val is_slprop2_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
     (r:pcm_ref p)
     (v:a)
-: Lemma (is_slprop1 (pcm_pts_to r v))
-        [SMTPat (is_slprop1 (pcm_pts_to r v))]
+: Lemma (is_slprop2 (pcm_pts_to r v))
+        [SMTPat (is_slprop2 (pcm_pts_to r v))]
 
 let pcm_ref_null
     (#a:Type)
@@ -785,13 +785,13 @@ val ghost_pcm_pts_to
     (v:a)
 : slprop
 
-val is_slprop1_ghost_pcm_pts_to
+val is_slprop2_ghost_pcm_pts_to
     (#a:Type u#1)
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: Lemma (is_slprop1 (ghost_pcm_pts_to r v))
-        [SMTPat (is_slprop1 (ghost_pcm_pts_to r v))]
+: Lemma (is_slprop2 (ghost_pcm_pts_to r v))
+        [SMTPat (is_slprop2 (ghost_pcm_pts_to r v))]
 
 val ghost_alloc
     (#a:Type u#1)
@@ -860,13 +860,13 @@ val big_pcm_pts_to
 : slprop
 
 
-val is_slprop2_big_pcm_pts_to
+val is_slprop3_big_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
     (r:pcm_ref p)
     (v:a)
-: Lemma (is_slprop2 (big_pcm_pts_to r v))
-        [SMTPat (is_slprop2 (big_pcm_pts_to r v))]
+: Lemma (is_slprop3 (big_pcm_pts_to r v))
+        [SMTPat (is_slprop3 (big_pcm_pts_to r v))]
 
 val big_pts_to_not_null
     (#a:Type)
@@ -938,13 +938,13 @@ val big_ghost_pcm_pts_to
     (v:a)
 : slprop
 
-val is_slprop2_big_ghost_pcm_pts_to
+val is_slprop3_big_ghost_pcm_pts_to
     (#a:Type u#2)
     (#p:pcm a)
     (r:ghost_pcm_ref p)
     (v:a)
-: Lemma (is_slprop2 (big_ghost_pcm_pts_to r v))
-        [SMTPat (is_slprop2 (big_ghost_pcm_pts_to r v))]
+: Lemma (is_slprop3 (big_ghost_pcm_pts_to r v))
+        [SMTPat (is_slprop3 (big_ghost_pcm_pts_to r v))]
 
 val big_ghost_alloc
     (#a:Type)

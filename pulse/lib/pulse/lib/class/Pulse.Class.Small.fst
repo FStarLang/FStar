@@ -6,7 +6,7 @@ instance small_emp : small emp = {
   pf = ();
 }
 
-instance slprop1_star
+instance slprop2_star
   (p q : slprop)
   (sp : small p)
   (sq : small q)
@@ -20,7 +20,7 @@ instance small_pure
   pf = ();
 }
 
-let small_from_small_ref (v:slprop) (_ : squash (is_slprop1 v))
+let small_from_small_ref (v:slprop) (_ : squash (is_slprop2 v))
   : small v = {
   pf = ();
 }

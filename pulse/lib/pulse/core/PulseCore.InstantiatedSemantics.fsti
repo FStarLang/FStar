@@ -20,7 +20,17 @@ val slprop : Type u#4
 
 (* Previously "big" *)
 [@@erasable]
-val slprop2_base : Type u#3
+val slprop3_base : Type u#3
+val cm_slprop3 : FStar.Algebra.CommMonoid.cm slprop3_base
+val down3 (s:slprop) : slprop3_base
+val up3 (s:slprop3_base) : slprop
+let is_slprop3 (s:slprop) = s == up3 (down3 s)
+let slprop3 = s:slprop { is_slprop3 s }
+val up3_is_slprop3 (b:slprop3_base) : Lemma (is_slprop3 (up3 b))
+
+(* Previously "small" *)
+[@@erasable]
+val slprop2_base : Type u#2
 val cm_slprop2 : FStar.Algebra.CommMonoid.cm slprop2_base
 val down2 (s:slprop) : slprop2_base
 val up2 (s:slprop2_base) : slprop
@@ -28,44 +38,34 @@ let is_slprop2 (s:slprop) = s == up2 (down2 s)
 let slprop2 = s:slprop { is_slprop2 s }
 val up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b))
 
-(* Previously "small" *)
-[@@erasable]
-val slprop1_base : Type u#2
-val cm_slprop1 : FStar.Algebra.CommMonoid.cm slprop1_base
-val down1 (s:slprop) : slprop1_base
-val up1 (s:slprop1_base) : slprop
-let is_slprop1 (s:slprop) = s == up1 (down1 s)
-let slprop1 = s:slprop { is_slprop1 s }
-val up1_is_slprop1 (b:slprop1_base) : Lemma (is_slprop1 (up1 b))
-
 val slprop_1_is_2 (s:slprop)
-  : Lemma (is_slprop1 s ==> is_slprop2 s)
+  : Lemma (is_slprop2 s ==> is_slprop3 s)
 
-val emp : slprop1
-val pure (p:prop) : slprop1
+val emp : slprop2
+val pure (p:prop) : slprop2
 val ( ** ) (p q : slprop) : slprop
 val ( exists* ) (#a:Type u#a) (p: a -> slprop) : slprop
+
+val slprop3_star (p q:slprop3) : squash (is_slprop3 (p ** q))
+val slprop3_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma (requires forall x. is_slprop3 (p x))
+        (ensures is_slprop3 (op_exists_Star p))
 
 val slprop2_star (p q:slprop2) : squash (is_slprop2 (p ** q))
 val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_slprop2 (p x))
         (ensures is_slprop2 (op_exists_Star p))
 
-val slprop1_star (p q:slprop1) : squash (is_slprop1 (p ** q))
-val slprop1_exists (#a:Type u#a) (p: a -> slprop)
-: Lemma (requires forall x. is_slprop1 (p x))
-        (ensures is_slprop1 (op_exists_Star p))
-
 (* Q: Can the star lemmas be provided pointfree? Is that useful? *)
+val up3_emp    ()      : Lemma (up3 cm_slprop3.unit == emp)
+val down3_emp  ()      : Lemma (down3 emp == cm_slprop3.unit)
+val up3_star   (p q:_) : Lemma (up3 (p `cm_slprop3.mult` q) == up3 p ** up3 q)
+val down3_star (p q:_) : Lemma (down3 (p ** q) == down3 p `cm_slprop3.mult` down3 q)
+
 val up2_emp    ()      : Lemma (up2 cm_slprop2.unit == emp)
 val down2_emp  ()      : Lemma (down2 emp == cm_slprop2.unit)
 val up2_star   (p q:_) : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p ** up2 q)
 val down2_star (p q:_) : Lemma (down2 (p ** q) == down2 p `cm_slprop2.mult` down2 q)
-
-val up1_emp    ()      : Lemma (up1 cm_slprop1.unit == emp)
-val down1_emp  ()      : Lemma (down1 emp == cm_slprop1.unit)
-val up1_star   (p q:_) : Lemma (up1 (p `cm_slprop1.mult` q) == up1 p ** up1 q)
-val down1_star (p q:_) : Lemma (down1 (p ** q) == down1 p `cm_slprop1.mult` down1 q)
 
 [@@ erasable]
 val iref : Type0

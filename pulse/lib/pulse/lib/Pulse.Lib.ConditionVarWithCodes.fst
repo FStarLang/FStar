@@ -49,7 +49,7 @@ let empty_map_below #c (n:nat)
     else Some (c.emp, full_perm))
 
 let predicate_at #c (m:carrier c) (i:nat)
-: slprop2
+: slprop3
 = match Map.sel m i with
   | None ->
     pure False
@@ -67,13 +67,13 @@ let map_invariant0 #c (m:carrier c) (n:nat) (p:slprop)
 = pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
 
 let map_invariant #c (v:U32.t) (m:carrier c) (n:nat) (p:slprop)
-: slprop2
+: slprop3
 = if v = 0ul
   then map_invariant0 m n p
   else OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R)
 
 let cvar_inv #c (b: cvar_t_core c) (p:slprop)
-: slprop2
+: slprop3
 = exists* v n m.
     Box.pts_to b.r #0.5R v **
     GR.pts_to #nat b.ctr n **
@@ -611,7 +611,7 @@ ensures  GR.pts_to b.ctr (n + 1) **
          big_ghost_pcm_pts_to b.gref (singleton n #0.5R q)
 {
   GR.write b.ctr (n + 1);
-//  down2_emp();
+//  down3_emp();
   assert pure (Map.equal (empty_map_below n) (comp (singleton n #1.0R c.emp) (empty_map_below (n + 1))));
   rewrite (big_ghost_pcm_pts_to b.gref (empty_map_below n))
   as      (big_ghost_pcm_pts_to b.gref (comp (singleton n #1.0R c.emp) (empty_map_below (n + 1))));
@@ -794,7 +794,7 @@ ensures cvinv cv p ** cvinv cv p
 }
 ```
 
-let send_core #c (cv:cvar_t c) : slprop2 =
+let send_core #c (cv:cvar_t c) : slprop3 =
   Box.pts_to cv.core.r #0.5R 0ul
 
 ```pulse
@@ -822,7 +822,7 @@ ensures send cv p
 ```
 
 let recv_core #c (cv:cvar_t c) (q:slprop)
-: slprop2
+: slprop3
 = exists* i code.
     big_ghost_pcm_pts_to cv.core.gref (singleton i #0.5R code) **
     pure (c.up code == q)
