@@ -166,8 +166,8 @@ let find_inv_post (#g:env) (x:var { lookup g x == None})
                    tot_typing g (tm_inv i p) tm_slprop &
                    tot_typing (push_binding g x ppname_default ret_ty) (open_term frame x) tm_slprop &
                    slprop_equiv (push_binding g x ppname_default ret_ty)
-                               (tm_star (tm_inv i p) (open_term frame x))
-                               (open_term post x))) =
+                                (tm_star (tm_inv i p) (open_term frame x))
+                                (open_term post x))) =
   
   let post_opened = open_term_nv post (ppname_default, x) in
   let res = find_inv #_ #post_opened post_typing i in
@@ -187,6 +187,32 @@ let atomic_or_ghost_with_inames_and_pre_post
     C_STAtomic inames obs { s with pre; post }
   | C_STGhost _ s ->
     C_STGhost inames { s with pre; post }
+
+let rec withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
+  (p_typing:tot_typing g p tm_slprop)
+  (i_typing:tot_typing g i tm_iname)
+  (post_typing:tot_typing g post tm_slprop)
+
+  : T.Tac (option (post':term &
+                   tot_typing g post' tm_slprop)) =
+  
+  if eq_tm post p
+  then Some (| tm_inv i p, magic () |)
+  else match inspect_term post with
+       | Tm_Star l r ->
+         let res = withinv_post #g #p #i #l p_typing i_typing (magic ()) in
+         begin
+           match res with
+           | Some (| l', _ |) -> Some (| tm_star l' r, magic () |)
+           | None ->
+             begin
+               let res = withinv_post #g #p #i #r p_typing i_typing (magic ()) in
+               match res with
+               | Some (| r', _ |) -> Some (| tm_star l r', magic () |)
+               | None -> None
+             end
+          end
+       | _ -> None
 
 #restart-solver
 #push-options "--z3rlimit_factor 20 --split_queries no"
@@ -209,16 +235,38 @@ let check
         prefix 2 1 (text " in the precondition ") (pp pre)
       ];
     
-  let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
+  let Some (| p, pre_frame, _, pre_frame_typing, d_pre_frame_eq |) = res in
 
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
     | None, Some post -> post
     | Some (b, post, opens), None ->
-      Pulse.Checker.Base.intro_post_hint g
+      let post_hint = Pulse.Checker.Base.intro_post_hint g
         (EffectAnnotAtomicOrGhost { opens })
         (Some b.binder_ty)
-        post
+        post in
+      begin
+        assume (~ (Set.mem post_hint.x (dom g)));
+        let res = withinv_post
+          #(push_binding g post_hint.x ppname_default post_hint.ret_ty)
+          #p #i #(open_term_nv post_hint.post (v_as_nv post_hint.x))
+          (magic ())  // weakening of p typing
+          (magic ())  // weakening of i typing
+          (magic ())  // post_hint.post typing 
+        in
+        match res with
+        | None ->
+          fail g (Some (FStar.Reflection.range_of_term post))
+            (Printf.sprintf
+               "Cannot find invariant slprop %s in the with_invariants annotated postcondition"
+               (show p))
+        | Some (| post', _ |) ->
+          assume (freevars post_hint.post == freevars post');
+          { post_hint with
+            post = post';
+            post_typing_src = magic ();
+            post_typing = magic () }
+      end
     | Some (_, post, _), Some q ->
       fail_doc g (Some t.range) 
         [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
@@ -349,25 +397,25 @@ let check
       T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
     let d_pre_eq : slprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
     let d_post_eq : slprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                (tm_star (tm_inv i p) (open_term post_frame x))
-                                (open_term post_hint.post x) = d_post_frame_equiv in
+                                 (tm_star (tm_inv i p) (open_term post_frame x))
+                                 (open_term post_hint.post x) = d_post_frame_equiv in
     assume (open_term (tm_inv i p) x == tm_inv i p);
     assert (comp_post c_out_eq == tm_star (tm_inv i p) post_frame);
     assume (open_term (comp_post c_out_eq) x ==
             tm_star (tm_inv i p) (open_term post_frame x));
     let d_post_eq : slprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                (open_term (comp_post c_out_eq) x)
-                                (open_term (comp_post c_out) x) = d_post_eq in
+                                 (open_term (comp_post c_out_eq) x)
+                                 (open_term (comp_post c_out) x) = d_post_eq in
     assert (comp_res c_out_eq == comp_res c_out);
     assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
     assume (~ (x `Set.mem` freevars (comp_post c_out)));
     let d_st_equiv : st_equiv _ c_out_eq c_out =
       ST_SLPropEquiv _ c_out_eq c_out x (magic ())
-                                       (magic ())
-                                       (magic ())
-                                       (RT.Rel_refl _ _ RT.R_Eq)
-                                       d_pre_eq
-                                       d_post_eq in
+                                        (magic ())
+                                        (magic ())
+                                        (RT.Rel_refl _ _ RT.R_Eq)
+                                        d_pre_eq
+                                        d_post_eq in
     let d : st_typing _ _ c_out =
       T_Equiv _ _ _ _ d d_st_equiv in
     d
