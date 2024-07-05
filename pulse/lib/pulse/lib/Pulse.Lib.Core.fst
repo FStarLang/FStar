@@ -29,13 +29,18 @@ let equate_syntactic = ()
 let allow_ambiguous = ()
 
 let slprop = slprop
+
+let slprop4_base = slprop
+let down4 = id
+let up4 = id
+let up4_is_slprop4 = fun _ -> ()
+
 let slprop3_base = slprop3_base
-let cm_slprop3 = cm_slprop3
 let down3 = down3
 let up3 = up3
 let up3_is_slprop3 = up3_is_slprop3
+
 let slprop2_base = slprop2_base
-let cm_slprop2 = cm_slprop2
 let down2 = down2
 let up2 = up2
 let up2_is_slprop2 = up2_is_slprop2

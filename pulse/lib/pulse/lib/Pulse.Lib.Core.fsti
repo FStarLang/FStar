@@ -52,9 +52,20 @@ val allow_ambiguous : unit
 
 (***** begin slprop_equiv *****)
 
+(* A full slprop. In universe 4 (currently!) *)
 [@@erasable]
 val slprop : Type u#4
 
+(* slprop4: slprops that can be represented in universe 4.
+Currently, just an alias to slprop, but this provides a stable universe 4 interface. *)
+[@@erasable]
+val slprop4_base : Type u#4
+val down4 (p:slprop) : slprop4_base
+val up4 (p:slprop4_base) : slprop
+let is_slprop4 (v:slprop) : prop = up4 (down4 v) == v
+val up4_is_slprop4 (p:slprop4_base) : Lemma (is_slprop4 (up4 p))
+
+(* slprop3: slprops that can be represented in universe 3. *)
 [@@erasable]
 val slprop3_base : Type u#3
 val down3 (p:slprop) : slprop3_base
@@ -62,6 +73,7 @@ val up3 (p:slprop3_base) : slprop
 let is_slprop3 (v:slprop) : prop = up3 (down3 v) == v
 val up3_is_slprop3 (p:slprop3_base) : Lemma (is_slprop3 (up3 p))
 
+(* slprop2: slprops that can be represented in universe 2. *)
 [@@erasable]
 val slprop2_base : Type u#2
 val down2 (p:slprop) : slprop2_base
