@@ -188,6 +188,12 @@ let atomic_or_ghost_with_inames_and_pre_post
   | C_STGhost _ s ->
     C_STGhost inames { s with pre; post }
 
+//
+// Given a post that may have a p in it,
+//   the function transforms it into inv i p ** <the frame>
+//
+// As with find_inv, it is doing structural matching for now
+//
 let rec withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   (p_typing:tot_typing g p tm_slprop)
   (i_typing:tot_typing g i tm_iname)
@@ -237,10 +243,20 @@ let check
     
   let Some (| p, pre_frame, _, pre_frame_typing, d_pre_frame_eq |) = res in
 
+  //
+  // post_hint for the with_invariants block
+  //
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
     | None, Some post -> post
     | Some (b, post, opens), None ->
+      //
+      // The with_invariants block is annotated with an ensures
+      // For something like inv i p, the ensures only has p in it
+      // So get inside and change that p to inv i p
+      //
+      // First typecheck the annotated ensures
+      //
       let post_hint = Pulse.Checker.Base.intro_post_hint g
         (EffectAnnotAtomicOrGhost { opens })
         (Some b.binder_ty)
