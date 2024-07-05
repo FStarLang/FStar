@@ -444,12 +444,14 @@ let tc_one_file
       match r with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
+        && not (Options.force ())
         then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
                  text <| BU.format1 "Expected %s to already be checked." fn
                ]);
 
         if (Option.isSome (Options.codegen())
         && Options.cmi())
+        && not (Options.force ())
         then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
                  text "Cross-module inlining expects all modules to be checked first.";
                  text <| BU.format1 "Module %s was not checked." fn;
