@@ -332,7 +332,7 @@ ensures inv l invp ** qpred ('i + 1)
     let next = 
       with_invariants l
       returns b1:bool
-      ensures inv l invp 
+      ensures invp 
           ** cond b1 (qpred 'i) (qpred ('i + 1))
           ** pts_to continue true
       {

@@ -100,7 +100,7 @@ fn test2 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures inv i (exists* v. pts_to r v)
+    ensures (exists* v. pts_to r v)
     opens (add_inv emp_inames i) {
       atomic_write_int r 1;
   };
@@ -206,7 +206,7 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures inv j emp {
+    ensures emp {
     ()
   };
   drop_ (inv j _);
@@ -229,7 +229,7 @@ fn test_returns0 (i:iname) (b:bool)
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q {
+    ensures p ** q {
     if b {
       p_to_q ()
     } else {
@@ -250,7 +250,7 @@ fn test_returns1 (i:iname)
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q {
+    ensures p ** q {
     ghost_p_to_q ()
   };
   fold folded_inv i

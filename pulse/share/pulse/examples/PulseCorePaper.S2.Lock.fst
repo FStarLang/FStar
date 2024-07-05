@@ -53,7 +53,7 @@ ensures protects l p
   with_invariants l.i
     //requires inv l.i (lock_inv l.r p) ** p  //we be nice to add this optionally
     returns _ : unit //would be nice to avoid this
-    ensures inv l.i (lock_inv l.r p)
+    ensures lock_inv l.r p
     opens (add_inv emp_inames l.i) //would be nice to have better syntax for sets
   { 
     unfold lock_inv; drop_ (maybe _ _);
@@ -73,7 +73,7 @@ ensures protects l p ** p
   unfold protects;
   let b = with_invariants l.i
     returns b:bool //can we avoid annotating this?
-    ensures inv l.i (lock_inv l.r p) ** maybe b p //and this?
+    ensures lock_inv l.r p ** maybe b p //and this?
   { unfold lock_inv;
     let b = cas_box l.r 0ul 1ul;
     if b {

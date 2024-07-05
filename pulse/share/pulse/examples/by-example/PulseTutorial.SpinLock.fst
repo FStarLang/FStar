@@ -82,7 +82,7 @@ ensures lock_alive l p ** p
   let b = 
     with_invariants l.i
       returns b:bool
-      ensures inv l.i (lock_inv l.r p) ** maybe b p
+      ensures lock_inv l.r p ** maybe b p
       opens (add_inv emp_inames l.i) {
       unfold lock_inv;
       let b = cas_box l.r 0ul 1ul;
@@ -118,7 +118,7 @@ ensures lock_alive l p
   unfold lock_alive;
   with_invariants l.i
     returns _:unit
-    ensures inv l.i (lock_inv l.r p)
+    ensures lock_inv l.r p
     opens (add_inv emp_inames l.i) {
     unfold lock_inv;
     write_atomic_box l.r 0ul;
