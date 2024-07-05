@@ -33,7 +33,8 @@ open FStar.Float
     can be defined: see {!PPrintCombinators}. *)
 
 (** This is the abstract type of documents. *)
-type document
+new
+val document : Type0
 
 (** The following basic (low-level) combinators allow constructing documents. *)
 
