@@ -273,6 +273,7 @@ let rec concatMap (f : 'a -> Tac (list 'b)) (l : list 'a) : Tac (list 'b) =
 let tcresolve () : Tac unit =
     let open FStar.Stubs.Pprint in
     debug (fun () -> dump ""; "tcresolve entry point");
+    norm [];
     let w = cur_witness () in
     set_dump_on_failure false; (* We report our own errors *)
 
