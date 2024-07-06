@@ -45,6 +45,23 @@ fn g (i:iname)
 }
 ```
 
+#push-options "--fuel 0"
+(* Does it work without fuel? Requires the iname_list coercion
+to normalize away. *)
+```pulse
+atomic
+fn g2 (i:iname)
+  requires inv i p ** q
+  ensures  r ** inv i p
+  opens [i]
+{
+  with_invariants i {
+    f ()
+  }
+}
+```
+#pop-options
+
 assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
