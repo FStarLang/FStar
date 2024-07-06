@@ -137,7 +137,7 @@ val refl_tc_term                      : env -> term -> tac (option (term & (Core
 val refl_universe_of                  : env -> term -> tac (option universe & issues)
 val refl_check_prop_validity          : env -> term -> tac (option unit & issues)
 val refl_check_match_complete         : env -> term -> term -> list pattern -> tac (option (list pattern & list (list RD.binding)))
-val refl_instantiate_implicits        : env -> term -> tac (option (list (bv & typ) & term & typ) & issues)
+val refl_instantiate_implicits        : env -> term -> expected_typ:option term -> tac (option (list (bv & typ) & term & typ) & issues)
 val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> tac (option (list (bv & term)) & issues)
 val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
 val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)

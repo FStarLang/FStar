@@ -2591,7 +2591,7 @@ let refl_check_match_complete (g:env) (sc:term) (scty:typ) (pats : list RD.patte
     return (Some (List.map inspect_pat pats, List.map bnds_for_pat pats))
   | _ -> return None
 
-let refl_instantiate_implicits (g:env) (e:term)
+let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
   : tac (option (list (bv & typ) & term & typ) & issues) =
   if no_uvars_in_g g &&
      no_uvars_in_term e
@@ -2602,6 +2602,11 @@ let refl_instantiate_implicits (g:env) (e:term)
     dbg_refl g (fun _ -> "refl_instantiate_implicits: starting tc {\n");
     // AR: ghost is ok for instantiating implicits
     let must_tot = false in
+    let g =
+      match expected_typ with
+      | None -> Env.clear_expected_typ g |> fst
+      | Some typ -> Env.set_expected_typ g typ
+    in
     let g = {g with instantiate_imp=false; phase1=true; lax=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     //
