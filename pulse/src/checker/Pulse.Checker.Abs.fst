@@ -184,7 +184,7 @@ let preprocess_abs
   : T.Tac (t:st_term { Tm_Abs? t.term })
   = let annot, t = arrow_of_abs g t in
     debug_abs g (fun _ -> Printf.sprintf "arrow_of_abs = %s\n" (P.term_to_string annot));
-    let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot in
+    let annot, _ = Pulse.Checker.Pure.instantiate_term_implicits g annot None in
     let abs = rebuild_abs g t annot in
     debug_abs g (fun _ -> Printf.sprintf "rebuild_abs = %s\n" (P.st_term_to_string abs));
     abs
@@ -275,7 +275,7 @@ let maybe_rewrite_body_typing
     | Some (C_Tot t) -> (
       match c with
       | C_Tot t' -> (
-        let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t in
+        let t, _ = Pulse.Checker.Pure.instantiate_term_implicits g t None in
         let (| u, t_typing |) = Pulse.Checker.Pure.check_universe g t in
         match Pulse.Checker.Base.norm_st_typing_inverse
                  #_ #_ #t' d t t_typing [hnf;delta]
@@ -352,7 +352,7 @@ let rec check_abs_core
       let binder_attrs =
         binder_attrs
         |> T.unseal
-        |> T.map (fun attr -> attr |> instantiate_term_implicits g |> fst)
+        |> T.map (fun attr -> attr |> (fun t -> instantiate_term_implicits g t None) |> fst)
         |> FStar.Sealed.seal in
 
       let b = {binder_ty=t;binder_ppname=ppname;binder_attrs} in
