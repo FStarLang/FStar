@@ -374,9 +374,26 @@ let rec check_abs_core
         )
 
         | Some c -> 
-          c,
+          let inames_opened =
+            if C_STGhost? c || C_STAtomic? c then
+             let inames = open_term_nv (comp_inames c) px in
+             let inames = T.norm_well_typed_term (elab_env g)
+               [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
+               inames
+             in
+             inames
+           else
+             tm_emp_inames
+          in
+          let set_inames inames (c:comp) : comp =
+            match c with
+            | C_STAtomic _ obs st -> C_STAtomic inames obs st
+            | C_STGhost  _ st     -> C_STGhost inames st
+            | _ -> c
+          in
+          set_inames inames_opened c,
           open_term_nv (comp_pre c) px,
-          (if C_STAtomic? c then open_term_nv (comp_inames c) px else tm_emp_inames),
+          inames_opened,
           Some (open_term_nv (comp_res c) px),
           Some (open_term' (comp_post c) var 1)
       in
