@@ -751,7 +751,10 @@ ghost
 fn split #c (b:cvar_t c) (#q #r:slprop) (cq:codeable c q) (cr:codeable c r)
 requires recv b (q ** r)
 ensures recv b q ** recv b r
-opens [b.i]
+(* For whatever reason using list syntax below does not work,
+so I'm using the old one. *)
+opens add_inv emp_inames b.i
+// opens [b.i]
 {
   unfold recv;
   with p i code. _;
