@@ -553,7 +553,7 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 //
 //   t' is the elaborated t, and ty is its type
 //
-val instantiate_implicits (g:env) (t:term)
+val instantiate_implicits (g:env) (t:term) (expected_typ : option term)
   : Tac (ret_t (list (namedv & typ) & term & typ))
 
 //
