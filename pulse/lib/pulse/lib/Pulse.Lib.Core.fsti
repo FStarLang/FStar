@@ -1144,3 +1144,13 @@ val nb_ghost_gather
 val as_atomic (#a:Type u#0) (pre:slprop) (post:a -> slprop)
               (pf:stt a pre post)
 : stt_atomic a emp_inames pre post
+
+(* Some syntactic sugar for iname sets. *)
+
+[@@coercion]
+let rec iname_list (xs : list iname) : inames =
+  match xs with
+  | [] -> emp_inames
+  | i::is -> add_inv (iname_list is) i
+
+let (@@) : inames -> inames -> inames = join_inames
