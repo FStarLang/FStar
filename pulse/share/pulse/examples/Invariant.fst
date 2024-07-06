@@ -35,9 +35,9 @@ assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 ```pulse
 atomic
 fn g (i:iname)
-  requires (inv i p ** q)
-  ensures (r ** inv i p)
-  opens (add_inv emp_inames i)
+  requires inv i p ** q
+  ensures  r ** inv i p
+  opens [i]
 {
   with_invariants i {
     f ()
@@ -52,7 +52,7 @@ ghost
 fn g_ghost (i:iname)
   requires (inv i p ** q)
   ensures (r ** inv i p)
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   with_invariants i {
     f_ghost ()
@@ -101,7 +101,7 @@ fn test2 ()
   with_invariants i
     returns _:unit
     ensures inv i (exists* v. pts_to r v)
-    opens (add_inv emp_inames i) {
+    opens [i] {
       atomic_write_int r 1;
   };
   drop_ (inv i _)
@@ -134,7 +134,7 @@ fn test3 ()
  fn t00 () (i:iname)
    requires (inv i emp)
    ensures (inv i emp)
-   opens (add_inv emp_inames i)
+   opens [i]
  {
   ()
  }
@@ -145,7 +145,7 @@ atomic
 fn t0 () (i:iname)
   requires inv i emp
   ensures inv i emp
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   with_invariants i {
     ()
@@ -174,7 +174,7 @@ atomic
 fn t1 ()
   requires inv i emp
   ensures inv i emp
-  opens emp_inames
+  opens []
 {
   with_invariants i {
     ()
@@ -188,7 +188,7 @@ atomic
 fn t3 ()
   requires inv i emp
   ensures inv i emp
-  opens (add_inv (add_inv emp_inames i) i2)
+  opens [i; i2]
 {
   with_invariants i {
     ()
@@ -224,7 +224,7 @@ atomic
 fn test_returns0 (i:iname) (b:bool)
   requires folded_inv i
   ensures folded_inv i ** q
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   unfold folded_inv i;
   with_invariants i
@@ -245,7 +245,7 @@ ghost
 fn test_returns1 (i:iname)
   requires folded_inv i
   ensures folded_inv i ** q
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   unfold folded_inv i;
   with_invariants i

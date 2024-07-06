@@ -46,14 +46,12 @@ ensures inv i p
 }
 ```
 
-let singleton (i:iname) = add_inv emp_inames i
-
 ```pulse //update_ref_atomic$
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
-opens (singleton i)
+opens [i]
 {
   with_invariants i {    //owns r
      unfold owns;        //ghost step;  exists* u. pts_to r u
@@ -145,7 +143,7 @@ ghost
 fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
 ensures inv i (readable r) ** readable r
-opens (singleton i)
+opens [i]
 {
     with_invariants i {
         unfold readable;
