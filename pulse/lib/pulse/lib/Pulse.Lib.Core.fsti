@@ -1147,10 +1147,16 @@ val as_atomic (#a:Type u#0) (pre:slprop) (post:a -> slprop)
 
 (* Some syntactic sugar for iname sets. *)
 
-[@@coercion]
+(* An attribute to mark definitions to be unfolded
+during checking `opens` annotations. We use to try
+to make iname_list and @@ reduce away. *)
+val unfold_check_opens : unit
+
+[@@coercion; strict_on_arguments [0]; unfold_check_opens]
 let rec iname_list (xs : list iname) : inames =
   match xs with
   | [] -> emp_inames
   | i::is -> add_inv (iname_list is) i
 
+[@@unfold_check_opens]
 let (@@) : inames -> inames -> inames = join_inames
