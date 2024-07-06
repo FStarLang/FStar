@@ -275,7 +275,7 @@ let (check_elim_exists :
                                                                     (Prims.of_int (75))
                                                                     (Prims.of_int (17))
                                                                     (Prims.of_int (75))
-                                                                    (Prims.of_int (47)))))
+                                                                    (Prims.of_int (52)))))
                                                                (FStar_Sealed.seal
                                                                   (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -286,7 +286,8 @@ let (check_elim_exists :
                                                                     (Prims.of_int (22)))))
                                                                (Obj.magic
                                                                   (Pulse_Checker_Pure.instantiate_term_implicits
-                                                                    g1 t1))
+                                                                    g1 t1
+                                                                    FStar_Pervasives_Native.None))
                                                                (fun uu___2 ->
                                                                   (fun uu___2
                                                                     ->
