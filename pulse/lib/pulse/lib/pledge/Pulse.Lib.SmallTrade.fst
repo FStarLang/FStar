@@ -131,7 +131,7 @@ fn deconstruct_trade (is:invlist) (hyp concl:slprop)
   let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
   let res =
     (| (extra <: erased small_slprop), f |) <: (p:erased small_slprop & trade_elim_t is hyp (reveal p) concl);
-  rewrite (reveal extra) as (reveal (dfst res));
+  rewrite extra as (dfst res);
   res
 }
 ```
