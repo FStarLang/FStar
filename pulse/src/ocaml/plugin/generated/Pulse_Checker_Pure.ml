@@ -3604,14 +3604,15 @@ let (check_term :
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                      (Prims.of_int (319)) (Prims.of_int (13))
-                     (Prims.of_int (319)) (Prims.of_int (48)))))
+                     (Prims.of_int (319)) (Prims.of_int (52)))))
             (FStar_Sealed.seal
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                      (Prims.of_int (317)) (Prims.of_int (39))
                      (Prims.of_int (334)) (Prims.of_int (78)))))
             (Obj.magic
-               (instantiate_term_implicits g e FStar_Pervasives_Native.None))
+               (instantiate_term_implicits g e
+                  (FStar_Pervasives_Native.Some t)))
             (fun uu___ ->
                (fun uu___ ->
                   match uu___ with
@@ -3756,14 +3757,14 @@ let (check_term_at_type :
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                    (Prims.of_int (339)) (Prims.of_int (13))
-                   (Prims.of_int (339)) (Prims.of_int (48)))))
+                   (Prims.of_int (339)) (Prims.of_int (52)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Pure.fst"
                    (Prims.of_int (337)) (Prims.of_int (60))
                    (Prims.of_int (354)) (Prims.of_int (65)))))
           (Obj.magic
-             (instantiate_term_implicits g e FStar_Pervasives_Native.None))
+             (instantiate_term_implicits g e (FStar_Pervasives_Native.Some t)))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
