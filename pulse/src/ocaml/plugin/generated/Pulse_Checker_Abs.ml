@@ -1306,7 +1306,7 @@ let (preprocess_abs :
                                            (Prims.of_int (187))
                                            (Prims.of_int (19))
                                            (Prims.of_int (187))
-                                           (Prims.of_int (72)))))
+                                           (Prims.of_int (77)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
@@ -1317,7 +1317,7 @@ let (preprocess_abs :
                                            (Prims.of_int (7)))))
                                   (Obj.magic
                                      (Pulse_Checker_Pure.instantiate_term_implicits
-                                        g annot))
+                                        g annot FStar_Pervasives_Native.None))
                                   (fun uu___2 ->
                                      (fun uu___2 ->
                                         match uu___2 with
@@ -2506,7 +2506,7 @@ let (maybe_rewrite_body_typing :
                                                 (Prims.of_int (278))
                                                 (Prims.of_int (19))
                                                 (Prims.of_int (278))
-                                                (Prims.of_int (68)))))
+                                                (Prims.of_int (73)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
@@ -2517,7 +2517,7 @@ let (maybe_rewrite_body_typing :
                                                 (Prims.of_int (7)))))
                                        (Obj.magic
                                           (Pulse_Checker_Pure.instantiate_term_implicits
-                                             g t))
+                                             g t FStar_Pervasives_Native.None))
                                        (fun uu___ ->
                                           (fun uu___ ->
                                              match uu___ with
@@ -2537,7 +2537,7 @@ let (maybe_rewrite_body_typing :
                                                             (FStar_Range.mk_range
                                                                "Pulse.Checker.Abs.fst"
                                                                (Prims.of_int (278))
-                                                               (Prims.of_int (71))
+                                                               (Prims.of_int (76))
                                                                (Prims.of_int (290))
                                                                (Prims.of_int (26)))))
                                                       (Obj.magic
@@ -3321,7 +3321,7 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (353))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (355))
-                                                                    (Prims.of_int (74)))))
+                                                                    (Prims.of_int (92)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -3347,7 +3347,7 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (353))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (355))
-                                                                    (Prims.of_int (74)))))
+                                                                    (Prims.of_int (92)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Unseal.unseal
                                                                     binder_attrs))
@@ -3369,7 +3369,7 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (355))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (355))
-                                                                    (Prims.of_int (66)))))
+                                                                    (Prims.of_int (84)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -3377,10 +3377,11 @@ let rec (check_abs_core :
                                                                     (Prims.of_int (355))
                                                                     (Prims.of_int (30))
                                                                     (Prims.of_int (355))
-                                                                    (Prims.of_int (73)))))
+                                                                    (Prims.of_int (91)))))
                                                                     (Obj.magic
                                                                     (Pulse_Checker_Pure.instantiate_term_implicits
-                                                                    g attr))
+                                                                    g attr
+                                                                    FStar_Pervasives_Native.None))
                                                                     (fun
                                                                     uu___11
                                                                     ->

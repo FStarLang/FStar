@@ -93,7 +93,7 @@ let check_core
       match inspect_term expected_type with
       | Tm_Unknown -> None
       | _ ->
-        let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type in
+        let ty, _ = Pulse.Checker.Pure.instantiate_term_implicits g expected_type None in
         let (| u, d |) = check_universe g ty in
         Some (| ty, u, d |)
   in

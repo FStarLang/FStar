@@ -620,7 +620,7 @@ let (intro_post_hint :
                                            (Prims.of_int (111))
                                            (Prims.of_int (18))
                                            (Prims.of_int (111))
-                                           (Prims.of_int (56)))))
+                                           (Prims.of_int (61)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
@@ -631,7 +631,7 @@ let (intro_post_hint :
                                            (Prims.of_int (72)))))
                                   (Obj.magic
                                      (Pulse_Checker_Pure.instantiate_term_implicits
-                                        g ret_ty))
+                                        g ret_ty FStar_Pervasives_Native.None))
                                   (fun uu___ ->
                                      (fun uu___ ->
                                         match uu___ with
@@ -651,7 +651,7 @@ let (intro_post_hint :
                                                        (FStar_Range.mk_range
                                                           "Pulse.Checker.Base.fst"
                                                           (Prims.of_int (111))
-                                                          (Prims.of_int (59))
+                                                          (Prims.of_int (64))
                                                           (Prims.of_int (124))
                                                           (Prims.of_int (72)))))
                                                  (Obj.magic
