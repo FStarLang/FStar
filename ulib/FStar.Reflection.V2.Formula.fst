@@ -28,6 +28,8 @@ open FStar.Tactics.Effect
 open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.NamedView
 
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
+
 ///// Helpers (we cannot use the ones in Tactics.V2.Derived, those are for named views /////
 private let rec inspect_unascribe (t:term) : Tac term_view =
   match inspect t with

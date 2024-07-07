@@ -5,7 +5,7 @@ module P = FStar.Printf
 let f (x:int) = x + 1
 let m (y:list int) = L.map f y
 
-let term_eq = FStar.Reflection.V2.TermEq.term_eq
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 let n2 = assert (m [1;2;3] == L.map (fun x -> x + 1) [1;2;3])
              by (norm [delta_namespace["Test.Delta"];zeta;iota;primops]; //don't unfold the map, but unfold m and f

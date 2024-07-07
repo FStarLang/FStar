@@ -159,7 +159,7 @@ let extract_fundeps (se : sigelt) : Tac (option (list int)) =
     | attr::attrs' ->
       match collect_app attr with
       | hd, [(a0, Q_Explicit)] ->
-        if FStar.Reflection.V2.TermEq.term_eq hd (`fundeps) then (
+        if FStar.Reflection.TermEq.Simple.term_eq hd (`fundeps) then (
           unembed_list unembed_int a0
         ) else
           aux attrs'
@@ -239,7 +239,7 @@ let rec tcresolve' (st:st_t) : Tac unit =
     let g = cur_goal () in
 
     (* Try to detect loops *)
-    if L.existsb (Reflection.V2.TermEq.term_eq g) st.seen then (
+    if L.existsb (Reflection.TermEq.Simple.term_eq g) st.seen then (
       debug (fun () -> "loop");
       raise NoInst
     );
@@ -327,7 +327,7 @@ let rec last (l : list 'a) : Tac 'a =
 private
 let filter_no_method_binders (bs:binders)
   : binders
-  = let open FStar.Reflection.V2.TermEq in
+  = let open FStar.Reflection.TermEq.Simple in
     let has_no_method_attr (b:binder) : bool =
       L.existsb (term_eq (`no_method)) b.attrs
     in

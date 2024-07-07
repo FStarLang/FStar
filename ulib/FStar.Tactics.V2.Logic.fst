@@ -24,6 +24,9 @@ open FStar.Tactics.V2.SyntaxCoercions
 open FStar.Tactics.NamedView
 open FStar.Tactics.Util
 
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
+
 (** Returns the current goal as a [formula]. *)
 let cur_formula () : Tac formula = term_as_formula (cur_goal ())
 

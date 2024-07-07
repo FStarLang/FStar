@@ -20,6 +20,9 @@ open FStar.List
 open FStar.Reflection.V2
 open FStar.Tactics.V2
 
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
+
 (* Only dump when debugging is on *)
 let dump m = if debugging () then dump m
 

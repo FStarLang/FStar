@@ -31,6 +31,9 @@ module L = FStar.List.Tot.Base
 module V = FStar.Tactics.Visit
 private let (@) = L.op_At
 
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
+
 let name_of_bv (bv : bv) : Tac string =
     unseal ((inspect_bv bv).ppname)
 

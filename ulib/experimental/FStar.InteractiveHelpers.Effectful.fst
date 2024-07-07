@@ -9,7 +9,7 @@ open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
 open FStar.InteractiveHelpers.Propositions
 
-let term_eq = FStar.Tactics.term_eq_old
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 /// Effectful term analysis: retrieve information about an effectful term, including
 /// its return type, its arguments, its correctly instantiated pre/postcondition, etc.
