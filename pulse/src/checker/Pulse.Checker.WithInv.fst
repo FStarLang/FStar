@@ -194,6 +194,10 @@ let atomic_or_ghost_with_inames_and_pre_post
 //
 // As with find_inv, it is doing structural matching for now
 //
+// The function also needs to return typing of the transformed postcondition
+// Should be easy to construct structurally, given that we have post typing
+//   and i typing in hand
+//
 let rec withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
   (p_typing:tot_typing g p tm_slprop)
   (i_typing:tot_typing g i tm_iname)
@@ -203,7 +207,7 @@ let rec withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
                    tot_typing g post' tm_slprop)) =
   
   if eq_tm post p
-  then Some (| tm_inv i p, magic () |)
+  then Some (| tm_inv i p, magic () |)  // i:iname, p:slprop, get typing of inv i p
   else match inspect_term post with
        | Tm_Star l r ->
          let res = withinv_post #g #p #i #l p_typing i_typing (magic ()) in
@@ -262,13 +266,13 @@ let check
         (Some b.binder_ty)
         post in
       begin
-        assume (~ (Set.mem post_hint.x (dom g)));
+        let g_x = push_binding g post_hint.x ppname_default post_hint.ret_ty in
         let res = withinv_post
-          #(push_binding g post_hint.x ppname_default post_hint.ret_ty)
+          #g_x
           #p #i #(open_term_nv post_hint.post (v_as_nv post_hint.x))
           (magic ())  // weakening of p typing
           (magic ())  // weakening of i typing
-          (magic ())  // post_hint.post typing 
+          post_hint.post_typing_src
         in
         match res with
         | None ->
@@ -276,12 +280,14 @@ let check
             (Printf.sprintf
                "Cannot find invariant slprop %s in the with_invariants annotated postcondition"
                (show p))
-        | Some (| post', _ |) ->
+        | Some (| post', post'_typing |) ->
+          let post'_closed = close_term post' post_hint.x in
+          assume (open_term (post'_closed) post_hint.x == post');
           assume (freevars post_hint.post == freevars post');
           { post_hint with
-            post = post';
-            post_typing_src = magic ();
-            post_typing = magic () }
+            post = post'_closed;
+            post_typing_src = post'_typing;
+            post_typing = post_typing_as_abstraction #_ #post_hint.x #_ #post'_closed post'_typing }
       end
     | Some (_, post, _), Some q ->
       fail_doc g (Some t.range) 

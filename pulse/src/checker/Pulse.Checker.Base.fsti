@@ -61,7 +61,10 @@ val intro_post_hint
   (effect_annot:effect_annot)
   (ret_ty:option term)
   (post:term)
-  : T.Tac (h:post_hint_for_env g {effect_annot_labels_match h.effect_annot effect_annot})
+  : T.Tac (h:post_hint_for_env g {
+      h.g == g /\
+      effect_annot_labels_match h.effect_annot effect_annot
+    })
 
 val post_hint_from_comp_typing (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
   : post_hint_for_env g
