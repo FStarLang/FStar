@@ -1,6 +1,3 @@
-# Make sure to get verbose output from makefiles
-export V=1
-
 function export_home() {
     local home_path=""
     if command -v cygpath >/dev/null 2>&1; then
@@ -175,6 +172,7 @@ function build_fstar() {
 }
 
 # Some environment variables we want
+export V=1 # Make sure to get verbose output from makefiles
 export OCAMLRUNPARAM=b
-export OTHERFLAGS="--use_hints --query_stats"
-export MAKEFLAGS="$MAKEFLAGS -Otarget"
+export OTHERFLAGS="--use_hints"
+export MAKEFLAGS="$MAKEFLAGS -Otarget" # Group make output by target
