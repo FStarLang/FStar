@@ -128,7 +128,7 @@ ensures inv i (pts_to x 0ul) ** pts_to y 0ul
     let n = 
         with_invariants i
         returns r:U32.t
-        ensures inv i (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
+        ensures pts_to x 0ul ** pure (r == 0ul) ** pts_to y 'w
         opens [i] {
             read_atomic x
         };

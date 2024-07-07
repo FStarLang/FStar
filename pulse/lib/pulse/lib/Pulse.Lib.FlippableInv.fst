@@ -70,7 +70,7 @@ fn flip_on (#p:slprop) (fi:finv p)
   unfold off;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) **
+    ensures finv_p p fi.r **
             GR.pts_to fi.r #0.5R true
     opens [fi.i]
   {
@@ -97,7 +97,7 @@ fn flip_off (#p:slprop) (fi : finv p)
   unfold on;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) **
+    ensures finv_p p fi.r **
             GR.pts_to fi.r #0.5R false ** p
     opens [fi.i]
   {

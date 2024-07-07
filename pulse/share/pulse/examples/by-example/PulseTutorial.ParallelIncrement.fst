@@ -356,7 +356,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
     let next = 
       with_invariants (C.iname_of c)
       returns b1:bool
-      ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+      ensures C.cinv_vp c (exists* v. pts_to x v ** refine v)
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active c p
