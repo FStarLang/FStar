@@ -96,7 +96,7 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
       rewrite (invlist_inv is) as (inv (snd h) (fst h) ** invlist_inv t);
       let r = with_invariants (snd h)
         returns v:a
-        ensures inv (snd h) (fst h) ** invlist_inv t ** post v
+        ensures fst h ** invlist_inv t ** post v
         opens (invlist_names t @@ [snd h]) {
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))

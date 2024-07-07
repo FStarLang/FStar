@@ -161,7 +161,7 @@ fn cancel (#v:slprop) (c:cinv)
 {
   with_invariants (iname_of c)
     returns _:unit
-    ensures inv (iname_of c) (cinv_vp c v) ** v
+    ensures cinv_vp c v ** v
     opens [iname_of c] {
     cancel_ c
   };

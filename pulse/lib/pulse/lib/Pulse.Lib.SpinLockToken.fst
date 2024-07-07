@@ -59,7 +59,7 @@ fn lock_alive (#v:slprop) (l:lock v)
   T.recall l.t2;
   with_invariants l.i
     returns _:unit
-    ensures inv l.i (exists* (p:perm). L.lock_active #p l.l) **
+    ensures (exists* (p:perm). L.lock_active #p l.l) **
             (exists* (p:perm). L.lock_active #p l.l) {
     L.share_lock_active l.l
   };

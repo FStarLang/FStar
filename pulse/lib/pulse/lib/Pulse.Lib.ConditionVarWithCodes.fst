@@ -313,7 +313,7 @@ ensures emp
   unfold cvar;
   with_invariants b.i 
   returns u:unit
-  ensures inv b.i (cvar_inv b.core p) ** emp
+  ensures cvar_inv b.core p ** emp
   {
     unfold cvar_inv;
     Box.gather b.core.r;
@@ -520,7 +520,7 @@ ensures q
   let res : bool =
     with_invariants b.i
     returns res:bool
-    ensures inv b.i (cvar_inv b.core pp) **
+    ensures cvar_inv b.core pp **
             (cond res q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code)))
     {
       unfold cvar_inv;
@@ -758,7 +758,7 @@ opens [b.i]
   unfold cvar;
   with_invariants b.i
   returns u:unit
-  ensures inv b.i (cvar_inv b.core (reveal p)) **
+  ensures cvar_inv b.core (reveal p) **
          (exists* j k.
             big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R cq.c) **
             big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R cr.c))

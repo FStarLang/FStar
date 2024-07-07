@@ -80,7 +80,7 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   let b =
     with_invariants (CInv.iname_of l.i)
       returns b:bool
-      ensures inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+      ensures cinv_vp l.i (lock_inv l.r l.gr v) **
               active l.i p **
               (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) {
       unpack_cinv_vp l.i;
@@ -142,7 +142,7 @@ fn release (#v:slprop) (#p:perm) (l:lock)
 
   with_invariants (CInv.iname_of l.i)
     returns _:unit
-    ensures inv (CInv.iname_of l.i) (cinv_vp l.i (lock_inv l.r l.gr v)) **
+    ensures cinv_vp l.i (lock_inv l.r l.gr v) **
             active l.i p {
     unpack_cinv_vp l.i;
     unfold (lock_inv l.r l.gr v);
