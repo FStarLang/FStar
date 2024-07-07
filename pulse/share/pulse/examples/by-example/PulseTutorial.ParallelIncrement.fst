@@ -326,7 +326,7 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
   requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   returns v:int
   ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
-  opens (add_inv emp_inames (C.iname_of c))
+  opens [C.iname_of c]
   {
     with_invariants (C.iname_of c)
     {

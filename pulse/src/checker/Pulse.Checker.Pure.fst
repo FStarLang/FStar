@@ -87,13 +87,13 @@ let rtb_check_subtyping g (t1 t2:term) : Tac (ret_t (subtyping_token g t1 t2)) =
   let res = RU.with_context (get_context g) (fun _ -> RTB.check_subtyping (elab_env g) t1 t2) in
   res
 
-let rtb_instantiate_implicits g f t =
+let rtb_instantiate_implicits g f t expected =
   check_ln g "rtb_instantiate_implicits" t;
   debug g (fun _ -> Printf.sprintf "Calling instantiate_implicits on %s"
                                        (T.term_to_string t));
   (* WARN: unary dependence, see comment in RU *)
   let t = RU.deep_transform_to_unary_applications t in
-  let res, iss = RU.with_context (get_context g) (fun _ -> RTB.instantiate_implicits f t) in
+  let res, iss = RU.with_context (get_context g) (fun _ -> RTB.instantiate_implicits f t expected) in
   match res with
   | None ->
     debug g (fun _ -> "Returned from instantiate_implicits: None");
@@ -189,11 +189,11 @@ let maybe_fail_doc (issues:list FStar.Issue.issue)
        T.fail message (* Would be nice to tag this failure with the provided range *)
   else fail_doc g (Some rng) doc
 
-let instantiate_term_implicits (g:env) (t0:term) =
+let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
-  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0) in
+  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 expected) in
   T.log_issues issues;
   match topt with
   | None -> (
@@ -219,7 +219,7 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
   let f = elab_env g in
   let rng = RU.range_of_term t0 in
   let f = RU.env_set_range f (Pulse.Typing.Env.get_range g (Some rng)) in
-  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0) in
+  let topt, issues = catch_all (fun _ -> rtb_instantiate_implicits g f t0 None) in
   T.log_issues issues;
   match topt with
   | None -> (
@@ -316,7 +316,7 @@ let compute_term_type_and_u (g:env) (t:term)
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e in
+  let e, _ = instantiate_term_implicits g e (Some t) in
 
   let fg = elab_env g in
 
@@ -336,7 +336,7 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
 let check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e in
+  let e, _ = instantiate_term_implicits g e (Some t) in
   let fg = elab_env g in
 
   let effopt, issues =

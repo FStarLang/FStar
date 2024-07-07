@@ -83,7 +83,7 @@ ensures lock_alive l p ** p
     with_invariants l.i
       returns b:bool
       ensures lock_inv l.r p ** maybe b p
-      opens (add_inv emp_inames l.i) {
+      opens [l.i] {
       unfold lock_inv;
       let b = cas_box l.r 0ul 1ul;
       if b
@@ -119,7 +119,7 @@ ensures lock_alive l p
   with_invariants l.i
     returns _:unit
     ensures lock_inv l.r p
-    opens (add_inv emp_inames l.i) {
+    opens [l.i] {
     unfold lock_inv;
     write_atomic_box l.r 0ul;
     drop_ (maybe _ _); //double release

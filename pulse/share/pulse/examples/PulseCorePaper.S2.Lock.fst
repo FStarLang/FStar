@@ -54,7 +54,7 @@ ensures protects l p
     //requires inv l.i (lock_inv l.r p) ** p  //we be nice to add this optionally
     returns _ : unit //would be nice to avoid this
     ensures lock_inv l.r p
-    opens (add_inv emp_inames l.i) //would be nice to have better syntax for sets
+    opens [l.i]
   { 
     unfold lock_inv; drop_ (maybe _ _);
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;

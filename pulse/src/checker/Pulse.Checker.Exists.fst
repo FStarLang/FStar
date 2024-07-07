@@ -72,7 +72,7 @@ let check_elim_exists
              (terms_to_string exist_tms))
       )
     | _ ->
-      let t, _ = instantiate_term_implicits g t in
+      let t, _ = instantiate_term_implicits g t None in
       check_slprop g t
   in
 

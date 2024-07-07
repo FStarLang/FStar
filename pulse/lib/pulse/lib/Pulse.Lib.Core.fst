@@ -445,3 +445,5 @@ let nb_ghost_share = A.nb_ghost_share
 let nb_ghost_gather = A.nb_ghost_gather
 
 let as_atomic #a pre post (e:stt a pre post) = admit () // intentional since it is an assumption
+
+let unfold_check_opens = ()

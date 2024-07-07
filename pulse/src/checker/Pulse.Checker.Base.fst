@@ -86,9 +86,34 @@ let post_typing_as_abstraction
   : FStar.Ghost.erased (RT.tot_typing (elab_env g) (mk_abs ty t) (mk_arrow ty tm_slprop))                                 
   = admit()
 
+(* This should be in reflection typing *)
+let fstar_equiv_preserves_typing
+    (g:R.env) (t1 : R.term) (typ : R.term) (t2 : R.term)
+    (eq : squash (T.equiv_token g t1 t2))
+    (t1_typing : RT.tot_typing g t1 typ)
+  : RT.tot_typing g t2 typ
+  = admit()
+
+let equiv_preserves_typing
+    (g:env) (t1 : term) (typ : term) (t2 : term)
+    (eq : squash (T.equiv_token (elab_env g) t1 t2))
+    (t1_typing : typing g t1 T.E_Total typ)
+  : typing g t2 T.E_Total typ
+  = match t1_typing with
+    | E pf -> E (fstar_equiv_preserves_typing _ t1 typ t2 eq pf)
+
 let check_effect_annot (g:env) (e:effect_annot)
   : T.Tac (e':effect_annot { effect_annot_labels_match e e' } & effect_annot_typing g e') =
-  let check_opens opens : T.Tac _ = CP.check_term g opens T.E_Total tm_inames in
+  let check_opens opens : T.Tac (e:term & typing g e T.E_Total tm_inames) =
+    let (| opens, d |) = CP.check_term g opens T.E_Total tm_inames in
+    let opens' =
+      T.norm_well_typed_term
+        (elab_env g)
+        [primops; iota; zeta; delta_attr ["Pulse.Lib.Core.unfold_check_opens"]]
+        opens
+    in
+    (| opens', equiv_preserves_typing _ _ _ _ () d |)
+  in
   match e with
   | EffectAnnotSTT -> (| e, () |)
   | EffectAnnotGhost { opens } ->
@@ -108,7 +133,7 @@ let intro_post_hint g effect_annot ret_ty_opt post =
       | None -> wr RT.unit_ty FStar.Range.range_0
       | Some t -> t
   in
-  let ret_ty, _ = CP.instantiate_term_implicits g ret_ty in
+  let ret_ty, _ = CP.instantiate_term_implicits g ret_ty None in
   let (| u, ty_typing |) = CP.check_universe g ret_ty in
   let (| post, post_typing |) = CP.check_slprop (push_binding g x ppname_default ret_ty) (open_term_nv post (v_as_nv x)) in 
   let post' = close_term post x in

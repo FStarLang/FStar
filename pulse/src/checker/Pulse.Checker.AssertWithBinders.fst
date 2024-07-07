@@ -77,7 +77,7 @@ let infer_binder_types (g:env) (bs:list binder) (v:slprop)
         bs
         v
     in
-    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) in
+    let inst_abstraction, _ = PC.instantiate_term_implicits g (wr abstraction v_rng) None in
     refl_abs_binders inst_abstraction []
 
 let rec open_binders (g:env) (bs:list binder) (uvs:env { disjoint uvs g }) (v:term) (body:st_term)
@@ -255,8 +255,8 @@ let rewrite_all (g:env) (p: list (term & term)) (t:term) : T.Tac (term & term) =
     let p : list (R.term & R.term) = 
       T.map 
         (fun (e1, e2) -> 
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1)),
-          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2)))
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e1 None)),
+          (fst (Pulse.Checker.Pure.instantiate_term_implicits g e2 None)))
         p
     in
     let lhs, rhs = visit_and_rewrite_conjuncts_all p t in
@@ -294,7 +294,7 @@ let check_renaming
     { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
 
   | [], Some goal -> (
-      let goal, _ = PC.instantiate_term_implicits g goal in
+      let goal, _ = PC.instantiate_term_implicits g goal None in
       let lhs, rhs = rewrite_all g pairs goal in
       let t = { st with term = Tm_Rewrite { t1 = lhs; t2 = rhs; tac_opt } } in
       { st with term = Tm_Bind { binder = as_binder tm_unit; head = t; body } }
@@ -439,7 +439,7 @@ let check
 
     check_unfoldable g v;
 
-    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened in
+    let v_opened, t_rem = PC.instantiate_term_implicits (push_env g uvs) v_opened None in
 
     let uvs, v_opened =
       let (| uvs_rem, v_opened |) =

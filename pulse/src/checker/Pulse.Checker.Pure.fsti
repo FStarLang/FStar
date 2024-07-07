@@ -30,7 +30,7 @@ module RU = Pulse.RuntimeUtils
 let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
   = push_context g ctx r
 
-val instantiate_term_implicits (g:env) (t:term)
+val instantiate_term_implicits (g:env) (t:term) (expected: option typ)
   : T.Tac (term & term)
 
 val instantiate_term_implicits_uvs (g:env) (t:term)
