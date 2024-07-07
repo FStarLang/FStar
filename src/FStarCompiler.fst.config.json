@@ -10,21 +10,6 @@
     "-271-272-241-319-274"
   ],
   "include_dirs": [
-    "../ulib",
-    "basic",
-    "class",
-    "data",
-    "extraction",
-    "fstar",
-    "parser",
-    "prettyprint",
-    "reflection",
-    "smtencoding",
-    "syntax",
-    "syntax/print",
-    "tactics",
-    "tosyntax",
-    "typechecker",
-    "tests"
+    "../ulib"
   ]
 }
