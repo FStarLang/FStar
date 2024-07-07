@@ -1724,24 +1724,51 @@ let should_print_message m =
     then m <> "Prims"
     else false
 
+let read_fstar_include (fn : string) : option (list string) =
+  try
+    let s = file_get_contents fn in
+    let subdirs = String.split ['\n'] s |> List.filter (fun s -> s <> "" && not (String.get s 0 = '#')) in
+    Some subdirs
+  with
+  | _ ->
+    failwith ("Could not read " ^ fn);
+    None
+
+let rec expand_include_d (dirname : string) : list string =
+  let dot_inc_path = dirname ^ "/fstar.include" in
+  if Util.file_exists dot_inc_path then (
+    let subdirs = Some?.v <| read_fstar_include dot_inc_path in
+    dirname :: List.collect (fun subd -> expand_include_d (dirname ^ "/" ^ subd)) subdirs
+  ) else
+    [dirname]
+
+let expand_include_ds (dirnames : list string) : list string =
+  List.collect expand_include_d dirnames
+
+let get_expanded_include () =
+  ("." :: get_include ()) |> expand_include_ds
+
 let include_path () =
   let cache_dir =
     match get_cache_dir() with
     | None -> []
     | Some c -> [c]
   in
-  if get_no_default_includes() then
-    cache_dir @ get_include()
-  else
-    let lib_paths =
-        match Util.expand_environment_variable "FSTAR_LIB" with
-        | None ->
-          let fstar_home = fstar_bin_directory ^ "/.."  in
-          let defs = universe_include_path_base_dirs in
-          defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
-        | Some s -> [s]
-    in
-    cache_dir @ lib_paths @ get_include() @ [ "." ]
+  let lib_paths =
+    if get_no_default_includes() then
+      []
+    else
+      match Util.expand_environment_variable "FSTAR_LIB" with
+      | None ->
+        let fstar_home = fstar_bin_directory ^ "/.."  in
+        let defs = universe_include_path_base_dirs in
+        defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists |> expand_include_ds
+      | Some s -> [s]
+  in
+  let include_paths =
+    get_expanded_include ()
+  in
+  cache_dir @ lib_paths @ include_paths
 
 let find_file =
   let file_map = Util.smap_create 100 in
