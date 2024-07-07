@@ -3763,6 +3763,31 @@ let (module_name_eq : Prims.string -> Prims.string -> Prims.bool) =
 let (should_print_message : Prims.string -> Prims.bool) =
   fun m ->
     let uu___ = should_verify m in if uu___ then m <> "Prims" else false
+let (get_expanded_include : unit -> Prims.string Prims.list) =
+  fun uu___ ->
+    let rec expand_d dirname =
+      let dot_inc_path =
+        FStar_Compiler_String.op_Hat dirname "/fstar.include" in
+      if FStar_Compiler_Util.file_exists dot_inc_path
+      then
+        let s = FStar_Compiler_Util.file_get_contents dot_inc_path in
+        let subdirs =
+          FStar_Compiler_List.filter (fun s1 -> s1 <> "")
+            (FStar_Compiler_String.split [10] s) in
+        let uu___1 =
+          FStar_Compiler_List.collect
+            (fun subd ->
+               let uu___2 =
+                 let uu___3 = FStar_Compiler_String.op_Hat "/" subd in
+                 FStar_Compiler_String.op_Hat dirname uu___3 in
+               expand_d uu___2) subdirs in
+        dirname :: uu___1
+      else [dirname] in
+    let uu___1 = expand_d "." in
+    let uu___2 =
+      let uu___3 = get_include () in
+      FStar_Compiler_List.collect expand_d uu___3 in
+    FStar_Compiler_List.op_At uu___1 uu___2
 let (include_path : unit -> Prims.string Prims.list) =
   fun uu___ ->
     let cache_dir =
@@ -3773,7 +3798,7 @@ let (include_path : unit -> Prims.string Prims.list) =
     let uu___1 = get_no_default_includes () in
     if uu___1
     then
-      let uu___2 = get_include () in
+      let uu___2 = get_expanded_include () in
       FStar_Compiler_List.op_At cache_dir uu___2
     else
       (let lib_paths =
@@ -3792,7 +3817,7 @@ let (include_path : unit -> Prims.string Prims.list) =
          | FStar_Pervasives_Native.Some s -> [s] in
        let uu___3 =
          let uu___4 =
-           let uu___5 = get_include () in
+           let uu___5 = get_expanded_include () in
            FStar_Compiler_List.op_At uu___5 ["."] in
          FStar_Compiler_List.op_At lib_paths uu___4 in
        FStar_Compiler_List.op_At cache_dir uu___3)
