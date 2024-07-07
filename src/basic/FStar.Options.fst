@@ -1671,6 +1671,22 @@ let should_print_message m =
     then m <> "Prims"
     else false
 
+let get_expanded_include () =
+  let rec expand_d (dirname : string) : list string =
+    // Util.print1 "GG expand_d (%s)\n" dirname;
+    let dot_inc_path = dirname ^ "/fstar.include" in
+    if Util.file_exists dot_inc_path then (
+      // Util.print1 "GG found file (%s)\n" dot_inc_path;
+      let s = file_get_contents dot_inc_path in
+      let subdirs = String.split ['\n'] s |> List.filter (fun s -> s <> "") in
+      // Util.print1 "GG got subdirs = %s\n" (String.concat ";" subdirs);
+      dirname :: List.collect (fun subd -> expand_d (dirname ^ "/" ^ subd)) subdirs
+    ) else
+      [dirname]
+  in
+  expand_d "." @
+  (get_include () |> List.collect expand_d)
+
 let include_path () =
   let cache_dir =
     match get_cache_dir() with
@@ -1678,7 +1694,7 @@ let include_path () =
     | Some c -> [c]
   in
   if get_no_default_includes() then
-    cache_dir @ get_include()
+    cache_dir @ get_expanded_include()
   else
     let lib_paths =
         match Util.expand_environment_variable "FSTAR_LIB" with
@@ -1688,7 +1704,7 @@ let include_path () =
           defs |> List.map (fun x -> fstar_home ^ x) |> List.filter file_exists
         | Some s -> [s]
     in
-    cache_dir @ lib_paths @ get_include() @ [ "." ]
+    cache_dir @ lib_paths @ get_expanded_include() @ [ "." ]
 
 let find_file =
   let file_map = Util.smap_create 100 in
