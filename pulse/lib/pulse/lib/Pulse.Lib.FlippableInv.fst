@@ -57,14 +57,14 @@ fn mk_finv (p:slprop { is_storable p })
 ```
 
 
-let iname_of #p (f : finv p) : erased iname = f.i
+let iname_of #p (f : finv p) : iname = f.i
 
 ```pulse
 atomic
 fn flip_on (#p:slprop) (fi:finv p)
    requires off fi ** p
    ensures on fi
-   opens add_inv emp_inames (iname_of fi)
+   opens [iname_of fi]
 {
   open Pulse.Lib.GhostReference;
   unfold off;
@@ -72,7 +72,8 @@ fn flip_on (#p:slprop) (fi:finv p)
     returns _:unit
     ensures inv fi.i (finv_p p fi.r) **
             GR.pts_to fi.r #0.5R true
-    opens (add_inv emp_inames fi.i) {
+    opens [fi.i]
+  {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if false then p else emp) as emp;
@@ -90,7 +91,7 @@ atomic
 fn flip_off (#p:slprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
-   opens add_inv emp_inames (iname_of fi)
+   opens [iname_of fi]
 {
   open Pulse.Lib.GhostReference;
   unfold on;
@@ -98,7 +99,8 @@ fn flip_off (#p:slprop) (fi : finv p)
     returns _:unit
     ensures inv fi.i (finv_p p fi.r) **
             GR.pts_to fi.r #0.5R false ** p
-    opens (add_inv emp_inames fi.i) {
+    opens [fi.i]
+  {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if true then p else emp) as p;

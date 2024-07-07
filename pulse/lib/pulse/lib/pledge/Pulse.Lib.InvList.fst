@@ -59,7 +59,7 @@ fn shift_invlist_one
   requires invlist_v is ** (p ** pre)
   returns v:a
   ensures invlist_v is ** (p ** post v)
-  opens emp_inames
+  opens []
 {
   rewrite
     (p ** invlist_v is)
@@ -97,7 +97,7 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
       let r = with_invariants (snd h)
         returns v:a
         ensures inv (snd h) (fst h) ** invlist_inv t ** post v
-        opens (add_inv (invlist_names t) (snd h)) {
+        opens (invlist_names t @@ [snd h]) {
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;

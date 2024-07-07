@@ -61,7 +61,7 @@ fn proof
    (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R true ** GR.pts_to claimed #0.5R false
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
-   opens add_inv emp_inames i
+   opens [i]
 {
   with_invariants i {
     unfold inv_p;

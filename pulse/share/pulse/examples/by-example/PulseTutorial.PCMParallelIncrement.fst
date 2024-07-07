@@ -291,7 +291,7 @@ ensures
     CI.active i p **     //and the invariant remains ...
     inv (CI.iname_of i) 
         (CI.cinv_vp i (contributions n initial gs r))
-opens (add_inv emp_inames (CI.iname_of i)) //we used the invariant
+opens [CI.iname_of i] //we used the invariant
 { 
   with_invariants (CI.iname_of i)
   {
@@ -374,7 +374,7 @@ ensures
    CI.active ci p **
    inv (CI.iname_of ci) 
        (CI.cinv_vp ci (contributions capacity initial gs r))
-opens (add_inv emp_inames (CI.iname_of ci))
+opens [CI.iname_of ci]
 {
   with_invariants (CI.iname_of ci)
   {

@@ -50,7 +50,7 @@ fn new_cancellable_invariant (v:slprop { is_storable v })
   requires v
   returns c:cinv
   ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
-  opens emp_inames
+  opens []
 {
   let r = GR.alloc true;
   rewrite v as (if true then v else emp);
@@ -72,7 +72,7 @@ ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p
   ensures v ** unpacked c v ** active c p
-  opens emp_inames
+  opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
@@ -89,7 +89,7 @@ ghost
 fn pack_cinv_vp (#v:slprop) (c:cinv)
   requires v ** unpacked c v
   ensures cinv_vp c v
-  opens emp_inames
+  opens []
 {
   unfold unpacked;
   rewrite v as (if true then v else emp);
@@ -103,7 +103,7 @@ ghost
 fn share (#p:perm) (c:cinv)
   requires active c p
   ensures active c (p /. 2.0R) ** active c (p /. 2.0R)
-  opens emp_inames
+  opens []
 {
   unfold active;
   GR.share c.r;
@@ -135,7 +135,7 @@ fn cancel_ (#v:slprop) (c:cinv)
 requires cinv_vp c v **
          active c 1.0R
 ensures cinv_vp c v ** v
-opens emp_inames
+opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
@@ -157,12 +157,12 @@ ghost
 fn cancel (#v:slprop) (c:cinv)
   requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
-  opens (add_inv emp_inames (iname_of c))
+  opens [iname_of c]
 {
   with_invariants (iname_of c)
     returns _:unit
     ensures inv (iname_of c) (cinv_vp c v) ** v
-    opens (add_inv emp_inames (iname_of c)) {
+    opens [iname_of c] {
     cancel_ c
   };
   drop_ (inv (iname_of c) _)

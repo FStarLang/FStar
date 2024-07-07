@@ -316,7 +316,7 @@ let compute_term_type_and_u (g:env) (t:term)
 let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
   : T.Tac (e:term & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e None in
+  let e, _ = instantiate_term_implicits g e (Some t) in
 
   let fg = elab_env g in
 
@@ -336,7 +336,7 @@ let check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
 let check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (e:term & eff:T.tot_or_ghost & typing g e eff t) =
 
-  let e, _ = instantiate_term_implicits g e None in
+  let e, _ = instantiate_term_implicits g e (Some t) in
   let fg = elab_env g in
 
   let effopt, issues =

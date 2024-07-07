@@ -129,7 +129,7 @@ ensures inv i (pts_to x 0ul) ** pts_to y 0ul
         with_invariants i
         returns r:U32.t
         ensures inv i (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
-        opens (add_inv emp_inames i) {
+        opens [i] {
             read_atomic x
         };
     y := n;
