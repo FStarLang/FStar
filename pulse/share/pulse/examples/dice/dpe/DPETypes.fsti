@@ -321,21 +321,19 @@ fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
 
 ```pulse
 ghost
-fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == Engine_context ec)
+fn rewrite_context_perm_engine (ec:engine_context_t) (#r:context_repr_t)
+  requires context_perm (Engine_context ec) r
   returns uds:Ghost.erased (Seq.seq U8.t)
   ensures engine_context_perm ec uds ** pure (r == Engine_context_repr uds)
 {
   match r {
     Engine_context_repr uds -> {
-      rewrite (context_perm c r) as
-              (engine_context_perm ec uds);
+      unfold context_perm;
       hide uds
     }
     _ -> {
       assume_ (pure (~ (Engine_context_repr? r)));
-      rewrite (context_perm c r) as
+      rewrite (context_perm (Engine_context ec) r) as
               (pure False);
       unreachable ()
 
@@ -346,21 +344,19 @@ fn rewrite_context_perm_engine (c:context_t) (ec:engine_context_t) (#r:context_r
 
 ```pulse
 ghost
-fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == L0_context lc)
+fn rewrite_context_perm_l0 (lc:l0_context_t) (#r:context_repr_t)
+  requires context_perm (L0_context lc) r
   returns lrepr:Ghost.erased l0_context_repr_t
   ensures l0_context_perm lc lrepr ** pure (r == L0_context_repr lrepr)
 {
   match r {
     L0_context_repr lrepr -> {
-      rewrite (context_perm c r) as
-              (l0_context_perm lc lrepr);
+      unfold context_perm;
       hide lrepr
     }
     _ -> {
       assume_ (pure (~ (L0_context_repr? r)));
-      rewrite (context_perm c r) as
+      rewrite (context_perm (L0_context lc) r) as
               (pure False);
       unreachable ()
     }
@@ -370,21 +366,19 @@ fn rewrite_context_perm_l0 (c:context_t) (lc:l0_context_t) (#r:context_repr_t)
 
 ```pulse
 ghost
-fn rewrite_context_perm_l1 (c:context_t) (lc:l1_context_t) (#r:context_repr_t)
-  requires context_perm c r **
-           pure (c == L1_context lc)
+fn rewrite_context_perm_l1 (lc:l1_context_t) (#r:context_repr_t)
+  requires context_perm (L1_context lc) r
   returns lrepr:Ghost.erased l1_context_repr_t
   ensures l1_context_perm lc lrepr ** pure (r == L1_context_repr lrepr)
 {
   match r {
     L1_context_repr lrepr -> {
-      rewrite (context_perm c r) as
-              (l1_context_perm lc lrepr);
+      unfold context_perm;
       hide lrepr
     }
     _ -> {
       assume_ (pure (~ (L1_context_repr? r)));
-      rewrite (context_perm c r) as
+      rewrite (context_perm (L1_context lc) r) as
               (pure False);
       unreachable ()
     }
@@ -433,21 +427,19 @@ fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
 
 ```pulse
 ghost
-fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr:repr_t)
-  requires record_perm r p repr **
-           pure (r == Engine_record er)
+fn rewrite_record_perm_engine (er:engine_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm (Engine_record er) p repr
   returns erepr:Ghost.erased engine_record_repr
   ensures engine_record_perm er p erepr ** pure (repr == Engine_repr erepr)
 {
   match repr {
     Engine_repr erepr -> {
-      rewrite (record_perm r p repr)
-          as  (engine_record_perm er p erepr);
+      unfold record_perm;
       hide erepr
     }
     L0_repr _ -> {
-      rewrite (record_perm r p repr)
-          as  (pure False);
+      rewrite record_perm (Engine_record er) p repr
+           as pure False;
       unreachable ()
     }
   }
@@ -456,21 +448,19 @@ fn rewrite_record_perm_engine (r:record_t) (er:engine_record_t) (#p:perm) (#repr
 
 ```pulse
 ghost
-fn rewrite_record_perm_l0 (r:record_t) (lr:l0_record_t) (#p:perm) (#repr:repr_t)
-  requires record_perm r p repr **
-           pure (r == L0_record lr)
+fn rewrite_record_perm_l0 (lr:l0_record_t) (#p:perm) (#repr:repr_t)
+  requires record_perm (L0_record lr) p repr
   returns r0:Ghost.erased l0_record_repr_t
   ensures l0_record_perm lr p r0 ** pure (repr == L0_repr r0)
 {
   match repr {
     Engine_repr _ -> {
-      rewrite (record_perm r p repr)
-          as  (pure False);
+      rewrite record_perm (L0_record lr) p repr
+           as pure False;
       unreachable ()
     }
     L0_repr r0 -> {
-      rewrite (record_perm r p repr)
-          as  (l0_record_perm lr p r0);
+      unfold record_perm;
       hide r0
     }
   }
