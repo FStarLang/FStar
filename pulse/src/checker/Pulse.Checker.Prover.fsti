@@ -34,6 +34,17 @@ val elim_exists_and_pure (#g:env) (#ctxt:slprop)
            tot_typing g' ctxt' tm_slprop &
            continuation_elaborator g ctxt g' ctxt')
 
+val normalize_slprop
+  (g:env)
+  (v:slprop)
+  : T.Tac (v':slprop & slprop_equiv g v v')
+
+val normalize_slprop_welltyped
+  (g:env)
+  (v:slprop)
+  (v_typing:tot_typing g v tm_slprop)
+  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
+
 val prove
   (allow_ambiguous : bool)
   (#g:env) (#ctxt:slprop) (ctxt_typing:tot_typing g ctxt tm_slprop)

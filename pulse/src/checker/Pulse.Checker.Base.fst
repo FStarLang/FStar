@@ -772,6 +772,14 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
         else None
     )
 
+let checker_result_t_equiv_ctxt (g:env) (ctxt ctxt' : slprop)
+  (post_hint:post_hint_opt g)
+  (equiv : slprop_equiv g ctxt ctxt')
+  (r : checker_result_t g ctxt post_hint)
+: checker_result_t g ctxt' post_hint
+= let (| x, g1, t, ctxt', k |) = r in
+  (| x, g1, t, ctxt', k_elab_equiv k equiv (VE_Refl _ _) |)
+
 module RU = Pulse.RuntimeUtils  
 let is_stateful_application (g:env) (e:term) 
   : T.Tac (option st_term) =
