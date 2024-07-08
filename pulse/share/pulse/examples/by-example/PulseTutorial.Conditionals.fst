@@ -193,13 +193,14 @@ ensures pts_to_or_null r #p 'v
 {
     match r {
      Some x -> {
-        elim_pts_to_or_null_some r x;
+        elim_pts_to_or_null_some (Some x) x;
         let o = !x;
         intro_pts_to_or_null_some r x;
         Some o
      }
      None -> {
-        elim_pts_to_or_null_none r;
+        unfold pts_to_or_null None 'v;
+        fold pts_to_or_null None 'v;
         None #a
      }
     }
@@ -234,9 +235,12 @@ requires pts_to_or_null r 'v
 ensures exists* w. pts_to_or_null r w ** pure (Some? r ==> w == Some v)
 {
     match r {
-     None -> { () }
+     None -> {
+        rewrite pts_to_or_null None 'v
+             as pts_to_or_null r 'v;
+     }
      Some x -> {
-        elim_pts_to_or_null_some r x;
+        unfold pts_to_or_null (Some x) 'v;
         x := v;
         intro_pts_to_or_null_some r x;
      }
