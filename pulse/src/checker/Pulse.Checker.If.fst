@@ -64,6 +64,18 @@ let check
         hyp 
         (mk_eq2 u0 tm_bool b eq_v)
     in
+
+    let br = {
+        term =
+          Tm_ProofHintWithBinders {
+            binders = [];
+            hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; };
+            t = br;
+          };
+        range = br.range;
+        effect_tag = br.effect_tag;
+      }
+    in
     
     let (| br, c, d |) =
       let ppname = mk_ppname_no_range "_if_br" in
