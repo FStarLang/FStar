@@ -33,3 +33,21 @@ fn test (b:bool)
   }
 }
 ```
+
+
+```pulse
+fn test_if (b:bool)
+  requires p b
+  ensures  q
+{
+  if b {
+    (* Rewrite added by checker *)
+    // rewrite each b as true;
+    foo1 ();
+  } else {
+    (* Rewrite added by checker *)
+    // rewrite each b as false;
+    foo2 ();
+  }
+}
+```
