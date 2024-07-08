@@ -872,19 +872,19 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   {
     Engine_context c ->
     {
-      let uds = rewrite_context_perm_engine ctxt c;
+      let uds = rewrite_context_perm_engine c;
       unfold (engine_context_perm c uds);
       V.free c.uds;
     }
     L0_context c ->
     {
-      let r = rewrite_context_perm_l0 ctxt c;
+      let r = rewrite_context_perm_l0 c;
       unfold (l0_context_perm c r);
       V.free c.cdi;
     }
     L1_context c ->
     {
-      let r = rewrite_context_perm_l1 ctxt c;
+      let r = rewrite_context_perm_l1 c;
       unfold (l1_context_perm c r);
       V.free c.deviceID_pub;
       V.free c.aliasKey_priv;
@@ -918,10 +918,10 @@ fn derive_child_from_context
     Engine_context c -> {
       match record {
         Engine_record r -> {
-          let uds_bytes = rewrite_context_perm_engine context c;
+          let uds_bytes = rewrite_context_perm_engine c;
           unfold (engine_context_perm c uds_bytes);
 
-          let engine_record_repr = rewrite_record_perm_engine record r;
+          let engine_record_repr = rewrite_record_perm_engine r;
 
           let mut cdi = [| 0uy; dice_digest_len |];
 
@@ -974,11 +974,11 @@ fn derive_child_from_context
     L0_context c -> {
       match record {
         L0_record r -> {
-          let cr = rewrite_context_perm_l0 context c;
+          let cr = rewrite_context_perm_l0 c;
           unfold (l0_context_perm c cr);
           with s. assert (V.pts_to c.cdi s);
 
-          let r0 = rewrite_record_perm_l0 record r;
+          let r0 = rewrite_record_perm_l0 r;
           unfold (l0_record_perm r 1.0R r0);
 
           let deviceID_pub = V.alloc 0uy (SZ.uint_to_t 32);
@@ -1259,7 +1259,7 @@ fn certify_key (sid:sid_t)
             0ul
           } else {
             let r = rewrite_session_state_related_available (L1_context c) s t;
-            let r = rewrite_context_perm_l1 (L1_context c) c;
+            let r = rewrite_context_perm_l1 c;
             unfold (l1_context_perm c r);
 
             V.to_array_pts_to c.aliasKey_pub;
@@ -1331,7 +1331,7 @@ fn sign (sid:sid_t)
       match hc.context {
         L1_context c -> {
           let r = rewrite_session_state_related_available (L1_context c) s t;
-          let r = rewrite_context_perm_l1 (L1_context c) c;
+          let r = rewrite_context_perm_l1 c;
           unfold (l1_context_perm c r);
 
           V.to_array_pts_to c.aliasKey_priv;

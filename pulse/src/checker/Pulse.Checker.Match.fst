@@ -245,9 +245,22 @@ let check_branch
   if (R.Tv_Unknown? (R.inspect_ln (fst (Some?.v elab_p)))) then
     fail g (Some e.range) "should not happen: pattern elaborated to Tv_Unknown";
   // T.print ("Elaborated pattern = " ^ T.term_to_string (fst (Some?.v elab_p)));
-  let eq_typ = mk_sq_eq2 sc_u sc_ty sc (wr (fst (Some?.v elab_p)) Range.range_0) in
+  let elab_p_tm = fst (Some?.v elab_p) in
+  let eq_typ = mk_sq_eq2 sc_u sc_ty sc (wr elab_p_tm Range.range_0) in
   let g' = push_binding g' hyp_var ({name = Sealed.seal "branch equality"; range = Range.range_0 }) eq_typ in
   let e = open_st_term_bs e pulse_bs in
+  let e =
+    {
+      term =
+        Tm_ProofHintWithBinders {
+          binders = [];
+          hint_type = RENAME { pairs = [(sc, elab_p_tm)]; goal=None; tac_opt=None; };
+          t = e;
+        };
+      range = e.range;
+      effect_tag = e.effect_tag;
+    }
+  in
   let pre_typing = tot_typing_weakening_n pulse_bs pre_typing in // weaken w/ binders
   let pre_typing = Pulse.Typing.Metatheory.tot_typing_weakening_single pre_typing hyp_var eq_typ in // weaken w/ branch eq
 
