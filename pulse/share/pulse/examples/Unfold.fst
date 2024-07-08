@@ -2,8 +2,6 @@ module Unfold
 
 open Pulse.Lib.Pervasives
 
-let unf = ()
-
 assume
 val p : slprop
 
