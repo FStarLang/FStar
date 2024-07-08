@@ -136,11 +136,17 @@ let normalize_slprop_context
   (#preamble:_)
   (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+  (* Keep things reduced *)
+  let steps = [Pervasives.unascribe; primops; iota] in
+
+  (* Unfold anything marked with the "pulse_unfold" attribute. *)
+  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
+
   let ctxt = pst.remaining_ctxt in
-  let ctxt' = ctxt |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+  let ctxt' = ctxt |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) steps) in
 
   let unsolved = pst.unsolved in
-  let unsolved' = unsolved |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+  let unsolved' = unsolved |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) steps) in
 
   if RU.debug_at_level (fstar_env pst.pg) "ggg" then
   info_doc pst.pg None [
