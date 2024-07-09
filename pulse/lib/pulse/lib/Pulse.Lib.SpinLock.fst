@@ -119,13 +119,9 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
     };
 
   if b {
-    rewrite (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) as
-            (v ** GR.pts_to l.gr #0.5R 1ul);
     fold (lock_alive l #p v);
     fold (lock_acquired l)
   } else {
-    rewrite (if b then v ** GR.pts_to l.gr #0.5R 1ul else emp) as
-            emp;
     fold (lock_alive l #p v);
     acquire l
   }
