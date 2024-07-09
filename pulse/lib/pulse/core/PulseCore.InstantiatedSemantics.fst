@@ -58,7 +58,7 @@ let laws ()
 
 let state0 (e:inames) : Sem.state u#4 = {
     // max_act = U.raise_t u#0 u#100 unit;
-    s = mem u#1;
+    s = mem u#0;
     is_full_mem = full_mem_pred;
     pred = slprop;
     emp = emp;
