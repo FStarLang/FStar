@@ -337,21 +337,22 @@ ensures inv l invp ** qpred ('i + 1)
           ** pts_to continue true
       {
         elim_inv ();
+        unfold cond;
         let b = cas x v (v + 1);
         if b
         {
-          elim_cond_true b _ _;
-          elim_cond_true true _ _;
+          unfold cond;
           with vv. assert (pred vv);
           f vv _;
-          intro_cond_false (qpred 'i) (qpred ('i + 1));
           intro_inv ();
+          fold (cond false (qpred 'i) (qpred ('i + 1)));
           false
         }
         else
         {
-          with p q. rewrite (cond b p q) as q;
+          unfold cond;
           intro_inv ();
+          fold (cond true (qpred 'i) (qpred ('i + 1)));
           true
         }
       };
