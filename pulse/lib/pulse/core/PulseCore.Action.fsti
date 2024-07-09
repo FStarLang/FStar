@@ -152,7 +152,7 @@ let rec all_live (ctx:list iref) =
 val dup_inv (i:iref) (p:slprop)
   : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
-val new_invariant (p:slprop2)
+val new_invariant (p:slprop3)
 : act iref Ghost emp_inames p (fun i -> inv i p)
 
 let fresh_wrt (i:iref)
@@ -160,7 +160,7 @@ let fresh_wrt (i:iref)
 : prop
 = forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
-val fresh_invariant (ctx:list iref) (p:slprop2)
+val fresh_invariant (ctx:list iref) (p:slprop3)
 : act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> inv i p)
 
 val with_invariant
@@ -210,7 +210,7 @@ let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
 = is_core_ref_null r
 
-val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop1
+val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop2
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -283,7 +283,7 @@ val gather
 // Big references
 ///////////////////////////////////////////////////////////////////
 
-val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop2
+val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop3
 
 val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -458,7 +458,7 @@ val drop (p:slprop)
 [@@erasable]
 val core_ghost_ref : Type u#0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop1
+val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2
 
 val ghost_alloc
     (#a:Type u#1)
@@ -510,7 +510,7 @@ val ghost_gather
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3
 
 val big_ghost_alloc
     (#a:Type)

@@ -82,7 +82,7 @@ let tank (n:nat) = GPR.gref (pcm_of n)
 
 // A predicate asserting ownership of `i` units of the tank
 let owns_tank_units #n (g:tank n) (i:nat)
-: slprop2
+: slprop3
 = GPR.pts_to #_ #(pcm_of n) g i
 
 
@@ -199,7 +199,6 @@ instance non_informative_gs (n:nat)
 // Now for the main invariant
 // The total volume of the given and to_give tanks owned by the invariant is n
 // The value of r is v, and v == initial + g, the owned units in the given tank
-[@@pulse_unfold]
 let contributions
     (n:nat)
     (initial:nat)
@@ -228,8 +227,7 @@ requires
 ensures
     contributions n initial gs r
 {
-  ()
-//  fold (contributions n initial gs r)
+  fold (contributions n initial gs r)
 }
 ```
 
@@ -308,7 +306,7 @@ requires
 ensures
   pts_to r (initial + capacity)
 {
-  // unfold contributions;
+  unfold contributions;
   unfold has_given;
   gather_tank_units gs.to_give;
   drop_ (owns_tank_units gs.to_give _);
@@ -331,11 +329,11 @@ ensures
     has_given gs 1 **    //we have contributed 1 unit to the reference
     contributions n initial gs r
 {
-  //  unfold contributions;
-    unfold can_give;  gather_tank_units gs.given;
+   unfold contributions;
+   unfold can_give;  gather_tank_units gs.given;
    atomic_incr r;
-   let remaining = share_one_tank_units gs.to_give; fold (has_given gs 1)
-  //  fold (contributions n initial gs r)
+   let remaining = share_one_tank_units gs.to_give; fold (has_given gs 1);
+   fold (contributions n initial gs r)
 }
 ```
 

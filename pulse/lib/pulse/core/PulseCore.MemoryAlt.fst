@@ -46,40 +46,40 @@ let ghost_action_preorder (_:unit)
 let slprop : Type u#(a + 4) = erased sig.slprop
 let reveal_slprop (p:slprop) : sig.slprop = sig.non_info_slprop p
 
-let slprop2_base : Type u#(a + 3) = erased sig.bprop
-let cm_slprop2 : CM.cm slprop2_base = H.cm_e_slprop small_sig
-let down2 (s:slprop u#a) : slprop2_base u#a = sig.down s
-let up2 (s:slprop2_base u#a) : slprop u#a = reveal_slprop <| sig.up s
-let up2_is_slprop2_alt (b:slprop2_base)
-: Lemma (is_slprop2 (up2 b))
-        [SMTPat (is_slprop2 (up2 b))]
+let slprop3_base : Type u#(a + 3) = erased sig.bprop
+let cm_slprop3 : CM.cm slprop3_base = H.cm_e_slprop small_sig
+let down3 (s:slprop u#a) : slprop3_base u#a = sig.down s
+let up3 (s:slprop3_base u#a) : slprop u#a = reveal_slprop <| sig.up s
+let up3_is_slprop3_alt (b:slprop3_base)
+: Lemma (is_slprop3 (up3 b))
+        [SMTPat (is_slprop3 (up3 b))]
 = sig.up_down b
-let up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b)) = ()
+let up3_is_slprop3 (b:slprop3_base) : Lemma (is_slprop3 (up3 b)) = ()
 
-let slprop1_base : Type u#(a + 2) = erased small_sig.bprop
-let cm_slprop1 : CM.cm slprop1_base = H.cm_e_slprop smaller_sig
-let down1 (s:slprop u#a) : slprop1_base u#a = small_sig.down (sig.down s)
-let up1 (s:slprop1_base u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
+let slprop2_base : Type u#(a + 2) = erased small_sig.bprop
+let cm_slprop2 : CM.cm slprop2_base = H.cm_e_slprop smaller_sig
+let down2 (s:slprop u#a) : slprop2_base u#a = small_sig.down (sig.down s)
+let up2 (s:slprop2_base u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
 
-let up1_is_slprop1_alt (s:slprop1_base)
-: Lemma (ensures is_slprop1 (up1 s))
-        [SMTPat (is_slprop1 (up1 s))]
+let up2_is_slprop2_alt (s:slprop2_base)
+: Lemma (ensures is_slprop2 (up2 s))
+        [SMTPat (is_slprop2 (up2 s))]
 = calc (==) {
-    up1 (down1 (up1 s));
+    up2 (down2 (up2 s));
   (==) {}
-    up1 (down1 (sig.up (small_sig.up s)));
+    up2 (down2 (sig.up (small_sig.up s)));
   (==) {}
-    up1 (small_sig.down (sig.down (sig.up (small_sig.up s))));
+    up2 (small_sig.down (sig.down (sig.up (small_sig.up s))));
   (==) { sig.up_down (small_sig.up s) }
-    up1 (small_sig.down (small_sig.up s));
+    up2 (small_sig.down (small_sig.up s));
   (==) { small_sig.up_down s }
-    up1 s;
+    up2 s;
   }
-let up1_is_slprop1 s = up1_is_slprop1_alt s
+let up2_is_slprop2 s = up2_is_slprop2_alt s
 
 let slprop_1_is_2 (s:slprop)
-: Lemma (is_slprop1 s ==> is_slprop2 s)
-= sig.up_down (small_sig.up (small_sig.down (down2 s)))
+: Lemma (is_slprop2 s ==> is_slprop3 s)
+= sig.up_down (small_sig.up (small_sig.down (down3 s)))
 
 (** Interpreting mem assertions as memory predicates *)
 let interp (p:slprop u#a) (m:mem u#a) : prop = H.interpret p m
@@ -113,15 +113,15 @@ let core_ref_is_null (r:core_ref)
 = PulseCore.Heap2.core_ref_is_null r
 
 
-let emp_is_slprop1 () 
-: Lemma (is_slprop1 sig.emp)
+let emp_is_slprop2 () 
+: Lemma (is_slprop2 sig.emp)
 = E.up_emp smaller_sig;
   E.up_emp small_sig;
   small_sig.up_down smaller_sig.emp;
   sig.up_down small_sig.emp
 
-let pure_is_slprop1 (p:prop) 
-: Lemma (is_slprop1 (sig.pure p))
+let pure_is_slprop2 (p:prop) 
+: Lemma (is_slprop2 (sig.pure p))
 = E.up_pure smaller_sig p;
   E.up_pure small_sig p;
   small_sig.up_down (smaller_sig.pure p);
@@ -129,11 +129,11 @@ let pure_is_slprop1 (p:prop)
 
 let emp
 : slprop u#a
-= emp_is_slprop1(); sig.emp
+= emp_is_slprop2(); sig.emp
 
 let pure (p:prop)
-: slprop1 u#a
-= pure_is_slprop1 p; sig.pure p
+: slprop2 u#a
+= pure_is_slprop2 p; sig.pure p
 
 let star  (p1 p2:slprop u#a)
 : slprop u#a
@@ -173,92 +173,92 @@ let star_congruence (p1 p2 p3 p4:slprop)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 = ()
 
-let slprop2_star_congruence (p1 p2:slprop2 u#a)
-: Lemma (is_slprop2 (p1 `star` p2))
+let slprop3_star_congruence (p1 p2:slprop3 u#a)
+: Lemma (is_slprop3 (p1 `star` p2))
 = sig.star_congruence p1 p2
 
 module T = FStar.Tactics.V2
-let slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+let slprop3_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
-  (requires forall x. is_slprop2 (p x))
-  (ensures is_slprop2 (h_exists p))
-= introduce forall x. is_slprop2 (reveal_slprop (p x))
+  (requires forall x. is_slprop3 (p x))
+  (ensures is_slprop3 (h_exists p))
+= introduce forall x. is_slprop3 (reveal_slprop (p x))
   with (  
-    assert (is_slprop2 (p x))  
+    assert (is_slprop3 (p x))  
   );
   assert (H.is_boxable (H.exists_ #sig #a (fun x -> reveal_slprop (p x))))
     by (T.mapply (`E.exists_congruence))
 
-let slprop1_star_congruence (p1 p2:slprop1 u#a)
-: Lemma (is_slprop1 (p1 `star` p2))
+let slprop2_star_congruence (p1 p2:slprop2 u#a)
+: Lemma (is_slprop2 (p1 `star` p2))
 = slprop_1_is_2 p1;
   slprop_1_is_2 p2;
   calc (==) {
-    reveal_slprop <| up1 (down1 (p1 `star` p2));
+    reveal_slprop <| up2 (down2 (p1 `star` p2));
   (==) {}
     sig.up (small_sig.up (small_sig.down (sig.down (p1 `star` p2))));
   (==) { E.down_star p1 p2 }
-    sig.up (small_sig.up (small_sig.down (down2 p1 `small_sig.star` down2 p2)));
-  (==) { E.down_star #smaller_sig (down2 p1) (down2 p2) }
-    sig.up (small_sig.up (down1 p1 `smaller_sig.star` down1 p2));
-  (==) { E.up_star #smaller_sig (down1 p1) (down1 p2) }
-    sig.up (small_sig.up (down1 p1) `small_sig.star` (small_sig.up (down1 p2)));
-  (==) { E.up_star #small_sig (small_sig.up (down1 p1)) (small_sig.up (down1 p2)) }
-    sig.up (small_sig.up (down1 p1)) `sig.star` sig.up (small_sig.up (down1 p2));
+    sig.up (small_sig.up (small_sig.down (down3 p1 `small_sig.star` down3 p2)));
+  (==) { E.down_star #smaller_sig (down3 p1) (down3 p2) }
+    sig.up (small_sig.up (down2 p1 `smaller_sig.star` down2 p2));
+  (==) { E.up_star #smaller_sig (down2 p1) (down2 p2) }
+    sig.up (small_sig.up (down2 p1) `small_sig.star` (small_sig.up (down2 p2)));
+  (==) { E.up_star #small_sig (small_sig.up (down2 p1)) (small_sig.up (down2 p2)) }
+    sig.up (small_sig.up (down2 p1)) `sig.star` sig.up (small_sig.up (down2 p2));
   (==) { (*def*) }
     sig.up (small_sig.up (small_sig.down (sig.down p1)))
     `sig.star`
     sig.up (small_sig.up (small_sig.down (sig.down p2)));
-  (==) { E.up_star #small_sig (small_sig.up (down1 p1)) (small_sig.up (down1 p2)) }
+  (==) { E.up_star #small_sig (small_sig.up (down2 p1)) (small_sig.up (down2 p2)) }
     reveal_slprop (p1 `star` p2);
   }
 
-let reveal_bprop (x:slprop2_base) : small_sig.slprop = small_sig.non_info_slprop x
+let reveal_bprop (x:slprop3_base) : small_sig.slprop = small_sig.non_info_slprop x
 
 let down_exists_alt #a (p: a -> slprop)
 : Lemma 
-  (ensures down2 (h_exists p) ==
-           hide <| H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down2 (p x)))
+  (ensures down3 (h_exists p) ==
+           hide <| H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down3 (p x)))
 = calc (==) {
-    reveal_bprop (down2 (h_exists p));
+    reveal_bprop (down3 (h_exists p));
   (==) {}
     sig.down (H.exists_ (fun x -> reveal_slprop (p x)));
   (==) { _ by (T.mapply (`E.down_exists)) }
     H.exists_ #small_sig (fun x -> sig.down (reveal_slprop (p x)));
   (==) { H.exists_extensionality #small_sig
           (fun x -> sig.down (reveal_slprop (p x)))
-          (fun x -> small_sig.non_info_slprop <| down2 (p x)) }
-    H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down2 (p x));
+          (fun x -> small_sig.non_info_slprop <| down3 (p x)) }
+    H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down3 (p x));
   } 
 
 
 let split_small (p:slprop u#a)
-: Lemma (requires is_slprop1 p)
-        (ensures H.is_boxable #small_sig (small_sig.non_info_slprop (down2 p)))
+: Lemma (requires is_slprop2 p)
+        (ensures H.is_boxable #small_sig (small_sig.non_info_slprop (down3 p)))
 = slprop_1_is_2 p;
   calc (==) {
-   hide <| small_sig.up (small_sig.down (down2 p));
-  (==) {  sig.up_down (small_sig.up (small_sig.down (down2 p))) }
-   down2 (up2 (small_sig.up (small_sig.down (down2 p))));
+   hide <| small_sig.up (small_sig.down (down3 p));
+  (==) {  sig.up_down (small_sig.up (small_sig.down (down3 p))) }
+   down3 (up3 (small_sig.up (small_sig.down (down3 p))));
   (==) { }
-   down2 (up1 (down1 p));
+   down3 (up2 (down2 p));
   (==) {}
-   down2 p;
+   down3 p;
   }
 
-let slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+let slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
-  (requires forall x. is_slprop1 (p x))
-  (ensures is_slprop1 (h_exists p))
+  (requires forall x. is_slprop2 (p x))
+  (ensures is_slprop2 (h_exists p))
 = FStar.Classical.forall_intro slprop_1_is_2;
-  slprop2_exists_congruence #a p;
-  assert (is_slprop2 (h_exists p));
+  slprop3_exists_congruence #a p;
+  assert (is_slprop3 (h_exists p));
   down_exists_alt #a p;
-  assert (forall x. H.is_boxable #small_sig (small_sig.non_info_slprop (down2 (p x))))
+  assert (forall x. H.is_boxable #small_sig (small_sig.non_info_slprop (down3 (p x))))
       by (let _ = T.forall_intro () in
           T.mapply (`split_small));
   assert (H.is_boxable #small_sig
-           (H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down2 (p x))))
+           (H.exists_ #small_sig (fun x -> small_sig.non_info_slprop <| down3 (p x))))
      by (T.mapply (`E.exists_congruence))
      
 let h_exists_equiv (#a:Type) (p q : a -> slprop)
@@ -276,50 +276,50 @@ let h_exists_equiv (#a:Type) (p q : a -> slprop)
     reveal_slprop <| h_exists q;
   }
 
-let up2_emp ()
-: Lemma (up2 cm_slprop2.unit == emp)
+let up3_emp ()
+: Lemma (up3 cm_slprop3.unit == emp)
 = E.up_emp small_sig
-let down2_emp ()
-: Lemma (down2 emp == cm_slprop2.unit)
+let down3_emp ()
+: Lemma (down3 emp == cm_slprop3.unit)
 = E.down_emp small_sig
-let up2_star  (p q:slprop2_base)
-: Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
+let up3_star  (p q:slprop3_base)
+: Lemma (up3 (p `cm_slprop3.mult` q) == up3 p `star` up3 q)
 = E.up_star #small_sig p q
-let down2_star (p q:slprop)
-: Lemma (down2 (p `star` q) == down2 p `cm_slprop2.mult` down2 q)
+let down3_star (p q:slprop)
+: Lemma (down3 (p `star` q) == down3 p `cm_slprop3.mult` down3 q)
 = E.down_star #small_sig p q
 
-let up1_emp ()
-: Lemma (up1 cm_slprop1.unit == emp)
+let up2_emp ()
+: Lemma (up2 cm_slprop2.unit == emp)
 = E.up_emp smaller_sig;
   E.up_emp small_sig
-let down1_emp ()
-: Lemma (down1 emp == cm_slprop1.unit)
+let down2_emp ()
+: Lemma (down2 emp == cm_slprop2.unit)
 = E.down_emp smaller_sig;
   E.down_emp small_sig
-let up1_star (p q:slprop1_base)
-: Lemma (up1 (p `cm_slprop1.mult` q) == up1 p `star` up1 q)
+let up2_star (p q:slprop2_base)
+: Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
 = calc (==) {
-    reveal_slprop <| up1 (p `cm_slprop1.mult` q);
+    reveal_slprop <| up2 (p `cm_slprop2.mult` q);
   == {}
     sig.up (small_sig.up (p `smaller_sig.star` q));
   == { E.up_star #smaller_sig p q }
     sig.up (small_sig.up p `small_sig.star` small_sig.up q);
   == { E.up_star #small_sig (small_sig.up p) (small_sig.up q) }
-    reveal_slprop <| up1 p `star` up1 q;
+    reveal_slprop <| up2 p `star` up2 q;
   }
 
-let reveal_slprop1 (b:slprop1_base) : smaller_sig.slprop = smaller_sig.non_info_slprop b
-let down1_star (p q:slprop)
-: Lemma (down1 (p `star` q) == down1 p `cm_slprop1.mult` down1 q)
+let reveal_slprop2 (b:slprop2_base) : smaller_sig.slprop = smaller_sig.non_info_slprop b
+let down2_star (p q:slprop)
+: Lemma (down2 (p `star` q) == down2 p `cm_slprop2.mult` down2 q)
 = calc (==) {
-    reveal_slprop1 <| down1 (p `star` q);
+    reveal_slprop2 <| down2 (p `star` q);
   == {}
     small_sig.down (sig.down (p `star` q));
   == { E.down_star #small_sig p q }
-    small_sig.down ((down2 p) `small_sig.star` (down2 q));
-  == { E.down_star #smaller_sig (down2 p) (down2 q) }
-    reveal_slprop1 <| down1 p `smaller_sig.star` down1 q;
+    small_sig.down ((down3 p) `small_sig.star` (down3 q));
+  == { E.down_star #smaller_sig (down3 p) (down3 q) }
+    reveal_slprop2 <| down2 p `smaller_sig.star` down2 q;
   }
 
 (**** Memory invariants *)
@@ -384,7 +384,7 @@ let dup_inv (e:inames) (i:iref) (p:slprop u#a)
     (fun _ -> inv i p `star` inv i p)
 = coerce_action () <| E.dup_inv #(small_sig u#a) (down_inames e) (reveal_iref i) (reveal_slprop p)
 
-let new_invariant (e:inames) (p:slprop { is_slprop2 p })
+let new_invariant (e:inames) (p:slprop { is_slprop3 p })
 : pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
@@ -530,7 +530,7 @@ let rec coerce_ctx_mem (ctx:erased (list iref))
     let _ = coerce_ctx_mem tl in
     ()
 
-let fresh_invariant_alt (e:inames) (p:slprop2 u#m) (ctx:erased (list iref))
+let fresh_invariant_alt (e:inames) (p:slprop3 u#m) (ctx:erased (list iref))
 : pst_ghost_action_except (i:E.iiref small_sig { E.fresh_wrt (coerce_ctx ctx) i }) e
        p
        (fun i -> inv i p)
@@ -545,7 +545,7 @@ let fresh_invariant_alt (e:inames) (p:slprop2 u#m) (ctx:erased (list iref))
   () <|
   E.fresh_invariant #(small_sig u#m) (down_inames e) (reveal_slprop p) (coerce_ctx ctx)
 
-let fresh_invariant (e:inames) (p:slprop2 u#m) (ctx:erased (list iref))
+let fresh_invariant (e:inames) (p:slprop3 u#m) (ctx:erased (list iref))
 : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
        p
        (fun i -> inv i p)
@@ -640,7 +640,7 @@ let lift_ghost
 
 (* Concrete references to "small" types *)
 let pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
- = up1 (E.pts_to #B.base_heap #a #pcm r v)
+ = up2 (E.pts_to #B.base_heap #a #pcm r v)
 
 let wrap (#h:H.heap_sig u#a) (p:erased h.slprop) : h.slprop = h.non_info_slprop p
 
@@ -669,7 +669,7 @@ let split_action
 : pst_ghost_action_except unit e 
      (pts_to r (v0 `op pcm` v1))
      (fun _ -> pts_to r v0 `star` pts_to r v1)
-= up1_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
@@ -687,7 +687,7 @@ let gather_action
 : pst_ghost_action_except (squash (composable pcm v0 v1)) e
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
-= up1_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r v0 `star` pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
@@ -699,8 +699,8 @@ let alloc_action (#a:Type u#(a+1)) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> pts_to r x)
-= up1_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (E.pts_to #B.base_heap #a #pcm r x)) () <|
+= up2_emp ();
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.pts_to #B.base_heap #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
   E.alloc_action #B.base_heap #a #pcm
@@ -718,7 +718,7 @@ let select_refine (#a:Type u#(a+1)) (#p:pcm a)
     (pts_to r x)
     (fun v -> pts_to r (f v))
 = coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_ #(reveal_slprop (pts_to r x)) 
-                #(fun v -> up1 (E.pts_to #B.base_heap #a #p r (f v))) #(pts_to r x) #(fun v -> pts_to r (f v)) () <|
+                #(fun v -> up2 (E.pts_to #B.base_heap #a #p r (f v))) #(pts_to r x) #(fun v -> pts_to r (f v)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
   E.select_refine #B.base_heap #a #p 
@@ -758,7 +758,7 @@ let pts_to_not_null_action
 let core_ghost_ref : Type0 = H.core_ghost_ref
 let ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a)
 : slprop u#a
-= up1 (E.ghost_pts_to #B.base_heap #a #p r v)
+= up2 (E.ghost_pts_to #B.base_heap #a #p r v)
 
 let ghost_alloc
     (#e:_)
@@ -770,8 +770,8 @@ let ghost_alloc
     e
     emp 
     (fun r -> ghost_pts_to r x)
-= up1_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (E.ghost_pts_to #B.base_heap #a #pcm r x)) () <|
+= up2_emp ();
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.ghost_pts_to #B.base_heap #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
   E.ghost_alloc #B.base_heap #a #pcm
@@ -794,7 +794,7 @@ let ghost_read
     (fun v -> ghost_pts_to r (f v))
 = coerce_action #(erased (v:a{compatible p x v /\ p.refine v})) #_ #_
                 #(reveal_slprop (ghost_pts_to r x)) 
-                #(fun v -> up1 (E.ghost_pts_to #B.base_heap #a #p r (f v)))
+                #(fun v -> up2 (E.ghost_pts_to #B.base_heap #a #p r (f v)))
                 #(ghost_pts_to r x)
                 #(fun v -> ghost_pts_to r (f v))
                 () <|
@@ -832,7 +832,7 @@ let ghost_share
 : pst_ghost_action_except unit e
     (ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
-= up1_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
@@ -852,7 +852,7 @@ let ghost_gather
     (squash (composable pcm v0 v1)) e
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
-= up1_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r v0 `star` ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   lift_action_alt #smaller_sig <|
@@ -863,8 +863,8 @@ let ghost_gather
 
 (* Concrete references to "big" types *)
 let big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a)
-: slprop2 u#a
-= up2 (E.pts_to #smaller_sig #a #pcm r v)
+: slprop3 u#a
+= up3 (E.pts_to #smaller_sig #a #pcm r v)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 let big_split_action
@@ -877,7 +877,7 @@ let big_split_action
 : pst_ghost_action_except unit e
     (big_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
-= up2_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
+= up3_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   E.split_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
@@ -892,7 +892,7 @@ let big_gather_action
 : pst_ghost_action_except (squash (composable pcm v0 v1)) e
     (big_pts_to r v0 `star` big_pts_to r v1)
     (fun _ -> big_pts_to r (op pcm v0 v1))
-= up2_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
+= up3_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r v0 `star` big_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   E.gather_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
@@ -905,8 +905,8 @@ let big_alloc_action
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> big_pts_to r x)
-= up2_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.pts_to #smaller_sig #a #pcm r x)) () <|
+= up3_emp ();
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up3 (E.pts_to #smaller_sig #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   E.alloc_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) x
 
@@ -924,7 +924,7 @@ let big_select_refine
     (fun v -> big_pts_to r (f v))
 = coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_
       #(reveal_slprop (big_pts_to r x))
-      #(fun v -> up2 (E.pts_to #smaller_sig #a #p r (f v)))
+      #(fun v -> up3 (E.pts_to #smaller_sig #a #p r (f v)))
       #(big_pts_to r x)
       #(fun v -> big_pts_to r (f v))
       () <|
@@ -960,8 +960,8 @@ let big_pts_to_not_null_action
 
 (* Ghost references to "big" types *)
 let big_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a)
-: slprop2 u#a
-= up2 (E.ghost_pts_to #smaller_sig #a #p r v)
+: slprop3 u#a
+= up3 (E.ghost_pts_to #smaller_sig #a #p r v)
 
 let big_ghost_alloc
     (#o:_)
@@ -973,8 +973,8 @@ let big_ghost_alloc
     o
     emp 
     (fun r -> big_ghost_pts_to r x)
-= up2_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.ghost_pts_to #smaller_sig #a #pcm r x)) () <|
+= up3_emp ();
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up3 (E.ghost_pts_to #smaller_sig #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
   E.ghost_alloc #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames o)) x
 
@@ -994,7 +994,7 @@ let big_ghost_read
     (fun v -> big_ghost_pts_to r (f v))
 = coerce_action #(erased (v:a{compatible p x v /\ p.refine v})) #_ #_
                 #(reveal_slprop (big_ghost_pts_to r x)) 
-                #(fun v -> up2 (E.ghost_pts_to #smaller_sig #a #p r (f v)))
+                #(fun v -> up3 (E.ghost_pts_to #smaller_sig #a #p r (f v)))
                 #(big_ghost_pts_to r x)
                 #(fun v -> big_ghost_pts_to r (f v))
                 () <|
@@ -1025,7 +1025,7 @@ let big_ghost_share
 : pst_ghost_action_except unit e
     (big_ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
-= up2_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
+= up3_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
   E.ghost_share #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
@@ -1042,7 +1042,7 @@ let big_ghost_gather
     (squash (composable pcm v0 v1)) e
     (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-= up2_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
+= up3_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
   E.ghost_gather #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1

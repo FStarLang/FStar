@@ -11,16 +11,16 @@ val with_pure
 val size_small
   (p : prop)
   (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop1 (v s))
-        (ensures  is_slprop1 (with_pure p v))
-        [SMTPat (is_slprop1 (with_pure p v))]
+: Lemma (requires forall s. is_slprop2 (v s))
+        (ensures  is_slprop2 (with_pure p v))
+        [SMTPat (is_slprop2 (with_pure p v))]
 
 val size_boxable
   (p : prop)
   (v : squash p -> slprop)
-: Lemma (requires forall s. is_slprop2 (v s))
-        (ensures  is_slprop2 (with_pure p v))
-        [SMTPat (is_slprop2 (with_pure p v))]
+: Lemma (requires forall s. is_slprop3 (v s))
+        (ensures  is_slprop3 (with_pure p v))
+        [SMTPat (is_slprop3 (with_pure p v))]
 
 ```pulse
 ghost

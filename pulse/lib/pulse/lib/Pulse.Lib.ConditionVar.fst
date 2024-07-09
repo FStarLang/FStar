@@ -19,18 +19,18 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.ConditionVarWithCodes
 module CV = Pulse.Lib.ConditionVarWithCodes
 ////////////////////////////////////////////////////////////////
-//Using condition vars directly with slprop1 slprops
+//Using condition vars directly with slprop2 slprops
 ////////////////////////////////////////////////////////////////
 
 let code : CV.code = {
-  t = slprop1_base;
-  emp = down1 emp;
-  up = (fun x -> up1_is_slprop1 x; up1 x);
+  t = slprop2_base;
+  emp = down2 emp;
+  up = (fun x -> up2_is_slprop2 x; up2 x);
   laws = ()
 }
 
-let code_of (p:slprop1) : CV.codeable code p = {
-  c = down1 p;
+let code_of (p:slprop2) : CV.codeable code p = {
+  c = down2 p;
   laws = ()
 }
 
@@ -42,7 +42,7 @@ let send (cv:cvar_t) (p:slprop) : slprop = CV.send cv p
 
 let recv (cv:cvar_t) (p:slprop) : slprop = CV.recv cv p
 
-let create (p:slprop1)
+let create (p:slprop2)
 : stt cvar_t emp (fun b -> send b p ** recv b p)
 = CV.create p (code_of p)
 
@@ -54,7 +54,7 @@ let wait (cv:cvar_t) (#p:slprop)
 : stt unit (recv cv p) (fun _ -> p)
 = CV.wait cv #p
 
-let split (cv:cvar_t) (#p #q:slprop1)
+let split (cv:cvar_t) (#p #q:slprop2)
 : stt_ghost unit (add_inv emp_inames (inv_name cv))
   (recv cv (p ** q)) (fun _ -> recv cv p ** recv cv q)
 = CV.split cv #p #q (code_of p) (code_of q)

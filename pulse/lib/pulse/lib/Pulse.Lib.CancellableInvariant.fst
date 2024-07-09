@@ -40,7 +40,7 @@ let is_storable_cinv_vp _ _ = ()
 
 let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
-let active_is_slprop1 p c = ()
+let active_is_slprop2 p c = ()
 
 let iname_of c = c.i
 

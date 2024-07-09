@@ -3,14 +3,14 @@ open Pulse.Lib.Pervasives
 module CV = Pulse.Lib.ConditionVarWithCodes
 
 let free_code : CV.code = {
-  t = slprop1_base;
-  emp = down1 emp;
-  up = (fun x -> up1_is_slprop1 x; up1 x);
+  t = slprop2_base;
+  emp = down2 emp;
+  up = (fun x -> up2_is_slprop2 x; up2 x);
   laws = ()
 }
 
-let free_code_of (p:slprop1) : CV.codeable free_code p = {
-  c = down1 p;
+let free_code_of (p:slprop2) : CV.codeable free_code p = {
+  c = down2 p;
   laws = ()
 }
 
@@ -29,7 +29,7 @@ type cc (c:CV.code) : Type u#2 =
 | Recv : CV.cvar_t c -> c.t -> cc c
 
 let rec up_cc #c (t:cc c)
-: slprop2
+: slprop3
 = match t with
   | Small s -> c.up s
   | Star c1 c2 ->
@@ -76,7 +76,7 @@ ensures
 ```
 
 ```pulse
-fn wait_direct #c (cv:CV.cvar_t c) (#p:slprop2)
+fn wait_direct #c (cv:CV.cvar_t c) (#p:slprop3)
 requires CV.recv cv p
 ensures p
 {
@@ -85,7 +85,7 @@ ensures p
 ```
 
 ```pulse
-fn test_two (p:slprop1)
+fn test_two (p:slprop2)
 requires p
 ensures p
 {

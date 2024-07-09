@@ -22,7 +22,7 @@ open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
-type small_slprop = v:slprop { is_slprop1 v }
+type small_slprop = v:slprop { is_slprop2 v }
 
 let trade_elim_t (is:invlist) (hyp:slprop) (extra:small_slprop) (concl:slprop) : Type u#4 =
   unit -> stt_ghost unit (invlist_names is) (invlist_inv is ** extra ** hyp) (fun _ -> invlist_inv is ** concl)
@@ -35,15 +35,15 @@ let __trade (#is:invlist) (hyp concl:slprop) : small_slprop =
 
 let trade #is hyp concl : slprop = __trade #is hyp concl
 
-let trade_is_slprop1 (#is:invlist) (hyp concl:slprop)
-  : Lemma (is_slprop1 (trade #is hyp concl)) = ()
+let trade_is_slprop2 (#is:invlist) (hyp concl:slprop)
+  : Lemma (is_slprop2 (trade #is hyp concl)) = ()
 
 ```pulse
 ghost
 fn intro_trade
   (#is:invlist)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop1 extra })
+  (extra:slprop { is_slprop2 extra })
   (f_elim:unit -> (
     stt_ghost unit (invlist_names is)
     (invlist_inv is ** extra ** hyp)
@@ -64,7 +64,7 @@ ghost
 fn intro_trade_invs
   (#is:invlist)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop1 extra })
+  (extra:slprop { is_slprop2 extra })
   (f_elim:unit -> (
     stt_ghost unit emp_inames
       (invlist_v is ** extra ** hyp)
@@ -217,7 +217,7 @@ fn trade_compose
     elim_trade #os p _;
     elim_trade #os _ _;
   };
-  slprop1_star (trade #os p q) (trade #os q r);
+  slprop2_star (trade #os p q) (trade #os q r);
   intro_trade #os p r (trade #os p q ** trade #os q r) aux;
 }
 ```

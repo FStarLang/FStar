@@ -35,7 +35,7 @@ type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
 [@@pulse_unfold]
 let maybe b p = if b then p else emp
 [@@pulse_unfold]
-let lock_inv r p : v:slprop { is_slprop2 p ==> is_slprop2 v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+let lock_inv r p : v:slprop { is_storable p ==> is_storable v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 [@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
