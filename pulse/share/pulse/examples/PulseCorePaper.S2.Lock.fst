@@ -23,8 +23,11 @@ module Box = Pulse.Lib.Box
 
 noeq
 type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
+[@@pulse_unfold]
 let maybe b p = if b then p else emp
+[@@pulse_unfold]
 let lock_inv r p : v:slprop { is_slprop2 p ==> is_slprop2 v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+[@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
 ```pulse
@@ -34,12 +37,9 @@ returns l:lock
 ensures protects l p
 {
    let r = Box.alloc 0ul; 
-   fold (maybe true p); (* proof hint *)
-   fold lock_inv; (* proof hint *)
    let i = new_invariant (lock_inv r p);
    let l = {r;i};
    rewrite each r as l.r, i as l.i; (* proof hint *)
-   fold protects; (* proof hint  *)
    l
 }
 ```
@@ -51,19 +51,24 @@ ensures protects l p
 {
   unfold protects;
   with_invariants l.i
-    //requires inv l.i (lock_inv l.r p) ** p  //we be nice to add this optionally
-    returns _ : unit //would be nice to avoid this
+    returns _ : unit
     ensures lock_inv l.r p
     opens [l.i]
   { 
-    unfold lock_inv; drop_ (maybe _ _);
+    drop_ (maybe _ _);
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
-    fold (maybe true p); fold lock_inv;
-  }; //$\label{line:release-block-end}$
+  };
   fold protects;
 }
 ```
-
+module B = Pulse.Lib.Box
+assume
+val cas_box_alt (r:B.box U32.t) (u v:U32.t) (#i:erased U32.t)
+  : stt_atomic bool #Observable emp_inames 
+    (B.pts_to r i)
+    (fun b ->
+      if b then (B.pts_to r v ** pure (reveal i == u)) 
+           else (B.pts_to r i))
 
 ```pulse
 fn rec acquire #p (l:lock)
@@ -72,22 +77,13 @@ ensures protects l p ** p
 {
   unfold protects;
   let b = with_invariants l.i
-    returns b:bool //can we avoid annotating this?
-    ensures lock_inv l.r p ** maybe b p //and this?
-  { unfold lock_inv;
-    let b = cas_box l.r 0ul 1ul;
-    if b {
-     elim_cond_true _ _ _;  //can we avoid this?
-     unfold (maybe true p); //how many of this folds can we avoid
-     fold (maybe false p);
-     fold (lock_inv l.r p);
-     fold (maybe true p);
-     true
-    } else { 
-      elim_cond_false _ _ _; //can we avoid this?
-      fold (lock_inv l.r p);  fold (maybe false p);
-      false }};
+    returns b:bool 
+    ensures lock_inv l.r p ** maybe b p
+  {
+    let b = cas_box_alt l.r 0ul 1ul;
+    if b { true } else { false }
+  };
   fold protects;
-  if b { unfold (maybe true p)  }
-  else { unfold (maybe false p); acquire l }}
+  if b { () } else { acquire l }
+}
 ```
