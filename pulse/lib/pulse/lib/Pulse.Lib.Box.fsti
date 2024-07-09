@@ -33,9 +33,9 @@ val pts_to (#a:Type0)
            (#[T.exact (`1.0R)] p:perm)
            (v:a) : slprop
 
-val pts_to_is_slprop1 (#a:Type) (r:box a) (p:perm) (x:a)
-  : Lemma (is_slprop1 (pts_to r #p x))
-          [SMTPat (is_slprop1 (pts_to r #p x))]
+val pts_to_is_slprop2 (#a:Type) (r:box a) (p:perm) (x:a)
+  : Lemma (is_slprop2 (pts_to r #p x))
+          [SMTPat (is_slprop2 (pts_to r #p x))]
 
 val alloc (#a:Type0) (x:a)
   : stt (box a) emp (fun b -> pts_to b x)

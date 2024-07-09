@@ -48,9 +48,9 @@ let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : slprop =
   V.pts_to ht.contents pht.repr.seq **
   pure (related ht pht /\ V.is_full_vec ht.contents)
 
-val models_is_slprop1 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
-: Lemma (is_slprop1 (models ht pht))
-        [SMTPat (is_slprop1 (models ht pht))]
+val models_is_slprop2 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+: Lemma (is_slprop2 (models ht pht))
+        [SMTPat (is_slprop2 (models ht pht))]
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 

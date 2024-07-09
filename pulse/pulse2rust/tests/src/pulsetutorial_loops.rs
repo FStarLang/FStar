@@ -11,7 +11,7 @@ pub fn count_down(x: &mut i64, __v: ()) -> () {
         if n == 0 { keep_going = false } else { *x = n - 1 };
     }
 }
-pub fn count_down2(x: &mut i64, __v: ()) -> () {
+pub fn count_down3(x: &mut i64, __v: ()) -> () {
     while {
         let n = *x;
         if n == 0 {

@@ -27,13 +27,13 @@ val trade :
   (concl:slprop) ->
   slprop
 
-val trade_is_slprop1 (#is:invlist) (hyp concl:slprop)
-  : Lemma (is_slprop1 (trade #is hyp concl))
+val trade_is_slprop2 (#is:invlist) (hyp concl:slprop)
+  : Lemma (is_slprop2 (trade #is hyp concl))
 
 val intro_trade
   (#is:invlist)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop1 extra })
+  (extra:slprop { is_slprop2 extra })
   (f_elim:unit -> (
     stt_ghost unit (invlist_names is)
     (invlist_inv is ** extra ** hyp)
@@ -44,7 +44,7 @@ val intro_trade
 val intro_trade_invs
   (#is:invlist)
   (hyp concl:slprop)
-  (extra:slprop { is_slprop1 extra })
+  (extra:slprop { is_slprop2 extra })
   (f_elim:unit -> (
     stt_ghost unit emp_inames
       (invlist_v is ** extra ** hyp)

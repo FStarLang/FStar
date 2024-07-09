@@ -45,8 +45,8 @@ ensures pts_to x 0
 }
 ```
 
-```pulse //count_down2$
-fn count_down2 (x:ref nat)
+```pulse //count_down3$
+fn count_down3 (x:ref nat)
 requires pts_to x 'v
 ensures pts_to x 0
 {

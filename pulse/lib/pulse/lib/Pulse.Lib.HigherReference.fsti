@@ -24,9 +24,9 @@ val ref ([@@@unused]a:Type u#1) : Type u#0
 
 val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
-val pts_to_is_slprop1 (#a:Type) (r:ref a) (p:perm) (n:a)
-  : Lemma (is_slprop1 (pts_to r #p n))
-          [SMTPat (is_slprop1 (pts_to r #p n))]
+val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (n:a)
+  : Lemma (is_slprop2 (pts_to r #p n))
+          [SMTPat (is_slprop2 (pts_to r #p n))]
 
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)

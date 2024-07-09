@@ -24,7 +24,7 @@ module Box = Pulse.Lib.Box
 noeq
 type lock = { r:Pulse.Lib.Box.box U32.t; i:iname }
 let maybe b p = if b then p else emp
-let lock_inv r p : v:slprop { is_slprop2 p ==> is_slprop2 v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
+let lock_inv r p : v:slprop { is_slprop3 p ==> is_slprop3 v } = exists* v. Box.pts_to r v ** (maybe (v = 0ul) p)
 let protects l p = inv l.i (lock_inv l.r p)
 
 ```pulse

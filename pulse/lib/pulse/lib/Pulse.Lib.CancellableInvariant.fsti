@@ -31,9 +31,9 @@ val is_storable_cinv_vp (c:cinv) (v:slprop)
 
 val active (c:cinv) (p:perm) : slprop
 
-val active_is_slprop1 (c:cinv) (p:perm)
-  : Lemma (is_slprop1 (active c p))
-          [SMTPat (is_slprop1 (active c p))]
+val active_is_slprop2 (c:cinv) (p:perm)
+  : Lemma (is_slprop2 (active c p))
+          [SMTPat (is_slprop2 (active c p))]
 
 val iname_of (c:cinv) : GTot iname
 

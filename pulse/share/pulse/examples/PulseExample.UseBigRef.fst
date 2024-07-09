@@ -21,8 +21,8 @@ open Pulse.Lib.BigReference
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
 
-let thunk (p q : slprop1_base) = unit -> stt unit (up1 p) (fun _ -> up1 q)
-let closure = (p:slprop1_base & q:slprop1_base & thunk p q)
+let thunk (p q : slprop2_base) = unit -> stt unit (up2 p) (fun _ -> up2 q)
+let closure = (p:slprop2_base & q:slprop2_base & thunk p q)
 let closure_list = B.ref (list closure)
 
 ```pulse
@@ -36,15 +36,15 @@ ensures B.pts_to r []
 ```
 
 let mk_closure
-    (#p #q:slprop1)
+    (#p #q:slprop2)
     (f: unit -> stt unit p (fun _ -> q))
 : closure
-= (| down1 p, down1 q, f |)
+= (| down2 p, down2 q, f |)
 
 
 ```pulse
 fn push (l:closure_list)
-        (#p #q:slprop1)
+        (#p #q:slprop2)
         (f: unit -> stt unit p (fun _ -> q))
 requires B.pts_to l 'xs
 ensures B.pts_to l (mk_closure f :: 'xs)
@@ -55,12 +55,12 @@ ensures B.pts_to l (mk_closure f :: 'xs)
 }
 ```
 
-let pre_of (c:closure) : slprop1 =
+let pre_of (c:closure) : slprop2 =
   let (| p, _, _ |) = c in
-  up1_is_slprop1 p;
-  up1 p
+  up2_is_slprop2 p;
+  up2 p
 
-let rec inv (l:list closure) : v:slprop { is_slprop1 v } =
+let rec inv (l:list closure) : v:slprop { is_slprop2 v } =
   match l with
   | [] -> emp
   | hd :: tl -> pre_of hd ** inv tl
@@ -111,7 +111,7 @@ ensures pre_of c ** inv tl
 }
 ```
 
-let lock_inv (r:closure_list) : v:slprop { is_slprop2 v } =
+let lock_inv (r:closure_list) : v:slprop { is_slprop3 v } =
   exists* (l:list closure). 
     B.pts_to r l **
     inv l
@@ -141,7 +141,7 @@ ensures L.lock_alive t.lock (lock_inv t.task_list)
 
 let post_of (c:closure) =
   let (| _, q, _ |) = c in
-  up1 q
+  up2 q
 
 let run_thunk_of_closure (c:closure) 
 : unit -> stt unit (pre_of c) (fun _ -> post_of c)

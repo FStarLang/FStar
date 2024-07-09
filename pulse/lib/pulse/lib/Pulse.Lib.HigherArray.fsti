@@ -34,9 +34,9 @@ val is_full_array (#a:Type) (x:array a) : prop
 
 val pts_to (#a:Type) (x:array a) (#[exact (`1.0R)] p:perm) (s: Seq.seq a) : slprop
 
-val pts_to_is_slprop1 (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop1 (pts_to x #p s))
-          [SMTPat (is_slprop1 (pts_to x #p s))]
+val pts_to_is_slprop2 (#a:Type) (x:array a) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop2 (pts_to x #p s))
+          [SMTPat (is_slprop2 (pts_to x #p s))]
 
 val pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:Seq.seq t)
     : stt_ghost unit emp_inames
@@ -118,9 +118,9 @@ val pts_to_range
   (#[exact (`1.0R)] p:perm)
   (s : Seq.seq a) : slprop
 
-val pts_to_range_is_slprop1 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop1 (pts_to_range x i j #p s))
-          [SMTPat (is_slprop1 (pts_to_range x i j #p s))]
+val pts_to_range_is_slprop2 (#a:Type) (x:array a) (i j : nat) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop2 (pts_to_range x i j #p s))
+          [SMTPat (is_slprop2 (pts_to_range x i j #p s))]
 
 val pts_to_range_prop
   (#elt: Type) (a: array elt) (#i #j: nat)

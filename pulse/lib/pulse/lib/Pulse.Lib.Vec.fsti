@@ -43,9 +43,9 @@ val pts_to
   (s:Seq.seq a)
 : slprop
 
-val pts_to_is_slprop1 (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
-  : Lemma (is_slprop1 (pts_to v #p s))
-          [SMTPat (is_slprop1 (pts_to v #p s))]
+val pts_to_is_slprop2 (#a:Type0) (v:vec a) (p:perm) (s:Seq.seq a)
+  : Lemma (is_slprop2 (pts_to v #p s))
+          [SMTPat (is_slprop2 (pts_to v #p s))]
 
 val pts_to_len (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
   : stt_ghost unit emp_inames

@@ -11,7 +11,7 @@ val pts_to
     (#p:pcm a)
     (r:gref p)
     (v:a)
-: slprop1
+: slprop2
 
 val alloc
     (#a:Type u#0)
