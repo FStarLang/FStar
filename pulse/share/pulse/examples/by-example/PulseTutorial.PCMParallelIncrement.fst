@@ -143,6 +143,28 @@ ensures
 }
 ```
 
+```pulse
+ghost
+fn share_one_tank_units (#n:nat) (g:tank n) (#u:nat { u > 0 })
+requires
+  owns_tank_units g u
+returns k:erased nat
+ensures
+  owns_tank_units g (u - 1) **
+  owns_tank_units g 1 **
+  pure (k == u - 1)
+{
+  open FStar.PCM;
+  unfold owns_tank_units;
+  rewrite (GPR.pts_to g u)
+       as (GPR.pts_to g (op (pcm_of n) (u - 1) 1));
+  GPR.share g (u-1) 1;  //leaving the arguments as _ _ causes a crash
+  fold (owns_tank_units g (u - 1));
+  fold (owns_tank_units g 1);
+  (hide #nat (u - 1))
+}
+```
+
 // ```pulse
 // ghost
 // fn share_owns_tank_units_unit (#n:nat) (g:tank n) (#v:nat)
@@ -182,12 +204,33 @@ let contributions
     (initial:nat)
     (gs:ghost_state n)
     (r:ref nat)
-: slprop3
+: storable
 = exists* (v g t:nat).
     pts_to r v **    
     owns_tank_units gs.given g **
     owns_tank_units gs.to_give t **
     pure (v == initial + g /\ g + t == n)
+
+```pulse
+ghost
+fn fold_contribs 
+    (n:nat)
+    (initial:nat)
+    (gs:ghost_state n)
+    (r:ref nat)
+    (v g t:nat)
+requires
+    pts_to r v **    
+    owns_tank_units gs.given g **
+    owns_tank_units gs.to_give t **
+    pure (v == initial + g /\ g + t == n)
+ensures
+    contributions n initial gs r
+{
+  fold (contributions n initial gs r)
+}
+```
+
 
 // can_give gs k: Knowledge that the given tank has at least `k` units
 // remaining to be filled
@@ -274,6 +317,29 @@ ensures
 // The core function to increment a reference
 ```pulse
 atomic
+fn incr_core
+    (#n:erased nat)
+    (#initial:erased nat)
+    (gs:ghost_state n)
+    (r:ref nat)
+requires
+    can_give gs 1 **     //we have permission to add one to the reference
+    contributions n initial gs r
+ensures
+    has_given gs 1 **    //we have contributed 1 unit to the reference
+    contributions n initial gs r
+{
+   unfold contributions;
+   unfold can_give;  gather_tank_units gs.given;
+   atomic_incr r;
+   let remaining = share_one_tank_units gs.to_give; fold (has_given gs 1);
+   fold (contributions n initial gs r)
+}
+```
+
+// The core function to increment a reference
+```pulse
+atomic
 fn increment 
     (#n:erased nat)
     (#initial:erased nat)
@@ -296,21 +362,8 @@ opens [CI.iname_of i] //we used the invariant
   with_invariants (CI.iname_of i)
   {
     CI.unpack_cinv_vp i;
-    unfold contributions;
-    unfold can_give;
-    //this moves one unit of ownership of the given tank
-    //from the caller into the invariant; while gaining
-    //information that the to_give tank cannot be empty
-    gather_tank_units gs.given;
-    atomic_incr r; //the actual increment
-    with t. assert (owns_tank_units gs.to_give t);
-    //We take out ownership of one unit of the to_give tank
-    //to return to the caller as `has_given gs 1`
-    share_tank_units gs.to_give #(t - 1) #1;
-    fold (has_given gs 1);
-    //rebuild the invariant
-    fold (contributions n initial gs r);
-    CI.pack_cinv_vp #(contributions n initial gs r) i;
+    incr_core gs r;
+    CI.pack_cinv_vp i;
   }
 }
 ```
@@ -440,13 +493,8 @@ ensures pts_to r ('i + n)
 {
   let gs = init_ghost_state 'i n r;
   let ci = CI.new_cancellable_invariant (contributions n 'i gs r);
-  rewrite (can_give #n gs n) as (can_give #(reveal (hide n)) gs n);
   incr_n_aux #n r n ci;
   CI.cancel ci;
-  rewrite (contributions (reveal (hide n)) 'i gs r) as
-          (contributions n 'i gs r);
-  rewrite (has_given #(reveal (hide n)) gs n) as
-          (has_given #n gs n);
-  elim_ghost_state 'i _ r gs;
+  elim_ghost_state _ _ _ gs; //elim_ghost_state 'i _ r gs;
 }
 ```

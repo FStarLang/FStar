@@ -314,6 +314,11 @@ let comp_observability (c:comp_st {C_STAtomic? c}) =
   let C_STAtomic _ obs _ = c in
   obs
 
+let ctag_of_br  (#g #pre #post_hint #sc_u #sc_ty #sc:_)
+                (l:check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+: ctag
+= let (|_, c, _|) = l in ctag_of_comp_st c
+
 let weaken_branch_observability
       (obs:observability)
       (#g #pre:_) (#post_hint:post_hint_for_env g) 
@@ -322,21 +327,21 @@ let weaken_branch_observability
           C_STAtomic? c /\
           comp_pre c == pre /\
           comp_post_matches_hint c (Some post_hint) /\
-          (~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot)) /\
           comp_observability c == obs
         })
-      (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+      (checked_br : check_branches_aux_t #g pre post_hint sc_u sc_ty sc { ctag_of_br checked_br == STT_Atomic})
 : T.Tac (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
 = let (| br, c0, typing |) = checked_br in
-  let C_STAtomic i obs' st = c0 in
-  if not (sub_observability obs' obs)
-  then T.fail "Cannot weaken observability"
-  else (
-     let TBR g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
-     let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
-     let d = TBR g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
-    (| br, d |)
-  )
+  match c0 with
+  | C_STAtomic i obs' st ->
+    if not (sub_observability obs' obs)
+    then T.fail "Cannot weaken observability"
+    else (
+      let TBR g sc_u sc_ty sc c p e bs p1 p2 p3 hyp st_typing = typing in
+      let st_typing = T_Lift _ _ _ _ st_typing (Lift_Observability _ c obs) in
+      let d = TBR g sc_u sc_ty sc _ p e bs p1 p2 p3 hyp st_typing in
+      (| br, d |)
+    )
 
 let rec max_obs 
     (checked_brs : list comp_st)
@@ -352,9 +357,10 @@ let rec max_obs
     | C_STAtomic _ obs' _ ->
       max_obs rest (join_obs obs obs')
 
-let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
-                  (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
-                  (_:squash (~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot)))
+
+let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
+                  (ct:ctag)
+                  (checked_brs : list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
 : T.Tac (c:comp_st { comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint) } &
          list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c))
 = match checked_brs with
@@ -366,7 +372,7 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
     | C_STGhost _ _ ->
       let rest = 
         List.Tot.map 
-          #(check_branches_aux_t #g pre post_hint sc_u sc_ty sc)
+          #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr==ct})
           #(br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c)
           (fun (| br, c', d |) -> (| br, d |))
           rest
@@ -378,11 +384,75 @@ let join_branches (#g #pre #post_hint #sc_u #sc_ty #sc:_)
       let checked_brs = T.map (weaken_branch_observability max_obs c) checked_brs in
       (| c, checked_brs |)
 
+let rec least_tag (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
+              (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
+: ctag
+= match checked_brs with
+  | [] -> STT_Ghost
+  | checked_br::rest ->
+    let (| _, c, _ |) = checked_br in
+    match c with
+    | C_ST _ -> STT
+    | C_STGhost _ _ -> least_tag rest
+    | C_STAtomic i _ _ -> STT_Atomic
+
+let weaken_branch_tag_to 
+      (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
+      (ct:ctag)
+      (br :check_branches_aux_t #g pre post_hint sc_u sc_ty sc  { EffectAnnotAtomicOrGhost? post_hint.effect_annot })
+: T.Tac (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc { ctag_of_br cbr == ct })
+= let (| pe, c, d|) = br in
+  if ctag_of_comp_st c = ct then br
+  else
+    let r = (snd pe).range in
+    match ct, c with
+    | STT_Ghost, C_STAtomic _ _ _
+    | STT_Ghost, C_ST _ -> T.fail "Unexpected least effect"
+
+    | STT_Atomic, C_ST _ ->
+      fail g (Some r)  "Cannot lift a computation from ST to atomic"
+
+    | STT, _ ->
+      fail g (Some r)  "Cannot lift a branch to ST"
+
+    | STT_Atomic, C_STGhost _ _ -> (
+      let TBR g sc_u sc_ty sc c p e bs pf1 pf2 pf3 h d = d in
+      let d = Pulse.Typing.Combinators.lift_ghost_atomic d in
+      let d = TBR g sc_u sc_ty sc _ p e bs pf1 pf2 pf3 h d in
+      (| pe, _, d |)
+    )
+
+
+let weaken_branch_tags
+      (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
+      (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc) {EffectAnnotAtomicOrGhost? post_hint.effect_annot})
+: T.Tac (ct:ctag & list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
+= let ct = least_tag checked_brs in
+  let brs = T.map (weaken_branch_tag_to ct) checked_brs in
+  (| ct, brs |)
+
+let maybe_weaken_branch_tags
+      (#g #pre #post_hint #sc_u #sc_ty #sc:_) 
+      (checked_brs : list (check_branches_aux_t #g pre post_hint sc_u sc_ty sc))
+: T.Tac (ct:ctag & list (cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}))
+= match post_hint.effect_annot with
+  | EffectAnnotAtomicOrGhost _ -> 
+    let ct = least_tag checked_brs in
+    let brs = T.map (weaken_branch_tag_to ct) checked_brs in
+    (| ct, brs |)
+  | _ ->
+    match checked_brs with
+    | [] -> (| STT_Ghost, [] |)
+    | hd::tl ->
+      let ct = ctag_of_br hd in
+      let checked_brs = T.map #_ #(cbr:check_branches_aux_t #g pre post_hint sc_u sc_ty sc {ctag_of_br cbr == ct}) (fun x -> x) checked_brs in
+      (| ct, checked_brs |)
+
 let check_branches
         (g:env)
         (pre:term)
         (pre_typing: tot_typing g pre tm_slprop)
-        (post_hint:post_hint_for_env g { ~ (EffectAnnotAtomicOrGhost? post_hint.effect_annot) })
+        (post_hint:post_hint_for_env g)
         (check:check_t)
         (sc_u : universe)
         (sc_ty : typ)
@@ -393,7 +463,8 @@ let check_branches
          & c:comp_st{comp_pre c == pre /\ comp_post_matches_hint c (Some post_hint)}
          & brs_typing g sc_u sc_ty sc brs c)
 = let checked_brs = check_branches_aux g pre pre_typing post_hint check sc_u sc_ty sc brs0 bnds in
-  let (| c0, checked_brs |) = join_branches checked_brs () in
+  let (| ct, checked_brs |) = maybe_weaken_branch_tags checked_brs in
+  let (| c0, checked_brs |) = join_branches ct checked_brs in
   let brs = List.Tot.map dfst checked_brs in
   let d : brs_typing g sc_u sc_ty sc brs c0 =
     let rec aux (brs : list (br:branch & br_typing g sc_u sc_ty sc (fst br) (snd br) c0))
@@ -420,9 +491,6 @@ let check
   =
 
   let g = Pulse.Typing.Env.push_context_no_range g "check_match" in
-
-  if EffectAnnotAtomicOrGhost? post_hint.effect_annot
-  then fail g None "Cannot check match with (atomic_or_ghost) post effect annotation";
 
   let sc_range = Pulse.RuntimeUtils.range_of_term sc in // save range, it gets lost otherwise
   let orig_brs = brs in

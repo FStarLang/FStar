@@ -27,7 +27,7 @@ module CM = FStar.Algebra.CommMonoid
 (**** Basic memory properties *)
 
 (** Abstract type of memories *)
-val mem  : Type u#(a + 3)
+val mem  : Type u#(a + 4)
 
 val is_ghost_action (m0 m1:mem u#a) : prop
 let maybe_ghost_action (b:bool) (m0 m1:mem u#a) = b ==> is_ghost_action m0 m1
@@ -48,10 +48,10 @@ val ghost_action_preorder (_:unit)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
+val slprop : Type u#(a + 4) //invariant predicates, i --> p, live in u#a+4
 
 [@@erasable]
-val slprop3_base : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val slprop3_base : Type u#(a + 3) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
 val cm_slprop3 : CM.cm slprop3_base
 val down3 (s:slprop u#a) : slprop3_base u#a
 val up3 (s:slprop3_base u#a) : slprop u#a
@@ -61,7 +61,7 @@ val up3_is_slprop3 (b:slprop3_base) : Lemma (is_slprop3 (up3 b))
 //big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
-val slprop2_base : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
+val slprop2_base : Type u#(a + 2) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
 //e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
 val cm_slprop2 : CM.cm slprop2_base
 val down2 (s:slprop u#a) : slprop2_base u#a
@@ -236,7 +236,7 @@ let _pst_action_except
     (except:inames)
     (expects:slprop u#um)
     (provides: a -> slprop u#um)
- : Type u#(max a (um + 3)) 
+ : Type u#(max a (um + 4)) 
  = frame:slprop -> _PST a maybe_ghost except expects provides frame
 
 let pst_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a ->  slprop u#um) =
@@ -359,11 +359,11 @@ val lift_ghost
   : pst_ghost_action_except a opened_invariants p q
 
 (* Concrete references to "small" types *)
-val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop2 u#a
+val pts_to (#a:Type u#(a+1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop2 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -375,7 +375,7 @@ val split_action
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -385,12 +385,12 @@ val gather_action
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#a) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
+val alloc_action (#a:Type u#(a + 1)) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> pts_to r x)
 
-val select_refine (#a:Type u#a) (#p:pcm a)
+val select_refine (#a:Type u#(a + 1)) (#p:pcm a)
                   (e:inames)
                   (r:ref a p)
                   (x:erased a)
@@ -401,14 +401,14 @@ val select_refine (#a:Type u#a) (#p:pcm a)
     (pts_to r x)
     (fun v -> pts_to r (f v))
 
-val upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
+val upd_gen (#a:Type u#(a + 1)) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
 : pst_action_except unit e
     (pts_to r x)
     (fun _ -> pts_to r y)
 
 val pts_to_not_null_action 
-      (#a:Type u#a) (#pcm:pcm a)
+      (#a:Type u#(a + 1)) (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
@@ -420,11 +420,11 @@ val pts_to_not_null_action
 [@@erasable]
 val core_ghost_ref : Type0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2 u#a
+val ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2 u#a
 
 val ghost_alloc
     (#o:_)
-    (#a:Type u#a)
+    (#a:Type u#(a + 1))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -435,7 +435,7 @@ val ghost_alloc
 
 val ghost_read
     #o
-    (#a:Type)
+    (#a:Type u#(a + 1))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -483,11 +483,11 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 (* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop3 u#a
+val big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop3 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val big_split_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -499,7 +499,7 @@ val big_split_action
 
 (** Combining separate permissions into a single composite permission *)
 val big_gather_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -510,7 +510,7 @@ val big_gather_action
     (fun _ -> big_pts_to r (op pcm v0 v1))
 
 val big_alloc_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -519,7 +519,7 @@ val big_alloc_action
     (fun r -> big_pts_to r x)
 
 val big_select_refine
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -532,7 +532,7 @@ val big_select_refine
     (fun v -> big_pts_to r (f v))
 
 val big_upd_gen
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -543,7 +543,7 @@ val big_upd_gen
     (fun _ -> big_pts_to r y)
 
 val big_pts_to_not_null_action 
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -552,11 +552,11 @@ val big_pts_to_not_null_action
     (big_pts_to r v)
     (fun _ -> big_pts_to r v)
 
-val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3 u#a
+val big_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3 u#a
 
 val big_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -567,7 +567,7 @@ val big_ghost_alloc
 
 val big_ghost_read
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -582,7 +582,7 @@ val big_ghost_read
 
 val big_ghost_write
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -593,7 +593,7 @@ val big_ghost_write
 
 val big_ghost_share
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -604,7 +604,7 @@ val big_ghost_share
 
 val big_ghost_gather
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -615,11 +615,11 @@ val big_ghost_gather
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
 
 (* References for objects in universes a+2, "non-boxable" pts_to *)
-val nb_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
+val nb_pts_to (#a:Type u#(a + 3)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val nb_split_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -631,7 +631,7 @@ val nb_split_action
 
 (** Combining separate permissions into a single composite permission *)
 val nb_gather_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -642,7 +642,7 @@ val nb_gather_action
     (fun _ -> nb_pts_to r (op pcm v0 v1))
 
 val nb_alloc_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -651,7 +651,7 @@ val nb_alloc_action
     (fun r -> nb_pts_to r x)
 
 val nb_select_refine
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -664,7 +664,7 @@ val nb_select_refine
     (fun v -> nb_pts_to r (f v))
 
 val nb_upd_gen
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -675,7 +675,7 @@ val nb_upd_gen
     (fun _ -> nb_pts_to r y)
 
 val nb_pts_to_not_null_action 
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -684,11 +684,11 @@ val nb_pts_to_not_null_action
     (nb_pts_to r v)
     (fun _ -> nb_pts_to r v)
 
-val nb_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val nb_ghost_pts_to (#a:Type u#(a + 3)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
 val nb_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -699,7 +699,7 @@ val nb_ghost_alloc
 
 val nb_ghost_read
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -714,7 +714,7 @@ val nb_ghost_read
 
 val nb_ghost_write
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -725,7 +725,7 @@ val nb_ghost_write
 
 val nb_ghost_share
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -736,7 +736,7 @@ val nb_ghost_share
 
 val nb_ghost_gather
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
