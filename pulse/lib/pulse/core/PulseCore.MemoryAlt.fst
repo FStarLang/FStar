@@ -28,10 +28,11 @@ module B = PulseCore.BaseHeapSig
 /// final interface for Pulse's PCM-based memory model.
 
 (**** Basic memory properties *)
-let small_sig : H.heap_sig u#(a + 1) = E.extend (B.base_heap u#a)
-let sig : H.heap_sig u#(a + 2) = E.extend small_sig
+let smaller_sig : H.heap_sig u#(a + 1) = E.extend (B.base_heap u#a)
+let small_sig : H.heap_sig u#(a + 2) = E.extend smaller_sig
+let sig : H.heap_sig u#(a + 3) = E.extend small_sig
 (** Abstract type of memories *)
-let mem  : Type u#(a + 3) = sig.mem
+let mem  : Type u#(a + 4) = sig.mem
 
 let is_ghost_action (m0 m1:mem u#a) : prop = sig.is_ghost_action m0 m1
 
@@ -42,10 +43,10 @@ let ghost_action_preorder (_:unit)
 (**** Separation logic *)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
-let slprop : Type u#(a + 3) = erased sig.slprop
+let slprop : Type u#(a + 4) = erased sig.slprop
 let reveal_slprop (p:slprop) : sig.slprop = sig.non_info_slprop p
 
-let slprop2_base : Type u#(a + 2) = erased sig.bprop
+let slprop2_base : Type u#(a + 3) = erased sig.bprop
 let cm_slprop2 : CM.cm slprop2_base = H.cm_e_slprop small_sig
 let down2 (s:slprop u#a) : slprop2_base u#a = sig.down s
 let up2 (s:slprop2_base u#a) : slprop u#a = reveal_slprop <| sig.up s
@@ -55,8 +56,8 @@ let up2_is_slprop2_alt (b:slprop2_base)
 = sig.up_down b
 let up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b)) = ()
 
-let slprop1_base : Type u#(a + 1) = erased small_sig.bprop
-let cm_slprop1 : CM.cm slprop1_base = H.cm_e_slprop B.base_heap
+let slprop1_base : Type u#(a + 2) = erased small_sig.bprop
+let cm_slprop1 : CM.cm slprop1_base = H.cm_e_slprop smaller_sig
 let down1 (s:slprop u#a) : slprop1_base u#a = small_sig.down (sig.down s)
 let up1 (s:slprop1_base u#a) : slprop u#a = reveal_slprop <| sig.up (small_sig.up s)
 
@@ -114,16 +115,16 @@ let core_ref_is_null (r:core_ref)
 
 let emp_is_slprop1 () 
 : Lemma (is_slprop1 sig.emp)
-= E.up_emp B.base_heap;
+= E.up_emp smaller_sig;
   E.up_emp small_sig;
-  small_sig.up_down B.base_heap.emp;
+  small_sig.up_down smaller_sig.emp;
   sig.up_down small_sig.emp
 
 let pure_is_slprop1 (p:prop) 
 : Lemma (is_slprop1 (sig.pure p))
-= E.up_pure B.base_heap p;
+= E.up_pure smaller_sig p;
   E.up_pure small_sig p;
-  small_sig.up_down (B.base_heap.pure p);
+  small_sig.up_down (smaller_sig.pure p);
   sig.up_down (small_sig.pure p)
 
 let emp
@@ -198,9 +199,9 @@ let slprop1_star_congruence (p1 p2:slprop1 u#a)
     sig.up (small_sig.up (small_sig.down (sig.down (p1 `star` p2))));
   (==) { E.down_star p1 p2 }
     sig.up (small_sig.up (small_sig.down (down2 p1 `small_sig.star` down2 p2)));
-  (==) { E.down_star #B.base_heap (down2 p1) (down2 p2) }
-    sig.up (small_sig.up (down1 p1 `B.base_heap.star` down1 p2));
-  (==) { E.up_star #B.base_heap (down1 p1) (down1 p2) }
+  (==) { E.down_star #smaller_sig (down2 p1) (down2 p2) }
+    sig.up (small_sig.up (down1 p1 `smaller_sig.star` down1 p2));
+  (==) { E.up_star #smaller_sig (down1 p1) (down1 p2) }
     sig.up (small_sig.up (down1 p1) `small_sig.star` (small_sig.up (down1 p2)));
   (==) { E.up_star #small_sig (small_sig.up (down1 p1)) (small_sig.up (down1 p2)) }
     sig.up (small_sig.up (down1 p1)) `sig.star` sig.up (small_sig.up (down1 p2));
@@ -290,25 +291,25 @@ let down2_star (p q:slprop)
 
 let up1_emp ()
 : Lemma (up1 cm_slprop1.unit == emp)
-= E.up_emp B.base_heap;
+= E.up_emp smaller_sig;
   E.up_emp small_sig
 let down1_emp ()
 : Lemma (down1 emp == cm_slprop1.unit)
-= E.down_emp B.base_heap;
+= E.down_emp smaller_sig;
   E.down_emp small_sig
 let up1_star (p q:slprop1_base)
 : Lemma (up1 (p `cm_slprop1.mult` q) == up1 p `star` up1 q)
 = calc (==) {
     reveal_slprop <| up1 (p `cm_slprop1.mult` q);
   == {}
-    sig.up (small_sig.up (p `B.base_heap.star` q));
-  == { E.up_star #B.base_heap p q }
+    sig.up (small_sig.up (p `smaller_sig.star` q));
+  == { E.up_star #smaller_sig p q }
     sig.up (small_sig.up p `small_sig.star` small_sig.up q);
   == { E.up_star #small_sig (small_sig.up p) (small_sig.up q) }
     reveal_slprop <| up1 p `star` up1 q;
   }
 
-let reveal_slprop1 (b:slprop1_base) : B.base_heap.slprop = B.base_heap.non_info_slprop b
+let reveal_slprop1 (b:slprop1_base) : smaller_sig.slprop = smaller_sig.non_info_slprop b
 let down1_star (p q:slprop)
 : Lemma (down1 (p `star` q) == down1 p `cm_slprop1.mult` down1 q)
 = calc (==) {
@@ -317,8 +318,8 @@ let down1_star (p q:slprop)
     small_sig.down (sig.down (p `star` q));
   == { E.down_star #small_sig p q }
     small_sig.down ((down2 p) `small_sig.star` (down2 q));
-  == { E.down_star #B.base_heap (down2 p) (down2 q) }
-    reveal_slprop1 <| down1 p `B.base_heap.star` down1 q;
+  == { E.down_star #smaller_sig (down2 p) (down2 q) }
+    reveal_slprop1 <| down1 p `smaller_sig.star` down1 q;
   }
 
 (**** Memory invariants *)
@@ -638,8 +639,8 @@ let lift_ghost
     (coerce_action_back _ _ () f)
 
 (* Concrete references to "small" types *)
-let pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
- = up1 (B.pts_to #a #pcm r v)
+let pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
+ = up1 (E.pts_to #B.base_heap #a #pcm r v)
 
 let wrap (#h:H.heap_sig u#a) (p:erased h.slprop) : h.slprop = h.non_info_slprop p
 
@@ -659,7 +660,7 @@ let wrap (#h:H.heap_sig u#a) (p:erased h.slprop) : h.slprop = h.non_info_slprop 
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 let split_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -668,16 +669,16 @@ let split_action
 : pst_ghost_action_except unit e 
      (pts_to r (v0 `op pcm` v1))
      (fun _ -> pts_to r v0 `star` pts_to r v1)
-= up1_star (B.pts_to #a #pcm r v0) (B.pts_to #a #pcm r v1);
+= up1_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v0 v1
+  lift_action_alt #smaller_sig <|
+  E.split_action #B.base_heap #a #pcm (E.lower_inames #(smaller_sig) (E.lower_inames #(small_sig u#a) (down_inames e))) r v0 v1
   
 
 (** Combining separate permissions into a single composite permission*)
 let gather_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -686,23 +687,27 @@ let gather_action
 : pst_ghost_action_except (squash (composable pcm v0 v1)) e
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
-= up1_star (B.pts_to #a #pcm r v0) (B.pts_to #a #pcm r v1);
+= up1_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (pts_to r v0 `star` pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v0 v1
+  lift_action_alt #smaller_sig <|
+  E.gather_action #B.base_heap #a #pcm
+      (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+      r v0 v1
 
-let alloc_action (#a:Type u#a) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
+let alloc_action (#a:Type u#(a+1)) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> pts_to r x)
 = up1_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (B.pts_to #a #pcm r x)) () <|
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (E.pts_to #B.base_heap #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.extend #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm x
+  lift_action_alt #smaller_sig <|
+  E.alloc_action #B.base_heap #a #pcm
+          (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+          x
 
-let select_refine (#a:Type u#a) (#p:pcm a)
+let select_refine (#a:Type u#(a+1)) (#p:pcm a)
                   (e:inames)
                   (r:ref a p)
                   (x:erased a)
@@ -712,23 +717,28 @@ let select_refine (#a:Type u#a) (#p:pcm a)
 : pst_action_except (v:a{compatible p x v /\ p.refine v}) e
     (pts_to r x)
     (fun v -> pts_to r (f v))
-= coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_ #(reveal_slprop (pts_to r x)) #(fun v -> up1 (B.pts_to #a #p r (f v))) #(pts_to r x) #(fun v -> pts_to r (f v)) () <|
+= coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_ #(reveal_slprop (pts_to r x)) 
+                #(fun v -> up1 (E.pts_to #B.base_heap #a #p r (f v))) #(pts_to r x) #(fun v -> pts_to r (f v)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #p r x f
+  lift_action_alt #smaller_sig <|
+  E.select_refine #B.base_heap #a #p 
+                  (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+                  r x f
 
-let upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
+let upd_gen (#a:Type u#(a+1)) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
 : pst_action_except unit e
     (pts_to r x)
     (fun _ -> pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #p r x y f
+  lift_action_alt #smaller_sig <|
+  E.upd_gen #B.base_heap #a #p
+            (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e))) 
+            r x y f
 
 let pts_to_not_null_action 
-      (#a:Type u#a) (#pcm:pcm a)
+      (#a:Type u#(a+1)) (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
@@ -737,20 +747,22 @@ let pts_to_not_null_action
     (fun _ -> pts_to r v)
 = coerce_action #_ #_ #_ #(reveal_slprop (pts_to r v)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.pts_to_not_null_action #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm r v 
+  lift_action_alt #smaller_sig <|
+  E.pts_to_not_null_action #B.base_heap #a #pcm
+                 (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+                 r v 
 
 
 (* Ghost references to "small" types *)
 [@@erasable]
 let core_ghost_ref : Type0 = H.core_ghost_ref
-let ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a)
+let ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a)
 : slprop u#a
-= up1 (B.ghost_pts_to false #a #p r v)
+= up1 (E.ghost_pts_to #B.base_heap #a #p r v)
 
 let ghost_alloc
     (#e:_)
-    (#a:Type u#a)
+    (#a:Type u#(a+1))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -759,10 +771,12 @@ let ghost_alloc
     emp 
     (fun r -> ghost_pts_to r x)
 = up1_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (B.ghost_pts_to false #a #pcm r x)) () <|
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up1 (E.ghost_pts_to #B.base_heap #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.ghost_extend false #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #a #pcm x
+  lift_action_alt #smaller_sig <|
+  E.ghost_alloc #B.base_heap #a #pcm
+         (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+          x
 
 let ghost_read
     #e
@@ -780,13 +794,15 @@ let ghost_read
     (fun v -> ghost_pts_to r (f v))
 = coerce_action #(erased (v:a{compatible p x v /\ p.refine v})) #_ #_
                 #(reveal_slprop (ghost_pts_to r x)) 
-                #(fun v -> up1 (B.ghost_pts_to false #a #p r (f v)))
+                #(fun v -> up1 (E.ghost_pts_to #B.base_heap #a #p r (f v)))
                 #(ghost_pts_to r x)
                 #(fun v -> ghost_pts_to r (f v))
                 () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.ghost_read #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #p r x f
+  lift_action_alt #smaller_sig <|
+  E.ghost_read #B.base_heap #a #p
+               (E.lower_inames (E.lower_inames #(small_sig u#a) (down_inames e)))
+              r x f
 
 let ghost_write
     #e
@@ -800,8 +816,10 @@ let ghost_write
     (fun _ -> ghost_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.ghost_write #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #p r x y f
+  lift_action_alt #smaller_sig <|
+  E.ghost_write #B.base_heap #a #p
+                (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e))) 
+                r x y f
 
 
 let ghost_share
@@ -814,11 +832,13 @@ let ghost_share
 : pst_ghost_action_except unit e
     (ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> ghost_pts_to r v0 `star` ghost_pts_to r v1)
-= up1_star (B.ghost_pts_to false #a #pcm r v0) (B.ghost_pts_to false #a #pcm r v1);
+= up1_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.ghost_share #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #pcm r v0 v1
+  lift_action_alt #smaller_sig <|
+  E.ghost_share #B.base_heap #a #pcm 
+                (E.lower_inames #smaller_sig (E.lower_inames #(small_sig u#a) (down_inames e)))
+                r v0 v1
 
 
 let ghost_gather
@@ -832,21 +852,23 @@ let ghost_gather
     (squash (composable pcm v0 v1)) e
     (ghost_pts_to r v0 `star` ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
-= up1_star (B.ghost_pts_to false #a #pcm r v0) (B.ghost_pts_to false #a #pcm r v1);
+= up1_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (ghost_pts_to r v0 `star` ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  lift_action_alt #B.base_heap <|
-  B.ghost_gather #(E.lower_inames #(B.base_heap u#a) (E.lower_inames #(small_sig u#a) (down_inames e))) #false #a #pcm r v0 v1
+  lift_action_alt #smaller_sig <|
+  E.ghost_gather #B.base_heap #a #pcm
+                 (E.lower_inames (E.lower_inames #(small_sig u#a) (down_inames e)))
+                 r v0 v1
 
 
 (* Concrete references to "big" types *)
-let big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a)
+let big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a)
 : slprop2 u#a
-= up2 (E.pts_to #B.base_heap #a #pcm r v)
+= up2 (E.pts_to #smaller_sig #a #pcm r v)
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 let big_split_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -855,13 +877,13 @@ let big_split_action
 : pst_ghost_action_except unit e
     (big_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_pts_to r v0 `star` big_pts_to r v1)
-= up2_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  E.split_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
+  E.split_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 let big_gather_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -870,13 +892,13 @@ let big_gather_action
 : pst_ghost_action_except (squash (composable pcm v0 v1)) e
     (big_pts_to r v0 `star` big_pts_to r v1)
     (fun _ -> big_pts_to r (op pcm v0 v1))
-= up2_star (E.pts_to #B.base_heap #a #pcm r v0) (E.pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.pts_to #smaller_sig #a #pcm r v0) (E.pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r v0 `star` big_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  E.gather_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
+  E.gather_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 let big_alloc_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -884,12 +906,12 @@ let big_alloc_action
     emp
     (fun r -> big_pts_to r x)
 = up2_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.pts_to #B.base_heap #a #pcm r x)) () <|
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.pts_to #smaller_sig #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  E.alloc_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) x
+  E.alloc_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) x
 
 let big_select_refine
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -902,15 +924,15 @@ let big_select_refine
     (fun v -> big_pts_to r (f v))
 = coerce_action #(v:a{compatible p x v /\ p.refine v}) #_ #_
       #(reveal_slprop (big_pts_to r x))
-      #(fun v -> up2 (E.pts_to #B.base_heap #a #p r (f v)))
+      #(fun v -> up2 (E.pts_to #smaller_sig #a #p r (f v)))
       #(big_pts_to r x)
       #(fun v -> big_pts_to r (f v))
       () <|
   lift_action_alt #small_sig <|
-  E.select_refine #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x f
+  E.select_refine #smaller_sig #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x f
 
 let big_upd_gen
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -921,10 +943,10 @@ let big_upd_gen
     (fun _ -> big_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  E.upd_gen #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x y f
+  E.upd_gen #smaller_sig #_ #p (E.lower_inames #(small_sig u#a) (down_inames e)) r x y f
 
 let big_pts_to_not_null_action 
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -934,16 +956,16 @@ let big_pts_to_not_null_action
     (fun _ -> big_pts_to r v)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_pts_to r v)) () <|
   lift_action_alt #small_sig <|
-  E.pts_to_not_null_action #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v
+  E.pts_to_not_null_action #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v
 
 (* Ghost references to "big" types *)
-let big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a)
+let big_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a)
 : slprop2 u#a
-= up2 (E.ghost_pts_to #B.base_heap #a #p r v)
+= up2 (E.ghost_pts_to #smaller_sig #a #p r v)
 
 let big_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -952,13 +974,13 @@ let big_ghost_alloc
     emp 
     (fun r -> big_ghost_pts_to r x)
 = up2_emp ();
-  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.ghost_pts_to #B.base_heap #a #pcm r x)) () <|
+  coerce_action #_ #_ #_ #(reveal_slprop emp) #(fun r -> up2 (E.ghost_pts_to #smaller_sig #a #pcm r x)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_alloc #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames o)) x
+  E.ghost_alloc #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames o)) x
 
 let big_ghost_read
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -972,16 +994,16 @@ let big_ghost_read
     (fun v -> big_ghost_pts_to r (f v))
 = coerce_action #(erased (v:a{compatible p x v /\ p.refine v})) #_ #_
                 #(reveal_slprop (big_ghost_pts_to r x)) 
-                #(fun v -> up2 (E.ghost_pts_to #B.base_heap #a #p r (f v)))
+                #(fun v -> up2 (E.ghost_pts_to #smaller_sig #a #p r (f v)))
                 #(big_ghost_pts_to r x)
                 #(fun v -> big_ghost_pts_to r (f v))
                 () <|
   lift_action_alt #small_sig <|
-  E.ghost_read #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x f
+  E.ghost_read #smaller_sig #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x f
 
 let big_ghost_write
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -991,11 +1013,11 @@ let big_ghost_write
     (fun _ -> big_ghost_pts_to r y)
 = coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r x)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_write #B.base_heap #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x y f
+  E.ghost_write #smaller_sig #_ #p (E.lower_inames #(small_sig u#a) (down_inames o)) r x y f
 
 let big_ghost_share
     #e
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -1003,15 +1025,15 @@ let big_ghost_share
 : pst_ghost_action_except unit e
     (big_ghost_pts_to r (v0 `op pcm` v1))
     (fun _ -> big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
-= up2_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r (v0 `op pcm` v1))) () <|
   lift_action_alt #small_sig <|
-  E.ghost_share #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
+  E.ghost_share #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
 
 let big_ghost_gather
     #e
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -1020,19 +1042,19 @@ let big_ghost_gather
     (squash (composable pcm v0 v1)) e
     (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
-= up2_star (E.ghost_pts_to #B.base_heap #a #pcm r v0) (E.ghost_pts_to #B.base_heap #a #pcm r v1);
+= up2_star (E.ghost_pts_to #smaller_sig #a #pcm r v0) (E.ghost_pts_to #smaller_sig #a #pcm r v1);
   coerce_action #_ #_ #_ #(reveal_slprop (big_ghost_pts_to r v0 `star` big_ghost_pts_to r v1)) () <|
   lift_action_alt #small_sig <|
-  E.ghost_gather #B.base_heap #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
+  E.ghost_gather #smaller_sig #_ #pcm (E.lower_inames #(small_sig u#a) (down_inames e)) r v0 v1
 
-  (* References for objects in universes a+2, "non-boxable" pts_to *)
-let nb_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a)
+  (* References for objects in universes a+3, "non-boxable" pts_to *)
+let nb_pts_to (#a:Type u#(a + 3)) (#pcm:_) (r:ref a pcm) (v:a)
 : slprop u#a
 = E.pts_to #small_sig #a #pcm r v
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 let nb_split_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -1047,7 +1069,7 @@ let nb_split_action
 
 (** Combining separate permissions into a single composite permission *)
 let nb_gather_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -1060,7 +1082,7 @@ let nb_gather_action
   E.gather_action #small_sig #_ #pcm (down_inames e) r v0 v1
 
 let nb_alloc_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -1072,7 +1094,7 @@ let nb_alloc_action
 
 
 let nb_select_refine
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -1092,7 +1114,7 @@ let nb_select_refine
   E.select_refine #small_sig #_ #p (down_inames e) r x f
 
 let nb_upd_gen
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -1106,7 +1128,7 @@ let nb_upd_gen
 
 
 let nb_pts_to_not_null_action 
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -1117,13 +1139,13 @@ let nb_pts_to_not_null_action
 = coerce_action #_ #_ #_ #(reveal_slprop (nb_pts_to r v)) () <|
   E.pts_to_not_null_action #small_sig #_ #pcm (down_inames e) r v
 
-let nb_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a)
+let nb_ghost_pts_to (#a:Type u#(a + 3)) (#p:pcm a) (r:ghost_ref p) (v:a)
 : slprop u#a
 = E.ghost_pts_to #small_sig #a #p r v
 
 let nb_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -1136,7 +1158,7 @@ let nb_ghost_alloc
 
 let nb_ghost_read
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -1159,7 +1181,7 @@ let nb_ghost_read
 
 let nb_ghost_write
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -1173,7 +1195,7 @@ let nb_ghost_write
 
 let nb_ghost_share
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -1187,7 +1209,7 @@ let nb_ghost_share
 
 let nb_ghost_gather
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
