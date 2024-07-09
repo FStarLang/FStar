@@ -362,21 +362,22 @@ ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** 
           ** C.active c p
       {
         C.unpack_cinv_vp c;
+        unfold cond;
         let b = cas x v (v + 1);
         if b
         { 
-          elim_cond_true b _ _;
-          elim_cond_true true _ _;
+          unfold cond;
           with vv. assert (refine vv);
           f vv _;
-          intro_cond_false (aspec 'i) (aspec ('i + 1));
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
+          fold (cond false (aspec 'i) (aspec ('i + 1)));
           false
         }
         else
         {
-          with p q. rewrite (cond b p q) as q;
+          unfold cond;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
+          fold (cond true (aspec 'i) (aspec ('i + 1)));
           true
         }
       };

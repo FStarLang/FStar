@@ -27,15 +27,9 @@ requires (exists* x. inv x)
 ensures inv false
 {
   let b = cond ();
-  if b
-  {
-     rewrite (inv b) as (inv true);
+  if b {
      body ();
      while_loop' inv cond body;
-  }
-  else
-  {
-    rewrite (inv b) as (inv false);
   }
 }
 ```
