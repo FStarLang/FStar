@@ -115,7 +115,7 @@ and term_to_string' (level:string) (t:term) : T.Tac string
     | Tm_EmpInames -> "emp_inames"
     | Tm_Unknown -> "_"
     | Tm_Inv i p ->
-      sprintf "%s -~- %s"
+      sprintf "inv %s %s"
         (term_to_string' level i)
         (term_to_string' level p)
     | Tm_FStar t -> T.term_to_string t
@@ -189,9 +189,10 @@ and term_to_doc t : T.Tac document
     | Tm_Inames -> doc_of_string "inames"
     | Tm_EmpInames -> doc_of_string "emp_inames"
     | Tm_Inv i p ->
-      infix 2 1 (doc_of_string "-~-")
-                (term_to_doc i)
-                (term_to_doc p)
+      doc_of_string "inv " ^^
+        term_to_doc i ^^
+        doc_of_string " " ^^
+        parens (term_to_doc p)
 
     | Tm_Unknown -> doc_of_string "_"
     | Tm_FStar t -> T.term_to_doc t
