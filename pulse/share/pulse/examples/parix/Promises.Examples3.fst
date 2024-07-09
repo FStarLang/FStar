@@ -25,7 +25,7 @@ assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : v:slprop { is_slprop2 v } =
+let inv_p : v:slprop { is_slprop3 v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res

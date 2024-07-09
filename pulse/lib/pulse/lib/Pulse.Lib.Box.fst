@@ -22,7 +22,7 @@ module R = Pulse.Lib.Reference
 
 type box a = R.ref a
 let pts_to b #p v = R.pts_to b #p v
-let pts_to_is_slprop1 _ _ _ = ()
+let pts_to_is_slprop2 _ _ _ = ()
 let alloc x = R.alloc x
 let op_Bang b #v #p = R.op_Bang b #v #p
 let op_Colon_Equals b x #v = R.op_Colon_Equals b x #v

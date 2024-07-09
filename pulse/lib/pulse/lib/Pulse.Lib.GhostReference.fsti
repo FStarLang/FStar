@@ -32,9 +32,9 @@ val pts_to (#a:Type)
            (n:a)
 : slprop
 
-val pts_to_is_slprop1 (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_slprop1 (pts_to r #p x))
-          [SMTPat (is_slprop1 (pts_to r #p x))]
+val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_slprop2 (pts_to r #p x))
+          [SMTPat (is_slprop2 (pts_to r #p x))]
 
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)
