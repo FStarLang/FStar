@@ -125,22 +125,39 @@ let rec prove_pures #preamble (pst:prover_state preamble)
 let normalize_slprop
   (g:env)
   (v:slprop)
-  : T.Tac (v':slprop & Ghost.erased (slprop_equiv g v v'))
+  : T.Tac (v':slprop & slprop_equiv g v v')
 =
-  let v' = T.norm_well_typed_term (elab_env g) [Pervasives.unascribe; primops; iota] v in
-  let v_equiv_v' : Ghost.erased _ = VE_Ext _ _ _ (RU.magic ()) in
+  (* Keep things reduced *)
+  let steps = [Pervasives.unascribe; primops; iota] in
+
+  (* Unfold anything marked with the "pulse_unfold" attribute. *)
+  let steps = steps @ [delta_attr ["Pulse.Lib.Core.pulse_unfold"]] in
+
+  let v' = T.norm_well_typed_term (elab_env g) steps v in
+  let v_equiv_v' = VE_Ext _ _ _ (RU.magic ()) in
   (| v', v_equiv_v' |)
+
+let normalize_slprop_welltyped
+  (g:env)
+  (v:slprop)
+  (v_typing:tot_typing g v tm_slprop)
+  : T.Tac (v':slprop & slprop_equiv g v v' & tot_typing g v' tm_slprop)
+=
+  let (| v', v_equiv_v' |) = normalize_slprop g v in
+  // FIXME: prove (or add axiom) that equiv preserves typing
+  (| v', v_equiv_v', E (magic()) |)
 
 (* normalizes ctx and unsolved *)
 let normalize_slprop_context
   (#preamble:_)
   (pst:prover_state preamble)
   : T.Tac (pst':prover_state preamble { pst' `pst_extends` pst }) =
+
   let ctxt = pst.remaining_ctxt in
-  let ctxt' = ctxt |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+  let ctxt' = ctxt |> Tactics.Util.map (fun v -> (normalize_slprop pst.pg v)._1) in
 
   let unsolved = pst.unsolved in
-  let unsolved' = unsolved |> Tactics.Util.map (T.norm_well_typed_term (elab_env pst.pg) [Pervasives.unascribe; primops; iota]) in
+  let unsolved' = unsolved |> Tactics.Util.map (fun v -> (normalize_slprop pst.pg v)._1) in
 
   if RU.debug_at_level (fstar_env pst.pg) "ggg" then
   info_doc pst.pg None [

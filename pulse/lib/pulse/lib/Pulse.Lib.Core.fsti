@@ -1172,3 +1172,6 @@ let rec iname_list (xs : list iname) : inames =
 
 [@@unfold_check_opens]
 let (@@) : inames -> inames -> inames = join_inames
+
+(* Attribute to eagerly unfold slprops in the context and goal. *)
+val pulse_unfold : unit

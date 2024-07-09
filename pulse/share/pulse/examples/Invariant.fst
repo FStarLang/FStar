@@ -273,3 +273,26 @@ fn test_returns1 (i:iname)
   fold folded_inv i
 }
 ```
+
+(* Testing that the with_invariants checker respects
+pulse_unfold. *)
+
+[@@pulse_unfold]
+let pp = p
+
+```pulse
+ghost
+fn test_returns2 (i:iname)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens [i]
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures pp ** q {
+    ghost_p_to_q ()
+  };
+  fold folded_inv i
+}
+```
