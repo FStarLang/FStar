@@ -175,3 +175,5 @@ assume val dice_digest_len_spec : squash (
 )
 
 let dice_digest_len = dice_digest_len0
+
+let reveal_dice_digest_len () = ()
