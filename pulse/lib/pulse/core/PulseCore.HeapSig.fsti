@@ -390,3 +390,5 @@ val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.s
 : Lemma
   (requires h.interp p m)
   (ensures h.interp (p `h.star` h.pure q) m)
+
+let is_storable (#h:heap_sig) (p:h.slprop) = h.up (h.down p) == p
