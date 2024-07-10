@@ -48,6 +48,7 @@ val injective_invariant
         (i:(extend h).iref)
 : GTot bool
 
+
 let iiref (h:heap_sig) = i:(extend h).iref { injective_invariant i }
 
 val new_invariant
@@ -118,6 +119,19 @@ val fresh_invariant
 
 val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
+
+val storable_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: GTot bool
+
+val lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
+: Lemma (storable_invariant (lift_iref i))
+
+let siref (h:heap_sig) = i:(extend h).iref { storable_invariant i }
+
+val storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable p })
+: Lemma (is_storable ((extend h).inv i p))
 
 open FStar.PCM
 open FStar.Ghost

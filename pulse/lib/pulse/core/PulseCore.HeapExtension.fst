@@ -2035,6 +2035,39 @@ let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
   }
 
 
+let storable_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: GTot bool
+= Inl? i
+
+let lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
+: Lemma (storable_invariant (lift_iref i))
+= ()
+
+let storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable p })
+: Lemma (is_storable ((extend h).inv i p))
+= let Inl j = i in
+  calc (==) {
+    up (down (inv i p));
+  (==) { }
+    up (down (up (h.inv j (down p)) `star` pure (is_boxable_ext #h p)));
+  (==) { down_star_ext (up (h.inv j (down p))) (pure (is_boxable_ext #h p)) }
+    up (down (up (h.inv j (down p))) `h.star` down (pure (is_boxable_ext #h p)));
+  (==) {}
+    up (h.inv j (down p) `h.star` down (pure (is_boxable_ext #h p)));
+  (==) { up_star_ext (h.inv j (down p)) (down (pure (is_boxable_ext #h p))) }
+    up (h.inv j (down p)) `star` pure (is_boxable_ext #h p);
+  (==) { lift_inv h j (down p) }
+    inv i (up (down p)) `star` pure (is_boxable_ext #h p);
+  (==) {}
+    inv i p `star` pure (is_boxable_ext #h p);
+  (==) { pure_ext h (is_boxable_ext #h p) True }
+    inv i p `star` pure True;
+  (==) { (extend h).pure_true_emp (); ac_lemmas_ext h }
+    inv i p;
+  }
+
 #push-options "--ifuel 2 --fuel 1"
 let sl_pure_imp_ext_aux
        (#h:heap_sig u#h)
