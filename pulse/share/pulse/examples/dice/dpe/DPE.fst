@@ -536,6 +536,7 @@ fn replace_session
           tsnd ret as b,
           tthd ret as idx;
         with pht. assert (models tbl pht);
+        assume_ (pure (b <==> (Some? (PHT.lookup pht sid))));
         if b {
           match idx {
             Some idx -> {
@@ -580,10 +581,6 @@ fn replace_session
             }
           }
         } else {
-          //
-          // AR: TODO: would be nice if we can prove this can't happen
-          //           i.e. if sid is in pht, then its lookup should succeed
-          assume_ (pure False);
           unreachable ()
         }
       } else {
