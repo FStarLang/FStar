@@ -111,8 +111,6 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
 }
 ```
 
-let invlist_reveal = admit()
-
 ```pulse
 ghost
 fn iname_inj
