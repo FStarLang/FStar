@@ -21,7 +21,6 @@ open Pulse.Lib.Fixpoints
 open Pulse.Lib.Task
 open FStar.Real
 open Pulse.Lib.Pledge
-open Pulse.Lib.InvList
 open Pulse.Lib.OnRange
 
 module P = Pulse.Lib.Pledge

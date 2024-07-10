@@ -18,7 +18,6 @@ module Promises.Examples3
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
-open Pulse.Lib.InvList
 module GR = Pulse.Lib.GhostReference
 
 assume val done : ref bool
@@ -113,8 +112,6 @@ fn proof
   }
 }
 ```
-
-let is (i:iname) : invlist = [(inv_p <: slprop), i]
 
 let cheat_proof (i:iname)
   : (_:unit) ->

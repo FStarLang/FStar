@@ -77,28 +77,6 @@ fn make_pledge
 
 ```pulse
 ghost
-fn make_pledge_invs
-  (is:invlist)
-  (f v extra:slprop)
-  (k:unit -> stt_ghost unit emp_inames (invlist_v is ** f ** extra) (fun _ -> invlist_v is ** f ** v))
-  requires invlist_inv is ** extra
-  ensures pledge (invlist_names is) f v
-{
-  ghost
-  fn aux ()
-    requires invlist_v is ** extra ** f
-    ensures invlist_v is ** (f ** v)
-  {
-    k ()
-  };
-  intro_trade_invs #is f (f ** v) extra aux;
-  fold ((==>*) #(invlist_names is) f (f ** v));
-  fold pledge
-}
-```
-
-```pulse
-ghost
 fn redeem_pledge (is:inames) (f v:slprop)
   requires f ** pledge is f v
   ensures f ** v
