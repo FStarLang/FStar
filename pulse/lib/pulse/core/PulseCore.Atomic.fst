@@ -286,7 +286,7 @@ let ghost_reveal (a:Type) (x:erased a)
 let dup_inv (i:iref) (p:slprop) = A.dup_inv i p
 
 let new_invariant (p:slprop3)
-: stt_ghost iref emp_inames p (fun i -> inv i p)
+: stt_ghost (i:iref{injective_iref i}) emp_inames p (fun i -> inv i p)
 = A.new_invariant p
 
 let fresh_invariant ctx p = A.fresh_invariant ctx p

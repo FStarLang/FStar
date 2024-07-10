@@ -86,8 +86,17 @@ let down2 = down2
 let up2 = up2
 let up2_is_slprop2 = up2_is_slprop2
 
-let slprop_1_is_2 (s:slprop)
+let slprop_2_is_3 (s:slprop)
   : Lemma (is_slprop2 s ==> is_slprop3 s)
+  = slprop_2_is_3 s
+
+let slprop1_base = slprop1_base
+let cm_slprop1 = cm_slprop1
+let down1 = down1
+let up1 = up1
+let up1_is_slprop1 = up1_is_slprop1
+let slprop_1_is_2 (s:slprop)
+  : Lemma (is_slprop1 s ==> is_slprop2 s)
   = slprop_1_is_2 s
 
 let emp = emp
@@ -100,6 +109,8 @@ let slprop3_star p q = slprop3_star_congruence p q
 let slprop3_exists #a p = slprop3_exists_congruence #a (F.on_dom a p)
 let slprop2_star p q = slprop2_star_congruence p q
 let slprop2_exists #a p = slprop2_exists_congruence #a (F.on_dom a p)
+let slprop1_star p q = slprop1_star_congruence p q
+let slprop1_exists #a p = slprop1_exists_congruence #a (F.on_dom a p)
 
 let up3_emp    = up3_emp
 let down3_emp  = down3_emp

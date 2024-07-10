@@ -2045,7 +2045,7 @@ let lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
 : Lemma (storable_invariant (lift_iref i))
 = ()
 
-let storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable p })
+let storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop{ is_storable p })
 : Lemma (is_storable ((extend h).inv i p))
 = let Inl j = i in
   calc (==) {

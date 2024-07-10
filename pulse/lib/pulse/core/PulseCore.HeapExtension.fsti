@@ -130,7 +130,7 @@ val lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
 
 let siref (h:heap_sig) = i:(extend h).iref { storable_invariant i }
 
-val storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable p })
+val storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable #(extend h) p })
 : Lemma (is_storable ((extend h).inv i p))
 
 open FStar.PCM

@@ -51,18 +51,16 @@ val ghost_action_preorder (_:unit)
 val slprop : Type u#(a + 4) //invariant predicates, i --> p, live in u#a+4
 
 [@@erasable]
-val slprop3_base : Type u#(a + 3) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
+val slprop3_base : Type u#(a + 3)
 val cm_slprop3 : CM.cm slprop3_base
 val down3 (s:slprop u#a) : slprop3_base u#a
 val up3 (s:slprop3_base u#a) : slprop u#a
-let is_slprop3 (s:slprop u#a) = s == up3 (down3 s) //any slprop that has no invariants in it, satisfies is_slprop3
+let is_slprop3 (s:slprop u#a) = s == up3 (down3 s)
 let slprop3 = s:slprop u#a { is_slprop3 s }
 val up3_is_slprop3 (b:slprop3_base) : Lemma (is_slprop3 (up3 b))
-//big slprops can be turned into invariants, but are not otherwise storeable in the heap
 
 [@@erasable]
-val slprop2_base : Type u#(a + 2) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
-//e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
+val slprop2_base : Type u#(a + 2) 
 val cm_slprop2 : CM.cm slprop2_base
 val down2 (s:slprop u#a) : slprop2_base u#a
 val up2 (s:slprop2_base u#a) : slprop u#a
@@ -70,8 +68,21 @@ let is_slprop2 (s:slprop u#a) = s == up2 (down2 s)
 let slprop2 = s:slprop u#a { is_slprop2 s }
 val up2_is_slprop2 (s:slprop2_base) : Lemma (is_slprop2 (up2 s))
 
-val slprop_1_is_2 (s:slprop)
+val slprop_2_is_3 (s:slprop)
   : Lemma (is_slprop2 s ==> is_slprop3 s)
+
+[@@erasable]
+val slprop1_base : Type u#(a + 1)
+val cm_slprop1 : CM.cm slprop1_base
+val down1 (s:slprop u#a) : slprop1_base u#a
+val up1 (s:slprop1_base u#a) : slprop u#a
+let is_slprop1 (s:slprop u#a) = s == up1 (down1 s)
+let slprop1 = s:slprop u#a { is_slprop1 s }
+val up1_is_slprop1 (s:slprop1_base) : Lemma (is_slprop1 (up1 s))
+
+val slprop_1_is_2 (s:slprop)
+  : Lemma (is_slprop1 s ==> is_slprop2 s)
+
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
@@ -183,10 +194,21 @@ val down2_emp  ()      : Lemma (down2 emp == cm_slprop2.unit)
 val up2_star   (p q:_) : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
 val down2_star (p q:_) : Lemma (down2 (p `star` q) == down2 p `cm_slprop2.mult` down2 q)
 
+val slprop1_star_congruence (p1 p2:slprop1 u#a)
+  : Lemma (is_slprop1 (p1 `star` p2))
+
+val slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+  : Lemma
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (h_exists p))
+
+
+
 (**** Memory invariants *)
 [@@erasable]
 val iref : Type0
-
+val injective_iref (i:iref) : GTot bool
+val storable_iref (i:iref) : GTot bool
 val deq_iref : FStar.GhostSet.decide_eq iref
 
 (** Invariants have a name *)
@@ -248,7 +270,8 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 (**** Invariants *)
 val inv (i:iref) (p:slprop u#a) : slprop u#a
-
+val storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
+: Lemma (is_slprop3 (inv i p))
 let live (i:iref) = h_exists (fun p -> inv i p)
 
 let add_inv (e:inames) (i:iref) : inames = FStar.GhostSet.(union (singleton deq_iref i) e)
@@ -260,7 +283,12 @@ val dup_inv (e:inames) (i:iref) (p:slprop u#a)
     (fun _ -> inv i p `star` inv i p)
 
 val new_invariant (e:inames) (p:slprop { is_slprop3 p })
-  : pst_ghost_action_except iref e
+  : pst_ghost_action_except (i:iref {injective_iref i}) e
+    p
+    (fun i -> inv i p)
+
+val new_storable_invariant (e:inames) (p:slprop { is_slprop2 p })
+  : pst_ghost_action_except (i:iref {storable_iref i}) e
     p
     (fun i -> inv i p)
 
@@ -283,7 +311,7 @@ val distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i j: iref)
+      (i:iref { injective_iref i }) (j:iref { injective_iref j })
 : pst_ghost_action_except u#0 u#m 
     (squash (i =!= j))
     e 
@@ -294,7 +322,7 @@ val invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j } )
+      (j:iref { i == j /\ injective_iref j })
 : pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)

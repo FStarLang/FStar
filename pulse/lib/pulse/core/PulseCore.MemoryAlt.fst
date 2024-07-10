@@ -62,26 +62,54 @@ let slprop2_base : Type u#(a + 2) = erased sig_1.bprop
 let cm_slprop2 : CM.cm slprop2_base = H.cm_e_slprop sig_2
 let down2 (s:slprop u#a) : slprop2_base u#a = sig_1.down (sig.down s)
 let up2 (s:slprop2_base u#a) : slprop u#a = reveal_slprop <| sig.up (sig_1.up s)
-
+let up2_down2 (s:slprop2_base)
+: Lemma (down2 (up2 s) == s)
+= calc (==) {
+    down2 (up2 s);
+  (==) {}
+    down2 (sig.up (sig_1.up s));
+  (==) {}
+    hide <| sig_1.down (sig.down (sig.up (sig_1.up s)));
+  (==) { sig.up_down (sig_1.up s) }
+    hide <| sig_1.down (sig_1.up s);
+  (==) { sig_1.up_down s }
+    s;
+  }
 let up2_is_slprop2_alt (s:slprop2_base)
 : Lemma (ensures is_slprop2 (up2 s))
         [SMTPat (is_slprop2 (up2 s))]
-= calc (==) {
-    up2 (down2 (up2 s));
-  (==) {}
-    up2 (down2 (sig.up (sig_1.up s)));
-  (==) {}
-    up2 (sig_1.down (sig.down (sig.up (sig_1.up s))));
-  (==) { sig.up_down (sig_1.up s) }
-    up2 (sig_1.down (sig_1.up s));
-  (==) { sig_1.up_down s }
-    up2 s;
-  }
+= up2_down2 s
 let up2_is_slprop2 s = up2_is_slprop2_alt s
 
-let slprop_1_is_2 (s:slprop)
+let slprop_2_is_3 (s:slprop)
 : Lemma (is_slprop2 s ==> is_slprop3 s)
 = sig.up_down (sig_1.up (sig_1.down (down3 s)))
+
+
+let slprop1_base : Type u#(a + 1) = erased sig_2.bprop
+let cm_slprop1 : CM.cm slprop1_base = H.cm_e_slprop sig_3
+let down1 (s:slprop u#a) : slprop1_base u#a = sig_2.down (down2 s)
+let up1 (s:slprop1_base u#a) : slprop u#a = reveal_slprop <| up2 (sig_2.up s)
+let up1_down1 (s:slprop1_base)
+: Lemma (down1 (up1 s) == s)
+= calc (==) {
+    down1 (up1 s);
+  (==) {}
+    hide <| sig_2.down (down2 (up2 (sig_2.up s)));
+  (==) { up2_down2 (sig_2.up s) }
+    hide <| sig_2.down (sig_2.up s);
+  (==) { sig_2.up_down s }
+    s;
+  }
+let up1_is_slprop1_alt (s:slprop1_base)
+: Lemma (ensures is_slprop1 (up1 s))
+        [SMTPat (is_slprop1 (up1 s))]
+= up1_down1 s
+let up1_is_slprop1 s = up1_is_slprop1_alt s
+
+let slprop_1_is_2 (s:slprop)
+: Lemma (is_slprop1 s ==> is_slprop2 s)
+= sig_1.up_down (sig_2.up (sig_2.down (down2 s)))
 
 (** Interpreting mem assertions as memory predicates *)
 let interp (p:slprop u#a) (m:mem u#a) : prop = H.interpret p m
@@ -193,9 +221,7 @@ let slprop3_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 
 let slprop2_star_congruence (p1 p2:slprop2 u#a)
 : Lemma (is_slprop2 (p1 `star` p2))
-= slprop_1_is_2 p1;
-  slprop_1_is_2 p2;
-  calc (==) {
+= calc (==) {
     reveal_slprop <| up2 (down2 (p1 `star` p2));
   (==) {}
     sig.up (sig_1.up (sig_1.down (sig.down (p1 `star` p2))));
@@ -237,8 +263,7 @@ let down_exists_alt #a (p: a -> slprop)
 let split_small (p:slprop u#a)
 : Lemma (requires is_slprop2 p)
         (ensures H.is_boxable #sig_1 (sig_1.non_info_slprop (down3 p)))
-= slprop_1_is_2 p;
-  calc (==) {
+= calc (==) {
    hide <| sig_1.up (sig_1.down (down3 p));
   (==) {  sig.up_down (sig_1.up (sig_1.down (down3 p))) }
    down3 (up3 (sig_1.up (sig_1.down (down3 p))));
@@ -252,7 +277,7 @@ let slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 : Lemma
   (requires forall x. is_slprop2 (p x))
   (ensures is_slprop2 (h_exists p))
-= FStar.Classical.forall_intro slprop_1_is_2;
+= FStar.Classical.forall_intro slprop_2_is_3;
   slprop3_exists_congruence #a p;
   assert (is_slprop3 (h_exists p));
   down_exists_alt #a p;
@@ -324,12 +349,98 @@ let down2_star (p q:slprop)
     reveal_slprop2 <| down2 p `sig_2.star` down2 q;
   }
 
+let slprop1_star_congruence (p1 p2:slprop1 u#a)
+: Lemma (is_slprop1 (p1 `star` p2))
+= calc (==) {
+    up1 (down1 (p1 `star` p2));
+  (==) {}
+    up2 (sig_2.up (sig_2.down (down2 (p1 `star` p2))));
+  (==) { down2_star p1 p2 }
+    up2 (sig_2.up (sig_2.down (down2 p1 `sig_2.star` down2 p2)));
+  (==) { E.down_star #sig_3 (down2 p1) (down2 p2) }
+    up2 (sig_2.up (down1 p1 `sig_3.star` down1 p2));
+  (==) { E.up_star #sig_3 (down1 p1) (down1 p2) }
+    up2 (sig_2.up (down1 p1) `sig_2.star` (sig_2.up (down1 p2)));
+  (==)  { up2_star (sig_2.up (down1 p1)) (sig_2.up (down1 p2)) }
+   up1 (down1 p1) `star` up1 (down1 p2);
+  (==) {}
+   p1 `star` p2;
+  }
+
+let down_exists_sig2 a (p: a -> GTot sig_1.slprop)
+  : Lemma 
+    (ensures sig_1.down (H.exists_ #sig_1 p) ==
+             H.exists_ #sig_2 (fun x -> sig_1.down (p x)))
+  = calc (==) {
+      sig_1.down (H.exists_ #sig_1 p);
+    (==) {}
+      (E.extend sig_2).down (H.exists_ #(E.extend sig_2) p);
+    (==) { E.down_exists #sig_2 #a p }
+      H.exists_ #sig_2 (fun x -> (E.extend sig_2).down (p x));
+    (==) { _ by (T.trefl ()) }
+      H.exists_ #sig_2 (fun x -> sig_1.down (p x));
+  }
+
+let down_exists_alt2 #a (p: a -> slprop)
+: Lemma 
+  (ensures down2 (h_exists p) ==
+           hide <| H.exists_ #sig_2 (fun x -> sig_2.non_info_slprop <| down2 (p x)))
+= 
+  calc (==) {
+    reveal (down2 (h_exists p));
+  (==) {}
+    sig_1.down (down3 (h_exists p));
+  (==) { down_exists_alt p }
+    sig_1.down (H.exists_ #sig_1 #a (fun x -> sig_1.non_info_slprop (down3 (p x))));
+  (==) { down_exists_sig2 a (fun x -> sig_1.non_info_slprop (down3 (p x))) }
+    H.exists_ #sig_2 (fun x -> sig_1.down (sig_1.non_info_slprop (down3 (p x))));
+  (==) { H.exists_extensionality #sig_2
+          (fun x -> sig_1.down (sig_1.non_info_slprop (down3 (p x))))
+          (fun x -> sig_2.non_info_slprop <| down2 (p x)) }
+    H.exists_ #sig_2 (fun x -> sig_2.non_info_slprop <| down2 (p x));
+  }
+
+
+let split_small1 (p:slprop u#a)
+: Lemma (requires is_slprop1 p)
+        (ensures H.is_boxable #sig_2 (sig_2.non_info_slprop (down2 p)))
+= calc (==) {
+   sig_2.up (sig_2.down (down2 p));
+  (==) { sig_1.up_down (sig_2.up (sig_2.down (down2 p))) }
+   sig_1.down (sig_1.up (sig_2.up (sig_2.down (down2 p))));
+  (==) {}
+   sig_1.down (sig_1.up (sig_2.up (down1 p)));
+  (==) { sig.up_down (sig_1.up (sig_2.up (down1 p))) }
+    sig_1.down (sig.down (sig.up (sig_1.up (sig_2.up (down1 p)))));
+  (==) {}
+    sig_1.down (sig.down (up1 (down1 p)));
+  (==) {}
+   reveal <| down2 p;
+  }
+
+let slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+  : Lemma
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (h_exists p))
+= FStar.Classical.forall_intro slprop_1_is_2;
+  slprop2_exists_congruence #a p;
+  assert (is_slprop2 (h_exists p));
+  down_exists_alt2 #a p;
+  assert (forall x. H.is_boxable #sig_2 (sig_2.non_info_slprop (down2 (p x))))
+      by (let _ = T.forall_intro () in
+          T.mapply (`split_small1));
+  assert (H.is_boxable #sig_2
+           (H.exists_ #sig_2 (fun x -> sig_2.non_info_slprop <| down2 (p x))))
+     by (T.mapply (`E.exists_congruence))
+     
 (**** Memory invariants *)
-let iref : Type0 = i:erased sig.iref { E.injective_invariant i }
+let iref : Type0 = erased sig.iref
+let injective_iref (i:iref) = E.injective_invariant i
+let storable_iref (i:iref) = E.storable_invariant i
 let deq_iref : FStar.GhostSet.decide_eq iref = fun x y -> sig.deq_iref x y
 let down_inames (e:inames)
 : GhostSet.set sig.iref
-= GhostSet.comprehend (fun (i:sig.iref) -> if E.injective_invariant i then GhostSet.mem (hide i) e else false)
+= GhostSet.comprehend (fun (i:sig.iref) -> GhostSet.mem (hide i) e)
 let inames_ok (e:inames) (m:mem) : prop = H.inames_ok (down_inames e) m
 
 (** The empty set of invariants is always empty *)
@@ -353,6 +464,10 @@ let reveal_iref (i:iref) : sig.iref =
   sig.non_info_iref x
 
 let inv (i:iref) (p:slprop u#a) : slprop u#a = sig.inv (reveal_iref i) p
+
+let storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
+: Lemma (is_slprop3 (inv i p))
+= E.storable_inv _ i p
 
 let coerce_action
     (#a:Type u#x)
@@ -386,13 +501,52 @@ let dup_inv (e:inames) (i:iref) (p:slprop u#a)
     (fun _ -> inv i p `star` inv i p)
 = coerce_action () <| E.dup_inv #(sig_1 u#a) (down_inames e) (reveal_iref i) (reveal_slprop p)
 
+
 let new_invariant (e:inames) (p:slprop { is_slprop3 p })
-: pst_ghost_action_except iref e
+: pst_ghost_action_except (i:iref{injective_iref i}) e
     p
     (fun i -> inv i p)
 = fun frame m0 -> 
     let i, m1 = E.new_invariant #(sig_1 u#a) (down_inames e) (reveal_slprop p) (reveal_slprop frame) m0 in
     hide i, m1
+
+let slprop2_boxable (p:slprop{ is_slprop2 p})
+: Lemma (H.is_boxable #sig_1 (down3 p))
+        [SMTPat (is_slprop2 p)]
+= calc (==) {
+    sig_1.up (sig_1.down (down3 p));
+  (==) { sig.up_down (sig_1.up (sig_1.down (sig.down p))) }
+    sig.down (sig.up (sig_1.up (sig_1.down (sig.down p))));
+  (==) { sig.up_down (sig_1.up (sig_1.down (sig.down p))) }
+    sig.down (up2 (down2 p));
+  (==) {}
+    reveal <| sig.down p;  
+  }
+
+
+let lift_inv (i:E.iiref sig_2) (p:slprop { is_slprop2 p })
+: Lemma (sig.up (sig_1.inv i (down3 p)) == reveal_slprop <| inv (E.lift_iref #sig_1 i) p)
+        [SMTPat (sig.up (sig_1.inv i (down3 p)))]
+= E.lift_inv sig_1 i (down3 p)
+
+let new_storable_invariant_alt (e:inames) (p:slprop u#a { is_slprop2 p })
+: pst_ghost_action_except (E.iiref (sig_2 u#a)) e 
+    p
+    (fun i -> inv (E.lift_iref #sig_1 i) p)
+= coerce_action () <|
+  E.lift_action_alt #sig_1 <|
+  E.new_invariant #(sig_2 u#a)
+      (E.lower_inames #(sig_1 u#a) (down_inames e))
+      (sig_1.non_info_slprop (down3 p))
+
+let new_storable_invariant (e:inames) (p:slprop { is_slprop2 p })
+: pst_ghost_action_except (i:iref{storable_iref i}) e 
+    p
+    (fun i -> inv i p)
+= fun frame m0 ->
+    let i,m1 = new_storable_invariant_alt e p frame m0 in
+    E.lift_iref_is_storable #sig_1 i;
+    hide <| E.lift_iref #sig_1 i, m1
 
 let with_invariant_alt
     (#h:H.heap_sig u#a)
@@ -426,7 +580,8 @@ let with_invariant (#a:Type u#x)
 : _pst_action_except a maybe_ghost opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
-= assert (GhostSet.equal
+= assume (injective_iref i);
+  assert (GhostSet.equal
     (down_inames (add_inv opened_invariants i))
     (H.add_iref (reveal_iref i) (down_inames opened_invariants)));
   coerce_action () <|
@@ -458,7 +613,7 @@ let distinct_invariants_have_distinct_names_alt
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i j: iref)
+      (i:iref { injective_iref i }) (j:iref { injective_iref j })
 : pst_ghost_action_except u#0 u#m 
     (squash (~(eq2 #(E.iiref sig_1) (reveal_iref i) (reveal_iref j))))
     e 
@@ -473,13 +628,15 @@ let distinct_invariants_have_distinct_names_alt
     #(inv i p `star` inv j q)
     #(fun _ -> inv i p `star` inv j q)
      () <|
-  E.distinct_invariants_have_distinct_names #(sig_1 u#m) (down_inames e) (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
+  E.distinct_invariants_have_distinct_names 
+    #(sig_1 u#m) 
+    (down_inames e) (reveal_slprop p) (reveal_slprop q) (reveal_iref i) (reveal_iref j)
 
 let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i j: iref)
+      (i:iref { injective_iref i }) (j:iref { injective_iref j })
 : pst_ghost_action_except u#0 u#m 
     (squash (i =!= j))
     e 
@@ -491,7 +648,7 @@ let invariant_name_identifies_invariant_alt
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j } )
+      (j:iref { i == j /\ injective_iref j } )
 : pst_ghost_action_except (squash (reveal_slprop p == reveal_slprop q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
@@ -510,7 +667,7 @@ let invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j } )
+      (j:iref { i == j /\ injective_iref j } )
 : pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)

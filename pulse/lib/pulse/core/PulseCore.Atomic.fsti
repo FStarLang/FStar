@@ -251,7 +251,7 @@ val dup_inv (i:iref) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
 val new_invariant (p:slprop3)
-  : stt_ghost iref emp_inames p (fun i -> inv i p)
+  : stt_ghost (i:iref{injective_iref i}) emp_inames p (fun i -> inv i p)
 
 val fresh_invariant (ctx:list iref) (p:slprop3)
 : stt_ghost (i:iref { i `fresh_wrt` ctx })
@@ -286,7 +286,8 @@ val with_invariant_g
 
 val distinct_invariants_have_distinct_names
     (#p #q:slprop)
-    (i j:iref)
+    (i:iref { injective_iref i })
+    (j:iref { injective_iref j })
     (_:squash (p =!= q))
 : stt_ghost
     (squash (i =!= j))
@@ -297,7 +298,7 @@ val distinct_invariants_have_distinct_names
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { i == j })
+      (j:iref { i == j /\ injective_iref j })
 : stt_ghost
     (squash (p == q))
     emp_inames
