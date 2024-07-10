@@ -26,7 +26,7 @@ let emp_unit_left (p:slprop)
   = elim_slprop_equiv (slprop_equiv_unit p)
 
 (* This module is just a special case of trades. The tactic
-instantiates the implicit InvList to [] everywhere. We do not
+instantiates the implicit inames to emp_inames everywhere. We do not
 even need to use the Pulse checker for it. *)
 
 let stick (p q : slprop) =
