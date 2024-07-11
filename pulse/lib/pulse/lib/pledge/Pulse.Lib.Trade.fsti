@@ -17,7 +17,6 @@
 module Pulse.Lib.Trade
 
 open Pulse.Lib.Core
-open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
@@ -46,18 +45,6 @@ val intro_trade
 : stt_ghost unit emp_inames
     extra
     (fun _ -> trade #is hyp concl)
-
-val intro_trade_invs
-  (#[T.exact (`[])] is:invlist)
-  (hyp concl extra:slprop)
-  (f_elim: unit -> (
-    stt_ghost unit emp_inames
-    (invlist_v is ** extra ** hyp)
-    (fun _ -> invlist_v is ** concl)
-  ))
-: stt_ghost unit emp_inames
-    (invlist_inv is ** extra)
-    (fun _ -> trade #(invlist_names is) hyp concl)
 
 val elim_trade
   (#[T.exact (`emp_inames)] is:inames)

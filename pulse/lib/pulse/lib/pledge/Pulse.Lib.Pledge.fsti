@@ -17,7 +17,6 @@
 module Pulse.Lib.Pledge
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.InvList
 
 val pledge (is:inames) (f:slprop) (v:slprop) : slprop
 
@@ -42,10 +41,6 @@ val return_pledge (f v:slprop)
 val make_pledge (is:inames) (f:slprop) (v:slprop) (extra:slprop)
   (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
   : stt_ghost unit emp_inames extra (fun _ -> pledge is f v)
-
-val make_pledge_invs (is:invlist) (f v extra:slprop)
-  (k:unit -> stt_ghost unit emp_inames (invlist_v is ** f ** extra) (fun _ -> invlist_v is ** f ** v))
-  : stt_ghost unit emp_inames (invlist_inv is ** extra) (fun _ -> pledge (invlist_names is) f v)
 
 val redeem_pledge (is:inames) (f v:slprop)
   : stt_ghost unit is (f ** pledge is f v) (fun () -> f ** v)
