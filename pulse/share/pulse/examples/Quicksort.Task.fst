@@ -22,8 +22,6 @@ module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 module GSet = FStar.GhostSet
 
-open Pulse.Lib.InvList
-
 module T = Pulse.Lib.Task
 open Quicksort.Base
 open Pulse.Lib.Pledge
@@ -103,10 +101,10 @@ fn rec t_quicksort
 ```
 
 assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
-  : stt_atomic (pi:invlist_elem { not (mem_inv is (snd pi)) })
+  : stt_atomic iname
                is
                (pledge is f (v1 ** v2))
-               (fun pi -> pledge (add_inv is (snd pi)) f v1 ** pledge (add_inv is (snd pi)) f v2)
+               (fun i -> pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2)
 
 ```pulse
 fn rec quicksort

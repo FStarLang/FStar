@@ -17,51 +17,39 @@
 module Pulse.Lib.SmallTrade
 
 open Pulse.Lib.Core
-open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
 val trade :
-  (#[T.exact (`[])] is:invlist) ->
+  (#[T.exact (`[])] is:inames) ->
   (hyp:slprop) ->
   (concl:slprop) ->
   slprop
 
-val trade_is_slprop2 (#is:invlist) (hyp concl:slprop)
+val trade_is_slprop2 (#is:inames) (hyp concl:slprop)
   : Lemma (is_slprop2 (trade #is hyp concl))
 
 val intro_trade
-  (#is:invlist)
+  (#is:inames)
   (hyp concl:slprop)
   (extra:slprop { is_slprop2 extra })
   (f_elim:unit -> (
-    stt_ghost unit (invlist_names is)
-    (invlist_inv is ** extra ** hyp)
-    (fun _ -> invlist_inv is ** concl)
-  ))
-: stt_ghost unit emp_inames extra (fun _ -> trade #is hyp concl)
-
-val intro_trade_invs
-  (#is:invlist)
-  (hyp concl:slprop)
-  (extra:slprop { is_slprop2 extra })
-  (f_elim:unit -> (
-    stt_ghost unit emp_inames
-      (invlist_v is ** extra ** hyp)
-      (fun _ -> invlist_v is ** concl)
+    stt_ghost unit is
+    (extra ** hyp)
+    (fun _ -> concl)
   ))
 : stt_ghost unit emp_inames extra (fun _ -> trade #is hyp concl)
 
 val elim_trade
-  (#is:invlist)
+  (#is:inames)
   (hyp concl:slprop)
-: stt_ghost unit (invlist_names is)
-    (invlist_inv is ** trade #is hyp concl ** hyp)
-    (fun _ -> invlist_inv is ** concl)
+: stt_ghost unit is
+    (trade #is hyp concl ** hyp)
+    (fun _ -> concl)
 
 val trade_sub_inv
-  (#is1:invlist)
-  (#is2:invlist { invlist_sub is1 is2 })
+  (#is1:inames)
+  (#is2:inames { inames_subset is1 is2 })
   (hyp concl:slprop)
 : stt_ghost unit emp_inames
     (trade #is1 hyp concl)
@@ -70,7 +58,7 @@ val trade_sub_inv
 // Could weaken `f` to
 // (f : unit -> stt_ghost unit (invlist_names os) (invlist_inv os ** q) (fun _ -> invlist_inv os ** r))
 val trade_map
-  (#os : invlist)
+  (#os : inames)
   (p q r : slprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
 : stt_ghost unit emp_inames
@@ -78,7 +66,7 @@ val trade_map
     (fun _ -> trade #os p r)
 
 val trade_compose
-  (#os : invlist)
+  (#os : inames)
   (p q r : slprop)
 : stt_ghost unit emp_inames
     (trade #os p q ** trade #os q r)

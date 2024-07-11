@@ -17,7 +17,6 @@
 module Pulse.Lib.Trade
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
@@ -49,40 +48,6 @@ fn __intro_trade
 }
 ```
 let intro_trade #is = __intro_trade #is
-
-```pulse
-ghost
-fn intro_trade_invs_aux
-  (#is:invlist)
-  (hyp concl extra:slprop)
-  (f_elim: unit -> (
-    stt_ghost unit emp_inames
-    (invlist_v is ** extra ** hyp)
-    (fun _ -> invlist_v is ** concl)
-  ))
-  requires invlist_inv is ** extra
-  ensures trade #(invlist_names is) hyp concl
-{
-  ghost
-  fn aux ()
-    requires ((invlist_inv is ** extra) ** hyp)
-    ensures concl
-    opens (invlist_names is)
-  {
-    ghost fn aux' ()
-      requires (invlist_v is ** (extra ** hyp))
-      ensures (invlist_v is ** concl)
-    {
-      f_elim ()
-    };
-    with_invlist is aux';
-    drop_ (invlist_inv _)
-  };
-  intro_trade #(invlist_names is) hyp concl (invlist_inv is ** extra) aux
-}
-```
-
-let intro_trade_invs #is = intro_trade_invs_aux #is
 
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
