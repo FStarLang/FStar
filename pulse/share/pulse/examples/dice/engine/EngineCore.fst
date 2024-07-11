@@ -24,9 +24,6 @@ module U8 = FStar.UInt8
 open EngineTypes
 open HACL
 
-assume
-val stack_is_erased : slprop
-
 let l0_is_authentic (repr:engine_record_repr) 
   : prop
   = spec_ed25519_verify 

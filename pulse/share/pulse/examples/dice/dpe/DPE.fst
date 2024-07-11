@@ -44,8 +44,11 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.MutexToken
 
-assume
-val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
+// We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
+assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
+
+// We assume this code will be executed on a machine where u32 fits the word size
+assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
@@ -974,7 +977,6 @@ fn derive_child_from_context
           let deviceID_pub = V.alloc 0uy (SZ.uint_to_t 32);
           let aliasKey_pub = V.alloc 0uy (SZ.uint_to_t 32);
           let aliasKey_priv = V.alloc 0uy (SZ.uint_to_t 32);
-          assume_ (pure (SZ.fits_u32));
           let deviceIDCSR_len = L0Types.len_of_deviceIDCSR r.deviceIDCSR_ingredients;
           let aliasKeyCRT_len = L0Types.len_of_aliasKeyCRT r.aliasKeyCRT_ingredients;
           let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet deviceIDCSR_len);
@@ -990,7 +992,7 @@ fn derive_child_from_context
           V.to_array_pts_to deviceIDCSR;
           V.to_array_pts_to aliasKeyCRT;
 
-          assume_ (pure (A.length (V.vec_to_array c.cdi) == 32));
+          HACL.reveal_dice_digest_len ();
 
           let _ : unit = l0
             (V.vec_to_array c.cdi)
@@ -1019,6 +1021,12 @@ fn derive_child_from_context
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
 
+          with deviceID_pub_repr. assert (V.pts_to deviceID_pub deviceID_pub_repr);
+          with aliasKey_pub_repr. assert (V.pts_to aliasKey_pub aliasKey_pub_repr);
+          with aliasKey_priv_repr. assert (V.pts_to aliasKey_priv aliasKey_priv_repr);
+          with deviceIDCSR_repr. assert (V.pts_to deviceIDCSR deviceIDCSR_repr);
+          with aliasKeyCRT_repr. assert (V.pts_to aliasKeyCRT aliasKeyCRT_repr);
+
           let l1_context : l1_context_t = init_l1_ctxt
             s
             (hide r.deviceID_label_len)
@@ -1033,7 +1041,9 @@ fn derive_child_from_context
             aliasKeyCRT_len
             aliasKeyCRT
             r0
-            (magic ());
+            #deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
+            #deviceIDCSR_repr #aliasKeyCRT_repr
+            ();
 
           fold (l0_context_perm c cr);
           rewrite (l0_context_perm c cr) as
@@ -1113,8 +1123,7 @@ fn derive_child (sid:sid_t)
                   (pure False);
           unreachable ()
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        Engine_context _ -> {
           let repr = rewrite_session_state_related_available hc.context s t;
           intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record #rrepr #repr ();
@@ -1145,6 +1154,38 @@ fn derive_child (sid:sid_t)
             }
           }
         }
+        L0_context _ -> {
+          let repr = rewrite_session_state_related_available hc.context s t;
+          intro_context_and_repr_tag_related hc.context repr;
+          let ret = derive_child_from_context hc.context record #rrepr #repr ();
+
+          match ret {
+            Some nctxt -> {
+              unfold (maybe_context_perm repr rrepr (Some nctxt));
+              with nrepr. assert (context_perm nctxt nrepr);
+              intro_context_and_repr_tag_related nctxt nrepr;
+              let s = Available { context = nctxt };
+              rewrite (context_perm nctxt nrepr) as
+                      (session_state_related s (G_Available nrepr));
+              let s = replace_session sid t1 s (G_Available nrepr);
+              intro_session_state_tag_related s (current_state t1);
+              fold (derive_child_client_perm sid t rrepr true);
+              with _x _y. rewrite (session_state_related _x _y) as emp;
+              true
+            }
+            None -> {
+              let s = SessionError;
+              rewrite (maybe_context_perm repr rrepr ret) as emp;
+              rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
+              let s = replace_session sid t1 s (G_SessionError (current_state t1));
+              intro_session_state_tag_related s (current_state t1);
+              fold (derive_child_client_perm sid t rrepr false);
+              with _x _y. rewrite (session_state_related _x _y) as emp;
+              false
+            }
+          }
+        }
+
       }
     }
     SessionStart -> {
@@ -1182,10 +1223,19 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
       rewrite_session_state_related_available hc.context s t;
       destroy_ctxt hc.context
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
       with _x _y. rewrite (session_state_related _x _y) as emp
     }
+    InUse -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+    SessionClosed -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+    SessionError -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+
   }
 }
 ```
@@ -1256,7 +1306,6 @@ fn certify_key (sid:sid_t)
             memcpy_l (SZ.uint_to_t 32) (V.vec_to_array c.aliasKey_pub) pub_key;
             V.to_vec_pts_to c.aliasKey_pub;
 
-            assume_ (pure (SZ.fits_u32));
             V.to_array_pts_to c.aliasKeyCRT;
             
             memcpy_l (SZ.uint32_to_sizet c.aliasKeyCRT_len) (V.vec_to_array c.aliasKeyCRT) crt;
@@ -1277,16 +1326,35 @@ fn certify_key (sid:sid_t)
             c_crt_len
           }
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        L0_context _ -> {
           rewrite (session_state_related s (current_state t)) as
                   (pure False);
           unreachable ()
         }
+        Engine_context _ -> {
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+
       }
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    InUse -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionClosed -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionError -> {
       rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
@@ -1341,20 +1409,39 @@ fn sign (sid:sid_t)
           with _x _y. rewrite (session_state_related _x _y) as emp;
           fold (sign_client_perm sid t);
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        L0_context _ -> {
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+        Engine_context _ -> {
           rewrite (session_state_related s (current_state t)) as
                   (pure False);
           unreachable ()
         }
       }
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
       rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
+    InUse -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionClosed -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionError -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+
   }
 }
 ```
