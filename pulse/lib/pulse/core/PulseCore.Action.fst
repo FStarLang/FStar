@@ -168,7 +168,6 @@ let action_of_pre_act
 
 let iref = iref
 let storable_iref = storable_iref
-let injective_iref = injective_iref
 let deq_iref = deq_iref
 
 let act 
@@ -420,7 +419,7 @@ let with_invariant #a #r #fp #fp' #f_opens #p i f =
   let ictx' = Mem.add_inv ictx i in
   with_invariant #a #fp #fp' #ictx i (f #ictx')
 let distinct_invariants_have_distinct_names #p #q i j _ =
-  fun #ictx -> assume (injective_iref i /\ injective_iref j); distinct_invariants_have_distinct_names ictx p q i j
+  fun #ictx -> distinct_invariants_have_distinct_names ictx p q i j
 let invariant_name_identifies_invariant p q i j =
   fun #ictx -> invariant_name_identifies_invariant ictx p q i j
 

@@ -434,13 +434,13 @@ let slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
      by (T.mapply (`E.exists_congruence))
      
 (**** Memory invariants *)
-let iref : Type0 = erased sig.iref
-let injective_iref (i:iref) = E.injective_invariant i
+let iref : Type0 = i:erased sig.iref { sig.iref_injective i }
 let storable_iref (i:iref) = E.storable_invariant i
 let deq_iref : FStar.GhostSet.decide_eq iref = fun x y -> sig.deq_iref x y
 let down_inames (e:inames)
 : GhostSet.set sig.iref
-= GhostSet.comprehend (fun (i:sig.iref) -> GhostSet.mem (hide i) e)
+= GhostSet.comprehend (fun (i:sig.iref) -> 
+  if sig.iref_injective i then GhostSet.mem (hide i) e else false)
 let inames_ok (e:inames) (m:mem) : prop = H.inames_ok (down_inames e) m
 
 (** The empty set of invariants is always empty *)
@@ -503,7 +503,7 @@ let dup_inv (e:inames) (i:iref) (p:slprop u#a)
 
 
 let new_invariant (e:inames) (p:slprop { is_slprop3 p })
-: pst_ghost_action_except (i:iref{injective_iref i}) e
+: pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
 = fun frame m0 -> 
@@ -523,9 +523,14 @@ let slprop2_boxable (p:slprop{ is_slprop2 p})
     reveal <| sig.down p;  
   }
 
+let lifted_iref_injective (i:E.iiref sig_2)
+: Lemma (sig.iref_injective (E.lift_iref #sig_1 i))
+        [SMTPat (E.lift_iref #sig_1 i)]
+= E.lifted_iref_injective #sig_1 i
 
 let lift_inv (i:E.iiref sig_2) (p:slprop { is_slprop2 p })
-: Lemma (sig.up (sig_1.inv i (down3 p)) == reveal_slprop <| inv (E.lift_iref #sig_1 i) p)
+: Lemma (
+    sig.up (sig_1.inv i (down3 p)) == reveal_slprop <| inv (E.lift_iref #sig_1 i) p)
         [SMTPat (sig.up (sig_1.inv i (down3 p)))]
 = E.lift_inv sig_1 i (down3 p)
 
@@ -580,8 +585,7 @@ let with_invariant (#a:Type u#x)
 : _pst_action_except a maybe_ghost opened_invariants 
       (inv i p `star` fp)
       (fun x -> inv i p `star` fp' x)
-= assume (injective_iref i);
-  assert (GhostSet.equal
+= assert (GhostSet.equal
     (down_inames (add_inv opened_invariants i))
     (H.add_iref (reveal_iref i) (down_inames opened_invariants)));
   coerce_action () <|
@@ -613,7 +617,7 @@ let distinct_invariants_have_distinct_names_alt
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i:iref { injective_iref i }) (j:iref { injective_iref j })
+      (i j:iref)
 : pst_ghost_action_except u#0 u#m 
     (squash (~(eq2 #(E.iiref sig_1) (reveal_iref i) (reveal_iref j))))
     e 
@@ -636,7 +640,7 @@ let distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i:iref { injective_iref i }) (j:iref { injective_iref j })
+      (i j:iref)
 : pst_ghost_action_except u#0 u#m 
     (squash (~(eq2 #iref i j)))
     e 
@@ -648,7 +652,7 @@ let invariant_name_identifies_invariant_alt
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j /\ injective_iref j } )
+      (j:iref { i == j  })
 : pst_ghost_action_except (squash (reveal_slprop p == reveal_slprop q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
@@ -667,7 +671,7 @@ let invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j /\ injective_iref j } )
+      (j:iref { i == j })
 : pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)

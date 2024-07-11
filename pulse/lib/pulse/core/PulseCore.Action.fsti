@@ -36,7 +36,6 @@ let ( ^^ ) (r1 r2 : reifiability) : reifiability =
 [@@ erasable]
 val iref : Type0
 val storable_iref (i:iref) : GTot bool
-val injective_iref (i:iref) : GTot bool
 val deq_iref : FStar.GhostSet.decide_eq iref
 let inames = FStar.GhostSet.set iref
 let singleton (i:iref) : inames = GhostSet.singleton deq_iref i
@@ -155,7 +154,7 @@ val dup_inv (i:iref) (p:slprop)
   : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
 val new_invariant (p:slprop3)
-: act (i:iref{injective_iref i}) Ghost emp_inames p (fun i -> inv i p)
+: act iref Ghost emp_inames p (fun i -> inv i p)
 
 val new_storable_invariant (p:slprop2)
 : act (i:iref{storable_iref i}) Ghost emp_inames p (fun i -> inv i p)
@@ -193,7 +192,7 @@ val distinct_invariants_have_distinct_names
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { i == j /\ injective_iref i } )
+      (j:iref { i == j })
 : act (squash (p == q))
       Ghost
       emp_inames
