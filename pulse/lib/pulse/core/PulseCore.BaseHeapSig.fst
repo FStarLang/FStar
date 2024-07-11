@@ -200,6 +200,8 @@ let base_heap : heap_sig u#a =
     mem_invariant;
     inv_iname_ok = (fun _ _ _ -> ());
     mem_invariant_equiv;
+    iref_injective = (fun _ -> false);
+    iref_injectivity = (fun _ _ _ _ _ -> ())
 }
 let join_empty_inverse m0 m1 = H2.join_empty_inverse m0 m1
 let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r

@@ -209,6 +209,23 @@ type heap_sig : Type u#(a + 2) = {
           mem_invariant e m ==
           mem_invariant (add deq_iref i e) m `star` p)
     );
+    iref_injective: (iref -> GTot bool);
+    iref_injectivity : (
+      i:iref ->
+      j:iref ->
+      p:slprop ->
+      q:slprop ->
+      m:mem ->
+      Lemma
+       (requires
+          iref_injective i /\
+          iref_injective j /\
+          interp (inv i p) (sep.core_of m) /\
+          interp (inv j q) (sep.core_of m))
+       (ensures
+         (p =!= q ==> i =!= j) /\
+         (i==j ==> p == q))
+    );
 }
 let add_iref (#h:heap_sig) (i:h.iref) (s:GhostSet.set h.iref) = add h.deq_iref i s
 val emp_trivial (h:heap_sig u#a)

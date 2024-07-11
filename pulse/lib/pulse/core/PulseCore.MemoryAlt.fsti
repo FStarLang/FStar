@@ -207,7 +207,6 @@ val slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
 (**** Memory invariants *)
 [@@erasable]
 val iref : Type0
-val injective_iref (i:iref) : GTot bool
 val storable_iref (i:iref) : GTot bool
 val deq_iref : FStar.GhostSet.decide_eq iref
 
@@ -283,7 +282,7 @@ val dup_inv (e:inames) (i:iref) (p:slprop u#a)
     (fun _ -> inv i p `star` inv i p)
 
 val new_invariant (e:inames) (p:slprop { is_slprop3 p })
-  : pst_ghost_action_except (i:iref {injective_iref i}) e
+  : pst_ghost_action_except iref e
     p
     (fun i -> inv i p)
 
@@ -311,7 +310,7 @@ val distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i:iref { injective_iref i }) (j:iref { injective_iref j })
+      (i j:iref)
 : pst_ghost_action_except u#0 u#m 
     (squash (~(eq2 #iref i j)))
     e 
@@ -322,7 +321,7 @@ val invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { i == j /\ injective_iref j })
+      (j:iref { i == j })
 : pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
