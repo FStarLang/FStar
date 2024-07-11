@@ -128,33 +128,28 @@ pub fn replace_session(
             if sid < ctr {
                 let ret = super::pulse_lib_hashtable::lookup((), tbl, sid);
                 let tbl1 = ret.0;
-                let b = ret.1;
-                let idx = ret.2;
-                if b {
-                    match idx {
-                        Some(mut idx1) => {
-                            let ret1 = super::pulse_lib_hashtable::replace(
-                                (),
-                                tbl1,
-                                idx1,
-                                sid,
-                                sst,
-                                (),
-                            );
-                            let tbl2 = ret1.0;
-                            let st1 = ret1.1;
-                            let s1 = super::dpe::st {
-                                st_ctr: ctr,
-                                st_tbl: tbl2,
-                            };
-                            *mg = Some(s1);
-                            std::mem::drop(mg);
-                            st1
-                        }
-                        None => panic!(),
+                let idx = ret.1;
+                match idx {
+                    Some(mut idx1) => {
+                        let ret1 = super::pulse_lib_hashtable::replace(
+                            (),
+                            tbl1,
+                            idx1,
+                            sid,
+                            sst,
+                            (),
+                        );
+                        let tbl2 = ret1.0;
+                        let st1 = ret1.1;
+                        let s1 = super::dpe::st {
+                            st_ctr: ctr,
+                            st_tbl: tbl2,
+                        };
+                        *mg = Some(s1);
+                        std::mem::drop(mg);
+                        st1
                     }
-                } else {
-                    panic!()
+                    None => panic!(),
                 }
             } else {
                 panic!()
