@@ -22,7 +22,7 @@ pub struct evercrypt {
         x4: u32,
     ),
     pub EverCrypt_Hash_Incremental_hash_len:
-        unsafe extern "C" fn(uu___: Spec_Hash_Definitions_hash_alg) -> u32,
+        unsafe extern "C" fn(a: Spec_Hash_Definitions_hash_alg) -> u32,
     pub EverCrypt_Hash_Incremental_hash: unsafe extern "C" fn(
         a: Spec_Hash_Definitions_hash_alg,
         output: *mut u8,
@@ -101,9 +101,9 @@ impl evercrypt {
     }
     pub unsafe fn EverCrypt_Hash_Incremental_hash_len(
         &self,
-        uu___: Spec_Hash_Definitions_hash_alg,
+        a: Spec_Hash_Definitions_hash_alg,
     ) -> u32 {
-        (self.EverCrypt_Hash_Incremental_hash_len)(uu___)
+        (self.EverCrypt_Hash_Incremental_hash_len)(a)
     }
     pub unsafe fn EverCrypt_Hash_Incremental_hash(
         &self,
