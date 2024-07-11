@@ -206,7 +206,6 @@ let up_down (#h:heap_sig u#a) (p:h.slprop)
   );
   h.slprop_extensionality (down (up p)) p
 
-let non_info_bprop (h:heap_sig u#a) : non_info (bprop h) = h.non_info_slprop
 let pure (#h:heap_sig u#a) (p:prop) : ext_slprop h = up (h.pure p)
 let emp (#h:heap_sig u#a) : ext_slprop h = up h.emp
 let star (#h:heap_sig u#a) (p1 p2:ext_slprop h) 
@@ -998,7 +997,6 @@ let extend (h:heap_sig u#a) = {
     up = up #h;
     down = down #h;
     up_down = up_down #h;
-    non_info_bprop = non_info_bprop h;
     emp = emp;
     pure = pure;
     star = star;

@@ -173,7 +173,6 @@ let base_heap : heap_sig u#a =
     slprop_extensionality;
     non_info_slprop = (fun x -> reveal x);
     bprop;
-    non_info_bprop = (fun x -> reveal x);
     up;
     down;
     up_down;

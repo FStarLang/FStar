@@ -104,7 +104,6 @@ type heap_sig : Type u#(a + 2) = {
     bprop : Type u#a;
     up: bprop -> slprop;
     down: slprop -> bprop;
-    non_info_bprop: non_info bprop;
     up_down: (
       p:bprop ->
       Lemma (down (up p) == p)
