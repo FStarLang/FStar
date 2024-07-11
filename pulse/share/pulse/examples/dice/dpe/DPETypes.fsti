@@ -331,13 +331,19 @@ fn rewrite_context_perm_engine (ec:engine_context_t) (#r:context_repr_t)
       unfold context_perm;
       hide uds
     }
-    _ -> {
-      assume_ (pure (~ (Engine_context_repr? r)));
+    L0_context_repr _ -> {
       rewrite (context_perm (Engine_context ec) r) as
               (pure False);
       unreachable ()
 
     }
+    L1_context_repr _ -> {
+      rewrite (context_perm (Engine_context ec) r) as
+              (pure False);
+      unreachable ()
+
+    }
+
   }
 }
 ```
@@ -354,8 +360,12 @@ fn rewrite_context_perm_l0 (lc:l0_context_t) (#r:context_repr_t)
       unfold context_perm;
       hide lrepr
     }
-    _ -> {
-      assume_ (pure (~ (L0_context_repr? r)));
+    Engine_context_repr _ -> {
+      rewrite (context_perm (L0_context lc) r) as
+              (pure False);
+      unreachable ()
+    }
+    L1_context_repr _ -> {
       rewrite (context_perm (L0_context lc) r) as
               (pure False);
       unreachable ()
@@ -376,8 +386,12 @@ fn rewrite_context_perm_l1 (lc:l1_context_t) (#r:context_repr_t)
       unfold context_perm;
       hide lrepr
     }
-    _ -> {
-      assume_ (pure (~ (L1_context_repr? r)));
+    Engine_context_repr _ -> {
+      rewrite (context_perm (L1_context lc) r) as
+              (pure False);
+      unreachable ()
+    }
+    L0_context_repr _ -> {
       rewrite (context_perm (L1_context lc) r) as
               (pure False);
       unreachable ()

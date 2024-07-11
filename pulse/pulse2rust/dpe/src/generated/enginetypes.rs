@@ -4,7 +4,7 @@
 ////
 ////
 
-pub static uds_len: super::hacl::hashable_len = 1;
+pub static uds_len: super::hacl::hashable_len = 32;
 pub enum dice_return_code {
     DICE_SUCCESS,
     DICE_ERROR,

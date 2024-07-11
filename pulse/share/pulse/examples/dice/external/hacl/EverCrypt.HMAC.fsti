@@ -24,6 +24,8 @@ let keysized (a:H.hash_alg) (l:nat) =
   l `H.less_than_max_input_length` a &&
   l + block_length a < pow2 32
 
+val sha2_256_is_keysized : squash (keysized Spec.Hash.Definitions.sha2_256 32)
+
 /// From Spec.Agile.HMAC
 noextract [@@noextract_to "krml"]
 val spec_hmac:

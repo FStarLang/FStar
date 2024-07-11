@@ -25,19 +25,19 @@ module U8 = FStar.UInt8
 module US = FStar.SizeT
 module A = Pulse.Lib.Array
 
-assume val get_uds ()
+assume val get_uds ()  // used only for testing a client
   : stt (larray U8.t (US.v uds_len))
         (requires emp)
         (ensures fun uds -> exists* uds_repr. A.pts_to uds uds_repr)
 
-assume val get_engine_record ()
+assume val get_engine_record ()  // used only for testing a client
   : stt record_t
         (requires emp)
         (ensures fun r ->
            pure (Engine_record? r) **
            (exists* repr. pure (Engine_repr? repr) ** record_perm r 1.0R repr))
 
-assume val get_l0_record ()
+assume val get_l0_record ()  // used only for testing a client
   : stt record_t
         (requires emp)
         (ensures fun r ->
@@ -95,7 +95,7 @@ fn dpe_client_err ()
       unfold (initialize_context_client_perm sid uds_repr);
       let r = get_l0_record ();
       let hopt = derive_child sid _ r;
-      admit ()
+      admit ()  //used only for testing a client
     }
     None -> {
       rewrite (open_session_client_perm None) as emp
