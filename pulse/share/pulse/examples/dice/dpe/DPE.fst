@@ -528,63 +528,53 @@ fn replace_session
         with t1. assert (ghost_pcm_pts_to trace_ref (singleton sid 1.0R t1));
         assert (pure (t1 == t));
         let ret = HT.lookup tbl sid;
-        let tbl = tfst ret;
-        let b = tsnd ret;
-        let idx = tthd ret;
+        let tbl = fst ret;
+        let idx = snd ret;
         rewrite each
-          tfst ret as tbl,
-          tsnd ret as b,
-          tthd ret as idx;
+          fst ret as tbl,
+          snd ret as idx;
         with pht. assert (models tbl pht);
-        if b {
-          match idx {
-            Some idx -> {
-              let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
-              let tbl = fst ret;
-              let st = snd ret;
-              rewrite each
-                fst ret as tbl,
-                snd ret as st;
-              assert (session_state_related sst gsst);
-              with sst' gsst'. assert (
-                session_state_related sst' gsst' **
-                session_state_related sst gsst
-              );
-              rewrite (session_state_related sst' gsst')
-                   as (session_state_related st (current_state t1));
-              with pht. assert (models tbl pht);
-              upd_singleton sid #t1 gsst;
-              share_sid_pts_to sid;
-              rewrite (session_state_related sst gsst) as
-                      (session_state_related sst (current_state (next_trace t1 gsst)));
-              fold (session_state_perm trace_ref pht sid);
-              rewrite (session_state_perm trace_ref pht sid) as
-                      (session_perm trace_ref pht (U16.v sid));
-              frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
-              frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
-              on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
-              let s = { st_ctr = ctr; st_tbl = tbl };
-              rewrite each
-                ctr as s.st_ctr,
-                tbl as s.st_tbl;
-              fold (dpe_inv trace_ref (Some s));
-              mg := Some s;
+        match idx {
+          Some idx -> {
+            let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
+            let tbl = fst ret;
+            let st = snd ret;
+            rewrite each
+              fst ret as tbl,
+              snd ret as st;
+            assert (session_state_related sst gsst);
+            with sst' gsst'. assert (
+              session_state_related sst' gsst' **
+              session_state_related sst gsst
+            );
+            rewrite (session_state_related sst' gsst')
+                 as (session_state_related st (current_state t1));
+            with pht. assert (models tbl pht);
+            upd_singleton sid #t1 gsst;
+            share_sid_pts_to sid;
+            rewrite (session_state_related sst gsst) as
+                    (session_state_related sst (current_state (next_trace t1 gsst)));
+            fold (session_state_perm trace_ref pht sid);
+            rewrite (session_state_perm trace_ref pht sid) as
+                    (session_perm trace_ref pht (U16.v sid));
+            frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
+            frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
+            on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
+            let s = { st_ctr = ctr; st_tbl = tbl };
+            rewrite each
+              ctr as s.st_ctr,
+              tbl as s.st_tbl;
+            fold (dpe_inv trace_ref (Some s));
+            mg := Some s;
 
-              from_dpe_inv_trace_ref ();
-              M.unlock (dsnd gst) mg;
-              
-              st
-            }
-            None -> {
-              unreachable ()
-            }
+            from_dpe_inv_trace_ref ();
+            M.unlock (dsnd gst) mg;
+
+            st
           }
-        } else {
-          //
-          // AR: TODO: would be nice if we can prove this can't happen
-          //           i.e. if sid is in pht, then its lookup should succeed
-          assume_ (pure False);
-          unreachable ()
+          None -> {
+            unreachable ()
+          }
         }
       } else {
         unfold sid_pts_to;
