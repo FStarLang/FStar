@@ -86,10 +86,6 @@ let down2 = down2
 let up2 = up2
 let up2_is_slprop2 = up2_is_slprop2
 
-let slprop_2_is_3 (s:slprop)
-  : Lemma (is_slprop2 s ==> is_slprop3 s)
-  = slprop_2_is_3 s
-
 let slprop1_base = slprop1_base
 let cm_slprop1 = cm_slprop1
 let down1 = down1
@@ -99,6 +95,9 @@ let slprop_1_is_2 (s:slprop)
   : Lemma (is_slprop1 s ==> is_slprop2 s)
   = slprop_1_is_2 s
 
+let slprop_2_is_3 (s:slprop)
+  : Lemma (is_slprop2 s ==> is_slprop3 s)
+  = slprop_2_is_3 s
 let emp = emp
 
 let pure p = pure p

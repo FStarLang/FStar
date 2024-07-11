@@ -46,7 +46,9 @@ val up1 (s:slprop1_base) : slprop
 let is_slprop1 (s:slprop) = s == up1 (down1 s)
 let slprop1 = s:slprop { is_slprop1 s }
 val up1_is_slprop1 (b:slprop1_base) : Lemma (is_slprop1 (up1 b))
+
 val slprop_1_is_2 (s:slprop) : Lemma (is_slprop1 s ==> is_slprop2 s)
+val slprop_2_is_3 (s:slprop) : Lemma (is_slprop2 s ==> is_slprop3 s)
 
 
 val emp : slprop2
