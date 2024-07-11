@@ -129,7 +129,7 @@ val slprop_2_is_3 (v:slprop)
 val slprop_1_is_2 (v:slprop)
   : Lemma (is_slprop1 v ==> is_slprop2 v)
           [SMTPat (is_slprop2 v)]
-          
+
 val emp : slprop
 val emp_is_slprop2 : squash (is_slprop2 emp)
 
@@ -152,6 +152,12 @@ val slprop2_star (p q : slprop)
     (ensures is_slprop2 (p ** q))
     [SMTPat (is_slprop2 (p ** q))]
 
+val slprop1_star (p q : slprop)
+: Lemma
+    (requires is_slprop1 p /\ is_slprop1 q)
+    (ensures is_slprop1 (p ** q))
+    [SMTPat (is_slprop1 (p ** q))]
+
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
 val slprop3_exists (#a:Type u#a) (p: a -> slprop)
@@ -165,6 +171,12 @@ val slprop2_exists (#a:Type u#a) (p: a -> slprop)
     (requires forall x. is_slprop2 (p x))
     (ensures is_slprop2 (op_exists_Star p))
     [SMTPat (is_slprop2 (op_exists_Star p))]
+
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (op_exists_Star p))
+    [SMTPat (is_slprop1 (op_exists_Star p))]
 
 val slprop_equiv (p q:slprop) : prop
 val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
