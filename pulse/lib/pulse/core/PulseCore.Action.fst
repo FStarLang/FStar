@@ -380,7 +380,7 @@ let lift3 (#a:Type u#3) #r #opens #pre #post
 // invariants
 ///////////////////////////////////////////////////////
 let inv i p = inv i p
-
+let storable_inv i p = storable_inv i p
 let dup_inv (i:iref) (p:slprop) =
   fun #ictx -> dup_inv ictx i p
 let new_invariant p = fun #ictx -> new_invariant ictx p

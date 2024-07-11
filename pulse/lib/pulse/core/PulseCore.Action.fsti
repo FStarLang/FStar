@@ -142,7 +142,8 @@ let add_inv (e:inames) (i:iref) : inames = GhostSet.union (singleton i) e
 let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
 val inv (i:iref) (p:slprop) : slprop
-
+val storable_inv (i:iref { storable_iref i }) (p:slprop3)
+: Lemma (is_slprop3 (inv i p))
 let live (i:iref) = exists* (p:slprop). inv i p
 
 let rec all_live (ctx:list iref) =

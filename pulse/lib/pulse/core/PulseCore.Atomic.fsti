@@ -253,6 +253,9 @@ val dup_inv (i:iref) (p:slprop)
 val new_invariant (p:slprop3)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
+val new_storable_invariant (p:slprop2)
+  : stt_ghost (i:iref { storable_iref i }) emp_inames p (fun i -> inv i p)
+
 val fresh_invariant (ctx:list iref) (p:slprop3)
 : stt_ghost (i:iref { i `fresh_wrt` ctx })
             emp_inames
