@@ -311,6 +311,7 @@ let with_invariant_g #a #fp #fp' #f_opens #p i $f =
 let distinct_invariants_have_distinct_names i j _ =
   A.distinct_invariants_have_distinct_names i j ()
 let invariant_name_identifies_invariant p q i j =
+  assume (A.injective_iref j);
   A.invariant_name_identifies_invariant p q i j
 
 let pts_to_not_null #a #p r v = Ghost.hide (A.pts_to_not_null #a #p r v)

@@ -313,7 +313,7 @@ val distinct_invariants_have_distinct_names
       (q:slprop u#m { p =!= q })
       (i:iref { injective_iref i }) (j:iref { injective_iref j })
 : pst_ghost_action_except u#0 u#m 
-    (squash (i =!= j))
+    (squash (~(eq2 #iref i j)))
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
