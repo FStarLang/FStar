@@ -81,8 +81,17 @@ val up2 (p:slprop2_base) : slprop
 let is_slprop2 (v:slprop) : prop = up2 (down2 v) == v
 val up2_is_slprop2 (p:slprop2_base) : Lemma (is_slprop2 (up2 p))
 
+(* slprop1: slprops that can be represented in universe 1. *)
+[@@erasable]
+val slprop1_base : Type u#1
+val down1 (p:slprop) : slprop1_base
+val up1 (p:slprop1_base) : slprop
+let is_slprop1 (v:slprop) : prop = up1 (down1 v) == v
+val up1_is_slprop1 (p:slprop1_base) : Lemma (is_slprop1 (up1 p))
+
 let slprop3 = s:slprop { is_slprop3 s }
 let slprop2 = s:slprop { is_slprop2 s }
+let slprop1 = s:slprop { is_slprop1 s }
 
 (* Storable slprops: a storable0 (or storable) can be stored in the heap
 (made into an invariant), and obtain an slprop asserting this fact.
@@ -113,9 +122,13 @@ let is_storable = is_storable0
 //
 // This is a bit suboptimal
 //
-val slprop_1_is_2 (v:slprop)
+val slprop_2_is_3 (v:slprop)
   : Lemma (is_slprop2 v ==> is_slprop3 v)
           [SMTPat (is_slprop3 v)]
+
+val slprop_1_is_2 (v:slprop)
+  : Lemma (is_slprop1 v ==> is_slprop2 v)
+          [SMTPat (is_slprop2 v)]
 
 val emp : slprop
 val emp_is_slprop2 : squash (is_slprop2 emp)
@@ -139,6 +152,12 @@ val slprop2_star (p q : slprop)
     (ensures is_slprop2 (p ** q))
     [SMTPat (is_slprop2 (p ** q))]
 
+val slprop1_star (p q : slprop)
+: Lemma
+    (requires is_slprop1 p /\ is_slprop1 q)
+    (ensures is_slprop1 (p ** q))
+    [SMTPat (is_slprop1 (p ** q))]
+
 val ( exists* ) (#a:Type) (p:a -> slprop) : slprop
 
 val slprop3_exists (#a:Type u#a) (p: a -> slprop)
@@ -152,6 +171,12 @@ val slprop2_exists (#a:Type u#a) (p: a -> slprop)
     (requires forall x. is_slprop2 (p x))
     (ensures is_slprop2 (op_exists_Star p))
     [SMTPat (is_slprop2 (op_exists_Star p))]
+
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (op_exists_Star p))
+    [SMTPat (is_slprop1 (op_exists_Star p))]
 
 val slprop_equiv (p q:slprop) : prop
 val elim_slprop_equiv (#p #q:_) (_:slprop_equiv p q) : squash (p == q)
@@ -226,6 +251,7 @@ let slprop_equivs ()
 ////////////////////////////////////////////////////////////////////
 [@@ erasable]
 val iname : Type0
+val storable_iname (i:iname) : GTot bool
 val deq_iname : FStar.GhostSet.decide_eq iname
 instance val non_informative_iname
   : NonInformative.non_informative iname
@@ -243,6 +269,8 @@ let (/!) (is1 is2 : inames) : Type0 =
   GhostSet.disjoint is1 is2
 
 val inv (i:iname) (p:slprop) : slprop
+val storable_inv (i:iname { storable_iname i }) (p:slprop3)
+: Lemma (is_slprop3 (inv i p))
 
 let mem_iname (e:inames) (i:iname) : erased bool = elift2 (fun e i -> GhostSet.mem i e) e i
 let mem_inv (e:inames) (i:iname) : GTot bool = mem_iname e i
@@ -549,6 +577,9 @@ val dup_inv (i:iname) (p:slprop)
 
 val new_invariant (p:storable)
 : stt_ghost iname emp_inames p (fun i -> inv i p)
+
+val new_storable_invariant (p:slprop2)
+: stt_ghost (i:iname { storable_iname i }) emp_inames p (fun i -> inv i p)
 
 val fresh_wrt (i:iname) (c:list iname)
 : prop

@@ -104,7 +104,6 @@ type heap_sig : Type u#(a + 2) = {
     bprop : Type u#a;
     up: bprop -> slprop;
     down: slprop -> bprop;
-    non_info_bprop: non_info bprop;
     up_down: (
       p:bprop ->
       Lemma (down (up p) == p)
@@ -208,6 +207,23 @@ type heap_sig : Type u#(a + 2) = {
         (ensures
           mem_invariant e m ==
           mem_invariant (add deq_iref i e) m `star` p)
+    );
+    iref_injective: (iref -> GTot bool);
+    iref_injectivity : (
+      i:iref ->
+      j:iref ->
+      p:slprop ->
+      q:slprop ->
+      m:mem ->
+      Lemma
+       (requires
+          iref_injective i /\
+          iref_injective j /\
+          interp (inv i p) (sep.core_of m) /\
+          interp (inv j q) (sep.core_of m))
+       (ensures
+         (p =!= q ==> i =!= j) /\
+         (i==j ==> p == q))
     );
 }
 let add_iref (#h:heap_sig) (i:h.iref) (s:GhostSet.set h.iref) = add h.deq_iref i s
@@ -390,3 +406,5 @@ val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.s
 : Lemma
   (requires h.interp p m)
   (ensures h.interp (p `h.star` h.pure q) m)
+
+let is_storable (#h:heap_sig) (p:h.slprop) = h.up (h.down p) == p

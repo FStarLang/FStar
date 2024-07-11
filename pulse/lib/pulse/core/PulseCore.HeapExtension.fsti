@@ -4,22 +4,10 @@ open PulseCore.HeapSig
 val extend (h:heap_sig u#a) : h2:heap_sig u#(a + 1) { h2.bprop == h.slprop }
 
 val lift_iref (#h:heap_sig u#a) (i:h.iref) : (extend h).iref
-// val lift_iname (#h:heap_sig u#a) (i:h.iname) : (extend h).iname
-// val lift_inames (#h:heap_sig u#a) (is:inames h) : inames (extend h)
-val lower_inames (#h:heap_sig u#a) (is:inames (extend h)) : inames h
 
-// val lift_action
-//     (#h:heap_sig u#h)
-//     (#a:Type u#a)
-//     (#mg:bool)
-//     (#ex:inames h)
-//     (#pre:h.slprop)
-//     (#post:a -> h.slprop)
-//     (action:_action_except h a mg ex pre post)
-// : _action_except (extend h)
-//     a mg (lift_inames ex) 
-//     ((extend h).up pre)
-//     (fun x -> (extend h).up (post x))
+val lifted_iref_injective (#h:heap_sig u#a) (i:h.iref)
+: Lemma ((extend h).iref_injective (lift_iref i) == h.iref_injective i)
+val lower_inames (#h:heap_sig u#a) (is:inames (extend h)) : inames h
 
 val lift_action_alt
     (#h:heap_sig u#h)
@@ -43,12 +31,7 @@ val dup_inv
     ((extend h).inv i p) 
     (fun _ -> (extend h).inv i p `(extend h).star` (extend h).inv i p)
 
-val injective_invariant 
-        (#h:heap_sig u#a) 
-        (i:(extend h).iref)
-: GTot bool
-
-let iiref (h:heap_sig) = i:(extend h).iref { injective_invariant i }
+let iiref (h:heap_sig) = i:(extend h).iref { (extend h).iref_injective i }
 
 val new_invariant
     (#h:heap_sig u#a) 
@@ -118,6 +101,19 @@ val fresh_invariant
 
 val lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
 : Lemma ((extend h).up (h.inv i p) == (extend h).inv (lift_iref i) ((extend h).up p))
+
+val storable_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: GTot bool
+
+val lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
+: Lemma (storable_invariant (lift_iref i))
+
+let siref (h:heap_sig) = i:(extend h).iref { storable_invariant i }
+
+val storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop { is_storable #(extend h) p })
+: Lemma (is_storable ((extend h).inv i p))
 
 open FStar.PCM
 open FStar.Ghost

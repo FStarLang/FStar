@@ -206,7 +206,6 @@ let up_down (#h:heap_sig u#a) (p:h.slprop)
   );
   h.slprop_extensionality (down (up p)) p
 
-let non_info_bprop (h:heap_sig u#a) : non_info (bprop h) = h.non_info_slprop
 let pure (#h:heap_sig u#a) (p:prop) : ext_slprop h = up (h.pure p)
 let emp (#h:heap_sig u#a) : ext_slprop h = up h.emp
 let star (#h:heap_sig u#a) (p1 p2:ext_slprop h) 
@@ -954,6 +953,33 @@ let update_ghost (#h:heap_sig u#h) (m0:ext_mem h) (m1:erased (ext_mem h) { is_gh
 = { small = h.update_ghost m0.small m1.small; 
     big = H2.base_heap.update_ghost m0.big m1.big }
 
+let iref_injective #h (i:ext_iref h)
+: GTot bool
+= match i with 
+  | Inr _ -> true
+  | Inl i -> h.iref_injective i
+
+let iref_injectivity #h (i:ext_iref h) (j:ext_iref h) (p q:ext_slprop h) (m:ext_mem h)
+: Lemma
+  (requires
+    iref_injective i /\
+    iref_injective j /\
+    interp (inv i p) (get_core m) /\
+    interp (inv j q) (get_core m))
+  (ensures
+    (p =!= q ==> i =!= j) /\
+    (i==j ==> p == q))
+= match reveal i, reveal j with
+  | Inl _, Inr _
+  | Inr _, Inl _ -> ()
+  | Inl i0, Inl j0 ->
+    h.iref_injectivity i0 j0 (down p) (down q) m.small;
+    pure_interp (is_boxable_ext p) (get_core m);
+    pure_interp (is_boxable_ext q) (get_core m)
+  | Inr i0, Inr j0 ->
+    inv_interp i p m;
+    inv_interp j q m
+
 let extend (h:heap_sig u#a) = {
     mem = ext_mem h;
     sep = ext_sep h;
@@ -971,7 +997,6 @@ let extend (h:heap_sig u#a) = {
     up = up #h;
     down = down #h;
     up_down = up_down #h;
-    non_info_bprop = non_info_bprop h;
     emp = emp;
     pure = pure;
     star = star;
@@ -992,6 +1017,8 @@ let extend (h:heap_sig u#a) = {
     dup_inv_equiv = dup_inv_equiv #h;
     mem_invariant = mem_invariant;
     mem_invariant_equiv = mem_invariant_equiv_ext #h;
+    iref_injective;
+    iref_injectivity
 }
 
 let lift_iref (#h:heap_sig u#a) (i:h.iref)
@@ -1009,6 +1036,10 @@ let lift_irefs (#h:heap_sig u#a) (is:inames h)
 : inames (extend h) 
 = let is = Ghost.reveal is in
   FStar.GhostSet.comprehend (lift_irefs_body #h is)
+
+let lifted_iref_injective (#h:heap_sig u#a) (i:h.iref)
+: Lemma ((extend h).iref_injective (lift_iref i) == h.iref_injective i)
+= ()
 
 let lower_inames #h = down_irefs #h
 let down_frame_core
@@ -1150,105 +1181,6 @@ let pqr_prq (h:heap_sig u#a) (p q r:h.slprop)
 = ac_lemmas h
 
 module T = FStar.Tactics.V2
-#push-options "--fuel 0 --ifuel 0"
-let lift_action
-    (#h:heap_sig u#h)
-    (#a:Type u#a)
-    (#mg:bool)
-    (#ex:inames h)
-    (#pre:h.slprop)
-    (#post:a -> h.slprop)
-    (action:_action_except h a mg ex pre post)
-: _action_except (extend h)
-    a mg (lift_irefs ex) 
-    ((extend h).up pre)
-    (fun x -> (extend h).up (post x))
-= fun (frame:ext_slprop h) 
-      (m0:ext_mem h {
-        (extend h).full_mem_pred m0 /\
-        inames_ok (lift_irefs ex) m0 /\
-        interpret #(extend h) (up pre `star` frame `star` mem_invariant (lift_irefs ex) m0) m0
-       }) ->
-        down_inames_ok #h ex m0;
-        up_down_irefs ex;
-        calc (==) {
-          up pre `star` frame `star` mem_invariant (lift_irefs ex) m0;
-        (==) {} 
-          up pre `star` frame `star` (up (h.mem_invariant (down_irefs (lift_irefs ex)) m0.small) `star`
-                                      istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-                                      lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
-        (==) { ac_lemmas_ext h } //_ by (T.mapply (quote (pqrs_pr_qs (extend h)))) }
-          (up pre `star` up (h.mem_invariant (down_irefs (lift_irefs ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-           lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
-          );
-        (==) { () }
-          (up (pre `h.star` h.mem_invariant (down_irefs (lift_irefs ex)) m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-           lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
-          );
-        (==) { () }
-          (up (pre `h.star` h.mem_invariant ex m0.small)) `star` (
-           frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-           lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
-          );
-        };
-        let (| frame', restore |) =
-          down_frame
-            (pre `h.star` h.mem_invariant ex m0.small)
-            (frame `star` 
-             istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big))
-            m0
-        in
-        calc (==) {
-          (pre `h.star` h.mem_invariant ex m0.small) `h.star` frame';
-        (==) { _ by (T.mapply (quote (pqr_prq h))) }
-          pre `h.star` frame' `h.star` h.mem_invariant ex m0.small;
-        };
-        let (x, m1') = action frame' m0.small in
-        let m1 = { m0 with small = m1' } in
-        calc (==) {
-          (post x `h.star` frame' `h.star` h.mem_invariant ex m1');
-        (==) { _ by (T.mapply (quote (pqr_prq h))) }
-          (post x `h.star` h.mem_invariant ex m1') `h.star` frame';
-        };
-        let _ = restore (post x `h.star` h.mem_invariant ex m1') m1' in
-        assert (
-          interpret #(extend h)
-            (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)))
-          m1
-        );
-        calc (==) {
-          (up (post x `h.star` h.mem_invariant ex m1') `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big)
-             `star`
-            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)));
-        (==) {}
-          (up (post x) `star` up (h.mem_invariant ex m1')) `star`
-            (frame `star` istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big)
-             `star`
-            lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big)
-            );
-        (==) { ac_lemmas_ext h }
-          up (post x) `star` frame `star`
-            (up (h.mem_invariant ex m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big) `star`
-             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
-        (==) {}
-          up (post x) `star` frame `star`
-            (up (h.mem_invariant (down_irefs (lift_irefs ex)) m1') `star` 
-             istore_invariant #h (ghost_ctr m0) (lift_irefs ex) (core_of m0.big)  `star`
-             lift h (H2.base_heap.mem_invariant GhostSet.empty m0.big));
-        (==) { () }
-          up (post x) `star` frame `star` (mem_invariant (lift_irefs ex) m1);
-        };
-        down_inames_ok #h ex m1;
-        H2.base_heap.is_ghost_action_preorder();
-        (x, m1)
-
 #push-options "--ifuel 1"
 let frame_inames_ok (#h:heap_sig u#a) (ex:inames (extend h)) (m0 m1:ext_mem h)
 : Lemma
@@ -1750,7 +1682,7 @@ let new_invariant_alt
     (p:boxable (extend h))
     (ctx:erased nat)
 : ghost_action_except (extend h) 
-    (i:iiref h { iref_as_addr #h i >= ctx })
+    (i:iiref h { Inr? i /\ iref_as_addr #h i >= ctx })
     ex
     p
     (fun i -> (extend h).inv i p)
@@ -1955,9 +1887,7 @@ let distinct_invariants_have_distinct_names
 = fun frame m0 ->
     assert (interpret (inv i p) m0);
     assert (interpret (inv j q) m0);
-    inv_interp i p m0;
-    inv_interp j q m0;
-    assert ((i =!= j));
+    (extend h).iref_injectivity i j p q m0;
     h.is_ghost_action_preorder ();
     H2.base_heap.is_ghost_action_preorder ();
     (), m0
@@ -1976,8 +1906,7 @@ let invariant_name_identifies_invariant
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
 = fun frame m0 -> 
-    inv_interp i p m0;
-    inv_interp j q m0;
+    (extend h).iref_injectivity i j p q m0;
     h.is_ghost_action_preorder ();
     H2.base_heap.is_ghost_action_preorder ();
     (), m0
@@ -1995,7 +1924,7 @@ let rec max_l #h (ctx:(list (extend h).iref))
     | Inl _ -> tl_max
     | Inr _ -> max (iref_as_addr hd) tl_max
 let pick #h (ctx:(list (extend h).iref)) : erased nat = max_l ctx + 1
-let rec fresh_against_pick #h (ctx:list (extend h).iref) (i:iiref h)
+let rec fresh_against_pick #h (ctx:list (extend h).iref) (i:iiref h { Inr? i })
 : Lemma
   (requires iref_as_addr #h i > max_l ctx)
   (ensures fresh_wrt ctx i)
@@ -2034,6 +1963,39 @@ let lift_inv (h:heap_sig u#a) (i:h.iref) (p:h.slprop)
     up (h.inv i p);
   }
 
+
+let storable_invariant 
+        (#h:heap_sig u#a) 
+        (i:(extend h).iref)
+: GTot bool
+= Inl? i
+
+let lift_iref_is_storable (#h:heap_sig u#a) (i:h.iref)
+: Lemma (storable_invariant (lift_iref i))
+= ()
+
+let storable_inv (h:heap_sig u#a) (i:siref h) (p:(extend h).slprop{ is_storable p })
+: Lemma (is_storable ((extend h).inv i p))
+= let Inl j = i in
+  calc (==) {
+    up (down (inv i p));
+  (==) { }
+    up (down (up (h.inv j (down p)) `star` pure (is_boxable_ext #h p)));
+  (==) { down_star_ext (up (h.inv j (down p))) (pure (is_boxable_ext #h p)) }
+    up (down (up (h.inv j (down p))) `h.star` down (pure (is_boxable_ext #h p)));
+  (==) {}
+    up (h.inv j (down p) `h.star` down (pure (is_boxable_ext #h p)));
+  (==) { up_star_ext (h.inv j (down p)) (down (pure (is_boxable_ext #h p))) }
+    up (h.inv j (down p)) `star` pure (is_boxable_ext #h p);
+  (==) { lift_inv h j (down p) }
+    inv i (up (down p)) `star` pure (is_boxable_ext #h p);
+  (==) {}
+    inv i p `star` pure (is_boxable_ext #h p);
+  (==) { pure_ext h (is_boxable_ext #h p) True }
+    inv i p `star` pure True;
+  (==) { (extend h).pure_true_emp (); ac_lemmas_ext h }
+    inv i p;
+  }
 
 #push-options "--ifuel 2 --fuel 1"
 let sl_pure_imp_ext_aux

@@ -167,6 +167,7 @@ let action_of_pre_act
 = f
 
 let iref = iref
+let storable_iref = storable_iref
 let deq_iref = deq_iref
 
 let act 
@@ -379,11 +380,11 @@ let lift3 (#a:Type u#3) #r #opens #pre #post
 // invariants
 ///////////////////////////////////////////////////////
 let inv i p = inv i p
-
+let storable_inv i p = storable_inv i p
 let dup_inv (i:iref) (p:slprop) =
   fun #ictx -> dup_inv ictx i p
 let new_invariant p = fun #ictx -> new_invariant ictx p
-
+let new_storable_invariant p = fun #ictx -> new_storable_invariant ictx p
 let exists_equiv (#a:_) (#p:a -> slprop)
   : squash (op_exists_Star p == (exists* x. p x))
   = let pf = I.slprop_equiv_exists p (fun x -> p x) () in

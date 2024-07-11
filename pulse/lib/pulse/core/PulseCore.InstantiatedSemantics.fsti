@@ -38,8 +38,18 @@ let is_slprop2 (s:slprop) = s == up2 (down2 s)
 let slprop2 = s:slprop { is_slprop2 s }
 val up2_is_slprop2 (b:slprop2_base) : Lemma (is_slprop2 (up2 b))
 
-val slprop_1_is_2 (s:slprop)
-  : Lemma (is_slprop2 s ==> is_slprop3 s)
+[@@erasable]
+val slprop1_base : Type u#1
+val cm_slprop1 : FStar.Algebra.CommMonoid.cm slprop1_base
+val down1 (s:slprop) : slprop1_base
+val up1 (s:slprop1_base) : slprop
+let is_slprop1 (s:slprop) = s == up1 (down1 s)
+let slprop1 = s:slprop { is_slprop1 s }
+val up1_is_slprop1 (b:slprop1_base) : Lemma (is_slprop1 (up1 b))
+
+val slprop_1_is_2 (s:slprop) : Lemma (is_slprop1 s ==> is_slprop2 s)
+val slprop_2_is_3 (s:slprop) : Lemma (is_slprop2 s ==> is_slprop3 s)
+
 
 val emp : slprop2
 val pure (p:prop) : slprop2
@@ -55,6 +65,11 @@ val slprop2_star (p q:slprop2) : squash (is_slprop2 (p ** q))
 val slprop2_exists (#a:Type u#a) (p: a -> slprop)
 : Lemma (requires forall x. is_slprop2 (p x))
         (ensures is_slprop2 (op_exists_Star p))
+
+val slprop1_star (p q:slprop1) : squash (is_slprop1 (p ** q))
+val slprop1_exists (#a:Type u#a) (p: a -> slprop)
+: Lemma (requires forall x. is_slprop1 (p x))
+        (ensures is_slprop1 (op_exists_Star p))
 
 (* Q: Can the star lemmas be provided pointfree? Is that useful? *)
 val up3_emp    ()      : Lemma (up3 cm_slprop3.unit == emp)

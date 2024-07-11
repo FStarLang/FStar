@@ -288,6 +288,9 @@ let dup_inv (i:iref) (p:slprop) = A.dup_inv i p
 let new_invariant (p:slprop3)
 : stt_ghost iref emp_inames p (fun i -> inv i p)
 = A.new_invariant p
+let new_storable_invariant (p:slprop2)
+: stt_ghost (i:iref{ storable_iref i }) emp_inames p (fun i -> inv i p)
+= A.new_storable_invariant p
 
 let fresh_invariant ctx p = A.fresh_invariant ctx p
 
