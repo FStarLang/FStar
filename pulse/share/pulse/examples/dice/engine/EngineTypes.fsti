@@ -22,8 +22,6 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 open HACL
 
-val uds_is_enabled : slprop
-
 val uds_len : hashable_len 
 
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR

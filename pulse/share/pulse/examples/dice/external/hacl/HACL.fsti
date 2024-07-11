@@ -81,7 +81,7 @@ val spec_hmac
   (m:Seq.seq U8.t) 
   : s:(Seq.seq U8.t){ Seq.length s = (US.v (digest_len a)) }
 
-val hacl_hmac (alg:alg_t)
+val hacl_hmac (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
               (key_len: hashable_len { US.v key_len == A.length key })
@@ -143,7 +143,7 @@ val ed25519_sign
 
 // NOTE: I added a unit argument to avoid krmlinit_globals
 
-val dice_hash_alg0 (_: unit) : alg_t
+val dice_hash_alg0 (_: unit) : a:alg_t { a == Spec.Hash.Definitions.sha2_256 }
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let dice_hash_alg = dice_hash_alg0 ()
@@ -154,10 +154,11 @@ val dice_digest_len : (dice_digest_len: hashable_len {
   dice_digest_len == digest_len dice_hash_alg
 })
 
-assume Dice_digest_len_is_hashable : is_hashable_len dice_digest_len
 
-assume Dice_digest_len_is_hkdf_ikm : valid_hkdf_ikm_len dice_digest_len
+val dice_digest_len_is_hkdf_ikm : squash (valid_hkdf_ikm_len dice_digest_len)
 
-assume Is_hashable_len_32 : is_hashable_len v32us
+val is_hashable_len_32 : squash (is_hashable_len v32us)
 
 val reveal_dice_digest_len () : Lemma (dice_digest_len == 32sz)
+
+val dice_digest_len_is_hashable : squash (is_hashable_len dice_digest_len)

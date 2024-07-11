@@ -8,7 +8,7 @@ module U8 = FStar.UInt8
 module U32 = FStar.UInt32
 
 /// From EverCrypt.Hash.Incremental.hash_len
-val hash_len : hash_alg -> U32.t
+val hash_len : a:hash_alg -> v:U32.t { a == sha2_256 ==> v == 32ul}
 
 noextract [@@noextract_to "krml"]
 let hash_length (a: hash_alg) : Tot nat = U32.v (hash_len a)

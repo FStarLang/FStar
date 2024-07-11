@@ -6,15 +6,14 @@ let digest_len a = US.uint32_to_sizet (EverCrypt.Hash.Incremental.hash_len a)
 
 let is_hashable_len x =
   (US.v x < pow2 32) /\
-  (forall (a: alg_t) .
-    EverCrypt.HMAC.keysized a (US.v x))
+  EverCrypt.HMAC.keysized Spec.Hash.Definitions.sha2_256 (US.v x)
 
 let is_signable_len x =
   US.v x <= EverCrypt.Ed25519.max_size_t
 
-let valid_hkdf_lbl_len _ = True // FIXME: where is this used?
+let valid_hkdf_lbl_len _ = True // where is this used?
 
-let valid_hkdf_ikm_len _ = True // FIXME: where is this used?
+let valid_hkdf_ikm_len _ = True // where is this used?
 
 let spec_hash
   a s
@@ -56,7 +55,7 @@ let spec_hmac
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
 ```pulse
-fn hacl_hmac0 (alg:alg_t)
+fn hacl_hmac0 (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
               (key_len: hashable_len { US.v key_len == A.length key })
@@ -167,13 +166,20 @@ let dice_hash_alg1 (_: unit) : alg_t = Spec.Hash.Definitions.sha2_256
 let dice_hash_alg0 _ = dice_hash_alg1 ()
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-let dice_digest_len0 = 32sz // FIXME: this is taken from previously handwritten hacl.rs
+let dice_digest_len0 = 32sz // this is taken from previously handwritten hacl.rs
 
-assume val dice_digest_len_spec : squash (
+let dice_digest_len_spec : squash (
   is_hashable_len (digest_len dice_hash_alg) /\
   dice_digest_len0 == digest_len dice_hash_alg
-)
+) = ()
 
 let dice_digest_len = dice_digest_len0
 
+let dice_digest_len_is_hkdf_ikm = ()
+
+let is_hashable_len_32 = ()
+
 let reveal_dice_digest_len () = ()
+
+let dice_digest_len_is_hashable = ()
+

@@ -44,12 +44,10 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.MutexToken
 
-assume
-val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
+// We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
+assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
 
-//
 // We assume this code will be executed on a machine where u32 fits the word size
-//
 assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
@@ -541,6 +539,9 @@ fn replace_session
           tsnd ret as b,
           tthd ret as idx;
         with pht. assert (models tbl pht);
+        //
+        // We should strengthen the postcondition of hashtable lookup to provide this
+        //
         assume_ (pure (b <==> (Some? (PHT.lookup pht sid))));
         if b {
           match idx {
