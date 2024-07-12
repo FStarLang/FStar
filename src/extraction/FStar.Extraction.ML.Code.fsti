@@ -18,6 +18,7 @@ module FStar.Extraction.ML.Code
 open FStar.Compiler.Effect
 
 open FStar.Extraction.ML.Syntax
+open FStar.Class.Show
 open FStar.Pprint
 
 type doc = | Doc of string
@@ -27,3 +28,5 @@ val doc_of_sig :      mlsymbol -> mlsig -> doc
 val string_of_mlexpr: mlpath -> mlexpr -> string
 val string_of_mlty:   mlpath -> mlty -> string
 val pretty:           int -> doc -> string
+
+instance val showable_mlexpr : showable mlexpr

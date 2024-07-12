@@ -850,3 +850,7 @@ let string_of_mlexpr cmod (e:mlexpr) =
 let string_of_mlty (cmod) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     pretty 0 doc
+
+instance showable_mlexpr : showable mlexpr = {
+  show = string_of_mlexpr ([], "");
+}
