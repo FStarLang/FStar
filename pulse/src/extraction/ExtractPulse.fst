@@ -125,6 +125,10 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
     when (string_of_mlpath p = "Pulse.Lib.Core.new_invariant") ->
     EUnit
 
+  | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ b ])
+    when string_of_mlpath p = "Pulse.Lib.Box.box_to_ref" ->
+    cb b
+
   // FIXME: What should we do with DPE.run_stt? Pulse2Rust has a similar ad-hoc rule
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ _post; body ])
     when string_of_mlpath p = "DPE.run_stt" ->
