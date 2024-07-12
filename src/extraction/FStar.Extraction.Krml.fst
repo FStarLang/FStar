@@ -242,7 +242,7 @@ let mk_op = function
       Some Sub
   | "sub_mod" | "op_Subtraction_Percent_Hat" ->
       Some SubW
-  | "mul" | "op_Star_Hat" ->
+  | "mul" | "op_Star_Hat" | "mul_underspec" ->
       Some Mult
   | "mul_mod" | "op_Star_Percent_Hat" ->
       Some MultW

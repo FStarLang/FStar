@@ -675,6 +675,7 @@ let (mk_op : Prims.string -> op FStar_Pervasives_Native.option) =
     | "op_Subtraction_Percent_Hat" -> FStar_Pervasives_Native.Some SubW
     | "mul" -> FStar_Pervasives_Native.Some Mult
     | "op_Star_Hat" -> FStar_Pervasives_Native.Some Mult
+    | "mul_underspec" -> FStar_Pervasives_Native.Some Mult
     | "mul_mod" -> FStar_Pervasives_Native.Some MultW
     | "op_Star_Percent_Hat" -> FStar_Pervasives_Native.Some MultW
     | "div" -> FStar_Pervasives_Native.Some Div
@@ -3156,7 +3157,7 @@ let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
                      "Unable to translate module: %s because:\n  %s\n" m_name
                      uu___3);
                   FStar_Pervasives_Native.None)) modules
-let (uu___1702 : unit) =
+let (uu___1703 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
