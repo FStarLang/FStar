@@ -87,6 +87,8 @@ val is_split_is_small (#t: Type) (s: slice t) (p: perm) (i: SZ.t) (left: slice t
   : Lemma (is_small (is_split s p i left right))
           [SMTPat (is_small (is_split s p i left right))]
 
+noeq type slice_pair (t: Type) = | SlicePair: (fst: slice t) -> (snd: slice t) -> slice_pair t
+
 let split_precond
   (#t: Type) (mutb: bool) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
 : Tot prop
@@ -108,12 +110,12 @@ let split_post'
 
 let split_post
     (#t: Type) (s: slice t) (p: perm) (v: Ghost.erased (Seq.seq t)) (i: SZ.t)
-    (res: (slice t & slice t))
+    (res: slice_pair t)
 : Tot vprop
-= let (s1, s2) = res in
+= let SlicePair s1 s2 = res in
     split_post' s p v i s1 s2
 
-val split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice t & slice t)
+val split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t) : stt (slice_pair t)
     (requires pts_to s #p v ** pure (split_precond mutb p v i))
     (ensures fun res -> split_post s p v i res)
 

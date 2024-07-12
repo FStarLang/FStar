@@ -161,7 +161,7 @@ let is_split_is_small s p i s1 s2 = ()
 ```pulse
 fn split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)
     requires pts_to s #p v ** pure (split_precond mutb p v i)
-    returns res : (slice t & slice t)
+    returns res : slice_pair t
     ensures (split_post s p v i res)
 {
     unfold (pts_to s #p v);
@@ -182,8 +182,8 @@ fn split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.
     fold (pts_to s2 #p _v2);
     fold (is_split s p i s1 s2);
     fold (split_post' s p v i s1 s2);
-    fold (split_post s p v i (s1, s2));
-    (s1, s2)
+    fold (split_post s p v i (s1 `SlicePair` s2));
+    (s1 `SlicePair` s2)
 }
 ```
 
