@@ -1428,3 +1428,6 @@ let (string_of_mlty :
         let uu___ = FStar_Extraction_ML_Util.flatten_mlpath cmod in
         doc_of_mltype uu___ (min_op_prec, NonAssoc) e in
       pretty Prims.int_zero doc1
+let (showable_mlexpr :
+  FStar_Extraction_ML_Syntax.mlexpr FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = (string_of_mlexpr ([], "")) }

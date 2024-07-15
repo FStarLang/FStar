@@ -3464,12 +3464,16 @@ and (tc_maybe_toplevel_term :
               | FStar_Pervasives_Native.None ->
                   let uu___6 =
                     let uu___7 =
-                      let uu___8 = FStar_Ident.string_of_lid field_name in
-                      FStar_Compiler_Util.format1
-                        "Field name %s could not be resolved" uu___8 in
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 = FStar_Ident.string_of_lid field_name in
+                          FStar_Compiler_Util.format1
+                            "Field name %s could not be resolved" uu___10 in
+                        FStar_Errors_Msg.text uu___9 in
+                      [uu___8] in
                     (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___7) in
                   let uu___7 = FStar_Ident.range_of_lid field_name in
-                  FStar_Errors.raise_error uu___6 uu___7
+                  FStar_Errors.raise_error_doc uu___6 uu___7
               | FStar_Pervasives_Native.Some choice1 ->
                   let f = FStar_Syntax_Syntax.fv_to_tm choice1 in
                   let term =

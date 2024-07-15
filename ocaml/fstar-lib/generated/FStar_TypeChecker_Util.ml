@@ -8348,7 +8348,8 @@ let (find_record_or_dc_from_typ :
                       FStar_Errors_Msg.text uu___5 in
                     [uu___4] in
                   (FStar_Errors_Codes.Error_CannotResolveRecord, uu___3) in
-                FStar_Errors.raise_error_doc uu___2 rng
+                let uu___3 = FStar_Ident.range_of_lid f1 in
+                FStar_Errors.raise_error_doc uu___2 uu___3
             | (FStar_Pervasives_Native.Some tn, uu___1) ->
                 let uu___2 = try_lookup_record_type env tn in
                 (match uu___2 with

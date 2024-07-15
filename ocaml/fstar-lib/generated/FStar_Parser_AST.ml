@@ -2521,3 +2521,5 @@ let (idents_of_binders :
   = fun bs -> fun r -> FStar_Compiler_List.map (ident_of_binder r) bs
 let (showable_decl : decl FStar_Class_Show.showable) =
   { FStar_Class_Show.show = decl_to_string }
+let (showable_term : term FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = term_to_string }
