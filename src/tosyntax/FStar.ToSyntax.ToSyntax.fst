@@ -42,7 +42,8 @@ module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
 module SS = FStar.Syntax.Subst
 
-let dbg_attrs = Debug.get_toggle "attrs"
+let dbg_attrs    = Debug.get_toggle "attrs"
+let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
 
 type antiquotations_temp = list (bv & S.term)
 
@@ -1143,6 +1144,8 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       | _ ->
         raise_error (Fatal_UnexpectedTerm, "Unexpected qualified binder in ELIM_EXISTS") (range_of_bv b.binder_bv)
   in
+  if !dbg_ToSyntax then
+    BU.print1 "desugaring (%s)\n\n" (show top);
   begin match (unparen top).tm with
     | Wild -> setpos tun, noaqs
 
