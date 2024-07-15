@@ -712,28 +712,36 @@ let (is_machine_int : Prims.string -> Prims.bool) =
   fun m -> (mk_width m) <> FStar_Pervasives_Native.None
 type env =
   {
+  uenv: FStar_Extraction_ML_UEnv.uenv ;
   names: name Prims.list ;
   names_t: Prims.string Prims.list ;
   module_name: Prims.string Prims.list }
 and name = {
   pretty: Prims.string }
+let (__proj__Mkenv__item__uenv : env -> FStar_Extraction_ML_UEnv.uenv) =
+  fun projectee ->
+    match projectee with | { uenv; names; names_t; module_name;_} -> uenv
 let (__proj__Mkenv__item__names : env -> name Prims.list) =
   fun projectee ->
-    match projectee with | { names; names_t; module_name;_} -> names
+    match projectee with | { uenv; names; names_t; module_name;_} -> names
 let (__proj__Mkenv__item__names_t : env -> Prims.string Prims.list) =
   fun projectee ->
-    match projectee with | { names; names_t; module_name;_} -> names_t
+    match projectee with | { uenv; names; names_t; module_name;_} -> names_t
 let (__proj__Mkenv__item__module_name : env -> Prims.string Prims.list) =
   fun projectee ->
-    match projectee with | { names; names_t; module_name;_} -> module_name
+    match projectee with
+    | { uenv; names; names_t; module_name;_} -> module_name
 let (__proj__Mkname__item__pretty : name -> Prims.string) =
   fun projectee -> match projectee with | { pretty;_} -> pretty
-let (empty : Prims.string Prims.list -> env) =
-  fun module_name -> { names = []; names_t = []; module_name }
+let (empty : FStar_Extraction_ML_UEnv.uenv -> Prims.string Prims.list -> env)
+  =
+  fun uenv ->
+    fun module_name -> { uenv; names = []; names_t = []; module_name }
 let (extend : env -> Prims.string -> env) =
   fun env1 ->
     fun x ->
       {
+        uenv = (env1.uenv);
         names = ({ pretty = x } :: (env1.names));
         names_t = (env1.names_t);
         module_name = (env1.module_name)
@@ -742,6 +750,7 @@ let (extend_t : env -> Prims.string -> env) =
   fun env1 ->
     fun x ->
       {
+        uenv = (env1.uenv);
         names = (env1.names);
         names_t = (x :: (env1.names_t));
         module_name = (env1.module_name)
@@ -2837,10 +2846,14 @@ let (translate_type_decl' :
           FStar_Extraction_ML_Syntax.tydecl_defn = uu___4;_} ->
           ((let uu___6 =
               let uu___7 =
-                FStar_Compiler_Util.format1
-                  "Error extracting type definition %s to KaRaMeL\n" name1 in
+                let uu___8 =
+                  let uu___9 =
+                    FStar_Compiler_Util.format1
+                      "Error extracting type definition %s to KaRaMeL." name1 in
+                  FStar_Errors_Msg.text uu___9 in
+                [uu___8] in
               (FStar_Errors_Codes.Warning_DefinitionNotTranslated, uu___7) in
-            FStar_Errors.log_issue FStar_Compiler_Range_Type.dummyRange
+            FStar_Errors.log_issue_doc FStar_Compiler_Range_Type.dummyRange
               uu___6);
            FStar_Pervasives_Native.None)
 let (translate_let' :
@@ -3025,14 +3038,23 @@ let (translate_let' :
                    ((let uu___6 =
                        let uu___7 =
                          let uu___8 =
-                           FStar_Extraction_ML_Syntax.string_of_mlpath name2 in
-                         let uu___9 = FStar_Compiler_Util.print_exn uu___4 in
-                         FStar_Compiler_Util.format2
-                           "Error extracting %s to KaRaMeL (%s)\n" uu___8
-                           uu___9 in
+                           let uu___9 =
+                             let uu___10 =
+                               FStar_Extraction_ML_Syntax.string_of_mlpath
+                                 name2 in
+                             FStar_Compiler_Util.format1
+                               "Error extracting %s to KaRaMeL." uu___10 in
+                           FStar_Errors_Msg.text uu___9 in
+                         let uu___9 =
+                           let uu___10 =
+                             let uu___11 =
+                               FStar_Compiler_Util.print_exn uu___4 in
+                             FStar_Pprint.arbitrary_string uu___11 in
+                           [uu___10] in
+                         uu___8 :: uu___9 in
                        (FStar_Errors_Codes.Warning_DefinitionNotTranslated,
                          uu___7) in
-                     FStar_Errors.log_issue
+                     FStar_Errors.log_issue_doc
                        FStar_Compiler_Range_Type.dummyRange uu___6);
                     FStar_Pervasives_Native.Some
                       (DGlobal
@@ -3105,59 +3127,66 @@ let (translate_decl :
              m;
            [])
 let (translate_module :
-  (FStar_Extraction_ML_Syntax.mlpath * (FStar_Extraction_ML_Syntax.mlsig *
-    FStar_Extraction_ML_Syntax.mlmodule) FStar_Pervasives_Native.option *
-    FStar_Extraction_ML_Syntax.mllib) -> file)
+  FStar_Extraction_ML_UEnv.uenv ->
+    (FStar_Extraction_ML_Syntax.mlpath * (FStar_Extraction_ML_Syntax.mlsig *
+      FStar_Extraction_ML_Syntax.mlmodule) FStar_Pervasives_Native.option *
+      FStar_Extraction_ML_Syntax.mllib) -> file)
   =
-  fun m ->
-    let uu___ = m in
-    match uu___ with
-    | (module_name, modul, uu___1) ->
-        let module_name1 =
-          FStar_Compiler_List.op_At (FStar_Pervasives_Native.fst module_name)
-            [FStar_Pervasives_Native.snd module_name] in
-        let program1 =
-          match modul with
-          | FStar_Pervasives_Native.Some (_signature, decls) ->
-              FStar_Compiler_List.collect
-                (translate_decl (empty module_name1)) decls
-          | uu___2 ->
-              FStar_Compiler_Effect.failwith
-                "Unexpected standalone interface or nested modules" in
-        ((FStar_Compiler_String.concat "_" module_name1), program1)
-let (translate : FStar_Extraction_ML_Syntax.mllib -> file Prims.list) =
-  fun uu___ ->
-    match uu___ with
-    | FStar_Extraction_ML_Syntax.MLLib modules ->
-        FStar_Compiler_List.filter_map
-          (fun m ->
-             let m_name =
-               let uu___1 = m in
-               match uu___1 with
-               | (path, uu___2, uu___3) ->
-                   FStar_Extraction_ML_Syntax.string_of_mlpath path in
-             try
-               (fun uu___1 ->
-                  match () with
-                  | () ->
-                      ((let uu___3 =
-                          let uu___4 = FStar_Options.silent () in
-                          Prims.op_Negation uu___4 in
-                        if uu___3
-                        then
-                          FStar_Compiler_Util.print1
-                            "Attempting to translate module %s\n" m_name
-                        else ());
-                       (let uu___3 = translate_module m in
-                        FStar_Pervasives_Native.Some uu___3))) ()
-             with
-             | uu___1 ->
-                 ((let uu___3 = FStar_Compiler_Util.print_exn uu___1 in
-                   FStar_Compiler_Util.print2
-                     "Unable to translate module: %s because:\n  %s\n" m_name
-                     uu___3);
-                  FStar_Pervasives_Native.None)) modules
-let (uu___1703 : unit) =
+  fun uenv ->
+    fun m ->
+      let uu___ = m in
+      match uu___ with
+      | (module_name, modul, uu___1) ->
+          let module_name1 =
+            FStar_Compiler_List.op_At
+              (FStar_Pervasives_Native.fst module_name)
+              [FStar_Pervasives_Native.snd module_name] in
+          let program1 =
+            match modul with
+            | FStar_Pervasives_Native.Some (_signature, decls) ->
+                FStar_Compiler_List.collect
+                  (translate_decl (empty uenv module_name1)) decls
+            | uu___2 ->
+                FStar_Compiler_Effect.failwith
+                  "Unexpected standalone interface or nested modules" in
+          ((FStar_Compiler_String.concat "_" module_name1), program1)
+let (translate :
+  FStar_Extraction_ML_UEnv.uenv ->
+    FStar_Extraction_ML_Syntax.mllib -> file Prims.list)
+  =
+  fun ue ->
+    fun uu___ ->
+      match uu___ with
+      | FStar_Extraction_ML_Syntax.MLLib modules ->
+          FStar_Compiler_List.filter_map
+            (fun m ->
+               let m_name =
+                 let uu___1 = m in
+                 match uu___1 with
+                 | (path, uu___2, uu___3) ->
+                     FStar_Extraction_ML_Syntax.string_of_mlpath path in
+               try
+                 (fun uu___1 ->
+                    match () with
+                    | () ->
+                        ((let uu___3 =
+                            let uu___4 = FStar_Options.silent () in
+                            Prims.op_Negation uu___4 in
+                          if uu___3
+                          then
+                            FStar_Compiler_Util.print1
+                              "Attempting to translate module %s\n" m_name
+                          else ());
+                         (let uu___3 = translate_module ue m in
+                          FStar_Pervasives_Native.Some uu___3))) ()
+               with
+               | uu___1 ->
+                   ((let uu___3 = FStar_Compiler_Util.print_exn uu___1 in
+                     FStar_Compiler_Util.print2
+                       "Unable to translate module: %s because:\n  %s\n"
+                       m_name uu___3);
+                    FStar_Pervasives_Native.None)) modules
+let (uu___1711 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';

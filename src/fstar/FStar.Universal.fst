@@ -305,7 +305,10 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       ) mllibs
 
     | Some Options.Krml ->
-      let programs = List.collect Extraction.Krml.translate (List.map snd mllibs) in
+      let programs =
+        mllibs |> List.collect (fun (ue, mllibs) ->
+                                  Extraction.Krml.translate ue mllibs)
+      in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       begin match programs with
             | [ name, _ ] ->
@@ -548,7 +551,7 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
       let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
       if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env_before mllib), env) remaining
+      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)

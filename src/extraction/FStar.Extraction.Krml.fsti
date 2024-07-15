@@ -25,4 +25,4 @@ type version = int
 type binary_format = version & list file
 
 val current_version: version
-val translate : FStar.Extraction.ML.Syntax.mllib -> list file
+val translate : Extraction.ML.UEnv.uenv -> FStar.Extraction.ML.Syntax.mllib -> list file

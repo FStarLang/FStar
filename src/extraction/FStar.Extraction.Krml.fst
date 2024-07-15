@@ -24,6 +24,7 @@ open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.UEnv
 open FStar.Const
 open FStar.BaseTypes
 
@@ -286,6 +287,7 @@ let is_machine_int m =
 (* Environments **************************************************************)
 
 type env = {
+  uenv : uenv;
   names: list name;
   names_t: list string;
   module_name: list string;
@@ -295,7 +297,8 @@ and name = {
   pretty: string;
 }
 
-let empty module_name = {
+let empty uenv module_name = {
+  uenv = uenv;
   names = [];
   names_t = [];
   module_name = module_name
@@ -1149,7 +1152,9 @@ let translate_type_decl' env ty: option decl =
         ) branches))
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
-        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KaRaMeL\n" name));
+        Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+            Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
+          ]);
         None
 
 let translate_let' env flavor lb: option decl =
@@ -1237,7 +1242,10 @@ let translate_let' env flavor lb: option decl =
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
-          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+              Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+              Pprint.arbitrary_string (BU.print_exn e);
+            ]);
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
         end
 
@@ -1293,18 +1301,18 @@ let translate_decl env d: list decl =
       BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
+let translate_module uenv (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
   let (module_name, modul, _) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
-        List.collect (translate_decl (empty module_name)) decls
+        List.collect (translate_decl (empty uenv module_name)) decls
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
   (String.concat "_" module_name), program
 
-let translate (MLLib modules): list file =
+let translate (ue:uenv) (MLLib modules): list file =
   List.filter_map (fun m ->
     let m_name =
       let path, _, _ = m in
@@ -1312,7 +1320,7 @@ let translate (MLLib modules): list file =
     in
     try
       if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
-      Some (translate_module m)
+      Some (translate_module ue m)
     with
     | e ->
         BU.print2 "Unable to translate module: %s because:\n  %s\n"
