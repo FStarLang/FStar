@@ -305,7 +305,10 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
       ) mllibs
 
     | Some Options.Krml ->
-      let programs = List.collect Extraction.Krml.translate (List.map snd mllibs) in
+      let programs =
+        mllibs |> List.collect (fun (ue, mllibs) ->
+                                  Extraction.Krml.translate ue mllibs)
+      in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
       begin match programs with
             | [ name, _ ] ->

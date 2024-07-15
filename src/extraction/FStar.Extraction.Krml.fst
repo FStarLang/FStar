@@ -24,6 +24,7 @@ open FStar.Compiler.Util
 open FStar.Extraction
 open FStar.Extraction.ML
 open FStar.Extraction.ML.Syntax
+open FStar.Extraction.ML.UEnv
 open FStar.Const
 open FStar.BaseTypes
 
@@ -286,6 +287,7 @@ let is_machine_int m =
 (* Environments **************************************************************)
 
 type env = {
+  uenv : uenv;
   names: list name;
   names_t: list string;
   module_name: list string;
@@ -295,7 +297,8 @@ and name = {
   pretty: string;
 }
 
-let empty module_name = {
+let empty uenv module_name = {
+  uenv = uenv;
   names = [];
   names_t = [];
   module_name = module_name
@@ -1298,18 +1301,18 @@ let translate_decl env d: list decl =
       BU.print1_warning "Not extracting exception %s to KaRaMeL (exceptions unsupported)\n" m;
       []
 
-let translate_module (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
+let translate_module uenv (m : mlpath & option (mlsig & mlmodule) & mllib) : file =
   let (module_name, modul, _) = m in
   let module_name = fst module_name @ [ snd module_name ] in
   let program = match modul with
     | Some (_signature, decls) ->
-        List.collect (translate_decl (empty module_name)) decls
+        List.collect (translate_decl (empty uenv module_name)) decls
     | _ ->
         failwith "Unexpected standalone interface or nested modules"
   in
   (String.concat "_" module_name), program
 
-let translate (MLLib modules): list file =
+let translate (ue:uenv) (MLLib modules): list file =
   List.filter_map (fun m ->
     let m_name =
       let path, _, _ = m in
@@ -1317,7 +1320,7 @@ let translate (MLLib modules): list file =
     in
     try
       if not (Options.silent()) then (BU.print1 "Attempting to translate module %s\n" m_name);
-      Some (translate_module m)
+      Some (translate_module ue m)
     with
     | e ->
         BU.print2 "Unable to translate module: %s because:\n  %s\n"
