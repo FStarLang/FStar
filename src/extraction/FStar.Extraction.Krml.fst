@@ -1149,7 +1149,9 @@ let translate_type_decl' env ty: option decl =
         ) branches))
     | {tydecl_name=name} ->
         // JP: TODO: figure out why and how this happens
-        Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format1 "Error extracting type definition %s to KaRaMeL\n" name));
+        Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+            Errors.Msg.text <| BU.format1 "Error extracting type definition %s to KaRaMeL." name;
+          ]);
         None
 
 let translate_let' env flavor lb: option decl =
@@ -1237,7 +1239,10 @@ let translate_let' env flavor lb: option decl =
           let expr = translate_expr env expr in
           Some (DGlobal (meta, name, List.length tvars, t, expr))
         with e ->
-          Errors. log_issue Range.dummyRange (Errors.Warning_DefinitionNotTranslated, (BU.format2 "Error extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) (BU.print_exn e)));
+          Errors.log_issue_doc Range.dummyRange (Errors.Warning_DefinitionNotTranslated, [
+              Errors.Msg.text <| BU.format1 "Error extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+              Pprint.arbitrary_string (BU.print_exn e);
+            ]);
           Some (DGlobal (meta, name, List.length tvars, t, EAny))
         end
 
