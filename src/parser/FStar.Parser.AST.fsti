@@ -329,3 +329,4 @@ val ident_of_binder : range -> binder -> ident
 val idents_of_binders : list binder -> range -> list ident
 
 instance val showable_decl : showable decl
+instance val showable_term : showable term
