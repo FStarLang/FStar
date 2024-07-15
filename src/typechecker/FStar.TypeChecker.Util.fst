@@ -3622,7 +3622,7 @@ let find_record_or_dc_from_typ env (t:option typ) (uc:unresolved_constructor) rn
         let f = List.hd uc.uc_fields in
         raise_error_doc (Errors.Error_CannotResolveRecord, [
             text <| BU.format1 "Field name %s could not be resolved." (string_of_lid f);
-          ]) rng
+          ]) (range_of_lid f)
 
       | Some tn, _ ->
         match try_lookup_record_type env tn with

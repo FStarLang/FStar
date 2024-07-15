@@ -1211,10 +1211,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     let proceed_with choice =
       match choice with
       | None ->
-        raise_error (Errors.Fatal_IdentifierNotFound,
-                     BU.format1 "Field name %s could not be resolved"
-                                (string_of_lid field_name))
-                     (range_of_lid field_name)
+        raise_error_doc (Errors.Fatal_IdentifierNotFound, [
+           text <| BU.format1 "Field name %s could not be resolved" (string_of_lid field_name);
+        ]) (range_of_lid field_name)
       | Some choice ->
         let f = S.fv_to_tm choice in
         let term = S.mk_Tm_app f ((e, None)::rest) top.pos in
