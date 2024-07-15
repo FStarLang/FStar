@@ -9,11 +9,12 @@ stdenv.mkDerivation {
   pname = "fstar-ulib";
   inherit version;
 
-  src = lib.sourceByRegex ./.. ["ulib.*" ".common.mk"];
-
-  nativeBuildInputs = [
-    z3
+  src = lib.sourceByRegex ./.. [
+    "ulib.*"
+    ".common.mk"
   ];
+
+  nativeBuildInputs = [ z3 ];
 
   postPatch = ''
     mkdir -p bin
@@ -22,7 +23,7 @@ stdenv.mkDerivation {
     cd ulib
   '';
 
-  makeFlags = ["PREFIX=$(out)"];
+  makeFlags = [ "PREFIX=$(out)" ];
 
   enableParallelBuilding = true;
 }

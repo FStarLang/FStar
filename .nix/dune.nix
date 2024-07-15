@@ -23,7 +23,10 @@ buildDunePackage {
 
   duneVersion = "3";
 
-  src = lib.sourceByRegex ./.. ["ocaml.*" "version.txt"];
+  src = lib.sourceByRegex ./.. [
+    "ocaml.*"
+    "version.txt"
+  ];
 
   prePatch = ''
     patchShebangs ocaml/fstar-lib/make_fstar_version.sh
@@ -32,13 +35,9 @@ buildDunePackage {
 
   FSTAR_COMMIT = version;
 
-  nativeBuildInputs = [
-    menhir
-  ];
+  nativeBuildInputs = [ menhir ];
 
-  buildInputs = [
-    memtrace
-  ];
+  buildInputs = [ memtrace ];
 
   propagatedBuildInputs = [
     batteries

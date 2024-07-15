@@ -11,13 +11,20 @@ stdenv.mkDerivation {
 
   src = lib.cleanSourceWith {
     src = ./..;
-    filter = path: _: let
-      relPath = lib.removePrefix (toString ./.. + "/") (toString path);
-    in
-      lib.any (lib.flip lib.hasPrefix relPath) ["src" "ulib"]
-      || (lib.hasPrefix "ocaml" relPath
+    filter =
+      path: _:
+      let
+        relPath = lib.removePrefix (toString ./.. + "/") (toString path);
+      in
+      lib.any (lib.flip lib.hasPrefix relPath) [
+        "src"
+        "ulib"
+      ]
+      || (
+        lib.hasPrefix "ocaml" relPath
         && !(lib.hasInfix "/generated/" relPath)
-        && !(lib.hasInfix "/dynamic/" relPath))
+        && !(lib.hasInfix "/dynamic/" relPath)
+      )
       || lib.hasSuffix ".common.mk" relPath;
   };
 
@@ -27,7 +34,10 @@ stdenv.mkDerivation {
     cd src/ocaml-output
   '';
 
-  nativeBuildInputs = with ocamlPackages; [ocaml menhir];
+  nativeBuildInputs = with ocamlPackages; [
+    ocaml
+    menhir
+  ];
 
   installPhase = "mv ../../ocaml $out";
 

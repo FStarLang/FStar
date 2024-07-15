@@ -4,7 +4,8 @@
   fstar-ocaml-snapshot,
   fstar-ulib,
   stdenv,
-}: let
+}:
+let
   ocaml-src = stdenv.mkDerivation {
     name = "src";
     src = fstar-ocaml-snapshot;
@@ -20,13 +21,17 @@
     src = ocaml-src;
   });
   fstar-ulib-bootstrap =
-    (fstar-ulib.override
-      (_: {fstar-dune = fstar-dune-bootstrap;}))
-    .overrideAttrs
-    (_: {pname = "fstar-bootstrap-ulib";});
+    (fstar-ulib.override (_: {
+      fstar-dune = fstar-dune-bootstrap;
+    })).overrideAttrs
+      (_: {
+        pname = "fstar-bootstrap-ulib";
+      });
 in
-  (fstar.override (_: {
-    fstar-dune = fstar-dune-bootstrap;
-    fstar-ulib = fstar-ulib-bootstrap;
-  }))
-  .overrideAttrs (_: {pname = "fstar-bootstrap";})
+(fstar.override (_: {
+  fstar-dune = fstar-dune-bootstrap;
+  fstar-ulib = fstar-ulib-bootstrap;
+})).overrideAttrs
+  (_: {
+    pname = "fstar-bootstrap";
+  })
