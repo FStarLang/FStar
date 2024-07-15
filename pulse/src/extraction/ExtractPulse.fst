@@ -46,13 +46,6 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
     ->
       TBuf (translate_type_without_decay env arg)
 
-  | MLTY_Named ([_inv], p) when
-    (let p = Syntax.string_of_mlpath p in
-     p = "Pulse.Lib.Core.inv"
-    )
-    ->
-      TUnit
-
   | _ -> raise NotSupportedByKrmlExtension
 
 let head_and_args (e : mlexpr) : mlexpr & list mlexpr =
@@ -133,10 +126,6 @@ let pulse_translate_expr : translate_expr_t = fun env e ->
   | MLE_App ({expr=MLE_Name p}, _)
     when (string_of_mlpath p = "Pulse.Lib.Core.unreachable") ->
     EAbortS (string_of_mlpath p)
-
-  | MLE_App ({expr=MLE_Name p}, _)
-    when (string_of_mlpath p = "Pulse.Lib.Core.new_invariant") ->
-    EUnit
 
   | MLE_App ({ expr = MLE_TApp({ expr = MLE_Name p }, _) }, [ b ])
     when string_of_mlpath p = "Pulse.Lib.Box.box_to_ref" ->
