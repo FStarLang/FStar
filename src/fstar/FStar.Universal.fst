@@ -548,7 +548,7 @@ let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing
       let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
       if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env_before mllib), env) remaining
+      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
