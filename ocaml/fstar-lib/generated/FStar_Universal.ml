@@ -1003,10 +1003,11 @@ let (emit :
                             ms)) mllibs
         | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
             let programs =
-              let uu___ =
-                FStar_Compiler_List.map FStar_Pervasives_Native.snd mllibs in
-              FStar_Compiler_List.collect FStar_Extraction_Krml.translate
-                uu___ in
+              FStar_Compiler_List.collect
+                (fun uu___ ->
+                   match uu___ with
+                   | (ue, mllibs1) ->
+                       FStar_Extraction_Krml.translate ue mllibs1) mllibs in
             let bin = (FStar_Extraction_Krml.current_version, programs) in
             (match programs with
              | (name, uu___)::[] ->
@@ -1390,7 +1391,7 @@ let rec (tc_fold_interleave :
                        tc_fold_interleave deps
                          ((FStar_Compiler_List.op_At mods [nmod]),
                            (FStar_Compiler_List.op_At mllibs
-                              (as_list env_before mllib)), env) remaining1)))
+                              (as_list env mllib)), env) remaining1)))
 let (dbg_dep : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "Dep"
 let (batch_mode_tc :
