@@ -204,6 +204,14 @@ let (e_term_aq :
     }
 let (e_term : FStar_Syntax_Syntax.term FStar_TypeChecker_NBETerm.embedding) =
   e_term_aq (Prims.int_zero, [])
+let (e_sort :
+  FStar_Syntax_Syntax.term FStar_Compiler_Sealed.sealed
+    FStar_TypeChecker_NBETerm.embedding)
+  = FStar_TypeChecker_NBETerm.e_sealed e_term
+let (e_ppname :
+  Prims.string FStar_Compiler_Sealed.sealed
+    FStar_TypeChecker_NBETerm.embedding)
+  = FStar_TypeChecker_NBETerm.e_sealed FStar_TypeChecker_NBETerm.e_string
 let (e_aqualv :
   FStar_Reflection_V2_Data.aqualv FStar_TypeChecker_NBETerm.embedding) =
   let embed_aqualv cb q =
@@ -551,17 +559,12 @@ let rec e_pattern_aq :
       | FStar_Reflection_V2_Data.Pat_Var (sort, ppname) ->
           let uu___ =
             let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_TypeChecker_NBETerm.e_sealed e_term in
-                FStar_TypeChecker_NBETerm.embed uu___3 cb sort in
+              let uu___2 = FStar_TypeChecker_NBETerm.embed e_sort cb sort in
               FStar_TypeChecker_NBETerm.as_arg uu___2 in
             let uu___2 =
               let uu___3 =
                 let uu___4 =
-                  let uu___5 =
-                    FStar_TypeChecker_NBETerm.e_sealed
-                      FStar_TypeChecker_NBETerm.e_string in
-                  FStar_TypeChecker_NBETerm.embed uu___5 cb ppname in
+                  FStar_TypeChecker_NBETerm.embed e_ppname cb ppname in
                 FStar_TypeChecker_NBETerm.as_arg uu___4 in
               [uu___3] in
             uu___1 :: uu___2 in
@@ -622,16 +625,11 @@ let rec e_pattern_aq :
           FStar_Syntax_Syntax.fv_eq_lid fv
             FStar_Reflection_V2_Constants.ref_Pat_Var.FStar_Reflection_V2_Constants.lid
           ->
-          let uu___2 =
-            let uu___3 = FStar_TypeChecker_NBETerm.e_sealed e_term in
-            FStar_TypeChecker_NBETerm.unembed uu___3 cb sort in
+          let uu___2 = FStar_TypeChecker_NBETerm.unembed e_sort cb sort in
           FStar_Compiler_Util.bind_opt uu___2
             (fun sort1 ->
                let uu___3 =
-                 let uu___4 =
-                   FStar_TypeChecker_NBETerm.e_sealed
-                     FStar_TypeChecker_NBETerm.e_string in
-                 FStar_TypeChecker_NBETerm.unembed uu___4 cb ppname in
+                 FStar_TypeChecker_NBETerm.unembed e_ppname cb ppname in
                FStar_Compiler_Util.bind_opt uu___3
                  (fun ppname1 ->
                     FStar_Pervasives_Native.Some
@@ -1616,16 +1614,13 @@ let (e_namedv_view :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            let uu___5 =
-              FStar_TypeChecker_NBETerm.e_sealed
-                FStar_TypeChecker_NBETerm.e_string in
-            FStar_TypeChecker_NBETerm.embed uu___5 cb
+            FStar_TypeChecker_NBETerm.embed e_ppname cb
               namedvv.FStar_Reflection_V2_Data.ppname in
           FStar_TypeChecker_NBETerm.as_arg uu___4 in
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              FStar_TypeChecker_NBETerm.embed e_term cb
+              FStar_TypeChecker_NBETerm.embed e_sort cb
                 namedvv.FStar_Reflection_V2_Data.sort in
             FStar_TypeChecker_NBETerm.as_arg uu___6 in
           [uu___5] in
@@ -1648,14 +1643,11 @@ let (e_namedv_view :
         FStar_Compiler_Util.bind_opt uu___4
           (fun uniq1 ->
              let uu___5 =
-               let uu___6 =
-                 FStar_TypeChecker_NBETerm.e_sealed
-                   FStar_TypeChecker_NBETerm.e_string in
-               FStar_TypeChecker_NBETerm.unembed uu___6 cb ppname in
+               FStar_TypeChecker_NBETerm.unembed e_ppname cb ppname in
              FStar_Compiler_Util.bind_opt uu___5
                (fun ppname1 ->
                   let uu___6 =
-                    FStar_TypeChecker_NBETerm.unembed e_term cb sort in
+                    FStar_TypeChecker_NBETerm.unembed e_sort cb sort in
                   FStar_Compiler_Util.bind_opt uu___6
                     (fun sort1 ->
                        let r =
@@ -1688,16 +1680,13 @@ let (e_bv_view :
       let uu___2 =
         let uu___3 =
           let uu___4 =
-            let uu___5 =
-              FStar_TypeChecker_NBETerm.e_sealed
-                FStar_TypeChecker_NBETerm.e_string in
-            FStar_TypeChecker_NBETerm.embed uu___5 cb
+            FStar_TypeChecker_NBETerm.embed e_ppname cb
               bvv.FStar_Reflection_V2_Data.ppname1 in
           FStar_TypeChecker_NBETerm.as_arg uu___4 in
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              FStar_TypeChecker_NBETerm.embed e_term cb
+              FStar_TypeChecker_NBETerm.embed e_sort cb
                 bvv.FStar_Reflection_V2_Data.sort1 in
             FStar_TypeChecker_NBETerm.as_arg uu___6 in
           [uu___5] in
@@ -1719,14 +1708,11 @@ let (e_bv_view :
         FStar_Compiler_Util.bind_opt uu___4
           (fun idx1 ->
              let uu___5 =
-               let uu___6 =
-                 FStar_TypeChecker_NBETerm.e_sealed
-                   FStar_TypeChecker_NBETerm.e_string in
-               FStar_TypeChecker_NBETerm.unembed uu___6 cb ppname in
+               FStar_TypeChecker_NBETerm.unembed e_ppname cb ppname in
              FStar_Compiler_Util.bind_opt uu___5
                (fun ppname1 ->
                   let uu___6 =
-                    FStar_TypeChecker_NBETerm.unembed e_term cb sort in
+                    FStar_TypeChecker_NBETerm.unembed e_sort cb sort in
                   FStar_Compiler_Util.bind_opt uu___6
                     (fun sort1 ->
                        let r =
@@ -1771,10 +1757,7 @@ let (e_binding :
         let uu___4 =
           let uu___5 =
             let uu___6 =
-              let uu___7 =
-                FStar_TypeChecker_NBETerm.e_sealed
-                  FStar_TypeChecker_NBETerm.e_string in
-              FStar_TypeChecker_NBETerm.embed uu___7 cb
+              FStar_TypeChecker_NBETerm.embed e_ppname cb
                 b.FStar_Reflection_V2_Data.ppname3 in
             FStar_TypeChecker_NBETerm.as_arg uu___6 in
           [uu___5] in
@@ -1800,10 +1783,7 @@ let (e_binding :
              FStar_Compiler_Util.bind_opt uu___5
                (fun sort1 ->
                   let uu___6 =
-                    let uu___7 =
-                      FStar_TypeChecker_NBETerm.e_sealed
-                        FStar_TypeChecker_NBETerm.e_string in
-                    FStar_TypeChecker_NBETerm.unembed uu___7 cb ppname in
+                    FStar_TypeChecker_NBETerm.unembed e_ppname cb ppname in
                   FStar_Compiler_Util.bind_opt uu___6
                     (fun ppname1 ->
                        let r =
@@ -1838,10 +1818,7 @@ let (e_binder_view :
           let uu___6 =
             let uu___7 =
               let uu___8 =
-                let uu___9 =
-                  FStar_TypeChecker_NBETerm.e_sealed
-                    FStar_TypeChecker_NBETerm.e_string in
-                FStar_TypeChecker_NBETerm.embed uu___9 cb
+                FStar_TypeChecker_NBETerm.embed e_ppname cb
                   bview.FStar_Reflection_V2_Data.ppname2 in
               FStar_TypeChecker_NBETerm.as_arg uu___8 in
             [uu___7] in
@@ -1871,10 +1848,7 @@ let (e_binder_view :
                   FStar_Compiler_Util.bind_opt uu___7
                     (fun attrs1 ->
                        let uu___8 =
-                         let uu___9 =
-                           FStar_TypeChecker_NBETerm.e_sealed
-                             FStar_TypeChecker_NBETerm.e_string in
-                         FStar_TypeChecker_NBETerm.unembed uu___9 cb ppname in
+                         FStar_TypeChecker_NBETerm.unembed e_ppname cb ppname in
                        FStar_Compiler_Util.bind_opt uu___8
                          (fun ppname1 ->
                             let r =

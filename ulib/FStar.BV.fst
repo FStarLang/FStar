@@ -32,6 +32,17 @@ let int2bv_lemma_2 = U.to_vec_lemma_2
 let inverse_vec_lemma = U.inverse_vec_lemma
 let inverse_num_lemma = U.inverse_num_lemma
 
+(** Mapping an unbounded nat to a bitvector; only used for bvshl and bvshr
+  compatibility funs *)
+let int2bv_nat (#n: pos) (num: nat): Tot (bv_t n) = U.to_vec (num % pow2 n)
+
+let int2bv_nat_lemma (#n: pos) (num: uint_t n)
+    : Lemma
+      (ensures (int2bv_nat #n num == int2bv #n num)) =
+  assert (num < pow2 n);
+  FStar.Math.Lemmas.modulo_lemma num (pow2 n);
+  assert (num % pow2 n = num)
+
 let list2bv #n l = S.seq_of_list l
 let bv2list #n s = S.seq_to_list s
 let list2bv_bij #n a = S.lemma_list_seq_bij a
@@ -54,12 +65,25 @@ let int2bv_lognot #n #x #y pf =
   inverse_vec_lemma #n (bvnot #n (int2bv x))
 
 (*TODO: specify index functions? *)
-let bvshl = B.shift_left_vec
+let bvshl' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.shift_left_vec #n a (bv2int #n s)
+let bvshl (#n: pos) (a: bv_t n) (s: nat): bv_t n =
+  bvshl' #n a (int2bv_nat #n s)
+
+let int2bv_shl' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvshl' #n (int2bv #n x) (int2bv #n y))
 let int2bv_shl #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
   inverse_vec_lemma #n (bvshl #n (int2bv #n x) y)
 
-let bvshr = B.shift_right_vec
+let bvshr' (#n: pos) (a: bv_t n) (s: bv_t n): bv_t n =
+  B.shift_right_vec #n a (bv2int #n s)
+let bvshr (#n: pos) (a: bv_t n) (s: nat) : bv_t n =
+  bvshr' #n a (int2bv_nat #n s)
+let int2bv_shr' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvshr' #n (int2bv #n x) (int2bv #n y))
 let int2bv_shr #n #x #y #z pf =
+  int2bv_nat_lemma #n y;
   inverse_vec_lemma #n (bvshr #n (int2bv #n x) y)
 
 
@@ -99,8 +123,17 @@ let bvmod #n a b =
 let int2bv_mod #n #x #y #z pf =
   inverse_vec_lemma #n (bvmod #n (int2bv #n x) y)
 
+let bvmod_unsafe #n a b = if (bv2int b <> 0) then bvmod a (bv2int b) else int2bv 0
+let bvmod_unsafe_sound #n #a #b b_nonzero_pf = ()
+
 // Z3's bvmul is also modulo
 let bvmul #n a b =
   int2bv #n (U.mul_mod #n (bv2int #n a) b)
 let int2bv_mul #n #x #y #z pf =
   inverse_vec_lemma #n (bvmul #n (int2bv #n x) y)
+
+let bvmul' #n a b =
+  int2bv #n (U.mul_mod #n (bv2int #n a) (bv2int #n b))
+
+let int2bv_mul' #n #x #y #z pf =
+  inverse_vec_lemma #n (bvmul' #n (int2bv #n x) (int2bv #n y))

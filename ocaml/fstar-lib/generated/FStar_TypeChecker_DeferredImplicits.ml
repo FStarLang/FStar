@@ -53,89 +53,8 @@ let (uu___is_Imp : goal_type -> Prims.bool) =
   fun projectee -> match projectee with | Imp _0 -> true | uu___ -> false
 let (__proj__Imp__item___0 : goal_type -> FStar_Syntax_Syntax.ctx_uvar) =
   fun projectee -> match projectee with | Imp _0 -> _0
-type goal_dep =
-  {
-  goal_dep_id: Prims.int ;
-  goal_type: goal_type ;
-  goal_imp: FStar_TypeChecker_Common.implicit ;
-  assignees: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t ;
-  goal_dep_uvars: FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t ;
-  dependences: goal_dep Prims.list FStar_Compiler_Effect.ref ;
-  visited: Prims.int FStar_Compiler_Effect.ref }
-let (__proj__Mkgoal_dep__item__goal_dep_id : goal_dep -> Prims.int) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> goal_dep_id
-let (__proj__Mkgoal_dep__item__goal_type : goal_dep -> goal_type) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> goal_type1
-let (__proj__Mkgoal_dep__item__goal_imp :
-  goal_dep -> FStar_TypeChecker_Common.implicit) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> goal_imp
-let (__proj__Mkgoal_dep__item__assignees :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> assignees
-let (__proj__Mkgoal_dep__item__goal_dep_uvars :
-  goal_dep -> FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> goal_dep_uvars
-let (__proj__Mkgoal_dep__item__dependences :
-  goal_dep -> goal_dep Prims.list FStar_Compiler_Effect.ref) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> dependences
-let (__proj__Mkgoal_dep__item__visited :
-  goal_dep -> Prims.int FStar_Compiler_Effect.ref) =
-  fun projectee ->
-    match projectee with
-    | { goal_dep_id; goal_type = goal_type1; goal_imp; assignees;
-        goal_dep_uvars; dependences; visited;_} -> visited
-type goal_deps = goal_dep Prims.list
-let (print_uvar_set :
-  FStar_Syntax_Syntax.ctx_uvar FStar_Compiler_Set.t -> Prims.string) =
-  fun s ->
-    let uu___ =
-      let uu___1 = FStar_Compiler_Set.elems FStar_Syntax_Free.ord_ctx_uvar s in
-      FStar_Compiler_List.map
-        (fun u ->
-           let uu___2 =
-             let uu___3 =
-               FStar_Syntax_Unionfind.uvar_id
-                 u.FStar_Syntax_Syntax.ctx_uvar_head in
-             FStar_Compiler_Util.string_of_int uu___3 in
-           Prims.strcat "?" uu___2) uu___1 in
-    FStar_Compiler_String.concat "; " uu___
-let (print_goal_dep : goal_dep -> Prims.string) =
-  fun gd ->
-    let uu___ = FStar_Compiler_Util.string_of_int gd.goal_dep_id in
-    let uu___1 = print_uvar_set gd.assignees in
-    let uu___2 =
-      let uu___3 =
-        let uu___4 = FStar_Compiler_Effect.op_Bang gd.dependences in
-        FStar_Compiler_List.map
-          (fun gd1 -> FStar_Compiler_Util.string_of_int gd1.goal_dep_id)
-          uu___4 in
-      FStar_Compiler_String.concat "; " uu___3 in
-    let uu___3 =
-      FStar_Syntax_Print.ctx_uvar_to_string
-        (gd.goal_imp).FStar_TypeChecker_Common.imp_uvar in
-    FStar_Compiler_Util.format4
-      "%s:{assignees=[%s], dependences=[%s]}\n\t%s\n" uu___ uu___1 uu___2
-      uu___3
 let (find_user_tac_for_uvar :
-  FStar_TypeChecker_Env.env ->
+  FStar_TypeChecker_Env.env_t ->
     FStar_Syntax_Syntax.ctx_uvar ->
       FStar_Syntax_Syntax.sigelt FStar_Pervasives_Native.option)
   =
@@ -201,7 +120,8 @@ let (find_user_tac_for_uvar :
           let candidates =
             FStar_Compiler_List.filter
               (fun hook ->
-                 FStar_Compiler_Util.for_some (FStar_Syntax_Util.attr_eq a)
+                 FStar_Compiler_Util.for_some
+                   (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool env a)
                    hook.FStar_Syntax_Syntax.sigattrs) hooks in
           let candidates1 =
             FStar_Compiler_Util.remove_dups
@@ -237,7 +157,9 @@ let (find_user_tac_for_uvar :
                                when
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.override_resolve_implicits_handler_lid)
-                                 && (FStar_Syntax_Util.attr_eq a a')
+                                 &&
+                                 (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                                    env a a')
                                ->
                                let uu___5 = attr_list_elements overrides in
                                (match uu___5 with
@@ -255,7 +177,9 @@ let (find_user_tac_for_uvar :
                               (a', uu___2)::(overrides, uu___3)::[]) when
                                (FStar_Syntax_Syntax.fv_eq_lid fv
                                   FStar_Parser_Const.override_resolve_implicits_handler_lid)
-                                 && (FStar_Syntax_Util.attr_eq a a')
+                                 &&
+                                 (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
+                                    env a a')
                                ->
                                let uu___4 = attr_list_elements overrides in
                                (match uu___4 with
@@ -330,13 +254,6 @@ let solve_goals_with_tac :
                      let fv =
                        FStar_Syntax_Syntax.lid_as_fv lid
                          FStar_Pervasives_Native.None in
-                     let dd =
-                       let uu___3 =
-                         FStar_TypeChecker_Env.delta_depth_of_qninfo fv qn in
-                       match uu___3 with
-                       | FStar_Pervasives_Native.Some dd1 -> dd1
-                       | FStar_Pervasives_Native.None ->
-                           FStar_Compiler_Effect.failwith "Expected a dd" in
                      let term =
                        let uu___3 =
                          FStar_Syntax_Syntax.lid_as_fv lid
@@ -393,8 +310,8 @@ let solve_goals_with_tac :
                      (env.FStar_TypeChecker_Env.phase1);
                    FStar_TypeChecker_Env.failhard =
                      (env.FStar_TypeChecker_Env.failhard);
-                   FStar_TypeChecker_Env.nosynth =
-                     (env.FStar_TypeChecker_Env.nosynth);
+                   FStar_TypeChecker_Env.flychecking =
+                     (env.FStar_TypeChecker_Env.flychecking);
                    FStar_TypeChecker_Env.uvar_subtyping =
                      (env.FStar_TypeChecker_Env.uvar_subtyping);
                    FStar_TypeChecker_Env.intactics =
@@ -449,7 +366,9 @@ let solve_goals_with_tac :
                    FStar_TypeChecker_Env.erase_erasable_args =
                      (env.FStar_TypeChecker_Env.erase_erasable_args);
                    FStar_TypeChecker_Env.core_check =
-                     (env.FStar_TypeChecker_Env.core_check)
+                     (env.FStar_TypeChecker_Env.core_check);
+                   FStar_TypeChecker_Env.missing_decl =
+                     (env.FStar_TypeChecker_Env.missing_decl)
                  } in
                env1.FStar_TypeChecker_Env.try_solve_implicits_hook env1
                  resolve_tac deferred_goals) uu___
@@ -523,8 +442,8 @@ let (solve_deferred_to_tactic_goals :
                                (env1.FStar_TypeChecker_Env.phase1);
                              FStar_TypeChecker_Env.failhard =
                                (env1.FStar_TypeChecker_Env.failhard);
-                             FStar_TypeChecker_Env.nosynth =
-                               (env1.FStar_TypeChecker_Env.nosynth);
+                             FStar_TypeChecker_Env.flychecking =
+                               (env1.FStar_TypeChecker_Env.flychecking);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env1.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
@@ -581,7 +500,9 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env1.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env1.FStar_TypeChecker_Env.core_check)
+                               (env1.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env1.FStar_TypeChecker_Env.missing_decl)
                            } in
                          let env_lax =
                            {
@@ -630,8 +551,8 @@ let (solve_deferred_to_tactic_goals :
                                (env2.FStar_TypeChecker_Env.phase1);
                              FStar_TypeChecker_Env.failhard =
                                (env2.FStar_TypeChecker_Env.failhard);
-                             FStar_TypeChecker_Env.nosynth =
-                               (env2.FStar_TypeChecker_Env.nosynth);
+                             FStar_TypeChecker_Env.flychecking =
+                               (env2.FStar_TypeChecker_Env.flychecking);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env2.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
@@ -688,7 +609,9 @@ let (solve_deferred_to_tactic_goals :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env2.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env2.FStar_TypeChecker_Env.core_check)
+                               (env2.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env2.FStar_TypeChecker_Env.missing_decl)
                            } in
                          let uu___5 =
                            let t =

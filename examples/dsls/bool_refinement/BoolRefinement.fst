@@ -516,7 +516,7 @@ let weaken (f:RT.fstar_top_env) (sg:src_env) (hyp:var { None? (lookup sg hyp) } 
 
 let exp (sg:src_env) = e:src_exp { ln e /\ (forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)) }
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6"
 let rec check (f:RT.fstar_top_env)
               (sg:src_env)
               (e:exp sg)
@@ -650,7 +650,7 @@ let src_refinements_are_closed (e:src_exp {ln e && closed e})
     src_refinements_are_closed_core 0 e elt
  
 
-#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp { ln' e n }) (x:var) 
   : Lemma (ensures
               RT.subst_term (elab_exp e) (RT.open_with_var x n) ==
@@ -949,7 +949,7 @@ let rec as_bindings_rename_env_append (sg sg':src_env) (x y:var)
 let rt_rename (x y:var) : RT.subst_elt =
   RT.NT x (RT.var_as_term y)
 
-#push-options "--query_stats --fuel 8 --ifuel 4 --z3rlimit_factor 10"
+#push-options "--fuel 8 --ifuel 4 --z3rlimit_factor 10"
 let rec rename_elab_commute_core (m:int) (e:src_exp { ln' e m } ) (x y:var) (n:nat)
   : Lemma 
     (ensures RT.subst_term (elab_exp e) (RT.shift_subst_n n [rt_rename x y]) ==
@@ -1123,7 +1123,7 @@ let sub_typing_renaming (#f:RT.fstar_top_env)
     | S_ELab g _ _ d ->
       S_ELab _ _ _ (core_subtyping_renaming sg sg' x y b t0 t1 d)
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 let freevars_included_in (e:src_exp) (sg:src_env) =
   forall x. x `Set.mem` freevars e ==> Some? (lookup sg x)
   
@@ -1685,12 +1685,15 @@ let soundness_lemma (f:RT.fstar_top_env)
       (fun dd -> FStar.Squash.return_squash (soundness dd))
 
 let main (nm:string) (src:src_exp) : RT.dsl_tac_t =
-  fun f ->
+  fun (f, expected_t) ->
   if ln src && closed src
-  then 
-    let (| src_ty, _ |) = check f [] src in
-    soundness_lemma f [] src src_ty;
-    [RT.mk_checked_let f nm (elab_exp src) (elab_ty src_ty)]
+  then if None? expected_t
+       then let (| src_ty, _ |) = check f [] src in
+            soundness_lemma f [] src src_ty;
+            [],
+            RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
+            []
+       else T.fail "Bool refinement DSL: no support for expected type yet"
   else T.fail "Not locally nameless"
 
 (***** Examples *****)

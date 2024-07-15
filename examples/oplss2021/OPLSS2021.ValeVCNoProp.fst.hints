@@ -11,7 +11,7 @@
         "data_elim_OPLSS2021.ValeVCNoProp.QProc"
       ],
       0,
-      "3cce0fc91aeaf96d6ea7f1fcf1ee2474"
+      "1816c364313187c7b0d372a4b8dfb698"
     ],
     [
       "OPLSS2021.ValeVCNoProp.__proj__QSeq__item__c",
@@ -149,7 +149,7 @@
         "subterm_ordering_OPLSS2021.ValeVCNoProp.QSeq"
       ],
       0,
-      "91465ed36d38a63c3997fab3f76ed160"
+      "4c2848f0016df265b9086d04a08efdf0"
     ],
     [
       "OPLSS2021.ValeVCNoProp.vc_sound",
@@ -166,9 +166,10 @@
         "binder_x_1ef0b435af407be38ebd773e60bcc6cb_3",
         "binder_x_385a8f11ae151c92dd8b0c0ad29fbf62_1",
         "binder_x_a87a45df515da4fa9d3b482260f0fa4f_2",
-        "binder_x_b2b7cde4456e5d6ed2fa059f2eafc491_0", "bool_inversion",
+        "binder_x_b2b7cde4456e5d6ed2fa059f2eafc491_0",
         "constructor_distinct_OPLSS2021.Vale.Block",
         "constructor_distinct_OPLSS2021.ValeVCNoProp.QEmpty",
+        "constructor_distinct_OPLSS2021.ValeVCNoProp.QLemma",
         "constructor_distinct_OPLSS2021.ValeVCNoProp.QSeq",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_elim_OPLSS2021.ValeVCNoProp.QEmpty",
@@ -196,7 +197,9 @@
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_OPLSS2021.Vale.Block_block",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma__3",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma__4",
+        "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_cs",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_post",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QLemma_pre",
         "projection_inverse_OPLSS2021.ValeVCNoProp.QSeq_c",
@@ -210,7 +213,6 @@
         "subterm_ordering_OPLSS2021.ValeVCNoProp.QLemma",
         "subterm_ordering_Prims.Cons",
         "token_correspondence_OPLSS2021.ValeVCNoProp.vc_gen",
-        "typing_OPLSS2021.ValeVCNoProp.uu___is_QSeq",
         "typing_tok_OPLSS2021.ValeVCNoProp.QEmpty@tok"
       ],
       0,

@@ -65,37 +65,74 @@ let steps_to_string f =
     weakly_reduce_scrutinee = %s;\n\
     for_extraction = %s;\n\
     unrefine = %s;\n\
+    default_univs_to_zero = %s;\n\
   }"
-  [ f.beta |> b;
-    f.iota |> b;
-    f.zeta |> b;
-    f.zeta_full |> b;
-    f.weak |> b;
-    f.hnf  |> b;
-    f.primops |> b;
-    f.do_not_unfold_pure_lets |> b;
-    f.unfold_until |> format_opt show;
-    f.unfold_only |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_fully |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_attr |> format_opt (fun x -> List.map Ident.string_of_lid x |> String.concat ", ");
-    f.unfold_qual |> format_opt (String.concat ", ");
+  [ f.beta |> show;
+    f.iota |> show;
+    f.zeta |> show;
+    f.zeta_full |> show;
+    f.weak |> show;
+    f.hnf  |> show;
+    f.primops |> show;
+    f.do_not_unfold_pure_lets |> show;
+    f.unfold_until |> show;
+    f.unfold_only |> show;
+    f.unfold_fully |> show;
+    f.unfold_attr |> show;
+    f.unfold_qual |> show;
     f.unfold_namespace |> show;
-    f.unfold_tac |> b;
-    f.pure_subterms_within_computations |> b;
-    f.simplify |> b;
-    f.erase_universes |> b;
-    f.allow_unbound_universes |> b;
-    f.reify_ |> b;
-    f.compress_uvars |> b;
-    f.no_full_norm |> b;
-    f.check_no_uvars |> b;
-    f.unmeta |> b;
-    f.unascribe |> b;
-    f.in_full_norm_request |> b;
-    f.weakly_reduce_scrutinee |> b;
-    f.for_extraction |> b;
-    f.unrefine |> b;
+    f.unfold_tac |> show;
+    f.pure_subterms_within_computations |> show;
+    f.simplify |> show;
+    f.erase_universes |> show;
+    f.allow_unbound_universes |> show;
+    f.reify_ |> show;
+    f.compress_uvars |> show;
+    f.no_full_norm |> show;
+    f.check_no_uvars |> show;
+    f.unmeta |> show;
+    f.unascribe |> show;
+    f.in_full_norm_request |> show;
+    f.weakly_reduce_scrutinee |> show;
+    f.for_extraction |> show;
+    f.unrefine |> show;
+    f.default_univs_to_zero |> show;
    ]
+
+instance deq_fsteps : deq fsteps = {
+  (=?) = (fun f1 f2 ->
+            f1.beta =? f2.beta &&
+            f1.iota =? f2.iota &&
+            f1.zeta =? f2.zeta &&
+            f1.zeta_full =? f2.zeta_full &&
+            f1.weak =? f2.weak &&
+            f1.hnf =? f2.hnf &&
+            f1.primops =? f2.primops &&
+            f1.do_not_unfold_pure_lets =? f2.do_not_unfold_pure_lets &&
+            f1.unfold_until =? f2.unfold_until &&
+            f1.unfold_only =? f2.unfold_only &&
+            f1.unfold_fully =? f2.unfold_fully &&
+            f1.unfold_attr =? f2.unfold_attr &&
+            f1.unfold_qual =? f2.unfold_qual &&
+            f1.unfold_namespace =? f2.unfold_namespace &&
+            f1.unfold_tac =? f2.unfold_tac &&
+            f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
+            f1.simplify =? f2.simplify &&
+            f1.erase_universes =? f2.erase_universes &&
+            f1.allow_unbound_universes =? f2.allow_unbound_universes &&
+            f1.reify_ =? f2.reify_ &&
+            f1.compress_uvars =? f2.compress_uvars &&
+            f1.no_full_norm =? f2.no_full_norm &&
+            f1.check_no_uvars =? f2.check_no_uvars &&
+            f1.unmeta =? f2.unmeta &&
+            f1.unascribe =? f2.unascribe &&
+            f1.in_full_norm_request =? f2.in_full_norm_request &&
+            f1.weakly_reduce_scrutinee =? f2.weakly_reduce_scrutinee &&
+            f1.nbe_step =? f2.nbe_step &&
+            f1.for_extraction =? f2.for_extraction &&
+            f1.unrefine =? f2.unrefine &&
+            f1.default_univs_to_zero =? f2.default_univs_to_zero);
+}
 
 let default_steps : fsteps = {
     beta = true;
@@ -128,6 +165,7 @@ let default_steps : fsteps = {
     nbe_step = false;
     for_extraction = false;
     unrefine = false;
+    default_univs_to_zero = false;
 }
 
 let fstep_add_one s fs =
@@ -173,6 +211,7 @@ let fstep_add_one s fs =
     | ForExtraction -> {fs with for_extraction = true }
     | Unrefine -> {fs with unrefine = true }
     | NormDebug -> fs // handled above, affects only dbg flags
+    | DefaultUnivsToZero -> {fs with default_univs_to_zero = true}
 
 let to_fsteps (s : list step) : fsteps =
     List.fold_right fstep_add_one s default_steps
@@ -212,13 +251,17 @@ let prim_from_list (l : list primitive_step) : prim_step_set =
 
 (* Turn the lists into psmap sets, for efficiency of lookup *)
 let built_in_primitive_steps = prim_from_list built_in_primitive_steps_list
-let equality_ops = prim_from_list equality_ops_list
+let env_dependent_ops env = prim_from_list (env_dependent_ops env)
+let simplification_steps env = prim_from_list (simplification_ops_list env)
 
-let cfg_to_string cfg =
-    String.concat "\n"
-        ["{";
-         BU.format1 "  steps = %s" (steps_to_string cfg.steps);
-         "}" ]
+instance showable_cfg : showable cfg = {
+  show = (fun cfg ->
+             String.concat "\n"
+                 ["{";
+                 BU.format1 "  steps = %s;" (steps_to_string cfg.steps);
+                 BU.format1 "  delta_level = %s;" (show cfg.delta_level);
+                 "}" ]);
+}
 
 let cfg_env cfg = cfg.tcenv
 
@@ -240,8 +283,9 @@ let log_cfg cfg f =
 let log_primops cfg f =
     if cfg.debug.primop then f () else ()
 
+let dbg_unfolding = Debug.get_toggle "Unfolding"
 let log_unfolding cfg f =
-    if cfg.debug.unfolding then f () else ()
+  if !dbg_unfolding then f () else ()
 
 let log_nbe cfg f =
     if cfg.debug.debug_nbe then f ()
@@ -273,7 +317,7 @@ type register_prim_step_t = primitive_step -> unit
 type retrieve_prim_step_t = unit -> prim_step_set
 let mk_extendable_primop_set ()
   : register_prim_step_t
-  * retrieve_prim_step_t =
+  & retrieve_prim_step_t =
   let steps = BU.mk_ref (empty_prim_steps ()) in
   let register (p:primitive_step) =
       extendable_primops_dirty := true;
@@ -316,6 +360,17 @@ let add_nbe s = // ZP : Turns nbe flag on, to be used as the default norm strate
     then { s with nbe_step = true }
     else s
 
+let dbg_Norm = Debug.get_toggle "Norm"
+let dbg_NormTop = Debug.get_toggle "NormTop"
+let dbg_NormCfg = Debug.get_toggle "NormCfg"
+let dbg_Primops = Debug.get_toggle "Primops"
+let dbg_Unfolding = Debug.get_toggle "Unfolding"
+let dbg_380 = Debug.get_toggle "380"
+let dbg_WPE = Debug.get_toggle "WPE"
+let dbg_NormDelayed = Debug.get_toggle "NormDelayed"
+let dbg_print_normalized = Debug.get_toggle "print_normalized_terms"
+let dbg_NBE = Debug.get_toggle "NBE"
+let dbg_UNSOUND_EraseErasableArgs = Debug.get_toggle "UNSOUND_EraseErasableArgs"
 
 let config' psteps s e =
     let d = s |> List.collect (function
@@ -331,39 +386,35 @@ let config' psteps s e =
         | [] -> [Env.NoDelta]
         | _ -> d in
     let steps = to_fsteps s |> add_nbe in
-    let psteps = add_steps (cached_steps ()) psteps in
+    let psteps = add_steps (merge_steps (env_dependent_ops e) (cached_steps ())) psteps in
     let dbg_flag = List.contains NormDebug s in
-    {tcenv = e;
-     debug = if dbg_flag || Options.debug_any () then
-            { gen = Env.debug e (Options.Other "Norm") || dbg_flag
-             ; top = Env.debug e (Options.Other "NormTop") || dbg_flag
-             ; cfg = Env.debug e (Options.Other "NormCfg")
-             ; primop = Env.debug e (Options.Other "Primops")
-             ; unfolding = Env.debug e (Options.Other "Unfolding")
-             ; b380 = Env.debug e (Options.Other "380")
-             ; wpe = Env.debug e (Options.Other "WPE")
-             ; norm_delayed = Env.debug e (Options.Other "NormDelayed")
-             ; print_normalized = Env.debug e (Options.Other "print_normalized_terms")
-             ; debug_nbe = Env.debug e (Options.Other "NBE")
-             ; erase_erasable_args =
-               (let b = Env.debug e (Options.Other "UNSOUND_EraseErasableArgs") in
-                if b
-                then Errors.log_issue
-                        (Env.get_range e)
-                        (Errors.Warning_WarnOnUse,
-                         "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
-                b)
-             }
-            else no_debug_switches
-      ;
-     steps = steps;
-     delta_level = d;
-     primitive_steps = psteps;
-     strong = false;
-     memoize_lazy = true;
-     normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
-     reifying = false;
-     compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
+    {
+      tcenv = e;
+      debug = {
+        gen = !dbg_Norm || dbg_flag;
+        top = !dbg_NormTop || dbg_flag;
+        cfg = !dbg_NormCfg;
+        primop = !dbg_Primops;
+        unfolding = !dbg_Unfolding;
+        b380 = !dbg_380;
+        wpe = !dbg_WPE;
+        norm_delayed = !dbg_NormDelayed;
+        print_normalized = !dbg_print_normalized;
+        debug_nbe = !dbg_NBE;
+        erase_erasable_args = (
+         if !dbg_UNSOUND_EraseErasableArgs then
+           Errors.log_issue (Env.get_range e) (Errors.Warning_WarnOnUse,
+                  "The 'UNSOUND_EraseErasableArgs' setting is for debugging only; it is not sound");
+         !dbg_UNSOUND_EraseErasableArgs);
+      };
+      steps = steps;
+      delta_level = d;
+      primitive_steps = psteps;
+      strong = false;
+      memoize_lazy = true;
+      normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
+      reifying = false;
+      compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
    }
 
 let config s e = config' [] s e
@@ -410,7 +461,7 @@ let translate_norm_step = function
 
 let translate_norm_steps s =
     let s = List.concatMap translate_norm_step s in
-    let add_exclude s z = if BU.for_some (eq_step z) s then s else Exclude z :: s in
+    let add_exclude s z = if BU.for_some ((=?) z) s then s else Exclude z :: s in
     let s = Beta::s in
     let s = add_exclude s Zeta in
     let s = add_exclude s Iota in

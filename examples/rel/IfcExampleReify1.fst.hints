@@ -18,7 +18,7 @@
         "typing_IfcExampleReify1.env", "typing_IfcExampleReify1.y"
       ],
       0,
-      "fb06194bc27a028c5066c72ed4d41746"
+      "e927336bf20ad67d25907381a650a707"
     ],
     [
       "IfcExampleReify1.c1_2_ni",
@@ -117,6 +117,7 @@
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
         "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_FStar.Pervasives.Native.Some_a",

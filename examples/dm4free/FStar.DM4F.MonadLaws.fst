@@ -19,7 +19,7 @@ open FStar.FunctionalExtensionality
 
 (* State *)
 
-let st (s:Type) (a:Type) = s -> Tot (a * s)
+let st (s:Type) (a:Type) = s -> Tot (a & s)
 
 let return_st (#s:Type) (#a:Type) (x:a) : st s a = fun s0 -> x, s0
 
@@ -43,7 +43,7 @@ type label =
   | Low
   | High
 
-let ifc (a:Type) = label -> Tot (option (a * label))
+let ifc (a:Type) = label -> Tot (option (a & label))
 
 let return_ifc (#a:Type) (x:a) : ifc a = fun l -> Some (x, l)
 let bind_ifc (#a:Type) (#b:Type) (f:ifc a) (g: a -> Tot (ifc b)) : ifc b

@@ -33,6 +33,9 @@ module BU = FStar.Compiler.Util //basic util
 module Env = FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
 
+open FStar.Errors.Msg
+open FStar.Class.PP
+
 let info_at_pos env file row col =
     match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
@@ -49,8 +52,8 @@ let info_at_pos env file row col =
  * It will also prioritize them in that order, prefering to show
  * a discrepancy of implicits before one of universes, etc.
  *)
-let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b =
-    let print () : b * b * bool =
+let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b & b =
+    let print () : b & b & bool =
         let xs = f x in
         let ys = f y in
         xs, ys, xs <> ys
@@ -123,12 +126,6 @@ let print_discrepancy (#a:Type) (#b:eqtype) (f : a -> b) (x : a) (y : a) : b * b
     in
     Options.with_saved_options (fun () -> go bas)
 
-(*
- * AR: smt_detail is either an Inr of a long multi-line message or Inr of a short one
- *     in the first case, we print it starting from a newline,
- *       while in the latter, it is printed on the same line
- * GM: TODO: Use a document?
- *)
 let errors_smt_detail env
         (errs : list Errors.error)
         (smt_detail : Errors.error_message)
@@ -168,25 +165,31 @@ let log_issue env r (e, m) : unit =
 let log_issue_text env r (e, m) : unit =
   log_issue env r (e, [Errors.text m])
 
-let err_msg_type_strings env t1 t2 :(string * string) =
+let err_msg_type_strings env t1 t2 :(string & string) =
   print_discrepancy (N.term_to_string env) t1 t2
 
 // let err_msg_type_docs env t1 t2 :(Pprint.document * Pprint.document) =
 
 //   print_discrepancy (N.term_to_doc env) t1 t2
 
-let err_msg_comp_strings env c1 c2 :(string * string) =
+let err_msg_comp_strings env c1 c2 :(string & string) =
   print_discrepancy (N.comp_to_string env) c1 c2
 
 (* Error messages for labels in VCs *)
-let exhaustiveness_check = "Patterns are incomplete"
+let exhaustiveness_check = [
+  FStar.Errors.Msg.text "Patterns are incomplete"
+]
 
-let subtyping_failed : env -> typ -> typ -> unit -> string =
+let subtyping_failed : env -> typ -> typ -> unit -> error_message =
      fun env t1 t2 () ->
-       let s1, s2 = err_msg_type_strings env t1 t2 in
-       BU.format2 "Subtyping check failed; expected type %s; got type %s" s2 s1
-let ill_kinded_type = "Ill-kinded type"
-let totality_check  = "This term may not terminate"
+      //  let s1, s2 = err_msg_type_strings env t1 t2 in
+      let ppt = N.term_to_doc env in
+       [text "Subtyping check failed";
+        prefix 2 1 (text "Expected type") (ppt t2) ^/^
+        prefix 2 1 (text "got type") (ppt t1);
+       ]
+
+let ill_kinded_type = Errors.mkmsg "Ill-kinded type"
 
 let unexpected_signature_for_monad env m k =
   (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
@@ -219,9 +222,18 @@ let expected_pattern_of_type env t1 e t2 =
 
 let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
+  let open FStar.Errors.Msg in
   let msg = match eopt with
-    | None -> format2 "Expected type \"%s\"; got type \"%s\"" s1 s2
-    | Some e -> format3 "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1 (N.term_to_string env e) s2 in
+    | None -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "got type") (N.term_to_doc env t2);
+    ]
+    | Some e -> [
+      prefix 4 1 (text "Expected type") (N.term_to_doc env t1) ^/^
+      prefix 4 1 (text "but") (N.term_to_doc env e) ^/^
+      prefix 4 1 (text "has type") (N.term_to_doc env t2);
+    ]
+  in
   (Errors.Error_TypeError, msg)
 
 let occurs_check =
@@ -260,41 +272,42 @@ let name_and_result c = match c.n with
   | Comp ct -> Print.lid_to_string ct.effect_name, ct.result_typ
 
 let computed_computation_type_does_not_match_annotation env e c c' =
+  let ppt = N.term_to_doc env in
   let f1, r1 = name_and_result c in
   let f2, r2 = name_and_result c' in
-  let s1, s2 = err_msg_type_strings env r1 r2 in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format4
-    "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-      s1 f1 s2 f2))
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, [
+    prefix 2 1 (text "Computed type") (ppt r1) ^/^
+    prefix 2 1 (text "and effect") (text f1) ^/^
+    prefix 2 1 (text "is not compatible with the annotated type") (ppt r2) ^/^
+    prefix 2 1 (text "and effect") (text f2)
+  ])
 
 let computed_computation_type_does_not_match_annotation_eq env e c c' =
-  let s1, s2 = err_msg_comp_strings env c c' in
-  (Errors.Fatal_ComputedTypeNotMatchAnnotation, (format2
-    "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
-      s1 s2))
+  let ppc = N.comp_to_doc env in
+  (Errors.Fatal_ComputedTypeNotMatchAnnotation, ([
+    prefix 2 1 (text "Computed type") (ppc c) ^/^
+    prefix 2 1 (text "does not match annotated type") (ppc c') ^/^
+    text "and no subtyping was allowed";
+  ]))
 
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let expected_pure_expression e c reason =
-  let msg = "Expected a pure expression" in
-  let msg =
-    if reason = ""
-    then msg
-    else BU.format1 (msg ^ " (%s)") reason in
-  (Errors.Fatal_ExpectedPureExpression,
-   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
-     (Print.term_to_string e) (fst <| name_and_result c))
+let __expected_eff_expression (effname:string) (e:term) (c:comp) (reason:string) =
+  let open FStar.Class.PP in
+  let open FStar.Pprint in
+  (Errors.Fatal_ExpectedGhostExpression, [
+    text ("Expected a " ^ effname ^ " expression.");
+    (if reason = "" then empty else flow (break_ 1) (doc_of_string "Because:" :: words (reason ^ ".")));
+    prefix 2 1 (text "Got an expression") (pp e) ^/^
+    prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
+  ])
 
-let expected_ghost_expression e c reason =
-  let msg = "Expected a ghost expression" in
-  let msg =
-    if reason = ""
-    then msg
-    else BU.format1 (msg ^ " (%s)") reason in
-  (Errors.Fatal_ExpectedGhostExpression,
-   format2 (msg ^ "; got an expression \"%s\" with effect \"%s\"")   
-     (Print.term_to_string e) (fst <| name_and_result c))
+let expected_pure_expression (e:term) (c:comp) (reason:string) =
+  __expected_eff_expression "pure" e c reason
+
+let expected_ghost_expression (e:term) (c:comp) (reason:string) =
+  __expected_eff_expression "ghost" e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
   (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))

@@ -71,7 +71,7 @@ instance ord_either #a #b (d1 : ord a) (d2 : ord b) : Tot (ord (either a b)) = {
           );
 }
 
-instance ord_tuple2 #a #b (d1 : ord a) (d2 : ord b) : Tot (ord (a * b)) = {
+instance ord_tuple2 #a #b (d1 : ord a) (d2 : ord b) : Tot (ord (a & b)) = {
    super = solve;
    cmp = (fun (x1, x2) (y1, y2) -> 
           lex (cmp x1 y1) (fun () ->

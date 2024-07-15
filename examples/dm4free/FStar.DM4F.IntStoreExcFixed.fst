@@ -18,7 +18,7 @@ module FStar.DM4F.IntStoreExcFixed
 open FStar.DM4F.Heap.IntStoreFixed
 
 (* TODO : Try to use [either a exn] instead of [option] *)
-type int_store_exc (a:Type) = heap -> M (option a * heap)
+type int_store_exc (a:Type) = heap -> M (option a & heap)
 let return_is (a:Type) (x:a) : int_store_exc a = fun store -> Some x, store
 let bind_is (a b : Type) (x:int_store_exc a) (f: a -> int_store_exc b) : int_store_exc b =
   fun store ->
@@ -51,10 +51,10 @@ effect IntStoreExc (a:Type) (pre:INT_STORE_EXC?.pre) (post: heap -> option a -> 
   INT_STORE_EXC a (fun l0 p -> pre l0 /\ (forall x l1. pre l0 /\ post l0 x l1 ==> p (x, l1)))
 
 effect ISE (a:Type) =
-  INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:a). p (Some x, l0))
+  INT_STORE_EXC a (fun (l0:heap) (p:((option a & heap) -> Type0)) -> forall (x:a). p (Some x, l0))
 
 effect ISENull (a:Type) =
-  INT_STORE_EXC a (fun (l0:heap) (p:((option a * heap) -> Type0)) -> forall (x:option a * heap). p x)
+  INT_STORE_EXC a (fun (l0:heap) (p:((option a & heap) -> Type0)) -> forall (x:option a & heap). p x)
 
 
 let raise_ (#a:Type) ()

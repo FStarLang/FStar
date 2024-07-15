@@ -1,4 +1,40 @@
 open Prims
+type 'a termable =
+  {
+  to_term:
+    'a -> (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr }
+let __proj__Mktermable__item__to_term :
+  'a .
+    'a termable ->
+      'a ->
+        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
+  = fun projectee -> match projectee with | { to_term;_} -> to_term
+let to_term :
+  'a .
+    'a termable ->
+      'a ->
+        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
+  =
+  fun projectee -> match projectee with | { to_term = to_term1;_} -> to_term1
+let (termable_term : FStar_Tactics_NamedView.term termable) =
+  {
+    to_term =
+      (fun uu___ ->
+         (fun t ->
+            Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> t)))
+           uu___)
+  }
+let (termable_binding : FStar_Tactics_NamedView.binding termable) =
+  {
+    to_term =
+      (fun uu___ ->
+         (fun b ->
+            Obj.magic
+              (FStar_Tactics_Effect.lift_div_tac
+                 (fun uu___ ->
+                    FStar_Tactics_V2_SyntaxCoercions.binding_to_term b)))
+           uu___)
+  }
 let rec (apply_squash_or_lem :
   Prims.nat ->
     FStar_Tactics_NamedView.term ->
@@ -17,13 +53,13 @@ let rec (apply_squash_or_lem :
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range "FStar.Tactics.MApply.fst"
-                               (Prims.of_int (35)) (Prims.of_int (8))
-                               (Prims.of_int (35)) (Prims.of_int (43)))))
+                               (Prims.of_int (25)) (Prims.of_int (8))
+                               (Prims.of_int (25)) (Prims.of_int (43)))))
                       (FStar_Sealed.seal
                          (Obj.magic
                             (FStar_Range.mk_range "FStar.Tactics.MApply.fst"
-                               (Prims.of_int (35)) (Prims.of_int (45))
-                               (Prims.of_int (35)) (Prims.of_int (52)))))
+                               (Prims.of_int (25)) (Prims.of_int (45))
+                               (Prims.of_int (25)) (Prims.of_int (52)))))
                       (Obj.magic
                          (FStar_Tactics_V2_Derived.apply
                             (FStar_Reflection_V2_Builtins.pack_ln
@@ -55,17 +91,17 @@ let rec (apply_squash_or_lem :
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.MApply.fst"
-                                           (Prims.of_int (41))
+                                           (Prims.of_int (31))
                                            (Prims.of_int (13))
-                                           (Prims.of_int (41))
+                                           (Prims.of_int (31))
                                            (Prims.of_int (30)))))
                                   (FStar_Sealed.seal
                                      (Obj.magic
                                         (FStar_Range.mk_range
                                            "FStar.Tactics.MApply.fst"
-                                           (Prims.of_int (41))
+                                           (Prims.of_int (31))
                                            (Prims.of_int (33))
-                                           (Prims.of_int (90))
+                                           (Prims.of_int (80))
                                            (Prims.of_int (41)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
@@ -73,17 +109,17 @@ let rec (apply_squash_or_lem :
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "FStar.Tactics.MApply.fst"
-                                                 (Prims.of_int (41))
+                                                 (Prims.of_int (31))
                                                  (Prims.of_int (16))
-                                                 (Prims.of_int (41))
+                                                 (Prims.of_int (31))
                                                  (Prims.of_int (28)))))
                                         (FStar_Sealed.seal
                                            (Obj.magic
                                               (FStar_Range.mk_range
                                                  "FStar.Tactics.MApply.fst"
-                                                 (Prims.of_int (41))
+                                                 (Prims.of_int (31))
                                                  (Prims.of_int (13))
-                                                 (Prims.of_int (41))
+                                                 (Prims.of_int (31))
                                                  (Prims.of_int (30)))))
                                         (Obj.magic
                                            (FStar_Tactics_V2_Derived.cur_env
@@ -101,17 +137,17 @@ let rec (apply_squash_or_lem :
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.MApply.fst"
-                                                      (Prims.of_int (42))
+                                                      (Prims.of_int (32))
                                                       (Prims.of_int (17))
-                                                      (Prims.of_int (42))
+                                                      (Prims.of_int (32))
                                                       (Prims.of_int (31)))))
                                              (FStar_Sealed.seal
                                                 (Obj.magic
                                                    (FStar_Range.mk_range
                                                       "FStar.Tactics.MApply.fst"
-                                                      (Prims.of_int (41))
+                                                      (Prims.of_int (31))
                                                       (Prims.of_int (33))
-                                                      (Prims.of_int (90))
+                                                      (Prims.of_int (80))
                                                       (Prims.of_int (41)))))
                                              (Obj.magic
                                                 (FStar_Tactics_V2_SyntaxHelpers.collect_arr
@@ -135,18 +171,18 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (36))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (36))
                                                                     (Prims.of_int (32)))))
                                                                     (
                                                                     FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (46))
+                                                                    (Prims.of_int (36))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (55))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (41)))))
                                                                     (
                                                                     FStar_Tactics_Effect.lift_div_tac
@@ -170,17 +206,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (37))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (47))
+                                                                    (Prims.of_int (37))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (55))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.norm_term
@@ -195,17 +231,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (49))
+                                                                    (Prims.of_int (39))
                                                                     (Prims.of_int (7))
-                                                                    (Prims.of_int (55))
+                                                                    (Prims.of_int (45))
                                                                     (Prims.of_int (41)))))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_V2_Formula.term_as_formula'
@@ -226,17 +262,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (41))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (51))
+                                                                    (Prims.of_int (41))
                                                                     (Prims.of_int (31)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (42))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (42))
                                                                     (Prims.of_int (38)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
@@ -281,17 +317,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (63))
+                                                                    (Prims.of_int (53))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (43)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.norm_term
@@ -306,17 +342,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (55))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (71))
+                                                                    (Prims.of_int (61))
                                                                     (Prims.of_int (43)))))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_V2_Formula.term_as_formula'
@@ -337,17 +373,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (67))
+                                                                    (Prims.of_int (57))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (67))
+                                                                    (Prims.of_int (57))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (68))
+                                                                    (Prims.of_int (58))
                                                                     (Prims.of_int (40)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
@@ -383,17 +419,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (68))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (78))
+                                                                    (Prims.of_int (68))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (87))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.norm_term
@@ -408,17 +444,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (34)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (80))
+                                                                    (Prims.of_int (70))
                                                                     (Prims.of_int (9))
-                                                                    (Prims.of_int (87))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Reflection_V2_Formula.term_as_formula'
@@ -438,17 +474,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (82))
+                                                                    (Prims.of_int (72))
                                                                     (Prims.of_int (33)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (73))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (83))
+                                                                    (Prims.of_int (73))
                                                                     (Prims.of_int (40)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply_lemma
@@ -477,17 +513,17 @@ let rec (apply_squash_or_lem :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (86))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (86))
+                                                                    (Prims.of_int (76))
                                                                     (Prims.of_int (48)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MApply.fst"
-                                                                    (Prims.of_int (87))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (13))
-                                                                    (Prims.of_int (87))
+                                                                    (Prims.of_int (77))
                                                                     (Prims.of_int (20)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply
@@ -513,45 +549,21 @@ let rec (apply_squash_or_lem :
                                                                  (FStar_Tactics_V2_Derived.fail
                                                                     "mapply: can't apply (2)"))))
                                                   uu___4))) uu___4)))) uu___2)))
-type 'a termable =
-  {
-  to_term:
-    'a -> (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr }
-let __proj__Mktermable__item__to_term :
-  'a .
-    'a termable ->
-      'a ->
-        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
-  = fun projectee -> match projectee with | { to_term;_} -> to_term
-let to_term :
-  'a .
-    'a termable ->
-      'a ->
-        (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
-  =
-  fun projectee -> match projectee with | { to_term = to_term1;_} -> to_term1
-let (termable_term : FStar_Tactics_NamedView.term termable) =
-  {
-    to_term =
-      (fun uu___ ->
-         (fun t ->
-            Obj.magic (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> t)))
-           uu___)
-  }
-let (termable_binding : FStar_Tactics_NamedView.binding termable) =
-  {
-    to_term =
-      (fun uu___ ->
-         (fun b ->
-            Obj.magic
-              (FStar_Tactics_Effect.lift_div_tac
-                 (fun uu___ ->
-                    FStar_Tactics_V2_SyntaxCoercions.binding_to_term b)))
-           uu___)
-  }
 let (mapply0 :
   FStar_Tactics_NamedView.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   = fun t -> apply_squash_or_lem (Prims.of_int (10)) t
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.MApply.mapply0"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.MApply.mapply0 (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 mapply0)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Syntax_Embeddings.e_unit psc ncb us args)
 let mapply :
   'ty . 'ty termable -> 'ty -> (unit, unit) FStar_Tactics_Effect.tac_repr =
   fun uu___ ->
@@ -559,14 +571,12 @@ let mapply :
       FStar_Tactics_Effect.tac_bind
         (FStar_Sealed.seal
            (Obj.magic
-              (FStar_Range.mk_range "FStar.Tactics.MApply.fst"
-                 (Prims.of_int (110)) (Prims.of_int (10))
-                 (Prims.of_int (110)) (Prims.of_int (19)))))
+              (FStar_Range.mk_range "FStar.Tactics.MApply.fsti"
+                 (Prims.of_int (35)) (Prims.of_int (10)) (Prims.of_int (35))
+                 (Prims.of_int (19)))))
         (FStar_Sealed.seal
            (Obj.magic
-              (FStar_Range.mk_range "FStar.Tactics.MApply.fst"
-                 (Prims.of_int (111)) (Prims.of_int (2)) (Prims.of_int (111))
-                 (Prims.of_int (26))))) (Obj.magic (to_term uu___ x))
-        (fun uu___1 ->
-           (fun t -> Obj.magic (apply_squash_or_lem (Prims.of_int (10)) t))
-             uu___1)
+              (FStar_Range.mk_range "FStar.Tactics.MApply.fsti"
+                 (Prims.of_int (36)) (Prims.of_int (2)) (Prims.of_int (36))
+                 (Prims.of_int (11))))) (Obj.magic (to_term uu___ x))
+        (fun uu___1 -> (fun t -> Obj.magic (mapply0 t)) uu___1)

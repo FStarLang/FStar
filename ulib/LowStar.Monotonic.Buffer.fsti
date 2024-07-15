@@ -1474,12 +1474,12 @@ val modifies_loc_buffer_from_to_intro
 
 val does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : GTot Type0
 
 val not_live_region_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (~ (HS.live_region h (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
@@ -1495,7 +1495,7 @@ val unused_in_does_not_contain_addr
 
 val addr_unused_in_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel (HS.get_hmap h) (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
@@ -1505,7 +1505,7 @@ val free_does_not_contain_addr
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     HS.is_mm r /\
@@ -1523,7 +1523,7 @@ val does_not_contain_addr_elim
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     m `does_not_contain_addr` x /\

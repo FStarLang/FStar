@@ -219,12 +219,12 @@ let mkRefinedPattern pat t should_bind_pat phi_opt t_range range =
      in
      mk_pattern (PatAscribed(pat, (t, None))) range
 
-let rec extract_named_refinement t1  =
-    match t1.tm with
-        | NamedTyp(x, t) -> Some (x, t, None)
-        | Refine({b=Annotated(x, t)}, t') ->  Some (x, t, Some t')
-    | Paren t -> extract_named_refinement t
-        | _ -> None
+let rec extract_named_refinement (remove_parens:bool) (t1:term) : option (ident & term & option typ) =
+  match t1.tm with
+  | NamedTyp(x, t) -> Some (x, t, None)
+  | Refine({b=Annotated(x, t)}, t') -> Some (x, t, Some t')
+  | Paren t when remove_parens -> extract_named_refinement remove_parens t
+  | _ -> None
 
 (* Some helpers that parse.mly and parse.fsy will want too *)
 
@@ -242,7 +242,7 @@ let rec extract_named_refinement t1  =
 
 //NS: needed to hoist this to workaround a bootstrapping bug
 //    leaving it within as_frag causes the type-checker to take a very long time, perhaps looping
-let rec as_mlist (cur: (lid * decl) * list decl) (ds:list decl) : modul =
+let rec as_mlist (cur: (lid & decl) & list decl) (ds:list decl) : modul =
     let ((m_name, m_decl), cur) = cur in
     match ds with
     | [] -> Module(m_name, m_decl :: List.rev cur)
@@ -328,15 +328,15 @@ let string_to_op s =
     match s with
     | "Amp" ->  Some ("&", None)
     | "At" -> Some ("@", None)
-    | "Plus" -> Some ("+", None)
+    | "Plus" -> Some ("+", Some 2)
     | "Minus" -> Some ("-", None)
     | "Subtraction" -> Some ("-", Some 2)
     | "Tilde" -> Some ("~", None)
-    | "Slash" -> Some ("/", None)
+    | "Slash" -> Some ("/", Some 2)
     | "Backslash" -> Some ("\\", None)
-    | "Less" -> Some ("<", None)
+    | "Less" -> Some ("<", Some 2)
     | "Equals" -> Some ("=", None)
-    | "Greater" -> Some (">", None)
+    | "Greater" -> Some (">", Some 2)
     | "Underscore" -> Some ("_", None)
     | "Bar" -> Some ("|", None)
     | "Bang" -> Some ("!", None)
@@ -792,3 +792,11 @@ let ident_of_binder r b =
                  "Wildcard binders in quantifiers are not allowed") r
 
 let idents_of_binders bs r = bs |> List.map (ident_of_binder r)
+
+instance showable_decl : showable decl = {
+  show = decl_to_string;
+}
+
+instance showable_term : showable term = {
+  show = term_to_string;
+}

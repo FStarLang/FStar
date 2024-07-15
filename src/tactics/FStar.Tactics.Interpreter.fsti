@@ -22,6 +22,17 @@ open FStar.Syntax.Embeddings
 open FStar.Tactics.Types
 module Env = FStar.TypeChecker.Env
 
+(* Run a `tac` *)
+val run_unembedded_tactic_on_ps :
+    range -> (* position on the tactic call *)
+    range -> (* position for the goal *)
+    bool ->  (* whether this call is in the "background", like resolve_implicits *)
+    'a ->
+    ('a -> Monad.tac 'b) -> (* a term representing an `'a -> tac 'b` *)
+    proofstate ->  (* proofstate *)
+    list goal & 'b (* goals and return value *)
+
+(* Run a term of type `a -> Tac b` *)
 val run_tactic_on_ps :
     range -> (* position on the tactic call *)
     range -> (* position for the goal *)
@@ -32,7 +43,7 @@ val run_tactic_on_ps :
     term ->        (* a term representing an `'a -> tac 'b` *)
     bool ->        (* true if the tactic term is already typechecked *)
     proofstate ->  (* proofstate *)
-    list goal * 'b (* goals and return value *)
+    list goal & 'b (* goals and return value *)
 
 val primitive_steps : unit -> list FStar.TypeChecker.Primops.primitive_step
 
@@ -40,9 +51,6 @@ val report_implicits : range -> FStar.TypeChecker.Rel.tagged_implicits -> unit
 
 (* Called by Main *)
 val register_tactic_primitive_step : FStar.TypeChecker.Primops.primitive_step -> unit
-
-(* For debugging only *)
-val tacdbg : ref bool
 
 open FStar.Tactics.Monad
 module NBET = FStar.TypeChecker.NBETerm

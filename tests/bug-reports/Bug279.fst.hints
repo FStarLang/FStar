@@ -10,7 +10,7 @@
         "@query", "assumption_Prims.list__uu___haseq", "kinding_Bug279.t@tok"
       ],
       0,
-      "97598015ce57dfa7d1a3a14d6fb6189f"
+      "74de80b6f36ee1e6f7095dc823689bbd"
     ],
     [
       "Bug279.f",
@@ -23,7 +23,7 @@
         "subterm_ordering_Bug279.T"
       ],
       0,
-      "d577e20f5294f3339a39bcc8d0a1020d"
+      "8772daefd6fc73fed84631cdd82524bc"
     ]
   ]
 ]

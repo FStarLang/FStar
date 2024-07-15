@@ -19,8 +19,8 @@ open FStar.List
 val foo : list nat -> Tot bool
 let foo _ = true
 
-val bar : ms1:list (nat * nat)
-        -> ms2:list (nat * nat){mapT #_ #nat fst ms1 = mapT #_ #nat fst ms2}
+val bar : ms1:list (nat & nat)
+        -> ms2:list (nat & nat){mapT #_ #nat fst ms1 = mapT #_ #nat fst ms2}
         -> Lemma
         (requires (foo (mapT fst ms1)))
         (ensures true)

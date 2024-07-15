@@ -138,7 +138,7 @@ effect Exn (a:Type) (pre:Type0) (post:option a -> Type0) =
 
 assume val get_n1
 : n:nat ->
-  Pure (option (nat * nat))
+  Pure (option (nat & nat))
   (requires n > 0)
   (ensures fun r ->
     match r with
@@ -181,7 +181,7 @@ let get_flt (n:nat)
 
 inline_for_extraction
 let get_n1_exn (n:nat)
-: Exn (nat * nat)
+: Exn (nat & nat)
   (requires n > 0)
   (ensures fun r ->
     match r with
@@ -336,7 +336,7 @@ let get_flt_stexn (_:unit)
 /// And now we can reify the effect to reveal a spec in terms of PURE
 
 let get_flt_stexn_reified (n:nat)
-: Pure (option (flt * nat))
+: Pure (option (flt & nat))
   (requires n > 0)
   (ensures fun r ->
     match r with

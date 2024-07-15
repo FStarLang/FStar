@@ -83,6 +83,15 @@ let hash_option :
             let uu___1 = FStar_Hash.of_int (Prims.of_int (1249)) in
             ret uu___1 in
           let uu___1 = h o1 in mix uu___ uu___1
+let (hash_doc : FStar_Pprint.document -> FStar_Hash.hash_code mm) =
+  fun d ->
+    let uu___ =
+      FStar_Pprint.pretty_string (FStar_Compiler_Util.float_of_string "1.0")
+        (Prims.of_int (80)) d in
+    of_string uu___
+let (hash_doc_list :
+  FStar_Pprint.document Prims.list -> FStar_Hash.hash_code mm) =
+  fun ds -> hash_list hash_doc ds
 let hash_pair :
   'a 'b .
     ('a -> FStar_Hash.hash_code mm) ->
@@ -579,7 +588,7 @@ and (hash_meta : FStar_Syntax_Syntax.metadata -> FStar_Hash.hash_code mm) =
         let uu___1 =
           let uu___2 = of_int (Prims.of_int (1031)) in
           let uu___3 =
-            let uu___4 = of_string s in
+            let uu___4 = hash_doc_list s in
             let uu___5 =
               let uu___6 =
                 let uu___7 = FStar_Compiler_Range_Ops.string_of_range r in
@@ -1141,7 +1150,11 @@ and (equal_meta :
             && (equal_term t1 t2)
 and (equal_lazyinfo :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.lazyinfo -> Prims.bool)
-  = fun l1 -> fun l2 -> l1 = l2
+  =
+  fun l1 ->
+    fun l2 ->
+      FStar_Compiler_Util.physical_equality l1.FStar_Syntax_Syntax.blob
+        l2.FStar_Syntax_Syntax.blob
 and (equal_quoteinfo :
   FStar_Syntax_Syntax.quoteinfo ->
     FStar_Syntax_Syntax.quoteinfo -> Prims.bool)
@@ -1235,3 +1248,5 @@ and (equal_subst_elt :
           (i1 = i2) && (equal_universe u1 u2)
       | (FStar_Syntax_Syntax.UD (un1, i1), FStar_Syntax_Syntax.UD (un2, i2))
           -> (i1 = i2) && (FStar_Ident.ident_equals un1 un2)
+let (hashable_term : FStar_Syntax_Syntax.term FStar_Class_Hashable.hashable)
+  = { FStar_Class_Hashable.hash = ext_hash_term }

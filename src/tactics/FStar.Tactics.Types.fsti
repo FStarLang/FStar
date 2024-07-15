@@ -49,6 +49,7 @@ type guard_policy =
     | SMT
     | SMTSync
     | Force
+    | ForceSMT
     | Drop // unsound
 
 type proofstate = {
@@ -77,6 +78,8 @@ type proofstate = {
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop
                                  // open a buffer or not (default: 1).
+
+    dump_on_failure : bool;      // Whether to dump the proofstate to the user when a failure occurs.
 }
 
 val decr_depth : proofstate -> proofstate
@@ -102,7 +105,7 @@ val smt_goals_of : proofstate -> list goal
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
 
-val goal_of_goal_ty : env -> typ -> goal * guard_t
+val goal_of_goal_ty : env -> typ -> goal & guard_t
 val goal_of_implicit : env -> implicit -> goal
 val goal_of_ctx_uvar: goal -> ctx_uvar -> goal
 

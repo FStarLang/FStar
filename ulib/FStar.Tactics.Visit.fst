@@ -87,6 +87,7 @@ let rec visit_tm (ff : term -> Tac term) (t : term) : Tac term =
         Tv_AscribedT e t topt use_eq
     | Tv_AscribedC e c topt use_eq ->
         let e = visit_tm ff e in
+        let c = visit_comp ff c in
         Tv_AscribedC e c topt use_eq
   in
   ff (pack_ln tv')

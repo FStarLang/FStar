@@ -48,13 +48,13 @@ let goals () : Tac (list goal) = goals_of (get ())
 let smt_goals () : Tac (list goal) = smt_goals_of (get ())
 
 let fail (#a:Type) (m:string)
-  : TAC a (fun ps post -> post (Failed (TacticFailure m) ps))
-  = raise #a (TacticFailure m)
+  : TAC a (fun ps post -> post (Failed (TacticFailure (mkmsg m)) ps))
+  = raise #a (TacticFailure (mkmsg m))
 
 let fail_silently (#a:Type) (m:string)
-  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure m) ps))
+  : TAC a (fun _ post -> forall ps. post (Failed (TacticFailure (mkmsg m)) ps))
   = set_urgency 0;
-    raise #a (TacticFailure m)
+    raise #a (TacticFailure (mkmsg m))
 
 (** Return the current *goal*, not its type. (Ignores SMT goals) *)
 let _cur_goal () : Tac goal =
@@ -137,8 +137,7 @@ let qed () : Tac unit =
     | _ -> fail "qed: not done!"
 
 (** [debug str] is similar to [print str], but will only print the message
-if the [--debug] option was given for the current module AND
-[--debug_level Tac] is on. *)
+if [--debug Tac] is on. *)
 let debug (m:string) : Tac unit =
     if debugging () then print m
 
@@ -247,7 +246,7 @@ let t_pointwise (d:direction) (tau : unit -> Tac unit) : Tac unit =
     When [snd (ctrl t) = 2], no more rewrites are performed in the
     goal.
 *)
-let topdown_rewrite (ctrl : term -> Tac (bool * int))
+let topdown_rewrite (ctrl : term -> Tac (bool & int))
                     (rw:unit -> Tac unit) : Tac unit
   = let ctrl' (t:term) : Tac (bool & ctrl_flag) =
       let b, i = ctrl t in
@@ -290,7 +289,7 @@ let tmatch (t1 t2 : term) : Tac bool =
 (** [divide n t1 t2] will split the current set of goals into the [n]
 first ones, and the rest. It then runs [t1] on the first set, and [t2]
 on the second, returning both results (and concatenating remaining goals). *)
-let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a * 'b) =
+let divide (n:int) (l : unit -> Tac 'a) (r : unit -> Tac 'b) : Tac ('a & 'b) =
     if n < 0 then
       fail "divide: negative n";
     let gs, sgs = goals (), smt_goals () in
@@ -559,7 +558,7 @@ let rec __assumption_aux (bs : binders) : Tac unit =
 let assumption () : Tac unit =
     __assumption_aux (cur_binders ())
 
-let destruct_equality_implication (t:term) : Tac (option (formula * term)) =
+let destruct_equality_implication (t:term) : Tac (option (formula & term)) =
     match term_as_formula t with
     | Implies lhs rhs ->
         let lhs = term_as_formula' lhs in
@@ -840,7 +839,7 @@ let focus_all () : Tac unit =
     set_smt_goals []
 
 private
-let rec extract_nth (n:nat) (l : list 'a) : option ('a * list 'a) =
+let rec extract_nth (n:nat) (l : list 'a) : option ('a & list 'a) =
   match n, l with
   | _, [] -> None
   | 0, hd::tl -> Some (hd, tl)
@@ -940,7 +939,7 @@ let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =
 [s] as a term in environment [e] augmented with bindings
 [id1, t1], ..., [idn, tn]. *)
 let string_to_term_with_lb
-  (letbindings: list (string * term))
+  (letbindings: list (string & term))
   (e: env) (t: string): Tac term
   = let unk = pack_ln Tv_Unknown in
     let e, lb_bvs = fold_left (fun (e, lb_bvs) (i, v) ->

@@ -21,9 +21,9 @@ open FStar.Preorder
    reference to be allocated) and a mapping of allocated raw references
    (represented as natural numbers) to types, values and preorders. *)
 
-let heap_cell_a (a:Type0) = a * preorder_t a
+let heap_cell_a (a:Type0) = a & preorder_t a
 let heap_cell = (a:Type0 & heap_cell_a a)
-let heap = h:(nat * (nat -> Tot (option heap_cell)))
+let heap = h:(nat & (nat -> Tot (option heap_cell)))
 		       {(forall (n:nat) . n < fst h ==> (exists v . snd h n == Some v)) /\
 			(forall (n:nat) . n >= fst h ==> snd h n == None)}
 

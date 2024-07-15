@@ -31,6 +31,8 @@ open FStar.Interactive.PushHelper
 open FStar.Interactive.Ide.Types
 module BU = FStar.Compiler.Util
 
+let dbg = Debug.get_toggle "IDE"
+
 open FStar.Universal
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Common
@@ -138,7 +140,7 @@ This function is stateful: it uses ``push_repl`` and ``pop_repl``.
 let run_repl_ld_transactions (st: repl_state) (tasks: list repl_task)
                              (progress_callback: repl_task -> unit) =
   let debug verb task =
-    if Options.debug_at_level_no_module (Options.Other "IDE") then
+    if !dbg then
       Util.print2 "%s %s" verb (string_of_repl_task task) in
 
   (* Run as many ``pop_repl`` as there are entries in the input stack.
@@ -635,7 +637,7 @@ let write_full_buffer_fragment_progress (di:Incremental.fragment_progress) =
     | FullBufferFinished ->
       write_progress (Some "full-buffer-finished") []
 
-let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool * SS.modul =
+let trunc_modul (m: SS.modul) (pred : SS.sigelt -> bool) : bool & SS.modul =
   let rec filter decls acc =
     match decls with
     | [] -> false, List.rev acc
@@ -690,8 +692,8 @@ let run_load_partial_file st decl_name: (query_status & json) & either repl_stat
 
 let run_push_without_deps st query
   : (query_status & json) & either repl_state int =
-  let set_nosynth_flag st flag =
-    { st with repl_env = { st.repl_env with nosynth = flag } } in
+  let set_flychecking_flag st flag =
+    { st with repl_env = { st.repl_env with flychecking = flag } } in
 
   let { push_code_or_decl = code_or_decl;
         push_line = line;
@@ -712,9 +714,9 @@ let run_push_without_deps st query
     | Inr (decl, _code) -> 
       Inr decl
     in
-  let st = set_nosynth_flag st peek_only in
+  let st = set_flychecking_flag st peek_only in
   let success, st = run_repl_transaction st (Some push_kind) peek_only (PushFragment (frag, push_kind, [])) in
-  let st = set_nosynth_flag st false in
+  let st = set_flychecking_flag st false in
 
   let status = if success || peek_only then QueryOK else QueryNOK in
   let errs = collect_errors () in
@@ -744,7 +746,7 @@ let run_push_without_deps st query
   ((status, json_errors), Inl st)
 
 let run_push_with_deps st query =
-  if Options.debug_at_level_no_module (Options.Other "IDE") then
+  if !dbg then
     Util.print_string "Reloading dependencies";
   TcEnv.toggle_id_info st.repl_env false;
   match load_deps st with
@@ -968,7 +970,7 @@ let st_cost = function
 
 type search_candidate = { sc_lid: lid; sc_typ:
                           ref (option Syntax.Syntax.typ);
-                          sc_fvars: ref (option (Set.t lid)) }
+                          sc_fvars: ref (option (RBSet.t lid)) }
 
 let sc_of_lid lid = { sc_lid = lid;
                       sc_typ = Util.mk_ref None;
@@ -997,13 +999,12 @@ exception InvalidSearch of string
 
 let run_search st search_str =
   let tcenv = st.repl_env in
-  let empty_fv_set = SS.new_fv_set () in
 
   let st_matches candidate term =
     let found =
       match term.st_term with
       | NameContainsStr str -> Util.contains (string_of_lid candidate.sc_lid) str
-      | TypeContainsLid lid -> Set.mem lid (sc_fvars tcenv candidate) in
+      | TypeContainsLid lid -> Class.Setlike.mem lid (sc_fvars tcenv candidate) in
     found <> term.st_negate in
 
   let parse search_str =
@@ -1071,11 +1072,11 @@ let as_json_list (q: (query_status & json) & either repl_state int)
   = let (q, j), s = q in
     (q, [j]), s
 
-let run_query_result = (query_status * list json) * either repl_state int 
+let run_query_result = (query_status & list json) & either repl_state int 
 
 let maybe_cancel_queries st l = 
   let log_cancellation l = 
-      if Options.debug_at_level_no_module (Options.Other "IDE")
+      if !dbg
       then List.iter (fun q -> BU.print1 "Cancelling query: %s\n" (query_to_string q)) l
   in
   match st.repl_buffered_input_queries with
@@ -1130,7 +1131,7 @@ let validate_query st (q: query) : query =
         | _ -> q
 
 
-let rec run_query st (q: query) : (query_status * list json) * either repl_state int =
+let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
   match q.qq with
   | Exit -> as_json_list (run_exit st)
   | DescribeProtocol -> as_json_list (run_describe_protocol st)
@@ -1173,7 +1174,7 @@ let rec run_query st (q: query) : (query_status * list json) * either repl_state
 and validate_and_run_query st query =
   let query = validate_query st query in
   repl_current_qid := Some query.qid;
-  if Options.debug_at_level_no_module (Options.Other "IDE")
+  if !dbg
   then BU.print2 "Running query %s: %s\n" query.qid (query_to_string query);
   run_query st query
 

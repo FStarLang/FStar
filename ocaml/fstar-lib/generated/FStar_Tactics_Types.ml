@@ -35,6 +35,7 @@ type guard_policy =
   | SMT 
   | SMTSync 
   | Force 
+  | ForceSMT 
   | Drop 
 let (uu___is_Goal : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Goal -> true | uu___ -> false
@@ -44,6 +45,8 @@ let (uu___is_SMTSync : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | SMTSync -> true | uu___ -> false
 let (uu___is_Force : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Force -> true | uu___ -> false
+let (uu___is_ForceSMT : guard_policy -> Prims.bool) =
+  fun projectee -> match projectee with | ForceSMT -> true | uu___ -> false
 let (uu___is_Drop : guard_policy -> Prims.bool) =
   fun projectee -> match projectee with | Drop -> true | uu___ -> false
 type proofstate =
@@ -60,91 +63,104 @@ type proofstate =
   freshness: Prims.int ;
   tac_verb_dbg: Prims.bool ;
   local_state: FStar_Syntax_Syntax.term FStar_Compiler_Util.psmap ;
-  urgency: Prims.int }
+  urgency: Prims.int ;
+  dump_on_failure: Prims.bool }
 let (__proj__Mkproofstate__item__main_context :
   proofstate -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> main_context
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
+        main_context
 let (__proj__Mkproofstate__item__all_implicits :
   proofstate -> FStar_TypeChecker_Common.implicits) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> all_implicits
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
+        all_implicits
 let (__proj__Mkproofstate__item__goals : proofstate -> goal Prims.list) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> goals
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> goals
 let (__proj__Mkproofstate__item__smt_goals : proofstate -> goal Prims.list) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> smt_goals
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> smt_goals
 let (__proj__Mkproofstate__item__depth : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> depth
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> depth
 let (__proj__Mkproofstate__item____dump :
   proofstate -> proofstate -> Prims.string -> unit) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> __dump
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> __dump
 let (__proj__Mkproofstate__item__psc :
   proofstate -> FStar_TypeChecker_Primops_Base.psc) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> psc
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> psc
 let (__proj__Mkproofstate__item__entry_range :
   proofstate -> FStar_Compiler_Range_Type.range) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> entry_range
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> entry_range
 let (__proj__Mkproofstate__item__guard_policy : proofstate -> guard_policy) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> guard_policy1
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
+        guard_policy1
 let (__proj__Mkproofstate__item__freshness : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> freshness
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> freshness
 let (__proj__Mkproofstate__item__tac_verb_dbg : proofstate -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> tac_verb_dbg
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
+        tac_verb_dbg
 let (__proj__Mkproofstate__item__local_state :
   proofstate -> FStar_Syntax_Syntax.term FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> local_state
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> local_state
 let (__proj__Mkproofstate__item__urgency : proofstate -> Prims.int) =
   fun projectee ->
     match projectee with
     | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
         psc; entry_range; guard_policy = guard_policy1; freshness;
-        tac_verb_dbg; local_state; urgency;_} -> urgency
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} -> urgency
+let (__proj__Mkproofstate__item__dump_on_failure : proofstate -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { main_context; all_implicits; goals; smt_goals; depth; __dump; 
+        psc; entry_range; guard_policy = guard_policy1; freshness;
+        tac_verb_dbg; local_state; urgency; dump_on_failure;_} ->
+        dump_on_failure
 let (goal_env : goal -> FStar_TypeChecker_Env.env) = fun g -> g.goal_main_env
 let (goal_range : goal -> FStar_Compiler_Range_Type.range) =
   fun g -> (g.goal_main_env).FStar_TypeChecker_Env.range
@@ -272,7 +288,8 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
           FStar_TypeChecker_Env.failhard =
             (env.FStar_TypeChecker_Env.failhard);
-          FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
+          FStar_TypeChecker_Env.flychecking =
+            (env.FStar_TypeChecker_Env.flychecking);
           FStar_TypeChecker_Env.uvar_subtyping =
             (env.FStar_TypeChecker_Env.uvar_subtyping);
           FStar_TypeChecker_Env.intactics =
@@ -324,7 +341,9 @@ let (goal_of_implicit :
           FStar_TypeChecker_Env.erase_erasable_args =
             (env.FStar_TypeChecker_Env.erase_erasable_args);
           FStar_TypeChecker_Env.core_check =
-            (env.FStar_TypeChecker_Env.core_check)
+            (env.FStar_TypeChecker_Env.core_check);
+          FStar_TypeChecker_Env.missing_decl =
+            (env.FStar_TypeChecker_Env.missing_decl)
         } i.FStar_TypeChecker_Common.imp_uvar uu___ false
         i.FStar_TypeChecker_Common.imp_reason
 let (decr_depth : proofstate -> proofstate) =
@@ -342,7 +361,8 @@ let (decr_depth : proofstate -> proofstate) =
       freshness = (ps.freshness);
       tac_verb_dbg = (ps.tac_verb_dbg);
       local_state = (ps.local_state);
-      urgency = (ps.urgency)
+      urgency = (ps.urgency);
+      dump_on_failure = (ps.dump_on_failure)
     }
 let (incr_depth : proofstate -> proofstate) =
   fun ps ->
@@ -359,7 +379,8 @@ let (incr_depth : proofstate -> proofstate) =
       freshness = (ps.freshness);
       tac_verb_dbg = (ps.tac_verb_dbg);
       local_state = (ps.local_state);
-      urgency = (ps.urgency)
+      urgency = (ps.urgency);
+      dump_on_failure = (ps.dump_on_failure)
     }
 let (set_ps_psc :
   FStar_TypeChecker_Primops_Base.psc -> proofstate -> proofstate) =
@@ -378,7 +399,8 @@ let (set_ps_psc :
         freshness = (ps.freshness);
         tac_verb_dbg = (ps.tac_verb_dbg);
         local_state = (ps.local_state);
-        urgency = (ps.urgency)
+        urgency = (ps.urgency);
+        dump_on_failure = (ps.dump_on_failure)
       }
 let (tracepoint_with_psc :
   FStar_TypeChecker_Primops_Base.psc -> proofstate -> Prims.bool) =
@@ -419,7 +441,8 @@ let (set_proofstate_range :
         freshness = (ps.freshness);
         tac_verb_dbg = (ps.tac_verb_dbg);
         local_state = (ps.local_state);
-        urgency = (ps.urgency)
+        urgency = (ps.urgency);
+        dump_on_failure = (ps.dump_on_failure)
       }
 let (goals_of : proofstate -> goal Prims.list) = fun ps -> ps.goals
 let (smt_goals_of : proofstate -> goal Prims.list) = fun ps -> ps.smt_goals

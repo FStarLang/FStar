@@ -28,6 +28,7 @@ open FStar.Ident
 open FStar.Compiler.Range
 open FStar.Errors
 open FStar.TypeChecker.Common
+open FStar.Class.Setlike
 
 open FStar.Class.Show
 open FStar.Class.PP
@@ -41,6 +42,9 @@ module Const = FStar.Parser.Const
 module TcComm = FStar.TypeChecker.Common
 
 open FStar.Defensive
+
+let dbg_ImplicitTrace = Debug.get_toggle "ImplicitTrace"
+let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
 
 let rec eq_step s1 s2 =
   match s1, s2 with
@@ -71,11 +75,71 @@ let rec eq_step s1 s2 =
   | UnfoldUntil s1, UnfoldUntil s2 -> s1 = s2
   | UnfoldOnly lids1, UnfoldOnly lids2
   | UnfoldFully lids1, UnfoldFully lids2
-  | UnfoldAttr lids1, UnfoldAttr lids2 ->
-      List.length lids1 = List.length lids2 && List.forall2 Ident.lid_equals lids1 lids2
-  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 = strs2
-  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 = strs2  
-  | _ -> false
+  | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
+  | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
+  | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
+  | _ -> false // fixme: others ?
+
+instance deq_step : deq step = {
+  (=?) = eq_step;
+}
+
+let rec step_to_string (s:step) : string =
+  match s with
+  | Beta -> "Beta"
+  | Iota -> "Iota"
+  | Zeta -> "Zeta"
+  | ZetaFull -> "ZetaFull"
+  | Exclude s1 -> "Exclude " ^ step_to_string s1
+  | Weak -> "Weak"
+  | HNF -> "HNF"
+  | Primops -> "Primops"
+  | Eager_unfolding -> "Eager_unfolding"
+  | Inlining -> "Inlining"
+  | DoNotUnfoldPureLets -> "DoNotUnfoldPureLets"
+  | UnfoldUntil s1 -> "UnfoldUntil " ^ show s1
+  | UnfoldOnly lids1 -> "UnfoldOnly " ^ show lids1
+  | UnfoldFully lids1 -> "UnfoldFully " ^ show lids1
+  | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
+  | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
+  | UnfoldNamespace strs1 -> "UnfoldNamespace " ^ show strs1
+  | UnfoldTac -> "UnfoldTac"
+  | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
+  | Simplify -> "Simplify"
+  | EraseUniverses -> "EraseUniverses"
+  | AllowUnboundUniverses -> "AllowUnboundUniverses"
+  | Reify -> "Reify"
+  | CompressUvars -> "CompressUvars"
+  | NoFullNorm -> "NoFullNorm"
+  | CheckNoUvars -> "CheckNoUvars"
+  | Unmeta -> "Unmeta"
+  | Unascribe -> "Unascribe"
+  | NBE -> "NBE"
+  | ForExtraction -> "ForExtraction"
+  | Unrefine -> "Unrefine"
+  | NormDebug -> "NormDebug"
+  | DefaultUnivsToZero -> "DefaultUnivsToZero"
+
+instance showable_step : showable step = {
+  show = step_to_string;
+}
+
+instance deq_delta_level : deq delta_level = {
+  (=?) = (fun x y -> match x, y with
+    | NoDelta, NoDelta -> true
+    | InliningDelta, InliningDelta -> true
+    | Eager_unfolding_only, Eager_unfolding_only -> true
+    | Unfold x, Unfold y -> x =? y
+    | _ -> false);
+}
+
+instance showable_delta_level : showable delta_level = {
+  show = (function
+          | NoDelta -> "NoDelta"
+          | InliningDelta -> "Inlining"
+          | Eager_unfolding_only -> "Eager_unfolding_only"
+          | Unfold d -> "Unfold " ^ show d);
+}
 
 let preprocess env tau tm  = env.mpreprocess env tau tm
 let postprocess env tau ty tm = env.postprocess env tau ty tm
@@ -99,6 +163,15 @@ let set_tc_hooks env hooks = { env with tc_hooks = hooks }
 
 let set_dep_graph e g = {e with dsenv=DsEnv.set_dep_graph e.dsenv g}
 let dep_graph e = DsEnv.dep_graph e.dsenv
+
+let record_val_for (e:env) (l:lident) : env =
+  { e with missing_decl = add l e.missing_decl }
+
+let record_definition_for (e:env) (l:lident) : env =
+  { e with missing_decl = remove l e.missing_decl }
+
+let missing_definition_list (e:env) : list lident =
+  elems e.missing_decl
 
 type sigtable = BU.smap sigelt
 
@@ -152,7 +225,7 @@ let initial_env deps
     phase1=false;
     nocoerce=false;
     failhard=false;
-    nosynth=false;
+    flychecking=false;
     uvar_subtyping=true;
     intactics=false;
 
@@ -187,7 +260,9 @@ let initial_env deps
     unif_allow_ref_guards=false;
     erase_erasable_args=false;
 
-    core_check
+    core_check;
+
+    missing_decl = empty();
   }
 
 let dsenv env = env.dsenv
@@ -197,7 +272,7 @@ let gamma_cache env = env.gamma_cache
 
 (* Marking and resetting the environment, for the interactive mode *)
 
-let query_indices: ref (list (list (lident * int))) = BU.mk_ref [[]]
+let query_indices: ref (list (list (lident & int))) = BU.mk_ref [[]]
 let push_query_indices () = match !query_indices with // already signal-atmoic
   | [] -> failwith "Empty query indices!"
   | _ -> query_indices := (List.hd !query_indices)::!query_indices
@@ -283,8 +358,7 @@ let incr_query_index env =
 ////////////////////////////////////////////////////////////
 // Checking the per-module debug level and position info  //
 ////////////////////////////////////////////////////////////
-let debug env (l:Options.debug_level_t) =
-    Options.debug_at_level (string_of_lid env.curmodule) l
+
 let set_range e r = if r=dummyRange then e else {e with range=r}
 let get_range e = e.range
 
@@ -325,7 +399,7 @@ let mk_univ_subst (formals : list univ_name) (us : universes) : list subst_elt =
     us |> List.mapi (fun i u -> UN (n - i, u))
 
 //Instantiate the universe variables in a type scheme with provided universes
-let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
+let inst_tscheme_with : tscheme -> universes -> universes & term = fun ts us ->
     match ts, us with
     | ([], t), [] -> [], t
     | (formals, t), _ ->
@@ -333,7 +407,7 @@ let inst_tscheme_with : tscheme -> universes -> universes * term = fun ts us ->
       us, Subst.subst vs t
 
 //Instantiate the universe variables in a type scheme with new unification variables
-let inst_tscheme : tscheme -> universes * term = function
+let inst_tscheme : tscheme -> universes & term = function
     | [], t -> [], t
     | us, t ->
       let us' = us |> List.map (fun _ -> new_u_univ()) in
@@ -434,7 +508,8 @@ let lookup_attr (env:env) (attr:string) : list sigelt =
 let add_se_to_attrtab env se =
     let add_one env se attr = BU.smap_add (attrtab env) attr (se :: lookup_attr env attr) in
     List.iter (fun attr ->
-                match (Subst.compress attr).n with
+                let hd, _ = U.head_and_args attr in
+                match (Subst.compress hd).n with
                 | Tm_fvar fv -> add_one env se (string_of_lid (lid_of_fv fv))
                 | _ -> ()) se.sigattrs
 
@@ -505,7 +580,7 @@ let lookup_type_of_let us_opt se lid =
 
     | _ -> None
 
-let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes * typ) * Range.range) =
+let effect_signature (us_opt:option universes) (se:sigelt) rng : option ((universes & typ) & Range.range) =
   let inst_ts us_opt ts =
     match us_opt with
     | None -> inst_tscheme ts
@@ -683,6 +758,12 @@ let typ_of_datacon env lid =
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
     | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
 
+let num_datacon_non_injective_ty_params env lid =
+  match lookup_qname env lid with
+    | Some (Inr ({ sigel = Sig_datacon {num_ty_params; injective_type_params} }, _), _) ->
+      if injective_type_params then Some 0 else Some num_ty_params
+    | _ -> None
+
 let lookup_definition_qninfo_aux rec_ok delta_levels lid (qninfo : qninfo) =
   let visible quals =
       delta_levels |> BU.for_some (fun dl -> quals |> BU.for_some (visible_at dl))
@@ -711,96 +792,112 @@ let lookup_definition delta_levels env lid =
 let lookup_nonrec_definition delta_levels env lid =
     lookup_definition_qninfo_aux false delta_levels lid <| lookup_qname env lid
 
-let delta_depth_of_qninfo_lid lid (qn:qninfo) : option delta_depth =
-    match qn with
-    | None
-    | Some (Inl _, _) -> Some (Delta_constant_at_level 0)
-    | Some (Inr(se, _), _) ->
-      match se.sigel with
-      | Sig_inductive_typ _
-      | Sig_bundle _
-      | Sig_datacon _ -> Some (Delta_constant_at_level 0)
-      | Sig_declare_typ _ -> Some (FStar.Syntax.DsEnv.delta_depth_of_declaration lid se.sigquals)
-      | Sig_let {lbs=(_,lbs)} ->
-          BU.find_map lbs (fun lb ->
-              let fv = right lb.lbname in
-              if fv_eq_lid fv lid
-              then fv.fv_delta
-              else None)
+let rec delta_depth_of_qninfo_lid env lid (qn:qninfo) : delta_depth =
+  match qn with
+  | None
+  | Some (Inl _, _) -> delta_constant
+  | Some (Inr(se, _), _) ->
+    match se.sigel with
+    | Sig_inductive_typ _
+    | Sig_bundle _
+    | Sig_datacon _ -> delta_constant
 
-      | Sig_fail _
-      | Sig_splice  _ ->
-        failwith "impossible: delta_depth_of_qninfo"
+    | Sig_declare_typ _ ->
+      let d0 =
+        if U.is_primop_lid lid
+        then delta_equational
+        else delta_constant
+      in
+      if se.sigquals |> BU.for_some (Assumption?)
+        && not (se.sigquals |> BU.for_some (New?))
+      then Delta_abstract d0
+      else d0
 
-      | Sig_assume _
-      | Sig_new_effect _
-      | Sig_sub_effect _
-      | Sig_effect_abbrev _ (* None? *)
-      | Sig_pragma  _
-      | Sig_polymonadic_bind _
-      | Sig_polymonadic_subcomp _ -> None
+    | Sig_let {lbs=(_,lbs)} ->
+      BU.find_map lbs (fun lb ->
+          let fv = right lb.lbname in
+          if fv_eq_lid fv lid then
+            Some (incr_delta_depth <| delta_depth_of_term env lb.lbdef)
+          else None) |> must
 
+    | Sig_fail _
+    | Sig_splice  _ ->
+      failwith "impossible: delta_depth_of_qninfo"
 
-//
-// For the following prims symbols,
-//   delta depth is handled specially
-// Instead of looking it up in the env,
-//   we  return as is set in the input fv.fv_delta
-// No principled reason, for backward compatibility
-//
-let prims_dd_lids = [
-  Const.and_lid;
-  Const.or_lid;
-  Const.imp_lid;
-  Const.iff_lid;
-  Const.true_lid;
-  Const.false_lid;
-  Const.not_lid;
-  Const.b2t_lid;
-  Const.eq2_lid;
-  Const.eq3_lid;
-  Const.op_Eq;
-  Const.op_LT;
-  Const.op_LTE;
-  Const.op_GT;
-  Const.op_GTE;
-  Const.forall_lid;
-  Const.exists_lid;
-  Const.haseq_lid;
-  Const.op_And;
-  Const.op_Or;
-  Const.op_Negation;
-]
+    | Sig_assume _
+    | Sig_new_effect _
+    | Sig_sub_effect _
+    | Sig_effect_abbrev _ (* None? *)
+    | Sig_pragma  _
+    | Sig_polymonadic_bind _
+    | Sig_polymonadic_subcomp _ ->
+      delta_constant
 
-let is_prims_dd_lid (l:lident) =
-  List.existsb (fun l0 -> lid_equals l l0) prims_dd_lids
+and delta_depth_of_qninfo env (fv:fv) (qn:qninfo) : delta_depth =
+  delta_depth_of_qninfo_lid env fv.fv_name.v qn
 
-let delta_depth_of_qninfo (fv:fv) (qn:qninfo) : option delta_depth =
+(* Computes the canonical delta_depth of a given fvar, by looking at its
+definition (and recursing) if needed. Results are memoized in the env.
+
+NB: The cache is never invalidated. A potential problem here would be
+if we memoize the delta_depth of a `val` before seeing the corresponding
+`let`, but I don't think that can happen. Before seeing the `let`, other code
+cannot refer to the name. *)
+and delta_depth_of_fv (env:env) (fv:S.fv) : delta_depth =
   let lid = fv.fv_name.v in
-  if is_prims_dd_lid lid && Some? fv.fv_delta
-  then fv.fv_delta //NS delta: too many special cases in existing code
-  else delta_depth_of_qninfo_lid lid qn
+  (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (function
+  | Some dd -> dd
+  | None ->
+    BU.smap_add env.fv_delta_depths (string_of_lid lid) delta_equational;
+    // ^ To prevent an infinite loop on recursive functions, we pre-seed the cache with
+    // a delta_equational. If we run into the same function while computing its delta_depth,
+    // we will return delta_equational. If not, we override the cache with the correct delta_depth.
+    let d = delta_depth_of_qninfo env fv (lookup_qname env fv.fv_name.v) in
+    // if Debug.any () then
+    //  BU.print2_error "Memoizing delta_depth_of_fv %s ->\t%s\n" (show lid) (show d);
+    BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
+    d)
 
-let delta_depth_of_fv env fv =
-  let lid = fv.fv_name.v in
-  if is_prims_dd_lid lid && Some? fv.fv_delta
-  then fv.fv_delta |> must
-  else
-    //try cache
-    (string_of_lid lid) |> BU.smap_try_find env.fv_delta_depths |> (fun d_opt ->
-      if d_opt |> is_some then d_opt |> must
-      else
-        match delta_depth_of_qninfo fv (lookup_qname env fv.fv_name.v) with
-        | None -> failwith (BU.format1 "Delta depth not found for %s" (FStar.Syntax.Print.fv_to_string fv))
-        | Some d ->
-          if Some? fv.fv_delta && d <> Some?.v fv.fv_delta
-          && Options.debug_any()
-          then BU.print3 "WARNING WARNING WARNING fv=%s, delta_depth=%s, env.delta_depth=%s\n"
-                         (Print.fv_to_string fv)
-                         (show (Some?.v fv.fv_delta))
-                         (show d);
-          BU.smap_add env.fv_delta_depths (string_of_lid lid) d;
-          d)
+(* Computes the delta_depth of an fv, but taking into account the visibility
+in the current module. *)
+and fv_delta_depth (env:env) (fv:S.fv) : delta_depth =
+    let d = delta_depth_of_fv env fv in
+    match d with
+    | Delta_abstract (Delta_constant_at_level l) ->
+      if string_of_lid env.curmodule = nsstr fv.fv_name.v && not env.is_iface
+       //AR: TODO: this is to prevent unfolding of abstract symbols in the extracted interface
+       //a better way would be create new fvs with appripriate delta_depth at extraction time
+      then Delta_constant_at_level l //we're in the defining module
+      else delta_constant
+    | d -> d
+
+(* Computes the delta_depth of a term. This is the single way to compute it. *)
+and delta_depth_of_term env t =
+    let t = U.unmeta t in
+    match t.n with
+    | Tm_meta _
+    | Tm_delayed _  -> failwith "Impossible (delta depth of term)"
+    | Tm_lazy i -> delta_depth_of_term env (U.unfold_lazy i)
+
+    | Tm_fvar fv -> fv_delta_depth env fv
+
+    | Tm_bvar _
+    | Tm_name _
+    | Tm_match _
+    | Tm_uvar _
+    | Tm_unknown -> delta_equational
+
+    | Tm_type _
+    | Tm_quoted _
+    | Tm_constant _
+    | Tm_arrow _ -> delta_constant
+
+    | Tm_uinst(t, _)
+    | Tm_refine {b={sort=t}}
+    | Tm_ascribed {tm=t}
+    | Tm_app {hd=t}
+    | Tm_abs {body=t}
+    | Tm_let {body=t} -> delta_depth_of_term env t
 
 let quals_of_qninfo (qninfo : qninfo) : option (list qualifier) =
   match qninfo with
@@ -815,7 +912,7 @@ let attrs_of_qninfo (qninfo : qninfo) : option (list attribute) =
 let lookup_attrs_of_lid env lid : option (list attribute) =
   attrs_of_qninfo <| lookup_qname env lid
 
-let fv_exists_and_has_attr env fv_lid attr_lid : bool * bool =
+let fv_exists_and_has_attr env fv_lid attr_lid : bool & bool =
     match lookup_attrs_of_lid env fv_lid with
     | None ->
       false, false
@@ -832,7 +929,7 @@ let fv_with_lid_has_attr env fv_lid attr_lid : bool =
 let fv_has_attr env fv attr_lid =
   fv_with_lid_has_attr env fv.fv_name.v attr_lid
 
-let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool * 'a)) : 'a =
+let cache_in_fv_tab (tab:BU.smap 'a) (fv:fv) (f:unit -> (bool & 'a)) : 'a =
   let s = string_of_lid (S.lid_of_fv fv) in
   match BU.smap_try_find tab s with
   | None ->
@@ -1129,7 +1226,7 @@ let identity_mlift : mlift =
   { mlift_wp=(fun _ c -> c, trivial_guard);
     mlift_term=Some (fun _ _ e -> return_all e) }
 
-let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
+let join_opt env (l1:lident) (l2:lident) : option (lident & mlift & mlift) =
   if lid_equals l1 l2
   then Some (l1, identity_mlift, identity_mlift)
   else if lid_equals l1 Const.effect_GTot_lid && lid_equals l2 Const.effect_Tot_lid
@@ -1139,7 +1236,7 @@ let join_opt env (l1:lident) (l2:lident) : option (lident * mlift * mlift) =
         | None -> None
         | Some (_, _, m3, j1, j2) -> Some (m3, j1, j2)
 
-let join env l1 l2 : (lident * mlift * mlift) =
+let join env l1 l2 : (lident & mlift & mlift) =
   match join_opt env l1 l2 with
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
@@ -1181,7 +1278,7 @@ let all_binders env = binders_of_bindings env.gamma
 let bound_vars env = bound_vars_of_bindings env.gamma
 
 instance hasBinders_env : hasBinders env = {
-  boundNames = (fun e -> Set.from_list (bound_vars e) );
+  boundNames = (fun e -> FlatSet.from_list (bound_vars e) );
 }
 
 instance hasNames_lcomp : hasNames lcomp = {
@@ -1194,7 +1291,7 @@ instance pretty_lcomp : pretty lcomp = {
 
 instance hasNames_guard : hasNames guard_t = {
   freeNames = (fun g -> match g.guard_f with
-                        | Trivial -> Set.empty ()
+                        | Trivial -> FlatSet.empty ()
                         | NonTrivial f -> freeNames f);
 }
 
@@ -1340,6 +1437,26 @@ let reify_comp env c u_c : term =
 //  env.tc_hooks.tc_push_in_gamma_hook env s;
 //  { env with gamma = push s env.gamma }
 
+let rec record_vals_and_defns (g:env) (se:sigelt) : env =
+  match se.sigel with
+  | Sig_declare_typ _
+  | Sig_let _
+      when se.sigquals |> BU.for_some (function OnlyName -> true | _ -> false) ->
+      g
+  | Sig_declare_typ {lid} ->
+    if se.sigquals |> List.contains Assumption || g.is_iface
+    then g
+    else record_val_for g lid
+  | Sig_let {lids} ->
+    List.fold_left record_definition_for g lids
+  | Sig_datacon {lid} ->
+    record_definition_for g lid
+  | Sig_inductive_typ {lid} ->
+    record_definition_for g lid
+  | Sig_bundle {ses} ->
+    List.fold_left record_vals_and_defns g ses
+  | _ -> g
+
 // This function assumes that, in the case that the environment contains local
 // bindings _and_ we push a top-level binding, then the top-level binding does
 // not capture any of the local bindings (duh).
@@ -1348,6 +1465,7 @@ let push_sigelt' (force:bool) env s =
   let env = {env with gamma_sig = sb::env.gamma_sig} in
   add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
+  let env = record_vals_and_defns env s in
   env
 
 let push_sigelt = push_sigelt' false
@@ -1562,7 +1680,7 @@ let update_effect_lattice env src tgt st_mlift =
     //
     //A map where we populate all upper bounds for each pair of effects
     //
-    let ubs : smap (list (lident * lident * lident * mlift * mlift)) =
+    let ubs : smap (list (lident & lident & lident & mlift & mlift)) =
       BU.smap_create 10 in
     let add_ub i j k ik jk =
       let key = string_of_lid i ^ ":" ^ string_of_lid j in
@@ -1665,7 +1783,7 @@ let expected_typ env = match env.expected_typ with
   | None -> None
   | Some t -> Some t
 
-let clear_expected_typ (env_: env): env * option (typ * bool) =
+let clear_expected_typ (env_: env): env & option (typ & bool) =
     {env_ with expected_typ=None}, expected_typ env_
 
 let finish_module =
@@ -1685,43 +1803,34 @@ let finish_module =
 // Collections from the environment                       //
 ////////////////////////////////////////////////////////////
 let uvars_in_env env =
-  let no_uvs = Free.new_uv_set () in
-  let ext out uvs = Set.union out uvs in
+  let no_uvs = empty () in
   let rec aux out g = match g with
     | [] -> out
     | Binding_univ _ :: tl -> aux out tl
     | Binding_lid(_, (_, t))::tl
-    | Binding_var({sort=t})::tl -> aux (ext out (Free.uvars t)) tl
+    | Binding_var({sort=t})::tl -> aux (union out (Free.uvars t)) tl
   in
   aux no_uvs env.gamma
 
 let univ_vars env =
-    let no_univs = Free.new_universe_uvar_set () in
-    let ext out uvs = Set.union out uvs in
+    let no_univs = empty () in
     let rec aux out g = match g with
       | [] -> out
       | Binding_univ _ :: tl -> aux out tl
       | Binding_lid(_, (_, t))::tl
-      | Binding_var({sort=t})::tl -> aux (ext out (Free.univs t)) tl
+      | Binding_var({sort=t})::tl -> aux (union out (Free.univs t)) tl
     in
     aux no_univs env.gamma
 
 let univnames env =
-    let no_univ_names = Syntax.no_universe_names in
-    let ext out uvs = Set.union out uvs in
+    let no_univ_names = empty () in
     let rec aux out g = match g with
         | [] -> out
-        | Binding_univ uname :: tl -> aux (Set.add uname out) tl
+        | Binding_univ uname :: tl -> aux (add uname out) tl
         | Binding_lid(_, (_, t))::tl
-        | Binding_var({sort=t})::tl -> aux (ext out (Free.univnames t)) tl
+        | Binding_var({sort=t})::tl -> aux (union out (Free.univnames t)) tl
     in
     aux no_univ_names env.gamma
-
-let string_of_delta_level = function
-  | NoDelta -> "NoDelta"
-  | InliningDelta -> "Inlining"
-  | Eager_unfolding_only -> "Eager_unfolding_only"
-  | Unfold d -> "Unfold " ^ show d
 
 let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in
@@ -1750,15 +1859,15 @@ let rem_proof_ns e path = cons_proof_ns false e path
 let get_proof_ns e = e.proof_ns
 let set_proof_ns ns e = {e with proof_ns = ns}
 
-let unbound_vars (e : env) (t : term) : Set.t bv =
+let unbound_vars (e : env) (t : term) : FlatSet.t bv =
     // FV(t) \ Vars(Γ)
-    List.fold_left (fun s bv -> Set.remove bv s) (Free.names t) (bound_vars e)
+    List.fold_left (fun s bv -> remove bv s) (Free.names t) (bound_vars e)
 
 let closed (e : env) (t : term) =
-    Set.is_empty (unbound_vars e t)
+    is_empty (unbound_vars e t)
 
 let closed' (t : term) =
-    Set.is_empty (Free.names t)
+    is_empty (Free.names t)
 
 let string_of_proof_ns env =
     let aux (p,b) =
@@ -1903,7 +2012,7 @@ let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
                 ; imp_uvar   = ctx_uvar
                 ; imp_range  = r
                 } in
-      if debug env (Options.Other "ImplicitTrace") then
+      if !dbg_ImplicitTrace then
         BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
       let g = {trivial_guard with implicits=[imp]} in
       t, [(ctx_uvar, r)], g
@@ -1936,7 +2045,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
        else Strict)
       ctx_uvar_meta_t in
 
-    if debug env <| Options.Other "LayeredEffectsEqns"
+    if !dbg_LayeredEffectsEqns
     then List.iter (fun (ctx_uvar, _) ->
                     BU.print1 "Layered Effect uvar : %s\n"
                       (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;
@@ -1973,11 +2082,6 @@ let get_letrec_arity (env:env) (lbname:lbname) : option int =
 
 let fvar_of_nonqual_lid env lid =
     let qn = lookup_qname env lid in
-    let dd =
-        match delta_depth_of_qninfo_lid lid qn with
-        | None -> failwith "Unexpected no delta_depth"
-        | Some dd -> dd
-    in
     fvar lid None
 
 let split_smt_query (e:env) (q:term) 

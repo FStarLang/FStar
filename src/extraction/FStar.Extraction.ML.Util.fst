@@ -49,7 +49,6 @@ let pruneNones (l : list (option 'a)) : list 'a =
 
 let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
-let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -57,10 +56,10 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_effect       -> failwith "Unsupported constant"
 
   | Const_range _
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_int    (s, i)-> MLC_Int   (s, i)
-  | Const_bool   b     -> MLC_Bool  b
+  | Const_unit          -> MLC_Unit
+  | Const_char   c      -> MLC_Char  c
+  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 
   | Const_range_of
@@ -107,14 +106,10 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | Const_range r ->
         mlexpr_of_range r
 
-    | Const_real s ->
-        let str = mlconst_of_const p (Const_string(s, p)) in
-        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
-
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
-let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
+let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     match t with
     | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
@@ -128,7 +123,7 @@ let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
 let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
     if List.length formals <> List.length args
     then None
-    else Some (subst_aux (List.zip formals args) t)
+    else Some (subst_aux (List.zip (ty_param_names formals) args) t)
 
 let subst ts args =
     match try_subst ts args with
@@ -179,7 +174,7 @@ let join r f f' = match f, f' with
 
 let join_l r fs = List.fold_left (join r) E_PURE fs
 
-let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
+let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_PURE, t))
 
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
@@ -187,7 +182,7 @@ let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply
    erase e to unit right away.
 *)
-let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool * option mlexpr) =
+let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool & option mlexpr) =
     match t, t' with
     | MLTY_Var x, MLTY_Var y ->
         if x = y
@@ -364,7 +359,8 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = with_ty (mk_ty_fun [("x", ml_bool_ty); ("y", ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [{mlbinder_name="x";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]};
+                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None
@@ -377,7 +373,7 @@ let mlloc_of_range (r: Range.range) =
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r
 
-let rec doms_and_cod (t:mlty) : list mlty * mlty =
+let rec doms_and_cod (t:mlty) : list mlty & mlty =
     match t with
       | MLTY_Fun (a,_,b) ->
         let ds, c = doms_and_cod b in
@@ -394,3 +390,14 @@ let rec uncurry_mlty_fun t =
         let args, res = uncurry_mlty_fun b in
         a::args, res
     | _ -> [], t
+
+let list_elements (e:mlexpr) : option (list mlexpr) =
+  let rec list_elements acc e =
+    match e.expr with
+    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+      list_elements (hd :: acc) tl
+    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+      List.rev acc |> Some
+    | _ -> None
+  in
+  list_elements [] e

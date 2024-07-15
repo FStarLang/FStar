@@ -42,7 +42,7 @@ let _ = assert True
 
 let _ = assert True
             by (let y = bool in
-                let tm = `(int * (`@y)) in
+                let tm = `(int & (`@y)) in
                 debug ("tm = " ^ term_to_string tm);
                 ignore (tc (cur_env ()) tm))
 

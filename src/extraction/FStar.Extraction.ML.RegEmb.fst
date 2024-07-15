@@ -72,8 +72,10 @@ let ml_record : Ident.lid -> list (string & mlexpr) -> mlexpr =
     // [] -> assuming same module
     mk (MLE_Record ([], l |> Ident.ident_of_lid |> Ident.string_of_id, args))
 
+let mk_binder x t = {mlbinder_name=x; mlbinder_ty=t; mlbinder_attrs=[]}
+
 let ml_lam nm e =
-    mk <| MLE_Fun ([(nm, MLTY_Top)], e)
+    mk <| MLE_Fun ([mk_binder nm MLTY_Top ], e)
 
 let ml_none : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "None"))
 let ml_some : mlexpr = mk (MLE_Name (["FStar"; "Pervasives"; "Native"], "Some"))
@@ -121,12 +123,16 @@ let fresh : string -> string =
     s^"_"^(string_of_int v)
 
 let not_implemented_warning (r: Range.range) (t: string) (msg: string) =
-    Errors.log_issue r
-        (Errors.Warning_PluginNotImplemented,
-         BU.format3 "Plugin `%s' can not run natively because %s (use --warn_error -%s to carry on)."
-                        t
-                        msg
-                        (string_of_int <| Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented)))
+  let open FStar.Pprint in
+  let open FStar.Errors.Msg in
+  let open FStar.Class.PP in
+  Errors.log_issue_doc r (Errors.Warning_PluginNotImplemented, [
+    prefix 2 1 (text (BU.format1 "Plugin `%s' can not run natively because:" t))
+      (text msg);
+    text "Use --warn_error -"
+      ^^ pp (Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented))
+      ^/^ text "to carry on."
+  ])
 
 type embedding_data = {
   arity : int;
@@ -189,9 +195,11 @@ let builtin_embeddings : list (Ident.lident & embedding_data) =
     (RC.fstar_refl_data_lid  "qualifier",      {arity=0; syn_emb=refl_emb_lid "e_qualifier";      nbe_emb=Some(nbe_refl_emb_lid "e_qualifier")});
   ]
 
+let dbg_plugin = Debug.get_toggle "Plugins"
+
 let local_fv_embeddings : ref (list (Ident.lident & embedding_data)) = BU.mk_ref []
 let register_embedding (l: Ident.lident) (d: embedding_data) : unit =
-  if Options.debug_at_level_no_module (Options.Other "Plugins") then
+  if !dbg_plugin then
     BU.print1 "Registering local embedding for %s\n" (Ident.string_of_lid l);
   local_fv_embeddings := (l,d) :: !local_fv_embeddings
 
@@ -222,7 +230,7 @@ let rec embedding_for
     (tcenv:Env.env)
     (mutuals: list Ident.lid)
     (k: embedding_kind)
-    (env:list (bv * string))
+    (env:list (bv & string))
     (t: term)
 : mlexpr
 = let str_to_name s     = as_name ([], s) in
@@ -332,7 +340,7 @@ let rec embedding_for
   | _ ->
     raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
 
-type wrapped_term = mlexpr * mlexpr * int * bool
+type wrapped_term = mlexpr & mlexpr & int & bool
 
 let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
     : option wrapped_term =
@@ -481,7 +489,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     let tvar_arity = List.length type_vars in
     let non_tvar_arity = List.length bs in
     let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list (bv * string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
+    let tvar_context : list (bv & string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
     // The tvar_context records all the ML type variables in scope
     // All their embeddings will be just identity embeddings
 
@@ -494,7 +502,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
                  int,    //the arity of the compiled code (+1 for tactics)
                  bool)   //true if this is a tactic
     *)
-    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr * int * bool) =
+    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr & int & bool) =
         match bs with
         | [] ->
           let arg_unembeddings = List.rev accum_embeddings in
@@ -595,7 +603,7 @@ let mk_unembed
       let ret = mk (MLE_App (ml_some, [ret])) in // final return
 
       let body = List.fold_right (fun (v, ty) body ->
-        let body = mk (MLE_Fun ([(v, MLTY_Top)], body)) in
+        let body = mk (MLE_Fun ([mk_binder v MLTY_Top], body)) in
 
         mk (MLE_App (ml_name bind_opt_lid, [
                       mk (MLE_App (ml_name unembed_lid, [embedding_for tcenv mutuals SyntaxTerm [] ty; mk (MLE_Var v)]));
@@ -612,7 +620,7 @@ let mk_unembed
   let branches = List.rev (nomatch :: !e_branches) in
   let sc = mk (MLE_Var arg_v) in
   let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  let lam = mk (MLE_Fun ([mk_binder arg_v MLTY_Top], def)) in
   lam
 
 (* Creates an embedding function for the type *)
@@ -663,7 +671,7 @@ let mk_embed
   let branches = List.rev !e_branches in
   let sc = mk (MLE_Var arg_v) in
   let def = mk (MLE_Match (sc, branches)) in
-  let lam = mk (MLE_Fun ([arg_v, MLTY_Top], def)) in
+  let lam = mk (MLE_Fun ([mk_binder arg_v MLTY_Top], def)) in
   lam
 
 
@@ -689,7 +697,7 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
              let h = with_ty MLTY_Top <| MLE_Name register in
              let arity  = MLE_Const (MLC_Int(string_of_int arity, None)) in
              let app = with_ty MLTY_Top <| MLE_App (h, [mk ml_name_str; mk arity] @ args) in
-             [MLM_Top app]
+             [MLM_Top app |> mk_mlmodule1]
          | None -> []
       in
       List.collect mk_registration (snd lbs)
@@ -728,13 +736,14 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
                       ml_unembed;
                       ml_embed]))
       in
-      let def = mk (MLE_Fun ([("_", MLTY_Erased)], def)) in // thunk
+      let def = mk (MLE_Fun ([mk_binder "_" MLTY_Erased], def)) in // thunk
       let lb = {
         mllb_name     = "__knot_e_" ^ name;
         mllb_tysc     = None;
         mllb_add_unit = false;
         mllb_def      = def;
         mllb_meta     = [];
+        mllb_attrs    = [];
         print_typ     = false;
       }
       in
@@ -761,14 +770,15 @@ let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlm
           mllb_add_unit = false;
           mllb_def      = app;
           mllb_meta     = [];
+          mllb_attrs    = [];
           print_typ     = false;
         }
         in
-        [MLM_Let (NonRec, [lb])]
+        [MLM_Let (NonRec, [lb]) |> mk_mlmodule1]
       )
     in
     // TODO: We always make a let rec, we could check if that's really needed.
-    [MLM_Let (Rec, lbs)] @ unthunking
+    [MLM_Let (Rec, lbs) |> mk_mlmodule1] @ unthunking
 
   | _ -> []
 

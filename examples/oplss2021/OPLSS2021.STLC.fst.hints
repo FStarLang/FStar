@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8fe341a280539c87eaba69a01f188015"
+      "724893d7d0bc329887531fb527021956"
     ],
     [
       "OPLSS2021.STLC.__proj__TArrow__item___0",
@@ -135,7 +135,7 @@
         "subterm_ordering_OPLSS2021.STLC.EApp"
       ],
       0,
-      "d02dd244cc9a3add2f7573fac83644fa"
+      "95edb00f265db03b7db2fb960206a426"
     ],
     [
       "OPLSS2021.STLC.step",
@@ -147,14 +147,12 @@
         "OPLSS2021.STLC_pretyping_e968e2378e54d65f25da885ec3f83302",
         "binder_x_e968e2378e54d65f25da885ec3f83302_0",
         "data_typing_intro_OPLSS2021.STLC.EUnit@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "kinding_OPLSS2021.STLC.exp@tok",
         "lemma_FStar.Pervasives.invertOption",
         "subterm_ordering_OPLSS2021.STLC.EApp"
       ],
       0,
-      "35c71b54ac9f5e61f76fafcecfeef85a"
+      "14f0d6dc2de049e77da0a08bc05c13d0"
     ],
     [
       "OPLSS2021.STLC.typing",
@@ -163,28 +161,23 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "OPLSS2021.STLC_pretyping_98ef48c04e5f877c6d2b2004883b422e",
         "OPLSS2021.STLC_pretyping_e968e2378e54d65f25da885ec3f83302",
         "assumption_OPLSS2021.STLC.ty__uu___haseq",
         "binder_x_e968e2378e54d65f25da885ec3f83302_1",
         "data_typing_intro_OPLSS2021.STLC.EUnit@tok",
-        "disc_equation_FStar.Pervasives.Native.None",
-        "disc_equation_FStar.Pervasives.Native.Some",
         "disc_equation_OPLSS2021.STLC.EAbs",
         "disc_equation_OPLSS2021.STLC.EApp",
         "disc_equation_OPLSS2021.STLC.EUnit",
         "disc_equation_OPLSS2021.STLC.EVar",
-        "equality_tok_OPLSS2021.STLC.TUnit@tok",
         "fuel_guarded_inversion_OPLSS2021.STLC.exp",
         "kinding_OPLSS2021.STLC.ty@tok",
         "lemma_FStar.Pervasives.invertOption",
         "projection_inverse_BoxBool_proj_0",
         "subterm_ordering_OPLSS2021.STLC.EAbs",
-        "subterm_ordering_OPLSS2021.STLC.EApp",
-        "typing_tok_OPLSS2021.STLC.TUnit@tok"
+        "subterm_ordering_OPLSS2021.STLC.EApp"
       ],
       0,
-      "d33952cc66fc7376ac0bca53745ca5cc"
+      "7bbc5c5cf04b731851f6b09a295ead3a"
     ],
     [
       "OPLSS2021.STLC.progress",
@@ -260,7 +253,7 @@
         "subterm_ordering_OPLSS2021.STLC.EApp"
       ],
       0,
-      "fb1cd5703d0b7e061ff1dd3df04039df"
+      "ec5f3db6b28844dbc8a3e61895ea8a2c"
     ],
     [
       "OPLSS2021.STLC.free_in_context",

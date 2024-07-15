@@ -456,7 +456,7 @@ let nondep_then
   (p1: parser_spec t1)
   (#t2: Type0)
   (p2: parser_spec t2)
-: Tot (parser_spec (t1 * t2))
+: Tot (parser_spec (t1 & t2))
 = p1 `and_then` (fun v1 -> p2 `and_then` (fun v2 -> (parse_ret (v1, v2))))
 
 let nondep_then_eq
@@ -485,8 +485,8 @@ let bare_serialize_nondep_then
   (#t2: Type0)
   (p2: parser_spec t2)
   (s2: serializer_spec p2)
-: Tot (bare_serializer (t1 * t2))
-= fun (x: t1 * t2) ->
+: Tot (bare_serializer (t1 & t2))
+= fun (x: t1 & t2) ->
   let (x1, x2) = x in
   Seq.append (serialize s1 x1) (serialize s2 x2)
 
@@ -514,7 +514,7 @@ let bare_serialize_nondep_then_correct
 : Lemma
   (ensures (serializer_correct (nondep_then p1 p2) (bare_serialize_nondep_then p1 s1 p2 s2)))
 = let prf
-    (x: t1 * t2)
+    (x: t1 & t2)
   : Lemma (parse (nondep_then p1 p2) (bare_serialize_nondep_then p1 s1 p2 s2 x) == Some (x, Seq.length (bare_serialize_nondep_then p1 s1 p2 s2 x)))
   = let v1' = parse p1 (bare_serialize_nondep_then p1 s1 p2 s2 x) in
     let v1 = parse p1 (serialize s1 (fst x)) in

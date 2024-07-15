@@ -43,7 +43,7 @@ open FStar.FiniteSet.Ambient
 module T = FStar.Tactics.V2
 
 // Finite maps
-type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a) & (setfun_t a b keys)
+type map (a: eqtype) (b: Type u#b) = (keys: FSet.set a & setfun_t a b keys)
 
 let domain (#a: eqtype) (#b: Type u#b) (m: map a b) : FSet.set a =
   let (| keys, _ |) = m in 
@@ -59,14 +59,14 @@ let rec key_list_to_item_list
   (#b: Type u#b)
   (m: map a b)
   (keys: list a{FSet.list_nonrepeating keys /\ (forall key. FLT.mem key keys ==> FSet.mem key (domain m))})
-: GTot (items: list (a * b){item_list_doesnt_repeat_keys items /\ (forall key. FLT.mem key keys <==> key_in_item_list key items)})
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. FLT.mem key keys <==> key_in_item_list key items)})
        (decreases keys) =
   match keys with
   | [] -> []
   | key :: remaining_keys -> (key, Some?.v ((elements m) key)) :: key_list_to_item_list m remaining_keys
 
 let map_as_list (#a: eqtype) (#b: Type u#b) (m: map a b)
-: GTot (items: list (a * b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)}) =
+: GTot (items: list (a & b){item_list_doesnt_repeat_keys items /\ (forall key. key_in_item_list key items <==> mem key m)}) =
   key_list_to_item_list m (FSet.set_as_list (domain m))
 
 /// We represent the Dafny function `Map#Card` with `cardinality`:
@@ -87,7 +87,7 @@ let values (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot (b -> prop) =
 ///
 /// function Map#Items<U,V>(Map U V) : Set Box;
 
-let items (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot ((a * b) -> prop) =
+let items (#a: eqtype) (#b: Type u#b) (m: map a b) : GTot ((a & b) -> prop) =
   fun item -> ((elements m) (fst item) == Some (snd item))
 
 /// We represent the Dafny function `Map#Empty` with `emptymap`:

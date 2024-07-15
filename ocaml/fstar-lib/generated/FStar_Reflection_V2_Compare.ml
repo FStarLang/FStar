@@ -10,6 +10,40 @@ let (compare_name :
            fun s2 ->
              FStar_Order.order_from_int
                (FStar_Reflection_V2_Builtins.compare_string s1 s2))
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_name" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_name"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Syntax_Embeddings.e_string)
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Syntax_Embeddings.e_string) FStar_Order.e_order
+                     compare_name Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_name") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_name"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_TypeChecker_NBETerm.e_string)
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_TypeChecker_NBETerm.e_string)
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_name
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_name") cb us) args))
 let (compare_fv :
   FStar_Reflection_Types.fv -> FStar_Reflection_Types.fv -> FStar_Order.order)
   =
@@ -17,6 +51,35 @@ let (compare_fv :
     fun f2 ->
       compare_name (FStar_Reflection_V2_Builtins.inspect_fv f1)
         (FStar_Reflection_V2_Builtins.inspect_fv f2)
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_fv" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_fv"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_fv
+                     FStar_Reflection_V2_Embeddings.e_fv FStar_Order.e_order
+                     compare_fv Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_fv"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_fv
+                   FStar_Reflection_V2_NBEEmbeddings.e_fv
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_fv
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
 let (compare_const :
   FStar_Reflection_V2_Data.vconst ->
     FStar_Reflection_V2_Data.vconst -> FStar_Order.order)
@@ -42,6 +105,10 @@ let (compare_const :
           -> FStar_Order.Eq
       | (FStar_Reflection_V2_Data.C_Reflect l1,
          FStar_Reflection_V2_Data.C_Reflect l2) -> compare_name l1 l2
+      | (FStar_Reflection_V2_Data.C_Real r1, FStar_Reflection_V2_Data.C_Real
+         r2) ->
+          FStar_Order.order_from_int
+            (FStar_Reflection_V2_Builtins.compare_string r1 r2)
       | (FStar_Reflection_V2_Data.C_Unit, uu___) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Unit) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.C_Int uu___, uu___1) -> FStar_Order.Lt
@@ -58,6 +125,39 @@ let (compare_const :
       | (uu___, FStar_Reflection_V2_Data.C_Reify) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.C_Reflect uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Reflect uu___1) -> FStar_Order.Gt
+      | (FStar_Reflection_V2_Data.C_Real uu___, uu___1) -> FStar_Order.Lt
+      | (uu___, FStar_Reflection_V2_Data.C_Real uu___1) -> FStar_Order.Gt
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_const" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_const"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_vconst
+                     FStar_Reflection_V2_Embeddings.e_vconst
+                     FStar_Order.e_order compare_const Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_const") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_const"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_vconst
+                   FStar_Reflection_V2_NBEEmbeddings.e_vconst
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_const
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_const") cb us)
+                  args))
 let (compare_ident :
   FStar_Reflection_Types.ident ->
     FStar_Reflection_Types.ident -> FStar_Order.order)
@@ -72,6 +172,37 @@ let (compare_ident :
            | (nm2, uu___3) ->
                FStar_Order.order_from_int
                  (FStar_Reflection_V2_Builtins.compare_string nm1 nm2))
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_ident" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_ident"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_ident
+                     FStar_Reflection_V2_Embeddings.e_ident
+                     FStar_Order.e_order compare_ident Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_ident") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_ident"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_ident
+                   FStar_Reflection_V2_NBEEmbeddings.e_ident
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_ident
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_ident") cb us)
+                  args))
 let rec (compare_universe :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe -> FStar_Order.order)
@@ -111,11 +242,77 @@ let rec (compare_universe :
       | (FStar_Reflection_V2_Data.Uv_Unif uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.Uv_Unif uu___1) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.Uv_Unk, uu___) -> FStar_Order.Lt
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_universe" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_universe"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Reflection_V2_Embeddings.e_universe
+                     FStar_Order.e_order compare_universe Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_universe") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_universe"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   FStar_Reflection_V2_NBEEmbeddings.e_universe
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   compare_universe Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_universe") cb us)
+                  args))
 let (compare_universes :
   FStar_Reflection_V2_Data.universes ->
     FStar_Reflection_V2_Data.universes -> FStar_Order.order)
   = fun us1 -> fun us2 -> FStar_Order.compare_list us1 us2 compare_universe
-let rec (compare_term :
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_universes" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_universes"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Reflection_V2_Embeddings.e_universe)
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Reflection_V2_Embeddings.e_universe)
+                     FStar_Order.e_order compare_universes Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_universes") cb
+                     us) args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_universes"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_Reflection_V2_NBEEmbeddings.e_universe)
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_Reflection_V2_NBEEmbeddings.e_universe)
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   compare_universes Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_universes") cb us)
+                  args))
+let rec (__compare_term :
   FStar_Reflection_Types.term ->
     FStar_Reflection_Types.term -> FStar_Order.order)
   =
@@ -135,22 +332,29 @@ let rec (compare_term :
          FStar_Reflection_V2_Data.Tv_UInst (tv, tus)) ->
           FStar_Order.lex (compare_fv sv tv)
             (fun uu___ -> compare_universes sus tus)
-      | (FStar_Reflection_V2_Data.Tv_App (h1, a1),
-         FStar_Reflection_V2_Data.Tv_App (h2, a2)) ->
-          FStar_Order.lex (compare_term h1 h2)
-            (fun uu___ -> compare_argv a1 a2)
+      | (FStar_Reflection_V2_Data.Tv_App (uu___, uu___1),
+         FStar_Reflection_V2_Data.Tv_App (uu___2, uu___3)) ->
+          let uu___4 = FStar_Reflection_V2_Derived_Lemmas.collect_app_ref s in
+          (match uu___4 with
+           | (h1, aa1) ->
+               let uu___5 =
+                 FStar_Reflection_V2_Derived_Lemmas.collect_app_ref t in
+               (match uu___5 with
+                | (h2, aa2) ->
+                    FStar_Order.lex (__compare_term h1 h2)
+                      (fun uu___6 -> compare_argv_list () () aa1 aa2)))
       | (FStar_Reflection_V2_Data.Tv_Abs (b1, e1),
          FStar_Reflection_V2_Data.Tv_Abs (b2, e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu___ -> compare_term e1 e2)
+          FStar_Order.lex (__compare_binder b1 b2)
+            (fun uu___ -> __compare_term e1 e2)
       | (FStar_Reflection_V2_Data.Tv_Refine (b1, e1),
          FStar_Reflection_V2_Data.Tv_Refine (b2, e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu___ -> compare_term e1 e2)
+          FStar_Order.lex (__compare_binder b1 b2)
+            (fun uu___ -> __compare_term e1 e2)
       | (FStar_Reflection_V2_Data.Tv_Arrow (b1, e1),
          FStar_Reflection_V2_Data.Tv_Arrow (b2, e2)) ->
-          FStar_Order.lex (compare_binder b1 b2)
-            (fun uu___ -> compare_comp e1 e2)
+          FStar_Order.lex (__compare_binder b1 b2)
+            (fun uu___ -> __compare_comp e1 e2)
       | (FStar_Reflection_V2_Data.Tv_Type su,
          FStar_Reflection_V2_Data.Tv_Type tu) -> compare_universe su tu
       | (FStar_Reflection_V2_Data.Tv_Const c1,
@@ -160,18 +364,18 @@ let rec (compare_term :
           FStar_Order.compare_int u1 u2
       | (FStar_Reflection_V2_Data.Tv_Let (_r1, _attrs1, b1, t1, t1'),
          FStar_Reflection_V2_Data.Tv_Let (_r2, _attrs2, b2, t2, t2')) ->
-          FStar_Order.lex (compare_binder b1 b2)
+          FStar_Order.lex (__compare_binder b1 b2)
             (fun uu___ ->
-               FStar_Order.lex (compare_term t1 t2)
-                 (fun uu___1 -> compare_term t1' t2'))
+               FStar_Order.lex (__compare_term t1 t2)
+                 (fun uu___1 -> __compare_term t1' t2'))
       | (FStar_Reflection_V2_Data.Tv_Match (uu___, uu___1, uu___2),
          FStar_Reflection_V2_Data.Tv_Match (uu___3, uu___4, uu___5)) ->
           FStar_Order.Eq
       | (FStar_Reflection_V2_Data.Tv_AscribedT (e1, t1, tac1, uu___),
          FStar_Reflection_V2_Data.Tv_AscribedT (e2, t2, tac2, uu___1)) ->
-          FStar_Order.lex (compare_term e1 e2)
+          FStar_Order.lex (__compare_term e1 e2)
             (fun uu___2 ->
-               FStar_Order.lex (compare_term t1 t2)
+               FStar_Order.lex (__compare_term t1 t2)
                  (fun uu___3 ->
                     match (tac1, tac2) with
                     | (FStar_Pervasives_Native.None,
@@ -182,12 +386,12 @@ let rec (compare_term :
                         FStar_Order.Gt
                     | (FStar_Pervasives_Native.Some e11,
                        FStar_Pervasives_Native.Some e21) ->
-                        compare_term e11 e21))
+                        __compare_term e11 e21))
       | (FStar_Reflection_V2_Data.Tv_AscribedC (e1, c1, tac1, uu___),
          FStar_Reflection_V2_Data.Tv_AscribedC (e2, c2, tac2, uu___1)) ->
-          FStar_Order.lex (compare_term e1 e2)
+          FStar_Order.lex (__compare_term e1 e2)
             (fun uu___2 ->
-               FStar_Order.lex (compare_comp c1 c2)
+               FStar_Order.lex (__compare_comp c1 c2)
                  (fun uu___3 ->
                     match (tac1, tac2) with
                     | (FStar_Pervasives_Native.None,
@@ -198,7 +402,7 @@ let rec (compare_term :
                         FStar_Order.Gt
                     | (FStar_Pervasives_Native.Some e11,
                        FStar_Pervasives_Native.Some e21) ->
-                        compare_term e11 e21))
+                        __compare_term e11 e21))
       | (FStar_Reflection_V2_Data.Tv_Unknown,
          FStar_Reflection_V2_Data.Tv_Unknown) -> FStar_Order.Eq
       | (FStar_Reflection_V2_Data.Tv_Unsupp,
@@ -257,7 +461,7 @@ let rec (compare_term :
       | (uu___, FStar_Reflection_V2_Data.Tv_Unknown) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.Tv_Unsupp, uu___) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.Tv_Unsupp) -> FStar_Order.Gt
-and (compare_term_list :
+and (__compare_term_list :
   FStar_Reflection_Types.term Prims.list ->
     FStar_Reflection_Types.term Prims.list -> FStar_Order.order)
   =
@@ -268,27 +472,48 @@ and (compare_term_list :
       | ([], uu___) -> FStar_Order.Lt
       | (uu___, []) -> FStar_Order.Gt
       | (hd1::tl1, hd2::tl2) ->
-          FStar_Order.lex (compare_term hd1 hd2)
-            (fun uu___ -> compare_term_list tl1 tl2)
+          FStar_Order.lex (__compare_term hd1 hd2)
+            (fun uu___ -> __compare_term_list tl1 tl2)
 and (compare_argv :
-  FStar_Reflection_V2_Data.argv ->
-    FStar_Reflection_V2_Data.argv -> FStar_Order.order)
+  unit ->
+    unit ->
+      FStar_Reflection_V2_Data.argv ->
+        FStar_Reflection_V2_Data.argv -> FStar_Order.order)
   =
-  fun a1 ->
-    fun a2 ->
-      let uu___ = a1 in
-      match uu___ with
-      | (a11, q1) ->
-          let uu___1 = a2 in
-          (match uu___1 with
-           | (a21, q2) ->
-               (match (q1, q2) with
-                | (FStar_Reflection_V2_Data.Q_Implicit,
-                   FStar_Reflection_V2_Data.Q_Explicit) -> FStar_Order.Lt
-                | (FStar_Reflection_V2_Data.Q_Explicit,
-                   FStar_Reflection_V2_Data.Q_Implicit) -> FStar_Order.Gt
-                | (uu___2, uu___3) -> compare_term a11 a21))
-and (compare_comp :
+  fun b1 ->
+    fun b2 ->
+      fun a1 ->
+        fun a2 ->
+          let uu___ = a1 in
+          match uu___ with
+          | (t1, q1) ->
+              let uu___1 = a2 in
+              (match uu___1 with
+               | (t2, q2) ->
+                   (match (q1, q2) with
+                    | (FStar_Reflection_V2_Data.Q_Implicit,
+                       FStar_Reflection_V2_Data.Q_Explicit) -> FStar_Order.Lt
+                    | (FStar_Reflection_V2_Data.Q_Explicit,
+                       FStar_Reflection_V2_Data.Q_Implicit) -> FStar_Order.Gt
+                    | (uu___2, uu___3) -> __compare_term t1 t2))
+and (compare_argv_list :
+  unit ->
+    unit ->
+      FStar_Reflection_V2_Data.argv Prims.list ->
+        FStar_Reflection_V2_Data.argv Prims.list -> FStar_Order.order)
+  =
+  fun b1 ->
+    fun b2 ->
+      fun l1 ->
+        fun l2 ->
+          match (l1, l2) with
+          | ([], []) -> FStar_Order.Eq
+          | ([], uu___) -> FStar_Order.Lt
+          | (uu___, []) -> FStar_Order.Gt
+          | (hd1::tl1, hd2::tl2) ->
+              FStar_Order.lex (compare_argv () () hd1 hd2)
+                (fun uu___ -> compare_argv_list () () tl1 tl2)
+and (__compare_comp :
   FStar_Reflection_Types.comp ->
     FStar_Reflection_Types.comp -> FStar_Order.order)
   =
@@ -298,21 +523,21 @@ and (compare_comp :
       let cv2 = FStar_Reflection_V2_Builtins.inspect_comp c2 in
       match (cv1, cv2) with
       | (FStar_Reflection_V2_Data.C_Total t1,
-         FStar_Reflection_V2_Data.C_Total t2) -> compare_term t1 t2
+         FStar_Reflection_V2_Data.C_Total t2) -> __compare_term t1 t2
       | (FStar_Reflection_V2_Data.C_GTotal t1,
-         FStar_Reflection_V2_Data.C_GTotal t2) -> compare_term t1 t2
+         FStar_Reflection_V2_Data.C_GTotal t2) -> __compare_term t1 t2
       | (FStar_Reflection_V2_Data.C_Lemma (p1, q1, s1),
          FStar_Reflection_V2_Data.C_Lemma (p2, q2, s2)) ->
-          FStar_Order.lex (compare_term p1 p2)
+          FStar_Order.lex (__compare_term p1 p2)
             (fun uu___ ->
-               FStar_Order.lex (compare_term q1 q2)
-                 (fun uu___1 -> compare_term s1 s2))
+               FStar_Order.lex (__compare_term q1 q2)
+                 (fun uu___1 -> __compare_term s1 s2))
       | (FStar_Reflection_V2_Data.C_Eff (us1, eff1, res1, args1, _decrs1),
          FStar_Reflection_V2_Data.C_Eff (us2, eff2, res2, args2, _decrs2)) ->
           FStar_Order.lex (compare_universes us1 us2)
             (fun uu___ ->
                FStar_Order.lex (compare_name eff1 eff2)
-                 (fun uu___1 -> compare_term res1 res2))
+                 (fun uu___1 -> __compare_term res1 res2))
       | (FStar_Reflection_V2_Data.C_Total uu___, uu___1) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Total uu___1) -> FStar_Order.Gt
       | (FStar_Reflection_V2_Data.C_GTotal uu___, uu___1) -> FStar_Order.Lt
@@ -325,7 +550,7 @@ and (compare_comp :
          (uu___, uu___1, uu___2, uu___3, uu___4), uu___5) -> FStar_Order.Lt
       | (uu___, FStar_Reflection_V2_Data.C_Eff
          (uu___1, uu___2, uu___3, uu___4, uu___5)) -> FStar_Order.Gt
-and (compare_binder :
+and (__compare_binder :
   FStar_Reflection_Types.binder ->
     FStar_Reflection_Types.binder -> FStar_Order.order)
   =
@@ -333,5 +558,108 @@ and (compare_binder :
     fun b2 ->
       let bview1 = FStar_Reflection_V2_Builtins.inspect_binder b1 in
       let bview2 = FStar_Reflection_V2_Builtins.inspect_binder b2 in
-      compare_term bview1.FStar_Reflection_V2_Data.sort2
+      __compare_term bview1.FStar_Reflection_V2_Data.sort2
         bview2.FStar_Reflection_V2_Data.sort2
+let (compare_term :
+  FStar_Reflection_Types.term ->
+    FStar_Reflection_Types.term -> FStar_Order.order)
+  = __compare_term
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_term" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_term"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Reflection_V2_Embeddings.e_term
+                     FStar_Order.e_order compare_term Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_term") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_term"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   FStar_Reflection_V2_NBEEmbeddings.e_term
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_term
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_term") cb us) args))
+let (compare_comp :
+  FStar_Reflection_Types.comp ->
+    FStar_Reflection_Types.comp -> FStar_Order.order)
+  = __compare_comp
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_comp" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_comp"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_comp
+                     FStar_Reflection_V2_Embeddings.e_comp
+                     FStar_Order.e_order compare_comp Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_comp") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_comp"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_comp
+                   FStar_Reflection_V2_NBEEmbeddings.e_comp
+                   (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_comp
+                   Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_comp") cb us) args))
+let (compare_binder :
+  FStar_Reflection_Types.binder ->
+    FStar_Reflection_Types.binder -> FStar_Order.order)
+  = __compare_binder
+let _ =
+  FStar_Tactics_Native.register_plugin
+    "FStar.Reflection.V2.Compare.compare_binder" (Prims.of_int (2))
+    (fun _psc ->
+       fun cb ->
+         fun us ->
+           fun args ->
+             FStar_Syntax_Embeddings.debug_wrap
+               "FStar.Reflection.V2.Compare.compare_binder"
+               (fun _ ->
+                  (FStar_Syntax_Embeddings.arrow_as_prim_step_2
+                     FStar_Reflection_V2_Embeddings.e_binder
+                     FStar_Reflection_V2_Embeddings.e_binder
+                     FStar_Order.e_order compare_binder Prims.int_zero
+                     (FStar_Ident.lid_of_str
+                        "FStar.Reflection.V2.Compare.compare_binder") cb us)
+                    args))
+    (fun cb ->
+       fun us ->
+         fun args ->
+           FStar_Syntax_Embeddings.debug_wrap
+             "FStar.Reflection.V2.Compare.compare_binder"
+             (fun _ ->
+                (FStar_TypeChecker_NBETerm.arrow_as_prim_step_2
+                   FStar_Reflection_V2_NBEEmbeddings.e_binder
+                   FStar_Reflection_V2_NBEEmbeddings.e_binder
+                   (FStar_TypeChecker_NBETerm.e_unsupported ())
+                   compare_binder Prims.int_zero
+                   (FStar_Ident.lid_of_str
+                      "FStar.Reflection.V2.Compare.compare_binder") cb us)
+                  args))

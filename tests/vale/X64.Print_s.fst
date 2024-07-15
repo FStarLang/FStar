@@ -24,10 +24,10 @@ open FStar.IO
 noeq type printer = {
   reg_prefix : unit -> string;
   mem_prefix : string -> string;
-  maddr      : string -> option(string * string) -> string -> string;
+  maddr      : string -> option(string & string) -> string -> string;
   const      : int -> string;
   ins_name   : string -> list operand -> string;
-  op_order   : string -> string -> string * string;
+  op_order   : string -> string -> string & string;
   align      : unit -> string;
   header     : unit -> string;
   footer     : unit -> string;
@@ -159,14 +159,14 @@ let print_cmp (c:ocmp) (counter:int) (p:printer) : string =
   | OLt o1 o2 -> print_ops o1 o2 ^ "  jb " ^ "L" ^ string_of_int counter ^ "\n"
   | OGt o1 o2 -> print_ops o1 o2 ^ "  ja " ^ "L" ^ string_of_int counter ^ "\n"
 
-let rec print_block (b:codes) (n:int) (p:printer) : string * int =
+let rec print_block (b:codes) (n:int) (p:printer) : string & int =
   match b with
   | Nil -> "", n
   | head :: tail ->
     let head_str, n' = print_code head n p in
     let rest, n'' = print_block tail n' p in
     head_str ^ rest, n''
-and print_code (c:code) (n:int) (p:printer) : string * int =
+and print_code (c:code) (n:int) (p:printer) : string & int =
   match c with
   | Ins ins -> print_ins ins p, n
   | Block b -> print_block b n p
@@ -207,7 +207,7 @@ let print_footer (p:printer) =
 let masm : printer =
   let reg_prefix unit = "" in
   let mem_prefix (ptr_type:string) = ptr_type ^ " ptr " in
-  let maddr (base:string) (adj:option(string * string)) (offset:string) =
+  let maddr (base:string) (adj:option(string & string)) (offset:string) =
     match adj with
     | None -> "[" ^ base ^ " + " ^ offset ^ "]"
     | Some (scale, index) -> "[" ^ base ^ " + " ^ scale ^ " * " ^ index ^ " + " ^ offset ^ "]"
@@ -237,7 +237,7 @@ let masm : printer =
 let gcc : printer =
   let reg_prefix unit = "%" in
   let mem_prefix (ptr_type:string) = "" in
-  let maddr (base:string) (adj:option(string * string)) (offset:string) =
+  let maddr (base:string) (adj:option(string & string)) (offset:string) =
     match adj with
     | None -> offset ^ "(" ^ base ^ ")"
     | Some (scale, index) -> offset ^ " (" ^ base ^ ", " ^ scale ^ ", " ^ index ^ ")"

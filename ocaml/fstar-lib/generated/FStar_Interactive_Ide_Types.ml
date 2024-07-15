@@ -414,7 +414,7 @@ let (string_of_repl_task : repl_task -> Prims.string) =
         FStar_Compiler_Util.format1 "PushFragment { code = %s }"
           frag.FStar_Parser_ParseIt.frag_text
     | PushFragment (FStar_Pervasives.Inr d, uu___1, uu___2) ->
-        let uu___3 = FStar_Parser_AST.decl_to_string d in
+        let uu___3 = FStar_Class_Show.show FStar_Parser_AST.showable_decl d in
         FStar_Compiler_Util.format1 "PushFragment { decl = %s }" uu___3
     | Noop -> "Noop {}"
 let (string_of_repl_stack_entry : repl_stack_entry_t -> Prims.string) =

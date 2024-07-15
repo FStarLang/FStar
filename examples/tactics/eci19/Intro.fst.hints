@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "901253bdf4be6ecac4dba064d4d40f73"
+      "a3287dd514df14a79ac1c73c678c7e5d"
     ],
     [
       "Intro.constr",
@@ -39,7 +39,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "8b1534055cc75ba4133c676af552407e"
+      "11c21ee50b91f85d35ce8ffe391e79ec"
     ],
     [
       "Intro.triang_aux",
@@ -133,7 +133,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "67e2f9fd6fa31246f1620891e74a9d4d"
+      "5e8ed691a88ad2dd860665b59012bc1c"
     ],
     [
       "Intro.sums",
@@ -148,7 +148,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "b880017c45cfa344b0b66f03b63a7804"
+      "f192b028ac382de4f17bb4592871b2a9"
     ],
     [
       "Intro.uu___128",
@@ -226,7 +226,7 @@
         "typing_Intro.add_int"
       ],
       0,
-      "5215e638221f3c6d21bf946f48485308"
+      "0eece337c184bffdb70cfc0fb82cf627"
     ]
   ]
 ]

@@ -23,13 +23,6 @@ open FStar.Compiler
 
 //let __test_norm_all = Util.mk_ref false
 
-type debug_level_t =
-  | Low
-  | Medium
-  | High
-  | Extreme
-  | Other of string
-
 type split_queries_t = | No | OnFailure | Always
 
 type option_val =
@@ -55,18 +48,18 @@ type opt_type =
   // --admit_except xyz
 | EnumStr of list string
   // --codegen OCaml
-| OpenEnumStr of list string (* suggested values (not exhaustive) *) * string (* label *)
-  // --debug_level …
-| PostProcessed of ((option_val -> option_val) (* validator *) * opt_type (* elem spec *))
+| OpenEnumStr of list string (* suggested values (not exhaustive) *) & string (* label *)
+  // --debug …
+| PostProcessed of ((option_val -> option_val) (* validator *) & opt_type (* elem spec *))
   // For options like --extract_module that require post-processing or validation
 | Accumulated of opt_type (* elem spec *)
   // For options like --extract_module that can be repeated (LIFO)
 | ReverseAccumulated of opt_type (* elem spec *)
   // For options like --include that can be repeated (FIFO)
-| WithSideEffect of ((unit -> unit) * opt_type (* elem spec *))
+| WithSideEffect of ((unit -> unit) & opt_type (* elem spec *))
   // For options like --version that have side effects
 
-val defaults                    : list (string * option_val)
+val defaults                    : list (string & option_val)
 
 val init                        : unit    -> unit  //sets the current options to their defaults
 val clear                       : unit    -> unit  //wipes the stack of options, and then inits
@@ -80,7 +73,7 @@ val push                        : unit -> unit
 val pop                         : unit -> unit
 val internal_push               : unit -> unit
 val internal_pop                : unit -> bool (* returns whether it worked or not, false should be taken as a hard error *)
-val snapshot                    : unit -> (int * unit)
+val snapshot                    : unit -> (int & unit)
 val rollback                    : option int -> unit
 val peek                        : unit -> optionstate
 val set                         : optionstate -> unit
@@ -89,12 +82,12 @@ val set_verification_options    : optionstate -> unit
 val __unit_tests                : unit    -> bool
 val __set_unit_tests            : unit    -> unit
 val __clear_unit_tests          : unit    -> unit
-val parse_cmd_line              : unit    -> parse_cmdline_res * list string
+val parse_cmd_line              : unit    -> parse_cmdline_res & list string
 val add_verify_module           : string  -> unit
 
 val set_option_warning_callback : (string -> unit) -> unit
 val desc_of_opt_type            : opt_type -> option string
-val all_specs_with_types        : list (char * string * opt_type * Pprint.document)
+val all_specs_with_types        : list (char & string & opt_type & Pprint.document)
 val settable                    : string -> bool
 
 val abort_counter : ref int
@@ -117,7 +110,7 @@ val codegen                     : unit    -> option codegen_t
 val parse_codegen               : string  -> option codegen_t
 val codegen_libs                : unit    -> list (list string)
 val profile_enabled             : module_name:option string -> profile_phase:string -> bool
-val profile_group_by_decls      : unit    -> bool
+val profile_group_by_decl       : unit    -> bool
 val defensive                   : unit    -> bool // true if checks should be performed
 val defensive_error             : unit    -> bool // true if "error"
 val defensive_abort             : unit    -> bool // true if "abort"
@@ -187,6 +180,7 @@ val proof_recovery              : unit    -> bool
 val quake_lo                    : unit    -> int
 val quake_hi                    : unit    -> int
 val quake_keep                  : unit    -> bool
+val query_cache                 : unit    -> bool
 val query_stats                 : unit    -> bool
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
@@ -230,7 +224,7 @@ val use_hints                   : unit    -> bool
 val use_hint_hashes             : unit    -> bool
 val use_native_tactics          : unit    -> option string
 val use_tactics                 : unit    -> bool
-val using_facts_from            : unit    -> list (list string * bool)
+val using_facts_from            : unit    -> list (list string & bool)
 val warn_default_effects        : unit    -> bool
 val with_saved_options          : (unit -> 'a) -> 'a
 val with_options                : string -> (unit -> 'a) -> 'a
@@ -249,19 +243,12 @@ val use_nbe_for_extraction      : unit    -> bool
 val trivial_pre_for_unannotated_effectful_fns
                                 : unit    -> bool
 
-(* True iff the user passed '--debug M' for some M *)
-val debug_any                   : unit    -> bool
+(* List of enabled debug toggles. *)
+val debug_keys                  : unit    -> list string
 
-(* True for M when the user passed '--debug M' *)
-val debug_module                : string  -> bool
-
-(* True for M and L when the user passed '--debug M --debug_level L'
- * (and possibly more) *)
-val debug_at_level              : string  -> debug_level_t -> bool
-
-(* True for L when the user passed '--debug_level L'
- * (and possibly more, but independent of --debug) *)
-val debug_at_level_no_module    : debug_level_t -> bool
+(* Whether we are debugging every module and not just the ones
+in the cmdline. *)
+val debug_all_modules           : unit    -> bool
 
 // HACK ALERT! This is to ensure we have no dependency from Options to Version,
 // otherwise, since Version is regenerated all the time, this invalidates the

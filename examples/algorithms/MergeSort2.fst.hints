@@ -20,7 +20,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2e44d849f0396ad806301e845b1b3b7c"
+      "92d2998af1fc5d3bd2de6d9426742b7c"
     ],
     [
       "MergeSort2.merge'_permutation",
@@ -48,9 +48,9 @@
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.mem.fuel_instrumented",
         "equation_with_fuel_MergeSort2.merge_.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion",
+        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "primitive_Prims.op_BarBar",
-        "primitive_Prims.op_Equality",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_LessThanOrEqual",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "projection_inverse_BoxBool_proj_0",
@@ -280,7 +280,7 @@
         "typing_FStar.Pervasives.Native.snd"
       ],
       0,
-      "d9aa0264608fe4aeb9c79246f9f8f179"
+      "9117d66b33510c10a4be0aae55ad1445"
     ],
     [
       "MergeSort2.split_n",
@@ -357,7 +357,7 @@
         "typing_Prims.__proj__Cons__item__tl", "well-founded-ordering-on-nat"
       ],
       0,
-      "7a64219140b786658dcbc443a9b5deab"
+      "3426bf48ded2653a0ab13f6beb4b223a"
     ],
     [
       "MergeSort2.mergesort'_sorted",
@@ -478,6 +478,7 @@
         "@fuel_correspondence_FStar.List.Tot.Base.mem.fuel_instrumented",
         "@fuel_correspondence_GenericStability.filter_eq.fuel_instrumented",
         "@fuel_correspondence_MergeSort2.mergesort_.fuel_instrumented",
+        "@fuel_irrelevance_FStar.List.Tot.Base.length.fuel_instrumented",
         "@fuel_irrelevance_MergeSort2.mergesort_.fuel_instrumented",
         "@query",
         "GenericSort_interpretation_Tm_arrow_2b1c71e61beb0ccdfcd22e3f2064d949",

@@ -23,10 +23,10 @@ open FStar.Squash
 type dom : eqtype = int
 type codom : Type = int
 
-type heap = list (dom * codom)
+type heap = list (dom & codom)
 
 
-type memo (a:Type) = heap -> M (a * heap)
+type memo (a:Type) = heap -> M (a & heap)
 let return (a:Type) (x:a) : memo a = fun h -> (x, h)
 let bind (a b:Type) (m:memo a) (f:a -> memo b) : memo b =
   fun h -> let (x, h) = m h in f x h
@@ -63,14 +63,14 @@ let rec for_all_prop (#a:Type) (p:a -> Type0) (l:list a) : Tot Type0 (decreases 
   | [] -> True
   | x :: xs -> p x /\ for_all_prop p xs
 
-let rec for_all_prop_assoc_lemma (#a:eqtype) (#b:Type) (x:a) (p : (a * b) -> Tot Type0) (l:list (a*b))
+let rec for_all_prop_assoc_lemma (#a:eqtype) (#b:Type) (x:a) (p : (a & b) -> Tot Type0) (l:list (a&b))
   : Lemma (requires (for_all_prop p l))
     (ensures (match List.assoc x l with Some y -> p (x,y) | _ -> True))
 = match l with
   | [] -> ()
   | (x0, y0) :: xs -> if x0 = x then () else for_all_prop_assoc_lemma x p xs
 
-let forall_prop_assoc_lemma2 (#a:eqtype) (#b:Type) (x:a) (y:b) (p : (a * b) -> Tot Type0)
+let forall_prop_assoc_lemma2 (#a:eqtype) (#b:Type) (x:a) (y:b) (p : (a & b) -> Tot Type0)
   : Lemma (forall h. for_all_prop p h /\ List.assoc x h == Some y ==> p (x,y))
 = let aux h : Lemma (requires (for_all_prop p h /\ List.assoc x h == Some y)) (ensures (p (x,y))) =
     for_all_prop_assoc_lemma x p h
@@ -129,7 +129,7 @@ type memo_pack (f:dom -> Tot codom) =
     mf:(dom -> Memo codom){mf `computes` f} ->
     memo_pack f
 
-let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom * memo_pack f) =
+let apply_memo (#f:dom -> Tot codom) (mp:memo_pack f) (x:dom) : Tot (codom & memo_pack f) =
   let MemoPack h0 mf = mp in
   let y, h1 = reify (mf x) h0 in
   y, MemoPack h1 mf
@@ -331,7 +331,7 @@ let fpartial_result_init_lemma f x
 let valid_memo_rec (h:heap) (f: (x:dom -> Tot (partial_result x))) = for_all_prop (fun (x,y) -> y == fixp f x) h
 
 unfold
-let memo_rec_wp (f: (x:dom -> Tot (partial_result x))) (x0:dom) (h0:heap) (p:(codom * heap) -> Type0) : Tot Type0=
+let memo_rec_wp (f: (x:dom -> Tot (partial_result x))) (x0:dom) (h0:heap) (p:(codom & heap) -> Type0) : Tot Type0=
   valid_memo_rec h0 f /\ (forall h. valid_memo_rec h f ==> p (fixp f x0, h))
 
 let valid_memo_rec_lemma

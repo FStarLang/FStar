@@ -29,7 +29,7 @@ open FStar.Char
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 module Z = FStar.BigInt
-
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 open FStar.Class.Show
 
 val interleave_hack : int
@@ -58,10 +58,11 @@ type constant =
   | Unit
   | Bool of bool
   | Int of Z.t
-  | String of string * Range.range
+  | String of string & Range.range
   | Char of FStar.Char.char
   | Range of Range.range
   | SConst of FStar.Const.sconst
+  | Real of string
 
 // Atoms represent the head of an irreducible application
 // They can either be variables
@@ -71,11 +72,11 @@ type atom
   | Var of var
   | Match of
        // 1. the scrutinee
-       t *
+       t &
        // 2. reconstruct the returns annotation
-       (unit -> option match_returns_ascription) *
+       (unit -> option match_returns_ascription) &
        // 3. reconstructs the pattern matching, if it needs to be readback
-       (unit -> list branch) *
+       (unit -> list branch) &
        // 4. reconstruct the residual comp if set
        (unit -> option S.residual_comp)
   | UnreducedLet of
@@ -83,13 +84,13 @@ type atom
      // since that can lead to exponential code size blowup. This node represents
      // an unreduced let binding which can be read back as an F* let
      // 1. The name of the let-bound term
-       var *
+       var &
      // 2. The type of the let-bound term
-       Thunk.t t   *
+       Thunk.t t   &
      // 3. Its definition
-       Thunk.t t   *
+       Thunk.t t   &
      // 4. The body of the let binding
-       Thunk.t t   *
+       Thunk.t t   &
      // 5. The source letbinding for readback (of attributes etc.)
        letbinding
   | UnreducedLetRec of
@@ -97,62 +98,75 @@ type atom
      // 1. list of names of all mutually recursive let-rec-bound terms
      //    * their types
      //    * their definitions
-        list (var * t * t) *
+        list (var & t & t) &
      // 2. the body of the let binding
-        t *
+        t &
      // 3. the source letbinding for readback (of attributes etc.)
      //    equal in length to the first list
         list letbinding
   | UVar of Thunk.t S.term
 
-and t'
-  =
-  | Lam of (list (t * aqual) -> t)  //these expect their arguments in binder order (optimized for convenience beta reduction)
-                                   //we also maintain aquals so as to reconstruct the application properly for implicits
-        * either (list t * binders * option S.residual_comp) (list arg) //a context, binders and residual_comp for readback
-                                                                        //or a list of arguments, for primitive unembeddings
-        * int  // arity
-  | Accu of atom * args
-  | Construct of fv * list universe * args
-  | FV of fv * list universe * args //universes and args in reverse order
+and lam_shape =
+  // a context, binders and residual_comp for readback
+  | Lam_bs of (list t & binders & option S.residual_comp)
+
+  // or a list of arguments, for primitive unembeddings (see e_arrow)
+  | Lam_args of (list arg)
+
+  // or a partially applied primop
+  | Lam_primop of (S.fv & list arg)
+
+and t' =
+  | Lam {
+    interp : list (t & aqual) -> t;
+    //these expect their arguments in binder order (optimized for convenience beta reduction)
+    //we also maintain aquals so as to reconstruct the application properly for implicits
+
+    shape : lam_shape;
+    arity : int;
+  }
+
+  | Accu of atom & args
+  | Construct of fv & list universe & args
+  | FV of fv & list universe & args //universes and args in reverse order
   | Constant of constant
   | Type_t of universe
   | Univ of universe
   | Unknown
-  | Arrow of either (Thunk.t S.term) (list arg * comp)
-  | Refinement of (t -> t) * (unit -> arg)
+  | Arrow of either (Thunk.t S.term) (list arg & comp)
+  | Refinement of (t -> t) & (unit -> arg)
   | Reflect of t
-  | Quote of S.term * S.quoteinfo
-  | Lazy of (either S.lazyinfo (Dyn.dyn * emb_typ)) * Thunk.t t
-  | Meta of t * Thunk.t S.metadata
+  | Quote of S.term & S.quoteinfo
+  | Lazy of (either S.lazyinfo (Dyn.dyn & emb_typ)) & Thunk.t t
+  | Meta of t & Thunk.t S.metadata
   | TopLevelLet of
        // 1. The definition of the fv
-       letbinding *
+       letbinding &
        // 2. Its natural arity including universes (see Util.let_rec_arity)
-       int *
+       int &
        // 3. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
        args
   | TopLevelRec of
        // 1. The definition of the fv
-       letbinding *
+       letbinding &
        // 2. Its natural arity including universes (see Util.let_rec_arity)
-       int *
+       int &
        // 3. Whether or not each argument appeats in the decreases clause (also see Util.let_rec_arity)
-       list bool *
+       list bool &
        // 4. Accumulated arguments in order from left-to-right (unlike Accu, these are not reversed)
        args
   | LocalLetRec of
       // 1. index of the let binding in the mutually recursive list
-      int *
-      letbinding *
+      int &
+      letbinding &
       // 2. Mutally recursive letbindings (only for local mutually recursive let bindings)
-      list letbinding *
+      list letbinding &
       // 3. rec env
-      list t *
+      list t &
       // 4. Argument accumulator
-      args *
+      args &
       // 5. natural arity (including universes) of the main let binding `f` (see Util.let_rec_arity)
-      int *
+      int &
       // 6. for each argument, a bool records if that argument appears in the decreases
       //    This is used to detect potentially non-terminating loops
       list bool
@@ -192,9 +206,9 @@ and cflag =
   | LEMMA
   | CPS
   | DECREASES_lex of list t
-  | DECREASES_wf of (t * t)
+  | DECREASES_wf of (t & t)
 
-and arg = t * aqual
+and arg = t & aqual
 and args = list (arg)
 
 instance val showable_t    : showable t
@@ -225,7 +239,7 @@ class embedding (a:Type0) = {
   e_typ : unit -> emb_typ;
 }
 
-val eq_t : t -> t -> U.eq_result
+val eq_t : Env.env_t -> t -> t -> TEQ.eq_result
 
 // Printing functions
 
@@ -265,6 +279,7 @@ instance val e_bool   : embedding bool
 instance val e_string : embedding string
 instance val e_char   : embedding char
 instance val e_int    : embedding Z.t
+instance val e_real   : embedding Compiler.Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
@@ -275,10 +290,10 @@ instance val e_vconfig  : embedding vconfig
 instance val e_norm_step : embedding Pervasives.norm_step
 instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
 instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
-instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a * 'b))
-instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a * 'b * 'c))
+instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a & 'b))
+instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a & 'b & 'c))
 instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
-val e_sealed : embedding 'a -> embedding 'a
+instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStar.Compiler.Sealed.sealed 'a))
 instance val e_string_list : embedding (list string)
 val e_arrow : embedding 'a -> embedding 'b -> embedding ('a -> 'b)
 

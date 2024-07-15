@@ -58,7 +58,7 @@ val lemma_cmp_gt : s:state -> o1:operand -> o2:operand -> Lemma
   [SMTPat (eval_ocmp s (S.OGt o1 o2))]
 
 val lemma_block : (b0:codes) -> (s0:state) -> (sN:state) ->
-  Ghost (state * code * codes)
+  Ghost (state & code & codes)
   (requires (Cons? b0 /\ eval_code (Block b0) s0 sN))
   (ensures  (fun (s1, c1, b1) ->
     b0 == c1::b1 /\
@@ -69,21 +69,21 @@ val lemma_empty : (s0:state) -> (sN:state) -> Ghost state
   (requires (eval_code (Block []) s0 sN))
   (ensures  (fun sM -> sM == s0 /\ sM == sN))
 
-val lemma_ifElse : ifb:S.ocmp -> ct:code -> cf:code -> s0:state -> sN:state -> Ghost (bool * state)
+val lemma_ifElse : ifb:S.ocmp -> ct:code -> cf:code -> s0:state -> sN:state -> Ghost (bool & state)
   (requires (eval_code (IfElse ifb ct cf) s0 sN))
   (ensures  (fun (cond, sM) ->
     cond == eval_ocmp s0 ifb /\
     sM == s0 /\
     (if cond then eval_code ct sM sN else eval_code cf sM sN)))
 
-val lemma_while : b:S.ocmp -> c:code -> s0:state -> sN:state -> Ghost (nat * state)
+val lemma_while : b:S.ocmp -> c:code -> s0:state -> sN:state -> Ghost (nat & state)
   (requires (eval_code (While b c) s0 sN))
   (ensures  (fun (n, s1) ->
     eval_while b c n s0 sN /\
     s1 == s0
   ))
 
-val lemma_whileTrue : b:S.ocmp -> c:code -> n:nat -> s0:state -> sN:state -> Ghost (state * state)
+val lemma_whileTrue : b:S.ocmp -> c:code -> n:nat -> s0:state -> sN:state -> Ghost (state & state)
   (requires
     n > 0 /\
     eval_while b c n s0 sN

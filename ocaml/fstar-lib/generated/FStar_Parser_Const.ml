@@ -48,6 +48,7 @@ let (int32_lid : FStar_Ident.lident) = p2l ["FStar"; "Int32"; "t"]
 let (uint32_lid : FStar_Ident.lident) = p2l ["FStar"; "UInt32"; "t"]
 let (int64_lid : FStar_Ident.lident) = p2l ["FStar"; "Int64"; "t"]
 let (uint64_lid : FStar_Ident.lident) = p2l ["FStar"; "UInt64"; "t"]
+let (sizet_lid : FStar_Ident.lident) = p2l ["FStar"; "SizeT"; "t"]
 let (salloc_lid : FStar_Ident.lident) = p2l ["FStar"; "ST"; "salloc"]
 let (swrite_lid : FStar_Ident.lident) =
   p2l ["FStar"; "ST"; "op_Colon_Equals"]
@@ -177,9 +178,13 @@ let (bv_sub_lid : FStar_Ident.lident) = bvconst "bvsub"
 let (bv_shift_left_lid : FStar_Ident.lident) = bvconst "bvshl"
 let (bv_shift_right_lid : FStar_Ident.lident) = bvconst "bvshr"
 let (bv_udiv_lid : FStar_Ident.lident) = bvconst "bvdiv"
-let (bv_udiv_unsafe_lid : FStar_Ident.lident) = bvconst "bvdiv_unsafe"
 let (bv_mod_lid : FStar_Ident.lident) = bvconst "bvmod"
 let (bv_mul_lid : FStar_Ident.lident) = bvconst "bvmul"
+let (bv_shift_left'_lid : FStar_Ident.lident) = bvconst "bvshl'"
+let (bv_shift_right'_lid : FStar_Ident.lident) = bvconst "bvshr'"
+let (bv_udiv_unsafe_lid : FStar_Ident.lident) = bvconst "bvdiv_unsafe"
+let (bv_mod_unsafe_lid : FStar_Ident.lident) = bvconst "bvmod_unsafe"
+let (bv_mul'_lid : FStar_Ident.lident) = bvconst "bvmul'"
 let (bv_ult_lid : FStar_Ident.lident) = bvconst "bvult"
 let (bv_uext_lid : FStar_Ident.lident) = bvconst "bv_uext"
 let (array_lid : FStar_Ident.lident) = p2l ["FStar"; "Array"; "array"]
@@ -253,6 +258,8 @@ let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
 let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
 let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (mk_range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "mk_range"]
+let (join_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "join_range"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
 let (inversion_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "inversion"]

@@ -74,8 +74,8 @@ and sub_elam (#r:bool) (s:sub r)
     introduce not r ==> (exists x. ~ (EVar? (f x)))
     with not_r. 
       eliminate exists y. ~ (EVar? (s y))
-      returns _
-      with not_evar_sy. 
+      returns (exists x. ~ (EVar? (f x)))
+      with (not_evar_sy:squash (~(EVar? (s y)))). 
         introduce exists x. ~(EVar? (f x))
         with (y + 1)
         and ()

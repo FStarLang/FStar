@@ -73,14 +73,19 @@ let mix_list_lit = mix_list
 
 let hash_list (h:'a -> mm H.hash_code) (ts:list 'a) : mm H.hash_code = mix_list (List.map h ts)
 
-
 let hash_option (h:'a -> mm H.hash_code) (o:option 'a) : mm H.hash_code =
   match o with
   | None -> ret (H.of_int 1237)
   | Some o -> mix (ret (H.of_int 1249)) (h o)
 
+// hash the string.
+let hash_doc (d : Pprint.document) : mm H.hash_code =
+  of_string (Pprint.pretty_string (float_of_string "1.0") 80 d)
 
-let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a * 'b))
+let hash_doc_list (ds : list Pprint.document) : mm H.hash_code =
+  hash_list hash_doc ds
+
+let hash_pair (h:'a -> mm H.hash_code) (i:'b -> mm H.hash_code) (x:('a & 'b))
   : mm H.hash_code
   = mix (h (fst x)) (i (snd x))
 
@@ -94,7 +99,7 @@ and hash_comp c
 
 and hash_term' (t:term)
   : mm H.hash_code
-  = // if Options.debug_any ()
+  = // if Debug.any ()
     // then FStar.Compiler.Util.print1 "Hash_term %s\n" (FStar.Syntax.Print.term_to_string t);
     match (SS.compress t).n with
     | Tm_bvar bv -> mix (of_int 3) (of_int bv.index)
@@ -298,7 +303,7 @@ and hash_meta m =
   | Meta_labeled (s, r, _) ->
     mix_list_lit
       [ of_int 1031;
-        of_string s;
+        hash_doc_list s;
         of_string (Range.string_of_range r) ]
   | Meta_desugared msi ->
     mix_list_lit
@@ -549,7 +554,10 @@ and equal_meta m1 m2 =
     Ident.lid_equals n1 n2 &&
     equal_term t1 t2
 
-and equal_lazyinfo l1 l2 = l1 = l2
+and equal_lazyinfo l1 l2 =
+  (* We cannot really compare the blobs. Just try physical
+  equality (first matching kinds). *)
+  l1.lkind = l1.lkind && BU.physical_equality l1.blob l2.blob
 
 and equal_quoteinfo q1 q2 =
   q1.qkind = q2.qkind &&
@@ -600,3 +608,7 @@ and equal_subst_elt s1 s2 =
   | UD (un1, i1), UD (un2, i2) ->
     i1 = i2 &&
     Ident.ident_equals un1 un2
+
+instance hashable_term : hashable term = {
+  hash = ext_hash_term;
+}

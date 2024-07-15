@@ -25,6 +25,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 open FStar.Extraction.ML.Syntax
+open FStar.Class.Setlike
 
 (**
   This module implements a transformation on the FStar.Extraction.ML.Syntax
@@ -75,12 +76,12 @@ let lookup_tyname (env:env_t) (name:mlpath)
   = BU.psmap_try_find env.tydef_map (string_of_mlpath name)
 
 (** Free variables of a type: Computed to check which parameters are used *)
-type var_set = Set.set mlident
-let empty_var_set : Set.set string = Set.empty ()
+type var_set = RBSet.t mlident
+let empty_var_set : RBSet.t string = empty ()
 let rec freevars_of_mlty' (vars:var_set) (t:mlty) =
   match t with
   | MLTY_Var i ->
-    Set.add i vars
+    add i vars
   | MLTY_Fun (t0, _, t1) ->
     freevars_of_mlty' (freevars_of_mlty' vars t0) t1
   | MLTY_Named (tys, _)
@@ -136,7 +137,10 @@ let rec elim_mlexpr' (env:env_t) (e:mlexpr') =
   | MLE_Let (lb, e) -> MLE_Let(elim_letbinding env lb, elim_mlexpr env e)
   | MLE_App(e, es) -> MLE_App(elim_mlexpr env e, List.map (elim_mlexpr env) es)
   | MLE_TApp (e, tys) -> MLE_TApp(e, List.map (elim_mlty env) tys)
-  | MLE_Fun(bvs, e) -> MLE_Fun(List.map (fun (x, t) -> x, elim_mlty env t) bvs, elim_mlexpr env e)
+  | MLE_Fun(bvs, e) ->
+    MLE_Fun (List.map (fun b -> {mlbinder_name=b.mlbinder_name;
+                                 mlbinder_ty=elim_mlty env b.mlbinder_ty;
+                                 mlbinder_attrs=List.map (elim_mlexpr env) b.mlbinder_attrs}) bvs, elim_mlexpr env e)
   | MLE_Match(e, branches) -> MLE_Match(elim_mlexpr env e, List.map (elim_branch env) branches)
   | MLE_Coerce(e, t0, t1) -> MLE_Coerce(elim_mlexpr env e, elim_mlty env t0, elim_mlty env t1)
   | MLE_CTor(l, es) -> MLE_CTor(l, List.map (elim_mlexpr env) es)
@@ -201,8 +205,9 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     let freevars = freevars_of_mlty mlty in
     let _, parameters, entry =
         List.fold_left
-          (fun (i, params, entry) p ->
-             if Set.mem p freevars
+          (fun (i, params, entry) param ->
+             let p = param.ty_param_name in
+             if mem p freevars
              then begin
                if must_eliminate i
                then begin
@@ -212,7 +217,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                     "Expected parameter %s of %s to be unused in its definition and eliminated"
                       p name)
                end;
-               i+1, p::params, Retain::entry
+               i+1, param::params, Retain::entry
              end
              else begin
                if can_eliminate i //there's no val
@@ -237,7 +242,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
                         name
                         (string_of_int i));
                     raise Drop_tydef
-               else i+1, p::params, Retain::entry
+               else i+1, param::params, Retain::entry
              end)
           (0, [], [])
           parameters
@@ -246,7 +251,7 @@ let elim_tydef (env:env_t) name metadata parameters mlty
     (name, metadata, List.rev parameters, mlty)
 
 let elim_tydef_or_decl (env:env_t) (td:tydef)
-  : env_t * tydef
+  : env_t & tydef
   = match td with
     | name, metadata, Inr arity ->
       let remove_typars_list =
@@ -273,7 +278,7 @@ let elim_tydef_or_decl (env:env_t) (td:tydef)
       in
       env, (name, meta, Inl (params, mlty))
 
-let elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef =
+let elim_tydefs (env:env_t) (tds:list tydef) : env_t & list tydef =
   if Options.codegen() <> Some Options.FSharp then env, tds else
   let env, tds =
     List.fold_left
@@ -294,7 +299,7 @@ let elim_tydefs (env:env_t) (tds:list tydef) : env_t * list tydef =
     in the environment and removes them from the definition here *)
 let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
   : env_t
-  * one_mltydecl
+  & one_mltydecl
   = let {tydecl_name=name; tydecl_meta=meta; tydecl_parameters=parameters; tydecl_defn=body} = td in
     let elim_td td =
       match td with
@@ -333,16 +338,16 @@ let elim_one_mltydecl (env:env_t) (td:one_mltydecl)
 
 let elim_module env m =
   let elim_module1 env m =
-    match m with
+    match m.mlmodule1_m with
     | MLM_Ty td ->
       let env, td = BU.fold_map elim_one_mltydecl env td in
-      env, MLM_Ty td
+      env, { m with mlmodule1_m = MLM_Ty td }
     | MLM_Let lb ->
-      env, MLM_Let (elim_letbinding env lb)
+      env, { m with mlmodule1_m = MLM_Let (elim_letbinding env lb) }
     | MLM_Exn (name, sym_tys) ->
-      env, MLM_Exn (name, List.map (fun (s, t) -> s, elim_mlty env t) sym_tys)
+      env, { m with mlmodule1_m = MLM_Exn (name, List.map (fun (s, t) -> s, elim_mlty env t) sym_tys) }
     | MLM_Top e ->
-      env, MLM_Top (elim_mlexpr env e)
+      env, { m with mlmodule1_m = MLM_Top (elim_mlexpr env e) }
     | _ ->
       env, m
   in

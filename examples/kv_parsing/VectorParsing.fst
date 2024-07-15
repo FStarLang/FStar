@@ -154,7 +154,7 @@ val do_while_readonly :
     #a:Type ->
     buf:B.buffer a ->
     inv:(vs:seq a{length vs == B.length buf} -> t -> bool -> GTot Type0) ->
-    f:(v:t -> Stack (t*bool)
+    f:(v:t -> Stack (t&bool)
              (requires (fun h0 -> B.live h0 buf /\
                                inv (B.as_seq h0 buf) v false))
              (ensures (fun h0 (v', done) h1 ->

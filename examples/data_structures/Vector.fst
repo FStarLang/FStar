@@ -67,7 +67,7 @@ let rec find f #n v = match v with
     then Some hd
     else find f tl
 
-val zip': #a:Type -> #b:Type -> #n:nat -> vector a n -> vector b n -> Tot (vector (a * b) n)
+val zip': #a:Type -> #b:Type -> #n:nat -> vector a n -> vector b n -> Tot (vector (a & b) n)
 let rec zip' #a #b #n v1 v2 = match v1 with
   | VNil -> VNil
   | VCons a tl1 ->

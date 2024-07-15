@@ -48,5 +48,5 @@ let normal #a (e:a) =
 
 let norm_assert (p:Type) : Lemma (requires (normal p)) (ensures True) = ()
 
-#set-options "--debug Imp.List.DriverNBE --debug_level print_normalized_terms --admit_smt_queries true"
+#set-options "--debug print_normalized_terms --admit_smt_queries true"
 let _ = norm_assert (forall x y. equiv_norm (long_zero x) (long_zero y))

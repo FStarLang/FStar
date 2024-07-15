@@ -2,6 +2,24 @@
   "kdg∞c\\Â€†R<%ÕµÄË",
   [
     [
+      "Tutorial.ex1",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "6b62c9d8ee918201123b3f9b9e28fb07"
+    ],
+    [
+      "Tutorial.ex2",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "7b8d587a009155d42d11b03b2425be28"
+    ],
+    [
       "Tutorial.ex3",
       1,
       2,
@@ -12,7 +30,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "1dfc565ebef91e2b66e613559d57674b"
+      "31cec7eeab0d2c538c815165900de3d8"
     ],
     [
       "Tutorial.ex3'",

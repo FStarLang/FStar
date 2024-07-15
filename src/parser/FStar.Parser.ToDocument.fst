@@ -28,6 +28,7 @@ open FStar.Ident
 open FStar.Const
 open FStar.Pprint
 open FStar.Compiler.Range
+open FStar.Class.Show
 
 module C = FStar.Parser.Const
 module BU = FStar.Compiler.Util
@@ -35,9 +36,8 @@ module BU = FStar.Compiler.Util
 
 
 (* !!! SIDE EFFECT WARNING !!! *)
-(* There are 2 uses of global side-effect in the printer for : *)
+(* There is ONE use of global side-effect in the printer for : *)
 (* - Printing the comments [comment_stack] *)
-(* - Printing tuples [unfold_tuples] *)
 
 let maybe_unthunk t =
     match t.tm with
@@ -75,15 +75,11 @@ let rec all (f: 'a -> bool) (l: list 'a): bool =
   | [] -> true
   | x :: xs -> if f x then all f xs else false
 
-let all1_explicit (args:list (term*imp)) : bool =
+let all1_explicit (args:list (term&imp)) : bool =
     not (List.isEmpty args) &&
     BU.for_all (function
                 | (_, Nothing) -> true
                 | _ -> false) args
-
-(* Tuples which come from a resugared AST, via term_to_document are already flattened *)
-(* This reference is set to false in term_to_document and checked in p_tmNoEqWith'    *)
-let unfold_tuples = BU.mk_ref true
 
 // abbrev
 let str s = doc_of_string s
@@ -313,7 +309,7 @@ type token =
     | Exact     : string    -> token
     | UnicodeOperator
 
-type associativity_level = associativity * list token
+type associativity_level = associativity & list token
 
 let token_to_string = function
     | StartsWith      c -> string_of_char c ^ ".*"
@@ -375,7 +371,7 @@ let level_table =
   in
   List.mapi (fun i (assoc, tokens) -> (levels_from_associativity i assoc, tokens)) level_associativity_spec
 
-let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int * int * int =
+let assign_levels (token_associativity_spec : list associativity_level) (s:string) : int & int & int =
     match List.tryFind (matches_level s) level_table with
         | Some (assoc_levels, _) -> assoc_levels
         | _ -> failwith ("Unrecognized operator " ^ s)
@@ -389,18 +385,18 @@ let max_level l =
   in List.fold_left find_level_and_max 0 l
 
 let levels op =
-  (* See comment in parse.fsy: tuples MUST be parenthesized because [t * u * v]
-   * is not the same thing as [(t * u) * v]. So, we are conservative and make an
-   * exception for the "*" operator and treat it as, really, non-associative. If
+  (* See comment in parse.fsy: tuples MUST be parenthesized because [t & u & v]
+   * is not the same thing as [(t & u) & v]. So, we are conservative and make an
+   * exception for the "&" operator and treat it as, really, non-associative. If
    * the AST comes from the user, then the Paren node was there already and no
    * extra parentheses are added. If the AST comes from some client inside of
    * the F* compiler that doesn't know about this quirk, then it forces it to be
-   * parenthesized properly. In case the user overrode * to be a truly
-   * associative operator (e.g. multiplication) then we're just being a little
+   * parenthesized properly. In case the user overrode & to be a truly
+   * associative operator then we're just being a little
    * conservative because, unlike ToSyntax.fs, we don't have lexical context to
    * help us determine which operator this is, really. *)
   let left, mine, right = assign_levels level_associativity_spec op in
-  if op = "*" then
+  if op = "&" then
     left - 1, mine, right
   else
     left, mine, right
@@ -451,8 +447,8 @@ let handleable_op op args =
 // The third parameter in Binders controls whether each binder is
 // paranthesised
 type annotation_style =
-  | Binders of int * int * bool // val f (x1:t1) ... (xn:tn) : C
-  | Arrows of int * int //  val f : x1:t1 -> ... -> xn:tn -> C
+  | Binders of int & int & bool // val f (x1:t1) ... (xn:tn) : C
+  | Arrows of int & int //  val f : x1:t1 -> ... -> xn:tn -> C
 
 // decide whether a type signature can be printed in the format
 //   val f (x1:t1) ... (xn:tn) : C
@@ -509,7 +505,7 @@ let cat_with_colon x y = x ^^ colon ^/^ y
 (* that all printed AST nodes that could eventually contain a comment are printed in the *)
 (* sequential order of the document. *)
 
-let comment_stack : ref (list (string*range))= BU.mk_ref []
+let comment_stack : ref (list (string&range))= BU.mk_ref []
 
 (* some meta-information that informs spacing and the placement of comments around a declaration *)
 type decl_meta =
@@ -823,6 +819,11 @@ and p_rawDecl d = match d.d with
     str "%splice" ^^
     (if is_typed then str "_t" else empty) ^^
     p_list p_uident (str ";") ids ^^ space ^^ p_term false false t
+  | DeclSyntaxExtension (tag, blob, blob_rng, start_rng) ->
+    // NB: using ^^ since the blob also contains the newlines
+    doc_of_string ("```"^tag) ^^
+    arbitrary_string blob ^^
+    doc_of_string "```"
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
@@ -997,7 +998,7 @@ and p_effectDecl ps d = match d.d with
       prefix2 (p_lident lid ^^ space ^^ equals) (p_simpleTerm ps false e)
   | _ ->
       failwith (Util.format1 "Not a declaration of an effect member... or at least I hope so : %s"
-                              (decl_to_string d))
+                              (show d))
 
 and p_subEffect lift =
   let lift_op_doc =
@@ -1170,7 +1171,7 @@ and p_binder is_atomic b =
 //  2- optionally: a doc for the type annotation (if any), and a function to concat it to the binder
 // When the binder is nameless, the at
 // This does NOT handle typeclass arguments. The wrapping is done from the outside.
-and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document * option (document * catf) =
+and p_binder' (no_pars: bool) (is_atomic: bool) (b: binder): document & option (document & catf) =
   match b.b with
   | Variable lid -> optional p_aqual b.aqual ^^ p_attributes false b.battributes ^^ p_lident lid, None
   | TVariable lid -> p_attributes false b.battributes ^^ p_lident lid, None
@@ -1631,8 +1632,8 @@ and sig_as_binders_if_possible t extra_space =
     group (colon ^^ s ^^ p_typ_top (Arrows (2, 2)) false false t)
 
 // Typeclass arguments are not collapsed.
-and collapse_pats (pats: list (document * document * bool * bool)): list document =
-  let fold_fun (bs: list (list document * document * bool * bool)) (x: document * document * bool * bool) =
+and collapse_pats (pats: list (document & document & bool & bool)): list document =
+  let fold_fun (bs: list (list document & document & bool & bool)) (x: document & document & bool & bool) =
     let b1, t1, tc1, j1 = x in
     match bs with
     | [] -> [([b1], t1, tc1, j1)]
@@ -1643,7 +1644,7 @@ and collapse_pats (pats: list (document * document * bool * bool)): list documen
       else
         ([b1], t1, tc1, j1) :: hd :: tl
   in
-  let p_collapsed_binder (cb: list document * document * bool * bool): document =
+  let p_collapsed_binder (cb: list document & document & bool & bool): document =
     let bs, typ, istcarg, _ = cb in
     let body =
       match bs with
@@ -1836,7 +1837,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
   // - optional annotation doc + cat function
   // - whether it was a typeclass arg
   // - whether it is joinable (tc args and meta args are not)
-  let rec accumulate_binders p_Tm e: list ((document * option (document * catf)) * bool * bool) & document =
+  let rec accumulate_binders p_Tm e: list ((document & option (document & catf)) & bool & bool) & document =
     match e.tm with
     | Product(bs, tgt) ->
         let bs_ds = List.map (fun b -> p_binder' true false b, is_tc_binder b, is_joinable_binder b) bs in
@@ -1844,7 +1845,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
         bs_ds@bs_ds', ret
     | _ -> ([], p_Tm e)
   in
-  let fold_fun (bs: list (list document * option (document * catf) * bool * bool)) (x: (document * option (document * catf)) * bool * bool) =
+  let fold_fun (bs: list (list document & option (document & catf) & bool & bool)) (x: (document & option (document & catf)) & bool & bool) =
     let (b1, t1), tc1, j1 = x in
     match bs with
     | [] -> [([b1], t1, tc1, j1)]
@@ -1862,7 +1863,7 @@ and collapse_binders (style : annotation_style) (p_Tm: term -> document) (e: ter
         (* Otherwise just make a new group *)
         ([b1], t1, tc1, j1) :: bs
   in
-  let p_collapsed_binder (cb: list document * option (document * catf) * bool * bool): document =
+  let p_collapsed_binder (cb: list document & option (document & catf) & bool & bool): document =
     let bs, t, is_tc, _ = cb in
     match t with
     | None -> begin
@@ -1904,10 +1905,10 @@ and p_tmTuple' e = match e.tm with
   | _ -> p_tmEq e
 
 and paren_if_gt curr mine doc =
-  if mine <= curr then
-    doc
-  else
+  if mine > curr then
     group (lparen ^^ doc ^^ rparen)
+  else
+    doc
 
 and p_tmEqWith p_X e =
   (* TODO : this should be precomputed but F* complains about a potential ML effect *)
@@ -1951,13 +1952,6 @@ and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
         | Inr t -> p_tmNoEqWith' false p_X left t ^^ space ^^ str op ^^ break1
       in
       paren_if_gt curr mine (concat_map p_dsumfst binders ^^ p_tmNoEqWith' false p_X right res)
-  | Op(id, [e1; e2]) when string_of_id id = "*" && !unfold_tuples ->
-      let op = "*" in
-      let left, mine, right = levels op in
-      if inside_tuple then
-        infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2)
-      else
-        paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' true p_X left e1) (p_tmNoEqWith' true p_X right e2))
   | Op (op, [e1; e2]) when is_operatorInfix34 op ->
       let op = Ident.string_of_id op in
       let left, mine, right = levels op in
@@ -2253,11 +2247,7 @@ and p_atomicUniverse u = match u.tm with
   | _ -> failwith (Util.format1 "Invalid term in universe context %s" (term_to_string u))
 
 let term_to_document e =
-  let old_unfold_tuples = !unfold_tuples in
-  unfold_tuples := false;
-  let res = p_term false false e in
-  unfold_tuples := old_unfold_tuples;
-  res
+  p_term false false e
 
 let signature_to_document e = p_justSig e
 
@@ -2273,7 +2263,7 @@ let modul_to_document (m:modul) =
   | Interface (_, decls, _) ->
     decls |> List.map decl_to_document |> separate hardline
 
-let comments_to_document (comments : list (string * FStar.Compiler.Range.range)) =
+let comments_to_document (comments : list (string & FStar.Compiler.Range.range)) =
     separate_map hardline (fun (comment, range) -> str comment) comments
 
 let extract_decl_range (d: decl): decl_meta =

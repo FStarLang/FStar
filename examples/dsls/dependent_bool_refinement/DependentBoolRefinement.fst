@@ -105,7 +105,7 @@ let open_ty t v = open_ty' t (EVar v) 0
 let close_ty t v = close_ty' t v 0
 let open_ty_with t e = open_ty' t e 0
 
-#push-options "--query_stats --fuel 4 --ifuel 2 --z3rlimit_factor 8"
+#push-options "--fuel 4 --ifuel 2 --z3rlimit_factor 8"
 let rec open_exp_freevars (e:src_exp) (v:src_exp) (n:nat)
   : Lemma 
     (ensures (freevars e `Set.subset` freevars (open_exp' e v n))  /\
@@ -472,7 +472,7 @@ and check_ok (e:src_exp) (sg:src_env)
     | EApp e1 e2 -> check_ok e1 sg && check_ok e2 sg
   
 
-#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6 --query_stats"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 6"
 
 let rec check (f:fstar_top_env)
               (sg:src_env)
@@ -578,7 +578,7 @@ let rec extend_env_l_lookup_bvar (g:R.env) (sg:src_env) (x:var)
     | [] -> ()
     | hd :: tl -> extend_env_l_lookup_bvar g tl x
 
-#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 2"
 let rec elab_open_commute' (n:nat) (e:src_exp) (x:src_exp) 
   : Lemma (ensures
               RT.subst_term (elab_exp e) [ RT.DT n (elab_exp x) ] ==
@@ -638,7 +638,7 @@ let rec extend_env_l_lookup_fvar (g:R.env) (sg:src_env) (fv:R.fv)
     | [] -> ()
     | hd::tl -> extend_env_l_lookup_fvar g tl fv
 
-#push-options "--query_stats --fuel 2 --ifuel 2 --z3rlimit_factor 2"
+#push-options "--fuel 2 --ifuel 2 --z3rlimit_factor 2"
 
 let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0 t1)
   : GTot (RT.sub_typing (extend_env_l f sg) (elab_ty t0) (elab_ty t1))
@@ -646,7 +646,7 @@ let subtyping_soundness #f (#sg:src_env) (#t0 #t1:src_ty) (ds:sub_typing f sg t0
     | S_Refl _ _ -> RT.Rel_equiv _ _ _ _ (RT.Rel_refl _ _ _)
     | S_ELab _ _ _ d -> d
 
-#push-options "--query_stats --fuel 8 --ifuel 2 --z3rlimit_factor 4"
+#push-options "--fuel 8 --ifuel 2 --z3rlimit_factor 4"
 let rec elab_close_commute' (n:nat) (e:src_exp) (x:var)
   : Lemma (ensures
               RT.subst_term (elab_exp e) [ RT.ND x n ] ==
@@ -878,10 +878,13 @@ and closed_ty (t:src_ty)
 
 let main (nm:string) (src:src_exp)
   : RT.dsl_tac_t
-  = fun f -> 
+  = fun (f, expected_t) -> 
       if closed src
-      then 
-        let (| src_ty, _ |) = check f [] src in
-        soundness_lemma f [] src src_ty;
-        [RT.mk_checked_let f nm (elab_exp src) (elab_ty src_ty)]
+      then if None? expected_t
+           then let (| src_ty, _ |) = check f [] src in
+                soundness_lemma f [] src src_ty;
+                [],
+                RT.mk_checked_let f (T.cur_module ()) nm (elab_exp src) (elab_ty src_ty),
+                []
+           else T.fail "Dependent bool refinement DSL: no support for expected type yet"
       else T.fail "Not locally nameless"

@@ -41,21 +41,21 @@ instance val e_char        : embedding char
 instance val e_int         : embedding Z.t
 instance val e_fsint       : embedding int
 instance val e_string      : embedding string
+instance val e_real        : embedding Compiler.Real.real
 instance val e_norm_step   : embedding Pervasives.norm_step
 instance val e_vconfig     : embedding vconfig
 instance val e_order       : embedding FStar.Order.order
 
 instance val e_option      : embedding 'a -> Tot (embedding (option 'a))
 instance val e_list        : embedding 'a -> Tot (embedding (list 'a))
-instance val e_tuple2      : embedding 'a -> embedding 'b -> Tot (embedding ('a * 'b))
-instance val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> Tot (embedding ('a * 'b * 'c))
+instance val e_tuple2      : embedding 'a -> embedding 'b -> Tot (embedding ('a & 'b))
+instance val e_tuple3      : embedding 'a -> embedding 'b -> embedding 'c -> Tot (embedding ('a & 'b & 'c))
 instance val e_either      : embedding 'a -> embedding 'b -> Tot (embedding (either 'a 'b))
 instance val e_string_list : embedding (list string)
 val e_arrow       : embedding 'a -> embedding 'b -> Tot (embedding ('a -> 'b))
-val e_sealed      : embedding 'a -> Tot (embedding 'a)
-(* ^ This one is explicit. Or we could add a Sealed "newtype" in compiler land. *)
+instance val e_sealed      : embedding 'a -> Tot (embedding (Sealed.sealed 'a))
 
-instance val e___range     : embedding Range.range (* unsealed *)
+val e___range     : embedding Range.range (* unsealed *)
 instance val e_range       : embedding Range.range (* sealed *)
 instance val e_document    : embedding FStar.Pprint.document
 instance val e_issue       : embedding FStar.Errors.issue

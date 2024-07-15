@@ -15,7 +15,7 @@
 *)
 module Bug293
 
-val test : (a:int & b:int{a=b}) ->(unit*unit) -> Tot unit
+val test : (a:int & b:int{a=b}) ->(unit&unit) -> Tot unit
 let test (|a, b|) ((),()) =  assert(a = b)
 
 (* This term in elaborated form is

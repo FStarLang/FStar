@@ -19,6 +19,9 @@ module FStar.SMTEncoding.Term
 open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.Util
+open FStar.Class.Show
+open FStar.Compiler.List
+open FStar.Class.Ord
 
 module S = FStar.Syntax.Syntax
 
@@ -29,8 +32,8 @@ type sort =
   | Term_sort
   | Fuel_sort
   | BitVec_sort of int
-  | Array of sort * sort
-  | Arrow of sort * sort
+  | Array of sort & sort
+  | Arrow of sort & sort
   | Sort of string
 
 type op =
@@ -80,18 +83,18 @@ type term' =
   | Real       of string
   | BoundV     of int
   | FreeV      of fv
-  | App        of op  * list term
-  | Quant      of qop * list (list pat) * option int * list sort * term
-  | Let        of list term * term
-  | Labeled    of term * string * Range.range
-  | LblPos     of term * string
+  | App        of op  & list term
+  | Quant      of qop & list (list pat) & option int & list sort & term
+  | Let        of list term & term
+  | Labeled    of term & Errors.error_message & Range.range
+  | LblPos     of term & string // FIXME: this case is unused
 and pat  = term
 and term = {tm:term'; freevars:S.memo fvs; rng:Range.range}
-and fv = | FV of string * sort * bool (* bool iff variable must be forced/unthunked *)
+and fv = | FV of string & sort & bool (* bool iff variable must be forced/unthunked *)
 and fvs = list fv
 
 type caption = option string
-type binders = list (string * sort)
+type binders = list (string & sort)
 type constructor_field = {
   field_name:string;  //name of the field
   field_sort:sort;    //sort of the field
@@ -101,8 +104,10 @@ type constructor_t = {
   constr_name:string;
   constr_fields:list constructor_field;
   constr_sort:sort;
-  constr_id:option int; //Some i, if a term whose head is this constructor is distinct from 
-               //terms with other head constructors
+  constr_id:option int;
+    //Some i, if a term whose head is this constructor is distinct from 
+    //terms with other head constructors
+  constr_base: bool; //generate a base to eliminate non-injective arguments
 }
 type constructors  = list constructor_t
 type fact_db_id =
@@ -117,11 +122,11 @@ type assumption = {
 }
 type decl =
   | DefPrelude
-  | DeclFun    of string * list sort * sort * caption
-  | DefineFun  of string * list sort * sort * term * caption
+  | DeclFun    of string & list sort & sort & caption
+  | DefineFun  of string & list sort & sort & term & caption
   | Assume     of assumption
   | Caption    of string
-  | Module     of string * list decl
+  | Module     of string & list decl
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list string
@@ -129,7 +134,7 @@ type decl =
   | Pop
   | CheckSat
   | GetUnsatCore
-  | SetOption  of string * string
+  | SetOption  of string & string
   | GetStatistics
   | GetReasonUnknown
 
@@ -168,7 +173,7 @@ type decls_t = list decls_elt
 val fv_name : fv -> string
 val fv_sort : fv -> sort
 val fv_force : fv -> bool
-val mk_fv : string * sort -> fv
+val mk_fv : string & sort -> fv
 
 
 (*
@@ -189,7 +194,7 @@ val mk_decls_trivial: list decl -> decls_t
  *)
 val decls_list_of: decls_t -> list decl
 
-type error_label = (fv * string * Range.range)
+type error_label = (fv & Errors.error_message & Range.range)
 type error_labels = list error_label
 
 val escape: string -> string
@@ -198,10 +203,10 @@ val inst: list term -> term -> term
 val subst: term -> fv -> term -> term
 val mk: term' -> Range.range -> term
 val hash_of_term: term -> string
-val boxIntFun : string * string
-val boxBoolFun : string * string
-val boxStringFun : string * string
-val boxRealFun: string * string
+val boxIntFun : string & string
+val boxBoolFun : string & string
+val boxStringFun : string & string
+val boxRealFun: string & string
 val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val fvs_subset_of: fvs -> fvs -> bool
@@ -215,52 +220,57 @@ val mkReal: string -> Range.range -> term
 val mkRealOfInt: term -> Range.range -> term
 val mkBoundV : int -> Range.range -> term
 val mkFreeV  : fv -> Range.range -> term
-val mkApp' : (op * list term) -> Range.range -> term
-val mkApp  : (string * list term) -> Range.range -> term
+val mkApp' : (op & list term) -> Range.range -> term
+val mkApp  : (string & list term) -> Range.range -> term
 val mkNot  : term -> Range.range -> term
 val mkMinus: term -> Range.range -> term
-val mkAnd  : ((term * term) -> Range.range -> term)
-val mkOr  :  ((term * term) -> Range.range -> term)
-val mkImp :  ((term * term) -> Range.range -> term)
-val mkIff :  ((term * term) -> Range.range -> term)
-val mkEq :   ((term * term) -> Range.range -> term)
-val mkLT :   ((term * term) -> Range.range -> term)
-val mkLTE :  ((term * term) -> Range.range -> term)
-val mkGT:    ((term * term) -> Range.range -> term)
-val mkGTE:   ((term * term) -> Range.range -> term)
-val mkAdd:   ((term * term) -> Range.range -> term)
-val mkSub:   ((term * term) -> Range.range -> term)
-val mkDiv:   ((term * term) -> Range.range -> term)
-val mkRealDiv:   ((term * term) -> Range.range -> term)
-val mkMul:   ((term * term) -> Range.range -> term)
-val mkMod:   ((term * term) -> Range.range -> term)
+val mkAnd  : ((term & term) -> Range.range -> term)
+val mkOr  :  ((term & term) -> Range.range -> term)
+val mkImp :  ((term & term) -> Range.range -> term)
+val mkIff :  ((term & term) -> Range.range -> term)
+val mkEq :   ((term & term) -> Range.range -> term)
+val mkLT :   ((term & term) -> Range.range -> term)
+val mkLTE :  ((term & term) -> Range.range -> term)
+val mkGT:    ((term & term) -> Range.range -> term)
+val mkGTE:   ((term & term) -> Range.range -> term)
+val mkAdd:   ((term & term) -> Range.range -> term)
+val mkSub:   ((term & term) -> Range.range -> term)
+val mkDiv:   ((term & term) -> Range.range -> term)
+val mkRealDiv:   ((term & term) -> Range.range -> term)
+val mkMul:   ((term & term) -> Range.range -> term)
+val mkMod:   ((term & term) -> Range.range -> term)
 val mkNatToBv : (int -> term -> Range.range -> term)
 val mkBvToNat : (term -> Range.range -> term)
-val mkBvAnd   : ((term * term) -> Range.range -> term)
-val mkBvXor   : ((term * term) -> Range.range -> term)
-val mkBvOr    : ((term * term) -> Range.range -> term)
-val mkBvAdd   : ((term * term) -> Range.range -> term)
-val mkBvSub   : ((term * term) -> Range.range -> term)
-val mkBvUlt   : ((term * term) -> Range.range -> term)
+val mkBvAnd   : ((term & term) -> Range.range -> term)
+val mkBvXor   : ((term & term) -> Range.range -> term)
+val mkBvOr    : ((term & term) -> Range.range -> term)
+val mkBvAdd   : ((term & term) -> Range.range -> term)
+val mkBvSub   : ((term & term) -> Range.range -> term)
+val mkBvUlt   : ((term & term) -> Range.range -> term)
 val mkBvUext  : (int -> term -> Range.range -> term)
-val mkBvShl   : (int -> (term * term) -> Range.range -> term)
-val mkBvShr   : (int -> (term * term) -> Range.range -> term)
-val mkBvUdiv  : (int -> (term * term) -> Range.range -> term)
-val mkBvMod   : (int -> (term * term) -> Range.range -> term)
-val mkBvMul   : (int -> (term * term) -> Range.range -> term)
+val mkBvShl   : (int -> (term & term) -> Range.range -> term)
+val mkBvShr   : (int -> (term & term) -> Range.range -> term)
+val mkBvUdiv  : (int -> (term & term) -> Range.range -> term)
+val mkBvMod   : (int -> (term & term) -> Range.range -> term)
+val mkBvMul   : (int -> (term & term) -> Range.range -> term)
+val mkBvShl'  : (int -> (term & term) -> Range.range -> term)
+val mkBvShr'  : (int -> (term & term) -> Range.range -> term)
+val mkBvUdivUnsafe : (int -> (term & term) -> Range.range -> term)
+val mkBvModUnsafe  : (int -> (term & term) -> Range.range -> term)
+val mkBvMul'  : (int -> (term & term) -> Range.range -> term)
 
-val mkITE: (term * term * term) -> Range.range -> term
+val mkITE: (term & term & term) -> Range.range -> term
 val mkCases : list term -> Range.range -> term
 val check_pattern_ok: term -> option term
-val mkForall:  Range.range -> (list (list pat) * fvs * term) -> term
-val mkForall': Range.range -> (list (list pat) * option int * fvs * term)  -> term
-val mkForall'': Range.range -> (list (list pat) * option int * list sort * term) -> term
-val mkExists: Range.range -> (list (list pat) * fvs * term) -> term
-val mkLet: (list term * term) -> Range.range -> term
-val mkLet': (list (fv * term) * term) -> Range.range -> term
+val mkForall:  Range.range -> (list (list pat) & fvs & term) -> term
+val mkForall': Range.range -> (list (list pat) & option int & fvs & term)  -> term
+val mkForall'': Range.range -> (list (list pat) & option int & list sort & term) -> term
+val mkExists: Range.range -> (list (list pat) & fvs & term) -> term
+val mkLet: (list term & term) -> Range.range -> term
+val mkLet': (list (fv & term) & term) -> Range.range -> term
 
-val fresh_token: (string * sort) -> int -> decl
-val fresh_constructor : Range.range -> (string * list sort * sort * int) -> decl
+val fresh_token: (string & sort) -> int -> decl
+val fresh_constructor : Range.range -> (string & list sort & sort & int) -> decl
 //val constructor_to_decl_aux: bool -> constructor_t -> decls_t
 val constructor_to_decl: Range.range -> constructor_t -> list decl
 val mkBvConstructor: int -> list decl & string & string
@@ -315,3 +325,4 @@ val print_smt_term_list_list: list (list term) -> string
 val dummy_sort : sort
 
 instance val showable_smt_term : Class.Show.showable term
+instance val showable_decl : showable decl

@@ -106,7 +106,7 @@ val intro : unit -> Tac binder
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
-val intro_rec  : unit -> Tac (binder * binder)
+val intro_rec  : unit -> Tac (binder & binder)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
@@ -189,7 +189,7 @@ of printing [str] on the compiler's standard output. *)
 val print : string -> Tac unit
 
 (** [debugging ()] returns true if the current module has the debug flag
-on, i.e. when [--debug MyModule --debug_level Tac] was passed in. *)
+on, i.e. when [--debug Tac] was passed in. *)
 val debugging : unit -> Tac bool
 
 (** Similar to [print], but will dump a text representation of the proofstate
@@ -286,7 +286,7 @@ match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list
 with the fvars of each constructor and their arities, in the order
 they appear as goals. *)
-val t_destruct : term -> Tac (list (fv * nat))
+val t_destruct : term -> Tac (list (fv & nat))
 
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
@@ -403,7 +403,7 @@ val string_to_term : env -> string -> Tac term
 environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding bounded
 variable. *)
-val push_bv_dsenv : env -> string -> Tac (env * bv)
+val push_bv_dsenv : env -> string -> Tac (env & bv)
 
 (** Print a term via the pretty printer. This is considered effectful
 since 1) setting options can change the behavior of this function, and

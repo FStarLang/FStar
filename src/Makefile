@@ -60,7 +60,7 @@ ulib-extra:
 
 .PHONY: tutorial
 tutorial:
-	+$(MAKE) -C ../doc/tutorial regressions
+	+$(MAKE) -C ../doc/old/tutorial regressions
 	+$(MAKE) -C ../doc/book/code
 
 .PHONY: utests

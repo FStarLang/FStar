@@ -73,6 +73,32 @@ let rec mapM :
                              Obj.magic
                                (return uu___ () (Obj.magic (y :: ys))))
                             uu___3))
+let mapMi :
+  'm .
+    'm monad ->
+      unit -> unit -> (Prims.int -> Obj.t -> 'm) -> Obj.t Prims.list -> 'm
+  =
+  fun uu___ ->
+    fun a ->
+      fun b ->
+        fun f ->
+          fun l ->
+            let rec mapMi_go i f1 l1 =
+              match l1 with
+              | [] -> return uu___ () (Obj.magic [])
+              | x::xs ->
+                  let uu___1 = f1 i x in
+                  op_let_Bang uu___ () () uu___1
+                    (fun y ->
+                       let uu___2 = mapMi_go (i + Prims.int_one) f1 xs in
+                       op_let_Bang uu___ () () uu___2
+                         (fun uu___3 ->
+                            (fun ys ->
+                               let ys = Obj.magic ys in
+                               Obj.magic
+                                 (return uu___ () (Obj.magic (y :: ys))))
+                              uu___3)) in
+            mapMi_go Prims.int_zero f l
 let map_optM :
   'm .
     'm monad ->

@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_754b00004f4a881ff74d076ab276dfe1"
       ],
       0,
-      "5590a0c81cf29ea9f862574ddebd1d6e"
+      "9aafb66748b16ffa962835d2e4aba348"
     ],
     [
       "Lattice.interp",
@@ -242,7 +242,7 @@
         "typing_tok_Lattice.WR@tok"
       ],
       0,
-      "fed45e16d1b5cac237449d4d1d90936a"
+      "cd9711759bb0a026b3fbf4c2cb1f3195"
     ],
     [
       "Lattice.subcomp",
@@ -256,12 +256,10 @@
         "bool_inversion", "bool_typing", "defn_equation_Lattice.abides",
         "equality_tok_Lattice.EXN@tok", "equality_tok_Lattice.RD@tok",
         "equality_tok_Lattice.WR@tok", "equation_Lattice.annot",
-        "equation_Lattice.interp", "equation_Lattice.repr",
-        "equation_Lattice.sublist", "equation_Prims.l_Forall",
-        "function_token_typing_Lattice.interp",
-        "interpretation_Tm_abs_7456d7f56c2fd10586907141549e1496",
-        "l_and-interp", "l_imp-interp", "primitive_Prims.op_Equality",
-        "projection_inverse_BoxBool_proj_0",
+        "equation_Lattice.repr", "equation_Prims.l_Forall",
+        "function_token_typing_Lattice.interp", "l_and-interp",
+        "l_imp-interp", "lemma_Lattice.interp_sublist",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_d0ce9416d4cf5350a8ee110128d072f7",
         "typing_Lattice.interp", "typing_tok_Lattice.EXN@tok",
         "typing_tok_Lattice.RD@tok", "typing_tok_Lattice.WR@tok"
@@ -323,7 +321,7 @@
       "583a61e68da7d8bc241cfbf744ede7ba"
     ],
     [
-      "Lattice.13792",
+      "Lattice.13912",
       1,
       2,
       1,
@@ -599,7 +597,7 @@
         "typing_tok_Lattice.WR@tok"
       ],
       0,
-      "061cdbafcff72fe7089f0508c287499d"
+      "d562d87a45fc82496f17cd19fe737e7c"
     ],
     [
       "Lattice.g",

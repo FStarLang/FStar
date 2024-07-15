@@ -219,23 +219,36 @@ let (err_msg_comp_strings :
       fun c2 ->
         print_discrepancy (FStar_TypeChecker_Normalize.comp_to_string env) c1
           c2
-let (exhaustiveness_check : Prims.string) = "Patterns are incomplete"
+let (exhaustiveness_check : FStar_Pprint.document Prims.list) =
+  let uu___ = FStar_Errors_Msg.text "Patterns are incomplete" in [uu___]
 let (subtyping_failed :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.typ ->
-      FStar_Syntax_Syntax.typ -> unit -> Prims.string)
+      FStar_Syntax_Syntax.typ -> unit -> FStar_Errors_Msg.error_message)
   =
   fun env ->
     fun t1 ->
       fun t2 ->
         fun uu___ ->
-          let uu___1 = err_msg_type_strings env t1 t2 in
-          match uu___1 with
-          | (s1, s2) ->
-              FStar_Compiler_Util.format2
-                "Subtyping check failed; expected type %s; got type %s" s2 s1
-let (ill_kinded_type : Prims.string) = "Ill-kinded type"
-let (totality_check : Prims.string) = "This term may not terminate"
+          let ppt = FStar_TypeChecker_Normalize.term_to_doc env in
+          let uu___1 = FStar_Errors_Msg.text "Subtyping check failed" in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                let uu___5 = FStar_Errors_Msg.text "Expected type" in
+                let uu___6 = ppt t2 in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                  uu___6 in
+              let uu___5 =
+                let uu___6 = FStar_Errors_Msg.text "got type" in
+                let uu___7 = ppt t1 in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___6
+                  uu___7 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+            [uu___3] in
+          uu___1 :: uu___2
+let (ill_kinded_type : FStar_Errors_Msg.error_message) =
+  FStar_Errors_Msg.mkmsg "Ill-kinded type"
 let (unexpected_signature_for_monad :
   FStar_TypeChecker_Env.env ->
     FStar_Ident.lident ->
@@ -333,7 +346,7 @@ let (basic_type_error :
     FStar_Syntax_Syntax.term FStar_Pervasives_Native.option ->
       FStar_Syntax_Syntax.term ->
         FStar_Syntax_Syntax.term ->
-          (FStar_Errors_Codes.raw_error * Prims.string))
+          (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun env ->
     fun eopt ->
@@ -345,14 +358,45 @@ let (basic_type_error :
               let msg =
                 match eopt with
                 | FStar_Pervasives_Native.None ->
-                    FStar_Compiler_Util.format2
-                      "Expected type \"%s\"; got type \"%s\"" s1 s2
+                    let uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Errors_Msg.text "Expected type" in
+                        let uu___4 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t1 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___3 uu___4 in
+                      let uu___3 =
+                        let uu___4 = FStar_Errors_Msg.text "got type" in
+                        let uu___5 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t2 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___4 uu___5 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                    [uu___1]
                 | FStar_Pervasives_Native.Some e ->
                     let uu___1 =
-                      FStar_TypeChecker_Normalize.term_to_string env e in
-                    FStar_Compiler_Util.format3
-                      "Expected type \"%s\"; but \"%s\" has type \"%s\"" s1
-                      uu___1 s2 in
+                      let uu___2 =
+                        let uu___3 = FStar_Errors_Msg.text "Expected type" in
+                        let uu___4 =
+                          FStar_TypeChecker_Normalize.term_to_doc env t1 in
+                        FStar_Pprint.prefix (Prims.of_int (4)) Prims.int_one
+                          uu___3 uu___4 in
+                      let uu___3 =
+                        let uu___4 =
+                          let uu___5 = FStar_Errors_Msg.text "but" in
+                          let uu___6 =
+                            FStar_TypeChecker_Normalize.term_to_doc env e in
+                          FStar_Pprint.prefix (Prims.of_int (4))
+                            Prims.int_one uu___5 uu___6 in
+                        let uu___5 =
+                          let uu___6 = FStar_Errors_Msg.text "has type" in
+                          let uu___7 =
+                            FStar_TypeChecker_Normalize.term_to_doc env t2 in
+                          FStar_Pprint.prefix (Prims.of_int (4))
+                            Prims.int_one uu___6 uu___7 in
+                        FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                      FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+                    [uu___1] in
               (FStar_Errors_Codes.Error_TypeError, msg)
 let (occurs_check : (FStar_Errors_Codes.raw_error * Prims.string)) =
   (FStar_Errors_Codes.Fatal_PossibleInfiniteTyp,
@@ -462,48 +506,84 @@ let computed_computation_type_does_not_match_annotation :
       'uuuuu ->
         FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
           FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-            (FStar_Errors_Codes.raw_error * Prims.string)
+            (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list)
   =
   fun env ->
     fun e ->
       fun c ->
         fun c' ->
+          let ppt = FStar_TypeChecker_Normalize.term_to_doc env in
           let uu___ = name_and_result c in
           match uu___ with
           | (f1, r1) ->
               let uu___1 = name_and_result c' in
               (match uu___1 with
                | (f2, r2) ->
-                   let uu___2 = err_msg_type_strings env r1 r2 in
-                   (match uu___2 with
-                    | (s1, s2) ->
-                        let uu___3 =
-                          FStar_Compiler_Util.format4
-                            "Computed type \"%s\" and effect \"%s\" is not compatible with the annotated type \"%s\" effect \"%s\""
-                            s1 f1 s2 f2 in
-                        (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
-                          uu___3)))
+                   let uu___2 =
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 = FStar_Errors_Msg.text "Computed type" in
+                         let uu___6 = ppt r1 in
+                         FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                           uu___5 uu___6 in
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 = FStar_Errors_Msg.text "and effect" in
+                           let uu___8 = FStar_Errors_Msg.text f1 in
+                           FStar_Pprint.prefix (Prims.of_int (2))
+                             Prims.int_one uu___7 uu___8 in
+                         let uu___7 =
+                           let uu___8 =
+                             let uu___9 =
+                               FStar_Errors_Msg.text
+                                 "is not compatible with the annotated type" in
+                             let uu___10 = ppt r2 in
+                             FStar_Pprint.prefix (Prims.of_int (2))
+                               Prims.int_one uu___9 uu___10 in
+                           let uu___9 =
+                             let uu___10 = FStar_Errors_Msg.text "and effect" in
+                             let uu___11 = FStar_Errors_Msg.text f2 in
+                             FStar_Pprint.prefix (Prims.of_int (2))
+                               Prims.int_one uu___10 uu___11 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                         FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+                     [uu___3] in
+                   (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
+                     uu___2))
 let computed_computation_type_does_not_match_annotation_eq :
   'uuuuu .
     FStar_TypeChecker_Env.env ->
       'uuuuu ->
         FStar_Syntax_Syntax.comp ->
           FStar_Syntax_Syntax.comp ->
-            (FStar_Errors_Codes.raw_error * Prims.string)
+            (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list)
   =
   fun env ->
     fun e ->
       fun c ->
         fun c' ->
-          let uu___ = err_msg_comp_strings env c c' in
-          match uu___ with
-          | (s1, s2) ->
-              let uu___1 =
-                FStar_Compiler_Util.format2
-                  "Computed type \"%s\" does not match annotated type \"%s\", and no subtyping was allowed"
-                  s1 s2 in
-              (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation,
-                uu___1)
+          let ppc = FStar_TypeChecker_Normalize.comp_to_doc env in
+          let uu___ =
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = FStar_Errors_Msg.text "Computed type" in
+                let uu___4 = ppc c in
+                FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___3
+                  uu___4 in
+              let uu___3 =
+                let uu___4 =
+                  let uu___5 =
+                    FStar_Errors_Msg.text "does not match annotated type" in
+                  let uu___6 = ppc c' in
+                  FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___5
+                    uu___6 in
+                let uu___5 =
+                  FStar_Errors_Msg.text "and no subtyping was allowed" in
+                FStar_Pprint.op_Hat_Slash_Hat uu___4 uu___5 in
+              FStar_Pprint.op_Hat_Slash_Hat uu___2 uu___3 in
+            [uu___1] in
+          (FStar_Errors_Codes.Fatal_ComputedTypeNotMatchAnnotation, uu___)
 let (unexpected_non_trivial_precondition_on_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term -> (FStar_Errors_Codes.raw_error * Prims.string))
@@ -515,50 +595,75 @@ let (unexpected_non_trivial_precondition_on_term :
         FStar_Compiler_Util.format1
           "Term has an unexpected non-trivial pre-condition: %s" uu___1 in
       (FStar_Errors_Codes.Fatal_UnExpectedPreCondition, uu___)
+let (__expected_eff_expression :
+  Prims.string ->
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.comp ->
+        Prims.string ->
+          (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
+  =
+  fun effname ->
+    fun e ->
+      fun c ->
+        fun reason ->
+          let uu___ =
+            let uu___1 =
+              FStar_Errors_Msg.text
+                (Prims.strcat "Expected a "
+                   (Prims.strcat effname " expression.")) in
+            let uu___2 =
+              let uu___3 =
+                if reason = ""
+                then FStar_Pprint.empty
+                else
+                  (let uu___5 = FStar_Pprint.break_ Prims.int_one in
+                   let uu___6 =
+                     let uu___7 = FStar_Pprint.doc_of_string "Because:" in
+                     let uu___8 =
+                       FStar_Pprint.words (Prims.strcat reason ".") in
+                     uu___7 :: uu___8 in
+                   FStar_Pprint.flow uu___5 uu___6) in
+              let uu___4 =
+                let uu___5 =
+                  let uu___6 =
+                    let uu___7 = FStar_Errors_Msg.text "Got an expression" in
+                    let uu___8 =
+                      FStar_Class_PP.pp FStar_Syntax_Print.pretty_term e in
+                    FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                      uu___7 uu___8 in
+                  let uu___7 =
+                    let uu___8 =
+                      let uu___9 = FStar_Errors_Msg.text "with effect" in
+                      let uu___10 =
+                        let uu___11 =
+                          let uu___12 =
+                            let uu___13 = name_and_result c in
+                            FStar_Pervasives_Native.fst uu___13 in
+                          FStar_Pprint.doc_of_string uu___12 in
+                        FStar_Pprint.squotes uu___11 in
+                      FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                        uu___9 uu___10 in
+                    FStar_Pprint.op_Hat_Hat uu___8 FStar_Pprint.dot in
+                  FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                [uu___5] in
+              uu___3 :: uu___4 in
+            uu___1 :: uu___2 in
+          (FStar_Errors_Codes.Fatal_ExpectedGhostExpression, uu___)
 let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      Prims.string -> (FStar_Errors_Codes.raw_error * Prims.string))
+    FStar_Syntax_Syntax.comp ->
+      Prims.string ->
+        (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
-  fun e ->
-    fun c ->
-      fun reason ->
-        let msg = "Expected a pure expression" in
-        let msg1 =
-          if reason = ""
-          then msg
-          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
-        let uu___ =
-          let uu___1 = FStar_Syntax_Print.term_to_string e in
-          let uu___2 =
-            let uu___3 = name_and_result c in
-            FStar_Pervasives_Native.fst uu___3 in
-          FStar_Compiler_Util.format2
-            (Prims.strcat msg1
-               "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
-        (FStar_Errors_Codes.Fatal_ExpectedPureExpression, uu___)
+  fun e -> fun c -> fun reason -> __expected_eff_expression "pure" e c reason
 let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
-    FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax ->
-      Prims.string -> (FStar_Errors_Codes.raw_error * Prims.string))
+    FStar_Syntax_Syntax.comp ->
+      Prims.string ->
+        (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun e ->
-    fun c ->
-      fun reason ->
-        let msg = "Expected a ghost expression" in
-        let msg1 =
-          if reason = ""
-          then msg
-          else FStar_Compiler_Util.format1 (Prims.strcat msg " (%s)") reason in
-        let uu___ =
-          let uu___1 = FStar_Syntax_Print.term_to_string e in
-          let uu___2 =
-            let uu___3 = name_and_result c in
-            FStar_Pervasives_Native.fst uu___3 in
-          FStar_Compiler_Util.format2
-            (Prims.strcat msg1
-               "; got an expression \"%s\" with effect \"%s\"") uu___1 uu___2 in
-        (FStar_Errors_Codes.Fatal_ExpectedGhostExpression, uu___)
+    fun c -> fun reason -> __expected_eff_expression "ghost" e c reason
 let (expected_effect_1_got_effect_2 :
   FStar_Ident.lident ->
     FStar_Ident.lident -> (FStar_Errors_Codes.raw_error * Prims.string))

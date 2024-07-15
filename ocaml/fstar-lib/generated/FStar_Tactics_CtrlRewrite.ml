@@ -104,8 +104,9 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.phase1);
                                             FStar_TypeChecker_Env.failhard =
                                               (env.FStar_TypeChecker_Env.failhard);
-                                            FStar_TypeChecker_Env.nosynth =
-                                              (env.FStar_TypeChecker_Env.nosynth);
+                                            FStar_TypeChecker_Env.flychecking
+                                              =
+                                              (env.FStar_TypeChecker_Env.flychecking);
                                             FStar_TypeChecker_Env.uvar_subtyping
                                               =
                                               (env.FStar_TypeChecker_Env.uvar_subtyping);
@@ -181,7 +182,10 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.erase_erasable_args);
                                             FStar_TypeChecker_Env.core_check
                                               =
-                                              (env.FStar_TypeChecker_Env.core_check)
+                                              (env.FStar_TypeChecker_Env.core_check);
+                                            FStar_TypeChecker_Env.missing_decl
+                                              =
+                                              (env.FStar_TypeChecker_Env.missing_decl)
                                           } tm in
                                       FStar_Pervasives_Native.Some uu___3))
                             ()
@@ -226,8 +230,7 @@ let (__do_rewrite :
                                       "do_rewrite.lhs") in
                              let uu___4 =
                                let uu___5 =
-                                 FStar_Tactics_V2_Basic.goal_typedness_deps
-                                   g0 in
+                                 FStar_Tactics_Monad.goal_typedness_deps g0 in
                                FStar_Tactics_Monad.new_uvar "do_rewrite.rhs"
                                  env typ should_check uu___5 (rangeof g0) in
                              Obj.magic
@@ -285,7 +288,7 @@ let (__do_rewrite :
                                                                     uu___9 in
                                                                   let uu___10
                                                                     =
-                                                                    FStar_Tactics_V2_Basic.focus
+                                                                    FStar_Tactics_Monad.focus
                                                                     rewriter in
                                                                   Obj.magic
                                                                     (
@@ -378,8 +381,7 @@ let (do_rewrite :
                               let uu___1 = Obj.magic uu___1 in
                               match uu___1 with
                               | FStar_Pervasives.Inl
-                                  (FStar_Tactics_Common.TacticFailure "SKIP")
-                                  ->
+                                  (FStar_Tactics_Common.SKIP) ->
                                   Obj.magic
                                     (Obj.repr
                                        (FStar_Class_Monad.return
@@ -1628,7 +1630,7 @@ let (ctrl_rewrite :
                                                                     Obj.magic
                                                                     uu___9 in
                                                                     let g1 =
-                                                                    FStar_Tactics_V2_Basic.goal_with_type
+                                                                    FStar_Tactics_Monad.goal_with_type
                                                                     g gt' in
                                                                     Obj.magic
                                                                     (FStar_Tactics_Monad.add_goals

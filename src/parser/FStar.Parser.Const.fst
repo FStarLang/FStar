@@ -70,6 +70,7 @@ let int32_lid   = p2l ["FStar"; "Int32"; "t"]
 let uint32_lid  = p2l ["FStar"; "UInt32"; "t"]
 let int64_lid   = p2l ["FStar"; "Int64"; "t"]
 let uint64_lid  = p2l ["FStar"; "UInt64"; "t"]
+let sizet_lid  = p2l ["FStar"; "SizeT"; "t"]
 
 let salloc_lid = p2l ["FStar"; "ST"; "salloc"]
 let swrite_lid = p2l ["FStar"; "ST"; "op_Colon_Equals"]
@@ -216,9 +217,18 @@ let bv_sub_lid         = bvconst "bvsub"
 let bv_shift_left_lid  = bvconst "bvshl"
 let bv_shift_right_lid = bvconst "bvshr"
 let bv_udiv_lid        = bvconst "bvdiv"
-let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
 let bv_mod_lid         = bvconst "bvmod"
 let bv_mul_lid         = bvconst "bvmul"
+// shifts, division and multiplication take natural numbers as their second
+// arguments, which incurs some encoding overhead. The primed versions bvshl',
+// bvshr', bvdiv_unsafe, bvmod_unsafe and bvmul' take a bitvector as the second
+// argument instead, which more closely matches SMT-LIB.
+let bv_shift_left'_lid = bvconst "bvshl'"
+let bv_shift_right'_lid= bvconst "bvshr'"
+let bv_udiv_unsafe_lid = bvconst "bvdiv_unsafe"
+let bv_mod_unsafe_lid  = bvconst "bvmod_unsafe"
+let bv_mul'_lid        = bvconst "bvmul'"
+
 let bv_ult_lid         = bvconst "bvult"
 let bv_uext_lid        = bvconst "bv_uext"
 
@@ -303,6 +313,7 @@ let __range_lid    = p2l ["FStar"; "Range"; "__range"]
 let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
+let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
 let guard_free     = pconst "guard_free"
 let inversion_lid  = p2l ["FStar"; "Pervasives"; "inversion"]

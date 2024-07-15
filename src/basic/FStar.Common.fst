@@ -49,7 +49,7 @@ let try_convert_file_name_to_mixed =
     else
       s
 
-let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int * 'b) = BU.atomically (fun () ->
+let snapshot (push: 'a -> 'b) (stackref: ref (list 'c)) (arg: 'a) : (int & 'b) = BU.atomically (fun () ->
   let len : int = List.length !stackref in
   let arg' = push arg in
   (len, arg'))
@@ -112,7 +112,7 @@ let tabulate (n:int) (f : int -> 'a) : list 'a =
   * l@r == xs
   * and l is the largest list satisfying that
   *)
-let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
+let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   match xs with
   | [] -> [], []
   | x::xs when f x ->
@@ -126,7 +126,7 @@ let rec max_prefix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
   * l@r == xs
   * and r is the largest list satisfying that
   *)
-let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a * list 'a =
+let max_suffix (f : 'a -> bool) (xs : list 'a) : list 'a & list 'a =
   let rec aux acc xs =
     match xs with
     | [] -> acc, []

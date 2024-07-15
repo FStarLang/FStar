@@ -33,6 +33,13 @@ module N = FStar.TypeChecker.Normalize
 module L = FStar.Compiler.List
 module C = FStar.Parser.Const
 
+open FStar.Class.Setlike
+
+let dbg_Positivity = Debug.get_toggle "Positivity"
+let debug_positivity (env:env_t) (msg:unit -> string) : unit =
+  if !dbg_Positivity
+  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
+
 (**
 
   This module implements the strict positivity check on inductive type
@@ -134,11 +141,6 @@ module C = FStar.Parser.Const
 let string_of_lids lids =
     List.map string_of_lid lids |> String.concat ", "
 
-(* Used extensively for verbose debugging output at debug_level Positivity *)
-let debug_positivity (env:env_t) (msg:unit -> string) : unit =
-  if Env.debug env <| Options.Other "Positivity"
-  then BU.print_string ("Positivity::" ^ msg () ^ "\n")
-
 (* Normalize a term before checking for non-strictly positive occurrences *)
 let normalize env t =
     N.normalize [Env.Beta;
@@ -184,11 +186,11 @@ let apply_constr_arrow (dlid:lident) (dt:term) (all_params:list arg)
 let ty_occurs_in (ty_lid:lident)
                  (t:term)
   : bool
-  = Set.mem ty_lid (Free.fvars t)
+  = mem ty_lid (Free.fvars t)
 
 (* Checks if `t` is a name or fv and returns it, if so. *)
 let rec term_as_fv_or_name (t:term) 
-  : option (either (fv * universes) bv)
+  : option (either (fv & universes) bv)
   = match (SS.compress t).n with
     | Tm_name x -> 
       Some (Inr x)
@@ -364,7 +366,7 @@ let mark_uniform_type_parameters (env:env_t)
                                  (sig:sigelt)
   : sigelt
   = let mark_tycon_parameters tc datas =
-        let Sig_inductive_typ {lid=tc_lid; us; params=ty_param_binders; t; mutuals; ds=data_lids} = tc.sigel in
+        let Sig_inductive_typ {lid=tc_lid; us; params=ty_param_binders; t; mutuals; ds=data_lids; injective_type_params } = tc.sigel in
         let env, (tc_lid, us, ty_params) = open_sig_inductive_typ env tc in
         let _, ty_param_args = U.args_of_binders ty_params in
         let datacon_fields : list (list binder) =
@@ -416,7 +418,8 @@ let mark_uniform_type_parameters (env:env_t)
                                        num_uniform_params=Some max_uniform_prefix;
                                        t;
                                        mutuals;
-                                       ds=data_lids} in
+                                       ds=data_lids;
+                                       injective_type_params} in
         { tc with sigel }
     in 
     match sig.sigel with

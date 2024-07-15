@@ -1,11 +1,10 @@
-FROM ubuntu:latest
+FROM ubuntu:23.10
 
 SHELL ["/bin/bash", "-c"]
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
 # python3 (for interactive tests)
-# libicu (for .NET, cf. https://aka.ms/dotnet-missing-libicu )
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates \
@@ -16,7 +15,6 @@ RUN apt-get update \
       sudo \
       python3 \
       python-is-python3 \
-      libicu70 \
       libgmp-dev \
       opam \
     && apt-get clean -y

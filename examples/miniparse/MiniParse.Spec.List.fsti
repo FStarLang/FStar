@@ -31,7 +31,7 @@ val nlist_nil_unique (t: Type) (l: nlist 0 t) : Lemma (l == nlist_nil)
 let nlist_cons (#t: Type) (#n: nat) (a: t) (q: nlist n t) : Tot (nlist (n + 1) t) =
   a :: q
 
-let nlist_destruct (#t: Type) (#n: nat) (x: nlist (n + 1) t) : Tot (t * nlist n t) =
+let nlist_destruct (#t: Type) (#n: nat) (x: nlist (n + 1) t) : Tot (t & nlist n t) =
   let (a :: q) = x in
   a, q
 
@@ -40,11 +40,11 @@ val nlist_cons_unique (#t: Type) (#n: nat) (x: nlist (n + 1) t) : Lemma
 
 unfold let mul = Prims.op_Multiply
 
-let synth_nlist (#t: Type) (n: nat) (xy: t * nlist n t) : Tot (nlist (n + 1) t) =
+let synth_nlist (#t: Type) (n: nat) (xy: t & nlist n t) : Tot (nlist (n + 1) t) =
   let (x, y) = xy in
   nlist_cons x y
 
-let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t * nlist n t) =
+let synth_nlist_recip (#t: Type) (n: nat) (xy: nlist (n + 1) t) : Tot (t & nlist n t) =
   nlist_destruct xy
 
 val synth_inverse_1 (t: Type) (n: nat) : Lemma

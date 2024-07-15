@@ -1,4 +1,22 @@
 open Prims
+let (dbg_Exports : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Exports"
+let (dbg_LayeredEffects : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "LayeredEffects"
+let (dbg_NYC : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "NYC"
+let (dbg_Patterns : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Patterns"
+let (dbg_Range : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Range"
+let (dbg_RelCheck : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RelCheck"
+let (dbg_RFD : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RFD"
+let (dbg_Tac : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Tac"
+let (dbg_UniverseOf : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "UniverseOf"
 let (instantiate_both :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env ->
@@ -32,7 +50,8 @@ let (instantiate_both :
         (env.FStar_TypeChecker_Env.lax_universes);
       FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
       FStar_TypeChecker_Env.failhard = (env.FStar_TypeChecker_Env.failhard);
-      FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
+      FStar_TypeChecker_Env.flychecking =
+        (env.FStar_TypeChecker_Env.flychecking);
       FStar_TypeChecker_Env.uvar_subtyping =
         (env.FStar_TypeChecker_Env.uvar_subtyping);
       FStar_TypeChecker_Env.intactics = (env.FStar_TypeChecker_Env.intactics);
@@ -80,7 +99,9 @@ let (instantiate_both :
       FStar_TypeChecker_Env.erase_erasable_args =
         (env.FStar_TypeChecker_Env.erase_erasable_args);
       FStar_TypeChecker_Env.core_check =
-        (env.FStar_TypeChecker_Env.core_check)
+        (env.FStar_TypeChecker_Env.core_check);
+      FStar_TypeChecker_Env.missing_decl =
+        (env.FStar_TypeChecker_Env.missing_decl)
     }
 let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
   fun env ->
@@ -114,7 +135,8 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
         (env.FStar_TypeChecker_Env.lax_universes);
       FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
       FStar_TypeChecker_Env.failhard = (env.FStar_TypeChecker_Env.failhard);
-      FStar_TypeChecker_Env.nosynth = (env.FStar_TypeChecker_Env.nosynth);
+      FStar_TypeChecker_Env.flychecking =
+        (env.FStar_TypeChecker_Env.flychecking);
       FStar_TypeChecker_Env.uvar_subtyping =
         (env.FStar_TypeChecker_Env.uvar_subtyping);
       FStar_TypeChecker_Env.intactics = (env.FStar_TypeChecker_Env.intactics);
@@ -162,7 +184,9 @@ let (no_inst : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
       FStar_TypeChecker_Env.erase_erasable_args =
         (env.FStar_TypeChecker_Env.erase_erasable_args);
       FStar_TypeChecker_Env.core_check =
-        (env.FStar_TypeChecker_Env.core_check)
+        (env.FStar_TypeChecker_Env.core_check);
+      FStar_TypeChecker_Env.missing_decl =
+        (env.FStar_TypeChecker_Env.missing_decl)
     }
 let (is_eq :
   FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
@@ -211,7 +235,9 @@ let (check_no_escape :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                               let uu___6 =
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_bv x in
                                FStar_Pprint.doc_of_string uu___6 in
                              FStar_Pprint.squotes uu___5 in
                            let uu___5 =
@@ -231,7 +257,9 @@ let (check_no_escape :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                               let uu___6 =
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_bv x in
                                FStar_Pprint.doc_of_string uu___6 in
                              FStar_Pprint.squotes uu___5 in
                            let uu___5 =
@@ -264,8 +292,11 @@ let (check_no_escape :
                      let uu___2 =
                        FStar_Compiler_List.tryFind
                          (fun x ->
-                            FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv
-                              x fvs') fvs in
+                            FStar_Class_Setlike.mem ()
+                              (Obj.magic
+                                 (FStar_Compiler_FlatSet.setlike_flat_set
+                                    FStar_Syntax_Syntax.ord_bv)) x
+                              (Obj.magic fvs')) fvs in
                      match uu___2 with
                      | FStar_Pervasives_Native.None ->
                          (t1, FStar_TypeChecker_Env.trivial_guard)
@@ -307,40 +338,48 @@ let (check_no_escape :
                             with | uu___4 -> fail x) in
                    aux false kt)
 let (check_expected_aqual_for_binder :
-  FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option ->
+  FStar_Syntax_Syntax.aqual ->
     FStar_Syntax_Syntax.binder ->
-      FStar_Compiler_Range_Type.range ->
-        FStar_Syntax_Syntax.arg_qualifier FStar_Pervasives_Native.option)
+      FStar_Compiler_Range_Type.range -> FStar_Syntax_Syntax.aqual)
   =
   fun aq ->
     fun b ->
       fun pos ->
-        let expected_aq = FStar_Syntax_Util.aqual_of_binder b in
-        match (aq, expected_aq) with
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) -> aq
-        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some eaq) ->
-            if eaq.FStar_Syntax_Syntax.aqual_implicit
-            then
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers (expected implicit annotation on the argument)")
-                pos
-            else expected_aq
-        | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None) ->
-            FStar_Errors.raise_error
-              (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                "Inconsistent implicit qualifiers (did not expect argument aquals)")
+        let uu___ =
+          let expected_aq = FStar_Syntax_Util.aqual_of_binder b in
+          match (aq, expected_aq) with
+          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+              FStar_Pervasives.Inr aq
+          | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.Some eaq)
+              ->
+              if eaq.FStar_Syntax_Syntax.aqual_implicit
+              then
+                FStar_Pervasives.Inl
+                  "expected implicit annotation on the argument"
+              else FStar_Pervasives.Inr expected_aq
+          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.None)
+              ->
+              FStar_Pervasives.Inl
+                "expected an explicit argument (without annotation)"
+          | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
+             eaq) ->
+              if
+                aq1.FStar_Syntax_Syntax.aqual_implicit <>
+                  eaq.FStar_Syntax_Syntax.aqual_implicit
+              then FStar_Pervasives.Inl "mismatch"
+              else FStar_Pervasives.Inr expected_aq in
+        match uu___ with
+        | FStar_Pervasives.Inl err ->
+            let msg =
+              let uu___1 =
+                FStar_Errors_Msg.text
+                  (Prims.strcat "Inconsistent argument qualifiers: "
+                     (Prims.strcat err ".")) in
+              [uu___1] in
+            FStar_Errors.raise_error_doc
+              (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier, msg)
               pos
-        | (FStar_Pervasives_Native.Some aq1, FStar_Pervasives_Native.Some
-           eaq) ->
-            if
-              aq1.FStar_Syntax_Syntax.aqual_implicit <>
-                eaq.FStar_Syntax_Syntax.aqual_implicit
-            then
-              FStar_Errors.raise_error
-                (FStar_Errors_Codes.Fatal_InconsistentImplicitQualifier,
-                  "Inconsistent implicit qualifiers (mismatch)") pos
-            else expected_aq
+        | FStar_Pervasives.Inr r -> r
 let (check_erasable_binder_attributes :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax Prims.list ->
@@ -515,14 +554,14 @@ let (value_check_expected_typ :
                      lc t' use_eq in
                  (match uu___3 with
                   | (e1, lc1, g) ->
-                      ((let uu___5 =
-                          FStar_TypeChecker_Env.debug env
-                            FStar_Options.Medium in
+                      ((let uu___5 = FStar_Compiler_Debug.medium () in
                         if uu___5
                         then
                           let uu___6 =
                             FStar_TypeChecker_Common.lcomp_to_string lc1 in
-                          let uu___7 = FStar_Syntax_Print.term_to_string t' in
+                          let uu___7 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term t' in
                           let uu___8 =
                             FStar_TypeChecker_Rel.guard_to_string env g in
                           let uu___9 =
@@ -779,17 +818,18 @@ let (check_expected_effect :
                                    c4.FStar_Syntax_Syntax.pos
                                    "check_expected_effect.c.after_assume" env
                                    c4;
-                                 (let uu___8 =
-                                    FStar_TypeChecker_Env.debug env
-                                      FStar_Options.Medium in
+                                 (let uu___8 = FStar_Compiler_Debug.medium () in
                                   if uu___8
                                   then
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string e in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term e in
                                     let uu___10 =
-                                      FStar_Syntax_Print.comp_to_string c4 in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_comp c4 in
                                     let uu___11 =
-                                      FStar_Syntax_Print.comp_to_string
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_comp
                                         expected_c in
                                     let uu___12 =
                                       FStar_Compiler_Util.string_of_bool
@@ -806,12 +846,13 @@ let (check_expected_effect :
                                       let g1 =
                                         let uu___10 =
                                           FStar_TypeChecker_Env.get_range env in
+                                        let uu___11 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Could not prove post-condition" in
                                         FStar_TypeChecker_Util.label_guard
-                                          uu___10
-                                          "Could not prove post-condition" g in
+                                          uu___10 uu___11 g in
                                       ((let uu___11 =
-                                          FStar_TypeChecker_Env.debug env
-                                            FStar_Options.Medium in
+                                          FStar_Compiler_Debug.medium () in
                                         if uu___11
                                         then
                                           let uu___12 =
@@ -861,7 +902,7 @@ let (print_expected_ty_str : FStar_TypeChecker_Env.env -> Prims.string) =
     match uu___ with
     | FStar_Pervasives_Native.None -> "Expected type is None"
     | FStar_Pervasives_Native.Some (t, use_eq) ->
-        let uu___1 = FStar_Syntax_Print.term_to_string t in
+        let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
         let uu___2 = FStar_Compiler_Util.string_of_bool use_eq in
         FStar_Compiler_Util.format2 "Expected type is (%s, use_eq = %s)"
           uu___1 uu___2
@@ -872,65 +913,95 @@ let (print_expected_ty : FStar_TypeChecker_Env.env -> unit) =
 let rec (get_pat_vars' :
   FStar_Syntax_Syntax.bv Prims.list ->
     Prims.bool ->
-      FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
+      FStar_Syntax_Syntax.term ->
+        FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   =
-  fun all ->
-    fun andlist ->
-      fun pats ->
-        let pats1 = FStar_Syntax_Util.unmeta pats in
-        let uu___ = FStar_Syntax_Util.head_and_args pats1 in
-        match uu___ with
-        | (head, args) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = FStar_Syntax_Util.un_uinst head in
-                uu___3.FStar_Syntax_Syntax.n in
-              (uu___2, args) in
-            (match uu___1 with
-             | (FStar_Syntax_Syntax.Tm_fvar fv, uu___2) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.nil_lid
-                 ->
-                 if andlist
-                 then
-                   FStar_Compiler_Set.from_list FStar_Syntax_Syntax.ord_bv
-                     all
-                 else FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ()
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (uu___2, FStar_Pervasives_Native.Some
-                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                   FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
-                (hd, FStar_Pervasives_Native.None)::(tl,
-                                                     FStar_Pervasives_Native.None)::[])
-                 when
-                 FStar_Syntax_Syntax.fv_eq_lid fv FStar_Parser_Const.cons_lid
-                 ->
-                 let hdvs = get_pat_vars' all false hd in
-                 let tlvs = get_pat_vars' all andlist tl in
-                 if andlist
-                 then
-                   FStar_Compiler_Set.inter FStar_Syntax_Syntax.ord_bv hdvs
-                     tlvs
-                 else
-                   FStar_Compiler_Set.union FStar_Syntax_Syntax.ord_bv hdvs
-                     tlvs
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (uu___2, FStar_Pervasives_Native.Some
-                 { FStar_Syntax_Syntax.aqual_implicit = true;
-                   FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
-                (pat, FStar_Pervasives_Native.None)::[]) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.smtpat_lid
-                 -> FStar_Syntax_Free.names pat
-             | (FStar_Syntax_Syntax.Tm_fvar fv,
-                (subpats, FStar_Pervasives_Native.None)::[]) when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.smtpatOr_lid
-                 -> get_pat_vars' all true subpats
-             | uu___2 ->
-                 FStar_Compiler_Set.empty FStar_Syntax_Syntax.ord_bv ())
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun all ->
+           fun andlist ->
+             fun pats ->
+               let pats1 = FStar_Syntax_Util.unmeta pats in
+               let uu___ = FStar_Syntax_Util.head_and_args pats1 in
+               match uu___ with
+               | (head, args) ->
+                   let uu___1 =
+                     let uu___2 =
+                       let uu___3 = FStar_Syntax_Util.un_uinst head in
+                       uu___3.FStar_Syntax_Syntax.n in
+                     (uu___2, args) in
+                   (match uu___1 with
+                    | (FStar_Syntax_Syntax.Tm_fvar fv, uu___2) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.nil_lid
+                        ->
+                        Obj.magic
+                          (Obj.repr
+                             (if andlist
+                              then
+                                FStar_Class_Setlike.from_list ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv)) all
+                              else
+                                FStar_Class_Setlike.empty ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv)) ()))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (uu___2, FStar_Pervasives_Native.Some
+                        { FStar_Syntax_Syntax.aqual_implicit = true;
+                          FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
+                       (hd, FStar_Pervasives_Native.None)::(tl,
+                                                            FStar_Pervasives_Native.None)::[])
+                        when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.cons_lid
+                        ->
+                        Obj.magic
+                          (Obj.repr
+                             (let hdvs = get_pat_vars' all false hd in
+                              let tlvs = get_pat_vars' all andlist tl in
+                              if andlist
+                              then
+                                FStar_Class_Setlike.inter ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv))
+                                  (Obj.magic hdvs) (Obj.magic tlvs)
+                              else
+                                FStar_Class_Setlike.union ()
+                                  (Obj.magic
+                                     (FStar_Compiler_FlatSet.setlike_flat_set
+                                        FStar_Syntax_Syntax.ord_bv))
+                                  (Obj.magic hdvs) (Obj.magic tlvs)))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (uu___2, FStar_Pervasives_Native.Some
+                        { FStar_Syntax_Syntax.aqual_implicit = true;
+                          FStar_Syntax_Syntax.aqual_attributes = uu___3;_})::
+                       (pat, FStar_Pervasives_Native.None)::[]) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.smtpat_lid
+                        -> Obj.magic (Obj.repr (FStar_Syntax_Free.names pat))
+                    | (FStar_Syntax_Syntax.Tm_fvar fv,
+                       (subpats, FStar_Pervasives_Native.None)::[]) when
+                        FStar_Syntax_Syntax.fv_eq_lid fv
+                          FStar_Parser_Const.smtpatOr_lid
+                        ->
+                        Obj.magic (Obj.repr (get_pat_vars' all true subpats))
+                    | uu___2 ->
+                        Obj.magic
+                          (Obj.repr
+                             (FStar_Class_Setlike.empty ()
+                                (Obj.magic
+                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                      FStar_Syntax_Syntax.ord_bv)) ()))))
+          uu___2 uu___1 uu___
 let (get_pat_vars :
   FStar_Syntax_Syntax.bv Prims.list ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.bv FStar_Compiler_Set.t)
+    FStar_Syntax_Syntax.term ->
+      FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.t)
   = fun all -> fun pats -> get_pat_vars' all false pats
 let (check_pat_fvs :
   FStar_Compiler_Range_Type.range ->
@@ -959,8 +1030,11 @@ let (check_pat_fvs :
                      FStar_Syntax_Syntax.binder_positivity = uu___3;
                      FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
                      let uu___5 =
-                       FStar_Compiler_Set.mem FStar_Syntax_Syntax.ord_bv b
-                         pat_vars in
+                       FStar_Class_Setlike.mem ()
+                         (Obj.magic
+                            (FStar_Compiler_FlatSet.setlike_flat_set
+                               FStar_Syntax_Syntax.ord_bv)) b
+                         (Obj.magic pat_vars) in
                      Prims.op_Negation uu___5) bs in
           match uu___ with
           | FStar_Pervasives_Native.None -> ()
@@ -972,7 +1046,8 @@ let (check_pat_fvs :
               ->
               let uu___4 =
                 let uu___5 =
-                  let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                  let uu___6 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
                   FStar_Compiler_Util.format1
                     "Pattern misses at least one bound variable: %s" uu___6 in
                 (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___5) in
@@ -1062,21 +1137,25 @@ let (check_no_smt_theory_symbols :
       if (FStar_Compiler_List.length tlist) = Prims.int_zero
       then ()
       else
-        (let msg =
-           FStar_Compiler_List.fold_left
-             (fun s ->
-                fun t1 ->
-                  let uu___1 =
-                    let uu___2 = FStar_Syntax_Print.term_to_string t1 in
-                    Prims.strcat " " uu___2 in
-                  Prims.strcat s uu___1) "" tlist in
-         let uu___1 =
+        (let uu___1 =
            let uu___2 =
-             FStar_Compiler_Util.format1
-               "Pattern uses these theory symbols or terms that should not be in an smt pattern: %s"
-               msg in
+             let uu___3 =
+               let uu___4 =
+                 FStar_Errors_Msg.text
+                   "Pattern uses these theory symbols or terms that should not be in an SMT pattern:" in
+               let uu___5 =
+                 let uu___6 =
+                   let uu___7 =
+                     let uu___8 = FStar_Pprint.break_ Prims.int_one in
+                     FStar_Pprint.op_Hat_Hat FStar_Pprint.comma uu___8 in
+                   FStar_Pprint.separate_map uu___7
+                     (FStar_Class_PP.pp FStar_Syntax_Print.pretty_term) tlist in
+                 FStar_Pprint.group uu___6 in
+               FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
+                 uu___5 in
+             [uu___3] in
            (FStar_Errors_Codes.Warning_SMTPatternIllFormed, uu___2) in
-         FStar_Errors.log_issue t.FStar_Syntax_Syntax.pos uu___1)
+         FStar_Errors.log_issue_doc t.FStar_Syntax_Syntax.pos uu___1)
 let (check_smt_pat :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
@@ -1165,8 +1244,8 @@ let (guard_letrecs :
                   (env.FStar_TypeChecker_Env.phase1);
                 FStar_TypeChecker_Env.failhard =
                   (env.FStar_TypeChecker_Env.failhard);
-                FStar_TypeChecker_Env.nosynth =
-                  (env.FStar_TypeChecker_Env.nosynth);
+                FStar_TypeChecker_Env.flychecking =
+                  (env.FStar_TypeChecker_Env.flychecking);
                 FStar_TypeChecker_Env.uvar_subtyping =
                   (env.FStar_TypeChecker_Env.uvar_subtyping);
                 FStar_TypeChecker_Env.intactics =
@@ -1221,15 +1300,17 @@ let (guard_letrecs :
                 FStar_TypeChecker_Env.erase_erasable_args =
                   (env.FStar_TypeChecker_Env.erase_erasable_args);
                 FStar_TypeChecker_Env.core_check =
-                  (env.FStar_TypeChecker_Env.core_check)
+                  (env.FStar_TypeChecker_Env.core_check);
+                FStar_TypeChecker_Env.missing_decl =
+                  (env.FStar_TypeChecker_Env.missing_decl)
               } in
             let decreases_clause bs c =
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env1 FStar_Options.Low in
+              (let uu___1 = FStar_Compiler_Debug.low () in
                if uu___1
                then
                  let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
-                 let uu___3 = FStar_Syntax_Print.comp_to_string c in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
                  FStar_Compiler_Util.print2
                    "Building a decreases clause over (%s) and %s\n" uu___2
                    uu___3
@@ -1305,8 +1386,10 @@ let (guard_letrecs :
                     FStar_Syntax_Util.unrefine uu___ in
                   let rec warn t11 t21 =
                     let uu___ =
-                      let uu___1 = FStar_Syntax_Util.eq_tm t11 t21 in
-                      uu___1 = FStar_Syntax_Util.Equal in
+                      let uu___1 =
+                        FStar_TypeChecker_TermEqAndSimplify.eq_tm env2 t11
+                          t21 in
+                      uu___1 = FStar_TypeChecker_TermEqAndSimplify.Equal in
                     if uu___
                     then false
                     else
@@ -1357,7 +1440,10 @@ let (guard_letrecs :
                        | (uu___3, FStar_Syntax_Syntax.Tm_uvar uu___4) ->
                            false
                        | (uu___3, uu___4) -> true) in
-                  (let uu___1 = should_warn && (warn t1 t2) in
+                  (let uu___1 =
+                     ((Prims.op_Negation env2.FStar_TypeChecker_Env.phase1)
+                        && should_warn)
+                       && (warn t1 t2) in
                    if uu___1
                    then
                      let uu___2 =
@@ -1377,25 +1463,86 @@ let (guard_letrecs :
                              let uu___7 =
                                let uu___8 =
                                  let uu___9 =
-                                   FStar_Syntax_Print.term_to_string e1 in
+                                   FStar_Errors_Msg.text
+                                     "In the decreases clause for this function, the SMT solver may not be able to prove that the types of" in
                                  let uu___10 =
-                                   FStar_Compiler_Range_Ops.string_of_range
-                                     e1.FStar_Syntax_Syntax.pos in
+                                   let uu___11 =
+                                     let uu___12 =
+                                       FStar_Class_PP.pp
+                                         FStar_Syntax_Print.pretty_term e1 in
+                                     let uu___13 =
+                                       let uu___14 =
+                                         let uu___15 =
+                                           FStar_Errors_Msg.text "bound in" in
+                                         let uu___16 =
+                                           FStar_Class_PP.pp
+                                             FStar_Compiler_Range_Ops.pretty_range
+                                             e1.FStar_Syntax_Syntax.pos in
+                                         FStar_Pprint.op_Hat_Slash_Hat
+                                           uu___15 uu___16 in
+                                       FStar_Pprint.parens uu___14 in
+                                     FStar_Pprint.op_Hat_Slash_Hat uu___12
+                                       uu___13 in
+                                   FStar_Pprint.group uu___11 in
+                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___9 uu___10 in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 = FStar_Errors_Msg.text "and" in
+                                   let uu___12 =
+                                     let uu___13 =
+                                       let uu___14 =
+                                         FStar_Class_PP.pp
+                                           FStar_Syntax_Print.pretty_term e2 in
+                                       let uu___15 =
+                                         let uu___16 =
+                                           let uu___17 =
+                                             FStar_Errors_Msg.text "bound in" in
+                                           let uu___18 =
+                                             FStar_Class_PP.pp
+                                               FStar_Compiler_Range_Ops.pretty_range
+                                               e2.FStar_Syntax_Syntax.pos in
+                                           FStar_Pprint.op_Hat_Slash_Hat
+                                             uu___17 uu___18 in
+                                         FStar_Pprint.parens uu___16 in
+                                       FStar_Pprint.op_Hat_Slash_Hat uu___14
+                                         uu___15 in
+                                     FStar_Pprint.group uu___13 in
+                                   FStar_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___11 uu___12 in
                                  let uu___11 =
-                                   FStar_Syntax_Print.term_to_string t1 in
+                                   FStar_Errors_Msg.text "are equal." in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                   uu___11 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                             let uu___8 =
+                               let uu___9 =
+                                 let uu___10 =
+                                   FStar_Errors_Msg.text
+                                     "The type of the first term is:" in
+                                 let uu___11 =
+                                   FStar_Class_PP.pp
+                                     FStar_Syntax_Print.pretty_term t1 in
+                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___10 uu___11 in
+                               let uu___10 =
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStar_Errors_Msg.text
+                                       "The type of the second term is:" in
+                                   let uu___13 =
+                                     FStar_Class_PP.pp
+                                       FStar_Syntax_Print.pretty_term t2 in
+                                   FStar_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___12 uu___13 in
                                  let uu___12 =
-                                   FStar_Syntax_Print.term_to_string e2 in
-                                 let uu___13 =
-                                   FStar_Compiler_Range_Ops.string_of_range
-                                     e2.FStar_Syntax_Syntax.pos in
-                                 let uu___14 =
-                                   FStar_Syntax_Print.term_to_string t2 in
-                                 FStar_Compiler_Util.format6
-                                   "SMT may not be able to prove the types of %s at %s (%s) and %s at %s (%s) to be equal, if the proof fails, try annotating these with the same type"
-                                   uu___9 uu___10 uu___11 uu___12 uu___13
-                                   uu___14 in
-                               FStar_Errors_Msg.text uu___8 in
-                             [uu___7] in
+                                   let uu___13 =
+                                     FStar_Errors_Msg.text
+                                       "If the proof fails, try annotating these with the same type." in
+                                   [uu___13] in
+                                 uu___11 :: uu___12 in
+                               uu___9 :: uu___10 in
+                             uu___7 :: uu___8 in
                            (FStar_Errors_Codes.Warning_Defensive, uu___6) in
                          FStar_Errors.log_issue_doc
                            e1.FStar_Syntax_Syntax.pos uu___5
@@ -1495,8 +1642,10 @@ let (guard_letrecs :
                       uu___1 :: uu___2 in
                     FStar_Syntax_Syntax.mk_Tm_app rel uu___ r in
                   let uu___ =
-                    let uu___1 = FStar_Syntax_Util.eq_tm rel rel_prev in
-                    uu___1 = FStar_Syntax_Util.Equal in
+                    let uu___1 =
+                      FStar_TypeChecker_TermEqAndSimplify.eq_tm env2 rel
+                        rel_prev in
+                    uu___1 = FStar_TypeChecker_TermEqAndSimplify.Equal in
                   if uu___
                   then rel_guard
                   else
@@ -1570,9 +1719,10 @@ let (guard_letrecs :
                              FStar_TypeChecker_Env.push_binders env1 formals1 in
                            mk_precedes env2 dec previous_dec in
                          let precedes1 =
-                           FStar_TypeChecker_Util.label
-                             "Could not prove termination of this recursive call"
-                             r precedes in
+                           let uu___3 =
+                             FStar_Errors_Msg.mkmsg
+                               "Could not prove termination of this recursive call" in
+                           FStar_TypeChecker_Util.label uu___3 r precedes in
                          let uu___3 = FStar_Compiler_Util.prefix formals1 in
                          match uu___3 with
                          | (bs,
@@ -1600,17 +1750,20 @@ let (guard_letrecs :
                                FStar_Compiler_List.op_At bs uu___4 in
                              let t' =
                                FStar_Syntax_Util.arrow refined_formals c in
-                             ((let uu___5 =
-                                 FStar_TypeChecker_Env.debug env1
-                                   FStar_Options.Medium in
+                             ((let uu___5 = FStar_Compiler_Debug.medium () in
                                if uu___5
                                then
                                  let uu___6 =
-                                   FStar_Syntax_Print.lbname_to_string l in
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_either
+                                        FStar_Syntax_Print.showable_bv
+                                        FStar_Syntax_Print.showable_fv) l in
                                  let uu___7 =
-                                   FStar_Syntax_Print.term_to_string t in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term t in
                                  let uu___8 =
-                                   FStar_Syntax_Print.term_to_string t' in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term t' in
                                  FStar_Compiler_Util.print3
                                    "Refined let rec %s\n\tfrom type %s\n\tto type %s\n"
                                    uu___6 uu___7 uu___8
@@ -1679,7 +1832,7 @@ let rec (tc_term :
       FStar_Defensive.def_check_scoped FStar_TypeChecker_Env.hasBinders_env
         FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
         e.FStar_Syntax_Syntax.pos "tc_term.entry" env e;
-      (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+      (let uu___2 = FStar_Compiler_Debug.medium () in
        if uu___2
        then
          let uu___3 =
@@ -1688,7 +1841,8 @@ let rec (tc_term :
          let uu___4 =
            FStar_Compiler_Util.string_of_bool
              env.FStar_TypeChecker_Env.phase1 in
-         let uu___5 = FStar_Syntax_Print.term_to_string e in
+         let uu___5 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
          let uu___6 =
            let uu___7 = FStar_Syntax_Subst.compress e in
            FStar_Syntax_Print.tag_of_term uu___7 in
@@ -1746,8 +1900,8 @@ let rec (tc_term :
                     (env.FStar_TypeChecker_Env.phase1);
                   FStar_TypeChecker_Env.failhard =
                     (env.FStar_TypeChecker_Env.failhard);
-                  FStar_TypeChecker_Env.nosynth =
-                    (env.FStar_TypeChecker_Env.nosynth);
+                  FStar_TypeChecker_Env.flychecking =
+                    (env.FStar_TypeChecker_Env.flychecking);
                   FStar_TypeChecker_Env.uvar_subtyping =
                     (env.FStar_TypeChecker_Env.uvar_subtyping);
                   FStar_TypeChecker_Env.intactics =
@@ -1802,18 +1956,20 @@ let rec (tc_term :
                   FStar_TypeChecker_Env.erase_erasable_args =
                     (env.FStar_TypeChecker_Env.erase_erasable_args);
                   FStar_TypeChecker_Env.core_check =
-                    (env.FStar_TypeChecker_Env.core_check)
+                    (env.FStar_TypeChecker_Env.core_check);
+                  FStar_TypeChecker_Env.missing_decl =
+                    (env.FStar_TypeChecker_Env.missing_decl)
                 } e) in
        match uu___2 with
        | (r, ms) ->
-           ((let uu___4 =
-               FStar_TypeChecker_Env.debug env FStar_Options.Medium in
+           ((let uu___4 = FStar_Compiler_Debug.medium () in
              if uu___4
              then
                ((let uu___6 =
                    let uu___7 = FStar_TypeChecker_Env.get_range env in
                    FStar_Compiler_Range_Ops.string_of_range uu___7 in
-                 let uu___7 = FStar_Syntax_Print.term_to_string e in
+                 let uu___7 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                  let uu___8 =
                    let uu___9 = FStar_Syntax_Subst.compress e in
                    FStar_Syntax_Print.tag_of_term uu___9 in
@@ -1827,7 +1983,9 @@ let rec (tc_term :
                      let uu___8 =
                        let uu___9 = FStar_TypeChecker_Env.get_range env in
                        FStar_Compiler_Range_Ops.string_of_range uu___9 in
-                     let uu___9 = FStar_Syntax_Print.term_to_string e1 in
+                     let uu___9 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         e1 in
                      let uu___10 =
                        FStar_TypeChecker_Common.lcomp_to_string lc in
                      let uu___11 =
@@ -1854,12 +2012,13 @@ and (tc_maybe_toplevel_term :
         FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
         e.FStar_Syntax_Syntax.pos "tc_maybe_toplevel_term.entry" env1 e;
       (let top = FStar_Syntax_Subst.compress e in
-       (let uu___2 = FStar_TypeChecker_Env.debug env1 FStar_Options.Medium in
+       (let uu___2 = FStar_Compiler_Debug.medium () in
         if uu___2
         then
           let uu___3 =
             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
-            FStar_Class_Show.show FStar_Compiler_Range_Ops.show_range uu___4 in
+            FStar_Class_Show.show FStar_Compiler_Range_Ops.showable_range
+              uu___4 in
           let uu___4 = FStar_Syntax_Print.tag_of_term top in
           let uu___5 =
             FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
@@ -2064,8 +2223,8 @@ and (tc_maybe_toplevel_term :
                             (env'.FStar_TypeChecker_Env.phase1);
                           FStar_TypeChecker_Env.failhard =
                             (env'.FStar_TypeChecker_Env.failhard);
-                          FStar_TypeChecker_Env.nosynth =
-                            (env'.FStar_TypeChecker_Env.nosynth);
+                          FStar_TypeChecker_Env.flychecking =
+                            (env'.FStar_TypeChecker_Env.flychecking);
                           FStar_TypeChecker_Env.uvar_subtyping =
                             (env'.FStar_TypeChecker_Env.uvar_subtyping);
                           FStar_TypeChecker_Env.intactics =
@@ -2122,7 +2281,9 @@ and (tc_maybe_toplevel_term :
                           FStar_TypeChecker_Env.erase_erasable_args =
                             (env'.FStar_TypeChecker_Env.erase_erasable_args);
                           FStar_TypeChecker_Env.core_check =
-                            (env'.FStar_TypeChecker_Env.core_check)
+                            (env'.FStar_TypeChecker_Env.core_check);
+                          FStar_TypeChecker_Env.missing_decl =
+                            (env'.FStar_TypeChecker_Env.missing_decl)
                         } in
                       let uu___4 = tc_term env'1 qt in
                       (match uu___4 with
@@ -2440,13 +2601,12 @@ and (tc_maybe_toplevel_term :
                                  FStar_Syntax_Syntax.Tm_ascribed uu___12 in
                                FStar_Syntax_Syntax.mk uu___11
                                  e1.FStar_Syntax_Syntax.pos in
-                             (let uu___12 =
-                                FStar_TypeChecker_Env.debug env0
-                                  FStar_Options.Extreme in
+                             (let uu___12 = FStar_Compiler_Debug.extreme () in
                               if uu___12
                               then
                                 let uu___13 =
-                                  FStar_Syntax_Print.term_to_string e2 in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term e2 in
                                 FStar_Compiler_Util.print1
                                   "Typechecking ascribed reflect, inner ascribed term: %s\n"
                                   uu___13
@@ -2456,12 +2616,12 @@ and (tc_maybe_toplevel_term :
                               | (e3, uu___13, g_e) ->
                                   let e4 = FStar_Syntax_Util.unascribe e3 in
                                   ((let uu___15 =
-                                      FStar_TypeChecker_Env.debug env0
-                                        FStar_Options.Extreme in
+                                      FStar_Compiler_Debug.extreme () in
                                     if uu___15
                                     then
                                       let uu___16 =
-                                        FStar_Syntax_Print.term_to_string e4 in
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term e4 in
                                       let uu___17 =
                                         FStar_TypeChecker_Rel.guard_to_string
                                           env0 g_e in
@@ -2603,8 +2763,7 @@ and (tc_maybe_toplevel_term :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___9 ->
-                                     FStar_Compiler_Util.return_all
-                                       FStar_TypeChecker_Err.ill_kinded_type))
+                                     FStar_TypeChecker_Err.ill_kinded_type))
                                uu___8 e2 c f in
                            (match uu___7 with
                             | (c1, f1) ->
@@ -2856,7 +3015,8 @@ and (tc_maybe_toplevel_term :
             ->
             let uu___6 =
               let uu___7 =
-                let uu___8 = FStar_Syntax_Print.term_to_string top in
+                let uu___8 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
                 FStar_Compiler_Util.format1 "Ill-applied constant %s" uu___8 in
               (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___7) in
             FStar_Errors.raise_error uu___6 e.FStar_Syntax_Syntax.pos
@@ -2873,7 +3033,8 @@ and (tc_maybe_toplevel_term :
             ->
             let uu___6 =
               let uu___7 =
-                let uu___8 = FStar_Syntax_Print.term_to_string top in
+                let uu___8 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
                 FStar_Compiler_Util.format1 "Ill-applied constant %s" uu___8 in
               (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___7) in
             FStar_Errors.raise_error uu___6 e.FStar_Syntax_Syntax.pos
@@ -3090,7 +3251,8 @@ and (tc_maybe_toplevel_term :
                                                   FStar_Syntax_Print.tag_of_term
                                                     expected_repr_typ in
                                                 let uu___20 =
-                                                  FStar_Syntax_Print.term_to_string
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_term
                                                     expected_repr_typ in
                                                 FStar_Compiler_Util.format3
                                                   "Expected repr type for %s is not an application node (%s:%s)"
@@ -3152,94 +3314,93 @@ and (tc_maybe_toplevel_term :
                 {
                   FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
                     { FStar_Syntax_Syntax.fv_name = uu___2;
-                      FStar_Syntax_Syntax.fv_delta = uu___3;
                       FStar_Syntax_Syntax.fv_qual =
                         FStar_Pervasives_Native.Some
                         (FStar_Syntax_Syntax.Unresolved_constructor uc);_};
-                  FStar_Syntax_Syntax.pos = uu___4;
-                  FStar_Syntax_Syntax.vars = uu___5;
-                  FStar_Syntax_Syntax.hash_code = uu___6;_};
+                  FStar_Syntax_Syntax.pos = uu___3;
+                  FStar_Syntax_Syntax.vars = uu___4;
+                  FStar_Syntax_Syntax.hash_code = uu___5;_};
               FStar_Syntax_Syntax.args = args;_}
             ->
-            let uu___7 =
-              let uu___8 =
+            let uu___6 =
+              let uu___7 =
                 if uc.FStar_Syntax_Syntax.uc_base_term
                 then
                   match args with
-                  | (b, uu___9)::rest ->
+                  | (b, uu___8)::rest ->
                       ((FStar_Pervasives_Native.Some b), rest)
-                  | uu___9 -> FStar_Compiler_Effect.failwith "Impossible"
+                  | uu___8 -> FStar_Compiler_Effect.failwith "Impossible"
                 else (FStar_Pervasives_Native.None, args) in
-              match uu___8 with
+              match uu___7 with
               | (base_term, fields) ->
                   if
                     (FStar_Compiler_List.length
                        uc.FStar_Syntax_Syntax.uc_fields)
                       <> (FStar_Compiler_List.length fields)
                   then
-                    let uu___9 =
-                      let uu___10 =
-                        let uu___11 =
+                    let uu___8 =
+                      let uu___9 =
+                        let uu___10 =
                           FStar_Class_Show.show
                             (FStar_Class_Show.printableshow
                                FStar_Class_Printable.printable_nat)
                             (FStar_Compiler_List.length
                                uc.FStar_Syntax_Syntax.uc_fields) in
-                        let uu___12 =
+                        let uu___11 =
                           FStar_Class_Show.show
                             (FStar_Class_Show.printableshow
                                FStar_Class_Printable.printable_nat)
                             (FStar_Compiler_List.length fields) in
                         FStar_Compiler_Util.format2
                           "Could not resolve constructor; expected %s fields but only found %s"
-                          uu___11 uu___12 in
-                      (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___10) in
-                    FStar_Errors.raise_error uu___9
+                          uu___10 uu___11 in
+                      (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___9) in
+                    FStar_Errors.raise_error uu___8
                       top.FStar_Syntax_Syntax.pos
                   else
-                    (let uu___10 =
-                       let uu___11 =
+                    (let uu___9 =
+                       let uu___10 =
                          FStar_Compiler_List.map FStar_Pervasives_Native.fst
                            fields in
                        FStar_Compiler_List.zip
-                         uc.FStar_Syntax_Syntax.uc_fields uu___11 in
-                     (base_term, uu___10)) in
-            (match uu___7 with
+                         uc.FStar_Syntax_Syntax.uc_fields uu___10 in
+                     (base_term, uu___9)) in
+            (match uu___6 with
              | (base_term, uc_fields) ->
-                 let uu___8 =
-                   let uu___9 = FStar_TypeChecker_Env.expected_typ env1 in
-                   match uu___9 with
-                   | FStar_Pervasives_Native.Some (t, uu___10) ->
-                       let uu___11 =
+                 let uu___7 =
+                   let uu___8 = FStar_TypeChecker_Env.expected_typ env1 in
+                   match uu___8 with
+                   | FStar_Pervasives_Native.Some (t, uu___9) ->
+                       let uu___10 =
                          FStar_TypeChecker_Util.find_record_or_dc_from_typ
                            env1 (FStar_Pervasives_Native.Some t) uc
                            top.FStar_Syntax_Syntax.pos in
-                       (uu___11,
+                       (uu___10,
                          (FStar_Pervasives_Native.Some
                             (FStar_Pervasives.Inl t)))
                    | FStar_Pervasives_Native.None ->
                        (match base_term with
                         | FStar_Pervasives_Native.Some e1 ->
-                            let uu___10 = tc_term env1 e1 in
-                            (match uu___10 with
-                             | (uu___11, lc, uu___12) ->
-                                 let uu___13 =
+                            let uu___9 = tc_term env1 e1 in
+                            (match uu___9 with
+                             | (uu___10, lc, uu___11) ->
+                                 let uu___12 =
                                    FStar_TypeChecker_Util.find_record_or_dc_from_typ
                                      env1
                                      (FStar_Pervasives_Native.Some
                                         (lc.FStar_TypeChecker_Common.res_typ))
                                      uc top.FStar_Syntax_Syntax.pos in
-                                 (uu___13,
+                                 (uu___12,
                                    (FStar_Pervasives_Native.Some
                                       (FStar_Pervasives.Inr
                                          (lc.FStar_TypeChecker_Common.res_typ)))))
                         | FStar_Pervasives_Native.None ->
-                            let uu___10 =
+                            let uu___9 =
                               FStar_TypeChecker_Util.find_record_or_dc_from_typ
                                 env1 FStar_Pervasives_Native.None uc
                                 top.FStar_Syntax_Syntax.pos in
-                            (uu___10, FStar_Pervasives_Native.None)) in
-                 (match uu___8 with
+                            (uu___9, FStar_Pervasives_Native.None)) in
+                 (match uu___7 with
                   | ((rdc, constrname, constructor), topt) ->
                       let rdc1 = rdc in
                       let constructor1 =
@@ -3256,10 +3417,10 @@ and (tc_maybe_toplevel_term :
                                  (constrname, i))
                           else FStar_Pervasives_Native.None in
                         let candidate =
-                          let uu___9 =
+                          let uu___8 =
                             FStar_Ident.set_lid_range projname
                               x.FStar_Syntax_Syntax.pos in
-                          FStar_Syntax_Syntax.fvar uu___9 qual in
+                          FStar_Syntax_Syntax.fvar uu___8 qual in
                         FStar_Syntax_Syntax.mk_Tm_app candidate
                           [(x, FStar_Pervasives_Native.None)]
                           x.FStar_Syntax_Syntax.pos in
@@ -3269,9 +3430,9 @@ and (tc_maybe_toplevel_term :
                           (fun field_name ->
                              match base_term with
                              | FStar_Pervasives_Native.Some x ->
-                                 let uu___9 = mk_field_projector field_name x in
-                                 FStar_Pervasives_Native.Some uu___9
-                             | uu___9 -> FStar_Pervasives_Native.None)
+                                 let uu___8 = mk_field_projector field_name x in
+                                 FStar_Pervasives_Native.Some uu___8
+                             | uu___8 -> FStar_Pervasives_Native.None)
                           top.FStar_Syntax_Syntax.pos in
                       let args1 =
                         FStar_Compiler_List.map
@@ -3289,27 +3450,30 @@ and (tc_maybe_toplevel_term :
                       FStar_Syntax_Syntax.fv_name =
                         { FStar_Syntax_Syntax.v = field_name;
                           FStar_Syntax_Syntax.p = uu___2;_};
-                      FStar_Syntax_Syntax.fv_delta = uu___3;
                       FStar_Syntax_Syntax.fv_qual =
                         FStar_Pervasives_Native.Some
                         (FStar_Syntax_Syntax.Unresolved_projector candidate);_};
-                  FStar_Syntax_Syntax.pos = uu___4;
-                  FStar_Syntax_Syntax.vars = uu___5;
-                  FStar_Syntax_Syntax.hash_code = uu___6;_};
+                  FStar_Syntax_Syntax.pos = uu___3;
+                  FStar_Syntax_Syntax.vars = uu___4;
+                  FStar_Syntax_Syntax.hash_code = uu___5;_};
               FStar_Syntax_Syntax.args =
                 (e1, FStar_Pervasives_Native.None)::rest;_}
             ->
             let proceed_with choice =
               match choice with
               | FStar_Pervasives_Native.None ->
-                  let uu___7 =
-                    let uu___8 =
-                      let uu___9 = FStar_Ident.string_of_lid field_name in
-                      FStar_Compiler_Util.format1
-                        "Field name %s could not be resolved" uu___9 in
-                    (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___8) in
-                  let uu___8 = FStar_Ident.range_of_lid field_name in
-                  FStar_Errors.raise_error uu___7 uu___8
+                  let uu___6 =
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 = FStar_Ident.string_of_lid field_name in
+                          FStar_Compiler_Util.format1
+                            "Field name %s could not be resolved" uu___10 in
+                        FStar_Errors_Msg.text uu___9 in
+                      [uu___8] in
+                    (FStar_Errors_Codes.Fatal_IdentifierNotFound, uu___7) in
+                  let uu___7 = FStar_Ident.range_of_lid field_name in
+                  FStar_Errors.raise_error_doc uu___6 uu___7
               | FStar_Pervasives_Native.Some choice1 ->
                   let f = FStar_Syntax_Syntax.fv_to_tm choice1 in
                   let term =
@@ -3317,55 +3481,57 @@ and (tc_maybe_toplevel_term :
                       ((e1, FStar_Pervasives_Native.None) :: rest)
                       top.FStar_Syntax_Syntax.pos in
                   tc_term env1 term in
-            let uu___7 =
-              let uu___8 = FStar_TypeChecker_Env.clear_expected_typ env1 in
-              match uu___8 with | (env2, uu___9) -> tc_term env2 e1 in
-            (match uu___7 with
-             | (uu___8, lc, uu___9) ->
+            let uu___6 =
+              let uu___7 = FStar_TypeChecker_Env.clear_expected_typ env1 in
+              match uu___7 with | (env2, uu___8) -> tc_term env2 e1 in
+            (match uu___6 with
+             | (uu___7, lc, uu___8) ->
                  let t0 =
                    FStar_TypeChecker_Normalize.unfold_whnf'
                      [FStar_TypeChecker_Env.Unascribe;
                      FStar_TypeChecker_Env.Unmeta;
                      FStar_TypeChecker_Env.Unrefine] env1
                      lc.FStar_TypeChecker_Common.res_typ in
-                 let uu___10 = FStar_Syntax_Util.head_and_args t0 in
-                 (match uu___10 with
-                  | (thead, uu___11) ->
-                      ((let uu___13 =
-                          FStar_TypeChecker_Env.debug env1
-                            (FStar_Options.Other "RFD") in
-                        if uu___13
+                 let uu___9 = FStar_Syntax_Util.head_and_args t0 in
+                 (match uu___9 with
+                  | (thead, uu___10) ->
+                      ((let uu___12 = FStar_Compiler_Effect.op_Bang dbg_RFD in
+                        if uu___12
                         then
-                          let uu___14 =
-                            FStar_Syntax_Print.term_to_string
+                          let uu___13 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term
                               lc.FStar_TypeChecker_Common.res_typ in
-                          let uu___15 = FStar_Syntax_Print.term_to_string t0 in
-                          let uu___16 =
-                            FStar_Syntax_Print.term_to_string thead in
+                          let uu___14 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term t0 in
+                          let uu___15 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term thead in
                           FStar_Compiler_Util.print3
                             "Got lc.res_typ=%s; t0 = %s; thead = %s\n"
-                            uu___14 uu___15 uu___16
+                            uu___13 uu___14 uu___15
                         else ());
-                       (let uu___13 =
-                          let uu___14 =
-                            let uu___15 = FStar_Syntax_Util.un_uinst thead in
-                            FStar_Syntax_Subst.compress uu___15 in
-                          uu___14.FStar_Syntax_Syntax.n in
-                        match uu___13 with
+                       (let uu___12 =
+                          let uu___13 =
+                            let uu___14 = FStar_Syntax_Util.un_uinst thead in
+                            FStar_Syntax_Subst.compress uu___14 in
+                          uu___13.FStar_Syntax_Syntax.n in
+                        match uu___12 with
                         | FStar_Syntax_Syntax.Tm_fvar type_name ->
-                            let uu___14 =
+                            let uu___13 =
                               FStar_TypeChecker_Util.try_lookup_record_type
                                 env1
                                 (type_name.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
-                            (match uu___14 with
+                            (match uu___13 with
                              | FStar_Pervasives_Native.None ->
                                  proceed_with candidate
                              | FStar_Pervasives_Native.Some rdc ->
                                  let i =
                                    FStar_Compiler_List.tryFind
-                                     (fun uu___15 ->
-                                        match uu___15 with
-                                        | (i1, uu___16) ->
+                                     (fun uu___14 ->
+                                        match uu___14 with
+                                        | (i1, uu___15) ->
                                             FStar_TypeChecker_Util.field_name_matches
                                               field_name rdc i1)
                                      rdc.FStar_Syntax_DsEnv.fields in
@@ -3373,15 +3539,15 @@ and (tc_maybe_toplevel_term :
                                   | FStar_Pervasives_Native.None ->
                                       proceed_with candidate
                                   | FStar_Pervasives_Native.Some
-                                      (i1, uu___15) ->
+                                      (i1, uu___14) ->
                                       let constrname =
-                                        let uu___16 =
-                                          let uu___17 =
+                                        let uu___15 =
+                                          let uu___16 =
                                             FStar_Ident.ns_of_lid
                                               rdc.FStar_Syntax_DsEnv.typename in
-                                          FStar_Compiler_List.op_At uu___17
+                                          FStar_Compiler_List.op_At uu___16
                                             [rdc.FStar_Syntax_DsEnv.constrname] in
-                                        FStar_Ident.lid_of_ids uu___16 in
+                                        FStar_Ident.lid_of_ids uu___15 in
                                       let projname =
                                         FStar_Syntax_Util.mk_field_projector_name_from_ident
                                           constrname i1 in
@@ -3393,17 +3559,17 @@ and (tc_maybe_toplevel_term :
                                                (constrname, i1))
                                         else FStar_Pervasives_Native.None in
                                       let choice =
-                                        let uu___16 =
-                                          let uu___17 =
+                                        let uu___15 =
+                                          let uu___16 =
                                             FStar_Ident.range_of_lid
                                               field_name in
                                           FStar_Ident.set_lid_range projname
-                                            uu___17 in
-                                        FStar_Syntax_Syntax.lid_as_fv uu___16
+                                            uu___16 in
+                                        FStar_Syntax_Syntax.lid_as_fv uu___15
                                           qual in
                                       proceed_with
                                         (FStar_Pervasives_Native.Some choice)))
-                        | uu___14 -> proceed_with candidate))))
+                        | uu___13 -> proceed_with candidate))))
         | FStar_Syntax_Syntax.Tm_app
             { FStar_Syntax_Syntax.hd = head;
               FStar_Syntax_Syntax.args =
@@ -3467,14 +3633,14 @@ and (tc_maybe_toplevel_term :
                 let uu___3 = FStar_TypeChecker_Env.clear_expected_typ env1 in
                 FStar_Pervasives_Native.fst uu___3 in
               instantiate_both uu___2 in
-            ((let uu___3 =
-                FStar_TypeChecker_Env.debug env2 FStar_Options.High in
+            ((let uu___3 = FStar_Compiler_Debug.high () in
               if uu___3
               then
                 let uu___4 =
                   FStar_Compiler_Range_Ops.string_of_range
                     top.FStar_Syntax_Syntax.pos in
-                let uu___5 = FStar_Syntax_Print.term_to_string top in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
                 let uu___6 = print_expected_ty_str env0 in
                 FStar_Compiler_Util.print3 "(%s) Checking app %s, %s\n"
                   uu___4 uu___5 uu___6
@@ -3519,7 +3685,12 @@ and (tc_maybe_toplevel_term :
                                 (FStar_TypeChecker_Common.is_tot_or_gtot_lcomp
                                    c)
                                   ||
-                                  (env2.FStar_TypeChecker_Env.phase1 &&
+                                  ((env2.FStar_TypeChecker_Env.phase1 ||
+                                      (let uu___8 =
+                                         FStar_TypeChecker_Env.should_verify
+                                           env2 in
+                                       Prims.op_Negation uu___8))
+                                     &&
                                      (FStar_TypeChecker_Common.is_pure_or_ghost_lcomp
                                         c)) in
                               if uu___7
@@ -3539,8 +3710,7 @@ and (tc_maybe_toplevel_term :
                             (match uu___6 with
                              | (e2, c1, implicits) ->
                                  ((let uu___8 =
-                                     FStar_TypeChecker_Env.debug env2
-                                       FStar_Options.Extreme in
+                                     FStar_Compiler_Debug.extreme () in
                                    if uu___8
                                    then
                                      let uu___9 =
@@ -3561,12 +3731,12 @@ and (tc_maybe_toplevel_term :
                                          FStar_TypeChecker_Env.conj_guard
                                            gres implicits in
                                        ((let uu___10 =
-                                           FStar_TypeChecker_Env.debug env2
-                                             FStar_Options.Extreme in
+                                           FStar_Compiler_Debug.extreme () in
                                          if uu___10
                                          then
                                            let uu___11 =
-                                             FStar_Syntax_Print.term_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_term
                                                e3 in
                                            let uu___12 =
                                              FStar_TypeChecker_Rel.guard_to_string
@@ -3710,7 +3880,8 @@ and (tc_match :
                               let uu___7 =
                                 let uu___8 =
                                   let uu___9 =
-                                    FStar_Syntax_Print.term_to_string e12 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term e12 in
                                   let uu___10 =
                                     FStar_Ident.string_of_lid
                                       c11.FStar_TypeChecker_Common.eff_name in
@@ -4134,8 +4305,7 @@ and (tc_match :
                               (match uu___6 with
                                | (e2, cres2, g_expected_type) ->
                                    ((let uu___8 =
-                                       FStar_TypeChecker_Env.debug env
-                                         FStar_Options.Extreme in
+                                       FStar_Compiler_Debug.extreme () in
                                      if uu___8
                                      then
                                        let uu___9 =
@@ -4189,8 +4359,7 @@ and (tc_synth :
                     "synth_by_tactic: bad application") rng in
           match uu___ with
           | (tau, atyp) ->
-              ((let uu___2 =
-                  FStar_TypeChecker_Env.debug env (FStar_Options.Other "Tac") in
+              ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_Tac in
                 if uu___2
                 then
                   let uu___3 =
@@ -4215,7 +4384,8 @@ and (tc_synth :
                               (let uu___4 =
                                  let uu___5 =
                                    let uu___6 =
-                                     FStar_Syntax_Print.term_to_string t in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term t in
                                    FStar_Compiler_Util.format1
                                      "Equality ascription in synth (%s) is not yet supported, please use subtyping"
                                      uu___6 in
@@ -4259,12 +4429,12 @@ and (tc_synth :
                                     (tau1.FStar_Syntax_Syntax.hash_code)
                                 } in
                             (let uu___9 =
-                               FStar_TypeChecker_Env.debug env
-                                 (FStar_Options.Other "Tac") in
+                               FStar_Compiler_Effect.op_Bang dbg_Tac in
                              if uu___9
                              then
                                let uu___10 =
-                                 FStar_Syntax_Print.term_to_string t in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term t in
                                FStar_Compiler_Util.print1 "Got %s\n" uu___10
                              else ());
                             FStar_TypeChecker_Util.check_uvars
@@ -4330,8 +4500,8 @@ and (tc_tactic :
               FStar_TypeChecker_Env.phase1 =
                 (env.FStar_TypeChecker_Env.phase1);
               FStar_TypeChecker_Env.failhard = true;
-              FStar_TypeChecker_Env.nosynth =
-                (env.FStar_TypeChecker_Env.nosynth);
+              FStar_TypeChecker_Env.flychecking =
+                (env.FStar_TypeChecker_Env.flychecking);
               FStar_TypeChecker_Env.uvar_subtyping =
                 (env.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.intactics =
@@ -4385,7 +4555,9 @@ and (tc_tactic :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (env.FStar_TypeChecker_Env.core_check)
+                (env.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.missing_decl =
+                (env.FStar_TypeChecker_Env.missing_decl)
             } in
           let uu___ = FStar_Syntax_Syntax.t_tac_of a b in
           tc_check_tot_or_gtot_term env1 tau uu___ ""
@@ -4457,7 +4629,8 @@ and (tc_value :
       | FStar_Syntax_Syntax.Tm_bvar x ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_Syntax_Print.term_to_string top in
+              let uu___2 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
               FStar_Compiler_Util.format1
                 "Violation of locally nameless convention: %s" uu___2 in
             (FStar_Errors_Codes.Error_IllScopedTerm, uu___1) in
@@ -4486,7 +4659,9 @@ and (tc_value :
                  then
                    (let uu___3 =
                       let uu___4 =
-                        let uu___5 = FStar_Syntax_Print.term_to_string t in
+                        let uu___5 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term t in
                         FStar_Compiler_Util.format1
                           "Equality ascription as an expected type for unk (:%s) is not yet supported, please use subtyping"
                           uu___5 in
@@ -4580,7 +4755,9 @@ and (tc_value :
                 then
                   (let uu___6 =
                      let uu___7 =
-                       let uu___8 = FStar_Syntax_Print.fv_to_string fv1 in
+                       let uu___8 =
+                         FStar_Class_Show.show FStar_Syntax_Print.showable_fv
+                           fv1 in
                        let uu___9 =
                          FStar_Compiler_Util.string_of_int
                            (FStar_Compiler_List.length us1) in
@@ -4608,11 +4785,14 @@ and (tc_value :
                            let uu___8 =
                              let uu___9 =
                                let uu___10 =
-                                 FStar_Syntax_Print.fv_to_string fv1 in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_fv fv1 in
                                let uu___11 =
-                                 FStar_Syntax_Print.univ_to_string ul in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_univ ul in
                                let uu___12 =
-                                 FStar_Syntax_Print.univ_to_string ur in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_univ ur in
                                FStar_Compiler_Util.format3
                                  "Incompatible universe application for %s, expected %s got %s\n"
                                  uu___10 uu___11 uu___12 in
@@ -4642,14 +4822,12 @@ and (tc_value :
            | ((us, t), range) ->
                let fv1 = FStar_Syntax_Syntax.set_range_of_fv fv range in
                (maybe_warn_on_use env1 fv1;
-                (let uu___3 =
-                   FStar_TypeChecker_Env.debug env1
-                     (FStar_Options.Other "Range") in
+                (let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Range in
                  if uu___3
                  then
                    let uu___4 =
                      let uu___5 = FStar_Syntax_Syntax.lid_of_fv fv1 in
-                     FStar_Syntax_Print.lid_to_string uu___5 in
+                     FStar_Class_Show.show FStar_Ident.showable_lident uu___5 in
                    let uu___5 =
                      FStar_Compiler_Range_Ops.string_of_range
                        e.FStar_Syntax_Syntax.pos in
@@ -4657,7 +4835,8 @@ and (tc_value :
                      FStar_Compiler_Range_Ops.string_of_range range in
                    let uu___7 =
                      FStar_Compiler_Range_Ops.string_of_use_range range in
-                   let uu___8 = FStar_Syntax_Print.term_to_string t in
+                   let uu___8 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                    FStar_Compiler_Util.print5
                      "Lookup up fvar %s at location %s (lid range = defined at %s, used at %s); got universes type %s\n"
                      uu___4 uu___5 uu___6 uu___7 uu___8
@@ -4752,18 +4931,18 @@ and (tc_value :
                       tc_binder env2 uu___4 in
                     (match uu___3 with
                      | (x2, env3, f1, u) ->
-                         ((let uu___5 =
-                             FStar_TypeChecker_Env.debug env3
-                               FStar_Options.High in
+                         ((let uu___5 = FStar_Compiler_Debug.high () in
                            if uu___5
                            then
                              let uu___6 =
                                FStar_Compiler_Range_Ops.string_of_range
                                  top.FStar_Syntax_Syntax.pos in
                              let uu___7 =
-                               FStar_Syntax_Print.term_to_string phi1 in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term phi1 in
                              let uu___8 =
-                               FStar_Syntax_Print.bv_to_string
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_bv
                                  x2.FStar_Syntax_Syntax.binder_bv in
                              FStar_Compiler_Util.print3
                                "(%s) Checking refinement formula %s; binder is %s\n"
@@ -4812,12 +4991,11 @@ and (tc_value :
             FStar_Syntax_Syntax.rc_opt = uu___;_}
           ->
           let bs1 = FStar_TypeChecker_Util.maybe_add_implicit_binders env1 bs in
-          ((let uu___2 =
-              FStar_TypeChecker_Env.debug env1 FStar_Options.Medium in
+          ((let uu___2 = FStar_Compiler_Debug.medium () in
             if uu___2
             then
               let uu___3 =
-                FStar_Syntax_Print.term_to_string
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term
                   {
                     FStar_Syntax_Syntax.n =
                       (FStar_Syntax_Syntax.Tm_abs
@@ -4838,7 +5016,8 @@ and (tc_value :
             match uu___2 with | (bs2, body1) -> tc_abs env1 top bs2 body1))
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.term_to_string top in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
             let uu___3 = FStar_Syntax_Print.tag_of_term top in
             FStar_Compiler_Util.format2 "Unexpected value: %s (%s)" uu___2
               uu___3 in
@@ -4876,7 +5055,9 @@ and (tc_constant :
                  | (FStar_Const.Unsigned, FStar_Const.Int32) ->
                      FStar_Parser_Const.uint32_lid
                  | (FStar_Const.Unsigned, FStar_Const.Int64) ->
-                     FStar_Parser_Const.uint64_lid)
+                     FStar_Parser_Const.uint64_lid
+                 | (FStar_Const.Unsigned, FStar_Const.Sizet) ->
+                     FStar_Parser_Const.sizet_lid)
           | FStar_Const.Const_string uu___ -> FStar_Syntax_Syntax.t_string
           | FStar_Const.Const_real uu___ -> FStar_Syntax_Syntax.t_real
           | FStar_Const.Const_char uu___ ->
@@ -5020,8 +5201,8 @@ and (tc_comp :
                 FStar_TypeChecker_Env.phase1 =
                   (env.FStar_TypeChecker_Env.phase1);
                 FStar_TypeChecker_Env.failhard = true;
-                FStar_TypeChecker_Env.nosynth =
-                  (env.FStar_TypeChecker_Env.nosynth);
+                FStar_TypeChecker_Env.flychecking =
+                  (env.FStar_TypeChecker_Env.flychecking);
                 FStar_TypeChecker_Env.uvar_subtyping =
                   (env.FStar_TypeChecker_Env.uvar_subtyping);
                 FStar_TypeChecker_Env.intactics =
@@ -5076,7 +5257,9 @@ and (tc_comp :
                 FStar_TypeChecker_Env.erase_erasable_args =
                   (env.FStar_TypeChecker_Env.erase_erasable_args);
                 FStar_TypeChecker_Env.core_check =
-                  (env.FStar_TypeChecker_Env.core_check)
+                  (env.FStar_TypeChecker_Env.core_check);
+                FStar_TypeChecker_Env.missing_decl =
+                  (env.FStar_TypeChecker_Env.missing_decl)
               } tc FStar_Syntax_Syntax.teff "" in
           (match uu___ with
            | (tc1, uu___1, f) ->
@@ -5270,7 +5453,9 @@ and (tc_universe :
             else
               (let uu___2 =
                  let uu___3 =
-                   let uu___4 = FStar_Syntax_Print.univ_to_string u2 in
+                   let uu___4 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_univ
+                       u2 in
                    Prims.strcat uu___4 " not found" in
                  Prims.strcat "Universe variable " uu___3 in
                FStar_Compiler_Effect.failwith uu___2) in
@@ -5517,8 +5702,8 @@ and (tc_abs_expected_function_typ :
                                  (envbody.FStar_TypeChecker_Env.phase1);
                                FStar_TypeChecker_Env.failhard =
                                  (envbody.FStar_TypeChecker_Env.failhard);
-                               FStar_TypeChecker_Env.nosynth =
-                                 (envbody.FStar_TypeChecker_Env.nosynth);
+                               FStar_TypeChecker_Env.flychecking =
+                                 (envbody.FStar_TypeChecker_Env.flychecking);
                                FStar_TypeChecker_Env.uvar_subtyping =
                                  (envbody.FStar_TypeChecker_Env.uvar_subtyping);
                                FStar_TypeChecker_Env.intactics =
@@ -5577,7 +5762,9 @@ and (tc_abs_expected_function_typ :
                                FStar_TypeChecker_Env.erase_erasable_args =
                                  (envbody.FStar_TypeChecker_Env.erase_erasable_args);
                                FStar_TypeChecker_Env.core_check =
-                                 (envbody.FStar_TypeChecker_Env.core_check)
+                                 (envbody.FStar_TypeChecker_Env.core_check);
+                               FStar_TypeChecker_Env.missing_decl =
+                                 (envbody.FStar_TypeChecker_Env.missing_decl)
                              } in
                            let uu___2 =
                              FStar_Compiler_List.fold_left
@@ -5675,8 +5862,8 @@ and (tc_abs_expected_function_typ :
                                (env.FStar_TypeChecker_Env.phase1);
                              FStar_TypeChecker_Env.failhard =
                                (env.FStar_TypeChecker_Env.failhard);
-                             FStar_TypeChecker_Env.nosynth =
-                               (env.FStar_TypeChecker_Env.nosynth);
+                             FStar_TypeChecker_Env.flychecking =
+                               (env.FStar_TypeChecker_Env.flychecking);
                              FStar_TypeChecker_Env.uvar_subtyping =
                                (env.FStar_TypeChecker_Env.uvar_subtyping);
                              FStar_TypeChecker_Env.intactics =
@@ -5733,7 +5920,9 @@ and (tc_abs_expected_function_typ :
                              FStar_TypeChecker_Env.erase_erasable_args =
                                (env.FStar_TypeChecker_Env.erase_erasable_args);
                              FStar_TypeChecker_Env.core_check =
-                               (env.FStar_TypeChecker_Env.core_check)
+                               (env.FStar_TypeChecker_Env.core_check);
+                             FStar_TypeChecker_Env.missing_decl =
+                               (env.FStar_TypeChecker_Env.missing_decl)
                            } in
                          let uu___2 =
                            check_actuals_against_formals envbody bs
@@ -5788,8 +5977,8 @@ and (tc_abs_expected_function_typ :
                                     (envbody1.FStar_TypeChecker_Env.phase1);
                                   FStar_TypeChecker_Env.failhard =
                                     (envbody1.FStar_TypeChecker_Env.failhard);
-                                  FStar_TypeChecker_Env.nosynth =
-                                    (envbody1.FStar_TypeChecker_Env.nosynth);
+                                  FStar_TypeChecker_Env.flychecking =
+                                    (envbody1.FStar_TypeChecker_Env.flychecking);
                                   FStar_TypeChecker_Env.uvar_subtyping =
                                     (envbody1.FStar_TypeChecker_Env.uvar_subtyping);
                                   FStar_TypeChecker_Env.intactics =
@@ -5850,7 +6039,9 @@ and (tc_abs_expected_function_typ :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (envbody1.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (envbody1.FStar_TypeChecker_Env.core_check)
+                                    (envbody1.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.missing_decl =
+                                    (envbody1.FStar_TypeChecker_Env.missing_decl)
                                 } in
                               let uu___3 = mk_letrec_env envbody2 bs1 c in
                               (match uu___3 with
@@ -5958,12 +6149,14 @@ and (tc_abs_check_binders :
                        let uu___2 =
                          (Prims.op_Negation (special imp imp')) &&
                            (let uu___3 = FStar_Syntax_Util.eq_bqual imp imp' in
-                            uu___3 <> FStar_Syntax_Util.Equal) in
+                            Prims.op_Negation uu___3) in
                        if uu___2
                        then
                          let uu___3 =
                            let uu___4 =
-                             let uu___5 = FStar_Syntax_Print.bv_to_string hd in
+                             let uu___5 =
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_bv hd in
                              FStar_Compiler_Util.format1
                                "Inconsistent implicit argument annotation on argument %s"
                                uu___5 in
@@ -5989,7 +6182,9 @@ and (tc_abs_check_binders :
                         then
                           let uu___4 =
                             let uu___5 =
-                              let uu___6 = FStar_Syntax_Print.bv_to_string hd in
+                              let uu___6 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_bv hd in
                               FStar_Compiler_Util.format3
                                 "Inconsistent positivity qualifier on argument %s; Expected qualifier %s, found qualifier %s"
                                 uu___6
@@ -6014,13 +6209,12 @@ and (tc_abs_check_binders :
                               (expected_t,
                                 FStar_TypeChecker_Env.trivial_guard)
                           | uu___5 ->
-                              ((let uu___7 =
-                                  FStar_TypeChecker_Env.debug env1
-                                    FStar_Options.High in
+                              ((let uu___7 = FStar_Compiler_Debug.high () in
                                 if uu___7
                                 then
                                   let uu___8 =
-                                    FStar_Syntax_Print.bv_to_string hd in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_bv hd in
                                   FStar_Compiler_Util.print1
                                     "Checking binder %s\n" uu___8
                                 else ());
@@ -6031,10 +6225,12 @@ and (tc_abs_check_binders :
                                 | (t, uu___8, g1_env) ->
                                     let g2_env =
                                       let label_guard g =
+                                        let uu___9 =
+                                          FStar_Errors_Msg.mkmsg
+                                            "Type annotation on parameter incompatible with the expected type" in
                                         FStar_TypeChecker_Util.label_guard
                                           (hd.FStar_Syntax_Syntax.sort).FStar_Syntax_Syntax.pos
-                                          "Type annotation on parameter incompatible with the expected type"
-                                          g in
+                                          uu___9 g in
                                       let uu___9 =
                                         FStar_TypeChecker_Rel.teq_nosmt env1
                                           t expected_t in
@@ -6064,7 +6260,7 @@ and (tc_abs_check_binders :
                                                  let uu___13 =
                                                    FStar_TypeChecker_Env.get_range
                                                      env1 in
-                                                 FStar_Errors.raise_error
+                                                 FStar_Errors.raise_error_doc
                                                    uu___12 uu___13
                                              | FStar_Pervasives_Native.Some
                                                  g_env -> label_guard g_env) in
@@ -6090,9 +6286,10 @@ and (tc_abs_check_binders :
                                        FStar_Compiler_List.existsb
                                          (fun attr ->
                                             let uu___5 =
-                                              FStar_Syntax_Util.eq_tm attr
-                                                attr' in
-                                            uu___5 = FStar_Syntax_Util.Equal)
+                                              FStar_TypeChecker_TermEqAndSimplify.eq_tm
+                                                env1 attr attr' in
+                                            uu___5 =
+                                              FStar_TypeChecker_TermEqAndSimplify.Equal)
                                          attrs1 in
                                      Prims.op_Negation uu___4) attrs'1 in
                               FStar_Compiler_List.op_At attrs1 diff in
@@ -6163,15 +6360,16 @@ and (tc_abs :
           let uu___ = FStar_TypeChecker_Env.clear_expected_typ env in
           match uu___ with
           | (env1, topt) ->
-              ((let uu___2 =
-                  FStar_TypeChecker_Env.debug env1 FStar_Options.High in
+              ((let uu___2 = FStar_Compiler_Debug.high () in
                 if uu___2
                 then
                   let uu___3 =
                     match topt with
                     | FStar_Pervasives_Native.None -> "None"
                     | FStar_Pervasives_Native.Some (t, use_eq) ->
-                        let uu___4 = FStar_Syntax_Print.term_to_string t in
+                        let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term t in
                         let uu___5 =
                           let uu___6 =
                             FStar_Compiler_Util.string_of_bool use_eq in
@@ -6190,21 +6388,21 @@ and (tc_abs :
                 match uu___2 with
                 | (tfun_opt, bs1, letrec_binders, c_opt, envbody, body1,
                    g_env) ->
-                    ((let uu___4 =
-                        FStar_TypeChecker_Env.debug env1
-                          FStar_Options.Extreme in
+                    ((let uu___4 = FStar_Compiler_Debug.extreme () in
                       if uu___4
                       then
                         let uu___5 =
                           match tfun_opt with
                           | FStar_Pervasives_Native.None -> "None"
                           | FStar_Pervasives_Native.Some t ->
-                              FStar_Syntax_Print.term_to_string t in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term t in
                         let uu___6 =
                           match c_opt with
                           | FStar_Pervasives_Native.None -> "None"
                           | FStar_Pervasives_Native.Some t ->
-                              FStar_Syntax_Print.comp_to_string t in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_comp t in
                         let uu___7 =
                           let uu___8 =
                             FStar_TypeChecker_Env.expected_typ envbody in
@@ -6212,7 +6410,8 @@ and (tc_abs :
                           | FStar_Pervasives_Native.None -> "None"
                           | FStar_Pervasives_Native.Some (t, use_eq) ->
                               let uu___9 =
-                                FStar_Syntax_Print.term_to_string t in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t in
                               let uu___10 =
                                 let uu___11 =
                                   FStar_Compiler_Util.string_of_bool use_eq in
@@ -6222,9 +6421,7 @@ and (tc_abs :
                           "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
                           uu___5 uu___6 uu___7
                       else ());
-                     (let uu___5 =
-                        FStar_TypeChecker_Env.debug env1
-                          (FStar_Options.Other "NYC") in
+                     (let uu___5 = FStar_Compiler_Effect.op_Bang dbg_NYC in
                       if uu___5
                       then
                         let uu___6 =
@@ -6370,8 +6567,8 @@ and (tc_abs :
                                     (envbody2.FStar_TypeChecker_Env.phase1);
                                   FStar_TypeChecker_Env.failhard =
                                     (envbody2.FStar_TypeChecker_Env.failhard);
-                                  FStar_TypeChecker_Env.nosynth =
-                                    (envbody2.FStar_TypeChecker_Env.nosynth);
+                                  FStar_TypeChecker_Env.flychecking =
+                                    (envbody2.FStar_TypeChecker_Env.flychecking);
                                   FStar_TypeChecker_Env.uvar_subtyping =
                                     (envbody2.FStar_TypeChecker_Env.uvar_subtyping);
                                   FStar_TypeChecker_Env.intactics =
@@ -6432,7 +6629,9 @@ and (tc_abs :
                                   FStar_TypeChecker_Env.erase_erasable_args =
                                     (envbody2.FStar_TypeChecker_Env.erase_erasable_args);
                                   FStar_TypeChecker_Env.core_check =
-                                    (envbody2.FStar_TypeChecker_Env.core_check)
+                                    (envbody2.FStar_TypeChecker_Env.core_check);
+                                  FStar_TypeChecker_Env.missing_decl =
+                                    (envbody2.FStar_TypeChecker_Env.missing_decl)
                                 } body2 in
                             (match uu___7 with
                              | (body3, cbody, guard_body) ->
@@ -6470,9 +6669,7 @@ and (tc_abs :
                                            (body3, cbody1, uu___10)))) in
                       match uu___5 with
                       | (body2, cbody, guard_body) ->
-                          ((let uu___7 =
-                              FStar_TypeChecker_Env.debug env1
-                                FStar_Options.Extreme in
+                          ((let uu___7 = FStar_Compiler_Debug.extreme () in
                             if uu___7
                             then
                               let uu___8 =
@@ -6484,9 +6681,7 @@ and (tc_abs :
                            (let guard_body1 =
                               if env1.FStar_TypeChecker_Env.top_level
                               then
-                                ((let uu___8 =
-                                    FStar_TypeChecker_Env.debug env1
-                                      FStar_Options.Medium in
+                                ((let uu___8 = FStar_Compiler_Debug.medium () in
                                   if uu___8
                                   then
                                     let uu___9 =
@@ -6538,7 +6733,8 @@ and (tc_abs :
                                        let uu___12 =
                                          let uu___13 =
                                            let uu___14 =
-                                             FStar_Syntax_Print.binder_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_binder
                                                b in
                                            FStar_Compiler_Util.format1
                                              "Binder %s is marked unused, but its use in the definition is not"
@@ -6566,7 +6762,8 @@ and (tc_abs :
                                        let uu___12 =
                                          let uu___13 =
                                            let uu___14 =
-                                             FStar_Syntax_Print.binder_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_binder
                                                b in
                                            FStar_Compiler_Util.format1
                                              "Binder %s is marked strictly positive, but its use in the definition is not"
@@ -6654,16 +6851,22 @@ and (check_application_args :
               let n_args = FStar_Compiler_List.length args in
               let r = FStar_TypeChecker_Env.get_range env in
               let thead = FStar_Syntax_Util.comp_result chead in
-              (let uu___1 =
-                 FStar_TypeChecker_Env.debug env FStar_Options.High in
+              (let uu___1 = FStar_Compiler_Debug.high () in
                if uu___1
                then
                  let uu___2 =
-                   FStar_Compiler_Range_Ops.string_of_range
+                   FStar_Class_Show.show
+                     FStar_Compiler_Range_Ops.showable_range
                      head.FStar_Syntax_Syntax.pos in
-                 let uu___3 = FStar_Syntax_Print.term_to_string thead in
-                 FStar_Compiler_Util.print2 "(%s) Type of head is %s\n"
-                   uu___2 uu___3
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                     thead in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_args
+                     args in
+                 FStar_Compiler_Util.print3
+                   "(%s) Type of head is %s\nArgs = %s\n" uu___2 uu___3
+                   uu___4
                else ());
               (let monadic_application uu___1 subst arg_comps_rev
                  arg_rets_rev guard fvs bs =
@@ -6702,12 +6905,12 @@ and (check_application_args :
                                (match uu___4 with
                                 | (cres2, guard2) ->
                                     ((let uu___6 =
-                                        FStar_TypeChecker_Env.debug env
-                                          FStar_Options.Medium in
+                                        FStar_Compiler_Debug.medium () in
                                       if uu___6
                                       then
                                         let uu___7 =
-                                          FStar_Syntax_Print.comp_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_comp
                                             cres2 in
                                         FStar_Compiler_Util.print1
                                           "\t Type of result cres is %s\n"
@@ -6763,12 +6966,13 @@ and (check_application_args :
                                             if uu___8
                                             then
                                               ((let uu___10 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env FStar_Options.Extreme in
+                                                  FStar_Compiler_Debug.extreme
+                                                    () in
                                                 if uu___10
                                                 then
                                                   let uu___11 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       term in
                                                   FStar_Compiler_Util.print1
                                                     "(a) Monadic app: Return inserted in monadic application: %s\n"
@@ -6780,12 +6984,13 @@ and (check_application_args :
                                                 (uu___10, true)))
                                             else
                                               ((let uu___11 =
-                                                  FStar_TypeChecker_Env.debug
-                                                    env FStar_Options.Extreme in
+                                                  FStar_Compiler_Debug.extreme
+                                                    () in
                                                 if uu___11
                                                 then
                                                   let uu___12 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       term in
                                                   FStar_Compiler_Util.print1
                                                     "(a) Monadic app: No return inserted in monadic application: %s\n"
@@ -6839,9 +7044,8 @@ and (check_application_args :
                                                              ((e, q), x, c))
                                                               ->
                                                               ((let uu___12 =
-                                                                  FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                  FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                 if uu___12
                                                                 then
                                                                   let uu___13
@@ -6854,11 +7058,13 @@ and (check_application_args :
                                                                     | 
                                                                     FStar_Pervasives_Native.Some
                                                                     x1 ->
-                                                                    FStar_Syntax_Print.bv_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_bv
                                                                     x1 in
                                                                   let uu___14
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     e in
                                                                   let uu___15
                                                                     =
@@ -6928,13 +7134,13 @@ and (check_application_args :
                                                          env
                                                          arg_rets_names_opt in
                                                      ((let uu___11 =
-                                                         FStar_TypeChecker_Env.debug
-                                                           env1
-                                                           FStar_Options.Extreme in
+                                                         FStar_Compiler_Debug.extreme
+                                                           () in
                                                        if uu___11
                                                        then
                                                          let uu___12 =
-                                                           FStar_Syntax_Print.term_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_term
                                                              head1 in
                                                          let uu___13 =
                                                            FStar_TypeChecker_Common.lcomp_to_string
@@ -7014,13 +7220,13 @@ and (check_application_args :
                                                         | ((e, q), uu___11,
                                                            c) ->
                                                             ((let uu___13 =
-                                                                FStar_TypeChecker_Env.debug
-                                                                  env
-                                                                  FStar_Options.Extreme in
+                                                                FStar_Compiler_Debug.extreme
+                                                                  () in
                                                               if uu___13
                                                               then
                                                                 let uu___14 =
-                                                                  FStar_Syntax_Print.term_to_string
+                                                                  FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     e in
                                                                 let uu___15 =
                                                                   FStar_TypeChecker_Common.lcomp_to_string
@@ -7037,9 +7243,8 @@ and (check_application_args :
                                                               then
                                                                 ((let uu___15
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                    FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                   if uu___15
                                                                   then
                                                                     FStar_Compiler_Util.print_string
@@ -7089,15 +7294,18 @@ and (check_application_args :
                                                                     =
                                                                     let uu___18
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     e in
                                                                     let uu___19
                                                                     =
-                                                                    FStar_Ident.string_of_lid
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_lident
                                                                     c.FStar_TypeChecker_Common.eff_name in
                                                                     let uu___20
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     head1 in
                                                                     FStar_Compiler_Util.format3
                                                                     "Effectful argument %s (%s) to erased function %s, consider let binding it"
@@ -7112,9 +7320,8 @@ and (check_application_args :
                                                                  else ();
                                                                  (let uu___17
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    FStar_Options.Extreme in
+                                                                    FStar_Compiler_Debug.extreme
+                                                                    () in
                                                                   if uu___17
                                                                   then
                                                                     FStar_Compiler_Util.print_string
@@ -7260,13 +7467,13 @@ and (check_application_args :
                                                (match uu___8 with
                                                 | (comp1, g) ->
                                                     ((let uu___10 =
-                                                        FStar_TypeChecker_Env.debug
-                                                          env
-                                                          FStar_Options.Extreme in
+                                                        FStar_Compiler_Debug.extreme
+                                                          () in
                                                       if uu___10
                                                       then
                                                         let uu___11 =
-                                                          FStar_Syntax_Print.term_to_string
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
                                                             app in
                                                         let uu___12 =
                                                           FStar_TypeChecker_Common.lcomp_to_string
@@ -7510,21 +7717,27 @@ and (check_application_args :
                                 (x.FStar_Syntax_Syntax.index);
                               FStar_Syntax_Syntax.sort = targ
                             } in
-                          ((let uu___4 =
-                              FStar_TypeChecker_Env.debug env
-                                FStar_Options.Extreme in
+                          ((let uu___4 = FStar_Compiler_Debug.extreme () in
                             if uu___4
                             then
-                              let uu___5 = FStar_Syntax_Print.bv_to_string x1 in
+                              let uu___5 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_bv x1 in
                               let uu___6 =
-                                FStar_Syntax_Print.term_to_string
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term
                                   x1.FStar_Syntax_Syntax.sort in
                               let uu___7 =
-                                FStar_Syntax_Print.term_to_string e in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term e in
                               let uu___8 =
-                                FStar_Syntax_Print.subst_to_string subst in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.show_list
+                                     FStar_Syntax_Print.showable_subst_elt)
+                                  subst in
                               let uu___9 =
-                                FStar_Syntax_Print.term_to_string targ in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term targ in
                               FStar_Compiler_Util.print5
                                 "\tFormal is %s : %s\tType of arg %s (after subst %s) = %s\n"
                                 uu___5 uu___6 uu___7 uu___8 uu___9
@@ -7538,17 +7751,18 @@ and (check_application_args :
                                 let env1 =
                                   FStar_TypeChecker_Env.set_expected_typ_maybe_eq
                                     env targ1 (is_eq bqual1) in
-                                ((let uu___6 =
-                                    FStar_TypeChecker_Env.debug env1
-                                      FStar_Options.High in
+                                ((let uu___6 = FStar_Compiler_Debug.high () in
                                   if uu___6
                                   then
                                     let uu___7 =
                                       FStar_Syntax_Print.tag_of_term e in
                                     let uu___8 =
-                                      FStar_Syntax_Print.term_to_string e in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term e in
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string targ1 in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term
+                                        targ1 in
                                     let uu___10 =
                                       FStar_Compiler_Util.string_of_bool
                                         (is_eq bqual1) in
@@ -7638,8 +7852,8 @@ and (check_application_args :
                                                  (head1, chead2, ghead3,
                                                    cres'1) in
                                                ((let uu___7 =
-                                                   FStar_TypeChecker_Env.debug
-                                                     env FStar_Options.Low in
+                                                   FStar_Compiler_Debug.low
+                                                     () in
                                                  if uu___7
                                                  then
                                                    FStar_Errors.log_issue
@@ -7804,17 +8018,18 @@ and (check_application_args :
                           (match uu___4 with
                            | (cres, guard2) ->
                                let bs_cres = FStar_Syntax_Util.arrow bs cres in
-                               ((let uu___6 =
-                                   FStar_TypeChecker_Env.debug env
-                                     FStar_Options.Extreme in
+                               ((let uu___6 = FStar_Compiler_Debug.extreme () in
                                  if uu___6
                                  then
                                    let uu___7 =
-                                     FStar_Syntax_Print.term_to_string head in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term head in
                                    let uu___8 =
-                                     FStar_Syntax_Print.term_to_string tf in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term tf in
                                    let uu___9 =
-                                     FStar_Syntax_Print.term_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term
                                        bs_cres in
                                    FStar_Compiler_Util.print3
                                      "Forcing the type of %s from %s to %s\n"
@@ -7893,16 +8108,18 @@ and (check_application_args :
                            | (cres, guard2) ->
                                let bs_cres = FStar_Syntax_Util.arrow bs cres in
                                ((let uu___10 =
-                                   FStar_TypeChecker_Env.debug env
-                                     FStar_Options.Extreme in
+                                   FStar_Compiler_Debug.extreme () in
                                  if uu___10
                                  then
                                    let uu___11 =
-                                     FStar_Syntax_Print.term_to_string head in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term head in
                                    let uu___12 =
-                                     FStar_Syntax_Print.term_to_string tf in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term tf in
                                    let uu___13 =
-                                     FStar_Syntax_Print.term_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term
                                        bs_cres in
                                    FStar_Compiler_Util.print3
                                      "Forcing the type of %s from %s to %s\n"
@@ -7924,19 +8141,20 @@ and (check_application_args :
                      (match uu___2 with
                       | (bs1, c1) ->
                           let head_info = (head, chead, ghead, c1) in
-                          ((let uu___4 =
-                              FStar_TypeChecker_Env.debug env
-                                FStar_Options.Extreme in
+                          ((let uu___4 = FStar_Compiler_Debug.extreme () in
                             if uu___4
                             then
                               let uu___5 =
-                                FStar_Syntax_Print.term_to_string head in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term head in
                               let uu___6 =
-                                FStar_Syntax_Print.term_to_string tf in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term tf in
                               let uu___7 =
                                 FStar_Syntax_Print.binders_to_string ", " bs1 in
                               let uu___8 =
-                                FStar_Syntax_Print.comp_to_string c1 in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_comp c1 in
                               FStar_Compiler_Util.print4
                                 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
                                 uu___5 uu___6 uu___7 uu___8
@@ -8128,69 +8346,83 @@ and (tc_pat :
               scrutinee_t in
           aux false uu___ in
         let pat_typ_ok env1 pat_t1 scrutinee_t =
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug env1
-               (FStar_Options.Other "Patterns") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
            if uu___1
            then
-             let uu___2 = FStar_Syntax_Print.term_to_string pat_t1 in
-             let uu___3 = FStar_Syntax_Print.term_to_string scrutinee_t in
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term pat_t1 in
+             let uu___3 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                 scrutinee_t in
              FStar_Compiler_Util.print2 "$$$$$$$$$$$$pat_typ_ok? %s vs. %s\n"
                uu___2 uu___3
            else ());
+          FStar_Defensive.def_check_scoped
+            FStar_TypeChecker_Env.hasBinders_env
+            FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
+            pat_t1.FStar_Syntax_Syntax.pos "pat_typ_ok.pat_t.entry" env1
+            pat_t1;
           (let fail1 msg_str =
              let msg =
                if msg_str = ""
                then []
-               else (let uu___2 = FStar_Errors_Msg.text msg_str in [uu___2]) in
+               else (let uu___3 = FStar_Errors_Msg.text msg_str in [uu___3]) in
              let msg1 =
-               let uu___1 =
-                 let uu___2 =
-                   let uu___3 = FStar_Syntax_Print.term_to_string pat_t1 in
-                   let uu___4 = FStar_Syntax_Print.term_to_string scrutinee_t in
-                   FStar_Compiler_Util.format2
-                     "Type of pattern (%s) does not match type of scrutinee (%s)"
-                     uu___3 uu___4 in
-                 FStar_Errors_Msg.text uu___2 in
-               uu___1 :: msg in
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = FStar_Errors_Msg.text "Type of pattern" in
+                   let uu___5 =
+                     FStar_Class_PP.pp FStar_Syntax_Print.pretty_term pat_t1 in
+                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     uu___4 uu___5 in
+                 let uu___4 =
+                   let uu___5 =
+                     FStar_Errors_Msg.text "does not match type of scrutinee" in
+                   let uu___6 =
+                     FStar_Class_PP.pp FStar_Syntax_Print.pretty_term
+                       scrutinee_t in
+                   FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                     uu___5 uu___6 in
+                 FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+               uu___2 :: msg in
              FStar_Errors.raise_error_doc
                (FStar_Errors_Codes.Fatal_MismatchedPatternType, msg1)
                p0.FStar_Syntax_Syntax.p in
-           let uu___1 = FStar_Syntax_Util.head_and_args scrutinee_t in
-           match uu___1 with
+           let uu___2 = FStar_Syntax_Util.head_and_args scrutinee_t in
+           match uu___2 with
            | (head_s, args_s) ->
                let pat_t2 =
                  FStar_TypeChecker_Normalize.normalize
                    [FStar_TypeChecker_Env.Beta] env1 pat_t1 in
-               let uu___2 = FStar_Syntax_Util.un_uinst head_s in
-               (match uu___2 with
+               let uu___3 = FStar_Syntax_Util.un_uinst head_s in
+               (match uu___3 with
                 | {
                     FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_fvar
-                      uu___3;
-                    FStar_Syntax_Syntax.pos = uu___4;
-                    FStar_Syntax_Syntax.vars = uu___5;
-                    FStar_Syntax_Syntax.hash_code = uu___6;_} ->
-                    let uu___7 = FStar_Syntax_Util.head_and_args pat_t2 in
-                    (match uu___7 with
+                      uu___4;
+                    FStar_Syntax_Syntax.pos = uu___5;
+                    FStar_Syntax_Syntax.vars = uu___6;
+                    FStar_Syntax_Syntax.hash_code = uu___7;_} ->
+                    let uu___8 = FStar_Syntax_Util.head_and_args pat_t2 in
+                    (match uu___8 with
                      | (head_p, args_p) ->
-                         let uu___8 =
+                         let uu___9 =
                            FStar_TypeChecker_Rel.teq_nosmt_force env1 head_p
                              head_s in
-                         if uu___8
+                         if uu___9
                          then
-                           let uu___9 =
-                             let uu___10 = FStar_Syntax_Util.un_uinst head_p in
-                             uu___10.FStar_Syntax_Syntax.n in
-                           (match uu___9 with
+                           let uu___10 =
+                             let uu___11 = FStar_Syntax_Util.un_uinst head_p in
+                             uu___11.FStar_Syntax_Syntax.n in
+                           (match uu___10 with
                             | FStar_Syntax_Syntax.Tm_fvar f ->
-                                ((let uu___11 =
-                                    let uu___12 =
-                                      let uu___13 =
+                                ((let uu___12 =
+                                    let uu___13 =
+                                      let uu___14 =
                                         FStar_Syntax_Syntax.lid_of_fv f in
                                       FStar_TypeChecker_Env.is_type_constructor
-                                        env1 uu___13 in
-                                    Prims.op_Negation uu___12 in
-                                  if uu___11
+                                        env1 uu___14 in
+                                    Prims.op_Negation uu___13 in
+                                  if uu___12
                                   then
                                     fail1
                                       "Pattern matching a non-inductive type"
@@ -8200,53 +8432,55 @@ and (tc_pat :
                                      (FStar_Compiler_List.length args_s)
                                  then fail1 ""
                                  else ();
-                                 (let uu___12 =
-                                    let uu___13 =
-                                      let uu___14 =
+                                 (let uu___13 =
+                                    let uu___14 =
+                                      let uu___15 =
                                         FStar_Syntax_Syntax.lid_of_fv f in
                                       FStar_TypeChecker_Env.num_inductive_ty_params
-                                        env1 uu___14 in
-                                    match uu___13 with
+                                        env1 uu___15 in
+                                    match uu___14 with
                                     | FStar_Pervasives_Native.None ->
                                         (args_p, args_s)
                                     | FStar_Pervasives_Native.Some n ->
-                                        let uu___14 =
+                                        let uu___15 =
                                           FStar_Compiler_Util.first_N n
                                             args_p in
-                                        (match uu___14 with
-                                         | (params_p, uu___15) ->
-                                             let uu___16 =
+                                        (match uu___15 with
+                                         | (params_p, uu___16) ->
+                                             let uu___17 =
                                                FStar_Compiler_Util.first_N n
                                                  args_s in
-                                             (match uu___16 with
-                                              | (params_s, uu___17) ->
+                                             (match uu___17 with
+                                              | (params_s, uu___18) ->
                                                   (params_p, params_s))) in
-                                  match uu___12 with
+                                  match uu___13 with
                                   | (params_p, params_s) ->
                                       FStar_Compiler_List.fold_left2
                                         (fun out ->
-                                           fun uu___13 ->
-                                             fun uu___14 ->
-                                               match (uu___13, uu___14) with
-                                               | ((p, uu___15), (s, uu___16))
+                                           fun uu___14 ->
+                                             fun uu___15 ->
+                                               match (uu___14, uu___15) with
+                                               | ((p, uu___16), (s, uu___17))
                                                    ->
-                                                   let uu___17 =
+                                                   let uu___18 =
                                                      FStar_TypeChecker_Rel.teq_nosmt
                                                        env1 p s in
-                                                   (match uu___17 with
+                                                   (match uu___18 with
                                                     | FStar_Pervasives_Native.None
                                                         ->
-                                                        let uu___18 =
-                                                          let uu___19 =
-                                                            FStar_Syntax_Print.term_to_string
-                                                              p in
+                                                        let uu___19 =
                                                           let uu___20 =
-                                                            FStar_Syntax_Print.term_to_string
+                                                            FStar_Class_Show.show
+                                                              FStar_Syntax_Print.showable_term
+                                                              p in
+                                                          let uu___21 =
+                                                            FStar_Class_Show.show
+                                                              FStar_Syntax_Print.showable_term
                                                               s in
                                                           FStar_Compiler_Util.format2
                                                             "Parameter %s <> Parameter %s"
-                                                            uu___19 uu___20 in
-                                                        fail1 uu___18
+                                                            uu___20 uu___21 in
+                                                        fail1 uu___19
                                                     | FStar_Pervasives_Native.Some
                                                         g ->
                                                         let g1 =
@@ -8256,21 +8490,23 @@ and (tc_pat :
                                                           g1 out))
                                         FStar_TypeChecker_Env.trivial_guard
                                         params_p params_s))
-                            | uu___10 ->
+                            | uu___11 ->
                                 fail1 "Pattern matching a non-inductive type")
                          else
-                           (let uu___10 =
-                              let uu___11 =
-                                FStar_Syntax_Print.term_to_string head_p in
+                           (let uu___11 =
                               let uu___12 =
-                                FStar_Syntax_Print.term_to_string head_s in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term head_p in
+                              let uu___13 =
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term head_s in
                               FStar_Compiler_Util.format2
-                                "Head mismatch %s vs %s" uu___11 uu___12 in
-                            fail1 uu___10))
-                | uu___3 ->
-                    let uu___4 =
+                                "Head mismatch %s vs %s" uu___12 uu___13 in
+                            fail1 uu___11))
+                | uu___4 ->
+                    let uu___5 =
                       FStar_TypeChecker_Rel.teq_nosmt env1 pat_t2 scrutinee_t in
-                    (match uu___4 with
+                    (match uu___5 with
                      | FStar_Pervasives_Native.None -> fail1 ""
                      | FStar_Pervasives_Native.Some g ->
                          let g1 =
@@ -8598,13 +8834,13 @@ and (tc_pat :
                                  formals args))))
                | uu___1 -> fail "Not a simple pattern") in
         let rec check_nested_pattern env1 p t =
-          (let uu___1 =
-             FStar_TypeChecker_Env.debug env1
-               (FStar_Options.Other "Patterns") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
            if uu___1
            then
-             let uu___2 = FStar_Syntax_Print.pat_to_string p in
-             let uu___3 = FStar_Syntax_Print.term_to_string t in
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_pat p in
+             let uu___3 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
              FStar_Compiler_Util.print2 "Checking pattern %s at type %s\n"
                uu___2 uu___3
            else ());
@@ -8675,7 +8911,8 @@ and (tc_pat :
            match p.FStar_Syntax_Syntax.v with
            | FStar_Syntax_Syntax.Pat_dot_term uu___1 ->
                let uu___2 =
-                 let uu___3 = FStar_Syntax_Print.pat_to_string p in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_pat p in
                  FStar_Compiler_Util.format1
                    "Impossible: Expected an undecorated pattern, got %s"
                    uu___3 in
@@ -8704,7 +8941,9 @@ and (tc_pat :
                  | FStar_Const.Const_string uu___2 -> ()
                  | uu___2 ->
                      let uu___3 =
-                       let uu___4 = FStar_Syntax_Print.const_to_string c in
+                       let uu___4 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_const c in
                        FStar_Compiler_Util.format1
                          "Pattern matching a constant that does not have decidable equality: %s"
                          uu___4 in
@@ -8731,10 +8970,12 @@ and (tc_pat :
                              then
                                let uu___10 =
                                  let uu___11 =
-                                   FStar_Syntax_Print.term_to_string
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term
                                      lc.FStar_TypeChecker_Common.res_typ in
                                  let uu___12 =
-                                   FStar_Syntax_Print.term_to_string
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term
                                      expected_t in
                                  FStar_Compiler_Util.format2
                                    "Type of pattern (%s) does not match type of scrutinee (%s)"
@@ -8745,17 +8986,16 @@ and (tc_pat :
                               FStar_TypeChecker_Env.trivial_guard, false))))))
            | FStar_Syntax_Syntax.Pat_cons
                ({ FStar_Syntax_Syntax.fv_name = uu___1;
-                  FStar_Syntax_Syntax.fv_delta = uu___2;
                   FStar_Syntax_Syntax.fv_qual = FStar_Pervasives_Native.Some
                     (FStar_Syntax_Syntax.Unresolved_constructor uc);_},
                 us_opt, sub_pats)
                ->
-               let uu___3 =
+               let uu___2 =
                  FStar_TypeChecker_Util.find_record_or_dc_from_typ env1
                    (FStar_Pervasives_Native.Some t) uc
                    p.FStar_Syntax_Syntax.p in
-               (match uu___3 with
-                | (rdc, uu___4, constructor_fv) ->
+               (match uu___2 with
+                | (rdc, uu___3, constructor_fv) ->
                     let f_sub_pats =
                       FStar_Compiler_List.zip
                         uc.FStar_Syntax_Syntax.uc_fields sub_pats in
@@ -8764,18 +9004,18 @@ and (tc_pat :
                         uc
                         (FStar_Pervasives_Native.Some
                            (FStar_Pervasives.Inl t)) rdc f_sub_pats
-                        (fun uu___5 ->
+                        (fun uu___4 ->
                            let x =
                              FStar_Syntax_Syntax.new_bv
                                FStar_Pervasives_Native.None
                                FStar_Syntax_Syntax.tun in
-                           let uu___6 =
-                             let uu___7 =
+                           let uu___5 =
+                             let uu___6 =
                                FStar_Syntax_Syntax.withinfo
                                  (FStar_Syntax_Syntax.Pat_var x)
                                  p.FStar_Syntax_Syntax.p in
-                             (uu___7, false) in
-                           FStar_Pervasives_Native.Some uu___6)
+                             (uu___6, false) in
+                           FStar_Pervasives_Native.Some uu___5)
                         p.FStar_Syntax_Syntax.p in
                     let p1 =
                       {
@@ -8837,7 +9077,8 @@ and (tc_pat :
                             FStar_Compiler_Range_Ops.string_of_range
                               p.FStar_Syntax_Syntax.p in
                           let uu___5 =
-                            FStar_Syntax_Print.pat_to_string simple_pat in
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_pat simple_pat in
                           let uu___6 =
                             FStar_Compiler_Util.string_of_int
                               (FStar_Compiler_List.length sub_pats1) in
@@ -8863,9 +9104,12 @@ and (tc_pat :
                               FStar_Pervasives_Native.snd uu___5 in
                             let g' =
                               let uu___5 =
+                                FStar_TypeChecker_Env.push_bvs env1
+                                  simple_bvs1 in
+                              let uu___6 =
                                 expected_pat_typ env1
                                   p0.FStar_Syntax_Syntax.p t in
-                              pat_typ_ok env1 simple_pat_t uu___5 in
+                              pat_typ_ok uu___5 simple_pat_t uu___6 in
                             let guard1 =
                               let fml =
                                 FStar_TypeChecker_Env.guard_form guard in
@@ -8899,15 +9143,16 @@ and (tc_pat :
                             let guard2 =
                               FStar_TypeChecker_Env.conj_guard guard1 g' in
                             ((let uu___6 =
-                                FStar_TypeChecker_Env.debug env1
-                                  (FStar_Options.Other "Patterns") in
+                                FStar_Compiler_Effect.op_Bang dbg_Patterns in
                               if uu___6
                               then
                                 let uu___7 =
-                                  FStar_Syntax_Print.term_to_string
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term
                                     simple_pat_e1 in
                                 let uu___8 =
-                                  FStar_Syntax_Print.term_to_string
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term
                                     simple_pat_t in
                                 let uu___9 =
                                   let uu___10 =
@@ -8915,12 +9160,14 @@ and (tc_pat :
                                       (fun x ->
                                          let uu___11 =
                                            let uu___12 =
-                                             FStar_Syntax_Print.bv_to_string
+                                             FStar_Class_Show.show
+                                               FStar_Syntax_Print.showable_bv
                                                x in
                                            let uu___13 =
                                              let uu___14 =
                                                let uu___15 =
-                                                 FStar_Syntax_Print.term_to_string
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_term
                                                    x.FStar_Syntax_Syntax.sort in
                                                Prims.strcat uu___15 ")" in
                                              Prims.strcat " : " uu___14 in
@@ -9083,11 +9330,11 @@ and (tc_pat :
                                let uu___6 =
                                  reconstruct_nested_pat simple_pat_elab in
                                (bvs, tms, pat_e, uu___6, g, erasable1)))))) in
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "Patterns") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.pat_to_string p0 in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_pat p0 in
            FStar_Compiler_Util.print1 "Checking pattern: %s\n" uu___2
          else ());
         (let uu___1 =
@@ -9099,22 +9346,23 @@ and (tc_pat :
            check_nested_pattern uu___2 uu___3 uu___4 in
          match uu___1 with
          | (bvs, tms, pat_e, pat, g, erasable) ->
-             ((let uu___3 =
-                 FStar_TypeChecker_Env.debug env
-                   (FStar_Options.Other "Patterns") in
+             let extended_env = FStar_TypeChecker_Env.push_bvs env bvs in
+             let pat_e_norm =
+               FStar_TypeChecker_Normalize.normalize
+                 [FStar_TypeChecker_Env.Beta] extended_env pat_e in
+             ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_Patterns in
                if uu___3
                then
-                 let uu___4 = FStar_Syntax_Print.pat_to_string pat in
-                 let uu___5 = FStar_Syntax_Print.term_to_string pat_e in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_pat pat in
+                 let uu___5 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                     pat_e in
                  FStar_Compiler_Util.print2
                    "Done checking pattern %s as expression %s\n" uu___4
                    uu___5
                else ());
-              (let uu___3 = FStar_TypeChecker_Env.push_bvs env bvs in
-               let uu___4 =
-                 FStar_TypeChecker_Normalize.normalize
-                   [FStar_TypeChecker_Env.Beta] env pat_e in
-               (pat, bvs, tms, uu___3, pat_e, uu___4, g, erasable))))
+              (pat, bvs, tms, extended_env, pat_e, pat_e_norm, g, erasable)))
 and (tc_eqn :
   FStar_Syntax_Syntax.bv ->
     FStar_TypeChecker_Env.env ->
@@ -9155,29 +9403,22 @@ and (tc_eqn :
                         (match uu___5 with
                          | (pattern1, pat_bvs, pat_bv_tms, pat_env, pat_exp,
                             norm_pat_exp, guard_pat, erasable) ->
-                             ((let uu___7 =
-                                 FStar_TypeChecker_Env.debug env
-                                   FStar_Options.Extreme in
+                             ((let uu___7 = FStar_Compiler_Debug.extreme () in
                                if uu___7
                                then
                                  let uu___8 =
-                                   FStar_Syntax_Print.pat_to_string pattern1 in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_pat pattern1 in
                                  let uu___9 =
                                    FStar_Syntax_Print.bvs_to_string ";"
                                      pat_bvs in
                                  let uu___10 =
-                                   FStar_Compiler_List.fold_left
-                                     (fun s ->
-                                        fun t ->
-                                          let uu___11 =
-                                            let uu___12 =
-                                              FStar_Syntax_Print.term_to_string
-                                                t in
-                                            Prims.strcat ";" uu___12 in
-                                          Prims.strcat s uu___11) ""
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        FStar_Syntax_Print.showable_term)
                                      pat_bv_tms in
                                  FStar_Compiler_Util.print3
-                                   "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms %s\n"
+                                   "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms=%s\n"
                                    uu___8 uu___9 uu___10
                                else ());
                               (let uu___7 =
@@ -9337,7 +9578,8 @@ and (tc_eqn :
                                                        FStar_Compiler_Range_Ops.string_of_range
                                                          pat_exp1.FStar_Syntax_Syntax.pos in
                                                      let uu___15 =
-                                                       FStar_Syntax_Print.term_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_term
                                                          pat_exp1 in
                                                      let uu___16 =
                                                        FStar_Syntax_Print.tag_of_term
@@ -9368,7 +9610,8 @@ and (tc_eqn :
                                                            FStar_Compiler_Range_Ops.string_of_range
                                                              pattern2.FStar_Syntax_Syntax.p in
                                                          let uu___15 =
-                                                           FStar_Syntax_Print.pat_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_pat
                                                              pattern2 in
                                                          FStar_Compiler_Util.format2
                                                            "Impossible (%s): scrutinee of match is not defined %s"
@@ -9604,10 +9847,12 @@ and (tc_eqn :
                                                  | uu___12 ->
                                                      let uu___13 =
                                                        let uu___14 =
-                                                         FStar_Syntax_Print.pat_to_string
+                                                         FStar_Class_Show.show
+                                                           FStar_Syntax_Print.showable_pat
                                                            pattern2 in
                                                        let uu___15 =
-                                                         FStar_Syntax_Print.term_to_string
+                                                         FStar_Class_Show.show
+                                                           FStar_Syntax_Print.showable_term
                                                            pat_exp2 in
                                                        FStar_Compiler_Util.format2
                                                          "Internal error: unexpected elaborated pattern: %s and pattern expression %s"
@@ -9655,12 +9900,12 @@ and (tc_eqn :
                                                        branch_guard1 w in
                                                branch_guard2) in
                                           (let uu___11 =
-                                             FStar_TypeChecker_Env.debug env
-                                               FStar_Options.Extreme in
+                                             FStar_Compiler_Debug.extreme () in
                                            if uu___11
                                            then
                                              let uu___12 =
-                                               FStar_Syntax_Print.term_to_string
+                                               FStar_Class_Show.show
+                                                 FStar_Syntax_Print.showable_term
                                                  branch_guard in
                                              FStar_Compiler_Util.print1
                                                "tc_eqn: branch guard : %s\n"
@@ -9863,8 +10108,13 @@ and (tc_eqn :
                                                                     c_weak) in
                                                                if uu___15
                                                                then
+                                                                 let uu___16
+                                                                   =
+                                                                   FStar_TypeChecker_Env.push_bvs
+                                                                    scrutinee_env
+                                                                    pat_bvs in
                                                                  FStar_TypeChecker_Util.maybe_assume_result_eq_pure_term
-                                                                   env
+                                                                   uu___16
                                                                    branch_exp1
                                                                    c_weak
                                                                else c_weak in
@@ -9873,10 +10123,8 @@ and (tc_eqn :
                                                              then
                                                                ((let uu___16
                                                                    =
-                                                                   FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffects") in
+                                                                   FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffects in
                                                                  if uu___16
                                                                  then
                                                                    FStar_Compiler_Util.print_string
@@ -9977,9 +10225,9 @@ and (tc_eqn :
                                                                     FStar_TypeChecker_Env.failhard
                                                                     =
                                                                     (uu___16.FStar_TypeChecker_Env.failhard);
-                                                                    FStar_TypeChecker_Env.nosynth
+                                                                    FStar_TypeChecker_Env.flychecking
                                                                     =
-                                                                    (uu___16.FStar_TypeChecker_Env.nosynth);
+                                                                    (uu___16.FStar_TypeChecker_Env.flychecking);
                                                                     FStar_TypeChecker_Env.uvar_subtyping
                                                                     =
                                                                     (uu___16.FStar_TypeChecker_Env.uvar_subtyping);
@@ -10063,7 +10311,10 @@ and (tc_eqn :
                                                                     (uu___16.FStar_TypeChecker_Env.erase_erasable_args);
                                                                     FStar_TypeChecker_Env.core_check
                                                                     =
-                                                                    (uu___16.FStar_TypeChecker_Env.core_check)
+                                                                    (uu___16.FStar_TypeChecker_Env.core_check);
+                                                                    FStar_TypeChecker_Env.missing_decl
+                                                                    =
+                                                                    (uu___16.FStar_TypeChecker_Env.missing_decl)
                                                                     } in
                                                                    let uu___16
                                                                     =
@@ -10127,50 +10378,24 @@ and (tc_eqn :
                                                                     uu___16 in
                                                                  (let uu___17
                                                                     =
-                                                                    FStar_TypeChecker_Env.debug
-                                                                    env
-                                                                    (FStar_Options.Other
-                                                                    "LayeredEffects") in
+                                                                    FStar_Compiler_Effect.op_Bang
+                                                                    dbg_LayeredEffects in
                                                                   if uu___17
                                                                   then
                                                                     let uu___18
                                                                     =
-                                                                    FStar_Compiler_List.fold_left
-                                                                    (fun s ->
-                                                                    fun t ->
-                                                                    let uu___19
-                                                                    =
-                                                                    let uu___20
-                                                                    =
-                                                                    FStar_Syntax_Print.term_to_string
-                                                                    t in
-                                                                    Prims.strcat
-                                                                    ";"
-                                                                    uu___20 in
-                                                                    Prims.strcat
-                                                                    s uu___19)
-                                                                    ""
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Syntax_Print.showable_term)
                                                                     pat_bv_tms2 in
                                                                     let uu___19
                                                                     =
-                                                                    FStar_Compiler_List.fold_left
-                                                                    (fun s ->
-                                                                    fun t ->
-                                                                    let uu___20
-                                                                    =
-                                                                    let uu___21
-                                                                    =
-                                                                    FStar_Syntax_Print.bv_to_string
-                                                                    t in
-                                                                    Prims.strcat
-                                                                    ";"
-                                                                    uu___21 in
-                                                                    Prims.strcat
-                                                                    s uu___20)
-                                                                    ""
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Syntax_Print.showable_bv)
                                                                     pat_bvs in
                                                                     FStar_Compiler_Util.print2
-                                                                    "tc_eqn: typechecked pat_bv_tms %s (pat_bvs : %s)\n"
+                                                                    "tc_eqn: typechecked pat_bv_tms=%s (pat_bvs=%s)\n"
                                                                     uu___18
                                                                     uu___19
                                                                   else ());
@@ -10255,8 +10480,8 @@ and (tc_eqn :
                                                  FStar_TypeChecker_Env.conj_guard
                                                    g_when1 g_branch1 in
                                                ((let uu___13 =
-                                                   FStar_TypeChecker_Env.debug
-                                                     env FStar_Options.High in
+                                                   FStar_Compiler_Debug.high
+                                                     () in
                                                  if uu___13
                                                  then
                                                    let uu___14 =
@@ -10369,13 +10594,12 @@ and (check_top_level_let :
                               (uu___6, c12))) in
                     (match uu___2 with
                      | (e21, c12) ->
-                         ((let uu___4 =
-                             FStar_TypeChecker_Env.debug env1
-                               FStar_Options.Medium in
+                         ((let uu___4 = FStar_Compiler_Debug.medium () in
                            if uu___4
                            then
                              let uu___5 =
-                               FStar_Syntax_Print.term_to_string e11 in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term e11 in
                              FStar_Compiler_Util.print1
                                "Let binding BEFORE tcnorm: %s\n" uu___5
                            else ());
@@ -10394,13 +10618,12 @@ and (check_top_level_let :
                                  FStar_TypeChecker_Env.DoNotUnfoldPureLets]
                                  env1 e11
                              else e11 in
-                           (let uu___5 =
-                              FStar_TypeChecker_Env.debug env1
-                                FStar_Options.Medium in
+                           (let uu___5 = FStar_Compiler_Debug.medium () in
                             if uu___5
                             then
                               let uu___6 =
-                                FStar_Syntax_Print.term_to_string e12 in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term e12 in
                               FStar_Compiler_Util.print1
                                 "Let binding AFTER tcnorm: %s\n" uu___6
                             else ());
@@ -10519,8 +10742,8 @@ and (check_inner_let :
                 (env1.FStar_TypeChecker_Env.phase1);
               FStar_TypeChecker_Env.failhard =
                 (env1.FStar_TypeChecker_Env.failhard);
-              FStar_TypeChecker_Env.nosynth =
-                (env1.FStar_TypeChecker_Env.nosynth);
+              FStar_TypeChecker_Env.flychecking =
+                (env1.FStar_TypeChecker_Env.flychecking);
               FStar_TypeChecker_Env.uvar_subtyping =
                 (env1.FStar_TypeChecker_Env.uvar_subtyping);
               FStar_TypeChecker_Env.intactics =
@@ -10575,7 +10798,9 @@ and (check_inner_let :
               FStar_TypeChecker_Env.erase_erasable_args =
                 (env1.FStar_TypeChecker_Env.erase_erasable_args);
               FStar_TypeChecker_Env.core_check =
-                (env1.FStar_TypeChecker_Env.core_check)
+                (env1.FStar_TypeChecker_Env.core_check);
+              FStar_TypeChecker_Env.missing_decl =
+                (env1.FStar_TypeChecker_Env.missing_decl)
             } in
           let uu___ =
             let uu___1 =
@@ -10602,9 +10827,11 @@ and (check_inner_let :
                  then
                    let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Syntax_Print.term_to_string e1 in
+                       let uu___6 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term e1 in
                        let uu___7 =
-                         FStar_Syntax_Print.lid_to_string
+                         FStar_Class_Show.show FStar_Ident.showable_lident
                            c1.FStar_TypeChecker_Common.eff_name in
                        FStar_Compiler_Util.format2
                          "Definitions marked @inline_let are expected to be pure or ghost; got an expression \"%s\" with effect \"%s\""
@@ -10641,7 +10868,8 @@ and (check_inner_let :
                              FStar_TypeChecker_Util.strengthen_precondition
                                (FStar_Pervasives_Native.Some
                                   (fun uu___7 ->
-                                     "folding guard g2 of e2 in the lcomp"))
+                                     FStar_Errors_Msg.mkmsg
+                                       "folding guard g2 of e2 in the lcomp"))
                                env_x e22 c2 g2 in
                            (match uu___6 with | (c21, g21) -> (e22, c21, g21)) in
                      (match uu___4 with
@@ -10728,14 +10956,15 @@ and (check_inner_let :
                                 FStar_Compiler_Option.get uu___7 in
                               FStar_Pervasives_Native.fst uu___6 in
                             ((let uu___7 =
-                                FStar_TypeChecker_Env.debug env2
-                                  (FStar_Options.Other "Exports") in
+                                FStar_Compiler_Effect.op_Bang dbg_Exports in
                               if uu___7
                               then
                                 let uu___8 =
-                                  FStar_Syntax_Print.term_to_string tt in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term tt in
                                 let uu___9 =
-                                  FStar_Syntax_Print.term_to_string
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term
                                     cres.FStar_TypeChecker_Common.res_typ in
                                 FStar_Compiler_Util.print2
                                   "Got expected type from env %s\ncres.res_typ=%s\n"
@@ -10750,15 +10979,17 @@ and (check_inner_let :
                              match uu___7 with
                              | (t, g_ex) ->
                                  ((let uu___9 =
-                                     FStar_TypeChecker_Env.debug env2
-                                       (FStar_Options.Other "Exports") in
+                                     FStar_Compiler_Effect.op_Bang
+                                       dbg_Exports in
                                    if uu___9
                                    then
                                      let uu___10 =
-                                       FStar_Syntax_Print.term_to_string
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term
                                          cres.FStar_TypeChecker_Common.res_typ in
                                      let uu___11 =
-                                       FStar_Syntax_Print.term_to_string t in
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term t in
                                      FStar_Compiler_Util.print2
                                        "Checked %s has no escaping types; normalized to %s\n"
                                        uu___10 uu___11
@@ -11032,9 +11263,13 @@ and (check_inner_let_rec :
                                           if uu___6
                                           then
                                             let bvss =
-                                              FStar_Compiler_Set.from_list
-                                                FStar_Syntax_Syntax.ord_bv
-                                                bvs in
+                                              Obj.magic
+                                                (FStar_Class_Setlike.from_list
+                                                   ()
+                                                   (Obj.magic
+                                                      (FStar_Compiler_FlatSet.setlike_flat_set
+                                                         FStar_Syntax_Syntax.ord_bv))
+                                                   bvs) in
                                             FStar_TypeChecker_Common.apply_lcomp
                                               (fun c ->
                                                  let uu___7 =
@@ -11050,13 +11285,23 @@ and (check_inner_let_rec :
                                                                 let uu___13 =
                                                                   FStar_Syntax_Free.names
                                                                     t in
-                                                                FStar_Compiler_Set.inter
-                                                                  FStar_Syntax_Syntax.ord_bv
-                                                                  bvss
-                                                                  uu___13 in
-                                                              FStar_Compiler_Set.is_empty
-                                                                FStar_Syntax_Syntax.ord_bv
-                                                                uu___12 in
+                                                                Obj.magic
+                                                                  (FStar_Class_Setlike.inter
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    (FStar_Compiler_FlatSet.setlike_flat_set
+                                                                    FStar_Syntax_Syntax.ord_bv))
+                                                                    (Obj.magic
+                                                                    bvss)
+                                                                    (Obj.magic
+                                                                    uu___13)) in
+                                                              FStar_Class_Setlike.is_empty
+                                                                ()
+                                                                (Obj.magic
+                                                                   (FStar_Compiler_FlatSet.setlike_flat_set
+                                                                    FStar_Syntax_Syntax.ord_bv))
+                                                                (Obj.magic
+                                                                   uu___12) in
                                                             Prims.op_Negation
                                                               uu___11) uu___8 in
                                                  if uu___7
@@ -11184,9 +11429,11 @@ and (build_let_rec_env :
                               let uu___7 =
                                 FStar_Syntax_Print.tag_of_term lbdef in
                               let uu___8 =
-                                FStar_Syntax_Print.term_to_string lbdef in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term lbdef in
                               let uu___9 =
-                                FStar_Syntax_Print.term_to_string lbtyp in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term lbtyp in
                               FStar_Compiler_Util.format3
                                 "Only function literals with arrow types can be defined recursively; got (%s) %s : %s"
                                 uu___7 uu___8 uu___9 in
@@ -11204,7 +11451,10 @@ and (build_let_rec_env :
                           ((let uu___7 =
                               let uu___8 =
                                 let uu___9 =
-                                  FStar_Syntax_Print.lbname_to_string lbname in
+                                  FStar_Class_Show.show
+                                    (FStar_Class_Show.show_either
+                                       FStar_Syntax_Print.showable_bv
+                                       FStar_Syntax_Print.showable_fv) lbname in
                                 Prims.strcat "Admitting termination of "
                                   uu___9 in
                               (FStar_Errors_Codes.Warning_WarnOnUse, uu___8) in
@@ -11278,8 +11528,8 @@ and (build_let_rec_env :
                   (env01.FStar_TypeChecker_Env.phase1);
                 FStar_TypeChecker_Env.failhard =
                   (env01.FStar_TypeChecker_Env.failhard);
-                FStar_TypeChecker_Env.nosynth =
-                  (env01.FStar_TypeChecker_Env.nosynth);
+                FStar_TypeChecker_Env.flychecking =
+                  (env01.FStar_TypeChecker_Env.flychecking);
                 FStar_TypeChecker_Env.uvar_subtyping =
                   (env01.FStar_TypeChecker_Env.uvar_subtyping);
                 FStar_TypeChecker_Env.intactics =
@@ -11334,7 +11584,9 @@ and (build_let_rec_env :
                 FStar_TypeChecker_Env.erase_erasable_args =
                   (env01.FStar_TypeChecker_Env.erase_erasable_args);
                 FStar_TypeChecker_Env.core_check =
-                  (env01.FStar_TypeChecker_Env.core_check)
+                  (env01.FStar_TypeChecker_Env.core_check);
+                FStar_TypeChecker_Env.missing_decl =
+                  (env01.FStar_TypeChecker_Env.missing_decl)
               } t uu___1 "" in
           match uu___ with
           | (t1, uu___1, g) ->
@@ -11378,15 +11630,15 @@ and (build_let_rec_env :
                                  | FStar_Pervasives_Native.Some
                                      (arity, lbdef1) ->
                                      ((let uu___7 =
-                                         FStar_TypeChecker_Env.debug env2
-                                           FStar_Options.Extreme in
+                                         FStar_Compiler_Debug.extreme () in
                                        if uu___7
                                        then
                                          let uu___8 =
                                            FStar_Compiler_Util.string_of_int
                                              arity in
                                          let uu___9 =
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              lbdef1 in
                                          FStar_Compiler_Util.print2
                                            "termination_check_enabled returned arity: %s and lbdef: %s\n"
@@ -11463,8 +11715,9 @@ and (build_let_rec_env :
                                              (env2.FStar_TypeChecker_Env.phase1);
                                            FStar_TypeChecker_Env.failhard =
                                              (env2.FStar_TypeChecker_Env.failhard);
-                                           FStar_TypeChecker_Env.nosynth =
-                                             (env2.FStar_TypeChecker_Env.nosynth);
+                                           FStar_TypeChecker_Env.flychecking
+                                             =
+                                             (env2.FStar_TypeChecker_Env.flychecking);
                                            FStar_TypeChecker_Env.uvar_subtyping
                                              =
                                              (env2.FStar_TypeChecker_Env.uvar_subtyping);
@@ -11538,7 +11791,10 @@ and (build_let_rec_env :
                                              =
                                              (env2.FStar_TypeChecker_Env.erase_erasable_args);
                                            FStar_TypeChecker_Env.core_check =
-                                             (env2.FStar_TypeChecker_Env.core_check)
+                                             (env2.FStar_TypeChecker_Env.core_check);
+                                           FStar_TypeChecker_Env.missing_decl
+                                             =
+                                             (env2.FStar_TypeChecker_Env.missing_decl)
                                          } in
                                        (lb1, env3)))
                                  | FStar_Pervasives_Native.None ->
@@ -11588,10 +11844,14 @@ and (check_let_recs :
                         let uu___3 =
                           let uu___4 =
                             let uu___5 =
-                              FStar_Syntax_Print.lbname_to_string
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.show_either
+                                   FStar_Syntax_Print.showable_bv
+                                   FStar_Syntax_Print.showable_fv)
                                 lb.FStar_Syntax_Syntax.lbname in
                             let uu___6 =
-                              FStar_Syntax_Print.term_to_string
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term
                                 lb.FStar_Syntax_Syntax.lbdef in
                             FStar_Compiler_Util.format2
                               "Only function literals may be defined recursively; %s is defined to be %s"
@@ -11758,8 +12018,8 @@ and (check_let_bound_def :
                            (env11.FStar_TypeChecker_Env.phase1);
                          FStar_TypeChecker_Env.failhard =
                            (env11.FStar_TypeChecker_Env.failhard);
-                         FStar_TypeChecker_Env.nosynth =
-                           (env11.FStar_TypeChecker_Env.nosynth);
+                         FStar_TypeChecker_Env.flychecking =
+                           (env11.FStar_TypeChecker_Env.flychecking);
                          FStar_TypeChecker_Env.uvar_subtyping =
                            (env11.FStar_TypeChecker_Env.uvar_subtyping);
                          FStar_TypeChecker_Env.intactics =
@@ -11816,7 +12076,9 @@ and (check_let_bound_def :
                          FStar_TypeChecker_Env.erase_erasable_args =
                            (env11.FStar_TypeChecker_Env.erase_erasable_args);
                          FStar_TypeChecker_Env.core_check =
-                           (env11.FStar_TypeChecker_Env.core_check)
+                           (env11.FStar_TypeChecker_Env.core_check);
+                         FStar_TypeChecker_Env.missing_decl =
+                           (env11.FStar_TypeChecker_Env.missing_decl)
                        } e11 in
                    match uu___4 with
                    | (e12, c1, g1) ->
@@ -11834,13 +12096,14 @@ and (check_let_bound_def :
                         | (c11, guard_f) ->
                             let g11 =
                               FStar_TypeChecker_Env.conj_guard g1 guard_f in
-                            ((let uu___7 =
-                                FStar_TypeChecker_Env.debug env
-                                  FStar_Options.Extreme in
+                            ((let uu___7 = FStar_Compiler_Debug.extreme () in
                               if uu___7
                               then
                                 let uu___8 =
-                                  FStar_Syntax_Print.lbname_to_string
+                                  FStar_Class_Show.show
+                                    (FStar_Class_Show.show_either
+                                       FStar_Syntax_Print.showable_bv
+                                       FStar_Syntax_Print.showable_fv)
                                     lb.FStar_Syntax_Syntax.lbname in
                                 let uu___9 =
                                   FStar_TypeChecker_Common.lcomp_to_string
@@ -11910,8 +12173,7 @@ and (check_lbtyp :
                              (match uu___6 with
                               | (t2, uu___7, g) ->
                                   ((let uu___9 =
-                                      FStar_TypeChecker_Env.debug env
-                                        FStar_Options.Medium in
+                                      FStar_Compiler_Debug.medium () in
                                     if uu___9
                                     then
                                       let uu___10 =
@@ -11921,7 +12183,8 @@ and (check_lbtyp :
                                         FStar_Compiler_Range_Ops.string_of_range
                                           uu___11 in
                                       let uu___11 =
-                                        FStar_Syntax_Print.term_to_string t2 in
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term t2 in
                                       FStar_Compiler_Util.print2
                                         "(%s) Checked type annotation %s\n"
                                         uu___10 uu___11
@@ -11948,15 +12211,17 @@ and (tc_binder :
           let uu___1 = FStar_Syntax_Util.type_u () in
           (match uu___1 with
            | (tu, u) ->
-               ((let uu___3 =
-                   FStar_TypeChecker_Env.debug env FStar_Options.Extreme in
+               ((let uu___3 = FStar_Compiler_Debug.extreme () in
                  if uu___3
                  then
-                   let uu___4 = FStar_Syntax_Print.bv_to_string x in
+                   let uu___4 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
                    let uu___5 =
-                     FStar_Syntax_Print.term_to_string
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
                        x.FStar_Syntax_Syntax.sort in
-                   let uu___6 = FStar_Syntax_Print.term_to_string tu in
+                   let uu___6 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       tu in
                    FStar_Compiler_Util.print3
                      "Checking binder %s:%s at type %s\n" uu___4 uu___5
                      uu___6
@@ -11995,16 +12260,16 @@ and (tc_binder :
                                          (x.FStar_Syntax_Syntax.index);
                                        FStar_Syntax_Syntax.sort = t
                                      } imp1 pqual attrs1 in
-                                 (let uu___9 =
-                                    FStar_TypeChecker_Env.debug env
-                                      FStar_Options.High in
+                                 (let uu___9 = FStar_Compiler_Debug.high () in
                                   if uu___9
                                   then
                                     let uu___10 =
-                                      FStar_Syntax_Print.bv_to_string
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_bv
                                         x1.FStar_Syntax_Syntax.binder_bv in
                                     let uu___11 =
-                                      FStar_Syntax_Print.term_to_string t in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term t in
                                     FStar_Compiler_Util.print2
                                       "Pushing binder %s at type %s\n"
                                       uu___10 uu___11
@@ -12019,7 +12284,7 @@ and (tc_binders :
   =
   fun env ->
     fun bs ->
-      (let uu___1 = FStar_TypeChecker_Env.debug env FStar_Options.Extreme in
+      (let uu___1 = FStar_Compiler_Debug.extreme () in
        if uu___1
        then
          let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
@@ -12140,13 +12405,13 @@ and (tc_tot_or_gtot_term_maybe_solve_deferred :
                                  let uu___7 =
                                    FStar_TypeChecker_Err.expected_ghost_expression
                                      e1 c2 msg in
-                                 FStar_Errors.raise_error uu___7
+                                 FStar_Errors.raise_error_doc uu___7
                                    e1.FStar_Syntax_Syntax.pos
                                else
                                  (let uu___8 =
                                     FStar_TypeChecker_Err.expected_pure_expression
                                       e1 c2 msg in
-                                  FStar_Errors.raise_error uu___8
+                                  FStar_Errors.raise_error_doc uu___8
                                     e1.FStar_Syntax_Syntax.pos))))
 and (tc_tot_or_gtot_term' :
   FStar_TypeChecker_Env.env ->
@@ -12230,11 +12495,11 @@ let (typeof_tot_or_gtot_term :
   fun env ->
     fun e ->
       fun must_tot ->
-        (let uu___1 =
-           FStar_TypeChecker_Env.debug env (FStar_Options.Other "RelCheck") in
+        (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_RelCheck in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.term_to_string e in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
            FStar_Compiler_Util.print1 "Checking term %s\n" uu___2
          else ());
         (let env1 =
@@ -12279,8 +12544,8 @@ let (typeof_tot_or_gtot_term :
                (env.FStar_TypeChecker_Env.phase1);
              FStar_TypeChecker_Env.failhard =
                (env.FStar_TypeChecker_Env.failhard);
-             FStar_TypeChecker_Env.nosynth =
-               (env.FStar_TypeChecker_Env.nosynth);
+             FStar_TypeChecker_Env.flychecking =
+               (env.FStar_TypeChecker_Env.flychecking);
              FStar_TypeChecker_Env.uvar_subtyping =
                (env.FStar_TypeChecker_Env.uvar_subtyping);
              FStar_TypeChecker_Env.intactics =
@@ -12334,7 +12599,9 @@ let (typeof_tot_or_gtot_term :
              FStar_TypeChecker_Env.erase_erasable_args =
                (env.FStar_TypeChecker_Env.erase_erasable_args);
              FStar_TypeChecker_Env.core_check =
-               (env.FStar_TypeChecker_Env.core_check)
+               (env.FStar_TypeChecker_Env.core_check);
+             FStar_TypeChecker_Env.missing_decl =
+               (env.FStar_TypeChecker_Env.missing_decl)
            } in
          let uu___1 =
            try
@@ -12361,7 +12628,9 @@ let (typeof_tot_or_gtot_term :
                 else
                   (let uu___4 =
                      let uu___5 =
-                       let uu___6 = FStar_Syntax_Print.term_to_string e in
+                       let uu___6 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term e in
                        FStar_Compiler_Util.format1
                          "Implicit argument: Expected a total term; got a ghost term: %s"
                          uu___6 in
@@ -12382,7 +12651,8 @@ let level_of_type_fail :
           let uu___1 =
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Syntax_Print.term_to_string e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                 FStar_Compiler_Util.format2
                   "Expected a type; got %s of type %s" uu___4 t in
               FStar_Errors_Msg.text uu___3 in
@@ -12463,8 +12733,8 @@ let (level_of_type :
                            (env.FStar_TypeChecker_Env.phase1);
                          FStar_TypeChecker_Env.failhard =
                            (env.FStar_TypeChecker_Env.failhard);
-                         FStar_TypeChecker_Env.nosynth =
-                           (env.FStar_TypeChecker_Env.nosynth);
+                         FStar_TypeChecker_Env.flychecking =
+                           (env.FStar_TypeChecker_Env.flychecking);
                          FStar_TypeChecker_Env.uvar_subtyping =
                            (env.FStar_TypeChecker_Env.uvar_subtyping);
                          FStar_TypeChecker_Env.intactics =
@@ -12521,12 +12791,16 @@ let (level_of_type :
                          FStar_TypeChecker_Env.erase_erasable_args =
                            (env.FStar_TypeChecker_Env.erase_erasable_args);
                          FStar_TypeChecker_Env.core_check =
-                           (env.FStar_TypeChecker_Env.core_check)
+                           (env.FStar_TypeChecker_Env.core_check);
+                         FStar_TypeChecker_Env.missing_decl =
+                           (env.FStar_TypeChecker_Env.missing_decl)
                        } in
                      let g = FStar_TypeChecker_Rel.teq env1 t1 t_u in
                      ((match g.FStar_TypeChecker_Common.guard_f with
                        | FStar_TypeChecker_Common.NonTrivial f ->
-                           let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                           let uu___5 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term t1 in
                            level_of_type_fail env1 e uu___5
                        | uu___5 ->
                            FStar_TypeChecker_Rel.force_trivial_guard env1 g);
@@ -12617,19 +12891,22 @@ let rec (universe_of_aux :
       match uu___ with
       | FStar_Syntax_Syntax.Tm_bvar uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             Prims.strcat "TcTerm.universe_of:Impossible (bvar/unknown/lazy) "
               uu___3 in
           FStar_Compiler_Effect.failwith uu___2
       | FStar_Syntax_Syntax.Tm_unknown ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.term_to_string e in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             Prims.strcat "TcTerm.universe_of:Impossible (bvar/unknown/lazy) "
               uu___2 in
           FStar_Compiler_Effect.failwith uu___1
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             Prims.strcat "TcTerm.universe_of:Impossible (bvar/unknown/lazy) "
               uu___3 in
           FStar_Compiler_Effect.failwith uu___2
@@ -12710,11 +12987,14 @@ let rec (universe_of_aux :
                            let uu___9 =
                              let uu___10 =
                                let uu___11 =
-                                 FStar_Syntax_Print.fv_to_string fv in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_fv fv in
                                let uu___12 =
-                                 FStar_Syntax_Print.univ_to_string ul in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_univ ul in
                                let uu___13 =
-                                 FStar_Syntax_Print.univ_to_string ur in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_univ ur in
                                FStar_Compiler_Util.format3
                                  "Incompatible universe application for %s, expected %s got %s\n"
                                  uu___11 uu___12 uu___13 in
@@ -12868,8 +13148,8 @@ let rec (universe_of_aux :
                            (env2.FStar_TypeChecker_Env.phase1);
                          FStar_TypeChecker_Env.failhard =
                            (env2.FStar_TypeChecker_Env.failhard);
-                         FStar_TypeChecker_Env.nosynth =
-                           (env2.FStar_TypeChecker_Env.nosynth);
+                         FStar_TypeChecker_Env.flychecking =
+                           (env2.FStar_TypeChecker_Env.flychecking);
                          FStar_TypeChecker_Env.uvar_subtyping =
                            (env2.FStar_TypeChecker_Env.uvar_subtyping);
                          FStar_TypeChecker_Env.intactics =
@@ -12926,17 +13206,20 @@ let rec (universe_of_aux :
                          FStar_TypeChecker_Env.erase_erasable_args =
                            (env2.FStar_TypeChecker_Env.erase_erasable_args);
                          FStar_TypeChecker_Env.core_check =
-                           (env2.FStar_TypeChecker_Env.core_check)
+                           (env2.FStar_TypeChecker_Env.core_check);
+                         FStar_TypeChecker_Env.missing_decl =
+                           (env2.FStar_TypeChecker_Env.missing_decl)
                        } in
                      ((let uu___5 =
-                         FStar_TypeChecker_Env.debug env3
-                           (FStar_Options.Other "UniverseOf") in
+                         FStar_Compiler_Effect.op_Bang dbg_UniverseOf in
                        if uu___5
                        then
                          let uu___6 =
                            let uu___7 = FStar_TypeChecker_Env.get_range env3 in
                            FStar_Compiler_Range_Ops.string_of_range uu___7 in
-                         let uu___7 = FStar_Syntax_Print.term_to_string hd2 in
+                         let uu___7 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term hd2 in
                          FStar_Compiler_Util.print2
                            "%s: About to type-check %s\n" uu___6 uu___7
                        else ());
@@ -12960,7 +13243,9 @@ let rec (universe_of_aux :
                (match uu___2 with
                 | FStar_Pervasives_Native.Some t1 -> t1
                 | FStar_Pervasives_Native.None ->
-                    let uu___3 = FStar_Syntax_Print.term_to_string t in
+                    let uu___3 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t in
                     level_of_type_fail env e uu___3))
       | FStar_Syntax_Syntax.Tm_match
           { FStar_Syntax_Syntax.scrutinee = uu___1;
@@ -12988,10 +13273,11 @@ let (universe_of :
     fun e ->
       FStar_Errors.with_ctx "While attempting to compute a universe level"
         (fun uu___ ->
-           (let uu___2 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+           (let uu___2 = FStar_Compiler_Debug.high () in
             if uu___2
             then
-              let uu___3 = FStar_Syntax_Print.term_to_string e in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.print1
                 "Calling universe_of_aux with %s {\n" uu___3
             else ());
@@ -13000,10 +13286,11 @@ let (universe_of :
              FStar_Class_Binders.hasNames_term FStar_Syntax_Print.pretty_term
              e.FStar_Syntax_Syntax.pos "universe_of entry" env e;
            (let r = universe_of_aux env e in
-            (let uu___4 = FStar_TypeChecker_Env.debug env FStar_Options.High in
+            (let uu___4 = FStar_Compiler_Debug.high () in
              if uu___4
              then
-               let uu___5 = FStar_Syntax_Print.term_to_string r in
+               let uu___5 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term r in
                FStar_Compiler_Util.print1
                  "Got result from universe_of_aux = %s }\n" uu___5
              else ());
@@ -13038,12 +13325,14 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
         match t1.FStar_Syntax_Syntax.n with
         | FStar_Syntax_Syntax.Tm_delayed uu___ ->
             let uu___1 =
-              let uu___2 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___2 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               Prims.strcat "Impossible: " uu___2 in
             FStar_Compiler_Effect.failwith uu___1
         | FStar_Syntax_Syntax.Tm_bvar uu___ ->
             let uu___1 =
-              let uu___2 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___2 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               Prims.strcat "Impossible: " uu___2 in
             FStar_Compiler_Effect.failwith uu___1
         | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_reify uu___) ->

@@ -47,7 +47,7 @@ effect ST (a:Type) (pre: STATE?.pre) (post: (state -> a -> state -> GTot Type0))
             (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 effect St (a:Type) =
-  STATE a (fun (_:state) (p:(a * state) -> Type0) -> forall (x:(a * state)). p x)
+  STATE a (fun (_:state) (p:(a & state) -> Type0) -> forall (x:(a & state)). p x)
 
 (* equivalence *)
 

@@ -33,7 +33,7 @@ open FStar.Ghost
 [@@must_erase_for_extraction]
 val rid :eqtype
 
-val reveal (r:rid) :GTot (list (int * int))
+val reveal (r:rid) :GTot (list (int & int))
 
 let rid_last_component (r:rid) :GTot int
   = let open FStar.List.Tot in

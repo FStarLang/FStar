@@ -13,7 +13,7 @@
         "refinement_interpretation_Tm_refine_6c1f277b5c2f87db3cb97c7c99e0f5af"
       ],
       0,
-      "17f337e091264b6b24de36561c06ee6a"
+      "aa291412d632c4312780344f5d55787d"
     ],
     [
       "Setoids.per_diagonal",
@@ -1054,7 +1054,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "105f5fdf96ca25b61c9611f2bdac968d"
+      "081670c1162e5c1c99404b57cf656dad"
     ],
     [
       "Setoids.field_rels",
@@ -1115,7 +1115,7 @@
         "typing_Setoids.arrow", "typing_Setoids.lo", "typing_Setoids.st_rel"
       ],
       0,
-      "2d2398f88114efd9c7ea18133e71fa48"
+      "40bd3f9dbbf4c4f1b807b2ed005efa81"
     ],
     [
       "Setoids.sig_x",
@@ -1150,7 +1150,7 @@
         "typing_Setoids.two_a"
       ],
       0,
-      "2faa11089831ee9dcfbf72bc991a5388"
+      "e3c6d0101d6f1783d9833870dc09fb56"
     ],
     [
       "Setoids.module_b",
@@ -1173,7 +1173,7 @@
         "typing_Setoids.two_b"
       ],
       0,
-      "933113a6de1efacf12378944d264e858"
+      "3cc4692440fc7b15862d5d0beff0b918"
     ],
     [
       "Setoids.equiv_module_ab",
@@ -1356,7 +1356,7 @@
         "typing_Setoids.__proj__Mksig__item__labels"
       ],
       0,
-      "efbb2e506a7307592ee8fe2f20827d36"
+      "9706f4843e2a73098ce26caa3ba248e3"
     ],
     [
       "Setoids.module_prod",
@@ -1380,16 +1380,15 @@
         "projection_inverse_FStar.Pervasives.Inl_a",
         "projection_inverse_FStar.Pervasives.Inl_b",
         "projection_inverse_FStar.Pervasives.Inl_v",
-        "projection_inverse_FStar.Pervasives.Inr_a",
-        "projection_inverse_FStar.Pervasives.Inr_b",
         "projection_inverse_FStar.Pervasives.Inr_v",
         "projection_inverse_Setoids.Mksig_labels",
         "projection_inverse_Setoids.Mksig_ops",
+        "token_correspondence_Setoids.__proj__Mksig__item__ops",
         "typing_FStar.DependentMap.sel",
         "typing_Setoids.__proj__Mksig__item__labels"
       ],
       0,
-      "94f30a223def49600932f363c9479706"
+      "9f7a9a091c637c218a472bd7a218f514"
     ],
     [
       "Setoids.module_fst",

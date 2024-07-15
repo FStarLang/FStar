@@ -52,7 +52,7 @@ type t =
  * #868
  *)
 let l_868: eqtype = (y: Seq.seq int {Seq.mem 2 y })
-type essai_868 = | T of list (l_868 * essai_868)
+type essai_868 = | T of list (l_868 & essai_868)
 
 type t_t12 = unit
 

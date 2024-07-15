@@ -127,7 +127,7 @@ val init:
 val abyte (b:byte) : lbytes 1
     (* admit () create 1ul b *)
 
-val twobytes (b:byte*byte) : lbytes 2
+val twobytes (b:byte&byte) : lbytes 2
     // init 2ul (fun i -> if i = 0ul then fst b else snd b)
 
 (** appending bytes **)
@@ -155,7 +155,7 @@ val sub:
 val split:
     b:bytes
   -> k:u32{U32.v k <= length b}
-  -> p:(bytes*bytes){
+  -> p:(bytes&bytes){
      let x, y = p in
      (reveal x, reveal y) == Seq.split (reveal b) (U32.v k)}
 

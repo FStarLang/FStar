@@ -21,9 +21,9 @@ val noshort : char
 val nolong : string
 type opt_variant 'a =
   | ZeroArgs of (unit -> 'a)
-  | OneArg of (string -> 'a) * string
+  | OneArg of (string -> 'a) & string
 
-type opt' 'a = char * string * opt_variant 'a
+type opt' 'a = char & string & opt_variant 'a
 type opt = opt' unit
 
 type parse_cmdline_res =

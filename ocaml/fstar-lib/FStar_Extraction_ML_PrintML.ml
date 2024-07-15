@@ -89,6 +89,7 @@ let mk_top_mllb (e: mlexpr): mllb =
    mllb_add_unit=false;
    mllb_def=e;
    mllb_meta=[];
+   mllb_attrs=[];
    print_typ=false }
 
 (* names of F* functions which need to be handled differently *)
@@ -341,7 +342,7 @@ and resugar_app f args es: expression =
 
 and get_variants (e : mlexpr) : Parsetree.case list =
     match e.expr with
-    | MLE_Fun ([(id, _)], e) ->
+    | MLE_Fun ([{mlbinder_name=id}], e) ->
        (match e.expr with
         | MLE_Match ({expr = MLE_Var id'}, branches) when id = id' ->
            map build_case branches
@@ -372,7 +373,7 @@ and build_constructor_expr ((path, sym), exp): expression =
 
 and build_fun l e =
    match l with
-   | ((id, ty)::tl) ->
+   | ({mlbinder_name=id; mlbinder_ty=ty}::tl) ->
       let p = build_binding_pattern id in
       Exp.fun_ Nolabel None p (build_fun tl e)
    | [] -> build_expr e
@@ -390,7 +391,7 @@ and build_binding (toplevel: bool) (lb: mllb): value_binding =
       | None -> None
       | Some ts ->
            if lb.print_typ && toplevel
-           then let vars = List.map mk1 (fst ts) in
+           then let vars = List.map mk1 (ty_param_names (fst ts)) in
                 let ty = snd ts in
                 Some (build_core_type ~annots:vars ty)
            else None
@@ -459,7 +460,7 @@ let build_one_tydecl ({tydecl_name=x;
   let ptype_name = match mangle_opt with
     | Some y -> mk_sym y
     | None -> mk_sym x in
-  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) tparams) in
+  let ptype_params = Some (map (fun sym -> Typ.mk (Ptyp_var (mk_typ_name sym)), (NoVariance, NoInjectivity)) (ty_param_names tparams)) in
   let (ptype_manifest: core_type option) =
     BatOption.map_default build_ty_manifest None body |> add_deriving_const attrs in
   let ptype_kind =  Some (BatOption.map_default build_ty_kind Ptype_abstract body) in
@@ -479,7 +480,7 @@ let build_exn (sym, tys): type_exception =
   Te.mk_exception ctor
 
 let build_module1 path (m1: mlmodule1): structure_item option =
-  match m1 with
+  match m1.mlmodule1_m with
   | MLM_Ty tydecl ->
      (match build_tydecl tydecl with
       | Some t -> Some (Str.mk t)

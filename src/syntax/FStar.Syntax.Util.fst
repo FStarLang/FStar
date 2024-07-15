@@ -32,6 +32,10 @@ module U = FStar.Compiler.Util
 module List = FStar.Compiler.List
 module PC = FStar.Parser.Const
 
+open FStar.Class.Show
+open FStar.Class.Monad
+open FStar.Class.Setlike
+
 (********************************************************************************)
 (**************************Utilities for identifiers ****************************)
 (********************************************************************************)
@@ -66,7 +70,7 @@ let aqual_of_binder (b:binder)
     | _ -> None
 
 let bqual_and_attrs_of_aqual (a:aqual)
-  : bqual * list attribute
+  : bqual & list attribute
   = match a with
     | None -> None, []
     | Some a -> (if a.aqual_implicit then Some imp_tag else None),
@@ -79,7 +83,7 @@ let args_of_non_null_binders (binders:binders) =
         if is_null_binder b then []
         else [arg_of_non_null_binder b])
 
-let args_of_binders (binders:Syntax.binders) : (Syntax.binders * args) =
+let args_of_binders (binders:Syntax.binders) : (Syntax.binders & args) =
  binders |> List.map (fun b ->
     if is_null_binder b
     then let b = { b with binder_bv = new_bv None b.binder_bv.sort } in
@@ -98,13 +102,11 @@ let name_function_binders t = match t.n with
     | Tm_arrow {bs=binders; comp} -> mk (Tm_arrow {bs=name_binders binders; comp}) t.pos
     | _ -> t
 
-let null_binders_of_tks (tks:list (typ * bqual)) : binders =
+let null_binders_of_tks (tks:list (typ & bqual)) : binders =
     tks |> List.map (fun (t, imp) -> { null_binder t with binder_qual = imp })
 
-let binders_of_tks (tks:list (typ * bqual)) : binders =
+let binders_of_tks (tks:list (typ & bqual)) : binders =
     tks |> List.map (fun (t, imp) -> mk_binder_with_attrs (new_bv (Some t.pos) t) imp None [])
-
-let binders_of_freevars fvs = Set.elems fvs |> List.map mk_binder
 
 let mk_subst s = [s]
 
@@ -151,7 +153,7 @@ let unmeta_lift (t:term) : term =
 (* kernel u = (k_u, n)
         where u is of the form S^n k_u
         i.e., k_u is the "kernel" and n is the offset *)
-let rec univ_kernel u = match u with
+let rec univ_kernel u = match Subst.compress_univ u with
     | U_unknown
     | U_name _
     | U_unif _
@@ -172,7 +174,7 @@ let constant_univ_as_nat u = snd (univ_kernel u)
 //e.g, [Z; S Z; S S Z; u1; S u1; u2; S u2; S S u2; ?v1; S ?v1; ?v2]
 let rec compare_univs (u1:universe) (u2:universe) : int =
   let rec compare_kernel (uk1:universe) (uk2:universe) : int =
-    match uk1, uk2 with
+    match Subst.compress_univ uk1, Subst.compress_univ uk2 with
     | U_bvar _, _
     | _, U_bvar _  -> failwith "Impossible: compare_kernel bvar"
 
@@ -219,6 +221,10 @@ let rec compare_univs (u1:universe) (u2:universe) : int =
   | n -> n
 
 let eq_univs u1 u2 = compare_univs u1 u2 = 0
+
+let eq_univs_list (us:universes) (vs:universes) : bool =
+    List.length us = List.length vs
+    && List.forall2 eq_univs us vs
 
 (********************************************************************************)
 (*********************** Utilities for computation types ************************)
@@ -269,7 +275,7 @@ let effect_indices_from_repr (repr:term) (is_layered:bool) (r:Range.range) (err:
        | Tm_arrow {comp=c} -> c |> comp_eff_name_res_and_args |> (fun (_, _, args) -> args |> List.map fst)
        | _ -> err ()
 
-let destruct_comp c : (universe * typ * typ) =
+let destruct_comp c : (universe & typ & typ) =
   let wp = match c.effect_args with
     | [(wp, _)] -> wp
     | _ ->
@@ -493,315 +499,6 @@ let mk_lazy (t : 'a) (typ : typ) (k : lazy_kind) (r : option range) : term =
 let canon_app t =
     let hd, args = head_and_args_full (unascribe t) in
     mk_Tm_app hd args t.pos
-
-(* ---------------------------------------------------------------------- *)
-(* <eq_tm> Syntactic equality of terms                                    *)
-(* ---------------------------------------------------------------------- *)
-type eq_result =
-    | Equal
-    | NotEqual
-    | Unknown
-
-// Functions that we specially treat as injective, to make normalization
-// (particularly of decidable equality) better. We should make sure they
-// are actually proved to be injective.
-let injectives =
-    ["FStar.Int8.int_to_t";
-     "FStar.Int16.int_to_t";
-     "FStar.Int32.int_to_t";
-     "FStar.Int64.int_to_t";
-     "FStar.Int128.int_to_t";
-     "FStar.UInt8.uint_to_t";
-     "FStar.UInt16.uint_to_t";
-     "FStar.UInt32.uint_to_t";
-     "FStar.UInt64.uint_to_t";
-     "FStar.UInt128.uint_to_t";
-     "FStar.SizeT.uint_to_t";
-     "FStar.Int8.__int_to_t";
-     "FStar.Int16.__int_to_t";
-     "FStar.Int32.__int_to_t";
-     "FStar.Int64.__int_to_t";
-     "FStar.Int128.__int_to_t";
-     "FStar.UInt8.__uint_to_t";
-     "FStar.UInt16.__uint_to_t";
-     "FStar.UInt32.__uint_to_t";
-     "FStar.UInt64.__uint_to_t";
-     "FStar.UInt128.__uint_to_t";
-     "FStar.SizeT.__uint_to_t";
-     ]
-
-// Compose two eq_result injectively, as in a pair
-let eq_inj r s =
-     match r, s with
-     | Equal, Equal -> Equal
-     | NotEqual, _
-     | _, NotEqual -> NotEqual
-     | _, _ -> Unknown
-
-// Promote a bool to eq_result, conservatively.
-let equal_if = function
-    | true -> Equal
-    | _ -> Unknown
-
-// Promote a bool to an eq_result, taking a false to bet NotEqual.
-// This is only useful for fully decidable equalities.
-// Use with care, see note about Const_real below and #2806.
-let equal_iff = function
-    | true -> Equal
-    | _ -> NotEqual
-
-// Compose two equality results, NOT assuming a NotEqual implies anything.
-// This is useful, e.g., for checking the equality of applications. Consider
-//  f x ~ g y
-// if f=g and x=y then we know these two expressions are equal, but cannot say
-// anything when either result is NotEqual or Unknown, hence this returns Unknown
-// in most cases.
-// The second comparison is thunked for efficiency.
-let eq_and r s =
-    if r = Equal && s () = Equal
-    then Equal
-    else Unknown
-
-(* Precondition: terms are well-typed in a common environment, or this can return false positives *)
-let rec eq_tm (t1:term) (t2:term) : eq_result =
-    let t1 = canon_app t1 in
-    let t2 = canon_app t2 in
-    let equal_data (f1:fv) (args1:Syntax.args) (f2:fv) (args2:Syntax.args) =
-        // we got constructors! we know they are injective and disjoint, so we can do some
-        // good analysis on them
-        if fv_eq f1 f2
-        then (
-            assert (List.length args1 = List.length args2);
-            List.fold_left (fun acc ((a1, q1), (a2, q2)) ->
-                                //if q1 <> q2
-                                //then failwith (U.format1 "Arguments of %s mismatch on implicit qualifier\n"
-                                //                (Ident.string_of_lid f1.fv_name.v));
-                                //NS: 05/06/2018 ...this does not always hold
-                                //    it's been succeeding because the assert is disabled in the non-debug builds
-                                //assert (q1 = q2);
-                                eq_inj acc (eq_tm a1 a2)) Equal <| List.zip args1 args2
-        ) else NotEqual
-    in
-    let qual_is_inj = function
-      | Some Data_ctor
-      | Some (Record_ctor _) -> true
-      | _ -> false
-    in
-    let heads_and_args_in_case_both_data :option (fv * args * fv * args) =
-      let head1, args1 = t1 |> unmeta |> head_and_args in
-      let head2, args2 = t2 |> unmeta |> head_and_args in
-      match (un_uinst head1).n, (un_uinst head2).n with
-      | Tm_fvar f, Tm_fvar g when qual_is_inj f.fv_qual &&
-                                  qual_is_inj g.fv_qual -> Some (f, args1, g, args2)
-      | _ -> None
-    in
-    let t1 = unmeta t1 in
-    let t2 = unmeta t2 in
-    match t1.n, t2.n with
-    // We sometimes compare open terms, as we get alpha-equivalence
-    // for free.
-    | Tm_bvar bv1, Tm_bvar bv2 ->
-      equal_if (bv1.index = bv2.index)
-
-    | Tm_lazy _, _ -> eq_tm (unlazy t1) t2
-    | _, Tm_lazy _ -> eq_tm t1 (unlazy t2)
-
-    | Tm_name a, Tm_name b ->
-      equal_if (bv_eq a b)
-
-    | _ when heads_and_args_in_case_both_data |> is_some ->  //matches only when both are data constructors
-      heads_and_args_in_case_both_data |> must |> (fun (f, args1, g, args2) ->
-        equal_data f args1 g args2
-      )
-
-    | Tm_fvar f, Tm_fvar g -> equal_if (fv_eq f g)
-
-    | Tm_uinst(f, us), Tm_uinst(g, vs) ->
-      // If the fvars and universe instantiations match, then Equal,
-      // otherwise Unknown.
-      eq_and (eq_tm f g) (fun () -> equal_if (eq_univs_list us vs))
-
-    | Tm_constant (Const_range _), Tm_constant (Const_range _) ->
-      // Ranges should be opaque, even to the normalizer. c.f. #1312
-      Unknown
-
-    | Tm_constant (Const_real r1), Tm_constant (Const_real r2) ->
-      // We cannot decide equality of reals. Use a conservative approach here.
-      // If the strings match, they are equal, otherwise we don't know. If this
-      // goes via the eq_iff case below, it will falsely claim that "1.0R" and
-      // "01.R" are different, since eq_const does not canonizalize the string
-      // representations.
-      equal_if (r1 = r2)
-
-    | Tm_constant c, Tm_constant d ->
-      // NOTE: this relies on the fact that eq_const *correctly decides*
-      // semantic equality of constants. This needs some care. For instance,
-      // since integers are represented by a string, eq_const needs to take care
-      // of ignoring leading zeroes, and match 0 with -0. An exception to this
-      // are real number literals (handled above). See #2806.
-      //
-      // Currently (24/Jan/23) this seems to be correctly implemented, but
-      // updates should be done with care.
-      equal_iff (eq_const c d)
-
-    | Tm_uvar (u1, ([], _)), Tm_uvar (u2, ([], _)) ->
-      equal_if (Unionfind.equiv u1.ctx_uvar_head u2.ctx_uvar_head)
-
-    | Tm_app {hd=h1; args=args1}, Tm_app {hd=h2; args=args2} ->
-      begin match (un_uinst h1).n, (un_uinst h2).n with
-      | Tm_fvar f1, Tm_fvar f2 when fv_eq f1 f2 && List.mem (string_of_lid (lid_of_fv f1)) injectives ->
-        equal_data f1 args1 f2 args2
-
-      | _ -> // can only assert they're equal if they syntactically match, nothing else
-        eq_and (eq_tm h1 h2) (fun () -> eq_args args1 args2)
-      end
-
-    | Tm_match {scrutinee=t1; brs=bs1}, Tm_match {scrutinee=t2; brs=bs2} ->  //AR: note: no return annotations
-        if List.length bs1 = List.length bs2
-        then List.fold_right (fun (b1, b2) a -> eq_and a (fun () -> branch_matches b1 b2))
-                             (List.zip bs1 bs2)
-                             (eq_tm t1 t2)
-        else Unknown
-
-    | Tm_type u, Tm_type v ->
-      equal_if (eq_univs u v)
-
-    | Tm_quoted (t1, q1), Tm_quoted (t2, q2) ->
-      // NOTE: we do NOT ever provide a meaningful result for quoted terms. Even
-      // if term_eq (the syntactic equality) returns true, that does not mean we
-      // can present the equality to userspace since term_eq ignores the names
-      // of binders, but the view exposes them. Hence, we simply always return
-      // Unknown. We do not seem to rely anywhere on simplifying equalities of
-      // quoted literals. See also #2806.
-      Unknown
-
-    | Tm_refine {b=t1; phi=phi1}, Tm_refine {b=t2; phi=phi2} ->
-      eq_and (eq_tm t1.sort t2.sort) (fun () -> eq_tm phi1 phi2)
-
-      (*
-       * AR: ignoring residual comp here, that's an ascription added by the typechecker
-       *     do we care if that's different?
-       *)
-    | Tm_abs {bs=bs1; body=body1}, Tm_abs {bs=bs2; body=body2}
-      when List.length bs1 = List.length bs2 ->
-
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
-                Equal bs1 bs2)
-             (fun () -> eq_tm body1 body2)
-
-    | Tm_arrow {bs=bs1; comp=c1}, Tm_arrow {bs=bs2; comp=c2}
-          when List.length bs1 = List.length bs2 ->
-      eq_and (List.fold_left2 (fun r b1 b2 -> eq_and r (fun () -> eq_tm b1.binder_bv.sort b2.binder_bv.sort))
-                Equal bs1 bs2)
-             (fun () -> eq_comp c1 c2)
-
-    | _ -> Unknown
-
-and eq_antiquotations a1 a2 =
-  // Basically this;
-  //  List.fold_left2 (fun acc t1 t2 -> eq_inj acc (eq_tm t1 t2)) Equal a1 a2
-  // but lazy and handling lists of different size
-  match a1, a2 with
-  | [], [] -> Equal
-  | [], _
-  | _, [] -> NotEqual
-  | t1::a1, t2::a2 ->
-    match eq_tm t1 t2 with
-    | NotEqual -> NotEqual
-    | Unknown ->
-      (match eq_antiquotations a1 a2 with
-       | NotEqual -> NotEqual
-       | _ -> Unknown)
-    | Equal -> eq_antiquotations a1 a2
-
-and branch_matches b1 b2 =
-    let related_by f o1 o2 =
-        match o1, o2 with
-        | None, None -> true
-        | Some x, Some y -> f x y
-        | _, _ -> false
-    in
-    let (p1, w1, t1) = b1 in
-    let (p2, w2, t2) = b2 in
-    if eq_pat p1 p2
-    then begin
-         // We check the `when` branches too, even if unsupported for now
-         if eq_tm t1 t2 = Equal && related_by (fun t1 t2 -> eq_tm t1 t2 = Equal) w1 w2
-         then Equal
-         else Unknown
-         end
-    else Unknown
-
-and eq_args (a1:args) (a2:args) : eq_result =
-    match a1, a2 with
-    | [], [] -> Equal
-    | (a, _)::a1, (b, _)::b1 ->
-      (match eq_tm a b with
-       | Equal -> eq_args a1 b1
-       | _ -> Unknown)
-    | _ -> Unknown
-
-and eq_univs_list (us:universes) (vs:universes) : bool =
-    List.length us = List.length vs
-    && List.forall2 eq_univs us vs
-
-and eq_comp (c1 c2:comp) : eq_result =
-  match c1.n, c2.n with
-  | Total t1, Total t2
-  | GTotal t1, GTotal t2 ->
-    eq_tm t1 t2
-  | Comp ct1, Comp ct2 ->
-    eq_and (equal_if (eq_univs_list ct1.comp_univs ct2.comp_univs))
-           (fun _ ->
-             eq_and (equal_if (Ident.lid_equals ct1.effect_name ct2.effect_name))
-                    (fun _ ->
-                      eq_and (eq_tm ct1.result_typ ct2.result_typ)
-                             (fun _ -> eq_args ct1.effect_args ct2.effect_args)))
-                             //ignoring cflags
-  | _ -> NotEqual
-
-(* Only used in term_eq *)
-let eq_quoteinfo q1 q2 =
-    if q1.qkind <> q2.qkind
-    then NotEqual
-    else eq_antiquotations (snd q1.antiquotations) (snd q2.antiquotations)
-
-(* Only used in term_eq *)
-let eq_bqual a1 a2 =
-    match a1, a2 with
-    | None, None -> Equal
-    | None, _
-    | _, None -> NotEqual
-    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> Equal
-    | Some (Meta t1), Some (Meta t2) -> eq_tm t1 t2
-    | Some Equality, Some Equality -> Equal
-    | _ -> NotEqual
-
-(* Only used in term_eq *)
-let eq_aqual a1 a2 =
-  match a1, a2 with
-  | Some a1, Some a2 ->
-    if a1.aqual_implicit = a2.aqual_implicit
-    && List.length a1.aqual_attributes = List.length a2.aqual_attributes
-    then List.fold_left2
-           (fun out t1 t2 ->
-             match out with
-             | NotEqual -> out
-             | Unknown ->
-               (match eq_tm t1 t2 with
-                 | NotEqual -> NotEqual
-                 | _ -> Unknown)
-             | Equal ->
-               eq_tm t1 t2)
-           Equal
-           a1.aqual_attributes
-           a2.aqual_attributes
-    else NotEqual
-  | None, None ->
-    Equal
-  | _ ->
-    NotEqual
-
 
 let rec unrefine t =
   let t = compress t in
@@ -1081,7 +778,7 @@ let arrow_formals k =
         3. a list of booleans, one for each argument above, where the boolean is true iff the variable appears in the f's decreases clause
     This is used by NBE for detecting potential non-terminating loops
 *)
-let let_rec_arity (lb:letbinding) : int * option (list bool) =
+let let_rec_arity (lb:letbinding) : int & option (list bool) =
     let rec arrow_until_decreases (k:term) =
         let k = Subst.compress k in
         match k.n with
@@ -1111,11 +808,11 @@ let let_rec_arity (lb:letbinding) : int * option (list bool) =
          match d with
          | Decreases_lex l ->
            l |> List.fold_left (fun s t ->
-             Set.union s (FStar.Syntax.Free.names t)) (Set.empty ())
+             union s (FStar.Syntax.Free.names t)) (empty #bv ())
          | Decreases_wf (rel, e) ->
-           Set.union (FStar.Syntax.Free.names rel) (FStar.Syntax.Free.names e) in
+           union (Free.names rel) (Free.names e) in
        Common.tabulate n_univs (fun _ -> false)
-       @ (bs |> List.map (fun b -> Set.mem b.binder_bv d_bvs)))
+       @ (bs |> List.map (fun b -> mem b.binder_bv d_bvs)))
 
 let abs_formals_maybe_unascribe_body maybe_unascribe t =
     let subst_lcomp_opt s l = match l with
@@ -1256,17 +953,17 @@ let ktype  : term = mk (Tm_type(U_unknown)) dummyRange
 let ktype0 : term = mk (Tm_type(U_zero)) dummyRange
 
 //Type(u), where u is a new universe unification variable
-let type_u () : typ * universe =
+let type_u () : typ & universe =
     let u = U_unif <| Unionfind.univ_fresh Range.dummyRange in
     mk (Tm_type u) dummyRange, u
 
 let type_with_u (u:universe) : typ = mk (Tm_type u) dummyRange
 
-// works on anything, really
-let attr_eq a a' =
-   match eq_tm a a' with
-   | Equal -> true
-   | _ -> false
+// // works on anything, really
+// let attr_eq a a' =
+//    match eq_tm a a' with
+//    | Equal -> true
+//    | _ -> false
 
 let attr_substitute =
   mk (Tm_fvar (lid_as_fv PC.attr_substitute_lid None)) Range.dummyRange
@@ -1280,17 +977,17 @@ let exp_int s : term = mk (Tm_constant (Const_int (s,None))) dummyRange
 let exp_char c : term = mk (Tm_constant (Const_char c)) dummyRange
 let exp_string s : term = mk (Tm_constant (Const_string (s, dummyRange))) dummyRange
 
-let fvar_const l = fvar_with_dd l delta_constant None
+let fvar_const l = fvar_with_dd l None
 let tand    = fvar_const PC.and_lid
 let tor     = fvar_const PC.or_lid
-let timp    = fvar_with_dd PC.imp_lid (Delta_constant_at_level 1) None //NS delta: wrong? level 2
-let tiff    = fvar_with_dd PC.iff_lid (Delta_constant_at_level 2) None //NS delta: wrong? level 3
+let timp    = fvar_with_dd PC.imp_lid None
+let tiff    = fvar_with_dd PC.iff_lid None
 let t_bool  = fvar_const PC.bool_lid
 let b2t_v   = fvar_const PC.b2t_lid
 let t_not   = fvar_const PC.not_lid
 // These are `True` and `False`, not the booleans
-let t_false = fvar_const PC.false_lid //NS delta: wrong? should be Delta_constant_at_level 2
-let t_true  = fvar_const PC.true_lid  //NS delta: wrong? should be Delta_constant_at_level 2
+let t_false = fvar_const PC.false_lid
+let t_true  = fvar_const PC.true_lid
 let tac_opaque_attr = exp_string "tac_opaque"
 let dm4f_bind_range_attr = fvar_const PC.dm4f_bind_range_attr
 let tcdecltime_attr = fvar_const PC.tcdecltime_attr
@@ -1310,7 +1007,7 @@ let mk_binop op_t phi1 phi2 = mk (Tm_app {hd=op_t; args=[as_arg phi1; as_arg phi
 let mk_neg phi = mk (Tm_app {hd=t_not; args=[as_arg phi]}) phi.pos
 let mk_conj phi1 phi2 = mk_binop tand phi1 phi2
 let mk_conj_l phi = match phi with
-    | [] -> fvar_with_dd PC.true_lid delta_constant None //NS delta: wrong, see a t_true
+    | [] -> fvar_with_dd PC.true_lid None
     | hd::tl -> List.fold_right mk_conj tl hd
 let mk_disj phi1 phi2 = mk_binop tor phi1 phi2
 let mk_disj_l phi = match phi with
@@ -1355,9 +1052,9 @@ let mk_has_type t x t' =
     let t_has_type = mk (Tm_uinst(t_has_type, [U_zero; U_zero])) dummyRange in
     mk (Tm_app {hd=t_has_type; args=[iarg t; as_arg x; as_arg t']}) dummyRange
 
-let tforall  = fvar_with_dd PC.forall_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let texists  = fvar_with_dd PC.exists_lid (Delta_constant_at_level 1) None //NS delta: wrong level 2
-let t_haseq   = fvar_with_dd PC.haseq_lid delta_constant None //NS delta: wrong Delta_abstract (Delta_constant_at_level 0)?
+let tforall  = fvar_with_dd PC.forall_lid None
+let texists  = fvar_with_dd PC.exists_lid None
+let t_haseq   = fvar_with_dd PC.haseq_lid None
 
 let decidable_eq = fvar_const PC.op_Eq
 let mk_decidable_eq t e1 e2 =
@@ -1431,11 +1128,11 @@ let if_then_else b t1 t2 =
 // Operations on squashed and other irrelevant/sub-singleton types
 //////////////////////////////////////////////////////////////////////////////////////
 let mk_squash u p =
-    let sq = fvar_with_dd PC.squash_lid (Delta_constant_at_level 1) None in //NS delta: ok
+    let sq = fvar_with_dd PC.squash_lid None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let mk_auto_squash u p =
-    let sq = fvar_with_dd PC.auto_squash_lid (Delta_constant_at_level 2) None in //NS delta: ok
+    let sq = fvar_with_dd PC.auto_squash_lid None in
     mk_app (mk_Tm_uinst sq [u]) [as_arg p]
 
 let un_squash t =
@@ -1455,7 +1152,7 @@ let un_squash t =
                     | _ -> failwith "impossible"
             in
             // A bit paranoid, but need this check for terms like `u:unit{u == ()}`
-            if Set.mem b.binder_bv (Free.names p)
+            if mem b.binder_bv (Free.names p)
             then None
             else Some p
         | _ -> None
@@ -1506,7 +1203,7 @@ let is_sub_singleton t =
         || Syntax.fv_eq_lid fv PC.precedes_lid
     | _ -> false
 
-let arrow_one_ln (t:typ) : option (binder * comp) =
+let arrow_one_ln (t:typ) : option (binder & comp) =
     match (compress t).n with
     | Tm_arrow {bs=[]} ->
         failwith "fatal: empty binders on arrow?"
@@ -1517,7 +1214,7 @@ let arrow_one_ln (t:typ) : option (binder * comp) =
     | _ ->
         None
 
-let arrow_one (t:typ) : option (binder * comp) =
+let arrow_one (t:typ) : option (binder & comp) =
     bind_opt (arrow_one_ln t) (fun (b, c) ->
     let bs, c = Subst.open_comp [b] c in
     let b = match bs with
@@ -1526,174 +1223,24 @@ let arrow_one (t:typ) : option (binder * comp) =
     in
     Some (b, c))
 
+let abs_one_ln (t:typ) : option (binder & term) =
+    match (compress t).n with
+    | Tm_abs {bs=[]} ->
+        failwith "fatal: empty binders on abs?"
+    | Tm_abs {bs=[b]; body} ->
+        Some (b, body)
+    | Tm_abs {bs=b::bs; body; rc_opt} ->
+        Some (b, abs bs body rc_opt)
+    | _ ->
+        None
+
 let is_free_in (bv:bv) (t:term) : bool =
-    Set.mem bv (FStar.Syntax.Free.names t)
-
-(**************************************************************************************)
-(* Destructing a type as a formula *)
-(**************************************************************************************)
-type qpats = list args
-type connective =
-    | QAll of binders * qpats * typ
-    | QEx of binders * qpats * typ
-    | BaseConn of lident * args
-
-(* destruct_typ_as_formula can be hot; these tables are defined
-   here to ensure they are constructed only once in the executing
-   binary
-
-   the tables encode arity -> match_lid -> output_lid
-   *)
-let destruct_base_table =
-  let f x = (x,x) in
-  [ (0, [f PC.true_lid; f PC.false_lid]);
-    (2, [f PC.and_lid; f PC.or_lid; f PC.imp_lid; f PC.iff_lid; f PC.eq2_lid]);
-    (1, [f PC.not_lid]);
-    (3, [f PC.ite_lid; f PC.eq2_lid]);
-  ]
-
-let destruct_sq_base_table =
-  [ (2, [(PC.c_and_lid, PC.and_lid);
-         (PC.c_or_lid, PC.or_lid);
-         (PC.c_eq2_lid, PC.c_eq2_lid)]);
-    (3, [(PC.c_eq2_lid, PC.c_eq2_lid)]);
-    (0, [(PC.c_true_lid, PC.true_lid); (PC.empty_type_lid, PC.false_lid)])
-  ]
-
-let destruct_typ_as_formula f : option connective =
-    let rec unmeta_monadic f =
-      let f = Subst.compress f in
-      match f.n with
-      | Tm_meta {tm=t; meta=Meta_monadic _}
-      | Tm_meta {tm=t; meta=Meta_monadic_lift _} -> unmeta_monadic t
-      | _ -> f in
-    let lookup_arity_lid table target_lid args =
-        let arg_len : int = List.length args in
-        let aux (arity, lids) =
-            if arg_len = arity
-            then U.find_map lids
-                (fun (lid, out_lid) ->
-                  if lid_equals target_lid lid
-                  then Some (BaseConn (out_lid, args))
-                  else None)
-            else None
-        in
-        U.find_map table aux
-    in
-    let destruct_base_conn t =
-        let hd, args = head_and_args t in
-        match (un_uinst hd).n with
-        | Tm_fvar fv -> lookup_arity_lid destruct_base_table fv.fv_name.v args
-        | _ -> None
-    in
-    let destruct_sq_base_conn t =
-        bind_opt (un_squash t) (fun t ->
-        let hd, args = head_and_args_full t in
-        match (un_uinst hd).n with
-        | Tm_fvar fv -> lookup_arity_lid destruct_sq_base_table fv.fv_name.v args
-        | _ -> None
-        )
-    in
-    let patterns t =
-        let t = compress t in
-        match t.n with
-            | Tm_meta {tm=t; meta=Meta_pattern (_, pats)} -> pats, compress t
-            | _ -> [], t
-    in
-    let destruct_q_conn t =
-        let is_q (fa:bool) (fv:fv) : bool =
-            if fa
-            then is_forall fv.fv_name.v
-            else is_exists fv.fv_name.v
-        in
-        let flat t =
-            let t, args = head_and_args t in
-            un_uinst t, args |> List.map (fun (t, imp) -> unascribe t, imp)
-        in
-        let rec aux qopt out t = match qopt, flat t with
-            | Some fa, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
-            | Some fa, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
-                when (is_q fa tc) ->
-              aux qopt (b::out) t2
-
-            | None, ({n=Tm_fvar tc}, [({n=Tm_abs {bs=[b]; body=t2}}, _)])
-            | None, ({n=Tm_fvar tc}, [_; ({n=Tm_abs {bs=[b]; body=t2}}, _)])
-                when (is_qlid tc.fv_name.v) ->
-              aux (Some (is_forall tc.fv_name.v)) (b::out) t2
-
-            | Some b, _ ->
-              let bs = List.rev out in
-              let bs, t = Subst.open_term bs t in
-              let pats, body = patterns t in
-              if b
-              then Some (QAll(bs, pats, body))
-              else Some  (QEx(bs, pats, body))
-
-            | _ -> None in
-        aux None [] t in
-    let rec destruct_sq_forall t =
-        bind_opt (un_squash t) (fun t ->
-        match arrow_one t with
-        | Some (b, c) ->
-            if not (is_tot_or_gtot_comp c)
-            then None
-            else
-                let q = comp_result c in
-                if is_free_in b.binder_bv q
-                then (
-                    let pats, q = patterns q in
-                    maybe_collect <| Some (QAll([b], pats, q))
-                ) else (
-                    // Since we know it's not free, we can just open and discard the binder
-                    Some (BaseConn (PC.imp_lid, [as_arg b.binder_bv.sort; as_arg q]))
-                )
-        | _ -> None)
-    and destruct_sq_exists t =
-        bind_opt (un_squash t) (fun t ->
-        let hd, args = head_and_args_full t in
-        match (un_uinst hd).n, args with
-        | Tm_fvar fv, [(a1, _); (a2, _)]
-            when fv_eq_lid fv PC.dtuple2_lid ->
-                begin match (compress a2).n with
-                | Tm_abs {bs=[b]; body=q} ->
-                    let bs, q = open_term [b] q in
-                    let b = match bs with // coverage...
-                            | [b] -> b
-                            | _ -> failwith "impossible"
-                    in
-                    let pats, q = patterns q in
-                    maybe_collect <| Some (QEx ([b], pats, q))
-                | _ -> None
-                end
-        | _ -> None)
-    and maybe_collect f =
-        match f with
-        | Some (QAll (bs, pats, phi)) ->
-            begin match destruct_sq_forall phi with
-            | Some (QAll (bs', pats', psi)) -> Some <| QAll(bs@bs', pats@pats', psi)
-            | _ -> f
-            end
-        | Some (QEx (bs, pats, phi)) ->
-            begin match destruct_sq_exists phi with
-            | Some (QEx (bs', pats', psi)) -> Some <| QEx(bs@bs', pats@pats', psi)
-            | _ -> f
-            end
-        | _ -> f
-    in
-
-    let phi = unmeta_monadic f in
-        // Try all possibilities, stopping at the first
-        catch_opt (destruct_base_conn phi) (fun () ->
-        catch_opt (destruct_q_conn phi) (fun () ->
-        catch_opt (destruct_sq_base_conn phi) (fun () ->
-        catch_opt (destruct_sq_forall phi) (fun () ->
-        catch_opt (destruct_sq_exists phi) (fun () ->
-                   None)))))
+    mem bv (FStar.Syntax.Free.names t)
 
 let action_as_lb eff_lid a pos =
   let lb =
     close_univs_and_mk_letbinding None
-      (Inr (lid_and_dd_as_fv a.action_name delta_equational None))
+      (Inr (lid_and_dd_as_fv a.action_name None))
       a.action_univs
       (arrow a.action_params (mk_Total a.action_typ))
       PC.effect_Tot_lid
@@ -1722,39 +1269,11 @@ let mk_reflect t =
 (* Some utilities for clients who wish to build top-level bindings and keep
  * their delta-qualifiers correct (e.g. dmff). *)
 
-let rec delta_qualifier t =
-    let t = Subst.compress t in
-    match t.n with
-        | Tm_delayed _ -> failwith "Impossible"
-        | Tm_lazy i -> delta_qualifier (unfold_lazy i)
-        | Tm_fvar fv -> (match fv.fv_delta with
-                         | Some d -> d
-                         | None -> delta_constant)
-        | Tm_bvar _
-        | Tm_name _
-        | Tm_match _
-        | Tm_uvar _
-        | Tm_unknown -> delta_equational
-        | Tm_type _
-        | Tm_quoted _
-        | Tm_constant _
-        | Tm_arrow _ -> delta_constant
-        | Tm_uinst(t, _)
-        | Tm_refine {b={sort=t}}
-        | Tm_meta {tm=t}
-        | Tm_ascribed {tm=t}
-        | Tm_app {hd=t}
-        | Tm_abs {body=t}
-        | Tm_let {body=t} -> delta_qualifier t
-
 let rec incr_delta_depth d =
     match d with
     | Delta_constant_at_level i   -> Delta_constant_at_level (i + 1)
     | Delta_equational_at_level i -> Delta_equational_at_level (i + 1)
     | Delta_abstract d            -> incr_delta_depth d
-
-let incr_delta_qualifier t =
-    incr_delta_depth (delta_qualifier t)
 
 let is_unknown t = match (Subst.compress t).n with | Tm_unknown -> true | _ -> false
 
@@ -1787,7 +1306,7 @@ let eqsum (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : either 'a 'b) (y 
     | Inr x, Inr y -> e2 x y
     | _ -> false
 
-let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a * 'b) (y : 'a * 'b) : bool =
+let eqprod (e1 : 'a -> 'a -> bool) (e2 : 'b -> 'b -> bool) (x : 'a & 'b) (y : 'a & 'b) : bool =
     match x, y with
     | (x1,x2), (y1,y2) -> e1 x1 y1 && e2 x2 y2
 
@@ -1875,7 +1394,7 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
     check "uvar" (u1.ctx_uvar_head = u2.ctx_uvar_head)
 
   | Tm_quoted (qt1, qi1), Tm_quoted (qt2, qi2) ->
-    (check "tm_quoted qi"      (eq_quoteinfo qi1 qi2 = Equal)) &&
+    (check "tm_quoted qi"      (quote_info_eq_dbg dbg qi1 qi2)) &&
     (check "tm_quoted payload" (term_eq_dbg dbg qt1 qt2))
 
   | Tm_meta {tm=t1; meta=m1}, Tm_meta {tm=t2; meta=m2} ->
@@ -1925,11 +1444,11 @@ let rec term_eq_dbg (dbg : bool) t1 t2 =
 
 and arg_eq_dbg (dbg : bool) a1 a2 =
     eqprod (fun t1 t2 -> check dbg "arg tm" (term_eq_dbg dbg t1 t2))
-           (fun q1 q2 -> check dbg "arg qual"  (eq_aqual q1 q2 = Equal))
+           (fun q1 q2 -> check dbg "arg qual"  (aqual_eq_dbg dbg q1 q2))
            a1 a2
 and binder_eq_dbg (dbg : bool) b1 b2 =
     (check dbg "binder_sort" (term_eq_dbg dbg b1.binder_bv.sort b2.binder_bv.sort)) &&
-    (check dbg "binder qual" (eq_bqual b1.binder_qual b2.binder_qual = Equal)) &&  //AR: not checking attributes, should we?
+    (check dbg "binder qual" (bqual_eq_dbg dbg b1.binder_qual b2.binder_qual)) &&  //AR: not checking attributes, should we?
     (check dbg "binder attrs" (eqlist (term_eq_dbg dbg) b1.binder_attrs b2.binder_attrs))
 
 and comp_eq_dbg (dbg : bool) c1 c2 =
@@ -1956,6 +1475,56 @@ and letbinding_eq_dbg (dbg : bool) (lb1 : letbinding) lb2 =
     (check dbg "lb typ"  (term_eq_dbg dbg lb1.lbtyp lb2.lbtyp)) &&
     (check dbg "lb def"  (term_eq_dbg dbg lb1.lbdef lb2.lbdef))
     // Ignoring eff and attrs..
+
+and quote_info_eq_dbg (dbg:bool) q1 q2 =
+    if q1.qkind <> q2.qkind
+    then false
+    else antiquotations_eq_dbg dbg (snd q1.antiquotations) (snd q2.antiquotations)
+
+and antiquotations_eq_dbg (dbg:bool) a1 a2 =
+  // Basically this;
+  //  List.fold_left2 (fun acc t1 t2 -> eq_inj acc (eq_tm t1 t2)) Equal a1 a2
+  // but lazy and handling lists of different size
+  match a1, a2 with
+  | [], [] -> true
+  | [], _
+  | _, [] -> false
+  | t1::a1, t2::a2 ->
+    if not <| term_eq_dbg dbg t1 t2
+    then false
+    else antiquotations_eq_dbg dbg a1 a2
+
+and bqual_eq_dbg dbg a1 a2 =
+    match a1, a2 with
+    | None, None -> true
+    | None, _
+    | _, None -> false
+    | Some (Implicit b1), Some (Implicit b2) when b1=b2 -> true
+    | Some (Meta t1), Some (Meta t2) -> term_eq_dbg dbg t1 t2
+    | Some Equality, Some Equality -> true
+    | _ -> false
+
+and aqual_eq_dbg dbg a1 a2 =
+  match a1, a2 with
+  | Some a1, Some a2 ->
+    if a1.aqual_implicit = a2.aqual_implicit
+    && List.length a1.aqual_attributes = List.length a2.aqual_attributes
+    then List.fold_left2
+           (fun out t1 t2 ->
+            if not out
+            then false
+            else term_eq_dbg dbg t1 t2)
+           true
+           a1.aqual_attributes
+           a2.aqual_attributes
+    else false
+  | None, None ->
+    true
+  | _ ->
+    false
+
+let eq_aqual a1 a2 = aqual_eq_dbg false a1 a2
+let eq_bqual b1 b2 = bqual_eq_dbg false b1 b2
 
 let term_eq t1 t2 =
     let r = term_eq_dbg !debug_term_eq t1 t2 in
@@ -2157,7 +1726,7 @@ and unbound_variables_comp c =
       unbound_variables ct.result_typ
       @ List.collect (fun (a, _) -> unbound_variables a) ct.effect_args
 
-let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term * args) =
+let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term & args) =
     let rec aux acc attrs =
         match attrs with
         | [] -> None
@@ -2173,7 +1742,7 @@ let extract_attr' (attr_lid:lid) (attrs:list term) : option (list term * args) =
     in
     aux [] attrs
 
-let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt * args) =
+let extract_attr (attr_lid:lid) (se:sigelt) : option (sigelt & args) =
     match extract_attr' attr_lid se.sigattrs with
     | None -> None
     | Some (attrs', t) -> Some ({ se with sigattrs = attrs' }, t)
@@ -2548,7 +2117,7 @@ let is_binder_unused (b:binder) =
   b.binder_positivity = Some BinderUnused
 
 let deduplicate_terms (l:list term) = 
-  FStar.Compiler.List.deduplicate (fun x y -> eq_tm x y = Equal) l
+  FStar.Compiler.List.deduplicate (fun x y -> term_eq x y) l
 
 let eq_binding b1 b2 =
     match b1, b2 with

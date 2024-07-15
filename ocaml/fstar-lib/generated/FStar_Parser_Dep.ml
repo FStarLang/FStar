@@ -9,6 +9,8 @@ let (uu___is_Open_namespace : open_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Open_namespace -> true | uu___ -> false
 type module_name = Prims.string
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Dep"
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
@@ -136,7 +138,7 @@ let (module_name_of_file : Prims.string -> Prims.string) =
     | FStar_Pervasives_Native.None ->
         let uu___1 =
           let uu___2 =
-            FStar_Compiler_Util.format1 "not a valid FStar file: %s" f in
+            FStar_Compiler_Util.format1 "Not a valid FStar file: '%s'" f in
           (FStar_Errors_Codes.Fatal_NotValidFStarFile, uu___2) in
         FStar_Errors.raise_err uu___1
 let (lowercase_module_name : Prims.string -> Prims.string) =
@@ -508,8 +510,8 @@ let (has_implementation : files_for_module_name -> module_name -> Prims.bool)
       FStar_Compiler_Option.isSome uu___
 let (cache_file_name : Prims.string -> Prims.string) =
   let checked_file_and_exists_flag fn =
-    let lax = FStar_Options.lax () in
     let cache_fn =
+      let lax = FStar_Options.lax () in
       if lax
       then Prims.strcat fn ".checked.lax"
       else Prims.strcat fn ".checked" in
@@ -628,18 +630,28 @@ let (file_of_dep_aux :
                       let uu___4 =
                         let uu___5 =
                           let uu___6 =
-                            implementation_of_internal file_system_map key in
-                          FStar_Compiler_Option.get uu___6 in
+                            let uu___7 =
+                              let uu___8 =
+                                implementation_of_internal file_system_map
+                                  key in
+                              FStar_Compiler_Option.get uu___8 in
+                            let uu___8 =
+                              let uu___9 =
+                                interface_of_internal file_system_map key in
+                              FStar_Compiler_Option.get uu___9 in
+                            FStar_Compiler_Util.format3
+                              "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s."
+                              key uu___7 uu___8 in
+                          FStar_Errors_Msg.text uu___6 in
                         let uu___6 =
                           let uu___7 =
-                            interface_of_internal file_system_map key in
-                          FStar_Compiler_Option.get uu___7 in
-                        FStar_Compiler_Util.format3
-                          "You may have a cyclic dependence on module %s: use --dep full to confirm. Alternatively, invoking fstar with %s on the command line breaks the abstraction imposed by its interface %s; if you really want this behavior add the option '--expose_interfaces'"
-                          key uu___5 uu___6 in
+                            FStar_Errors_Msg.text
+                              "If you really want this behavior add the option '--expose_interfaces'." in
+                          [uu___7] in
+                        uu___5 :: uu___6 in
                       (FStar_Errors_Codes.Fatal_MissingExposeInterfacesOption,
                         uu___4) in
-                    FStar_Errors.raise_err uu___3))
+                    FStar_Errors.raise_err_doc uu___3))
               else
                 (let uu___2 =
                    let uu___3 = interface_of_internal file_system_map key in
@@ -933,10 +945,10 @@ let (enter_namespace :
   =
   fun original_map ->
     fun working_map ->
-      fun prefix ->
+      fun sprefix ->
         fun implicit_open ->
           let found = FStar_Compiler_Util.mk_ref false in
-          let prefix1 = Prims.strcat prefix "." in
+          let sprefix1 = Prims.strcat sprefix "." in
           let suffix_exists mopt =
             match mopt with
             | FStar_Pervasives_Native.None -> false
@@ -946,13 +958,13 @@ let (enter_namespace :
           FStar_Compiler_Util.smap_iter original_map
             (fun k ->
                fun uu___1 ->
-                 if FStar_Compiler_Util.starts_with k prefix1
+                 if FStar_Compiler_Util.starts_with k sprefix1
                  then
                    let suffix =
                      FStar_Compiler_String.substring k
-                       (FStar_Compiler_String.length prefix1)
+                       (FStar_Compiler_String.length sprefix1)
                        ((FStar_Compiler_String.length k) -
-                          (FStar_Compiler_String.length prefix1)) in
+                          (FStar_Compiler_String.length sprefix1)) in
                    ((let suffix_filename =
                        FStar_Compiler_Util.smap_try_find original_map suffix in
                      if implicit_open && (suffix_exists suffix_filename)
@@ -964,12 +976,58 @@ let (enter_namespace :
                        let uu___3 =
                          let uu___4 =
                            let uu___5 =
-                             let uu___6 =
-                               FStar_Compiler_Util.format4
-                                 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to avoid conflicts"
-                                 prefix1 suffix str str in
-                             FStar_Errors_Msg.text uu___6 in
-                           [uu___5] in
+                             let uu___6 = FStar_Pprint.break_ Prims.int_one in
+                             let uu___7 =
+                               let uu___8 =
+                                 FStar_Errors_Msg.text
+                                   "Implicitly opening namespace" in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Pprint.doc_of_string sprefix1 in
+                                   FStar_Pprint.squotes uu___11 in
+                                 let uu___11 =
+                                   let uu___12 =
+                                     FStar_Errors_Msg.text "shadows module" in
+                                   let uu___13 =
+                                     let uu___14 =
+                                       let uu___15 =
+                                         FStar_Pprint.doc_of_string suffix in
+                                       FStar_Pprint.squotes uu___15 in
+                                     let uu___15 =
+                                       let uu___16 =
+                                         FStar_Errors_Msg.text "in file" in
+                                       let uu___17 =
+                                         let uu___18 =
+                                           let uu___19 =
+                                             let uu___20 =
+                                               FStar_Pprint.doc_of_string str in
+                                             FStar_Pprint.dquotes uu___20 in
+                                           FStar_Pprint.op_Hat_Hat uu___19
+                                             FStar_Pprint.dot in
+                                         [uu___18] in
+                                       uu___16 :: uu___17 in
+                                     uu___14 :: uu___15 in
+                                   uu___12 :: uu___13 in
+                                 uu___10 :: uu___11 in
+                               uu___8 :: uu___9 in
+                             FStar_Pprint.flow uu___6 uu___7 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 = FStar_Errors_Msg.text "Rename" in
+                               let uu___9 =
+                                 let uu___10 =
+                                   let uu___11 =
+                                     FStar_Pprint.doc_of_string str in
+                                   FStar_Pprint.dquotes uu___11 in
+                                 let uu___11 =
+                                   FStar_Errors_Msg.text
+                                     "to avoid conflicts." in
+                                 FStar_Pprint.op_Hat_Slash_Hat uu___10
+                                   uu___11 in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                             [uu___7] in
+                           uu___5 :: uu___6 in
                          (FStar_Errors_Codes.Warning_UnexpectedFile, uu___4) in
                        FStar_Errors.log_issue_doc
                          FStar_Compiler_Range_Type.dummyRange uu___3
@@ -1124,9 +1182,7 @@ let (collect_one :
             if uu___
             then ()
             else
-              (let uu___2 =
-                 FStar_Options.debug_at_level_no_module
-                   (FStar_Options.Other "Dep") in
+              (let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                if uu___2
                then
                  let uu___3 = FStar_Ident.range_of_lid module_name1 in
@@ -1186,9 +1242,7 @@ let (collect_one :
             from_parsing_data uu___1 original_map filename in
           match uu___ with
           | (deps1, has_inline_for_extraction, mo_roots) ->
-              ((let uu___2 =
-                  FStar_Options.debug_at_level_no_module
-                    (FStar_Options.Other "Dep") in
+              ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                 if uu___2
                 then
                   let uu___3 =
@@ -1459,6 +1513,13 @@ let (collect_one :
                      (false, uu___4) in
                    P_dep uu___3 in
                  add_to_parsing_data uu___2
+             | FStar_Const.Const_real uu___2 ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = FStar_Ident.lid_of_str "fstar.real" in
+                     (false, uu___5) in
+                   P_dep uu___4 in
+                 add_to_parsing_data uu___3
              | uu___2 -> ()
            and collect_term' uu___1 =
              match uu___1 with
@@ -1877,9 +1938,7 @@ let (topological_dependences_of' :
                          "Impossible: cycle detected after cycle detection has passed"
                    | Black -> (all_friends, all_files)
                    | White ->
-                       ((let uu___2 =
-                           FStar_Options.debug_at_level_no_module
-                             (FStar_Options.Other "Dep") in
+                       ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                          if uu___2
                          then
                            let uu___3 =
@@ -1902,9 +1961,7 @@ let (topological_dependences_of' :
                          | (all_friends1, all_files1) ->
                              (deps_add_dep dep_graph1 filename
                                 { edges = (dep_node1.edges); color = Black };
-                              (let uu___6 =
-                                 FStar_Options.debug_at_level_no_module
-                                   (FStar_Options.Other "Dep") in
+                              (let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
                                if uu___6
                                then
                                  FStar_Compiler_Util.print1 "Adding %s\n"
@@ -1929,9 +1986,7 @@ let (topological_dependences_of' :
             let uu___ = all_friend_deps dep_graph [] ([], []) root_files in
             match uu___ with
             | (friends1, all_files_0) ->
-                ((let uu___2 =
-                    FStar_Options.debug_at_level_no_module
-                      (FStar_Options.Other "Dep") in
+                ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg in
                   if uu___2
                   then
                     let uu___3 =
@@ -1950,9 +2005,7 @@ let (topological_dependences_of' :
                   match uu___2 with
                   | (widened1, dep_graph1) ->
                       let uu___3 =
-                        (let uu___5 =
-                           FStar_Options.debug_at_level_no_module
-                             (FStar_Options.Other "Dep") in
+                        (let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                          if uu___5
                          then
                            FStar_Compiler_Util.print_string
@@ -1961,9 +2014,7 @@ let (topological_dependences_of' :
                         all_friend_deps dep_graph1 [] ([], []) root_files in
                       (match uu___3 with
                        | (uu___4, all_files) ->
-                           ((let uu___6 =
-                               FStar_Options.debug_at_level_no_module
-                                 (FStar_Options.Other "Dep") in
+                           ((let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
                              if uu___6
                              then
                                FStar_Compiler_Util.print1
@@ -1980,9 +2031,7 @@ let (phase1 :
     fun dep_graph ->
       fun interfaces_needing_inlining ->
         fun for_extraction ->
-          (let uu___1 =
-             FStar_Options.debug_at_level_no_module
-               (FStar_Options.Other "Dep") in
+          (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
            if uu___1
            then
              FStar_Compiler_Util.print_string
@@ -2219,9 +2268,7 @@ let (collect :
             "FStar.Parser.Dep.topological_dependences_of" in
         match uu___3 with
         | (all_files, uu___4) ->
-            ((let uu___6 =
-                FStar_Options.debug_at_level_no_module
-                  (FStar_Options.Other "Dep") in
+            ((let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
               if uu___6
               then
                 FStar_Compiler_Util.print1

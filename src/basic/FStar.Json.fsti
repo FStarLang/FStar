@@ -23,7 +23,7 @@ type json =
 | JsonInt of int
 | JsonStr of string
 | JsonList of list json
-| JsonAssoc of list (string * json)
+| JsonAssoc of list (string & json)
 
 val json_of_string : string -> option json
 val string_of_json : json -> string

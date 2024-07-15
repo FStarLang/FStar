@@ -11,7 +11,7 @@
         "refinement_interpretation_Tm_refine_67dd0c8a36eaf642ae0fc764a3b385e4"
       ],
       0,
-      "41281f71c3e9454502061c62383731d1"
+      "2d3ac5227862d3f8028bb8bd6187f68c"
     ],
     [
       "STLC.Infer.__proj__EVar__item___0",
@@ -97,7 +97,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "6fe894e30946967b2d3c4d1ee3147f5f"
+      "25ae9886bd1a067490850f117b209051"
     ],
     [
       "STLC.Infer.close_exp'",
@@ -123,7 +123,7 @@
         "subterm_ordering_STLC.Infer.ELam"
       ],
       0,
-      "2292bd80c8af6171bc55b23a48c3db94"
+      "42a20599d2e3cce79931f7e1d47c7e2a"
     ],
     [
       "STLC.Infer.infer",
@@ -140,7 +140,7 @@
         "projection_inverse_BoxBool_proj_0", "typing_STLC.Core.lookup"
       ],
       0,
-      "fe1133f53ff86eff846b07ac0ecdeed6"
+      "d58d704c75bc4ac1fb39d860dc0a6a65"
     ],
     [
       "STLC.Infer.elab_core",
@@ -155,7 +155,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "3f40e005d9849a2f70b8e393b12584c1"
+      "3abffbeaa1f9c82dbfddc46b88569591"
     ]
   ]
 ]

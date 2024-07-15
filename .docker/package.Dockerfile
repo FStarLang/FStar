@@ -46,7 +46,7 @@ ENV PATH=${PATH}:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
 # Configure the git user
 RUN git config --global user.name "Dzomo, the Everest Yak" && \
-    git config --global user.email "everbld@microsoft.com"
+    git config --global user.email "24394600+dzomo@users.noreply.github.com"
 
 # Download and extract z3, but do not add it in the PATH
 # We download a z3 that does not depend on libgomp

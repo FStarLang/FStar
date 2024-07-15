@@ -19,7 +19,7 @@
         "typing_IfcRulesReify.meet", "typing_IfcRulesReify.op_Less_Equals"
       ],
       0,
-      "3a984b8a975e65cfe11b5b9b04850336"
+      "01775bbcfe7c5353a5e14758999dad6d"
     ],
     [
       "IfcRulesReify.low_equiv",
@@ -47,7 +47,7 @@
         "typing_WhileReify.interpret_com"
       ],
       0,
-      "38b724db6e34644a171eb4deff9246ab"
+      "42c1a0988a7aa3f7ad77bb738fe10f26"
     ],
     [
       "IfcRulesReify.sub_exp",
@@ -775,7 +775,7 @@
         "typing_WhileReify.interpret_com", "unit_typing"
       ],
       0,
-      "aa42ce3483d569bb4e53aaad37d3673b"
+      "4a0404723b2b06a4a14c2c7933dde6ca"
     ],
     [
       "IfcRulesReify.while_inv_com'",
@@ -907,7 +907,6 @@
         "binder_x_961a83ca4e58bd70b992f49bc5b8c30f_4",
         "binder_x_db9f5591f9c8c6a645bfa61f7afb22db_2",
         "binder_x_f1b0adbf3001da485bb55c0cfa02da25_3", "bool_inversion",
-        "constructor_distinct_FStar.Pervasives.Native.Mktuple2",
         "constructor_distinct_FStar.Pervasives.Native.None",
         "constructor_distinct_FStar.Pervasives.Native.Some",
         "constructor_distinct_Tm_unit",
@@ -915,10 +914,8 @@
         "data_typing_intro_WhileReify.While@tok",
         "disc_equation_IfcRulesReify.Low",
         "equation_FStar.DM4F.IntStoreExcFixed.get",
-        "equation_FStar.DM4F.IntStoreExcFixed.write",
         "equation_FStar.Pervasives.Native.fst",
-        "equation_FStar.Pervasives.pattern",
-        "equation_IfcRulesReify.low_equiv", "equation_IfcRulesReify.ni_com",
+        "equation_FStar.Pervasives.pattern", "equation_IfcRulesReify.ni_com",
         "equation_IfcRulesReify.ni_com_", "equation_IfcRulesReify.ni_exp",
         "equation_Prims.nat", "equation_WhileReify.decr_while",
         "equation_WhileReify.interpret_com",
@@ -934,9 +931,6 @@
         "interpretation_Tm_abs_6169b3ea32ca1b53d4c1becbc6732636",
         "interpretation_Tm_abs_936023dc6b4c426772a2f02a9a4c3dc5",
         "interpretation_Tm_abs_afc6079413f746330eab7ab4eced1d83",
-        "interpretation_Tm_abs_b76086e793a91fa75d25d023f610772c",
-        "interpretation_Tm_abs_bf3ba1c110edf43afc5f4102c0a51f61",
-        "interpretation_Tm_abs_ec3aaaebabfa81be7b5a5795fe5b609b",
         "l_imp-interp", "lemma_FStar.Pervasives.invertOption",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Equality",
         "primitive_Prims.op_GreaterThan", "primitive_Prims.op_disEquality",

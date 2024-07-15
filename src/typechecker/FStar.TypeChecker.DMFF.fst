@@ -40,19 +40,24 @@ module TcTerm = FStar.TypeChecker.TcTerm
 module BU = FStar.Compiler.Util //basic util
 module U  = FStar.Syntax.Util
 module PC = FStar.Parser.Const
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
+
+open FStar.Class.Setlike
+
+let dbg = Debug.get_toggle "ED"
 
 let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s
 
 // Takes care of creating the [fv], generating the top-level let-binding, and
 // return a term that's a suitable reference (a [Tm_fv]) to the definition
-let mk_toplevel_definition (env: env_t) lident (def: term): sigelt * term =
+let mk_toplevel_definition (env: env_t) lident (def: term): sigelt & term =
   // Debug
-  if Env.debug env (Options.Other "ED") then begin
+  if !dbg then begin
     d (string_of_lid lident);
     BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
   end;
   // Allocate a new top-level name.
-  let fv = S.lid_and_dd_as_fv lident (U.incr_delta_qualifier def) None in
+  let fv = S.lid_and_dd_as_fv lident None in
   let lbname: lbname = Inr fv in
   let lb: letbindings =
     // the effect label will be recomputed correctly
@@ -73,7 +78,7 @@ let empty env tc_const = {
 
 let gen_wps_for_free
   env (binders: binders) (a: bv) (wp_a: term) (ed: Syntax.eff_decl):
-  Syntax.sigelts * Syntax.eff_decl
+  Syntax.sigelts & Syntax.eff_decl
 =
   // [wp_a] has been type-checked and contains universe unification variables;
   // we want to re-use [wp_a] and make it re-generalize accordingly
@@ -82,7 +87,7 @@ let gen_wps_for_free
 
   // Debugging
   let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s in
-  if Env.debug env (Options.Other "ED") then begin
+  if !dbg then begin
     d "Elaborating extra WP combinators";
     BU.print1 "wp_a is: %s\n" (Print.term_to_string wp_a)
   end;
@@ -120,7 +125,7 @@ let gen_wps_for_free
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     d (BU.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
   let unknown = S.tun in
   let mk x = mk x Range.dummyRange in
@@ -297,7 +302,7 @@ let gen_wps_for_free
     let result_comp = (mk_Total ((U.arrow [ S.null_binder wp_a; S.null_binder wp_a ] (mk_Total wp_a)))) in
     let c = S.gen_bv "c" None U.ktype in
     U.abs (binders @ S.binders_of_list [ a; c ]) (
-      let l_ite = fvar_with_dd PC.ite_lid (S.Delta_constant_at_level 2) None in
+      let l_ite = fvar_with_dd PC.ite_lid None in
       U.ascribe (
         U.mk_app c_lift2 (List.map S.as_arg [
           U.mk_app l_ite [S.as_arg (S.bv_to_name c)]
@@ -352,7 +357,7 @@ let gen_wps_for_free
   in
   let rec mk_rel rel t x y =
     let mk_rel = mk_rel rel in
-    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+    let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
         (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
@@ -392,13 +397,13 @@ let gen_wps_for_free
     let wp1 = S.gen_bv "wp1" None wp_a in
     let wp2 = S.gen_bv "wp2" None wp_a in
     let rec mk_stronger t x y =
-        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant ] env t in
+        let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant ] env t in
         match (SS.compress t).n with
         | Tm_type _ -> U.mk_imp x y
         | Tm_app {hd=head; args} when is_tuple_constructor (SS.compress head) ->
           let project i tuple =
             (* TODO : I guess a projector shouldn't be handled as a constant... *)
-            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) (S.Delta_constant_at_level 1) None in
+            let projector = S.fvar_with_dd (Env.lookup_projector env (PC.mk_tuple_data_lid (List.length args) Range.dummyRange) i) None in
             mk_app projector [tuple, None]
           in
           let (rel0,rels) =
@@ -428,14 +433,15 @@ let gen_wps_for_free
     // forall k: post a
     let k = S.gen_bv "k" None post.binder_bv.sort in
     let equiv =
+      let open FStar.Syntax.Formula in
         let k_tm = S.bv_to_name k in
         let eq = mk_rel U.mk_iff k.sort
                           k_tm
                           (S.bv_to_name post.binder_bv) in
-        match U.destruct_typ_as_formula eq with
+        match destruct_typ_as_formula eq with
         | Some (QAll (binders, [], body)) ->
           let k_app = U.mk_app k_tm (args_of_binders binders) in
-          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free delta_constant None) in
+          let guard_free =  S.fv_to_tm (S.lid_and_dd_as_fv PC.guard_free None) in
           let pat = U.mk_app guard_free [as_arg k_app] in
           let pattern_guarded_body =
             mk (Tm_meta {tm=body; meta=Meta_pattern(binders_to_names binders, [[as_arg pat]])}) in
@@ -476,7 +482,7 @@ let gen_wps_for_free
   let wp_trivial = register env (mk_lid "wp_trivial") wp_trivial in
   let wp_trivial = mk_generic_app wp_trivial in
 
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     d "End Dijkstra monads for free";
 
   let c = close binders in
@@ -581,7 +587,7 @@ and star_type' env t =
       // (st a)* every time.
       let debug t s =
         let string_of_set f s =
-            let elts = Set.elems s in
+            let elts = elems s in
             match elts with
             | [] -> "{}"
             | x::xs ->
@@ -605,15 +611,15 @@ and star_type' env t =
                 else
                     try
                         let non_dependent_or_raise s ty =
-                            let sinter = Set.inter (Free.names ty) s in
-                            if  not (Set.is_empty sinter)
+                            let sinter = inter (Free.names ty) s in
+                            if  not (is_empty sinter)
                             then (debug ty sinter ; raise Not_found)
                         in
                         let binders, c = SS.open_comp binders c in
                         let s = List.fold_left (fun s ({binder_bv=bv}) ->
                             non_dependent_or_raise s bv.sort ;
-                            Set.add bv s
-                        ) S.no_names binders in
+                            add bv s
+                        ) (Class.Setlike.empty ())  binders in
                         let ct = U.comp_result c in
                         non_dependent_or_raise s ct ;
                         let k = n - List.length binders in
@@ -639,7 +645,7 @@ and star_type' env t =
              if is_non_dependent_arrow ty (List.length args)
              then
                // We need to check that the result of the application is a datatype
-                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldUntil S.delta_constant] env.tcenv t in
+                let res = N.normalize [Env.EraseUniverses; Env.Inlining ; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant] env.tcenv t in
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
@@ -805,7 +811,7 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // [check] returns two terms:
 // - the first is [e*], the CPS'd version of [e]
 // - the second is [_e_], the elaborated version of [e]
-let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
+let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
   // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
@@ -832,7 +838,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
 
   in
 
-  let ensure_m (env: env_) (e2: term): term * term * term =
+  let ensure_m (env: env_) (e2: term): term & term & term =
     let strip_m = function
       | M t, s_e, u_e -> t, s_e, u_e
       | _ -> failwith "impossible"
@@ -892,10 +898,10 @@ let rec check (env: env) (e: term) (context_nm: nm): nm * term * term =
       failwith (BU.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
 
 
-and infer (env: env) (e: term): nm * term * term =
+and infer (env: env) (e: term): nm & term & term =
   // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
   let mk x = mk x e.pos in
-  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
+  let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
   | Tm_bvar bv ->
       failwith "I failed to open a binder... boo"
@@ -973,7 +979,7 @@ and infer (env: env) (e: term): nm * term * term =
               Some rc
 
             | Some rt ->
-              let rt = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] (get_env env) rt in
+              let rt = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.UnfoldTac; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] (get_env env) rt in
               if rc.residual_flags |> BU.for_some (function CPS -> true | _ -> false)
               then
                 let flags = List.filter (function CPS -> false | _ -> true) rc.residual_flags in
@@ -1206,8 +1212,8 @@ and mk_match env e0 branches f =
   end
 
 and mk_let (env: env_) (binding: letbinding) (e2: term)
-    (proceed: env_ -> term -> nm * term * term)
-    (ensure_m: env_ -> term -> term * term * term) =
+    (proceed: env_ -> term -> nm & term & term)
+    (ensure_m: env_ -> term -> term & term & term) =
   let mk x = mk x e2.pos in
   let e1 = binding.lbdef in
   // This is [let x = e1 in e2]. Open [x] in [e2].
@@ -1253,13 +1259,13 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   end
 
 
-and check_n (env: env_) (e: term): typ * term * term =
+and check_n (env: env_) (e: term): typ & term & term =
   let mn = N (mk Tm_unknown e.pos) in
   match check env e mn with
   | N t, s_e, u_e -> t, s_e, u_e
   | _ -> failwith "[check_n]: impossible"
 
-and check_m (env: env_) (e: term): typ * term * term =
+and check_m (env: env_) (e: term): typ & term & term =
   let mn = M (mk Tm_unknown e.pos) in
   match check env e mn with
   | M t, s_e, u_e -> t, s_e, u_e
@@ -1295,7 +1301,7 @@ and trans_F_ (env: env_) (c: typ) (wp: term): term =
         failwith "mismatch";
       mk (Tm_app {hd=head; args=List.map2 (fun (arg, q) (wp_arg, q') ->
         let print_implicit q = if S.is_aqual_implicit q then "implicit" else "explicit" in
-        if eq_aqual q q' <> Equal
+        if not (eq_aqual q q')
         then Errors.log_issue
                     head.pos
                     (Errors.Warning_IncoherentImplicitQualifier,
@@ -1343,7 +1349,7 @@ and trans_G (env: env_) (h: typ) (is_monadic: bool) (wp: typ): comp =
 // A helper --------------------------------------------------------------------
 
 (* KM : why is there both NoDeltaSteps and UnfoldUntil Delta_constant ? *)
-let n = N.normalize [ Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
+let n = N.normalize [ Env.UnfoldTac; Env.Beta; Env.UnfoldUntil delta_constant; Env.DoNotUnfoldPureLets; Env.Eager_unfolding; Env.EraseUniverses ]
 
 
 // Exported definitions -------------------------------------------------------
@@ -1359,17 +1365,17 @@ let trans_F (env: env_) (c: typ) (wp: term): term =
 
 // A helper to check that the terms elaborated by DMFF are well-typed
 let recheck_debug (s:string) (env:FStar.TypeChecker.Env.env) (t:S.term) : S.term =
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
   let t', _, _ = TcTerm.tc_term env t in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
   t'
 
 
 let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
-  : list S.sigelt *
-    S.eff_decl *
+  : list S.sigelt &
+    S.eff_decl &
     option S.sigelt =
   // Using [STInt: a:Type -> Effect] as an example...
   let effect_binders_un, signature_un = SS.open_term ed.binders (ed.signature |> U.effect_sig_ts |> snd) in
@@ -1379,7 +1385,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   let signature, _ = TcTerm.tc_trivial_guard env signature_un in
   // We will open binders through [open_and_check]
 
-  let raise_error : (Errors.raw_error * string) -> 'a = fun (e, err_msg) ->
+  let raise_error : (Errors.raw_error & string) -> 'a = fun (e, err_msg) ->
     Errors.raise_error (e, err_msg) signature.pos
   in
 
@@ -1417,7 +1423,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> must |> snd) in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
 
   let ed_range = Env.get_range env in
@@ -1532,7 +1538,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     match (SS.compress bind_wp).n with
     | Tm_abs {bs=binders; body; rc_opt=what} ->
         // TODO: figure out how to deal with ranges
-        //let r = S.lid_and_dd_as_fv PC.range_lid (S.Delta_constant_at_level 1) None in
+        //let r = S.lid_and_dd_as_fv PC.range_lid None in
         U.abs binders body what
     | _ ->
         raise_error (Errors.Fatal_UnexpectedBindShape, "unexpected shape for bind")
@@ -1556,10 +1562,9 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     let l' = lid_of_path p' ed_range in
     match try_lookup_lid env l' with
     | Some (_us,_t) -> begin
-      if Options.debug_any () then
+      if Debug.any () then
           BU.print1 "DM4F: Applying override %s\n" (string_of_lid l');
-      // TODO: GM: get exact delta depth, needs a change of interfaces
-      fv_to_tm (lid_and_dd_as_fv l' delta_equational None)
+      fv_to_tm (lid_and_dd_as_fv l' None)
       end
     | None ->
       let sigelt, fv = mk_toplevel_definition env (mk_lid name) (U.abs effect_binders item None) in
@@ -1608,7 +1613,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
       | [] -> action_typ_with_wp
       | _ -> flat_arrow action_params (S.mk_Total action_typ_with_wp)
     in
-    if Env.debug env <| Options.Other "ED"
+    if !dbg
     then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
         (Print.binders_to_string "," params_un)
         (Print.binders_to_string "," action_params)
@@ -1651,7 +1656,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
             let wp_binders, c = SS.open_comp wp_binders c in
             let pre_args, post_args =
                 List.partition (fun ({binder_bv=bv}) ->
-                  Free.names bv.sort |> Set.mem type_param.binder_bv |> not
+                  Free.names bv.sort |> mem type_param.binder_bv |> not
                 ) wp_binders
             in
             let post = match post_args with
@@ -1704,7 +1709,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
 
   // Generate the missing combinators.
   let sigelts', ed = gen_wps_for_free env effect_binders a wp_a ed in
-  if Env.debug env (Options.Other "ED") then
+  if !dbg then
     BU.print_string (Print.eff_decl_to_string true ed);
 
   let lift_from_pure_opt =

@@ -26,6 +26,7 @@ open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 
 open FStar.Class.Show
+open FStar.Class.Setlike
 
 module BU    = FStar.Compiler.Util
 module S     = FStar.Syntax.Syntax
@@ -37,6 +38,8 @@ module UF    = FStar.Syntax.Unionfind
 module Env   = FStar.TypeChecker.Env
 module N     = FStar.TypeChecker.Normalize
 
+let dbg_Gen = Debug.get_toggle "Gen"
+
 instance showable_univ_var : showable universe_uvar = {
   show = (fun u -> show (U_unif u));
 }
@@ -45,15 +48,15 @@ instance showable_univ_var : showable universe_uvar = {
 (* Generalizing types *)
 (**************************************************************************************)
 
-let gen_univs env (x:Set.t universe_uvar) : list univ_name =
-    if Set.is_empty x then []
-    else let s = Set.diff x (Env.univ_vars env) |> Set.elems in // GGG: bad, order dependent
-         if Env.debug env <| Options.Other "Gen" then
+let gen_univs env (x:FlatSet.t universe_uvar) : list univ_name =
+    if is_empty x then []
+    else let s = diff x (Env.univ_vars env) |> elems in // GGG: bad, order dependent
+         if !dbg_Gen then
            BU.print1 "univ_vars in env: %s\n" (show (Env.univ_vars env));
          let r = Some (Env.get_range env) in
          let u_names = s |> List.map (fun u ->
            let u_name = Syntax.new_univ_name r in
-           if Env.debug env <| Options.Other "Gen" then
+           if !dbg_Gen then
             BU.print3 "Setting ?%s (%s) to %s\n"
                             (string_of_int <| UF.univ_uvar_id u)
                             (show (U_unif u))
@@ -63,10 +66,10 @@ let gen_univs env (x:Set.t universe_uvar) : list univ_name =
          in
          u_names
 
-let gather_free_univnames env t : Set.t univ_name =
+let gather_free_univnames env t : FlatSet.t univ_name =
     let ctx_univnames = Env.univnames env in
     let tm_univnames = Free.univnames t in
-    let univnames = Set.diff tm_univnames ctx_univnames in
+    let univnames = diff tm_univnames ctx_univnames in
     // BU.print4 "Closing universe variables in term %s : %s in ctx, %s in tm, %s globally\n"
     //     (show t)
     //     (Common.string_of_set Ident.string_of_id ctx_univnames)
@@ -89,14 +92,14 @@ let check_universe_generalization
 let generalize_universes (env:env) (t0:term) : tscheme =
   Errors.with_ctx "While generalizing universes" (fun () ->
     let t = N.normalize [Env.NoFullNorm; Env.Beta; Env.DoNotUnfoldPureLets] env t0 in
-    let univnames = Set.elems (gather_free_univnames env t) in /// GGG: bad, order dependent
-    if Env.debug env <| Options.Other "Gen"
+    let univnames = elems (gather_free_univnames env t) in /// GGG: bad, order dependent
+    if !dbg_Gen
     then BU.print2 "generalizing universes in the term (post norm): %s with univnames: %s\n" (show t) (show univnames);
     let univs = Free.univs t in
-    if Env.debug env <| Options.Other "Gen"
+    if !dbg_Gen
     then BU.print1 "univs to gen : %s\n" (show univs);
     let gen = gen_univs env univs in
-    if Env.debug env <| Options.Other "Gen"
+    if !dbg_Gen
     then BU.print2 "After generalization, t: %s and univs: %s\n"  (show t) (show gen);
     let univs = check_universe_generalization univnames gen t0 in
     let t = N.reduce_uvar_solutions env t in
@@ -104,35 +107,35 @@ let generalize_universes (env:env) (t0:term) : tscheme =
     univs, ts
   )
 
-let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbname * list univ_name * term * comp * list binder)) =
+let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbname & list univ_name & term & comp & list binder)) =
   if not <| (BU.for_all (fun (_, _, c) -> U.is_pure_or_ghost_comp c) lecs) //No value restriction in F*---generalize the types of pure computations
   then None
   else
      let norm c =
-        if debug env Options.Medium
+        if Debug.medium ()
         then BU.print1 "Normalizing before generalizing:\n\t %s\n" (show c);
          let c = Normalize.normalize_comp [Env.Beta; Env.Exclude Env.Zeta; Env.NoFullNorm; Env.DoNotUnfoldPureLets] env c in
-         if debug env Options.Medium then
+         if Debug.medium () then
             BU.print1 "Normalized to:\n\t %s\n" (show c);
          c in
      let env_uvars = Env.uvars_in_env env in
-     let gen_uvars uvs = Set.diff uvs env_uvars |> Set.elems in /// GGG: bad, order depenedent
+     let gen_uvars uvs = diff uvs env_uvars |> elems in /// GGG: bad, order depenedent
      let univs_and_uvars_of_lec (lbname, e, c) =
           let c = norm c in
           let t = U.comp_result c in
           let univs = Free.univs t in
           let uvt = Free.uvars t in
-          if Env.debug env <| Options.Other "Gen"
+          if !dbg_Gen
           then BU.print2 "^^^^\n\tFree univs = %s\n\tFree uvt=%s\n"
                 (show univs) (show uvt);
           let univs =
             List.fold_left
-              (fun univs uv -> Set.union univs (Free.univs (U.ctx_uvar_typ uv)))
+              (fun univs uv -> union univs (Free.univs (U.ctx_uvar_typ uv)))
               univs
-             (Set.elems uvt) // Bad; order dependent
+             (elems uvt) // Bad; order dependent
           in
           let uvs = gen_uvars uvt in
-          if Env.debug env <| Options.Other "Gen"
+          if !dbg_Gen
           then BU.print2 "^^^^\n\tFree univs = %s\n\tgen_uvars = %s\n"
                 (show univs) (show uvs);
 
@@ -140,7 +143,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      in
      let univs, uvs, lec_hd = univs_and_uvars_of_lec (List.hd lecs) in
      let force_univs_eq lec2 u1 u2 =
-        if Set.equal u1 u2
+        if equal u1 u2
         then ()
         else let lb1, _, _ = lec_hd in
              let lb2, _, _ = lec2 in
@@ -179,7 +182,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
 
      let lecs = lec_hd :: lecs in
 
-     let gen_types (uvs:list ctx_uvar) : list (bv * bqual) =
+     let gen_types (uvs:list ctx_uvar) : list (bv & bqual) =
          uvs |> List.concatMap (fun u ->
          (* If this implicit has a meta, don't generalize it. Just leave it
          unresolved for the resolve_implicits phase to fill it in. *)
@@ -198,7 +201,7 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
            match (U.unrefine (N.unfold_whnf env kres)).n with
            | Tm_type _ ->
               let free = FStar.Syntax.Free.names kres in
-              if not (Set.is_empty free) then
+              if not (is_empty free) then
                 []
               else
               let a = S.new_bv (Some <| Env.get_range env) kres in
@@ -259,25 +262,25 @@ let gen env (is_rec:bool) (lecs:list (lbname * term * comp)) : option (list (lbn
      in
      Some ecs
 
-let generalize' env (is_rec:bool) (lecs:list (lbname*term*comp)) : (list (lbname*univ_names*term*comp*list binder)) =
+let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname&univ_names&term&comp&list binder)) =
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
-  if debug env Options.Low then
+  if Debug.low () then
      BU.print1 "Generalizing: %s\n"
        (show <| List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs);
   let univnames_lecs = 
-    let empty = Set.from_list [] in
+    let empty = from_list [] in
     List.fold_left
       (fun out (l, t, c) -> 
-          Set.union out (gather_free_univnames env t))
+          union out (gather_free_univnames env t))
       empty
       lecs
   in
-  let univnames_lecs = Set.elems univnames_lecs in /// GGG: bad, order dependent
+  let univnames_lecs = elems univnames_lecs in /// GGG: bad, order dependent
   let generalized_lecs =
       match gen env is_rec lecs with
           | None -> lecs |> List.map (fun (l,t,c) -> l,[],t,c,[])
           | Some luecs ->
-            if debug env Options.Medium
+            if Debug.medium ()
             then luecs |> List.iter
                     (fun (l, us, e, c, gvs) ->
                          BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"

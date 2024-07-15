@@ -41,6 +41,9 @@ one, but if that's the case it's probably better to build a doc instead
 of lifting from a string. NB: mkmsg s is equal to [doc_of_string s]. *)
 val mkmsg : string -> error_message
 
+(* As subdoc, but allows to not indent. *)
+val subdoc' : indent:bool -> document -> document
+
 (* A nested document that can be concatenated with another one *)
 val subdoc : document -> document
 

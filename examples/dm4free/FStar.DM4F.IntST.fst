@@ -51,7 +51,7 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
 
 // Another effect abbreviation for the trivial pre-post conditions
 effect StNull (a:Type) =
-  STINT a (fun (n0:int) (p:(a * int) -> Type0) -> forall (x:(a * int)). p x)
+  STINT a (fun (n0:int) (p:(a & int) -> Type0) -> forall (x:(a & int)). p x)
 
 // We define an increment function that we verify intrinsically
 
@@ -149,7 +149,7 @@ let refine_st (#a:Type)
                                  reify (f x) h0 == (z, h1) /\
                                  post x h0 z h1)
   = let g (h0:int)
-      : Pure (b * int)
+      : Pure (b & int)
              (pre x h0)
              (fun (z,h1) -> pre x h0 /\
                        reify (f x) h0 == (z, h1) /\

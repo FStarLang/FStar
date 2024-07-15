@@ -50,7 +50,7 @@ val upd: #a:Type -> h0:heap -> r:ref a -> x:a
                   -> GTot heap
 (* Generating a fresh reference for the given heap. *)
 
-val alloc: #a:Type -> h0:heap -> x:a -> Tot (t:(ref a * heap){snd t == upd h0 (fst t) x})
+val alloc: #a:Type -> h0:heap -> x:a -> Tot (t:(ref a & heap){snd t == upd h0 (fst t) x})
 
 val contains (#a:Type) (h:heap) (r:ref a): Tot Type0
 

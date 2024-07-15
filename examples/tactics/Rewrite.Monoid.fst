@@ -52,7 +52,7 @@ let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
      (* dump "after replace norm"; *)
      trefl ())
 
-let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool * int) =
+let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool & int) =
   let m_mult = norm_term [delta;zeta;iota] (quote (Monoid?.mult m)) in
   let m_unit = norm_term [delta;zeta;iota] (quote (Monoid?.unit m)) in
   // debug "should_rewrite: ";

@@ -23,8 +23,8 @@ open FStar.TypeChecker.Env
 val generalize:
   env ->
   bool -> (* is_rec *)
-  list (lbname * term * comp) ->
-  list (lbname * univ_names * term * comp * list binder)
+  list (lbname & term & comp) ->
+  list (lbname & univ_names & term & comp & list binder)
 
 val generalize_universes:
   env ->

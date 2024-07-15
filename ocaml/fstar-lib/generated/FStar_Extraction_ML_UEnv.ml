@@ -251,12 +251,13 @@ let with_typars_env :
              currentModule = (u.currentModule)
            }, x)
 let (bindings_of_uenv : uenv -> binding Prims.list) = fun u -> u.env_bindings
+let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Extraction"
 let (debug : uenv -> (unit -> unit) -> unit) =
   fun g ->
     fun f ->
       let c = FStar_Extraction_ML_Syntax.string_of_mlpath g.currentModule in
-      let uu___ =
-        FStar_Options.debug_at_level c (FStar_Options.Other "Extraction") in
+      let uu___ = FStar_Compiler_Effect.op_Bang dbg in
       if uu___ then f () else ()
 let (print_mlpath_map : uenv -> Prims.string) =
   fun g ->
@@ -307,15 +308,32 @@ let (try_lookup_fv :
         | FStar_Pervasives.Inl (true) ->
             ((let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.fv_to_string fv in
+                  let uu___4 =
+                    let uu___5 =
+                      let uu___6 = FStar_Syntax_Print.fv_to_string fv in
+                      FStar_Compiler_Util.format1
+                        "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
+                        uu___6 in
+                    FStar_Errors_Msg.text uu___5 in
                   let uu___5 =
-                    FStar_Compiler_Util.string_of_int
-                      FStar_Errors.call_to_erased_errno in
-                  FStar_Compiler_Util.format2
-                    "Will not extract reference to variable `%s` since it is noextract; either remove its qualifier or add it to this definition. This error can be ignored with `--warn_error -%s`."
-                    uu___4 uu___5 in
+                    let uu___6 =
+                      FStar_Errors_Msg.text
+                        "Either remove its qualifier or add it to this definition." in
+                    let uu___7 =
+                      let uu___8 =
+                        let uu___9 =
+                          let uu___10 =
+                            FStar_Compiler_Util.string_of_int
+                              FStar_Errors.call_to_erased_errno in
+                          FStar_Compiler_Util.format1
+                            "This error can be ignored with `--warn_error -%s`."
+                            uu___10 in
+                        FStar_Errors_Msg.text uu___9 in
+                      [uu___8] in
+                    uu___6 :: uu___7 in
+                  uu___4 :: uu___5 in
                 (FStar_Errors_Codes.Error_CallToErased, uu___3) in
-              FStar_Errors.log_issue r uu___2);
+              FStar_Errors.log_issue_doc r uu___2);
              FStar_Pervasives_Native.None)
         | FStar_Pervasives.Inl (false) -> FStar_Pervasives_Native.None
 let (lookup_fv :
@@ -819,7 +837,10 @@ let (extend_fv :
             | [] -> true in
           let tySchemeIsClosed tys =
             let uu___ = mltyFvars (FStar_Pervasives_Native.snd tys) in
-            subsetMlidents uu___ (FStar_Pervasives_Native.fst tys) in
+            let uu___1 =
+              FStar_Extraction_ML_Syntax.ty_param_names
+                (FStar_Pervasives_Native.fst tys) in
+            subsetMlidents uu___ uu___1 in
           let uu___ = tySchemeIsClosed t_x in
           if uu___
           then
@@ -1137,7 +1158,10 @@ let (new_uenv : FStar_TypeChecker_Env.env -> uenv) =
       } in
     let a = "'a" in
     let failwith_ty =
-      ([a],
+      ([{
+          FStar_Extraction_ML_Syntax.ty_param_name = a;
+          FStar_Extraction_ML_Syntax.ty_param_attrs = []
+        }],
         (FStar_Extraction_ML_Syntax.MLTY_Fun
            ((FStar_Extraction_ML_Syntax.MLTY_Named
                ([], (["Prims"], "string"))),

@@ -59,7 +59,7 @@ open FStar.Tactics.V2
 ///
 /// Here's a basic (but cumbersome!) implementation:
 
-let fetch_eq_side () : Tac (term * term) =
+let fetch_eq_side () : Tac (term & term) =
   let g = cur_goal () in
   match inspect g with
   | Tv_App squash (g, _) ->
@@ -193,9 +193,9 @@ let rec string_of_pattern = function
 /// -------------------
 
 noeq type match_exception =
-| NameMismatch of qn * qn
-| SimpleMismatch of pattern * term
-| NonLinearMismatch of varname * term * term
+| NameMismatch of qn & qn
+| SimpleMismatch of pattern & term
+| NonLinearMismatch of varname & term & term
 | UnsupportedTermInPattern of term
 | IncorrectTypeInAbsPatBinder of typ
 
@@ -280,7 +280,7 @@ let lift_exn_tactic #a #b (f: a -> match_res b) (aa: a) : Tac b =
 /// pattern implementation — handling cases in which mutliple hypotheses match
 /// the same pattern is done later.
 
-type bindings = list (varname * term)
+type bindings = list (varname & term)
 let string_of_bindings (bindings: bindings) =
   String.concat "\n"
     (map (fun (nm, tm) -> (">> " ^ nm ^ ": " ^ term_to_string tm))
@@ -354,7 +354,7 @@ type hypothesis = binding
 
 noeq type matching_problem =
   { mp_vars: list varname;
-    mp_hyps: list (varname * pattern);
+    mp_hyps: list (varname & pattern);
     mp_goal: option pattern }
 
 let string_of_matching_problem mp =
@@ -375,8 +375,8 @@ let string_of_matching_problem mp =
 /// captured to match hypothesis patterns.
 
 noeq type matching_solution =
-  { ms_vars: list (varname * term);
-    ms_hyps: list (varname * hypothesis) }
+  { ms_vars: list (varname & term);
+    ms_hyps: list (varname & hypothesis) }
 
 let string_of_matching_solution ms =
   let vars =
@@ -391,7 +391,7 @@ let string_of_matching_solution ms =
   "  hyps: " ^ hyps ^ " }"
 
 (** Find a varname in an association list; fail if it can't be found. **)
-let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname * b))
+let assoc_varname_fail (#b: Type) (key: varname) (ls: list (varname & b))
     : Tac b =
   match List.Tot.Base.assoc key ls with
   | None -> fail ("Not found: " ^ key)
@@ -455,7 +455,7 @@ let rec solve_mp_for_single_hyp #a
 (** Scan ``hypotheses`` for matches for ``mp_hyps`` that lets ``body``
 succeed. **)
 let rec solve_mp_for_hyps #a
-                          (mp_hyps: list (varname * pattern))
+                          (mp_hyps: list (varname & pattern))
                           (hypotheses: list hypothesis)
                           (body: matching_solution -> Tac a)
                           (partial_solution: matching_solution)
@@ -579,12 +579,12 @@ noeq type abspat_argspec =
 // We must store this continuation, because recomputing it yields different
 // names when the binders are re-opened.
 type abspat_continuation =
-  list abspat_argspec * term
+  list abspat_argspec & term
 
 let type_of_named_binder (nb : binder) : term =
  nb.sort
 
-let classify_abspat_binder (b : binder): Tac (abspat_binder_kind * term) =
+let classify_abspat_binder (b : binder): Tac (abspat_binder_kind & term) =
   let varname = "v" in
   let hyp_pat = PApp (PQn hyp_qn) (PVar varname) in
   let goal_pat = PApp (PQn goal_qn) (PVar varname) in
@@ -600,7 +600,7 @@ let classify_abspat_binder (b : binder): Tac (abspat_binder_kind * term) =
     | Failure _ -> ABKVar typ, typ
 
 (** Split an abstraction `tm` into a list of binders and a body. **)
-let rec binders_and_body_of_abs tm : Tac (list binder * term) =
+let rec binders_and_body_of_abs tm : Tac (list binder & term) =
   match inspect tm with
   | Tv_Abs binder tm ->
     let binders, body = binders_and_body_of_abs tm in
@@ -629,7 +629,7 @@ needed because F* tends to infer arguments in β-expanded form.
 The continuation returned can't directly be applied to a pattern-matching
 solution; see ``interp_abspat_continuation`` below for that. **)
 let matching_problem_of_abs (tm: term)
-    : Tac (matching_problem * abspat_continuation) =
+    : Tac (matching_problem & abspat_continuation) =
 
   let binders, body = binders_and_body_of_abs (cleanup_abspat tm) in
   debug ("Got binders: " ^ (String.concat ", "
@@ -666,7 +666,7 @@ let matching_problem_of_abs (tm: term)
 
   let mp =
     { mp_vars = List.Tot.Base.rev #varname problem.mp_vars;
-      mp_hyps = List.Tot.Base.rev #(varname * pattern) problem.mp_hyps;
+      mp_hyps = List.Tot.Base.rev #(varname & pattern) problem.mp_hyps;
       mp_goal = problem.mp_goal } in
 
   debug ("Got matching problem: " ^ (string_of_matching_problem mp));
@@ -761,7 +761,7 @@ let interp_abspat_continuation (a:Type0) (continuation: abspat_continuation)
 
 (** Construct a matching problem from an abspat. **)
 let interp_abspat #a (abspat: a)
-    : Tac (matching_problem * abspat_continuation) =
+    : Tac (matching_problem & abspat_continuation) =
   matching_problem_of_abs (quote abspat)
 
 (** Construct an solve a matching problem.
@@ -783,7 +783,7 @@ let inspect_abspat_problem #a (abspat: a) : Tac matching_problem =
 let inspect_abspat_solution #a (abspat: a) : Tac matching_solution =
   match_abspat abspat (fun _ -> (fun solution -> solution <: Tac _) <: Tac _)
 
-let tpair #a #b (x : a) : Tac (b -> Tac (a * b)) =
+let tpair #a #b (x : a) : Tac (b -> Tac (a & b)) =
   fun (y: b) -> (x, y)
 
 /// Our first convenient entry point!
@@ -823,7 +823,7 @@ let pm #b #a (abspat: a) : Tac b =
 ///
 /// Here's the example from the intro, which we can now run!
 
-let fetch_eq_side' #a : Tac (term * term) =
+let fetch_eq_side' #a : Tac (term & term) =
   gpm (fun (left right: a) (g: pm_goal (squash (left == right))) ->
          (quote left, quote right)) ()
 

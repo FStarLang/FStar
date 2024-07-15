@@ -1,0 +1,46 @@
+[
+  "kVÌ\u0004£‚óŒo\u001fIÍžûeÅ",
+  [
+    [
+      "Ex12g.TMAC2.bspec0",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "16fa493840a531d3ca417b46667e005d"
+    ],
+    [
+      "Ex12g.TMAC2.bspec1",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "f0bf9020d8fb0195c158f58ce233ff9d"
+    ],
+    [
+      "Ex12g.TMAC2.keygen",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Ex12.BMAC_interpretation_Tm_arrow_ce0c823d76df01d9670b8417aea68ae7",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_cf20b310f2692239564e86cb4231e614",
+        "Ex12g.TMAC2_interpretation_Tm_arrow_cfecfaa75515b6c7a02161ace50f71c9",
+        "equation_Ex12.BMAC.pkey", "equation_Prims.logical",
+        "function_token_typing_Ex12g.TMAC2.bspec0",
+        "function_token_typing_Ex12g.TMAC2.bspec1",
+        "proj_equation_Ex12g.TMAC2.Keys_k0",
+        "proj_equation_Ex12g.TMAC2.Keys_k1",
+        "projection_inverse_Ex12g.TMAC2.Keys_k0",
+        "projection_inverse_Ex12g.TMAC2.Keys_k1",
+        "refinement_interpretation_Tm_refine_cf4b96afb14879fedb96bcc2ed0b9772",
+        "typing_Ex12.BMAC.keygen"
+      ],
+      0,
+      "bf5df94f279bafccb2667902d32362ea"
+    ]
+  ]
+]

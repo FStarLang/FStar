@@ -23,19 +23,6 @@ open FStar.TypeChecker.Common
 open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
-type should_unfold_res =
-    | Should_unfold_no
-    | Should_unfold_yes
-    | Should_unfold_fully
-    | Should_unfold_reify
-
-val should_unfold : cfg
-                 -> should_reify:(cfg -> bool)
-                 -> fv
-                 -> Env.qninfo
-                 -> should_unfold_res
-
-
 val eta_expand_with_type :Env.env -> term -> typ -> term
 val eta_expand:           Env.env -> term -> term
 val normalize:            steps -> Env.env -> term -> term
@@ -62,16 +49,18 @@ val maybe_ghost_to_pure_lcomp:  Env.env -> lcomp -> lcomp
  *   if one of them is erasable, and the other is GHOST,
  *   the GHOST one is promoted to PURE, see their implementation for more details
  *)
-val ghost_to_pure2 : Env.env -> (comp * comp) -> (comp * comp)
-val ghost_to_pure_lcomp2 : Env.env -> (lcomp * lcomp) -> (lcomp * lcomp)
+val ghost_to_pure2 : Env.env -> (comp & comp) -> (comp & comp)
+val ghost_to_pure_lcomp2 : Env.env -> (lcomp & lcomp) -> (lcomp & lcomp)
 
 val normalize_with_primitive_steps : list Primops.primitive_step -> steps -> Env.env -> term -> term
 val term_to_string:  Env.env -> term -> string
 val term_to_doc:     Env.env -> term -> Pprint.document
 val comp_to_string:  Env.env -> comp -> string
+val comp_to_doc:     Env.env -> comp -> Pprint.document
 val elim_uvars: Env.env -> sigelt -> sigelt
 val erase_universes: Env.env -> term -> term
 
+(* Note: This will default any unresolved universe variables to U_zero. *)
 val remove_uvar_solutions: Env.env -> term -> term
 
 val unfold_head_once: Env.env -> term -> option term
@@ -82,6 +71,6 @@ val reflection_env_hook : ref (option Env.env)
 (* Destructs the term as an arrow type and returns its binders and
 computation type. Only grabs up to [n] binders, and normalizes only as
 needed to discover the shape of the arrow. The binders are opened. *)
-val get_n_binders : Env.env -> int -> term -> list binder * comp
+val get_n_binders : Env.env -> int -> term -> list binder & comp
 
 val maybe_unfold_head : Env.env -> term -> option term

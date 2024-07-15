@@ -41,12 +41,16 @@ module Z = FStar.BigInt
 module C = FStar.Const
 module Cfg = FStar.TypeChecker.Cfg
 module PO = FStar.TypeChecker.Primops
-module N = FStar.TypeChecker.Normalize
+module NU = FStar.TypeChecker.Normalize.Unfolding
 module FC = FStar.Const
 module EMB = FStar.Syntax.Embeddings
 module PC = FStar.Parser.Const
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Show
+
+let dbg_NBE    = Debug.get_toggle "NBE"
+let dbg_NBETop = Debug.get_toggle "NBETop"
 
 (* Broadly, the algorithm implemented here is inspired by
 
@@ -127,7 +131,7 @@ let implies b1 b2 =
   | false, _ -> true
   | true, b2 -> b2
 
-let let_rec_arity (b:letbinding) : int * list bool =
+let let_rec_arity (b:letbinding) : int & list bool =
   let (ar, maybe_lst) = U.let_rec_arity b in
   match maybe_lst with
   | None ->
@@ -200,9 +204,9 @@ let rec unlazy_unmeta t =
       end
     | _ -> t
 
-let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term * list t) =
+let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term & list t) =
   let all_branches = branches in
-  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term * list t) =
+  let rec pickBranch_aux (scrut : t) (branches : list branch) (branches0 : list branch) : option (term & list t) =
     //NS: adapted from FStar.TypeChecker.Normalize: rebuild_match
     let rec matches_pat (scrutinee0:t) (p:pat)
         : either (list t) bool =
@@ -235,7 +239,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
             if matches_const scrutinee s then Inl [] else Inr false
 
         | Pat_cons(fv, _us_opt, arg_pats) ->
-            let rec matches_args out (a:list (t * aqual)) (p:list (pat * bool))
+            let rec matches_args out (a:list (t & aqual)) (p:list (pat & bool))
                 : either (list t) bool =
                 match a, p with
                 | [], [] -> Inl out
@@ -288,7 +292,7 @@ let pickBranch (cfg:config) (scrut : t) (branches : list branch) : option (term 
 let should_reduce_recursive_definition
        (arguments:args)
        (formals_in_decreases:list bool)
-  : (bool * args * args) (* can unfold x full arg list x residual args *)
+  : (bool & args & args) (* can unfold x full arg list x residual args *)
   =
   let rec aux ts ar_list acc =
     match ts, ar_list with
@@ -470,9 +474,11 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
     | Tm_abs {bs=[]} -> failwith "Impossible: abstraction with no binders"
 
     | Tm_abs {bs=xs; body; rc_opt=resc} ->
-      mk_t <| Lam ((fun ys -> translate cfg (List.append (List.map fst ys) bs) body),
-                  Inl (bs, xs, resc),
-                  List.length xs)
+      mk_t <| Lam {
+        interp = (fun ys -> translate cfg (List.append (List.map fst ys) bs) body);
+        shape = Lam_bs (bs, xs, resc);
+        arity = List.length xs;
+      }
 
     | Tm_fvar fvar ->
       begin
@@ -554,7 +560,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
       (* Thunked computation that reconstructs the patterns *)
       let make_branches () : list branch =
         let cfg = zeta_false cfg in
-        let rec process_pattern bs (p:pat) : list t * pat = (* returns new environment and pattern *)
+        let rec process_pattern bs (p:pat) : list t & pat = (* returns new environment and pattern *)
           let (bs, p_new) =
             match p.v with
             | Pat_constant c -> (bs, Pat_constant c)
@@ -718,26 +724,31 @@ and iapp (cfg : config) (f:t) (args:args) : t =
   // meta and lazy nodes shouldn't block reduction
   let mk t = mk_rt f.nbe_r t in
   match (unlazy_unmeta f).nbe_t with
-  | Lam (f, binders, n) ->
+  | Lam {interp=f; shape; arity=n} ->
     let m = List.length args in
     if m < n then
       // partial application
       let arg_values_rev = List.rev args in
-      let binders =
-        match binders with
-        | Inr raw_args ->
+      let shape =
+        match shape with
+        | Lam_args raw_args ->
           let _, raw_args = List.splitAt m raw_args in
-          Inr raw_args
+          Lam_args raw_args
 
-        | Inl (ctx, xs, rc) ->
+        | Lam_bs (ctx, xs, rc) ->
           let _, xs = List.splitAt m xs in
           let ctx = List.append (List.map fst arg_values_rev) ctx in
-          Inl (ctx, xs, rc)
+          Lam_bs (ctx, xs, rc)
+
+        | Lam_primop (f, args_acc) ->
+          Lam_primop (f, args_acc @ args)
       in
       mk <|
-      Lam((fun l -> f (List.append l arg_values_rev)),
-          binders,
-          n - m)
+      Lam {
+        interp = (fun l -> f (List.append l arg_values_rev));
+        shape = shape;
+        arity = n-m;
+      }
     else if m = n then
       // full application
       let arg_values_rev = List.rev args in
@@ -864,17 +875,18 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
    let qninfo = Env.lookup_qname (Cfg.cfg_env cfg.core_cfg) (S.lid_of_fv fvar) in
    if is_constr qninfo || is_constr_fv fvar then mkConstruct fvar [] []
    else
-     match N.should_unfold cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
-     | N.Should_unfold_fully  ->
+     match NU.should_unfold cfg.core_cfg (fun _ -> cfg.core_cfg.reifying) fvar qninfo with
+     | NU.Should_unfold_fully  ->
        failwith "Not yet handled"
 
-     | N.Should_unfold_no ->
+     | NU.Should_unfold_no ->
        debug (fun () -> BU.print1 "(1) Decided to not unfold %s\n" (P.fv_to_string fvar));
        begin match Cfg.find_prim_step cfg.core_cfg fvar with
        | Some prim_step when prim_step.strong_reduction_ok (* TODO : || not cfg.strong *) ->
          let arity = prim_step.arity + prim_step.univ_arity in
          debug (fun () -> BU.print1 "Found a primop %s\n" (P.fv_to_string fvar));
-         mk_t <| Lam ((fun args_rev ->
+         mk_t <| Lam {
+           interp = (fun args_rev ->
                       let args' = List.rev args_rev in
                       let callbacks = {
                         iapp = iapp cfg;
@@ -889,18 +901,18 @@ and translate_fv (cfg: config) (bs:list t) (fvar:fv): t =
                         x
                       | None ->
                         debug (fun () -> BU.print1 "Primitive operator %s failed\n" (P.fv_to_string fvar));
-                        iapp cfg (mkFV fvar [] []) args'),
-                     (let f (_:int) = S.mk_binder (S.new_bv None S.t_unit) in
-                      Inl ([], FStar.Common.tabulate arity f, None)),
-                     arity)
+                        iapp cfg (mkFV fvar [] []) args');
+            shape = Lam_primop (fvar, []);
+            arity = arity;
+          }
 
        | Some _ -> debug (fun () -> BU.print1 "(2) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        | _      -> debug (fun () -> BU.print1 "(3) Decided to not unfold %s\n" (P.fv_to_string fvar)); mkFV fvar [] []
        end
 
 
-     | N.Should_unfold_reify
-     | N.Should_unfold_yes ->
+     | NU.Should_unfold_reify
+     | NU.Should_unfold_yes ->
        let t =
          let is_qninfo_visible =
            Option.isSome (Env.lookup_definition_qninfo cfg.core_cfg.delta_level fvar.fv_name.v qninfo)
@@ -967,6 +979,7 @@ and translate_constant (c : sconst) : constant =
     | C.Const_string (s, r) -> String (s,r)
     | C.Const_char c -> Char c
     | C.Const_range r -> Range r
+    | C.Const_real r -> Real r
     | _ -> SConst c
 
 and readback_comp cfg (c: comp) : S.comp =
@@ -1062,7 +1075,7 @@ and translate_monadic (m, ty) cfg bs e : t =
            S.mk (Tm_abs {bs=[S.mk_binder (BU.left lb.lbname)]; body; rc_opt=Some body_rc}) body.pos
        in
        let maybe_range_arg =
-           if BU.for_some (U.attr_eq U.dm4f_bind_range_attr) ed.eff_attrs
+           if BU.for_some (TEQ.eq_tm_bool cfg.core_cfg.tcenv U.dm4f_bind_range_attr) ed.eff_attrs
            then [translate cfg [] (PO.embed_simple lb.lbpos lb.lbpos), None;
                  translate cfg [] (PO.embed_simple body.pos body.pos), None]
            else []
@@ -1217,6 +1230,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
     | Constant (Range r) -> PO.embed_simple x.nbe_r r
+    | Constant (Real r) ->  PO.embed_simple x.nbe_r (Compiler.Real.Real r)
     | Constant (SConst c) -> mk (S.Tm_constant c)
 
     | Meta(t, m) ->
@@ -1225,47 +1239,52 @@ and readback (cfg:config) (x:t) : term =
     | Type_t u ->
       mk (Tm_type u)
 
-    | Lam (f, binders, arity) ->
-      let binders, accus_rev, rc =
-        match binders with
-        | Inl (ctx, binders, rc) ->
-          let ctx, binders_rev, accus_rev =
-            List.fold_left
-              (fun (ctx, binders_rev, accus_rev) b ->
-                let x = b.binder_bv in
-                let tnorm = readback cfg (translate cfg ctx x.sort) in
-                let x = { S.freshen_bv x with sort = tnorm } in
-                let ax = mkAccuVar x in
-                let ctx = ax :: ctx in
-                ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
-              (ctx, [], [])
-              binders
-          in
-          let rc =
-            match rc with
-            | None -> None
-            | Some rc ->
-              Some (readback_residual_comp cfg (translate_residual_comp cfg ctx rc))
-          in
-          List.rev binders_rev,
-          accus_rev,
-          rc
-        | Inr args ->
-          let binders, accus =
-            List.fold_right
-              (fun (t, aq) (binders, accus) ->
-               let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
-               let pqual, battrs = U.parse_positivity_attributes battrs in
-               let x = S.new_bv None (readback cfg t) in
-               (S.mk_binder_with_attrs x bqual pqual battrs)::binders,
-               (mkAccuVar x, aq) :: accus)
-              args
-              ([],[])
-          in
-          binders, List.rev accus, None
-      in
-      let body = readback cfg (f accus_rev) in
-      with_range (U.abs binders body rc)
+    | Lam {interp=f; shape; arity} ->
+      begin match shape with
+      | Lam_bs (ctx, binders, rc) ->
+        let ctx, binders_rev, accus_rev =
+          List.fold_left
+            (fun (ctx, binders_rev, accus_rev) b ->
+              let x = b.binder_bv in
+              let tnorm = readback cfg (translate cfg ctx x.sort) in
+              let x = { S.freshen_bv x with sort = tnorm } in
+              let ax = mkAccuVar x in
+              let ctx = ax :: ctx in
+              ctx, ({b with binder_bv=x})::binders_rev, (ax, U.aqual_of_binder b)::accus_rev)
+            (ctx, [], [])
+            binders
+        in
+        let rc =
+          match rc with
+          | None -> None
+          | Some rc ->
+            Some (readback_residual_comp cfg (translate_residual_comp cfg ctx rc))
+        in
+        let binders = List.rev binders_rev in
+        let body = readback cfg (f accus_rev) in
+        with_range (U.abs binders body rc)
+
+      | Lam_args args ->
+        let binders, accus_rev =
+          List.fold_right
+            (fun (t, aq) (binders, accus) ->
+              let bqual, battrs = U.bqual_and_attrs_of_aqual aq in
+              let pqual, battrs = U.parse_positivity_attributes battrs in
+              let x = S.new_bv None (readback cfg t) in
+              (S.mk_binder_with_attrs x bqual pqual battrs)::binders,
+              (mkAccuVar x, aq) :: accus)
+            args
+            ([], [])
+        in
+        let accus = List.rev accus_rev in
+        let rc = None in
+        let body = readback cfg (f accus_rev) in
+        with_range (U.abs binders body rc)
+
+      | Lam_primop (fv, args) ->
+        let body = U.mk_app (S.mk (Tm_fvar fv) (S.range_of_fv fv)) (readback_args cfg args) in
+        with_range body
+      end
 
     | Refinement (f, targ) ->
       if cfg.core_cfg.steps.for_extraction
@@ -1276,7 +1295,7 @@ and readback (cfg:config) (x:t) : term =
         let refinement = U.refine x body in
         with_range (
           if cfg.core_cfg.steps.simplify
-          then Common.simplify cfg.core_cfg.debug.wpe refinement
+          then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv refinement
           else refinement
         )
 
@@ -1313,7 +1332,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app (S.mk_Tm_uinst fv (List.rev us)) args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1325,7 +1344,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app (S.bv_to_name bv) args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1367,7 +1386,7 @@ and readback (cfg:config) (x:t) : term =
       let app = U.mk_app head args in
       with_range (
         if cfg.core_cfg.steps.simplify
-        then Common.simplify cfg.core_cfg.debug.wpe app
+        then TEQ.simplify cfg.core_cfg.debug.wpe cfg.core_cfg.tcenv app
         else app
       )
 
@@ -1504,13 +1523,11 @@ let normalize psteps (steps:list Env.step)
   let cfg = Cfg.config' psteps steps env in
   //debug_sigmap env.sigtab;
   let cfg = {cfg with steps={cfg.steps with reify_=true}} in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "Calling NBE with (%s) {\n" (P.term_to_string e);
   let cfg = new_config cfg in
   let r = readback cfg (translate cfg [] e) in
-  if Env.debug env (Options.Other "NBETop")
-  ||  Env.debug env (Options.Other "NBE")
+  if !dbg_NBETop || !dbg_NBE
   then BU.print1 "}\nNBE returned (%s)\n" (P.term_to_string r);
   r
 

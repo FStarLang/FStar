@@ -50,7 +50,7 @@
         "typing_tok_FStar.Pointer.Base.TInt@tok"
       ],
       0,
-      "f92e2f780515440bb31711b946e83c75"
+      "8733ab62993d9cae1ca4fc11c121ebe6"
     ],
     [
       "Test.flip",
@@ -131,7 +131,7 @@
         "typing_Test.point_struct_t"
       ],
       0,
-      "21d54828f86aa18850edb66f782478dd"
+      "fd752215df3707cfa6713dd510fe5764"
     ],
     [
       "Test.flip'",
@@ -212,7 +212,7 @@
         "typing_Test.point_struct_t"
       ],
       0,
-      "76358b02d2daf7faa87fc4fab353b479"
+      "0a0a778d4f5014dd765f526e068285a6"
     ]
   ]
 ]

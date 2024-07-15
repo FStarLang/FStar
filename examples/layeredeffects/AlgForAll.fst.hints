@@ -23,7 +23,7 @@
         "typing_tok_Alg.Write@tok"
       ],
       0,
-      "b3d0e775dbdb63da5556e2d388b646d2"
+      "96c160eb75fd3ee23e3f5cbb80b9adf1"
     ],
     [
       "AlgForAll.return_wp",
@@ -127,7 +127,7 @@
         "well_founded_ordering_on_codomain_Alg.Op"
       ],
       0,
-      "1d3b23681e8178ec2ff285fefdf93645"
+      "4126b32f6b3b4158b7a9b517880191ff"
     ],
     [
       "AlgForAll.interp_as_wp2",
@@ -157,7 +157,7 @@
         "typing_tok_Alg.Read@tok", "typing_tok_Alg.Write@tok"
       ],
       0,
-      "97da8fa1e745d69848f64abeef53b28c"
+      "2e4164d8bb623f7a1e5d920db7507d72"
     ],
     [
       "AlgForAll.interp_ret",
@@ -689,7 +689,7 @@
       "219708320ef1ff38967fcd4ce2c0faad"
     ],
     [
-      "AlgForAll.40610",
+      "AlgForAll.40247",
       1,
       2,
       1,

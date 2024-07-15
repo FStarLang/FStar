@@ -20,7 +20,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "067e0b2f58de92253d6d15b89daeeb79"
+      "31406ba07e08b24281c6c13aee2fd9e6"
     ],
     [
       "Loops.sum_up_eq",
@@ -287,6 +287,7 @@
         "@fuel_irrelevance_Loops.sum_dn.fuel_instrumented", "@query",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__get_equality",
         "FStar.DM4F.Heap.ST.__proj__STATE__item__put_equality",
+        "FStar.DM4F.Heap.ST_interpretation_Tm_arrow_3b04e6e179fe4fabe28fe13ac21d6cec",
         "FStar.DM4F.Heap.ST_interpretation_Tm_arrow_459eebfe514ede00b4e707ad8461278c",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_12e7a5c451a804bc9be1a9a1f0fbc931_0",
@@ -323,6 +324,7 @@
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "refinement_interpretation_Tm_refine_289855aa746535562d5330d01c24b5ff",
         "refinement_interpretation_Tm_refine_33c56d04cd2b4870da0423961c379a8a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
         "refinement_interpretation_Tm_refine_41ecba646f02f1b0dd449ea5cb2576de",
@@ -333,7 +335,8 @@
         "token_correspondence_FStar.DM4F.Heap.ST.op_Colon_Equals",
         "token_correspondence_FStar.DM4F.Heap.ST.read",
         "token_correspondence_FStar.DM4F.Heap.ST.write",
-        "typing_FStar.DM4F.Heap.sel", "typing_FStar.DM4F.Heap.upd",
+        "typing_FStar.DM4F.Heap.ST.read", "typing_FStar.DM4F.Heap.sel",
+        "typing_FStar.DM4F.Heap.upd",
         "typing_FStar.Pervasives.Native.__proj__Mktuple2__item___2",
         "typing_Loops.sum_dn", "unit_inversion",
         "well-founded-ordering-on-nat"

@@ -23,7 +23,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "69a992adbedd67ad16924f759dee6c66"
+      "1a67baca6f476dceea97e67cf75815b6"
     ],
     [
       "LeftistHeap.sorted",
@@ -36,7 +36,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7af417c561421690b4cda1cf70e00a6f"
+      "22eb08c92dfa0b5b3c3b40b3a98e08c1"
     ],
     [
       "LeftistHeap.transitivity",
@@ -147,7 +147,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "15fe6d8b89b13b048c38a1c7983e904e"
+      "b951b8ac76d68f922d0e2bacf746888a"
     ],
     [
       "LeftistHeap.lower_bounded",
@@ -164,7 +164,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c6946b04e186a1b23b5a8968fd285d76"
+      "97af0265053f0aee63bd05e636e3c5b5"
     ],
     [
       "LeftistHeap.lower_bounded_trans",
@@ -937,7 +937,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "1f8891ea406148202c5bd149464e2001"
+      "be5de96a7a17b48e9ec36d027c84ff4c"
     ],
     [
       "LeftistHeap.lower_bounded_heap",
@@ -955,7 +955,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "99d2c2721083e189bbbf47d06ad49915"
+      "d3214f6d177487a617b6b7e48695316c"
     ],
     [
       "LeftistHeap.heap_property",
@@ -969,7 +969,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "2d27c62d1dce6d64af1141c55aabc9ca"
+      "dfa46456c76cf8e82a67b28cae42a9f6"
     ],
     [
       "LeftistHeap.count_heap",
@@ -990,7 +990,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "7f84c8a986fd2dc7c2247a95bfbc3325"
+      "8d759b66565a619623ec6fdda682881a"
     ],
     [
       "LeftistHeap.to_list_aux",
@@ -1008,7 +1008,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "2ba2013ab083eb089230c870d7d4ea6d"
+      "de353fb46fc03e06483bf43ce474eee8"
     ],
     [
       "LeftistHeap.to_list_aux_lower_bounded",
@@ -1146,7 +1146,7 @@
         "fuel_guarded_inversion_LeftistHeap.heap",
         "fuel_guarded_inversion_LeftistHeap.ordered",
         "function_token_typing_Prims.int",
-        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2", "int_inversion",
+        "haseqTm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_LeftistHeap.Leaf_a",
@@ -1159,9 +1159,7 @@
         "projection_inverse_Prims.Cons_hd",
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "subterm_ordering_LeftistHeap.Node", "typing_LeftistHeap.count",
-        "typing_LeftistHeap.count_heap", "typing_LeftistHeap.to_list_aux"
+        "subterm_ordering_LeftistHeap.Node", "typing_LeftistHeap.to_list_aux"
       ],
       0,
       "03bd2802791cf16b30bf3350ad47430c"
@@ -1192,7 +1190,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "555d993f41de8ea803a47c52457c6bef"
+      "7e34c0c55fd24aca91d23052c9078f3b"
     ],
     [
       "LeftistHeap.merge_heaps_aux",
@@ -1243,7 +1241,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "ce953737a847cb64f0e5960f8d6a9a12"
+      "aba1c3969f8da12da18638af1caf7880"
     ],
     [
       "LeftistHeap.heap_property_merge",
@@ -1326,10 +1324,10 @@
         "binder_x_f0062e810d23900aea914a963397c69a_1", "bool_inversion",
         "constructor_distinct_LeftistHeap.Node",
         "constructor_distinct_Tm_unit", "data_elim_LeftistHeap.Mkordered",
-        "disc_equation_LeftistHeap.Node", "equation_LeftistHeap.gt",
-        "equation_LeftistHeap.leq", "equation_LeftistHeap.measure",
-        "equation_Prims.eqtype", "equation_Prims.nat",
-        "equation_Prims.op_Equals_Equals_Equals",
+        "disc_equation_LeftistHeap.Node", "equation_LeftistHeap.delta",
+        "equation_LeftistHeap.gt", "equation_LeftistHeap.leq",
+        "equation_LeftistHeap.measure", "equation_Prims.eqtype",
+        "equation_Prims.nat", "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_LeftistHeap.count_heap.fuel_instrumented",
         "equation_with_fuel_LeftistHeap.merge_heaps_aux.fuel_instrumented",
         "equation_with_fuel_LeftistHeap.size.fuel_instrumented",
@@ -1357,8 +1355,8 @@
         "token_correspondence_LeftistHeap.leq",
         "token_correspondence_LeftistHeap.size.fuel_instrumented",
         "typing_LeftistHeap.count_heap", "typing_LeftistHeap.measure",
-        "typing_LeftistHeap.merge_heaps_aux", "unit_inversion",
-        "unit_typing", "well-founded-ordering-on-nat"
+        "typing_LeftistHeap.merge_heaps_aux", "typing_LeftistHeap.size",
+        "unit_inversion", "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
       "91a813ca64e1466ba565dce4813dad71"
@@ -1400,7 +1398,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "eb2cb14d63e43ae352a02bef0735378b"
+      "edf848191d78d87a85e52011afd53bfe"
     ],
     [
       "LeftistHeap.compute_rank",
@@ -1416,7 +1414,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "2ceb42b3059f2c5510253de0c5d15a14"
+      "b773a3d73985cb67a4f7fd794b328f19"
     ],
     [
       "LeftistHeap.correct_ranks",
@@ -1432,7 +1430,7 @@
         "subterm_ordering_LeftistHeap.Node"
       ],
       0,
-      "147ac74d6a4ef6e7ffc03e61e4e89223"
+      "95c90aaa2b147e7206f16fb158e931e4"
     ],
     [
       "LeftistHeap.correct_ranks_merge",

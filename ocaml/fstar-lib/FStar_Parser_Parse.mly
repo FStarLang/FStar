@@ -640,7 +640,7 @@ atomicPattern:
       }
   | LBRACK pats=separated_list(SEMICOLON, tuplePattern) RBRACK
       { mk_pattern (PatList pats) (rr2 $loc($1) $loc($3)) }
-  | LBRACE record_pat=right_flexible_nonempty_list(SEMICOLON, fieldPattern) RBRACE
+  | LBRACE record_pat=right_flexible_list(SEMICOLON, fieldPattern) RBRACE
       { mk_pattern (PatRecord record_pat) (rr $loc) }
   | LENS_PAREN_LEFT pat0=constructorPattern COMMA pats=separated_nonempty_list(COMMA, constructorPattern) LENS_PAREN_RIGHT
       { mk_pattern (PatTuple(pat0::pats, true)) (rr $loc) }
@@ -1150,7 +1150,7 @@ tmArrow(Tm):
   | dom=tmArrowDomain(Tm) RARROW tgt=tmArrow(Tm)
      {
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rr $loc(dom)) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rr2 $loc(dom) $loc(dom)) aq_opt attrs
        in
@@ -1162,7 +1162,7 @@ simpleArrow:
   | dom=simpleArrowDomain RARROW tgt=simpleArrow
      {
        let ((aq_opt, attrs), dom_tm) = dom in
-       let b = match extract_named_refinement dom_tm with
+       let b = match extract_named_refinement true dom_tm with
          | None -> mk_binder_with_attrs (NoName dom_tm) (rr $loc(dom)) Un aq_opt attrs
          | Some (x, t, f) -> mkRefinedBinder x t true f (rr2 $loc(dom) $loc(dom)) aq_opt attrs
        in
@@ -1240,7 +1240,7 @@ tmNoEqWith(X):
   | e1=tmNoEqWith(X) AMP e2=tmNoEqWith(X)
       {
             let dom =
-               match extract_named_refinement e1 with
+               match extract_named_refinement false e1 with
                | Some (x, t, f) ->
                  let dom = mkRefinedBinder x t true f (rr $loc(e1)) None [] in
                  Inl dom

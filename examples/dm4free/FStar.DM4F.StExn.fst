@@ -24,7 +24,7 @@ module FStar.DM4F.StExn
 
 (* The underlying representation type *)
 let stexn a =
-  int -> M (option a * int)
+  int -> M (option a & int)
 
 (* Monad definition *)
 val return : (a:Type) -> (x:a) -> stexn a

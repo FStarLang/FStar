@@ -17,7 +17,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bdc4535bf0b3773cbf5d7ff6c808943d"
+      "69c18a8025c14a6a57aa6a27432d7928"
     ],
     [
       "SfPoly.test_length1",
@@ -116,7 +116,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "b24fb55e1f61b0a51754d57ebe28e070"
+      "7bdee7052bcc3d04ea9161924bf283d6"
     ],
     [
       "SfPoly.nil_app",
@@ -177,7 +177,7 @@
         "equation_Prims.nat",
         "equation_with_fuel_SfPoly.app.fuel_instrumented",
         "equation_with_fuel_SfPoly.length.fuel_instrumented",
-        "fuel_guarded_inversion_Prims.list", "int_inversion",
+        "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
         "projection_inverse_Prims.Cons_a",
@@ -203,7 +203,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bfc94b067f3e6248b521542026cef6bf"
+      "ffbd0ea5483e62c495209f52597d8211"
     ],
     [
       "SfPoly.snoc_with_append",
@@ -248,7 +248,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "663306d51c39cba7a7f1e2f245fe67c5"
+      "73de2306aa02c5956b598b23831ac264"
     ],
     [
       "SfPoly.rev_snoc",
@@ -318,7 +318,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0d50ecffd0750fc07032a6a0e0acc83c"
+      "caa6b786458274053f161f6bce43ff76"
     ],
     [
       "SfPoly.combine",
@@ -339,7 +339,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "9ccd636842ea0e2e237f86eccc857700"
+      "cc5cb5f956d6bcbe4a600cfb314e919e"
     ],
     [
       "SfPoly.index_option",
@@ -362,7 +362,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "1e20a53570a20c8e33c8a2d91caf107b"
+      "afa4224c48b11e9050b5055c60214978"
     ],
     [
       "SfPoly.test_index_option1",
@@ -515,7 +515,7 @@
         "subterm_ordering_Prims.Cons", "typing_SfPoly.length"
       ],
       0,
-      "c732997cf83b068b3d0485470da92dc6"
+      "dda3f06510342571141c57774bbb4b98"
     ],
     [
       "SfPoly.test_prod_uncurry",
@@ -592,7 +592,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6b1edc60c48635709eeaf7a18920912f"
+      "3dc8fe4bffd619ef0368d1cd0250399d"
     ],
     [
       "SfPoly.evenb'",
@@ -608,7 +608,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0e92f7d9054b7474abbeb96aa94ce968"
+      "cf5178b4c1dd1fed3bd32e75cbbe4efd"
     ],
     [
       "SfPoly.test_filter1",
@@ -717,7 +717,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c8464e338cd7957246d2e796a3a7b9fe"
+      "4dd7facfd1f739bfb7db61420af67577"
     ],
     [
       "SfPoly.test_map1",
@@ -927,7 +927,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "6585404ac838ee25abad9d09b12d1195"
+      "bfbf0ee314bcd844c6ed02170008b25e"
     ],
     [
       "SfPoly.fold",
@@ -942,7 +942,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "90de3e2b1b746705a5354b2529f6f605"
+      "d943767ec2de1600ecc68ed59086d058"
     ],
     [
       "SfPoly.fold_example1",

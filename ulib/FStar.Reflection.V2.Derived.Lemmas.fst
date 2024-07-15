@@ -55,13 +55,13 @@ let rec collect_app_order' args tt t =
 val collect_app_order : (t:term) ->
             Lemma (ensures (forall (f:term). forall (s:list argv). (f,s) == collect_app_ln t ==>
                               (f << t /\ s <<: t)
-                            \/ (f == t /\ s == [])))
+                            \/ (f == t /\ s == [] /\ ~(Tv_App? (inspect_ln t)))))
 let collect_app_order t =
     match inspect_ln_unascribe t with
     | Tv_App l r -> collect_app_order' [r] t l
     | _ -> ()
 
-val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) * list (a:argv{fst a << t})
+val collect_app_ref : (t:term) -> (h:term{h == t \/ h << t}) & list (a:argv{fst a << t})
 let collect_app_ref t =
     let h, a = collect_app_ln t in
     collect_app_order t;
@@ -90,7 +90,7 @@ let collect_abs_ln_order t =
                       Classical.forall_intro (rev_memP bds)
     | _ -> ()
 
-val collect_abs_ln_ref : (t:term) -> list (bd:binder{bd << t}) * (body:term{body == t \/ body << t})
+val collect_abs_ln_ref : (t:term) -> list (bd:binder{bd << t}) & (body:term{body == t \/ body << t})
 let collect_abs_ln_ref t =
     let bds, body = collect_abs_ln t in
     collect_abs_ln_order t;
@@ -125,7 +125,7 @@ let collect_arr_ln_bs_order t =
   | _ -> inspect_pack_comp_inv (C_Total t)
 
 val collect_arr_ln_bs_ref : (t:term) -> list (bd:binder{bd << t})
-                                     * (c:comp{ c == pack_comp (C_Total t) \/ c << t})
+                                     & (c:comp{ c == pack_comp (C_Total t) \/ c << t})
 let collect_arr_ln_bs_ref t =
     let bds, c = collect_arr_ln_bs t in
     collect_arr_ln_bs_order t;

@@ -1,4 +1,6 @@
 open Prims
+let (dbg_Imp : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Imp"
 let (term_to_string :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.term -> Prims.string) =
   fun e ->
@@ -230,10 +232,7 @@ let (ps_to_string :
                 else "" in
               let uu___6 =
                 let uu___7 =
-                  let uu___8 =
-                    FStar_TypeChecker_Env.debug
-                      ps.FStar_Tactics_Types.main_context
-                      (FStar_Options.Other "Imp") in
+                  let uu___8 = FStar_Compiler_Effect.op_Bang dbg_Imp in
                   if uu___8
                   then
                     let uu___9 =

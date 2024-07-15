@@ -10,7 +10,7 @@ let pp_set :
   'a .
     'a FStar_Class_Ord.ord ->
       'a FStar_Class_PP.pretty ->
-        'a FStar_Compiler_Set.set FStar_Class_PP.pretty
+        'a FStar_Compiler_FlatSet.t FStar_Class_PP.pretty
   =
   fun uu___ ->
     fun uu___1 ->
@@ -26,7 +26,10 @@ let pp_set :
                  Prims.int_zero uu___2 FStar_Pprint.lbracket uu___3
                  FStar_Pprint.rbracket ds in
              let uu___2 =
-               let uu___3 = FStar_Compiler_Set.elems uu___ s in
+               let uu___3 =
+                 FStar_Class_Setlike.elems ()
+                   (Obj.magic (FStar_Compiler_FlatSet.setlike_flat_set uu___))
+                   (Obj.magic s) in
                FStar_Compiler_List.map (FStar_Class_PP.pp uu___1) uu___3 in
              doclist uu___2)
       }
@@ -49,8 +52,11 @@ let __def_check_scoped :
                 let scope = FStar_Class_Binders.boundNames uu___ env in
                 let uu___3 =
                   let uu___4 =
-                    FStar_Compiler_Set.subset FStar_Syntax_Syntax.ord_bv free
-                      scope in
+                    FStar_Class_Setlike.subset ()
+                      (Obj.magic
+                         (FStar_Compiler_FlatSet.setlike_flat_set
+                            FStar_Syntax_Syntax.ord_bv)) (Obj.magic free)
+                      (Obj.magic scope) in
                   Prims.op_Negation uu___4 in
                 if uu___3
                 then
@@ -90,8 +96,12 @@ let __def_check_scoped :
                                 let uu___15 = FStar_Errors_Msg.text "Diff =" in
                                 let uu___16 =
                                   let uu___17 =
-                                    FStar_Compiler_Set.diff
-                                      FStar_Syntax_Syntax.ord_bv free scope in
+                                    Obj.magic
+                                      (FStar_Class_Setlike.diff ()
+                                         (Obj.magic
+                                            (FStar_Compiler_FlatSet.setlike_flat_set
+                                               FStar_Syntax_Syntax.ord_bv))
+                                         (Obj.magic free) (Obj.magic scope)) in
                                   FStar_Class_PP.pp
                                     (pp_set FStar_Syntax_Syntax.ord_bv pp_bv)
                                     uu___17 in

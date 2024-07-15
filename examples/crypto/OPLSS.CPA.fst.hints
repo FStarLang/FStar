@@ -16,7 +16,7 @@
         "typing_FStar.UInt8.t", "typing_OPLSS.Plain.plain"
       ],
       0,
-      "c0893bd2b38b30a87347ce7697888076"
+      "ad081ae1e3b4d862b6c416d05a5093c0"
     ],
     [
       "OPLSS.CPA.iv_of_entry",
@@ -214,7 +214,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "132a2eee1d6d882bba7556ffecef140d"
+      "53e8eed182c4a64064da17b6a25a4874"
     ],
     [
       "OPLSS.CPA.pairwise_snoc",
@@ -299,7 +299,7 @@
         "typing_Prims.pow2"
       ],
       0,
-      "0d31561aadd0cb1ec018e5b825bcd1cb"
+      "3d18edf7cd01b9128c954e3bbf36a2ca"
     ],
     [
       "OPLSS.CPA.cipher_functional_correctness",

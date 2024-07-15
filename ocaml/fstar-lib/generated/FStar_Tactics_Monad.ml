@@ -1,4 +1,12 @@
 open Prims
+let (dbg_Core : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "Core"
+let (dbg_CoreEq : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CoreEq"
+let (dbg_RegisterGoal : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "RegisterGoal"
+let (dbg_TacFail : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "TacFail"
 let (goal_ctr : Prims.int FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref Prims.int_zero
 let (get_goal_ctr : unit -> Prims.int) =
@@ -20,8 +28,10 @@ let (is_goal_safe_as_well_typed : FStar_Tactics_Types.goal -> Prims.bool) =
            match uu___1 with
            | FStar_Pervasives_Native.Some t ->
                let uu___2 = FStar_Syntax_Free.uvars t in
-               FStar_Compiler_Set.is_empty FStar_Syntax_Free.ord_ctx_uvar
-                 uu___2
+               FStar_Class_Setlike.is_empty ()
+                 (Obj.magic
+                    (FStar_Compiler_FlatSet.setlike_flat_set
+                       FStar_Syntax_Free.ord_ctx_uvar)) (Obj.magic uu___2)
            | uu___2 -> false) uu___ in
     all_deps_resolved
 let (register_goal : FStar_Tactics_Types.goal -> unit) =
@@ -93,8 +103,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                    (env.FStar_TypeChecker_Env.phase1);
                  FStar_TypeChecker_Env.failhard =
                    (env.FStar_TypeChecker_Env.failhard);
-                 FStar_TypeChecker_Env.nosynth =
-                   (env.FStar_TypeChecker_Env.nosynth);
+                 FStar_TypeChecker_Env.flychecking =
+                   (env.FStar_TypeChecker_Env.flychecking);
                  FStar_TypeChecker_Env.uvar_subtyping =
                    (env.FStar_TypeChecker_Env.uvar_subtyping);
                  FStar_TypeChecker_Env.intactics =
@@ -149,11 +159,11 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.erase_erasable_args =
                    (env.FStar_TypeChecker_Env.erase_erasable_args);
                  FStar_TypeChecker_Env.core_check =
-                   (env.FStar_TypeChecker_Env.core_check)
+                   (env.FStar_TypeChecker_Env.core_check);
+                 FStar_TypeChecker_Env.missing_decl =
+                   (env.FStar_TypeChecker_Env.missing_decl)
                } in
-             (let uu___6 =
-                FStar_TypeChecker_Env.debug env1
-                  (FStar_Options.Other "CoreEq") in
+             (let uu___6 = FStar_Compiler_Effect.op_Bang dbg_CoreEq in
               if uu___6
               then
                 let uu___7 =
@@ -166,11 +176,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
               if Prims.op_Negation should_register
               then
                 let uu___7 =
-                  (FStar_TypeChecker_Env.debug env1
-                     (FStar_Options.Other "Core"))
-                    ||
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "RegisterGoal")) in
+                  (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                    (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                 (if uu___7
                  then
                    let uu___8 =
@@ -183,11 +190,8 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  else ())
               else
                 ((let uu___8 =
-                    (FStar_TypeChecker_Env.debug env1
-                       (FStar_Options.Other "Core"))
-                      ||
-                      (FStar_TypeChecker_Env.debug env1
-                         (FStar_Options.Other "RegisterGoal")) in
+                    (FStar_Compiler_Effect.op_Bang dbg_Core) ||
+                      (FStar_Compiler_Effect.op_Bang dbg_RegisterGoal) in
                   if uu___8
                   then
                     let uu___9 =
@@ -283,22 +287,31 @@ let (get : FStar_Tactics_Types.proofstate tac) =
   mk_tac (fun ps -> FStar_Tactics_Result.Success (ps, ps))
 let traise : 'a . Prims.exn -> 'a tac =
   fun e -> mk_tac (fun ps -> FStar_Tactics_Result.Failed (e, ps))
-let (log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
+let (do_log : FStar_Tactics_Types.proofstate -> (unit -> unit) -> unit) =
   fun ps -> fun f -> if ps.FStar_Tactics_Types.tac_verb_dbg then f () else ()
-let fail : 'a . Prims.string -> 'a tac =
+let (log : (unit -> unit) -> unit tac) =
+  fun f ->
+    mk_tac (fun ps -> do_log ps f; FStar_Tactics_Result.Success ((), ps))
+let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
   fun msg ->
     mk_tac
       (fun ps ->
-         (let uu___1 =
-            FStar_TypeChecker_Env.debug ps.FStar_Tactics_Types.main_context
-              (FStar_Options.Other "TacFail") in
+         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_TacFail in
           if uu___1
           then
-            FStar_Tactics_Printing.do_dump_proofstate ps
-              (Prims.strcat "TACTIC FAILING: " msg)
+            let uu___2 =
+              let uu___3 =
+                let uu___4 = FStar_Compiler_List.hd msg in
+                FStar_Errors_Msg.renderdoc uu___4 in
+              Prims.strcat "TACTIC FAILING: " uu___3 in
+            FStar_Tactics_Printing.do_dump_proofstate ps uu___2
           else ());
          FStar_Tactics_Result.Failed
            ((FStar_Tactics_Common.TacticFailure msg), ps))
+let fail : 'a . Prims.string -> 'a tac =
+  fun msg ->
+    let uu___ = let uu___1 = FStar_Errors_Msg.text msg in [uu___1] in
+    fail_doc uu___
 let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
   fun t ->
     mk_tac
@@ -335,7 +348,9 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
                    FStar_Tactics_Types.local_state =
                      (ps.FStar_Tactics_Types.local_state);
                    FStar_Tactics_Types.urgency =
-                     (ps.FStar_Tactics_Types.urgency)
+                     (ps.FStar_Tactics_Types.urgency);
+                   FStar_Tactics_Types.dump_on_failure =
+                     (ps.FStar_Tactics_Types.dump_on_failure)
                  } in
                FStar_Tactics_Result.Success ((FStar_Pervasives.Inl m), ps1))))
 let recover : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
@@ -366,13 +381,13 @@ let trytac_exn : 'a . 'a tac -> 'a FStar_Pervasives_Native.option tac =
              ()
          with
          | FStar_Errors.Err (uu___1, msg, uu___2) ->
-             (log ps
+             (do_log ps
                 (fun uu___4 ->
                    let uu___5 = FStar_Errors_Msg.rendermsg msg in
                    FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___5);
               FStar_Tactics_Result.Success (FStar_Pervasives_Native.None, ps))
          | FStar_Errors.Error (uu___1, msg, uu___2, uu___3) ->
-             (log ps
+             (do_log ps
                 (fun uu___5 ->
                    let uu___6 = FStar_Errors_Msg.rendermsg msg in
                    FStar_Compiler_Util.print1 "trytac_exn error: (%s)" uu___6);
@@ -500,7 +515,9 @@ let (set_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -527,7 +544,9 @@ let (set_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (cur_goals : FStar_Tactics_Types.goal Prims.list tac) =
   bind get (fun ps -> ret ps.FStar_Tactics_Types.goals)
@@ -587,7 +606,9 @@ let (dismiss : unit tac) =
              (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
              (ps.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+           FStar_Tactics_Types.dump_on_failure =
+             (ps.FStar_Tactics_Types.dump_on_failure)
          } in
        set uu___)
 let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
@@ -621,7 +642,9 @@ let (replace_cur : FStar_Tactics_Types.goal -> unit tac) =
                 (ps.FStar_Tactics_Types.tac_verb_dbg);
               FStar_Tactics_Types.local_state =
                 (ps.FStar_Tactics_Types.local_state);
-              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+              FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+              FStar_Tactics_Types.dump_on_failure =
+                (ps.FStar_Tactics_Types.dump_on_failure)
             } in
           set uu___1))
 let (getopts : FStar_Options.optionstate tac) =
@@ -660,7 +683,9 @@ let (add_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (add_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -689,7 +714,9 @@ let (add_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (push_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -719,7 +746,9 @@ let (push_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (push_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
   fun gs ->
@@ -748,7 +777,9 @@ let (push_smt_goals : FStar_Tactics_Types.goal Prims.list -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (add_implicits : FStar_TypeChecker_Env.implicits -> unit tac) =
   fun i ->
@@ -777,7 +808,9 @@ let (add_implicits : FStar_TypeChecker_Env.implicits -> unit tac) =
                (ps.FStar_Tactics_Types.tac_verb_dbg);
              FStar_Tactics_Types.local_state =
                (ps.FStar_Tactics_Types.local_state);
-             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+             FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+             FStar_Tactics_Types.dump_on_failure =
+               (ps.FStar_Tactics_Types.dump_on_failure)
            })
 let (new_uvar :
   Prims.string ->
@@ -910,7 +943,7 @@ let (goal_of_guard :
                             (goal.FStar_Tactics_Types.label)
                         } in
                       ret goal1))
-let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
+let wrap_err_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac -> 'a tac =
   fun pref ->
     fun t ->
       mk_tac
@@ -923,20 +956,28 @@ let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
                (FStar_Tactics_Common.TacticFailure msg, q) ->
                FStar_Tactics_Result.Failed
                  ((FStar_Tactics_Common.TacticFailure
-                     (Prims.strcat pref (Prims.strcat ": " msg))), q)
+                     (FStar_Compiler_List.op_At pref msg)), q)
            | FStar_Tactics_Result.Failed (e, q) ->
                FStar_Tactics_Result.Failed (e, q))
+let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =
+  fun pref ->
+    fun t ->
+      let uu___ =
+        let uu___1 = FStar_Errors_Msg.text (Prims.strcat pref " failed") in
+        [uu___1] in
+      wrap_err_doc uu___ t
 let mlog : 'a . (unit -> unit) -> (unit -> 'a tac) -> 'a tac =
   fun uu___1 ->
     fun uu___ ->
       (fun f ->
          fun cont ->
+           let uu___ = log f in
            Obj.magic
-             (FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)
-                (fun uu___ ->
-                   (fun ps ->
-                      let ps = Obj.magic ps in log ps f; Obj.magic (cont ()))
-                     uu___))) uu___1 uu___
+             (FStar_Class_Monad.op_let_Bang monad_tac () () uu___
+                (fun uu___1 ->
+                   (fun uu___1 ->
+                      let uu___1 = Obj.magic uu___1 in Obj.magic (cont ()))
+                     uu___1))) uu___1 uu___
 let (if_verbose_tac : (unit -> unit tac) -> unit tac) =
   fun f ->
     FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic get)
@@ -988,6 +1029,371 @@ let (compress_implicits : unit tac) =
              (ps.FStar_Tactics_Types.tac_verb_dbg);
            FStar_Tactics_Types.local_state =
              (ps.FStar_Tactics_Types.local_state);
-           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency)
+           FStar_Tactics_Types.urgency = (ps.FStar_Tactics_Types.urgency);
+           FStar_Tactics_Types.dump_on_failure =
+             (ps.FStar_Tactics_Types.dump_on_failure)
          } in
        set ps')
+let (get_phi :
+  FStar_Tactics_Types.goal ->
+    FStar_Syntax_Syntax.term FStar_Pervasives_Native.option)
+  =
+  fun g ->
+    let uu___ =
+      let uu___1 = FStar_Tactics_Types.goal_env g in
+      let uu___2 = FStar_Tactics_Types.goal_type g in
+      FStar_TypeChecker_Normalize.unfold_whnf uu___1 uu___2 in
+    FStar_Syntax_Util.un_squash uu___
+let (is_irrelevant : FStar_Tactics_Types.goal -> Prims.bool) =
+  fun g -> let uu___ = get_phi g in FStar_Compiler_Option.isSome uu___
+let (goal_typedness_deps :
+  FStar_Tactics_Types.goal -> FStar_Syntax_Syntax.ctx_uvar Prims.list) =
+  fun g ->
+    FStar_Syntax_Util.ctx_uvar_typedness_deps
+      g.FStar_Tactics_Types.goal_ctx_uvar
+let (set_uvar_expected_typ :
+  FStar_Syntax_Syntax.ctx_uvar -> FStar_Syntax_Syntax.typ -> unit) =
+  fun u ->
+    fun t ->
+      let dec =
+        FStar_Syntax_Unionfind.find_decoration
+          u.FStar_Syntax_Syntax.ctx_uvar_head in
+      FStar_Syntax_Unionfind.change_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head
+        {
+          FStar_Syntax_Syntax.uvar_decoration_typ = t;
+          FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
+          FStar_Syntax_Syntax.uvar_decoration_should_check =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check)
+        }
+let (mark_uvar_with_should_check_tag :
+  FStar_Syntax_Syntax.ctx_uvar ->
+    FStar_Syntax_Syntax.should_check_uvar -> unit)
+  =
+  fun u ->
+    fun sc ->
+      let dec =
+        FStar_Syntax_Unionfind.find_decoration
+          u.FStar_Syntax_Syntax.ctx_uvar_head in
+      FStar_Syntax_Unionfind.change_decoration
+        u.FStar_Syntax_Syntax.ctx_uvar_head
+        {
+          FStar_Syntax_Syntax.uvar_decoration_typ =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
+          FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
+          FStar_Syntax_Syntax.uvar_decoration_should_check = sc
+        }
+let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
+  fun u ->
+    mark_uvar_with_should_check_tag u FStar_Syntax_Syntax.Already_checked
+let (mark_goal_implicit_already_checked : FStar_Tactics_Types.goal -> unit) =
+  fun g -> mark_uvar_as_already_checked g.FStar_Tactics_Types.goal_ctx_uvar
+let (goal_with_type :
+  FStar_Tactics_Types.goal ->
+    FStar_Syntax_Syntax.typ -> FStar_Tactics_Types.goal)
+  =
+  fun g ->
+    fun t ->
+      let u = g.FStar_Tactics_Types.goal_ctx_uvar in
+      set_uvar_expected_typ u t; g
+let divide : 'a 'b . FStar_BigInt.t -> 'a tac -> 'b tac -> ('a * 'b) tac =
+  fun uu___2 ->
+    fun uu___1 ->
+      fun uu___ ->
+        (fun n ->
+           fun l ->
+             fun r ->
+               Obj.magic
+                 (FStar_Class_Monad.op_let_Bang monad_tac () ()
+                    (Obj.magic get)
+                    (fun uu___ ->
+                       (fun p ->
+                          let p = Obj.magic p in
+                          let uu___ =
+                            try
+                              (fun uu___1 ->
+                                 (fun uu___1 ->
+                                    match () with
+                                    | () ->
+                                        let uu___2 =
+                                          let uu___3 =
+                                            FStar_BigInt.to_int_fs n in
+                                          FStar_Compiler_List.splitAt uu___3
+                                            p.FStar_Tactics_Types.goals in
+                                        Obj.magic
+                                          (FStar_Class_Monad.return monad_tac
+                                             () (Obj.magic uu___2))) uu___1)
+                                ()
+                            with | uu___1 -> fail "divide: not enough goals" in
+                          Obj.magic
+                            (FStar_Class_Monad.op_let_Bang monad_tac () ()
+                               (Obj.magic uu___)
+                               (fun uu___1 ->
+                                  (fun uu___1 ->
+                                     let uu___1 = Obj.magic uu___1 in
+                                     match uu___1 with
+                                     | (lgs, rgs) ->
+                                         let lp =
+                                           {
+                                             FStar_Tactics_Types.main_context
+                                               =
+                                               (p.FStar_Tactics_Types.main_context);
+                                             FStar_Tactics_Types.all_implicits
+                                               =
+                                               (p.FStar_Tactics_Types.all_implicits);
+                                             FStar_Tactics_Types.goals = lgs;
+                                             FStar_Tactics_Types.smt_goals =
+                                               [];
+                                             FStar_Tactics_Types.depth =
+                                               (p.FStar_Tactics_Types.depth);
+                                             FStar_Tactics_Types.__dump =
+                                               (p.FStar_Tactics_Types.__dump);
+                                             FStar_Tactics_Types.psc =
+                                               (p.FStar_Tactics_Types.psc);
+                                             FStar_Tactics_Types.entry_range
+                                               =
+                                               (p.FStar_Tactics_Types.entry_range);
+                                             FStar_Tactics_Types.guard_policy
+                                               =
+                                               (p.FStar_Tactics_Types.guard_policy);
+                                             FStar_Tactics_Types.freshness =
+                                               (p.FStar_Tactics_Types.freshness);
+                                             FStar_Tactics_Types.tac_verb_dbg
+                                               =
+                                               (p.FStar_Tactics_Types.tac_verb_dbg);
+                                             FStar_Tactics_Types.local_state
+                                               =
+                                               (p.FStar_Tactics_Types.local_state);
+                                             FStar_Tactics_Types.urgency =
+                                               (p.FStar_Tactics_Types.urgency);
+                                             FStar_Tactics_Types.dump_on_failure
+                                               =
+                                               (p.FStar_Tactics_Types.dump_on_failure)
+                                           } in
+                                         let uu___2 = set lp in
+                                         Obj.magic
+                                           (FStar_Class_Monad.op_let_Bang
+                                              monad_tac () () uu___2
+                                              (fun uu___3 ->
+                                                 (fun uu___3 ->
+                                                    let uu___3 =
+                                                      Obj.magic uu___3 in
+                                                    Obj.magic
+                                                      (FStar_Class_Monad.op_let_Bang
+                                                         monad_tac () ()
+                                                         (Obj.magic l)
+                                                         (fun uu___4 ->
+                                                            (fun a1 ->
+                                                               let a1 =
+                                                                 Obj.magic a1 in
+                                                               Obj.magic
+                                                                 (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    (
+                                                                    Obj.magic
+                                                                    get)
+                                                                    (
+                                                                    fun
+                                                                    uu___4 ->
+                                                                    (fun lp'
+                                                                    ->
+                                                                    let lp' =
+                                                                    Obj.magic
+                                                                    lp' in
+                                                                    let rp =
+                                                                    {
+                                                                    FStar_Tactics_Types.main_context
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.main_context);
+                                                                    FStar_Tactics_Types.all_implicits
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.all_implicits);
+                                                                    FStar_Tactics_Types.goals
+                                                                    = rgs;
+                                                                    FStar_Tactics_Types.smt_goals
+                                                                    = [];
+                                                                    FStar_Tactics_Types.depth
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.depth);
+                                                                    FStar_Tactics_Types.__dump
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.__dump);
+                                                                    FStar_Tactics_Types.psc
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.psc);
+                                                                    FStar_Tactics_Types.entry_range
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.entry_range);
+                                                                    FStar_Tactics_Types.guard_policy
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.guard_policy);
+                                                                    FStar_Tactics_Types.freshness
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.freshness);
+                                                                    FStar_Tactics_Types.tac_verb_dbg
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.tac_verb_dbg);
+                                                                    FStar_Tactics_Types.local_state
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.local_state);
+                                                                    FStar_Tactics_Types.urgency
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.urgency);
+                                                                    FStar_Tactics_Types.dump_on_failure
+                                                                    =
+                                                                    (lp'.FStar_Tactics_Types.dump_on_failure)
+                                                                    } in
+                                                                    let uu___4
+                                                                    = set rp in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    uu___4
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    let uu___5
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___5 in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    r)
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    (fun b1
+                                                                    ->
+                                                                    let b1 =
+                                                                    Obj.magic
+                                                                    b1 in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    get)
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    (fun rp'
+                                                                    ->
+                                                                    let rp' =
+                                                                    Obj.magic
+                                                                    rp' in
+                                                                    let p' =
+                                                                    {
+                                                                    FStar_Tactics_Types.main_context
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.main_context);
+                                                                    FStar_Tactics_Types.all_implicits
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.all_implicits);
+                                                                    FStar_Tactics_Types.goals
+                                                                    =
+                                                                    (FStar_Compiler_List.op_At
+                                                                    lp'.FStar_Tactics_Types.goals
+                                                                    rp'.FStar_Tactics_Types.goals);
+                                                                    FStar_Tactics_Types.smt_goals
+                                                                    =
+                                                                    (FStar_Compiler_List.op_At
+                                                                    lp'.FStar_Tactics_Types.smt_goals
+                                                                    (FStar_Compiler_List.op_At
+                                                                    rp'.FStar_Tactics_Types.smt_goals
+                                                                    p.FStar_Tactics_Types.smt_goals));
+                                                                    FStar_Tactics_Types.depth
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.depth);
+                                                                    FStar_Tactics_Types.__dump
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.__dump);
+                                                                    FStar_Tactics_Types.psc
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.psc);
+                                                                    FStar_Tactics_Types.entry_range
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.entry_range);
+                                                                    FStar_Tactics_Types.guard_policy
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.guard_policy);
+                                                                    FStar_Tactics_Types.freshness
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.freshness);
+                                                                    FStar_Tactics_Types.tac_verb_dbg
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.tac_verb_dbg);
+                                                                    FStar_Tactics_Types.local_state
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.local_state);
+                                                                    FStar_Tactics_Types.urgency
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.urgency);
+                                                                    FStar_Tactics_Types.dump_on_failure
+                                                                    =
+                                                                    (rp'.FStar_Tactics_Types.dump_on_failure)
+                                                                    } in
+                                                                    let uu___6
+                                                                    = set p' in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    uu___6
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    let uu___7
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___7 in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    monad_tac
+                                                                    () ()
+                                                                    remove_solved_goals
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    (fun
+                                                                    uu___8 ->
+                                                                    let uu___8
+                                                                    =
+                                                                    Obj.magic
+                                                                    uu___8 in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.return
+                                                                    monad_tac
+                                                                    ()
+                                                                    (Obj.magic
+                                                                    (a1, b1))))
+                                                                    uu___8)))
+                                                                    uu___7)))
+                                                                    uu___6)))
+                                                                    uu___6)))
+                                                                    uu___5)))
+                                                                    uu___4)))
+                                                              uu___4)))
+                                                   uu___3))) uu___1))) uu___)))
+          uu___2 uu___1 uu___
+let focus : 'a . 'a tac -> 'a tac =
+  fun uu___ ->
+    (fun f ->
+       let uu___ =
+         let uu___1 = FStar_Class_Monad.return monad_tac () (Obj.repr ()) in
+         divide FStar_BigInt.one f uu___1 in
+       Obj.magic
+         (FStar_Class_Monad.op_let_Bang monad_tac () () (Obj.magic uu___)
+            (fun uu___1 ->
+               (fun uu___1 ->
+                  let uu___1 = Obj.magic uu___1 in
+                  match uu___1 with
+                  | (a1, uu___2) ->
+                      Obj.magic
+                        (FStar_Class_Monad.return monad_tac () (Obj.magic a1)))
+                 uu___1))) uu___

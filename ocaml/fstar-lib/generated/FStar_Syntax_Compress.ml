@@ -21,7 +21,7 @@ let (compress1_t :
             FStar_Errors.raise_err uu___
         | FStar_Syntax_Syntax.Tm_name bv when Prims.op_Negation allow_names
             ->
-            ((let uu___1 = FStar_Options.debug_any () in
+            ((let uu___1 = FStar_Compiler_Debug.any () in
               if uu___1
               then
                 let uu___2 =
@@ -80,7 +80,7 @@ let (compress1_u :
       fun u ->
         match u with
         | FStar_Syntax_Syntax.U_name bv when Prims.op_Negation allow_names ->
-            ((let uu___1 = FStar_Options.debug_any () in
+            ((let uu___1 = FStar_Compiler_Debug.any () in
               if uu___1
               then
                 let uu___2 =

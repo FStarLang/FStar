@@ -46,6 +46,29 @@ let (definition_lids :
              | uu___3 -> []) tys
     | FStar_Parser_AST.Splice (uu___, ids, uu___1) ->
         FStar_Compiler_List.map (fun id -> FStar_Ident.lid_of_ids [id]) ids
+    | FStar_Parser_AST.DeclSyntaxExtension
+        (extension_name, code, uu___, range) ->
+        let ext_parser =
+          FStar_Parser_AST_Util.lookup_extension_parser extension_name in
+        (match ext_parser with
+         | FStar_Pervasives_Native.None ->
+             let uu___1 =
+               let uu___2 =
+                 FStar_Compiler_Util.format1 "Unknown syntax extension %s"
+                   extension_name in
+               (FStar_Errors_Codes.Fatal_SyntaxError, uu___2) in
+             FStar_Errors.raise_error uu___1 d.FStar_Parser_AST.drange
+         | FStar_Pervasives_Native.Some parser ->
+             let uu___1 =
+               parser.FStar_Parser_AST_Util.parse_decl_name code range in
+             (match uu___1 with
+              | FStar_Pervasives.Inl error ->
+                  FStar_Errors.raise_error
+                    (FStar_Errors_Codes.Fatal_SyntaxError,
+                      (error.FStar_Parser_AST_Util.message))
+                    error.FStar_Parser_AST_Util.range
+              | FStar_Pervasives.Inr id ->
+                  let uu___2 = FStar_Ident.lid_of_ids [id] in [uu___2]))
     | uu___ -> []
 let (is_definition_of :
   FStar_Ident.ident -> FStar_Parser_AST.decl -> Prims.bool) =
@@ -88,88 +111,196 @@ let rec (prefix_with_iface_decls :
                     | FStar_Parser_AST.TyconAbstract uu___3 -> true
                     | uu___3 -> false) tys
                ->
-               FStar_Errors.raise_error
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Errors_Msg.text
+                       "Interface contains an abstract 'type' declaration; use 'val' instead." in
+                   [uu___4] in
                  (FStar_Errors_Codes.Fatal_AbstractTypeDeclarationInInterface,
-                   "Interface contains an abstract 'type' declaration; use 'val' instead")
+                   uu___3) in
+               FStar_Errors.raise_error_doc uu___2
                  impl.FStar_Parser_AST.drange
-           | FStar_Parser_AST.Val (x, t) ->
+           | FStar_Parser_AST.Splice (uu___, x::[], uu___1) ->
                let def_ids = definition_lids impl in
                let defines_x =
                  FStar_Compiler_Util.for_some (id_eq_lid x) def_ids in
                if Prims.op_Negation defines_x
                then
-                 let uu___ =
-                   FStar_Compiler_Util.for_some
-                     (fun y ->
-                        let uu___1 =
-                          let uu___2 = FStar_Ident.ident_of_lid y in
-                          is_val uu___2 in
-                        FStar_Compiler_Util.for_some uu___1 iface_tl) def_ids in
-                 (if uu___
-                  then
-                    let uu___1 =
-                      let uu___2 =
-                        let uu___3 = FStar_Ident.string_of_id x in
-                        let uu___4 =
-                          let uu___5 =
-                            FStar_Compiler_List.map FStar_Ident.string_of_lid
-                              def_ids in
-                          FStar_Compiler_String.concat ", " uu___5 in
-                        FStar_Compiler_Util.format2
-                          "Expected the definition of %s to precede %s"
-                          uu___3 uu___4 in
-                      (FStar_Errors_Codes.Fatal_WrongDefinitionOrder, uu___2) in
-                    FStar_Errors.raise_error uu___1
-                      impl.FStar_Parser_AST.drange
-                  else
-                    (let uu___2 =
-                       let uu___3 = qualify_karamel_private impl in [uu___3] in
-                     (iface, uu___2)))
+                 ((let uu___3 =
+                     FStar_Compiler_Util.for_some
+                       (fun y ->
+                          let uu___4 =
+                            let uu___5 = FStar_Ident.ident_of_lid y in
+                            is_val uu___5 in
+                          FStar_Compiler_Util.for_some uu___4 iface_tl)
+                       def_ids in
+                   if uu___3
+                   then
+                     let uu___4 =
+                       let uu___5 =
+                         let uu___6 =
+                           let uu___7 =
+                             FStar_Errors_Msg.text
+                               "Expected the definition of" in
+                           let uu___8 =
+                             let uu___9 =
+                               FStar_Class_PP.pp FStar_Ident.pretty_ident x in
+                             let uu___10 =
+                               let uu___11 =
+                                 FStar_Errors_Msg.text "to precede" in
+                               let uu___12 =
+                                 FStar_Class_PP.pp
+                                   (FStar_Class_PP.pp_list
+                                      FStar_Ident.pretty_lident) def_ids in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___11 uu___12 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___9 uu___10 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___7 uu___8 in
+                         [uu___6] in
+                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
+                         uu___5) in
+                     FStar_Errors.raise_error_doc uu___4
+                       impl.FStar_Parser_AST.drange
+                   else ());
+                  (let uu___3 =
+                     let uu___4 = qualify_karamel_private impl in [uu___4] in
+                   (iface, uu___3)))
                else
                  (let mutually_defined_with_x =
                     FStar_Compiler_List.filter
                       (fun y ->
-                         let uu___1 = id_eq_lid x y in
-                         Prims.op_Negation uu___1) def_ids in
+                         let uu___3 = id_eq_lid x y in
+                         Prims.op_Negation uu___3) def_ids in
                   let rec aux mutuals iface1 =
                     match (mutuals, iface1) with
-                    | ([], uu___1) -> ([], iface1)
-                    | (uu___1::uu___2, []) -> ([], [])
-                    | (y::ys, iface_hd1::iface_tl1) ->
-                        let uu___1 =
-                          let uu___2 = FStar_Ident.ident_of_lid y in
-                          is_val uu___2 iface_hd1 in
-                        if uu___1
-                        then
-                          let uu___2 = aux ys iface_tl1 in
-                          (match uu___2 with
-                           | (val_ys, iface2) ->
-                               ((iface_hd1 :: val_ys), iface2))
-                        else
-                          (let uu___3 =
-                             let uu___4 =
-                               let uu___5 =
-                                 let uu___6 = FStar_Ident.ident_of_lid y in
-                                 is_val uu___6 in
-                               FStar_Compiler_List.tryFind uu___5 iface_tl1 in
-                             FStar_Compiler_Option.isSome uu___4 in
-                           if uu___3
-                           then
-                             let uu___4 =
-                               let uu___5 =
-                                 let uu___6 =
-                                   FStar_Parser_AST.decl_to_string iface_hd1 in
-                                 let uu___7 = FStar_Ident.string_of_lid y in
-                                 FStar_Compiler_Util.format2
-                                   "%s is out of order with the definition of %s"
-                                   uu___6 uu___7 in
-                               (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
-                                 uu___5) in
-                             FStar_Errors.raise_error uu___4
-                               iface_hd1.FStar_Parser_AST.drange
-                           else aux ys iface1) in
-                  let uu___1 = aux mutually_defined_with_x iface_tl in
-                  match uu___1 with
+                    | ([], uu___3) -> ([], iface1)
+                    | (uu___3::uu___4, []) -> ([], [])
+                    | (y::ys, iface_hd1::iface_tl1) when
+                        let uu___3 = FStar_Ident.ident_of_lid y in
+                        is_val uu___3 iface_hd1 ->
+                        let uu___3 = aux ys iface_tl1 in
+                        (match uu___3 with
+                         | (val_ys, iface2) ->
+                             ((iface_hd1 :: val_ys), iface2))
+                    | (y::ys, iface_hd1::iface_tl1) when
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 = FStar_Ident.ident_of_lid y in
+                            is_val uu___5 in
+                          FStar_Compiler_List.tryFind uu___4 iface_tl1 in
+                        FStar_Compiler_Option.isSome uu___3 ->
+                        let uu___3 =
+                          let uu___4 =
+                            let uu___5 =
+                              let uu___6 =
+                                let uu___7 =
+                                  FStar_Class_Show.show
+                                    FStar_Parser_AST.showable_decl iface_hd1 in
+                                let uu___8 = FStar_Ident.string_of_lid y in
+                                FStar_Compiler_Util.format2
+                                  "%s is out of order with the definition of %s"
+                                  uu___7 uu___8 in
+                              FStar_Errors_Msg.text uu___6 in
+                            [uu___5] in
+                          (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
+                            uu___4) in
+                        FStar_Errors.raise_error_doc uu___3
+                          iface_hd1.FStar_Parser_AST.drange
+                    | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
+                  let uu___3 = aux mutually_defined_with_x iface_tl in
+                  match uu___3 with
+                  | (take_iface, rest_iface) ->
+                      (rest_iface,
+                        (FStar_Compiler_List.op_At (iface_hd :: take_iface)
+                           [impl])))
+           | FStar_Parser_AST.Val (x, uu___) ->
+               let def_ids = definition_lids impl in
+               let defines_x =
+                 FStar_Compiler_Util.for_some (id_eq_lid x) def_ids in
+               if Prims.op_Negation defines_x
+               then
+                 ((let uu___2 =
+                     FStar_Compiler_Util.for_some
+                       (fun y ->
+                          let uu___3 =
+                            let uu___4 = FStar_Ident.ident_of_lid y in
+                            is_val uu___4 in
+                          FStar_Compiler_Util.for_some uu___3 iface_tl)
+                       def_ids in
+                   if uu___2
+                   then
+                     let uu___3 =
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 =
+                             FStar_Errors_Msg.text
+                               "Expected the definition of" in
+                           let uu___7 =
+                             let uu___8 =
+                               FStar_Class_PP.pp FStar_Ident.pretty_ident x in
+                             let uu___9 =
+                               let uu___10 =
+                                 FStar_Errors_Msg.text "to precede" in
+                               let uu___11 =
+                                 FStar_Class_PP.pp
+                                   (FStar_Class_PP.pp_list
+                                      FStar_Ident.pretty_lident) def_ids in
+                               FStar_Pprint.op_Hat_Slash_Hat uu___10 uu___11 in
+                             FStar_Pprint.op_Hat_Slash_Hat uu___8 uu___9 in
+                           FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
+                         [uu___5] in
+                       (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
+                         uu___4) in
+                     FStar_Errors.raise_error_doc uu___3
+                       impl.FStar_Parser_AST.drange
+                   else ());
+                  (let uu___2 =
+                     let uu___3 = qualify_karamel_private impl in [uu___3] in
+                   (iface, uu___2)))
+               else
+                 (let mutually_defined_with_x =
+                    FStar_Compiler_List.filter
+                      (fun y ->
+                         let uu___2 = id_eq_lid x y in
+                         Prims.op_Negation uu___2) def_ids in
+                  let rec aux mutuals iface1 =
+                    match (mutuals, iface1) with
+                    | ([], uu___2) -> ([], iface1)
+                    | (uu___2::uu___3, []) -> ([], [])
+                    | (y::ys, iface_hd1::iface_tl1) when
+                        let uu___2 = FStar_Ident.ident_of_lid y in
+                        is_val uu___2 iface_hd1 ->
+                        let uu___2 = aux ys iface_tl1 in
+                        (match uu___2 with
+                         | (val_ys, iface2) ->
+                             ((iface_hd1 :: val_ys), iface2))
+                    | (y::ys, iface_hd1::iface_tl1) when
+                        let uu___2 =
+                          let uu___3 =
+                            let uu___4 = FStar_Ident.ident_of_lid y in
+                            is_val uu___4 in
+                          FStar_Compiler_List.tryFind uu___3 iface_tl1 in
+                        FStar_Compiler_Option.isSome uu___2 ->
+                        let uu___2 =
+                          let uu___3 =
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  FStar_Class_Show.show
+                                    FStar_Parser_AST.showable_decl iface_hd1 in
+                                let uu___7 = FStar_Ident.string_of_lid y in
+                                FStar_Compiler_Util.format2
+                                  "%s is out of order with the definition of %s"
+                                  uu___6 uu___7 in
+                              FStar_Errors_Msg.text uu___5 in
+                            [uu___4] in
+                          (FStar_Errors_Codes.Fatal_WrongDefinitionOrder,
+                            uu___3) in
+                        FStar_Errors.raise_error_doc uu___2
+                          iface_hd1.FStar_Parser_AST.drange
+                    | (y::ys, iface_hd1::iface_tl1) -> aux ys iface1 in
+                  let uu___2 = aux mutually_defined_with_x iface_tl in
+                  match uu___2 with
                   | (take_iface, rest_iface) ->
                       (rest_iface,
                         (FStar_Compiler_List.op_At (iface_hd :: take_iface)
@@ -471,30 +602,14 @@ let (fixup_interleaved_decls :
   fun iface ->
     let fix1 d =
       let d1 =
-        if FStar_Parser_AST.uu___is_Splice d.FStar_Parser_AST.d
-        then
-          let uu___ = d.FStar_Parser_AST.d in
-          match uu___ with
-          | FStar_Parser_AST.Splice (is_typed, uu___1, tau) ->
-              {
-                FStar_Parser_AST.d =
-                  (FStar_Parser_AST.Splice (is_typed, [], tau));
-                FStar_Parser_AST.drange = (d.FStar_Parser_AST.drange);
-                FStar_Parser_AST.quals = (d.FStar_Parser_AST.quals);
-                FStar_Parser_AST.attrs = (d.FStar_Parser_AST.attrs);
-                FStar_Parser_AST.interleaved =
-                  (d.FStar_Parser_AST.interleaved)
-              }
-        else d in
-      let d2 =
         {
-          FStar_Parser_AST.d = (d1.FStar_Parser_AST.d);
-          FStar_Parser_AST.drange = (d1.FStar_Parser_AST.drange);
-          FStar_Parser_AST.quals = (d1.FStar_Parser_AST.quals);
-          FStar_Parser_AST.attrs = (d1.FStar_Parser_AST.attrs);
+          FStar_Parser_AST.d = (d.FStar_Parser_AST.d);
+          FStar_Parser_AST.drange = (d.FStar_Parser_AST.drange);
+          FStar_Parser_AST.quals = (d.FStar_Parser_AST.quals);
+          FStar_Parser_AST.attrs = (d.FStar_Parser_AST.attrs);
           FStar_Parser_AST.interleaved = true
         } in
-      d2 in
+      d1 in
     FStar_Compiler_List.map fix1 iface
 let (prefix_with_interface_decls :
   FStar_Ident.lident ->
@@ -527,10 +642,9 @@ let (prefix_with_interface_decls :
               if uu___2
               then
                 let uu___3 =
-                  let uu___4 =
-                    FStar_Compiler_List.map FStar_Parser_AST.decl_to_string
-                      decls in
-                  FStar_Compiler_String.concat "\n" uu___4 in
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list
+                       FStar_Parser_AST.showable_decl) decls in
                 FStar_Compiler_Util.print1 "Interleaved decls:\n%s\n" uu___3
               else ());
              (decls, env1))
@@ -603,10 +717,6 @@ let (interleave_module :
                            let a1 = FStar_Parser_AST.Module (l, impls2) in
                            (match remaining_iface_vals with
                             | uu___3::uu___4 when expect_complete_modul ->
-                                let remaining =
-                                  FStar_Compiler_List.map
-                                    FStar_Parser_AST.decl_to_string
-                                    remaining_iface_vals in
                                 ((let uu___6 = FStar_Ident.range_of_lid l in
                                   let uu___7 =
                                     let uu___8 =
@@ -622,8 +732,14 @@ let (interleave_module :
                                         let uu___11 =
                                           let uu___12 =
                                             FStar_Compiler_List.map
-                                              FStar_Pprint.doc_of_string
-                                              remaining in
+                                              (fun d ->
+                                                 let uu___13 =
+                                                   FStar_Class_Show.show
+                                                     FStar_Parser_AST.showable_decl
+                                                     d in
+                                                 FStar_Pprint.doc_of_string
+                                                   uu___13)
+                                              remaining_iface_vals in
                                           FStar_Errors_Msg.sublist
                                             FStar_Pprint.empty uu___12 in
                                         FStar_Pprint.op_Hat_Hat uu___10

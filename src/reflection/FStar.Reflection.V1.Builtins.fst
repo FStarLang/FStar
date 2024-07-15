@@ -273,7 +273,7 @@ let rec inspect_ln (t:term) : term_view =
             match p.v with
             | Pat_constant c -> Pat_Constant (inspect_const c)
             | Pat_cons (fv, us_opt, ps) -> Pat_Cons (fv, us_opt, List.map (fun (p, b) -> inspect_pat p, b) ps)
-            | Pat_var bv -> Pat_Var (bv, bv.sort)
+            | Pat_var bv -> Pat_Var (bv, Sealed.seal bv.sort)
             | Pat_dot_term eopt -> Pat_Dot_Term eopt
         in
         let brs = List.map (function (pat, _, t) -> (inspect_pat pat, t)) brs in
@@ -639,12 +639,14 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       check_lid ind_lid;
       let s = SS.univ_var_closing us_names in
       let nparam = List.length param_bs in
+      //We can't tust the value of injective_type_params; set it to false here and let the typechecker recompute
+      let injective_type_params = false in
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
         let ty = U.arrow param_bs (S.mk_Total ty) in
         let ty = SS.subst s ty in (* close univs *)
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params }
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -665,7 +667,8 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                                         num_uniform_params=None;
                                         t=ty;
                                         mutuals=[];
-                                        ds=c_lids}
+                                        ds=c_lids;
+                                        injective_type_params }
       in
       let se = mk_sigelt <| Sig_bundle {ses=ind_se::ctor_ses; lids=ind_lid::c_lids} in
       { se with sigquals = Noeq::se.sigquals }
@@ -708,7 +711,7 @@ let inspect_bv (bv:bv) : bv_view =
                                          (string_of_int bv.index))
     );
     {
-      bv_ppname = Ident.string_of_id bv.ppname;
+      bv_ppname = Sealed.seal <| Ident.string_of_id bv.ppname;
       bv_index = Z.of_int_fs bv.index;
     }
 
@@ -716,11 +719,11 @@ let pack_bv (bvv:bv_view) : bv =
     if Z.to_int_fs bvv.bv_index < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
-                                         bvv.bv_ppname
+                                         (Sealed.unseal bvv.bv_ppname)
                                          (string_of_int (Z.to_int_fs bvv.bv_index)))
     );
     {
-      ppname = Ident.mk_ident (bvv.bv_ppname, Range.dummyRange);
+      ppname = Ident.mk_ident (Sealed.unseal <| bvv.bv_ppname, Range.dummyRange);
       index = Z.to_int_fs bvv.bv_index; // Guaranteed to be a nat
       sort = S.tun;
     }

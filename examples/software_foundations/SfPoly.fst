@@ -110,7 +110,7 @@ let rec repeat a n =
   | 0 -> []
   | _ -> a :: (repeat a (n-1))
 
-val combine : list 'a -> list 'b -> list ('a * 'b)
+val combine : list 'a -> list 'b -> list ('a & 'b)
 let rec combine la lb =
   match (la,lb) with
   | ([],_) -> []
@@ -153,17 +153,17 @@ let rec index l n =
 (* NS: it used to be that if you intended to partially apply
        a function, then you had to indicate it as such in the type.
        Not so any more. *)
-val prod_curry : (('a * 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
+val prod_curry : (('a & 'b) -> Tot 'c) -> 'a -> 'b -> Tot 'c
 let prod_curry f x y =  f (x,y)
 
-val prod_uncurry : ('a -> 'b -> Tot 'c) -> ('a * 'b) -> Tot 'c
+val prod_uncurry : ('a -> 'b -> Tot 'c) -> ('a & 'b) -> Tot 'c
 let prod_uncurry f xy = f (fst xy) (snd xy)
 
 val test_prod_uncurry: f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures ((prod_uncurry f) (x, y) == f x y))
 let test_prod_uncurry f x y = ()
 
-val test_prod_curry: f:(('a * 'b)->Tot 'c) -> x:'a -> y:'b -> Lemma
+val test_prod_curry: f:(('a & 'b)->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures ((prod_curry f) x y == f (x, y)))
 let test_prod_curry f x y = ()
 
@@ -171,7 +171,7 @@ val uncurry_curry : f:('a->'b->Tot 'c) -> x:'a -> y:'b -> Lemma
       (ensures (prod_curry (prod_uncurry f) x y == f x y))
 let uncurry_curry f x y = ()
 
-val curry_uncurry : f:(('a*'b)->Tot 'c) -> xy:('a*'b) -> Lemma
+val curry_uncurry : f:(('a&'b)->Tot 'c) -> xy:('a&'b) -> Lemma
       (ensures (prod_uncurry (prod_curry f) xy == f xy))
 let curry_uncurry f xy = ()
 

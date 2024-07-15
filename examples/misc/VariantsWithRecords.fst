@@ -13,7 +13,7 @@ type foo =
   (** fields can be named *)
   | B: named:int -> other:string -> foo
   (** for constructor of arity 1, one cam use OCaml's [of] notation *)
-  | C of int * string
+  | C of int & string
   (** [D] carries nothing *)
   | D
   (** [E] carries a record *)

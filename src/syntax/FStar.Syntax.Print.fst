@@ -249,7 +249,7 @@ and term_to_string x =
       | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_labeled(l,r,b)} ->
-        U.format3 "Meta_labeled(%s, %s){%s}" l (Range.string_of_range r) (term_to_string t)
+        U.format3 "Meta_labeled(%s, %s){%s}" (Errors.Msg.rendermsg l) (Range.string_of_range r) (term_to_string t)
 
       | Tm_meta {tm=t; meta=Meta_named(l)} ->
         U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
@@ -559,7 +559,7 @@ and metadata_to_string = function
         U.format1 "{Meta_named %s}" (sli lid)
 
     | Meta_labeled (l, r, _) ->
-        U.format2 "{Meta_labeled (%s, %s)}" l (Range.string_of_range r)
+        U.format2 "{Meta_labeled (%s, %s)}" (Errors.Msg.rendermsg l) (Range.string_of_range r)
 
     | Meta_desugared msi ->
         "{Meta_desugared}"
@@ -572,6 +572,7 @@ and metadata_to_string = function
 
 let aqual_to_string aq = aqual_to_string' "" aq
 let bqual_to_string bq = bqual_to_string' "" bq
+let lb_to_string lb = lbs_to_string [] (false, [lb])
 
 let comp_to_string' env c =
   if Options.ugly ()
@@ -990,17 +991,13 @@ let sigelt_to_doc t =
   then Pprint.arbitrary_string (sigelt_to_string t)
   else Pretty.sigelt_to_doc t
 
-instance pretty_term     = { pp   = term_to_doc; }
-instance pretty_univ     = { pp   = univ_to_doc; }
-instance pretty_sigelt   = { pp   = sigelt_to_doc; }
-instance pretty_comp     = { pp   = comp_to_doc; }
-
 instance showable_term   = { show = term_to_string; }
 instance showable_univ   = { show = univ_to_string; }
 instance showable_comp   = { show = comp_to_string; }
 instance showable_sigelt = { show = sigelt_to_string; }
 instance showable_args   = { show = args_to_string; }
 instance showable_bv     = { show = bv_to_string; }
+instance showable_fv     = { show = fv_to_string; }
 instance showable_binder = { show = binder_to_string; }
 instance showable_uvar   = { show = uvar_to_string; }
 instance showable_ctxu   = { show = ctx_uvar_to_string; }
@@ -1014,3 +1011,23 @@ instance showable_pragma = { show = pragma_to_string; }
 instance showable_subst_elt = { show = subst_elt_to_string; }
 instance showable_branch = { show = branch_to_string; }
 instance showable_qualifier = { show = qual_to_string; }
+instance showable_pat    = { show = pat_to_string; }
+instance showable_const  = { show = const_to_string; }
+instance showable_letbinding  = { show = lb_to_string; }
+
+instance pretty_term     = { pp   = term_to_doc; }
+instance pretty_univ     = { pp   = univ_to_doc; }
+instance pretty_sigelt   = { pp   = sigelt_to_doc; }
+instance pretty_comp     = { pp   = comp_to_doc; }
+instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+
+open FStar.Pprint
+
+instance pretty_binding : pretty binding = {
+  pp = (function Binding_var bv -> pp bv
+               | Binding_lid (l, (us, t)) -> pp l ^^ colon ^^ pp t
+               | Binding_univ u -> pp u);
+}

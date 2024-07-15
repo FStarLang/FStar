@@ -31,6 +31,8 @@ module P = FStar.Syntax.Print
 module BU = FStar.Compiler.Util
 module C = FStar.Const
 module SE = FStar.Syntax.Embeddings
+module TEQ = FStar.TypeChecker.TermEqAndSimplify
+
 open FStar.VConfig
 
 open FStar.Class.Show
@@ -82,74 +84,89 @@ let mkAccuMatch (s:t) (ret:(unit -> option match_returns_ascription)) (bs:(unit 
 // Term equality
 
 let equal_if = function
-  | true -> U.Equal
-  | _ -> U.Unknown
+  | true -> TEQ.Equal
+  | _ -> TEQ.Unknown
 
 let equal_iff = function
-  | true -> U.Equal
-  | _ -> U.NotEqual
+  | true -> TEQ.Equal
+  | _ -> TEQ.NotEqual
 
 let eq_inj r1 r2 =
   match r1, r2 with
-  | U.Equal, U.Equal -> U.Equal
-  |  U.NotEqual, _
-  | _, U.NotEqual -> U.NotEqual
-  | U.Unknown, _
-  | _, U.Unknown -> U.Unknown
+  | TEQ.Equal, TEQ.Equal -> TEQ.Equal
+  |  TEQ.NotEqual, _
+  | _, TEQ.NotEqual -> TEQ.NotEqual
+  | TEQ.Unknown, _
+  | _, TEQ.Unknown -> TEQ.Unknown
 
 let eq_and f g =
   match f with
-  | U.Equal -> g()
-  | _ -> U.Unknown
+  | TEQ.Equal -> g()
+  | _ -> TEQ.Unknown
 
 let eq_constant (c1 : constant) (c2 : constant) =
 match c1, c2 with
-| Unit, Unit -> U.Equal
+| Unit, Unit -> TEQ.Equal
 | Bool b1, Bool b2 -> equal_iff (b1 = b2)
 | Int i1, Int i2 -> equal_iff (i1 = i2)
 | String (s1, _), String (s2, _) -> equal_iff (s1 = s2)
 | Char c1, Char c2 -> equal_iff (c1 = c2)
-| Range r1, Range r2 -> U.Unknown (* Seems that ranges are opaque *)
-| _, _ -> U.NotEqual
+| Range r1, Range r2 -> TEQ.Unknown (* Seems that ranges are opaque *)
+| Real r1, Real r2 -> equal_if (r1 = r2) (* conservative, cannot use iff since strings could be 1.0 and 01.0 *)
+| _, _ -> TEQ.NotEqual
 
 
-let rec eq_t (t1 : t) (t2 : t) : U.eq_result =
+let rec eq_t env (t1 : t) (t2 : t) : TEQ.eq_result =
   match t1.nbe_t, t2.nbe_t with
-  | Lam _, Lam _ -> U.Unknown
-  | Accu(a1, as1), Accu(a2, as2) -> eq_and (eq_atom a1 a2) (fun () -> eq_args as1 as2)
+  | Lam _, Lam _ -> TEQ.Unknown
+  | Accu(a1, as1), Accu(a2, as2) -> eq_and (eq_atom a1 a2) (fun () -> eq_args env as1 as2)
   | Construct(v1, us1, args1), Construct(v2, us2, args2) ->
     if S.fv_eq v1 v2 then begin
         if List.length args1 <> List.length args2 then
             failwith "eq_t, different number of args on Construct";
-        List.fold_left (fun acc ((a1, _), (a2, _)) ->
-                            eq_inj acc (eq_t a1 a2)) U.Equal <| List.zip args1 args2
-    end else U.NotEqual
+        match Env.num_datacon_non_injective_ty_params env (lid_of_fv v1) with
+        | None -> TEQ.Unknown
+        | Some n ->
+          if n <= List.length args1
+          then (
+            let eq_args as1 as2 =
+              List.fold_left2
+                (fun acc (a1, _) (a2, _) -> eq_inj acc (eq_t env a1 a2))
+                TEQ.Equal
+                as1 as2
+            in
+            let parms1, args1 = List.splitAt n args1 in
+            let parms2, args2 = List.splitAt n args2 in
+            eq_args args1 args2
+          )
+          else TEQ.Unknown
+    end else TEQ.NotEqual
 
   | FV(v1, us1, args1), FV(v2, us2, args2) ->
     if S.fv_eq v1 v2 then
-     eq_and (equal_iff (U.eq_univs_list us1 us2)) (fun () -> eq_args args1 args2)
-    else U.Unknown
+     eq_and (equal_iff (U.eq_univs_list us1 us2)) (fun () -> eq_args env args1 args2)
+    else TEQ.Unknown
 
   | Constant c1, Constant c2 -> eq_constant c1 c2
   | Type_t u1, Type_t u2
   | Univ u1, Univ u2 -> equal_iff (U.eq_univs u1 u2)
   | Refinement(r1, t1), Refinement(r2, t2) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
-    eq_and (eq_t (fst (t1 ())) (fst (t2 ()))) (fun () -> eq_t (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
-  | Unknown, Unknown -> U.Equal
-  | _, _ -> U.Unknown (* XXX following eq_tm *)
+    eq_and (eq_t env (fst (t1 ())) (fst (t2 ()))) (fun () -> eq_t env (r1 (mkAccuVar x)) (r2 (mkAccuVar x)))
+  | Unknown, Unknown -> TEQ.Equal
+  | _, _ -> TEQ.Unknown (* XXX following eq_tm *)
 
-and eq_atom (a1 : atom) (a2 : atom) : U.eq_result =
+and eq_atom (a1 : atom) (a2 : atom) : TEQ.eq_result =
   match a1, a2 with
   | Var bv1, Var bv2 -> equal_if (bv_eq bv1 bv2) (* ZP : TODO if or iff?? *)
-  | _, _ -> U.Unknown (* XXX Cannot compare suspended matches (?) *)
+  | _, _ -> TEQ.Unknown (* XXX Cannot compare suspended matches (?) *)
 
-and eq_arg (a1 : arg) (a2 : arg) = eq_t (fst a1) (fst a2)
-and eq_args (as1 : args) (as2 : args) : U.eq_result =
-match as1, as2 with
-| [], [] -> U.Equal
-| x :: xs, y :: ys -> eq_and (eq_arg x y) (fun () -> eq_args xs ys)
-| _, _ -> U.Unknown (* ZP: following tm_eq, but why not U.NotEqual? *)
+and eq_arg env (a1 : arg) (a2 : arg) = eq_t env (fst a1) (fst a2)
+and eq_args env (as1 : args) (as2 : args) : TEQ.eq_result =
+  match as1, as2 with
+  | [], [] -> TEQ.Equal
+  | x :: xs, y :: ys -> eq_and (eq_arg env x y) (fun () -> eq_args env xs ys)
+  | _, _ -> TEQ.Unknown (* ZP: following tm_eq, but why not TEQ.NotEqual? *)
 
 
 // Printing functions
@@ -163,10 +180,11 @@ let constant_to_string (c: constant) =
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
   | SConst s -> P.const_to_string s
+  | Real s -> BU.format1 "Real %s" s
 
 let rec t_to_string (x:t) =
   match x.nbe_t with
-  | Lam (b, _, arity) -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
+  | Lam {interp=b; arity} -> BU.format1 "Lam (_, %s args)"  (BU.string_of_int arity)
   | Accu (a, l) ->
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
@@ -356,6 +374,15 @@ let e_int : embedding Z.t =
     in
     mk_emb' em un (fun () -> lid_as_typ PC.int_lid [] [])  (SE.emb_typ_of int)
 
+let e_real : embedding Compiler.Real.real =
+    let em _cb (Compiler.Real.Real c) = Constant (Real c) in
+    let un _cb c =
+        match c with
+        | Constant (Real a) -> Some (Compiler.Real.Real a)
+        | _ -> None
+    in
+    mk_emb' em un (fun () -> lid_as_typ PC.real_lid [] [])  (SE.emb_typ_of Compiler.Real.real)
+
 let e_fsint = embed_as e_int Z.to_int_fs Z.of_int_fs None
 
 // Embedding at option type
@@ -389,7 +416,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let etyp () =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ ()])
     in
-    let em cb (x:'a * 'b) : t =
+    let em cb (x:'a & 'b) : t =
         lazy_embed etyp x (fun () ->
         lid_as_constr (PC.lid_Mktuple2)
                       [U_zero; U_zero]
@@ -398,7 +425,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option ('a * 'b) =
+    let un cb (trm:t) : option ('a & 'b) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
@@ -415,7 +442,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let etyp () =
         ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ (); ec.e_typ ()])
     in
-    let em cb ((x1, x2, x3):('a * 'b * 'c)) : t =
+    let em cb ((x1, x2, x3):('a & 'b & 'c)) : t =
         lazy_embed etyp (x1, x2, x3) (fun () ->
         lid_as_constr (PC.lid_Mktuple3)
                       [U_zero; U_zero; U_zero]
@@ -426,7 +453,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
                        as_iarg (type_of eb);
                        as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option ('a * 'b * 'c) =
+    let un cb (trm:t) : option ('a & 'b & 'c) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
@@ -544,11 +571,13 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Prims.Tot (embedding ('a -> 'b
     let etyp () = ET_fun(ea.e_typ (), eb.e_typ ()) in
     let em cb (f : 'a -> 'b) : t =
         lazy_embed etyp f (fun () ->
-        mk_t <| Lam ((fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
+        mk_t <| Lam {
+          interp = (fun tas -> match unembed ea cb (tas |> List.hd |> fst) with
                              | Some a -> embed eb cb (f a)
-                             | None -> failwith "cannot unembed function argument"),
-               Inr [as_arg (type_of eb)],
-               1))
+                             | None -> failwith "cannot unembed function argument");
+          shape = Lam_args [as_arg (type_of eb)];
+          arity = 1;
+        })
     in
     let un cb (lam : t) : option ('a -> 'b) =
         let k (lam:t) : option ('a -> 'b) =
@@ -646,20 +675,20 @@ let e_norm_step =
 
 // Embedding a sealed term. This just calls the embedding for a but also
 // adds a `seal` marker to the result. The unembedding removes it.
-let e_sealed (ea : embedding 'a) =
+let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
     let etyp () =
         ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
     in
-    let em cb (x:'a) : t =
+    let em cb (x: Sealed.sealed 'a) : t =
         lazy_embed etyp x (fun () ->
-          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb x);
+          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
                                           as_iarg (type_of ea)])
     in
-    let un cb (trm:t) : option 'a =
+    let un cb (trm:t) : option (Sealed.sealed 'a) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
-          unembed ea cb a
+          Class.Monad.fmap Sealed.seal <| unembed ea cb a
         | _ -> None)
     in
     mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp

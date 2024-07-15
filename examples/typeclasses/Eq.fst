@@ -46,7 +46,7 @@ let rec eqList {|deq 'a|} (xs ys : list 'a) : Tot (b:bool{b <==> xs == ys}) =
 instance eq_list (_ : deq 'a) : deq (list 'a) =
   Mkdeq eqList (fun x y -> ())
 
-instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) =
+instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a & 'b) =
   Mkdeq (fun (a,b) (c,d) -> eq a c && eq b d)
         (fun (a,b) (c,d) -> eq_ok a c; eq_ok b d)
 

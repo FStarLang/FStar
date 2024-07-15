@@ -39,7 +39,7 @@ let package_parser (#t: Type0) (p: package t) : Tot (parser_spec t) =
 let package_serializer (#t: Type0) (p: package t) : Tot (serializer_spec (package_parser p)) =
   Package?.s p
 
-let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
+let rec gen_package' (p: T.term) : T.Tac (T.term & T.term) =
   let (hd, tl) = app_head_tail p in
   if hd `T.is_fvar` (`%FStar.UInt8.t)
   then begin
@@ -110,6 +110,6 @@ let gen_specs = gen_package
 
 type u8 = FStar.UInt8.t
 
-type t = (u8 * (nlist 79 u8 * u8))
+type t = (u8 & (nlist 79 u8 & u8))
 
 let p : package t = T.synth_by_tactic (fun () -> gen_package T.Goal (`t))

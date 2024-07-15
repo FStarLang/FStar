@@ -34,35 +34,31 @@ let to_tac_1 (t: 'b -> 'a __tac): 'b -> 'a TM.tac = fun x ->
   (fun (ps: proofstate) ->
     uninterpret_tac (t x) ps) |> TM.mk_tac
 
-let from_tac_1 s (t: 'a -> 'b TM.tac): 'a  -> 'b __tac =
-  fun (x: 'a) ->
-    fun (ps: proofstate) ->
-      let m = t x in
-      interpret_tac s m ps
+let from_tac_1 s (t: 'a -> 'r TM.tac): 'a  -> 'r __tac =
+  fun (xa: 'a) (ps : proofstate) ->
+    let m = t xa in
+    interpret_tac s m ps
 
-let from_tac_2 s (t: 'a -> 'b -> 'c TM.tac): 'a  -> 'b -> 'c __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (ps: proofstate) ->
-        let m = t x y in
-        interpret_tac s m ps
+let from_tac_2 s (t: 'a -> 'b -> 'r TM.tac): 'a  -> 'b -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (ps : proofstate) ->
+    let m = t xa xb in
+    interpret_tac s m ps
 
-let from_tac_3 s (t: 'a -> 'b -> 'c -> 'd TM.tac): 'a  -> 'b -> 'c -> 'd __tac =
-  fun (x: 'a) ->
-    fun (y: 'b) ->
-      fun (z: 'c) ->
-        fun (ps: proofstate) ->
-          let m = t x y z in
-          interpret_tac s m ps
+let from_tac_3 s (t: 'a -> 'b -> 'c -> 'r TM.tac): 'a  -> 'b -> 'c -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (ps : proofstate) ->
+    let m = t xa xb xc in
+    interpret_tac s m ps
 
-let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'e TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e __tac =
-  fun (x: 'a) ->
-  fun (y: 'b) ->
-  fun (z: 'c) ->
-  fun (w: 'd) ->
-  fun (ps: proofstate) ->
-  let m = t x y z w in
-  interpret_tac s m ps
+let from_tac_4 s (t: 'a -> 'b -> 'c -> 'd -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd)  (ps : proofstate) ->
+    let m = t xa xb xc xd in
+    interpret_tac s m ps
+
+let from_tac_5 s (t: 'a -> 'b -> 'c -> 'd -> 'e -> 'r TM.tac): 'a  -> 'b -> 'c -> 'd -> 'e -> 'r __tac =
+  fun (xa: 'a) (xb: 'b) (xc: 'c) (xd: 'd) (xe: 'e) (ps : proofstate) ->
+    let m = t xa xb xc xd xe in
+    interpret_tac s m ps
+
 
 (* Pointing to the internal primitives *)
 let compress                = from_tac_1 "B.compress" B.compress
@@ -91,6 +87,7 @@ let t_apply                 = from_tac_4 "B.t_apply" B.t_apply
 let t_apply_lemma           = from_tac_3 "B.t_apply_lemma" B.t_apply_lemma
 let print                   = from_tac_1 "B.print" B.print
 let debugging               = from_tac_1 "B.debugging" B.debugging
+let ide                     = from_tac_1 "B.ide" B.ide
 let dump                    = from_tac_1 "B.dump" B.dump
 let dump_all                = from_tac_2 "B.dump_all" B.dump_all
 let dump_uvars_of           = from_tac_2 "B.dump_uvars_of" B.dump_uvars_of
@@ -115,6 +112,7 @@ let tadmit_t                = from_tac_1 "B.tadmit_t" B.tadmit_t
 let join                    = from_tac_1 "B.join" B.join
 let curms                   = from_tac_1 "B.curms" B.curms
 let set_urgency             = from_tac_1 "B.set_urgency" B.set_urgency
+let set_dump_on_failure     = from_tac_1 "B.set_dump_on_failure" B.set_dump_on_failure
 let t_commute_applied_match = from_tac_1 "B.t_commute_applied_match" B.t_commute_applied_match
 let gather_or_solve_explicit_guards_for_resolved_goals = from_tac_1 "B.gather_explicit_guards_for_resolved_goals" B.gather_explicit_guards_for_resolved_goals
 let string_to_term          = from_tac_2 "B.string_to_term" B.string_to_term
@@ -146,7 +144,7 @@ type ('env, 'sc, 't, 'pats, 'bnds) match_complete_token = unit
 
 let is_non_informative           = from_tac_2 "B.refl_is_non_informative" B.refl_is_non_informative
 let check_subtyping              = from_tac_3 "B.refl_check_subtyping" B.refl_check_subtyping
-let check_equiv                  = from_tac_3 "B.refl_check_equiv" B.refl_check_equiv
+let t_check_equiv                = from_tac_5 "B.t_refl_check_equiv" B.t_refl_check_equiv
 let core_compute_term_type       = from_tac_2 "B.refl_core_compute_term_type" B.refl_core_compute_term_type
 let core_check_term              = from_tac_4 "B.refl_core_check_term" B.refl_core_check_term
 let core_check_term_at_type      = from_tac_3 "B.refl_core_check_term_at_type" B.refl_core_check_term_at_type
@@ -154,9 +152,12 @@ let check_match_complete         = from_tac_4 "B.refl_check_match_complete" B.re
 let tc_term                      = from_tac_2 "B.refl_tc_term" B.refl_tc_term
 let universe_of                  = from_tac_2 "B.refl_universe_of" B.refl_universe_of
 let check_prop_validity          = from_tac_2 "B.refl_check_prop_validity" B.refl_check_prop_validity
-let instantiate_implicits        = from_tac_2 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
+let instantiate_implicits        = from_tac_3 "B.refl_instantiate_implicits" B.refl_instantiate_implicits
+let try_unify                    = from_tac_4 "B.refl_try_unify" B.refl_try_unify
 let maybe_relate_after_unfolding = from_tac_3 "B.refl_maybe_relate_after_unfolding" B.refl_maybe_relate_after_unfolding
 let maybe_unfold_head            = from_tac_2 "B.refl_maybe_unfold_head" B.refl_maybe_unfold_head
+let norm_well_typed_term         = from_tac_3 "B.norm_well_typed_term" B.refl_norm_well_typed_term
+
 let push_open_namespace          = from_tac_2 "B.push_open_namespace" B.push_open_namespace
 let push_module_abbrev           = from_tac_3 "B.push_module_abbrev" B.push_module_abbrev
 let resolve_name                 = from_tac_2 "B.resolve_name" B.resolve_name
@@ -172,3 +173,9 @@ let ctrl_rewrite
     (t2 : unit -> unit __tac)
   : unit __tac
   = from_tac_3 "ctrl_rewrite" CTRW.ctrl_rewrite d (to_tac_1 t1) (to_tac_0 (t2 ()))
+
+let call_subtac g (t : unit -> unit __tac) u ty =
+  let t = to_tac_1 t () in
+  from_tac_4 "B.call_subtac" B.call_subtac g t u ty
+
+let call_subtac_tm               = from_tac_4 "B.call_subtac_tm" B.call_subtac_tm

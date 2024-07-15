@@ -38,6 +38,8 @@ module U       = FStar.Syntax.Util
 module Cfg     = FStar.TypeChecker.Cfg
 module PO      = FStar.TypeChecker.Primops
 
+let dbg_Imp = Debug.get_toggle "Imp"
+
 let term_to_string (e:Env.env) (t:term) : string =
     Print.term_to_string' e.dsenv t
 
@@ -48,7 +50,7 @@ let goal_to_string_verbose (g:goal) : string =
          | None -> ""
          | Some t -> BU.format1 "\tGOAL ALREADY SOLVED!: %s" (term_to_string (goal_env g) t))
 
-let unshadow (bs : binders) (t : term) : binders * term =
+let unshadow (bs : binders) (t : term) : binders & term =
     (* string name of a bv *)
     let sset bv s = S.gen_bv s (Some (range_of_id bv.ppname)) bv.sort in
     let fresh_until b f =
@@ -75,7 +77,7 @@ let unshadow (bs : binders) (t : term) : binders * term =
     in
     go [] [] bs [] t
 
-let goal_to_string (kind : string) (maybe_num : option (int * int)) (ps:proofstate) (g:goal) : string =
+let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofstate) (g:goal) : string =
     let w =
         if Options.print_implicits ()
         then term_to_string (goal_env g) (goal_witness g)
@@ -136,7 +138,7 @@ let ps_to_string (msg, ps) =
                 (if ps.entry_range <> Range.dummyRange
                  then BU.format1 "Location: %s\n" (Range.string_of_def_range ps.entry_range)
                  else "");
-                (if Env.debug ps.main_context (Options.Other "Imp")
+                (if !dbg_Imp
                  then BU.format1 "Imps: %s\n" (FStar.Common.string_of_list p_imp ps.all_implicits)
                  else "")]
                  @ (List.mapi (fun i g -> goal_to_string "Goal"     (Some (1 + i, n))            ps g) ps.goals)

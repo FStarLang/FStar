@@ -39,7 +39,7 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
-module Set = FStar.Compiler.Set
+let dbg = Debug.get_toggle "Dep"
 
 let profile f c = Profiling.profile f None c
 
@@ -66,7 +66,7 @@ type verify_mode =
   | VerifyUserList
   | VerifyFigureItOut
 
-type intf_and_impl = option string * option string
+type intf_and_impl = option string & option string
 
 type files_for_module_name = smap intf_and_impl
 
@@ -125,7 +125,7 @@ let module_name_of_file f =
     | Some longname ->
       longname
     | None ->
-      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "not a valid FStar file: %s" f))
+      raise_err (Errors.Fatal_NotValidFStarFile, (Util.format1 "Not a valid FStar file: '%s'" f))
 
 (* In public interface *)
 let lowercase_module_name f = String.lowercase (module_name_of_file f)
@@ -172,10 +172,10 @@ type dependence_graph = //maps file names to the modules it depends on
  *)
 type parsing_data_elt =
   | P_begin_module of lident  //begin_module
-  | P_open of bool * lident  //record_open
-  | P_implicit_open_module_or_namespace of (open_kind * lid)  //record_open_module_or_namespace
-  | P_dep of bool * lident  //add_dep_on_module, bool=true iff it's a friend dependency
-  | P_alias of ident * lident  //record_module_alias
+  | P_open of bool & lident  //record_open
+  | P_implicit_open_module_or_namespace of (open_kind & lid)  //record_open_module_or_namespace
+  | P_dep of bool & lident  //add_dep_on_module, bool=true iff it's a friend dependency
+  | P_alias of ident & lident  //record_module_alias
   | P_lid of lident  //record_lid
   | P_inline_for_extraction
 
@@ -289,8 +289,8 @@ let has_implementation (file_system_map:files_for_module_name) (key:module_name)
  *)
 let cache_file_name =
     let checked_file_and_exists_flag fn =
-      let lax = Options.lax () in
       let cache_fn =
+        let lax = Options.lax () in
         if lax then fn ^".checked.lax"
         else fn ^".checked"
       in
@@ -373,14 +373,15 @@ let file_of_dep_aux
       && Option.isNone (Options.dep()) //and we're not just doing a dependency scan using `--dep _`
       then if Options.expose_interfaces()
            then maybe_use_cache_of (Option.get (implementation_of_internal file_system_map key))
-           else raise_err (Errors.Fatal_MissingExposeInterfacesOption,
-                           BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
-                                       Alternatively, invoking fstar with %s on the command line breaks \
-                                       the abstraction imposed by its interface %s; \
-                                       if you really want this behavior add the option '--expose_interfaces'"
-                                       key
-                                       (Option.get (implementation_of_internal file_system_map key))
-                                       (Option.get (interface_of_internal file_system_map key)))
+           else raise_err_doc (Errors.Fatal_MissingExposeInterfacesOption, [
+                               text <|
+                               BU.format3 "You may have a cyclic dependence on module %s: use --dep full to confirm. \
+                                           Alternatively, invoking fstar with %s on the command line breaks \
+                                           the abstraction imposed by its interface %s."
+                                           key
+                                           (Option.get (implementation_of_internal file_system_map key))
+                                           (Option.get (interface_of_internal file_system_map key));
+                               text "If you really want this behavior add the option '--expose_interfaces'.";])
       else maybe_use_cache_of (Option.get (interface_of_internal file_system_map key))   //we prefer to use 'a.fsti'
 
     | PreferInterface key
@@ -435,7 +436,7 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
 (** Enumerate all F* files in include directories.
     Return a list of pairs of long names and full paths. *)
 (* In public interface *)
-let build_inclusion_candidates_list (): list (string * string) =
+let build_inclusion_candidates_list (): list (string & string) =
   let include_directories = Options.include_path () in
   let include_directories = List.map normalize_file_path include_directories in
   (* Note that [BatList.unique] keeps the last occurrence, that way one can
@@ -555,18 +556,18 @@ let dep_subsumed_by d d' =
 let enter_namespace
   (original_map: files_for_module_name)
   (working_map: files_for_module_name)
-  (prefix: string)
+  (sprefix: string)
   (implicit_open:bool) : bool =
   let found = BU.mk_ref false in
-  let prefix = prefix ^ "." in
+  let sprefix = sprefix ^ "." in
   let suffix_exists mopt =
     match mopt with
     | None -> false
     | Some (intf, impl) -> is_some intf || is_some impl in
   smap_iter original_map (fun k _ ->
-    if Util.starts_with k prefix then
+    if Util.starts_with k sprefix then
       let suffix =
-        String.substring k (String.length prefix) (String.length k - String.length prefix)
+        String.substring k (String.length sprefix) (String.length k - String.length sprefix)
       in
 
       begin
@@ -574,11 +575,19 @@ let enter_namespace
         if implicit_open &&
            suffix_exists suffix_filename
         then let str = suffix_filename |> must |> intf_and_impl_to_string in
-             FStar.Errors.log_issue_doc Range.dummyRange
-               (Errors.Warning_UnexpectedFile,
-                [Errors.text <|
-                BU.format4 "Implicitly opening %s namespace shadows (%s -> %s), rename %s to \
-                  avoid conflicts" prefix suffix str str])
+             let open FStar.Pprint in
+             log_issue_doc Range.dummyRange
+               (Errors.Warning_UnexpectedFile, [
+                flow (break_ 1) [
+                  text "Implicitly opening namespace";
+                  squotes (doc_of_string sprefix);
+                  text "shadows module";
+                  squotes (doc_of_string suffix);
+                  text "in file";
+                  dquotes (doc_of_string str) ^^ dot;
+                ];
+                text "Rename" ^/^ dquotes (doc_of_string str) ^/^ text "to avoid conflicts.";
+             ])
       end;
 
       let filename = must (smap_try_find original_map k) in
@@ -600,9 +609,9 @@ let collect_one
   (original_map: files_for_module_name)
   (filename: string)
   (get_parsing_data_from_cache:string -> option parsing_data)
-  : parsing_data *
-    list dependence *  //direct dependence
-    bool *  //has_inline_for_extraction
+  : parsing_data &
+    list dependence &  //direct dependence
+    bool &  //has_inline_for_extraction
     list dependence  //additional roots
                       //that used to be part of parsing_data earlier
                       //removing it from the cache (#1657)
@@ -614,8 +623,8 @@ let collect_one
    *   or constructed after AST traversal of the module
    *)
   let from_parsing_data (pd:parsing_data) (original_map:files_for_module_name) (filename:string)
-    : list dependence *
-      bool *
+    : list dependence &
+      bool &
       list dependence
     =  let deps     : ref (list dependence) = BU.mk_ref [] in
        let has_inline_for_extraction = BU.mk_ref false in
@@ -682,7 +691,7 @@ let collect_one
          end
        in
 
-         let record_open_namespace lid (implicit_open:bool) =
+       let record_open_namespace lid (implicit_open:bool) =
          let key = lowercase_join_longident lid true in
          let r = enter_namespace original_map working_map key implicit_open in
          if not r && not implicit_open then  //suppress the warning for implicit opens
@@ -722,7 +731,7 @@ let collect_one
        let add_dep_on_module (module_name : lid) (is_friend : bool) =
          if add_dependence_edge working_map module_name is_friend
          then ()
-         else if Options.debug_at_level_no_module (Options.Other "Dep") then
+         else if !dbg then
            FStar.Errors.log_issue (range_of_lid module_name)
              (Errors.Warning_UnboundModuleReference, (BU.format1 "Unbound module reference %s"
               (Ident.string_of_lid module_name)))
@@ -772,7 +781,7 @@ let collect_one
 
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
-    if Options.debug_at_level_no_module (Options.Other "Dep") then
+    if !dbg then
       BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
@@ -914,6 +923,8 @@ let collect_one
         | Const_range_of
         | Const_set_range_of ->
             add_to_parsing_data (P_dep (false, ("fstar.range" |> Ident.lid_of_str)))
+        | Const_real _ ->
+            add_to_parsing_data (P_dep (false, ("fstar.real" |> Ident.lid_of_str)))
         | _ ->
             ()
 
@@ -1186,10 +1197,10 @@ let collect_one
  * map lowercase module names to filenames. *)
 
 // Used by F*.js
-let collect_one_cache : ref (smap (list dependence * list dependence * bool)) =
+let collect_one_cache : ref (smap (list dependence & list dependence & bool)) =
   BU.mk_ref (BU.smap_create 0)
 
-let set_collect_one_cache (cache: smap (list dependence * list dependence * bool)) : unit =
+let set_collect_one_cache (cache: smap (list dependence & list dependence & bool)) : unit =
   collect_one_cache := cache
 
 let dep_graph_copy dep_graph =
@@ -1227,7 +1238,7 @@ let topological_dependences_of'
         root_files
         widened
     : list file_name
-    * bool =
+    & bool =
     let rec all_friend_deps_1
             dep_graph
             (cycle:list file_name)
@@ -1242,7 +1253,7 @@ let topological_dependences_of'
             * dependencies. Otherwise, the map only contains its direct dependencies. *)
         all_friends, all_files
     | White ->
-        if Options.debug_at_level_no_module (Options.Other "Dep")
+        if !dbg
         then BU.print2 "Visiting %s: direct deps are %s\n"
                 filename (show dep_node.edges);
         (* Unvisited. Compute. *)
@@ -1257,7 +1268,7 @@ let topological_dependences_of'
         in
         (* Mutate the graph to mark the node as visited *)
         deps_add_dep dep_graph filename ({dep_node with color=Black});
-        if Options.debug_at_level_no_module (Options.Other "Dep")
+        if !dbg
         then BU.print1 "Adding %s\n" filename;
         (* Also build the topological sort (Tarjan's algorithm). *)
         List.collect
@@ -1339,7 +1350,7 @@ let topological_dependences_of'
     let friends, all_files_0 =
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_at_level_no_module (Options.Other "Dep")
+    if !dbg
     then BU.print3 "Phase1 complete:\n\t\
                        all_files = %s\n\t\
                        all_friends=%s\n\t\
@@ -1351,11 +1362,11 @@ let topological_dependences_of'
         widen_deps friends dep_graph file_system_map widened
     in
     let _, all_files =
-        if Options.debug_at_level_no_module (Options.Other "Dep")
+        if !dbg
         then BU.print_string "==============Phase2==================\n";
         all_friend_deps dep_graph [] ([], []) root_files
     in
-    if Options.debug_at_level_no_module (Options.Other "Dep")
+    if !dbg
     then BU.print1 "Phase2 complete: all_files = %s\n" (String.concat ", " all_files);
     all_files,
     widened
@@ -1366,7 +1377,7 @@ let phase1
         interfaces_needing_inlining
         for_extraction
 =
-    if Options.debug_at_level_no_module (Options.Other "Dep")
+    if !dbg
     then BU.print_string "==============Phase1==================\n";
     let widened = false in
     if Options.cmi()
@@ -1381,7 +1392,7 @@ let topological_dependences_of
         root_files
         for_extraction
     : list file_name
-    * bool =
+    & bool =
 
     let widened, dep_graph = phase1 file_system_map dep_graph interfaces_needing_inlining for_extraction in
     topological_dependences_of' file_system_map dep_graph interfaces_needing_inlining root_files widened
@@ -1405,7 +1416,7 @@ let all_files_in_include_paths () =
 let collect (all_cmd_line_files: list file_name)
             (get_parsing_data_from_cache:string -> option parsing_data)
     : list file_name
-    * deps //topologically sorted transitive dependences of all_cmd_line_files
+    & deps //topologically sorted transitive dependences of all_cmd_line_files
     =
   let all_cmd_line_files =
     match all_cmd_line_files with
@@ -1588,7 +1599,7 @@ let collect (all_cmd_line_files: list file_name)
            (Options.codegen()<>None))
       "FStar.Parser.Dep.topological_dependences_of"
   in
-  if Options.debug_at_level_no_module (Options.Other "Dep")
+  if !dbg
   then BU.print1 "Interfaces needing inlining: %s\n" (String.concat ", " inlining_ifaces);
   all_files,
   mk_deps dep_graph file_system_map all_cmd_line_files all_files inlining_ifaces parse_results
@@ -1610,7 +1621,7 @@ let deps_of_modul deps (m:module_name) : list module_name =
     |> BU.dflt []
 
 (* In public interface *)
-let print_digest (dig:list (string * string)) : string =
+let print_digest (dig:list (string & string)) : string =
     dig
     |> List.map (fun (m, d) -> BU.format2 "%s:%s" m (BU.base64_encode d))
     |> String.concat "\n"

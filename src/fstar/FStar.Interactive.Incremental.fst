@@ -118,7 +118,7 @@ let dump_symbols (d:decl)
 let push_decl (push_kind:push_kind)
               (with_symbols:bool)
               (write_full_buffer_fragment_progress: fragment_progress -> unit)
-              (ds:decl * code_fragment)              
+              (ds:decl & code_fragment)              
   : qst (list query)
   = let open FStar.Compiler.Range in
     let d, s = ds in
@@ -313,7 +313,7 @@ let run_full_buffer (st:repl_state)
               run_qst (inspect_repl_stack (!repl_stack) decls push_kind with_symbols write_full_buffer_fragment_progress) qid
           in
           if request_type <> Cache then log_syntax_issues err_opt;
-          if Options.debug_any()
+          if Debug.any()
           then (
             BU.print1 "Generating queries\n%s\n" 
                       (String.concat "\n" (List.map query_to_string queries))

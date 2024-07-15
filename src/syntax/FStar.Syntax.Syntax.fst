@@ -29,13 +29,13 @@ open FStar.VConfig
 
 open FStar.Class.Ord
 open FStar.Class.HasRange
-
+open FStar.Class.Setlike
 
 module O    = FStar.Options
 module PC   = FStar.Parser.Const
 module Err  = FStar.Errors
 module GS   = FStar.GenSym
-module Set  = FStar.Compiler.Set
+module FlatSet  = FStar.Compiler.FlatSet
 
 let rec emb_typ_to_string = function
     | ET_abstract -> "abstract"
@@ -146,6 +146,10 @@ instance deq_fv : deq lident =
   deq_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
 instance deq_univ_name : deq univ_name =
   deq_instance_from_cmp (fun x y -> Order.order_from_int (order_univ_name x y))
+instance deq_delta_depth : deq delta_depth = {
+  (=?) = (fun x y -> x = y);
+}
+
 instance ord_bv : ord bv =
   ord_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
 instance ord_ident : ord ident =
@@ -156,18 +160,10 @@ instance ord_fv : ord lident =
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : Set.t bv = Set.empty ()
-let new_id_set () : Set.t ident = Set.empty ()
-let new_fv_set () : Set.t lident = Set.empty ()
-let new_universe_names_set () : Set.t univ_name = Set.empty ()
 
-let no_names  = new_bv_set()
-let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
-let freenames_of_list l = Set.addn l no_names
-let list_of_freenames (fvs:freenames) = Set.elems fvs
+let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
@@ -222,6 +218,7 @@ let mk_Tac t =
 let default_sigmeta = {
     sigmeta_active=true;
     sigmeta_fact_db_ids=[];
+    sigmeta_spliced=false;
     sigmeta_admit=false;
     sigmeta_already_checked=false;
     sigmeta_extension_data=[]
@@ -290,10 +287,10 @@ let is_top_level = function
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun b out -> Set.add b.binder_bv out) bs no_names
+    List.fold_right (fun b out -> add b.binder_bv out) bs (empty ())
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
-let binders_of_freenames (fvs:freenames) = Set.elems fvs |> binders_of_list
+let binders_of_freenames (fvs:freenames) = elems fvs |> binders_of_list
 let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
 let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
 let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
@@ -323,18 +320,16 @@ let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 
 let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
-let lid_and_dd_as_fv l dd dq : fv = {
+let lid_and_dd_as_fv l dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=Some dd;
     fv_qual =dq;
 }
 let lid_as_fv l dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=None;
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
-let fvar_with_dd l dd dq =  fv_to_tm (lid_and_dd_as_fv l dd dq)
+let fvar_with_dd l dq =  fv_to_tm (lid_and_dd_as_fv l dq)
 let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
@@ -371,10 +366,10 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let fvconst l = lid_and_dd_as_fv l delta_constant None
+let fvconst l = lid_and_dd_as_fv l None
 let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l delta_constant (Some Data_ctor))
+let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l None)) Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid

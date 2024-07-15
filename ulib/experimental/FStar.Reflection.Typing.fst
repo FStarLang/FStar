@@ -53,6 +53,11 @@ let pack_inspect_fv = R.pack_inspect_fv
 let inspect_pack_universe = R.inspect_pack_universe
 let pack_inspect_universe = R.pack_inspect_universe
 
+let inspect_pack_lb = R.inspect_pack_lb
+let pack_inspect_lb = R.pack_inspect_lb
+
+let inspect_pack_sigelt = R.inspect_pack_sigelt
+let pack_inspect_sigelt = R.pack_inspect_sigelt
 
 let lookup_bvar (e:env) (x:int) : option term = magic ()
 
@@ -969,3 +974,5 @@ let mkif
     [[]; []]
     (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
     (brty ())
+
+let typing_to_token (#g:env) (#e:term) (#c:comp_typ) (_ : typing g e c) = magic()

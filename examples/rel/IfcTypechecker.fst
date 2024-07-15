@@ -86,11 +86,11 @@ exception Not_well_typed
 
 open FStar.List
 
- val tc_com_hybrid : env:label_fun -> c:com -> list (cl:(com*label){ni_com env (fst cl) (snd cl)}) ->
+ val tc_com_hybrid : env:label_fun -> c:com -> list (cl:(com&label){ni_com env (fst cl) (snd cl)}) ->
   Exn label (requires True) (ensures fun ol -> Inl? ol ==> ni_com env c (Inl?.v ol))
     (decreases c)
  let rec tc_com_hybrid env c cls =
-  match find #(cl:(com*label){ni_com env (fst cl) (snd cl)})
+  match find #(cl:(com&label){ni_com env (fst cl) (snd cl)})
              (fun cl -> fst cl = c) cls with
   | Some (_,l) -> l
   | None ->

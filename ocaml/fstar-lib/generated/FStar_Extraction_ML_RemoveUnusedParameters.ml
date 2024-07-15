@@ -45,24 +45,40 @@ let (lookup_tyname :
     fun name ->
       let uu___ = FStar_Extraction_ML_Syntax.string_of_mlpath name in
       FStar_Compiler_Util.psmap_try_find env.tydef_map uu___
-type var_set = FStar_Extraction_ML_Syntax.mlident FStar_Compiler_Set.set
-let (empty_var_set : Prims.string FStar_Compiler_Set.set) =
-  FStar_Compiler_Set.empty FStar_Class_Ord.ord_string ()
+type var_set = FStar_Extraction_ML_Syntax.mlident FStar_Compiler_RBSet.t
+let (empty_var_set : Prims.string FStar_Compiler_RBSet.t) =
+  Obj.magic
+    (FStar_Class_Setlike.empty ()
+       (Obj.magic
+          (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string)) ())
 let rec (freevars_of_mlty' :
   var_set -> FStar_Extraction_ML_Syntax.mlty -> var_set) =
-  fun vars ->
-    fun t ->
-      match t with
-      | FStar_Extraction_ML_Syntax.MLTY_Var i ->
-          FStar_Compiler_Set.add FStar_Class_Ord.ord_string i vars
-      | FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1) ->
-          let uu___1 = freevars_of_mlty' vars t0 in
-          freevars_of_mlty' uu___1 t1
-      | FStar_Extraction_ML_Syntax.MLTY_Named (tys, uu___) ->
-          FStar_Compiler_List.fold_left freevars_of_mlty' vars tys
-      | FStar_Extraction_ML_Syntax.MLTY_Tuple tys ->
-          FStar_Compiler_List.fold_left freevars_of_mlty' vars tys
-      | uu___ -> vars
+  fun uu___1 ->
+    fun uu___ ->
+      (fun vars ->
+         fun t ->
+           match t with
+           | FStar_Extraction_ML_Syntax.MLTY_Var i ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Class_Setlike.add ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Class_Ord.ord_string)) i (Obj.magic vars)))
+           | FStar_Extraction_ML_Syntax.MLTY_Fun (t0, uu___, t1) ->
+               Obj.magic
+                 (Obj.repr
+                    (let uu___1 = freevars_of_mlty' vars t0 in
+                     freevars_of_mlty' uu___1 t1))
+           | FStar_Extraction_ML_Syntax.MLTY_Named (tys, uu___) ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Compiler_List.fold_left freevars_of_mlty' vars tys))
+           | FStar_Extraction_ML_Syntax.MLTY_Tuple tys ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Compiler_List.fold_left freevars_of_mlty' vars tys))
+           | uu___ -> Obj.magic (Obj.repr vars)) uu___1 uu___
 let (freevars_of_mlty : FStar_Extraction_ML_Syntax.mlty -> var_set) =
   freevars_of_mlty' empty_var_set
 let rec (elim_mlty :
@@ -135,10 +151,18 @@ let rec (elim_mlexpr' :
           let uu___ =
             let uu___1 =
               FStar_Compiler_List.map
-                (fun uu___2 ->
-                   match uu___2 with
-                   | (x, t) -> let uu___3 = elim_mlty env t in (x, uu___3))
-                bvs in
+                (fun b ->
+                   let uu___2 =
+                     elim_mlty env b.FStar_Extraction_ML_Syntax.mlbinder_ty in
+                   let uu___3 =
+                     FStar_Compiler_List.map (elim_mlexpr env)
+                       b.FStar_Extraction_ML_Syntax.mlbinder_attrs in
+                   {
+                     FStar_Extraction_ML_Syntax.mlbinder_name =
+                       (b.FStar_Extraction_ML_Syntax.mlbinder_name);
+                     FStar_Extraction_ML_Syntax.mlbinder_ty = uu___2;
+                     FStar_Extraction_ML_Syntax.mlbinder_attrs = uu___3
+                   }) bvs in
             let uu___2 = elim_mlexpr env e1 in (uu___1, uu___2) in
           FStar_Extraction_ML_Syntax.MLE_Fun uu___
       | FStar_Extraction_ML_Syntax.MLE_Match (e1, branches) ->
@@ -222,6 +246,8 @@ and (elim_letbinding :
               FStar_Extraction_ML_Syntax.mllb_add_unit =
                 (lb.FStar_Extraction_ML_Syntax.mllb_add_unit);
               FStar_Extraction_ML_Syntax.mllb_def = expr;
+              FStar_Extraction_ML_Syntax.mllb_attrs =
+                (lb.FStar_Extraction_ML_Syntax.mllb_attrs);
               FStar_Extraction_ML_Syntax.mllb_meta =
                 (lb.FStar_Extraction_ML_Syntax.mllb_meta);
               FStar_Extraction_ML_Syntax.print_typ =
@@ -263,10 +289,10 @@ let (elim_tydef :
   env_t ->
     Prims.string ->
       FStar_Extraction_ML_Syntax.meta Prims.list ->
-        Prims.string Prims.list ->
+        FStar_Extraction_ML_Syntax.ty_param Prims.list ->
           FStar_Extraction_ML_Syntax.mlty ->
             (env_t * (Prims.string * FStar_Extraction_ML_Syntax.meta
-              Prims.list * Prims.string Prims.list *
+              Prims.list * FStar_Extraction_ML_Syntax.ty_param Prims.list *
               FStar_Extraction_ML_Syntax.mlty)))
   =
   fun env ->
@@ -311,12 +337,17 @@ let (elim_tydef :
             let uu___ =
               FStar_Compiler_List.fold_left
                 (fun uu___1 ->
-                   fun p ->
+                   fun param ->
                      match uu___1 with
                      | (i, params, entry1) ->
+                         let p =
+                           param.FStar_Extraction_ML_Syntax.ty_param_name in
                          let uu___2 =
-                           FStar_Compiler_Set.mem FStar_Class_Ord.ord_string
-                             p freevars in
+                           FStar_Class_Setlike.mem ()
+                             (Obj.magic
+                                (FStar_Compiler_RBSet.setlike_rbset
+                                   FStar_Class_Ord.ord_string)) p
+                             (Obj.magic freevars) in
                          if uu___2
                          then
                            (if must_eliminate i
@@ -330,8 +361,8 @@ let (elim_tydef :
                                    uu___5) in
                                FStar_Errors.log_issue range_of_tydef uu___4)
                             else ();
-                            ((i + Prims.int_one), (p :: params), (Retain ::
-                              entry1)))
+                            ((i + Prims.int_one), (param :: params), (Retain
+                              :: entry1)))
                          else
                            if (can_eliminate i) || (must_eliminate i)
                            then
@@ -362,9 +393,9 @@ let (elim_tydef :
                                   FStar_Errors.log_issue range uu___7);
                                  FStar_Compiler_Effect.raise Drop_tydef)
                               else
-                                ((i + Prims.int_one), (p :: params), (Retain
-                                  :: entry1)))) (Prims.int_zero, [], [])
-                parameters in
+                                ((i + Prims.int_one), (param :: params),
+                                  (Retain :: entry1))))
+                (Prims.int_zero, [], []) parameters in
             match uu___ with
             | (uu___1, parameters1, entry1) ->
                 let uu___2 =
@@ -514,34 +545,59 @@ let (elim_module :
   fun env ->
     fun m ->
       let elim_module1 env1 m1 =
-        match m1 with
+        match m1.FStar_Extraction_ML_Syntax.mlmodule1_m with
         | FStar_Extraction_ML_Syntax.MLM_Ty td ->
             let uu___ =
               FStar_Compiler_Util.fold_map elim_one_mltydecl env1 td in
             (match uu___ with
-             | (env2, td1) -> (env2, (FStar_Extraction_ML_Syntax.MLM_Ty td1)))
+             | (env2, td1) ->
+                 (env2,
+                   {
+                     FStar_Extraction_ML_Syntax.mlmodule1_m =
+                       (FStar_Extraction_ML_Syntax.MLM_Ty td1);
+                     FStar_Extraction_ML_Syntax.mlmodule1_attrs =
+                       (m1.FStar_Extraction_ML_Syntax.mlmodule1_attrs)
+                   }))
         | FStar_Extraction_ML_Syntax.MLM_Let lb ->
             let uu___ =
-              let uu___1 = elim_letbinding env1 lb in
-              FStar_Extraction_ML_Syntax.MLM_Let uu___1 in
+              let uu___1 =
+                let uu___2 = elim_letbinding env1 lb in
+                FStar_Extraction_ML_Syntax.MLM_Let uu___2 in
+              {
+                FStar_Extraction_ML_Syntax.mlmodule1_m = uu___1;
+                FStar_Extraction_ML_Syntax.mlmodule1_attrs =
+                  (m1.FStar_Extraction_ML_Syntax.mlmodule1_attrs)
+              } in
             (env1, uu___)
         | FStar_Extraction_ML_Syntax.MLM_Exn (name, sym_tys) ->
             let uu___ =
               let uu___1 =
                 let uu___2 =
-                  FStar_Compiler_List.map
-                    (fun uu___3 ->
-                       match uu___3 with
-                       | (s, t) ->
-                           let uu___4 = elim_mlty env1 t in (s, uu___4))
-                    sym_tys in
-                (name, uu___2) in
-              FStar_Extraction_ML_Syntax.MLM_Exn uu___1 in
+                  let uu___3 =
+                    FStar_Compiler_List.map
+                      (fun uu___4 ->
+                         match uu___4 with
+                         | (s, t) ->
+                             let uu___5 = elim_mlty env1 t in (s, uu___5))
+                      sym_tys in
+                  (name, uu___3) in
+                FStar_Extraction_ML_Syntax.MLM_Exn uu___2 in
+              {
+                FStar_Extraction_ML_Syntax.mlmodule1_m = uu___1;
+                FStar_Extraction_ML_Syntax.mlmodule1_attrs =
+                  (m1.FStar_Extraction_ML_Syntax.mlmodule1_attrs)
+              } in
             (env1, uu___)
         | FStar_Extraction_ML_Syntax.MLM_Top e ->
             let uu___ =
-              let uu___1 = elim_mlexpr env1 e in
-              FStar_Extraction_ML_Syntax.MLM_Top uu___1 in
+              let uu___1 =
+                let uu___2 = elim_mlexpr env1 e in
+                FStar_Extraction_ML_Syntax.MLM_Top uu___2 in
+              {
+                FStar_Extraction_ML_Syntax.mlmodule1_m = uu___1;
+                FStar_Extraction_ML_Syntax.mlmodule1_attrs =
+                  (m1.FStar_Extraction_ML_Syntax.mlmodule1_attrs)
+              } in
             (env1, uu___)
         | uu___ -> (env1, m1) in
       let uu___ =

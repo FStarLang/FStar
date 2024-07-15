@@ -23,12 +23,12 @@ let rec fv_eq (fv1 : list string) (fv2 : list string) : bool =
     | x :: xs, y :: ys -> if x = y then fv_eq xs ys else false
     | _, _ -> false
 
-let unpack_field (b : T.binder) : T.Tac (string * option T.term * T.term) = 
+let unpack_field (b : T.binder) : T.Tac (string & option T.term & T.term) =
     let attr_opt = match b.attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd b.attrs) in
     (T.unseal b.ppname, attr_opt, b.sort)
 
 // returns a list of (field name, optional attribute, field type)
-let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string * option T.term * T.term)) = 
+let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string & option T.term & T.term)) = 
     // type of the constructor should contain an Arrow type (there's at least one field in a record)
     match T.inspect ty with
     | T.Tv_Arrow binder comp -> begin
@@ -46,7 +46,7 @@ let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string 
         end
     | _ -> T.fail "Expected an arrow type"
 
-let get_record_fields (env : T.env) (qname : list string) : T.Tac (list (string * option T.term * T.term)) = 
+let get_record_fields (env : T.env) (qname : list string) : T.Tac (list (string & option T.term & T.term)) = 
     match T.lookup_typ env qname with
     | Some s -> begin
         // Check if sig in an enum definition

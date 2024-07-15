@@ -599,6 +599,7 @@ and lidents_of_term' (t:term')
   | Sum (ts, t) -> concat_map (function Inl b -> lidents_of_binder b | Inr t -> lidents_of_term t) ts @ lidents_of_term t
   | QForall (bs, _pats, t) -> lidents_of_term t
   | QExists (bs, _pats, t) -> lidents_of_term t
+  | QuantOp (i, bs, pats, t) -> lidents_of_term t
   | Refine (b, t) -> lidents_of_term t
   | NamedTyp (i, t) -> lidents_of_term t
   | Paren t -> lidents_of_term t
@@ -659,7 +660,7 @@ let lidents_of_constructor_payload (t:constructor_payload) =
   | VpRecord (tc, None) -> concat_map lidents_of_tycon_record tc
   | VpRecord (tc, Some t) -> concat_map lidents_of_tycon_record tc @ lidents_of_term t
   
-let lidents_of_tycon_variant (tc:(ident * option constructor_payload * attributes_)) =
+let lidents_of_tycon_variant (tc:(ident & option constructor_payload & attributes_)) =
   match tc with
   | _, None, _ -> []
   | _, Some t, _ -> lidents_of_constructor_payload t

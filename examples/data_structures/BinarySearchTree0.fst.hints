@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "36f58087660b6d3375a5f413fbdf4e31"
+      "e22f353b64cea113dfbe08a94bb844ae"
     ],
     [
       "BinarySearchTree0.__proj__Node__item___0",
@@ -64,7 +64,7 @@
         "typing_tok_BinarySearchTree0.Leaf@tok"
       ],
       0,
-      "445cd0c81f852b127ba1a9773204e477"
+      "2a61b422dd0082e374c40885ff857b14"
     ],
     [
       "BinarySearchTree0.insert",
@@ -84,7 +84,7 @@
         "typing_tok_BinarySearchTree0.Leaf@tok"
       ],
       0,
-      "7aaf00e32555159413d83f2e31e5a5ad"
+      "d6c9a4bf43a7bc0a35cc36c1553e6f64"
     ]
   ]
 ]

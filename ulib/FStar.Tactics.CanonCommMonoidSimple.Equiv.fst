@@ -58,7 +58,7 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let amap (a:Type) = list (atom * a) * a
+let amap (a:Type) = list (atom & a) & a
 let const (#a:Type) (xa:a) : amap a = ([], xa)
 let select (#a:Type) (x:atom) (am:amap a) : Tot a =
   match assoc #atom #a x (fst am) with
@@ -274,7 +274,7 @@ let rec where_aux (n:nat) (x:term) (xs:list term) :
   | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
-let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap term) =
+let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp & list term & amap term) =
   match where t ts with
   | Some v -> (Atom v, ts, am)
   | None ->
@@ -284,7 +284,7 @@ let fatom (t:term) (ts:list term) (am:amap term) : Tac (exp * list term * amap t
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (ts:list term) (am:amap term)
-                        (mult unit t : term) : Tac (exp * list term * amap term) =
+                        (mult unit t : term) : Tac (exp & list term & amap term) =
   let hd, tl = collect_app t in
   match inspect hd, tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
@@ -299,7 +299,7 @@ let rec reification_aux (ts:list term) (am:amap term)
     else fatom t ts am
 
 let reification (eq: term) (m: term) (ts:list term) (am:amap term) (t:term) :
-    Tac (exp * list term * amap term) =
+    Tac (exp & list term & amap term) =
   let mult = norm_term [iota; zeta; delta] (`CM?.mult (`#m)) in
   let unit = norm_term [iota; zeta; delta] (`CM?.unit (`#m)) in
   let t    = norm_term [iota; zeta] t in
@@ -313,7 +313,7 @@ let rec repeat_cong_right_identity (eq: term) (m: term) : Tac unit =
                     repeat_cong_right_identity eq m
                     )
 
-let rec convert_map (m : list (atom * term)) : term =
+let rec convert_map (m : list (atom & term)) : term =
   match m with
   | [] -> `[]
   | (a, t)::ps ->

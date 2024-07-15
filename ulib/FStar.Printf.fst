@@ -123,7 +123,7 @@ let rec string_of_dirs
                                      ^ string_of_arg x
                                      ^ res))
 
-type extension_parser = i:list char -> option (extension * o:list char{o << i})
+type extension_parser = i:list char -> option (extension & o:list char{o << i})
 
 /// `parse_format s`:
 ///     Parses a list of characters into a list of directives

@@ -9,8 +9,6 @@ open FStar.InteractiveHelpers.Propositions
 open FStar.InteractiveHelpers.Effectful
 open FStar.InteractiveHelpers.Output
 
-let term_eq = FStar.Tactics.term_eq_old
-
 /// The high-level post-processing tactics, used to retrieve some specific
 /// information from the context and generate output which can be exploited
 /// on the IDE side.

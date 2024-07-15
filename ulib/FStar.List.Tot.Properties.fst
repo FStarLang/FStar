@@ -376,7 +376,7 @@ let rev_involutive l = rev_rev' l; rev_rev' (rev' l); rev'_involutive l
 
 (** Properties about snoc *)
 
-val lemma_snoc_length : (lx:(list 'a * 'a)) ->
+val lemma_snoc_length : (lx:(list 'a & 'a)) ->
   Lemma (requires True)
         (ensures (length (snoc lx) = length (fst lx) + 1))
 let lemma_snoc_length (l, x) = append_length l [x]
@@ -426,7 +426,7 @@ let lemma_unsnoc_snoc #a l =
   aux l
 
 (** [snoc] is the inverse of [unsnoc] *)
-val lemma_snoc_unsnoc: #a:Type -> lx:(list a * a) ->
+val lemma_snoc_unsnoc: #a:Type -> lx:(list a & a) ->
   Lemma (requires True)
     (ensures (unsnoc (snoc lx) == lx))
     (decreases (length (fst (lx))))
@@ -484,7 +484,7 @@ let rec lemma_unsnoc_index (#t:Type) (l:list t) (i:nat) :
 
     NOTE: Uses [strong_excluded_middle] axiom. *)
 let rec split_using (#t:Type) (l:list t) (x:t{x `memP` l}) :
-  GTot (list t * list t) =
+  GTot (list t & list t) =
   match l with
   | [_] -> [], l
   | a :: rest ->
@@ -595,14 +595,15 @@ let rec partition_count_forall #a f l= match l with
 (** Properties about subset **)
 
 let rec mem_subset (#a: eqtype) (la lb: list a)
-    : Lemma (requires (forall x. mem x la ==> mem x lb))
-            (ensures (subset la lb)) =
+    : Lemma (subset la lb <==> (forall x. mem x la ==> mem x lb))
+            [SMTPat (subset la lb)] =
   match la with
   | [] -> ()
   | hd :: tl -> mem_subset tl lb
 
+(* NOTE: This is implied by mem_subset above, kept for compatibility *)
 let subset_reflexive (#a: eqtype) (l: list a)
-    : Lemma (subset l l) [SMTPat (subset l l)] = mem_subset l l
+    : Lemma (subset l l) = ()
 
 (** Correctness of quicksort **)
 
@@ -824,7 +825,7 @@ let assoc_cons_eq
   (#b: Type)
   (x: a)
   (y: b)
-  (q: list (a * b))
+  (q: list (a & b))
 : Lemma
   (ensures (assoc x ((x, y) :: q) == Some y))
 = ()
@@ -834,7 +835,7 @@ let assoc_cons_not_eq
   (#b: Type)
   (x x': a)
   (y: b)
-  (q: list (a * b))
+  (q: list (a & b))
 : Lemma
   (requires (x <> x'))
   (ensures (assoc x' ((x, y) :: q) == assoc x' q))
@@ -844,7 +845,7 @@ let rec assoc_append_elim_r
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l1 l2: list (a * b))
+  (l1 l2: list (a & b))
 : Lemma
   (requires (assoc x l2 == None \/ ~ (assoc x l1 == None)))
   (ensures (assoc x (l1 @ l2) == assoc x l1))
@@ -857,7 +858,7 @@ let rec assoc_append_elim_l
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l1 l2: list (a * b))
+  (l1 l2: list (a & b))
 : Lemma
   (requires (assoc x l1 == None))
   (ensures (assoc x (l1 @ l2) == assoc x l2))
@@ -871,7 +872,7 @@ let rec assoc_memP_some
   (#b: Type)
   (x: a)
   (y: b)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (requires (assoc x l == Some y))
   (ensures (memP (x, y) l))
@@ -884,7 +885,7 @@ let rec assoc_memP_none
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (requires (assoc x l == None))
   (ensures (forall y . ~ (memP (x, y) l)))
@@ -897,7 +898,7 @@ let assoc_mem
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
 : Lemma
   (ensures (mem x (map fst l) <==> (exists y . assoc x l == Some y)))
 = match assoc x l with
@@ -1147,10 +1148,10 @@ let rec precedes_append_cons_r
 
 let precedes_append_cons_prod_r
   (#a #b: Type)
-  (l1: list (a * b))
+  (l1: list (a & b))
   (x: a)
   (y: b)
-  (l2: list (a * b))
+  (l2: list (a & b))
 : Lemma
   (ensures
     x << (append l1 ((x, y) :: l2)) /\
@@ -1179,7 +1180,7 @@ let assoc_precedes
   (#a: eqtype)
   (#b: Type)
   (x: a)
-  (l: list (a * b))
+  (l: list (a & b))
   (y: b)
 : Lemma
   (requires (assoc x l == Some y))

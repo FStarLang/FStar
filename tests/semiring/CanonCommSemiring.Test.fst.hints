@@ -8,7 +8,7 @@
       0,
       [ "@query" ],
       0,
-      "5ff7b23cff828c7f31ab8e74d15ee836"
+      "74d94557afeaa3e61891bdfbc334253e"
     ],
     [
       "CanonCommSemiring.Test.ring",
@@ -119,8 +119,7 @@
         "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef",
-        "typing_CanonCommSemiring.Test.one",
-        "typing_CanonCommSemiring.Test.op_Star_Percent"
+        "typing_CanonCommSemiring.Test.one"
       ],
       0,
       "6edd3393849e0627716dddb49eb26fa8"
@@ -252,9 +251,10 @@
         "equation_CanonCommSemiring.Test.op_Tilde_Percent",
         "equation_CanonCommSemiring.Test.prime",
         "equation_CanonCommSemiring.Test.ring",
-        "equation_CanonCommSemiring.Test.zero",
+        "equation_CanonCommSemiring.Test.zero", "equation_Prims.nat",
         "primitive_Prims.op_Addition", "primitive_Prims.op_Minus",
         "primitive_Prims.op_Modulus", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef",
         "typing_CanonCommSemiring.Test.op_Plus_Percent",
         "typing_CanonCommSemiring.Test.op_Tilde_Percent",
@@ -356,7 +356,7 @@
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef"
       ],
       0,
-      "700ef0287579d8172da20e08393d61af"
+      "7c0cc657f1f01ed574c406c85c1e5525"
     ],
     [
       "CanonCommSemiring.Test.test_poly1",
@@ -456,7 +456,7 @@
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef"
       ],
       0,
-      "2c20faa17f5c26caabec81cf354b2443"
+      "fd9af17056cb2a5269e76f27df577d55"
     ],
     [
       "CanonCommSemiring.Test.test_poly4",
@@ -532,7 +532,7 @@
         "refinement_interpretation_Tm_refine_c1f37b2c75b7890a493fd5df08ddc7ef"
       ],
       0,
-      "f34890aff59e3b29d9d8103e06a9ed13"
+      "032d7f2e15407545cf215ec76ae0a6ff"
     ],
     [
       "CanonCommSemiring.Test.poly_update_repeat_blocks_multi_lemma2_simplify",

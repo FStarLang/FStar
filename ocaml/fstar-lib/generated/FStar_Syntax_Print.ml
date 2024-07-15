@@ -417,10 +417,11 @@ and (term_to_string : FStar_Syntax_Syntax.term -> Prims.string) =
                  FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_labeled
                    (l, r, b);_}
                ->
-               let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
-               let uu___4 = term_to_string t in
-               FStar_Compiler_Util.format3 "Meta_labeled(%s, %s){%s}" l
-                 uu___3 uu___4
+               let uu___3 = FStar_Errors_Msg.rendermsg l in
+               let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
+               let uu___5 = term_to_string t in
+               FStar_Compiler_Util.format3 "Meta_labeled(%s, %s){%s}" uu___3
+                 uu___4 uu___5
            | FStar_Syntax_Syntax.Tm_meta
                { FStar_Syntax_Syntax.tm2 = t;
                  FStar_Syntax_Syntax.meta = FStar_Syntax_Syntax.Meta_named l;_}
@@ -1111,8 +1112,9 @@ and (metadata_to_string : FStar_Syntax_Syntax.metadata -> Prims.string) =
         let uu___1 = sli lid in
         FStar_Compiler_Util.format1 "{Meta_named %s}" uu___1
     | FStar_Syntax_Syntax.Meta_labeled (l, r, uu___1) ->
-        let uu___2 = FStar_Compiler_Range_Ops.string_of_range r in
-        FStar_Compiler_Util.format2 "{Meta_labeled (%s, %s)}" l uu___2
+        let uu___2 = FStar_Errors_Msg.rendermsg l in
+        let uu___3 = FStar_Compiler_Range_Ops.string_of_range r in
+        FStar_Compiler_Util.format2 "{Meta_labeled (%s, %s)}" uu___2 uu___3
     | FStar_Syntax_Syntax.Meta_desugared msi -> "{Meta_desugared}"
     | FStar_Syntax_Syntax.Meta_monadic (m, t) ->
         let uu___1 = sli m in
@@ -1128,6 +1130,8 @@ let (aqual_to_string : FStar_Syntax_Syntax.aqual -> Prims.string) =
   fun aq -> aqual_to_string' "" aq
 let (bqual_to_string : FStar_Syntax_Syntax.bqual -> Prims.string) =
   fun bq -> bqual_to_string' "" bq
+let (lb_to_string : FStar_Syntax_Syntax.letbinding -> Prims.string) =
+  fun lb -> lbs_to_string [] (false, [lb])
 let (comp_to_string' :
   FStar_Syntax_DsEnv.env -> FStar_Syntax_Syntax.comp -> Prims.string) =
   fun env ->
@@ -1450,41 +1454,43 @@ let rec (sigelt_to_string : FStar_Syntax_Syntax.sigelt -> Prims.string) =
                FStar_Syntax_Syntax.num_uniform_params = uu___2;
                FStar_Syntax_Syntax.t = k;
                FStar_Syntax_Syntax.mutuals = uu___3;
-               FStar_Syntax_Syntax.ds = uu___4;_}
+               FStar_Syntax_Syntax.ds = uu___4;
+               FStar_Syntax_Syntax.injective_type_params = uu___5;_}
              ->
              let quals_str = quals_to_string' x.FStar_Syntax_Syntax.sigquals in
              let binders_str = binders_to_string " " tps in
              let term_str = term_to_string k in
-             let uu___5 = FStar_Options.print_universes () in
-             if uu___5
+             let uu___6 = FStar_Options.print_universes () in
+             if uu___6
              then
-               let uu___6 = FStar_Ident.string_of_lid lid in
-               let uu___7 = univ_names_to_string univs in
+               let uu___7 = FStar_Ident.string_of_lid lid in
+               let uu___8 = univ_names_to_string univs in
                FStar_Compiler_Util.format5 "%stype %s<%s> %s : %s" quals_str
-                 uu___6 uu___7 binders_str term_str
+                 uu___7 uu___8 binders_str term_str
              else
-               (let uu___7 = FStar_Ident.string_of_lid lid in
+               (let uu___8 = FStar_Ident.string_of_lid lid in
                 FStar_Compiler_Util.format4 "%stype %s %s : %s" quals_str
-                  uu___7 binders_str term_str)
+                  uu___8 binders_str term_str)
          | FStar_Syntax_Syntax.Sig_datacon
              { FStar_Syntax_Syntax.lid1 = lid;
                FStar_Syntax_Syntax.us1 = univs; FStar_Syntax_Syntax.t1 = t;
                FStar_Syntax_Syntax.ty_lid = uu___2;
                FStar_Syntax_Syntax.num_ty_params = uu___3;
-               FStar_Syntax_Syntax.mutuals1 = uu___4;_}
+               FStar_Syntax_Syntax.mutuals1 = uu___4;
+               FStar_Syntax_Syntax.injective_type_params1 = uu___5;_}
              ->
-             let uu___5 = FStar_Options.print_universes () in
-             if uu___5
+             let uu___6 = FStar_Options.print_universes () in
+             if uu___6
              then
-               let uu___6 = univ_names_to_string univs in
-               let uu___7 = FStar_Ident.string_of_lid lid in
-               let uu___8 = term_to_string t in
-               FStar_Compiler_Util.format3 "datacon<%s> %s : %s" uu___6
-                 uu___7 uu___8
+               let uu___7 = univ_names_to_string univs in
+               let uu___8 = FStar_Ident.string_of_lid lid in
+               let uu___9 = term_to_string t in
+               FStar_Compiler_Util.format3 "datacon<%s> %s : %s" uu___7
+                 uu___8 uu___9
              else
-               (let uu___7 = FStar_Ident.string_of_lid lid in
-                let uu___8 = term_to_string t in
-                FStar_Compiler_Util.format2 "datacon %s : %s" uu___7 uu___8)
+               (let uu___8 = FStar_Ident.string_of_lid lid in
+                let uu___9 = term_to_string t in
+                FStar_Compiler_Util.format2 "datacon %s : %s" uu___8 uu___9)
          | FStar_Syntax_Syntax.Sig_declare_typ
              { FStar_Syntax_Syntax.lid2 = lid;
                FStar_Syntax_Syntax.us2 = univs; FStar_Syntax_Syntax.t2 = t;_}
@@ -1726,20 +1732,22 @@ let rec (sigelt_to_string_short : FStar_Syntax_Syntax.sigelt -> Prims.string)
           FStar_Syntax_Syntax.num_uniform_params = uu___2;
           FStar_Syntax_Syntax.t = uu___3;
           FStar_Syntax_Syntax.mutuals = uu___4;
-          FStar_Syntax_Syntax.ds = uu___5;_}
+          FStar_Syntax_Syntax.ds = uu___5;
+          FStar_Syntax_Syntax.injective_type_params = uu___6;_}
         ->
-        let uu___6 = FStar_Ident.string_of_lid lid in
-        FStar_Compiler_Util.format1 "type %s" uu___6
+        let uu___7 = FStar_Ident.string_of_lid lid in
+        FStar_Compiler_Util.format1 "type %s" uu___7
     | FStar_Syntax_Syntax.Sig_datacon
         { FStar_Syntax_Syntax.lid1 = lid; FStar_Syntax_Syntax.us1 = uu___;
           FStar_Syntax_Syntax.t1 = uu___1;
           FStar_Syntax_Syntax.ty_lid = t_lid;
           FStar_Syntax_Syntax.num_ty_params = uu___2;
-          FStar_Syntax_Syntax.mutuals1 = uu___3;_}
+          FStar_Syntax_Syntax.mutuals1 = uu___3;
+          FStar_Syntax_Syntax.injective_type_params1 = uu___4;_}
         ->
-        let uu___4 = FStar_Ident.string_of_lid lid in
-        let uu___5 = FStar_Ident.string_of_lid t_lid in
-        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___4 uu___5
+        let uu___5 = FStar_Ident.string_of_lid lid in
+        let uu___6 = FStar_Ident.string_of_lid t_lid in
+        FStar_Compiler_Util.format2 "datacon %s for type %s" uu___5 uu___6
     | FStar_Syntax_Syntax.Sig_assume
         { FStar_Syntax_Syntax.lid3 = lid; FStar_Syntax_Syntax.us3 = uu___;
           FStar_Syntax_Syntax.phi1 = uu___1;_}
@@ -1930,14 +1938,6 @@ let (sigelt_to_doc : FStar_Syntax_Syntax.sigelt -> FStar_Pprint.document) =
     then
       let uu___1 = sigelt_to_string t in FStar_Pprint.arbitrary_string uu___1
     else FStar_Syntax_Print_Pretty.sigelt_to_doc t
-let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = term_to_doc }
-let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = univ_to_doc }
-let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = sigelt_to_doc }
-let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
-  { FStar_Class_PP.pp = comp_to_doc }
 let (showable_term : FStar_Syntax_Syntax.term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
 let (showable_univ : FStar_Syntax_Syntax.universe FStar_Class_Show.showable)
@@ -1950,6 +1950,8 @@ let (showable_args : FStar_Syntax_Syntax.args FStar_Class_Show.showable) =
   { FStar_Class_Show.show = args_to_string }
 let (showable_bv : FStar_Syntax_Syntax.bv FStar_Class_Show.showable) =
   { FStar_Class_Show.show = bv_to_string }
+let (showable_fv : FStar_Syntax_Syntax.fv FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = fv_to_string }
 let (showable_binder : FStar_Syntax_Syntax.binder FStar_Class_Show.showable)
   = { FStar_Class_Show.show = binder_to_string }
 let (showable_uvar : FStar_Syntax_Syntax.uvar FStar_Class_Show.showable) =
@@ -1987,3 +1989,62 @@ let (showable_branch : FStar_Syntax_Syntax.branch FStar_Class_Show.showable)
 let (showable_qualifier :
   FStar_Syntax_Syntax.qualifier FStar_Class_Show.showable) =
   { FStar_Class_Show.show = qual_to_string }
+let (showable_pat : FStar_Syntax_Syntax.pat FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = pat_to_string }
+let (showable_const : FStar_Const.sconst FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = const_to_string }
+let (showable_letbinding :
+  FStar_Syntax_Syntax.letbinding FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = lb_to_string }
+let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = term_to_doc }
+let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = univ_to_doc }
+let (pretty_sigelt : FStar_Syntax_Syntax.sigelt FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = sigelt_to_doc }
+let (pretty_comp : FStar_Syntax_Syntax.comp FStar_Class_PP.pretty) =
+  { FStar_Class_PP.pp = comp_to_doc }
+let (pretty_ctxu : FStar_Syntax_Syntax.ctx_uvar FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_ctxu x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_uvar : FStar_Syntax_Syntax.uvar FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_uvar x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_binder : FStar_Syntax_Syntax.binder FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_binder x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_bv : FStar_Syntax_Syntax.bv FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun x ->
+         let uu___ = FStar_Class_Show.show showable_bv x in
+         FStar_Pprint.doc_of_string uu___)
+  }
+let (pretty_binding : FStar_Syntax_Syntax.binding FStar_Class_PP.pretty) =
+  {
+    FStar_Class_PP.pp =
+      (fun uu___ ->
+         match uu___ with
+         | FStar_Syntax_Syntax.Binding_var bv ->
+             FStar_Class_PP.pp pretty_bv bv
+         | FStar_Syntax_Syntax.Binding_lid (l, (us, t)) ->
+             let uu___1 = FStar_Class_PP.pp FStar_Ident.pretty_lident l in
+             let uu___2 =
+               let uu___3 = FStar_Class_PP.pp pretty_term t in
+               FStar_Pprint.op_Hat_Hat FStar_Pprint.colon uu___3 in
+             FStar_Pprint.op_Hat_Hat uu___1 uu___2
+         | FStar_Syntax_Syntax.Binding_univ u ->
+             FStar_Class_PP.pp FStar_Ident.pretty_ident u)
+  }

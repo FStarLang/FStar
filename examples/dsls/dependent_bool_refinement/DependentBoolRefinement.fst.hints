@@ -15,7 +15,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "fdfeceed10bd4a1e8571c62d1fb0ed63"
+      "3cd1c1a2fbc8fdb8b98d781898c46d3e"
     ],
     [
       "DependentBoolRefinement.__proj__EBVar__item___0",
@@ -203,7 +203,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "d1c6403384fe74a1b45a03816ec1ec28"
+      "b33142cd4d6ddd9585e54acafd75554e"
     ],
     [
       "DependentBoolRefinement.freevars",
@@ -230,7 +230,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "1bfe84b64850d17ff5b226d4c49aab46"
+      "863bc3dedd14950c5ddf6725ede4e704"
     ],
     [
       "DependentBoolRefinement.freevars",
@@ -272,7 +272,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "02db0cb29800865300027d08d82d45e8"
+      "be3616567a0bc9d565c986c5f431f1cd"
     ],
     [
       "DependentBoolRefinement.ln'",
@@ -294,7 +294,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "f4db9ae08292af17ef34e8f451ae903d"
+      "3e2627838fc4f71e71c76d39aea7adfa"
     ],
     [
       "DependentBoolRefinement.open_exp'",
@@ -329,7 +329,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "d086e15c9987aec239c4659b950de708"
+      "7ea2cb3965dafabfd64f8ca221a5a1d4"
     ],
     [
       "DependentBoolRefinement.open_exp'",
@@ -358,7 +358,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "5d8c17d78c06acb2526cc320d6a14ed4"
+      "407e458de9be5c76d59155ff65c94d6b"
     ],
     [
       "DependentBoolRefinement.close_exp'",
@@ -393,7 +393,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "73753dc254de19b5dee5a26122bb5143"
+      "4455aa193b94fafd51fef7f54c0b79dd"
     ],
     [
       "DependentBoolRefinement.close_exp'",
@@ -420,7 +420,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "62c5c558a8a9f347db42d25a3a9e5a29"
+      "07ab9b02748e0d3e472777816d621053"
     ],
     [
       "DependentBoolRefinement.open_exp_freevars",
@@ -552,7 +552,6 @@
         "subterm_ordering_DependentBoolRefinement.TArrow",
         "subterm_ordering_DependentBoolRefinement.TRefineBool",
         "token_correspondence_DependentBoolRefinement.freevars_ty.fuel_instrumented",
-        "token_correspondence_DependentBoolRefinement.open_ty_.fuel_instrumented",
         "typing_DependentBoolRefinement.freevars",
         "typing_DependentBoolRefinement.freevars_ty",
         "typing_DependentBoolRefinement.open_ty_",
@@ -597,7 +596,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "62e6c6ae8663478393d404b0275dde3d"
+      "416df06479c9dcb7b52532236ff14f3a"
     ],
     [
       "DependentBoolRefinement.src_env_ok",
@@ -615,7 +614,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "19bb454c329a0d8c4aca57c8ca8f2cee"
+      "a7355e7746538544dbd792f2bfad49f3"
     ],
     [
       "DependentBoolRefinement.fresh",
@@ -635,7 +634,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "238b404a760c6732446f8c31a467176d"
+      "f92471ae5bee48f648122c51a26ba799"
     ],
     [
       "DependentBoolRefinement.fresh_not_mem",
@@ -774,7 +773,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "c48a7a53dc5ad9c546991d78ccddc44d"
+      "841e6307d46556e59caddf55ee318e75"
     ],
     [
       "DependentBoolRefinement.elab_exp",
@@ -796,7 +795,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "c9abdb696953a2251330e561ce5ad2bc"
+      "90c04970eea2e8fc053ae39ce6ed3a76"
     ],
     [
       "DependentBoolRefinement.freevars_elab_exp",
@@ -1155,7 +1154,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "606a515d27149954462248466b4c6748"
+      "f6a3909175e8b2a6bd5e5311cb4251ca"
     ],
     [
       "DependentBoolRefinement.__proj__S_Refl__item__g",
@@ -1973,7 +1972,7 @@
         "subterm_ordering_DependentBoolRefinement.T_Lam"
       ],
       0,
-      "f70a0612482e14b78a53777f3b051c83"
+      "3e73c0dd5d7b268de012f4260581545e"
     ],
     [
       "DependentBoolRefinement.height",
@@ -1996,7 +1995,7 @@
         "subterm_ordering_DependentBoolRefinement.OK_TRefine"
       ],
       0,
-      "c3e28baa036b2eecabba6b828fa8d974"
+      "1e647a8d13f6e9c33f9a5338b14fbfaa"
     ],
     [
       "DependentBoolRefinement.check_sub_typing",
@@ -2008,7 +2007,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "4445f42c12634c04de3d3545a703af52"
+      "5f288b98cd77295eff40c076f6550a75"
     ],
     [
       "DependentBoolRefinement.weaken",
@@ -2020,7 +2019,7 @@
         "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "05e2b752a58765458142651e2420bac9"
+      "9709ff068921ac9327f0696ffb43adf6"
     ],
     [
       "DependentBoolRefinement.ok",
@@ -2104,7 +2103,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "f7004049b1517a04285fe6911c36a704"
+      "5bbb86d68941193874c3c6fdc0aa206b"
     ],
     [
       "DependentBoolRefinement.check_ok_ty",
@@ -2184,7 +2183,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "41e73492cdb5704d38b132d5487c3308"
+      "33800a010c43315f2637fc19f584a11c"
     ],
     [
       "DependentBoolRefinement.check",
@@ -2284,6 +2283,7 @@
         "string_typing",
         "token_correspondence_DependentBoolRefinement.freevars.fuel_instrumented",
         "token_correspondence_DependentBoolRefinement.freevars_ty.fuel_instrumented",
+        "token_correspondence_DependentBoolRefinement.lookup.fuel_instrumented",
         "typing_DependentBoolRefinement.check_ok_ty",
         "typing_DependentBoolRefinement.freevars",
         "typing_DependentBoolRefinement.freevars_ty",
@@ -2299,7 +2299,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "aeeeff33e5d1b9c93b5ca29d52f36aac"
+      "22c886e57d8662703fd4edc0180779f6"
     ],
     [
       "DependentBoolRefinement.check",
@@ -2383,7 +2383,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "6296d977d23a16707abae881aeaae21b"
+      "e637031eded4d0824046ad9f24d5ed60"
     ],
     [
       "DependentBoolRefinement.extend_env_l_lookup_bvar",
@@ -2443,7 +2443,7 @@
         "typing_Tm_abs_14f4b8293cb115090478765f9cdc922c"
       ],
       0,
-      "25f229a2cd3655b0cdb1c531843e70d7"
+      "3e05175f164adf1ecdd9733935539cfd"
     ],
     [
       "DependentBoolRefinement.extend_env_l_lookup_bvar",
@@ -2464,7 +2464,7 @@
         "typing_DependentBoolRefinement.lookup"
       ],
       0,
-      "964cac889a5e489b8c73bc5d0150fdb2"
+      "86453d3077541b5f6e102cc1d8311884"
     ],
     [
       "DependentBoolRefinement.elab_open_commute'",
@@ -2792,7 +2792,6 @@
         "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_FStar.Stubs.Reflection.V2.Data.Mkbinder_view_attrs",
-        "proj_equation_FStar.Stubs.Reflection.V2.Data.Mkbinder_view_ppname",
         "proj_equation_FStar.Stubs.Reflection.V2.Data.Mkbinder_view_sort",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -2804,7 +2803,6 @@
         "projection_inverse_FStar.Reflection.Typing.DT__0",
         "projection_inverse_FStar.Reflection.Typing.DT__1",
         "projection_inverse_FStar.Stubs.Reflection.V2.Data.C_Total_ret",
-        "projection_inverse_FStar.Stubs.Reflection.V2.Data.Mkbinder_view_ppname",
         "projection_inverse_FStar.Stubs.Reflection.V2.Data.Mkbinder_view_sort",
         "projection_inverse_FStar.Stubs.Reflection.V2.Data.Tv_App_a",
         "projection_inverse_FStar.Stubs.Reflection.V2.Data.Tv_App_hd",
@@ -2825,6 +2823,7 @@
         "subterm_ordering_DependentBoolRefinement.TRefineBool",
         "token_correspondence_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "token_correspondence_DependentBoolRefinement.elab_ty.fuel_instrumented",
+        "token_correspondence_DependentBoolRefinement.open_ty_.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.map",
         "token_correspondence_FStar.Reflection.Typing.shift_subst_elt",
         "token_correspondence_FStar.Reflection.Typing.shift_subst_n",
@@ -3009,7 +3008,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "d4dfcee5db31d268820065235a819271"
+      "830404a1f4f588170b800d5d43582cf4"
     ],
     [
       "DependentBoolRefinement.elab_close_commute'",
@@ -3489,6 +3488,7 @@
         "@fuel_correspondence_DependentBoolRefinement.src_env_ok.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.t_height.fuel_instrumented",
         "@fuel_correspondence_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "@fuel_correspondence_FStar.Reflection.Typing.freevars.fuel_instrumented",
         "@fuel_irrelevance_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "@fuel_irrelevance_DependentBoolRefinement.elab_ty.fuel_instrumented",
         "@fuel_irrelevance_DependentBoolRefinement.height.fuel_instrumented",
@@ -3540,7 +3540,6 @@
         "data_typing_intro_FStar.Stubs.Reflection.V2.Data.Mkbinder_view@tok",
         "data_typing_intro_FStar.Stubs.TypeChecker.Core.E_Ghost@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok",
         "disc_equation_DependentBoolRefinement.T_App",
         "disc_equation_DependentBoolRefinement.T_Bool",
         "disc_equation_DependentBoolRefinement.T_If",
@@ -3548,6 +3547,7 @@
         "disc_equation_DependentBoolRefinement.T_Var",
         "disc_equation_FStar.Pervasives.Native.None",
         "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_Prims.Nil",
         "equality_tok_DependentBoolRefinement.TBool@tok",
         "equality_tok_FStar.Stubs.Reflection.V2.Data.C_False@tok",
         "equality_tok_FStar.Stubs.Reflection.V2.Data.C_True@tok",
@@ -3595,10 +3595,11 @@
         "equation_with_fuel_DependentBoolRefinement.elab_ty.fuel_instrumented",
         "equation_with_fuel_DependentBoolRefinement.height.fuel_instrumented",
         "equation_with_fuel_DependentBoolRefinement.src_env_ok.fuel_instrumented",
-        "equation_with_fuel_DependentBoolRefinement.t_height.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.fold_right.fuel_instrumented",
+        "fuel_guarded_inversion_DependentBoolRefinement.src_exp",
         "fuel_guarded_inversion_DependentBoolRefinement.src_typing",
         "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "fuel_guarded_inversion_Prims.list",
         "function_token_typing_DependentBoolRefinement.binding",
         "function_token_typing_DependentBoolRefinement.src_eqn",
         "function_token_typing_FStar.Stubs.Reflection.Types.env",
@@ -3616,6 +3617,7 @@
         "lemma_FStar.Reflection.Typing.inspect_pack_binder",
         "lemma_FStar.Reflection.Typing.namedv_uniq_of_make_namedv",
         "lemma_FStar.Set.lemma_equal_elim", "lemma_FStar.Set.mem_union",
+        "lemma_FStar.Stubs.Reflection.V2.Builtins.simple_binder_defn",
         "primitive_Prims.op_Addition", "primitive_Prims.op_AmpAmp",
         "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
         "primitive_Prims.op_LessThan",
@@ -3699,9 +3701,11 @@
         "refinement_interpretation_Tm_refine_ff39d83f9ba7baffba174ac1c7d82e27",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "string_typing",
+        "token_correspondence_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "token_correspondence_DependentBoolRefinement.height.fuel_instrumented",
         "token_correspondence_DependentBoolRefinement.t_height.fuel_instrumented",
-        "true_interp", "typing_DependentBoolRefinement.elab_exp",
+        "true_interp", "typing_DependentBoolRefinement.b2t_fv",
+        "typing_DependentBoolRefinement.elab_exp",
         "typing_DependentBoolRefinement.elab_ty",
         "typing_DependentBoolRefinement.freevars",
         "typing_DependentBoolRefinement.height",
@@ -3712,7 +3716,6 @@
         "typing_DependentBoolRefinement.src_env_ok",
         "typing_DependentBoolRefinement.t_height",
         "typing_FStar.Pervasives.Native.uu___is_None",
-        "typing_FStar.Reflection.Typing.bool_fv",
         "typing_FStar.Reflection.Typing.bool_ty",
         "typing_FStar.Reflection.Typing.freevars",
         "typing_FStar.Reflection.Typing.lookup_bvar",
@@ -3732,7 +3735,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a0298d483ce9254f1250f485ef6d3f93"
+      "9e05bff94e652543da26b8f0b572f8f2"
     ],
     [
       "DependentBoolRefinement.soundness",
@@ -3744,6 +3747,7 @@
         "@fuel_correspondence_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.elab_ty.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.freevars.fuel_instrumented",
+        "@fuel_correspondence_DependentBoolRefinement.freevars_ty.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.height.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.lookup.fuel_instrumented",
         "@fuel_correspondence_DependentBoolRefinement.src_env_ok.fuel_instrumented",
@@ -3818,9 +3822,11 @@
         "equation_FStar.Reflection.Typing.mk_comp",
         "equation_FStar.Reflection.Typing.mk_simple_binder",
         "equation_FStar.Reflection.Typing.pp_name_default",
+        "equation_FStar.Reflection.Typing.tm_type",
         "equation_FStar.Stubs.Reflection.Types.typ",
         "equation_FStar.Stubs.Reflection.V2.Data.argv",
         "equation_FStar.Stubs.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_with_fuel_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "equation_with_fuel_DependentBoolRefinement.elab_ty.fuel_instrumented",
         "equation_with_fuel_DependentBoolRefinement.freevars.fuel_instrumented",
         "equation_with_fuel_DependentBoolRefinement.src_env_ok.fuel_instrumented",
@@ -3887,6 +3893,7 @@
         "refinement_interpretation_Tm_refine_841698a3d35eb0eee9d07e5aee00c80f",
         "refinement_interpretation_Tm_refine_ff39d83f9ba7baffba174ac1c7d82e27",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "token_correspondence_DependentBoolRefinement.elab_exp.fuel_instrumented",
         "token_correspondence_DependentBoolRefinement.t_height.fuel_instrumented",
         "token_correspondence_FStar.Reflection.Typing.freevars.fuel_instrumented",
         "typing_DependentBoolRefinement.b2t_fv",
@@ -3902,6 +3909,7 @@
         "typing_DependentBoolRefinement.src_env_ok",
         "typing_DependentBoolRefinement.t_height",
         "typing_DependentBoolRefinement.uu___is_OK_TBool",
+        "typing_FStar.Pervasives.Native.uu___is_None",
         "typing_FStar.Reflection.Typing.bool_fv",
         "typing_FStar.Reflection.Typing.freevars",
         "typing_FStar.Reflection.Typing.lookup_bvar", "typing_FStar.Set.mem",
@@ -3913,7 +3921,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "66bcc301e9dae65c2d5251a5f70210dd"
+      "c5edb4016f767a7dfe53b86456998f41"
     ],
     [
       "DependentBoolRefinement.soundness_lemma",
@@ -4003,7 +4011,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "6f024fb74f4834daa940b6656d542d31"
+      "283a0ee6beaf07bef3e47d138030ffb3"
     ],
     [
       "DependentBoolRefinement.closed",
@@ -4054,7 +4062,7 @@
         "typing_tok_DependentBoolRefinement.TBool@tok"
       ],
       0,
-      "5b82cbbf24ccf6eac58b239a3cd87bac"
+      "6591274996d459a92f2209d4394dd597"
     ],
     [
       "DependentBoolRefinement.closed",
@@ -4127,7 +4135,7 @@
         "typing_Tm_abs_14f4b8293cb115090478765f9cdc922c"
       ],
       0,
-      "d29c9b600a7c0000a224b305530d5c1e"
+      "0eae5509db63d5fef1426118eaee962a"
     ]
   ]
 ]

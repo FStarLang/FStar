@@ -263,8 +263,6 @@ let tag_with_range :
                    let fv1 =
                      {
                        FStar_Syntax_Syntax.fv_name = v;
-                       FStar_Syntax_Syntax.fv_delta =
-                         (fv.FStar_Syntax_Syntax.fv_delta);
                        FStar_Syntax_Syntax.fv_qual =
                          (fv.FStar_Syntax_Syntax.fv_qual)
                      } in

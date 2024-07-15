@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "8ad5fcffaa517218e0b1948b158cbd44"
+      "1e6b712b4192966d30cecebe6358e5a9"
     ],
     [
       "Trace.__proj__S__item___0",
@@ -37,7 +37,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "d09167cb32b9bac000f9016fbe1f8ee5"
+      "5c63a28c4ef9fb142f94d7789457de3c"
     ],
     [
       "Trace.instrument_body",
@@ -50,7 +50,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result"
       ],
       0,
-      "7ee3560916f692d97748d71326f119da"
+      "cf520e183f390999f8d435bdff4ce94a"
     ],
     [
       "Trace.cutlast",
@@ -79,7 +79,7 @@
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented"
       ],
       0,
-      "3508103d69d722628294c09890a455ec"
+      "6db61750e8495e03f6c20c3a5c43a874"
     ],
     [
       "Trace.instrument",
@@ -87,7 +87,7 @@
       2,
       1,
       [
-        "@MaxFuel_assumption", "@MaxIFuel_assumption",
+        "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
@@ -113,7 +113,7 @@
         "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "6b1adba853b40c36da419407a7ed89f2"
+      "ef4d42bba2f3b1907638475e5832d40d"
     ],
     [
       "Trace.fall",
@@ -130,7 +130,7 @@
         "typing_tok_Trace.Z@tok"
       ],
       0,
-      "46ab2efa5bf92ab694295614db088d7a"
+      "faebcd90af94ba30ec9f66539322b6a7"
     ],
     [
       "Trace.uu___114",
@@ -167,7 +167,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1e63a01ca6667a1683781b106175bfe1"
+      "39388c106f91c0dd7529deaaa3503d77"
     ],
     [
       "Trace.uu___127",

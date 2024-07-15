@@ -51,32 +51,32 @@ val close_ascription:     binders -> ascription -> ascription
 val close_branch:         branch -> branch
 val close_univ_vars:      univ_names -> term -> term
 val close_univ_vars_comp: univ_names -> comp -> comp
-val close_let_rec:        list letbinding -> term -> list letbinding * term
+val close_let_rec:        list letbinding -> term -> list letbinding & term
 val closing_of_binders:   binders -> subst_t
 
-val open_binders':      binders -> binders * subst_t
+val open_binders':      binders -> binders & subst_t
 val open_binders:       binders -> binders
-val open_term:          binders -> term -> binders * term
-val open_term':         binders -> term -> binders * term * subst_t
-val open_comp:          binders -> comp -> binders * comp
-val open_ascription:    binders -> ascription -> binders * ascription
+val open_term:          binders -> term -> binders & term
+val open_term':         binders -> term -> binders & term & subst_t
+val open_comp:          binders -> comp -> binders & comp
+val open_ascription:    binders -> ascription -> binders & ascription
 val open_branch:        branch -> branch
-val open_branch':       branch -> branch * subst_t
-val open_let_rec:       list letbinding -> term -> list letbinding * term
-val open_univ_vars:     univ_names -> term -> univ_names * term
-val open_univ_vars_comp:univ_names -> comp -> univ_names * comp
+val open_branch':       branch -> branch & subst_t
+val open_let_rec:       list letbinding -> term -> list letbinding & term
+val open_univ_vars:     univ_names -> term -> univ_names & term
+val open_univ_vars_comp:univ_names -> comp -> univ_names & comp
 val opening_of_binders: binders -> subst_t
 
 val subst_tscheme: list subst_elt -> tscheme -> tscheme
 val close_tscheme: binders -> tscheme -> tscheme
 val close_univ_vars_tscheme: univ_names -> tscheme -> tscheme
 
-val univ_var_opening: univ_names -> list subst_elt * list univ_name
+val univ_var_opening: univ_names -> list subst_elt & list univ_name
 val univ_var_closing: univ_names -> list subst_elt
 
 val set_use_range: Range.range -> term -> term
 
 (* Helpers *)
-val open_term_1   : binder   -> term -> binder * term
-val open_term_bvs : list bv -> term -> list bv * term
-val open_term_bv  : bv       -> term -> bv * term
+val open_term_1   : binder   -> term -> binder & term
+val open_term_bvs : list bv -> term -> list bv & term
+val open_term_bv  : bv       -> term -> bv & term

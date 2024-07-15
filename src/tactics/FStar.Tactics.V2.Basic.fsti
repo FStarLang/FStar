@@ -37,18 +37,11 @@ module TcComm = FStar.TypeChecker.Common
 module Core   = FStar.TypeChecker.Core
 module RD     = FStar.Reflection.V2.Data
 
-(* Internal utilities *)
-val is_irrelevant : goal -> bool
-val goal_typedness_deps : goal -> list ctx_uvar
-
 val proofstate_of_goals : Range.range -> env -> list goal -> list implicit -> proofstate
 (* Returns proofstate and uvar for main witness *)
-val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate * term
+val proofstate_of_goal_ty : Range.range -> env -> typ -> proofstate & term
 
-val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate * term
-
-(* Helper *)
-val focus                  : tac 'a -> tac 'a
+val proofstate_of_all_implicits: Range.range -> env -> implicits -> proofstate & term
 
 (* Metaprogramming primitives (not all of them).
  * Documented in `ulib/FStar.Tactics.Builtins.fst` *)
@@ -65,7 +58,7 @@ val norm                   : list Pervasives.norm_step -> tac unit
 val norm_term_env          : env -> list Pervasives.norm_step -> term -> tac term
 val norm_binding_type      : list Pervasives.norm_step -> RD.binding -> tac unit
 val intro                  : unit -> tac RD.binding
-val intro_rec              : unit -> tac (RD.binding * RD.binding)
+val intro_rec              : unit -> tac (RD.binding & RD.binding)
 val rename_to              : RD.binding -> string -> tac RD.binding
 val revert                 : unit -> tac unit
 val var_retype             : RD.binding -> tac unit
@@ -77,6 +70,7 @@ val t_apply                : bool -> bool -> bool -> term -> tac unit
 val t_apply_lemma          : bool -> bool -> term -> tac unit
 val print                  : string -> tac unit
 val debugging              : unit -> tac bool
+val ide                    : unit -> tac bool
 val dump                   : string -> tac unit
 val dump_all               : bool -> string -> tac unit
 val dump_uvars_of          : goal -> string -> tac unit
@@ -84,7 +78,7 @@ val t_trefl                : (*allow_guards:*)bool -> tac unit
 val dup                    : unit -> tac unit
 val prune                  : string -> tac unit
 val addns                  : string -> tac unit
-val t_destruct             : term -> tac (list (fv * Z.t))
+val t_destruct             : term -> tac (list (fv & Z.t))
 val gather_explicit_guards_for_resolved_goals : unit -> tac unit
 val set_options            : string -> tac unit
 val uvar_env               : env -> option typ -> tac term
@@ -105,11 +99,10 @@ val lget                   : typ -> string -> tac term
 val lset                   : typ -> string -> term -> tac unit
 val curms                  : unit -> tac Z.t
 val set_urgency            : Z.t -> tac unit
+val set_dump_on_failure    : bool -> tac unit
 val t_commute_applied_match : unit -> tac unit
-val goal_with_type : goal -> typ -> goal
-val mark_goal_implicit_already_checked : goal -> unit
 val string_to_term         : env -> string -> tac term
-val push_bv_dsenv          : env -> string -> tac (env * RD.binding)
+val push_bv_dsenv          : env -> string -> tac (env & RD.binding)
 val term_to_string         : term -> tac string
 val comp_to_string         : comp -> tac string
 val term_to_doc            : term -> tac Pprint.document
@@ -136,7 +129,7 @@ val write                  : tref 'a -> 'a -> tac unit
 let issues = list FStar.Errors.issue
 val refl_is_non_informative           : env -> typ -> tac (option unit & issues)
 val refl_check_subtyping              : env -> typ -> typ -> tac (option unit & issues)
-val refl_check_equiv                  : env -> typ -> typ -> tac (option unit & issues)
+val t_refl_check_equiv                : smt_ok:bool -> unfolding_ok:bool -> env -> typ -> typ -> tac (option unit & issues)
 val refl_core_compute_term_type       : env -> term -> tac (option (Core.tot_or_ghost & typ) & issues)
 val refl_core_check_term              : env -> term -> typ -> Core.tot_or_ghost -> tac (option unit & issues)
 val refl_core_check_term_at_type      : env -> term -> typ -> tac (option Core.tot_or_ghost & issues)
@@ -144,11 +137,16 @@ val refl_tc_term                      : env -> term -> tac (option (term & (Core
 val refl_universe_of                  : env -> term -> tac (option universe & issues)
 val refl_check_prop_validity          : env -> term -> tac (option unit & issues)
 val refl_check_match_complete         : env -> term -> term -> list pattern -> tac (option (list pattern & list (list RD.binding)))
-val refl_instantiate_implicits        : env -> term -> tac (option (list (bv & typ) & term & typ) & issues)
+val refl_instantiate_implicits        : env -> term -> expected_typ:option term -> tac (option (list (bv & typ) & term & typ) & issues)
+val refl_try_unify                    : env -> list (bv & typ) -> term -> term -> tac (option (list (bv & term)) & issues)
 val refl_maybe_relate_after_unfolding : env -> term -> term -> tac (option Core.side & issues)
 val refl_maybe_unfold_head            : env -> term -> tac (option term & issues)
+val refl_norm_well_typed_term         : env -> list norm_step -> term -> tac term
 
 val push_open_namespace               : env -> list string -> tac env
 val push_module_abbrev                : env -> string -> list string -> tac env
 val resolve_name                      : env -> list string -> tac (option (either bv fv))
 val log_issues                        : list Errors.issue -> tac unit
+
+val call_subtac                       : env -> tac unit -> universe -> typ -> tac (option term & issues)
+val call_subtac_tm                    : env -> term     -> universe -> typ -> tac (option term & issues)

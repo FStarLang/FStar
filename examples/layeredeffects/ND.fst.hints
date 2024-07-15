@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "bbf320556f56422f8dd34713c04b7e55"
+      "07133fcbf2fff6eebd1e3a064adde824"
     ],
     [
       "ND.w_bind",
@@ -170,7 +170,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "77fc7b864978227c569afdcd3a0ba54f"
+      "374ed9e9685ebcf39fca6563ab408826"
     ],
     [
       "ND.append_memP",
@@ -351,10 +351,10 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "5a769dbc8be72f5a24e927842125f6c7"
+      "7f9c742fee01cdbde254934d9b6b89a9"
     ],
     [
-      "ND.19286",
+      "ND.19460",
       1,
       2,
       1,
@@ -397,7 +397,7 @@
       0,
       "5079d54a112407164dca0e43bc7f4684"
     ],
-    [ "ND.Nd", 1, 2, 1, [ "@query" ], 0, "4bc2984a96a9860cd1b4c7edb8327ba0" ],
+    [ "ND.Nd", 1, 2, 1, [ "@query" ], 0, "2c642d9803ddc33c3cc9076f975aef23" ],
     [
       "ND.choose",
       1,
@@ -549,7 +549,7 @@
       1,
       [ "@query", "equation_ND.w_ord" ],
       0,
-      "624eb771b5d40c93cddea5ab2b728561"
+      "fd4c3a1bf96cd8f4e420023ad3b5253d"
     ]
   ]
 ]

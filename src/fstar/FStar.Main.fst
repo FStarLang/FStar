@@ -38,7 +38,7 @@ module X2 = FStar.Reflection.V2.Interpreter
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
-let process_args () : parse_cmdline_res * list string =
+let process_args () : parse_cmdline_res & list string =
   Options.parse_cmd_line ()
 
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
@@ -98,7 +98,7 @@ let load_native_tactics () =
               end
     in
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Options.debug_any () then
+    if Debug.any () then
       Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
@@ -225,10 +225,11 @@ let lazy_chooser k i = match k with
     | FStar.Syntax.Syntax.Lazy_proofstate       -> Tactics.Embedding.unfold_lazy_proofstate i
     | FStar.Syntax.Syntax.Lazy_goal             -> Tactics.Embedding.unfold_lazy_goal i
 
+    | FStar.Syntax.Syntax.Lazy_doc              -> RE.unfold_lazy_doc i
+
     | FStar.Syntax.Syntax.Lazy_uvar             -> FStar.Syntax.Util.exp_string "((uvar))"
     | FStar.Syntax.Syntax.Lazy_universe_uvar    -> FStar.Syntax.Util.exp_string "((universe_uvar))"
     | FStar.Syntax.Syntax.Lazy_issue            -> FStar.Syntax.Util.exp_string "((issue))"
-    | FStar.Syntax.Syntax.Lazy_doc              -> FStar.Syntax.Util.exp_string "((document))"
     | FStar.Syntax.Syntax.Lazy_ident            -> FStar.Syntax.Util.exp_string "((ident))"
     | FStar.Syntax.Syntax.Lazy_tref             -> FStar.Syntax.Util.exp_string "((tref))"
 

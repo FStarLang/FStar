@@ -17,6 +17,7 @@ module FStar.Errors
 
 open FStar.Pervasives
 open FStar.String
+open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 open FStar.Compiler.Util
@@ -63,7 +64,7 @@ let warn_on_use_errno    = errno Warning_WarnOnUse
 let defensive_errno      = errno Warning_Defensive
 let call_to_erased_errno = errno Error_CallToErased
 
-let update_flags (l:list (error_flag * string))
+let update_flags (l:list (error_flag & string))
   : list error_setting
   = let set_one_flag i flag default_flag =
       match flag, default_flag with
@@ -107,7 +108,7 @@ let update_flags (l:list (error_flag * string))
   @ default_settings
 
 exception Error   of error
-exception Err     of raw_error * error_message * list string
+exception Err     of raw_error & error_message & list string
 exception Warning of error
 exception Stop
 exception Empty_frag
@@ -182,6 +183,9 @@ let format_issue' (print_hdr:bool) (issue:issue) : string =
       List.fold_left (fun l r -> l ^^ hardline ^^ d1 r) (d1 h) t
     | _ -> empty
   in
+  (* We only indent if we are are printing the header. I.e., only ident for batch errors,
+  not for VS code diagnostics window. *)
+  let subdoc = subdoc' print_hdr in
   let mainmsg : document =
     concat (List.map (fun d -> subdoc (group d)) issue.issue_msg)
   in
@@ -199,7 +203,7 @@ let format_issue issue : string = format_issue' true issue
 let print_issue issue =
     let printer =
         match issue.issue_level with
-        | EInfo -> (fun s -> BU.print_string (colorize_magenta s))
+        | EInfo -> (fun s -> BU.print_string (colorize_cyan s))
         | EWarning -> BU.print_warning
         | EError -> BU.print_error
         | ENotImplemented -> BU.print_error in
@@ -253,7 +257,7 @@ let mk_default_handler print =
            err_count := 1 + !err_count);
         begin match e.issue_level with
           | EInfo -> print_issue e
-          | _ when print && Options.debug_any () -> print_issue e
+          | _ when print && Debug.any () -> print_issue e
           | _ -> issues := e :: !issues
         end;
         if Options.defensive_abort () && e.issue_number = Some defensive_errno then
@@ -345,15 +349,23 @@ let error_context : error_context_t =
 let get_ctx () : list string =
   error_context.get ()
 
+let maybe_add_backtrace (msg : error_message) : error_message =
+  if Options.trace_error () then
+    msg @ [backtrace_doc ()]
+  else
+    msg
+
 let diag_doc r msg =
-  if Options.debug_any()
-  then add_one (mk_issue EInfo (Some r) msg None [])
+  if Debug.any() then
+    let msg = maybe_add_backtrace msg in
+    let ctx = get_ctx () in
+    add_one (mk_issue EInfo (Some r) msg None ctx)
 
 let diag r msg =
   diag_doc r (mkmsg msg)
 
 let diag0 msg =
-  if Options.debug_any()
+  if Debug.any()
   then add_one (mk_issue EInfo None (mkmsg msg) None [])
 
 let diag1 f a         = diag0 (BU.format1 f a)
@@ -463,12 +475,6 @@ let lookup err =
 
   | _ ->
     with_level level
-
-let maybe_add_backtrace (msg : error_message) : error_message =
-  if Options.trace_error () then
-    msg @ [backtrace_doc ()]
-  else
-    msg
 
 let log_issue_ctx r (e, msg) ctx =
   let msg = maybe_add_backtrace msg in
@@ -607,7 +613,7 @@ let no_ctx (f : unit -> 'a) : 'a =
   error_context.set save;
   res
 
-let catch_errors (f : unit -> 'a) : list issue * option 'a =
+let catch_errors (f : unit -> 'a) : list issue & option 'a =
   let errs, rest, r = catch_errors_aux f in
   List.iter (!current_handler).eh_add_one rest;
   errs, r
@@ -622,9 +628,9 @@ let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
  * eg. find_multiset_discrepancy [1;1;3;5] [1;1;3;3;4;5] = Some (3, 1, 2)
  *     since 3 appears 1 time in l1, but 2 times in l2. *)
-let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int * int * int) =
+let find_multiset_discrepancy (l1 : list int) (l2 : list int) : option (int & int & int) =
     let sort = List.sortWith (fun x y -> x - y) in
-    let rec collect (l : list 'a) : list ('a * int) =
+    let rec collect (l : list 'a) : list ('a & int) =
         match l with
         | [] -> []
         | hd :: tl ->

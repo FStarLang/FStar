@@ -15,7 +15,7 @@
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "a98418779ad1e4d9c93717b6add03286"
+      "85deebcf749d85df6b460f8fb1551db1"
     ],
     [
       "Problem01.prefix",
@@ -49,7 +49,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "869a27f9ba2e86684c0efafb59da24da"
+      "3b56856de898992659694a1749b9c2b9"
     ],
     [
       "Problem01.prefix",
@@ -94,7 +94,7 @@
         "subterm_ordering_Prims.Cons", "typing_FStar.List.Tot.Base.length"
       ],
       0,
-      "c822a8cb20676ce45b0c1e058f02b953"
+      "b63c2bb371e55e4396c2021ee7049fec"
     ],
     [
       "Problem01.test_prefix",
@@ -132,7 +132,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "b2541d0f26d1252affd45ad21089b557"
+      "45a2cef6923cc51953fcd32edc859124"
     ],
     [
       "Problem01.test_prefix",
@@ -178,7 +178,7 @@
         "typing_Problem01.test_prefix", "well-founded-ordering-on-nat"
       ],
       0,
-      "ae8842943ce51fdb5056c4f52184a5b7"
+      "682c65049e5dfc8d6ad03b689b656cbb"
     ],
     [
       "Problem01.test_prefix_exists_to_b",
@@ -230,8 +230,9 @@
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_Problem01.prefix.fuel_instrumented",
         "fuel_guarded_inversion_Prims.list", "int_inversion", "int_typing",
-        "lemma_Problem01.test_prefix_iff", "primitive_Prims.op_GreaterThan",
-        "primitive_Prims.op_LessThan", "primitive_Prims.op_LessThanOrEqual",
+        "lemma_Problem01.test_prefix_iff", "primitive_Prims.op_BarBar",
+        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_LessThan",
+        "primitive_Prims.op_LessThanOrEqual",
         "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
@@ -244,7 +245,7 @@
         "typing_Problem01.prefix", "typing_Problem01.test_prefix"
       ],
       0,
-      "4a906c31064abab21f962c6ec6d7dc08"
+      "d8d98fd892ad9b4214da5e721133640a"
     ]
   ]
 ]

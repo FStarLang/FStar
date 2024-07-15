@@ -11,50 +11,75 @@ all: verify iverify not-verify extract
 ##################
 
 # These will be checked as part of the F* regressions.
-SHOULD_VERIFY_CLOSED=Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug028.fst Bug046.fst Bug052.fst\
-  Bug056.fst Bug058.fst Bug058b.fst Bug067.fst Bug069.fst Bug077.fst Bug097b.fst Bug102.fst Bug103.fst\
-  Bug111.fst Bug116.fst Bug122.fst Bug124.fst Bug125.fst Bug126.fst Bug138.fst Bug139.fst Bug152.fst\
-  Bug155.fst Bug161.fst Bug162.fst Bug170.fst Bug173.fst Bug175.fst Bug178.fst Bug181.fst Bug184Eta.fst\
-  Bug184.fst Bug185.fst Bug187.fst Bug190.fst Bug195.fst Bug195b.fst Bug209.fst Bug209b.fst Bug212.fst\
-  Bug213.fst Bug215.fst Bug237b.fst Bug238.fst Bug244.fst Bug251.fst Bug252.fst Bug254.fst Bug256.fst\
-  Bug257.fst Bug260.fst Bug264.fst Bug274.fst Bug275.fst Bug279.fst Bug281.fst Bug283.fst Bug290.fst Bug292.fst\
-  Bug293.fst Bug311.fst Bug316.fst Bug363.fst Bug375.fst Bug397.fst Bug398.fst Bug399.fst Bug405.fst\
-  Bug413.fst Bug416.fst Bug417.fst Bug422.fst Bug424.fst Bug433.fst Bug445.fst Bug463b.fst Bug482.fst Bug493.fst\
-  Bug516.fst Bug516b.fst Bug517.fst Bug540.fst Bug552.fst Bug566.fst Bug574.fst Bug577.fst Bug579.fst Bug581.fst\
-  Bug590.fst Bug601.fst Bug605.fst Bug609.fst Bug613.fst Bug686.fst Bug705.fst Bug706.fst Bug707.fst Bug709.fst\
-  Bug710.fst Bug712.fst Bug713.fst Bug736.fst Bug765.fst Bug769c.fst Bug786.fst Bug836.fst Bug844.fst Bug985.fst \
-  Bug989.fst\
-  BugWildcardTelescopes.fst NormalizingGhostSubterms.fst UnificationCrash.fst Bug1150.fst Bug1076.fst\
-  Bug1341.fst Bug1345.fst Bug1345b.fst Bug1345c.fst Bug1346.fst Bug1348.fst Bug1362.fst \
-  Bug1347b.fst Bug1206.fst Bug1271.fst Bug1305.fst Bug1361.fst Bug1383.fst Bug1414.fst \
-  unfold.fst Bug1091.fst Bug1449.fst Bug1427.fst Bug1423.fst Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst \
-  Bug1319a.fst Bug1319b.fst Bug1319c.fst Bug1319d.fst Bug1319e.fst Bug1319f.fst Bug807a.fst Bug807b.fst Bug807c.fst Bug807d.fst Bug807e.fst \
-  Bug1502.fst \
-  Bug1488.fst Bug607.fst Bug466.fst Bug400.fst Bug1470.fst Bug1481.fst Bug1506.fst Bug606.fst Bug543.fst Bug1521.fst \
-  Bug1533.fst Bug1535a.fst Bug1535b.fst Bug1536.fst Bug1370a.fst Bug1370b.fst Bug1534.fst Bug575.fst \
-  Bug1443a.fst Bug1443b.fst Bug1443c.fst Bug1443d.fst Bug1443e.fst Bug1523.fst Bug1141a.fst Bug1141b.fst Bug1141c.fst Bug1141d.fst \
-  Bug1561a.fst Bug1561b.fst Bug1065a.fst Bug1065b.fst Bug1065c.fst Bug1568.fst Bug1571.fst Bug1572.fst Bug1592.fst \
-  Bug1595.fst Bug1601.fst Bug1602.fst Bug1604.fst Bug1605.fst Bug1621.fst Bug1680.fst Bug1682.fst Bug1694.fst \
-  Bug1730b.fst Bug1612.fst Bug1614a.fst Bug1614b.fst Bug1614c.fst Bug1614d.fst Bug1614e.fst Bug1750.fst Bug1750.Aux.fst \
-  Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst Bug1640.fst Bug1841.fst \
-  Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst \
-  Bug1130.fst Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst Bug1940a.fst \
-  Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst \
-  Bug1903.fst Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst \
-  Bug1986.fst Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst \
-  Bug379.fst Bug1182a.fst Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst Bug2099.fst Bug2106.fst Bug2132.fst \
-  Bug2138.fst Bug2146.fst Bug2074.fst Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst Bug2066.fst Bug2189.fst Bug2184.fst \
-  Bug2211.fst Bug2210.fst Bug2193.fst Bug2257.fst Bug2229.fst Dec.fst Bug2269.fst Bug2352.fst Bug2366.fst Bug2331.fst \
-  Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst Bug2475.fst Bug2477.fst Bug1355.fst \
-  Bug1418.fst Bug171.fst Bug2496.fst Bug2478.fst Bug2414.fst Bug2515.fst \
-  Bug2535.fst Bug2557.fst Bug2572.fst Bug2522.fst Bug2486.fst \
-  Bug2552.fst Bug2597.fst Bug2471_B.fst Bug2614.fst Bug2622.fst \
-  Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst PropProofs.fst \
-  Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst Bug2659b.fst\
-  Bug2756.fst MutualRecPositivity.fst Bug2806a.fst Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst\
-  Bug2849a.fst Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst \
-  Bug2415.fst Bug3028.fst Bug2954.fst Bug3089.fst Bug3102.fst Bug2981.fst Bug2980.fst Bug3115.fst \
-  Bug2083.fst Bug2002.fst Bug1482.fst Bug1066.fst Bug3120a.fst Bug3120b.fst
+SHOULD_VERIFY_CLOSED=\
+	Bug022.fst Bug024.fst Bug025.fst Bug026.fst Bug026b.fst Bug028.fst		\
+	Bug046.fst Bug052.fst Bug056.fst Bug058.fst Bug058b.fst Bug067.fst		\
+	Bug069.fst Bug077.fst Bug097b.fst Bug102.fst Bug103.fst Bug111.fst		\
+	Bug116.fst Bug122.fst Bug124.fst Bug125.fst Bug126.fst Bug138.fst		\
+	Bug139.fst Bug152.fst Bug155.fst Bug161.fst Bug162.fst Bug170.fst		\
+	Bug173.fst Bug175.fst Bug178.fst Bug181.fst Bug184Eta.fst			\
+	Bug184.fst Bug185.fst Bug187.fst Bug190.fst Bug195.fst Bug195b.fst		\
+	Bug209.fst Bug209b.fst Bug212.fst Bug213.fst Bug215.fst				\
+	Bug237b.fst Bug238.fst Bug244.fst Bug251.fst Bug252.fst Bug254.fst		\
+	Bug256.fst Bug257.fst Bug260.fst Bug264.fst Bug274.fst Bug275.fst		\
+	Bug279.fst Bug281.fst Bug283.fst Bug290.fst Bug292.fst Bug293.fst		\
+	Bug311.fst Bug316.fst Bug363.fst Bug375.fst Bug397.fst Bug398.fst		\
+	Bug399.fst Bug405.fst Bug413.fst Bug416.fst Bug417.fst Bug422.fst		\
+	Bug424.fst Bug433.fst Bug445.fst Bug463b.fst Bug482.fst Bug493.fst		\
+	Bug516.fst Bug516b.fst Bug517.fst Bug540.fst Bug552.fst Bug566.fst		\
+	Bug574.fst Bug577.fst Bug579.fst Bug581.fst Bug590.fst Bug601.fst		\
+	Bug605.fst Bug609.fst Bug613.fst Bug686.fst Bug705.fst Bug706.fst		\
+	Bug707.fst Bug709.fst Bug710.fst Bug712.fst Bug713.fst Bug736.fst		\
+	Bug765.fst Bug769c.fst Bug786.fst Bug836.fst Bug844.fst Bug985.fst		\
+	Bug989.fst BugWildcardTelescopes.fst NormalizingGhostSubterms.fst		\
+	UnificationCrash.fst Bug1150.fst Bug1076.fst Bug1341.fst Bug1345.fst		\
+	Bug1345b.fst Bug1345c.fst Bug1346.fst Bug1348.fst Bug1362.fst			\
+	Bug1347b.fst Bug1206.fst Bug1271.fst Bug1305.fst Bug1361.fst Bug1383.fst	\
+	Bug1414.fst unfold.fst Bug1091.fst Bug1449.fst Bug1427.fst Bug1423.fst		\
+	Bug1352.fst Bug1123.fst ScopeOfBinderGuard.fst Bug1319a.fst Bug1319b.fst	\
+	Bug1319c.fst Bug1319d.fst Bug1319e.fst Bug1319f.fst Bug807a.fst			\
+	Bug807b.fst Bug807c.fst Bug807d.fst Bug807e.fst Bug1502.fst Bug1488.fst		\
+	Bug607.fst Bug466.fst Bug400.fst Bug1470.fst Bug1481.fst Bug1506.fst		\
+	Bug606.fst Bug543.fst Bug1521.fst Bug1533.fst Bug1535a.fst Bug1535b.fst		\
+	Bug1536.fst Bug1370a.fst Bug1370b.fst Bug1534.fst Bug575.fst			\
+	Bug1443a.fst Bug1443b.fst Bug1443c.fst Bug1443d.fst Bug1443e.fst		\
+	Bug1523.fst Bug1141a.fst Bug1141b.fst Bug1141c.fst Bug1141d.fst			\
+	Bug1561a.fst Bug1561b.fst Bug1065a.fst Bug1065b.fst Bug1065c.fst		\
+	Bug1568.fst Bug1571.fst Bug1572.fst Bug1592.fst Bug1595.fst Bug1601.fst		\
+	Bug1602.fst Bug1604.fst Bug1605.fst Bug1621.fst Bug1680.fst Bug1682.fst		\
+	Bug1694.fst Bug1730b.fst Bug1612.fst Bug1614a.fst Bug1614b.fst			\
+	Bug1614c.fst Bug1614d.fst Bug1614e.fst Bug1750.fst Bug1750.Aux.fst		\
+	Bug1622.fst Bug1540.fst Bug1784.fst Bug1802.fst Bug1055.fst Bug1818.fst		\
+	Bug1640.fst Bug1841.fst Bug1847.fst Bug1855.fst Bug1812.fst Bug1840.fst		\
+	Bug1866.fst Bug811.fst Bug841.fst Bug1060.fst Bug1070.fst Bug1130.fst		\
+	Bug1170.fst Bug1191.fst Bug1799.fst Bug1900.fst Bug1908.fst Bug1913.fst		\
+	Bug1940a.fst Bug1940b.fst Bug1940c.fst Bug1936.fst Bug1952a.fst			\
+	Bug1952b.fst Bug1953.fst Bug1074.fst Bug442.fst Bug1954.fst Bug1903.fst		\
+	Bug1121a.fst Bug1121b.fst Bug1956.fst Bug1228.fst Bug829.fst			\
+	Bug451.fst Bug1966a.fst Bug1966b.fst Bug1976.fst Bug1986.fst			\
+	Bug1995.fst Bug1507.fst Bug2001.fst Bug2004.fst Bug855a.fst Bug855b.fst		\
+	Bug1097.fst Bug1918.fst Bug1390.fst Bug2031.fst Bug379.fst Bug1182a.fst		\
+	Bug1182b.fst Bug1901.fst Bug1902.fst Bug258.fst Bug2055.fst Bug2081.fst		\
+	Bug2099.fst Bug2106.fst Bug2132.fst Bug2138.fst Bug2146.fst Bug2074.fst		\
+	Bug2125a.fst Bug2125b.fst Bug2167.fst Bug2169.fst Bug2169b.fst			\
+	Bug2066.fst Bug2189.fst Bug2184.fst Bug2211.fst Bug2210.fst Bug2193.fst		\
+	Bug2257.fst Bug2229.fst Dec.fst Bug2269.fst Bug2352.fst Bug2366.fst		\
+	Bug2331.fst Bug2398.fst Bug2432.fst Bug2374.fst Bug2438.fst Bug2456.fst		\
+	Bug2475.fst Bug2477.fst Bug1355.fst Bug1418.fst Bug171.fst Bug2496.fst		\
+	Bug2478.fst Bug2414.fst Bug2515.fst Bug2535.fst Bug2557.fst Bug2572.fst		\
+	Bug2522.fst Bug2486.fst Bug2552.fst Bug2597.fst Bug2471_B.fst			\
+	Bug2614.fst Bug2622.fst Bug2635.fst Bug2637.fst Bug2641.fst Bug1486.fst		\
+	PropProofs.fst Bug2684a.fst Bug2684b.fst Bug2684c.fst Bug2684d.fst		\
+	Bug2659b.fst Bug2756.fst MutualRecPositivity.fst Bug2806a.fst			\
+	Bug2806b.fst Bug2806c.fst Bug2806d.fst Bug2809.fst Bug2849a.fst			\
+	Bug2849b.fst Bug2045.fst Bug2876.fst Bug2882.fst Bug2895.fst Bug2894.fst	\
+	Bug2415.fst Bug3028.fst Bug2954.fst Bug3089.fst Bug3102.fst Bug2981.fst		\
+	Bug2980.fst Bug3115.fst Bug2083.fst Bug2002.fst Bug1482.fst Bug1066.fst		\
+	Bug3120a.fst Bug3120b.fst Bug3186.fst Bug3185.fst Bug3210.fst			\
+	Bug3213.fst Bug3213b.fst Bug3207.fst Bug3207b.fst Bug3207c.fst			\
+	Bug2155.fst Bug3224a.fst Bug3224b.fst Bug3236.fst Bug3252.fst \
+	BugBoxInjectivity.fst BugTypeParamProjector.fst Bug2172.fst Bug3266.fst		\
+	Bug3264a.fst Bug3264b.fst Bug3286a.fst Bug3286b.fst Bug3320.fst Bug2583.fst
 
 SHOULD_VERIFY_INTERFACE_CLOSED=Bug771.fsti Bug771b.fsti
 SHOULD_VERIFY_AND_WARN_CLOSED=Bug016.fst
@@ -211,6 +236,7 @@ RemoveUnusedTypars.B.extract: RemoveUnusedTypars.A.fst RemoveUnusedTypars.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTypars.B --codegen FSharp RemoveUnusedTypars.B.fst
 	diff -u --strip-trailing-cr RemoveUnusedTypars_A.fs RemoveUnusedTypars_A.fs.expected
 	diff -u --strip-trailing-cr RemoveUnusedTypars_B.fs RemoveUnusedTypars_B.fs.expected
+	@touch $@
 
 RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyparsIFace.B.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --cache_checked_modules RemoveUnusedTyparsIFace.A.fsti --warn_error -333
@@ -220,9 +246,11 @@ RemoveUnusedTyparsIFace.B.extract: RemoveUnusedTyparsIFace.A.fst RemoveUnusedTyp
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --extract RemoveUnusedTyparsIFace.B --codegen FSharp RemoveUnusedTyparsIFace.B.fst
 	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_A.fs RemoveUnusedTyparsIFace_A.fs.expected
 	diff -u --strip-trailing-cr RemoveUnusedTyparsIFace_B.fs RemoveUnusedTyparsIFace_B.fs.expected
+	@touch $@
 
 PushPopProjectors.extract: PushPopProjectors.fst
 	$(FSTAR) $(FSTAR_DEFAULT_ARGS) --odir out_$* --codegen FSharp $^
+	@touch $@
 
 output-accept: Bug310.ml Bug2058.ml Bug2595.ml Bug2699.ml Bug2895.ml
 	cp Bug310.ml Bug310.ml.expected

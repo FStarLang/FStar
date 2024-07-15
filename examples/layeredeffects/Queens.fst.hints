@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "c3de45013575f46403179e2fe8bb9210"
+      "5754c6c89045dd4811ae1930b855a9d9"
     ],
     [
       "Queens.no_clash_minus",
@@ -33,7 +33,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f6d62926a422f34e8bf8329c5fb37543"
+      "c78d03bca8737b889a93cb5344ad2f07"
     ],
     [
       "Queens.valid",
@@ -50,7 +50,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "407b972027c34d939b214c2b46dc22a6"
+      "612652318917f6050015cc32b31a30df"
     ],
     [
       "Queens.pickn",
@@ -175,9 +175,10 @@
         "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Other",
-        "eq2-interp", "equation_Alg.sublist", "equation_Prims.eqtype",
-        "equation_Prims.pos", "equation_Queens.board",
-        "equation_Queens.flipOp", "equation_Queens.quitOp",
+        "eq2-interp", "equation_Alg.ops", "equation_Alg.sublist",
+        "equation_Prims.eqtype", "equation_Prims.pos",
+        "equation_Queens.board", "equation_Queens.flipOp",
+        "equation_Queens.quitOp",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_Queens.valid.fuel_instrumented", "false_interp",
@@ -196,7 +197,7 @@
         "true_interp", "typing_Queens.flipOp", "typing_Queens.quitOp"
       ],
       0,
-      "3d069189621a71fc8e12e22e68fdc834"
+      "48d2848a2f315ca099de271b6d22ddb0"
     ]
   ]
 ]

@@ -111,7 +111,7 @@ val intro : unit -> Tac binding
 (** Similar to intros, but allows to build a recursive function.
 Currently broken (c.f. issue #1103)
 *)
-val intro_rec  : unit -> Tac (binding * binding)
+val intro_rec  : unit -> Tac (binding & binding)
 
 (** [rename_to b nm] will rename the binder [b] to [nm] in
 the environment, goal, and witness in a safe manner. The only use of this
@@ -190,8 +190,13 @@ of printing [str] on the compiler's standard output. *)
 val print : string -> Tac unit
 
 (** [debugging ()] returns true if the current module has the debug flag
-on, i.e. when [--debug MyModule --debug_level Tac] was passed in. *)
+on, i.e. when [--debug Tac] was passed in. *)
 val debugging : unit -> Tac bool
+
+(** [ide ()] return true if F* is running in interactive mode. This is
+useful to only print diagnostics messages in interactive mode but not in
+batch. *)
+val ide : unit -> Tac bool
 
 (** Similar to [print], but will dump a text representation of the proofstate
 along with the message. *)
@@ -287,7 +292,7 @@ match has one branch for each constructor and is therefore trivially
 exhaustive, no VC is generated for that purpose. It returns a list
 with the fvars of each constructor and their arities, in the order
 they appear as goals. *)
-val t_destruct : term -> Tac (list (fv * nat))
+val t_destruct : term -> Tac (list (fv & nat))
 
 (** Set command line options for the current goal. Mostly useful to
 change SMT encoding options such as [set_options "--z3rlimit 20"]. *)
@@ -383,6 +388,11 @@ val curms : unit -> Tac int
 before raising an exception (see e.g. [fail_silently]). *)
 val set_urgency : int -> TacS unit
 
+(** [set_dump_failure b] controls whether the engine will dump out
+the proofstate if a tactic fails during exception. This is true by
+default, but can be disabled to get less verbosity. *)
+val set_dump_on_failure : bool -> TacS unit
+
 (** [string_to_term e s] runs the F* parser on the string [s] in the
 environment [e], and produces a term. *)
 val string_to_term : env -> string -> Tac term
@@ -390,7 +400,7 @@ val string_to_term : env -> string -> Tac term
 (** [push_bv_dsenv e id] pushes a identifier [id] into the parsing
 environment of [e] an environment. It returns a new environment that
 has the identifier [id] along with its corresponding binding. *)
-val push_bv_dsenv : env -> string -> Tac (env * binding)
+val push_bv_dsenv : env -> string -> Tac (env & binding)
 
 (** Print a term via the pretty printer. This is considered effectful
 since 1) setting options can change the behavior of this function, and
@@ -484,7 +494,7 @@ val is_non_informative (g:env) (t:typ)
 val check_subtyping (g:env) (t0 t1:typ)
   : Tac (ret_t (subtyping_token g t0 t1))
 
-val check_equiv (g:env) (t0 t1:typ)
+val t_check_equiv (smt_ok:bool) (unfolding_ok:bool) (g:env) (t0 t1:typ)
   : Tac (ret_t (equiv_token g t0 t1))
 
 //
@@ -543,14 +553,44 @@ val check_match_complete (g:env) (sc:term) (t:typ) (pats:list pattern)
 //
 //   t' is the elaborated t, and ty is its type
 //
-val instantiate_implicits (g:env) (t:term)
+val instantiate_implicits (g:env) (t:term) (expected_typ : option term)
   : Tac (ret_t (list (namedv & typ) & term & typ))
+
+//
+// Tries to find substitutions for the names in uvs
+//   by unifying t0 and t1
+//
+// Internally, it creates fresh unification variables for uvs,
+//   substitutes them in t0 and t1,
+//   and tries to unify them
+//
+// The returned list contains uvs that could be solved
+//
+// uvs names are oldest binding first (i.e., most recent binding at the end of the list)
+//
+// and under the environment (g, (rev uvs)), t0 and t1 should be well-typed
+//
+// The API does not provide any guarantees, the caller should typecheck
+//   that the solutions are well-typed
+//
+val try_unify (g:env) (uvs:list (namedv & typ)) (t0 t1:term)
+  : Tac (ret_t (list (namedv & term)))
 
 val maybe_relate_after_unfolding (g:env) (t1 t2:term)
   : Tac (ret_t unfold_side)
 
 val maybe_unfold_head (g:env) (t0:term)
   : Tac (ret_t (t1:term{equiv_token g t0 t1}))
+
+(** [norm_well_typed_term e steps t] will call the normalizer on the
+term [t] using the list of steps [steps], over environment [e]. It
+differs from norm_term_env in that it will not attempt to typecheck t
+(so there is an implicit well-typing precondition for t, which we are
+not strcitly requiring yet in reflection primitives) and it will also
+return a token for the equivalence between t and t'. *)
+val norm_well_typed_term
+  (g:env) (steps : list norm_step) (t:term)
+  : Tac (t':term{equiv_token g t t'})
 
 val push_open_namespace (g:env) (ns:name)
   : Tac env
@@ -563,3 +603,15 @@ val resolve_name (g:env) (n:name)
 
 val log_issues (issues:list FStar.Issue.issue)
   : Tac unit
+
+(* Reentrancy: a metaprogram can spawn a sub-metaprogram to
+solve a goal, starting from a clean state, and obtain the witness
+that solves it. *)
+val call_subtac (g:env) (t : unit -> Tac unit) (u:universe)
+                (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
+  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))
+
+val call_subtac_tm
+    (g:env) (t : term) (u:universe)
+    (goal_ty : term{typing_token g goal_ty (E_Total, pack_ln (Tv_Type u))})
+  : Tac (ret_t (w:term{typing_token g w (E_Total, goal_ty)}))

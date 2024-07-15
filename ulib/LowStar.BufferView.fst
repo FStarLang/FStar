@@ -50,8 +50,8 @@ let view_indexing #b vb i
 let split_at_i (#b: _) (vb:buffer b) (i:nat{i < length vb}) (h:HS.mem)
     : GTot (frags:
                (let src_t = Mkdtuple4?._1 vb in
-                Seq.seq src_t *
-                Seq.lseq src_t (View?.n (get_view vb)) *
+                Seq.seq src_t &
+                Seq.lseq src_t (View?.n (get_view vb)) &
                 Seq.seq src_t){
                let prefix, es, suffix = frags in
                B.as_seq h (as_buffer vb) ==

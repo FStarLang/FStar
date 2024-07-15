@@ -40,6 +40,8 @@ clean-snapshot: clean-intermediate
 	$(call msg, "CLEAN SNAPSHOT")
 	$(Q)cd $(DUNE_SNAPSHOT) && { dune clean || true ; }
 	$(Q)rm -rf $(DUNE_SNAPSHOT)/fstar-lib/generated/*
+	$(Q)rm -f src/ocaml-output/fstarc/*
+	$(Q)rm -f src/ocaml-output/fstarlib/*
 
 .PHONY: dune-snapshot
 dune-snapshot:
@@ -57,6 +59,11 @@ bootstrap:
 	+$(Q)$(MAKE) dune-snapshot
 	+$(Q)$(MAKE) fstar
 
+# This is a faster version of bootstrap, since it does not use dune
+# to install the binary and libraries, and instead just copies the binary
+# mannualy. HOWEVER, note that this means plugins will not work well,
+# since they are compiled against the objects in bin/, which will become
+# stale if this rule is used. Using bootstrap is usually safer.
 .PHONY: boot
 boot:
 	+$(Q)$(MAKE) dune-snapshot
@@ -127,10 +134,22 @@ bench:
 # Regenerate and accept expected output tests. Should be manually
 # reviewed before checking in.
 .PHONY: output
-output:
+output: output-error-messages output-ide-emacs output-ide-lsp output-bug-reports
+
+.PHONY: output-error-messages
+output-error-messages:
 	+$(Q)$(MAKE) -C tests/error-messages accept
+
+.PHONY: output-ide-emacs
+output-ide-emacs:
 	+$(Q)$(MAKE) -C tests/ide/emacs accept
+
+.PHONY: output-ide-lsp
+output-ide-lsp:
 	+$(Q)$(MAKE) -C tests/ide/lsp accept
+
+.PHONY: output-bug-reports
+output-bug-reports:
 	+$(Q)$(MAKE) -C tests/bug-reports output-accept
 
 # This rule is meant to mimic what the docker based CI does, but it

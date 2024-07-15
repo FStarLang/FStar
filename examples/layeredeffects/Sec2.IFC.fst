@@ -68,7 +68,7 @@ let no_leakage #a (f:comp a) (from to:loc) = forall k. no_leakage_k f from to k
 let respects_flows #a (f:comp a) (fs:flows) =
     (forall from to. {:pattern (no_leakage f from to)} ~(has_flow from to fs) /\ from<>to ==> no_leakage f from to)
 let ist a (writes:label) (reads:label) (fs:flows) =
-  f:(store -> (a * store)) {
+  f:(store -> (a & store)) {
     reads_ok f reads /\
     writes_ok f writes  /\
     respects_flows f fs

@@ -258,7 +258,7 @@ let and_elim (t : term) : Tac unit =
      with | _ -> apply_lemma (`(__and_elim' (`#t)))
     end
 
-let destruct_and (t : term) : Tac (binding * binding) =
+let destruct_and (t : term) : Tac (binding & binding) =
     and_elim t;
     (implies_intro (), implies_intro ())
 

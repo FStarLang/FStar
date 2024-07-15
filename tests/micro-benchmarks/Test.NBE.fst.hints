@@ -16,7 +16,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "30085eb8ca3f7e253886cfa511c4efd7"
+      "985363e4b7e3d9daa2714b0a6e7738d0"
     ],
     [
       "Test.NBE.test1",
@@ -45,7 +45,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e05e2fd01b5128a0034788939073912c"
+      "7cb8f44789c63b1d45baa0b3e9d5ef35"
     ],
     [
       "Test.NBE.test2",

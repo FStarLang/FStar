@@ -41,7 +41,7 @@ let mk x = int_to_t (I16.v x)
 
 let ptrdifft_to_sizet x =
   bounds_lemma ();
-  Cast.int64_to_uint64 x
+  SizeT.Sz <| Cast.int64_to_uint64 x
 
 let add x y = I64.add x y
 

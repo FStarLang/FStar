@@ -1498,23 +1498,26 @@ let (mkRefinedPattern :
               mk_pattern
                 (PatAscribed (pat, (t1, FStar_Pervasives_Native.None))) range
 let rec (extract_named_refinement :
-  term ->
-    (FStar_Ident.ident * term * term FStar_Pervasives_Native.option)
-      FStar_Pervasives_Native.option)
+  Prims.bool ->
+    term ->
+      (FStar_Ident.ident * term * term FStar_Pervasives_Native.option)
+        FStar_Pervasives_Native.option)
   =
-  fun t1 ->
-    match t1.tm with
-    | NamedTyp (x, t) ->
-        FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
-    | Refine
-        ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
-           aqual = uu___2; battributes = uu___3;_},
-         t')
-        ->
-        FStar_Pervasives_Native.Some
-          (x, t, (FStar_Pervasives_Native.Some t'))
-    | Paren t -> extract_named_refinement t
-    | uu___ -> FStar_Pervasives_Native.None
+  fun remove_parens ->
+    fun t1 ->
+      match t1.tm with
+      | NamedTyp (x, t) ->
+          FStar_Pervasives_Native.Some (x, t, FStar_Pervasives_Native.None)
+      | Refine
+          ({ b = Annotated (x, t); brange = uu___; blevel = uu___1;
+             aqual = uu___2; battributes = uu___3;_},
+           t')
+          ->
+          FStar_Pervasives_Native.Some
+            (x, t, (FStar_Pervasives_Native.Some t'))
+      | Paren t when remove_parens ->
+          extract_named_refinement remove_parens t
+      | uu___ -> FStar_Pervasives_Native.None
 let rec (as_mlist :
   ((FStar_Ident.lid * decl) * decl Prims.list) -> decl Prims.list -> modul) =
   fun cur ->
@@ -1665,7 +1668,8 @@ let (string_to_op :
       | "At" ->
           FStar_Pervasives_Native.Some ("@", FStar_Pervasives_Native.None)
       | "Plus" ->
-          FStar_Pervasives_Native.Some ("+", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("+", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Minus" ->
           FStar_Pervasives_Native.Some ("-", FStar_Pervasives_Native.None)
       | "Subtraction" ->
@@ -1674,15 +1678,18 @@ let (string_to_op :
       | "Tilde" ->
           FStar_Pervasives_Native.Some ("~", FStar_Pervasives_Native.None)
       | "Slash" ->
-          FStar_Pervasives_Native.Some ("/", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("/", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Backslash" ->
           FStar_Pervasives_Native.Some ("\\", FStar_Pervasives_Native.None)
       | "Less" ->
-          FStar_Pervasives_Native.Some ("<", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            ("<", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Equals" ->
           FStar_Pervasives_Native.Some ("=", FStar_Pervasives_Native.None)
       | "Greater" ->
-          FStar_Pervasives_Native.Some (">", FStar_Pervasives_Native.None)
+          FStar_Pervasives_Native.Some
+            (">", (FStar_Pervasives_Native.Some (Prims.of_int (2))))
       | "Underscore" ->
           FStar_Pervasives_Native.Some ("_", FStar_Pervasives_Native.None)
       | "Bar" ->
@@ -2512,3 +2519,7 @@ let (idents_of_binders :
   binder Prims.list ->
     FStar_Compiler_Range_Type.range -> FStar_Ident.ident Prims.list)
   = fun bs -> fun r -> FStar_Compiler_List.map (ident_of_binder r) bs
+let (showable_decl : decl FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = decl_to_string }
+let (showable_term : term FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = term_to_string }

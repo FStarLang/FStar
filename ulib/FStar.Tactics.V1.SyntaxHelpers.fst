@@ -8,7 +8,7 @@ open FStar.Stubs.Tactics.V1.Builtins
 (* These are fully-named variants of functions found in FStar.Reflection *)
 
 private
-let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
+let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder & comp) =
     begin match inspect_comp c with
     | C_Total t ->
         begin match inspect t with
@@ -20,32 +20,32 @@ let rec collect_arr' (bs : list binder) (c : comp) : Tac (list binder * comp) =
     | _ -> (bs, c)
     end
 
-val collect_arr_bs : typ -> Tac (list binder * comp)
+val collect_arr_bs : typ -> Tac (list binder & comp)
 let collect_arr_bs t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
     (List.Tot.Base.rev bs, c)
 
-val collect_arr : typ -> Tac (list typ * comp)
+val collect_arr : typ -> Tac (list typ & comp)
 let collect_arr t =
     let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
     let ts = List.Tot.Base.map type_of_binder bs in
     (List.Tot.Base.rev ts, c)
 
 private
-let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder * term) (decreases t) =
+let rec collect_abs' (bs : list binder) (t : term) : Tac (list binder & term) (decreases t) =
     match inspect t with
     | Tv_Abs b t' ->
         collect_abs' (b::bs) t'
     | _ -> (bs, t)
 
-val collect_abs : term -> Tac (list binder * term)
+val collect_abs : term -> Tac (list binder & term)
 let collect_abs t =
     let (bs, t') = collect_abs' [] t in
     (List.Tot.Base.rev bs, t')
 
 (* Copied from FStar.Tactics.Derived *)
 private
-let fail (#a:Type) (m:string) = raise #a (TacticFailure m)
+let fail (#a:Type) (m:string) = raise #a (TacticFailure (mkmsg m))
 
 let rec mk_arr (bs: list binder) (cod : comp) : Tac term =
     match bs with
@@ -86,7 +86,7 @@ let rec inspect_unascribe (t:term) : Tac (tv:term_view{notAscription tv}) =
 
 (* Helpers for dealing with nested applications and arrows *)
 let rec collect_app' (args : list argv) (t : term)
-  : Tac (term * list argv) =
+  : Tac (term & list argv) =
     match inspect_unascribe t with
     | Tv_App l r ->
         collect_app' (r::args) l

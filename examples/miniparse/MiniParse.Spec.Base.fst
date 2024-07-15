@@ -40,13 +40,13 @@ inline_for_extraction
 let consumed_length (b: bytes) : Tot Type0 = (n: nat { n <= Seq.length b } )
 
 inline_for_extraction
-let bare_parser (t:Type0) : Tot Type0 = (b: bytes) -> GTot (option (t * consumed_length b))
+let bare_parser (t:Type0) : Tot Type0 = (b: bytes) -> GTot (option (t & consumed_length b))
 
 let bparse
   (#t: Type0)
   (p: bare_parser t)
   (input: bytes)
-: GTot (option (t * consumed_length input))
+: GTot (option (t & consumed_length input))
 = p input
 
 let no_lookahead_weak_on
@@ -251,7 +251,7 @@ let parse
   (#t: Type0)
   (p: parser_spec t)
   (input: bytes)
-: GTot (option (t * consumed_length input))
+: GTot (option (t & consumed_length input))
 = bparse (coerce_to_bare_parser _ p) input
 
 (* Coercions *)

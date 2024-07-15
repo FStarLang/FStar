@@ -20,7 +20,7 @@ let b1 = eq
 //                                               ))))))))))) ->
 //     Prims.Tot bool
 
-instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) =
+instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a & 'b) =
   Mkdeq (fun (a,b) (c,d) -> eq a c && eq b d)
 
 [@@(expect_failure [228])]

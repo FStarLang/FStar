@@ -197,7 +197,7 @@ let g'' : (lo int ** lo int ^--> lo int ** lo int)
 let g_rel_g' : squash (g `arrow (lo int ** hi int) (lo int ** hi int)` g') = ()
 
 /// And they satisfy many relations
-let g_rel_g'_alt : squash (g `arrow (lo (int * int)) (lo (int * int))` g') = ()
+let g_rel_g'_alt : squash (g `arrow (lo (int & int)) (lo (int & int))` g') = ()
 let g_rel_g'_alt' : squash (g `arrow (lo int ** lo int) (lo int ** lo int)` g') = ()
 
 /// `st`: A relational variant of the standard state monad `s -> a * s`

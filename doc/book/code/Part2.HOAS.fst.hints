@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "5ebc16b6c866412e94774a8e188fc5d6"
+      "c90662cc17e6b02d5846f37bcc58cd08"
     ],
     [
       "Part2.HOAS.__proj__Arrow__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_30150cb5895a521f1b4b0dbda069b0b1"
       ],
       0,
-      "70a51a2f051719c81f826fb9060e11db"
+      "8a8cbf0ea4862ea2ec74964618885500"
     ],
     [
       "Part2.HOAS.__proj__Arrow__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_30150cb5895a521f1b4b0dbda069b0b1"
       ],
       0,
-      "c19b86cdee60c521134c7a0b17e5643a"
+      "7ab3fe4f11e009f6b0c64672536d32f8"
     ],
     [
       "Part2.HOAS.denote_typ",
@@ -51,7 +51,7 @@
         "subterm_ordering_Part2.HOAS.Arrow"
       ],
       0,
-      "0cbbcc9be8a2e1d7ffdfa57176d5d370"
+      "12c643377a04c483a0184233c17a677a"
     ],
     [
       "Part2.HOAS.__proj__Var__item__t",
@@ -63,7 +63,7 @@
         "refinement_interpretation_Tm_refine_cfebae4731f3018188d6b3f7f86b69d4"
       ],
       0,
-      "c52fe58ab8756e73d43a3c274931a221"
+      "a97878928548000497868692c739138c"
     ],
     [
       "Part2.HOAS.__proj__Var__item___1",
@@ -77,7 +77,7 @@
         "refinement_interpretation_Tm_refine_cfebae4731f3018188d6b3f7f86b69d4"
       ],
       0,
-      "79ccef97960c9823b9834e5718a4dc8d"
+      "cf97e587555a072b79bcdc2705dfe017"
     ],
     [
       "Part2.HOAS.__proj__I__item___0",
@@ -89,7 +89,7 @@
         "refinement_interpretation_Tm_refine_e58f9931cf5268aecc895a6360af56a0"
       ],
       0,
-      "7ca85cbe37b062ec54c600882cb23c8d"
+      "cf7ed82f16b13e521abc2a12dc54b2ea"
     ],
     [
       "Part2.HOAS.__proj__App__item__t1",
@@ -101,7 +101,7 @@
         "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
       ],
       0,
-      "939fd1d92e0b90cd8190cab96fd18aa5"
+      "907e8812651fdd84484ea68e59b04917"
     ],
     [
       "Part2.HOAS.__proj__App__item__t2",
@@ -113,7 +113,7 @@
         "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
       ],
       0,
-      "1a8d9e75dfbb04fce08bf383898ca467"
+      "24e4fe5544f3e081bad6dc4f96c545d8"
     ],
     [
       "Part2.HOAS.__proj__App__item___2",
@@ -128,7 +128,7 @@
         "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
       ],
       0,
-      "5b19e7815dde5445b628928fe92445b1"
+      "7e4fd7a9bd20c8159a950502fee96e40"
     ],
     [
       "Part2.HOAS.__proj__App__item___3",
@@ -140,7 +140,7 @@
         "refinement_interpretation_Tm_refine_2b53c7ab1b7f4afa8fc6764f60c38c67"
       ],
       0,
-      "483af8d4d6d76cf9ae31dfc1d2b97932"
+      "28f825b70fecb7fafa11c58eeec0aa0f"
     ],
     [
       "Part2.HOAS.__proj__Lam__item__t1",
@@ -152,7 +152,7 @@
         "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
       ],
       0,
-      "f83d365c5f9cea154e5cbd7d7c9a8b26"
+      "79488eb4b5c8f15d7ccec274b754f9a8"
     ],
     [
       "Part2.HOAS.__proj__Lam__item__t2",
@@ -164,7 +164,7 @@
         "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
       ],
       0,
-      "7b4d2405acea23933900de5b0e5d1ee5"
+      "55dc2670ee5485a10a123edcb731682f"
     ],
     [
       "Part2.HOAS.__proj__Lam__item___2",
@@ -179,7 +179,7 @@
         "refinement_interpretation_Tm_refine_3e7664717b5f72e6b4bcf6765f78f8d7"
       ],
       0,
-      "42d40e29f5080074663ec760b6098c7c"
+      "0d456f93e6456087ff97cd1fd85bf7a8"
     ],
     [
       "Part2.HOAS.denote_term",
@@ -197,8 +197,7 @@
         "binder_x_9a376b73d8acd1a292693d4dea650d5b_1", "bool_inversion",
         "bool_typing", "constructor_distinct_Part2.HOAS.Arrow",
         "constructor_distinct_Part2.HOAS.Bool",
-        "constructor_distinct_Part2.HOAS.Int",
-        "constructor_distinct_Part2.HOAS.TT", "data_elim_Part2.HOAS.App",
+        "constructor_distinct_Part2.HOAS.Int", "data_elim_Part2.HOAS.App",
         "data_elim_Part2.HOAS.I", "data_elim_Part2.HOAS.Lam",
         "data_elim_Part2.HOAS.TT", "data_elim_Part2.HOAS.Var",
         "data_typing_intro_Part2.HOAS.FF@tok",
@@ -219,7 +218,7 @@
         "well_founded_ordering_on_codomain_Part2.HOAS.Lam"
       ],
       0,
-      "f46d00b425d4acca083db0c34a01aba7"
+      "70e6536caab193637c6b4653b5336d84"
     ]
   ]
 ]

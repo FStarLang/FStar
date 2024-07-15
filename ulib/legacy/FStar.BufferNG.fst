@@ -34,7 +34,7 @@ let rec supported
   | _ -> false
 
 and struct_typ_supported
-  (l: list (string * P.typ))
+  (l: list (string & P.typ))
 : Tot bool
 = match l with
   | [] -> true

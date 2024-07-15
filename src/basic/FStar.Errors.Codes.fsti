@@ -387,7 +387,8 @@ type raw_error =
   | Warning_SolverMismatch
   | Warning_SolverVersionMismatch
   | Warning_ProofRecovery
+  | Error_CannotResolveRecord
 
-type error_setting = raw_error * error_flag * int
+type error_setting = raw_error & error_flag & int
 
 val default_settings : list error_setting

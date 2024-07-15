@@ -14,7 +14,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "8c5f445cdeeb6dabb110b16fdb1e9716"
+      "601f54ff7b4be167d4324666ab5f264c"
     ],
     [
       "RBTree.__proj__T__item__col",
@@ -75,7 +75,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "ed6830a7c53c08db4189719259818581"
+      "74876db9c637ea8ce74948ef73886c98"
     ],
     [
       "RBTree.black_height",
@@ -99,7 +99,7 @@
         "subterm_ordering_RBTree.T", "typing_tok_RBTree.E@tok"
       ],
       0,
-      "d7bced214034c8b1f6482ce8c5057f63"
+      "3ee83b3082a7af9e87a17f821cfbda93"
     ],
     [
       "RBTree.min_elt",
@@ -175,7 +175,7 @@
         "typing_tok_RBTree.E@tok"
       ],
       0,
-      "cd4af668099c944585574fc2e2ee3c7d"
+      "2bc9c5ef3e4b22a8388818d20f77d8d6"
     ],
     [
       "RBTree.k_inv",
@@ -196,7 +196,7 @@
         "typing_RBTree.uu___is_E", "typing_tok_RBTree.E@tok"
       ],
       0,
-      "89277b4874ee045093781454a38a9587"
+      "5975aaa2423a3850a06481b2e7663510"
     ],
     [
       "RBTree.in_tree",
@@ -217,7 +217,7 @@
         "subterm_ordering_RBTree.T", "typing_tok_RBTree.E@tok"
       ],
       0,
-      "81560026fc84ad005cb6559ed6e54515"
+      "0262a163d9f0d51efb55c49b3bd75af5"
     ],
     [
       "RBTree.not_c_inv",
@@ -513,7 +513,6 @@
         "projection_inverse_RBTree.T_left",
         "projection_inverse_RBTree.T_right",
         "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "token_correspondence_RBTree.black_height.fuel_instrumented",
         "token_correspondence_RBTree.c_inv.fuel_instrumented",
         "token_correspondence_RBTree.k_inv.fuel_instrumented",
         "typing_RBTree.black_height", "typing_RBTree.c_inv",

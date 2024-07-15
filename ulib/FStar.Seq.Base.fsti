@@ -25,6 +25,10 @@ new val seq ([@@@strictly_positive] a : Type u#a) : Type u#a
 (* Destructors *)
 val length: #a:Type -> seq a -> Tot nat
 
+val seq_to_list (#a:Type) (s:seq a) : Tot (l:list a{List.length l == length s})
+
+val seq_of_list (#a:Type) (l:list a) : Tot (s:seq a{List.length l == length s})
+
 val index:  #a:Type -> s:seq a -> i:nat{i < length s} -> Tot a
 
 val create: #a:Type -> nat -> a -> Tot (seq a)
@@ -53,9 +57,36 @@ val upd: #a:Type -> s:seq a -> n:nat{n < length s} -> a ->  Tot (seq a)
 
 val append: #a:Type -> seq a -> seq a -> Tot (seq a)
 
+let cons (#a:Type) (x:a) (s:seq a) : Tot (seq a) = append (create 1 x) s
+
 let op_At_Bar (#a:Type) (s1:seq a) (s2:seq a) = append s1 s2
 
 val slice:  #a:Type -> s:seq a -> i:nat -> j:nat{i <= j && j <= length s} -> Tot (seq a)
+
+(* Lemmas about seq_to_list/seq_of_list *)
+val lemma_seq_of_seq_to_list : #a:Type -> s:seq a ->
+  Lemma
+  (requires True)
+  (ensures seq_of_list (seq_to_list s) == s)
+  [SMTPat (seq_of_list (seq_to_list s))]
+
+val lemma_seq_to_seq_of_list : #a:Type -> l:list a ->
+  Lemma
+  (requires True)
+  (ensures seq_to_list (seq_of_list l) == l)
+  [SMTPat (seq_to_list (seq_of_list l))]
+
+val lemma_seq_of_list_cons : #a:Type -> x:a -> l:list a ->
+  Lemma
+  (requires True)
+  (ensures seq_of_list (x::l) == create 1 x @| seq_of_list l)
+  [SMTPat (seq_of_list (x::l))]
+
+val lemma_seq_to_list_cons : #a:Type -> x:a -> s:seq a ->
+  Lemma
+  (requires True)
+  (ensures seq_to_list (cons x s) == x :: seq_to_list s)
+  [SMTPat (seq_to_list (cons x s))]
 
 (* Lemmas about length *)
 val lemma_create_len: #a:Type -> n:nat -> i:a -> Lemma

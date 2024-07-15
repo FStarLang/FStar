@@ -155,6 +155,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_range r -> C_Range r
     | FStar.Const.Const_reify _ -> C_Reify
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
+    | FStar.Const.Const_real s -> C_Real s
     | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
 
 let inspect_universe u =
@@ -181,7 +182,7 @@ let rec inspect_pat p =
   match p.v with
   | Pat_constant c -> Pat_Constant (inspect_const c)
   | Pat_cons (fv, us_opt, ps) -> Pat_Cons fv us_opt (List.map (fun (p, b) -> inspect_pat p, b) ps)
-  | Pat_var bv -> Pat_Var bv.sort (string_of_id bv.ppname)
+  | Pat_var bv -> Pat_Var (Sealed.seal bv.sort) (Sealed.seal <| string_of_id bv.ppname)
   | Pat_dot_term eopt -> Pat_Dot_Term eopt
 
 let rec inspect_ln (t:term) : term_view =
@@ -361,6 +362,7 @@ let pack_const (c:vconst) : sconst =
     | C_Range  r     -> C.Const_range r
     | C_Reify        -> C.Const_reify None
     | C_Reflect ns   -> C.Const_reflect (Ident.lid_of_path ns Range.dummyRange)
+    | C_Real r       -> C.Const_real r
 
 let rec pack_pat p : S.pat =
   let wrap v = {v=v;p=Range.dummyRange} in
@@ -368,7 +370,7 @@ let rec pack_pat p : S.pat =
   | Pat_Constant c -> wrap <| Pat_constant (pack_const c)
   | Pat_Cons head univs subpats -> wrap <| Pat_cons (head, univs, List.map (fun (p, b) -> pack_pat p, b) subpats)
   | Pat_Var  sort ppname ->
-    let bv = S.gen_bv ppname None sort in
+    let bv = S.gen_bv (Sealed.unseal ppname) None (Sealed.unseal sort) in
     wrap <| Pat_var bv
   | Pat_Dot_Term eopt -> wrap <| Pat_dot_term eopt
 
@@ -446,14 +448,16 @@ let compare_namedv (x:bv) (y:bv) : order =
     else if n = 0 then Eq
     else Gt
 
+let lookup_attr_ses (attr:term) (env:Env.env) : list sigelt =
+  match (SS.compress_subst attr).n with
+  | Tm_fvar fv -> Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv))
+  | _ -> []
+
 let lookup_attr (attr:term) (env:Env.env) : list fv =
-    match (SS.compress_subst attr).n with
-    | Tm_fvar fv ->
-        let ses = Env.lookup_attr env (Ident.string_of_lid (lid_of_fv fv)) in
-        List.concatMap (fun se -> match U.lid_of_sigelt se with
-                                  | None -> []
-                                  | Some l -> [S.lid_as_fv l None]) ses
-    | _ -> []
+  let ses = lookup_attr_ses attr env in
+  List.concatMap (fun se -> match U.lid_of_sigelt se with
+                            | None -> []
+                            | Some l -> [S.lid_as_fv l None]) ses
 
 let all_defs_in_env (env:Env.env) : list fv =
     List.map (fun l -> S.lid_as_fv l None) (Env.lidents env) // |> take 10
@@ -599,10 +603,12 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
       let ind_lid = Ident.lid_of_path nm Range.dummyRange in
       check_lid ind_lid;
       let nparam = List.length param_bs in
+      //We can't tust the value of injective_type_params; set it to false here and let the typechecker recompute
+      let injective_type_params = false in
       let pack_ctor (c:ctor) : sigelt =
         let (nm, ty) = c in
         let lid = Ident.lid_of_path nm Range.dummyRange in
-        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]}
+        mk_sigelt <| Sig_datacon {lid; us=us_names; t=ty; ty_lid=ind_lid; num_ty_params=nparam; mutuals=[]; injective_type_params }
       in
 
       let ctor_ses : list sigelt = List.map pack_ctor ctors in
@@ -617,7 +623,8 @@ let pack_sigelt (sv:sigelt_view) : sigelt =
                                         num_uniform_params=None;
                                         t=ty;
                                         mutuals=[];
-                                        ds=c_lids}
+                                        ds=c_lids;
+                                        injective_type_params }
       in
       let se = mk_sigelt <| Sig_bundle {ses=ind_se::ctor_ses; lids=ind_lid::c_lids} in
       { se with sigquals = Noeq::se.sigquals }
@@ -649,21 +656,21 @@ let inspect_namedv (v:bv) : namedv_view =
     );
     {
       uniq   = Z.of_int_fs v.index;
-      ppname = Ident.string_of_id v.ppname;
-      sort   = v.sort
+      ppname = Sealed.seal <| Ident.string_of_id v.ppname;
+      sort   = Sealed.seal <| v.sort
     }
 
 let pack_namedv (vv:namedv_view) : namedv =
     if Z.to_int_fs vv.uniq < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_namedv: uniq is negative (%s), uniq = %s"
-                                         vv.ppname
+                                         (Sealed.unseal vv.ppname)
                                          (string_of_int (Z.to_int_fs vv.uniq)))
     );
     {
       index  = Z.to_int_fs vv.uniq;
-      ppname = Ident.mk_ident (vv.ppname, Range.dummyRange);
-      sort   = vv.sort;
+      ppname = Ident.mk_ident (Sealed.unseal vv.ppname, Range.dummyRange);
+      sort   = Sealed.unseal <| vv.sort;
     }
 
 let inspect_bv (bv:bv) : bv_view =
@@ -676,27 +683,27 @@ let inspect_bv (bv:bv) : bv_view =
     );
     {
       index  = Z.of_int_fs bv.index;
-      ppname = Ident.string_of_id bv.ppname;
-      sort   = bv.sort;
+      ppname = Sealed.seal <| Ident.string_of_id bv.ppname;
+      sort   = Sealed.seal <| bv.sort;
     }
 
 let pack_bv (bvv:bv_view) : bv =
     if Z.to_int_fs bvv.index < 0 then (
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format2 "pack_bv: index is negative (%s), index = %s"
-                                         bvv.ppname
+                                         (Sealed.unseal bvv.ppname)
                                          (string_of_int (Z.to_int_fs bvv.index)))
     );
     {
       index = Z.to_int_fs bvv.index;
-      ppname = Ident.mk_ident (bvv.ppname, Range.dummyRange);
-      sort = bvv.sort;
+      ppname = Ident.mk_ident (Sealed.unseal bvv.ppname, Range.dummyRange);
+      sort = Sealed.unseal bvv.sort;
     }
 
 let inspect_binder (b:binder) : binder_view =
   let attrs = U.encode_positivity_attributes b.binder_positivity b.binder_attrs in
   {
-    ppname = Ident.string_of_id b.binder_bv.ppname;
+    ppname = Sealed.seal <| Ident.string_of_id b.binder_bv.ppname;
     qual   = inspect_bqual (b.binder_qual);
     attrs  = attrs;
     sort   = b.binder_bv.sort;
@@ -705,7 +712,7 @@ let inspect_binder (b:binder) : binder_view =
 let pack_binder (bview:binder_view) : binder =
   let pqual, attrs = U.parse_positivity_attributes bview.attrs in
   {
-    binder_bv= { ppname = Ident.mk_ident (bview.ppname, Range.dummyRange)
+    binder_bv= { ppname = Ident.mk_ident (Sealed.unseal bview.ppname, Range.dummyRange)
                ; sort = bview.sort
                ; index = 0 (* irrelevant, this is a binder *)
                };
@@ -726,7 +733,7 @@ let bv_to_binding (bv : bv) : RD.binding =
   {
     uniq   = Z.of_int_fs bv.index;
     sort   = bv.sort;
-    ppname = string_of_id bv.ppname;
+    ppname = Sealed.seal <| string_of_id bv.ppname;
   }
 
 let vars_of_env e = FStar.TypeChecker.Env.all_binders e |> List.map (fun b -> bv_to_binding b.binder_bv)

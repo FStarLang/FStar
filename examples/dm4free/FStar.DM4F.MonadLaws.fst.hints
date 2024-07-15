@@ -19,7 +19,7 @@
         "token_correspondence_FStar.DM4F.MonadLaws.return_st"
       ],
       0,
-      "b90ee85024858a209df5e1fd1836e898"
+      "d244079a7e61522eed46ac3ed1a71707"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit_st",
@@ -68,11 +68,10 @@
         "equation_FStar.DM4F.MonadLaws.ifc",
         "kinding_FStar.DM4F.MonadLaws.label@tok",
         "kinding_FStar.Pervasives.Native.tuple2@tok",
-        "lemma_FStar.Pervasives.invertOption",
-        "projection_inverse_BoxBool_proj_0"
+        "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "9024dad6c46b80da0c474c4c3ddaebbc"
+      "b517ee6a0bf8d9289e99968e7d46b0c9"
     ],
     [
       "FStar.DM4F.MonadLaws.left_unit",

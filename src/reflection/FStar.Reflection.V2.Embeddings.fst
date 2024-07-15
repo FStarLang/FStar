@@ -129,8 +129,8 @@ let e_term_aq aq =
 
 let e_term = e_term_aq noaqs
 
-let e_sort   : embedding term   = e_sealed e_term
-let e_ppname : embedding string = e_sealed e_string
+let e_sort   : embedding (Sealed.sealed term)   = e_sealed e_term
+let e_ppname : embedding ppname_t = e_sealed e_string
 
 let e_aqualv =
     let embed_aqualv (rng:Range.range) (q : aqualv) : term =
@@ -227,6 +227,10 @@ let e_vconst =
             S.mk_Tm_app ref_C_Reflect.t [S.as_arg (embed rng ns)]
                         Range.dummyRange
 
+        | C_Real s ->
+            S.mk_Tm_app ref_C_Real.t [S.as_arg (embed rng s)]
+                        Range.dummyRange
+
         in { r with pos = rng }
     in
     let unembed_const (t:term) : option vconst =
@@ -240,6 +244,7 @@ let e_vconst =
       | _ when S.fv_eq_lid fv ref_C_Range.lid -> run args (C_Range <$$> e_range)
       | _ when S.fv_eq_lid fv ref_C_Reify.lid -> run args (pure C_Reify)
       | _ when S.fv_eq_lid fv ref_C_Reflect.lid -> run args (C_Reflect <$$> e_string_list)
+      | _ when S.fv_eq_lid fv ref_C_Real.lid -> run args (C_Real <$$> e_string)
       | _ -> None
     in
     mk_emb embed_const unembed_const fstar_refl_vconst
@@ -435,7 +440,7 @@ instance e_namedv_view =
         S.mk_Tm_app ref_Mk_namedv_view.t [
           S.as_arg (embed rng namedvv.uniq);
           S.as_arg (embed #_ #e_sort   rng namedvv.sort);
-          S.as_arg (embed #_ #e_ppname rng namedvv.ppname);
+          S.as_arg (embed rng namedvv.ppname);
         ]
                     rng
     in
@@ -453,7 +458,7 @@ instance e_bv_view =
         S.mk_Tm_app ref_Mk_bv_view.t [
           S.as_arg (embed rng bvv.index);
           S.as_arg (embed #_ #e_sort   rng bvv.sort);
-          S.as_arg (embed #_ #e_ppname rng bvv.ppname);
+          S.as_arg (embed rng bvv.ppname);
         ]
                     rng
     in
@@ -471,7 +476,7 @@ instance e_binding =
         S.mk_Tm_app ref_Mk_binding.t [
           S.as_arg (embed rng bindingv.uniq);
           S.as_arg (embed #_ #e_term   rng bindingv.sort);
-          S.as_arg (embed #_ #e_ppname rng bindingv.ppname);
+          S.as_arg (embed rng bindingv.ppname);
         ]
                     rng
     in
@@ -493,7 +498,7 @@ let e_binder_view =
       S.as_arg (embed #_ #e_term rng bview.sort);
       S.as_arg (embed rng bview.qual);
       S.as_arg (embed #_ #e_attributes rng bview.attrs);
-      S.as_arg (embed #_ #e_ppname rng bview.ppname);
+      S.as_arg (embed rng bview.ppname);
     ]
                 rng in
 
@@ -826,3 +831,11 @@ let unfold_lazy_universe (i : lazyinfo) : term =
     let u : universe = undyn i.blob in
     S.mk_Tm_app fstar_refl_pack_universe.t [S.as_arg (embed i.rng (inspect_universe u))]
                 i.rng
+
+let unfold_lazy_doc (i : lazyinfo) : term =
+  let open FStar.Pprint in
+  let d : Pprint.document = undyn i.blob in
+  let lid = Ident.lid_of_str "FStar.Stubs.Pprint.arbitrary_string" in
+  let s = Pprint.render d in
+  S.mk_Tm_app (S.fvar lid None) [S.as_arg (embed i.rng s)]
+              i.rng

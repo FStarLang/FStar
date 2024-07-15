@@ -41,7 +41,7 @@ instance eq_list (_ : deq 'a) : deq (list 'a) = {
   eq = eqList eq;
 }
 
-instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a * 'b) = {
+instance eq_pair (_ : deq 'a) (_ : deq 'b) : deq ('a & 'b) = {
   eq = (fun (a,b) (c,d) -> eq a c && eq b d)
 }
 

@@ -10,6 +10,7 @@ type constant =
   | Char of FStar_Char.char 
   | Range of FStar_Compiler_Range_Type.range 
   | SConst of FStar_Const.sconst 
+  | Real of Prims.string 
 let (uu___is_Unit : constant -> Prims.bool) =
   fun projectee -> match projectee with | Unit -> true | uu___ -> false
 let (uu___is_Bool : constant -> Prims.bool) =
@@ -37,6 +38,10 @@ let (uu___is_SConst : constant -> Prims.bool) =
   fun projectee -> match projectee with | SConst _0 -> true | uu___ -> false
 let (__proj__SConst__item___0 : constant -> FStar_Const.sconst) =
   fun projectee -> match projectee with | SConst _0 -> _0
+let (uu___is_Real : constant -> Prims.bool) =
+  fun projectee -> match projectee with | Real _0 -> true | uu___ -> false
+let (__proj__Real__item___0 : constant -> Prims.string) =
+  fun projectee -> match projectee with | Real _0 -> _0
 type atom =
   | Var of var 
   | Match of (t *
@@ -51,12 +56,19 @@ type atom =
   | UnreducedLetRec of ((var * t * t) Prims.list * t *
   FStar_Syntax_Syntax.letbinding Prims.list) 
   | UVar of FStar_Syntax_Syntax.term FStar_Thunk.t 
+and lam_shape =
+  | Lam_bs of (t Prims.list * FStar_Syntax_Syntax.binders *
+  FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option) 
+  | Lam_args of (t * FStar_Syntax_Syntax.aqual) Prims.list 
+  | Lam_primop of (FStar_Syntax_Syntax.fv * (t * FStar_Syntax_Syntax.aqual)
+  Prims.list) 
+and t'__Lam__payload =
+  {
+  interp: (t * FStar_Syntax_Syntax.aqual) Prims.list -> t ;
+  shape: lam_shape ;
+  arity: Prims.int }
 and t' =
-  | Lam of (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
-  ((t Prims.list * FStar_Syntax_Syntax.binders *
-     FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
-  (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
-  Prims.int) 
+  | Lam of t'__Lam__payload 
   | Accu of (atom * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
   | Construct of (FStar_Syntax_Syntax.fv * FStar_Syntax_Syntax.universe
   Prims.list * (t * FStar_Syntax_Syntax.aqual) Prims.list) 
@@ -150,16 +162,39 @@ let (uu___is_UVar : atom -> Prims.bool) =
   fun projectee -> match projectee with | UVar _0 -> true | uu___ -> false
 let (__proj__UVar__item___0 : atom -> FStar_Syntax_Syntax.term FStar_Thunk.t)
   = fun projectee -> match projectee with | UVar _0 -> _0
+let (uu___is_Lam_bs : lam_shape -> Prims.bool) =
+  fun projectee -> match projectee with | Lam_bs _0 -> true | uu___ -> false
+let (__proj__Lam_bs__item___0 :
+  lam_shape ->
+    (t Prims.list * FStar_Syntax_Syntax.binders *
+      FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option))
+  = fun projectee -> match projectee with | Lam_bs _0 -> _0
+let (uu___is_Lam_args : lam_shape -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lam_args _0 -> true | uu___ -> false
+let (__proj__Lam_args__item___0 :
+  lam_shape -> (t * FStar_Syntax_Syntax.aqual) Prims.list) =
+  fun projectee -> match projectee with | Lam_args _0 -> _0
+let (uu___is_Lam_primop : lam_shape -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Lam_primop _0 -> true | uu___ -> false
+let (__proj__Lam_primop__item___0 :
+  lam_shape ->
+    (FStar_Syntax_Syntax.fv * (t * FStar_Syntax_Syntax.aqual) Prims.list))
+  = fun projectee -> match projectee with | Lam_primop _0 -> _0
+let (__proj__Mkt'__Lam__payload__item__interp :
+  t'__Lam__payload -> (t * FStar_Syntax_Syntax.aqual) Prims.list -> t) =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> interp
+let (__proj__Mkt'__Lam__payload__item__shape : t'__Lam__payload -> lam_shape)
+  =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> shape
+let (__proj__Mkt'__Lam__payload__item__arity : t'__Lam__payload -> Prims.int)
+  =
+  fun projectee -> match projectee with | { interp; shape; arity;_} -> arity
 let (uu___is_Lam : t' -> Prims.bool) =
   fun projectee -> match projectee with | Lam _0 -> true | uu___ -> false
-let (__proj__Lam__item___0 :
-  t' ->
-    (((t * FStar_Syntax_Syntax.aqual) Prims.list -> t) *
-      ((t Prims.list * FStar_Syntax_Syntax.binders *
-         FStar_Syntax_Syntax.residual_comp FStar_Pervasives_Native.option),
-      (t * FStar_Syntax_Syntax.aqual) Prims.list) FStar_Pervasives.either *
-      Prims.int))
-  = fun projectee -> match projectee with | Lam _0 -> _0
+let (__proj__Lam__item___0 : t' -> t'__Lam__payload) =
+  fun projectee -> match projectee with | Lam _0 -> _0
 let (uu___is_Accu : t' -> Prims.bool) =
   fun projectee -> match projectee with | Accu _0 -> true | uu___ -> false
 let (__proj__Accu__item___0 :
@@ -388,124 +423,173 @@ let (mkAccuMatch :
   =
   fun s ->
     fun ret -> fun bs -> fun rc -> mk_t (Accu ((Match (s, ret, bs, rc)), []))
-let (equal_if : Prims.bool -> FStar_Syntax_Util.eq_result) =
+let (equal_if : Prims.bool -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
   fun uu___ ->
-    if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.Unknown
-let (equal_iff : Prims.bool -> FStar_Syntax_Util.eq_result) =
+    if uu___
+    then FStar_TypeChecker_TermEqAndSimplify.Equal
+    else FStar_TypeChecker_TermEqAndSimplify.Unknown
+let (equal_iff : Prims.bool -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
   fun uu___ ->
-    if uu___ then FStar_Syntax_Util.Equal else FStar_Syntax_Util.NotEqual
+    if uu___
+    then FStar_TypeChecker_TermEqAndSimplify.Equal
+    else FStar_TypeChecker_TermEqAndSimplify.NotEqual
 let (eq_inj :
-  FStar_Syntax_Util.eq_result ->
-    FStar_Syntax_Util.eq_result -> FStar_Syntax_Util.eq_result)
+  FStar_TypeChecker_TermEqAndSimplify.eq_result ->
+    FStar_TypeChecker_TermEqAndSimplify.eq_result ->
+      FStar_TypeChecker_TermEqAndSimplify.eq_result)
   =
   fun r1 ->
     fun r2 ->
       match (r1, r2) with
-      | (FStar_Syntax_Util.Equal, FStar_Syntax_Util.Equal) ->
-          FStar_Syntax_Util.Equal
-      | (FStar_Syntax_Util.NotEqual, uu___) -> FStar_Syntax_Util.NotEqual
-      | (uu___, FStar_Syntax_Util.NotEqual) -> FStar_Syntax_Util.NotEqual
-      | (FStar_Syntax_Util.Unknown, uu___) -> FStar_Syntax_Util.Unknown
-      | (uu___, FStar_Syntax_Util.Unknown) -> FStar_Syntax_Util.Unknown
+      | (FStar_TypeChecker_TermEqAndSimplify.Equal,
+         FStar_TypeChecker_TermEqAndSimplify.Equal) ->
+          FStar_TypeChecker_TermEqAndSimplify.Equal
+      | (FStar_TypeChecker_TermEqAndSimplify.NotEqual, uu___) ->
+          FStar_TypeChecker_TermEqAndSimplify.NotEqual
+      | (uu___, FStar_TypeChecker_TermEqAndSimplify.NotEqual) ->
+          FStar_TypeChecker_TermEqAndSimplify.NotEqual
+      | (FStar_TypeChecker_TermEqAndSimplify.Unknown, uu___) ->
+          FStar_TypeChecker_TermEqAndSimplify.Unknown
+      | (uu___, FStar_TypeChecker_TermEqAndSimplify.Unknown) ->
+          FStar_TypeChecker_TermEqAndSimplify.Unknown
 let (eq_and :
-  FStar_Syntax_Util.eq_result ->
-    (unit -> FStar_Syntax_Util.eq_result) -> FStar_Syntax_Util.eq_result)
+  FStar_TypeChecker_TermEqAndSimplify.eq_result ->
+    (unit -> FStar_TypeChecker_TermEqAndSimplify.eq_result) ->
+      FStar_TypeChecker_TermEqAndSimplify.eq_result)
   =
   fun f ->
     fun g ->
       match f with
-      | FStar_Syntax_Util.Equal -> g ()
-      | uu___ -> FStar_Syntax_Util.Unknown
-let (eq_constant : constant -> constant -> FStar_Syntax_Util.eq_result) =
+      | FStar_TypeChecker_TermEqAndSimplify.Equal -> g ()
+      | uu___ -> FStar_TypeChecker_TermEqAndSimplify.Unknown
+let (eq_constant :
+  constant -> constant -> FStar_TypeChecker_TermEqAndSimplify.eq_result) =
   fun c1 ->
     fun c2 ->
       match (c1, c2) with
-      | (Unit, Unit) -> FStar_Syntax_Util.Equal
+      | (Unit, Unit) -> FStar_TypeChecker_TermEqAndSimplify.Equal
       | (Bool b1, Bool b2) -> equal_iff (b1 = b2)
       | (Int i1, Int i2) -> equal_iff (i1 = i2)
       | (String (s1, uu___), String (s2, uu___1)) -> equal_iff (s1 = s2)
       | (Char c11, Char c21) -> equal_iff (c11 = c21)
-      | (Range r1, Range r2) -> FStar_Syntax_Util.Unknown
-      | (uu___, uu___1) -> FStar_Syntax_Util.NotEqual
-let rec (eq_t : t -> t -> FStar_Syntax_Util.eq_result) =
-  fun t1 ->
-    fun t2 ->
-      match ((t1.nbe_t), (t2.nbe_t)) with
-      | (Lam uu___, Lam uu___1) -> FStar_Syntax_Util.Unknown
-      | (Accu (a1, as1), Accu (a2, as2)) ->
-          let uu___ = eq_atom a1 a2 in
-          eq_and uu___ (fun uu___1 -> eq_args as1 as2)
-      | (Construct (v1, us1, args1), Construct (v2, us2, args2)) ->
-          let uu___ = FStar_Syntax_Syntax.fv_eq v1 v2 in
-          if uu___
-          then
-            (if
-               (FStar_Compiler_List.length args1) <>
-                 (FStar_Compiler_List.length args2)
-             then
-               FStar_Compiler_Effect.failwith
-                 "eq_t, different number of args on Construct"
-             else ();
-             (let uu___2 = FStar_Compiler_List.zip args1 args2 in
-              FStar_Compiler_List.fold_left
-                (fun acc ->
-                   fun uu___3 ->
-                     match uu___3 with
-                     | ((a1, uu___4), (a2, uu___5)) ->
-                         let uu___6 = eq_t a1 a2 in eq_inj acc uu___6)
-                FStar_Syntax_Util.Equal uu___2))
-          else FStar_Syntax_Util.NotEqual
-      | (FV (v1, us1, args1), FV (v2, us2, args2)) ->
-          let uu___ = FStar_Syntax_Syntax.fv_eq v1 v2 in
-          if uu___
-          then
-            let uu___1 =
-              let uu___2 = FStar_Syntax_Util.eq_univs_list us1 us2 in
-              equal_iff uu___2 in
-            eq_and uu___1 (fun uu___2 -> eq_args args1 args2)
-          else FStar_Syntax_Util.Unknown
-      | (Constant c1, Constant c2) -> eq_constant c1 c2
-      | (Type_t u1, Type_t u2) ->
-          let uu___ = FStar_Syntax_Util.eq_univs u1 u2 in equal_iff uu___
-      | (Univ u1, Univ u2) ->
-          let uu___ = FStar_Syntax_Util.eq_univs u1 u2 in equal_iff uu___
-      | (Refinement (r1, t11), Refinement (r2, t21)) ->
-          let x =
-            FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
-              FStar_Syntax_Syntax.t_unit in
-          let uu___ =
-            let uu___1 =
-              let uu___2 = t11 () in FStar_Pervasives_Native.fst uu___2 in
-            let uu___2 =
-              let uu___3 = t21 () in FStar_Pervasives_Native.fst uu___3 in
-            eq_t uu___1 uu___2 in
-          eq_and uu___
-            (fun uu___1 ->
-               let uu___2 = let uu___3 = mkAccuVar x in r1 uu___3 in
-               let uu___3 = let uu___4 = mkAccuVar x in r2 uu___4 in
-               eq_t uu___2 uu___3)
-      | (Unknown, Unknown) -> FStar_Syntax_Util.Equal
-      | (uu___, uu___1) -> FStar_Syntax_Util.Unknown
-and (eq_atom : atom -> atom -> FStar_Syntax_Util.eq_result) =
+      | (Range r1, Range r2) -> FStar_TypeChecker_TermEqAndSimplify.Unknown
+      | (Real r1, Real r2) -> equal_if (r1 = r2)
+      | (uu___, uu___1) -> FStar_TypeChecker_TermEqAndSimplify.NotEqual
+let rec (eq_t :
+  FStar_TypeChecker_Env.env_t ->
+    t -> t -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
+  fun env ->
+    fun t1 ->
+      fun t2 ->
+        match ((t1.nbe_t), (t2.nbe_t)) with
+        | (Lam uu___, Lam uu___1) ->
+            FStar_TypeChecker_TermEqAndSimplify.Unknown
+        | (Accu (a1, as1), Accu (a2, as2)) ->
+            let uu___ = eq_atom a1 a2 in
+            eq_and uu___ (fun uu___1 -> eq_args env as1 as2)
+        | (Construct (v1, us1, args1), Construct (v2, us2, args2)) ->
+            let uu___ = FStar_Syntax_Syntax.fv_eq v1 v2 in
+            if uu___
+            then
+              (if
+                 (FStar_Compiler_List.length args1) <>
+                   (FStar_Compiler_List.length args2)
+               then
+                 FStar_Compiler_Effect.failwith
+                   "eq_t, different number of args on Construct"
+               else ();
+               (let uu___2 =
+                  let uu___3 = FStar_Syntax_Syntax.lid_of_fv v1 in
+                  FStar_TypeChecker_Env.num_datacon_non_injective_ty_params
+                    env uu___3 in
+                match uu___2 with
+                | FStar_Pervasives_Native.None ->
+                    FStar_TypeChecker_TermEqAndSimplify.Unknown
+                | FStar_Pervasives_Native.Some n ->
+                    if n <= (FStar_Compiler_List.length args1)
+                    then
+                      let eq_args1 as1 as2 =
+                        FStar_Compiler_List.fold_left2
+                          (fun acc ->
+                             fun uu___3 ->
+                               fun uu___4 ->
+                                 match (uu___3, uu___4) with
+                                 | ((a1, uu___5), (a2, uu___6)) ->
+                                     let uu___7 = eq_t env a1 a2 in
+                                     eq_inj acc uu___7)
+                          FStar_TypeChecker_TermEqAndSimplify.Equal as1 as2 in
+                      let uu___3 = FStar_Compiler_List.splitAt n args1 in
+                      (match uu___3 with
+                       | (parms1, args11) ->
+                           let uu___4 = FStar_Compiler_List.splitAt n args2 in
+                           (match uu___4 with
+                            | (parms2, args21) -> eq_args1 args11 args21))
+                    else FStar_TypeChecker_TermEqAndSimplify.Unknown))
+            else FStar_TypeChecker_TermEqAndSimplify.NotEqual
+        | (FV (v1, us1, args1), FV (v2, us2, args2)) ->
+            let uu___ = FStar_Syntax_Syntax.fv_eq v1 v2 in
+            if uu___
+            then
+              let uu___1 =
+                let uu___2 = FStar_Syntax_Util.eq_univs_list us1 us2 in
+                equal_iff uu___2 in
+              eq_and uu___1 (fun uu___2 -> eq_args env args1 args2)
+            else FStar_TypeChecker_TermEqAndSimplify.Unknown
+        | (Constant c1, Constant c2) -> eq_constant c1 c2
+        | (Type_t u1, Type_t u2) ->
+            let uu___ = FStar_Syntax_Util.eq_univs u1 u2 in equal_iff uu___
+        | (Univ u1, Univ u2) ->
+            let uu___ = FStar_Syntax_Util.eq_univs u1 u2 in equal_iff uu___
+        | (Refinement (r1, t11), Refinement (r2, t21)) ->
+            let x =
+              FStar_Syntax_Syntax.new_bv FStar_Pervasives_Native.None
+                FStar_Syntax_Syntax.t_unit in
+            let uu___ =
+              let uu___1 =
+                let uu___2 = t11 () in FStar_Pervasives_Native.fst uu___2 in
+              let uu___2 =
+                let uu___3 = t21 () in FStar_Pervasives_Native.fst uu___3 in
+              eq_t env uu___1 uu___2 in
+            eq_and uu___
+              (fun uu___1 ->
+                 let uu___2 = let uu___3 = mkAccuVar x in r1 uu___3 in
+                 let uu___3 = let uu___4 = mkAccuVar x in r2 uu___4 in
+                 eq_t env uu___2 uu___3)
+        | (Unknown, Unknown) -> FStar_TypeChecker_TermEqAndSimplify.Equal
+        | (uu___, uu___1) -> FStar_TypeChecker_TermEqAndSimplify.Unknown
+and (eq_atom : atom -> atom -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
   fun a1 ->
     fun a2 ->
       match (a1, a2) with
       | (Var bv1, Var bv2) ->
           let uu___ = FStar_Syntax_Syntax.bv_eq bv1 bv2 in equal_if uu___
-      | (uu___, uu___1) -> FStar_Syntax_Util.Unknown
-and (eq_arg : arg -> arg -> FStar_Syntax_Util.eq_result) =
-  fun a1 ->
-    fun a2 ->
-      eq_t (FStar_Pervasives_Native.fst a1) (FStar_Pervasives_Native.fst a2)
-and (eq_args : args -> args -> FStar_Syntax_Util.eq_result) =
-  fun as1 ->
-    fun as2 ->
-      match (as1, as2) with
-      | ([], []) -> FStar_Syntax_Util.Equal
-      | (x::xs, y::ys) ->
-          let uu___ = eq_arg x y in
-          eq_and uu___ (fun uu___1 -> eq_args xs ys)
-      | (uu___, uu___1) -> FStar_Syntax_Util.Unknown
+      | (uu___, uu___1) -> FStar_TypeChecker_TermEqAndSimplify.Unknown
+and (eq_arg :
+  FStar_TypeChecker_Env.env_t ->
+    arg -> arg -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
+  fun env ->
+    fun a1 ->
+      fun a2 ->
+        eq_t env (FStar_Pervasives_Native.fst a1)
+          (FStar_Pervasives_Native.fst a2)
+and (eq_args :
+  FStar_TypeChecker_Env.env_t ->
+    args -> args -> FStar_TypeChecker_TermEqAndSimplify.eq_result)
+  =
+  fun env ->
+    fun as1 ->
+      fun as2 ->
+        match (as1, as2) with
+        | ([], []) -> FStar_TypeChecker_TermEqAndSimplify.Equal
+        | (x::xs, y::ys) ->
+            let uu___ = eq_arg env x y in
+            eq_and uu___ (fun uu___1 -> eq_args env xs ys)
+        | (uu___, uu___1) -> FStar_TypeChecker_TermEqAndSimplify.Unknown
 let (constant_to_string : constant -> Prims.string) =
   fun c ->
     match c with
@@ -520,10 +604,11 @@ let (constant_to_string : constant -> Prims.string) =
         let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format1 "Range %s" uu___
     | SConst s -> FStar_Syntax_Print.const_to_string s
+    | Real s -> FStar_Compiler_Util.format1 "Real %s" s
 let rec (t_to_string : t -> Prims.string) =
   fun x ->
     match x.nbe_t with
-    | Lam (b, uu___, arity) ->
+    | Lam { interp = b; shape = uu___; arity;_} ->
         let uu___1 = FStar_Compiler_Util.string_of_int arity in
         FStar_Compiler_Util.format1 "Lam (_, %s args)" uu___1
     | Accu (a, l) ->
@@ -964,6 +1049,16 @@ let (e_int : FStar_BigInt.t embedding) =
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1 (fun uu___ -> lid_as_typ FStar_Parser_Const.int_lid [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_fsint)
+let (e_real : FStar_Compiler_Real.real embedding) =
+  let em1 _cb uu___ =
+    match uu___ with | FStar_Compiler_Real.Real c -> Constant (Real c) in
+  let un1 _cb c =
+    match c with
+    | Constant (Real a) ->
+        FStar_Pervasives_Native.Some (FStar_Compiler_Real.Real a)
+    | uu___ -> FStar_Pervasives_Native.None in
+  mk_emb' em1 un1 (fun uu___ -> lid_as_typ FStar_Parser_Const.real_lid [] [])
+    (FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_real)
 let (e_fsint : Prims.int embedding) =
   embed_as e_int FStar_BigInt.to_int_fs FStar_BigInt.of_int_fs
     FStar_Pervasives_Native.None
@@ -1426,20 +1521,24 @@ let e_arrow : 'a 'b . 'a embedding -> 'b embedding -> ('a -> 'b) embedding =
                    let uu___4 =
                      let uu___5 = let uu___6 = type_of eb in as_arg uu___6 in
                      [uu___5] in
-                   FStar_Pervasives.Inr uu___4 in
-                 ((fun tas ->
-                     let uu___4 =
-                       let uu___5 =
-                         let uu___6 = FStar_Compiler_List.hd tas in
-                         FStar_Pervasives_Native.fst uu___6 in
-                       unembed ea cb uu___5 in
-                     match uu___4 with
-                     | FStar_Pervasives_Native.Some a1 ->
-                         let uu___5 = f a1 in embed eb cb uu___5
-                     | FStar_Pervasives_Native.None ->
-                         FStar_Compiler_Effect.failwith
-                           "cannot unembed function argument"), uu___3,
-                   Prims.int_one) in
+                   Lam_args uu___4 in
+                 {
+                   interp =
+                     (fun tas ->
+                        let uu___4 =
+                          let uu___5 =
+                            let uu___6 = FStar_Compiler_List.hd tas in
+                            FStar_Pervasives_Native.fst uu___6 in
+                          unembed ea cb uu___5 in
+                        match uu___4 with
+                        | FStar_Pervasives_Native.Some a1 ->
+                            let uu___5 = f a1 in embed eb cb uu___5
+                        | FStar_Pervasives_Native.None ->
+                            FStar_Compiler_Effect.failwith
+                              "cannot unembed function argument");
+                   shape = uu___3;
+                   arity = Prims.int_one
+                 } in
                Lam uu___2 in
              mk_t uu___1) in
       let un1 cb lam =
@@ -1670,7 +1769,8 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
        mkFV uu___1 [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of
        FStar_Syntax_Embeddings.e_norm_step)
-let e_sealed : 'a . 'a embedding -> 'a embedding =
+let e_sealed : 'a . 'a embedding -> 'a FStar_Compiler_Sealed.sealed embedding
+  =
   fun ea ->
     let etyp uu___ =
       let uu___1 =
@@ -1681,7 +1781,9 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
       lazy_embed etyp x
         (fun uu___ ->
            let uu___1 =
-             let uu___2 = let uu___3 = embed ea cb x in as_arg uu___3 in
+             let uu___2 =
+               let uu___3 = embed ea cb (FStar_Compiler_Sealed.unseal x) in
+               as_arg uu___3 in
              let uu___3 =
                let uu___4 = let uu___5 = type_of ea in as_iarg uu___5 in
                [uu___4] in
@@ -1690,12 +1792,23 @@ let e_sealed : 'a . 'a embedding -> 'a embedding =
              [FStar_Syntax_Syntax.U_zero] uu___1) in
     let un1 cb trm =
       lazy_unembed etyp trm
-        (fun trm1 ->
-           match trm1.nbe_t with
-           | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
-               FStar_Syntax_Syntax.fv_eq_lid fvar FStar_Parser_Const.seal_lid
-               -> unembed ea cb a1
-           | uu___ -> FStar_Pervasives_Native.None) in
+        (fun uu___ ->
+           (fun trm1 ->
+              match trm1.nbe_t with
+              | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fvar
+                    FStar_Parser_Const.seal_lid
+                  ->
+                  Obj.magic
+                    (Obj.repr
+                       (let uu___2 = unembed ea cb a1 in
+                        FStar_Class_Monad.fmap FStar_Class_Monad.monad_option
+                          () ()
+                          (fun uu___3 ->
+                             (Obj.magic FStar_Compiler_Sealed.seal) uu___3)
+                          (Obj.magic uu___2)))
+              | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+             uu___) in
     mk_emb em1 un1
       (fun uu___ ->
          let uu___1 =

@@ -44,7 +44,7 @@ type key =
            }
        -> key
 
-let ae_cipher = AES.iv_cipher * HMACSHA1.tag
+let ae_cipher = AES.iv_cipher & HMACSHA1.tag
 
 let footprint (k:key) =
   B.loc_union (Log.fp k.mac.MAC.log)

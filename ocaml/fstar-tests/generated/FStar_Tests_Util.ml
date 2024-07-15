@@ -69,9 +69,8 @@ let rec (term_eq' :
                 fun uu___1 ->
                   match (uu___, uu___1) with
                   | ((a, imp), (b, imp')) ->
-                      (term_eq' a b) &&
-                        (let uu___2 = FStar_Syntax_Util.eq_aqual imp imp' in
-                         uu___2 = FStar_Syntax_Util.Equal)) xs ys) in
+                      (term_eq' a b) && (FStar_Syntax_Util.eq_aqual imp imp'))
+             xs ys) in
       let comp_eq c d =
         match ((c.FStar_Syntax_Syntax.n), (d.FStar_Syntax_Syntax.n)) with
         | (FStar_Syntax_Syntax.Total t, FStar_Syntax_Syntax.Total s) ->

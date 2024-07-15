@@ -46,14 +46,14 @@ type universes = list universe
 noeq
 type pattern =
     | Pat_Constant : vconst -> pattern              // A built-in constant
-    | Pat_Cons     : fv -> option universes -> list (pattern * bool) -> pattern
+    | Pat_Cons     : fv -> option universes -> list (pattern & bool) -> pattern
                                                     // A fully applied constructor, each boolean marks
                                                     // whether the argument was an explicitly-provided
                                                     // implicit argument
     | Pat_Var      : bv -> sealed typ -> pattern    // Pattern bound variable
     | Pat_Dot_Term : option term -> pattern         // Dot pattern: resolved by other elements in the pattern and type
 
-type branch = pattern * term  // | pattern -> term
+type branch = pattern & term  // | pattern -> term
 
 noeq
 type aqualv =
@@ -61,7 +61,7 @@ type aqualv =
     | Q_Explicit
     | Q_Meta of term
 
-type argv = term * aqualv
+type argv = term & aqualv
 
 (* The type of a string observable only with a tactic.
    All values of type ppname_t are provably equal *)
@@ -186,9 +186,9 @@ type qualifier =
   | Reifiable
   | Reflectable       of name
   | Discriminator     of name
-  | Projector         of name * ident
-  | RecordType        of list ident * list ident
-  | RecordConstructor of list ident * list ident
+  | Projector         of name & ident
+  | RecordType        of list ident & list ident
+  | RecordConstructor of list ident & list ident
   | Action            of name
   | ExceptionConstructor
   | HasMaskedEffect

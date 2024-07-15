@@ -7,9 +7,6 @@ let tail : 'a . 'a FStar_Seq_Base.seq -> 'a FStar_Seq_Base.seq =
   fun s -> FStar_Seq_Base.slice s Prims.int_one (FStar_Seq_Base.length s)
 let last : 'a . 'a FStar_Seq_Base.seq -> 'a =
   fun s -> FStar_Seq_Base.index s ((FStar_Seq_Base.length s) - Prims.int_one)
-let cons : 'a . 'a -> 'a FStar_Seq_Base.seq -> 'a FStar_Seq_Base.seq =
-  fun x ->
-    fun s -> FStar_Seq_Base.append (FStar_Seq_Base.create Prims.int_one x) s
 let split :
   'a .
     'a FStar_Seq_Base.seq ->
@@ -175,27 +172,13 @@ let for_all : 'a . ('a -> Prims.bool) -> 'a FStar_Seq_Base.seq -> Prims.bool
     fun l ->
       FStar_Pervasives_Native.uu___is_None
         (seq_find (fun i -> Prims.op_Negation (f i)) l)
-let rec seq_to_list : 'a . 'a FStar_Seq_Base.seq -> 'a Prims.list =
-  fun s ->
-    if (FStar_Seq_Base.length s) = Prims.int_zero
-    then []
-    else (FStar_Seq_Base.index s Prims.int_zero) ::
-      (seq_to_list
-         (FStar_Seq_Base.slice s Prims.int_one (FStar_Seq_Base.length s)))
-let rec seq_of_list : 'a . 'a Prims.list -> 'a FStar_Seq_Base.seq =
-  fun l ->
-    match l with
-    | [] -> FStar_Seq_Base.empty ()
-    | hd::tl ->
-        FStar_Seq_Base.op_At_Bar (FStar_Seq_Base.create Prims.int_one hd)
-          (seq_of_list tl)
 type ('a, 'l, 's) createL_post = unit
 let createL : 'a . 'a Prims.list -> 'a FStar_Seq_Base.seq =
-  fun l -> let s = seq_of_list l in s
+  fun l -> let s = FStar_Seq_Base.seq_of_list l in s
 type ('a, 's, 'x) contains = unit
 type ('a, 'susuff, 's) suffix_of = unit
 let of_list : 'a . 'a Prims.list -> 'a FStar_Seq_Base.seq =
-  fun l -> seq_of_list l
+  fun l -> FStar_Seq_Base.seq_of_list l
 type ('a, 'i, 's, 'l) explode_and = Obj.t
 type ('uuuuu, 's, 'l) pointwise_and = Obj.t
 let sortWith :
@@ -203,7 +186,9 @@ let sortWith :
     ('a -> 'a -> Prims.int) -> 'a FStar_Seq_Base.seq -> 'a FStar_Seq_Base.seq
   =
   fun f ->
-    fun s -> seq_of_list (FStar_List_Tot_Base.sortWith f (seq_to_list s))
+    fun s ->
+      FStar_Seq_Base.seq_of_list
+        (FStar_List_Tot_Base.sortWith f (FStar_Seq_Base.seq_to_list s))
 let sort_lseq :
   'a . Prims.nat -> 'a tot_ord -> ('a, unit) lseq -> ('a, unit) lseq =
   fun n ->
@@ -236,4 +221,5 @@ let rec map_seq :
       then FStar_Seq_Base.empty ()
       else
         (let uu___1 = ((head s), (tail s)) in
-         match uu___1 with | (hd, tl) -> cons (f hd) (map_seq f tl))
+         match uu___1 with
+         | (hd, tl) -> FStar_Seq_Base.cons (f hd) (map_seq f tl))

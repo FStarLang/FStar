@@ -18,13 +18,12 @@ all: uall
 uall: $(POSTARGETS) $(NEGTARGETS)
 
 $(POSTARGETS): %.pver: %
-	$(call msg, "CHECK", $(basename $(notdir $@)))
-	$(Q)$(FSTAR) $(SIL) --include $^ --odir $^ Test.fst
+	$(MAKE) -C $< check-pos
 
 $(NEGTARGETS): %.nver: %
-	$(call msg, "CHECKFAIL", $(basename $(notdir $@)))
-	$(Q)! $(FSTAR) $(SIL) --include $^ --odir $^ Test.fst > $^/error.log 2>&1
-	@echo $^ failed as expected
+	$(MAKE) -C $< check-neg
 
 clean:
-	for f in $(NEGTESTS) ; do rm -f $$f/error.log ; done
+	$(call msg, "CLEAN")
+	$(Q)for f in $(NEGTESTS) ; do $(MAKE) -C $$f clean; done
+	$(Q)for f in $(POSTESTS) ; do $(MAKE) -C $$f clean; done

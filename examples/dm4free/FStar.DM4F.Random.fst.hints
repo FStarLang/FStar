@@ -8,7 +8,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "6aca8144ab760e66928933698b1bb279"
+      "a7f05e72d07c8d40399899a8cd9c10f6"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "37063d577a211c62a5e61c8347df2d45"
+      "64d7771911d715cb67c6d5965af1529a"
     ],
     [
       "FStar.DM4F.Random.sample",
@@ -39,7 +39,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "501846b8b26e6c753ffa1a44eaad87bc"
+      "c2d04fa83478f0d167a7481a360b21a4"
     ],
     [
       "FStar.DM4F.Random.test_sample_some",
@@ -60,7 +60,7 @@
       1,
       [ "@query", "projection_inverse_BoxBool_proj_0" ],
       0,
-      "701721cd4f2a6bb60c256c64b9fbf107"
+      "6c8afa2617bb28941778e9d7894723b8"
     ],
     [
       "FStar.DM4F.Random.inverse",
@@ -80,7 +80,7 @@
         "token_correspondence_FStar.DM4F.Random.__proj__Bijection__item__finv"
       ],
       0,
-      "5b94c8639999f5750a769a71f48feacc"
+      "b87de761ecc4fda8a665e4c0013c7ce3"
     ],
     [
       "FStar.DM4F.Random.sum_extensional",
