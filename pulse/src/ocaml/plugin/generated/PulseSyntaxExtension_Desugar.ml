@@ -771,14 +771,28 @@ let (explicit_rvalues :
   = fun env -> fun s -> s
 type qual =
   PulseSyntaxExtension_SyntaxWrapper.qualifier FStar_Pervasives_Native.option
-let (as_qual : FStar_Parser_AST.aqual -> qual) =
+let (as_qual :
+  FStar_Parser_AST.aqual ->
+    FStar_Compiler_Range_Type.range -> qual PulseSyntaxExtension_Err.err)
+  =
   fun q ->
-    match q with
-    | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
-        PulseSyntaxExtension_SyntaxWrapper.as_qual true
-    | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg) ->
-        PulseSyntaxExtension_SyntaxWrapper.tc_qual
-    | uu___ -> PulseSyntaxExtension_SyntaxWrapper.as_qual false
+    fun rng ->
+      match q with
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.Implicit) ->
+          let uu___ = PulseSyntaxExtension_SyntaxWrapper.as_qual true in
+          PulseSyntaxExtension_Err.return uu___
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg) ->
+          PulseSyntaxExtension_Err.return
+            PulseSyntaxExtension_SyntaxWrapper.tc_qual
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.Meta t) ->
+          PulseSyntaxExtension_Err.fail
+            "Pulse does not yet support meta arguments" rng
+      | FStar_Pervasives_Native.Some (FStar_Parser_AST.Equality) ->
+          PulseSyntaxExtension_Err.fail
+            "Pulse does not yet support equality arguments" rng
+      | FStar_Pervasives_Native.None ->
+          let uu___ = PulseSyntaxExtension_SyntaxWrapper.as_qual false in
+          PulseSyntaxExtension_Err.return uu___
 let (desugar_tac_opt :
   PulseSyntaxExtension_Env.env_t ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option ->
@@ -2629,7 +2643,8 @@ and (desugar_binders :
                   | b::bs2 ->
                       Obj.magic
                         (Obj.repr
-                           (let uu___ =
+                           (let rng = b.FStar_Parser_AST.brange in
+                            let uu___ =
                               PulseSyntaxExtension_Env.destruct_binder b in
                             match uu___ with
                             | (aq, b1, t, attrs) ->
@@ -2682,26 +2697,31 @@ and (desugar_binders :
                                                                     ->
                                                                     let uu___6
                                                                     =
-                                                                    let uu___7
-                                                                    =
-                                                                    let uu___8
-                                                                    =
-                                                                    let uu___9
-                                                                    =
                                                                     as_qual
-                                                                    aq in
-                                                                    (uu___9,
-                                                                    b1, t1,
-                                                                    attrs1) in
-                                                                    uu___8 ::
-                                                                    bs3 in
-                                                                    (env3,
-                                                                    uu___7,
-                                                                    (bv ::
-                                                                    bvs)) in
+                                                                    aq rng in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    PulseSyntaxExtension_Err.err_monad
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___6)
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    (fun aq1
+                                                                    ->
+                                                                    let aq1 =
+                                                                    Obj.magic
+                                                                    aq1 in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
-                                                                    uu___6))
+                                                                    (env3,
+                                                                    ((aq1,
+                                                                    b1, t1,
+                                                                    attrs1)
+                                                                    :: bs3),
+                                                                    (bv ::
+                                                                    bvs))))
+                                                                    uu___7)))
                                                                  uu___5)))
                                                   uu___3))) uu___2)))) uu___1
                uu___ in
