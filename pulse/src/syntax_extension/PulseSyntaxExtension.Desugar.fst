@@ -325,11 +325,15 @@ let explicit_rvalues (env:env_t) (s:Sugar.stmt)
 
 let qual = option SW.qualifier
 
-let as_qual (q:A.aqual) : qual =
+let as_qual (q:A.aqual) rng : err qual =
   match q with
-  | Some A.Implicit -> SW.as_qual true
-  | Some A.TypeClassArg -> SW.tc_qual
-  | _ -> SW.as_qual false
+  | Some A.Implicit -> return <| SW.as_qual true
+  | Some A.TypeClassArg -> return <| SW.tc_qual
+  | Some (A.Meta t) ->
+    fail "Pulse does not yet support meta arguments" rng
+  | Some A.Equality ->
+    fail "Pulse does not yet support equality arguments" rng
+  | None -> return <| SW.as_qual false
 
 (* We open FStar.Tactics.V2 in the scope of every `by` as a convenience. *)
 let desugar_tac_opt (env:env_t) (topt : option A.term) : err (option SW.term) =
@@ -680,12 +684,14 @@ and desugar_binders (env:env_t) (bs:Sugar.binders)
       = match bs with
         | [] -> return (env, [], [])
         | b::bs -> 
+          let rng = b.A.brange in
           let (aq, b, t, attrs) = destruct_binder b in
           let! t = desugar_term env t in
           let! attrs = mapM (desugar_term env) attrs in
           let env, bv = push_bv env b in
           let! env, bs, bvs = aux env bs in
-          return (env, (as_qual aq, b, t, attrs)::bs, bv::bvs)
+          let! aq = as_qual aq rng in
+          return (env, (aq, b, t, attrs)::bs, bv::bvs)
     in
     let! env, bs, bvs = aux env bs in
     return (env, L.map (fun (aq, b, t, attrs) -> aq, SW.mk_binder_with_attrs b t attrs) bs, bvs)
