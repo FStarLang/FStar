@@ -675,7 +675,7 @@ fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
   (#ghost_inv:int -> slprop)
   (#ghost_pre:slprop)
   (#ghost_post:slprop)
-  ($ghost_steps:
+  (ghost_steps:
      (v:int ->
       stt_ghost unit emp_inames
         (ghost_pre ** ghost_inv v)
