@@ -2177,10 +2177,15 @@ and tc_abs_check_binders env bs bs_expected use_eq
         | Some (Implicit _), Some (Meta _) -> true
         | _ -> false in
 
-        if not (special imp imp') && not (U.eq_bqual imp imp')
-        then raise_error (Errors.Fatal_InconsistentImplicitArgumentAnnotation,
-                          BU.format1 "Inconsistent implicit argument annotation on argument %s" (show hd))
-                         (S.range_of_bv hd)
+        if not (special imp imp') && not (U.eq_bqual imp imp') then
+          let open FStar.Errors.Msg in
+          let open FStar.Pprint in
+          let open FStar.Class.PP in
+          raise_error_doc (Errors.Fatal_InconsistentImplicitArgumentAnnotation, [
+              text <| BU.format1 "Inconsistent implicit argument annotation on argument %s" (show hd);
+              prefix 2 1 (text "Got:") (squotes <| doc_of_string <| Print.bqual_to_string imp);
+              prefix 2 1 (text "Expected:") (squotes <| doc_of_string <| Print.bqual_to_string imp');
+            ]) (S.range_of_bv hd)
         end;
 
         // The expected binder may be annotated with a positivity attribute

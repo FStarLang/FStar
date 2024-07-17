@@ -6155,15 +6155,45 @@ and (tc_abs_check_binders :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               FStar_Class_Show.show
-                                 FStar_Syntax_Print.showable_bv hd in
-                             FStar_Compiler_Util.format1
-                               "Inconsistent implicit argument annotation on argument %s"
-                               uu___5 in
+                               let uu___6 =
+                                 let uu___7 =
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_bv hd in
+                                 FStar_Compiler_Util.format1
+                                   "Inconsistent implicit argument annotation on argument %s"
+                                   uu___7 in
+                               FStar_Errors_Msg.text uu___6 in
+                             let uu___6 =
+                               let uu___7 =
+                                 let uu___8 = FStar_Errors_Msg.text "Got:" in
+                                 let uu___9 =
+                                   let uu___10 =
+                                     let uu___11 =
+                                       FStar_Syntax_Print.bqual_to_string imp in
+                                     FStar_Pprint.doc_of_string uu___11 in
+                                   FStar_Pprint.squotes uu___10 in
+                                 FStar_Pprint.prefix (Prims.of_int (2))
+                                   Prims.int_one uu___8 uu___9 in
+                               let uu___8 =
+                                 let uu___9 =
+                                   let uu___10 =
+                                     FStar_Errors_Msg.text "Expected:" in
+                                   let uu___11 =
+                                     let uu___12 =
+                                       let uu___13 =
+                                         FStar_Syntax_Print.bqual_to_string
+                                           imp' in
+                                       FStar_Pprint.doc_of_string uu___13 in
+                                     FStar_Pprint.squotes uu___12 in
+                                   FStar_Pprint.prefix (Prims.of_int (2))
+                                     Prims.int_one uu___10 uu___11 in
+                                 [uu___9] in
+                               uu___7 :: uu___8 in
+                             uu___5 :: uu___6 in
                            (FStar_Errors_Codes.Fatal_InconsistentImplicitArgumentAnnotation,
                              uu___4) in
                          let uu___4 = FStar_Syntax_Syntax.range_of_bv hd in
-                         FStar_Errors.raise_error uu___3 uu___4
+                         FStar_Errors.raise_error_doc uu___3 uu___4
                        else ());
                       (let positivity_qual_to_string uu___2 =
                          match uu___2 with
