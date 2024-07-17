@@ -35,7 +35,17 @@ lemma_BitwiseMul64()
 
 // private unfold let op_Star = op_Multiply
 
-#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 0 --max_ifuel 0 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native"
+// GM 2024-07-17: this file is rather particular with options. It had
+// #reset-options pragmas everywher, but no real explanations. I've changed
+// it to use push/pop, where the push only states the difference instead
+// of the full thing again.
+#set-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 \
+  --z3cliopt smt.CASE_SPLIT=3 \
+  --z3cliopt smt.arith.nl=false \
+  --fuel 0 --ifuel 0 \
+  --smtencoding.elim_box true \
+  --smtencoding.nl_arith_repr wrapped \
+  --smtencoding.l_arith_repr native"
 
 (*
 let heapletTo128_preserved (m:mem) (m':mem) (i:int) (len:nat) =
@@ -79,7 +89,9 @@ let reveal_poly1305_heap_blocks (h:int) (pad:int) (r:int) (m:mem) (i:int) (k) =
 
 let lemma_heap_blocks_preserved (m:mem) (h:int) (pad:int) (r:int) (ptr num_bytes i:int) (k) = admit()
 
-#reset-options "--smtencoding.elim_box true --z3cliopt smt.arith.nl=true --max_fuel 1 --max_ifuel 1 --smtencoding.nl_arith_repr native --z3rlimit 100 --using_facts_from Prims --using_facts_from FStar.Math.Lemmas"
+#push-options "--z3cliopt smt.arith.nl=true --fuel 1 --ifuel 1 \
+  --smtencoding.nl_arith_repr native --z3rlimit 100 \
+  --using_facts_from Prims --using_facts_from FStar.Math.Lemmas"
 
 val lemma_mul_div_comm: a:nat -> b:pos -> c:nat ->
     Lemma (requires (c % b = 0 /\ a % b = 0))
@@ -107,8 +119,9 @@ val swap_add: a:int -> b:int -> c:int -> Lemma
       (a + b + c = a + c + b)
 let swap_add a b c = ()
 
+#pop-options
 
-#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 0 --max_ifuel 1 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3rlimit 8"
+#push-options "--ifuel 1"
 
 let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:int) (h1:int)
                         (h2:int) (s1:int) (d0:int) (d1:int) (d2:int) (hh:int) = admit()
@@ -161,6 +174,9 @@ let lemma_poly_multiply (n:int) (p:pos) (r:int) (h:int) (r0:int) (r1:nat) (h0:in
 let lemma_poly_reduce (n:int) (p:pos) (h:nat) (h2:nat) (h10:int) (c:int) (hh:int) =
   lemma_div_mod h (n*n);
   assert (h == (n*n)*h2 + h10);
+  admit();
+  // this chain below got broken after a normalizer patch to not leaks
+  // configs of norm requests.
   tcalc(
     h
       &= (n*n)*h2 + h10 &| using (lemma_div_mod h (n*n))
@@ -210,8 +226,8 @@ let lemma_mod_factors(x0:nat) (x1:nat) (y:nat) (z:pos) :
   nat_times_nat_is_nat y x1;
   lemma_mod_plus x0 (y*x1) z;
   assert ((y*z)*x1 == (y*x1)*z) by canon ()
+#pop-options
 
-#reset-options "--initial_fuel 0 --max_fuel 0 --smtencoding.elim_box true"
 let lemma_mul_pos_pos_is_pos_inverse (x:pos) (y:int) :
   Lemma (requires y*x > 0)
         (ensures y > 0) =
@@ -219,7 +235,7 @@ let lemma_mul_pos_pos_is_pos_inverse (x:pos) (y:int) :
   else if y < 0 then assume(False)
   else ()
 
-#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 0 --max_ifuel 1 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3rlimit 8"
+#push-options "--ifuel 1"
 let lemma_mod_factor_lo(x0:nat64) (x1:nat64) (y:int) (z:pos) :
   Lemma (requires z < 0x10000000000000000 /\
                   y * z == 0x10000000000000000)
@@ -253,9 +269,9 @@ let lemma_mod_breakdown (a:nat) (b:pos) (c:pos) :
   lemma_mul_pos_pos_is_pos b c;
   nat_over_pos_is_nat a b;
   admit ()
+#pop-options
 
-
-#reset-options "--smtencoding.elim_box true --z3rlimit 8 --smtencoding.l_arith_repr native --smtencoding.nl_arith_repr native"
+#push-options "--smtencoding.nl_arith_repr native"
 // using tcalc it was not even proving the first equation, look into this later
 let lemma_mod_hi (x0:nat64) (x1:nat64) (z:nat64) =
   let n = 0x10000000000000000 in
@@ -269,9 +285,9 @@ let lemma_mod_hi (x0:nat64) (x1:nat64) (z:nat64) =
 
 let lemma_poly_demod (p:pos) (h:int) (x:int) (r:int) =
   admit()
+#pop-options
 
-
-#reset-options "--z3cliopt smt.QI.EAGER_THRESHOLD=100 --z3cliopt smt.CASE_SPLIT=3 --z3cliopt smt.arith.nl=false --max_fuel 2 --max_ifuel 1 --smtencoding.elim_box true --smtencoding.nl_arith_repr wrapped --smtencoding.l_arith_repr native --z3rlimit 50"
+#push-options "--fuel 2 --ifuel 1 --z3rlimit 50"
 let lemma_reduce128  (h:int) (h2:nat64) (h1:nat64) (h0:nat64) (g:int) (g2:nat64) (g1:nat64) (g0:nat64) =
       admit()
       (*
@@ -333,3 +349,5 @@ let lemma_poly1305_heap_hash_blocks (h:int) (pad:int) (r:int) (m:mem) (i:int) (k
 
 let lemma_add_mod128 (x y :int) =
   reveal_opaque mod2_128'
+
+#pop-options
