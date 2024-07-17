@@ -2954,7 +2954,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             check_function_app t guard
 
         | _ ->
-            raise_error (Err.expected_function_typ env tf) head.pos in
+            raise_error_doc (Err.expected_function_typ env tf) head.pos in
 
     check_function_app thead Env.trivial_guard
 
