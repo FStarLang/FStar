@@ -2909,7 +2909,8 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
     in //end tc_args
 
     let rec check_function_app tf guard =
-       match (N.unfold_whnf env tf).n with
+       let tf = N.unfold_whnf env tf in
+       match (U.unmeta tf).n with
         | Tm_uvar _
         | Tm_app {hd={n=Tm_uvar _}} ->
             let bs, guard =
