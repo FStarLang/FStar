@@ -3201,18 +3201,8 @@ let rec (norm :
                            FStar_TypeChecker_Cfg.compat_memo_ignore_cfg =
                              (cfg.FStar_TypeChecker_Cfg.compat_memo_ignore_cfg)
                          } in
-                       let stack' =
-                         let debug =
-                           if
-                             (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
-                           then
-                             let uu___5 =
-                               let uu___6 = FStar_Compiler_Util.now () in
-                               (tm, uu___6) in
-                             FStar_Pervasives_Native.Some uu___5
-                           else FStar_Pervasives_Native.None in
-                         (Cfg (cfg, debug)) :: stack2 in
-                       norm cfg'1 env1 stack' tm))))
+                       let tm_normed = norm cfg'1 env1 [] tm in
+                       rebuild cfg env1 stack2 tm_normed))))
            | FStar_Syntax_Syntax.Tm_type u ->
                let u1 = norm_universe cfg env1 u in
                let uu___2 =
@@ -9779,7 +9769,7 @@ let (get_n_binders :
       FStar_Syntax_Syntax.term ->
         (FStar_Syntax_Syntax.binder Prims.list * FStar_Syntax_Syntax.comp))
   = fun env1 -> fun n -> fun t -> get_n_binders' env1 [] n t
-let (uu___3807 : unit) =
+let (uu___3805 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals __get_n_binders get_n_binders'
 let (maybe_unfold_head_fv :
   FStar_TypeChecker_Env.env ->

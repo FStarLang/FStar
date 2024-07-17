@@ -443,14 +443,21 @@ let (inferred_type_causes_variable_to_escape :
         (FStar_Errors_Codes.Fatal_InferredTypeCauseVarEscape, uu___)
 let (expected_function_typ :
   FStar_TypeChecker_Env.env ->
-    FStar_Syntax_Syntax.term -> (FStar_Errors_Codes.raw_error * Prims.string))
+    FStar_Syntax_Syntax.term ->
+      (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun env ->
     fun t ->
       let uu___ =
-        let uu___1 = FStar_TypeChecker_Normalize.term_to_string env t in
-        FStar_Compiler_Util.format1
-          "Expected a function; got an expression of type \"%s\"" uu___1 in
+        let uu___1 = FStar_Errors_Msg.text "Expected a function." in
+        let uu___2 =
+          let uu___3 =
+            let uu___4 = FStar_Errors_Msg.text "Got an expression of type:" in
+            let uu___5 = FStar_TypeChecker_Normalize.term_to_doc env t in
+            FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one uu___4
+              uu___5 in
+          [uu___3] in
+        uu___1 :: uu___2 in
       (FStar_Errors_Codes.Fatal_FunctionTypeExpected, uu___)
 let (expected_poly_typ :
   FStar_TypeChecker_Env.env ->

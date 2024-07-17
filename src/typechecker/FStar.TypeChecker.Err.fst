@@ -252,8 +252,11 @@ let inferred_type_causes_variable_to_escape env t x =
     (N.term_to_string env t) (Print.bv_to_string x)))
 
 let expected_function_typ env t =
-  (Errors.Fatal_FunctionTypeExpected, (format1 "Expected a function; got an expression of type \"%s\""
-    (N.term_to_string env t)))
+  (Errors.Fatal_FunctionTypeExpected, [
+      text "Expected a function.";
+      prefix 2 1 (text "Got an expression of type:")
+        (N.term_to_doc env t);
+    ])
 
 let expected_poly_typ env f t targ =
   (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""

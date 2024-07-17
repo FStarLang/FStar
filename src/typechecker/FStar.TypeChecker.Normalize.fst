@@ -1291,15 +1291,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                    for_extraction=cfg.steps.for_extraction})
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
-              let stack' =
-                let debug =
-                  if cfg.debug.print_normalized
-                  then Some (tm, BU.now())
-                  else None
-                in
-                Cfg (cfg, debug)::stack
-              in
-              norm cfg' env stack' tm
+              (* We reduce the term in an empty stack to prevent unwanted interactions.
+              Later, we rebuild the normalized term with the current stack. This is
+              not a tail-call, but this happens rarely enough that it should not be a problem. *)
+              let tm_normed = norm cfg' env [] tm in
+              rebuild cfg env stack tm_normed
             end
 
           | Tm_type u ->

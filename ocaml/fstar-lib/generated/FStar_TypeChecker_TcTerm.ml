@@ -7989,9 +7989,9 @@ and (check_application_args :
                                     aux false false ghead2
                                       (FStar_Syntax_Util.comp_result chead2)))) in
                let rec check_function_app tf guard =
+                 let tf1 = FStar_TypeChecker_Normalize.unfold_whnf env tf in
                  let uu___1 =
-                   let uu___2 =
-                     FStar_TypeChecker_Normalize.unfold_whnf env tf in
+                   let uu___2 = FStar_Syntax_Util.unmeta tf1 in
                    uu___2.FStar_Syntax_Syntax.n in
                  match uu___1 with
                  | FStar_Syntax_Syntax.Tm_uvar uu___2 ->
@@ -8008,7 +8008,7 @@ and (check_application_args :
                                       FStar_Pervasives_Native.fst uu___8 in
                                     FStar_TypeChecker_Util.new_implicit_var
                                       "formal parameter"
-                                      tf.FStar_Syntax_Syntax.pos env uu___7 in
+                                      tf1.FStar_Syntax_Syntax.pos env uu___7 in
                                   (match uu___6 with
                                    | (t, uu___7, g) ->
                                        let uu___8 =
@@ -8027,7 +8027,7 @@ and (check_application_args :
                                 let uu___7 = FStar_Syntax_Util.type_u () in
                                 FStar_Pervasives_Native.fst uu___7 in
                               FStar_TypeChecker_Util.new_implicit_var
-                                "result type" tf.FStar_Syntax_Syntax.pos env
+                                "result type" tf1.FStar_Syntax_Syntax.pos env
                                 uu___6 in
                             match uu___5 with
                             | (t, uu___6, g) ->
@@ -8056,7 +8056,7 @@ and (check_application_args :
                                        FStar_Syntax_Print.showable_term head in
                                    let uu___8 =
                                      FStar_Class_Show.show
-                                       FStar_Syntax_Print.showable_term tf in
+                                       FStar_Syntax_Print.showable_term tf1 in
                                    let uu___9 =
                                      FStar_Class_Show.show
                                        FStar_Syntax_Print.showable_term
@@ -8067,7 +8067,8 @@ and (check_application_args :
                                  else ());
                                 (let g =
                                    let uu___6 =
-                                     FStar_TypeChecker_Rel.teq env tf bs_cres in
+                                     FStar_TypeChecker_Rel.teq env tf1
+                                       bs_cres in
                                    FStar_TypeChecker_Rel.solve_deferred_constraints
                                      env uu___6 in
                                  let uu___6 =
@@ -8097,7 +8098,7 @@ and (check_application_args :
                                       FStar_Pervasives_Native.fst uu___12 in
                                     FStar_TypeChecker_Util.new_implicit_var
                                       "formal parameter"
-                                      tf.FStar_Syntax_Syntax.pos env uu___11 in
+                                      tf1.FStar_Syntax_Syntax.pos env uu___11 in
                                   (match uu___10 with
                                    | (t, uu___11, g) ->
                                        let uu___12 =
@@ -8116,7 +8117,7 @@ and (check_application_args :
                                 let uu___11 = FStar_Syntax_Util.type_u () in
                                 FStar_Pervasives_Native.fst uu___11 in
                               FStar_TypeChecker_Util.new_implicit_var
-                                "result type" tf.FStar_Syntax_Syntax.pos env
+                                "result type" tf1.FStar_Syntax_Syntax.pos env
                                 uu___10 in
                             match uu___9 with
                             | (t, uu___10, g) ->
@@ -8146,7 +8147,7 @@ and (check_application_args :
                                        FStar_Syntax_Print.showable_term head in
                                    let uu___12 =
                                      FStar_Class_Show.show
-                                       FStar_Syntax_Print.showable_term tf in
+                                       FStar_Syntax_Print.showable_term tf1 in
                                    let uu___13 =
                                      FStar_Class_Show.show
                                        FStar_Syntax_Print.showable_term
@@ -8157,7 +8158,8 @@ and (check_application_args :
                                  else ());
                                 (let g =
                                    let uu___10 =
-                                     FStar_TypeChecker_Rel.teq env tf bs_cres in
+                                     FStar_TypeChecker_Rel.teq env tf1
+                                       bs_cres in
                                    FStar_TypeChecker_Rel.solve_deferred_constraints
                                      env uu___10 in
                                  let uu___10 =
@@ -8179,7 +8181,7 @@ and (check_application_args :
                                   FStar_Syntax_Print.showable_term head in
                               let uu___6 =
                                 FStar_Class_Show.show
-                                  FStar_Syntax_Print.showable_term tf in
+                                  FStar_Syntax_Print.showable_term tf1 in
                               let uu___7 =
                                 FStar_Syntax_Print.binders_to_string ", " bs1 in
                               let uu___8 =
@@ -8201,8 +8203,8 @@ and (check_application_args :
                      -> check_function_app t guard
                  | uu___2 ->
                      let uu___3 =
-                       FStar_TypeChecker_Err.expected_function_typ env tf in
-                     FStar_Errors.raise_error uu___3
+                       FStar_TypeChecker_Err.expected_function_typ env tf1 in
+                     FStar_Errors.raise_error_doc uu___3
                        head.FStar_Syntax_Syntax.pos in
                check_function_app thead FStar_TypeChecker_Env.trivial_guard)
 and (check_short_circuit_args :
