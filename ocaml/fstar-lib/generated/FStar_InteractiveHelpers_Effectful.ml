@@ -1,9 +1,7 @@
 open Prims
 let (term_eq :
-  FStar_Reflection_Types.term ->
-    FStar_Reflection_Types.term ->
-      (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
-  = FStar_Tactics_V1_Builtins.term_eq_old
+  FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
+  FStar_Reflection_TermEq_Simple.term_eq
 type cast_info =
   {
   term: FStar_Reflection_Types.term ;
@@ -1747,302 +1745,247 @@ let (compare_types :
              (FStar_InteractiveHelpers_Base.print_dbg dbg "[> compare_types"))
           (fun uu___ ->
              (fun uu___ ->
-                Obj.magic
-                  (FStar_Tactics_Effect.tac_bind
-                     (FStar_Sealed.seal
-                        (Obj.magic
-                           (FStar_Range.mk_range
-                              "FStar.InteractiveHelpers.Effectful.fst"
-                              (Prims.of_int (253)) (Prims.of_int (5))
-                              (Prims.of_int (253)) (Prims.of_int (30)))))
-                     (FStar_Sealed.seal
-                        (Obj.magic
-                           (FStar_Range.mk_range
-                              "FStar.InteractiveHelpers.Effectful.fst"
-                              (Prims.of_int (253)) (Prims.of_int (2))
-                              (Prims.of_int (276)) (Prims.of_int (13)))))
-                     (Obj.magic
-                        (term_eq
-                           info1.FStar_InteractiveHelpers_ExploreTerm.ty
-                           info2.FStar_InteractiveHelpers_ExploreTerm.ty))
-                     (fun uu___1 ->
-                        (fun uu___1 ->
-                           if uu___1
-                           then
-                             Obj.magic
-                               (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Sealed.seal
-                                     (Obj.magic
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.Effectful.fst"
-                                           (Prims.of_int (254))
-                                           (Prims.of_int (14))
-                                           (Prims.of_int (254))
-                                           (Prims.of_int (48)))))
-                                  (FStar_Sealed.seal
-                                     (Obj.magic
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.Effectful.fst"
-                                           (Prims.of_int (255))
-                                           (Prims.of_int (6))
-                                           (Prims.of_int (273))
-                                           (Prims.of_int (15)))))
-                                  (Obj.magic
-                                     (FStar_InteractiveHelpers_Base.print_dbg
-                                        dbg "-> types are equal"))
-                                  (fun uu___2 ->
-                                     (fun uu___2 ->
-                                        if has_refinement info2
-                                        then
-                                          Obj.magic
-                                            (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Sealed.seal
-                                                  (Obj.magic
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.Effectful.fst"
-                                                        (Prims.of_int (256))
-                                                        (Prims.of_int (16))
-                                                        (Prims.of_int (256))
-                                                        (Prims.of_int (58)))))
-                                               (FStar_Sealed.seal
-                                                  (Obj.magic
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.Effectful.fst"
-                                                        (Prims.of_int (259))
-                                                        (Prims.of_int (8))
-                                                        (Prims.of_int (270))
-                                                        (Prims.of_int (23)))))
-                                               (Obj.magic
-                                                  (FStar_InteractiveHelpers_Base.print_dbg
-                                                     dbg
-                                                     "-> 2nd type has refinement"))
-                                               (fun uu___3 ->
-                                                  (fun uu___3 ->
-                                                     if has_refinement info1
-                                                     then
-                                                       Obj.magic
-                                                         (FStar_Tactics_Effect.tac_bind
-                                                            (FStar_Sealed.seal
-                                                               (Obj.magic
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (260))
-                                                                    (Prims.of_int (18))
-                                                                    (Prims.of_int (260))
-                                                                    (Prims.of_int (60)))))
-                                                            (FStar_Sealed.seal
-                                                               (Obj.magic
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (261))
-                                                                    (Prims.of_int (10))
-                                                                    (Prims.of_int (266))
-                                                                    (Prims.of_int (23)))))
-                                                            (Obj.magic
-                                                               (FStar_InteractiveHelpers_Base.print_dbg
-                                                                  dbg
-                                                                  "-> 1st type has refinement"))
-                                                            (fun uu___4 ->
-                                                               (fun uu___4 ->
-                                                                  Obj.magic
+                if
+                  term_eq info1.FStar_InteractiveHelpers_ExploreTerm.ty
+                    info2.FStar_InteractiveHelpers_ExploreTerm.ty
+                then
+                  Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.Effectful.fst"
+                                (Prims.of_int (254)) (Prims.of_int (14))
+                                (Prims.of_int (254)) (Prims.of_int (48)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.Effectful.fst"
+                                (Prims.of_int (255)) (Prims.of_int (6))
+                                (Prims.of_int (273)) (Prims.of_int (15)))))
+                       (Obj.magic
+                          (FStar_InteractiveHelpers_Base.print_dbg dbg
+                             "-> types are equal"))
+                       (fun uu___1 ->
+                          (fun uu___1 ->
+                             if has_refinement info2
+                             then
+                               Obj.magic
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.Effectful.fst"
+                                             (Prims.of_int (256))
+                                             (Prims.of_int (16))
+                                             (Prims.of_int (256))
+                                             (Prims.of_int (58)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.Effectful.fst"
+                                             (Prims.of_int (259))
+                                             (Prims.of_int (8))
+                                             (Prims.of_int (270))
+                                             (Prims.of_int (23)))))
+                                    (Obj.magic
+                                       (FStar_InteractiveHelpers_Base.print_dbg
+                                          dbg "-> 2nd type has refinement"))
+                                    (fun uu___2 ->
+                                       (fun uu___2 ->
+                                          if has_refinement info1
+                                          then
+                                            Obj.magic
+                                              (FStar_Tactics_Effect.tac_bind
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.Effectful.fst"
+                                                          (Prims.of_int (260))
+                                                          (Prims.of_int (18))
+                                                          (Prims.of_int (260))
+                                                          (Prims.of_int (60)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.Effectful.fst"
+                                                          (Prims.of_int (261))
+                                                          (Prims.of_int (10))
+                                                          (Prims.of_int (266))
+                                                          (Prims.of_int (23)))))
+                                                 (Obj.magic
+                                                    (FStar_InteractiveHelpers_Base.print_dbg
+                                                       dbg
+                                                       "-> 1st type has refinement"))
+                                                 (fun uu___3 ->
+                                                    (fun uu___3 ->
+                                                       if
+                                                         term_eq
+                                                           (get_refinement
+                                                              info1)
+                                                           (get_refinement
+                                                              info2)
+                                                       then
+                                                         Obj.magic
+                                                           (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
                                                                     (
-                                                                    FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (261))
-                                                                    (Prims.of_int (13))
-                                                                    (Prims.of_int (261))
-                                                                    (Prims.of_int (66)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (261))
-                                                                    (Prims.of_int (10))
-                                                                    (Prims.of_int (266))
-                                                                    (Prims.of_int (23)))))
-                                                                    (Obj.magic
-                                                                    (term_eq
-                                                                    (get_refinement
-                                                                    info1)
-                                                                    (get_refinement
-                                                                    info2)))
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    (fun
-                                                                    uu___5 ->
-                                                                    if uu___5
-                                                                    then
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                                    FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (262))
                                                                     (Prims.of_int (20))
                                                                     (Prims.of_int (262))
                                                                     (Prims.of_int (46)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (263))
                                                                     (Prims.of_int (12))
                                                                     (Prims.of_int (263))
                                                                     (Prims.of_int (19)))))
-                                                                    (Obj.magic
-                                                                    (FStar_InteractiveHelpers_Base.print_dbg
+                                                              (Obj.magic
+                                                                 (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
                                                                     "-> Refines"))
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___7 ->
+                                                              (fun uu___4 ->
+                                                                 FStar_Tactics_Effect.lift_div_tac
+                                                                   (fun
+                                                                    uu___5 ->
                                                                     Refines)))
-                                                                    else
-                                                                    Obj.magic
-                                                                    (FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                       else
+                                                         Obj.magic
+                                                           (FStar_Tactics_Effect.tac_bind
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (265))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (265))
                                                                     (Prims.of_int (50)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                              (FStar_Sealed.seal
+                                                                 (Obj.magic
+                                                                    (
+                                                                    FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (266))
                                                                     (Prims.of_int (23)))))
-                                                                    (Obj.magic
-                                                                    (FStar_InteractiveHelpers_Base.print_dbg
+                                                              (Obj.magic
+                                                                 (FStar_InteractiveHelpers_Base.print_dbg
                                                                     dbg
                                                                     "-> Same_raw_type"))
-                                                                    (fun
-                                                                    uu___7 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___8 ->
+                                                              (fun uu___5 ->
+                                                                 FStar_Tactics_Effect.lift_div_tac
+                                                                   (fun
+                                                                    uu___6 ->
                                                                     Same_raw_type))))
-                                                                    uu___5)))
-                                                                 uu___4))
-                                                     else
+                                                      uu___3))
+                                          else
+                                            Obj.magic
+                                              (FStar_Tactics_Effect.tac_bind
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.Effectful.fst"
+                                                          (Prims.of_int (268))
+                                                          (Prims.of_int (18))
+                                                          (Prims.of_int (268))
+                                                          (Prims.of_int (63)))))
+                                                 (FStar_Sealed.seal
+                                                    (Obj.magic
+                                                       (FStar_Range.mk_range
+                                                          "FStar.InteractiveHelpers.Effectful.fst"
+                                                          (Prims.of_int (268))
+                                                          (Prims.of_int (66))
+                                                          (Prims.of_int (270))
+                                                          (Prims.of_int (23)))))
+                                                 (Obj.magic
+                                                    (FStar_InteractiveHelpers_Base.print_dbg
+                                                       dbg
+                                                       "-> 1st type has no refinement"))
+                                                 (fun uu___4 ->
+                                                    (fun uu___4 ->
                                                        Obj.magic
                                                          (FStar_Tactics_Effect.tac_bind
                                                             (FStar_Sealed.seal
                                                                (Obj.magic
                                                                   (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (268))
-                                                                    (Prims.of_int (18))
-                                                                    (Prims.of_int (268))
-                                                                    (Prims.of_int (63)))))
-                                                            (FStar_Sealed.seal
-                                                               (Obj.magic
-                                                                  (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
-                                                                    (Prims.of_int (268))
-                                                                    (Prims.of_int (66))
-                                                                    (Prims.of_int (270))
-                                                                    (Prims.of_int (23)))))
-                                                            (Obj.magic
-                                                               (FStar_InteractiveHelpers_Base.print_dbg
-                                                                  dbg
-                                                                  "-> 1st type has no refinement"))
-                                                            (fun uu___5 ->
-                                                               (fun uu___5 ->
-                                                                  Obj.magic
-                                                                    (
-                                                                    FStar_Tactics_Effect.tac_bind
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
-                                                                    "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (269))
                                                                     (Prims.of_int (18))
                                                                     (Prims.of_int (269))
                                                                     (Prims.of_int (50)))))
-                                                                    (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                            (FStar_Sealed.seal
+                                                               (Obj.magic
+                                                                  (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (270))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (270))
                                                                     (Prims.of_int (23)))))
-                                                                    (Obj.magic
-                                                                    (FStar_InteractiveHelpers_Base.print_dbg
-                                                                    dbg
-                                                                    "-> Same_raw_type"))
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    FStar_Tactics_Effect.lift_div_tac
-                                                                    (fun
-                                                                    uu___7 ->
+                                                            (Obj.magic
+                                                               (FStar_InteractiveHelpers_Base.print_dbg
+                                                                  dbg
+                                                                  "-> Same_raw_type"))
+                                                            (fun uu___5 ->
+                                                               FStar_Tactics_Effect.lift_div_tac
+                                                                 (fun uu___6
+                                                                    ->
                                                                     Same_raw_type))))
-                                                                 uu___5)))
-                                                    uu___3))
-                                        else
-                                          Obj.magic
-                                            (FStar_Tactics_Effect.tac_bind
-                                               (FStar_Sealed.seal
-                                                  (Obj.magic
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.Effectful.fst"
-                                                        (Prims.of_int (272))
-                                                        (Prims.of_int (16))
-                                                        (Prims.of_int (272))
-                                                        (Prims.of_int (70)))))
-                                               (FStar_Sealed.seal
-                                                  (Obj.magic
-                                                     (FStar_Range.mk_range
-                                                        "FStar.InteractiveHelpers.Effectful.fst"
-                                                        (Prims.of_int (273))
-                                                        (Prims.of_int (8))
-                                                        (Prims.of_int (273))
-                                                        (Prims.of_int (15)))))
-                                               (Obj.magic
-                                                  (FStar_InteractiveHelpers_Base.print_dbg
-                                                     dbg
-                                                     "-> 2nd type has no refinement: Refines"))
-                                               (fun uu___4 ->
-                                                  FStar_Tactics_Effect.lift_div_tac
-                                                    (fun uu___5 -> Refines))))
-                                       uu___2))
-                           else
-                             Obj.magic
-                               (FStar_Tactics_Effect.tac_bind
-                                  (FStar_Sealed.seal
-                                     (Obj.magic
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.Effectful.fst"
-                                           (Prims.of_int (275))
-                                           (Prims.of_int (14))
-                                           (Prims.of_int (275))
-                                           (Prims.of_int (49)))))
-                                  (FStar_Sealed.seal
-                                     (Obj.magic
-                                        (FStar_Range.mk_range
-                                           "FStar.InteractiveHelpers.Effectful.fst"
-                                           (Prims.of_int (276))
-                                           (Prims.of_int (6))
-                                           (Prims.of_int (276))
-                                           (Prims.of_int (13)))))
-                                  (Obj.magic
-                                     (FStar_InteractiveHelpers_Base.print_dbg
-                                        dbg "types are not equal"))
-                                  (fun uu___3 ->
-                                     FStar_Tactics_Effect.lift_div_tac
-                                       (fun uu___4 -> Unknown)))) uu___1)))
-               uu___)
+                                                      uu___4))) uu___2))
+                             else
+                               Obj.magic
+                                 (FStar_Tactics_Effect.tac_bind
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.Effectful.fst"
+                                             (Prims.of_int (272))
+                                             (Prims.of_int (16))
+                                             (Prims.of_int (272))
+                                             (Prims.of_int (70)))))
+                                    (FStar_Sealed.seal
+                                       (Obj.magic
+                                          (FStar_Range.mk_range
+                                             "FStar.InteractiveHelpers.Effectful.fst"
+                                             (Prims.of_int (273))
+                                             (Prims.of_int (8))
+                                             (Prims.of_int (273))
+                                             (Prims.of_int (15)))))
+                                    (Obj.magic
+                                       (FStar_InteractiveHelpers_Base.print_dbg
+                                          dbg
+                                          "-> 2nd type has no refinement: Refines"))
+                                    (fun uu___3 ->
+                                       FStar_Tactics_Effect.lift_div_tac
+                                         (fun uu___4 -> Refines)))) uu___1))
+                else
+                  Obj.magic
+                    (FStar_Tactics_Effect.tac_bind
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.Effectful.fst"
+                                (Prims.of_int (275)) (Prims.of_int (14))
+                                (Prims.of_int (275)) (Prims.of_int (49)))))
+                       (FStar_Sealed.seal
+                          (Obj.magic
+                             (FStar_Range.mk_range
+                                "FStar.InteractiveHelpers.Effectful.fst"
+                                (Prims.of_int (276)) (Prims.of_int (6))
+                                (Prims.of_int (276)) (Prims.of_int (13)))))
+                       (Obj.magic
+                          (FStar_InteractiveHelpers_Base.print_dbg dbg
+                             "types are not equal"))
+                       (fun uu___2 ->
+                          FStar_Tactics_Effect.lift_div_tac
+                            (fun uu___3 -> Unknown)))) uu___)
 let (compare_cast_types :
   Prims.bool ->
     cast_info -> (type_comparison, unit) FStar_Tactics_Effect.tac_repr)
@@ -3232,8 +3175,10 @@ let (compute_post_type :
                                                                     (Prims.of_int (48))
                                                                     (Prims.of_int (440))
                                                                     (Prims.of_int (11)))))
-                                                                    (Obj.magic
-                                                                    (term_eq
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    term_eq
                                                                     ret_type
                                                                     r_ty))
                                                                     (fun
@@ -3259,8 +3204,10 @@ let (compute_post_type :
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (440))
                                                                     (Prims.of_int (11)))))
-                                                                    (Obj.magic
-                                                                    (term_eq
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    term_eq
                                                                     s1_ty
                                                                     s2_ty))
                                                                     (fun
@@ -3944,34 +3891,11 @@ let (check_pre_post_type :
                                            (FStar_InteractiveHelpers_Base.print_dbg
                                               dbg "PP_State, PP_State"))
                                         (fun uu___2 ->
-                                           (fun uu___2 ->
-                                              Obj.magic
-                                                (FStar_Tactics_Effect.tac_bind
-                                                   (FStar_Sealed.seal
-                                                      (Obj.magic
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.Effectful.fst"
-                                                            (Prims.of_int (454))
-                                                            (Prims.of_int (7))
-                                                            (Prims.of_int (454))
-                                                            (Prims.of_int (22)))))
-                                                   (FStar_Sealed.seal
-                                                      (Obj.magic
-                                                         (FStar_Range.mk_range
-                                                            "FStar.InteractiveHelpers.Effectful.fst"
-                                                            (Prims.of_int (454))
-                                                            (Prims.of_int (4))
-                                                            (Prims.of_int (454))
-                                                            (Prims.of_int (56)))))
-                                                   (Obj.magic
-                                                      (term_eq ty1 ty2))
-                                                   (fun uu___3 ->
-                                                      FStar_Tactics_Effect.lift_div_tac
-                                                        (fun uu___4 ->
-                                                           if uu___3
-                                                           then PP_State ty1
-                                                           else PP_Unknown))))
-                                             uu___2))
+                                           FStar_Tactics_Effect.lift_div_tac
+                                             (fun uu___3 ->
+                                                if term_eq ty1 ty2
+                                                then PP_State ty1
+                                                else PP_Unknown)))
                                | uu___2 ->
                                    Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
