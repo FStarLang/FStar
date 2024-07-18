@@ -2359,7 +2359,49 @@ let arrow_as_prim_step_1 :
     'a FStar_Syntax_Embeddings_Base.embedding ->
       'b FStar_Syntax_Embeddings_Base.embedding ->
         ('a -> 'b) ->
-          Prims.int ->
+          FStar_Ident.lid ->
+            FStar_Syntax_Embeddings_Base.norm_cb ->
+              FStar_Syntax_Syntax.universes ->
+                FStar_Syntax_Syntax.args ->
+                  FStar_Syntax_Syntax.term FStar_Pervasives_Native.option
+  =
+  fun ea ->
+    fun eb ->
+      fun f ->
+        fun fv_lid ->
+          fun norm ->
+            let rng = FStar_Ident.range_of_lid fv_lid in
+            let f_wrapped _us args =
+              let uu___ = args in
+              match uu___ with
+              | (x, uu___1)::[] ->
+                  let shadow_app =
+                    let uu___2 =
+                      FStar_Thunk.mk
+                        (fun uu___3 ->
+                           let uu___4 = norm (FStar_Pervasives.Inl fv_lid) in
+                           FStar_Syntax_Syntax.mk_Tm_app uu___4 args rng) in
+                    FStar_Pervasives_Native.Some uu___2 in
+                  let uu___2 =
+                    let uu___3 =
+                      FStar_Syntax_Embeddings_Base.try_unembed ea x norm in
+                    FStar_Compiler_Util.map_opt uu___3
+                      (fun x1 ->
+                         let uu___4 =
+                           let uu___5 = f x1 in
+                           FStar_Syntax_Embeddings_Base.embed eb uu___5 in
+                         uu___4 rng shadow_app norm) in
+                  (match uu___2 with
+                   | FStar_Pervasives_Native.Some x1 ->
+                       FStar_Pervasives_Native.Some x1
+                   | FStar_Pervasives_Native.None -> force_shadow shadow_app) in
+            f_wrapped
+let arrow_as_prim_step_2 :
+  'a 'b 'c .
+    'a FStar_Syntax_Embeddings_Base.embedding ->
+      'b FStar_Syntax_Embeddings_Base.embedding ->
+        'c FStar_Syntax_Embeddings_Base.embedding ->
+          ('a -> 'b -> 'c) ->
             FStar_Ident.lid ->
               FStar_Syntax_Embeddings_Base.norm_cb ->
                 FStar_Syntax_Syntax.universes ->
@@ -2368,51 +2410,52 @@ let arrow_as_prim_step_1 :
   =
   fun ea ->
     fun eb ->
-      fun f ->
-        fun n_tvars ->
+      fun ec ->
+        fun f ->
           fun fv_lid ->
             fun norm ->
               let rng = FStar_Ident.range_of_lid fv_lid in
               let f_wrapped _us args =
-                let uu___ = FStar_Compiler_List.splitAt n_tvars args in
+                let uu___ = args in
                 match uu___ with
-                | (_tvar_args, rest_args) ->
-                    let uu___1 = rest_args in
-                    (match uu___1 with
-                     | (x, uu___2)::[] ->
-                         let shadow_app =
-                           let uu___3 =
-                             FStar_Thunk.mk
-                               (fun uu___4 ->
-                                  let uu___5 =
-                                    norm (FStar_Pervasives.Inl fv_lid) in
-                                  FStar_Syntax_Syntax.mk_Tm_app uu___5 args
-                                    rng) in
-                           FStar_Pervasives_Native.Some uu___3 in
-                         let uu___3 =
-                           let uu___4 =
-                             FStar_Syntax_Embeddings_Base.try_unembed ea x
+                | (x, uu___1)::(y, uu___2)::[] ->
+                    let shadow_app =
+                      let uu___3 =
+                        FStar_Thunk.mk
+                          (fun uu___4 ->
+                             let uu___5 = norm (FStar_Pervasives.Inl fv_lid) in
+                             FStar_Syntax_Syntax.mk_Tm_app uu___5 args rng) in
+                      FStar_Pervasives_Native.Some uu___3 in
+                    let uu___3 =
+                      let uu___4 =
+                        FStar_Syntax_Embeddings_Base.try_unembed ea x norm in
+                      FStar_Compiler_Util.bind_opt uu___4
+                        (fun x1 ->
+                           let uu___5 =
+                             FStar_Syntax_Embeddings_Base.try_unembed eb y
                                norm in
-                           FStar_Compiler_Util.map_opt uu___4
-                             (fun x1 ->
-                                let uu___5 =
-                                  let uu___6 = f x1 in
-                                  FStar_Syntax_Embeddings_Base.embed eb
-                                    uu___6 in
-                                uu___5 rng shadow_app norm) in
-                         (match uu___3 with
-                          | FStar_Pervasives_Native.Some x1 ->
-                              FStar_Pervasives_Native.Some x1
-                          | FStar_Pervasives_Native.None ->
-                              force_shadow shadow_app)) in
+                           FStar_Compiler_Util.bind_opt uu___5
+                             (fun y1 ->
+                                let uu___6 =
+                                  let uu___7 =
+                                    let uu___8 = f x1 y1 in
+                                    FStar_Syntax_Embeddings_Base.embed ec
+                                      uu___8 in
+                                  uu___7 rng shadow_app norm in
+                                FStar_Pervasives_Native.Some uu___6)) in
+                    (match uu___3 with
+                     | FStar_Pervasives_Native.Some x1 ->
+                         FStar_Pervasives_Native.Some x1
+                     | FStar_Pervasives_Native.None ->
+                         force_shadow shadow_app) in
               f_wrapped
-let arrow_as_prim_step_2 :
-  'a 'b 'c .
+let arrow_as_prim_step_3 :
+  'a 'b 'c 'd .
     'a FStar_Syntax_Embeddings_Base.embedding ->
       'b FStar_Syntax_Embeddings_Base.embedding ->
         'c FStar_Syntax_Embeddings_Base.embedding ->
-          ('a -> 'b -> 'c) ->
-            Prims.int ->
+          'd FStar_Syntax_Embeddings_Base.embedding ->
+            ('a -> 'b -> 'c -> 'd) ->
               FStar_Ident.lid ->
                 FStar_Syntax_Embeddings_Base.norm_cb ->
                   FStar_Syntax_Syntax.universes ->
@@ -2422,121 +2465,51 @@ let arrow_as_prim_step_2 :
   fun ea ->
     fun eb ->
       fun ec ->
-        fun f ->
-          fun n_tvars ->
+        fun ed ->
+          fun f ->
             fun fv_lid ->
               fun norm ->
                 let rng = FStar_Ident.range_of_lid fv_lid in
                 let f_wrapped _us args =
-                  let uu___ = FStar_Compiler_List.splitAt n_tvars args in
+                  let uu___ = args in
                   match uu___ with
-                  | (_tvar_args, rest_args) ->
-                      let uu___1 = rest_args in
-                      (match uu___1 with
-                       | (x, uu___2)::(y, uu___3)::[] ->
-                           let shadow_app =
-                             let uu___4 =
-                               FStar_Thunk.mk
-                                 (fun uu___5 ->
-                                    let uu___6 =
-                                      norm (FStar_Pervasives.Inl fv_lid) in
-                                    FStar_Syntax_Syntax.mk_Tm_app uu___6 args
-                                      rng) in
-                             FStar_Pervasives_Native.Some uu___4 in
-                           let uu___4 =
-                             let uu___5 =
-                               FStar_Syntax_Embeddings_Base.try_unembed ea x
-                                 norm in
-                             FStar_Compiler_Util.bind_opt uu___5
-                               (fun x1 ->
-                                  let uu___6 =
-                                    FStar_Syntax_Embeddings_Base.try_unembed
-                                      eb y norm in
-                                  FStar_Compiler_Util.bind_opt uu___6
-                                    (fun y1 ->
-                                       let uu___7 =
-                                         let uu___8 =
-                                           let uu___9 = f x1 y1 in
-                                           FStar_Syntax_Embeddings_Base.embed
-                                             ec uu___9 in
-                                         uu___8 rng shadow_app norm in
-                                       FStar_Pervasives_Native.Some uu___7)) in
-                           (match uu___4 with
-                            | FStar_Pervasives_Native.Some x1 ->
-                                FStar_Pervasives_Native.Some x1
-                            | FStar_Pervasives_Native.None ->
-                                force_shadow shadow_app)) in
-                f_wrapped
-let arrow_as_prim_step_3 :
-  'a 'b 'c 'd .
-    'a FStar_Syntax_Embeddings_Base.embedding ->
-      'b FStar_Syntax_Embeddings_Base.embedding ->
-        'c FStar_Syntax_Embeddings_Base.embedding ->
-          'd FStar_Syntax_Embeddings_Base.embedding ->
-            ('a -> 'b -> 'c -> 'd) ->
-              Prims.int ->
-                FStar_Ident.lid ->
-                  FStar_Syntax_Embeddings_Base.norm_cb ->
-                    FStar_Syntax_Syntax.universes ->
-                      FStar_Syntax_Syntax.args ->
-                        FStar_Syntax_Syntax.term
-                          FStar_Pervasives_Native.option
-  =
-  fun ea ->
-    fun eb ->
-      fun ec ->
-        fun ed ->
-          fun f ->
-            fun n_tvars ->
-              fun fv_lid ->
-                fun norm ->
-                  let rng = FStar_Ident.range_of_lid fv_lid in
-                  let f_wrapped _us args =
-                    let uu___ = FStar_Compiler_List.splitAt n_tvars args in
-                    match uu___ with
-                    | (_tvar_args, rest_args) ->
-                        let uu___1 = rest_args in
-                        (match uu___1 with
-                         | (x, uu___2)::(y, uu___3)::(z, uu___4)::[] ->
-                             let shadow_app =
-                               let uu___5 =
-                                 FStar_Thunk.mk
-                                   (fun uu___6 ->
-                                      let uu___7 =
-                                        norm (FStar_Pervasives.Inl fv_lid) in
-                                      FStar_Syntax_Syntax.mk_Tm_app uu___7
-                                        args rng) in
-                               FStar_Pervasives_Native.Some uu___5 in
-                             let uu___5 =
+                  | (x, uu___1)::(y, uu___2)::(z, uu___3)::[] ->
+                      let shadow_app =
+                        let uu___4 =
+                          FStar_Thunk.mk
+                            (fun uu___5 ->
                                let uu___6 =
-                                 FStar_Syntax_Embeddings_Base.try_unembed ea
-                                   x norm in
-                               FStar_Compiler_Util.bind_opt uu___6
-                                 (fun x1 ->
-                                    let uu___7 =
-                                      FStar_Syntax_Embeddings_Base.try_unembed
-                                        eb y norm in
-                                    FStar_Compiler_Util.bind_opt uu___7
-                                      (fun y1 ->
-                                         let uu___8 =
-                                           FStar_Syntax_Embeddings_Base.try_unembed
-                                             ec z norm in
-                                         FStar_Compiler_Util.bind_opt uu___8
-                                           (fun z1 ->
-                                              let uu___9 =
-                                                let uu___10 =
-                                                  let uu___11 = f x1 y1 z1 in
-                                                  FStar_Syntax_Embeddings_Base.embed
-                                                    ed uu___11 in
-                                                uu___10 rng shadow_app norm in
-                                              FStar_Pervasives_Native.Some
-                                                uu___9))) in
-                             (match uu___5 with
-                              | FStar_Pervasives_Native.Some x1 ->
-                                  FStar_Pervasives_Native.Some x1
-                              | FStar_Pervasives_Native.None ->
-                                  force_shadow shadow_app)) in
-                  f_wrapped
+                                 norm (FStar_Pervasives.Inl fv_lid) in
+                               FStar_Syntax_Syntax.mk_Tm_app uu___6 args rng) in
+                        FStar_Pervasives_Native.Some uu___4 in
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Syntax_Embeddings_Base.try_unembed ea x norm in
+                        FStar_Compiler_Util.bind_opt uu___5
+                          (fun x1 ->
+                             let uu___6 =
+                               FStar_Syntax_Embeddings_Base.try_unembed eb y
+                                 norm in
+                             FStar_Compiler_Util.bind_opt uu___6
+                               (fun y1 ->
+                                  let uu___7 =
+                                    FStar_Syntax_Embeddings_Base.try_unembed
+                                      ec z norm in
+                                  FStar_Compiler_Util.bind_opt uu___7
+                                    (fun z1 ->
+                                       let uu___8 =
+                                         let uu___9 =
+                                           let uu___10 = f x1 y1 z1 in
+                                           FStar_Syntax_Embeddings_Base.embed
+                                             ed uu___10 in
+                                         uu___9 rng shadow_app norm in
+                                       FStar_Pervasives_Native.Some uu___8))) in
+                      (match uu___4 with
+                       | FStar_Pervasives_Native.Some x1 ->
+                           FStar_Pervasives_Native.Some x1
+                       | FStar_Pervasives_Native.None ->
+                           force_shadow shadow_app) in
+                f_wrapped
 let debug_wrap : 'a . Prims.string -> (unit -> 'a) -> 'a =
   fun s ->
     fun f ->

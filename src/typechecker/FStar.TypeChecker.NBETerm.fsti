@@ -308,7 +308,6 @@ val e_unsupported : #a:Type -> embedding a
 val arrow_as_prim_step_1:  embedding 'a
                         -> embedding 'b
                         -> ('a -> 'b)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
                         -> (universes -> args -> option t)
@@ -317,7 +316,6 @@ val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
                         -> embedding 'c
                         -> ('a -> 'b -> 'c)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
                         -> (universes -> args -> option t)
@@ -327,12 +325,9 @@ val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'c
                         -> embedding 'd
                         -> ('a -> 'b -> 'c -> 'd)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> nbe_cbs
                         -> (universes -> args -> option t)
-
-
 
 // Interface for NBE interpretations
 
