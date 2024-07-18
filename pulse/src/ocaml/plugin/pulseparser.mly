@@ -100,7 +100,7 @@ langDecls:
 
 langDecl:
   | p=pulseDecl { Inl p }
-  | d=decl { Inr d }
+  | d=decl { Inr (List.hd d) }
 
 pulseDecl:
   | q=option(qual)
