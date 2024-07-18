@@ -138,7 +138,7 @@ let mk_proj_decl (is_method:bool)
   in
   let maybe_se_method : list sigelt =
     if not is_method then [] else
-    if List.existsb (Reflection.V2.TermEq.term_eq (`Typeclasses.no_method)) field.attrs then [] else
+    if List.existsb (Reflection.TermEq.Simple.term_eq (`Typeclasses.no_method)) field.attrs then [] else
     let meth_fv = pack_fv (cur_module () @ [unseal field.ppname]) in
     let rb = { rb with qual = Q_Meta (`Typeclasses.tcresolve) } in
     let projty = mk_tot_arr (List.Tot.map binder_mk_implicit params

@@ -17,7 +17,7 @@ module WPExtensionality
 
 open FStar.Tactics.V2
 
-let term_eq = FStar.Reflection.V2.TermEq.term_eq
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 assume val wp1 : (int -> Type0) -> Type0
 assume val wp2 : (int -> unit -> Type0) -> Type0

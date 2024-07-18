@@ -1329,7 +1329,7 @@ let (mk_proj_decl :
                                                                     (Obj.repr
                                                                     (if
                                                                     FStar_List_Tot_Base.existsb
-                                                                    (FStar_Reflection_V2_TermEq.term_eq
+                                                                    (FStar_Reflection_TermEq_Simple.term_eq
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
                                                                     (FStar_Reflection_V2_Data.Tv_FVar
                                                                     (FStar_Reflection_V2_Builtins.pack_fv

@@ -6,7 +6,8 @@ open FStar.Mul
 open FStar.InteractiveHelpers.Base
 open FStar.InteractiveHelpers.ExploreTerm
 
-let term_eq = FStar.Tactics.term_eq_old
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 /// Propositions and assertions.
 /// Assertions are propositions to be inserted in the F* code: we differentiate

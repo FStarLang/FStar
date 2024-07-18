@@ -502,7 +502,7 @@ let (extract_fundeps :
                                        FStar_Reflection_V2_Data.Q_Explicit)::[])
                                        ->
                                        if
-                                         FStar_Reflection_V2_TermEq.term_eq
+                                         FStar_Reflection_TermEq_Simple.term_eq
                                            hd
                                            (FStar_Reflection_V2_Builtins.pack_ln
                                               (FStar_Reflection_V2_Data.Tv_FVar
@@ -1412,7 +1412,7 @@ let rec (tcresolve' : st_t -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                            (Prims.of_int (33)))))
                                                   (if
                                                      FStar_List_Tot_Base.existsb
-                                                       (FStar_Reflection_V2_TermEq.term_eq
+                                                       (FStar_Reflection_TermEq_Simple.term_eq
                                                           g) st.seen
                                                    then
                                                      Obj.magic
@@ -2396,7 +2396,7 @@ let (filter_no_method_binders :
   fun bs ->
     let has_no_method_attr b =
       FStar_List_Tot_Base.existsb
-        (FStar_Reflection_V2_TermEq.term_eq
+        (FStar_Reflection_TermEq_Simple.term_eq
            (FStar_Reflection_V2_Builtins.pack_ln
               (FStar_Reflection_V2_Data.Tv_FVar
                  (FStar_Reflection_V2_Builtins.pack_fv

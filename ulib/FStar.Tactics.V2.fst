@@ -35,3 +35,4 @@ include FStar.Tactics.NamedView
 include FStar.Tactics.MApply
 
 include FStar.Tactics.SMT (* Version agnostic *)
+include FStar.Reflection.TermEq.Simple
