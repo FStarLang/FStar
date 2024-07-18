@@ -1547,8 +1547,7 @@ let (interpret_plugin_as_term_fun :
                                           FStar_Extraction_ML_Syntax.MLTY_Top
                                           (FStar_Extraction_ML_Syntax.MLE_Const
                                              (FStar_Extraction_ML_Syntax.MLC_Int
-                                                ((Prims.string_of_int
-                                                    tvar_arity),
+                                                ("0",
                                                   FStar_Pervasives_Native.None)));
                                         fv_lid_embedded;
                                         cb;
