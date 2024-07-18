@@ -516,7 +516,8 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
             let args = arg_unembeddings
                     @ [res_embedding;
                        lid_to_name fv_lid;
-                       with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
+                       //with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
+                       with_ty MLTY_Top <| MLE_Const (MLC_Int("0", None));
                        fv_lid_embedded;
                        cb;
                        us]
