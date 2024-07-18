@@ -2360,7 +2360,9 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
     match (SS.compress tm).n with
     | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
     | Tm_app {hd={n=Tm_fvar fv}; args} ->
-      if S.fv_eq_lid fv PC.and_lid
+      if S.fv_eq_lid fv PC.squash_lid
+      then squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
            | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg, false
