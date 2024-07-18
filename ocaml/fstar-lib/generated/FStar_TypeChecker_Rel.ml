@@ -15064,27 +15064,41 @@ let (check_subtyping :
                       solve_and_commit (singleton wl prob smt_ok)
                         (fun uu___5 -> FStar_Pervasives_Native.None) in
                     with_guard env_x prob uu___4 in
-                  ((let uu___5 =
-                      ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
-                         (FStar_Compiler_Effect.op_Bang dbg_RelTop))
-                        && (FStar_Compiler_Util.is_some g) in
-                    if uu___5
-                    then
-                      let uu___6 =
-                        FStar_TypeChecker_Normalize.term_to_string env_x t1 in
-                      let uu___7 =
-                        FStar_TypeChecker_Normalize.term_to_string env_x t2 in
-                      let uu___8 =
-                        let uu___9 = FStar_Compiler_Util.must g in
-                        guard_to_string env_x uu___9 in
-                      FStar_Compiler_Util.print3
-                        "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                        uu___6 uu___7 uu___8
-                    else ());
-                   (match g with
-                    | FStar_Pervasives_Native.None ->
-                        FStar_Pervasives_Native.None
-                    | FStar_Pervasives_Native.Some g1 ->
+                  (match g with
+                   | FStar_Pervasives_Native.None ->
+                       ((let uu___5 =
+                           (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                             (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
+                         if uu___5
+                         then
+                           let uu___6 =
+                             FStar_TypeChecker_Normalize.term_to_string env_x
+                               t1 in
+                           let uu___7 =
+                             FStar_TypeChecker_Normalize.term_to_string env_x
+                               t2 in
+                           FStar_Compiler_Util.print2
+                             "check_subtyping FAILED: %s <: %s\n" uu___6
+                             uu___7
+                         else ());
+                        FStar_Pervasives_Native.None)
+                   | FStar_Pervasives_Native.Some g1 ->
+                       ((let uu___5 =
+                           (FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                             (FStar_Compiler_Effect.op_Bang dbg_RelTop) in
+                         if uu___5
+                         then
+                           let uu___6 =
+                             FStar_TypeChecker_Normalize.term_to_string env_x
+                               t1 in
+                           let uu___7 =
+                             FStar_TypeChecker_Normalize.term_to_string env_x
+                               t2 in
+                           let uu___8 = guard_to_string env_x g1 in
+                           FStar_Compiler_Util.print3
+                             "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                             uu___6 uu___7 uu___8
+                         else ());
                         FStar_Pervasives_Native.Some (x, g1))))) uu___
           "FStar.TypeChecker.Rel.check_subtyping"
 let (get_subtyping_predicate :
