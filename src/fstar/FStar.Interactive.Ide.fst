@@ -1246,7 +1246,7 @@ let install_ide_mode_hooks printer =
 let build_initial_repl_state (filename: string) =
   let env = init_env FStar.Parser.Dep.empty_deps in
   let env = FStar.TypeChecker.Env.set_range env initial_range in
-
+  FStar.Options.set_ide_filename filename;
   { repl_line = 1;
     repl_column = 0;
     repl_fname = filename;

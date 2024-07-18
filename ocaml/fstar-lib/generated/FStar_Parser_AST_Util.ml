@@ -602,6 +602,8 @@ let rec (eq_decl' :
       | (FStar_Parser_AST.DeclSyntaxExtension (s1, t1, uu___, uu___1),
          FStar_Parser_AST.DeclSyntaxExtension (s2, t2, uu___2, uu___3)) ->
           (s1 = s2) && (t1 = t2)
+      | (FStar_Parser_AST.UseLangDecls p1, FStar_Parser_AST.UseLangDecls p2)
+          -> p1 = p2
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)

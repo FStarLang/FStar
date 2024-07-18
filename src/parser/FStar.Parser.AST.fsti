@@ -242,7 +242,8 @@ type decl' =
      The second range is the start point of the extension syntax itself *)
   | DeclSyntaxExtension of string & string & range & range
   | UseLangDecls of string
-
+  | Unparseable
+  
 and decl = {
   d:decl';
   drange:range;

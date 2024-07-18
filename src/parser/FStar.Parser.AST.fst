@@ -770,6 +770,8 @@ let rec decl_to_string (d:decl) = match d.d with
     "```" ^ id ^ "\n" ^ content ^ "\n```"
   | UseLangDecls str ->
     format1 "#lang-%s" str
+  | Unparseable ->
+    "unparseable"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

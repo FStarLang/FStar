@@ -827,6 +827,7 @@ type decl' =
   | DeclSyntaxExtension of (Prims.string * Prims.string *
   FStar_Compiler_Range_Type.range * FStar_Compiler_Range_Type.range) 
   | UseLangDecls of Prims.string 
+  | Unparseable 
 and decl =
   {
   d: decl' ;
@@ -935,6 +936,9 @@ let (uu___is_UseLangDecls : decl' -> Prims.bool) =
     match projectee with | UseLangDecls _0 -> true | uu___ -> false
 let (__proj__UseLangDecls__item___0 : decl' -> Prims.string) =
   fun projectee -> match projectee with | UseLangDecls _0 -> _0
+let (uu___is_Unparseable : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unparseable -> true | uu___ -> false
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee ->
     match projectee with | { d; drange; quals; attrs; interleaved;_} -> d
@@ -2496,6 +2500,7 @@ let rec (decl_to_string : decl -> Prims.string) =
         Prims.strcat "```"
           (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
     | UseLangDecls str -> FStar_Compiler_Util.format1 "#lang-%s" str
+    | Unparseable -> "unparseable"
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with

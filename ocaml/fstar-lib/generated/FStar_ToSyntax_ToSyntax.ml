@@ -10046,6 +10046,10 @@ and (desugar_decl_core :
               } in
             let env1 = FStar_Syntax_DsEnv.push_sigelt env se in (env1, [se])
         | FStar_Parser_AST.UseLangDecls uu___ -> (env, [])
+        | FStar_Parser_AST.Unparseable ->
+            FStar_Errors.raise_error
+              (FStar_Errors_Codes.Fatal_SyntaxError, "Syntax error")
+              d.FStar_Parser_AST.drange
         | FStar_Parser_AST.DeclSyntaxExtension
             (extension_name, code, uu___, range) ->
             let extension_parser =

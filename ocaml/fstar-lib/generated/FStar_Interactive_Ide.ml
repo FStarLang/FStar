@@ -3035,19 +3035,20 @@ let (build_initial_repl_state :
     let env1 =
       FStar_TypeChecker_Env.set_range env
         FStar_Interactive_Ide_Types.initial_range in
-    let uu___ = FStar_Compiler_Util.open_stdin () in
-    {
-      FStar_Interactive_Ide_Types.repl_line = Prims.int_one;
-      FStar_Interactive_Ide_Types.repl_column = Prims.int_zero;
-      FStar_Interactive_Ide_Types.repl_fname = filename;
-      FStar_Interactive_Ide_Types.repl_deps_stack = [];
-      FStar_Interactive_Ide_Types.repl_curmod = FStar_Pervasives_Native.None;
-      FStar_Interactive_Ide_Types.repl_env = env1;
-      FStar_Interactive_Ide_Types.repl_stdin = uu___;
-      FStar_Interactive_Ide_Types.repl_names =
-        FStar_Interactive_CompletionTable.empty;
-      FStar_Interactive_Ide_Types.repl_buffered_input_queries = []
-    }
+    FStar_Options.set_ide_filename filename;
+    (let uu___1 = FStar_Compiler_Util.open_stdin () in
+     {
+       FStar_Interactive_Ide_Types.repl_line = Prims.int_one;
+       FStar_Interactive_Ide_Types.repl_column = Prims.int_zero;
+       FStar_Interactive_Ide_Types.repl_fname = filename;
+       FStar_Interactive_Ide_Types.repl_deps_stack = [];
+       FStar_Interactive_Ide_Types.repl_curmod = FStar_Pervasives_Native.None;
+       FStar_Interactive_Ide_Types.repl_env = env1;
+       FStar_Interactive_Ide_Types.repl_stdin = uu___1;
+       FStar_Interactive_Ide_Types.repl_names =
+         FStar_Interactive_CompletionTable.empty;
+       FStar_Interactive_Ide_Types.repl_buffered_input_queries = []
+     })
 let interactive_mode' :
   'uuuuu . FStar_Interactive_Ide_Types.repl_state -> 'uuuuu =
   fun init_st ->

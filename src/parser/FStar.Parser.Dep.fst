@@ -120,8 +120,9 @@ let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
 (* In public interface *)
+let maybe_module_name_of_file f = check_and_strip_suffix (basename f)
 let module_name_of_file f =
-    match check_and_strip_suffix (basename f) with
+    match maybe_module_name_of_file f with
     | Some longname ->
       longname
     | None ->
@@ -849,7 +850,8 @@ let collect_one
 
         | UseLangDecls _
         | Pragma _
-        | DeclSyntaxExtension _ ->
+        | DeclSyntaxExtension _
+        | Unparseable ->
             ()
         | TopLevelModule lid ->
             incr num_of_toplevelmods;

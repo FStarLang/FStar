@@ -545,6 +545,8 @@ let rec eq_decl' (d1 d2:decl') : bool =
     eq_term t1 t2
   | DeclSyntaxExtension (s1, t1, _, _), DeclSyntaxExtension (s2, t2, _, _) ->
     s1 = s2 && t1 = t2
+  | UseLangDecls p1, UseLangDecls p2 ->
+    p1 = p2
   | _ -> false
 
 and eq_effect_decl (t1 t2: effect_decl) =

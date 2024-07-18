@@ -4078,6 +4078,24 @@ let (hint_file_for_src : Prims.string -> Prims.string) =
 let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
 let (ide_id_info_off : unit -> Prims.bool) =
   fun uu___ -> get_ide_id_info_off ()
+let (ide_file_name_st :
+  ((Prims.string -> unit) *
+    (unit -> Prims.string FStar_Pervasives_Native.option)))
+  =
+  let v = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
+  let set1 f =
+    let uu___ = FStar_Compiler_Effect.op_Bang v in
+    match uu___ with
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.op_Colon_Equals v
+          (FStar_Pervasives_Native.Some f)
+    | FStar_Pervasives_Native.Some uu___1 ->
+        FStar_Compiler_Effect.failwith "ide_file_name_st already set" in
+  let get uu___ = FStar_Compiler_Effect.op_Bang v in (set1, get)
+let (set_ide_filename : Prims.string -> unit) =
+  FStar_Pervasives_Native.fst ide_file_name_st
+let (ide_filename : unit -> Prims.string FStar_Pervasives_Native.option) =
+  FStar_Pervasives_Native.snd ide_file_name_st
 let (print : unit -> Prims.bool) = fun uu___ -> get_print ()
 let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()
