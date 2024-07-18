@@ -2600,7 +2600,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_da8048236680add2b0dd36d0c7a3306a",
-        "typing_FStar.Reflection.V2.TermEq.term_eq"
+        "typing_FStar.Reflection.TermEq.term_eq"
       ],
       0,
       "a7ab41e53db032df7a02f09676d0f11c"
@@ -2619,7 +2619,7 @@
         "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_da8048236680add2b0dd36d0c7a3306a",
-        "typing_FStar.Reflection.V2.TermEq.term_eq"
+        "typing_FStar.Reflection.TermEq.term_eq"
       ],
       0,
       "27acaf6a1cbffef3e36d8ca45a8e362e"

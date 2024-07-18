@@ -834,7 +834,7 @@ let norm_typing
     let d : typing g e eff t' = apply_conversion d related_t_t' in
     (| t', d |)
 
-module TermEq = FStar.Reflection.V2.TermEq
+module TermEq = FStar.Reflection.TermEq
 let norm_typing_inverse
       (g:env) (e:term) (eff:_) (t0:term)
       (d:typing g e eff t0)

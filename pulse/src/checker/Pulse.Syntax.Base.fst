@@ -21,13 +21,13 @@ module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
 let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
-  let open FStar.Reflection.V2.TermEq in
+  let open FStar.Reflection.TermEq in
   assume (faithful_univ u1);
   assume (faithful_univ u2);
   univ_eq_dec u1 u2
 
 let eq_tm (t1 t2:term) : Tot (b:bool { b <==> (t1 == t2) }) =  
-  let open FStar.Reflection.V2.TermEq in
+  let open FStar.Reflection.TermEq in
   assume (faithful t1);
   assume (faithful t2);
   term_eq_dec t1 t2

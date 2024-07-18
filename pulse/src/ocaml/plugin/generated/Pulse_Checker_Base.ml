@@ -3484,8 +3484,7 @@ let (norm_typing_inverse :
                               match uu___ with
                               | FStar_Pervasives.Mkdtuple3
                                   (t1', t1'_typing, related_t1_t1') ->
-                                  if
-                                    FStar_Reflection_V2_TermEq.term_eq t0 t1'
+                                  if FStar_Reflection_TermEq.term_eq t0 t1'
                                   then FStar_Pervasives_Native.Some ()
                                   else FStar_Pervasives_Native.None))
 let (norm_st_typing_inverse :
@@ -3554,7 +3553,7 @@ let (norm_st_typing_inverse :
                                            (t1', t1'_typing, related_t1_t1')
                                            ->
                                            if
-                                             FStar_Reflection_V2_TermEq.term_eq
+                                             FStar_Reflection_TermEq.term_eq
                                                t0 t1'
                                            then
                                              FStar_Pervasives_Native.Some

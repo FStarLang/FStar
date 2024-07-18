@@ -189,7 +189,7 @@ let check_unfoldable g (v:term) : T.Tac unit =
                         (P.term_to_string v))
 
 let visit_and_rewrite (p: (R.term & R.term)) (t:term) : T.Tac term =
-  let open FStar.Reflection.V2.TermEq in
+  let open FStar.Reflection.TermEq in
   let lhs, rhs = p in
   let visitor (t:R.term) : T.Tac R.term =
     if term_eq t lhs then rhs else t

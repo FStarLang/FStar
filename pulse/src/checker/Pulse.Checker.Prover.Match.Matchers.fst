@@ -31,7 +31,7 @@ open Pulse.Show
 module T       = FStar.Tactics.V2
 module R       = FStar.Reflection.V2
 module L       = FStar.List.Tot
-module TermEq  = FStar.Reflection.V2.TermEq
+module TermEq  = FStar.Reflection.TermEq
 module RT      = FStar.Reflection.Typing
 
 module RU  = Pulse.RuntimeUtils
