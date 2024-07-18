@@ -1965,7 +1965,30 @@ let arrow_as_prim_step_1 :
     'a embedding ->
       'b embedding ->
         ('a -> 'b) ->
-          Prims.int ->
+          FStar_Ident.lid ->
+            nbe_cbs ->
+              FStar_Syntax_Syntax.universes ->
+                args -> t FStar_Pervasives_Native.option
+  =
+  fun ea ->
+    fun eb ->
+      fun f ->
+        fun _fv_lid ->
+          fun cb ->
+            let f_wrapped _us args1 =
+              let uu___ = FStar_Compiler_List.hd args1 in
+              match uu___ with
+              | (x, uu___1) ->
+                  let uu___2 = unembed ea cb x in
+                  FStar_Compiler_Util.map_opt uu___2
+                    (fun x1 -> let uu___3 = f x1 in embed eb cb uu___3) in
+            f_wrapped
+let arrow_as_prim_step_2 :
+  'a 'b 'c .
+    'a embedding ->
+      'b embedding ->
+        'c embedding ->
+          ('a -> 'b -> 'c) ->
             FStar_Ident.lid ->
               nbe_cbs ->
                 FStar_Syntax_Syntax.universes ->
@@ -1973,28 +1996,37 @@ let arrow_as_prim_step_1 :
   =
   fun ea ->
     fun eb ->
-      fun f ->
-        fun n_tvars ->
+      fun ec ->
+        fun f ->
           fun _fv_lid ->
             fun cb ->
               let f_wrapped _us args1 =
-                let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
+                let uu___ = FStar_Compiler_List.hd args1 in
                 match uu___ with
-                | (_tvar_args, rest_args) ->
-                    let uu___1 = FStar_Compiler_List.hd rest_args in
-                    (match uu___1 with
-                     | (x, uu___2) ->
-                         let uu___3 = unembed ea cb x in
-                         FStar_Compiler_Util.map_opt uu___3
-                           (fun x1 -> let uu___4 = f x1 in embed eb cb uu___4)) in
+                | (x, uu___1) ->
+                    let uu___2 =
+                      let uu___3 = FStar_Compiler_List.tl args1 in
+                      FStar_Compiler_List.hd uu___3 in
+                    (match uu___2 with
+                     | (y, uu___3) ->
+                         let uu___4 = unembed ea cb x in
+                         FStar_Compiler_Util.bind_opt uu___4
+                           (fun x1 ->
+                              let uu___5 = unembed eb cb y in
+                              FStar_Compiler_Util.bind_opt uu___5
+                                (fun y1 ->
+                                   let uu___6 =
+                                     let uu___7 = f x1 y1 in
+                                     embed ec cb uu___7 in
+                                   FStar_Pervasives_Native.Some uu___6))) in
               f_wrapped
-let arrow_as_prim_step_2 :
-  'a 'b 'c .
+let arrow_as_prim_step_3 :
+  'a 'b 'c 'd .
     'a embedding ->
       'b embedding ->
         'c embedding ->
-          ('a -> 'b -> 'c) ->
-            Prims.int ->
+          'd embedding ->
+            ('a -> 'b -> 'c -> 'd) ->
               FStar_Ident.lid ->
                 nbe_cbs ->
                   FStar_Syntax_Syntax.universes ->
@@ -2003,92 +2035,41 @@ let arrow_as_prim_step_2 :
   fun ea ->
     fun eb ->
       fun ec ->
-        fun f ->
-          fun n_tvars ->
+        fun ed ->
+          fun f ->
             fun _fv_lid ->
               fun cb ->
                 let f_wrapped _us args1 =
-                  let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
+                  let uu___ = FStar_Compiler_List.hd args1 in
                   match uu___ with
-                  | (_tvar_args, rest_args) ->
-                      let uu___1 = FStar_Compiler_List.hd rest_args in
-                      (match uu___1 with
-                       | (x, uu___2) ->
-                           let uu___3 =
-                             let uu___4 = FStar_Compiler_List.tl rest_args in
-                             FStar_Compiler_List.hd uu___4 in
-                           (match uu___3 with
-                            | (y, uu___4) ->
-                                let uu___5 = unembed ea cb x in
-                                FStar_Compiler_Util.bind_opt uu___5
+                  | (x, uu___1) ->
+                      let uu___2 =
+                        let uu___3 = FStar_Compiler_List.tl args1 in
+                        FStar_Compiler_List.hd uu___3 in
+                      (match uu___2 with
+                       | (y, uu___3) ->
+                           let uu___4 =
+                             let uu___5 =
+                               let uu___6 = FStar_Compiler_List.tl args1 in
+                               FStar_Compiler_List.tl uu___6 in
+                             FStar_Compiler_List.hd uu___5 in
+                           (match uu___4 with
+                            | (z, uu___5) ->
+                                let uu___6 = unembed ea cb x in
+                                FStar_Compiler_Util.bind_opt uu___6
                                   (fun x1 ->
-                                     let uu___6 = unembed eb cb y in
-                                     FStar_Compiler_Util.bind_opt uu___6
+                                     let uu___7 = unembed eb cb y in
+                                     FStar_Compiler_Util.bind_opt uu___7
                                        (fun y1 ->
-                                          let uu___7 =
-                                            let uu___8 = f x1 y1 in
-                                            embed ec cb uu___8 in
-                                          FStar_Pervasives_Native.Some uu___7)))) in
+                                          let uu___8 = unembed ec cb z in
+                                          FStar_Compiler_Util.bind_opt uu___8
+                                            (fun z1 ->
+                                               let uu___9 =
+                                                 let uu___10 = f x1 y1 z1 in
+                                                 embed ed cb uu___10 in
+                                               FStar_Pervasives_Native.Some
+                                                 uu___9))))) in
                 f_wrapped
-let arrow_as_prim_step_3 :
-  'a 'b 'c 'd .
-    'a embedding ->
-      'b embedding ->
-        'c embedding ->
-          'd embedding ->
-            ('a -> 'b -> 'c -> 'd) ->
-              Prims.int ->
-                FStar_Ident.lid ->
-                  nbe_cbs ->
-                    FStar_Syntax_Syntax.universes ->
-                      args -> t FStar_Pervasives_Native.option
-  =
-  fun ea ->
-    fun eb ->
-      fun ec ->
-        fun ed ->
-          fun f ->
-            fun n_tvars ->
-              fun _fv_lid ->
-                fun cb ->
-                  let f_wrapped _us args1 =
-                    let uu___ = FStar_Compiler_List.splitAt n_tvars args1 in
-                    match uu___ with
-                    | (_tvar_args, rest_args) ->
-                        let uu___1 = FStar_Compiler_List.hd rest_args in
-                        (match uu___1 with
-                         | (x, uu___2) ->
-                             let uu___3 =
-                               let uu___4 = FStar_Compiler_List.tl rest_args in
-                               FStar_Compiler_List.hd uu___4 in
-                             (match uu___3 with
-                              | (y, uu___4) ->
-                                  let uu___5 =
-                                    let uu___6 =
-                                      let uu___7 =
-                                        FStar_Compiler_List.tl rest_args in
-                                      FStar_Compiler_List.tl uu___7 in
-                                    FStar_Compiler_List.hd uu___6 in
-                                  (match uu___5 with
-                                   | (z, uu___6) ->
-                                       let uu___7 = unembed ea cb x in
-                                       FStar_Compiler_Util.bind_opt uu___7
-                                         (fun x1 ->
-                                            let uu___8 = unembed eb cb y in
-                                            FStar_Compiler_Util.bind_opt
-                                              uu___8
-                                              (fun y1 ->
-                                                 let uu___9 = unembed ec cb z in
-                                                 FStar_Compiler_Util.bind_opt
-                                                   uu___9
-                                                   (fun z1 ->
-                                                      let uu___10 =
-                                                        let uu___11 =
-                                                          f x1 y1 z1 in
-                                                        embed ed cb uu___11 in
-                                                      FStar_Pervasives_Native.Some
-                                                        uu___10)))))) in
-                  f_wrapped
 let (e_order : FStar_Order.order embedding) =
   let ord_Lt_lid =
     FStar_Ident.lid_of_path ["FStar"; "Order"; "Lt"]

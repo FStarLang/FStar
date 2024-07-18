@@ -25,7 +25,7 @@ let _ =
                         FStar_Syntax_Embeddings.e_string)
                      (FStar_Syntax_Embeddings.e_list
                         FStar_Syntax_Embeddings.e_string) FStar_Order.e_order
-                     compare_name Prims.int_zero
+                     compare_name
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_name") cb us)
                     args))
@@ -41,7 +41,6 @@ let _ =
                    (FStar_TypeChecker_NBETerm.e_list
                       FStar_TypeChecker_NBETerm.e_string)
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_name
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_name") cb us) args))
 let (compare_fv :
@@ -64,7 +63,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_fv
                      FStar_Reflection_V2_Embeddings.e_fv FStar_Order.e_order
-                     compare_fv Prims.int_zero
+                     compare_fv
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
     (fun cb ->
@@ -77,7 +76,6 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_fv
                    FStar_Reflection_V2_NBEEmbeddings.e_fv
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_fv
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_fv") cb us) args))
 let (compare_const :
@@ -140,7 +138,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_vconst
                      FStar_Reflection_V2_Embeddings.e_vconst
-                     FStar_Order.e_order compare_const Prims.int_zero
+                     FStar_Order.e_order compare_const
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_const") cb us)
                     args))
@@ -154,7 +152,6 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_vconst
                    FStar_Reflection_V2_NBEEmbeddings.e_vconst
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_const
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_const") cb us)
                   args))
@@ -185,7 +182,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_ident
                      FStar_Reflection_V2_Embeddings.e_ident
-                     FStar_Order.e_order compare_ident Prims.int_zero
+                     FStar_Order.e_order compare_ident
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_ident") cb us)
                     args))
@@ -199,7 +196,6 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_ident
                    FStar_Reflection_V2_NBEEmbeddings.e_ident
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_ident
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_ident") cb us)
                   args))
@@ -255,7 +251,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_universe
                      FStar_Reflection_V2_Embeddings.e_universe
-                     FStar_Order.e_order compare_universe Prims.int_zero
+                     FStar_Order.e_order compare_universe
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_universe") cb us)
                     args))
@@ -269,7 +265,7 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_universe
                    FStar_Reflection_V2_NBEEmbeddings.e_universe
                    (FStar_TypeChecker_NBETerm.e_unsupported ())
-                   compare_universe Prims.int_zero
+                   compare_universe
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_universe") cb us)
                   args))
@@ -292,7 +288,7 @@ let _ =
                         FStar_Reflection_V2_Embeddings.e_universe)
                      (FStar_Syntax_Embeddings.e_list
                         FStar_Reflection_V2_Embeddings.e_universe)
-                     FStar_Order.e_order compare_universes Prims.int_zero
+                     FStar_Order.e_order compare_universes
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_universes") cb
                      us) args))
@@ -308,7 +304,7 @@ let _ =
                    (FStar_TypeChecker_NBETerm.e_list
                       FStar_Reflection_V2_NBEEmbeddings.e_universe)
                    (FStar_TypeChecker_NBETerm.e_unsupported ())
-                   compare_universes Prims.int_zero
+                   compare_universes
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_universes") cb us)
                   args))
@@ -577,7 +573,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_term
                      FStar_Reflection_V2_Embeddings.e_term
-                     FStar_Order.e_order compare_term Prims.int_zero
+                     FStar_Order.e_order compare_term
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_term") cb us)
                     args))
@@ -591,7 +587,6 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_term
                    FStar_Reflection_V2_NBEEmbeddings.e_term
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_term
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_term") cb us) args))
 let (compare_comp :
@@ -611,7 +606,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_comp
                      FStar_Reflection_V2_Embeddings.e_comp
-                     FStar_Order.e_order compare_comp Prims.int_zero
+                     FStar_Order.e_order compare_comp
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_comp") cb us)
                     args))
@@ -625,7 +620,6 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_comp
                    FStar_Reflection_V2_NBEEmbeddings.e_comp
                    (FStar_TypeChecker_NBETerm.e_unsupported ()) compare_comp
-                   Prims.int_zero
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_comp") cb us) args))
 let (compare_binder :
@@ -645,7 +639,7 @@ let _ =
                   (FStar_Syntax_Embeddings.arrow_as_prim_step_2
                      FStar_Reflection_V2_Embeddings.e_binder
                      FStar_Reflection_V2_Embeddings.e_binder
-                     FStar_Order.e_order compare_binder Prims.int_zero
+                     FStar_Order.e_order compare_binder
                      (FStar_Ident.lid_of_str
                         "FStar.Reflection.V2.Compare.compare_binder") cb us)
                     args))
@@ -659,7 +653,7 @@ let _ =
                    FStar_Reflection_V2_NBEEmbeddings.e_binder
                    FStar_Reflection_V2_NBEEmbeddings.e_binder
                    (FStar_TypeChecker_NBETerm.e_unsupported ())
-                   compare_binder Prims.int_zero
+                   compare_binder
                    (FStar_Ident.lid_of_str
                       "FStar.Reflection.V2.Compare.compare_binder") cb us)
                   args))
