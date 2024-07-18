@@ -106,14 +106,168 @@ type code_fragment = {
    code: string;
 }
 
+type 'a incremental_result = 
+    ('a * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option
+
 type parse_result =
     | ASTFragment of (FStar_Parser_AST.inputFragment * (string * FStar_Compiler_Range.range) list)
-    | IncrementalFragment of ((FStar_Parser_AST.decl * code_fragment) list * (string * FStar_Compiler_Range.range) list * parse_error option)
+    | IncrementalFragment of FStar_Parser_AST.decl incremental_result
     | Term of FStar_Parser_AST.term
     | ParseError of parse_error
 
 module BU = FStar_Compiler_Util
 module Range = FStar_Compiler_Range
+module MHL = MenhirLib.Convert
+
+let range_of_positions filename start fin = 
+  let start_pos = FStar_Parser_Util.pos_of_lexpos start in
+  let end_pos = FStar_Parser_Util.pos_of_lexpos fin in
+  FStar_Compiler_Range.mk_range filename start_pos end_pos
+
+let err_of_parse_error filename lexbuf =
+    let pos = lexbuf.cur_p in
+    Fatal_SyntaxError,
+    Msg.mkmsg "Syntax error",
+    range_of_positions filename pos pos
+
+let parse_incremental_decls
+    filename
+    (contents:string)
+    lexbuf
+    (lexer:unit -> 'token * Lexing.position * Lexing.position)
+    (range_of: 'semantic_value -> FStar_Compiler_Range.range)
+    (parse_one:
+     (Lexing.lexbuf -> 'token) ->
+         Lexing.lexbuf ->
+         ('semantic_value list * FStar_Sedlexing.snap option) option)
+: 'semantic_value incremental_result
+= let parse_one = MenhirLib.Convert.Simplified.traditional2revised parse_one in
+  let err_of_parse_error () = err_of_parse_error filename lexbuf in
+  let contents_at =
+    let lines = U.splitlines contents in
+    let split_line_at_col line col =
+        if col > 0
+        then (
+            (* Don't index directly into the string, since this is a UTF-8 string.
+                Convert first to a list of characters, index into that, and then convert
+                back to a string *)
+            let chars = FStar_String.list_of_string line in
+            if col <= List.length chars
+            then (
+              let prefix, suffix = FStar_Compiler_Util.first_N (Z.of_int col) chars in
+              Some (FStar_String.string_of_list prefix, 
+                    FStar_String.string_of_list suffix)
+            )
+            else (
+              None
+            )
+        )
+        else None
+    in
+    let line_from_col line pos =
+      match split_line_at_col line pos with
+      | None -> None
+      | Some (_, p) -> Some p
+    in
+    let line_to_col line pos =
+      match split_line_at_col line pos with
+      | None -> None
+      | Some (p, _) -> Some p
+    in
+    (* Find the raw content of the input from the line of the start_pos to the end_pos.
+        This is used by Interactive.Incremental to record exactly the raw content of the
+        fragment that was checked *) 
+    fun (range:Range.range) ->
+      (* discard all lines until the start line *)
+      let start_pos = Range.start_of_range range in
+      let end_pos = Range.end_of_range range in
+      let start_line = Z.to_int (Range.line_of_pos start_pos) in
+      let start_col = Z.to_int (Range.col_of_pos start_pos) in
+      let end_line = Z.to_int (Range.line_of_pos end_pos) in
+      let end_col = Z.to_int (Range.col_of_pos end_pos) in          
+      let suffix = 
+        FStar_Compiler_Util.nth_tail 
+          (Z.of_int (if start_line > 0 then start_line - 1 else 0))
+          lines
+      in
+      (* Take all the lines between the start and end lines *)
+      let text, rest =
+        FStar_Compiler_Util.first_N
+          (Z.of_int (end_line - start_line))
+          suffix
+      in
+      let text =
+        match text with
+        | first_line::rest -> (
+          match line_from_col first_line start_col with
+          | Some s -> s :: rest
+          | _ -> text
+        )
+        | _ -> text
+      in
+      let text = 
+      (* For the last line itself, take the prefix of it up to the character of the end_pos *)
+        match rest with
+        | last::_ -> (
+          match line_to_col last end_col with
+          | None -> text
+          | Some last ->
+            (* The last line is also the first line *)
+            match text with
+            | [] -> (
+              match line_from_col last start_col with
+              | None -> [last]
+              | Some l -> [l]
+            )
+            | _ -> text @ [last]
+        )
+        | _ -> text
+      in
+      { range;
+        code = FStar_String.concat "\n" text }
+  in
+  let open FStar_Pervasives in
+  let rec parse decls =
+    let start_pos = current_pos lexbuf in
+    let d =
+      try
+        (* Reset the gensym between decls, to ensure determinism, 
+            otherwise, every _ is parsed as different name *)
+        FStar_GenSym.reset_gensym();
+        Inl (parse_one lexer)
+      with 
+      | FStar_Errors.Error(e, msg, r, _ctx) ->
+        Inr (e, msg, r)
+
+      | _e -> 
+        Inr (err_of_parse_error ())
+    in
+    match d with
+    | Inl None -> List.rev decls, FStar_Parser_Util.flush_comments(), None
+    | Inl (Some (ds, snap_opt)) -> 
+      (* The parser may advance the lexer beyond the decls last token.
+          E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
+                but the lexer will have advanced to `let ^ g ...` since the
+                parser will have looked ahead.
+                Rollback the lexer one token for declarations whose syntax
+                requires such lookahead to complete a production.
+      *)
+      let end_pos =
+        let _ = 
+          match snap_opt with
+          | None -> 
+            rollback lexbuf
+          | Some p -> 
+            restore_snapshot lexbuf p
+        in
+        current_pos lexbuf
+      in
+      let ds = List.map (fun d -> d, contents_at (range_of d)) ds in
+      parse (ds@decls)
+    | Inr err -> List.rev decls, FStar_Parser_Util.flush_comments(), Some err
+  in
+  parse []
+
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -135,158 +289,6 @@ let parse fn =
     let tok = FStar_Parser_LexFStar.token lexbuf in
     (tok, lexbuf.start_p, lexbuf.cur_p)
   in
-  let range_of_positions start fin = 
-    let start_pos = FStar_Parser_Util.pos_of_lexpos start in
-    let end_pos = FStar_Parser_Util.pos_of_lexpos fin in
-    FStar_Compiler_Range.mk_range filename start_pos end_pos
-  in
-  let err_of_parse_error () =
-      let pos = lexbuf.cur_p in
-      Fatal_SyntaxError,
-      Msg.mkmsg "Syntax error",
-      range_of_positions pos pos
-  in
-  let parse_incremental_decls () =
-      let parse_one_decl = MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.oneDeclOrEOF in
-      let contents_at =
-        let lines = U.splitlines contents in
-        let split_line_at_col line col =
-            if col > 0
-            then (
-                (* Don't index directly into the string, since this is a UTF-8 string.
-                   Convert first to a list of charaters, index into that, and then convert
-                   back to a string *)
-                let chars = FStar_String.list_of_string line in
-                if col <= List.length chars
-                then (
-                  let prefix, suffix = FStar_Compiler_Util.first_N (Z.of_int col) chars in
-                  Some (FStar_String.string_of_list prefix, 
-                        FStar_String.string_of_list suffix)
-                )
-                else (
-                  None
-                )
-            )
-            else None
-        in
-        let line_from_col line pos =
-          match split_line_at_col line pos with
-          | None -> None
-          | Some (_, p) -> Some p
-        in
-        let line_to_col line pos =
-          match split_line_at_col line pos with
-          | None -> None
-          | Some (p, _) -> Some p
-        in
-        (* Find the raw content of the input from the line of the start_pos to the end_pos.
-           This is used by Interactive.Incremental to record exactly the raw content of the
-           fragment that was checked *) 
-        fun (range:Range.range) ->
-          (* discard all lines until the start line *)
-          let start_pos = Range.start_of_range range in
-          let end_pos = Range.end_of_range range in
-          let start_line = Z.to_int (Range.line_of_pos start_pos) in
-          let start_col = Z.to_int (Range.col_of_pos start_pos) in
-          let end_line = Z.to_int (Range.line_of_pos end_pos) in
-          let end_col = Z.to_int (Range.col_of_pos end_pos) in          
-          let suffix = 
-            FStar_Compiler_Util.nth_tail 
-              (Z.of_int (if start_line > 0 then start_line - 1 else 0))
-              lines
-          in
-          (* Take all the lines between the start and end lines *)
-          let text, rest =
-            FStar_Compiler_Util.first_N
-              (Z.of_int (end_line - start_line))
-              suffix
-          in
-          let text =
-            match text with
-            | first_line::rest -> (
-              match line_from_col first_line start_col with
-              | Some s -> s :: rest
-              | _ -> text
-            )
-            | _ -> text
-          in
-          let text = 
-          (* For the last line itself, take the prefix of it up to the character of the end_pos *)
-            match rest with
-            | last::_ -> (
-              match line_to_col last end_col with
-              | None -> text
-              | Some last ->
-                (* The last line is also the first line *)
-                match text with
-                | [] -> (
-                  match line_from_col last start_col with
-                  | None -> [last]
-                  | Some l -> [l]
-                )
-                | _ -> text @ [last]
-            )
-            | _ -> text
-          in
-          { range;
-            code = FStar_String.concat "\n" text }
-      in
-      let open FStar_Pervasives in
-      let rec parse decls =
-        let start_pos = current_pos lexbuf in
-        let d =
-          try
-            (* Reset the gensym between decls, to ensure determinism, 
-               otherwise, every _ is parsed as different name *)
-            FStar_GenSym.reset_gensym();
-            Inl (parse_one_decl lexer)
-          with 
-          | FStar_Errors.Error(e, msg, r, _ctx) ->
-            Inr (e, msg, r)
-
-          | _e -> 
-            Inr (err_of_parse_error ())
-        in
-        match d with
-        | Inl None -> List.rev decls, None
-        | Inl (Some (d, snap_opt)) -> 
-          (* The parser may advance the lexer beyond the decls last token.
-             E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
-                   but the lexer will have advanced to `let ^ g ...` since the
-                   parser will have looked ahead.
-                   Rollback the lexer one token for declarations whose syntax
-                   requires such lookahead to complete a production.
-          *)
-          let end_pos =
-            let _ = 
-              match snap_opt with
-              | None -> 
-                rollback lexbuf
-              | Some p -> 
-                restore_snapshot lexbuf p
-            in
-            current_pos lexbuf
-          in
-          let raw_contents = contents_at d.drange in
-          if FStar_Compiler_Debug.any()
-          then 
-            FStar_Compiler_Util.print2 "At range %s, got code\n%s\n"
-              (FStar_Compiler_Range.string_of_range raw_contents.range)
-              (raw_contents.code);
-          parse ((d, raw_contents)::decls)
-        | Inr err -> List.rev decls, Some err
-      in
-      parse []
-  in
-  let parse_incremental_fragment () =
-      let decls, err_opt = parse_incremental_decls () in
-      match err_opt with
-      | None ->
-        FStar_Parser_AST.as_frag (List.map fst decls)
-      | Some (e, msg, r) ->
-        raise (FStar_Errors.Error(e, msg, r, []))
-  in
-
   try
     match fn with
     | Filename _
@@ -306,9 +308,17 @@ let parse fn =
       in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
       end
       
-    | Incremental _ ->
-      let decls, err_opt = parse_incremental_decls () in
-      IncrementalFragment(decls, FStar_Parser_Util.flush_comments(), err_opt)
+    | Incremental i ->
+      let decls, comments, err_opt = 
+        parse_incremental_decls 
+          filename
+          i.frag_text
+          lexbuf
+          lexer
+          (fun (d:FStar_Parser_AST.decl) -> d.drange)
+          FStar_Parser_Parse.oneDeclOrEOF
+      in
+      IncrementalFragment(decls, comments, err_opt)
     
     | Fragment _ ->
       Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
@@ -324,7 +334,7 @@ let parse fn =
     | Parsing.Parse_error as _e
     | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
 *)
-      ParseError (err_of_parse_error())
+      ParseError (err_of_parse_error filename lexbuf)
 
 
 (** Parsing of command-line error/warning/silent flags. *)

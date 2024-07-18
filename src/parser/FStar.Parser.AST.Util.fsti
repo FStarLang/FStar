@@ -52,3 +52,15 @@ type extension_parser = {
 
 val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
 val lookup_extension_parser (extension_name:string) : option extension_parser
+
+
+type extension_lang_parser = {
+  parse_decls:
+   (contents:string ->
+    p:FStar.Compiler.Range.range ->
+    either error_message (list decl))
+}
+
+val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : unit
+val lookup_extension_lang_parser (extension_name:string) : option extension_lang_parser
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStar.Compiler.Range.range) : list decl

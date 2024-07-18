@@ -360,6 +360,8 @@ and eq_term' (t1 t2:term')
       eq_binder b1 b3 &&
       eq_binder b2 b4 &&      
       eq_term t4 t8
+    | DesugaredBlob _, DesugaredBlob _ ->
+      false
     | _ -> false
 
 and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
@@ -723,3 +725,29 @@ let register_extension_parser (ext:string) (parser:extension_parser) =
   FStar.Compiler.Util.smap_add extension_parser_table ext parser
 let lookup_extension_parser (ext:string) =
   FStar.Compiler.Util.smap_try_find extension_parser_table ext
+
+
+let extension_lang_parser_table : BU.smap extension_lang_parser = FStar.Compiler.Util.smap_create 20
+let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
+  FStar.Compiler.Util.smap_add extension_lang_parser_table ext parser
+let lookup_extension_lang_parser (ext:string) =
+  FStar.Compiler.Util.smap_try_find extension_lang_parser_table ext
+
+let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:range)
+: list decl
+= let extension_parser = lookup_extension_lang_parser lang_name in
+  match extension_parser with
+  | None ->
+    raise_error 
+        (Errors.Fatal_SyntaxError,
+         BU.format1 "Unknown language extension %s" lang_name)
+        raw_text_pos
+  | Some parser ->
+    match parser.parse_decls raw_text raw_text_pos with
+    | Inl error ->
+      raise_error
+          (Errors.Fatal_SyntaxError, error.message)
+          error.range
+    | Inr ds ->
+      mk_decl (UseLangDecls lang_name) raw_text_pos [] :: ds
+

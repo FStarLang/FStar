@@ -627,6 +627,9 @@ let rec term_to_string (x:term) = match x.tm with
       (term_to_string q)
       (term_to_string e1)
       (term_to_string e2)
+    
+  | DesugaredBlob _ ->
+    "<DesugaredBlob>"
       
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
@@ -736,7 +739,7 @@ let string_of_pragma = function
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
 
-let decl_to_string (d:decl) = match d.d with
+let rec decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open l -> "open " ^ (string_of_lid l)
   | Friend l -> "friend " ^ (string_of_lid l)
@@ -765,6 +768,8 @@ let decl_to_string (d:decl) = match d.d with
   | Pragma p -> "pragma #" ^ string_of_pragma p
   | DeclSyntaxExtension (id, content, _, _) -> 
     "```" ^ id ^ "\n" ^ content ^ "\n```"
+  | UseLangDecls str ->
+    format1 "#use-lang-%s" str
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

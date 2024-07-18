@@ -24,6 +24,7 @@ open FStar.Parser.AST
 open FStar.Parser.ParseIt
 open FStar.Compiler.Util
 open FStar.Errors
+open FStar.Class.Show
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
@@ -42,10 +43,21 @@ let parse_fragment (frag: ParseIt.input_frag) : fragment =
     | Term _ ->
         failwith "Impossible: parsing a Toplevel always results in an ASTFragment"
 
+let maybe_dump_module (m:modul) = 
+    match m with
+    | Module (l, ds)
+    | Interface (l, ds, _) ->
+      if FStar.Options.dump_module (Ident.string_of_lid l)
+      then (
+        print2 "Parsed module %s\n%s\n"
+            (Ident.string_of_lid l)
+            (List.map show ds |> String.concat "\n")
+      )
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
     match ParseIt.parse (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
+        maybe_dump_module ast;
         ast, comments
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in

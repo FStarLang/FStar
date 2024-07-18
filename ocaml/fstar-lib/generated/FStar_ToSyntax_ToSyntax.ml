@@ -5260,6 +5260,7 @@ and (desugar_term_maybe_top :
                     FStar_Syntax_Syntax.mk_Tm_app head args
                       top.FStar_Parser_AST.range in
                   (uu___3, noaqs))
+         | FStar_Parser_AST.DesugaredBlob t -> (t, noaqs)
          | uu___2 when top.FStar_Parser_AST.level = FStar_Parser_AST.Formula
              -> let uu___3 = desugar_formula env top in (uu___3, noaqs)
          | uu___2 ->
@@ -10044,6 +10045,7 @@ and (desugar_decl_core :
                 FStar_Syntax_Syntax.sigopts = FStar_Pervasives_Native.None
               } in
             let env1 = FStar_Syntax_DsEnv.push_sigelt env se in (env1, [se])
+        | FStar_Parser_AST.UseLangDecls uu___ -> (env, [])
         | FStar_Parser_AST.DeclSyntaxExtension
             (extension_name, code, uu___, range) ->
             let extension_parser =
@@ -10090,7 +10092,7 @@ and (desugar_decl_core :
                           FStar_Parser_AST.interleaved =
                             (d.FStar_Parser_AST.interleaved)
                         }))
-let (desugar_decls :
+and (desugar_decls :
   env_t ->
     FStar_Parser_AST.decl Prims.list ->
       (env_t * FStar_Syntax_Syntax.sigelt Prims.list))

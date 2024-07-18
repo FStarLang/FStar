@@ -261,6 +261,7 @@ let maybe_trim_lines start_column comment =
 
 let comment_buffer = Buffer.create 128
 let blob_buffer = Buffer.create 128
+let use_lang_buffer = Buffer.create 128
 
 let start_comment lexbuf =
   Buffer.add_string comment_buffer "(*" ;
@@ -452,6 +453,15 @@ match%sedlex lexbuf with
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
+ | "#use-lang-", ident -> (
+   let s = L.lexeme lexbuf in
+   let lang_name = BatString.lchop ~n:10 s in
+   let snap = Sedlexing.snapshot lexbuf in
+   Buffer.clear use_lang_buffer;
+   let pos = L.current_pos lexbuf in
+   use_lang_blob snap lang_name pos use_lang_buffer lexbuf
+ )
+
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
  | "#push-options" -> PRAGMA_PUSH_OPTIONS
@@ -684,6 +694,22 @@ match %sedlex lexbuf with
  | any ->
    Buffer.add_string buffer (L.lexeme lexbuf);
    uninterpreted_blob snap name pos buffer lexbuf
+ | _ -> assert false
+
+and use_lang_blob snap name pos buffer lexbuf =
+match %sedlex lexbuf with
+ | "#end-lang" ->
+   USE_LANG_BLOB(name, Buffer.contents buffer, pos, snap)  
+ | eof ->
+   L.rollback lexbuf; (* leave the eof to be consumed later *)
+   USE_LANG_BLOB(name, Buffer.contents buffer, pos, snap)  
+ | newline ->
+   L.new_line lexbuf;
+   Buffer.add_string buffer (L.lexeme lexbuf);
+   use_lang_blob snap name pos buffer lexbuf
+ | any ->
+   Buffer.add_string buffer (L.lexeme lexbuf);
+   use_lang_blob snap name pos buffer lexbuf
  | _ -> assert false
 
 and ignore_endline lexbuf =

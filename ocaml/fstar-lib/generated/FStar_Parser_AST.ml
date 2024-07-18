@@ -96,6 +96,7 @@ type term' =
   | ElimImplies of (term * term * term) 
   | ElimOr of (term * term * term * binder * term * binder * term) 
   | ElimAnd of (term * term * term * binder * binder * term) 
+  | DesugaredBlob of FStar_Syntax_Syntax.term 
 and term = {
   tm: term' ;
   range: FStar_Compiler_Range_Type.range ;
@@ -417,6 +418,11 @@ let (uu___is_ElimAnd : term' -> Prims.bool) =
 let (__proj__ElimAnd__item___0 :
   term' -> (term * term * term * binder * binder * term)) =
   fun projectee -> match projectee with | ElimAnd _0 -> _0
+let (uu___is_DesugaredBlob : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DesugaredBlob _0 -> true | uu___ -> false
+let (__proj__DesugaredBlob__item___0 : term' -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | DesugaredBlob _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> tm
@@ -820,6 +826,7 @@ type decl' =
   | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
   | DeclSyntaxExtension of (Prims.string * Prims.string *
   FStar_Compiler_Range_Type.range * FStar_Compiler_Range_Type.range) 
+  | UseLangDecls of Prims.string 
 and decl =
   {
   d: decl' ;
@@ -923,6 +930,11 @@ let (__proj__DeclSyntaxExtension__item___0 :
     (Prims.string * Prims.string * FStar_Compiler_Range_Type.range *
       FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
+let (uu___is_UseLangDecls : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UseLangDecls _0 -> true | uu___ -> false
+let (__proj__UseLangDecls__item___0 : decl' -> Prims.string) =
+  fun projectee -> match projectee with | UseLangDecls _0 -> _0
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee ->
     match projectee with | { d; drange; quals; attrs; interleaved;_} -> d
@@ -2181,6 +2193,7 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___3 = term_to_string e2 in
         FStar_Compiler_Util.format4 "_intro_ %s /\\ %s with %s and %s" uu___
           uu___1 uu___2 uu___3
+    | DesugaredBlob uu___ -> "<DesugaredBlob>"
 and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
   fun sep ->
     fun bs ->
@@ -2397,7 +2410,7 @@ let (string_of_pragma : pragma -> Prims.string) =
     | PopOptions -> "pop-options"
     | RestartSolver -> "restart-solver"
     | PrintEffectsGraph -> "print-effects-graph"
-let (decl_to_string : decl -> Prims.string) =
+let rec (decl_to_string : decl -> Prims.string) =
   fun d ->
     match d.d with
     | TopLevelModule l ->
@@ -2482,6 +2495,7 @@ let (decl_to_string : decl -> Prims.string) =
     | DeclSyntaxExtension (id, content, uu___, uu___1) ->
         Prims.strcat "```"
           (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
+    | UseLangDecls str -> FStar_Compiler_Util.format1 "#use-lang-%s" str
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with

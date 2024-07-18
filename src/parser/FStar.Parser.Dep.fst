@@ -847,6 +847,7 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
+        | UseLangDecls _
         | Pragma _
         | DeclSyntaxExtension _ ->
             ()
@@ -1132,6 +1133,8 @@ let collect_one
           collect_binder y;
           collect_term e;
           collect_term e'
+        
+        | DesugaredBlob _ -> ()
 
       and collect_patterns ps =
         List.iter collect_pattern ps

@@ -22,7 +22,7 @@ open FStar.Compiler.Range
 open FStar.Const
 open FStar.Ident
 open FStar.Class.Show
-
+module S = FStar.Syntax.Syntax
 (* AST produced by the parser, before desugaring
    It is not stratified: a single type called "term" containing
    expressions, formulas, types, and so on
@@ -96,6 +96,7 @@ type term' =
   | ElimImplies of term & term & term                             (* elim_implies P Q with e *)
   | ElimOr of term & term & term & binder & term & binder & term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
+  | DesugaredBlob of S.term
 and term = {tm:term'; range:range; level:level}
 
 (* (as y)? returns t *)
@@ -240,6 +241,7 @@ type decl' =
   (* The first range is the entire range of the blob.
      The second range is the start point of the extension syntax itself *)
   | DeclSyntaxExtension of string & string & range & range
+  | UseLangDecls of string
 
 and decl = {
   d:decl';

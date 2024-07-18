@@ -3499,6 +3499,7 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Hat p1 uu___3 in
               FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___2 in
             FStar_Pprint.op_Hat_Hat uu___ uu___1
+        | FStar_Parser_AST.DesugaredBlob uu___ -> str "<DesugaredBlob>"
         | uu___ -> p_typ ps pb e
 and (p_dec_wf :
   Prims.bool ->

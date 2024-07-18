@@ -1356,6 +1356,7 @@ let (collect_one :
                  -> collect_term t
              | FStar_Parser_AST.Polymonadic_subcomp (uu___1, uu___2, t) ->
                  collect_term t
+             | FStar_Parser_AST.UseLangDecls uu___1 -> ()
              | FStar_Parser_AST.Pragma uu___1 -> ()
              | FStar_Parser_AST.DeclSyntaxExtension uu___1 -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
@@ -1791,6 +1792,7 @@ let (collect_one :
                   collect_binder y;
                   collect_term e;
                   collect_term e')
+             | FStar_Parser_AST.DesugaredBlob uu___2 -> ()
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat

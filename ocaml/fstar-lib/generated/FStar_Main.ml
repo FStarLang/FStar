@@ -153,29 +153,30 @@ let go : 'uuuuu . 'uuuuu -> unit =
          | FStar_Getopt.Success ->
              (FStar_Compiler_Effect.op_Colon_Equals fstar_files
                 (FStar_Pervasives_Native.Some filenames);
+              load_native_tactics ();
               FStar_Syntax_Unionfind.set_ro ();
-              (let uu___4 =
-                 let uu___5 = FStar_Options.dep () in
-                 uu___5 <> FStar_Pervasives_Native.None in
-               if uu___4
+              (let uu___5 =
+                 let uu___6 = FStar_Options.dep () in
+                 uu___6 <> FStar_Pervasives_Native.None in
+               if uu___5
                then
-                 let uu___5 =
+                 let uu___6 =
                    FStar_Parser_Dep.collect filenames
                      FStar_CheckedFiles.load_parsing_data_from_cache in
-                 match uu___5 with
-                 | (uu___6, deps) ->
+                 match uu___6 with
+                 | (uu___7, deps) ->
                      (FStar_Parser_Dep.print deps; report_errors [])
                else
-                 (let uu___6 =
+                 (let uu___7 =
                     (FStar_Options.print ()) ||
                       (FStar_Options.print_in_place ()) in
-                  if uu___6
+                  if uu___7
                   then
                     (if FStar_Platform.is_fstar_compiler_using_ocaml
                      then
                        let printing_mode =
-                         let uu___7 = FStar_Options.print () in
-                         if uu___7
+                         let uu___8 = FStar_Options.print () in
+                         if uu___8
                          then FStar_Prettyprint.FromTempToStdout
                          else FStar_Prettyprint.FromTempToFile in
                        FStar_Prettyprint.generate printing_mode filenames
@@ -183,69 +184,68 @@ let go : 'uuuuu . 'uuuuu -> unit =
                        FStar_Compiler_Effect.failwith
                          "You seem to be using the F#-generated version ofthe compiler ; \\o\n                         reindenting is not known to work yet with this version")
                   else
-                    (let uu___8 = FStar_Options.lsp_server () in
-                     if uu___8
+                    (let uu___9 = FStar_Options.lsp_server () in
+                     if uu___9
                      then FStar_Interactive_Lsp.start_server ()
                      else
-                       (load_native_tactics ();
-                        (let uu___11 = FStar_Options.interactive () in
-                         if uu___11
-                         then
-                           (FStar_Syntax_Unionfind.set_rw ();
-                            (match filenames with
-                             | [] ->
-                                 (FStar_Errors.log_issue
-                                    FStar_Compiler_Range_Type.dummyRange
-                                    (FStar_Errors_Codes.Error_MissingFileName,
-                                      "--ide: Name of current file missing in command line invocation\n");
-                                  FStar_Compiler_Effect.exit Prims.int_one)
-                             | uu___13::uu___14::uu___15 ->
-                                 (FStar_Errors.log_issue
-                                    FStar_Compiler_Range_Type.dummyRange
-                                    (FStar_Errors_Codes.Error_TooManyFiles,
-                                      "--ide: Too many files in command line invocation\n");
-                                  FStar_Compiler_Effect.exit Prims.int_one)
-                             | filename::[] ->
-                                 let uu___13 =
-                                   FStar_Options.legacy_interactive () in
-                                 if uu___13
-                                 then
-                                   FStar_Interactive_Legacy.interactive_mode
-                                     filename
-                                 else
-                                   FStar_Interactive_Ide.interactive_mode
-                                     filename))
-                         else
-                           if
-                             (FStar_Compiler_List.length filenames) >=
-                               Prims.int_one
-                           then
-                             (let uu___13 =
-                                FStar_Dependencies.find_deps_if_needed
-                                  filenames
-                                  FStar_CheckedFiles.load_parsing_data_from_cache in
-                              match uu___13 with
-                              | (filenames1, dep_graph) ->
-                                  let uu___14 =
-                                    FStar_Universal.batch_mode_tc filenames1
-                                      dep_graph in
-                                  (match uu___14 with
-                                   | (tcrs, env, cleanup1) ->
-                                       ((let uu___16 = cleanup1 env in ());
-                                        (let module_names =
-                                           FStar_Compiler_List.map
-                                             (fun tcr ->
-                                                FStar_Universal.module_or_interface_name
-                                                  tcr.FStar_CheckedFiles.checked_module)
-                                             tcrs in
-                                         report_errors module_names;
-                                         finished_message module_names
-                                           Prims.int_zero))))
-                           else
-                             FStar_Errors.raise_error
-                               (FStar_Errors_Codes.Error_MissingFileName,
-                                 "No file provided")
-                               FStar_Compiler_Range_Type.dummyRange)))))))
+                       (let uu___11 = FStar_Options.interactive () in
+                        if uu___11
+                        then
+                          (FStar_Syntax_Unionfind.set_rw ();
+                           (match filenames with
+                            | [] ->
+                                (FStar_Errors.log_issue
+                                   FStar_Compiler_Range_Type.dummyRange
+                                   (FStar_Errors_Codes.Error_MissingFileName,
+                                     "--ide: Name of current file missing in command line invocation\n");
+                                 FStar_Compiler_Effect.exit Prims.int_one)
+                            | uu___13::uu___14::uu___15 ->
+                                (FStar_Errors.log_issue
+                                   FStar_Compiler_Range_Type.dummyRange
+                                   (FStar_Errors_Codes.Error_TooManyFiles,
+                                     "--ide: Too many files in command line invocation\n");
+                                 FStar_Compiler_Effect.exit Prims.int_one)
+                            | filename::[] ->
+                                let uu___13 =
+                                  FStar_Options.legacy_interactive () in
+                                if uu___13
+                                then
+                                  FStar_Interactive_Legacy.interactive_mode
+                                    filename
+                                else
+                                  FStar_Interactive_Ide.interactive_mode
+                                    filename))
+                        else
+                          if
+                            (FStar_Compiler_List.length filenames) >=
+                              Prims.int_one
+                          then
+                            (let uu___13 =
+                               FStar_Dependencies.find_deps_if_needed
+                                 filenames
+                                 FStar_CheckedFiles.load_parsing_data_from_cache in
+                             match uu___13 with
+                             | (filenames1, dep_graph) ->
+                                 let uu___14 =
+                                   FStar_Universal.batch_mode_tc filenames1
+                                     dep_graph in
+                                 (match uu___14 with
+                                  | (tcrs, env, cleanup1) ->
+                                      ((let uu___16 = cleanup1 env in ());
+                                       (let module_names =
+                                          FStar_Compiler_List.map
+                                            (fun tcr ->
+                                               FStar_Universal.module_or_interface_name
+                                                 tcr.FStar_CheckedFiles.checked_module)
+                                            tcrs in
+                                        report_errors module_names;
+                                        finished_message module_names
+                                          Prims.int_zero))))
+                          else
+                            FStar_Errors.raise_error
+                              (FStar_Errors_Codes.Error_MissingFileName,
+                                "No file provided")
+                              FStar_Compiler_Range_Type.dummyRange))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
     FStar_Syntax_Syntax.lazyinfo ->

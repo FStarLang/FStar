@@ -2293,6 +2293,9 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                   (U.abs [x;y] e None, None)] in
       mk_Tm_app head args top.range, noaqs
 
+    | DesugaredBlob t ->
+      t, noaqs
+
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 
     | _ ->
@@ -4189,6 +4192,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
+  | UseLangDecls _ ->
+    env, []
+
   | DeclSyntaxExtension (extension_name, code, _, range) ->
     let extension_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
     match extension_parser with
@@ -4213,7 +4219,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         let attrs = d'.attrs @ d.attrs in
         desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
 
-let desugar_decls env decls =
+and desugar_decls env decls =
   let env, sigelts =
     List.fold_left (fun (env, sigelts) d ->
       let env, se = desugar_decl env d in

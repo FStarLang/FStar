@@ -1580,6 +1580,9 @@ and p_noSeqTerm' ps pb e = match e.tm with
     str "returns" ^^ space ^^ r ^^ hardline ^^
     str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
 
+  | DesugaredBlob _ ->
+    str "<DesugaredBlob>"
+    
   | _ -> p_typ ps pb e
 
 and p_dec_wf ps pb rel e =

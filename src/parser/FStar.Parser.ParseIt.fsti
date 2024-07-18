@@ -49,9 +49,12 @@ type code_fragment = {
     range: FStar.Compiler.Range.range;
 }
 
+type incremental_result 'a = 
+    list ('a & code_fragment) & list (string & Range.range) & option parse_error
+
 type parse_result =
     | ASTFragment of (AST.inputFragment & list (string & Range.range))
-    | IncrementalFragment of (list (AST.decl & code_fragment) & list (string & Range.range) & option parse_error)
+    | IncrementalFragment of incremental_result AST.decl
     | Term of AST.term
     | ParseError of parse_error
 
