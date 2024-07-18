@@ -70,10 +70,10 @@ let mk_fn_defn q id is_rec bs body range =
 
 %start pulseDeclEOF
 %start peekFnId
-%start langDecls
+%start iLangDeclOrEOF
 %type <PulseSyntaxExtension_Sugar.decl> pulseDeclEOF
 %type <string> peekFnId
-%type <(((PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) list)> langDecls
+%type <(((PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) list * FStar_Sedlexing.snap option) option> iLangDeclOrEOF
 %%
 
 maybeRec:
@@ -93,14 +93,18 @@ qual:
   | GHOST { PulseSyntaxExtension_Sugar.STGhost }
   | ATOMIC { PulseSyntaxExtension_Sugar.STAtomic }
 
+startOfNextPulseDeclToken:
+ | i=startOfNextDeclToken { i }
+ | qual { None }
+ | FN { None }
 
-langDecls:
-  | ds=list(langDecl) EOF
-    { ds }
+iLangDeclOrEOF:
+  | EOF { None }
+  | ds=incrementalLangDecl { Some ds }
 
-langDecl:
-  | p=pulseDecl { Inl p }
-  | d=decl { Inr (List.hd d) }
+incrementalLangDecl:
+  | p=pulseDecl snap=startOfNextPulseDeclToken { [Inl p], snap }
+  | d=decl snap=startOfNextPulseDeclToken { List.map (fun x -> Inr x) d, snap }
 
 pulseDecl:
   | q=option(qual)

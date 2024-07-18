@@ -171,14 +171,18 @@ let (parse_extension_lang :
       let uu___ = PulseSyntaxExtension_Parser.parse_lang contents r in
       match uu___ with
       | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
-          failwith "Pulse parser failed"
+          FStar_Pervasives.Inl
+            {
+              FStar_Parser_AST_Util.message = "#lang-pulse: Parsing failed";
+              FStar_Parser_AST_Util.range = r
+            }
       | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (err, r1)) ->
           FStar_Pervasives.Inl
             {
               FStar_Parser_AST_Util.message = err;
               FStar_Parser_AST_Util.range = r1
             }
-      | FStar_Pervasives.Inl decls ->
+      | FStar_Pervasives.Inl (decls, first_error) ->
           let id_and_range_of_decl d =
             match d with
             | PulseSyntaxExtension_Sugar.FnDefn
@@ -250,6 +254,10 @@ let (parse_extension_lang :
                     (ctx.FStar_Parser_AST_Util.module_abbreviations))
                 }
             | uu___1 -> ctx in
+          let default_opens =
+            [FStar_Parser_Const.pervasives_lid;
+            FStar_Parser_Const.prims_lid;
+            FStar_Parser_Const.fstar_ns_lid] in
           let uu___1 =
             FStar_Compiler_List.fold_left
               (fun uu___2 ->
@@ -265,19 +273,19 @@ let (parse_extension_lang :
                                 out in
                             (ctx, uu___3)))
               ({
-                 FStar_Parser_AST_Util.open_namespaces = [];
+                 FStar_Parser_AST_Util.open_namespaces = default_opens;
                  FStar_Parser_AST_Util.module_abbreviations = []
                }, []) decls in
           (match uu___1 with
            | (uu___2, decls1) ->
                FStar_Pervasives.Inr (FStar_Compiler_List.rev decls1))
-let (uu___122 : unit) =
+let (uu___125 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___123 : unit) =
+let (uu___126 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl

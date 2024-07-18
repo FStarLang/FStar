@@ -641,6 +641,8 @@ let (uu___is_FnDecl : decl -> Prims.bool) =
   fun projectee -> match projectee with | FnDecl _0 -> true | uu___ -> false
 let (__proj__FnDecl__item___0 : decl -> fn_decl) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
+let (range_of_decl : decl -> rng) =
+  fun d -> match d with | FnDefn f -> f.range3 | FnDecl d1 -> d1.range4
 let (mk_comp :
   st_comp_tag ->
     slprop ->

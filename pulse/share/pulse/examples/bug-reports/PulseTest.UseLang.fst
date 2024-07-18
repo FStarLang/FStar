@@ -1,24 +1,29 @@
 module PulseTest.UseLang
+#lang-pulse
+open FStar.Mul
+open Pulse.Lib.Pervasives
 let x = 0
 let y = 1
-
-#use-lang-pulse
-
-fn noop ()
-requires emp
-ensures emp
-{
-    ()
-}
-
 let z = x + y 
+let w = z
+let t = 0
 
-fn id (#t:Type0) (x:t)
+fn return_z ()
 requires emp
-returns r:t
-ensures pure (r == x)
+returns r:int
+ensures pure (r == z)
 {
-    x
+    z
 }
 
-let w = id z
+let some = 1
+let foobar = 17 
+
+fn return_2z ()
+requires emp
+returns r:int
+ensures pure (r == 2 * z)
+{
+  let v = return_z ();
+  (v + x + y)
+}

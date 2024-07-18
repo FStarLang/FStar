@@ -275,10 +275,10 @@ decl:
   | blob=USE_LANG_BLOB
       {
         let ext_name, contents, pos, snap = blob in
-        (* blob_range is the full range of the blob, starting from the #use-lang pragma *)
+        (* blob_range is the full range of the blob, starting from the #lang pragma *)
         let blob_range = rr (snd snap, snd $loc) in
         (* extension_syntax_start_range is where the extension syntax starts not including
-           the "#use-lang ident" prefix *)
+           the "#lang ident" prefix *)
         let extension_syntax_start_range = (rr (pos, pos)) in
         parse_use_lang_blob ext_name contents blob_range extension_syntax_start_range
       }

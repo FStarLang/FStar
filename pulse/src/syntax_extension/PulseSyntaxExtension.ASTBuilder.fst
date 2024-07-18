@@ -113,10 +113,10 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
 : either AU.error_message (list decl)
 = match Parser.parse_lang contents r with
   | Inr None ->
-    failwith "Pulse parser failed"
+    Inl { message = "#lang-pulse: Parsing failed"; range = r }
   | Inr (Some (err,r)) -> 
     Inl { message = err; range = r }
-  | Inl decls ->
+  | Inl (decls, first_error) ->
     let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
       let open PulseSyntaxExtension.Sugar in
       match d with
@@ -149,13 +149,14 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
       | ModuleAbbrev (i, l) -> { ctx with module_abbreviations = (i, l)::ctx.module_abbreviations }
       | _ -> ctx
     in
+    let default_opens = [ FStar.Parser.Const.pervasives_lid; FStar.Parser.Const.prims_lid; FStar.Parser.Const.fstar_ns_lid ] in
     let _, decls =
       List.fold_left 
         (fun (ctx, out) d ->
           match d with
           | Inr d -> maybe_extend_ctx ctx d, d::out
           | Inl d -> ctx, splice_decl ctx d :: out)
-        ({ open_namespaces = []; module_abbreviations = [] }, [])
+        ({ open_namespaces = default_opens; module_abbreviations = [] }, [])
         decls
     in
     Inr <| List.rev decls

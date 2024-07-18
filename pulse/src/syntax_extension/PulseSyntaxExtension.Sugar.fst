@@ -215,7 +215,11 @@ let tag_of_stmt (s:stmt) : string =
 type decl =
   | FnDefn of fn_defn
   | FnDecl of fn_decl
-  
+
+let range_of_decl (d:decl) =
+  match d with
+  | FnDefn f -> f.range
+  | FnDecl d -> d.range
 (* Convenience builders for use from OCaml/Menhir, since field names get mangled in OCaml *)
 let mk_comp tag precondition return_name return_type postcondition opens range = 
   {

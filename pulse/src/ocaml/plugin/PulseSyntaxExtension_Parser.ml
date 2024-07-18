@@ -247,11 +247,16 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
 let parse_lang (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
+  let range_of_either (d: (PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) =
+      match d with 
+      | Inl d -> PulseSyntaxExtension_Sugar.range_of_decl d
+      | Inr f -> f.drange
+  in
   try
-    let d = MenhirLib.Convert.Simplified.traditional2revised PP.langDecls lexer in
-    Inl d
+    let ds, err = FStar_Parser_ParseIt.parse_incremental_decls fn s lexbuf lexer range_of_either PP.iLangDeclOrEOF in
+    Inl (ds, err)
   with
   | e ->
     let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
     let r = FStar_Compiler_Range.mk_range fn pos pos in
-    Inr (Some ("Syntax error", r))
+    Inr (Some ("#lang-pulse: Syntax error", r))
