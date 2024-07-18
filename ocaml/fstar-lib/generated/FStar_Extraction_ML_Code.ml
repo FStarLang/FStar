@@ -403,7 +403,7 @@ let (string_of_mlconstant :
     | FStar_Extraction_ML_Syntax.MLC_Int
         (v, FStar_Pervasives_Native.Some (uu___, FStar_Const.Sizet)) ->
         let z = Prims.strcat "(Prims.parse_int \"" (Prims.strcat v "\")") in
-        Prims.strcat "(FStar_SizeT.int_to_t (" (Prims.strcat z "))")
+        Prims.strcat "(FStar_SizeT.uint_to_t (" (Prims.strcat z "))")
     | FStar_Extraction_ML_Syntax.MLC_Int
         (v, FStar_Pervasives_Native.Some (s, w)) ->
         let sign =

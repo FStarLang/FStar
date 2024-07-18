@@ -118,7 +118,6 @@ type stack_elt =
  | CBVApp   of env & term & aqual & Range.range
  | Meta     of env & S.metadata & Range.range
  | Let      of env & binders & letbinding & Range.range
- | Cfg      of cfg & option (term & BU.time)
 type stack = list stack_elt
 
 let head_of t = let hd, _ = U.head_and_args_full t in hd
@@ -165,8 +164,7 @@ instance showable_stack_elt : showable stack_elt = {
           | App (_, t,_,_) -> BU.format1 "App %s" (show t)
           | CBVApp (_, t,_,_) -> BU.format1 "CBVApp %s" (show t)
           | Meta (_, m,_) -> "Meta"
-          | Let  _ -> "Let"
-          | Cfg _ -> "Cfg");
+          | Let  _ -> "Let");
 }
 
 let is_empty = function
@@ -909,7 +907,7 @@ let rec maybe_weakly_reduced tm :  bool =
            | Meta_desugared _
            | Meta_named _ -> false)
 
-let decide_unfolding cfg stack fv qninfo (* : option (cfg * stack) *) =
+let decide_unfolding cfg stack fv qninfo (* : option (option cfg * stack) *) =
     let res =
         should_unfold cfg (fun cfg -> should_reify cfg stack) fv qninfo
     in
@@ -919,7 +917,7 @@ let decide_unfolding cfg stack fv qninfo (* : option (cfg * stack) *) =
         None
     | Should_unfold_yes ->
         // Usual unfolding, no change to cfg or stack
-        Some (cfg, stack)
+        Some (None, stack)
     | Should_unfold_fully ->
         // Unfolding fully, use new cfg with more steps and keep old one in stack
         let cfg' =
@@ -934,11 +932,7 @@ let decide_unfolding cfg stack fv qninfo (* : option (cfg * stack) *) =
         (* Take care to not change the stack's head if there's a universe
          * instantiation, but we do need to keep the old cfg. *)
         (* This is ugly, and a recurring problem, but I'm working around it for now *)
-        let stack' = match stack with
-                     | UnivArgs (us, r) :: stack' -> UnivArgs (us, r) :: Cfg (cfg, None) :: stack'
-                     | stack' -> Cfg (cfg, None) :: stack'
-        in
-        Some (cfg', stack')
+        Some (Some cfg', stack)
 
     | Should_unfold_reify ->
         // Reifying, adding a reflect on the stack to cancel the reify
@@ -952,7 +946,7 @@ let decide_unfolding cfg stack fv qninfo (* : option (cfg * stack) *) =
         let ref = S.mk (Tm_constant (Const_reflect (S.lid_of_fv fv)))
                        Range.dummyRange in
         let stack = push (App (empty_env, ref, None, Range.dummyRange)) stack in
-        Some (cfg, stack)
+        Some (None, stack)
 
 (* on_domain_lids are constant, so compute them once *)
 let on_domain_lids = [ PC.fext_on_domain_lid; PC.fext_on_dom_lid; PC.fext_on_domain_g_lid; PC.fext_on_dom_g_lid ]
@@ -1211,7 +1205,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               rebuild cfg empty_env stack t
             | _ ->
               match decide_unfolding cfg stack fv qninfo with
-              | Some (cfg, stack) -> do_unfold_fv cfg stack t qninfo fv
+              | Some (None, stack) -> do_unfold_fv cfg stack t qninfo fv
+              | Some (Some cfg, stack) ->
+                do_unfold_fv cfg [] t qninfo fv |> rebuild cfg empty_env stack
               | None -> rebuild cfg empty_env stack t
             end
 
@@ -1294,7 +1290,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
               (* We reduce the term in an empty stack to prevent unwanted interactions.
               Later, we rebuild the normalized term with the current stack. This is
               not a tail-call, but this happens rarely enough that it should not be a problem. *)
-              let tm_normed = norm cfg' env [] tm in
+              let t0 = BU.now () in
+              let (tm_normed, ms) = BU.record_time (fun () -> norm cfg' env [] tm) in
+              maybe_debug cfg tm_normed (Some (tm, t0));
               rebuild cfg env stack tm_normed
             end
 
@@ -1383,9 +1381,9 @@ let rec norm : cfg -> env -> stack -> term -> term =
                      Some {rc with residual_typ = BU.map_option (SS.subst opening) rc.residual_typ}
                    in
                    log cfg  (fun () -> BU.print1 "\tShifted %s dummies\n" (string_of_int <| List.length bs));
-                   let stack = (Cfg (cfg, None))::stack in
-                   let cfg = { cfg with strong = true } in
-                   norm cfg env' (Abs(env, bs, env', rc_opt, t.pos)::stack) body
+                   let cfg' = { cfg with strong = true } in
+                   let body_norm = norm cfg env' (Abs(env, bs, env', rc_opt, t.pos) :: []) body in
+                   rebuild cfg env stack body_norm
             in
             begin match stack with
                 | UnivArgs _::_ ->
@@ -1425,7 +1423,6 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   (match maybe_strip_meta_divs stack with
                    | None -> fallback ()
                    | Some stack -> norm cfg env stack t)
-                | Cfg _ :: _
                 | Match _::_
                 | Let _ :: _
                 | App _ :: _
@@ -1562,13 +1559,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let t1 = norm cfg env [] t1 in
                 log cfg  (fun () -> BU.print_string "+++ Normalizing ascription \n");
                 let asc = norm_ascription cfg env asc in
-                match stack with
-                | Cfg (cfg', dbg) :: stack ->
-                  maybe_debug cfg t1 dbg;
-                  let t = mk (Tm_ascribed {tm=U.unascribe t1; asc; eff_opt=l}) t.pos in
-                  norm cfg' env stack t
-                | _ ->
-                  rebuild cfg env stack (mk (Tm_ascribed {tm=U.unascribe t1; asc; eff_opt=l}) t.pos)
+                rebuild cfg env stack (mk (Tm_ascribed {tm=U.unascribe t1; asc; eff_opt=l}) t.pos)
             )
 
           | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
@@ -1578,7 +1569,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 && cfg.steps.weakly_reduce_scrutinee
                 && not cfg.steps.weak
             then let cfg' = { cfg with steps= { cfg.steps with weak = true } } in
-                 norm cfg' env (Cfg (cfg, None) :: stack) head
+                 let head_norm = norm cfg' env [] head in
+                 rebuild cfg env stack head_norm
             else norm cfg env stack head
 
           | Tm_let {lbs=(b, lbs); body=lbody} when is_top_level lbs && cfg.steps.compress_uvars ->
@@ -1634,10 +1626,10 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbdef=norm cfg env [] lb.lbdef;
                                    lbattrs=List.map (norm cfg env []) lb.lbattrs} in
                  let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
-                 let stack = (Cfg (cfg, None))::stack in
-                 let cfg = { cfg with strong = true } in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
-                 norm cfg env' (Let(env, bs, lb, t.pos)::stack) body
+                 let cfg' = { cfg with strong = true } in
+                 let body_norm = norm cfg' env' (Let (env, bs, lb, t.pos) :: []) body in
+                 rebuild cfg env stack body_norm
 
           | Tm_let {lbs=(true, lbs); body}
                 when cfg.steps.compress_uvars
@@ -1787,7 +1779,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
 
 (* NOTE: we do not need any environment here, since an fv does not
  * have any free indices. Hence, we use empty_env as environment when needed. *)
-and do_unfold_fv cfg stack (t0:term) (qninfo : qninfo) (f:fv) : term =
+and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
     match Env.lookup_definition_qninfo cfg.delta_level f.fv_name.v qninfo with
        | None ->
          log_unfolding cfg (fun () ->
@@ -2559,10 +2551,6 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
       match stack with
       | [] -> t
-
-      | Cfg (cfg', dbg) :: stack ->
-        maybe_debug cfg t dbg;
-        rebuild cfg' env stack t
 
       | Meta(_, m, r)::stack ->
         let t =

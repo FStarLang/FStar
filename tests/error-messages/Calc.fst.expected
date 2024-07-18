@@ -1,9 +1,9 @@
 >> Got issues: [
-* Error 19 at Calc.fst(12,2-17,23):
+* Error 19 at Calc.fst(12,2-12,13):
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: FStar.Calc.fsti(47,50-47,55)
+  - See also FStar.Calc.fsti(47,50-47,55)
 
 >>]
 >> Got issues: [
@@ -27,8 +27,7 @@
   - Could not prove that this calc-chain is compatible
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - Also see: FStar.Calc.fsti(47,4-47,55)
-  - Other related locations: Calc.fst(40,7-40,10)
+  - See also Calc.fst(40,7-40,10)
 
 >>]
 >> Got issues: [

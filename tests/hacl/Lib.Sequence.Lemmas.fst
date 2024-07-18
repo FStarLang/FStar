@@ -122,7 +122,7 @@ let len0_div_bs blocksize len len0 =
     len / blocksize;
   }
 
-#push-options "--z3rlimit 60"
+#push-options "--z3rlimit 80"
 let split_len_lemma0 blocksize n len0 =
   let len = n * blocksize in
   let len1 = len - len0 in
