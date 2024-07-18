@@ -5254,14 +5254,22 @@ let check_subtyping env t1 t2 =
     let env_x = Env.push_bv env x in
     let smt_ok = not (Options.ml_ish ()) in
     let g = with_guard env_x prob <| solve_and_commit (singleton wl prob smt_ok) (fun _ -> None) in
-    if (!dbg_Rel || !dbg_RelTop) && BU.is_some g
-    then BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
-                    (N.term_to_string env_x t1)
-                    (N.term_to_string env_x t2)
-                    (guard_to_string env_x (BU.must g));
     match g with
-    | None -> None
-    | Some g -> Some (x, g)
+    | None -> (
+      if !dbg_Rel || !dbg_RelTop then
+        BU.print2 "check_subtyping FAILED: %s <: %s\n"
+                      (N.term_to_string env_x t1)
+                      (N.term_to_string env_x t2);
+        None
+    )
+    | Some g -> (
+      if !dbg_Rel || !dbg_RelTop then
+        BU.print3 "check_subtyping succeeded: %s <: %s\n\tguard is %s\n"
+                      (N.term_to_string env_x t1)
+                      (N.term_to_string env_x t2)
+                      (guard_to_string env_x g);
+      Some (x, g)
+    )
   )
   (Some (Ident.string_of_lid (Env.current_module env)))
   "FStar.TypeChecker.Rel.check_subtyping"
