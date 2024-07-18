@@ -109,6 +109,40 @@ let parse_decl
         let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]; interleaved = false  } in
         Inr d
 
+let maybe_report_error first_error =
+  match first_error with
+  | None -> None
+  | Some (raw_error, msg, r) ->
+    let should_fail_on_error =
+      let file = FStar.Compiler.Range.file_of_range r in
+      match FStar.Parser.Dep.maybe_module_name_of_file file with
+      | None -> false //don't report hard errors on <input>; we'll log them as warnings below
+      | Some _ ->
+        match FStar.Options.ide_filename() with
+        | None -> true //we're not in IDE mode, parsing failures are fatal
+        | Some fn ->
+          BU.print2 "Hard error?: filename=%s; ide filename=%s\n" (BU.basename file) (BU.basename fn);
+          BU.basename fn <> BU.basename file  //we're in IDE mode, failures are not fatal in the current file
+    in
+    if should_fail_on_error
+    then (
+      Some { message = FStar.Errors.Msg.rendermsg msg; range = r }
+    )
+    else (
+      // FStar.Errors.log_issue_doc r (raw_error, msg);
+      let open FStar.Errors in
+      let msg = FStar.Errors.Msg.text "Tolerating syntax error when opening file interactively" in
+      let issue = {
+        issue_msg=[msg];
+        issue_level=EWarning;
+        issue_range=Some r;
+        issue_number=None;
+        issue_ctx=[];
+      } in
+      FStar.Errors.add_issues [issue];
+      None
+    )
+
 let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
 : either AU.error_message (list decl)
 = match Parser.parse_lang contents r with
@@ -116,50 +150,55 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
     Inl { message = "#lang-pulse: Parsing failed"; range = r }
   | Inr (Some (err,r)) -> 
     Inl { message = err; range = r }
-  | Inl (decls, first_error) ->
-    let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
-      let open PulseSyntaxExtension.Sugar in
-      match d with
-      | FnDefn { id; range }
-      | FnDecl { id; range } -> id, range
-    in
-    let splice_decl
-        (ctx:open_namespaces_and_abbreviations)
-        (d:PulseSyntaxExtension.Sugar.decl)
-    : decl
-    = let id, r = id_and_range_of_decl d in  
-      let id_txt = Ident.string_of_id id in
-      let decl_as_term = tm (DesugaredBlob <| FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_sugar_decl") (Some r)) r in
-      let splicer =
-        let head = tm (Var pulse_checker_after_parse_tac) r in
-        let namespaces, abbrevs = encode_open_namespaces_and_abbreviations ctx r in
-        mkApp head [(namespaces, Nothing);
-                    (abbrevs, Nothing);
-                    (decl_as_term, Nothing);
-                    (str id_txt r, Nothing)]
-                    r
+  | Inl (decls, first_error) -> (
+    match maybe_report_error first_error with
+    | Some err -> Inl err
+    | _ -> 
+      let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
+        let open PulseSyntaxExtension.Sugar in
+        match d with
+        | FnDefn { id; range }
+        | FnDecl { id; range } -> id, range
       in
-      let d = Splice (true, [id], splicer) in
-      let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt" r]; interleaved = false  } in
-      d
-    in
-    let maybe_extend_ctx ctx d =
-      match d.d with
-      | Open lid -> { ctx with open_namespaces = lid::ctx.open_namespaces }
-      | ModuleAbbrev (i, l) -> { ctx with module_abbreviations = (i, l)::ctx.module_abbreviations }
-      | _ -> ctx
-    in
-    let default_opens = [ FStar.Parser.Const.pervasives_lid; FStar.Parser.Const.prims_lid; FStar.Parser.Const.fstar_ns_lid ] in
-    let _, decls =
-      List.fold_left 
-        (fun (ctx, out) d ->
-          match d with
-          | Inr d -> maybe_extend_ctx ctx d, d::out
-          | Inl d -> ctx, splice_decl ctx d :: out)
-        ({ open_namespaces = default_opens; module_abbreviations = [] }, [])
-        decls
-    in
-    Inr <| List.rev decls
+      let splice_decl
+          (ctx:open_namespaces_and_abbreviations)
+          (d:PulseSyntaxExtension.Sugar.decl)
+      : decl
+      = let id, r = id_and_range_of_decl d in  
+        let id_txt = Ident.string_of_id id in
+        let decl_as_term = tm (DesugaredBlob <| FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_sugar_decl") (Some r)) r in
+        let splicer =
+          let head = tm (Var pulse_checker_after_parse_tac) r in
+          let namespaces, abbrevs = encode_open_namespaces_and_abbreviations ctx r in
+          mkApp head [(namespaces, Nothing);
+                      (abbrevs, Nothing);
+                      (decl_as_term, Nothing);
+                      (str id_txt r, Nothing)]
+                      r
+        in
+        let d = Splice (true, [id], splicer) in
+        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt" r]; interleaved = false  } in
+        d
+      in
+      let maybe_extend_ctx ctx d =
+        match d.d with
+        | Open lid -> { ctx with open_namespaces = lid::ctx.open_namespaces }
+        | ModuleAbbrev (i, l) -> { ctx with module_abbreviations = (i, l)::ctx.module_abbreviations }
+        | _ -> ctx
+      in
+      let default_opens = [ FStar.Parser.Const.pervasives_lid; FStar.Parser.Const.prims_lid; FStar.Parser.Const.fstar_ns_lid ] in
+      let _, decls =
+        List.fold_left 
+          (fun (ctx, out) d ->
+            match d with
+            | Inr d -> maybe_extend_ctx ctx d, d::out
+            | Inl d -> ctx, splice_decl ctx d :: out)
+          ({ open_namespaces = default_opens; module_abbreviations = [] }, [])
+          decls
+      in
+     Inr <| List.rev decls
+    )
+  
 
 
 #push-options "--warn_error -272" //intentional top-level effect

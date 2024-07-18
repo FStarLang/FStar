@@ -22,6 +22,7 @@ let foobar = 17
 fn return_2z ()
 requires emp
 returns r:int
+ 
 ensures pure (r == 2 * z)
 {
   let v = return_z ();

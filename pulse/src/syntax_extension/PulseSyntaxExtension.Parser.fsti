@@ -28,5 +28,5 @@ val parse_decl (contents:string)
 
 val parse_lang (contents:string)
                (r:FStar.Compiler.Range.range)
-  : either (list (either PulseSyntaxExtension.Sugar.decl FStar.Parser.AST.decl) & FStar.Parser.ParseIt.parse_error)
+  : either (list (either PulseSyntaxExtension.Sugar.decl FStar.Parser.AST.decl) & option FStar.Parser.ParseIt.parse_error)
            (option (string & FStar.Compiler.Range.range))
