@@ -1,5 +1,5 @@
 module Pulse.Lib.WithPure
-
+#lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main
 
@@ -50,7 +50,7 @@ let uneta_exists_aux
   Classical.forall_intro aux;
   slprop_equiv_exists (fun x -> p x) p ()
 
-```pulse
+
 ghost
 fn eta_exists
   (a : Type0)
@@ -62,9 +62,9 @@ fn eta_exists
        as op_exists_Star (fun (x:a) -> p x)
        by apply (`eta_exists_aux);
 }
-```
 
-```pulse
+
+
 ghost
 fn uneta_exists
   (a : Type0)
@@ -76,9 +76,9 @@ fn uneta_exists
        as op_exists_Star p
        by apply (`uneta_exists_aux);
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_with_pure
   (p : prop)
@@ -92,9 +92,9 @@ fn intro_with_pure
   uneta_exists _ v;
   fold (with_pure p v);
 }
-```
 
-```pulse
+
+
 ghost
 fn squash_single_coerce
   (p : prop)
@@ -106,9 +106,9 @@ fn squash_single_coerce
   rewrite v s as v ();
   ();
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_with_pure
   (p : prop)
@@ -123,4 +123,4 @@ fn elim_with_pure
   squash_single_coerce p v s;
   ()
 }
-```
+
