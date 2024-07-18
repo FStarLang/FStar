@@ -72,7 +72,6 @@ val mk_any_emb : typ -> embedding term
 val arrow_as_prim_step_1:  embedding 'a
                         -> embedding 'b
                         -> ('a -> 'b)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
                         -> (universes -> args -> option term)
@@ -81,7 +80,6 @@ val arrow_as_prim_step_2:  embedding 'a
                         -> embedding 'b
                         -> embedding 'c
                         -> ('a -> 'b -> 'c)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
                         -> (universes -> args -> option term)
@@ -91,7 +89,6 @@ val arrow_as_prim_step_3:  embedding 'a
                         -> embedding 'c
                         -> embedding 'd
                         -> ('a -> 'b -> 'c -> 'd)
-                        -> n_tvars:int
                         -> repr_f:Ident.lid
                         -> norm_cb
                         -> (universes -> args -> option term)
