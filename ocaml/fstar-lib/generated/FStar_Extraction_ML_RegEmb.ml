@@ -1411,7 +1411,7 @@ let (interpret_plugin_as_term_fun :
                     (pattern, FStar_Pervasives_Native.None,
                       (mk
                          (FStar_Extraction_ML_Syntax.MLE_App
-                            (body, [as_name1 ([], "args")])))) in
+                            (body, [as_name1 ([], "args_tail")])))) in
                   let default_branch =
                     (FStar_Extraction_ML_Syntax.MLP_Wild,
                       FStar_Pervasives_Native.None,

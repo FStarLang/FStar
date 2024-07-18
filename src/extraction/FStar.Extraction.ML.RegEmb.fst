@@ -425,7 +425,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
           let branch =
              pattern,
              None,
-             mk <| MLE_App(body, [as_name ([], "args")])
+             mk <| MLE_App(body, [as_name ([], "args_tail")])
           in
           let default_branch =
               MLP_Wild,
