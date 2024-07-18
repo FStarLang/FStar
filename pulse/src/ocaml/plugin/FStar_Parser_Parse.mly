@@ -58,6 +58,13 @@ let parse_extension_blob (extension_name:string)
                          (extension_syntax_start:range) : FStar_Parser_AST.decl' =
     DeclSyntaxExtension (extension_name, s, blob_range, extension_syntax_start)
 
+let parse_use_lang_blob (extension_name:string)
+                         (s:string)
+                         (blob_range:range)
+                         (extension_syntax_start:range) 
+: FStar_Parser_AST.decl list
+= FStar_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
+
 %}
 
 %token <string> STRING
@@ -129,6 +136,7 @@ let parse_extension_blob (extension_name:string)
 %token<string>  OPPREFIX OPINFIX0a OPINFIX0b OPINFIX0c OPINFIX0d OPINFIX1 OPINFIX2 OPINFIX3 OPINFIX4
 %token<string>  OP_MIXFIX_ASSIGNMENT OP_MIXFIX_ACCESS
 %token<string * string * Lexing.position * FStar_Sedlexing.snap>  BLOB
+%token<string * string * Lexing.position * FStar_Sedlexing.snap>  USE_LANG_BLOB
 
 /* These are artificial */
 %token EOF
@@ -157,7 +165,7 @@ let parse_extension_blob (extension_name:string)
 %start warn_error_list
 %start oneDeclOrEOF
 %type <FStar_Parser_AST.inputFragment> inputFragment
-%type <(FStar_Parser_AST.decl * FStar_Sedlexing.snap option) option> oneDeclOrEOF
+%type <(FStar_Parser_AST.decl list * FStar_Sedlexing.snap option) option> oneDeclOrEOF
 %type <FStar_Parser_AST.term> term
 %type <FStar_Ident.ident> lident
 %type <(FStar_Errors_Codes.error_flag * string) list> warn_error_list
@@ -167,7 +175,7 @@ let parse_extension_blob (extension_name:string)
 inputFragment:
   | decls=list(decl) EOF
       {
-        as_frag decls
+        as_frag (List.flatten decls)
       }
 
 oneDeclOrEOF:
@@ -178,7 +186,7 @@ idecl:
  | d=decl snap=startOfNextDeclToken
      { d, snap }
 
-
+%public
 startOfNextDeclToken:
  | EOF    { None }
  | pragmaStartToken { None }
@@ -204,7 +212,7 @@ startOfNextDeclToken:
  | POLYMONADIC_BIND  { None }
  | POLYMONADIC_SUBCOMP  { None }
  | b=BLOB { let _, _, _, snap = b in Some snap }
- 
+ | b=USE_LANG_BLOB { let _, _, _, snap = b in Some snap }
  
 pragmaStartToken:
  | PRAGMA_SET_OPTIONS
@@ -259,17 +267,29 @@ decoration:
   | x=qualifier
       { Qualifier x }
 
+%public
 decl:
   | ASSUME lid=uident COLON phi=formula
-      { mk_decl (Assume(lid, phi)) (rr $loc) [ Qualifier Assumption ] }
+      { [mk_decl (Assume(lid, phi)) (rr $loc) [ Qualifier Assumption ]] }
 
+  | blob=USE_LANG_BLOB
+      {
+        let ext_name, contents, pos, snap = blob in
+        (* blob_range is the full range of the blob, starting from the #use-lang pragma *)
+        let blob_range = rr (snd snap, snd $loc) in
+        (* extension_syntax_start_range is where the extension syntax starts not including
+           the "#use-lang ident" prefix *)
+        let extension_syntax_start_range = (rr (pos, pos)) in
+        parse_use_lang_blob ext_name contents blob_range extension_syntax_start_range
+      }
+      
   | ds=list(decoration) decl=rawDecl
-      { mk_decl decl (rr $loc(decl)) ds }
+      { [mk_decl decl (rr $loc(decl)) ds] }
 
   | ds=list(decoration) decl=typeclassDecl
       { let (decl, extra_attrs) = decl in
         let d = mk_decl decl (rr $loc(decl)) ds in
-        { d with attrs = extra_attrs @ d.attrs }
+        [{ d with attrs = extra_attrs @ d.attrs }]
       }
 
 typeclassDecl:
@@ -374,7 +394,7 @@ rawDecl:
         let ext_name, contents, pos, snap = blob in
         (* blob_range is the full range of the blob, including the enclosing ``` *)
         let blob_range = rr (snd snap, snd $loc) in
-        (* extension_syntax_start_range is where the extension syntax starts not incluing
+        (* extension_syntax_start_range is where the extension syntax starts not including
            the "```ident" prefix *)
         let extension_syntax_start_range = (rr (pos, pos)) in
         parse_extension_blob ext_name contents blob_range extension_syntax_start_range

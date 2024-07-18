@@ -15,8 +15,9 @@
 *)
 
 module Pulse.Lib.Trade
-
+#use-lang-pulse
 open Pulse.Lib.Pervasives
+
 
 module T = FStar.Tactics
 
@@ -28,8 +29,7 @@ let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
 
 let trade (#is:inames) (hyp concl:slprop) =
   exists* extra. extra ** trade_elim_exists is hyp extra concl
-
-```pulse
+#push-options "--print_implicits"
 ghost
 fn __intro_trade
   (#is:inames)
@@ -46,7 +46,7 @@ fn __intro_trade
   assert (extra ** trade_elim_exists is hyp extra concl);
   fold (trade #is hyp concl)
 }
-```
+(*)
 let intro_trade #is = __intro_trade #is
 
 let sqeq (p : Type) (_ : squash p) : erased p =
@@ -54,7 +54,6 @@ let sqeq (p : Type) (_ : squash p) : erased p =
 
 let psquash (a:Type u#a) : prop = squash a
 
-```pulse
 ghost
 fn pextract (a:Type u#4) (_:squash a)
 requires emp
@@ -67,9 +66,7 @@ ensures emp
   let i = reveal i;
   i
 }
-```
 
-```pulse
 ghost
 fn deconstruct_trade (is:inames) (hyp concl: slprop)
   requires trade #is hyp concl
@@ -89,9 +86,7 @@ fn deconstruct_trade (is:inames) (hyp concl: slprop)
   rewrite (reveal extra) as (reveal (dfst res));
   res
 }
-```
 
-```pulse
 ghost
 fn elim_trade_aux
   (#is:inames)
@@ -104,11 +99,9 @@ fn elim_trade_aux
   let f = dsnd res;
   f ()
 }
-```
 
 let elim_trade #is = elim_trade_aux #is
 
-```pulse
 ghost
 fn trade_sub_inv_aux
   (#is1:inames)
@@ -131,10 +124,8 @@ fn trade_sub_inv_aux
   
   intro_trade #is2 hyp concl (dfst res) aux
 }
-```
 let trade_sub_inv = trade_sub_inv_aux
 
-```pulse
 ghost
 fn __trade_map
   (#is : inames)
@@ -154,10 +145,8 @@ fn __trade_map
   };
   intro_trade #is p r (trade #is p q) aux;
 }
-```
 let trade_map = __trade_map
 
-```pulse
 ghost
 fn __trade_compose
   (#is : inames)
@@ -176,5 +165,5 @@ fn __trade_compose
   };
   intro_trade #is p r (trade #is p q ** trade #is q r) aux;
 }
-```
 let trade_compose = __trade_compose
+*)

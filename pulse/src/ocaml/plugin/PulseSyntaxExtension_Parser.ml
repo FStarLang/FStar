@@ -216,7 +216,7 @@ let parse_decl (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try
-    let d = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDecl lexer in
+    let d = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDeclEOF lexer in
     Inl d
   with
   | e ->
@@ -243,3 +243,15 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
           (Printexc.get_backtrace()) in
     Inr (msg, r)
 
+
+let parse_lang (s:string) (r:range) =
+  let fn = file_of_range r in
+  let lexbuf, lexer = lexbuf_and_lexer s r in
+  try
+    let d = MenhirLib.Convert.Simplified.traditional2revised PP.langDecls lexer in
+    Inl d
+  with
+  | e ->
+    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStar_Compiler_Range.mk_range fn pos pos in
+    Inr (Some ("Syntax error", r))

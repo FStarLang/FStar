@@ -25,3 +25,11 @@ val check_pulse (namespaces:list string)
                 (line col:int)
                 (nm:string)
   : RT.dsl_tac_t
+
+[@@plugin]
+val check_pulse_after_parse
+      (namespaces:list string)
+      (module_abbrevs:list (string & string))
+      (decl:'a)
+      (nm:string)
+: RT.dsl_tac_t

@@ -72,6 +72,8 @@ let embed_st_term_for_extraction (d:'a) r =
    U.mk_lazy d S.tun (S.Lazy_extension "pulse_st_term") r
 let unembed_st_term_for_extraction (d:S.term) : 'a =
    U.unlazy_as_t (S.Lazy_extension "pulse_st_term") d
+let unembed_pulse_sugar_decl (d:'a) : 'b =
+   U.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") (Obj.magic d)
 
 let debug_subst (s:S.subst_elt list) (t:S.term) (r1:S.term) (r2:S.term) =
   if is_pulse_option_set "subst"

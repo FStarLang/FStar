@@ -287,18 +287,14 @@ let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
     join_smt_goals();
   res
 
-[@@plugin]
-let check_pulse (namespaces:list string)
-                (module_abbrevs:list (string & string))
-                (content:string)
-                (file_name:string)
-                (line col:int)
-                (nm:string)
+let check_pulse_core 
+        (as_decl: unit -> Dv (either Pulse.Syntax.decl (option (string & R.range))))
+        (nm:string)
   : RT.dsl_tac_t
   = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then
         set_dump_on_failure false;
-      match PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col with
+      match as_decl () with
       | Inl decl ->
         main nm decl tm_emp (env, expected_t)
 
@@ -315,3 +311,35 @@ let check_pulse (namespaces:list string)
         in
         T.log_issues [i];
         T.fail "Pulse parser failed"
+
+
+
+[@@plugin]
+let check_pulse (namespaces:list string)
+                (module_abbrevs:list (string & string))
+                (content:string)
+                (file_name:string)
+                (line col:int)
+                (nm:string)
+  : RT.dsl_tac_t
+  = fun (env, expected_t) ->
+      check_pulse_core
+        (fun () -> PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col)
+        nm
+        (env, expected_t)
+
+[@@plugin]
+let check_pulse_after_parse
+      (namespaces:list string)
+      (module_abbrevs:list (string & string))
+      (decl:'a)
+      (nm:string)
+: RT.dsl_tac_t
+= fun (env, expected_t) ->
+    check_pulse_core
+        (fun () -> 
+          let open PulseSyntaxExtension.ASTBuilder in
+          let decl : sugar_decl = RU.unembed_pulse_sugar_decl decl in
+          desugar_pulse env namespaces module_abbrevs decl)
+        nm
+        (env, expected_t)
