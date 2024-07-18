@@ -56,7 +56,7 @@ fn return_pledge (f v : slprop)
 ghost
 fn make_pledge
   (is:inames) (f v extra:slprop)
-  ($k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
+  (k:unit -> stt_ghost unit is (f ** extra) (fun _ -> f ** v))
   requires extra
   ensures pledge is f v
 {

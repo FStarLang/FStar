@@ -565,7 +565,7 @@ let rec (match_f_1n :
                                                                     ->
                                                                     if
                                                                     Prims.op_Negation
-                                                                    (FStar_Reflection_V2_TermEq.term_eq
+                                                                    (FStar_Reflection_TermEq.term_eq
                                                                     p p')
                                                                     then
                                                                     FStar_Tactics_Effect.raise

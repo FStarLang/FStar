@@ -290,7 +290,7 @@
         "lemma_Pulse.Checker.Prover.Substs.lemma_subst_empty_term",
         "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_da8048236680add2b0dd36d0c7a3306a",
-        "typing_FStar.Reflection.V2.TermEq.term_eq"
+        "typing_FStar.Reflection.TermEq.term_eq"
       ],
       0,
       "3e9b235819f1db422d931463fe44be30"

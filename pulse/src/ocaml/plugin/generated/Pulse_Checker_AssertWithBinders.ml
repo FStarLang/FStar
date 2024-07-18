@@ -892,7 +892,7 @@ let (visit_and_rewrite :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "Pulse.Checker.AssertWithBinders.fst"
-                 (Prims.of_int (192)) (Prims.of_int (40))
+                 (Prims.of_int (192)) (Prims.of_int (37))
                  (Prims.of_int (203)) (Prims.of_int (47)))))
         (FStar_Tactics_Effect.lift_div_tac (fun uu___ -> p))
         (fun uu___ ->
@@ -922,7 +922,7 @@ let (visit_and_rewrite :
                                       (FStar_Tactics_Effect.lift_div_tac
                                          (fun uu___2 ->
                                             if
-                                              FStar_Reflection_V2_TermEq.term_eq
+                                              FStar_Reflection_TermEq.term_eq
                                                 t1 lhs
                                             then rhs
                                             else t1))) uu___2 uu___1))
