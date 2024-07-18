@@ -2294,7 +2294,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       mk_Tm_app head args top.range, noaqs
 
     | DesugaredBlob t ->
-      t, noaqs
+      t.blob, noaqs
 
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 

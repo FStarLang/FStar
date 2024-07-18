@@ -5260,7 +5260,8 @@ and (desugar_term_maybe_top :
                     FStar_Syntax_Syntax.mk_Tm_app head args
                       top.FStar_Parser_AST.range in
                   (uu___3, noaqs))
-         | FStar_Parser_AST.DesugaredBlob t -> (t, noaqs)
+         | FStar_Parser_AST.DesugaredBlob t ->
+             ((t.FStar_Parser_AST.blob), noaqs)
          | uu___2 when top.FStar_Parser_AST.level = FStar_Parser_AST.Formula
              -> let uu___3 = desugar_formula env top in (uu___3, noaqs)
          | uu___2 ->

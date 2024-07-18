@@ -37,6 +37,12 @@ type quote_kind =
   | Static
   | Dynamic
 
+type desugared_blob = {
+  tag:string;
+  blob: S.term;
+  eq: S.term -> S.term -> bool;
+}
+
 type term' =
   | Wild
   | Const     of sconst
@@ -96,7 +102,7 @@ type term' =
   | ElimImplies of term & term & term                             (* elim_implies P Q with e *)
   | ElimOr of term & term & term & binder & term & binder & term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
-  | DesugaredBlob of S.term
+  | DesugaredBlob of desugared_blob
 and term = {tm:term'; range:range; level:level}
 
 (* (as y)? returns t *)
@@ -243,7 +249,7 @@ type decl' =
   | DeclSyntaxExtension of string & string & range & range
   | UseLangDecls of string
   | Unparseable
-  
+
 and decl = {
   d:decl';
   drange:range;

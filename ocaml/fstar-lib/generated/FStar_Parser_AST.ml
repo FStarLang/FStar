@@ -30,6 +30,20 @@ let (uu___is_Static : quote_kind -> Prims.bool) =
   fun projectee -> match projectee with | Static -> true | uu___ -> false
 let (uu___is_Dynamic : quote_kind -> Prims.bool) =
   fun projectee -> match projectee with | Dynamic -> true | uu___ -> false
+type desugared_blob =
+  {
+  tag: Prims.string ;
+  blob: FStar_Syntax_Syntax.term ;
+  eq: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool }
+let (__proj__Mkdesugared_blob__item__tag : desugared_blob -> Prims.string) =
+  fun projectee -> match projectee with | { tag; blob; eq;_} -> tag
+let (__proj__Mkdesugared_blob__item__blob :
+  desugared_blob -> FStar_Syntax_Syntax.term) =
+  fun projectee -> match projectee with | { tag; blob; eq;_} -> blob
+let (__proj__Mkdesugared_blob__item__eq :
+  desugared_blob ->
+    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool)
+  = fun projectee -> match projectee with | { tag; blob; eq;_} -> eq
 type term' =
   | Wild 
   | Const of FStar_Const.sconst 
@@ -96,7 +110,7 @@ type term' =
   | ElimImplies of (term * term * term) 
   | ElimOr of (term * term * term * binder * term * binder * term) 
   | ElimAnd of (term * term * term * binder * binder * term) 
-  | DesugaredBlob of FStar_Syntax_Syntax.term 
+  | DesugaredBlob of desugared_blob 
 and term = {
   tm: term' ;
   range: FStar_Compiler_Range_Type.range ;
@@ -421,7 +435,7 @@ let (__proj__ElimAnd__item___0 :
 let (uu___is_DesugaredBlob : term' -> Prims.bool) =
   fun projectee ->
     match projectee with | DesugaredBlob _0 -> true | uu___ -> false
-let (__proj__DesugaredBlob__item___0 : term' -> FStar_Syntax_Syntax.term) =
+let (__proj__DesugaredBlob__item___0 : term' -> desugared_blob) =
   fun projectee -> match projectee with | DesugaredBlob _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->

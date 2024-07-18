@@ -360,8 +360,8 @@ and eq_term' (t1 t2:term')
       eq_binder b1 b3 &&
       eq_binder b2 b4 &&      
       eq_term t4 t8
-    | DesugaredBlob _, DesugaredBlob _ ->
-      false
+    | DesugaredBlob d1, DesugaredBlob d2 ->
+      d1.tag = d2.tag && d1.eq d1.blob d2.blob
     | _ -> false
 
 and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =

@@ -359,8 +359,11 @@ and (eq_term' :
               (eq_binder b1 b3))
              && (eq_binder b2 b4))
             && (eq_term t4 t8)
-      | (FStar_Parser_AST.DesugaredBlob uu___, FStar_Parser_AST.DesugaredBlob
-         uu___1) -> false
+      | (FStar_Parser_AST.DesugaredBlob d1, FStar_Parser_AST.DesugaredBlob
+         d2) ->
+          (d1.FStar_Parser_AST.tag = d2.FStar_Parser_AST.tag) &&
+            (d1.FStar_Parser_AST.eq d1.FStar_Parser_AST.blob
+               d2.FStar_Parser_AST.blob)
       | uu___ -> false
 and (eq_calc_step :
   FStar_Parser_AST.calc_step -> FStar_Parser_AST.calc_step -> Prims.bool) =
