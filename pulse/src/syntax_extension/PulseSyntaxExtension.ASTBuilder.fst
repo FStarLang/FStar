@@ -24,6 +24,7 @@ module List = FStar.Compiler.List
 module A = FStar.Parser.AST
 module AU = FStar.Parser.AST.Util
 module S = FStar.Syntax.Syntax
+open FStar.List.Tot
 open FStar.Const
 
 let r_ = FStar.Compiler.Range.dummyRange
@@ -109,9 +110,9 @@ let parse_decl
         let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt"]; interleaved = false  } in
         Inr d
 
-let maybe_report_error first_error =
+let maybe_report_error first_error decls =
   match first_error with
-  | None -> None
+  | None -> Inr decls
   | Some (raw_error, msg, r) ->
     let should_fail_on_error =
       let file = FStar.Compiler.Range.file_of_range r in
@@ -126,21 +127,12 @@ let maybe_report_error first_error =
     in
     if should_fail_on_error
     then (
-      Some { message = FStar.Errors.Msg.rendermsg msg; range = r }
+      Inl { message = FStar.Errors.Msg.rendermsg msg; range = r }
     )
     else (
       // FStar.Errors.log_issue_doc r (raw_error, msg);
       let open FStar.Errors in
-      let msg = FStar.Errors.Msg.text "Tolerating syntax error when opening file interactively" in
-      let issue = {
-        issue_msg=[msg];
-        issue_level=EWarning;
-        issue_range=Some r;
-        issue_number=None;
-        issue_ctx=[];
-      } in
-      FStar.Errors.add_issues [issue];
-      None
+      Inr <| (decls @ [Inr <| FStar.Parser.AST.(mk_decl Unparseable r [])])
     )
 
 let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
@@ -151,9 +143,9 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
   | Inr (Some (err,r)) -> 
     Inl { message = err; range = r }
   | Inl (decls, first_error) -> (
-    match maybe_report_error first_error with
-    | Some err -> Inl err
-    | _ -> 
+    match maybe_report_error first_error decls with
+    | Inl err -> Inl err
+    | Inr decls ->
       let id_and_range_of_decl (d:PulseSyntaxExtension.Sugar.decl) =
         let open PulseSyntaxExtension.Sugar in
         match d with

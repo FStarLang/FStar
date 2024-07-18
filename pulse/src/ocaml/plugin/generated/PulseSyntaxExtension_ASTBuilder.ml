@@ -161,55 +161,57 @@ let (parse_decl :
               } in
             FStar_Pervasives.Inr d1
 let maybe_report_error :
-  'uuuuu .
+  'uuuuu 'uuuuu1 .
     ('uuuuu * FStar_Errors_Msg.error_message *
       FStar_Compiler_Range_Type.range) FStar_Pervasives_Native.option ->
-      FStar_Parser_AST_Util.error_message FStar_Pervasives_Native.option
+      ('uuuuu1, FStar_Parser_AST.decl) FStar_Pervasives.either Prims.list ->
+        (FStar_Parser_AST_Util.error_message,
+          ('uuuuu1, FStar_Parser_AST.decl) FStar_Pervasives.either Prims.list)
+          FStar_Pervasives.either
   =
   fun first_error ->
-    match first_error with
-    | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None
-    | FStar_Pervasives_Native.Some (raw_error, msg, r) ->
-        let should_fail_on_error =
-          let file = FStar_Compiler_Range_Ops.file_of_range r in
-          let uu___ = FStar_Parser_Dep.maybe_module_name_of_file file in
-          match uu___ with
-          | FStar_Pervasives_Native.None -> false
-          | FStar_Pervasives_Native.Some uu___1 ->
-              let uu___2 = FStar_Options.ide_filename () in
-              (match uu___2 with
-               | FStar_Pervasives_Native.None -> true
-               | FStar_Pervasives_Native.Some fn ->
-                   ((let uu___4 = FStar_Compiler_Util.basename file in
-                     let uu___5 = FStar_Compiler_Util.basename fn in
-                     FStar_Compiler_Util.print2
-                       "Hard error?: filename=%s; ide filename=%s\n" uu___4
-                       uu___5);
-                    (let uu___4 = FStar_Compiler_Util.basename fn in
-                     let uu___5 = FStar_Compiler_Util.basename file in
-                     uu___4 <> uu___5))) in
-        if should_fail_on_error
-        then
-          let uu___ =
-            let uu___1 = FStar_Errors_Msg.rendermsg msg in
-            {
-              FStar_Parser_AST_Util.message = uu___1;
-              FStar_Parser_AST_Util.range = r
-            } in
-          FStar_Pervasives_Native.Some uu___
-        else
-          (let msg1 =
-             FStar_Errors_Msg.text
-               "Tolerating syntax error when opening file interactively" in
-           let issue =
-             {
-               FStar_Errors.issue_msg = [msg1];
-               FStar_Errors.issue_level = FStar_Errors.EWarning;
-               FStar_Errors.issue_range = (FStar_Pervasives_Native.Some r);
-               FStar_Errors.issue_number = FStar_Pervasives_Native.None;
-               FStar_Errors.issue_ctx = []
-             } in
-           FStar_Errors.add_issues [issue]; FStar_Pervasives_Native.None)
+    fun decls ->
+      match first_error with
+      | FStar_Pervasives_Native.None -> FStar_Pervasives.Inr decls
+      | FStar_Pervasives_Native.Some (raw_error, msg, r) ->
+          let should_fail_on_error =
+            let file = FStar_Compiler_Range_Ops.file_of_range r in
+            let uu___ = FStar_Parser_Dep.maybe_module_name_of_file file in
+            match uu___ with
+            | FStar_Pervasives_Native.None -> false
+            | FStar_Pervasives_Native.Some uu___1 ->
+                let uu___2 = FStar_Options.ide_filename () in
+                (match uu___2 with
+                 | FStar_Pervasives_Native.None -> true
+                 | FStar_Pervasives_Native.Some fn ->
+                     ((let uu___4 = FStar_Compiler_Util.basename file in
+                       let uu___5 = FStar_Compiler_Util.basename fn in
+                       FStar_Compiler_Util.print2
+                         "Hard error?: filename=%s; ide filename=%s\n" uu___4
+                         uu___5);
+                      (let uu___4 = FStar_Compiler_Util.basename fn in
+                       let uu___5 = FStar_Compiler_Util.basename file in
+                       uu___4 <> uu___5))) in
+          if should_fail_on_error
+          then
+            let uu___ =
+              let uu___1 = FStar_Errors_Msg.rendermsg msg in
+              {
+                FStar_Parser_AST_Util.message = uu___1;
+                FStar_Parser_AST_Util.range = r
+              } in
+            FStar_Pervasives.Inl uu___
+          else
+            (let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_Parser_AST.mk_decl FStar_Parser_AST.Unparseable r
+                       [] in
+                   FStar_Pervasives.Inr uu___4 in
+                 [uu___3] in
+               FStar_List_Tot_Base.op_At decls uu___2 in
+             FStar_Pervasives.Inr uu___1)
 let (parse_extension_lang :
   Prims.string ->
     FStar_Compiler_Range_Type.range ->
@@ -233,50 +235,50 @@ let (parse_extension_lang :
               FStar_Parser_AST_Util.range = r1
             }
       | FStar_Pervasives.Inl (decls, first_error) ->
-          let uu___1 = maybe_report_error first_error in
+          let uu___1 = maybe_report_error first_error decls in
           (match uu___1 with
-           | FStar_Pervasives_Native.Some err -> FStar_Pervasives.Inl err
-           | uu___2 ->
+           | FStar_Pervasives.Inl err -> FStar_Pervasives.Inl err
+           | FStar_Pervasives.Inr decls1 ->
                let id_and_range_of_decl d =
                  match d with
                  | PulseSyntaxExtension_Sugar.FnDefn
                      { PulseSyntaxExtension_Sugar.id2 = id;
-                       PulseSyntaxExtension_Sugar.is_rec = uu___3;
-                       PulseSyntaxExtension_Sugar.binders2 = uu___4;
-                       PulseSyntaxExtension_Sugar.ascription1 = uu___5;
-                       PulseSyntaxExtension_Sugar.measure = uu___6;
-                       PulseSyntaxExtension_Sugar.body3 = uu___7;
+                       PulseSyntaxExtension_Sugar.is_rec = uu___2;
+                       PulseSyntaxExtension_Sugar.binders2 = uu___3;
+                       PulseSyntaxExtension_Sugar.ascription1 = uu___4;
+                       PulseSyntaxExtension_Sugar.measure = uu___5;
+                       PulseSyntaxExtension_Sugar.body3 = uu___6;
                        PulseSyntaxExtension_Sugar.range3 = range;_}
                      -> (id, range)
                  | PulseSyntaxExtension_Sugar.FnDecl
                      { PulseSyntaxExtension_Sugar.id3 = id;
-                       PulseSyntaxExtension_Sugar.binders3 = uu___3;
-                       PulseSyntaxExtension_Sugar.ascription2 = uu___4;
+                       PulseSyntaxExtension_Sugar.binders3 = uu___2;
+                       PulseSyntaxExtension_Sugar.ascription2 = uu___3;
                        PulseSyntaxExtension_Sugar.range4 = range;_}
                      -> (id, range) in
                let splice_decl ctx d =
-                 let uu___3 = id_and_range_of_decl d in
-                 match uu___3 with
+                 let uu___2 = id_and_range_of_decl d in
+                 match uu___2 with
                  | (id, r1) ->
                      let id_txt = FStar_Ident.string_of_id id in
                      let decl_as_term =
-                       let uu___4 =
-                         let uu___5 =
+                       let uu___3 =
+                         let uu___4 =
                            FStar_Syntax_Util.mk_lazy d
                              FStar_Syntax_Syntax.t_bool
                              (FStar_Syntax_Syntax.Lazy_extension
                                 "pulse_sugar_decl")
                              (FStar_Pervasives_Native.Some r1) in
-                         FStar_Parser_AST.DesugaredBlob uu___5 in
-                       tm uu___4 r1 in
+                         FStar_Parser_AST.DesugaredBlob uu___4 in
+                       tm uu___3 r1 in
                      let splicer =
                        let head =
                          tm
                            (FStar_Parser_AST.Var
                               pulse_checker_after_parse_tac) r1 in
-                       let uu___4 =
+                       let uu___3 =
                          encode_open_namespaces_and_abbreviations ctx r1 in
-                       match uu___4 with
+                       match uu___3 with
                        | (namespaces, abbrevs) ->
                            FStar_Parser_AST.mkApp head
                              [(namespaces, FStar_Parser_AST.Nothing);
@@ -312,39 +314,39 @@ let (parse_extension_lang :
                          (i1, l) ::
                          (ctx.FStar_Parser_AST_Util.module_abbreviations))
                      }
-                 | uu___3 -> ctx in
+                 | uu___2 -> ctx in
                let default_opens =
                  [FStar_Parser_Const.pervasives_lid;
                  FStar_Parser_Const.prims_lid;
                  FStar_Parser_Const.fstar_ns_lid] in
-               let uu___3 =
+               let uu___2 =
                  FStar_Compiler_List.fold_left
-                   (fun uu___4 ->
+                   (fun uu___3 ->
                       fun d ->
-                        match uu___4 with
+                        match uu___3 with
                         | (ctx, out) ->
                             (match d with
                              | FStar_Pervasives.Inr d1 ->
                                  ((maybe_extend_ctx ctx d1), (d1 :: out))
                              | FStar_Pervasives.Inl d1 ->
-                                 let uu___5 =
-                                   let uu___6 = splice_decl ctx d1 in uu___6
+                                 let uu___4 =
+                                   let uu___5 = splice_decl ctx d1 in uu___5
                                      :: out in
-                                 (ctx, uu___5)))
+                                 (ctx, uu___4)))
                    ({
                       FStar_Parser_AST_Util.open_namespaces = default_opens;
                       FStar_Parser_AST_Util.module_abbreviations = []
-                    }, []) decls in
-               (match uu___3 with
-                | (uu___4, decls1) ->
-                    FStar_Pervasives.Inr (FStar_Compiler_List.rev decls1)))
-let (uu___148 : unit) =
+                    }, []) decls1 in
+               (match uu___2 with
+                | (uu___3, decls2) ->
+                    FStar_Pervasives.Inr (FStar_Compiler_List.rev decls2)))
+let (uu___147 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___149 : unit) =
+let (uu___148 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl
