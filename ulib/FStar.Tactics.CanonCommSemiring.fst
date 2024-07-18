@@ -48,7 +48,8 @@ open FStar.Reflection.V2
 open FStar.Tactics.V2
 open FStar.Algebra.CommMonoid
 
-let term_eq = FStar.Tactics.term_eq_old
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (** An attribute for marking definitions to unfold by the tactic *)
 irreducible let canon_attr = ()

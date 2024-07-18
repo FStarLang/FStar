@@ -1291,15 +1291,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                                    for_extraction=cfg.steps.for_extraction})
                                ; delta_level = delta_level
                                ; normalize_pure_lets = true } in
-              let stack' =
-                let debug =
-                  if cfg.debug.print_normalized
-                  then Some (tm, BU.now())
-                  else None
-                in
-                Cfg (cfg, debug)::stack
-              in
-              norm cfg' env stack' tm
+              (* We reduce the term in an empty stack to prevent unwanted interactions.
+              Later, we rebuild the normalized term with the current stack. This is
+              not a tail-call, but this happens rarely enough that it should not be a problem. *)
+              let tm_normed = norm cfg' env [] tm in
+              rebuild cfg env stack tm_normed
             end
 
           | Tm_type u ->
@@ -2364,7 +2360,9 @@ and maybe_simplify_aux (cfg:cfg) (env:env) (stack:stack) (tm:term) : term & bool
     match (SS.compress tm).n with
     | Tm_app {hd={n=Tm_uinst({n=Tm_fvar fv}, _)}; args}
     | Tm_app {hd={n=Tm_fvar fv}; args} ->
-      if S.fv_eq_lid fv PC.and_lid
+      if S.fv_eq_lid fv PC.squash_lid
+      then squashed_head_un_auto_squash_args tm
+      else if S.fv_eq_lid fv PC.and_lid
       then match args |> List.map simplify with
            | [(Some true, _); (_, (arg, _))]
            | [(_, (arg, _)); (Some true, _)] -> maybe_auto_squash arg, false

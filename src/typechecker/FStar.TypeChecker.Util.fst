@@ -2628,10 +2628,8 @@ let maybe_coerce_lc env (e:term) (lc:lcomp) (exp_t:term) : term & lcomp & guard_
 
 let weaken_result_typ env (e:term) (lc:lcomp) (t:typ) (use_eq:bool) : term & lcomp & guard_t =
   if Debug.high () then
-    BU.print3 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n"
-            (Print.term_to_string e)
-            (TcComm.lcomp_to_string lc)
-            (Print.term_to_string t);
+    BU.print4 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n"
+            (show use_eq) (show e) (TcComm.lcomp_to_string lc) (show t);
   let use_eq =
     use_eq            ||  //caller wants to check equality
     env.use_eq_strict ||

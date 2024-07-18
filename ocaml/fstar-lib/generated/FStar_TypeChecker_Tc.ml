@@ -4750,7 +4750,9 @@ let (tc_decls :
                   if uu___5
                   then
                     let uu___6 = FStar_Syntax_Print.tag_of_sigelt se in
-                    let uu___7 = FStar_Syntax_Print.sigelt_to_string se in
+                    let uu___7 =
+                      FStar_Class_Show.show
+                        FStar_Syntax_Print.showable_sigelt se in
                     FStar_Compiler_Util.print2
                       ">>>>>>>>>>>>>>Checking top-level %s decl %s\n" uu___6
                       uu___7

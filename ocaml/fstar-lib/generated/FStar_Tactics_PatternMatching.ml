@@ -1274,7 +1274,7 @@ let rec (interp_pattern_aux :
                     fun tm1 ->
                       match FStar_List_Tot_Base.assoc v cur_bindings1 with
                       | FStar_Pervasives_Native.Some tm' ->
-                          if FStar_Reflection_V2_Builtins.term_eq tm1 tm'
+                          if FStar_Reflection_TermEq_Simple.term_eq tm1 tm'
                           then return cur_bindings1
                           else raise (NonLinearMismatch (v, tm1, tm'))
                       | FStar_Pervasives_Native.None ->

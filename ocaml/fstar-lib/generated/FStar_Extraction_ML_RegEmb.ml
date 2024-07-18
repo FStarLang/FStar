@@ -1411,7 +1411,7 @@ let (interpret_plugin_as_term_fun :
                     (pattern, FStar_Pervasives_Native.None,
                       (mk
                          (FStar_Extraction_ML_Syntax.MLE_App
-                            (body, [as_name1 ([], "args")])))) in
+                            (body, [as_name1 ([], "args_tail")])))) in
                   let default_branch =
                     (FStar_Extraction_ML_Syntax.MLP_Wild,
                       FStar_Pervasives_Native.None,
@@ -1542,17 +1542,7 @@ let (interpret_plugin_as_term_fun :
                                     let uu___4 =
                                       let uu___5 =
                                         let uu___6 = lid_to_name fv_lid1 in
-                                        [uu___6;
-                                        FStar_Extraction_ML_Syntax.with_ty
-                                          FStar_Extraction_ML_Syntax.MLTY_Top
-                                          (FStar_Extraction_ML_Syntax.MLE_Const
-                                             (FStar_Extraction_ML_Syntax.MLC_Int
-                                                ((Prims.string_of_int
-                                                    tvar_arity),
-                                                  FStar_Pervasives_Native.None)));
-                                        fv_lid_embedded;
-                                        cb;
-                                        us] in
+                                        [uu___6; fv_lid_embedded; cb; us] in
                                       res_embedding :: uu___5 in
                                     FStar_Compiler_List.op_At
                                       arg_unembeddings uu___4 in

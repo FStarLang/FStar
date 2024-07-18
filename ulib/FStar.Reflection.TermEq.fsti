@@ -1,4 +1,4 @@
-module FStar.Reflection.V2.TermEq
+module FStar.Reflection.TermEq
 
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Data

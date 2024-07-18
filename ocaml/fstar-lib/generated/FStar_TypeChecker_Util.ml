@@ -5867,12 +5867,18 @@ let (weaken_result_typ :
             (let uu___1 = FStar_Compiler_Debug.high () in
              if uu___1
              then
-               let uu___2 = FStar_Syntax_Print.term_to_string e in
-               let uu___3 = FStar_TypeChecker_Common.lcomp_to_string lc in
-               let uu___4 = FStar_Syntax_Print.term_to_string t in
-               FStar_Compiler_Util.print3
-                 "weaken_result_typ e=(%s) lc=(%s) t=(%s)\n" uu___2 uu___3
-                 uu___4
+               let uu___2 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.printableshow
+                      FStar_Class_Printable.printable_bool) use_eq in
+               let uu___3 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
+               let uu___4 = FStar_TypeChecker_Common.lcomp_to_string lc in
+               let uu___5 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+               FStar_Compiler_Util.print4
+                 "weaken_result_typ use_eq=%s e=(%s) lc=(%s) t=(%s)\n" uu___2
+                 uu___3 uu___4 uu___5
              else ());
             (let use_eq1 =
                (use_eq || env.FStar_TypeChecker_Env.use_eq_strict) ||

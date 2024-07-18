@@ -797,11 +797,10 @@ let or_op (args:args) : option t =
 
 
 let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
-                         (f:'a -> 'b) (n_tvars:int) (_fv_lid:Ident.lid) cb
+                         (f:'a -> 'b) (_fv_lid:Ident.lid) cb
    : universes -> args -> option t =
     let f_wrapped _us args =
-        let _tvar_args, rest_args = List.splitAt n_tvars args in
-        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
+        let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
         BU.map_opt
                 (unembed ea cb x) (fun x ->
                  embed eb cb (f x))
@@ -809,12 +808,11 @@ let arrow_as_prim_step_1 (ea:embedding 'a) (eb:embedding 'b)
     f_wrapped
 
 let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
-                         (f:'a -> 'b -> 'c) (n_tvars:int) (_fv_lid:Ident.lid) cb
+                         (f:'a -> 'b -> 'c) (_fv_lid:Ident.lid) cb
    : universes -> args -> option t =
     let f_wrapped _us args =
-        let _tvar_args, rest_args = List.splitAt n_tvars args in
-        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
-        let y, _ = List.hd (List.tl rest_args) in
+        let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
+        let y, _ = List.hd (List.tl args) in
         BU.bind_opt (unembed ea cb x) (fun x ->
         BU.bind_opt (unembed eb cb y) (fun y ->
         Some (embed ec cb (f x y))))
@@ -824,13 +822,12 @@ let arrow_as_prim_step_2 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c)
 
 let arrow_as_prim_step_3 (ea:embedding 'a) (eb:embedding 'b)
                          (ec:embedding 'c) (ed:embedding 'd)
-                         (f:'a -> 'b -> 'c -> 'd) (n_tvars:int) (_fv_lid:Ident.lid) cb
+                         (f:'a -> 'b -> 'c -> 'd) (_fv_lid:Ident.lid) cb
    : universes -> args -> option t =
     let f_wrapped _us args =
-        let _tvar_args, rest_args = List.splitAt n_tvars args in
-        let x, _ = List.hd rest_args in //arity mismatches are handled by code that dispatches here
-        let y, _ = List.hd (List.tl rest_args) in
-        let z, _ = List.hd (List.tl (List.tl rest_args)) in
+        let x, _ = List.hd args in //arity mismatches are handled by code that dispatches here
+        let y, _ = List.hd (List.tl args) in
+        let z, _ = List.hd (List.tl (List.tl args)) in
         BU.bind_opt (unembed ea cb x) (fun x ->
         BU.bind_opt (unembed eb cb y) (fun y ->
         BU.bind_opt (unembed ec cb z) (fun z ->

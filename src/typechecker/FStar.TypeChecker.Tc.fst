@@ -990,7 +990,7 @@ let tc_decls env ses =
     if Debug.low ()
     then BU.print2 ">>>>>>>>>>>>>>Checking top-level %s decl %s\n"
                         (Print.tag_of_sigelt se)
-                        (Print.sigelt_to_string se);
+                        (show se);
 
     if Options.ide_id_info_off() then Env.toggle_id_info env false;
     if !dbg_IdInfoOn then Env.toggle_id_info env true;

@@ -22,6 +22,9 @@ open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
+
 (* An expression canonizer for commutative monoids.
    Inspired by:
    - http://adam.chlipala.net/cpdt/html/Cpdt.Reflection.html
