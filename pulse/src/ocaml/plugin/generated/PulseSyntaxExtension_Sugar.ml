@@ -641,6 +641,246 @@ let (uu___is_FnDecl : decl -> Prims.bool) =
   fun projectee -> match projectee with | FnDecl _0 -> true | uu___ -> false
 let (__proj__FnDecl__item___0 : decl -> fn_decl) =
   fun projectee -> match projectee with | FnDecl _0 -> _0
+let (eq_ident : FStar_Ident.ident -> FStar_Ident.ident -> Prims.bool) =
+  fun i1 ->
+    fun i2 ->
+      FStar_Class_Deq.op_Equals_Question FStar_Syntax_Syntax.deq_univ_name i1
+        i2
+let (eq_lident : FStar_Ident.lident -> FStar_Ident.lident -> Prims.bool) =
+  fun i1 ->
+    fun i2 ->
+      FStar_Class_Deq.op_Equals_Question FStar_Syntax_Syntax.deq_fv i1 i2
+let rec forall2 :
+  'a .
+    ('a -> 'a -> Prims.bool) -> 'a Prims.list -> 'a Prims.list -> Prims.bool
+  =
+  fun f ->
+    fun l1 ->
+      fun l2 ->
+        match (l1, l2) with
+        | ([], []) -> true
+        | (x::xs, y::ys) -> (f x y) && (forall2 f xs ys)
+        | (uu___, uu___1) -> false
+let eq_opt :
+  'a .
+    ('a -> 'a -> Prims.bool) ->
+      'a FStar_Pervasives_Native.option ->
+        'a FStar_Pervasives_Native.option -> Prims.bool
+  =
+  fun eq ->
+    fun o1 ->
+      fun o2 ->
+        match (o1, o2) with
+        | (FStar_Pervasives_Native.Some x, FStar_Pervasives_Native.Some y) ->
+            eq x y
+        | (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) ->
+            true
+        | (uu___, uu___1) -> false
+let rec (eq_decl : decl -> decl -> Prims.bool) =
+  fun d1 ->
+    fun d2 ->
+      match (d1, d2) with
+      | (FnDefn f1, FnDefn f2) -> eq_fn_defn f1 f2
+      | (FnDecl d11, FnDecl d21) -> eq_fn_decl d11 d21
+and (eq_fn_decl : fn_decl -> fn_decl -> Prims.bool) =
+  fun f1 ->
+    fun f2 ->
+      ((eq_ident f1.id3 f2.id3) &&
+         (forall2 FStar_Parser_AST_Util.eq_binder f1.binders3 f2.binders3))
+        && (eq_ascription f1.ascription2 f2.ascription2)
+and (eq_fn_defn : fn_defn -> fn_defn -> Prims.bool) =
+  fun f1 ->
+    fun f2 ->
+      (((((eq_ident f1.id2 f2.id2) && (f1.is_rec = f2.is_rec)) &&
+           (forall2 FStar_Parser_AST_Util.eq_binder f1.binders2 f2.binders2))
+          && (eq_ascription f1.ascription1 f2.ascription1))
+         && (eq_opt FStar_Parser_AST_Util.eq_term f1.measure f2.measure))
+        && (eq_body f1.body3 f2.body3)
+and (eq_ascription :
+  (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
+    FStar_Pervasives.either ->
+    (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
+      FStar_Pervasives.either -> Prims.bool)
+  =
+  fun a1 ->
+    fun a2 ->
+      match (a1, a2) with
+      | (FStar_Pervasives.Inl c1, FStar_Pervasives.Inl c2) ->
+          eq_computation_type c1 c2
+      | (FStar_Pervasives.Inr t1, FStar_Pervasives.Inr t2) ->
+          eq_opt FStar_Parser_AST_Util.eq_term t1 t2
+      | (uu___, uu___1) -> false
+and (eq_computation_type :
+  computation_type -> computation_type -> Prims.bool) =
+  fun c1 ->
+    fun c2 ->
+      (((((c1.tag = c2.tag) && (eq_slprop c1.precondition c2.precondition))
+           && (eq_ident c1.return_name c2.return_name))
+          && (FStar_Parser_AST_Util.eq_term c1.return_type c2.return_type))
+         && (eq_slprop c1.postcondition c2.postcondition))
+        && (eq_opt FStar_Parser_AST_Util.eq_term c1.opens c2.opens)
+and (eq_slprop : slprop -> slprop -> Prims.bool) =
+  fun s1 -> fun s2 -> eq_slprop' s1.v s2.v
+and (eq_slprop' : slprop' -> slprop' -> Prims.bool) =
+  fun s1 ->
+    fun s2 ->
+      match (s1, s2) with
+      | (SLPropTerm t1, SLPropTerm t2) -> FStar_Parser_AST_Util.eq_term t1 t2
+and (eq_body :
+  (stmt, lambda) FStar_Pervasives.either ->
+    (stmt, lambda) FStar_Pervasives.either -> Prims.bool)
+  =
+  fun b1 ->
+    fun b2 ->
+      match (b1, b2) with
+      | (FStar_Pervasives.Inl s1, FStar_Pervasives.Inl s2) -> eq_stmt s1 s2
+      | (FStar_Pervasives.Inr l1, FStar_Pervasives.Inr l2) -> eq_lambda l1 l2
+      | (uu___, uu___1) -> false
+and (eq_stmt : stmt -> stmt -> Prims.bool) =
+  fun s1 -> fun s2 -> eq_stmt' s1.s s2.s
+and (eq_stmt' : stmt' -> stmt' -> Prims.bool) =
+  fun s1 ->
+    fun s2 ->
+      match (s1, s2) with
+      | (Open l1, Open l2) -> eq_lident l1 l2
+      | (Expr e1, Expr e2) -> FStar_Parser_AST_Util.eq_term e1.e e2.e
+      | (Assignment { lhs = l1; value = v1;_}, Assignment
+         { lhs = l2; value = v2;_}) ->
+          (FStar_Parser_AST_Util.eq_term l1 l2) &&
+            (FStar_Parser_AST_Util.eq_term v1 v2)
+      | (ArrayAssignment { arr = a1; index = i1; value1 = v1;_},
+         ArrayAssignment { arr = a2; index = i2; value1 = v2;_}) ->
+          ((FStar_Parser_AST_Util.eq_term a1 a2) &&
+             (FStar_Parser_AST_Util.eq_term i1 i2))
+            && (FStar_Parser_AST_Util.eq_term v1 v2)
+      | (LetBinding { qualifier = q1; id = i1; typ = t1; init1;_}, LetBinding
+         { qualifier = q2; id = i2; typ = t2; init1 = init2;_}) ->
+          (((eq_opt eq_mut_or_ref q1 q2) && (eq_ident i1 i2)) &&
+             (eq_opt FStar_Parser_AST_Util.eq_term t1 t2))
+            && (eq_opt eq_let_init init1 init2)
+      | (Block { stmt = s11;_}, Block { stmt = s21;_}) -> eq_stmt s11 s21
+      | (If { head1 = h1; join_slprop = j1; then_ = t1; else_opt = e1;_}, If
+         { head1 = h2; join_slprop = j2; then_ = t2; else_opt = e2;_}) ->
+          (((FStar_Parser_AST_Util.eq_term h1 h2) &&
+              (eq_opt eq_ensures_slprop j1 j2))
+             && (eq_stmt t1 t2))
+            && (eq_opt eq_stmt e1 e2)
+      | (Match { head2 = h1; returns_annot = r1; branches = b1;_}, Match
+         { head2 = h2; returns_annot = r2; branches = b2;_}) ->
+          ((FStar_Parser_AST_Util.eq_term h1 h2) &&
+             (eq_opt eq_ensures_slprop r1 r2))
+            &&
+            (forall2
+               (fun uu___ ->
+                  fun uu___1 ->
+                    match (uu___, uu___1) with
+                    | ((p1, s11), (p2, s21)) ->
+                        (FStar_Parser_AST_Util.eq_pattern p1 p2) &&
+                          (eq_stmt s11 s21)) b1 b2)
+      | (While { guard = g1; id1; invariant = i1; body = b1;_}, While
+         { guard = g2; id1 = id2; invariant = i2; body = b2;_}) ->
+          (((eq_stmt g1 g2) && (eq_ident id1 id2)) && (eq_slprop i1 i2)) &&
+            (eq_stmt b1 b2)
+      | (Introduce { slprop = s11; witnesses = w1;_}, Introduce
+         { slprop = s21; witnesses = w2;_}) ->
+          (eq_slprop s11 s21) &&
+            (forall2 FStar_Parser_AST_Util.eq_term w1 w2)
+      | (Sequence { s1 = s11; s2 = s21;_}, Sequence { s1 = s1'; s2 = s2';_})
+          -> (eq_stmt s11 s1') && (eq_stmt s21 s2')
+      | (Parallel { p1; p2; q1; q2; b1; b2;_}, Parallel
+         { p1 = p1'; p2 = p2'; q1 = q1'; q2 = q2'; b1 = b1'; b2 = b2';_}) ->
+          (((((eq_slprop p1 p1') && (eq_slprop p2 p2')) && (eq_slprop q1 q1'))
+              && (eq_slprop q2 q2'))
+             && (eq_stmt b1 b1'))
+            && (eq_stmt b2 b2')
+      | (ProofHintWithBinders { hint_type = ht1; binders = bs1;_},
+         ProofHintWithBinders { hint_type = ht2; binders = bs2;_}) ->
+          (eq_hint_type ht1 ht2) &&
+            (forall2 FStar_Parser_AST_Util.eq_binder bs1 bs2)
+      | (WithInvariants { names = n1; body1 = b1; returns_ = r1;_},
+         WithInvariants { names = n2; body1 = b2; returns_ = r2;_}) ->
+          ((forall2 FStar_Parser_AST_Util.eq_term n1 n2) && (eq_stmt b1 b2))
+            && (eq_opt eq_ensures_slprop r1 r2)
+and (eq_let_init : let_init -> let_init -> Prims.bool) =
+  fun i1 ->
+    fun i2 ->
+      match (i1, i2) with
+      | (Array_initializer a1, Array_initializer a2) -> eq_array_init a1 a2
+      | (Default_initializer t1, Default_initializer t2) ->
+          FStar_Parser_AST_Util.eq_term t1 t2
+      | (Lambda_initializer l1, Lambda_initializer l2) -> eq_fn_defn l1 l2
+      | (Stmt_initializer s1, Stmt_initializer s2) -> eq_stmt s1 s2
+      | (uu___, uu___1) -> false
+and (eq_array_init : array_init -> array_init -> Prims.bool) =
+  fun a1 ->
+    fun a2 ->
+      (FStar_Parser_AST_Util.eq_term a1.init a2.init) &&
+        (FStar_Parser_AST_Util.eq_term a1.len a2.len)
+and (eq_hint_type : hint_type -> hint_type -> Prims.bool) =
+  fun h1 ->
+    fun h2 ->
+      match (h1, h2) with
+      | (ASSERT s1, ASSERT s2) -> eq_slprop s1 s2
+      | (UNFOLD (ns1, s1), UNFOLD (ns2, s2)) ->
+          (eq_opt (forall2 eq_lident) ns1 ns2) && (eq_slprop s1 s2)
+      | (FOLD (ns1, s1), FOLD (ns2, s2)) ->
+          (eq_opt (forall2 eq_lident) ns1 ns2) && (eq_slprop s1 s2)
+      | (RENAME (ts1, g1, t1), RENAME (ts2, g2, t2)) ->
+          ((forall2
+              (fun uu___ ->
+                 fun uu___1 ->
+                   match (uu___, uu___1) with
+                   | ((t11, t21), (t1', t2')) ->
+                       (FStar_Parser_AST_Util.eq_term t11 t1') &&
+                         (FStar_Parser_AST_Util.eq_term t21 t2')) ts1 ts2)
+             && (eq_opt eq_slprop g1 g2))
+            && (eq_opt FStar_Parser_AST_Util.eq_term t1 t2)
+      | (REWRITE (s1, s1', t1), REWRITE (s2, s2', t2)) ->
+          ((eq_slprop s1 s2) && (eq_slprop s1' s2')) &&
+            (eq_opt FStar_Parser_AST_Util.eq_term t1 t2)
+      | (WILD, WILD) -> true
+      | (SHOW_PROOF_STATE r1, SHOW_PROOF_STATE r2) -> true
+      | (uu___, uu___1) -> false
+and (eq_ensures_slprop : ensures_slprop -> ensures_slprop -> Prims.bool) =
+  fun e1 ->
+    fun e2 ->
+      let uu___ = e1 in
+      match uu___ with
+      | (h1, s1, t1) ->
+          let uu___1 = e2 in
+          (match uu___1 with
+           | (h2, s2, t2) ->
+               ((eq_opt
+                   (fun uu___2 ->
+                      fun uu___3 ->
+                        match (uu___2, uu___3) with
+                        | ((i1, t11), (i2, t21)) ->
+                            (eq_ident i1 i2) &&
+                              (FStar_Parser_AST_Util.eq_term t11 t21)) h1 h2)
+                  && (eq_slprop s1 s2))
+                 && (eq_opt FStar_Parser_AST_Util.eq_term t1 t2))
+and (eq_lambda : lambda -> lambda -> Prims.bool) =
+  fun l1 ->
+    fun l2 ->
+      ((forall2 FStar_Parser_AST_Util.eq_binder l1.binders1 l2.binders1) &&
+         (eq_opt eq_computation_type l1.ascription l2.ascription))
+        && (eq_stmt l1.body2 l2.body2)
+and (eq_mut_or_ref : mut_or_ref -> mut_or_ref -> Prims.bool) =
+  fun m1 ->
+    fun m2 ->
+      match (m1, m2) with
+      | (MUT, MUT) -> true
+      | (REF, REF) -> true
+      | (uu___, uu___1) -> false
+and (eq_pat : pat -> pat -> Prims.bool) =
+  fun p1 ->
+    fun p2 ->
+      match (p1, p2) with
+      | (PatVar i1, PatVar i2) -> eq_ident i1 i2
+      | (PatConstructor { head = h1; args = a1;_}, PatConstructor
+         { head = h2; args = a2;_}) ->
+          (eq_lident h1 h2) && (forall2 eq_pat a1 a2)
+      | (uu___, uu___1) -> false
 let (range_of_decl : decl -> rng) =
   fun d -> match d with | FnDefn f -> f.range3 | FnDecl d1 -> d1.range4
 let (mk_comp :

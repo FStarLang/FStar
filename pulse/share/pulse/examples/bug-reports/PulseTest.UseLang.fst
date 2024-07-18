@@ -12,19 +12,22 @@ fn return_z ()
 requires emp
 returns r:int
 ensures pure (r == z)
-{
+{  //add some comments; it caches fine
     z
 }
+
 
 let some = 1
 let foobar = 17 
 
+
 fn return_2z ()
 requires emp
 returns r:int
- 
 ensures pure (r == 2 * z)
 {
   let v = return_z ();
   (v + x + y)
 }
+
+let fixit = 0

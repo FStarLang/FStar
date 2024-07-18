@@ -262,15 +262,29 @@ let (parse_extension_lang :
                  | (id, r1) ->
                      let id_txt = FStar_Ident.string_of_id id in
                      let decl_as_term =
-                       let uu___3 =
-                         let uu___4 =
-                           FStar_Syntax_Util.mk_lazy d
-                             FStar_Syntax_Syntax.t_bool
+                       let blob =
+                         FStar_Syntax_Util.mk_lazy d
+                           FStar_Syntax_Syntax.t_bool
+                           (FStar_Syntax_Syntax.Lazy_extension
+                              "pulse_sugar_decl")
+                           (FStar_Pervasives_Native.Some r1) in
+                       let eq t1 t2 =
+                         let d1 =
+                           FStar_Syntax_Util.unlazy_as_t
                              (FStar_Syntax_Syntax.Lazy_extension
-                                "pulse_sugar_decl")
-                             (FStar_Pervasives_Native.Some r1) in
-                         FStar_Parser_AST.DesugaredBlob uu___4 in
-                       tm uu___3 r1 in
+                                "pulse_sugar_decl") t1 in
+                         let d2 =
+                           FStar_Syntax_Util.unlazy_as_t
+                             (FStar_Syntax_Syntax.Lazy_extension
+                                "pulse_sugar_decl") t2 in
+                         PulseSyntaxExtension_Sugar.eq_decl d1 d2 in
+                       tm
+                         (FStar_Parser_AST.DesugaredBlob
+                            {
+                              FStar_Parser_AST.tag = "pulse_sugar_decl";
+                              FStar_Parser_AST.blob = blob;
+                              FStar_Parser_AST.eq = eq
+                            }) r1 in
                      let splicer =
                        let head =
                          tm
@@ -340,13 +354,13 @@ let (parse_extension_lang :
                (match uu___2 with
                 | (uu___3, decls2) ->
                     FStar_Pervasives.Inr (FStar_Compiler_List.rev decls2)))
-let (uu___147 : unit) =
+let (uu___153 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___148 : unit) =
+let (uu___154 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl
