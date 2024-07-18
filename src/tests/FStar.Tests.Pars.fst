@@ -284,3 +284,62 @@ let parse_incremental_decls () =
 
   | _ ->
       failwith "Incremental parsing failed: Unexpected output"
+
+
+open FStar.Class.Show
+
+let parse_somelang (s:string) (r:FStar.Compiler.Range.range)
+: either FStar.Parser.AST.Util.error_message (list FStar.Parser.AST.decl)
+= BU.print1 "Parsing somelang: <%s>\n" s;    
+  match FStar.Parser.ParseIt.parse_string_incrementally s with
+  | Inr None ->
+    failwith "Pulse parser failed"
+  | Inr (Some (err,r)) -> 
+    Inl ( { message = err; range = r } <: FStar.Parser.AST.Util.error_message)
+  | Inl (decls, first_error) ->
+    BU.print1 "Parsed somelang decls: %s\n" <| show decls;
+    Inr decls
+
+let parse_incremental_decls_use_lang () =
+  let source0 =
+    "module Demo\n\
+     let x = 0\n\
+     #lang-somelang\n\
+     val f : t\n\
+     let g x = f x\n\
+     #restart-solver"
+  in
+  FStar.Parser.AST.Util.register_extension_lang_parser "somelang" {parse_decls=parse_somelang};
+  let open FStar.Parser.ParseIt in
+  let input0 = Incremental { frag_fname = "Demo.fst";
+                             frag_text = source0;
+                             frag_line = 1;
+                             frag_col = 0 } in
+  let open FStar.Compiler.Range in
+  match parse input0 with
+  | IncrementalFragment (decls0, _, parse_err0) -> (
+      let _ =
+        match parse_err0 with
+        | None -> ()
+        | Some _ ->
+          failwith "Incremental parsing failed: ..."
+      in
+      let open FStar.Parser.AST in
+      let ds = List.map fst decls0 in
+      match ds with
+      | [{d=TopLevelModule _}; {d=TopLevelLet _}; {d=UseLangDecls _}; {d=Val _}; {d=TopLevelLet _}; {d=Pragma _}] -> ()
+      | _ ->
+       failwith ("Incremental parsing failed; unexpected decls: " ^ show ds)
+      )
+
+
+  | ParseError (code, message, range) ->
+      let msg =
+        format2 "Incremental parsing failed: Syntax error @ %s: %s"
+                (Range.string_of_range range)
+                (Errors.rendermsg message) // FIXME
+      in
+      failwith msg
+
+  | _ ->
+      failwith "Incremental parsing failed: Unexpected output"

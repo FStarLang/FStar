@@ -453,9 +453,9 @@ match%sedlex lexbuf with
  | "`%" -> BACKTICK_PERC
  | "`#" -> BACKTICK_HASH
  | "`@" -> BACKTICK_AT
- | "#use-lang-", ident -> (
+ | "#lang-", ident -> (
    let s = L.lexeme lexbuf in
-   let lang_name = BatString.lchop ~n:10 s in
+   let lang_name = BatString.lchop ~n:6 s in
    let snap = Sedlexing.snapshot lexbuf in
    Buffer.clear use_lang_buffer;
    let pos = L.current_pos lexbuf in

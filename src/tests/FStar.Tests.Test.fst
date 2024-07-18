@@ -39,10 +39,11 @@ let main argv =
         | G.Success ->
           FStar.Main.setup_hooks();
           Pars.init() |> ignore;
-          Pars.parse_incremental_decls();
-          Norm.run_all ();
-          if Unif.run_all () then () else exit 1;
-          Data.run_all ();
+          // Pars.parse_incremental_decls();
+          Pars.parse_incremental_decls_use_lang ();
+          // Norm.run_all ();
+          // if Unif.run_all () then () else exit 1;
+          // Data.run_all ();
 
           FStar.Errors.report_all () |> ignore;
           let nerrs = FStar.Errors.get_err_count() in

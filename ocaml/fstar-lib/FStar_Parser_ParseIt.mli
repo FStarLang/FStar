@@ -38,8 +38,21 @@ type parse_result =
     | Term of FStar_Parser_AST.term
     | ParseError of parse_error
 
+val parse_incremental_decls :
+    (*filename*)string ->
+    (*contents*)string ->
+    FStar_Sedlexing.lexbuf ->
+    (unit -> 'token * Lexing.position * Lexing.position) ->
+    ('semantic_value -> FStar_Compiler_Range.range) ->
+    ((Lexing.lexbuf -> 'token) -> Lexing.lexbuf ->
+         ('semantic_value list * FStar_Sedlexing.snap option) option) ->
+'semantic_value list * parse_error option
+
 val parse: parse_frag -> parse_result
 
 val find_file: string -> string
 
 val parse_warn_error: string -> Codes.error_setting list 
+
+val parse_string_incrementally:
+     string -> ((FStar_Parser_AST.decl list * parse_error option), (string * FStar_Compiler_Range.range) option) FStar_Pervasives.either

@@ -62,3 +62,7 @@ val parse: parse_frag -> parse_result // either (AST.inputFragment * list (strin
 val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting
+
+(* useful for unit testing *)
+val parse_string_incrementally (s:string)
+: either (list FStar.Parser.AST.decl & parse_error) (option (string & FStar.Compiler.Range.range))

@@ -20,14 +20,8 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                     | FStar_Getopt.Empty ->
                         (FStar_Main.setup_hooks ();
                          (let uu___5 = FStar_Tests_Pars.init () in ());
-                         FStar_Tests_Pars.parse_incremental_decls ();
-                         FStar_Tests_Norm.run_all ();
-                         (let uu___8 = FStar_Tests_Unif.run_all () in
-                          if uu___8
-                          then ()
-                          else FStar_Compiler_Effect.exit Prims.int_one);
-                         FStar_Tests_Data.run_all ();
-                         (let uu___10 = FStar_Errors.report_all () in ());
+                         FStar_Tests_Pars.parse_incremental_decls_use_lang ();
+                         (let uu___7 = FStar_Errors.report_all () in ());
                          (let nerrs = FStar_Errors.get_err_count () in
                           if nerrs > Prims.int_zero
                           then FStar_Compiler_Effect.exit Prims.int_one
@@ -36,14 +30,8 @@ let main : 'uuuuu 'uuuuu1 . 'uuuuu -> 'uuuuu1 =
                     | FStar_Getopt.Success ->
                         (FStar_Main.setup_hooks ();
                          (let uu___5 = FStar_Tests_Pars.init () in ());
-                         FStar_Tests_Pars.parse_incremental_decls ();
-                         FStar_Tests_Norm.run_all ();
-                         (let uu___8 = FStar_Tests_Unif.run_all () in
-                          if uu___8
-                          then ()
-                          else FStar_Compiler_Effect.exit Prims.int_one);
-                         FStar_Tests_Data.run_all ();
-                         (let uu___10 = FStar_Errors.report_all () in ());
+                         FStar_Tests_Pars.parse_incremental_decls_use_lang ();
+                         (let uu___7 = FStar_Errors.report_all () in ());
                          (let nerrs = FStar_Errors.get_err_count () in
                           if nerrs > Prims.int_zero
                           then FStar_Compiler_Effect.exit Prims.int_one

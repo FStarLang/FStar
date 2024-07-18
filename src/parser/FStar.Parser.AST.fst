@@ -769,7 +769,7 @@ let rec decl_to_string (d:decl) = match d.d with
   | DeclSyntaxExtension (id, content, _, _) -> 
     "```" ^ id ^ "\n" ^ content ^ "\n```"
   | UseLangDecls str ->
-    format1 "#use-lang-%s" str
+    format1 "#lang-%s" str
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)

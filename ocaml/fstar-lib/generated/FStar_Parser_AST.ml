@@ -2495,7 +2495,7 @@ let rec (decl_to_string : decl -> Prims.string) =
     | DeclSyntaxExtension (id, content, uu___, uu___1) ->
         Prims.strcat "```"
           (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
-    | UseLangDecls str -> FStar_Compiler_Util.format1 "#use-lang-%s" str
+    | UseLangDecls str -> FStar_Compiler_Util.format1 "#lang-%s" str
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with

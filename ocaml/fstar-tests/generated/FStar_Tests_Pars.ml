@@ -755,3 +755,127 @@ let (parse_incremental_decls : unit -> unit) =
     | uu___2 ->
         FStar_Compiler_Effect.failwith
           "Incremental parsing failed: Unexpected output"
+let (parse_somelang :
+  Prims.string ->
+    FStar_Compiler_Range_Type.range ->
+      (FStar_Parser_AST_Util.error_message, FStar_Parser_AST.decl Prims.list)
+        FStar_Pervasives.either)
+  =
+  fun s ->
+    fun r ->
+      FStar_Compiler_Util.print1 "Parsing somelang: <%s>\n" s;
+      (let uu___1 = FStar_Parser_ParseIt.parse_string_incrementally s in
+       match uu___1 with
+       | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
+           FStar_Compiler_Effect.failwith "Pulse parser failed"
+       | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (err, r1)) ->
+           FStar_Pervasives.Inl
+             {
+               FStar_Parser_AST_Util.message = err;
+               FStar_Parser_AST_Util.range = r1
+             }
+       | FStar_Pervasives.Inl (decls, first_error) ->
+           ((let uu___3 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.show_list FStar_Parser_AST.showable_decl)
+                 decls in
+             FStar_Compiler_Util.print1 "Parsed somelang decls: %s\n" uu___3);
+            FStar_Pervasives.Inr decls))
+let (parse_incremental_decls_use_lang : unit -> unit) =
+  fun uu___ ->
+    let source0 =
+      "module Demo\nlet x = 0\n#lang-somelang\nval f : t\nlet g x = f x\n#restart-solver" in
+    FStar_Parser_AST_Util.register_extension_lang_parser "somelang"
+      { FStar_Parser_AST_Util.parse_decls = parse_somelang };
+    (let input0 =
+       FStar_Parser_ParseIt.Incremental
+         {
+           FStar_Parser_ParseIt.frag_fname = "Demo.fst";
+           FStar_Parser_ParseIt.frag_text = source0;
+           FStar_Parser_ParseIt.frag_line = Prims.int_one;
+           FStar_Parser_ParseIt.frag_col = Prims.int_zero
+         } in
+     let uu___2 = FStar_Parser_ParseIt.parse input0 in
+     match uu___2 with
+     | FStar_Parser_ParseIt.IncrementalFragment (decls0, uu___3, parse_err0)
+         ->
+         ((match parse_err0 with
+           | FStar_Pervasives_Native.None -> ()
+           | FStar_Pervasives_Native.Some uu___5 ->
+               FStar_Compiler_Effect.failwith
+                 "Incremental parsing failed: ...");
+          (let ds =
+             FStar_Compiler_List.map FStar_Pervasives_Native.fst decls0 in
+           match ds with
+           | { FStar_Parser_AST.d = FStar_Parser_AST.TopLevelModule uu___5;
+               FStar_Parser_AST.drange = uu___6;
+               FStar_Parser_AST.quals = uu___7;
+               FStar_Parser_AST.attrs = uu___8;
+               FStar_Parser_AST.interleaved = uu___9;_}::{
+                                                           FStar_Parser_AST.d
+                                                             =
+                                                             FStar_Parser_AST.TopLevelLet
+                                                             uu___10;
+                                                           FStar_Parser_AST.drange
+                                                             = uu___11;
+                                                           FStar_Parser_AST.quals
+                                                             = uu___12;
+                                                           FStar_Parser_AST.attrs
+                                                             = uu___13;
+                                                           FStar_Parser_AST.interleaved
+                                                             = uu___14;_}::
+               { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls uu___15;
+                 FStar_Parser_AST.drange = uu___16;
+                 FStar_Parser_AST.quals = uu___17;
+                 FStar_Parser_AST.attrs = uu___18;
+                 FStar_Parser_AST.interleaved = uu___19;_}::{
+                                                              FStar_Parser_AST.d
+                                                                =
+                                                                FStar_Parser_AST.Val
+                                                                uu___20;
+                                                              FStar_Parser_AST.drange
+                                                                = uu___21;
+                                                              FStar_Parser_AST.quals
+                                                                = uu___22;
+                                                              FStar_Parser_AST.attrs
+                                                                = uu___23;
+                                                              FStar_Parser_AST.interleaved
+                                                                = uu___24;_}::
+               { FStar_Parser_AST.d = FStar_Parser_AST.TopLevelLet uu___25;
+                 FStar_Parser_AST.drange = uu___26;
+                 FStar_Parser_AST.quals = uu___27;
+                 FStar_Parser_AST.attrs = uu___28;
+                 FStar_Parser_AST.interleaved = uu___29;_}::{
+                                                              FStar_Parser_AST.d
+                                                                =
+                                                                FStar_Parser_AST.Pragma
+                                                                uu___30;
+                                                              FStar_Parser_AST.drange
+                                                                = uu___31;
+                                                              FStar_Parser_AST.quals
+                                                                = uu___32;
+                                                              FStar_Parser_AST.attrs
+                                                                = uu___33;
+                                                              FStar_Parser_AST.interleaved
+                                                                = uu___34;_}::[]
+               -> ()
+           | uu___5 ->
+               let uu___6 =
+                 let uu___7 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list
+                        FStar_Parser_AST.showable_decl) ds in
+                 Prims.strcat
+                   "Incremental parsing failed; unexpected decls: " uu___7 in
+               FStar_Compiler_Effect.failwith uu___6))
+     | FStar_Parser_ParseIt.ParseError (code, message, range) ->
+         let msg =
+           let uu___3 = FStar_Compiler_Range_Ops.string_of_range range in
+           let uu___4 = FStar_Errors_Msg.rendermsg message in
+           FStar_Compiler_Util.format2
+             "Incremental parsing failed: Syntax error @ %s: %s" uu___3
+             uu___4 in
+         FStar_Compiler_Effect.failwith msg
+     | uu___3 ->
+         FStar_Compiler_Effect.failwith
+           "Incremental parsing failed: Unexpected output")

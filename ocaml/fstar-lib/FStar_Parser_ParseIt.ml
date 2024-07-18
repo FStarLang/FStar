@@ -124,11 +124,20 @@ let range_of_positions filename start fin =
   let end_pos = FStar_Parser_Util.pos_of_lexpos fin in
   FStar_Compiler_Range.mk_range filename start_pos end_pos
 
-let err_of_parse_error filename lexbuf =
+let err_of_parse_error filename lexbuf tag =
     let pos = lexbuf.cur_p in
+    let tag =
+      match tag with
+      | None -> "Syntax error"
+      | Some tag -> tag
+    in
     Fatal_SyntaxError,
-    Msg.mkmsg "Syntax error",
+    Msg.mkmsg tag,
     range_of_positions filename pos pos
+
+let string_of_lexpos lp = 
+    let r = range_of_positions "<input>" lp lp in
+    FStar_Compiler_Range.string_of_range r
 
 let parse_incremental_decls
     filename
@@ -140,10 +149,54 @@ let parse_incremental_decls
      (Lexing.lexbuf -> 'token) ->
          Lexing.lexbuf ->
          ('semantic_value list * FStar_Sedlexing.snap option) option)
-: 'semantic_value incremental_result
+: 'semantic_value list * parse_error option
 = let parse_one = MenhirLib.Convert.Simplified.traditional2revised parse_one in
-  let err_of_parse_error () = err_of_parse_error filename lexbuf in
-  let contents_at =
+  let err_of_parse_error tag = err_of_parse_error filename lexbuf tag in
+  let open FStar_Pervasives in
+  let push_decls ds decls = List.fold_left (fun decls d -> d::decls) decls ds in
+  let rec parse decls =
+    let start_pos = current_pos lexbuf in
+    let d =
+      try
+        (* Reset the gensym between decls, to ensure determinism, 
+            otherwise, every _ is parsed as different name *)
+        FStar_GenSym.reset_gensym();
+        Inl (parse_one lexer)
+      with 
+      | FStar_Errors.Error(e, msg, r, ctx) ->
+        Inr (e, msg, r)
+
+      | FStar_Errors.Err(e, msg, ctx) ->
+        Inr (err_of_parse_error (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
+
+      | e -> 
+        Inr (err_of_parse_error None)
+    in
+    match d with
+    | Inl None -> 
+      List.rev decls, None
+    | Inl (Some (ds, snap_opt)) -> 
+      (* The parser may advance the lexer beyond the decls last token. 
+          E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
+                but the lexer will have advanced to `let ^ g ...` since the
+                parser will have looked ahead.
+                Rollback the lexer one token for declarations whose syntax
+                requires such lookahead to complete a production.
+      *)
+      let _ = 
+        match snap_opt with
+        | None -> 
+          rollback lexbuf
+        | Some p -> 
+          restore_snapshot lexbuf p
+      in
+      parse (push_decls ds decls)
+    | Inr err ->
+      List.rev decls, Some err
+  in
+  parse []
+
+let contents_at contents =
     let lines = U.splitlines contents in
     let split_line_at_col line col =
         if col > 0
@@ -225,49 +278,51 @@ let parse_incremental_decls
       in
       { range;
         code = FStar_String.concat "\n" text }
-  in
+
+
+let parse_incremental_fragment
+    filename
+    (contents:string)
+    lexbuf
+    (lexer:unit -> 'token * Lexing.position * Lexing.position)
+    (range_of: 'semantic_value -> FStar_Compiler_Range.range)
+    (parse_one:
+     (Lexing.lexbuf -> 'token) ->
+         Lexing.lexbuf ->
+         ('semantic_value list * FStar_Sedlexing.snap option) option)
+: 'semantic_value incremental_result
+= let res = parse_incremental_decls filename contents lexbuf lexer range_of parse_one in
+  let comments = FStar_Parser_Util.flush_comments () in
+  let contents_at = contents_at contents in
+  let decls, err_opt = res in
+  let decls = List.map (fun d -> d, contents_at (range_of d)) decls in
+  decls, comments, err_opt
+
+let parse_string_incrementally (s:string) =
   let open FStar_Pervasives in
-  let rec parse decls =
-    let start_pos = current_pos lexbuf in
-    let d =
-      try
-        (* Reset the gensym between decls, to ensure determinism, 
-            otherwise, every _ is parsed as different name *)
-        FStar_GenSym.reset_gensym();
-        Inl (parse_one lexer)
-      with 
-      | FStar_Errors.Error(e, msg, r, _ctx) ->
-        Inr (e, msg, r)
-
-      | _e -> 
-        Inr (err_of_parse_error ())
-    in
-    match d with
-    | Inl None -> List.rev decls, FStar_Parser_Util.flush_comments(), None
-    | Inl (Some (ds, snap_opt)) -> 
-      (* The parser may advance the lexer beyond the decls last token.
-          E.g., in `let f x = 0 let g = 1`, we will have parsed the decl for `f`
-                but the lexer will have advanced to `let ^ g ...` since the
-                parser will have looked ahead.
-                Rollback the lexer one token for declarations whose syntax
-                requires such lookahead to complete a production.
-      *)
-      let end_pos =
-        let _ = 
-          match snap_opt with
-          | None -> 
-            rollback lexbuf
-          | Some p -> 
-            restore_snapshot lexbuf p
-        in
-        current_pos lexbuf
-      in
-      let ds = List.map (fun d -> d, contents_at (range_of d)) ds in
-      parse (ds@decls)
-    | Inr err -> List.rev decls, FStar_Parser_Util.flush_comments(), Some err
+  let lexbuf = create s "<input>" 0 0 in
+  let filename = "<input>" in
+  let contents = s in
+  let lexer () =
+    let tok = FStar_Parser_LexFStar.token lexbuf in
+    (tok, lexbuf.start_p, lexbuf.cur_p)
   in
-  parse []
-
+  try 
+    let decls, err_opt = 
+      parse_incremental_decls
+        filename
+        contents
+        lexbuf
+        lexer
+        (fun (d:FStar_Parser_AST.decl) -> d.drange)
+        FStar_Parser_Parse.oneDeclOrEOF
+    in
+    Inl (decls, err_opt)
+  with
+  | e ->
+    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStar_Compiler_Range.mk_range filename pos pos in
+    Inr (Some ("ParseStringIncrementally: Error " ^ Printexc.to_string e, r))
 
 let parse fn =
   FStar_Parser_Util.warningHandler := (function
@@ -310,7 +365,7 @@ let parse fn =
       
     | Incremental i ->
       let decls, comments, err_opt = 
-        parse_incremental_decls 
+        parse_incremental_fragment 
           filename
           i.frag_text
           lexbuf
@@ -329,12 +384,15 @@ let parse fn =
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | _e ->
+    | FStar_Errors.Err(e, msg, _ctx) ->
+      ParseError (err_of_parse_error filename lexbuf (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
+  
+    | e ->
 (*
     | Parsing.Parse_error as _e
     | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
 *)
-      ParseError (err_of_parse_error filename lexbuf)
+      ParseError (err_of_parse_error filename lexbuf None)
 
 
 (** Parsing of command-line error/warning/silent flags. *)
