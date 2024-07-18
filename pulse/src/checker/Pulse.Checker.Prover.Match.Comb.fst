@@ -86,7 +86,7 @@ let rec match_f_1n
           T.print "Checking for ambiguity";
         match match_f_1n label matcher pst q ps with
         | Some (| p', _, _, _, _ |) ->
-          if not (FStar.Reflection.V2.TermEq.term_eq p p') then
+          if not (FStar.Reflection.TermEq.term_eq p p') then
             raise (Ambig (q, p, p'))
         | None -> ()
       end;

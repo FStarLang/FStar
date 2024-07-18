@@ -605,9 +605,9 @@ let (mk_binder_ppname : term -> ppname -> binder) =
     fun binder_ppname ->
       mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
-  fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
+  fun u1 -> fun u2 -> FStar_Reflection_TermEq.univ_eq_dec u1 u2
 let (eq_tm : term -> term -> Prims.bool) =
-  fun t1 -> fun t2 -> FStar_Reflection_V2_TermEq.term_eq_dec t1 t2
+  fun t1 -> fun t2 -> FStar_Reflection_TermEq.term_eq_dec t1 t2
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
     fun s2 ->
