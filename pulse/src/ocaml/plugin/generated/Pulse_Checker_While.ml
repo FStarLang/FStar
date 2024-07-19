@@ -112,7 +112,7 @@ let (check :
                                                      (Prims.of_int (130))
                                                      (Prims.of_int (70)))))
                                             (Obj.magic
-                                               (Pulse_Checker_Pure.check_vprop
+                                               (Pulse_Checker_Pure.check_slprop
                                                   (Pulse_Checker_Pure.push_context
                                                      "invariant"
                                                      (Pulse_Syntax_Pure.term_range

@@ -39,13 +39,13 @@ let extend_post_hint
 = let arr = null_var x in
   let conjunct = (tm_exists_sl u0 (as_binder (mk_seq u0 init_t)) (mk_array_pts_to init_t arr (null_bvar 0))) in
   let g' = push_binding g x ppname_default (mk_array init_t) in
-  let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_vprop in
+  let c_typing = Pulse.Checker.Pure.core_check_term g' conjunct T.E_Total tm_slprop in
   let res = Pulse.Checker.Base.extend_post_hint g p x (mk_array init_t) _ c_typing in
   res
 
 
 let with_local_array_pre_typing (#g:env) (#pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (init_t:term)
   (init:term)
   (len:term)
@@ -54,7 +54,7 @@ let with_local_array_pre_typing (#g:env) (#pre:term)
   (x:var { ~ (Set.mem x (dom g)) })
   : tot_typing (push_binding g x ppname_default (mk_array init_t))
                (comp_withlocal_array_body_pre pre init_t (null_var x) init len)
-               tm_vprop
+               tm_slprop
   = admit()
 
 let is_annotated_type_array (t:term) : option term =
@@ -78,7 +78,7 @@ let head_range (t:st_term {Tm_WithLocalArray? t.term}) : range =
 let check
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term { Tm_WithLocalArray? t.term })

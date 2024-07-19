@@ -44,8 +44,11 @@ open Pulse.Lib.HashTable.Type
 open Pulse.Lib.HashTable
 open Pulse.Lib.MutexToken
 
-assume
-val run_stt (#a:Type) (#post:a -> vprop) (f:stt a emp post) : a
+// We assume a combinator to run pulse computations for initialization of top-level state, it gets primitive support in extraction
+assume val run_stt (#a:Type) (#post:a -> slprop) (f:stt a emp post) : a
+
+// We assume this code will be executed on a machine where u32 fits the word size
+assume SZ_fits_u32 : SZ.fits_u32
 
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
@@ -528,63 +531,53 @@ fn replace_session
         with t1. assert (ghost_pcm_pts_to trace_ref (singleton sid 1.0R t1));
         assert (pure (t1 == t));
         let ret = HT.lookup tbl sid;
-        let tbl = tfst ret;
-        let b = tsnd ret;
-        let idx = tthd ret;
+        let tbl = fst ret;
+        let idx = snd ret;
         rewrite each
-          tfst ret as tbl,
-          tsnd ret as b,
-          tthd ret as idx;
+          fst ret as tbl,
+          snd ret as idx;
         with pht. assert (models tbl pht);
-        if b {
-          match idx {
-            Some idx -> {
-              let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
-              let tbl = fst ret;
-              let st = snd ret;
-              rewrite each
-                fst ret as tbl,
-                snd ret as st;
-              assert (session_state_related sst gsst);
-              with sst' gsst'. assert (
-                session_state_related sst' gsst' **
-                session_state_related sst gsst
-              );
-              rewrite (session_state_related sst' gsst')
-                   as (session_state_related st (current_state t1));
-              with pht. assert (models tbl pht);
-              upd_singleton sid #t1 gsst;
-              share_sid_pts_to sid;
-              rewrite (session_state_related sst gsst) as
-                      (session_state_related sst (current_state (next_trace t1 gsst)));
-              fold (session_state_perm trace_ref pht sid);
-              rewrite (session_state_perm trace_ref pht sid) as
-                      (session_perm trace_ref pht (U16.v sid));
-              frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
-              frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
-              on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
-              let s = { st_ctr = ctr; st_tbl = tbl };
-              rewrite each
-                ctr as s.st_ctr,
-                tbl as s.st_tbl;
-              fold (dpe_inv trace_ref (Some s));
-              mg := Some s;
+        match idx {
+          Some idx -> {
+            let ret = HT.replace #_ #_ #pht tbl idx sid sst ();
+            let tbl = fst ret;
+            let st = snd ret;
+            rewrite each
+              fst ret as tbl,
+              snd ret as st;
+            assert (session_state_related sst gsst);
+            with sst' gsst'. assert (
+              session_state_related sst' gsst' **
+              session_state_related sst gsst
+            );
+            rewrite (session_state_related sst' gsst')
+                 as (session_state_related st (current_state t1));
+            with pht. assert (models tbl pht);
+            upd_singleton sid #t1 gsst;
+            share_sid_pts_to sid;
+            rewrite (session_state_related sst gsst) as
+                    (session_state_related sst (current_state (next_trace t1 gsst)));
+            fold (session_state_perm trace_ref pht sid);
+            rewrite (session_state_perm trace_ref pht sid) as
+                    (session_perm trace_ref pht (U16.v sid));
+            frame_session_perm_on_range trace_ref pht0 pht 0 (U16.v sid);
+            frame_session_perm_on_range trace_ref pht0 pht (U16.v sid + 1) (U16.v ctr);
+            on_range_put 0 (U16.v sid) (U16.v ctr) #(session_perm trace_ref pht);
+            let s = { st_ctr = ctr; st_tbl = tbl };
+            rewrite each
+              ctr as s.st_ctr,
+              tbl as s.st_tbl;
+            fold (dpe_inv trace_ref (Some s));
+            mg := Some s;
 
-              from_dpe_inv_trace_ref ();
-              M.unlock (dsnd gst) mg;
-              
-              st
-            }
-            None -> {
-              unreachable ()
-            }
+            from_dpe_inv_trace_ref ();
+            M.unlock (dsnd gst) mg;
+
+            st
           }
-        } else {
-          //
-          // AR: TODO: would be nice if we can prove this can't happen
-          //           i.e. if sid is in pht, then its lookup should succeed
-          assume_ (pure False);
-          unreachable ()
+          None -> {
+            unreachable ()
+          }
         }
       } else {
         unfold sid_pts_to;
@@ -872,19 +865,19 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   {
     Engine_context c ->
     {
-      let uds = rewrite_context_perm_engine ctxt c;
+      let uds = rewrite_context_perm_engine c;
       unfold (engine_context_perm c uds);
       V.free c.uds;
     }
     L0_context c ->
     {
-      let r = rewrite_context_perm_l0 ctxt c;
+      let r = rewrite_context_perm_l0 c;
       unfold (l0_context_perm c r);
       V.free c.cdi;
     }
     L1_context c ->
     {
-      let r = rewrite_context_perm_l1 ctxt c;
+      let r = rewrite_context_perm_l1 c;
       unfold (l1_context_perm c r);
       V.free c.deviceID_pub;
       V.free c.aliasKey_priv;
@@ -918,10 +911,10 @@ fn derive_child_from_context
     Engine_context c -> {
       match record {
         Engine_record r -> {
-          let uds_bytes = rewrite_context_perm_engine context c;
+          let uds_bytes = rewrite_context_perm_engine c;
           unfold (engine_context_perm c uds_bytes);
 
-          let engine_record_repr = rewrite_record_perm_engine record r;
+          let engine_record_repr = rewrite_record_perm_engine r;
 
           let mut cdi = [| 0uy; dice_digest_len |];
 
@@ -974,17 +967,16 @@ fn derive_child_from_context
     L0_context c -> {
       match record {
         L0_record r -> {
-          let cr = rewrite_context_perm_l0 context c;
+          let cr = rewrite_context_perm_l0 c;
           unfold (l0_context_perm c cr);
           with s. assert (V.pts_to c.cdi s);
 
-          let r0 = rewrite_record_perm_l0 record r;
+          let r0 = rewrite_record_perm_l0 r;
           unfold (l0_record_perm r 1.0R r0);
 
           let deviceID_pub = V.alloc 0uy (SZ.uint_to_t 32);
           let aliasKey_pub = V.alloc 0uy (SZ.uint_to_t 32);
           let aliasKey_priv = V.alloc 0uy (SZ.uint_to_t 32);
-          assume_ (pure (SZ.fits_u32));
           let deviceIDCSR_len = L0Types.len_of_deviceIDCSR r.deviceIDCSR_ingredients;
           let aliasKeyCRT_len = L0Types.len_of_aliasKeyCRT r.aliasKeyCRT_ingredients;
           let deviceIDCSR = V.alloc 0uy (SZ.uint32_to_sizet deviceIDCSR_len);
@@ -1000,7 +992,7 @@ fn derive_child_from_context
           V.to_array_pts_to deviceIDCSR;
           V.to_array_pts_to aliasKeyCRT;
 
-          assume_ (pure (A.length (V.vec_to_array c.cdi) == 32));
+          HACL.reveal_dice_digest_len ();
 
           let _ : unit = l0
             (V.vec_to_array c.cdi)
@@ -1029,6 +1021,12 @@ fn derive_child_from_context
           V.to_vec_pts_to deviceIDCSR;
           V.to_vec_pts_to aliasKeyCRT;
 
+          with deviceID_pub_repr. assert (V.pts_to deviceID_pub deviceID_pub_repr);
+          with aliasKey_pub_repr. assert (V.pts_to aliasKey_pub aliasKey_pub_repr);
+          with aliasKey_priv_repr. assert (V.pts_to aliasKey_priv aliasKey_priv_repr);
+          with deviceIDCSR_repr. assert (V.pts_to deviceIDCSR deviceIDCSR_repr);
+          with aliasKeyCRT_repr. assert (V.pts_to aliasKeyCRT aliasKeyCRT_repr);
+
           let l1_context : l1_context_t = init_l1_ctxt
             s
             (hide r.deviceID_label_len)
@@ -1043,7 +1041,9 @@ fn derive_child_from_context
             aliasKeyCRT_len
             aliasKeyCRT
             r0
-            (magic ());
+            #deviceID_pub_repr #aliasKey_pub_repr #aliasKey_priv_repr
+            #deviceIDCSR_repr #aliasKeyCRT_repr
+            ();
 
           fold (l0_context_perm c cr);
           rewrite (l0_context_perm c cr) as
@@ -1123,8 +1123,7 @@ fn derive_child (sid:sid_t)
                   (pure False);
           unreachable ()
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        Engine_context _ -> {
           let repr = rewrite_session_state_related_available hc.context s t;
           intro_context_and_repr_tag_related hc.context repr;
           let ret = derive_child_from_context hc.context record #rrepr #repr ();
@@ -1155,6 +1154,38 @@ fn derive_child (sid:sid_t)
             }
           }
         }
+        L0_context _ -> {
+          let repr = rewrite_session_state_related_available hc.context s t;
+          intro_context_and_repr_tag_related hc.context repr;
+          let ret = derive_child_from_context hc.context record #rrepr #repr ();
+
+          match ret {
+            Some nctxt -> {
+              unfold (maybe_context_perm repr rrepr (Some nctxt));
+              with nrepr. assert (context_perm nctxt nrepr);
+              intro_context_and_repr_tag_related nctxt nrepr;
+              let s = Available { context = nctxt };
+              rewrite (context_perm nctxt nrepr) as
+                      (session_state_related s (G_Available nrepr));
+              let s = replace_session sid t1 s (G_Available nrepr);
+              intro_session_state_tag_related s (current_state t1);
+              fold (derive_child_client_perm sid t rrepr true);
+              with _x _y. rewrite (session_state_related _x _y) as emp;
+              true
+            }
+            None -> {
+              let s = SessionError;
+              rewrite (maybe_context_perm repr rrepr ret) as emp;
+              rewrite emp as (session_state_related s (G_SessionError (current_state t1)));
+              let s = replace_session sid t1 s (G_SessionError (current_state t1));
+              intro_session_state_tag_related s (current_state t1);
+              fold (derive_child_client_perm sid t rrepr false);
+              with _x _y. rewrite (session_state_related _x _y) as emp;
+              false
+            }
+          }
+        }
+
       }
     }
     SessionStart -> {
@@ -1192,10 +1223,19 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
       rewrite_session_state_related_available hc.context s t;
       destroy_ctxt hc.context
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
       with _x _y. rewrite (session_state_related _x _y) as emp
     }
+    InUse -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+    SessionClosed -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+    SessionError -> {
+      with _x _y. rewrite (session_state_related _x _y) as emp
+    }
+
   }
 }
 ```
@@ -1259,14 +1299,13 @@ fn certify_key (sid:sid_t)
             0ul
           } else {
             let r = rewrite_session_state_related_available (L1_context c) s t;
-            let r = rewrite_context_perm_l1 (L1_context c) c;
+            let r = rewrite_context_perm_l1 c;
             unfold (l1_context_perm c r);
 
             V.to_array_pts_to c.aliasKey_pub;
             memcpy_l (SZ.uint_to_t 32) (V.vec_to_array c.aliasKey_pub) pub_key;
             V.to_vec_pts_to c.aliasKey_pub;
 
-            assume_ (pure (SZ.fits_u32));
             V.to_array_pts_to c.aliasKeyCRT;
             
             memcpy_l (SZ.uint32_to_sizet c.aliasKeyCRT_len) (V.vec_to_array c.aliasKeyCRT) crt;
@@ -1287,16 +1326,35 @@ fn certify_key (sid:sid_t)
             c_crt_len
           }
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        L0_context _ -> {
           rewrite (session_state_related s (current_state t)) as
                   (pure False);
           unreachable ()
         }
+        Engine_context _ -> {
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+
       }
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    InUse -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionClosed -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionError -> {
       rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
@@ -1331,7 +1389,7 @@ fn sign (sid:sid_t)
       match hc.context {
         L1_context c -> {
           let r = rewrite_session_state_related_available (L1_context c) s t;
-          let r = rewrite_context_perm_l1 (L1_context c) c;
+          let r = rewrite_context_perm_l1 c;
           unfold (l1_context_perm c r);
 
           V.to_array_pts_to c.aliasKey_priv;
@@ -1351,20 +1409,39 @@ fn sign (sid:sid_t)
           with _x _y. rewrite (session_state_related _x _y) as emp;
           fold (sign_client_perm sid t);
         }
-        _ -> {
-          assume_ (pure (~ (L1_context? hc.context)));
+        L0_context _ -> {
+          rewrite (session_state_related s (current_state t)) as
+                  (pure False);
+          unreachable ()
+        }
+        Engine_context _ -> {
           rewrite (session_state_related s (current_state t)) as
                   (pure False);
           unreachable ()
         }
       }
     }
-    _ -> {
-      assume_ (pure (~ (Available? s)));
+    SessionStart -> {
       rewrite (session_state_related s (current_state t)) as
               (pure False);
       unreachable ()
     }
+    InUse -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionClosed -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+    SessionError -> {
+      rewrite (session_state_related s (current_state t)) as
+              (pure False);
+      unreachable ()
+    }
+
   }
 }
 ```

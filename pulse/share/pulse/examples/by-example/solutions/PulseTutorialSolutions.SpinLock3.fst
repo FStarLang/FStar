@@ -5,21 +5,21 @@ module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 
 //lock$
-let maybe ([@@@equate_by_smt] b:bool) (p:vprop) =
+let maybe ([@@@equate_by_smt] b:bool) (p:slprop) =
     if b then p else emp
 
-let core_lock_inv (r:Box.box U32.t) (p:vprop) = 
+let core_lock_inv (r:Box.box U32.t) (p:slprop) = 
   exists* v.
       Box.pts_to r v **
       maybe (v = 0ul) p
 
-let lock_inv (r:Box.box U32.t) (live:GR.ref bool) (p:vprop) =
+let lock_inv (r:Box.box U32.t) (live:GR.ref bool) (p:slprop) =
   exists* b. 
     GR.pts_to live #one_half b **
     maybe b (core_lock_inv r p)
 
 noeq
-type lock (p:vprop) = {
+type lock (p:slprop) = {
   r:Box.box U32.t;
   live:GR.ref bool;
   i:inv (lock_inv r live p);

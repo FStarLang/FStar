@@ -22,11 +22,11 @@ module U32 = FStar.UInt32
 module T = FStar.Tactics
 val ref ([@@@unused]a:Type u#1) : Type u#0
 
-val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : vprop
+val pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a) : slprop
 
-val pts_to_is_small (#a:Type) (r:ref a) (p:perm) (n:a)
-  : Lemma (is_small (pts_to r #p n))
-          [SMTPat (is_small (pts_to r #p n))]
+val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (n:a)
+  : Lemma (is_slprop2 (pts_to r #p n))
+          [SMTPat (is_slprop2 (pts_to r #p n))]
 
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)
@@ -72,9 +72,9 @@ val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 val with_local
   (#a:Type u#1)
   (init:a)
-  (#pre:vprop)
+  (#pre:slprop)
   (#ret_t:Type)
-  (#post:ret_t -> vprop)
+  (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                                (fun v -> post v ** (exists* (x:a). pts_to r x)))
   : stt ret_t pre post

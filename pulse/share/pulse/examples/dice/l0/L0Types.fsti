@@ -69,7 +69,7 @@ type l0_record_repr_t = {
 let mk_l0_repr fwid deviceID_label aliasKey_label
   = {fwid; deviceID_label; aliasKey_label}
 
-let l0_record_perm (record:l0_record_t) (p:perm) (repr:l0_record_repr_t) : vprop =
+let l0_record_perm (record:l0_record_t) (p:perm) (repr:l0_record_repr_t) : slprop =
   V.pts_to record.fwid #p repr.fwid **
   V.pts_to record.deviceID_label #p repr.deviceID_label **
   V.pts_to record.aliasKey_label #p repr.aliasKey_label

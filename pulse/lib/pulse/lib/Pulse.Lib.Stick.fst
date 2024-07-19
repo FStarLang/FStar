@@ -20,16 +20,16 @@ open Pulse.Lib.Pervasives
 module T = Pulse.Lib.Trade
 
 (* This lemma needed to typecheck the definitions below. *)
-let emp_unit_left (p:vprop)
+let emp_unit_left (p:slprop)
   : Lemma (emp ** p == p)
           [SMTPat (emp ** p)]
-  = elim_vprop_equiv (vprop_equiv_unit p)
+  = elim_slprop_equiv (slprop_equiv_unit p)
 
 (* This module is just a special case of trades. The tactic
-instantiates the implicit InvList to [] everywhere. We do not
+instantiates the implicit inames to emp_inames everywhere. We do not
 even need to use the Pulse checker for it. *)
 
-let stick (p q : vprop) =
+let stick (p q : slprop) =
   T.trade p q
 
 let elim_stick p q =

@@ -22,7 +22,7 @@ module GR = Pulse.Lib.GhostReference
 
 noeq
 type cinv = {
-  i:iref;
+  i:iname;
   r:GR.ref bool;
 }
 
@@ -30,27 +30,27 @@ instance non_informative_cinv = {
   reveal = (fun r -> Ghost.reveal r) <: NonInformative.revealer cinv;
 }
 
-let cinv_vp_aux (r:GR.ref bool) (v:vprop) : (w:vprop { is_big v ==> is_big w }) =
+let cinv_vp_aux (r:GR.ref bool) (v:slprop) : (w:slprop { is_storable v ==> is_storable w }) =
   exists* (b:bool). GR.pts_to r #0.5R b **
                     (if b then v else emp)
 
 let cinv_vp c v = cinv_vp_aux c.r v
 
-let is_big_cinv_vp _ _ = ()
+let is_storable_cinv_vp _ _ = ()
 
 let active c p = GR.pts_to c.r #(p /. 2.0R) true
 
-let active_is_small p c = ()
+let active_is_slprop2 p c = ()
 
-let iref_of c = c.i
+let iname_of c = c.i
 
 ```pulse
 ghost
-fn new_cancellable_invariant (v:vprop { is_big v })
+fn new_cancellable_invariant (v:slprop { is_storable v })
   requires v
   returns c:cinv
-  ensures inv (iref_of c) (cinv_vp c v) ** active c 1.0R
-  opens emp_inames
+  ensures inv (iname_of c) (cinv_vp c v) ** active c 1.0R
+  opens []
 {
   let r = GR.alloc true;
   rewrite v as (if true then v else emp);
@@ -58,7 +58,7 @@ fn new_cancellable_invariant (v:vprop { is_big v })
   fold (cinv_vp_aux r v);
   let i = new_invariant (cinv_vp_aux r v);
   let c = {i;r};
-  rewrite (inv i (cinv_vp_aux r v)) as (inv (iref_of c) (cinv_vp c v));
+  rewrite (inv i (cinv_vp_aux r v)) as (inv (iname_of c) (cinv_vp c v));
   with _p _v. rewrite (GR.pts_to r #_p _v) as (active c 1.0R);
   c
 }
@@ -69,10 +69,10 @@ let unpacked c _v = GR.pts_to c.r #0.5R true
 
 ```pulse
 ghost
-fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
+fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p
   ensures v ** unpacked c v ** active c p
-  opens emp_inames
+  opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
@@ -86,10 +86,10 @@ fn unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
 
 ```pulse
 ghost
-fn pack_cinv_vp (#v:vprop) (c:cinv)
+fn pack_cinv_vp (#v:slprop) (c:cinv)
   requires v ** unpacked c v
   ensures cinv_vp c v
-  opens emp_inames
+  opens []
 {
   unfold unpacked;
   rewrite v as (if true then v else emp);
@@ -103,7 +103,7 @@ ghost
 fn share (#p:perm) (c:cinv)
   requires active c p
   ensures active c (p /. 2.0R) ** active c (p /. 2.0R)
-  opens emp_inames
+  opens []
 {
   unfold active;
   GR.share c.r;
@@ -131,11 +131,11 @@ let gather2 c = gather #0.5R #0.5R c
 
 ```pulse
 ghost
-fn cancel_ (#v:vprop) (c:cinv)
+fn cancel_ (#v:slprop) (c:cinv)
 requires cinv_vp c v **
          active c 1.0R
 ensures cinv_vp c v ** v
-opens emp_inames
+opens []
 {
   unfold cinv_vp;
   unfold cinv_vp_aux;
@@ -154,17 +154,17 @@ opens emp_inames
 
 ```pulse
 ghost
-fn cancel (#v:vprop) (c:cinv)
-  requires inv (iref_of c) (cinv_vp c v) ** active c 1.0R
+fn cancel (#v:slprop) (c:cinv)
+  requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
   ensures v
-  opens (add_inv emp_inames (iref_of c))
+  opens [iname_of c]
 {
-  with_invariants (iref_of c)
+  with_invariants (iname_of c)
     returns _:unit
-    ensures inv (iref_of c) (cinv_vp c v) ** v
-    opens (add_inv emp_inames (iref_of c)) {
+    ensures cinv_vp c v ** v
+    opens [iname_of c] {
     cancel_ c
   };
-  drop_ (inv (iref_of c) _)
+  drop_ (inv (iname_of c) _)
 }
 ```

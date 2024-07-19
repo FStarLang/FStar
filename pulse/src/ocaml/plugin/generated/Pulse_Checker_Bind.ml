@@ -1,7 +1,7 @@
 open Prims
 let (check_bind_fn :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         unit Pulse_Typing.post_hint_opt ->
           Pulse_Syntax_Base.ppname ->

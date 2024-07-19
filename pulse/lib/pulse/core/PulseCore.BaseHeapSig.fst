@@ -11,17 +11,9 @@ type mem : Type u#(a + 1) = {
     ghost_ctr: erased nat;
 }
 
-let lens_core : lens (mem u#a) (H2.heap u#a) = {
-    get = (fun s -> s.heap);
-    put = (fun v s -> {s with heap = v});
-    get_put = (fun m -> ());
-    put_get = (fun c m -> ());
-    put_put = (fun c1 c2 m -> ())
-}
-
 let sep : separable (mem u#a) = {
     core = H2.heap u#a;
-    lens_core = lens_core;
+    core_of = (fun m -> m.heap);
     empty = H2.empty_heap;
     disjoint = H2.disjoint;
     join = H2.join;
@@ -30,7 +22,6 @@ let sep : separable (mem u#a) = {
     disjoint_join = H2.disjoint_join;
     join_associative = (fun h0 h1 h2 -> H2.join_associative h0 h1 h2);
     join_empty = H2.join_empty;
-    join_empty_inverse = H2.join_empty_inverse
 }
 
 let full_mem_pred m = H2.full_heap_pred m.heap
@@ -122,7 +113,7 @@ let free_above (m:mem u#a) =
   // (forall i. i >= m.ghost_ctr ==> None? (H2.select_ghost i m.heap)) /\
   // (forall i. i >= m.ctr ==> None? (H2.select i m.heap))
 
-let mem_invariant (is:eset unit) (m:mem u#a)
+let mem_invariant (is:GhostSet.set unit) (m:mem u#a)
 : slprop u#a
 = pure (free_above m)
 
@@ -141,14 +132,15 @@ let inv_extract (i:unit) (p:slprop u#a) (m:mem u#a)
   (ensures p == emp)
 = H2.pure_interp (p == H2.emp) m.heap
 
-let mem_invariant_equiv (e:eset unit) (m:mem u#a) (i:unit) (p:slprop u#a)
+let deq_iref : GhostSet.decide_eq unit = fun x y -> true
+let mem_invariant_equiv (e:GhostSet.set unit) (m:mem u#a) (i:unit) (p:slprop u#a)
 : Lemma 
   (requires
     interp (inv i p) m.heap /\
-    not (iname_of i `Set.mem` e))
+    ~ (i `GhostSet.mem` e))
   (ensures
     mem_invariant e m ==
-    mem_invariant (Set.add (iname_of i) e) m `star` p)
+    mem_invariant (HeapSig.add deq_iref i e) m `star` p)
 = inv_extract i p m;
   H2.emp_unit (mem_invariant e m)
 
@@ -181,7 +173,6 @@ let base_heap : heap_sig u#a =
     slprop_extensionality;
     non_info_slprop = (fun x -> reveal x);
     bprop;
-    non_info_bprop = (fun x -> reveal x);
     up;
     down;
     up_down;
@@ -199,25 +190,28 @@ let base_heap : heap_sig u#a =
     star_associative=H2.star_associative;
     star_equiv;
     star_congruence;
-    pts_to=H2.pts_to;
-    ghost_pts_to=H2.ghost_pts_to;
-    iname = unit;
     iref = unit;
+    deq_iref;
     non_info_iref = (fun x -> reveal x);
-    iname_of = (fun x -> ());
     inv;
     iname_ok = (fun _ _ -> True);
     dup_inv_equiv;
     mem_invariant;
     inv_iname_ok = (fun _ _ _ -> ());
     mem_invariant_equiv;
+    iref_injective = (fun _ -> false);
+    iref_injectivity = (fun _ _ _ _ _ -> ())
 }
-
+let join_empty_inverse m0 m1 = H2.join_empty_inverse m0 m1
+let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
 let core_ghost_ref_as_addr (r:core_ghost_ref)
 : GTot nat
 = H2.core_ghost_ref_as_addr r
-let core_ghost_ref_is_null (r:core_ghost_ref) = H2.core_ghost_ref_is_null r
-let core_ghost_ref_as_addr_injective r1 r2 = H2.core_ghost_ref_as_addr_injective r1 r2
+let addr_as_core_ghost_ref (a:nat)
+: GTot core_ghost_ref
+= H2.addr_as_core_ghost_ref a
+let core_ghost_ref_as_addr_injective r1 = H2.core_ghost_ref_as_addr_injective r1
+let addr_as_core_ghost_ref_injective a = H2.addr_as_core_ghost_ref_injective a
 let select_ghost i m = H2.select_ghost i m
 let ghost_ctr m = m.ghost_ctr
 let mem_invariant_interp (ex:inames base_heap) (h0:base_heap.mem) (h1:base_heap.sep.core)
@@ -251,7 +245,8 @@ let bump_ghost_ctr (m0:base_heap.mem) (x:erased nat)
   );
   m1
 
-
+let pts_to #a #p r c = H2.pts_to #a #p r c
+let ghost_pts_to meta #a #p r x = H2.ghost_pts_to meta #a #p r x
 let interp_ghost_pts_to i #meta #a #pcm v h0 = H2.interp_ghost_pts_to i #meta #a #pcm v h0
 let ghost_pts_to_compatible_equiv = H2.ghost_pts_to_compatible_equiv
 
@@ -351,7 +346,7 @@ let ghost_extend_alt
     (x:erased a{pcm.refine x})
 : ghost_action_except base_heap (ghost_ref a pcm) ex    
         base_heap.emp 
-        (fun r -> base_heap.ghost_pts_to meta r x)
+        (fun r -> ghost_pts_to meta r x)
 = with_fresh_ghost_counter ex (H2.ghost_extend #meta #a #pcm x)
 
 let ghost_extend_spec_alt
@@ -416,14 +411,14 @@ let ghost_read #ex #meta #a #p r x f = lift_heap_action ex (H2.ghost_read #meta 
 let ghost_write #ex #meta #a #p r x y f = 
     let act 
       : ghost_action_except base_heap unit ex
-          (base_heap.ghost_pts_to meta r x)
-          (fun _ -> base_heap.ghost_pts_to meta r y)
+          (ghost_pts_to meta r x)
+          (fun _ -> ghost_pts_to meta r y)
       = lift_heap_action ex (H2.ghost_write #meta #a #p r x y f)
     in
     introduce reveal meta == false ==> preserves_inames act
     with _ . (
       introduce forall (m0:full_mem base_heap) frame. 
-        interpret ((base_heap.ghost_pts_to meta r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+        interpret ((ghost_pts_to meta r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
         inames_ok ex m0
           ==> ( 
           let x, m1 = act frame m0 in
@@ -432,13 +427,13 @@ let ghost_write #ex #meta #a #p r x y f =
       with introduce _ ==> _ 
       with _. ( 
         let _, m1 = act frame m0 in
-        elim_init ex (base_heap.ghost_pts_to meta r x) frame m0;
+        elim_init ex (ghost_pts_to meta r x) frame m0;
         H2.ghost_write_modifies #meta #a #p r x y f m0.heap;
         match (H2.select_ghost (H2.core_ghost_ref_as_addr r) m0.heap) with
         | None -> ()
         | Some (H.Ref meta' _ _ _) -> 
           assert (reveal meta == false);
-          assert (base_heap.interp (base_heap.ghost_pts_to meta r x) m0.heap);
+          assert (base_heap.interp (ghost_pts_to meta r x) m0.heap);
           interp_ghost_pts_to r #meta #a #p x m0.heap;
           assert (reveal meta' == false)
       )
@@ -467,12 +462,12 @@ let with_fresh_counter (#t:Type u#t) (#post:t -> slprop u#a) (e:inames base_heap
 let extend_alt #ex #a #pcm (x:a {pcm.refine x})
   : action_except base_heap (ref a pcm) ex    
         base_heap.emp 
-        (fun r -> base_heap.pts_to r x)
+        (fun r -> pts_to r x)
   = with_fresh_counter ex (H2.extend #a #pcm x)
 let extend #ex #a #pcm (x:a {pcm.refine x})
 : act:action_except base_heap (ref a pcm) ex    
           base_heap.emp 
-          (fun r -> base_heap.pts_to r x) {
+          (fun r -> pts_to r x) {
             preserves_inames act
           }
 = let act = extend_alt #ex #a #pcm x in 
@@ -497,13 +492,13 @@ let read #ex #a #p r x f = lift_heap_action ex (H2.select_refine #a #p r x f)
 let write #ex #a #p r x y f = 
   let act
     : action_except base_heap unit ex
-        (base_heap.pts_to r x)
-        (fun _ -> base_heap.pts_to r y)
+        (pts_to r x)
+        (fun _ -> pts_to r y)
     = lift_heap_action ex (H2.upd_gen_action #a #p r x y f)
   in
   FStar.Classical.forall_intro_2 H2.select_ghost_interp;
   introduce forall (m0:full_mem base_heap) frame. 
-  interpret ((base_heap.pts_to r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
+  interpret ((pts_to r x) `base_heap.star` frame `base_heap.star` base_heap.mem_invariant ex m0) m0 /\
   inames_ok ex m0
     ==> ( 
     let x, m1 = act frame m0 in
@@ -512,7 +507,7 @@ let write #ex #a #p r x y f =
   with introduce _ ==> _ 
   with _. ( 
     let _, m1 = act frame m0 in
-    elim_init ex (base_heap.pts_to r x) frame m0;
+    elim_init ex (pts_to r x) frame m0;
     H2.upd_gen_modifies #a #p r x y f m0.heap;
     assert (H2.ghost m0.heap == H2.ghost m1.heap);
     ()

@@ -93,7 +93,7 @@ val has_struct_field
   (r: ref (struct_typedef sd))
   (field: field_t sd.fields)
   (r': ref (sd.field_desc.fd_typedef field))
-: Tot vprop
+: Tot slprop
 
 val has_struct_field_dup
   (#t: Type)

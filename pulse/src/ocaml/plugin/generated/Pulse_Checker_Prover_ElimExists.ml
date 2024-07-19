@@ -1,6 +1,7 @@
 open Prims
 let (should_elim_exists :
-  Pulse_Syntax_Base.vprop -> (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
+  Pulse_Syntax_Base.slprop ->
+    (Prims.bool, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
     (fun v ->
@@ -13,7 +14,7 @@ let (should_elim_exists :
                | uu___1 -> false))) uu___
 let (mk :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
       unit ->
         ((Pulse_Syntax_Base.ppname, Pulse_Syntax_Base.st_term,
            Pulse_Syntax_Base.comp, (unit, unit, unit) Pulse_Typing.st_typing)
@@ -70,8 +71,8 @@ let (mk :
           uu___1 uu___
 let (elim_exists_frame :
   Pulse_Typing_Env.env ->
-    Pulse_Syntax_Base.vprop ->
-      Pulse_Syntax_Base.vprop ->
+    Pulse_Syntax_Base.slprop ->
+      Pulse_Syntax_Base.slprop ->
         unit ->
           Pulse_Typing_Env.env ->
             ((Pulse_Typing_Env.env, Pulse_Syntax_Base.term, unit,
@@ -109,7 +110,7 @@ let (elim_exists :
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range "Pulse.Checker.Prover.ElimExists.fst"
-                   (Prims.of_int (67)) (Prims.of_int (84))
+                   (Prims.of_int (67)) (Prims.of_int (85))
                    (Prims.of_int (72)) (Prims.of_int (62)))))
           (Obj.magic
              (elim_exists_frame g ctxt Pulse_Syntax_Pure.tm_emp ()
@@ -171,7 +172,7 @@ let (elim_exists_pst :
                             (Prims.of_int (120)) (Prims.of_int (3)))))
                    (Obj.magic
                       (elim_exists_frame pst.Pulse_Checker_Prover_Base.pg
-                         (Pulse_Syntax_Pure.list_as_vprop
+                         (Pulse_Syntax_Pure.list_as_slprop
                             pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                          (Pulse_Checker_Prover_Base.op_Star
                             preamble.Pulse_Checker_Prover_Base.frame
@@ -188,7 +189,7 @@ let (elim_exists_pst :
                                {
                                  Pulse_Checker_Prover_Base.pg = g';
                                  Pulse_Checker_Prover_Base.remaining_ctxt =
-                                   (Pulse_Syntax_Pure.vprop_as_list
+                                   (Pulse_Syntax_Pure.slprop_as_list
                                       remaining_ctxt');
                                  Pulse_Checker_Prover_Base.remaining_ctxt_frame_typing
                                    = ();
@@ -212,7 +213,7 @@ let (elim_exists_pst :
                                          preamble.Pulse_Checker_Prover_Base.frame)
                                       (Pulse_Checker_Prover_Base.op_Star
                                          (Pulse_Checker_Prover_Base.op_Star
-                                            (Pulse_Syntax_Pure.list_as_vprop
+                                            (Pulse_Syntax_Pure.list_as_slprop
                                                (Pulse_Checker_Prover_Base.__proj__Mkprover_state__item__remaining_ctxt
                                                   preamble pst))
                                             preamble.Pulse_Checker_Prover_Base.frame)
@@ -232,7 +233,7 @@ let (elim_exists_pst :
                                       (Pulse_Checker_Base.k_elab_equiv
                                          pst.Pulse_Checker_Prover_Base.pg g'
                                          (Pulse_Checker_Prover_Base.op_Star
-                                            (Pulse_Syntax_Pure.list_as_vprop
+                                            (Pulse_Syntax_Pure.list_as_slprop
                                                pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                             (Pulse_Checker_Prover_Base.op_Star
                                                preamble.Pulse_Checker_Prover_Base.frame
@@ -241,7 +242,7 @@ let (elim_exists_pst :
                                                   pst.Pulse_Checker_Prover_Base.solved)))
                                          (Pulse_Checker_Prover_Base.op_Star
                                             (Pulse_Checker_Prover_Base.op_Star
-                                               (Pulse_Syntax_Pure.list_as_vprop
+                                               (Pulse_Syntax_Pure.list_as_slprop
                                                   pst.Pulse_Checker_Prover_Base.remaining_ctxt)
                                                preamble.Pulse_Checker_Prover_Base.frame)
                                             (Pulse_Checker_Prover_Base.op_Array_Access

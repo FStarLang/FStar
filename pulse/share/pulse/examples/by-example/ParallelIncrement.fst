@@ -45,7 +45,7 @@ ensures (L.lock_alive l #p (exists* v. pts_to x #0.5R v)) ** pts_to x #0.5R ('i 
 ```pulse
 fn increment_f (x: ref nat)
                (#p:perm)
-               (#pred #qpred: nat -> vprop)
+               (#pred #qpred: nat -> slprop)
                (l:L.lock)
                (f: (v:nat -> stt_ghost unit
                         emp_inames
@@ -73,7 +73,7 @@ ensures L.lock_alive l #p (exists* v. pts_to x #0.5R v ** pred v) ** pts_to x #0
 ```pulse
 fn increment_f2 (x: ref int)
                 (#p:perm)
-                (#pred #qpred: int -> vprop)
+                (#pred #qpred: int -> slprop)
                 (l:L.lock)
                 (f: (v:int -> vq:int -> stt_ghost unit
                         emp_inames
@@ -184,13 +184,13 @@ val atomic_increment (r:ref int) (#i:erased int)
      
 module F = Pulse.Lib.FlippableInv
 
-let test (l:iref) = assert (not (mem_inv emp_inames l))
-let pts_to_refine #a (x:ref a) (p:a -> vprop) = exists* v. pts_to x v ** p v 
+let test (l:iname) = assert (not (mem_inv emp_inames l))
+let pts_to_refine #a (x:ref a) (p:a -> slprop) = exists* v. pts_to x v ** p v 
 ```pulse
 fn atomic_increment_f2
         (x: ref int)
-        (#pred #qpred: int -> vprop)
-        (l:iref)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
         (f: (v:int -> vq:int -> stt_ghost unit emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
@@ -213,8 +213,8 @@ module I = Pulse.Lib.Stick.Util
 ```pulse
 fn atomic_increment_f3
         (x: ref int)
-        (#pred #qpred: int -> vprop)
-        (l:iref)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
 requires
   inv l (pts_to_refine x pred) **
   qpred 'i **
@@ -241,9 +241,9 @@ ensures inv l (pts_to_refine x pred) ** qpred ('i + 1)
 ```pulse
 fn atomic_increment_f4
         (x: ref int)
-        (#invp : vprop)
-        (#pred #qpred: int -> vprop)
-        (l:iref)
+        (#invp : slprop)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
@@ -283,9 +283,9 @@ val cas (r:ref int) (u v:int) (#i:erased int)
 ```pulse
 fn atomic_increment_f5
         (x: ref int)
-        (#invp #tok : vprop)
-        (#pred #qpred: int -> vprop)
-        (l:iref)
+        (#invp #tok : slprop)
+        (#pred #qpred: int -> slprop)
+        (l:iname)
         (elim_inv: 
           (_:unit -> stt_ghost unit emp_inames invp (fun _ ->
                     ((exists* v. pts_to x v ** pred v) ** tok))))
@@ -332,26 +332,27 @@ ensures inv l invp ** qpred ('i + 1)
     let next = 
       with_invariants l
       returns b1:bool
-      ensures inv l invp 
+      ensures invp 
           ** cond b1 (qpred 'i) (qpred ('i + 1))
           ** pts_to continue true
       {
         elim_inv ();
+        unfold cond;
         let b = cas x v (v + 1);
         if b
         {
-          elim_cond_true b _ _;
-          elim_cond_true true _ _;
+          unfold cond;
           with vv. assert (pred vv);
           f vv _;
-          intro_cond_false (qpred 'i) (qpred ('i + 1));
           intro_inv ();
+          fold (cond false (qpred 'i) (qpred ('i + 1)));
           false
         }
         else
         {
-          with p q. rewrite (cond b p q) as q;
+          unfold cond;
           intro_inv ();
+          fold (cond true (qpred 'i) (qpred ('i + 1)));
           true
         }
       };
@@ -368,16 +369,16 @@ module C = Pulse.Lib.CancellableInvariant
 fn atomic_increment_f6
         (x: ref int)
         (#p:_)
-        (#pred #qpred: int -> vprop)
+        (#pred #qpred: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
                   (pred v ** qpred vq ** pts_to x (v + 1))
                   (fun _ -> pred (v + 1) ** qpred (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred 'i ** C.active c p
+ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)) ** qpred ('i + 1) ** C.active c p
 {
-  with_invariants (C.iref_of c) {
+  with_invariants (C.iname_of c) {
     C.unpack_cinv_vp c;
     atomic_increment x;
     f _ 'i;
@@ -447,27 +448,27 @@ ensures pts_to x ('i + 2)
     };
 
     C.share2 c;
-    with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
-    dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
+    with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
 
     parallel
     requires GR.pts_to left #0.5R 0 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 0 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     ensures  GR.pts_to left #0.5R 1 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
          and GR.pts_to right #0.5R 1 **
              C.active c 0.5R **
-             inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
+             inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v))
     { atomic_increment_f6 x c (step left true) }
     { atomic_increment_f6 x c (step right false) };
 
     C.gather2 c;
-    drop_ (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    drop_ (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
     C.cancel c;
     GR.gather left;
     GR.gather right;

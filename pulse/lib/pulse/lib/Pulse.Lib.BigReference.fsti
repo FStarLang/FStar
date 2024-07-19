@@ -26,11 +26,11 @@ val pts_to
   (#a:Type)
   ([@@@equate_strict] r:ref a)
   (#[T.exact (`1.0R)] p:perm)
-  (n:a) : vprop
+  (n:a) : slprop
 
-val pts_to_is_big (#a:Type) (r:ref a) (p:perm) (x:a)
-  : Lemma (is_big (pts_to r #p x))
-          [SMTPat (is_big (pts_to r #p x))]
+val pts_to_is_slprop3 (#a:Type) (r:ref a) (p:perm) (x:a)
+  : Lemma (is_slprop3 (pts_to r #p x))
+          [SMTPat (is_slprop3 (pts_to r #p x))]
 
 val alloc (#a:Type) (x:a)
   : stt (ref a) emp (fun r -> pts_to r x)
@@ -76,9 +76,9 @@ val gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a)
 val with_local
   (#a:Type u#2)
   (init:a)
-  (#pre:vprop)
+  (#pre:slprop)
   (#ret_t:Type)
-  (#post:ret_t -> vprop)
+  (#post:ret_t -> slprop)
   (body:(r:ref a) -> stt ret_t (pre ** pts_to r init)
                                (fun v -> post v ** (exists* (x:a). pts_to r x)))
   : stt ret_t pre post

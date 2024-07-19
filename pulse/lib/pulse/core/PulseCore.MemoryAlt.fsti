@@ -27,7 +27,7 @@ module CM = FStar.Algebra.CommMonoid
 (**** Basic memory properties *)
 
 (** Abstract type of memories *)
-val mem  : Type u#(a + 3)
+val mem  : Type u#(a + 4)
 
 val is_ghost_action (m0 m1:mem u#a) : prop
 let maybe_ghost_action (b:bool) (m0 m1:mem u#a) = b ==> is_ghost_action m0 m1
@@ -48,33 +48,44 @@ val ghost_action_preorder (_:unit)
 
 (** The type of separation logic propositions. Based on Steel.Heap.slprop *)
 [@@erasable]
-val slprop : Type u#(a + 3) //invariant predicates, i --> p, live in u#a+3
+val slprop : Type u#(a + 4) //invariant predicates, i --> p, live in u#a+4
 
 [@@erasable]
-val big_slprop : Type u#(a + 2) //all other predicates live in u#a+2, e.g., big_pts_to, pts_to
-val cm_big_slprop : CM.cm big_slprop
-val down (s:slprop u#a) : big_slprop u#a
-val up (s:big_slprop u#a) : slprop u#a
-let is_big (s:slprop u#a) = s == up (down s) //any slprop that has no invariants in it, satisfies is_big
-let big_vprop = s:slprop u#a { is_big s }
-val up_big_is_big (b:big_slprop) : Lemma (is_big (up b))
-//big slprops can be turned into invariants, but are not otherwise storeable in the heap
+val slprop3_base : Type u#(a + 3)
+val cm_slprop3 : CM.cm slprop3_base
+val down3 (s:slprop u#a) : slprop3_base u#a
+val up3 (s:slprop3_base u#a) : slprop u#a
+let is_slprop3 (s:slprop u#a) = s == up3 (down3 s)
+let slprop3 = s:slprop u#a { is_slprop3 s }
+val up3_is_slprop3 (b:slprop3_base) : Lemma (is_slprop3 (up3 b))
 
 [@@erasable]
-val small_slprop : Type u#(a + 1) //small slprops are heap storeable; these are the most common ones e.g., pts_to etc
-//e.g., one can write `r:BigRef.ref small_slprop` and write `big_pts_to r `
-val cm_small_slprop : CM.cm small_slprop
-val down2 (s:slprop u#a) : small_slprop u#a
-val up2 (s:small_slprop u#a) : slprop u#a
-let is_small (s:slprop u#a) = s == up2 (down2 s)
-val small_is_also_big (s:slprop)
-  : Lemma (is_small s ==> is_big s)
-let vprop = s:slprop u#a { is_small s }
-val up2_small_is_small (s:small_slprop) : Lemma (is_small (up2 s))
+val slprop2_base : Type u#(a + 2) 
+val cm_slprop2 : CM.cm slprop2_base
+val down2 (s:slprop u#a) : slprop2_base u#a
+val up2 (s:slprop2_base u#a) : slprop u#a
+let is_slprop2 (s:slprop u#a) = s == up2 (down2 s)
+let slprop2 = s:slprop u#a { is_slprop2 s }
+val up2_is_slprop2 (s:slprop2_base) : Lemma (is_slprop2 (up2 s))
+
+val slprop_2_is_3 (s:slprop)
+  : Lemma (is_slprop2 s ==> is_slprop3 s)
+
+[@@erasable]
+val slprop1_base : Type u#(a + 1)
+val cm_slprop1 : CM.cm slprop1_base
+val down1 (s:slprop u#a) : slprop1_base u#a
+val up1 (s:slprop1_base u#a) : slprop u#a
+let is_slprop1 (s:slprop u#a) = s == up1 (down1 s)
+let slprop1 = s:slprop u#a { is_slprop1 s }
+val up1_is_slprop1 (s:slprop1_base) : Lemma (is_slprop1 (up1 s))
+
+val slprop_1_is_2 (s:slprop)
+  : Lemma (is_slprop1 s ==> is_slprop2 s)
+
 
 (** Interpreting mem assertions as memory predicates *)
 val interp (p:slprop u#a) (m:mem u#a) : prop
-
 
 (** Equivalence relation on slprops is just equivalence of their interpretations *)
 val equiv (p1 p2:slprop u#a) : prop
@@ -112,8 +123,8 @@ val core_ref_is_null (r:core_ref) : b:bool { b <==> r == core_ref_null }
 let is_null (#a:Type u#a) (#pcm:pcm a) (r:ref a pcm) : (b:bool{b <==> r == null}) = core_ref_is_null r
 
 (** All the standard connectives of separation logic, based on [Steel.Heap] *)
-val emp : vprop u#a
-val pure (p:prop) : vprop u#a
+val emp : slprop2 u#a
+val pure (p:prop) : slprop2 u#a
 val star  (p1 p2:slprop u#a) : slprop u#a
 val h_exists (#a:Type u#b) (f: (a -> slprop u#a)) : slprop u#a
 
@@ -151,21 +162,21 @@ val star_congruence (p1 p2 p3 p4:slprop)
   : Lemma (requires p1 `equiv` p3 /\ p2 `equiv` p4)
           (ensures (p1 `star` p2) `equiv` (p3 `star` p4))
 
-val big_star_congruence (p1 p2:big_vprop u#a)
-  : Lemma (is_big (p1 `star` p2))
+val slprop3_star_congruence (p1 p2:slprop3 u#a)
+  : Lemma (is_slprop3 (p1 `star` p2))
 
-val big_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+val slprop3_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
-    (requires forall x. is_big (p x))
-    (ensures is_big (h_exists p))
+    (requires forall x. is_slprop3 (p x))
+    (ensures is_slprop3 (h_exists p))
 
-val small_star_congruence (p1 p2:vprop u#a)
-  : Lemma (is_small (p1 `star` p2))
+val slprop2_star_congruence (p1 p2:slprop2 u#a)
+  : Lemma (is_slprop2 (p1 `star` p2))
 
-val small_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+val slprop2_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
   : Lemma
-    (requires forall x. is_small (p x))
-    (ensures is_small (h_exists p))
+    (requires forall x. is_slprop2 (p x))
+    (ensures is_slprop2 (h_exists p))
 
 val h_exists_equiv (#a:Type) (p q : a -> slprop)
 : Lemma
@@ -173,38 +184,42 @@ val h_exists_equiv (#a:Type) (p q : a -> slprop)
     (ensures (h_exists p == h_exists q))
 
 
-val up_emp_big ()
-: Lemma (up cm_big_slprop.unit == emp)
-val down_emp_big ()
-: Lemma (down emp == cm_big_slprop.unit)
-val up_star_big (p q:big_slprop)
-: Lemma (up (p `cm_big_slprop.mult` q) == up p `star` up q)
-val down_star_big (p q:big_vprop)
-: Lemma (down (p `star` q) == down p `cm_big_slprop.mult` down q)
+val up3_emp    ()      : Lemma (up3 cm_slprop3.unit == emp)
+val down3_emp  ()      : Lemma (down3 emp == cm_slprop3.unit)
+val up3_star   (p q:_) : Lemma (up3 (p `cm_slprop3.mult` q) == up3 p `star` up3 q)
+val down3_star (p q:_) : Lemma (down3 (p `star` q) == down3 p `cm_slprop3.mult` down3 q)
 
-val up2_emp ()
-: Lemma (up2 cm_small_slprop.unit == emp)
-val down2_emp ()
-: Lemma (down2 emp == cm_small_slprop.unit)
-val up2_star (p q:small_slprop)
-: Lemma (up2 (p `cm_small_slprop.mult` q) == up2 p `star` up2 q)
-val down2_star (p q:vprop)
-: Lemma (down2 (p `star` q) == down2 p `cm_small_slprop.mult` down2 q)
+val up2_emp    ()      : Lemma (up2 cm_slprop2.unit == emp)
+val down2_emp  ()      : Lemma (down2 emp == cm_slprop2.unit)
+val up2_star   (p q:_) : Lemma (up2 (p `cm_slprop2.mult` q) == up2 p `star` up2 q)
+val down2_star (p q:_) : Lemma (down2 (p `star` q) == down2 p `cm_slprop2.mult` down2 q)
+
+val slprop1_star_congruence (p1 p2:slprop1 u#a)
+  : Lemma (is_slprop1 (p1 `star` p2))
+
+val slprop1_exists_congruence (#a:Type u#a) (p:a -> slprop u#b)
+  : Lemma
+    (requires forall x. is_slprop1 (p x))
+    (ensures is_slprop1 (h_exists p))
+
+
 
 (**** Memory invariants *)
+[@@erasable]
+val iref : Type0
+val storable_iref (i:iref) : GTot bool
+val deq_iref : FStar.GhostSet.decide_eq iref
 
 (** Invariants have a name *)
-val iname : eqtype
-
-let inames = erased (S.set iname)
+let inames = FStar.GhostSet.set iref
 
 (** This proposition tells us that all the invariants names in [e] are valid in memory [m] *)
 val inames_ok (e:inames) (m:mem) : prop
 
 (** The empty set of invariants is always empty *)
 val inames_ok_empty (m:mem)
-  : Lemma (ensures inames_ok Set.empty m)
-          [SMTPat (inames_ok Set.empty m)]
+  : Lemma (ensures inames_ok GhostSet.empty m)
+          [SMTPat (inames_ok GhostSet.empty m)]
 
 (**
   This separation logic proposition asserts that all the invariants whose names are in [e]
@@ -234,10 +249,6 @@ let _PST
         interp (expects `star` frame `star` mem_invariant except m0) m0 /\  //TODO: fix the effect so as not to repeat this
         interp (provides x `star` frame `star` mem_invariant except m1) m1)
 
-// (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
-// let action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a -> slprop u#um)
-//   : Type u#(max a (um + 3)) =
-//   frame:slprop -> _MstTot a except expects provides frame
 
 (** An action is just a thunked computation in [MstTot] that takes a frame as argument *)
 let _pst_action_except 
@@ -246,7 +257,7 @@ let _pst_action_except
     (except:inames)
     (expects:slprop u#um)
     (provides: a -> slprop u#um)
- : Type u#(max a (um + 3)) 
+ : Type u#(max a (um + 4)) 
  = frame:slprop -> _PST a maybe_ghost except expects provides frame
 
 let pst_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (provides: a ->  slprop u#um) =
@@ -257,26 +268,26 @@ let pst_ghost_action_except (a:Type u#a) (except:inames) (expects:slprop u#um) (
 
 
 (**** Invariants *)
-
-[@@erasable]
-val iref : Type0
-
-val iname_of (i:iref) : GTot iname
-
 val inv (i:iref) (p:slprop u#a) : slprop u#a
-
+val storable_inv (i:iref { storable_iref i }) (p:slprop { is_slprop3 p })
+: Lemma (is_slprop3 (inv i p))
 let live (i:iref) = h_exists (fun p -> inv i p)
 
-let add_inv (e:inames) (i:iref) : inames = S.add (iname_of i) e
-let mem_inv (e:inames) (i:iref) : GTot bool = S.mem (iname_of i) e
+let add_inv (e:inames) (i:iref) : inames = FStar.GhostSet.(union (singleton deq_iref i) e)
+let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
 val dup_inv (e:inames) (i:iref) (p:slprop u#a)
 : pst_ghost_action_except unit e 
     (inv i p) 
     (fun _ -> inv i p `star` inv i p)
 
-val new_invariant (e:inames) (p:slprop { is_big p })
+val new_invariant (e:inames) (p:slprop { is_slprop3 p })
   : pst_ghost_action_except iref e
+    p
+    (fun i -> inv i p)
+
+val new_storable_invariant (e:inames) (p:slprop { is_slprop2 p })
+  : pst_ghost_action_except (i:iref {storable_iref i}) e
     p
     (fun i -> inv i p)
 
@@ -299,9 +310,9 @@ val distinct_invariants_have_distinct_names
       (e:inames)
       (p:slprop u#m)
       (q:slprop u#m { p =!= q })
-      (i j: iref)
+      (i j:iref)
 : pst_ghost_action_except u#0 u#m 
-    (squash (iname_of i =!= iname_of j))
+    (squash (~(eq2 #iref i j)))
     e 
     (inv i p `star` inv j q)
     (fun _ -> inv i p `star` inv j q)
@@ -310,8 +321,8 @@ val invariant_name_identifies_invariant
       (e:inames)
       (p q:slprop u#m)
       (i:iref)
-      (j:iref { iname_of i == iname_of j } )
-: pst_ghost_action_except (squash (p == q /\ i == j)) e
+      (j:iref { i == j })
+: pst_ghost_action_except (squash (p == q)) e
    (inv i p `star` inv j q)
    (fun _ -> inv i p `star` inv j q)
    
@@ -322,9 +333,9 @@ let rec all_live (ctx:list iref) =
 
 let fresh_wrt (ctx:list iref)
               (i:iref)
-  = forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
+  = forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
-val fresh_invariant (e:inames) (p:big_vprop u#m) (ctx:erased (list iref))
+val fresh_invariant (e:inames) (p:slprop3 u#m) (ctx:erased (list iref))
   : pst_ghost_action_except (i:iref { fresh_wrt ctx i }) e
        p
        (fun i -> inv i p)
@@ -375,11 +386,11 @@ val lift_ghost
   : pst_ghost_action_except a opened_invariants p q
 
 (* Concrete references to "small" types *)
-val pts_to (#a:Type u#a) (#pcm:_) (r:ref a pcm) (v:a) : vprop u#a
+val pts_to (#a:Type u#(a+1)) (#pcm:_) (r:ref a pcm) (v:a) : slprop2 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val split_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -391,7 +402,7 @@ val split_action
 
 (** Combining separate permissions into a single composite permission *)
 val gather_action
-  (#a:Type u#a)
+  (#a:Type u#(a + 1))
   (#pcm:pcm a)
   (e:inames)
   (r:ref a pcm)
@@ -401,12 +412,12 @@ val gather_action
     (pts_to r v0 `star` pts_to r v1)
     (fun _ -> pts_to r (op pcm v0 v1))
 
-val alloc_action (#a:Type u#a) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
+val alloc_action (#a:Type u#(a + 1)) (#pcm:pcm a) (e:inames) (x:a{pcm.refine x})
 : pst_action_except (ref a pcm) e
     emp
     (fun r -> pts_to r x)
 
-val select_refine (#a:Type u#a) (#p:pcm a)
+val select_refine (#a:Type u#(a + 1)) (#p:pcm a)
                   (e:inames)
                   (r:ref a p)
                   (x:erased a)
@@ -417,14 +428,14 @@ val select_refine (#a:Type u#a) (#p:pcm a)
     (pts_to r x)
     (fun v -> pts_to r (f v))
 
-val upd_gen (#a:Type u#a) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
+val upd_gen (#a:Type u#(a + 1)) (#p:pcm a) (e:inames) (r:ref a p) (x y:Ghost.erased a)
             (f:FStar.PCM.frame_preserving_upd p x y)
 : pst_action_except unit e
     (pts_to r x)
     (fun _ -> pts_to r y)
 
 val pts_to_not_null_action 
-      (#a:Type u#a) (#pcm:pcm a)
+      (#a:Type u#(a + 1)) (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
       (v:Ghost.erased a)
@@ -436,11 +447,11 @@ val pts_to_not_null_action
 [@@erasable]
 val core_ghost_ref : Type0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#a) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop u#a
+val ghost_pts_to (#a:Type u#(a+1)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2 u#a
 
 val ghost_alloc
     (#o:_)
-    (#a:Type u#a)
+    (#a:Type u#(a + 1))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -451,7 +462,7 @@ val ghost_alloc
 
 val ghost_read
     #o
-    (#a:Type)
+    (#a:Type u#(a + 1))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -499,11 +510,11 @@ val ghost_gather
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
 (* Concrete references to "big" types *)
-val big_pts_to (#a:Type u#(a + 1)) (#pcm:_) (r:ref a pcm) (v:a) : big_vprop u#a
+val big_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop3 u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val big_split_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -515,7 +526,7 @@ val big_split_action
 
 (** Combining separate permissions into a single composite permission *)
 val big_gather_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -526,7 +537,7 @@ val big_gather_action
     (fun _ -> big_pts_to r (op pcm v0 v1))
 
 val big_alloc_action
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -535,7 +546,7 @@ val big_alloc_action
     (fun r -> big_pts_to r x)
 
 val big_select_refine
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -548,7 +559,7 @@ val big_select_refine
     (fun v -> big_pts_to r (f v))
 
 val big_upd_gen
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -559,7 +570,7 @@ val big_upd_gen
     (fun _ -> big_pts_to r y)
 
 val big_pts_to_not_null_action 
-      (#a:Type u#(a + 1))
+      (#a:Type u#(a + 2))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -568,11 +579,11 @@ val big_pts_to_not_null_action
     (big_pts_to r v)
     (fun _ -> big_pts_to r v)
 
-val big_ghost_pts_to (#a:Type u#(a + 1)) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop u#a
+val big_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3 u#a
 
 val big_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -583,7 +594,7 @@ val big_ghost_alloc
 
 val big_ghost_read
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -598,7 +609,7 @@ val big_ghost_read
 
 val big_ghost_write
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -609,7 +620,7 @@ val big_ghost_write
 
 val big_ghost_share
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -620,7 +631,7 @@ val big_ghost_share
 
 val big_ghost_gather
     #o
-    (#a:Type u#(a + 1))
+    (#a:Type u#(a + 2))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -631,11 +642,11 @@ val big_ghost_gather
     (fun _ -> big_ghost_pts_to r (op pcm v0 v1))
 
 (* References for objects in universes a+2, "non-boxable" pts_to *)
-val nb_pts_to (#a:Type u#(a + 2)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
+val nb_pts_to (#a:Type u#(a + 3)) (#pcm:_) (r:ref a pcm) (v:a) : slprop u#a
 
 (** Splitting a permission on a composite resource into two separate permissions *)
 val nb_split_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -647,7 +658,7 @@ val nb_split_action
 
 (** Combining separate permissions into a single composite permission *)
 val nb_gather_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:ref a pcm)
@@ -658,7 +669,7 @@ val nb_gather_action
     (fun _ -> nb_pts_to r (op pcm v0 v1))
 
 val nb_alloc_action
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (x:a{pcm.refine x})
@@ -667,7 +678,7 @@ val nb_alloc_action
     (fun r -> nb_pts_to r x)
 
 val nb_select_refine
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#p:pcm a)
       (e:inames)
       (r:ref a p)
@@ -680,7 +691,7 @@ val nb_select_refine
     (fun v -> nb_pts_to r (f v))
 
 val nb_upd_gen
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (e:inames)
     (r:ref a p)
@@ -691,7 +702,7 @@ val nb_upd_gen
     (fun _ -> nb_pts_to r y)
 
 val nb_pts_to_not_null_action 
-      (#a:Type u#(a + 2))
+      (#a:Type u#(a + 3))
       (#pcm:pcm a)
       (e:inames)
       (r:erased (ref a pcm))
@@ -700,11 +711,11 @@ val nb_pts_to_not_null_action
     (nb_pts_to r v)
     (fun _ -> nb_pts_to r v)
 
-val nb_ghost_pts_to (#a:Type u#(a + 2)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
+val nb_ghost_pts_to (#a:Type u#(a + 3)) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop u#a
 
 val nb_ghost_alloc
     (#o:_)
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (x:erased a{pcm.refine x})
 : pst_ghost_action_except
@@ -715,7 +726,7 @@ val nb_ghost_alloc
 
 val nb_ghost_read
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x:erased a)
@@ -730,7 +741,7 @@ val nb_ghost_read
 
 val nb_ghost_write
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#p:pcm a)
     (r:ghost_ref p)
     (x y:Ghost.erased a)
@@ -741,7 +752,7 @@ val nb_ghost_write
 
 val nb_ghost_share
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)
@@ -752,7 +763,7 @@ val nb_ghost_share
 
 val nb_ghost_gather
     #o
-    (#a:Type u#(a + 2))
+    (#a:Type u#(a + 3))
     (#pcm:pcm a)
     (r:ghost_ref pcm)
     (v0:FStar.Ghost.erased a)

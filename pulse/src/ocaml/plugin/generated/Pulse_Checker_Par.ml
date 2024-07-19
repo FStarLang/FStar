@@ -71,7 +71,7 @@ let (check :
                                                      (Prims.of_int (44))
                                                      (Prims.of_int (32))
                                                      (Prims.of_int (44))
-                                                     (Prims.of_int (62)))))
+                                                     (Prims.of_int (63)))))
                                             (FStar_Sealed.seal
                                                (Obj.magic
                                                   (FStar_Range.mk_range
@@ -83,7 +83,7 @@ let (check :
                                             (Obj.magic
                                                (Pulse_Checker_Pure.check_tot_term
                                                   g1 preL
-                                                  Pulse_Syntax_Pure.tm_vprop))
+                                                  Pulse_Syntax_Pure.tm_slprop))
                                             (fun uu___1 ->
                                                (fun uu___1 ->
                                                   match uu___1 with
@@ -98,19 +98,19 @@ let (check :
                                                                     (Prims.of_int (45))
                                                                     (Prims.of_int (32))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (62)))))
+                                                                    (Prims.of_int (63)))))
                                                            (FStar_Sealed.seal
                                                               (Obj.magic
                                                                  (FStar_Range.mk_range
                                                                     "Pulse.Checker.Par.fst"
                                                                     (Prims.of_int (44))
-                                                                    (Prims.of_int (65))
+                                                                    (Prims.of_int (66))
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (123)))))
                                                            (Obj.magic
                                                               (Pulse_Checker_Pure.check_tot_term
                                                                  g1 preR
-                                                                 Pulse_Syntax_Pure.tm_vprop))
+                                                                 Pulse_Syntax_Pure.tm_slprop))
                                                            (fun uu___2 ->
                                                               (fun uu___2 ->
                                                                  match uu___2

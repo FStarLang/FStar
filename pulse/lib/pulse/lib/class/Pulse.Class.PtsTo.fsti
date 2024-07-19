@@ -10,7 +10,7 @@ early in the typechecking process, or we make the pulse checker normalize
 let full_default () : Tac unit = exact (`1.0R)
 
 class pointer (r v : Type) = {
-  pts_to : r -> (#[full_default()] f : perm) -> v -> vprop;
+  pts_to : r -> (#[full_default()] f : perm) -> v -> slprop;
 }
 
 instance pts_to_r (a:Type) : pointer (ref a) a = {

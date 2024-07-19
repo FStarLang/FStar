@@ -74,7 +74,7 @@ let (post2_type_bind :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun t2 ->
     Pulse_Reflection_Util.mk_arrow (t2, FStar_Reflection_V2_Data.Q_Explicit)
-      Pulse_Reflection_Util.vprop_tm
+      Pulse_Reflection_Util.slprop_tm
 let (bind_type_t1_t2_pre_post1 :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe ->
@@ -101,7 +101,7 @@ let (post1_type_bind :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term) =
   fun t1 ->
     Pulse_Reflection_Util.mk_arrow (t1, FStar_Reflection_V2_Data.Q_Explicit)
-      Pulse_Reflection_Util.vprop_tm
+      Pulse_Reflection_Util.slprop_tm
 let (bind_type_t1_t2_pre :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.universe ->
@@ -133,7 +133,7 @@ let (bind_type_t1_t2 :
         fun t2 ->
           let var = (Prims.of_int (2)) in
           let pre = Pulse_Reflection_Util.mk_name var in
-          let pre_type = Pulse_Reflection_Util.vprop_tm in
+          let pre_type = Pulse_Reflection_Util.slprop_tm in
           Pulse_Reflection_Util.mk_arrow
             (pre_type, FStar_Reflection_V2_Data.Q_Implicit)
             (FStar_Reflection_Typing.subst_term
@@ -229,7 +229,7 @@ let (frame_type_t_pre_post :
           let var = Prims.int_zero in
           let frame = Pulse_Reflection_Util.mk_name var in
           Pulse_Reflection_Util.mk_arrow
-            (Pulse_Reflection_Util.vprop_tm,
+            (Pulse_Reflection_Util.slprop_tm,
               FStar_Reflection_V2_Data.Q_Explicit)
             (FStar_Reflection_Typing.close_term
                (frame_res u t pre post frame) var)
@@ -246,7 +246,7 @@ let (frame_type_t_pre :
         let post_type =
           Pulse_Reflection_Util.mk_arrow
             (t, FStar_Reflection_V2_Data.Q_Explicit)
-            Pulse_Reflection_Util.vprop_tm in
+            Pulse_Reflection_Util.slprop_tm in
         Pulse_Reflection_Util.mk_arrow
           (post_type, FStar_Reflection_V2_Data.Q_Implicit)
           (FStar_Reflection_Typing.close_term
@@ -259,7 +259,7 @@ let (frame_type_t :
     fun t ->
       let var = (Prims.of_int (2)) in
       let pre = Pulse_Reflection_Util.mk_name var in
-      let pre_type = Pulse_Reflection_Util.vprop_tm in
+      let pre_type = Pulse_Reflection_Util.slprop_tm in
       Pulse_Reflection_Util.mk_arrow
         (pre_type, FStar_Reflection_V2_Data.Q_Implicit)
         (FStar_Reflection_Typing.close_term (frame_type_t_pre u t pre) var)
@@ -272,15 +272,15 @@ let (frame_type :
     Pulse_Reflection_Util.mk_arrow
       (t_type, FStar_Reflection_V2_Data.Q_Implicit)
       (FStar_Reflection_Typing.close_term (frame_type_t u t) var)
-let (stt_vprop_post_equiv_fv : FStar_Reflection_Types.fv) =
+let (stt_slprop_post_equiv_fv : FStar_Reflection_Types.fv) =
   FStar_Reflection_V2_Builtins.pack_fv
-    (Pulse_Reflection_Util.mk_pulse_lib_core_lid "vprop_post_equiv")
-let (stt_vprop_post_equiv_univ_inst :
+    (Pulse_Reflection_Util.mk_pulse_lib_core_lid "slprop_post_equiv")
+let (stt_slprop_post_equiv_univ_inst :
   FStar_Reflection_Types.universe -> FStar_Reflection_Types.term) =
   fun u ->
     FStar_Reflection_V2_Builtins.pack_ln
-      (FStar_Reflection_V2_Data.Tv_UInst (stt_vprop_post_equiv_fv, [u]))
-let (stt_vprop_post_equiv :
+      (FStar_Reflection_V2_Data.Tv_UInst (stt_slprop_post_equiv_fv, [u]))
+let (stt_slprop_post_equiv :
   FStar_Reflection_Types.universe ->
     FStar_Reflection_Types.term ->
       FStar_Reflection_Types.term ->
@@ -291,7 +291,7 @@ let (stt_vprop_post_equiv :
       fun t1 ->
         fun t2 ->
           FStar_Reflection_V2_Derived.mk_app
-            (stt_vprop_post_equiv_univ_inst u)
+            (stt_slprop_post_equiv_univ_inst u)
             [(t, FStar_Reflection_V2_Data.Q_Implicit);
             (t1, FStar_Reflection_V2_Data.Q_Explicit);
             (t2, FStar_Reflection_V2_Data.Q_Explicit)]
@@ -320,7 +320,7 @@ let sub_stt_equiv_post :
           fun pre2 ->
             fun post2 ->
               Pulse_Reflection_Util.mk_arrow
-                ((stt_vprop_post_equiv u t post1 post2),
+                ((stt_slprop_post_equiv u t post1 post2),
                   FStar_Reflection_V2_Data.Q_Explicit)
                 (sub_stt_res u t pre2 post2)
 let (sub_stt_equiv_pre :
@@ -338,7 +338,7 @@ let (sub_stt_equiv_pre :
           fun pre2 ->
             fun post2 ->
               Pulse_Reflection_Util.mk_arrow
-                ((Pulse_Reflection_Util.stt_vprop_equiv pre1 pre2),
+                ((Pulse_Reflection_Util.stt_slprop_equiv pre1 pre2),
                   FStar_Reflection_V2_Data.Q_Explicit)
                 (sub_stt_equiv_post u t pre1 pre2 post1 post2)
 let (sub_stt_post2 :
@@ -358,7 +358,7 @@ let (sub_stt_post2 :
             let post2_type =
               Pulse_Reflection_Util.mk_arrow
                 (t, FStar_Reflection_V2_Data.Q_Explicit)
-                Pulse_Reflection_Util.vprop_tm in
+                Pulse_Reflection_Util.slprop_tm in
             Pulse_Reflection_Util.mk_arrow
               (post2_type, FStar_Reflection_V2_Data.Q_Explicit)
               (FStar_Reflection_Typing.close_term
@@ -375,7 +375,7 @@ let (sub_stt_pre2 :
         fun post1 ->
           let var = Prims.int_one in
           let pre2 = Pulse_Reflection_Util.mk_name var in
-          let pre2_type = Pulse_Reflection_Util.vprop_tm in
+          let pre2_type = Pulse_Reflection_Util.slprop_tm in
           Pulse_Reflection_Util.mk_arrow
             (pre2_type, FStar_Reflection_V2_Data.Q_Explicit)
             (FStar_Reflection_Typing.close_term
@@ -393,7 +393,7 @@ let (sub_stt_post1 :
         let post1_type =
           Pulse_Reflection_Util.mk_arrow
             (t, FStar_Reflection_V2_Data.Q_Explicit)
-            Pulse_Reflection_Util.vprop_tm in
+            Pulse_Reflection_Util.slprop_tm in
         Pulse_Reflection_Util.mk_arrow
           (post1_type, FStar_Reflection_V2_Data.Q_Explicit)
           (FStar_Reflection_Typing.close_term (sub_stt_pre2 u t pre1 post1)
@@ -406,7 +406,7 @@ let (sub_stt_pre1 :
     fun t ->
       let var = (Prims.of_int (3)) in
       let pre1 = Pulse_Reflection_Util.mk_name var in
-      let pre1_type = Pulse_Reflection_Util.vprop_tm in
+      let pre1_type = Pulse_Reflection_Util.slprop_tm in
       Pulse_Reflection_Util.mk_arrow
         (pre1_type, FStar_Reflection_V2_Data.Q_Explicit)
         (FStar_Reflection_Typing.close_term (sub_stt_post1 u t pre1) var)
@@ -436,5 +436,5 @@ let (comp_post_type :
   fun c ->
     let t = Pulse_Syntax_Base.comp_res c in
     Pulse_Reflection_Util.mk_arrow (t, FStar_Reflection_V2_Data.Q_Explicit)
-      Pulse_Reflection_Util.vprop_tm
+      Pulse_Reflection_Util.slprop_tm
 type ('a, 'd) soundness_t = unit

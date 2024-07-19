@@ -31,7 +31,7 @@ open Pulse.Show
 module T       = FStar.Tactics.V2
 module R       = FStar.Reflection.V2
 module L       = FStar.List.Tot
-module TermEq  = FStar.Reflection.V2.TermEq
+module TermEq  = FStar.Reflection.TermEq
 module RT      = FStar.Reflection.Typing
 
 module RU  = Pulse.RuntimeUtils
@@ -41,12 +41,12 @@ module PTU = Pulse.Typing.Util
 
 (* local aliases *)
 let (>>>) #g #t0 #t1 #t2 = VE_Trans g t0 t1 t2
-let (>>*) #g #t0 #t1 #t2 = vprop_list_equiv_trans g t0 t1 t2
-let cong_r #g #t0 #t1 #t2 (d : vprop_equiv g t1 t2) : vprop_equiv g (t0 * t1) (t0 * t2) =
+let (>>*) #g #t0 #t1 #t2 = slprop_list_equiv_trans g t0 t1 t2
+let cong_r #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t0 * t1) (t0 * t2) =
   VE_Ctxt _ _ _ _ _ (VE_Refl _ _) d
-let cong_l #g #t0 #t1 #t2 (d : vprop_equiv g t1 t2) : vprop_equiv g (t1 * t0) (t2 * t0) =
+let cong_l #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t1 * t0) (t2 * t0) =
   VE_Ctxt _ _ _ _ _ d (VE_Refl _ _)
-let ve_refl_pf (#g:env) (p q : vprop) (s : squash (p == q)) : vprop_equiv g p q = VE_Refl g p
+let ve_refl_pf (#g:env) (p q : slprop) (s : squash (p == q)) : slprop_equiv g p q = VE_Refl g p
 
 let rec equational (t:term) : bool =
   match R.inspect_ln t with
@@ -297,7 +297,7 @@ let head_is_uvar (uvs:env) (t:term) : T.Tac bool =
 (* The syntactic matcher *)
 let match_syntactic_11
   (#preamble:_) (pst : prover_state preamble)
-  (p q : vprop)
+  (p q : slprop)
   : T.Tac (match_success_t pst p q)
 = (* term_eq gives us provable equality between p and q, so we can use VE_Refl. *)
   if TermEq.term_eq p q
@@ -307,7 +307,7 @@ let match_syntactic_11
 (* Fast unification / strict matcher *)
 let match_fastunif_11
   (#preamble:_) (pst : prover_state preamble)
-  (p q : vprop)
+  (p q : slprop)
   : T.Tac (match_success_t pst p q)
 = match PTU.check_equiv_now_nosmt (elab_env pst.pg) p q with
   | Some tok, _ -> (| PS.empty, VE_Ext _ _ _ tok |)
@@ -315,7 +315,7 @@ let match_fastunif_11
 
 let match_fastunif_inst_11
   (#preamble:_) (pst : prover_state preamble)
-  (p q : vprop)
+  (p q : slprop)
   : T.Tac (match_success_t pst p q)
 = let g = pst.pg in
   let q0 = q in
@@ -356,8 +356,8 @@ let match_fastunif_inst_11
   | None, _ -> raise (NoMatch "no unif")
   | Some token, _ ->
     // (| ss', VE_Ext _ _ _ (RU.magic ()) |)
-    let p_eq_q_norm : vprop_equiv g p q_norm  = VE_Ext _ _ _ token in
-    let p_eq_q      : vprop_equiv g p q_subst =
+    let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
+    let p_eq_q      : slprop_equiv g p q_subst =
       p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
     in
     (| ss', p_eq_q |)
@@ -366,7 +366,7 @@ let match_fastunif_inst_11
 also do this?). *)
 let match_full_11
   (#preamble:_) (pst : prover_state preamble)
-  (p q : vprop)
+  (p q : slprop)
   : T.Tac (match_success_t pst p q)
 = let g = pst.pg in
   let q0 = q in
@@ -407,8 +407,8 @@ let match_full_11
   match PTU.check_equiv_now (elab_env g) p q_norm with
   | None, _ -> raise (NoMatch "no unif")
   | Some token, _ ->
-    let p_eq_q_norm : vprop_equiv g p q_norm  = VE_Ext _ _ _ token in
-    let p_eq_q      : vprop_equiv g p q_subst =
+    let p_eq_q_norm : slprop_equiv g p q_norm  = VE_Ext _ _ _ token in
+    let p_eq_q      : slprop_equiv g p q_subst =
       p_eq_q_norm >>> VE_Sym _ _ _ (VE_Ext _ _ _ q_subst_eq_q_norm)
     in
     (| ss', p_eq_q |) 

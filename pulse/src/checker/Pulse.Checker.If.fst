@@ -34,7 +34,7 @@ module J = Pulse.JoinComp
 let check
   (g:env)
   (pre:term)
-  (pre_typing: tot_typing g pre tm_vprop)
+  (pre_typing: tot_typing g pre tm_slprop)
   (post_hint:post_hint_for_env g)
   (res_ppname:ppname)
   (b:term)
@@ -63,6 +63,18 @@ let check
         pre_typing
         hyp 
         (mk_eq2 u0 tm_bool b eq_v)
+    in
+
+    let br = {
+        term =
+          Tm_ProofHintWithBinders {
+            binders = [];
+            hint_type = RENAME { pairs = [(b, eq_v)]; goal=None; tac_opt=None; };
+            t = br;
+          };
+        range = br.range;
+        effect_tag = br.effect_tag;
+      }
     in
     
     let (| br, c, d |) =

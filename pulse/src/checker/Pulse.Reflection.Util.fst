@@ -40,9 +40,9 @@ let int_lid  = R.int_lid
 let erased_lid = ["FStar"; "Ghost"; "erased"]
 let hide_lid = ["FStar"; "Ghost"; "hide"]
 let reveal_lid = ["FStar"; "Ghost"; "reveal"]
-let vprop_lid = mk_pulse_lib_core_lid "vprop"
-let vprop_fv = R.pack_fv vprop_lid
-let vprop_tm = R.pack_ln (R.Tv_FVar vprop_fv)
+let slprop_lid = mk_pulse_lib_core_lid "slprop"
+let slprop_fv = R.pack_fv slprop_lid
+let slprop_tm = R.pack_ln (R.Tv_FVar slprop_fv)
 let emp_lid = mk_pulse_lib_core_lid "emp"
 let unit_fv = R.pack_fv unit_lid
 let unit_tm = R.pack_ln (R.Tv_FVar unit_fv)
@@ -61,7 +61,7 @@ let seq_lid = ["FStar"; "Seq"; "Base"; "seq"]
 let seq_create_lid = ["FStar"; "Seq"; "Base"; "create"]
 let tot_lid = ["Prims"; "Tot"]
 
-let vprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "vprop_equiv_norm")))
+let slprop_equiv_norm_tm = R.pack_ln (R.Tv_FVar (R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv_norm")))
 
 (* The "plicities" *)
 let ex t : R.argv = (t, R.Q_Explicit)
@@ -279,12 +279,12 @@ let mk_while (inv cond body:R.term) : R.term =
   let t = R.pack_ln (R.Tv_App t (cond, R.Q_Explicit)) in
   R.pack_ln (R.Tv_App t (body, R.Q_Explicit))
 
-let vprop_eq_tm t1 t2 =
+let slprop_eq_tm t1 t2 =
   let open R in
   let u2 =
     pack_universe (Uv_Succ (pack_universe (Uv_Succ (pack_universe Uv_Zero)))) in
   let t = pack_ln (Tv_UInst (pack_fv eq2_qn) [u2]) in
-  let t = pack_ln (Tv_App t (pack_ln (Tv_FVar (pack_fv vprop_lid)), Q_Implicit)) in
+  let t = pack_ln (Tv_App t (pack_ln (Tv_FVar (pack_fv slprop_lid)), Q_Implicit)) in
   let t = pack_ln (Tv_App t (t1, Q_Explicit)) in
   let t = pack_ln (Tv_App t (t2, Q_Explicit)) in
   t
@@ -296,13 +296,13 @@ let non_informative_rt (u:R.universe) (a:R.term) : R.term =
   let t = pack_ln (Tv_App t (a, Q_Explicit)) in
   t
 
-let stt_vprop_equiv_fv =
-  R.pack_fv (mk_pulse_lib_core_lid "vprop_equiv")
-let stt_vprop_equiv_tm =
-  R.pack_ln (R.Tv_FVar stt_vprop_equiv_fv)
-let stt_vprop_equiv (t1 t2:R.term) =
+let stt_slprop_equiv_fv =
+  R.pack_fv (mk_pulse_lib_core_lid "slprop_equiv")
+let stt_slprop_equiv_tm =
+  R.pack_ln (R.Tv_FVar stt_slprop_equiv_fv)
+let stt_slprop_equiv (t1 t2:R.term) =
   let open R in
-		let t = pack_ln (Tv_App stt_vprop_equiv_tm (t1, Q_Explicit)) in
+		let t = pack_ln (Tv_App stt_slprop_equiv_tm (t1, Q_Explicit)) in
 		pack_ln (Tv_App t (t2, Q_Explicit))
 
 let return_stt_lid = mk_pulse_lib_core_lid "return_stt"
@@ -732,24 +732,24 @@ let mk_observability_lid l = ["PulseCore"; "Observability"; l]
 let observable_lid = mk_observability_lid "Observable"
 let neutral_lid = mk_observability_lid "Neutral"
 
+let iname_lid = mk_pulse_lib_core_lid "iname"
 let inames_lid = mk_pulse_lib_core_lid "inames"
-let iname_ref_lid = mk_pulse_lib_core_lid "iref"
 let inv_lid = mk_pulse_lib_core_lid "inv"
 let emp_inames_lid = mk_pulse_lib_core_lid "emp_inames"
 let all_inames_lid = mk_pulse_lib_core_lid "all_inames"
 let add_inv_lid = mk_pulse_lib_core_lid "add_inv"
 let remove_inv_lid = mk_pulse_lib_core_lid "remove_inv"
 
-let remove_inv_tm (is iref:R.term) : R.term =
+let remove_inv_tm (is iname:R.term) : R.term =
   let h = R.pack_ln (R.Tv_FVar (R.pack_fv remove_inv_lid)) in
-  R.mk_app h [ex is; ex iref]
-let mk_mem_inv (is iref:R.term) : R.term =
+  R.mk_app h [ex is; ex iname]
+let mk_mem_inv (is iname:R.term) : R.term =
   let mem_inv_tm = mk_pulse_lib_core_lid "mem_inv" in
   let t = R.pack_ln (R.Tv_FVar (R.pack_fv mem_inv_tm)) in
-  R.mk_app t [ ex is; ex iref ]
+  R.mk_app t [ ex is; ex iname ]
 
-let inv_disjointness_goal (is iref:R.term) : R.term =
-  let p = mk_mem_inv is iref in
+let inv_disjointness_goal (is iname:R.term) : R.term =
+  let p = mk_mem_inv is iname in
   let u0 = R.pack_universe R.Uv_Zero in
   let p = mk_reveal u0 bool_tm p in
   mk_eq2 u0 bool_tm (`false) p

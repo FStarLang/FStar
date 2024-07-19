@@ -19,14 +19,14 @@ open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 
 //owns$
-let owns (x:ref U32.t) : v:vprop { is_big v }= exists* v. pts_to x v
+let owns (x:ref U32.t) : v:slprop { is_slprop3 v }= exists* v. pts_to x v
 //owns$
 
 ```pulse //create_invariant$
 ghost
 fn create_invariant (r:ref U32.t) (v:erased U32.t)
 requires pts_to r v
-returns i:iref
+returns i:iname
 ensures inv i (owns r)
 {
     fold owns;
@@ -37,23 +37,21 @@ ensures inv i (owns r)
 [@@expect_failure [228; 19]]
 ```pulse //create_non_boxable$
 ghost
-fn create_non_boxable_inv (p:vprop)
+fn create_non_boxable_inv (p:slprop)
 requires p
-returns i:iref
+returns i:iname
 ensures inv i p
 {
   new_invariant p;
 }
 ```
 
-let singleton (i:iref) = add_inv emp_inames i
-
 ```pulse //update_ref_atomic$
 atomic
-fn update_ref_atomic (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
-opens (singleton i)
+opens [i]
 {
   with_invariants i {    //owns r
      unfold owns;        //ghost step;  exists* u. pts_to r u
@@ -97,7 +95,7 @@ ensures pure False
 
 
 ```pulse //update_ref$
-fn update_ref (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 {                    
@@ -112,7 +110,7 @@ ensures inv i (owns r)
 //update_ref_fail$
 [@@expect_failure]
 ```pulse 
-fn update_ref_fail (r:ref U32.t) (i:iref) (v:U32.t)
+fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
 {
@@ -127,7 +125,7 @@ ensures inv i (owns r)
 
 
 
-let readable (r:ref U32.t) : v:vprop { is_big v } = exists* p v. pts_to r #p v
+let readable (r:ref U32.t) : v:slprop { is_slprop3 v } = exists* p v. pts_to r #p v
 
 
 ```pulse
@@ -142,10 +140,10 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 
 ```pulse //split_readable$
 ghost
-fn split_readable (r:ref U32.t) (i:iref)
+fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
 ensures inv i (readable r) ** readable r
-opens (singleton i)
+opens [i]
 {
     with_invariants i {
         unfold readable;

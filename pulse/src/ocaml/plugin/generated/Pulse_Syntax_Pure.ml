@@ -392,13 +392,13 @@ let (mk_squash :
 type term_view =
   | Tm_Emp 
   | Tm_Pure of Pulse_Syntax_Base.term 
-  | Tm_Star of Pulse_Syntax_Base.vprop * Pulse_Syntax_Base.vprop 
+  | Tm_Star of Pulse_Syntax_Base.slprop * Pulse_Syntax_Base.slprop 
   | Tm_ExistsSL of Pulse_Syntax_Base.universe * Pulse_Syntax_Base.binder *
-  Pulse_Syntax_Base.vprop 
+  Pulse_Syntax_Base.slprop 
   | Tm_ForallSL of Pulse_Syntax_Base.universe * Pulse_Syntax_Base.binder *
-  Pulse_Syntax_Base.vprop 
-  | Tm_VProp 
-  | Tm_Inv of Pulse_Syntax_Base.term * Pulse_Syntax_Base.vprop 
+  Pulse_Syntax_Base.slprop 
+  | Tm_SLProp 
+  | Tm_Inv of Pulse_Syntax_Base.term * Pulse_Syntax_Base.slprop 
   | Tm_Inames 
   | Tm_EmpInames 
   | Tm_Unknown 
@@ -410,8 +410,8 @@ let uu___is_Tm_ExistsSL uu___ =
   match uu___ with | Tm_ExistsSL _ -> true | _ -> false
 let uu___is_Tm_ForallSL uu___ =
   match uu___ with | Tm_ForallSL _ -> true | _ -> false
-let uu___is_Tm_VProp uu___ =
-  match uu___ with | Tm_VProp _ -> true | _ -> false
+let uu___is_Tm_SLProp uu___ =
+  match uu___ with | Tm_SLProp _ -> true | _ -> false
 let uu___is_Tm_Inv uu___ = match uu___ with | Tm_Inv _ -> true | _ -> false
 let uu___is_Tm_Inames uu___ =
   match uu___ with | Tm_Inames _ -> true | _ -> false
@@ -430,12 +430,12 @@ let (pack_term_view :
     fun r ->
       let w t' = wr t' r in
       match top with
-      | Tm_VProp ->
+      | Tm_SLProp ->
           w
             (FStar_Reflection_V2_Builtins.pack_ln
                (FStar_Reflection_V2_Data.Tv_FVar
                   (FStar_Reflection_V2_Builtins.pack_fv
-                     Pulse_Reflection_Util.vprop_lid)))
+                     Pulse_Reflection_Util.slprop_lid)))
       | Tm_Emp ->
           w
             (FStar_Reflection_V2_Builtins.pack_ln
@@ -508,8 +508,8 @@ let (term_range : Pulse_Syntax_Base.term -> FStar_Range.range) =
 let (pack_term_view_wr :
   term_view -> Pulse_Syntax_Base.range -> Pulse_Syntax_Base.term) =
   fun t -> fun r -> pack_term_view t r
-let (tm_vprop : Pulse_Syntax_Base.term) =
-  pack_term_view_wr Tm_VProp FStar_Range.range_0
+let (tm_slprop : Pulse_Syntax_Base.term) =
+  pack_term_view_wr Tm_SLProp FStar_Range.range_0
 let (tm_inames : Pulse_Syntax_Base.term) =
   pack_term_view_wr Tm_Inames FStar_Range.range_0
 let (tm_emp : Pulse_Syntax_Base.term) =
@@ -521,8 +521,8 @@ let (tm_unknown : Pulse_Syntax_Base.term) =
 let (tm_pure : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term) =
   fun p -> pack_term_view (Tm_Pure p) (Pulse_RuntimeUtils.range_of_term p)
 let (tm_star :
-  Pulse_Syntax_Base.vprop ->
-    Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
+  Pulse_Syntax_Base.slprop ->
+    Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.term)
   =
   fun l ->
     fun r ->
@@ -532,7 +532,7 @@ let (tm_star :
 let (tm_exists_sl :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.binder ->
-      Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
+      Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.term)
   =
   fun u ->
     fun b ->
@@ -544,7 +544,7 @@ let (tm_exists_sl :
 let (tm_forall_sl :
   Pulse_Syntax_Base.universe ->
     Pulse_Syntax_Base.binder ->
-      Pulse_Syntax_Base.vprop -> Pulse_Syntax_Base.term)
+      Pulse_Syntax_Base.slprop -> Pulse_Syntax_Base.term)
   =
   fun u ->
     fun b ->
@@ -553,8 +553,8 @@ let (tm_forall_sl :
           (Pulse_RuntimeUtils.union_ranges
              (Pulse_RuntimeUtils.range_of_term b.Pulse_Syntax_Base.binder_ty)
              (Pulse_RuntimeUtils.range_of_term body))
-let (tm_iname_ref : Pulse_Syntax_Base.term) =
-  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.iname_ref_lid)
+let (tm_iname : Pulse_Syntax_Base.term) =
+  tm_fvar (Pulse_Syntax_Base.as_fv Pulse_Reflection_Util.iname_lid)
 let (tm_inv :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term)
   =
@@ -570,14 +570,14 @@ let (tm_add_inv :
     FStar_Reflection_Types.term -> FStar_Reflection_Types.term)
   =
   fun is ->
-    fun iref ->
+    fun iname ->
       let h =
         FStar_Reflection_V2_Builtins.pack_ln
           (FStar_Reflection_V2_Data.Tv_FVar
              (FStar_Reflection_V2_Builtins.pack_fv
                 Pulse_Reflection_Util.add_inv_lid)) in
       FStar_Reflection_V2_Derived.mk_app h
-        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iref]
+        [Pulse_Reflection_Util.ex is; Pulse_Reflection_Util.ex iname]
 let (tm_full_perm : Pulse_Syntax_Base.term) =
   tm_constant (FStar_Reflection_V2_Data.C_Real "1.0")
 type ('tv, 't) is_view_of = Obj.t
@@ -587,8 +587,8 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
     match FStar_Reflection_V2_Builtins.inspect_ln t with
     | FStar_Reflection_V2_Data.Tv_FVar fv ->
         let fv_lid = FStar_Reflection_V2_Builtins.inspect_fv fv in
-        if fv_lid = Pulse_Reflection_Util.vprop_lid
-        then Tm_VProp
+        if fv_lid = Pulse_Reflection_Util.slprop_lid
+        then Tm_SLProp
         else
           if fv_lid = Pulse_Reflection_Util.emp_lid
           then Tm_Emp
@@ -675,21 +675,21 @@ let rec (inspect_term : FStar_Reflection_Types.term -> term_view) =
     | FStar_Reflection_V2_Data.Tv_Uvar (uu___, uu___1) -> default_view
     | FStar_Reflection_V2_Data.Tv_Unknown -> Tm_Unknown
     | FStar_Reflection_V2_Data.Tv_Unsupp -> default_view
-let rec (vprop_as_list :
+let rec (slprop_as_list :
   Pulse_Syntax_Base.term -> Pulse_Syntax_Base.term Prims.list) =
   fun vp ->
     match inspect_term vp with
     | Tm_Emp -> []
     | Tm_Star (vp0, vp1) ->
-        FStar_List_Tot_Base.append (vprop_as_list vp0) (vprop_as_list vp1)
+        FStar_List_Tot_Base.append (slprop_as_list vp0) (slprop_as_list vp1)
     | uu___ -> [vp]
-let rec (list_as_vprop :
+let rec (list_as_slprop :
   Pulse_Syntax_Base.term Prims.list -> Pulse_Syntax_Base.term) =
   fun vps ->
     match vps with
     | [] -> tm_emp
     | hd::[] -> hd
-    | hd::tl -> tm_star hd (list_as_vprop tl)
+    | hd::tl -> tm_star hd (list_as_slprop tl)
 let rec (insert1 :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.term Prims.list ->
@@ -738,7 +738,7 @@ let (sort_terms :
   Pulse_Syntax_Base.term Prims.list ->
     (Pulse_Syntax_Base.term Prims.list, unit) FStar_Tactics_Effect.tac_repr)
   = fun ts -> FStar_Tactics_Util.fold_right insert1 ts []
-let (canon_vprop_list_print :
+let (canon_slprop_list_print :
   Pulse_Syntax_Base.term Prims.list ->
     (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -747,17 +747,17 @@ let (canon_vprop_list_print :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
-               (Prims.of_int (491)) (Prims.of_int (21)) (Prims.of_int (491))
-               (Prims.of_int (34)))))
+               (Prims.of_int (491)) (Prims.of_int (22)) (Prims.of_int (491))
+               (Prims.of_int (35)))))
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "Pulse.Syntax.Pure.fst"
                (Prims.of_int (491)) (Prims.of_int (4)) (Prims.of_int (491))
-               (Prims.of_int (34))))) (Obj.magic (sort_terms vs))
+               (Prims.of_int (35))))) (Obj.magic (sort_terms vs))
       (fun uu___ ->
          FStar_Tactics_Effect.lift_div_tac
-           (fun uu___1 -> list_as_vprop uu___))
-let (canon_vprop_print :
+           (fun uu___1 -> list_as_slprop uu___))
+let (canon_slprop_print :
   Pulse_Syntax_Base.term ->
     (Pulse_Syntax_Base.term, unit) FStar_Tactics_Effect.tac_repr)
-  = fun vp -> canon_vprop_list_print (vprop_as_list vp)
+  = fun vp -> canon_slprop_list_print (slprop_as_list vp)

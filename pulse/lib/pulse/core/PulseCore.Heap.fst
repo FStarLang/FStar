@@ -80,7 +80,7 @@ let disjoint_addr (m0 m1:heap u#h) (a:addr)
 type core_ref : Type u#0 =
   | Null
   | Addr of addr
-
+let core_ref_eq x y = x=y
 let core_ref_null = Null
 
 let core_ref_is_null (r:core_ref) = Null? r
@@ -1224,7 +1224,8 @@ let extend_modifies_nothing
       (forall (a:nat). a <> addr ==> select a h == select a h1) /\
       select addr h1 == Some (Ref meta a pcm x) /\
       not (core_ref_is_null r) /\
-      addr == core_ref_as_addr r
+      addr == core_ref_as_addr r /\
+      addr_as_core_ref addr == r
   )
 = ()
 

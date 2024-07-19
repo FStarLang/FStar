@@ -145,7 +145,7 @@ computation type
                 RETURNS  x : t
                 ENSURES  vp
 
-vprop     vp ::= e
+slprop     vp ::= e
               |  vp * vp
               |  exists (x:t). vp
               |  forall (x:t). vp

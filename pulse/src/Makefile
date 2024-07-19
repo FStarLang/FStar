@@ -71,8 +71,7 @@ boot:
 	+$(MAKE) build
 
 .PHONY: boot-checker
-boot-checker:
-	+$(MAKE) extract-syntax-extension extract-checker
+boot-checker: extract-ocaml
 	+$(MAKE) build-ocaml
 
 .PHONY: clean-snapshot

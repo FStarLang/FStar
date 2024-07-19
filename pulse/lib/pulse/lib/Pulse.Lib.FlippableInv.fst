@@ -19,23 +19,23 @@ module Pulse.Lib.FlippableInv
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
 
-let finv_p (p:vprop { is_big p }) (r : GR.ref bool) : v:vprop { is_big v } =
+let finv_p (p:slprop { is_storable p }) (r : GR.ref bool) : v:slprop { is_storable v } =
   exists* (b:bool). GR.pts_to r #0.5R b ** (if b then p else emp)
 
 noeq
-type finv (p:vprop) = {
+type finv (p:slprop) = {
   r : GR.ref bool;
-  i : iref;
-  p_big : squash (is_big p);
+  i : iname;
+  p_big : squash (is_storable p);
 }
 
-let off #p (fi : finv p) : vprop =
+let off #p (fi : finv p) : slprop =
   GR.pts_to fi.r #0.5R false ** inv fi.i (finv_p p fi.r)
-let on  #p (fi : finv p) : vprop =
+let on  #p (fi : finv p) : slprop =
   GR.pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
 ```pulse
-fn mk_finv (p:vprop { is_big p })
+fn mk_finv (p:slprop { is_storable p })
    requires emp
    returns f:(finv p)
    ensures off f
@@ -46,7 +46,7 @@ fn mk_finv (p:vprop { is_big p })
         as (if false then p else emp);
    fold finv_p p r;
    let i = new_invariant (finv_p p r);
-   let fi = Mkfinv r i (() <: squash (is_big p)); // See #121
+   let fi = Mkfinv r i (() <: squash (is_storable p)); // See #121
    rewrite (GR.pts_to r #0.5R false)
         as (GR.pts_to fi.r #0.5R false);
    rewrite (inv i (finv_p p r))
@@ -57,22 +57,23 @@ fn mk_finv (p:vprop { is_big p })
 ```
 
 
-let iname_of #p (f : finv p) : erased iname = iname_of f.i
+let iname_of #p (f : finv p) : iname = f.i
 
 ```pulse
 atomic
-fn flip_on (#p:vprop) (fi:finv p)
+fn flip_on (#p:slprop) (fi:finv p)
    requires off fi ** p
    ensures on fi
-   opens add_iname emp_inames (iname_of fi)
+   opens [iname_of fi]
 {
   open Pulse.Lib.GhostReference;
   unfold off;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) **
+    ensures finv_p p fi.r **
             GR.pts_to fi.r #0.5R true
-    opens (add_inv emp_inames fi.i) {
+    opens [fi.i]
+  {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if false then p else emp) as emp;
@@ -87,18 +88,19 @@ fn flip_on (#p:vprop) (fi:finv p)
 
 ```pulse
 atomic
-fn flip_off (#p:vprop) (fi : finv p)
+fn flip_off (#p:slprop) (fi : finv p)
    requires on fi
    ensures off fi ** p
-   opens add_iname emp_inames (iname_of fi)
+   opens [iname_of fi]
 {
   open Pulse.Lib.GhostReference;
   unfold on;
   with_invariants fi.i
     returns _:unit
-    ensures inv fi.i (finv_p p fi.r) **
+    ensures finv_p p fi.r **
             GR.pts_to fi.r #0.5R false ** p
-    opens (add_inv emp_inames fi.i) {
+    opens [fi.i]
+  {
     unfold finv_p;
     GR.gather2 fi.r;
     rewrite (if true then p else emp) as p;

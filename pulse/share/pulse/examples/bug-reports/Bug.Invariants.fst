@@ -94,8 +94,8 @@ ensures emp
 
 ```pulse
 fn return_with_invariant
-      (p:vprop)
-      (i:iref)
+      (p:slprop)
+      (i:iname)
 requires inv i p
 returns x:bool
 ensures inv i p
@@ -109,7 +109,7 @@ ensures inv i p
 ```pulse
 fn return_with_invariant2
       (x:ref U32.t)
-      (i:iref)
+      (i:iname)
 requires inv i (pts_to x 1ul)
 returns _:U32.t
 ensures inv i (pts_to x 1ul)
@@ -121,15 +121,15 @@ ensures inv i (pts_to x 1ul)
 ```
 
 ```pulse
-fn test_invariant_annot (x:ref U32.t) (i:iref) (y:ref U32.t)
+fn test_invariant_annot (x:ref U32.t) (i:iname) (y:ref U32.t)
 requires inv i (pts_to x 0ul) ** pts_to y 'w
 ensures inv i (pts_to x 0ul) ** pts_to y 0ul
 {
     let n = 
         with_invariants i
         returns r:U32.t
-        ensures inv i (pts_to x 0ul) ** pure (r == 0ul) ** pts_to y 'w
-        opens (add_inv emp_inames i) {
+        ensures pts_to x 0ul ** pure (r == 0ul) ** pts_to y 'w
+        opens [i] {
             read_atomic x
         };
     y := n;

@@ -30,10 +30,10 @@ module FV = Pulse.Typing.FV
 
 module Metatheory = Pulse.Typing.Metatheory
 
-let vprop_as_list_typing (#g:env) (#p:term)
-  (t:tot_typing g p tm_vprop)
-  (x:term { List.Tot.memP x (vprop_as_list p) })
-  : tot_typing g x tm_vprop
+let slprop_as_list_typing (#g:env) (#p:term)
+  (t:tot_typing g p tm_slprop)
+  (x:term { List.Tot.memP x (slprop_as_list p) })
+  : tot_typing g x tm_slprop
   = assume false; t
 
 let terms_to_string (t:list term)
@@ -44,7 +44,7 @@ let terms_to_string (t:list term)
 let check_elim_exists
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_ElimExists? t.term})
@@ -54,26 +54,26 @@ let check_elim_exists
 
   let Tm_ElimExists { p = t } = t.term in
   let t_rng = Pulse.RuntimeUtils.range_of_term t in
-  let (| t, t_typing |) : (t:term & tot_typing g t tm_vprop ) = 
+  let (| t, t_typing |) : (t:term & tot_typing g t tm_slprop ) = 
     match inspect_term t with
     | Tm_Unknown -> (
-      //There should be exactly one exists_ vprop in the context and we eliminate it      
-      let ts = vprop_as_list pre in
+      //There should be exactly one exists_ slprop in the context and we eliminate it      
+      let ts = slprop_as_list pre in
       let exist_tms = List.Tot.Base.filter #term (fun t -> match inspect_term t with
                                                            | Tm_ExistsSL _ _ _ -> true
                                                            | _ -> false) ts in
       match exist_tms with
       | [one] -> 
         assume (one `List.Tot.memP` ts);
-        (| one, vprop_as_list_typing pre_typing one |) //shouldn't need to check this again
+        (| one, slprop_as_list_typing pre_typing one |) //shouldn't need to check this again
       | _ -> 
         fail g (Some t_rng)
           (Printf.sprintf "Could not decide which exists term to eliminate: choices are\n%s"
              (terms_to_string exist_tms))
       )
     | _ ->
-      let t, _ = instantiate_term_implicits g t in
-      check_vprop g t
+      let t, _ = instantiate_term_implicits g t None in
+      check_slprop g t
   in
 
   let tv = inspect_term t in
@@ -98,26 +98,26 @@ let check_elim_exists
 let check_intro_exists
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (st:st_term { intro_exists_witness_singleton st })
-  (vprop_typing: option (tot_typing g (intro_exists_vprop st) tm_vprop))
+  (slprop_typing: option (tot_typing g (intro_exists_slprop st) tm_slprop))
   : T.Tac (checker_result_t g pre post_hint) =
 
   let g = Pulse.Typing.Env.push_context g "check_intro_exists_non_erased" st.range in
 
   let Tm_IntroExists { p=t; witnesses=[witness] } = st.term in
   let (| t, t_typing |) =
-    match vprop_typing with
+    match slprop_typing with
     | Some typing -> (| t, typing |)
-    | _ -> check_vprop g t
+    | _ -> check_slprop g t
   in
 
   let tv = inspect_term t in
   if not (Tm_ExistsSL? tv)
   then fail g (Some st.range)
-         (Printf.sprintf "check_intro_exists_non_erased: vprop %s is not an existential"
+         (Printf.sprintf "check_intro_exists_non_erased: slprop %s is not an existential"
             (P.term_to_string t));
 
   let Tm_ExistsSL u b p = tv in

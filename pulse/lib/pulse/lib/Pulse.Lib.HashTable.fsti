@@ -44,22 +44,28 @@ let related #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : GTot prop =
   SZ.v ht.sz == pht.repr.sz /\
   pht.repr.hashf == lift_hash_fun ht.hashf
 
-let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : vprop =
+let models #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt) : slprop =
   V.pts_to ht.contents pht.repr.seq **
-  pure (related ht pht /\ V.is_full_vec ht.contents)
+  pure (related ht pht /\
+        V.is_full_vec ht.contents /\
+        SZ.fits (2 `op_Multiply` SZ.v ht.sz))
 
-val models_is_small #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
-: Lemma (is_small (models ht pht))
-        [SMTPat (is_small (models ht pht))]
+val models_is_slprop2 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
+: Lemma (is_slprop2 (models ht pht))
+        [SMTPat (is_slprop2 (models ht pht))]
 
 let pht_sz #k #v (pht:pht_t k v) : GTot pos = pht.repr.sz
 
+(* A hash table can be created as long as the size isn't too big.
+*Twice* the size must fit in a size_t, since this means
+overflow will not occur internally when traversing the table.
+We could probably relax this to just a fitting in a size_t. *)
 val alloc
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
   (hashf:(k -> SZ.t)) (l:pos_us)
 : stt (ht_t k v)
-    (requires emp)
+    (requires pure (SZ.fits (2 `op_Multiply` SZ.v l)))
     (ensures fun ht -> exists* pht. models ht pht ** pure (pht == mk_init_pht hashf l))
 
 val dealloc
@@ -81,11 +87,11 @@ val lookup
   (#pht:erased (pht_t kt vt))
   (ht:ht_t kt vt)
   (k:kt)
-: stt (ht_t kt vt & bool & option SZ.t)
+: stt (ht_t kt vt & option SZ.t)
     (requires models ht pht)
     (ensures fun p ->
-       models (tfst p) pht ** 
-       pure (same_sz_and_hashf (tfst p) ht /\ (tsnd p ==> tthd p == PHT.lookup_index_us pht k)))
+       models (fst p) pht ** 
+       pure (same_sz_and_hashf (fst p) ht /\ (snd p == PHT.lookup_index_us pht k)))
 
 val replace
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)

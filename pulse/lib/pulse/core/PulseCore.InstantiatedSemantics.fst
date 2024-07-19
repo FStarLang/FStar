@@ -58,7 +58,7 @@ let laws ()
 
 let state0 (e:inames) : Sem.state u#4 = {
     // max_act = U.raise_t u#0 u#100 unit;
-    s = mem u#1;
+    s = mem u#0;
     is_full_mem = full_mem_pred;
     pred = slprop;
     emp = emp;
@@ -69,44 +69,56 @@ let state0 (e:inames) : Sem.state u#4 = {
     laws = laws ()
 }
 
-let state : Sem.state = state0 Set.empty
+let state : Sem.state = state0 GhostSet.empty
 
 let slprop = slprop
 let _eq : squash (slprop == state.pred) = ()
 
-let big_slprop = big_slprop
-let cm_big_slprop = cm_big_slprop
-let down = down
-let up = up
-let up_big_is_big = up_big_is_big
+let slprop3_base = slprop3_base
+let cm_slprop3 = cm_slprop3
+let down3 = down3
+let up3 = up3
+let up3_is_slprop3 = up3_is_slprop3
 
-let small_slprop = small_slprop
-let cm_small_slprop = cm_small_slprop
+let slprop2_base = slprop2_base
+let cm_slprop2 = cm_slprop2
 let down2 = down2
 let up2 = up2
-let up2_small_is_small = up2_small_is_small
+let up2_is_slprop2 = up2_is_slprop2
 
-let small_is_also_big (s:slprop)
-  : Lemma (is_small s ==> is_big s) = small_is_also_big s
+let slprop1_base = slprop1_base
+let cm_slprop1 = cm_slprop1
+let down1 = down1
+let up1 = up1
+let up1_is_slprop1 = up1_is_slprop1
+let slprop_1_is_2 (s:slprop)
+  : Lemma (is_slprop1 s ==> is_slprop2 s)
+  = slprop_1_is_2 s
 
+let slprop_2_is_3 (s:slprop)
+  : Lemma (is_slprop2 s ==> is_slprop3 s)
+  = slprop_2_is_3 s
 let emp = emp
+
 let pure p = pure p
 let ( ** ) p q = p `star` q
 let ( exists* ) #a p = h_exists (F.on_dom a p)
 
-let big_star p q = big_star_congruence p q
-let big_exists #a p = big_exists_congruence #a (F.on_dom a p)
-let small_star p q = small_star_congruence p q
-let small_exists #a p = small_exists_congruence #a (F.on_dom a p)
+let slprop3_star p q = slprop3_star_congruence p q
+let slprop3_exists #a p = slprop3_exists_congruence #a (F.on_dom a p)
+let slprop2_star p q = slprop2_star_congruence p q
+let slprop2_exists #a p = slprop2_exists_congruence #a (F.on_dom a p)
+let slprop1_star p q = slprop1_star_congruence p q
+let slprop1_exists #a p = slprop1_exists_congruence #a (F.on_dom a p)
 
-let up_emp = up_emp_big
-let down_emp = down_emp_big
-let up_star = up_star_big
-let down_star = down_star_big
+let up3_emp    = up3_emp
+let down3_emp  = down3_emp
+let up3_star   = up3_star
+let down3_star = down3_star
 
-let up2_emp = up2_emp
-let down2_emp = down2_emp
-let up2_star = up2_star
+let up2_emp    = up2_emp
+let down2_emp  = down2_emp
+let up2_star   = up2_star
 let down2_star = down2_star
 
 let iref = iref

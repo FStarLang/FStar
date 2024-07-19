@@ -28,7 +28,7 @@ let rec fix_ghost_1 (#a : Type0) (#b : a -> Type0)
   : x:a -> GTot (b x)
   = fun x -> ff x (fix_ghost_1 ff)
 
-let fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x:a -> b x -> vprop))
+let fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> slprop) (#post : (x:a -> b x -> slprop))
   (ff : (x:a -> (y:a{y << x} -> stt_ghost (b y) emp_inames (pre y) (post y)) -> stt_ghost (b x) emp_inames (pre x) (post x)))
   : x:a -> stt_ghost (b x) emp_inames (pre x) (post x)
   = fix_1 #a #(fun x -> stt_ghost (b x) emp_inames (pre x) (post x)) ff
@@ -38,8 +38,8 @@ let fix_stt_ghost_1 (#a : Type) (#b : a -> Type) (#pre : a -> vprop) (#post : (x
 let fix_stt_1_div
     (#a : Type)
     (#b : a -> Type)
-    (#pre : a -> vprop)
-    (#post : (x:a -> b x -> vprop))
+    (#pre : a -> slprop)
+    (#post : (x:a -> b x -> slprop))
     (kk : ((y:a -> unit -> Dv (stt (b y) (pre y) (post y))) ->
             x:a -> unit -> Dv (stt (b x) (pre x) (post x))))
 : x:a -> unit -> Dv (stt (b x) (pre x) (post x))
@@ -51,8 +51,8 @@ let fix_stt_1_div
 let fix_stt_1
     (#a : Type)
     (#b : a -> Type)
-    (#pre : a -> vprop)
-    (#post : (x:a -> b x -> vprop))
+    (#pre : a -> slprop)
+    (#post : (x:a -> b x -> slprop))
     (kk : ((y:a -> stt (b y) (pre y) (post y)) -> x:a -> stt (b x) (pre x) (post x)))
 : x:a -> stt (b x) (pre x) (post x)
 = fun x -> 

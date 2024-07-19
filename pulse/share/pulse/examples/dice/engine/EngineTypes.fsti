@@ -22,8 +22,6 @@ module US = FStar.SizeT
 module U8 = FStar.UInt8
 open HACL
 
-val uds_is_enabled : vprop
-
 val uds_len : hashable_len 
 
 type dice_return_code = | DICE_SUCCESS | DICE_ERROR
@@ -56,7 +54,7 @@ let mk_engine_repr  l0_image_header_size l0_image_header l0_image_header_sig
      l0_binary_size; l0_binary; l0_binary_hash; l0_image_auth_pubkey}
 
 let engine_record_perm (record:engine_record_t) (p:perm) (repr:engine_record_repr)
-  : vprop = 
+  : slprop = 
   V.pts_to record.l0_image_header #p repr.l0_image_header **
   V.pts_to record.l0_image_header_sig #p repr.l0_image_header_sig **
   V.pts_to record.l0_binary #p repr.l0_binary **

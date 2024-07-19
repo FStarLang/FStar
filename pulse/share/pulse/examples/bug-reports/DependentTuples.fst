@@ -19,13 +19,13 @@ module DependentTuples
 open Pulse.Lib.Pervasives
 
 //
-// The locks are no longer indexed by vprops
+// The locks are no longer indexed by slprops
 // Would need another instance of this problem
 //
 
-let exists_n (r:ref nat) : vprop = exists* n. pts_to r n
+let exists_n (r:ref nat) : slprop = exists* n. pts_to r n
 
-assume val t (v:vprop) : Type0
+assume val t (v:slprop) : Type0
 
 type tup_t = r:ref nat & t (exists_n r)
 let mk_tup r x : tup_t = (| r, x |)

@@ -63,14 +63,14 @@ let all_inames_typing (g:env)
 let remove_iname_typing
     (g:env) (#inames #i:term)
     (_:tot_typing g inames tm_inames)
-    (_:tot_typing g i tm_iname_ref)
+    (_:tot_typing g i tm_iname)
 : tot_typing g (remove_iname inames i) tm_inames
 = RU.magic()
 
 let add_iname_typing
     (g:env) (#inames #i:term)
     (_:tot_typing g inames tm_inames)
-    (_:tot_typing g i tm_iname_ref)
+    (_:tot_typing g i tm_iname)
 : tot_typing g (add_iname inames i) tm_inames
 = RU.magic()
 
@@ -88,7 +88,7 @@ let disjointness_remove_i_i (g:env) (inames i:term)
 let add_remove_inverse (g:env)
      (inames i:term)
      (inames_typing:tot_typing g inames tm_inames)
-     (i_typing:tot_typing g i tm_iname_ref)
+     (i_typing:tot_typing g i tm_iname)
 : T.Tac 
     (prop_validity g (tm_inames_subset (add_iname (remove_iname inames i) i) inames))
 = let typing
@@ -121,12 +121,12 @@ let add_remove_inverse (g:env)
 //
 // Find i -~- p in pre, where pre is well-typed
 //
-let rec find_inv (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_vprop) (i:term)
+let rec find_inv (#g:env) (#pre:term) (pre_typing:tot_typing g pre tm_slprop) (i:term)
   : T.Tac (option (p:term &
                    frame:term &
-                   tot_typing g (tm_inv i p) tm_vprop &
-                   tot_typing g frame tm_vprop &
-                   vprop_equiv g (tm_star (tm_inv i p) frame) pre)) =
+                   tot_typing g (tm_inv i p) tm_slprop &
+                   tot_typing g frame tm_slprop &
+                   slprop_equiv g (tm_star (tm_inv i p) frame) pre)) =
 
   match inspect_term pre with
   | Tm_Inv i' p ->
@@ -158,26 +158,29 @@ let find_inv_post (#g:env) (x:var { lookup g x == None})
   (ret_ty:term)
   (post:term)
   (ret_ty_typing:universe_of g ret_ty u)
-  (post_typing:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_vprop)
+  (post_typing:tot_typing (push_binding g x ppname_default ret_ty) (open_term post x) tm_slprop)
   (i:term)
 
   : T.Tac (option (p:term &
                    frame:term &
-                   tot_typing g (tm_inv i p) tm_vprop &
-                   tot_typing (push_binding g x ppname_default ret_ty) (open_term frame x) tm_vprop &
-                   vprop_equiv (push_binding g x ppname_default ret_ty)
-                               (tm_star (tm_inv i p) (open_term frame x))
-                               (open_term post x))) =
+                   tot_typing g (tm_inv i p) tm_slprop &
+                   tot_typing (push_binding g x ppname_default ret_ty) (open_term frame x) tm_slprop &
+                   slprop_equiv (push_binding g x ppname_default ret_ty)
+                                (tm_star (tm_inv i p) (open_term frame x))
+                                (open_term post x))) =
   
   let post_opened = open_term_nv post (ppname_default, x) in
-  let res = find_inv #_ #post_opened post_typing i in
+  let (| post_opened, post_equiv, post_typing |) =
+    normalize_slprop_welltyped (push_binding g x ppname_default ret_ty) post_opened post_typing
+  in
+  let res = find_inv post_typing i in
   match res with
   | None -> None
   | Some (| p, frame, inv_typing, frame_typing, d_eq |) ->
-    let frame_typing : tot_typing _ frame tm_vprop = frame_typing in
+    let frame_typing : tot_typing _ frame tm_slprop = frame_typing in
     assume (open_term (close_term frame x) x == frame);
-    let tm_inv_typing : tot_typing g (tm_inv i p) tm_vprop = recheck () in
-    Some (| p, close_term frame x, tm_inv_typing, frame_typing, d_eq |)
+    let tm_inv_typing : tot_typing g (tm_inv i p) tm_slprop = recheck () in
+    Some (| p, close_term frame x, tm_inv_typing, frame_typing, VE_Trans _ _ _ _ d_eq (VE_Sym _ _ _ post_equiv) |)
 
 let atomic_or_ghost_with_inames_and_pre_post
   (c:comp { C_STAtomic? c \/ C_STGhost? c})
@@ -188,37 +191,119 @@ let atomic_or_ghost_with_inames_and_pre_post
   | C_STGhost _ s ->
     C_STGhost inames { s with pre; post }
 
+//
+// Given a post that may have a p in it,
+//   the function transforms it into inv i p ** <the frame>
+//
+// As with find_inv, it is doing structural matching for now
+//
+// The function also needs to return typing of the transformed postcondition
+// Should be easy to construct structurally, given that we have post typing
+//   and i typing in hand
+//
+let rec __withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
+  (p_typing:tot_typing g p tm_slprop)
+  (i_typing:tot_typing g i tm_iname)
+  (post_typing:tot_typing g post tm_slprop)
+
+  : T.Tac (option (post':term &
+                   tot_typing g post' tm_slprop)) =
+  
+  if eq_tm post p
+  then Some (| tm_inv i p, magic () |)  // i:iname, p:slprop, get typing of inv i p
+  else match inspect_term post with
+       | Tm_Star l r ->
+         let res = __withinv_post #g #p #i #l p_typing i_typing (magic ()) in
+         begin
+           match res with
+           | Some (| l', _ |) -> Some (| tm_star l' r, magic () |)
+           | None ->
+             begin
+               let res = __withinv_post #g #p #i #r p_typing i_typing (magic ()) in
+               match res with
+               | Some (| r', _ |) -> Some (| tm_star l r', magic () |)
+               | None -> None
+             end
+          end
+       | _ -> None
+
+let withinv_post (#g:env) (#p:term) (#i:term) (#post:term)
+  (p_typing:tot_typing g p tm_slprop)
+  (i_typing:tot_typing g i tm_iname)
+  (post_typing:tot_typing g post tm_slprop)
+
+  : T.Tac (option (post':term &
+                   tot_typing g post' tm_slprop)) =
+  let (| p, _, p_typing |) = Prover.normalize_slprop_welltyped g p p_typing in
+  let (| post, _, post_typing |) = Prover.normalize_slprop_welltyped g post post_typing in
+  __withinv_post #g #p #i #post p_typing i_typing post_typing
+
 #restart-solver
 #push-options "--z3rlimit_factor 20 --split_queries no"
-let check
+let check0
   (g:env)
   (pre:term)
-  (pre_typing:tot_typing g pre tm_vprop)
+  (pre_typing:tot_typing g pre tm_slprop)
   (post_hint:post_hint_opt g)
   (res_ppname:ppname)
   (t:st_term{Tm_WithInv? t.term})
   (check:check_t)
 : T.Tac (checker_result_t g pre post_hint)
 = let Tm_WithInv {name=i; returns_inv; body} = t.term in
-  let (| i, _ |) = check_tot_term g i tm_iname_ref in
+  let (| i, _ |) = check_tot_term g i tm_iname in
   let i_range = Pulse.RuntimeUtils.range_of_term i in
   let res = find_inv pre_typing i in
   if None? res then
     fail_doc g (Some i_range) [
-        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
         prefix 2 1 (text " in the precondition ") (pp pre)
       ];
     
-  let Some (| p, pre_frame, inv_typing, pre_frame_typing, d_pre_frame_eq |) = res in
+  let Some (| p, pre_frame, _, pre_frame_typing, d_pre_frame_eq |) = res in
 
+  //
+  // post_hint for the with_invariants block
+  //
   let post_hint : post_hint_t =
     match returns_inv, post_hint with
     | None, Some post -> post
     | Some (b, post, opens), None ->
-      Pulse.Checker.Base.intro_post_hint g
+      //
+      // The with_invariants block is annotated with an ensures
+      // For something like inv i p, the ensures only has p in it
+      // So get inside and change that p to inv i p
+      //
+      // First typecheck the annotated ensures
+      //
+      let post_hint = Pulse.Checker.Base.intro_post_hint g
         (EffectAnnotAtomicOrGhost { opens })
         (Some b.binder_ty)
-        post
+        post in
+      begin
+        let g_x = push_binding g post_hint.x ppname_default post_hint.ret_ty in
+        let res = withinv_post
+          #g_x
+          #p #i #(open_term_nv post_hint.post (v_as_nv post_hint.x))
+          (magic ())  // weakening of p typing
+          (magic ())  // weakening of i typing
+          post_hint.post_typing_src
+        in
+        match res with
+        | None ->
+          fail_doc g (Some (FStar.Reflection.range_of_term post)) [
+            prefix 2 1 (text "Cannot find invariant slprop")
+              (pp p) ^/^
+            text "in the with_invariants annotated postcondition."
+          ]
+        | Some (| post', post'_typing |) ->
+          let post'_closed = close_term post' post_hint.x in
+          assume (open_term (post'_closed) post_hint.x == post');
+          assume (freevars post_hint.post == freevars post');
+          { post_hint with
+            post = post'_closed;
+            post_typing_src = post'_typing;
+            post_typing = post_typing_as_abstraction #_ #post_hint.x #_ #post'_closed post'_typing }
+      end
     | Some (_, post, _), Some q ->
       fail_doc g (Some t.range) 
         [ doc_of_string "Fatal: multiple annotated postconditions on with_invariant";
@@ -231,14 +316,14 @@ let check
   for better errors. *)
   let body_range = body.range in
 
-  let pre_body : vprop = tm_star p pre_frame in
+  let pre_body : slprop = tm_star p pre_frame in
   //
   // we know tm_inv i p is well-typed,
   // so p is well-typed
   // and frame is well-typed
   // therefore tm_star is well-typed
   //
-  let pre_body_typing : tot_typing g pre_body tm_vprop = magic () in
+  let pre_body_typing : tot_typing g pre_body tm_slprop = magic () in
 
   let x = fresh g in
   assume (fresh_wrt x g (freevars post_hint.post));
@@ -248,7 +333,7 @@ let check
   let post_hint_post_typing
     : tot_typing g'
                  (open_term_nv post_hint.post (ppname_default, x))
-                 tm_vprop
+                 tm_slprop
     = recheck ()
   in
   
@@ -263,7 +348,7 @@ let check
 
   if None? res then
     fail_doc g (Some i_range) [
-        prefix 2 1 (text "Cannot find invariant resource for iref ") (pp i) ^/^
+        prefix 2 1 (text "Cannot find invariant resource for iname ") (pp i) ^/^
         prefix 2 1 (text " in the postcondition ") (pp post_hint.post)
       ];
          
@@ -271,7 +356,7 @@ let check
   let Some (| p', post_frame, _, post_frame_typing, d_post_frame_equiv |) = res in
   if not (eq_tm p p')
   then fail g (Some i_range)
-         (FStar.Printf.sprintf "Inconsistent vprops for iref %s in pre (%s) and post (%s)"
+         (FStar.Printf.sprintf "Inconsistent slprops for iname %s in pre (%s) and post (%s)"
             (show i) (show p) (show p'));
   assert (p == p');
   let post_body = tm_star p post_frame in
@@ -347,27 +432,27 @@ let check
     assert (comp_with_inv c i p == c_out_eq);
     let d : st_typing _ _ c_out_eq =
       T_WithInv _ i p _ c (magic ()) (magic ()) body_typing tok in
-    let d_pre_eq : vprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
-    let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                (tm_star (tm_inv i p) (open_term post_frame x))
-                                (open_term post_hint.post x) = d_post_frame_equiv in
+    let d_pre_eq : slprop_equiv g (comp_pre c_out_eq) (comp_pre c_out) = d_pre_frame_eq in
+    let d_post_eq : slprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
+                                 (tm_star (tm_inv i p) (open_term post_frame x))
+                                 (open_term post_hint.post x) = d_post_frame_equiv in
     assume (open_term (tm_inv i p) x == tm_inv i p);
     assert (comp_post c_out_eq == tm_star (tm_inv i p) post_frame);
     assume (open_term (comp_post c_out_eq) x ==
             tm_star (tm_inv i p) (open_term post_frame x));
-    let d_post_eq : vprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
-                                (open_term (comp_post c_out_eq) x)
-                                (open_term (comp_post c_out) x) = d_post_eq in
+    let d_post_eq : slprop_equiv (push_binding g x ppname_default post_hint.ret_ty)
+                                 (open_term (comp_post c_out_eq) x)
+                                 (open_term (comp_post c_out) x) = d_post_eq in
     assert (comp_res c_out_eq == comp_res c_out);
     assume (~ (x `Set.mem` freevars (comp_post c_out_eq)));
     assume (~ (x `Set.mem` freevars (comp_post c_out)));
     let d_st_equiv : st_equiv _ c_out_eq c_out =
-      ST_VPropEquiv _ c_out_eq c_out x (magic ())
-                                       (magic ())
-                                       (magic ())
-                                       (RT.Rel_refl _ _ RT.R_Eq)
-                                       d_pre_eq
-                                       d_post_eq in
+      ST_SLPropEquiv _ c_out_eq c_out x (magic ())
+                                        (magic ())
+                                        (magic ())
+                                        (RT.Rel_refl _ _ RT.R_Eq)
+                                        d_pre_eq
+                                        d_post_eq in
     let d : st_typing _ _ c_out =
       T_Equiv _ _ _ _ d d_st_equiv in
     d
@@ -395,3 +480,28 @@ let check
     let d = T_Lift _ _ _ _ d (Lift_STAtomic_ST _ c_out) in
     checker_result_for_st_typing (| _, _, d |) res_ppname
 #pop-options
+
+(* Would be good to generalize this and expose it elsewhere. *)
+let norm_and_check
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_slprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_WithInv? t.term})
+  (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
+= let (| pre', pre_equiv, pre'_typing |) = Prover.normalize_slprop_welltyped g pre pre_typing in
+  let r = check0 g pre' pre'_typing post_hint res_ppname t check in
+  checker_result_t_equiv_ctxt _ _ _ _ (VE_Sym _ _ _ pre_equiv) r
+
+let check
+  (g:env)
+  (pre:term)
+  (pre_typing:tot_typing g pre tm_slprop)
+  (post_hint:post_hint_opt g)
+  (res_ppname:ppname)
+  (t:st_term{Tm_WithInv? t.term})
+  (check:check_t)
+: T.Tac (checker_result_t g pre post_hint)
+= norm_and_check g pre pre_typing post_hint res_ppname t check

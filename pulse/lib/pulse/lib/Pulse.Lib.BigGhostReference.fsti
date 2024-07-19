@@ -30,7 +30,7 @@ val pts_to
   ([@@@equate_strict] r:ref a)
   (#[exact (`1.0R)] p:perm)
   (n:a)
-: vprop
+: slprop
 
 val alloc (#a:Type) (x:a)
   : stt_ghost (ref a) emp_inames emp (fun r -> pts_to r x)

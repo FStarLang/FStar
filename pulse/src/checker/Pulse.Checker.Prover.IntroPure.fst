@@ -21,7 +21,7 @@ open Pulse.Typing
 open Pulse.Typing.Combinators
 open Pulse.Typing.Metatheory
 open Pulse.Checker.Pure
-open Pulse.Checker.VPropEquiv
+open Pulse.Checker.SLPropEquiv
 open Pulse.Checker.Prover.Base
 open Pulse.Checker.Base
 open Pulse.Checker.Prover.Util
@@ -35,7 +35,7 @@ let coerce_eq (#a #b:Type) (x:a) (_:squash (a == b)) : y:b{y == x} = x
 
 let k_intro_pure (g:env) (p:term)
   (d:tot_typing g p tm_prop)
-  (token:prop_validity g p) (frame:vprop)
+  (token:prop_validity g p) (frame:slprop)
   
   : T.Tac (continuation_elaborator g frame g (frame * tm_pure p)) =
 
@@ -212,7 +212,7 @@ let rec try_collect_substs (uvs:env) (t:term)
 
 let intro_pure (#preamble:_) (pst:prover_state preamble)
   (t:term)
-  (unsolved':list vprop)
+  (unsolved':list slprop)
   (_:squash (pst.unsolved == (tm_pure t)::unsolved'))
   : T.Tac (option (pst':prover_state preamble { pst' `pst_extends` pst })) =
 
@@ -280,8 +280,8 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
 
   let k : continuation_elaborator
             preamble.g0 (preamble.ctxt * preamble.frame)
-            pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
-    let frame = (list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved) in
+            pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
+    let frame = (list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved) in
     let k_pure
       : continuation_elaborator
           pst.pg frame
@@ -289,9 +289,9 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
       k_intro_pure _ _ d d_valid frame in
     // some *s
     let veq
-      : vprop_equiv pst.pg
-          (((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) * tm_pure t_ss)
-          ((list_as_vprop pst.remaining_ctxt * preamble.frame) * (tm_pure t_ss * ss_new.(pst.solved))) =
+      : slprop_equiv pst.pg
+          (((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) * tm_pure t_ss)
+          ((list_as_slprop pst.remaining_ctxt * preamble.frame) * (tm_pure t_ss * ss_new.(pst.solved))) =
       RU.magic () in
 
     // need lemmas in Prover.Subst
@@ -299,52 +299,52 @@ let intro_pure (#preamble:_) (pst:prover_state preamble)
             ss_new.(tm_pure t * pst.solved));
 
     let k_pure : continuation_elaborator
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved))
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
+      pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved))
+      pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(solved_new)) =
 
       k_elab_equiv k_pure (VE_Refl _ _) veq in
 
 
     let k_pst : continuation_elaborator
       preamble.g0 (preamble.ctxt * preamble.frame)
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved)) = pst.k in
+      pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * pst.ss.(pst.solved)) = pst.k in
 
     assume (pst.ss.(pst.solved) == ss_new.(pst.solved));
     let k_pst : continuation_elaborator
       preamble.g0 (preamble.ctxt * preamble.frame)
-      pst.pg ((list_as_vprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) = coerce_eq k_pst () in
+      pst.pg ((list_as_slprop pst.remaining_ctxt * preamble.frame) * ss_new.(pst.solved)) = coerce_eq k_pst () in
 
     k_elab_trans k_pst k_pure in
 
   let goals_inv
-    : vprop_equiv (push_env pst.pg pst.uvs)
+    : slprop_equiv (push_env pst.pg pst.uvs)
                   preamble.goals
-                  (list_as_vprop ((tm_pure t)::unsolved_new) * pst.solved) = pst.goals_inv in
+                  (list_as_slprop ((tm_pure t)::unsolved_new) * pst.solved) = pst.goals_inv in
 
-  let veq : vprop_equiv (push_env pst.pg pst.uvs)
-                        (list_as_vprop ((tm_pure t)::unsolved_new))
-                        (list_as_vprop unsolved_new * tm_pure t) = RU.magic () in
+  let veq : slprop_equiv (push_env pst.pg pst.uvs)
+                        (list_as_slprop ((tm_pure t)::unsolved_new))
+                        (list_as_slprop unsolved_new * tm_pure t) = RU.magic () in
 
-  let veq : vprop_equiv (push_env pst.pg pst.uvs)
-                        (list_as_vprop ((tm_pure t)::unsolved_new) * pst.solved)
-                        ((list_as_vprop unsolved_new * tm_pure t) * pst.solved) =
+  let veq : slprop_equiv (push_env pst.pg pst.uvs)
+                        (list_as_slprop ((tm_pure t)::unsolved_new) * pst.solved)
+                        ((list_as_slprop unsolved_new * tm_pure t) * pst.solved) =
     VE_Ctxt _ _ _ _ _ veq (VE_Refl _ _) in
 
   let goals_inv
-    : vprop_equiv (push_env pst.pg pst.uvs)
+    : slprop_equiv (push_env pst.pg pst.uvs)
                   preamble.goals
-                  ((list_as_vprop unsolved_new * tm_pure t) * pst.solved) =
+                  ((list_as_slprop unsolved_new * tm_pure t) * pst.solved) =
     VE_Trans _ _ _ _ goals_inv veq in
 
-  let veq : vprop_equiv (push_env pst.pg pst.uvs)
-                        ((list_as_vprop unsolved_new * tm_pure t) * pst.solved)
-                        (list_as_vprop unsolved_new * (tm_pure t * pst.solved)) =
+  let veq : slprop_equiv (push_env pst.pg pst.uvs)
+                        ((list_as_slprop unsolved_new * tm_pure t) * pst.solved)
+                        (list_as_slprop unsolved_new * (tm_pure t * pst.solved)) =
     VE_Sym _ _ _ (VE_Assoc _ _ _ _) in
 
   let goals_inv
-    : vprop_equiv (push_env pst.pg pst.uvs)
+    : slprop_equiv (push_env pst.pg pst.uvs)
                   preamble.goals
-                  (list_as_vprop unsolved_new * solved_new) =
+                  (list_as_slprop unsolved_new * solved_new) =
     VE_Trans _ _ _ _ goals_inv veq in
 
   assume (freevars ss_new.(solved_new) `Set.subset` dom pst.pg);

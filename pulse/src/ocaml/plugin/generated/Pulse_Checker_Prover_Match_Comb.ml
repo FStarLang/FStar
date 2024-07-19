@@ -5,8 +5,8 @@ let (wrap_matcher :
     Pulse_Checker_Prover_Match_Base.matcher_t ->
       Pulse_Checker_Prover_Base.preamble ->
         unit Pulse_Checker_Prover_Base.prover_state ->
-          Pulse_Syntax_Base.vprop ->
-            Pulse_Syntax_Base.vprop ->
+          Pulse_Syntax_Base.slprop ->
+            Pulse_Syntax_Base.slprop ->
               ((unit, unit, unit, unit)
                  Pulse_Checker_Prover_Match_Base.match_success_t
                  FStar_Pervasives_Native.option,
@@ -128,10 +128,11 @@ let rec (match_f_1n :
     Pulse_Checker_Prover_Match_Base.matcher_t ->
       Pulse_Checker_Prover_Base.preamble ->
         unit Pulse_Checker_Prover_Base.prover_state ->
-          Pulse_Syntax_Base.vprop ->
-            Pulse_Syntax_Base.vprop Prims.list ->
-              ((Pulse_Syntax_Base.vprop, Pulse_Syntax_Base.vprop Prims.list,
-                 unit, Pulse_Checker_Prover_Substs.ss_t, unit)
+          Pulse_Syntax_Base.slprop ->
+            Pulse_Syntax_Base.slprop Prims.list ->
+              ((Pulse_Syntax_Base.slprop,
+                 Pulse_Syntax_Base.slprop Prims.list, unit,
+                 Pulse_Checker_Prover_Substs.ss_t, unit)
                  FStar_Pervasives.dtuple5 FStar_Pervasives_Native.option,
                 unit) FStar_Tactics_Effect.tac_repr)
   =
@@ -480,7 +481,7 @@ let rec (match_f_1n :
                                                                     (Prims.of_int (93))
                                                                     (Prims.of_int (66))
                                                                     (Prims.of_int (108))
-                                                                    (Prims.of_int (59)))))
+                                                                    (Prims.of_int (60)))))
                                                                  (if
                                                                     Prims.op_Negation
                                                                     pst.Pulse_Checker_Prover_Base.allow_ambiguous
@@ -564,7 +565,7 @@ let rec (match_f_1n :
                                                                     ->
                                                                     if
                                                                     Prims.op_Negation
-                                                                    (FStar_Reflection_V2_TermEq.term_eq
+                                                                    (FStar_Reflection_TermEq.term_eq
                                                                     p p')
                                                                     then
                                                                     FStar_Tactics_Effect.raise
@@ -612,7 +613,7 @@ let rec (match_f_1n :
                                                                     (Prims.of_int (95))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (108))
-                                                                    (Prims.of_int (59)))))
+                                                                    (Prims.of_int (60)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -640,7 +641,7 @@ let rec (match_f_1n :
                                                                     (Prims.of_int (108))
                                                                     (Prims.of_int (6))
                                                                     (Prims.of_int (108))
-                                                                    (Prims.of_int (59)))))
+                                                                    (Prims.of_int (60)))))
                                                                     (if
                                                                     Pulse_RuntimeUtils.debug_at_level
                                                                     (Pulse_Typing_Env.fstar_env
@@ -1137,9 +1138,10 @@ let rec (match_f_1n :
 let report_ambig :
   'a .
     Pulse_Typing_Env.env ->
-      Pulse_Syntax_Base.vprop ->
-        Pulse_Syntax_Base.vprop ->
-          Pulse_Syntax_Base.vprop -> ('a, unit) FStar_Tactics_Effect.tac_repr
+      Pulse_Syntax_Base.slprop ->
+        Pulse_Syntax_Base.slprop ->
+          Pulse_Syntax_Base.slprop ->
+            ('a, unit) FStar_Tactics_Effect.tac_repr
   =
   fun g ->
     fun q ->
@@ -1523,8 +1525,8 @@ let rec (match_f_nn :
     Pulse_Checker_Prover_Match_Base.matcher_t ->
       Pulse_Checker_Prover_Base.preamble ->
         unit Pulse_Checker_Prover_Base.prover_state ->
-          Pulse_Syntax_Base.vprop Prims.list ->
-            Pulse_Syntax_Base.vprop Prims.list ->
+          Pulse_Syntax_Base.slprop Prims.list ->
+            Pulse_Syntax_Base.slprop Prims.list ->
               ((unit, unit, unit, unit)
                  Pulse_Checker_Prover_Match_Base.match_pass_result,
                 unit) FStar_Tactics_Effect.tac_repr)

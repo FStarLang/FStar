@@ -25,10 +25,10 @@ open Pulse.Checker.Prover.Base
 module T = FStar.Tactics.V2
 
 
-val elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_vprop)
+val elim_pure (#g:env) (#ctxt:term) (ctxt_typing:tot_typing g ctxt tm_slprop)
    : T.Tac (g':env { env_extends g' g } &
             ctxt':term &
-            tot_typing g' ctxt' tm_vprop &
+            tot_typing g' ctxt' tm_slprop &
             continuation_elaborator g ctxt g' ctxt')
 
 val elim_pure_pst (#preamble:_) (pst:prover_state preamble)

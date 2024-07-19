@@ -17,14 +17,14 @@ module Pulse.Lib.InvToken
 
 open Pulse.Lib.Pervasives
 
-val token (i:iref) (p:vprop) : Type u#4
+val token (i:iname) (p:slprop) : Type u#4
 
-val witness (i:iref) (#p:vprop)
+val witness (i:iname) (#p:slprop)
   : stt (token i p)
         (requires inv i p)
         (ensures fun _ -> emp)
 
-val recall (#i:iref) (#p:vprop) (t:token i p)
+val recall (#i:iname) (#p:slprop) (t:token i p)
   : stt unit
         (requires emp)
         (ensures fun _ -> inv i p)

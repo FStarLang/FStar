@@ -446,13 +446,13 @@ and (free_vars_binders :
                     (env',
                       (FStar_List_Tot_Base.op_At fvs
                          (FStar_List_Tot_Base.op_At fvs_attrs res)))))
-let (free_vars_vprop :
-  env_t -> PulseSyntaxExtension_Sugar.vprop -> FStar_Ident.ident Prims.list)
+let (free_vars_slprop :
+  env_t -> PulseSyntaxExtension_Sugar.slprop -> FStar_Ident.ident Prims.list)
   =
   fun env ->
     fun t ->
       match t.PulseSyntaxExtension_Sugar.v with
-      | PulseSyntaxExtension_Sugar.VPropTerm t1 -> free_vars_term env t1
+      | PulseSyntaxExtension_Sugar.SLPropTerm t1 -> free_vars_term env t1
 let (free_vars_comp :
   env_t ->
     PulseSyntaxExtension_Sugar.computation_type ->
@@ -462,7 +462,7 @@ let (free_vars_comp :
     fun c ->
       let ids =
         let uu___ =
-          free_vars_vprop env c.PulseSyntaxExtension_Sugar.precondition in
+          free_vars_slprop env c.PulseSyntaxExtension_Sugar.precondition in
         let uu___1 =
           let uu___2 =
             free_vars_term env c.PulseSyntaxExtension_Sugar.return_type in
@@ -471,7 +471,8 @@ let (free_vars_comp :
               let uu___5 =
                 push_bv env c.PulseSyntaxExtension_Sugar.return_name in
               FStar_Pervasives_Native.fst uu___5 in
-            free_vars_vprop uu___4 c.PulseSyntaxExtension_Sugar.postcondition in
+            free_vars_slprop uu___4
+              c.PulseSyntaxExtension_Sugar.postcondition in
           FStar_List_Tot_Base.op_At uu___2 uu___3 in
         FStar_List_Tot_Base.op_At uu___ uu___1 in
       FStar_Compiler_List.deduplicate FStar_Ident.ident_equals ids

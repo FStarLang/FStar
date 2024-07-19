@@ -17,24 +17,23 @@
 module Pulse.Lib.Trade
 
 open Pulse.Lib.Pervasives
-open Pulse.Lib.InvList
 
 module T = FStar.Tactics
 
 let trade_elim_t is hyp extra concl : Type u#4 =
   unit -> stt_ghost unit is (extra ** hyp) (fun _ -> concl)
 
-let trade_elim_exists (is:inames) (hyp extra concl:vprop) : vprop =
+let trade_elim_exists (is:inames) (hyp extra concl:slprop) : slprop =
   pure (squash (trade_elim_t is hyp extra concl))
 
-let trade (#is:inames) (hyp concl:vprop) =
+let trade (#is:inames) (hyp concl:slprop) =
   exists* extra. extra ** trade_elim_exists is hyp extra concl
 
 ```pulse
 ghost
 fn __intro_trade
   (#is:inames)
-  (hyp concl extra:vprop)
+  (hyp concl extra:slprop)
   (f_elim: unit -> (
     stt_ghost unit is
     (extra ** hyp)
@@ -49,40 +48,6 @@ fn __intro_trade
 }
 ```
 let intro_trade #is = __intro_trade #is
-
-```pulse
-ghost
-fn intro_trade_invs_aux
-  (#is:invlist)
-  (hyp concl extra:vprop)
-  (f_elim: unit -> (
-    stt_ghost unit emp_inames
-    (invlist_v is ** extra ** hyp)
-    (fun _ -> invlist_v is ** concl)
-  ))
-  requires invlist_inv is ** extra
-  ensures trade #(invlist_names is) hyp concl
-{
-  ghost
-  fn aux ()
-    requires ((invlist_inv is ** extra) ** hyp)
-    ensures concl
-    opens (invlist_names is)
-  {
-    ghost fn aux' ()
-      requires (invlist_v is ** (extra ** hyp))
-      ensures (invlist_v is ** concl)
-    {
-      f_elim ()
-    };
-    with_invlist is aux';
-    drop_ (invlist_inv _)
-  };
-  intro_trade #(invlist_names is) hyp concl (invlist_inv is ** extra) aux
-}
-```
-
-let intro_trade_invs #is = intro_trade_invs_aux #is
 
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
@@ -106,9 +71,9 @@ ensures emp
 
 ```pulse
 ghost
-fn deconstruct_trade (is:inames) (hyp concl: vprop)
+fn deconstruct_trade (is:inames) (hyp concl: slprop)
   requires trade #is hyp concl
-  returns res:(extra:erased vprop & trade_elim_t is hyp (reveal extra) concl)
+  returns res:(extra:erased slprop & trade_elim_t is hyp (reveal extra) concl)
   ensures reveal (dfst res)
 {
   unfold (trade #is hyp concl);
@@ -120,7 +85,7 @@ fn deconstruct_trade (is:inames) (hyp concl: vprop)
     FStar.Squash.join_squash pf;
   let f = pextract (trade_elim_t is hyp (reveal extra) concl) pf;
   let res =
-    (| (extra <: erased vprop), f |) <: (p:erased vprop & trade_elim_t is hyp (reveal p) concl);
+    (| (extra <: erased slprop), f |) <: (p:erased slprop & trade_elim_t is hyp (reveal p) concl);
   rewrite (reveal extra) as (reveal (dfst res));
   res
 }
@@ -130,7 +95,7 @@ fn deconstruct_trade (is:inames) (hyp concl: vprop)
 ghost
 fn elim_trade_aux
   (#is:inames)
-  (hyp concl:vprop)
+  (hyp concl:slprop)
   requires trade #is hyp concl ** hyp
   ensures concl
   opens is
@@ -148,7 +113,7 @@ ghost
 fn trade_sub_inv_aux
   (#is1:inames)
   (#is2:inames { inames_subset is1 is2 })
-  (hyp concl:vprop)
+  (hyp concl:slprop)
   requires trade #is1 hyp concl
   ensures trade #is2 hyp concl
 {
@@ -173,7 +138,7 @@ let trade_sub_inv = trade_sub_inv_aux
 ghost
 fn __trade_map
   (#is : inames)
-  (p q r : vprop)
+  (p q r : slprop)
   (f : unit -> stt_ghost unit emp_inames q (fun _ -> r))
   requires trade #is p q
   ensures  trade #is p r
@@ -196,7 +161,7 @@ let trade_map = __trade_map
 ghost
 fn __trade_compose
   (#is : inames)
-  (p q r : vprop)
+  (p q r : slprop)
   requires trade #is p q ** trade #is q r
   ensures  trade #is p r
 {

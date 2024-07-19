@@ -18,14 +18,13 @@ module Promises.Examples3
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
-open Pulse.Lib.InvList
 module GR = Pulse.Lib.GhostReference
 
 assume val done : ref bool
 assume val res : ref (option int)
 assume val claimed : GR.ref bool
 
-let inv_p : v:vprop { is_big v } =
+let inv_p : v:slprop { is_slprop3 v } =
   exists* (v_done:bool) (v_res:option int) (v_claimed:bool).
        pts_to done #0.5R v_done
     ** pts_to res #0.5R v_res
@@ -51,17 +50,17 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
 }
 ```
 
-let goal : vprop =
+let goal : slprop =
   exists* v_res. pts_to res #0.5R v_res ** pure (Some? v_res)
 
 
 ```pulse
 atomic
 fn proof
-   (i : iref) (_:unit)
+   (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R true ** GR.pts_to claimed #0.5R false
    ensures inv i inv_p ** pts_to done #0.5R true ** goal
-   opens add_inv emp_inames i
+   opens [i]
 {
   with_invariants i {
     unfold inv_p;
@@ -114,9 +113,7 @@ fn proof
 }
 ```
 
-let is (i:iref) : invlist = [(inv_p <: vprop), i]
-
-let cheat_proof (i:iref)
+let cheat_proof (i:iname)
   : (_:unit) ->
       stt_ghost unit (add_inv emp_inames i)
         (requires pts_to done #0.5R true ** (inv i inv_p ** GR.pts_to claimed #0.5R false))
@@ -128,7 +125,7 @@ let cheat_proof (i:iref)
 ```pulse
 fn setup (_:unit)
    requires pts_to done 'v_done ** pts_to res 'v_res ** GR.pts_to claimed 'v_claimed
-   returns i:iref
+   returns i:iname
    ensures pts_to done #0.5R false **
            pledge (add_inv emp_inames i) (pts_to done #0.5R true) goal
 {
@@ -160,7 +157,7 @@ fn setup (_:unit)
 
 [@@expect_failure] // block is not atomic/ghost
 ```pulse
-fn worker (i : iref) (_:unit)
+fn worker (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R false
    ensures  inv i inv_p ** pts_to done #0.5R true
 {

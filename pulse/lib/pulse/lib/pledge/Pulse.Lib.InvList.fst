@@ -47,11 +47,11 @@ fn rec dup_invlist_inv (is:invlist)
 ghost
 fn shift_invlist_one
   (#a:Type0)
-  (p : vprop)
-  (i : iref)
+  (p : slprop)
+  (i : iname)
   (is : invlist{not (mem_inv (invlist_names is) i)})
-  (#pre:vprop)
-  (#post : a -> vprop)
+  (#pre:slprop)
+  (#post : a -> slprop)
   (f : unit -> stt_ghost a emp_inames
                  (invlist_v (add_one ( p, i ) is) ** pre)
                  (fun v -> invlist_v (add_one ( p, i ) is) ** post v))
@@ -59,7 +59,7 @@ fn shift_invlist_one
   requires invlist_v is ** (p ** pre)
   returns v:a
   ensures invlist_v is ** (p ** post v)
-  opens emp_inames
+  opens []
 {
   rewrite
     (p ** invlist_v is)
@@ -76,7 +76,7 @@ fn shift_invlist_one
 
 ```pulse
 ghost
-fn rec with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
+fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
   (f : unit -> stt_ghost a emp_inames (invlist_v is ** pre) (fun v -> invlist_v is ** post v))
   requires invlist_inv is ** pre
@@ -96,8 +96,8 @@ fn rec with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
       rewrite (invlist_inv is) as (inv (snd h) (fst h) ** invlist_inv t);
       let r = with_invariants (snd h)
         returns v:a
-        ensures inv (snd h) (fst h) ** invlist_inv t ** post v
-        opens (add_inv (invlist_names t) (snd h)) {
+        ensures fst h ** invlist_inv t ** post v
+        opens (invlist_names t @@ [snd h]) {
         let fw : (unit -> stt_ghost a emp_inames
                             (invlist_v t ** (fst h ** pre))
                             (fun v -> invlist_v t ** (fst h ** post v))) = shift_invlist_one #a (fst h) (snd h) t #pre #post f;
@@ -111,14 +111,12 @@ fn rec with_invlist (#a:Type0) (#pre : vprop) (#post : a -> vprop)
 }
 ```
 
-let invlist_reveal = admit()
-
 ```pulse
 ghost
 fn iname_inj
-  (p1 p2 : vprop)
-  (i1 i2 : iref)
-  requires (inv i1 p1 ** inv i2 p2 ** pure (iname_of i1 = iname_of i2))
+  (p1 p2 : slprop)
+  (i1 i2 : iname)
+  requires (inv i1 p1 ** inv i2 p2 ** pure (i1 == i2))
   ensures (inv i1 p1 ** inv i2 p2 ** pure (p1 == p2))
 {
   invariant_name_identifies_invariant #p1 #p2 i1 i2;
@@ -127,9 +125,9 @@ fn iname_inj
 ```
 
 let invlist_mem_split (i : iname) (is : invlist)
-    (_ : squash (Set.mem i (invlist_names is)))
-    : squash (exists l r p (ii : iref).
-              iname_of ii == i /\
+    (_ : squash (FStar.GhostSet.mem i (invlist_names is)))
+    : squash (exists l r p (ii : iname).
+              ii == i /\
               is == l @ [( p, ii )] @ r)
   = admit()
 
@@ -156,7 +154,6 @@ fn __invlist_sub_split
     Cons h t -> {
       let p = fst h;
       let i = snd h;
-      let name = iname_of i;
       (* This is the interesting case, but it's rather hard to prove right now
       due to some pulse limitations (#151, #163). The idea is that (p, i) must
       also be in is2, so we can rewrite

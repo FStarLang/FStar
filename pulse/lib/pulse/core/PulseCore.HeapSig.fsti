@@ -4,8 +4,7 @@ open FStar.PCM
 module H2 = PulseCore.Heap2
 module ST = PulseCore.HoareStateMonad
 module CM = FStar.Algebra.CommMonoid
-let eset (i:eqtype) = erased (Set.set i)
-
+module Set = FStar.GhostSet
 let non_info (t:Type u#a) : Type u#a = x:erased t -> (y:t { y == reveal x })
 
 let core_ref: Type u#0 = H2.core_ref
@@ -15,20 +14,12 @@ let ref (a:Type u#a) (p:pcm a) = core_ref
 
 let core_ghost_ref : Type u#0 = H2.core_ghost_ref
 let ghost_ref (a:Type u#a) (p:pcm a) = core_ghost_ref
-
-noeq
-type lens (mem:Type u#a) (core:Type u#b) = {
-  get: mem -> core;
-  put: core -> mem -> mem;
-  get_put : (m:mem -> Lemma (put (get m) m == m));
-  put_get : (c:core -> m:mem -> Lemma (get (put c m) == c));
-  put_put : (c0:core -> c1:core -> m:mem -> Lemma (put c1 (put c0 m) == put c1 m));
-}
+let add (#a:Type) (f:Set.decide_eq a) (x:a) (y:Set.set a) = Set.union (Set.singleton f x) y
 
 noeq
 type separable (mem:Type u#a) = {
   core: Type u#a;
-  lens_core: lens mem core;
+  core_of: mem -> core;
   empty : core;
   disjoint : core -> core -> prop;
   join : (
@@ -70,13 +61,6 @@ type separable (mem:Type u#a) = {
     m0:core ->
     Lemma (disjoint m0 empty /\ join m0 empty == m0)
   );
-  join_empty_inverse : (
-    m0:core ->
-    m1:core ->
-    Lemma 
-    (requires disjoint m0 m1 /\ join m0 m1 == empty)
-    (ensures m0 == empty /\ m1 == empty)
-  )
 }
 
 let is_affine_mem_prop (#m:Type u#a) (sep:separable m) (p:sep.core -> prop)
@@ -120,7 +104,6 @@ type heap_sig : Type u#(a + 2) = {
     bprop : Type u#a;
     up: bprop -> slprop;
     down: slprop -> bprop;
-    non_info_bprop: non_info bprop;
     up_down: (
       p:bprop ->
       Lemma (down (up p) == p)
@@ -176,58 +159,74 @@ type heap_sig : Type u#(a + 2) = {
       (requires up (down p) == p /\ up (down q) == q)
       (ensures up (down (p `star` q)) == p `star` q)
     );
-    pts_to: (
-      #a:Type u#a ->
-      #p:pcm a ->
-      ref a p ->
-      a ->
-      slprop
-    );
+    // pts_to: (
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
-    ghost_pts_to: (
-      meta:bool ->
-      #a:Type u#a ->
-      #p:pcm a ->
-      ghost_ref a p ->
-      a ->
-      slprop
-    );
+    // ghost_pts_to: (
+    //   meta:bool ->
+    //   #a:Type u#a ->
+    //   #p:pcm a ->
+    //   ghost_ref a p ->
+    //   a ->
+    //   slprop
+    // );
 
-    iname:eqtype;
     iref:Type0;
+    deq_iref:FStar.GhostSet.decide_eq iref;
     non_info_iref: non_info iref;
-    iname_of: (i:iref -> GTot iname);
     inv : iref -> slprop -> slprop;
-    iname_ok: iname -> mem -> prop;
+    iname_ok: iref -> mem -> prop;
     dup_inv_equiv : (
       i:iref ->
       p:slprop ->
       Lemma (inv i p == (inv i p `star` inv i p))
     );
-    mem_invariant : eset iname -> mem -> slprop;
+    mem_invariant : Set.set iref -> mem -> slprop;
     inv_iname_ok : (
       i:iref ->
       p:slprop ->
       m:mem ->
       Lemma 
-        (requires interp (inv i p) (sep.lens_core.get m))
-        (ensures iname_ok (iname_of i) m)
+        (requires interp (inv i p) (sep.core_of m))
+        (ensures iname_ok i m)
     );
     mem_invariant_equiv : (
-      e:eset iname ->
+      e:Set.set iref ->
       m:mem ->
       i:iref ->
       p:slprop ->
       Lemma 
         (requires
-          interp (inv i p) (sep.lens_core.get m) /\
-          not (iname_of i `Set.mem` e))
+          interp (inv i p) (sep.core_of m) /\
+          ~(i `Set.mem` e))
         (ensures
           mem_invariant e m ==
-          mem_invariant (Set.add (iname_of i) e) m `star` p)
+          mem_invariant (add deq_iref i e) m `star` p)
+    );
+    iref_injective: (iref -> GTot bool);
+    iref_injectivity : (
+      i:iref ->
+      j:iref ->
+      p:slprop ->
+      q:slprop ->
+      m:mem ->
+      Lemma
+       (requires
+          iref_injective i /\
+          iref_injective j /\
+          interp (inv i p) (sep.core_of m) /\
+          interp (inv j q) (sep.core_of m))
+       (ensures
+         (p =!= q ==> i =!= j) /\
+         (i==j ==> p == q))
     );
 }
-
+let add_iref (#h:heap_sig) (i:h.iref) (s:GhostSet.set h.iref) = add h.deq_iref i s
 val emp_trivial (h:heap_sig u#a)
 : Lemma (forall m. h.interp h.emp m)
 
@@ -236,11 +235,13 @@ let boxable (h:heap_sig u#a) = p:h.slprop { is_boxable p }
 
 let core_of (#h:heap_sig) (m:h.mem)
 : h.sep.core
-= h.sep.lens_core.get m
+= h.sep.core_of m
 
-let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.lens_core.get m)
-let inames (hs:heap_sig u#h) = eset hs.iname
-let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem) = forall (i:hs.iname). i `Set.mem` is ==> hs.iname_ok i m
+let interpret (#h:heap_sig u#h) (p:h.slprop) : h.mem -> prop = fun m -> h.interp p (h.sep.core_of m)
+let inames (hs:heap_sig u#h) = Set.set hs.iref
+let inames_ok (#hs:heap_sig u#h) (is:inames hs) (m:hs.mem)
+: prop
+= forall (i:hs.iref). i `Set.mem` is ==> hs.iname_ok i m
 let full_mem (hs:heap_sig u#h) = m:hs.mem{ hs.full_mem_pred m }
 let maybe_ghost_action (chs:heap_sig u#m) (maybe_ghost:bool) (m0 m1:chs.mem)
     = maybe_ghost ==> chs.is_ghost_action m0 m1
@@ -405,3 +406,5 @@ val intro_pure_frame (#h:heap_sig u#h) (p:h.slprop) (q:prop) (_:squash q) (m:h.s
 : Lemma
   (requires h.interp p m)
   (ensures h.interp (p `h.star` h.pure q) m)
+
+let is_storable (#h:heap_sig) (p:h.slprop) = h.up (h.down p) == p

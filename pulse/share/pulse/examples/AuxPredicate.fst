@@ -23,9 +23,9 @@ module R = Pulse.Lib.Reference
    It could be improved by automated support for foldig & unfolding
    in the prover *)
 
-// Defining a vprop using F* syntax. We do not yet allow
-// writing Pulse syntax for vprops in predicates 
-let my_inv (b:bool) (r:R.ref int) : vprop
+// Defining a slprop using F* syntax. We do not yet allow
+// writing Pulse syntax for slprops in predicates 
+let my_inv (b:bool) (r:R.ref int) : slprop
   = exists* v.
       R.pts_to r v ** 
       pure ( (v==0 \/ v == 1) /\ b == (v = 0) )

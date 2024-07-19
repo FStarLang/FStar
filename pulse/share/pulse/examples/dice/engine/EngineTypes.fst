@@ -16,8 +16,4 @@
 
 module EngineTypes
 
-let uds_is_enabled : vprop 
-= admit()
-
-let uds_len : hashable_len 
-= assume (is_hashable_len 1sz); 1sz
+let uds_len : hashable_len  = 32sz

@@ -24,32 +24,32 @@ val cinv : Type0
 instance val non_informative_cinv
   : NonInformative.non_informative cinv
 
-val cinv_vp (c:cinv) (v:vprop) : vprop
+val cinv_vp (c:cinv) (v:slprop) : slprop
 
-val is_big_cinv_vp (c:cinv) (v:vprop)
-  : Lemma (is_big v ==> is_big (cinv_vp c v))
+val is_storable_cinv_vp (c:cinv) (v:slprop)
+  : Lemma (is_storable v ==> is_storable (cinv_vp c v))
 
-val active (c:cinv) (p:perm) : vprop
+val active (c:cinv) (p:perm) : slprop
 
-val active_is_small (c:cinv) (p:perm)
-  : Lemma (is_small (active c p))
-          [SMTPat (is_small (active c p))]
+val active_is_slprop2 (c:cinv) (p:perm)
+  : Lemma (is_slprop2 (active c p))
+          [SMTPat (is_slprop2 (active c p))]
 
-val iref_of (c:cinv) : GTot iref
+val iname_of (c:cinv) : GTot iname
 
-val new_cancellable_invariant (v:vprop { is_big v })
+val new_cancellable_invariant (v:slprop { is_storable v })
   : stt_ghost cinv emp_inames
       v
-      (fun c -> inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
+      (fun c -> inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
 
-val unpacked (c:cinv) (v:vprop) : vprop
+val unpacked (c:cinv) (v:slprop) : slprop
 
-val unpack_cinv_vp (#p:perm) (#v:vprop) (c:cinv)
+val unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   : stt_ghost unit emp_inames
       (cinv_vp c v ** active c p)
       (fun _ -> v ** unpacked c v ** active c p)
 
-val pack_cinv_vp (#v:vprop) (c:cinv)
+val pack_cinv_vp (#v:slprop) (c:cinv)
   : stt_ghost unit emp_inames
       (v ** unpacked c v)
       (fun _ -> cinv_vp c v)
@@ -76,7 +76,7 @@ val gather2 (c:cinv)
       (active c 0.5R ** active c 0.5R)
       (fun _ -> active c 1.0R)
 
-val cancel (#v:vprop) (c:cinv)
-  : stt_ghost unit (add_inv emp_inames (iref_of c))
-      (inv (iref_of c) (cinv_vp c v) ** active c 1.0R)
+val cancel (#v:slprop) (c:cinv)
+  : stt_ghost unit (add_inv emp_inames (iname_of c))
+      (inv (iname_of c) (cinv_vp c v) ** active c 1.0R)
       (fun _ -> v)

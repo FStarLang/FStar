@@ -31,14 +31,14 @@ val seq_list_match
   (#t #t': Type)
   (c: Seq.seq t)
   (v: list t')
-  (item_match: (t -> (v': t' { v' << v }) -> vprop))
-: Tot vprop
+  (item_match: (t -> (v': t' { v' << v }) -> slprop))
+: Tot slprop
 
 val seq_list_match_nil_intro
   (#t #t': Type)
   (c: Seq.seq t)
   (v: list t')
-  (item_match: (t -> (v': t' { v' << v }) -> vprop))
+  (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : stt_ghost unit emp_inames
     (pure (c `Seq.equal` Seq.empty /\
       Nil? v))
@@ -48,7 +48,7 @@ val seq_list_match_nil_elim
   (#t #t': Type)
   (c: Seq.seq t)
   (v: list t')
-  (item_match: (t -> (v': t' { v' << v }) -> vprop))
+  (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : stt_ghost unit emp_inames
     (seq_list_match c v item_match ** pure (
       c `Seq.equal` Seq.empty /\
@@ -72,7 +72,7 @@ val seq_list_match_cons_intro
   (a' : t')
   (c: Seq.seq t)
   (v: list t')
-  (item_match: (t -> (v': t' { v' << a' :: v }) -> vprop))
+  (item_match: (t -> (v': t' { v' << a' :: v }) -> slprop))
 : stt_ghost unit emp_inames
     (item_match a a' ** seq_list_match c v item_match)
     (fun _ -> seq_list_match (Seq.cons a c) (a' :: v) item_match)
@@ -81,7 +81,7 @@ val seq_list_match_cons_elim
   (#t #t': Type)
   (c: Seq.seq t)
   (v: list t' { Cons? v \/ Seq.length c > 0 })
-  (item_match: (t -> (v': t' { v' << v }) -> vprop))
+  (item_match: (t -> (v': t' { v' << v }) -> slprop))
 : stt_ghost (squash (Cons? v /\ Seq.length c > 0))
     emp_inames
     (seq_list_match c v item_match)
@@ -93,7 +93,7 @@ val seq_list_match_weaken
   (#t #t': Type)
   (c: Seq.seq t)
   (v: list t')
-  (item_match1 item_match2: (t -> (v': t' { v' << v }) -> vprop))
+  (item_match1 item_match2: (t -> (v': t' { v' << v }) -> slprop))
   (prf: (
     (c': t) ->
     (v': t' { v' << v }) ->
@@ -113,15 +113,15 @@ high-level values, because no lemma ensures that `Seq.index s i << s`  *)
 
 val seq_seq_match
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: Seq.seq t2)
   (i j: nat)
-: Tot vprop
+: Tot slprop
 
 val seq_seq_match_length
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
@@ -131,7 +131,7 @@ val seq_seq_match_length
 
 val seq_seq_match_weaken
   (#t1 #t2: Type)
-  (p p': t1 -> t2 -> vprop)
+  (p p': t1 -> t2 -> slprop)
   (w: ((x1: t1) -> (x2: t2) -> stt_ghost unit emp_inames
     (p x1 x2) (fun _ -> p' x1 x2)
   ))
@@ -151,7 +151,7 @@ val seq_seq_match_weaken
 
 val seq_seq_match_weaken_with_implies
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c1 c1': Seq.seq t1)
   (c2 c2': Seq.seq t2)
   (i j: nat)
@@ -172,7 +172,7 @@ val seq_seq_match_weaken_with_implies
 
 val seq_seq_match_seq_list_match
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
 : stt_ghost unit emp_inames
@@ -183,7 +183,7 @@ val seq_seq_match_seq_list_match
 
 val seq_list_match_seq_seq_match
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
 : stt_ghost unit emp_inames
@@ -194,7 +194,7 @@ val seq_list_match_seq_seq_match
 
 val seq_seq_match_seq_list_match_with_implies
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
 : stt_ghost unit emp_inames
@@ -205,7 +205,7 @@ val seq_seq_match_seq_list_match_with_implies
 
 val seq_list_match_seq_seq_match_with_implies
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
 : stt_ghost unit emp_inames
@@ -216,7 +216,7 @@ val seq_list_match_seq_seq_match_with_implies
 
 val seq_list_match_length
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (c: Seq.seq t1)
   (l: list t2)
 : stt_ghost unit emp_inames
@@ -227,7 +227,7 @@ val seq_list_match_length
 
 val seq_list_match_index
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: list t2)
   (i: nat)
@@ -247,7 +247,7 @@ ghost
 fn rec
 seq_list_match_append_intro
   (#t #t': Type0) // FIXME: universe polymorphism
-  (item_match: (t -> t' -> vprop))
+  (item_match: (t -> t' -> slprop))
   (c1: Seq.seq t)
   (l1: list t')
   (c2: Seq.seq t)
@@ -283,7 +283,7 @@ ghost
 fn rec
 seq_list_match_append_elim
   (#t #t': Type0) // FIXME: universe polymorphism
-  (item_match: (t -> t' -> vprop))
+  (item_match: (t -> t' -> slprop))
   (c1: Seq.seq t)
   (l1: list t')
   (c2: Seq.seq t)
@@ -340,17 +340,17 @@ let seq_map (#t1 #t2: Type) (f: t1 -> t2) (s: Seq.seq t1) : Tot (Seq.seq t2) =
 
 let item_match_option
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (x1: t1)
   (x2: option t2)
-: Tot vprop
+: Tot slprop
 = match x2 with
   | None -> emp
   | Some x2' -> p x1 x2'
 
 val seq_seq_match_item_match_option_elim
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
@@ -360,7 +360,7 @@ val seq_seq_match_item_match_option_elim
 
 val seq_seq_match_item_match_option_intro
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
@@ -370,7 +370,7 @@ val seq_seq_match_item_match_option_intro
 
 val seq_seq_match_item_match_option_init
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s: Seq.seq t1)
 : stt_ghost unit emp_inames
     emp
@@ -378,7 +378,7 @@ val seq_seq_match_item_match_option_init
 
 val seq_seq_match_upd
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq t2)
   (i j: nat)
@@ -396,7 +396,7 @@ val seq_seq_match_upd
     
 val seq_seq_match_item_match_option_upd
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq (option t2))
   (i j: nat)
@@ -414,7 +414,7 @@ val seq_seq_match_item_match_option_upd
 
 val seq_seq_match_item_match_option_index
   (#t1 #t2: Type)
-  (p: t1 -> t2 -> vprop)
+  (p: t1 -> t2 -> slprop)
   (s1: Seq.seq t1)
   (s2: Seq.seq (option t2))
   (i j: nat)

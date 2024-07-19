@@ -26,18 +26,18 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
 open Pulse.Lib
 
-assume val p : vprop
-assume val q : vprop
-assume val r : vprop
+assume val p : slprop
+assume val q : slprop
+assume val r : slprop
 
 assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 atomic
-fn g (i:iref)
-  requires (inv i p ** q)
-  ensures (r ** inv i p)
-  opens (add_inv emp_inames i)
+fn g (i:iname)
+  requires inv i p ** q
+  ensures  r ** inv i p
+  opens [i]
 {
   with_invariants i {
     f ()
@@ -45,14 +45,31 @@ fn g (i:iref)
 }
 ```
 
+#push-options "--fuel 0"
+(* Does it work without fuel? Requires the iname_list coercion
+to normalize away. *)
+```pulse
+atomic
+fn g2 (i:iname)
+  requires inv i p ** q
+  ensures  r ** inv i p
+  opens [i]
+{
+  with_invariants i {
+    f ()
+  }
+}
+```
+#pop-options
+
 assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
 ```pulse
 ghost
-fn g_ghost (i:iref)
+fn g_ghost (i:iname)
   requires (inv i p ** q)
   ensures (r ** inv i p)
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   with_invariants i {
     f_ghost ()
@@ -60,7 +77,7 @@ fn g_ghost (i:iref)
 }
 ```
 
-let test (i:iref) = assert (
+let test (i:iname) = assert (
   add_inv emp_inames i
   ==
   join_inames (add_inv emp_inames i) emp_inames
@@ -83,7 +100,7 @@ fn test_atomic (r : ref int)
 ```pulse
 fn package (r:ref int)
    requires pts_to r 123
-   returns i : iref
+   returns i : iname
    ensures inv i (pts_to r 123)
 {
   let i = new_invariant (pts_to r 123);
@@ -100,8 +117,8 @@ fn test2 ()
   let i = new_invariant (exists* v. pts_to r v);
   with_invariants i
     returns _:unit
-    ensures inv i (exists* v. pts_to r v)
-    opens (add_inv emp_inames i) {
+    ensures (exists* v. pts_to r v)
+    opens [i] {
       atomic_write_int r 1;
   };
   drop_ (inv i _)
@@ -131,10 +148,10 @@ fn test3 ()
 //
 ```pulse
  ghost
- fn t00 () (i:iref)
+ fn t00 () (i:iname)
    requires (inv i emp)
    ensures (inv i emp)
-   opens (add_inv emp_inames i)
+   opens [i]
  {
   ()
  }
@@ -142,10 +159,10 @@ fn test3 ()
 
 ```pulse
 atomic
-fn t0 () (i:iref)
+fn t0 () (i:iname)
   requires inv i emp
   ensures inv i emp
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   with_invariants i {
     ()
@@ -154,8 +171,8 @@ fn t0 () (i:iref)
 ```
 
 
-assume val i : iref
-assume val i2 : iref
+assume val i : iname
+assume val i2 : iname
 
 ```pulse
 ghost
@@ -174,7 +191,7 @@ atomic
 fn t1 ()
   requires inv i emp
   ensures inv i emp
-  opens emp_inames
+  opens []
 {
   with_invariants i {
     ()
@@ -188,7 +205,7 @@ atomic
 fn t3 ()
   requires inv i emp
   ensures inv i emp
-  opens (add_inv (add_inv emp_inames i) i2)
+  opens [i; i2]
 {
   with_invariants i {
     ()
@@ -206,7 +223,7 @@ fn t2 ()
   let j = new_invariant emp;
   with_invariants j 
     returns _:unit
-    ensures inv j emp {
+    ensures emp {
     ()
   };
   drop_ (inv j _);
@@ -217,19 +234,19 @@ fn t2 ()
 assume val p_to_q : unit -> stt_atomic unit emp_inames p (fun _ -> p ** q)
 assume val ghost_p_to_q : unit -> stt_ghost unit emp_inames p (fun _ -> p ** q)
 
-let folded_inv (i:iref) = inv i p
+let folded_inv (i:iname) = inv i p
 
 ```pulse
 atomic
-fn test_returns0 (i:iref) (b:bool)
+fn test_returns0 (i:iname) (b:bool)
   requires folded_inv i
   ensures folded_inv i ** q
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q {
+    ensures p ** q {
     if b {
       p_to_q ()
     } else {
@@ -242,15 +259,38 @@ fn test_returns0 (i:iref) (b:bool)
 
 ```pulse
 ghost
-fn test_returns1 (i:iref)
+fn test_returns1 (i:iname)
   requires folded_inv i
   ensures folded_inv i ** q
-  opens (add_inv emp_inames i)
+  opens [i]
 {
   unfold folded_inv i;
   with_invariants i
     returns _:unit
-    ensures inv i p ** q {
+    ensures p ** q {
+    ghost_p_to_q ()
+  };
+  fold folded_inv i
+}
+```
+
+(* Testing that the with_invariants checker respects
+pulse_unfold. *)
+
+[@@pulse_unfold]
+let pp = p
+
+```pulse
+ghost
+fn test_returns2 (i:iname)
+  requires folded_inv i
+  ensures folded_inv i ** q
+  opens [i]
+{
+  unfold folded_inv i;
+  with_invariants i
+    returns _:unit
+    ensures pp ** q {
     ghost_p_to_q ()
   };
   fold folded_inv i

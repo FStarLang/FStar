@@ -19,9 +19,12 @@ RUN apt-get update \
       libgmp-dev \
       opam \
       vim \
+      pkg-config \
     && apt-get clean -y
 # FIXME: libgmp-dev should be installed automatically by opam,
 # but it is not working, so just adding it above.
+# Same for pkg-config. OPAM prompts even if we're giving --yes
+# and setting OPAMYES.
 
 # Create a new user and give them sudo rights
 ARG USER=vscode

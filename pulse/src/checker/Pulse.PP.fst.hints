@@ -1,0 +1,27 @@
+[
+  "\u0002¢vÔíÙùÛ∞N—Ñ‹¶ˆà",
+  [
+    [
+      "Pulse.PP.printable_option",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "e4d6cd9c3dbf47a522dafbc9f4f74036"
+    ],
+    [
+      "Pulse.PP.separate_map",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
+        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "685a664fdcfb529e27d8470869aebdf4"
+    ]
+  ]
+]

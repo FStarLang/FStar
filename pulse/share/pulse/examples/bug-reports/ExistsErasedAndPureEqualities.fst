@@ -19,7 +19,7 @@ open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
 assume
-val some_pred (x:R.ref int) (v:int) : vprop
+val some_pred (x:R.ref int) (v:int) : slprop
 
 //Intro exists* with an erased variable fails
 [@@expect_failure]

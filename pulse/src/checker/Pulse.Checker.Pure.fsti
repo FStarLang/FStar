@@ -30,7 +30,7 @@ module RU = Pulse.RuntimeUtils
 let push_context (ctx:string) (r:range) (g:env) : (g':env { g == g' })
   = push_context g ctx r
 
-val instantiate_term_implicits (g:env) (t:term)
+val instantiate_term_implicits (g:env) (t:term) (expected: option typ)
   : T.Tac (term & term)
 
 val instantiate_term_implicits_uvs (g:env) (t:term)
@@ -69,13 +69,13 @@ val core_check_term (g:env) (e:term) (eff:T.tot_or_ghost) (t:term)
 val core_check_term_at_type (g:env) (e:term) (t:term)
   : T.Tac (eff:T.tot_or_ghost & typing g e eff t)
 
-val check_vprop (g:env)
+val check_slprop (g:env)
                 (t:term)
-  : T.Tac (t:term & tot_typing g t tm_vprop)
+  : T.Tac (t:term & tot_typing g t tm_slprop)
 
-val check_vprop_with_core (g:env)
+val check_slprop_with_core (g:env)
                           (t:term)
-  : T.Tac (tot_typing g t tm_vprop)
+  : T.Tac (tot_typing g t tm_slprop)
 
 val try_get_non_informative_witness (g:env) (u:universe) (t:term)
   (t_typing:universe_of g t u)

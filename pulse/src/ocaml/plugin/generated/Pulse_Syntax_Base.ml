@@ -55,7 +55,7 @@ let (__proj__Mkfv__item__fv_range : fv -> range) =
 let (as_fv : FStar_Reflection_Types.name -> fv) =
   fun l -> { fv_name = l; fv_range = FStar_Range.range_0 }
 type term = FStar_Reflection_Types.term
-type vprop = term
+type slprop = term
 type typ = term
 type binder =
   {
@@ -78,15 +78,15 @@ let (__proj__Mkbinder__item__binder_attrs :
 type st_comp = {
   u: universe ;
   res: term ;
-  pre: vprop ;
-  post: vprop }
+  pre: slprop ;
+  post: slprop }
 let (__proj__Mkst_comp__item__u : st_comp -> universe) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> u
 let (__proj__Mkst_comp__item__res : st_comp -> term) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> res
-let (__proj__Mkst_comp__item__pre : st_comp -> vprop) =
+let (__proj__Mkst_comp__item__pre : st_comp -> slprop) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> pre
-let (__proj__Mkst_comp__item__post : st_comp -> vprop) =
+let (__proj__Mkst_comp__item__post : st_comp -> slprop) =
   fun projectee -> match projectee with | { u; res; pre; post;_} -> post
 type observability =
   | Neutral 
@@ -243,15 +243,15 @@ let (ctag_of_effect_annot :
     | EffectAnnotAtomic uu___ -> FStar_Pervasives_Native.Some STT_Atomic
     | EffectAnnotAtomicOrGhost uu___ -> FStar_Pervasives_Native.None
 type proof_hint_type__ASSERT__payload = {
-  p: vprop }
+  p: slprop }
 and proof_hint_type__FOLD__payload =
   {
   names: Prims.string Prims.list FStar_Pervasives_Native.option ;
-  p1: vprop }
+  p1: slprop }
 and proof_hint_type__UNFOLD__payload =
   {
   names1: Prims.string Prims.list FStar_Pervasives_Native.option ;
-  p2: vprop }
+  p2: slprop }
 and proof_hint_type__RENAME__payload =
   {
   pairs: (term * term) Prims.list ;
@@ -259,8 +259,8 @@ and proof_hint_type__RENAME__payload =
   tac_opt: term FStar_Pervasives_Native.option }
 and proof_hint_type__REWRITE__payload =
   {
-  t1: vprop ;
-  t2: vprop ;
+  t1: slprop ;
+  t2: slprop ;
   tac_opt1: term FStar_Pervasives_Native.option }
 and proof_hint_type =
   | ASSERT of proof_hint_type__ASSERT__payload 
@@ -271,14 +271,14 @@ and proof_hint_type =
   | WILD 
   | SHOW_PROOF_STATE of range 
 let (__proj__Mkproof_hint_type__ASSERT__payload__item__p :
-  proof_hint_type__ASSERT__payload -> vprop) =
+  proof_hint_type__ASSERT__payload -> slprop) =
   fun projectee -> match projectee with | { p;_} -> p
 let (__proj__Mkproof_hint_type__FOLD__payload__item__names :
   proof_hint_type__FOLD__payload ->
     Prims.string Prims.list FStar_Pervasives_Native.option)
   = fun projectee -> match projectee with | { names; p1 = p;_} -> names
 let (__proj__Mkproof_hint_type__FOLD__payload__item__p :
-  proof_hint_type__FOLD__payload -> vprop) =
+  proof_hint_type__FOLD__payload -> slprop) =
   fun projectee -> match projectee with | { names; p1 = p;_} -> p
 let (__proj__Mkproof_hint_type__UNFOLD__payload__item__names :
   proof_hint_type__UNFOLD__payload ->
@@ -287,7 +287,7 @@ let (__proj__Mkproof_hint_type__UNFOLD__payload__item__names :
   fun projectee ->
     match projectee with | { names1 = names; p2 = p;_} -> names
 let (__proj__Mkproof_hint_type__UNFOLD__payload__item__p :
-  proof_hint_type__UNFOLD__payload -> vprop) =
+  proof_hint_type__UNFOLD__payload -> slprop) =
   fun projectee -> match projectee with | { names1 = names; p2 = p;_} -> p
 let (__proj__Mkproof_hint_type__RENAME__payload__item__pairs :
   proof_hint_type__RENAME__payload -> (term * term) Prims.list) =
@@ -300,11 +300,11 @@ let (__proj__Mkproof_hint_type__RENAME__payload__item__tac_opt :
   fun projectee ->
     match projectee with | { pairs; goal; tac_opt;_} -> tac_opt
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__t1 :
-  proof_hint_type__REWRITE__payload -> vprop) =
+  proof_hint_type__REWRITE__payload -> slprop) =
   fun projectee ->
     match projectee with | { t1; t2; tac_opt1 = tac_opt;_} -> t1
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__t2 :
-  proof_hint_type__REWRITE__payload -> vprop) =
+  proof_hint_type__REWRITE__payload -> slprop) =
   fun projectee ->
     match projectee with | { t1; t2; tac_opt1 = tac_opt;_} -> t2
 let (__proj__Mkproof_hint_type__REWRITE__payload__item__tac_opt :
@@ -391,19 +391,19 @@ and st_term'__Tm_If__payload =
   b1: term ;
   then_: st_term ;
   else_: st_term ;
-  post1: vprop FStar_Pervasives_Native.option }
+  post1: slprop FStar_Pervasives_Native.option }
 and st_term'__Tm_Match__payload =
   {
   sc: term ;
-  returns_: vprop FStar_Pervasives_Native.option ;
+  returns_: slprop FStar_Pervasives_Native.option ;
   brs: (pattern * st_term) Prims.list }
 and st_term'__Tm_IntroPure__payload = {
   p3: term }
 and st_term'__Tm_ElimExists__payload = {
-  p4: vprop }
+  p4: slprop }
 and st_term'__Tm_IntroExists__payload =
   {
-  p5: vprop ;
+  p5: slprop ;
   witnesses: term Prims.list }
 and st_term'__Tm_While__payload =
   {
@@ -450,7 +450,7 @@ and st_term'__Tm_WithInv__payload =
   {
   name1: term ;
   body6: st_term ;
-  returns_inv: (binder * vprop * term) FStar_Pervasives_Native.option }
+  returns_inv: (binder * slprop * term) FStar_Pervasives_Native.option }
 and st_term' =
   | Tm_Return of st_term'__Tm_Return__payload 
   | Tm_Abs of st_term'__Tm_Abs__payload 
@@ -605,9 +605,9 @@ let (mk_binder_ppname : term -> ppname -> binder) =
     fun binder_ppname ->
       mk_binder_with_attrs binder_ty binder_ppname (binder_attrs_default ())
 let (eq_univ : universe -> universe -> Prims.bool) =
-  fun u1 -> fun u2 -> FStar_Reflection_V2_TermEq.univ_eq_dec u1 u2
+  fun u1 -> fun u2 -> FStar_Reflection_TermEq.univ_eq_dec u1 u2
 let (eq_tm : term -> term -> Prims.bool) =
-  fun t1 -> fun t2 -> FStar_Reflection_V2_TermEq.term_eq_dec t1 t2
+  fun t1 -> fun t2 -> FStar_Reflection_TermEq.term_eq_dec t1 t2
 let (eq_st_comp : st_comp -> st_comp -> Prims.bool) =
   fun s1 ->
     fun s2 ->
@@ -869,8 +869,8 @@ let (universe_of_comp : comp_st -> FStar_Reflection_Types.universe) =
     match c with
     | C_ST uu___ -> FStar_Reflection_Typing.u_zero
     | uu___ -> Pulse_Reflection_Util.u_atomic_ghost (comp_u c)
-let (comp_pre : comp -> vprop) = fun c -> (st_comp_of_comp c).pre
-let (comp_post : comp -> vprop) = fun c -> (st_comp_of_comp c).post
+let (comp_pre : comp -> slprop) = fun c -> (st_comp_of_comp c).pre
+let (comp_post : comp -> slprop) = fun c -> (st_comp_of_comp c).post
 let (comp_inames : comp -> term) =
   fun c ->
     match c with

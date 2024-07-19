@@ -921,28 +921,28 @@ let tot_typing_ln
     (ensures ln e /\ ln t)
   = tot_or_ghost_typing_ln d
 
-let rec vprop_equiv_ln (#g:_) (#t0 #t1:_) (v:vprop_equiv g t0 t1)
+let rec slprop_equiv_ln (#g:_) (#t0 #t1:_) (v:slprop_equiv g t0 t1)
   : Lemma (ensures ln t0 <==> ln t1)
           (decreases v)
   = match v with
     | VE_Refl _ _ -> ()
     | VE_Sym _ _ _ v' -> 
-      vprop_equiv_ln v'
+      slprop_equiv_ln v'
     | VE_Trans g t0 t2 t1 v02 v21 ->
-      vprop_equiv_ln v02;
-      vprop_equiv_ln v21
+      slprop_equiv_ln v02;
+      slprop_equiv_ln v21
     | VE_Ctxt g s0 s1 s0' s1' v0 v1 ->
-      vprop_equiv_ln v0;
-      vprop_equiv_ln v1
+      slprop_equiv_ln v0;
+      slprop_equiv_ln v1
     | VE_Unit g t -> ()
     | VE_Comm g t0 t1 -> ()
     | VE_Assoc g t0 t1 t2 -> ()
     | VE_Ext g t0 t1 token ->
-      let d0, d1 = vprop_eq_typing_inversion _ _ _ token in
+      let d0, d1 = slprop_eq_typing_inversion _ _ _ token in
       tot_or_ghost_typing_ln d0;
       tot_or_ghost_typing_ln d1
     | VE_Fa g x u b t0' t1' d ->
-      vprop_equiv_ln d;
+      slprop_equiv_ln d;
       let xtm = (term_of_nvar (v_as_nv x)) in
       introduce ln t0 ==> ln t1
       with _ . (
@@ -963,10 +963,10 @@ let st_equiv_ln #g #c1 #c2 (d:st_equiv g c1 c2)
     (requires ln_c c1)
     (ensures ln_c c2)
   = match d with
-    | ST_VPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
-      vprop_equiv_ln eq_pre;
+    | ST_SLPropEquiv _ _ _ x (E dpre) _dres _dpost eq_res eq_pre eq_post ->
+      slprop_equiv_ln eq_pre;
       open_term_ln_inv' (comp_post c1) (term_of_no_name_var x) 0;
-      vprop_equiv_ln eq_post;
+      slprop_equiv_ln eq_post;
       rt_equiv_ln _ _ _ eq_res;
       open_term_ln' (comp_post c2) (term_of_no_name_var x) 0
 
@@ -1174,7 +1174,7 @@ let rec st_typing_ln (#g:_) (#t:_) (#c:_)
 
     | T_Rewrite _ _ _ p_typing equiv_p_q ->
       tot_or_ghost_typing_ln p_typing;
-      vprop_equiv_ln equiv_p_q
+      slprop_equiv_ln equiv_p_q
 
     | T_WithLocal g _ init body init_t c x init_typing init_t_typing c_typing body_typing ->
       tot_or_ghost_typing_ln init_typing;

@@ -95,13 +95,13 @@ ensures exists* v. pts_to x v
 ```
 
 //lock_inv$
-let contributions (left right: GR.ref int) (i v:int) : v:vprop { is_big v }=
+let contributions (left right: GR.ref int) (i v:int) : v:slprop { is_slprop3 v }=
   exists* (vl vr:int).
     GR.pts_to left #0.5R vl **
     GR.pts_to right #0.5R vr **
     pure (v == i + vl + vr)
 
-let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:vprop { is_big v } =
+let lock_inv (x:ref int) (init:int) (left right:GR.ref int) : v:slprop { is_slprop3 v } =
   exists* v. 
     pts_to x v **
     contributions left right init v
@@ -192,7 +192,7 @@ ensures  pts_to x ('i + 2)
 ```pulse //incr$
 fn incr (x: ref int)
         (#p:perm)
-        (#refine #aspec: int -> vprop)
+        (#refine #aspec: int -> slprop)
         (l:L.lock)
         (ghost_steps: 
           (v:int -> vq:int -> stt_ghost unit
@@ -310,25 +310,25 @@ module C = Pulse.Lib.CancellableInvariant
 fn incr_atomic
         (x: ref int)
         (#p:perm)
-        (#refine #aspec: int -> vprop)
+        (#refine #aspec: int -> slprop)
         (c:C.cinv)
         (f: (v:int -> vq:int -> stt_ghost unit
                   emp_inames
                   (refine v ** aspec vq ** pts_to x (v + 1))
                   (fun _ -> refine (v + 1) ** aspec (vq + 1) ** pts_to x (v + 1))))
-requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
-ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
+requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec 'i ** C.active c p
+ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** aspec ('i + 1) ** C.active c p
 //incr_atomic_body$
 {
   //incr_atomic_body_read$
   atomic
   fn read ()
-  requires inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
+  requires inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
   returns v:int
-  ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
-  opens (add_inv emp_inames (C.iref_of c))
+  ensures inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** C.active c p
+  opens [C.iname_of c]
   {
-    with_invariants (C.iref_of c)
+    with_invariants (C.iname_of c)
     {
         C.unpack_cinv_vp #p c;
         let v = atomic_read x;
@@ -347,36 +347,37 @@ ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) ** a
     b
   )
   invariant b.
-    inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
+    inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v)) **
     pts_to continue b **
     C.active c p **
     cond b (aspec 'i) (aspec ('i + 1))
   {
     let v = read ();
     let next = 
-      with_invariants (C.iref_of c)
+      with_invariants (C.iname_of c)
       returns b1:bool
-      ensures inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** refine v))
+      ensures C.cinv_vp c (exists* v. pts_to x v ** refine v)
           ** cond b1 (aspec 'i) (aspec ('i + 1))
           ** pts_to continue true
           ** C.active c p
       {
         C.unpack_cinv_vp c;
+        unfold cond;
         let b = cas x v (v + 1);
         if b
         { 
-          elim_cond_true b _ _;
-          elim_cond_true true _ _;
+          unfold cond;
           with vv. assert (refine vv);
           f vv _;
-          intro_cond_false (aspec 'i) (aspec ('i + 1));
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
+          fold (cond false (aspec 'i) (aspec ('i + 1)));
           false
         }
         else
         {
-          with p q. rewrite (cond b p q) as q;
+          unfold cond;
           C.pack_cinv_vp #(exists* v. pts_to x v ** refine v) c;
+          fold (cond true (aspec 'i) (aspec ('i + 1)));
           true
         }
       };
@@ -438,8 +439,8 @@ ensures pts_to x ('i + 2)
       }
     };
     C.share2 c;
-    with pred. assert (inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
-    dup_inv (C.iref_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
+    with pred. assert (inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v)));
+    dup_inv (C.iname_of c) (C.cinv_vp c (exists* v. pts_to x v ** pred v));
     par (fun _ -> incr_atomic x c (step left true))
         (fun _ -> incr_atomic x c (step right false));
     
@@ -548,11 +549,11 @@ fn gather (r:ghost_pcm_ref pcm) (#n1 #n2:int1) (#v1 #v2:int1)
 }
 ```
 
-let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:vprop { is_big v } =
+let lock_inv_ghost (ghost_r:ghost_pcm_ref pcm) (n:int) : v:slprop { is_slprop3 v } =
   exists* n1 n2. ghost_pcm_pts_to ghost_r (half n1, half n2) **
                  pure (n == U.downgrade_val n1 + U.downgrade_val n2)
 
-let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:vprop { is_big v } =
+let lock_inv_pcm (r:ref int) (ghost_r:ghost_pcm_ref pcm) : v:slprop { is_slprop3 v } =
   exists* n. pts_to r n ** lock_inv_ghost ghost_r n
 
 let t1_perm (ghost_r:ghost_pcm_ref pcm) (n:int1) (t1:bool) =
@@ -671,10 +672,10 @@ fn incr_pcm (r:ref int) (#n:erased int)
 
 ```pulse
 fn incr_pcm_t_abstract (r:ref int) (l:L.lock)
-  (#ghost_inv:int -> vprop)
-  (#ghost_pre:vprop)
-  (#ghost_post:vprop)
-  ($ghost_steps:
+  (#ghost_inv:int -> slprop)
+  (#ghost_pre:slprop)
+  (#ghost_post:slprop)
+  (ghost_steps:
      (v:int ->
       stt_ghost unit emp_inames
         (ghost_pre ** ghost_inv v)

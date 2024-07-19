@@ -21,16 +21,9 @@ open Pulse.Lib.BigReference
 module B = Pulse.Lib.BigReference
 module L = Pulse.Lib.SpinLock
 
-let thunk (p q : small_vprop) = unit -> stt unit (up2 p) (fun _ -> up2 q)
-let closure = (p:small_vprop & q:small_vprop & thunk p q)
+let thunk (p q : slprop2_base) = unit -> stt unit (up2 p) (fun _ -> up2 q)
+let closure = (p:slprop2_base & q:slprop2_base & thunk p q)
 let closure_list = B.ref (list closure)
-let vprop0 = v:vprop { is_small v }
-
-//
-// This is proven in memory, needs to be propagated up to core
-//
-assume val _small_is_small
-  : squash (forall (v:small_vprop).{:pattern is_small (up2 v) } is_small (up2 v))
 
 ```pulse
 fn mk_closure_list ()
@@ -43,7 +36,7 @@ ensures B.pts_to r []
 ```
 
 let mk_closure
-    (#p #q:vprop0)
+    (#p #q:slprop2)
     (f: unit -> stt unit p (fun _ -> q))
 : closure
 = (| down2 p, down2 q, f |)
@@ -51,7 +44,7 @@ let mk_closure
 
 ```pulse
 fn push (l:closure_list)
-        (#p #q:vprop0)
+        (#p #q:slprop2)
         (f: unit -> stt unit p (fun _ -> q))
 requires B.pts_to l 'xs
 ensures B.pts_to l (mk_closure f :: 'xs)
@@ -62,11 +55,12 @@ ensures B.pts_to l (mk_closure f :: 'xs)
 }
 ```
 
-let pre_of (c:closure) =
+let pre_of (c:closure) : slprop2 =
   let (| p, _, _ |) = c in
+  up2_is_slprop2 p;
   up2 p
 
-let rec inv (l:list closure) : v:vprop { is_small v } =
+let rec inv (l:list closure) : v:slprop { is_slprop2 v } =
   match l with
   | [] -> emp
   | hd :: tl -> pre_of hd ** inv tl
@@ -117,7 +111,7 @@ ensures pre_of c ** inv tl
 }
 ```
 
-let lock_inv (r:closure_list) : v:vprop { is_big v } =
+let lock_inv (r:closure_list) : v:slprop { is_slprop3 v } =
   exists* (l:list closure). 
     B.pts_to r l **
     inv l

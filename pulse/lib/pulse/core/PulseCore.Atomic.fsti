@@ -250,10 +250,13 @@ val ghost_reveal (a:Type) (x:erased a)
 val dup_inv (i:iref) (p:slprop)
   : stt_ghost unit emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
-val new_invariant (p:big_vprop)
+val new_invariant (p:slprop3)
   : stt_ghost iref emp_inames p (fun i -> inv i p)
 
-val fresh_invariant (ctx:list iref) (p:big_vprop)
+val new_storable_invariant (p:slprop2)
+  : stt_ghost (i:iref { storable_iref i }) emp_inames p (fun i -> inv i p)
+
+val fresh_invariant (ctx:list iref) (p:slprop3)
 : stt_ghost (i:iref { i `fresh_wrt` ctx })
             emp_inames
             p
@@ -289,7 +292,7 @@ val distinct_invariants_have_distinct_names
     (i j:iref)
     (_:squash (p =!= q))
 : stt_ghost
-    (squash (iname_of i =!= iname_of j))
+    (squash (i =!= j))
     emp_inames
     ((inv i p) ** (inv j q))
     (fun _ -> (inv i p) ** (inv j q))
@@ -297,9 +300,9 @@ val distinct_invariants_have_distinct_names
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { iname_of i == iname_of j })
+      (j:iref { i == j })
 : stt_ghost
-    (squash (p == q /\ i == j))
+    (squash (p == q))
     emp_inames
     ((inv i p) ** (inv j q))
     (fun _ -> (inv i p) ** (inv j q))

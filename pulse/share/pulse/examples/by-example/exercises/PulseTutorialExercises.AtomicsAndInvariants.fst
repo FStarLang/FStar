@@ -15,14 +15,12 @@ ensures emp
 }
 ```
 
-let singleton #p (i:inv p) = add_inv emp_inames i
-
 ```pulse
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 requires emp
 ensures emp
-opens (singleton i)
+opens [i]
 {
   with_invariants i {    //owns r
      unfold owns;        //ghost step;  exists* u. pts_to r u

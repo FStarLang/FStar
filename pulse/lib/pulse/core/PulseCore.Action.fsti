@@ -33,20 +33,22 @@ let ( ^^ ) (r1 r2 : reifiability) : reifiability =
   if r1 = r2 then r1
   else Reifiable
 
-val iname : eqtype
-
-let inames = Ghost.erased (FStar.Set.set iname)
-
-let emp_inames : inames = Ghost.hide Set.empty
+[@@ erasable]
+val iref : Type0
+val storable_iref (i:iref) : GTot bool
+val deq_iref : FStar.GhostSet.decide_eq iref
+let inames = FStar.GhostSet.set iref
+let singleton (i:iref) : inames = GhostSet.singleton deq_iref i
+let emp_inames : inames = GhostSet.empty
 
 let join_inames (is1 is2 : inames) : inames =
-  Set.union is1 is2
+  GhostSet.union is1 is2
 
 let inames_subset (is1 is2 : inames) : Type0 =
-  Set.subset is1 is2
+  GhostSet.subset is1 is2
 
 let (/!) (is1 is2 : inames) : Type0 =
-  Set.disjoint is1 is2
+  GhostSet.disjoint is1 is2
 
 unfold
 let inames_disj (ictx:inames) : Type = is:inames{is /! ictx}
@@ -99,7 +101,7 @@ val weaken
     (#r0 #r1:reifiability)
     (#opens opens':inames)
     (f:act a r0 opens pre post)
-: act a (r0 ^^ r1) (Set.union opens opens') pre post
+: act a (r0 ^^ r1) (GhostSet.union opens opens') pre post
 
 val sub 
     (#a:Type)
@@ -136,16 +138,12 @@ val lift3 (#a:Type u#3) #r #opens #pre #post
 // Invariants
 //////////////////////////////////////////////////////////////////////
 
-[@@ erasable]
-val iref : Type0
-
-val iname_of (i:iref) : GTot iname
-
-let add_inv (e:inames) (i:iref) : inames = S.add (iname_of i) e
-let mem_inv (e:inames) (i:iref) : GTot bool = S.mem (iname_of i) e
+let add_inv (e:inames) (i:iref) : inames = GhostSet.union (singleton i) e
+let mem_inv (e:inames) (i:iref) : GTot bool = GhostSet.mem i e
 
 val inv (i:iref) (p:slprop) : slprop
-
+val storable_inv (i:iref { storable_iref i }) (p:slprop3)
+: Lemma (is_slprop3 (inv i p))
 let live (i:iref) = exists* (p:slprop). inv i p
 
 let rec all_live (ctx:list iref) =
@@ -156,15 +154,18 @@ let rec all_live (ctx:list iref) =
 val dup_inv (i:iref) (p:slprop)
   : act unit Ghost emp_inames (inv i p) (fun _ -> (inv i p) ** (inv i p))
 
-val new_invariant (p:big_vprop)
+val new_invariant (p:slprop3)
 : act iref Ghost emp_inames p (fun i -> inv i p)
+
+val new_storable_invariant (p:slprop2)
+: act (i:iref{storable_iref i}) Ghost emp_inames p (fun i -> inv i p)
 
 let fresh_wrt (i:iref)
               (ctx:list iref)
 : prop
-= forall i'. List.Tot.memP i' ctx ==> iname_of i' <> iname_of i
+= forall i'. List.Tot.memP i' ctx ==> i' =!= i
 
-val fresh_invariant (ctx:list iref) (p:big_vprop)
+val fresh_invariant (ctx:list iref) (p:slprop3)
 : act (i:iref { i `fresh_wrt` ctx }) Ghost emp_inames p (fun i -> inv i p)
 
 val with_invariant
@@ -183,7 +184,7 @@ val distinct_invariants_have_distinct_names
     (#q:slprop)
     (i j:iref)
     (_:squash (p =!= q))
-: act (squash (iname_of i =!= iname_of j))
+: act (squash (i =!= j))
       Ghost
       emp_inames 
       ((inv i p) ** (inv j q))
@@ -192,8 +193,8 @@ val distinct_invariants_have_distinct_names
 val invariant_name_identifies_invariant
       (p q:slprop)
       (i:iref)
-      (j:iref { iname_of i == iname_of j } )
-: act (squash (p == q /\ i == j))
+      (j:iref { i == j })
+: act (squash (p == q))
       Ghost
       emp_inames
       ((inv i p) ** (inv j q))
@@ -214,7 +215,7 @@ let is_ref_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p)
 : b:bool { b <==> r == ref_null p }
 = is_core_ref_null r
 
-val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : vprop
+val pts_to (#a:Type u#1) (#p:pcm a) (r:ref a p) (v:a) : slprop2
 
 val pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -287,7 +288,7 @@ val gather
 // Big references
 ///////////////////////////////////////////////////////////////////
 
-val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : big_vprop
+val big_pts_to (#a:Type u#2) (#p:pcm a) (r:ref a p) (v:a) : slprop3
 
 val big_pts_to_not_null (#a:Type) (#p:FStar.PCM.pcm a) (r:ref a p) (v:a)
 : act (squash (not (is_ref_null r)))
@@ -462,7 +463,7 @@ val drop (p:slprop)
 [@@erasable]
 val core_ghost_ref : Type u#0
 let ghost_ref (#a:Type u#a) (p:pcm a) : Type u#0 = core_ghost_ref
-val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : vprop
+val ghost_pts_to (#a:Type u#1) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop2
 
 val ghost_alloc
     (#a:Type u#1)
@@ -514,7 +515,7 @@ val ghost_gather
     (ghost_pts_to r v0 ** ghost_pts_to r v1)
     (fun _ -> ghost_pts_to r (op pcm v0 v1))
 
-val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : big_vprop
+val big_ghost_pts_to (#a:Type u#2) (#p:pcm a) (r:ghost_ref p) (v:a) : slprop3
 
 val big_ghost_alloc
     (#a:Type)

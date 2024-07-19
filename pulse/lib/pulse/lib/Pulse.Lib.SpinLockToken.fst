@@ -22,17 +22,17 @@ module T = Pulse.Lib.InvToken
 module L = Pulse.Lib.SpinLock
 
 noeq
-type lock (v:vprop) : Type u#4 = {
+type lock (v:slprop) : Type u#4 = {
   l : L.lock;
 
-  i : iref;
+  i : iname;
 
-  t1 : T.token (L.iref_of l) (L.iref_v_of l v);
+  t1 : T.token (L.iname_of l) (L.iname_v_of l v);
   t2 : T.token i (exists* (p:perm). L.lock_active #p l)
 }
 
 ```pulse
-fn new_lock (v:vprop { is_big v })
+fn new_lock (v:slprop { is_storable v })
   requires v
   returns _:lock v
   ensures emp
@@ -40,7 +40,7 @@ fn new_lock (v:vprop { is_big v })
   let l = L.new_lock v;
   L.elim_alive_into_inv_and_active l v #1.0R;
   elim_stick _ _;
-  let t1 = T.witness (L.iref_of l);
+  let t1 = T.witness (L.iname_of l);
   let i = new_invariant (exists* (p:perm). L.lock_active #p l);
   let t2 = T.witness i;
   let l = { l; i; t1; t2 };
@@ -48,18 +48,18 @@ fn new_lock (v:vprop { is_big v })
 }
 ```
 
-let lock_acquired (#v:vprop) (l:lock v) : vprop =
+let lock_acquired (#v:slprop) (l:lock v) : slprop =
   L.lock_acquired l.l
 
 ```pulse
-fn lock_alive (#v:vprop) (l:lock v)
+fn lock_alive (#v:slprop) (l:lock v)
   requires emp
   ensures exists* (p:perm). L.lock_alive l.l #p v
 {
   T.recall l.t2;
   with_invariants l.i
     returns _:unit
-    ensures inv l.i (exists* (p:perm). L.lock_active #p l.l) **
+    ensures (exists* (p:perm). L.lock_active #p l.l) **
             (exists* (p:perm). L.lock_active #p l.l) {
     L.share_lock_active l.l
   };
@@ -73,7 +73,7 @@ fn lock_alive (#v:vprop) (l:lock v)
 ```
 
 ```pulse
-fn acquire (#v:vprop) (l:lock v)
+fn acquire (#v:slprop) (l:lock v)
   requires emp
   ensures v ** lock_acquired l
 {
@@ -86,7 +86,7 @@ fn acquire (#v:vprop) (l:lock v)
 ```
 
 ```pulse
-fn release (#v:vprop) (l:lock v)
+fn release (#v:slprop) (l:lock v)
   requires v ** lock_acquired l
   ensures emp
 {

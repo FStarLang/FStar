@@ -4,7 +4,7 @@ open Pulse.Lib.Pervasives
 
 let rec is_list_suffix
   (#t:Type) (x:ref t) (l:list t)
-  : Tot vprop (decreases l)
+  : Tot slprop (decreases l)
   = match l with
     | [n] ->
       exists* (v:t).

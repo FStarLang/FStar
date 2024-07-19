@@ -63,15 +63,15 @@ let par_soundness
 
   let (raL_typing, rpreL_typing, rpostL_typing)
     : (RT.tot_typing _ raL (R.pack_ln (R.Tv_Type uL)) &
-       RT.tot_typing _ rpreL vprop_tm &
-       RT.tot_typing _ rpostL (mk_arrow (raL, R.Q_Explicit) vprop_tm)) =
+       RT.tot_typing _ rpreL slprop_tm &
+       RT.tot_typing _ rpostL (mk_arrow (raL, R.Q_Explicit) slprop_tm)) =
 
     inversion_of_stt_typing g cL (Comp.comp_typing_soundness g cL _ cL_typing) in
 
   let (raR_typing, rpreR_typing, rpostR_typing)
     : (RT.tot_typing _ raR (R.pack_ln (R.Tv_Type uR)) &
-       RT.tot_typing _ rpreR vprop_tm &
-       RT.tot_typing _ rpostR (mk_arrow (raR, R.Q_Explicit) vprop_tm)) =
+       RT.tot_typing _ rpreR slprop_tm &
+       RT.tot_typing _ rpostR (mk_arrow (raR, R.Q_Explicit) slprop_tm)) =
 
     inversion_of_stt_typing g cR (Comp.comp_typing_soundness g cR _ cR_typing) in
 

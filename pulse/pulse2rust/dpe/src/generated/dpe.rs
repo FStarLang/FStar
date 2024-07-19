@@ -128,33 +128,28 @@ pub fn replace_session(
             if sid < ctr {
                 let ret = super::pulse_lib_hashtable::lookup((), tbl, sid);
                 let tbl1 = ret.0;
-                let b = ret.1;
-                let idx = ret.2;
-                if b {
-                    match idx {
-                        Some(mut idx1) => {
-                            let ret1 = super::pulse_lib_hashtable::replace(
-                                (),
-                                tbl1,
-                                idx1,
-                                sid,
-                                sst,
-                                (),
-                            );
-                            let tbl2 = ret1.0;
-                            let st1 = ret1.1;
-                            let s1 = super::dpe::st {
-                                st_ctr: ctr,
-                                st_tbl: tbl2,
-                            };
-                            *mg = Some(s1);
-                            std::mem::drop(mg);
-                            st1
-                        }
-                        None => panic!(),
+                let idx = ret.1;
+                match idx {
+                    Some(mut idx1) => {
+                        let ret1 = super::pulse_lib_hashtable::replace(
+                            (),
+                            tbl1,
+                            idx1,
+                            sid,
+                            sst,
+                            (),
+                        );
+                        let tbl2 = ret1.0;
+                        let st1 = ret1.1;
+                        let s1 = super::dpe::st {
+                            st_ctr: ctr,
+                            st_tbl: tbl2,
+                        };
+                        *mg = Some(s1);
+                        std::mem::drop(mg);
+                        st1
                     }
-                } else {
-                    panic!()
+                    None => panic!(),
                 }
             } else {
                 panic!()
@@ -395,7 +390,30 @@ pub fn derive_child(
         super::dpe::session_state::Available(mut hc) => {
             match hc.context {
                 super::dpetypes::context_t::L1_context(_) => panic!(),
-                _ => {
+                super::dpetypes::context_t::Engine_context(_) => {
+                    let ret = super::dpe::derive_child_from_context(
+                        hc.context,
+                        record,
+                        (),
+                        (),
+                        (),
+                    );
+                    match ret {
+                        Some(mut nctxt) => {
+                            let s1 = super::dpe::session_state::Available(super::dpe::session_state__Available__payload {
+                                context: nctxt,
+                            });
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            true
+                        }
+                        None => {
+                            let s1 = super::dpe::session_state::SessionError;
+                            let s2 = super::dpe::replace_session(sid, (), s1, ());
+                            false
+                        }
+                    }
+                }
+                super::dpetypes::context_t::L0_context(_) => {
                     let ret = super::dpe::derive_child_from_context(
                         hc.context,
                         record,
@@ -431,7 +449,10 @@ pub fn destroy_session_state(s: super::dpe::session_state, t: ()) -> () {
         super::dpe::session_state::Available(mut hc) => {
             super::dpe::destroy_ctxt(hc.context, ())
         }
-        _ => {}
+        super::dpe::session_state::SessionStart => {}
+        super::dpe::session_state::InUse => {}
+        super::dpe::session_state::SessionClosed => {}
+        super::dpe::session_state::SessionError => {}
     }
 }
 pub fn close_session(sid: super::dpe::sid_t, t: ()) -> () {
@@ -487,10 +508,14 @@ pub fn certify_key(
                         c_crt_len
                     }
                 }
-                _ => panic!(),
+                super::dpetypes::context_t::L0_context(_) => panic!(),
+                super::dpetypes::context_t::Engine_context(_) => panic!(),
             }
         }
-        _ => panic!(),
+        super::dpe::session_state::SessionStart => panic!(),
+        super::dpe::session_state::InUse => panic!(),
+        super::dpe::session_state::SessionClosed => panic!(),
+        super::dpe::session_state::SessionError => panic!(),
     }
 }
 pub fn sign(
@@ -521,10 +546,14 @@ pub fn sign(
                     });
                     let s1 = super::dpe::replace_session(sid, (), ns, ());
                 }
-                _ => panic!(),
+                super::dpetypes::context_t::L0_context(_) => panic!(),
+                super::dpetypes::context_t::Engine_context(_) => panic!(),
             }
         }
-        _ => panic!(),
+        super::dpe::session_state::SessionStart => panic!(),
+        super::dpe::session_state::InUse => panic!(),
+        super::dpe::session_state::SessionClosed => panic!(),
+        super::dpe::session_state::SessionError => panic!(),
     }
 }
 pub fn get_profile(uu___: ()) -> super::dpetypes::profile_descriptor_t {

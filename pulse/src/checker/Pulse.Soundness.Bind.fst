@@ -74,7 +74,7 @@ let inst_bind_t2 #u1 #u2 #g #head #t1
 let inst_bind_pre #u1 #u2 #g #head #t1 #t2
                   (head_typing: RT.tot_typing g head (bind_type_t1_t2 u1 u2 t1 t2))
                   (#pre:_)
-                  (pre_typing: RT.tot_typing g pre vprop_tm)
+                  (pre_typing: RT.tot_typing g pre slprop_tm)
   : RT.tot_typing g (R.mk_app head [(pre, R.Q_Implicit)]) (bind_type_t1_t2_pre u1 u2 t1 t2 pre)
   = admit()
 

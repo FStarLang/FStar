@@ -1,3 +1,19 @@
+(*
+   Copyright 2023 Microsoft Research
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*)
+
 module Pulse.Lib.ConditionVarWithCodes
 open Pulse.Lib.Pervasives
 // open Pulse.Lib.Codeable
@@ -7,19 +23,19 @@ module U32 = FStar.UInt32
 module GR = Pulse.Lib.GhostReference
 module OR = Pulse.Lib.OnRange
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 0 --ifuel 2"
-let small_vprop_map (#c:code) = PM.pointwise nat (PF.pcm_frac #c.t)
+let small_slprop_map (#c:code) = PM.pointwise nat (PF.pcm_frac #c.t)
 let carrier (c:code) = PM.map nat (PF.fractional c.t)
 
 noeq
 type cvar_t_core (c:code) = {
   r: Box.box U32.t;
   ctr : GR.ref nat;
-  gref: ghost_pcm_ref (small_vprop_map #c);
+  gref: ghost_pcm_ref (small_slprop_map #c);
 }
 
 noeq type cvar_t c = {
   core: cvar_t_core c;
-  i: iref
+  i: iname
 }
 
 let full_perm : perm = 1.0R
@@ -33,7 +49,7 @@ let empty_map_below #c (n:nat)
     else Some (c.emp, full_perm))
 
 let predicate_at #c (m:carrier c) (i:nat)
-: boxable
+: slprop3
 = match Map.sel m i with
   | None ->
     pure False
@@ -47,17 +63,17 @@ let all_perms #c (m:carrier c) (i j:nat) (p:perm) =
      | None -> False
      | Some (_, q) -> p == q)
 
-let map_invariant0 #c (m:carrier c) (n:nat) (p:vprop)
+let map_invariant0 #c (m:carrier c) (n:nat) (p:slprop)
 = pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
 
-let map_invariant #c (v:U32.t) (m:carrier c) (n:nat) (p:vprop)
-: boxable
+let map_invariant #c (v:U32.t) (m:carrier c) (n:nat) (p:slprop)
+: slprop3
 = if v = 0ul
   then map_invariant0 m n p
   else OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R)
 
-let cvar_inv #c (b: cvar_t_core c) (p:vprop)
-: boxable
+let cvar_inv #c (b: cvar_t_core c) (p:slprop)
+: slprop3
 = exists* v n m.
     Box.pts_to b.r #0.5R v **
     GR.pts_to #nat b.ctr n **
@@ -65,14 +81,14 @@ let cvar_inv #c (b: cvar_t_core c) (p:vprop)
     big_ghost_pcm_pts_to b.gref (empty_map_below n) **
     map_invariant v m n p
 
-let cvar #c (b: cvar_t c) (p:vprop)
-: vprop
+let cvar #c (b: cvar_t c) (p:slprop)
+: slprop
 = inv b.i (cvar_inv b.core p)
 
 let inv_name #c (b:cvar_t c) = b.i
 
-let send #c (b: cvar_t c) (p:vprop)
-: vprop
+let send #c (b: cvar_t c) (p:slprop)
+: slprop
 = cvar b p **
   Box.pts_to b.core.r #0.5R 0ul
 
@@ -84,8 +100,8 @@ let singleton #c (i:nat) (#p:perm) (code:c.t)
         then Some (code, p)
         else None)
 
-let recv #c (b:cvar_t c) (q:vprop)
-: vprop
+let recv #c (b:cvar_t c) (q:slprop)
+: slprop
 = exists* p i code.
     cvar b p **
     big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code) **
@@ -164,7 +180,7 @@ ensures  map_invariant v m n p ** pure (all_perms m 0 n 0.5R)
 
 ```pulse
 ghost
-fn flip_map_invariant #c (v:U32.t) (p:vprop) (m:carrier c) (n:nat)
+fn flip_map_invariant #c (v:U32.t) (p:slprop) (m:carrier c) (n:nat)
 requires map_invariant v m n p ** p ** pure (v == 0ul)
 ensures map_invariant 1ul m n p
 {
@@ -189,7 +205,7 @@ let on_range_singleton (#c:code) (p:c.t)
   (==) { OR.on_range_eq_cons (predicate_at m) 0 1;
          OR.on_range_eq_emp (predicate_at m) 1 1 }
     predicate_at m 0 ** emp;
-  (==) { vprop_equivs () }
+  (==) { slprop_equivs () }
     predicate_at m 0;
   (==) {}
     c.up p;
@@ -198,7 +214,7 @@ let on_range_singleton (#c:code) (p:c.t)
   
 ```pulse
 ghost
-fn intro_init_map_invariant (#c:code) (p:vprop) (code_of_p:codeable c p)
+fn intro_init_map_invariant (#c:code) (p:slprop) (code_of_p:codeable c p)
 requires emp
 ensures map_invariant 0ul (singleton 0 #0.5R code_of_p.c) 1 p
 {
@@ -208,13 +224,13 @@ ensures map_invariant 0ul (singleton 0 #0.5R code_of_p.c) 1 p
 ```
 
 let initial_map (#c:code) (p:c.t)
-: c:carrier c { small_vprop_map.refine c }
+: c:carrier c { small_slprop_map.refine c }
 = comp (singleton 0 #1.0R p) (empty_map_below 1)
 
 
 ```pulse
 ghost
-fn fold_cvar_inv #c (b: cvar_t_core c) (p:vprop)
+fn fold_cvar_inv #c (b: cvar_t_core c) (p:slprop)
                     (v n m:_)
 requires
     Box.pts_to b.r #0.5R v **
@@ -244,7 +260,7 @@ ensures OR.on_range (predicate_at (Map.upd m0 k v)) i j
 
 ```pulse
 ghost
-fn predicate_at_singleton #c (m:carrier c) (i:nat) (q:vprop) (code_of_q:codeable c q)
+fn predicate_at_singleton #c (m:carrier c) (i:nat) (q:slprop) (code_of_q:codeable c q)
 requires q ** pure (Map.sel m i == Some (code_of_q.c, 0.5R))
 ensures predicate_at m i
 {
@@ -254,14 +270,14 @@ ensures predicate_at m i
 
 
 ```pulse
-fn create (#c:code) (p:vprop) (code_of_p:codeable c p)
+fn create (#c:code) (p:slprop) (code_of_p:codeable c p)
 requires emp
 returns b:cvar_t c
 ensures send b p ** recv b p
 { 
   let r = Box.alloc 0ul;
   let ctr = GR.alloc #nat 1;
-  let gref = big_ghost_alloc #_ #small_vprop_map (initial_map code_of_p.c);
+  let gref = big_ghost_alloc #_ #small_slprop_map (initial_map code_of_p.c);
   big_ghost_share gref (singleton 0 #1.0R code_of_p.c) (empty_map_below 1);
   assert pure (singleton 0 #1.0R code_of_p.c `Map.equal` comp (singleton 0 #0.5R code_of_p.c) (singleton 0 #0.5R code_of_p.c));
   rewrite each (singleton 0 #1.0R code_of_p.c) 
@@ -289,7 +305,7 @@ ensures send b p ** recv b p
 
 
 ```pulse
-fn signal #c (b:cvar_t c) (#p:vprop)
+fn signal #c (b:cvar_t c) (#p:slprop)
 requires send b p ** p
 ensures emp
 {
@@ -297,7 +313,7 @@ ensures emp
   unfold cvar;
   with_invariants b.i 
   returns u:unit
-  ensures inv b.i (cvar_inv b.core p) ** emp
+  ensures cvar_inv b.core p ** emp
   {
     unfold cvar_inv;
     Box.gather b.core.r;
@@ -356,7 +372,7 @@ ensures OR.on_range (predicate_at m) 0 n ** pure (Some? (Map.sel m i))
 
 ```pulse
 ghost
-fn composable_three #c (gref:ghost_pcm_ref small_vprop_map) (c0 c1 c2:carrier c)
+fn composable_three #c (gref:ghost_pcm_ref small_slprop_map) (c0 c1 c2:carrier c)
 requires
   big_ghost_pcm_pts_to gref c0 **
   big_ghost_pcm_pts_to gref c1 **
@@ -387,7 +403,7 @@ ensures c.up (fst (Some?.v (Map.sel m i)))
 
 ```pulse
 ghost
-fn q_at_i #c (#gref:ghost_pcm_ref small_vprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
+fn q_at_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
 requires
   big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
   big_ghost_pcm_pts_to gref m **
@@ -409,7 +425,7 @@ ensures
 
 ```pulse
 ghost
-fn predicate_at_i_is_q #c (#gref:ghost_pcm_ref small_vprop_map) (#v:U32.t) (#m:carrier c) (#i #n:nat) (#p:vprop) (#q:c.t) ()
+fn predicate_at_i_is_q #c (#gref:ghost_pcm_ref small_slprop_map) (#v:U32.t) (#m:carrier c) (#i #n:nat) (#p:slprop) (#q:c.t) ()
 requires
   big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
   big_ghost_pcm_pts_to gref m **
@@ -450,7 +466,7 @@ let code_of_emp #c : codeable c emp =  { c = c.emp; laws = () }
 
 ```pulse
 ghost
-fn clear_i #c (#gref:ghost_pcm_ref small_vprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
+fn clear_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
 requires
   big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
   big_ghost_pcm_pts_to gref m **
@@ -492,7 +508,7 @@ ensures
 ```
 
 ```pulse
-fn rec wait #c (b:cvar_t c) (#q:vprop)
+fn rec wait #c (b:cvar_t c) (#q:slprop)
 requires recv b q
 ensures q
 {
@@ -504,7 +520,7 @@ ensures q
   let res : bool =
     with_invariants b.i
     returns res:bool
-    ensures inv b.i (cvar_inv b.core pp) **
+    ensures cvar_inv b.core pp **
             (cond res q (big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code)))
     {
       unfold cvar_inv;
@@ -547,7 +563,7 @@ ensures q
 ```
 
 let split_aux_post #c (b:cvar_t c) (q r:c.t)
-: vprop
+: slprop
 = exists* j k.
     big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R q) **
     big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R r)
@@ -557,7 +573,7 @@ let split_aux_post #c (b:cvar_t c) (q r:c.t)
 
 ```pulse
 ghost
-fn upd_i #c (#gref:ghost_pcm_ref small_vprop_map) (#m:carrier c) (#i:nat) (#q:c.t) ()
+fn upd_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i:nat) (#q:c.t) ()
 requires
   big_ghost_pcm_pts_to gref (singleton i #0.5R q) **
   big_ghost_pcm_pts_to gref m **
@@ -595,7 +611,7 @@ ensures  GR.pts_to b.ctr (n + 1) **
          big_ghost_pcm_pts_to b.gref (singleton n #0.5R q)
 {
   GR.write b.ctr (n + 1);
-//  down2_emp();
+//  down3_emp();
   assert pure (Map.equal (empty_map_below n) (comp (singleton n #1.0R c.emp) (empty_map_below (n + 1))));
   rewrite (big_ghost_pcm_pts_to b.gref (empty_map_below n))
   as      (big_ghost_pcm_pts_to b.gref (comp (singleton n #1.0R c.emp) (empty_map_below (n + 1))));
@@ -624,7 +640,7 @@ let split_map #c (m:carrier c) (i n:nat) (q r:c.t) = (up_i (up_i (up_i m i c.emp
 let split_lemma #c 
   (b:cvar_t_core c) 
   (m:carrier c)
-  (q r:vprop) 
+  (q r:slprop) 
   (cq:codeable c q)
   (cr:codeable c r)
   (cqr:c.t)
@@ -647,7 +663,7 @@ let split_lemma #c
     OR.on_range (predicate_at m) 0 i **
     (q ** r) **
     OR.on_range (predicate_at m) (i + 1) n;
-  (==) { vprop_equivs () }
+  (==) { slprop_equivs () }
    (OR.on_range (predicate_at m) 0 i **
     emp **
     OR.on_range (predicate_at m) (i + 1) n) **
@@ -669,8 +685,8 @@ let split_lemma #c
 
 ```pulse
 ghost
-fn split_aux #c (b:cvar_t c) (p:erased vprop) 
-    (q r:vprop)
+fn split_aux #c (b:cvar_t c) (p:erased slprop) 
+    (q r:slprop)
     (cq:codeable c q)
     (cr:codeable c r)
     (i:erased nat)
@@ -718,7 +734,7 @@ ensures  cvar_inv b.core p ** split_aux_post b cq.c cr.c
 
 ```pulse
 ghost
-fn fold_recv #c (b:cvar_t c) (q:vprop) (#code:c.t) (#p:vprop) (#i:nat)
+fn fold_recv #c (b:cvar_t c) (q:slprop) (#code:c.t) (#p:slprop) (#i:nat)
 requires
     cvar b p **
     big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code) **
@@ -732,17 +748,17 @@ ensures
 
 ```pulse
 ghost
-fn split #c (b:cvar_t c) (#q #r:vprop) (cq:codeable c q) (cr:codeable c r)
+fn split #c (b:cvar_t c) (#q #r:slprop) (cq:codeable c q) (cr:codeable c r)
 requires recv b (q ** r)
 ensures recv b q ** recv b r
-opens (add_inv emp_inames b.i)
+opens [b.i]
 {
   unfold recv;
   with p i code. _;
   unfold cvar;
   with_invariants b.i
   returns u:unit
-  ensures inv b.i (cvar_inv b.core (reveal p)) **
+  ensures cvar_inv b.core (reveal p) **
          (exists* j k.
             big_ghost_pcm_pts_to b.core.gref (singleton j #0.5R cq.c) **
             big_ghost_pcm_pts_to b.core.gref (singleton k #0.5R cr.c))
@@ -760,11 +776,11 @@ opens (add_inv emp_inames b.i)
 ```
 
 
-let cvinv #c (cv:cvar_t c) (p:vprop): vprop = cvar cv p
+let cvinv #c (cv:cvar_t c) (p:slprop): slprop = cvar cv p
 
 ```pulse
 ghost
-fn dup_cvinv #c (cv:cvar_t c) (#p:vprop)
+fn dup_cvinv #c (cv:cvar_t c) (#p:slprop)
 requires cvinv cv p
 ensures cvinv cv p ** cvinv cv p
 {
@@ -778,12 +794,12 @@ ensures cvinv cv p ** cvinv cv p
 }
 ```
 
-let send_core #c (cv:cvar_t c) : boxable =
+let send_core #c (cv:cvar_t c) : slprop3 =
   Box.pts_to cv.core.r #0.5R 0ul
 
 ```pulse
 ghost
-fn decompose_send #c (cv:cvar_t c) (p:vprop)
+fn decompose_send #c (cv:cvar_t c) (p:slprop)
 requires send cv p
 ensures cvinv cv p ** send_core cv
 {
@@ -795,7 +811,7 @@ ensures cvinv cv p ** send_core cv
 
 ```pulse
 ghost
-fn recompose_send #c (cv:cvar_t c) (p:vprop)
+fn recompose_send #c (cv:cvar_t c) (p:slprop)
 requires cvinv cv p ** send_core cv
 ensures send cv p
 {
@@ -805,15 +821,15 @@ ensures send cv p
 }
 ```
 
-let recv_core #c (cv:cvar_t c) (q:vprop)
-: boxable
+let recv_core #c (cv:cvar_t c) (q:slprop)
+: slprop3
 = exists* i code.
     big_ghost_pcm_pts_to cv.core.gref (singleton i #0.5R code) **
     pure (c.up code == q)
 
 ```pulse
 ghost
-fn decompose_recv #c (cv:cvar_t c) (p:vprop)
+fn decompose_recv #c (cv:cvar_t c) (p:slprop)
 requires recv cv p
 ensures (exists* q. cvinv cv q) ** recv_core cv p
 {
@@ -825,7 +841,7 @@ ensures (exists* q. cvinv cv q) ** recv_core cv p
 
 ```pulse
 ghost
-fn recompose_recv #c (cv:cvar_t c) (p:vprop) (#q:_)
+fn recompose_recv #c (cv:cvar_t c) (p:slprop) (#q:_)
 requires cvinv cv q ** recv_core cv p
 ensures recv cv p
 {

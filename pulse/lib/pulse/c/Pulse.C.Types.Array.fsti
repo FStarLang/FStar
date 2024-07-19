@@ -87,7 +87,7 @@ val has_base_array_cell
   (r: ref (base_array0 tn td n))
   (i: SZ.t)
   (r': ref td)
-: Tot vprop
+: Tot slprop
 
 val has_base_array_cell_post
   (#t: Type)
@@ -246,14 +246,14 @@ val array_pts_to
   (#td: typedef t)
   (r: array td)
   (v: Ghost.erased (Seq.seq t))
-: Tot vprop
+: Tot slprop
 
 let array_pts_to_or_null
   (#t: Type)
   (#td: typedef t)
   (r: array_or_null td)
   (v: Ghost.erased (Seq.seq t))
-: Tot vprop
+: Tot slprop
 = if g_array_is_null r
   then emp
   else array_pts_to r v
@@ -463,13 +463,13 @@ val freeable_array
   (#t: Type)
   (#td: typedef t)
   (a: array td)
-: Tot vprop
+: Tot slprop
 
 let freeable_or_null_array
   (#t: Type)
   (#td: typedef t)
   (a: array_or_null td)
-: Tot vprop
+: Tot slprop
 = if g_array_is_null a
   then emp
   else freeable_array a
@@ -571,7 +571,7 @@ val has_array_of_ref
   (#td: typedef t)
   (r: ref td)
   (a: array td)
-: Tot vprop
+: Tot slprop
 
 val has_array_of_ref_post
   (#opened: _)
@@ -667,7 +667,7 @@ val has_array_cell
   (a: array td)
   (i: SZ.t)
   (r: ref td)
-: Tot vprop
+: Tot slprop
 (*
 = SZ.v i < SZ.v (dsnd a) /\
   has_base_array_cell (array_ref_base (array_ptr_of a)) (array_ref_offset (array_ptr_of a) `SZ.add` i) r

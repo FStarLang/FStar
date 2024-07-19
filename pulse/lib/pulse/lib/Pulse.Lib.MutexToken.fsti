@@ -19,11 +19,11 @@ open Pulse.Lib.Pervasives
 
 module T = FStar.Tactics
 
-val mutex (#a:Type0) (p:a -> vprop) : Type u#4
+val mutex (#a:Type0) (p:a -> slprop) : Type u#4
 
 val mutex_guard (a:Type0) : Type0
 
-val pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : vprop
+val pts_to (#a:Type0) (mg:mutex_guard a) (#[T.exact (`1.0R)] p:perm) (x:a) : slprop
 
 val ( ! ) (#a:Type0) (mg:mutex_guard a) (#x:erased a) (#p:perm)
   : stt a
@@ -40,19 +40,19 @@ val replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
       (requires mg `pts_to` x)
       (ensures fun r -> mg `pts_to` y ** pure (r == reveal x))
 
-val new_mutex (#a:Type0) (v:a -> vprop { forall (x:a). is_big (v x) }) (x:a)
+val new_mutex (#a:Type0) (v:a -> slprop { forall (x:a). is_storable (v x) }) (x:a)
   : stt (mutex v)
         (requires v x)
         (ensures fun _ -> emp)
 
-val belongs_to (#a:Type0) (#v:a -> vprop) (mg:mutex_guard a) (m:mutex v) : vprop
+val belongs_to (#a:Type0) (#v:a -> slprop) (mg:mutex_guard a) (m:mutex v) : slprop
 
-val lock (#a:Type0) (#v:a -> vprop) (m:mutex v)
+val lock (#a:Type0) (#v:a -> slprop) (m:mutex v)
   : stt (mutex_guard a)
         (requires emp)
         (ensures fun mg -> mg `belongs_to` m ** (exists* x. pts_to mg x ** v x))
 
-val unlock (#a:Type0) (#v:a -> vprop) (m:mutex v) (mg:mutex_guard a)
+val unlock (#a:Type0) (#v:a -> slprop) (m:mutex v) (mg:mutex_guard a)
   : stt unit
         (requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x))
         (ensures fun _ -> emp)

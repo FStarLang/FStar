@@ -50,7 +50,7 @@ let st_typing_correctness (#g:env) (#t:st_term) (#c:comp_st)
   = admit_comp_typing g c
     
 let add_frame_well_typed (#g:env) (#c:comp_st) (ct:comp_typing_u g c)
-                         (#f:term) (ft:tot_typing g f tm_vprop)
+                         (#f:term) (ft:tot_typing g f tm_slprop)
   : comp_typing_u g (add_frame c f)
   = admit_comp_typing _ _
 
@@ -70,13 +70,13 @@ let st_comp_typing_inversion (#g:env) (#st:_) (ct:st_comp_typing g st) =
   (| ty, pre, x, post |)
 
 let tm_exists_inversion (#g:env) (#u:universe) (#ty:term) (#p:term) 
-                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_vprop)
+                        (_:tot_typing g (tm_exists_sl u (as_binder ty) p) tm_slprop)
                         (x:var { fresh_wrt x g (freevars p) } )
   : universe_of g ty u &
-    tot_typing (push_binding g x ppname_default ty) p tm_vprop
+    tot_typing (push_binding g x ppname_default ty) p tm_slprop
   = admit(), admit()
 
-let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_vprop)
+let pure_typing_inversion (#g:env) (#p:term) (_:tot_typing g (tm_pure p) tm_slprop)
    : tot_typing g p (wr FStar.Reflection.Typing.tm_prop Range.range_0)
    = admit ()
 
@@ -129,11 +129,11 @@ let st_equiv_weakening (g:env) (g':env { disjoint g g' })
   (g1:env { pairwise_disjoint g g1 g' })
   : st_equiv (push_env (push_env g g1) g') c1 c2 =
   match d with
-  | ST_VPropEquiv _ c1 c2 x _ _ _ _ _ _ ->
+  | ST_SLPropEquiv _ c1 c2 x _ _ _ _ _ _ ->
     assume (~ (x `Set.mem` dom g'));
     assume (~ (x `Set.mem` dom g1));
     // TODO: the proof for RT.Equiv is not correct here
-    ST_VPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (RU.magic ()) (RU.magic ())
+    ST_SLPropEquiv _ c1 c2 x (RU.magic ()) (RU.magic ()) (RU.magic ()) (FStar.Reflection.Typing.Rel_refl _ _ _) (RU.magic ()) (RU.magic ())
 #pop-options
 
 // TODO: add precondition that g1 extends g'
@@ -518,8 +518,8 @@ let st_equiv_subst (g:env) (x:var) (t:typ) (g':env { pairwise_disjoint g (single
              (subst_comp c1 (nt x e))
              (subst_comp c2 (nt x e)) =
   match d with
-  | ST_VPropEquiv _ c1 c2 y _ _ _ _ _ _ ->
-    ST_VPropEquiv _ (subst_comp c1 (nt x e))
+  | ST_SLPropEquiv _ c1 c2 y _ _ _ _ _ _ ->
+    ST_SLPropEquiv _ (subst_comp c1 (nt x e))
                     (subst_comp c2 (nt x e))
                     y
                     (RU.magic ())

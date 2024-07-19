@@ -26,7 +26,7 @@ type vec a = A.array a
 let length v = A.length v
 let is_full_vec v = A.is_full_array v
 let pts_to v #p s = A.pts_to v #p s
-let pts_to_is_small _ _ _ = ()
+let pts_to_is_slprop2 _ _ _ = ()
 let pts_to_len v = A.pts_to_len v
 let alloc x n = A.alloc x n
 let op_Array_Access v i #p #s = A.op_Array_Access v i #p #s
@@ -39,11 +39,11 @@ let vec_to_array v = v
 let to_array_pts_to v #p #s =
   rewrite (pts_to v #p s)
           (A.pts_to (vec_to_array v) #p s)
-          (vprop_equiv_refl _)
+          (slprop_equiv_refl _)
 let to_vec_pts_to v #p #s =
   rewrite (A.pts_to (vec_to_array v) #p s)
           (pts_to v #p s)
-          (vprop_equiv_refl _)
+          (slprop_equiv_refl _)
 
 ```pulse
 fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)

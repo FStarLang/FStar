@@ -21,7 +21,7 @@ open Pulse.Lib.Pervasives
 [@@expect_failure]
 ```pulse
 ghost
-fn test_elim_false (a:Type0) (p:(a -> vprop))
+fn test_elim_false (a:Type0) (p:(a -> slprop))
     requires pure False
     returns x:a
     ensures p x
@@ -32,7 +32,7 @@ fn test_elim_false (a:Type0) (p:(a -> vprop))
 
 ```pulse
 ghost
-fn elim_false_alt (a:Type0) (p:(a -> vprop))
+fn elim_false_alt (a:Type0) (p:(a -> slprop))
     requires pure False
     returns x:a
     ensures p x
@@ -46,7 +46,7 @@ fn elim_false_alt (a:Type0) (p:(a -> vprop))
 
 ```pulse
 ghost
-fn test_elim_false_alt (a:Type0) (p:(a -> vprop))
+fn test_elim_false_alt (a:Type0) (p:(a -> slprop))
     requires pure False
     returns x:a
     ensures p x
@@ -83,7 +83,7 @@ fn ret2 (#a:Type0) (x:a)
 //Admit is overloaded to work in all the effects, include ghost
 ```pulse
 ghost
-fn use_admit (t:Type0) (p:vprop)
+fn use_admit (t:Type0) (p:slprop)
     requires emp
     returns x:t
     ensures p
@@ -93,11 +93,11 @@ fn use_admit (t:Type0) (p:vprop)
 ```
 
 assume
-val p : vprop
+val p : slprop
 assume
-val q : vprop
+val q : slprop
 assume
-val r : vprop
+val r : slprop
 
 ```pulse
 ghost

@@ -4,9 +4,9 @@ open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
 let rec on_range
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i j: nat)
-: Tot vprop
+: Tot slprop
   (decreases (if j <= i then 0 else j - i))
 = if j < i
   then pure False
@@ -14,49 +14,49 @@ let rec on_range
   then emp
   else p i ** on_range p (i + 1) j
 
-let on_range_eq_false (p:nat -> vprop) (i j:nat)
+let on_range_eq_false (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i > j)
   (ensures on_range p i j == pure False)
 = ()
 
-let on_range_eq_emp (p:nat -> vprop) (i j:nat)
+let on_range_eq_emp (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i == j)
   (ensures on_range p i j == emp)
 = ()
 
-let on_range_eq_cons (p:nat -> vprop) (i j:nat)
+let on_range_eq_cons (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i < j)
   (ensures on_range p i j == (p i ** on_range p (i + 1) j))
 = ()
 
-let rec on_range_eq_get (p:nat -> vprop) (i j k:nat)
+let rec on_range_eq_get (p:nat -> slprop) (i j k:nat)
 : Lemma 
   (requires i <= j /\ j < k)
   (ensures on_range p i k == (on_range p i j ** p j ** on_range p (j + 1) k))
   (decreases j - i)
 = if i = j
-  then ( vprop_equivs () )
+  then ( slprop_equivs () )
   else (
     on_range_eq_get p (i + 1) j k;
-    vprop_equivs()
+    slprop_equivs()
   )
 
-let rec on_range_eq_snoc (p:nat -> vprop) (i j:nat)
+let rec on_range_eq_snoc (p:nat -> slprop) (i j:nat)
 : Lemma 
   (requires i <= j)
   (ensures on_range p i (j + 1) == on_range p i j ** p j)
   (decreases j - i)
 = if j = i
-  then vprop_equivs ()
+  then slprop_equivs ()
   else (
     on_range_eq_snoc p (i + 1) j;
-    vprop_equivs()
+    slprop_equivs()
   )
 
-let rec on_range_frame (p q:nat -> vprop) (i j:nat)
+let rec on_range_frame (p q:nat -> slprop) (i j:nat)
 : Lemma 
   (requires forall k. i <= k /\ k < j ==> p k == q k)
   (ensures on_range p i j == on_range q i j)
@@ -67,30 +67,30 @@ let rec on_range_frame (p q:nat -> vprop) (i j:nat)
     on_range_frame p q (i + 1) j
   )
 
-let rec on_range_is_small (p:nat -> vprop) (i:nat) (j:nat)
-: Lemma (requires forall k. (i <= k /\ k < j) ==> is_small (p k))
-        (ensures is_small (on_range p i j))
+let rec on_range_is_slprop2 (p:nat -> slprop) (i:nat) (j:nat)
+: Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop2 (p k))
+        (ensures is_slprop2 (on_range p i j))
         (decreases (if j <= i then 0 else j - i))
 = if j < i
   then ()
   else if j = i
   then ()
-  else on_range_is_small p (i + 1) j
+  else on_range_is_slprop2 p (i + 1) j
 
-let rec on_range_is_big (p:nat -> vprop) (i:nat) (j:nat)
-: Lemma (requires forall k. (i <= k /\ k < j) ==> is_big (p k))
-        (ensures is_big (on_range p i j))
+let rec on_range_is_slprop3 (p:nat -> slprop) (i:nat) (j:nat)
+: Lemma (requires forall k. (i <= k /\ k < j) ==> is_slprop3 (p k))
+        (ensures is_slprop3 (on_range p i j))
         (decreases (if j <= i then 0 else j - i))
 = if j < i
   then ()
   else if j = i
   then ()
-  else on_range_is_big p (i + 1) j
+  else on_range_is_slprop3 p (i + 1) j
 
 ```pulse
 ghost
 fn on_range_le
-    (p: (nat -> vprop))
+    (p: (nat -> slprop))
     (#i:nat)
     (#j:nat)
 requires on_range p i j
@@ -110,7 +110,7 @@ ensures on_range p i j ** pure (i <= j)
 ```pulse
 ghost
 fn on_range_empty
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 requires emp
 ensures on_range p i i
@@ -122,7 +122,7 @@ ensures on_range p i i
 ```pulse
 ghost
 fn on_range_empty_elim
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 requires on_range p i i
 ensures emp
@@ -134,7 +134,7 @@ ensures emp
 ```pulse
 ghost
 fn on_range_singleton_intro
-  (p: (nat -> vprop))
+  (p: (nat -> slprop))
   (i: nat)
 requires p i
 ensures on_range p i (i + 1)
@@ -149,7 +149,7 @@ ensures on_range p i (i + 1)
 ghost
 fn on_range_singleton_elim
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat { j == i + 1 })
 requires on_range p i j
@@ -164,7 +164,7 @@ ensures p i
 ghost
 fn rec on_range_split
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j <= k })
 requires on_range p i k
@@ -188,7 +188,7 @@ decreases (j - i)
 ghost
 fn rec on_range_join
   (i j k: nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
 requires on_range p i j ** on_range p j k
 ensures on_range p i k
 decreases (j - i)
@@ -212,7 +212,7 @@ decreases (j - i)
 ghost
 fn on_range_cons
   (i:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#j:nat{j == i + 1})
   (#k: nat)
 requires p i ** on_range p j k
@@ -227,7 +227,7 @@ ensures on_range p i k
 ghost
 fn on_range_uncons
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat { i < k })
 requires on_range p i k
@@ -241,7 +241,7 @@ ensures p i ** on_range p (i + 1) k
 ghost
 fn on_range_cons_with_implies
   (i:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#k: nat)
 requires p i ** on_range p (i + 1) k
 ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
@@ -264,7 +264,7 @@ ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
 ghost
 fn rec on_range_snoc
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i #j:nat)
 requires on_range p i j ** p j
 ensures on_range p i (j + 1)
@@ -290,7 +290,7 @@ decreases (if j <= i then 0 else j - i)
 ghost
 fn rec on_range_unsnoc
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#k:nat{ i < k })
 requires on_range p i k
@@ -314,7 +314,7 @@ decreases (k - i)
 ghost
 fn on_range_snoc_with_implies
   ()
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat)
   (#j:nat)
 requires on_range p i j ** p j
@@ -338,7 +338,7 @@ ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p
 ghost
 fn rec on_range_get
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{i <= j})
   (#k:nat{j < k})
 requires on_range p i k
@@ -365,7 +365,7 @@ fn rec on_range_put
   (i:nat)
   (j:nat{ i <= j })
   (k:nat{ j < k })
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
 requires on_range p i j ** p j ** on_range p (j + 1) k
 ensures on_range p i k
 decreases (j - i)
@@ -390,7 +390,7 @@ decreases (j - i)
 ghost
 fn on_range_focus
   (j:nat)
-  (#p: (nat -> vprop))
+  (#p: (nat -> slprop))
   (#i:nat{ i <= j })
   (#k:nat{ j < k })
 requires on_range p i k
@@ -412,7 +412,7 @@ ensures p j ** (p j @==> on_range p i k)
 ```pulse
 ghost
 fn rec on_range_weaken_and_shift
-  (p p': (nat -> vprop))
+  (p p': (nat -> slprop))
   (delta: int)
   (i: nat { i + delta >= 0 })
   (j: nat { j + delta >= 0 })
@@ -445,7 +445,7 @@ decreases (if j <= i then 0 else j - i)
 ```
 
 let on_range_weaken
-  (p p': (nat -> vprop))
+  (p p': (nat -> slprop))
   (i: nat)
   (j: nat)
   (phi: (k: nat { i <= k /\ k < j }) -> stt_ghost unit emp_inames (p k) (fun _ -> p' k))
@@ -456,7 +456,7 @@ let on_range_weaken
 
 ```pulse
 ghost
-fn rec on_range_zip (p q:nat -> vprop) (i j:nat)
+fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
   requires on_range p i j ** on_range q i j
   ensures on_range (fun k -> p k ** q k) i j
   decreases (j-i)
@@ -480,7 +480,7 @@ fn rec on_range_zip (p q:nat -> vprop) (i j:nat)
 
 ```pulse
 ghost
-fn rec on_range_unzip (p q:nat -> vprop) (i j:nat)
+fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
   requires on_range (fun k -> p k ** q k) i j
   ensures  on_range p i j ** on_range q i j
   decreases (j-i)

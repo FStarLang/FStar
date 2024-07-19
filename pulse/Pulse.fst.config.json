@@ -9,6 +9,7 @@
     "lib/pulse",
     "lib/pulse/core",
     "lib/pulse/lib",
+    "lib/pulse/lib/pledge",
     "lib/pulse/lib/class",
     "share/pulse/examples",
     "share/pulse/examples/bug-reports",

@@ -548,6 +548,7 @@ let lift_erased
   refined_pre_action_as_action g
 
 let core_ghost_ref = erased H.core_ref
+let core_ghost_ref_eq x y = H.core_ref_eq (reveal x) (reveal y)
 let ghost_pts_to meta #a #p r v = llift GHOST (H.pts_to meta #a #p r v)
 let ghost_free_above_addr h addr = H.free_above_addr h.ghost addr
 
@@ -727,15 +728,11 @@ let lift_ghost_emp : squash (llift GHOST H.emp == emp) =
 
 let core_ghost_ref_as_addr i = H.core_ref_as_addr i
 let core_ghost_ref_is_null c = H.core_ref_is_null c
-let core_ghost_ref_as_addr_injective (c1 c2:core_ghost_ref)
-: Lemma 
-  (requires 
-    core_ghost_ref_as_addr c1 == core_ghost_ref_as_addr c2 /\
-    not (core_ghost_ref_is_null c1) /\
-    not (core_ghost_ref_is_null c2))
-  (ensures c1 == c2)
-= H.addr_core_ref_injective_2 c1;
-  H.addr_core_ref_injective_2 c2
+let addr_as_core_ghost_ref n = H.addr_as_core_ref n
+let core_ghost_ref_as_addr_injective (c1:core_ghost_ref)
+= H.addr_core_ref_injective_2 c1
+let addr_as_core_ghost_ref_injective (a:nat)
+= H.addr_core_ref_injective a
 let interp_ghost_pts_to i #m #a #p v h = H.interp_pts_to i #m #a #p v h.ghost
 let ghost_pts_to_compatible_equiv #meta #a #pcm r v0 v1 =
   H.pts_to_compatible_equiv #meta #a #pcm r v0 v1;
@@ -756,7 +753,6 @@ let ghost_extend_spec
       (addr:nat)
       (h:full_hheap emp { free_above_addr GHOST h addr })
 = 
-
 calc (==) {
     (ghost_extend #meta #a #pcm x addr) h;
   (==) { _ by (T.trefl()) }

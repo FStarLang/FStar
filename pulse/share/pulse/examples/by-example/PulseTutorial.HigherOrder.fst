@@ -20,8 +20,8 @@ module B = Pulse.Lib.Box
 ```pulse //apply$
 fn apply (#a:Type0)
          (#b:a -> Type0)
-         (#pre:a -> vprop)
-         (#post: (x:a -> b x -> vprop))
+         (#pre:a -> slprop)
+         (#post: (x:a -> b x -> slprop))
          (f: (x:a -> stt (b x) (pre x) (fun y -> post x y)))
          (x:a)
 requires pre x
@@ -37,8 +37,8 @@ ghost
 fn apply_ghost 
          (#a:Type0)
          (#b:a -> Type0)
-         (#pre:a -> vprop)
-         (#post: (x:a -> b x -> vprop))
+         (#pre:a -> slprop)
+         (#post: (x:a -> b x -> slprop))
          (f: (x:a -> stt_ghost (b x) emp_inames (pre x) (fun y -> post x y)))
          (x:a)
 requires pre x
@@ -68,7 +68,7 @@ fn id_a (a:Type0)
 //ctr$
 noeq
 type ctr = {
-    inv: int -> vprop;
+    inv: int -> slprop;
     next: i:erased int -> stt int (inv i) (fun y -> inv (i + 1) ** pure (y == reveal i));
     destroy: i:erased int -> stt unit (inv i) (fun _ -> emp)
 }

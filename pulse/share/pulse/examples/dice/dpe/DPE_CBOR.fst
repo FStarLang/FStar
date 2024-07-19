@@ -31,19 +31,19 @@ module U8 = FStar.UInt8
 module A = Pulse.Lib.Array
 module Cast = FStar.Int.Cast
 assume
-val drop (p:vprop)
+val drop (p:slprop)
     : stt unit p (fun _ -> emp)
 
 #push-options "--ext 'pulse:env_on_err'"
 
 assume
-val dbg : vprop
+val dbg : slprop
 
 open Pulse.Lib.Stick
 
 ```pulse
 ghost
-fn elim_implies () (#p #q:vprop)
+fn elim_implies () (#p #q:slprop)
    requires (p @==> q) ** p
    ensures q
 {

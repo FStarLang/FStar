@@ -1,0 +1,29 @@
+[
+  "óÉ\bì4U\u0000oWS§yÅ≈≤\u0001",
+  [
+    [
+      "Pulse.Typing.Printer.print_st_typing",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "bool_inversion",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "disc_equation_FStar.Pervasives.Native.None",
+        "equation_FStar.Stubs.Reflection.V2.Data.var", "equation_Prims.nat",
+        "equation_Pulse.Syntax.Base.term", "equation_Pulse.Syntax.Base.typ",
+        "equation_Pulse.Syntax.Base.var", "equation_Pulse.Typing.Env.dom",
+        "equation_Pulse.Typing.Env.lookup",
+        "function_token_typing_FStar.Stubs.Reflection.Types.term",
+        "lemma_FStar.Map.lemma_ContainsDom",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_f2631f1e9df7e7fe731df0b4c6310657",
+        "refinement_interpretation_Tm_refine_f327b3b66854e57c59289f8c259581e7",
+        "typing_FStar.Set.mem", "typing_FStar.Stubs.Reflection.V2.Data.var",
+        "typing_Pulse.Typing.Env.as_map", "typing_Pulse.Typing.Env.dom"
+      ],
+      0,
+      "2cd2f420b8f9c86384131d3ecbc0a5d1"
+    ]
+  ]
+]

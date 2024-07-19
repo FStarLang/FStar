@@ -250,7 +250,7 @@ let (eligible_for_smt_equality :
                         (fun uu___ ->
                            fun t01 ->
                              fun t11 ->
-                               FStar_Reflection_V2_TermEq.term_eq t01 t11))
+                               FStar_Reflection_TermEq.term_eq t01 t11))
                      (fun uu___ ->
                         (fun term_eq ->
                            if (term_eq t0 t1) || (either_equational ())
@@ -1522,7 +1522,7 @@ let (try_unif_nosmt :
                                                             (Prims.of_int (272))
                                                             (Prims.of_int (7)))))
                                                    (if
-                                                      FStar_Reflection_V2_TermEq.term_eq
+                                                      FStar_Reflection_TermEq.term_eq
                                                         hp hq
                                                     then
                                                       Obj.magic
@@ -1597,7 +1597,7 @@ let (match_syntactic_11 : Pulse_Checker_Prover_Match_Base.matcher_t) =
     fun pst ->
       fun p ->
         fun q ->
-          if FStar_Reflection_V2_TermEq.term_eq p q
+          if FStar_Reflection_TermEq.term_eq p q
           then
             Obj.magic
               (FStar_Tactics_Effect.lift_div_tac

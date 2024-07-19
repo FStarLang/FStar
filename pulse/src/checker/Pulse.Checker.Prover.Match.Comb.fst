@@ -31,18 +31,18 @@ module PS = Pulse.Checker.Prover.Substs
 
 (* local aliases *)
 let (>>>) #g #t0 #t1 #t2 = VE_Trans g t0 t1 t2
-let (>>*) #g #t0 #t1 #t2 = vprop_list_equiv_trans g t0 t1 t2
-let cong_r #g #t0 #t1 #t2 (d : vprop_equiv g t1 t2) : vprop_equiv g (t0 * t1) (t0 * t2) =
+let (>>*) #g #t0 #t1 #t2 = slprop_list_equiv_trans g t0 t1 t2
+let cong_r #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t0 * t1) (t0 * t2) =
   VE_Ctxt _ _ _ _ _ (VE_Refl _ _) d
-let cong_l #g #t0 #t1 #t2 (d : vprop_equiv g t1 t2) : vprop_equiv g (t1 * t0) (t2 * t0) =
+let cong_l #g #t0 #t1 #t2 (d : slprop_equiv g t1 t2) : slprop_equiv g (t1 * t0) (t2 * t0) =
   VE_Ctxt _ _ _ _ _ d (VE_Refl _ _)
-let ve_refl_pf (#g:env) (p q : vprop) (s : squash (p == q)) : vprop_equiv g p q = VE_Refl g p
+let ve_refl_pf (#g:env) (p q : slprop) (s : squash (p == q)) : slprop_equiv g p q = VE_Refl g p
 
 let wrap_matcher
   (label : string)
   (matcher : matcher_t)
   (#preamble:_) (pst : prover_state preamble)
-  (p q : vprop)
+  (p q : slprop)
 =
   if RU.debug_at_level (fstar_env pst.pg) "prover.match" then
     T.print ("Trying matcher " ^ label);
@@ -59,15 +59,15 @@ let rec match_f_1n
   (label : string)
   (matcher : matcher_t)
   (#preamble:_) (pst : prover_state preamble)
-  (q : vprop)
-  (ctxt0 : list vprop)
+  (q : slprop)
+  (ctxt0 : list slprop)
   (* Returns new shrunk ctxt, proving the equivalence. *)
   : T.Tac (option (
-             p        : vprop &
-             ctxt1    : list vprop &
-             ctxt1_ok : vprop_list_equiv pst.pg ctxt0 (p::ctxt1) &
+             p        : slprop &
+             ctxt1    : list slprop &
+             ctxt1_ok : slprop_list_equiv pst.pg ctxt0 (p::ctxt1) &
              ss'      : (ss' : PS.ss_t {ss' `ss_extends` pst.ss}) &
-             pq_ok    : vprop_equiv pst.pg p ss'.(q)
+             pq_ok    : slprop_equiv pst.pg p ss'.(q)
     ))
 = match ctxt0 with
   | [] -> None
@@ -86,7 +86,7 @@ let rec match_f_1n
           T.print "Checking for ambiguity";
         match match_f_1n label matcher pst q ps with
         | Some (| p', _, _, _, _ |) ->
-          if not (FStar.Reflection.V2.TermEq.term_eq p p') then
+          if not (FStar.Reflection.TermEq.term_eq p p') then
             raise (Ambig (q, p, p'))
         | None -> ()
       end;
@@ -102,10 +102,10 @@ let rec match_f_1n
         ];
       assume (ss'.(q) == ss_extension.(pst.ss.(q)));
       (* ^ should be trivial from the definition of ss' + some missing lemmas in Prover.Substs *)
-      let pq' : vprop_equiv pst.pg p (ss'.(q)) =
+      let pq' : slprop_equiv pst.pg p (ss'.(q)) =
         coerce_eq () pq (* weird that we need to coerce? *)
       in
-      Some (| p, ps, vprop_list_equiv_refl _ _, ss', pq' |)
+      Some (| p, ps, slprop_list_equiv_refl _ _, ss', pq' |)
     )
     | None -> (
       match match_f_1n label matcher pst q ps with
@@ -113,19 +113,19 @@ let rec match_f_1n
       | Some (| p', ctxt1, ctxt1_ok, ss', p'q |) ->
         Some (| p',
                 p::ctxt1,
-                vprop_list_equiv_cons _ _ _ _ _ (VE_Refl _ _) ctxt1_ok >>>
-                  vprop_list_equiv_flip _ _ _ _,
+                slprop_list_equiv_cons _ _ _ _ _ (VE_Refl _ _) ctxt1_ok >>>
+                  slprop_list_equiv_flip _ _ _ _,
                 ss',
                 p'q |)
     )
 
-let weaken_vprop_equiv_env
+let weaken_slprop_equiv_env
       (#g1 : env)
       (#g2 : env{g2 `env_extends` g1})
-      (#p #q : vprop)
-      (pf : vprop_equiv g1 p q) : vprop_equiv g2 p q = magic()
+      (#p #q : slprop)
+      (pf : slprop_equiv g1 p q) : slprop_equiv g2 p q = magic()
 
-let report_ambig (#a:Type) (g:env) (q p p' :  vprop) : T.Tac a =
+let report_ambig (#a:Type) (g:env) (q p p' :  slprop) : T.Tac a =
   fail_doc_env true g (Some <| range_of_env g) [
     text "Ambiguous match for resource:" ^^
       indent (pp q);
@@ -141,7 +141,7 @@ let rec match_f_nn
   (label : string)
   (matcher_f : matcher_t)
   (#preamble:_) (pst : prover_state preamble)
-  (ctxt:list vprop) (unsolved:list vprop)
+  (ctxt:list slprop) (unsolved:list slprop)
   : T.Tac (match_pass_result (push_env pst.pg pst.uvs) pst.ss ctxt unsolved)
 = match unsolved with
   | [] ->
@@ -179,8 +179,8 @@ let rec match_f_nn
         unsolved_matched = mpr.unsolved_matched;
         unsolved1 = q::mpr.unsolved1;
         unsolved_ok =
-          vprop_list_equiv_cons _ q q _ _ (VE_Refl _ _) mpr.unsolved_ok >>>
-          vprop_list_equiv_push_append _ _ _ _;
+          slprop_list_equiv_cons _ q q _ _ (VE_Refl _ _) mpr.unsolved_ok >>>
+          slprop_list_equiv_push_append _ _ _ _;
       }
       in mpr'
 
@@ -192,17 +192,17 @@ let rec match_f_nn
         ctxt_matched = p :: mpr.ctxt_matched;
         ctxt1        = ctxt1;
         ctxt_ok      = mpr.ctxt_ok >>>
-                       weaken_vprop_equiv_env (vprop_list_equiv_append_r _ _ _ _ ctxt1_ok) >>>
-                       VE_Sym _ _ _ (vprop_list_equiv_push_append _ p mpr.ctxt_matched ctxt1);
+                       weaken_slprop_equiv_env (slprop_list_equiv_append_r _ _ _ _ ctxt1_ok) >>>
+                       VE_Sym _ _ _ (slprop_list_equiv_push_append _ p mpr.ctxt_matched ctxt1);
 
         unsolved_matched = q :: mpr.unsolved_matched;
         unsolved1        = mpr.unsolved1;
-        unsolved_ok      = vprop_list_equiv_cons _ q q _ _ (VE_Refl _ _) mpr.unsolved_ok;
+        unsolved_ok      = slprop_list_equiv_cons _ q q _ _ (VE_Refl _ _) mpr.unsolved_ok;
         
         match_ok = (
-          // assume (list_as_vprop (ss'.(q) :: (mpr.ss' $$ mpr.unsolved_matched)) ==
-          //         list_as_vprop (ss' $$ q :: mpr.unsolved_matched));
-          vprop_list_equiv_cons _ _ _ _ _ (weaken_vprop_equiv_env pq) mpr.match_ok >>*
+          // assume (list_as_slprop (ss'.(q) :: (mpr.ss' $$ mpr.unsolved_matched)) ==
+          //         list_as_slprop (ss' $$ q :: mpr.unsolved_matched));
+          slprop_list_equiv_cons _ _ _ _ _ (weaken_slprop_equiv_env pq) mpr.match_ok >>*
           ve_refl_pf _ _ (admit())
         );
       }
