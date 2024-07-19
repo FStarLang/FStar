@@ -197,7 +197,16 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
           if DsEnv.syntax_only env.dsenv then modul, env
           else Tc.tc_partial_modul env modul
       in
-      (Some modul, env)
+      let lang_decls =
+        let open FStar.Parser.AST in
+        let decls =
+          match ast_modul with
+          | Module (_, decls)
+          | Interface (_, decls, _) -> decls
+        in
+        List.filter (fun (d:FStar.Parser.AST.decl) -> Parser.AST.UseLangDecls? d.d) decls
+      in
+      Some modul, env, lang_decls
   in
   
   let check_decls ast_decls =
@@ -219,7 +228,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_more_partial_modul env modul sigelts in
-      (Some modul, env)
+      Some modul, env, List.filter (fun (d:FStar.Parser.AST.decl) -> Parser.AST.UseLangDecls? d.d) ast_decls
   in
   match frag with
   | Inr d -> (
@@ -231,11 +240,18 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       check_decls [d]
   )
 
-  | Inl frag -> (
-    match Parser.Driver.parse_fragment frag with
+  | Inl (frag, lang_decls) -> (
+    let parse_frag frag =
+      match lang_decls with
+      | [] ->
+        Parser.Driver.parse_fragment None frag
+      | {d=FStar.Parser.AST.UseLangDecls lang}::_ ->
+        Parser.Driver.parse_fragment (Some lang) frag
+    in
+    match parse_frag frag with
     | Parser.Driver.Empty
     | Parser.Driver.Decls [] ->
-      (curmod, env)
+      curmod, env, []
 
     | Parser.Driver.Modul ast_modul ->
       check_module_name_declaration ast_modul
@@ -245,7 +261,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   )
     
 let load_interface_decls env interface_file_name : TcEnv.env_t =
-  let r = Pars.parse (Pars.Filename interface_file_name) in
+  let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)

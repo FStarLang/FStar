@@ -28,8 +28,8 @@ open FStar.Class.Show
 
 let is_cache_file (fn: string) = Util.get_file_extension fn = ".cache"
 
-let parse_fragment (frag: ParseIt.input_frag) : fragment =
-    match ParseIt.parse (Toplevel frag) with
+let parse_fragment lang_opt (frag: ParseIt.input_frag) : fragment =
+    match ParseIt.parse lang_opt (Toplevel frag) with
     | ASTFragment (Inl modul, _) -> //interactive mode: module
         Modul modul
     | ASTFragment (Inr [], _) -> //interactive mode: blank space
@@ -55,7 +55,7 @@ let maybe_dump_module (m:modul) =
       )
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 let parse_file fn =
-    match ParseIt.parse (Filename fn) with
+    match ParseIt.parse None (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
         ast, comments
     | ASTFragment (Inr _ , _) ->

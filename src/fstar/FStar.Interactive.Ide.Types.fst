@@ -152,7 +152,8 @@ and repl_state = {
     repl_env: TcEnv.env;
     repl_stdin: stream_reader;
     repl_names: CTable.table;
-    repl_buffered_input_queries: list query
+    repl_buffered_input_queries: list query;
+    repl_lang:FStar.Universal.lang_decls_t;
 }
 and repl_stack_t = list repl_stack_entry_t
 and repl_stack_entry_t  = repl_depth_t & (repl_task & repl_state)

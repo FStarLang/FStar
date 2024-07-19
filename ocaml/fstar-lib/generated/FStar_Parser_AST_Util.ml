@@ -1168,9 +1168,4 @@ let (parse_extension_lang :
                  FStar_Errors.raise_error
                    (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
                    error.range
-             | FStar_Pervasives.Inr ds ->
-                 let uu___1 =
-                   FStar_Parser_AST.mk_decl
-                     (FStar_Parser_AST.UseLangDecls lang_name) raw_text_pos
-                     [] in
-                 uu___1 :: ds)
+             | FStar_Pervasives.Inr ds -> ds)

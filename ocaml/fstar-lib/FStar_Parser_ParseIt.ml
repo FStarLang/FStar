@@ -324,75 +324,95 @@ let parse_string_incrementally (s:string) =
     let r = FStar_Compiler_Range.mk_range filename pos pos in
     Inr (Some ("ParseStringIncrementally: Error " ^ Printexc.to_string e, r))
 
-let parse fn =
-  FStar_Parser_Util.warningHandler := (function
-    | e -> Printf.printf "There was some warning (TODO)\n");
-
-  let lexbuf, filename, contents = match fn with
-    | Filename f ->
-        check_extension f;
-        let f', contents = read_file f in
-        (try create contents f' 1 0, f', contents
-         with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
-    | Incremental s
-    | Toplevel s
-    | Fragment s ->
-      create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>", s.frag_text
-  in
-
-  let lexer () =
-    let tok = FStar_Parser_LexFStar.token lexbuf in
-    (tok, lexbuf.start_p, lexbuf.cur_p)
-  in
-  try
-    match fn with
-    | Filename _
-    | Toplevel _ -> begin
-      let fileOrFragment =
-          MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
-      in
-      let frags = match fileOrFragment with
-          | FStar_Pervasives.Inl modul ->
-             if has_extension filename interface_extensions
-             then match modul with
-                  | FStar_Parser_AST.Module(l,d) ->
-                    FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
-                  | _ -> failwith "Impossible"
-             else FStar_Pervasives.Inl modul
-          | _ -> fileOrFragment
-      in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
-      end
-      
-    | Incremental i ->
-      let decls, comments, err_opt = 
-        parse_incremental_fragment 
-          filename
-          i.frag_text
-          lexbuf
-          lexer
-          (fun (d:FStar_Parser_AST.decl) -> d.drange)
-          FStar_Parser_Parse.oneDeclOrEOF
-      in
-      IncrementalFragment(decls, comments, err_opt)
-    
-    | Fragment _ ->
-      Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
-  with
-    | FStar_Errors.Empty_frag ->
-      ASTFragment (FStar_Pervasives.Inr [], [])
-
+let parse_lang lang fn =
+  match fn with
+  | Filename _ ->
+    failwith "parse_lang: only in incremental mode"
+  | Incremental s
+  | Toplevel s
+  | Fragment s ->
+    try
+      let frag_pos = FStar_Compiler_Range.mk_pos s.frag_line s.frag_col in
+      let rng = FStar_Compiler_Range.mk_range s.frag_fname frag_pos frag_pos in
+      let decls = FStar_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
+      let comments = FStar_Parser_Util.flush_comments () in
+      ASTFragment (Inr decls, comments)
+    with
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-    | FStar_Errors.Err(e, msg, _ctx) ->
-      ParseError (err_of_parse_error filename lexbuf (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
-  
-    | e ->
-(*
-    | Parsing.Parse_error as _e
-    | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
-*)
-      ParseError (err_of_parse_error filename lexbuf None)
+let parse lang_opt fn =
+  FStar_Parser_Util.warningHandler := (function
+    | e -> Printf.printf "There was some warning (TODO)\n");
+  match lang_opt with
+  | Some lang -> parse_lang lang fn
+  | _ -> 
+    let lexbuf, filename, contents =
+      match fn with
+      | Filename f ->
+          check_extension f;
+          let f', contents = read_file f in
+          (try create contents f' 1 0, f', contents
+          with _ -> raise_err (Fatal_InvalidUTF8Encoding, U.format1 "File %s has invalid UTF-8 encoding.\n" f'))
+      | Incremental s
+      | Toplevel s
+      | Fragment s ->
+        create s.frag_text s.frag_fname (Z.to_int s.frag_line) (Z.to_int s.frag_col), "<input>", s.frag_text
+    in
+
+    let lexer () =
+      let tok = FStar_Parser_LexFStar.token lexbuf in
+      (tok, lexbuf.start_p, lexbuf.cur_p)
+    in
+    try
+      match fn with
+      | Filename _
+      | Toplevel _ -> begin
+        let fileOrFragment =
+            MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.inputFragment lexer
+        in
+        let frags = match fileOrFragment with
+            | FStar_Pervasives.Inl modul ->
+              if has_extension filename interface_extensions
+              then match modul with
+                    | FStar_Parser_AST.Module(l,d) ->
+                      FStar_Pervasives.Inl (FStar_Parser_AST.Interface(l, d, true))
+                    | _ -> failwith "Impossible"
+              else FStar_Pervasives.Inl modul
+            | _ -> fileOrFragment
+        in ASTFragment (frags, FStar_Parser_Util.flush_comments ())
+        end
+        
+      | Incremental i ->
+        let decls, comments, err_opt = 
+          parse_incremental_fragment 
+            filename
+            i.frag_text
+            lexbuf
+            lexer
+            (fun (d:FStar_Parser_AST.decl) -> d.drange)
+            FStar_Parser_Parse.oneDeclOrEOF
+        in
+        IncrementalFragment(decls, comments, err_opt)
+      
+      | Fragment _ ->
+        Term (MenhirLib.Convert.Simplified.traditional2revised FStar_Parser_Parse.term lexer)
+    with
+      | FStar_Errors.Empty_frag ->
+        ASTFragment (FStar_Pervasives.Inr [], [])
+
+      | FStar_Errors.Error(e, msg, r, _ctx) ->
+        ParseError (e, msg, r)
+
+      | FStar_Errors.Err(e, msg, _ctx) ->
+        ParseError (err_of_parse_error filename lexbuf (Some ("FStar.Errors.Err: " ^ FStar_Errors_Msg.rendermsg msg)))
+    
+      | e ->
+  (*
+      | Parsing.Parse_error as _e
+      | FStar_Parser_Parse.MenhirBasics.Error as _e  ->
+  *)
+        ParseError (err_of_parse_error filename lexbuf None)
 
 
 (** Parsing of command-line error/warning/silent flags. *)

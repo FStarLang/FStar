@@ -2206,7 +2206,7 @@ let string_to_term (e: Env.env) (s: string): tac term
     let frag_of_text s = { frag_fname= "<string_to_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in
-    match parse (Fragment (frag_of_text s)) with
+    match parse None (Fragment (frag_of_text s)) with
     | Term t ->
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
       begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with

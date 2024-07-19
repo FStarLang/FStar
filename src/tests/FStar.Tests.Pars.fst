@@ -44,7 +44,7 @@ let test_mod_ref = mk_ref (Some ({name=test_lid;
                                   is_interface=false}))
 
 let parse_mod mod_name dsenv =
-    match parse (Filename mod_name) with
+    match parse None (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Compiler.Range.dummyRange)) DsEnv.default_mii in
@@ -120,7 +120,7 @@ let frag_of_text s = {frag_fname=" input"; frag_text=s; frag_line=1; frag_col=0}
 let pars s =
     try
         let tcenv = init() in
-        match parse (Fragment <| frag_of_text s) with
+        match parse None (Fragment <| frag_of_text s) with
         | Term t ->
             ToSyntax.desugar_term tcenv.dsenv t
         | ParseError (e, msg, r) ->
@@ -164,7 +164,7 @@ let pars_and_tc_fragment (s:string) =
         let tcenv = init() in
         let frag = frag_of_text s in
         try
-          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (Inl frag) in
+          let test_mod', tcenv', _ = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (Inl (frag, [])) in
           test_mod_ref := test_mod';
           tcenv_ref := Some tcenv';
           let n = get_err_count () in
@@ -235,7 +235,7 @@ let parse_incremental_decls () =
                              frag_line = 1;
                              frag_col = 0 } in
   let open FStar.Compiler.Range in
-  match parse input0, parse input1 with
+  match parse None input0, parse None input1 with
   | IncrementalFragment (decls0, _, parse_err0),
     IncrementalFragment (decls1, _, parse_err1) -> (
       let check_range r l c =
@@ -316,7 +316,7 @@ let parse_incremental_decls_use_lang () =
                              frag_line = 1;
                              frag_col = 0 } in
   let open FStar.Compiler.Range in
-  match parse input0 with
+  match parse None input0 with
   | IncrementalFragment (decls0, _, parse_err0) -> (
       let _ =
         match parse_err0 with

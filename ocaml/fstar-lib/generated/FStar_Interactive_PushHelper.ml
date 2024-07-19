@@ -296,7 +296,9 @@ let (push_repl :
                         (st.FStar_Interactive_Ide_Types.repl_names);
                       FStar_Interactive_Ide_Types.repl_buffered_input_queries
                         =
-                        (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                        (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                      FStar_Interactive_Ide_Types.repl_lang =
+                        (st.FStar_Interactive_Ide_Types.repl_lang)
                     }))
 let (add_issues_to_push_fragment : FStar_Json.json Prims.list -> unit) =
   fun issues ->
@@ -366,32 +368,41 @@ let (run_repl_task :
   FStar_Interactive_Ide_Types.optmod_t ->
     FStar_TypeChecker_Env.env_t ->
       FStar_Interactive_Ide_Types.repl_task ->
-        (FStar_Interactive_Ide_Types.optmod_t * FStar_TypeChecker_Env.env_t))
+        FStar_Universal.lang_decls_t ->
+          (FStar_Interactive_Ide_Types.optmod_t * FStar_TypeChecker_Env.env_t
+            * FStar_Universal.lang_decls_t))
   =
   fun curmod ->
     fun env ->
       fun task ->
-        match task with
-        | FStar_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
-            let uu___ =
-              tc_one env
-                (FStar_Pervasives_Native.Some
-                   (intf.FStar_Interactive_Ide_Types.tf_fname))
-                impl.FStar_Interactive_Ide_Types.tf_fname in
-            (curmod, uu___)
-        | FStar_Interactive_Ide_Types.LDSingle intf_or_impl ->
-            let uu___ =
-              tc_one env FStar_Pervasives_Native.None
-                intf_or_impl.FStar_Interactive_Ide_Types.tf_fname in
-            (curmod, uu___)
-        | FStar_Interactive_Ide_Types.LDInterfaceOfCurrentFile intf ->
-            let uu___ =
-              FStar_Universal.load_interface_decls env
-                intf.FStar_Interactive_Ide_Types.tf_fname in
-            (curmod, uu___)
-        | FStar_Interactive_Ide_Types.PushFragment (frag, uu___, uu___1) ->
-            FStar_Universal.tc_one_fragment curmod env frag
-        | FStar_Interactive_Ide_Types.Noop -> (curmod, env)
+        fun lds ->
+          match task with
+          | FStar_Interactive_Ide_Types.LDInterleaved (intf, impl) ->
+              let uu___ =
+                tc_one env
+                  (FStar_Pervasives_Native.Some
+                     (intf.FStar_Interactive_Ide_Types.tf_fname))
+                  impl.FStar_Interactive_Ide_Types.tf_fname in
+              (curmod, uu___, [])
+          | FStar_Interactive_Ide_Types.LDSingle intf_or_impl ->
+              let uu___ =
+                tc_one env FStar_Pervasives_Native.None
+                  intf_or_impl.FStar_Interactive_Ide_Types.tf_fname in
+              (curmod, uu___, [])
+          | FStar_Interactive_Ide_Types.LDInterfaceOfCurrentFile intf ->
+              let uu___ =
+                FStar_Universal.load_interface_decls env
+                  intf.FStar_Interactive_Ide_Types.tf_fname in
+              (curmod, uu___, [])
+          | FStar_Interactive_Ide_Types.PushFragment (frag, uu___, uu___1) ->
+              let frag1 =
+                match frag with
+                | FStar_Pervasives.Inl frag2 ->
+                    FStar_Pervasives.Inl (frag2, lds)
+                | FStar_Pervasives.Inr decl -> FStar_Pervasives.Inr decl in
+              let uu___2 = FStar_Universal.tc_one_fragment curmod env frag1 in
+              (match uu___2 with | (o, e, langs) -> (o, e, langs))
+          | FStar_Interactive_Ide_Types.Noop -> (curmod, env, [])
 let (query_of_ids :
   FStar_Ident.ident Prims.list -> FStar_Interactive_CompletionTable.query) =
   fun ids -> FStar_Compiler_List.map FStar_Ident.string_of_id ids
@@ -505,7 +516,9 @@ let (commit_name_tracking :
           (st.FStar_Interactive_Ide_Types.repl_stdin);
         FStar_Interactive_Ide_Types.repl_names = names;
         FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-          (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+          (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+        FStar_Interactive_Ide_Types.repl_lang =
+          (st.FStar_Interactive_Ide_Types.repl_lang)
       }
 let (fresh_name_tracking_hooks :
   unit ->
@@ -607,9 +620,9 @@ let (repl_tx :
                       let uu___2 =
                         run_repl_task
                           st1.FStar_Interactive_Ide_Types.repl_curmod env
-                          task in
+                          task st1.FStar_Interactive_Ide_Types.repl_lang in
                       (match uu___2 with
-                       | (curmod, env1) ->
+                       | (curmod, env1, lds) ->
                            let st2 =
                              {
                                FStar_Interactive_Ide_Types.repl_line =
@@ -629,7 +642,11 @@ let (repl_tx :
                                  (st1.FStar_Interactive_Ide_Types.repl_names);
                                FStar_Interactive_Ide_Types.repl_buffered_input_queries
                                  =
-                                 (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                                 (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                               FStar_Interactive_Ide_Types.repl_lang =
+                                 (FStar_Compiler_List.op_At
+                                    (FStar_Compiler_List.rev lds)
+                                    st1.FStar_Interactive_Ide_Types.repl_lang)
                              } in
                            let uu___3 = finish_name_tracking env1 in
                            (match uu___3 with
@@ -732,7 +749,9 @@ let (repl_ldtx :
                 FStar_Interactive_Ide_Types.repl_names =
                   (st'.FStar_Interactive_Ide_Types.repl_names);
                 FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                  (st'.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                  (st'.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                FStar_Interactive_Ide_Types.repl_lang =
+                  (st'.FStar_Interactive_Ide_Types.repl_lang)
               } in
             revert_many st'1 entries in
       let rec aux st1 tasks1 previous =
@@ -767,7 +786,9 @@ let (repl_ldtx :
                          (st2.FStar_Interactive_Ide_Types.repl_names);
                        FStar_Interactive_Ide_Types.repl_buffered_input_queries
                          =
-                         (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                         (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                       FStar_Interactive_Ide_Types.repl_lang =
+                         (st2.FStar_Interactive_Ide_Types.repl_lang)
                      } in
                    aux uu___1 tasks2 []
                  else FStar_Pervasives.Inr st2)
@@ -818,7 +839,9 @@ let (ld_deps :
                         (st.FStar_Interactive_Ide_Types.repl_names);
                       FStar_Interactive_Ide_Types.repl_buffered_input_queries
                         =
-                        (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                        (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                      FStar_Interactive_Ide_Types.repl_lang =
+                        (st.FStar_Interactive_Ide_Types.repl_lang)
                     } in
                   let uu___2 = repl_ldtx st1 tasks in
                   (match uu___2 with
@@ -928,7 +951,9 @@ let (full_lax :
                  (st1.FStar_Interactive_Ide_Types.repl_stdin);
                FStar_Interactive_Ide_Types.repl_names = names;
                FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                 (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                 (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+               FStar_Interactive_Ide_Types.repl_lang =
+                 (st1.FStar_Interactive_Ide_Types.repl_lang)
              } FStar_Interactive_Ide_Types.LaxCheck
              (FStar_Interactive_Ide_Types.PushFragment
                 ((FStar_Pervasives.Inl frag),

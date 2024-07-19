@@ -336,31 +336,35 @@ let reload_deps :
                  FStar_Compiler_List.map (fun uu___5 -> pop) prefix in
                return uu___4) in
     pop_until_deps repl_stack
-let (parse_code : Prims.string -> FStar_Parser_ParseIt.parse_result) =
-  fun code ->
-    let uu___ =
-      let uu___1 =
-        let uu___2 =
-          FStar_Compiler_Range_Ops.file_of_range
-            FStar_Interactive_Ide_Types.initial_range in
-        let uu___3 =
+let (parse_code :
+  Prims.string FStar_Pervasives_Native.option ->
+    Prims.string -> FStar_Parser_ParseIt.parse_result)
+  =
+  fun lang ->
+    fun code ->
+      let uu___ =
+        let uu___1 =
+          let uu___2 =
+            FStar_Compiler_Range_Ops.file_of_range
+              FStar_Interactive_Ide_Types.initial_range in
+          let uu___3 =
+            let uu___4 =
+              FStar_Compiler_Range_Ops.start_of_range
+                FStar_Interactive_Ide_Types.initial_range in
+            FStar_Compiler_Range_Ops.line_of_pos uu___4 in
           let uu___4 =
-            FStar_Compiler_Range_Ops.start_of_range
-              FStar_Interactive_Ide_Types.initial_range in
-          FStar_Compiler_Range_Ops.line_of_pos uu___4 in
-        let uu___4 =
-          let uu___5 =
-            FStar_Compiler_Range_Ops.start_of_range
-              FStar_Interactive_Ide_Types.initial_range in
-          FStar_Compiler_Range_Ops.col_of_pos uu___5 in
-        {
-          FStar_Parser_ParseIt.frag_fname = uu___2;
-          FStar_Parser_ParseIt.frag_text = code;
-          FStar_Parser_ParseIt.frag_line = uu___3;
-          FStar_Parser_ParseIt.frag_col = uu___4
-        } in
-      FStar_Parser_ParseIt.Incremental uu___1 in
-    FStar_Parser_ParseIt.parse uu___
+            let uu___5 =
+              FStar_Compiler_Range_Ops.start_of_range
+                FStar_Interactive_Ide_Types.initial_range in
+            FStar_Compiler_Range_Ops.col_of_pos uu___5 in
+          {
+            FStar_Parser_ParseIt.frag_fname = uu___2;
+            FStar_Parser_ParseIt.frag_text = code;
+            FStar_Parser_ParseIt.frag_line = uu___3;
+            FStar_Parser_ParseIt.frag_col = uu___4
+          } in
+        FStar_Parser_ParseIt.Incremental uu___1 in
+      FStar_Parser_ParseIt.parse lang uu___
 let (syntax_issue :
   (FStar_Errors_Codes.raw_error * FStar_Errors_Msg.error_message *
     FStar_Compiler_Range_Type.range) -> FStar_Errors.issue)
@@ -398,7 +402,7 @@ let (run_full_buffer :
         fun request_type ->
           fun with_symbols ->
             fun write_full_buffer_fragment_progress ->
-              let parse_result = parse_code code in
+              let parse_result = parse_code FStar_Pervasives_Native.None code in
               let log_syntax_issues err =
                 match err with
                 | FStar_Pervasives_Native.None -> ()
@@ -523,7 +527,15 @@ let (format_code :
   =
   fun st ->
     fun code ->
-      let parse_result = parse_code code in
+      let maybe_lang =
+        match st.FStar_Interactive_Ide_Types.repl_lang with
+        | [] -> FStar_Pervasives_Native.None
+        | { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls l;
+            FStar_Parser_AST.drange = uu___; FStar_Parser_AST.quals = uu___1;
+            FStar_Parser_AST.attrs = uu___2;
+            FStar_Parser_AST.interleaved = uu___3;_}::uu___4 ->
+            FStar_Pervasives_Native.Some l in
+      let parse_result = parse_code maybe_lang code in
       match parse_result with
       | FStar_Parser_ParseIt.IncrementalFragment
           (decls, comments, FStar_Pervasives_Native.None) ->

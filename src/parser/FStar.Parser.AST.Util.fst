@@ -751,5 +751,4 @@ let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:rang
           (Errors.Fatal_SyntaxError, error.message)
           error.range
     | Inr ds ->
-      mk_decl (UseLangDecls lang_name) raw_text_pos [] :: ds
-
+      ds

@@ -98,16 +98,16 @@ let (run_repl_transaction :
                        let uu___3 =
                          FStar_Interactive_PushHelper.run_repl_task
                            st1.FStar_Interactive_Ide_Types.repl_curmod env1
-                           task in
+                           task st1.FStar_Interactive_Ide_Types.repl_lang in
                        FStar_Pervasives_Native.Some uu___3) in
                 match uu___2 with
-                | FStar_Pervasives_Native.Some (curmod, env1) when
-                    check_success () -> (curmod, env1, true)
+                | FStar_Pervasives_Native.Some (curmod, env1, lds) when
+                    check_success () -> (curmod, env1, true, lds)
                 | uu___3 ->
                     ((st1.FStar_Interactive_Ide_Types.repl_curmod), env,
-                      false) in
+                      false, []) in
               (match uu___1 with
-               | (curmod, env1, success) ->
+               | (curmod, env1, success, lds) ->
                    let uu___2 = finish_name_tracking env1 in
                    (match uu___2 with
                     | (env2, name_events) ->
@@ -133,7 +133,11 @@ let (run_repl_transaction :
                                   (st1.FStar_Interactive_Ide_Types.repl_names);
                                 FStar_Interactive_Ide_Types.repl_buffered_input_queries
                                   =
-                                  (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                                  (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                                FStar_Interactive_Ide_Types.repl_lang =
+                                  (FStar_Compiler_List.op_At
+                                     (FStar_Compiler_List.rev lds)
+                                     st1.FStar_Interactive_Ide_Types.repl_lang)
                               } in
                             FStar_Interactive_PushHelper.commit_name_tracking
                               st3 name_events
@@ -190,7 +194,9 @@ let (run_repl_ld_transactions :
                     FStar_Interactive_Ide_Types.repl_names =
                       (st'.FStar_Interactive_Ide_Types.repl_names);
                     FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                      (st'.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                      (st'.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                    FStar_Interactive_Ide_Types.repl_lang =
+                      (st'.FStar_Interactive_Ide_Types.repl_lang)
                   } in
                 revert_many st'1 entries)) in
         let rec aux st1 tasks1 previous =
@@ -239,7 +245,9 @@ let (run_repl_ld_transactions :
                             (st2.FStar_Interactive_Ide_Types.repl_names);
                           FStar_Interactive_Ide_Types.repl_buffered_input_queries
                             =
-                            (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                            (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                          FStar_Interactive_Ide_Types.repl_lang =
+                            (st2.FStar_Interactive_Ide_Types.repl_lang)
                         } in
                       aux uu___4 tasks2 []
                     else FStar_Pervasives.Inr st2))
@@ -581,7 +589,9 @@ let (buffer_input_queries :
           FStar_Interactive_Ide_Types.repl_buffered_input_queries =
             (FStar_Compiler_List.op_At
                st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries
-               (FStar_Compiler_List.rev qs1))
+               (FStar_Compiler_List.rev qs1));
+          FStar_Interactive_Ide_Types.repl_lang =
+            (st2.FStar_Interactive_Ide_Types.repl_lang)
         } in
       let uu___ =
         let uu___1 =
@@ -618,7 +628,9 @@ let (buffer_input_queries :
                     FStar_Interactive_Ide_Types.repl_names =
                       (st1.FStar_Interactive_Ide_Types.repl_names);
                     FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                      [q]
+                      [q];
+                    FStar_Interactive_Ide_Types.repl_lang =
+                      (st1.FStar_Interactive_Ide_Types.repl_lang)
                   }
               | uu___3 -> aux (q :: qs) st1)) in
     aux [] st
@@ -657,7 +669,9 @@ let (read_interactive_query :
               (st.FStar_Interactive_Ide_Types.repl_stdin);
             FStar_Interactive_Ide_Types.repl_names =
               (st.FStar_Interactive_Ide_Types.repl_names);
-            FStar_Interactive_Ide_Types.repl_buffered_input_queries = qs
+            FStar_Interactive_Ide_Types.repl_buffered_input_queries = qs;
+            FStar_Interactive_Ide_Types.repl_lang =
+              (st.FStar_Interactive_Ide_Types.repl_lang)
           })
 let json_of_opt :
   'uuuuu .
@@ -1150,7 +1164,9 @@ let run_segment :
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
         } in
       let collect_decls uu___ =
-        let uu___1 = FStar_Parser_Driver.parse_fragment frag in
+        let uu___1 =
+          FStar_Parser_Driver.parse_fragment FStar_Pervasives_Native.None
+            frag in
         match uu___1 with
         | FStar_Parser_Driver.Empty -> []
         | FStar_Parser_Driver.Decls decls -> decls
@@ -1302,7 +1318,9 @@ let (load_deps :
             FStar_Interactive_Ide_Types.repl_names =
               (st.FStar_Interactive_Ide_Types.repl_names);
             FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-              (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+              (st.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+            FStar_Interactive_Ide_Types.repl_lang =
+              (st.FStar_Interactive_Ide_Types.repl_lang)
           } in
         let uu___1 =
           run_repl_ld_transactions st1 tasks write_repl_ld_task_progress in
@@ -1586,7 +1604,9 @@ let (run_load_partial_file :
                    FStar_Interactive_Ide_Types.repl_names =
                      (st2.FStar_Interactive_Ide_Types.repl_names);
                    FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                     (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                     (st2.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                   FStar_Interactive_Ide_Types.repl_lang =
+                     (st2.FStar_Interactive_Ide_Types.repl_lang)
                  } in
                ((FStar_Interactive_Ide_Types.QueryOK,
                   (FStar_Json.JsonList [])), (FStar_Pervasives.Inl st3))
@@ -1734,7 +1754,9 @@ let (run_push_without_deps :
           FStar_Interactive_Ide_Types.repl_names =
             (st1.FStar_Interactive_Ide_Types.repl_names);
           FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-            (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+            (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+          FStar_Interactive_Ide_Types.repl_lang =
+            (st1.FStar_Interactive_Ide_Types.repl_lang)
         } in
       let uu___ = query in
       match uu___ with
@@ -1825,7 +1847,9 @@ let (run_push_without_deps :
                            (st3.FStar_Interactive_Ide_Types.repl_names);
                          FStar_Interactive_Ide_Types.repl_buffered_input_queries
                            =
-                           (st3.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                           (st3.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                         FStar_Interactive_Ide_Types.repl_lang =
+                           (st3.FStar_Interactive_Ide_Types.repl_lang)
                        }
                      else st3 in
                    ((status, json_errors), (FStar_Pervasives.Inl st4)))))))
@@ -1879,7 +1903,9 @@ let (run_push_with_deps :
                    (st1.FStar_Interactive_Ide_Types.repl_stdin);
                  FStar_Interactive_Ide_Types.repl_names = names;
                  FStar_Interactive_Ide_Types.repl_buffered_input_queries =
-                   (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries)
+                   (st1.FStar_Interactive_Ide_Types.repl_buffered_input_queries);
+                 FStar_Interactive_Ide_Types.repl_lang =
+                   (st1.FStar_Interactive_Ide_Types.repl_lang)
                } query)))
 let (run_push :
   FStar_Interactive_Ide_Types.repl_state ->
@@ -2308,7 +2334,7 @@ let run_with_parsed_and_tc_term :
               | uu___ -> FStar_Pervasives_Native.None in
             let parse frag =
               let uu___ =
-                FStar_Parser_ParseIt.parse
+                FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
                   (FStar_Parser_ParseIt.Incremental frag) in
               match uu___ with
               | FStar_Parser_ParseIt.IncrementalFragment
@@ -2734,7 +2760,9 @@ let (maybe_cancel_queries :
                 (st.FStar_Interactive_Ide_Types.repl_stdin);
               FStar_Interactive_Ide_Types.repl_names =
                 (st.FStar_Interactive_Ide_Types.repl_names);
-              FStar_Interactive_Ide_Types.repl_buffered_input_queries = rest
+              FStar_Interactive_Ide_Types.repl_buffered_input_queries = rest;
+              FStar_Interactive_Ide_Types.repl_lang =
+                (st.FStar_Interactive_Ide_Types.repl_lang)
             } in
           (match p with
            | FStar_Pervasives_Native.None -> (log_cancellation l; ([], st1))
@@ -2830,65 +2858,70 @@ let rec (run_query :
   =
   fun st ->
     fun q ->
-      match q.FStar_Interactive_Ide_Types.qq with
-      | FStar_Interactive_Ide_Types.Exit -> as_json_list (run_exit st)
-      | FStar_Interactive_Ide_Types.DescribeProtocol ->
-          as_json_list (run_describe_protocol st)
-      | FStar_Interactive_Ide_Types.DescribeRepl ->
-          let uu___ = run_describe_repl st in as_json_list uu___
-      | FStar_Interactive_Ide_Types.GenericError message ->
-          as_json_list (run_generic_error st message)
-      | FStar_Interactive_Ide_Types.ProtocolViolation query ->
-          as_json_list (run_protocol_violation st query)
-      | FStar_Interactive_Ide_Types.Segment c ->
-          let uu___ = run_segment st c in as_json_list uu___
-      | FStar_Interactive_Ide_Types.VfsAdd (fname, contents) ->
-          let uu___ = run_vfs_add st fname contents in as_json_list uu___
-      | FStar_Interactive_Ide_Types.Push pquery ->
-          let uu___ = run_push st pquery in as_json_list uu___
-      | FStar_Interactive_Ide_Types.PushPartialCheckedFile decl_name ->
-          let uu___ = run_load_partial_file st decl_name in
-          as_json_list uu___
-      | FStar_Interactive_Ide_Types.Pop ->
-          let uu___ = run_pop st in as_json_list uu___
-      | FStar_Interactive_Ide_Types.FullBuffer
-          (code, full_kind, with_symbols) ->
-          (write_full_buffer_fragment_progress
-             FStar_Interactive_Incremental.FullBufferStarted;
-           (let uu___1 =
-              FStar_Interactive_Incremental.run_full_buffer st
-                q.FStar_Interactive_Ide_Types.qid code full_kind with_symbols
-                write_full_buffer_fragment_progress in
-            match uu___1 with
-            | (queries, issues) ->
-                (FStar_Compiler_List.iter
-                   (write_response q.FStar_Interactive_Ide_Types.qid
-                      FStar_Interactive_Ide_Types.QueryOK) issues;
-                 (let res = fold_query validate_and_run_query queries st in
-                  write_full_buffer_fragment_progress
-                    FStar_Interactive_Incremental.FullBufferFinished;
-                  res))))
-      | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
-          let uu___ = run_autocomplete st search_term1 context in
-          as_json_list uu___
-      | FStar_Interactive_Ide_Types.Lookup
-          (symbol, context, pos_opt, rq_info, symrange) ->
-          run_lookup st symbol context pos_opt rq_info symrange
-      | FStar_Interactive_Ide_Types.Compute (term, rules) ->
-          let uu___ = run_compute st term rules in as_json_list uu___
-      | FStar_Interactive_Ide_Types.Search term ->
-          let uu___ = run_search st term in as_json_list uu___
-      | FStar_Interactive_Ide_Types.Callback f -> f st
-      | FStar_Interactive_Ide_Types.Format code ->
-          let uu___ = run_format_code st code in as_json_list uu___
-      | FStar_Interactive_Ide_Types.RestartSolver ->
-          (((st.FStar_Interactive_Ide_Types.repl_env).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-             ();
+      (let uu___1 =
+         FStar_Class_Show.show
+           (FStar_Class_Show.show_list FStar_Parser_AST.showable_decl)
+           st.FStar_Interactive_Ide_Types.repl_lang in
+       FStar_Compiler_Util.print1 "Running query with repl_lang=%s\n" uu___1);
+      (match q.FStar_Interactive_Ide_Types.qq with
+       | FStar_Interactive_Ide_Types.Exit -> as_json_list (run_exit st)
+       | FStar_Interactive_Ide_Types.DescribeProtocol ->
+           as_json_list (run_describe_protocol st)
+       | FStar_Interactive_Ide_Types.DescribeRepl ->
+           let uu___1 = run_describe_repl st in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.GenericError message ->
+           as_json_list (run_generic_error st message)
+       | FStar_Interactive_Ide_Types.ProtocolViolation query ->
+           as_json_list (run_protocol_violation st query)
+       | FStar_Interactive_Ide_Types.Segment c ->
+           let uu___1 = run_segment st c in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.VfsAdd (fname, contents) ->
+           let uu___1 = run_vfs_add st fname contents in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.Push pquery ->
+           let uu___1 = run_push st pquery in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.PushPartialCheckedFile decl_name ->
+           let uu___1 = run_load_partial_file st decl_name in
+           as_json_list uu___1
+       | FStar_Interactive_Ide_Types.Pop ->
+           let uu___1 = run_pop st in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.FullBuffer
+           (code, full_kind, with_symbols) ->
+           (write_full_buffer_fragment_progress
+              FStar_Interactive_Incremental.FullBufferStarted;
+            (let uu___2 =
+               FStar_Interactive_Incremental.run_full_buffer st
+                 q.FStar_Interactive_Ide_Types.qid code full_kind
+                 with_symbols write_full_buffer_fragment_progress in
+             match uu___2 with
+             | (queries, issues) ->
+                 (FStar_Compiler_List.iter
+                    (write_response q.FStar_Interactive_Ide_Types.qid
+                       FStar_Interactive_Ide_Types.QueryOK) issues;
+                  (let res = fold_query validate_and_run_query queries st in
+                   write_full_buffer_fragment_progress
+                     FStar_Interactive_Incremental.FullBufferFinished;
+                   res))))
+       | FStar_Interactive_Ide_Types.AutoComplete (search_term1, context) ->
+           let uu___1 = run_autocomplete st search_term1 context in
+           as_json_list uu___1
+       | FStar_Interactive_Ide_Types.Lookup
+           (symbol, context, pos_opt, rq_info, symrange) ->
+           run_lookup st symbol context pos_opt rq_info symrange
+       | FStar_Interactive_Ide_Types.Compute (term, rules) ->
+           let uu___1 = run_compute st term rules in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.Search term ->
+           let uu___1 = run_search st term in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.Callback f -> f st
+       | FStar_Interactive_Ide_Types.Format code ->
+           let uu___1 = run_format_code st code in as_json_list uu___1
+       | FStar_Interactive_Ide_Types.RestartSolver ->
+           (((st.FStar_Interactive_Ide_Types.repl_env).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
+              ();
+            ((FStar_Interactive_Ide_Types.QueryOK, []),
+              (FStar_Pervasives.Inl st)))
+       | FStar_Interactive_Ide_Types.Cancel uu___1 ->
            ((FStar_Interactive_Ide_Types.QueryOK, []),
              (FStar_Pervasives.Inl st)))
-      | FStar_Interactive_Ide_Types.Cancel uu___ ->
-          ((FStar_Interactive_Ide_Types.QueryOK, []),
-            (FStar_Pervasives.Inl st))
 and (validate_and_run_query :
   FStar_Interactive_Ide_Types.repl_state ->
     FStar_Interactive_Ide_Types.query -> run_query_result)
@@ -3047,7 +3080,8 @@ let (build_initial_repl_state :
        FStar_Interactive_Ide_Types.repl_stdin = uu___1;
        FStar_Interactive_Ide_Types.repl_names =
          FStar_Interactive_CompletionTable.empty;
-       FStar_Interactive_Ide_Types.repl_buffered_input_queries = []
+       FStar_Interactive_Ide_Types.repl_buffered_input_queries = [];
+       FStar_Interactive_Ide_Types.repl_lang = []
      })
 let interactive_mode' :
   'uuuuu . FStar_Interactive_Ide_Types.repl_state -> 'uuuuu =

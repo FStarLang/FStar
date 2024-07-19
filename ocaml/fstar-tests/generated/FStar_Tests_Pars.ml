@@ -24,7 +24,8 @@ let (parse_mod :
   fun mod_name ->
     fun dsenv ->
       let uu___ =
-        FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename mod_name) in
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
+          (FStar_Parser_ParseIt.Filename mod_name) in
       match uu___ with
       | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl m, uu___1) ->
           let uu___2 =
@@ -337,7 +338,7 @@ let (pars : Prims.string -> FStar_Syntax_Syntax.term) =
          | () ->
              let tcenv = init () in
              let uu___1 =
-               FStar_Parser_ParseIt.parse
+               FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
                  (FStar_Parser_ParseIt.Fragment (frag_of_text s)) in
              (match uu___1 with
               | FStar_Parser_ParseIt.Term t ->
@@ -591,9 +592,9 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                           let uu___4 =
                             FStar_Compiler_Effect.op_Bang test_mod_ref in
                           FStar_Universal.tc_one_fragment uu___4 tcenv
-                            (FStar_Pervasives.Inl frag) in
+                            (FStar_Pervasives.Inl (frag, [])) in
                         (match uu___3 with
-                         | (test_mod', tcenv') ->
+                         | (test_mod', tcenv', uu___4) ->
                              (FStar_Compiler_Effect.op_Colon_Equals
                                 test_mod_ref test_mod';
                               FStar_Compiler_Effect.op_Colon_Equals tcenv_ref
@@ -602,15 +603,15 @@ let (pars_and_tc_fragment : Prims.string -> unit) =
                                if n <> Prims.int_zero
                                then
                                  (report ();
-                                  (let uu___7 =
-                                     let uu___8 =
-                                       let uu___9 =
+                                  (let uu___8 =
+                                     let uu___9 =
+                                       let uu___10 =
                                          FStar_Compiler_Util.string_of_int n in
                                        FStar_Compiler_Util.format1
-                                         "%s errors were reported" uu___9 in
+                                         "%s errors were reported" uu___10 in
                                      (FStar_Errors_Codes.Fatal_ErrorsReported,
-                                       uu___8) in
-                                   FStar_Errors.raise_err uu___7))
+                                       uu___9) in
+                                   FStar_Errors.raise_err uu___8))
                                else ())))) ()
                with
                | uu___2 ->
@@ -672,8 +673,11 @@ let (parse_incremental_decls : unit -> unit) =
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
         } in
     let uu___1 =
-      let uu___2 = FStar_Parser_ParseIt.parse input0 in
-      let uu___3 = FStar_Parser_ParseIt.parse input1 in (uu___2, uu___3) in
+      let uu___2 =
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None input0 in
+      let uu___3 =
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None input1 in
+      (uu___2, uu___3) in
     match uu___1 with
     | (FStar_Parser_ParseIt.IncrementalFragment (decls0, uu___2, parse_err0),
        FStar_Parser_ParseIt.IncrementalFragment (decls1, uu___3, parse_err1))
@@ -795,7 +799,8 @@ let (parse_incremental_decls_use_lang : unit -> unit) =
            FStar_Parser_ParseIt.frag_line = Prims.int_one;
            FStar_Parser_ParseIt.frag_col = Prims.int_zero
          } in
-     let uu___2 = FStar_Parser_ParseIt.parse input0 in
+     let uu___2 =
+       FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None input0 in
      match uu___2 with
      | FStar_Parser_ParseIt.IncrementalFragment (decls0, uu___3, parse_err0)
          ->

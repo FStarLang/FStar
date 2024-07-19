@@ -747,13 +747,14 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (env4.FStar_TypeChecker_Env.missing_decl)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
+type lang_decls_t = FStar_Parser_AST.decl Prims.list
 let (tc_one_fragment :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env_t ->
-      (FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-        FStar_Pervasives.either ->
+      ((FStar_Parser_ParseIt.input_frag * lang_decls_t),
+        FStar_Parser_AST.decl) FStar_Pervasives.either ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
-          FStar_TypeChecker_Env.env))
+          FStar_TypeChecker_Env.env * lang_decls_t))
   =
   fun curmod ->
     fun env ->
@@ -833,7 +834,19 @@ let (tc_one_fragment :
                        else FStar_TypeChecker_Tc.tc_partial_modul env2 modul in
                      match uu___3 with
                      | (modul1, env3) ->
-                         ((FStar_Pervasives_Native.Some modul1), env3)))) in
+                         let lang_decls =
+                           let decls =
+                             match ast_modul1 with
+                             | FStar_Parser_AST.Module (uu___4, decls1) ->
+                                 decls1
+                             | FStar_Parser_AST.Interface
+                                 (uu___4, decls1, uu___5) -> decls1 in
+                           FStar_Compiler_List.filter
+                             (fun d ->
+                                FStar_Parser_AST.uu___is_UseLangDecls
+                                  d.FStar_Parser_AST.d) decls in
+                         ((FStar_Pervasives_Native.Some modul1), env3,
+                           lang_decls)))) in
         let check_decls ast_decls =
           match curmod with
           | FStar_Pervasives_Native.None ->
@@ -879,7 +892,13 @@ let (tc_one_fragment :
                               modul sigelts in
                         (match uu___2 with
                          | (modul1, uu___3, env3) ->
-                             ((FStar_Pervasives_Native.Some modul1), env3)))) in
+                             let uu___4 =
+                               FStar_Compiler_List.filter
+                                 (fun d ->
+                                    FStar_Parser_AST.uu___is_UseLangDecls
+                                      d.FStar_Parser_AST.d) ast_decls in
+                             ((FStar_Pervasives_Native.Some modul1), env3,
+                               uu___4)))) in
         match frag with
         | FStar_Pervasives.Inr d ->
             (match d.FStar_Parser_AST.d with
@@ -887,11 +906,23 @@ let (tc_one_fragment :
                  check_module_name_declaration
                    (FStar_Parser_AST.Module (lid, [d]))
              | uu___ -> check_decls [d])
-        | FStar_Pervasives.Inl frag1 ->
-            let uu___ = FStar_Parser_Driver.parse_fragment frag1 in
+        | FStar_Pervasives.Inl (frag1, lang_decls) ->
+            let parse_frag frag2 =
+              match lang_decls with
+              | [] ->
+                  FStar_Parser_Driver.parse_fragment
+                    FStar_Pervasives_Native.None frag2
+              | { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls lang;
+                  FStar_Parser_AST.drange = uu___;
+                  FStar_Parser_AST.quals = uu___1;
+                  FStar_Parser_AST.attrs = uu___2;
+                  FStar_Parser_AST.interleaved = uu___3;_}::uu___4 ->
+                  FStar_Parser_Driver.parse_fragment
+                    (FStar_Pervasives_Native.Some lang) frag2 in
+            let uu___ = parse_frag frag1 in
             (match uu___ with
-             | FStar_Parser_Driver.Empty -> (curmod, env)
-             | FStar_Parser_Driver.Decls [] -> (curmod, env)
+             | FStar_Parser_Driver.Empty -> (curmod, env, [])
+             | FStar_Parser_Driver.Decls [] -> (curmod, env, [])
              | FStar_Parser_Driver.Modul ast_modul ->
                  check_module_name_declaration ast_modul
              | FStar_Parser_Driver.Decls ast_decls -> check_decls ast_decls)
@@ -900,7 +931,7 @@ let (load_interface_decls :
   fun env ->
     fun interface_file_name ->
       let r =
-        FStar_Parser_ParseIt.parse
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
           (FStar_Parser_ParseIt.Filename interface_file_name) in
       match r with
       | FStar_Parser_ParseIt.ASTFragment

@@ -280,7 +280,8 @@ decl:
         (* extension_syntax_start_range is where the extension syntax starts not including
            the "#lang ident" prefix *)
         let extension_syntax_start_range = (rr (pos, pos)) in
-        parse_use_lang_blob ext_name contents blob_range extension_syntax_start_range
+        let ds = parse_use_lang_blob ext_name contents blob_range extension_syntax_start_range in
+        mk_decl (UseLangDecls ext_name) extension_syntax_start_range [] :: ds
       }
       
   | ds=list(decoration) decl=rawDecl

@@ -160,7 +160,7 @@ let (push_with_kind :
 let (check_frag :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
-      FStar_Parser_ParseIt.input_frag ->
+      (FStar_Parser_ParseIt.input_frag * FStar_Universal.lang_decls_t) ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
           FStar_TypeChecker_Env.env * Prims.int)
           FStar_Pervasives_Native.option)
@@ -176,11 +176,11 @@ let (check_frag :
                    FStar_Universal.tc_one_fragment curmod env
                      (FStar_Pervasives.Inl frag) in
                  (match uu___1 with
-                  | (m, env1) ->
-                      let uu___2 =
-                        let uu___3 = FStar_Errors.get_err_count () in
-                        (m, env1, uu___3) in
-                      FStar_Pervasives_Native.Some uu___2)) ()
+                  | (m, env1, uu___2) ->
+                      let uu___3 =
+                        let uu___4 = FStar_Errors.get_err_count () in
+                        (m, env1, uu___4) in
+                      FStar_Pervasives_Native.Some uu___3)) ()
         with
         | FStar_Errors.Error (e, msg, r, ctx) when
             let uu___1 = FStar_Options.trace_error () in
@@ -911,7 +911,7 @@ let rec (go :
                       FStar_Parser_ParseIt.frag_col =
                         (FStar_Pervasives_Native.snd line_col)
                     } in
-                  let res = check_frag env curmod frag in
+                  let res = check_frag env curmod (frag, []) in
                   (match res with
                    | FStar_Pervasives_Native.Some (curmod1, env1, n_errs) ->
                        if n_errs = Prims.int_zero

@@ -27,7 +27,7 @@ type fragment =
     | Decls of list AST.decl // a partial set of declarations
     | DeclsWithContent of list (AST.decl & ParseIt.code_fragment)
 
-val parse_fragment : ParseIt.input_frag -> fragment
+val parse_fragment : option string -> ParseIt.input_frag -> fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 val parse_file : string -> AST.file & list (string & Range.range)

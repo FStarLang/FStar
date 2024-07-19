@@ -107,16 +107,16 @@ let run_repl_transaction st push_kind must_rollback task =
     get_err_count () = 0 && not must_rollback in
 
   // Run the task (and capture errors)
-  let curmod, env, success =
+  let curmod, env, success, lds =
     match with_captured_errors env Util.sigint_raise
-              (fun env -> Some <| run_repl_task st.repl_curmod env task) with
-    | Some (curmod, env) when check_success () -> curmod, env, true
-    | _ -> st.repl_curmod, env, false in
+              (fun env -> Some <| run_repl_task st.repl_curmod env task st.repl_lang) with
+    | Some (curmod, env, lds) when check_success () -> curmod, env, true, lds
+    | _ -> st.repl_curmod, env, false, [] in
 
   let env, name_events = finish_name_tracking env in //  …end name tracking
   let st =
     if success then
-      let st = { st with repl_env = env; repl_curmod = curmod } in
+      let st = { st with repl_env = env; repl_curmod = curmod; repl_lang=List.rev lds@st.repl_lang } in
       commit_name_tracking st name_events
     else
       pop_repl "run_repl_transaction" st in
@@ -537,7 +537,7 @@ let run_segment (st: repl_state) (code: string) =
   let frag = { frag_fname = "<input>"; frag_text = code; frag_line = 1; frag_col = 0 } in
 
   let collect_decls () =
-    match Parser.Driver.parse_fragment frag with
+    match Parser.Driver.parse_fragment None frag with
     | Parser.Driver.Empty -> []
     | Parser.Driver.Decls decls
     | Parser.Driver.Modul (Parser.AST.Module (_, decls))
@@ -904,7 +904,7 @@ let run_with_parsed_and_tc_term st term line column continuation =
     | _ -> None in
 
   let parse frag =
-    match FStar.Parser.ParseIt.parse (FStar.Parser.ParseIt.Incremental frag) with
+    match FStar.Parser.ParseIt.parse None (FStar.Parser.ParseIt.Incremental frag) with
     | FStar.Parser.ParseIt.IncrementalFragment (decls, _, _err) -> Some (List.map fst decls)
     | _ -> None in
 
@@ -1130,8 +1130,9 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-
+open FStar.Class.Show
 let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
+  BU.print1 "Running query with repl_lang=%s\n" (show st.repl_lang);
   match q.qq with
   | Exit -> as_json_list (run_exit st)
   | DescribeProtocol -> as_json_list (run_describe_protocol st)
@@ -1255,7 +1256,8 @@ let build_initial_repl_state (filename: string) =
     repl_deps_stack = [];
     repl_stdin = open_stdin ();
     repl_names = CompletionTable.empty;
-    repl_buffered_input_queries = [] }
+    repl_buffered_input_queries = [];
+    repl_lang = [] }
 
 let interactive_mode' init_st =
   write_hello ();
