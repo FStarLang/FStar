@@ -57,7 +57,6 @@ let maybe_dump_module (m:modul) =
 let parse_file fn =
     match ParseIt.parse (Filename fn) with
     | ASTFragment (Inl ast, comments) ->
-        maybe_dump_module ast;
         ast, comments
     | ASTFragment (Inr _ , _) ->
         let msg = Util.format1 "%s: expected a module\n" fn in

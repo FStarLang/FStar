@@ -83,7 +83,7 @@ let (parse_file :
     let uu___ = FStar_Parser_ParseIt.parse (FStar_Parser_ParseIt.Filename fn) in
     match uu___ with
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inl ast, comments)
-        -> (maybe_dump_module ast; (ast, comments))
+        -> (ast, comments)
     | FStar_Parser_ParseIt.ASTFragment (FStar_Pervasives.Inr uu___1, uu___2)
         ->
         let msg = FStar_Compiler_Util.format1 "%s: expected a module\n" fn in
