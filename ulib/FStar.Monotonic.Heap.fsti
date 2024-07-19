@@ -35,6 +35,7 @@ val emp :heap
 
 val next_addr: heap -> GTot pos
 
+new
 val core_mref ([@@@ strictly_positive] a:Type0) : Type0
 
 let mref (a:Type0) (rel:preorder a) : Type0 = core_mref a
