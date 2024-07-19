@@ -24,10 +24,6 @@ open Pulse.Lib.Pervasives
 module T = Pulse.Lib.Spec.AVLTree
 module G = FStar.Ghost
 
-//val node (a:Type u#0) : Type u#0
-
-//val node_ptr (a:Type u#0) : Type u#0
-
 val tree_t  (a:Type u#0): Type u#0
 
 val is_tree #t (ct:tree_t t) (ft:T.tree t)
