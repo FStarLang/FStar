@@ -233,6 +233,7 @@ let rec eq_decl (d1 d2:decl) =
   match d1, d2 with
   | FnDefn f1, FnDefn f2 -> eq_fn_defn f1 f2
   | FnDecl d1, FnDecl d2 -> eq_fn_decl d1 d2
+  | _ -> false
 and eq_fn_decl (f1 f2:fn_decl) =
   eq_ident f1.id f2.id &&
   forall2 AU.eq_binder f1.binders f2.binders &&
@@ -315,6 +316,7 @@ and eq_stmt' (s1 s2:stmt') =
     forall2 AU.eq_term n1 n2 &&
     eq_stmt b1 b2 &&
     eq_opt eq_ensures_slprop r1 r2
+  | _ -> false
 and eq_let_init (i1 i2:let_init) =
   match i1, i2 with
   | Array_initializer a1, Array_initializer a2 -> eq_array_init a1 a2

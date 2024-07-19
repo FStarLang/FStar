@@ -682,6 +682,7 @@ let rec (eq_decl : decl -> decl -> Prims.bool) =
       match (d1, d2) with
       | (FnDefn f1, FnDefn f2) -> eq_fn_defn f1 f2
       | (FnDecl d11, FnDecl d21) -> eq_fn_decl d11 d21
+      | uu___ -> false
 and (eq_fn_decl : fn_decl -> fn_decl -> Prims.bool) =
   fun f1 ->
     fun f2 ->
@@ -801,6 +802,7 @@ and (eq_stmt' : stmt' -> stmt' -> Prims.bool) =
          WithInvariants { names = n2; body1 = b2; returns_ = r2;_}) ->
           ((forall2 FStar_Parser_AST_Util.eq_term n1 n2) && (eq_stmt b1 b2))
             && (eq_opt eq_ensures_slprop r1 r2)
+      | uu___ -> false
 and (eq_let_init : let_init -> let_init -> Prims.bool) =
   fun i1 ->
     fun i2 ->
