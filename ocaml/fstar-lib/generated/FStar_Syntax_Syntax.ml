@@ -392,7 +392,7 @@ and residual_comp =
   residual_flags: cflag Prims.list }
 and lazyinfo =
   {
-  blob: FStar_Compiler_Dyn.dyn ;
+  blob: FStar_Dyn.dyn ;
   lkind: lazy_kind ;
   ltyp: term' syntax ;
   rng: FStar_Compiler_Range_Type.range }
@@ -1011,7 +1011,7 @@ let (__proj__Mkresidual_comp__item__residual_flags :
   fun projectee ->
     match projectee with
     | { residual_effect; residual_typ; residual_flags;_} -> residual_flags
-let (__proj__Mklazyinfo__item__blob : lazyinfo -> FStar_Compiler_Dyn.dyn) =
+let (__proj__Mklazyinfo__item__blob : lazyinfo -> FStar_Dyn.dyn) =
   fun projectee -> match projectee with | { blob; lkind; ltyp; rng;_} -> blob
 let (__proj__Mklazyinfo__item__lkind : lazyinfo -> lazy_kind) =
   fun projectee ->
@@ -1707,7 +1707,7 @@ type sig_metadata =
   sigmeta_admit: Prims.bool ;
   sigmeta_spliced: Prims.bool ;
   sigmeta_already_checked: Prims.bool ;
-  sigmeta_extension_data: (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list }
+  sigmeta_extension_data: (Prims.string * FStar_Dyn.dyn) Prims.list }
 let (__proj__Mksig_metadata__item__sigmeta_active :
   sig_metadata -> Prims.bool) =
   fun projectee ->
@@ -1741,7 +1741,7 @@ let (__proj__Mksig_metadata__item__sigmeta_already_checked :
         sigmeta_already_checked; sigmeta_extension_data;_} ->
         sigmeta_already_checked
 let (__proj__Mksig_metadata__item__sigmeta_extension_data :
-  sig_metadata -> (Prims.string * FStar_Compiler_Dyn.dyn) Prims.list) =
+  sig_metadata -> (Prims.string * FStar_Dyn.dyn) Prims.list) =
   fun projectee ->
     match projectee with
     | { sigmeta_active; sigmeta_fact_db_ids; sigmeta_admit; sigmeta_spliced;

@@ -266,9 +266,7 @@ let (e_env :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_env;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_env unembed_env FStar_Reflection_V1_Constants.fstar_refl_env
 let (e_const :
@@ -1450,9 +1448,7 @@ let (e_sigelt :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_sigelt;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_sigelt unembed_sigelt
     FStar_Reflection_V1_Constants.fstar_refl_sigelt
@@ -1548,9 +1544,7 @@ let (e_letbinding :
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_letbinding;
           FStar_Syntax_Syntax.ltyp = uu___1;
           FStar_Syntax_Syntax.rng = uu___2;_}
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn lb in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn lb)
     | uu___1 -> FStar_Pervasives_Native.None in
   mk_emb embed_letbinding unembed_letbinding
     FStar_Reflection_V1_Constants.fstar_refl_letbinding
@@ -2023,7 +2017,7 @@ let (e_qualifiers :
 let (unfold_lazy_bv :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let bv = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let bv = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -2037,7 +2031,7 @@ let (unfold_lazy_bv :
 let (unfold_lazy_binder :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let binder = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let binder = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -2051,7 +2045,7 @@ let (unfold_lazy_binder :
 let (unfold_lazy_letbinding :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let lb = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let lb = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let lbv = FStar_Reflection_V1_Builtins.inspect_lb lb in
     let uu___ =
       let uu___1 =
@@ -2087,7 +2081,7 @@ let (unfold_lazy_letbinding :
 let (unfold_lazy_fvar :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let fv = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let fv = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -2102,7 +2096,7 @@ let (unfold_lazy_fvar :
 let (unfold_lazy_comp :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let comp = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let comp = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -2122,7 +2116,7 @@ let (unfold_lazy_optionstate :
 let (unfold_lazy_sigelt :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let sigelt = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let sigelt = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =
@@ -2136,7 +2130,7 @@ let (unfold_lazy_sigelt :
 let (unfold_lazy_universe :
   FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term) =
   fun i ->
-    let u = FStar_Compiler_Dyn.undyn i.FStar_Syntax_Syntax.blob in
+    let u = FStar_Dyn.undyn i.FStar_Syntax_Syntax.blob in
     let uu___ =
       let uu___1 =
         let uu___2 =

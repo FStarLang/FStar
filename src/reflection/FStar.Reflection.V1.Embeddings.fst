@@ -41,7 +41,7 @@ module Z       = FStar.BigInt
 
 module EmbV2 = FStar.Reflection.V2.Embeddings
 
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.Reflection.V1.Builtins //needed for inspect_fv, but that feels wrong
 open FStar.Reflection.V1.Constants
 

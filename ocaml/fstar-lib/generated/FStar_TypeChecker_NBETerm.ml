@@ -85,8 +85,8 @@ and t' =
   | Reflect of t 
   | Quote of (FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.quoteinfo) 
   | Lazy of ((FStar_Syntax_Syntax.lazyinfo,
-  (FStar_Compiler_Dyn.dyn * FStar_Syntax_Syntax.emb_typ))
-  FStar_Pervasives.either * t FStar_Thunk.t) 
+  (FStar_Dyn.dyn * FStar_Syntax_Syntax.emb_typ)) FStar_Pervasives.either * t
+  FStar_Thunk.t) 
   | Meta of (t * FStar_Syntax_Syntax.metadata FStar_Thunk.t) 
   | TopLevelLet of (FStar_Syntax_Syntax.letbinding * Prims.int * (t *
   FStar_Syntax_Syntax.aqual) Prims.list) 
@@ -258,8 +258,8 @@ let (uu___is_Lazy : t' -> Prims.bool) =
 let (__proj__Lazy__item___0 :
   t' ->
     ((FStar_Syntax_Syntax.lazyinfo,
-      (FStar_Compiler_Dyn.dyn * FStar_Syntax_Syntax.emb_typ))
-      FStar_Pervasives.either * t FStar_Thunk.t))
+      (FStar_Dyn.dyn * FStar_Syntax_Syntax.emb_typ)) FStar_Pervasives.either
+      * t FStar_Thunk.t))
   = fun projectee -> match projectee with | Lazy _0 -> _0
 let (uu___is_Meta : t' -> Prims.bool) =
   fun projectee -> match projectee with | Meta _0 -> true | uu___ -> false
@@ -913,9 +913,7 @@ let lazy_embed :
          then f ()
          else
            (let thunk = FStar_Thunk.mk f in
-            let li =
-              let uu___3 = FStar_Compiler_Dyn.mkdyn x in
-              let uu___4 = et () in (uu___3, uu___4) in
+            let li = let uu___3 = et () in ((FStar_Dyn.mkdyn x), uu___3) in
             mk_t (Lazy ((FStar_Pervasives.Inr li), thunk))))
 let lazy_unembed :
   'a .
@@ -953,7 +951,7 @@ let lazy_unembed :
                 else ());
                res)
             else
-              (let a1 = FStar_Compiler_Dyn.undyn b in
+              (let a1 = FStar_Dyn.undyn b in
                (let uu___3 =
                   FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                 if uu___3
@@ -990,8 +988,8 @@ let lazy_unembed_lazy_kind :
       | Lazy (FStar_Pervasives.Inl li, uu___) ->
           if li.FStar_Syntax_Syntax.lkind = k
           then
-            let uu___1 = FStar_Compiler_Dyn.undyn li.FStar_Syntax_Syntax.blob in
-            FStar_Pervasives_Native.Some uu___1
+            FStar_Pervasives_Native.Some
+              (FStar_Dyn.undyn li.FStar_Syntax_Syntax.blob)
           else FStar_Pervasives_Native.None
       | uu___ -> FStar_Pervasives_Native.None
 type abstract_nbe_term =
@@ -1356,9 +1354,8 @@ let (e_issue : FStar_Errors.issue embedding) =
   let t_issue =
     FStar_Syntax_Embeddings_Base.type_of FStar_Syntax_Embeddings.e_issue in
   let li blob rng =
-    let uu___ = FStar_Compiler_Dyn.mkdyn blob in
     {
-      FStar_Syntax_Syntax.blob = uu___;
+      FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_issue;
       FStar_Syntax_Syntax.ltyp = t_issue;
       FStar_Syntax_Syntax.rng = rng
@@ -1366,13 +1363,11 @@ let (e_issue : FStar_Errors.issue embedding) =
   let em1 cb iss =
     let uu___ =
       let uu___1 =
-        let uu___2 = li iss FStar_Compiler_Range_Type.dummyRange in
-        FStar_Pervasives.Inl uu___2 in
-      let uu___2 =
         FStar_Thunk.mk
-          (fun uu___3 ->
+          (fun uu___2 ->
              FStar_Compiler_Effect.failwith "Cannot unembed issue") in
-      (uu___1, uu___2) in
+      ((FStar_Pervasives.Inl (li iss FStar_Compiler_Range_Type.dummyRange)),
+        uu___1) in
     Lazy uu___ in
   let un1 cb t1 =
     match t1 with
@@ -1383,9 +1378,7 @@ let (e_issue : FStar_Errors.issue embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn blob in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.issue_lid [] [])
@@ -1394,9 +1387,8 @@ let (e_document : FStar_Pprint.document embedding) =
   let t_document =
     FStar_Syntax_Embeddings_Base.type_of FStar_Syntax_Embeddings.e_document in
   let li blob rng =
-    let uu___ = FStar_Compiler_Dyn.mkdyn blob in
     {
-      FStar_Syntax_Syntax.blob = uu___;
+      FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn blob);
       FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_doc;
       FStar_Syntax_Syntax.ltyp = t_document;
       FStar_Syntax_Syntax.rng = rng
@@ -1404,13 +1396,11 @@ let (e_document : FStar_Pprint.document embedding) =
   let em1 cb doc =
     let uu___ =
       let uu___1 =
-        let uu___2 = li doc FStar_Compiler_Range_Type.dummyRange in
-        FStar_Pervasives.Inl uu___2 in
-      let uu___2 =
         FStar_Thunk.mk
-          (fun uu___3 ->
+          (fun uu___2 ->
              FStar_Compiler_Effect.failwith "Cannot unembed document") in
-      (uu___1, uu___2) in
+      ((FStar_Pervasives.Inl (li doc FStar_Compiler_Range_Type.dummyRange)),
+        uu___1) in
     Lazy uu___ in
   let un1 cb t1 =
     match t1 with
@@ -1421,9 +1411,7 @@ let (e_document : FStar_Pprint.document embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn blob in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
     | uu___ -> FStar_Pervasives_Native.None in
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.document_lid [] [])

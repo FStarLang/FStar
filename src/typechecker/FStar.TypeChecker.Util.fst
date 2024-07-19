@@ -33,7 +33,7 @@ open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.Syntax
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.Class.Show
 open FStar.Class.PP
 

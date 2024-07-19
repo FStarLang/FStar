@@ -38,7 +38,7 @@ module SS      = FStar.Syntax.Subst
 module Thunk   = FStar.Thunk
 module U       = FStar.Syntax.Util
 
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.Reflection.V1.Constants
 
 (*
@@ -66,7 +66,7 @@ let mk_emb' x y fv = mk_emb x y (fun () -> mkFV fv [] []) (fun () -> fv_as_emb_t
 
 let mk_lazy cb obj ty kind =
     let li = {
-          blob = FStar.Compiler.Dyn.mkdyn obj
+          blob = FStar.Dyn.mkdyn obj
         ; lkind = kind
         ; ltyp = ty
         ; rng = Range.dummyRange
@@ -82,7 +82,7 @@ let e_bv =
     let unembed_bv cb (t:t) : option bv =
         match t.nbe_t with
         | Lazy (Inl {blob=b; lkind=Lazy_bv}, _) ->
-            Some <| FStar.Compiler.Dyn.undyn b
+            Some <| FStar.Dyn.undyn b
         | _ ->
             Err.log_issue Range.dummyRange (Err.Warning_NotEmbedded, (BU.format1 "Not an embedded bv: %s" (t_to_string t)));
             None
@@ -324,7 +324,7 @@ let unlazy_as_t k t =
     let open FStar.Class.Deq in
     match t.nbe_t with
     | Lazy (Inl {lkind=k'; blob=v}, _) when k =? k' ->
-      FStar.Compiler.Dyn.undyn v
+      FStar.Dyn.undyn v
     | _ ->
       failwith "Not a Lazy of the expected kind (NBE)"
 

@@ -2017,39 +2017,6 @@ let (splice :
                                           (fun uu___9 ->
                                              match uu___9 with
                                              | (checked, se, blob_opt) ->
-                                                 let uu___10 =
-                                                   let uu___11 =
-                                                     se.FStar_Syntax_Syntax.sigmeta in
-                                                   let uu___12 =
-                                                     match blob_opt with
-                                                     | FStar_Pervasives_Native.Some
-                                                         (s, blob) ->
-                                                         let uu___13 =
-                                                           let uu___14 =
-                                                             FStar_Compiler_Dyn.mkdyn
-                                                               blob in
-                                                           (s, uu___14) in
-                                                         [uu___13]
-                                                     | FStar_Pervasives_Native.None
-                                                         -> [] in
-                                                   {
-                                                     FStar_Syntax_Syntax.sigmeta_active
-                                                       =
-                                                       (uu___11.FStar_Syntax_Syntax.sigmeta_active);
-                                                     FStar_Syntax_Syntax.sigmeta_fact_db_ids
-                                                       =
-                                                       (uu___11.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
-                                                     FStar_Syntax_Syntax.sigmeta_admit
-                                                       =
-                                                       (uu___11.FStar_Syntax_Syntax.sigmeta_admit);
-                                                     FStar_Syntax_Syntax.sigmeta_spliced
-                                                       =
-                                                       (uu___11.FStar_Syntax_Syntax.sigmeta_spliced);
-                                                     FStar_Syntax_Syntax.sigmeta_already_checked
-                                                       = checked;
-                                                     FStar_Syntax_Syntax.sigmeta_extension_data
-                                                       = uu___12
-                                                   } in
                                                  {
                                                    FStar_Syntax_Syntax.sigel
                                                      =
@@ -2061,7 +2028,36 @@ let (splice :
                                                      =
                                                      (se.FStar_Syntax_Syntax.sigquals);
                                                    FStar_Syntax_Syntax.sigmeta
-                                                     = uu___10;
+                                                     =
+                                                     (let uu___10 =
+                                                        se.FStar_Syntax_Syntax.sigmeta in
+                                                      {
+                                                        FStar_Syntax_Syntax.sigmeta_active
+                                                          =
+                                                          (uu___10.FStar_Syntax_Syntax.sigmeta_active);
+                                                        FStar_Syntax_Syntax.sigmeta_fact_db_ids
+                                                          =
+                                                          (uu___10.FStar_Syntax_Syntax.sigmeta_fact_db_ids);
+                                                        FStar_Syntax_Syntax.sigmeta_admit
+                                                          =
+                                                          (uu___10.FStar_Syntax_Syntax.sigmeta_admit);
+                                                        FStar_Syntax_Syntax.sigmeta_spliced
+                                                          =
+                                                          (uu___10.FStar_Syntax_Syntax.sigmeta_spliced);
+                                                        FStar_Syntax_Syntax.sigmeta_already_checked
+                                                          = checked;
+                                                        FStar_Syntax_Syntax.sigmeta_extension_data
+                                                          =
+                                                          ((match blob_opt
+                                                            with
+                                                            | FStar_Pervasives_Native.Some
+                                                                (s, blob) ->
+                                                                [(s,
+                                                                   (FStar_Dyn.mkdyn
+                                                                    blob))]
+                                                            | FStar_Pervasives_Native.None
+                                                                -> []))
+                                                      });
                                                    FStar_Syntax_Syntax.sigattrs
                                                      =
                                                      (se.FStar_Syntax_Syntax.sigattrs);

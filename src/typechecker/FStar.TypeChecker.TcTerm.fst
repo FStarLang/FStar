@@ -32,7 +32,7 @@ open FStar.Syntax.Syntax
 open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.TypeChecker.Rel
 
 open FStar.Class.Show

@@ -29,6 +29,7 @@ let lift_pure_all (a:Type) (p:pure_wp a)
 
 sub_effect PURE ~> ALL { lift_wp = lift_pure_all }
 
+sub_effect DIV ~> ALL { lift_wp = lift_pure_all }
 
 effect All (a:Type) (pre:all_pre) (post:(h:unit -> Tot (all_post' a (pre h)))) =
   ALL a

@@ -290,9 +290,7 @@ let e_lazy :
             when
             FStar_Class_Deq.op_Equals_Question
               FStar_Syntax_Syntax.deq_lazy_kind lkind k
-            ->
-            let uu___3 = FStar_Compiler_Dyn.undyn b in
-            FStar_Pervasives_Native.Some uu___3
+            -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
         | FStar_Syntax_Syntax.Tm_lazy
             { FStar_Syntax_Syntax.blob = b;
               FStar_Syntax_Syntax.lkind = lkind;
@@ -407,7 +405,7 @@ let lazy_unembed :
                     else ());
                    res)
                 else
-                  (let a1 = FStar_Compiler_Dyn.undyn b in
+                  (let a1 = FStar_Dyn.undyn b in
                    (let uu___5 =
                       FStar_Compiler_Effect.op_Bang
                         FStar_Options.debug_embedding in

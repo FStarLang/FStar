@@ -888,7 +888,7 @@ let unlazy_as_t :
             FStar_Class_Deq.op_Equals_Question
               FStar_Syntax_Syntax.deq_lazy_kind k k' in
           if uu___3
-          then FStar_Compiler_Dyn.undyn v
+          then FStar_Dyn.undyn v
           else
             (let uu___5 =
                let uu___6 =
@@ -920,9 +920,8 @@ let mk_lazy :
             | FStar_Pervasives_Native.None ->
                 FStar_Compiler_Range_Type.dummyRange in
           let i =
-            let uu___ = FStar_Compiler_Dyn.mkdyn t in
             {
-              FStar_Syntax_Syntax.blob = uu___;
+              FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn t);
               FStar_Syntax_Syntax.lkind = k;
               FStar_Syntax_Syntax.ltyp = typ;
               FStar_Syntax_Syntax.rng = rng
