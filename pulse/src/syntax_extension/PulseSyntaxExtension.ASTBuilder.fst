@@ -160,12 +160,17 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
         let id_txt = Ident.string_of_id id in
         let decl_as_term = 
           let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_sugar_decl") (Some r) in
+          let unpack_blob t : PulseSyntaxExtension.Sugar.decl = FStar.Syntax.Util.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") t in
           let eq (t1 t2: FStar.Syntax.Syntax.term) =
-             let d1 : PulseSyntaxExtension.Sugar.decl = FStar.Syntax.Util.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") t1 in
-             let d2 : PulseSyntaxExtension.Sugar.decl = FStar.Syntax.Util.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") t2 in
+             let d1 = unpack_blob t1 in
+             let d2 = unpack_blob t2 in
              PulseSyntaxExtension.Sugar.eq_decl d1 d2
           in
-          tm (DesugaredBlob {tag="pulse_sugar_decl"; blob; eq}) r
+          let dep_scan cbs t =
+            let d = unpack_blob t in
+            PulseSyntaxExtension.Sugar.scan_decl cbs d
+          in
+          tm (DesugaredBlob {tag="pulse_sugar_decl"; blob; eq; dep_scan}) r
         in
         let splicer =
           let head = tm (Var pulse_checker_after_parse_tac) r in

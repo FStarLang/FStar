@@ -366,6 +366,108 @@ and eq_pat (p1 p2:pat) =
     eq_lident h1 h2 && forall2 eq_pat a1 a2
   | _, _ -> false
 
+let rec iter (f:'a -> unit) (l:list 'a) =
+  match l with
+  | [] -> ()
+  | x::xs -> f x; iter f xs
+let iopt (f:'a -> unit) (o:option 'a) =
+  match o with
+  | Some x -> f x
+  | None -> ()
+let ieither (f:'a -> unit) (g:'b -> unit) (e:either 'a 'b) =
+  match e with
+  | Inl x -> f x
+  | Inr x -> g x
+let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) =
+  match d with
+  | FnDefn f -> scan_fn_defn cbs f
+  | FnDecl d -> scan_fn_decl cbs d
+and scan_fn_decl (cbs:A.dep_scan_callbacks) (f:fn_decl) =
+  iter (scan_binder cbs) f.binders;
+  scan_ascription cbs f.ascription
+and scan_fn_defn (cbs:A.dep_scan_callbacks) (f:fn_defn) =
+  iter (scan_binder cbs) f.binders;
+  ieither (scan_computation_type cbs) (iopt cbs.scan_term) f.ascription;
+  iopt cbs.scan_term f.measure;
+  ieither (scan_stmt cbs) (scan_lambda cbs) f.body
+and scan_binder (cbs:A.dep_scan_callbacks) (b:binder) =
+  cbs.scan_binder b
+and scan_ascription (cbs:A.dep_scan_callbacks) (a:either computation_type (option A.term)) =
+  ieither (scan_computation_type cbs) (iopt cbs.scan_term) a
+and scan_computation_type (cbs:A.dep_scan_callbacks) (c:computation_type) =
+  scan_slprop cbs c.precondition;
+  cbs.scan_term c.return_type;
+  scan_slprop cbs c.postcondition;
+  iopt cbs.scan_term c.opens
+and scan_slprop (cbs:A.dep_scan_callbacks) (s:slprop) =
+  let SLPropTerm s = s.v in
+  cbs.scan_term s
+and scan_lambda (cbs:A.dep_scan_callbacks) (l:lambda) =
+  iter (scan_binder cbs) l.binders;
+  iopt (scan_computation_type cbs) l.ascription;
+  scan_stmt cbs l.body
+and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
+  match s.s with
+  | Open l -> cbs.add_open l
+  | Expr e -> cbs.scan_term e.e
+  | Assignment { lhs=l; value=v } -> cbs.scan_term l; cbs.scan_term v
+  | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
+  | LetBinding { qualifier=q; id=i; typ=t; init=init } ->
+    iopt (scan_let_init cbs) init;
+    iopt cbs.scan_term t
+  | Block { stmt=s } -> scan_stmt cbs s
+  | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
+    cbs.scan_term h;
+    iopt (scan_ensures_slprop cbs) j;
+    scan_stmt cbs t;
+    iopt (scan_stmt cbs) e
+  | Match { head=h; returns_annot=r; branches=b } ->
+    cbs.scan_term h;
+    iopt (scan_ensures_slprop cbs) r;
+    iter (fun (p, s) -> cbs.scan_pattern p; scan_stmt cbs s) b
+  | While { guard=g; id=id; invariant=i; body=b } ->
+    scan_stmt cbs g;
+    scan_slprop cbs i;
+    scan_stmt cbs b
+  | Introduce { slprop=s; witnesses=w } ->
+    scan_slprop cbs s;
+    iter cbs.scan_term w
+  | Sequence { s1=s1; s2=s2 } -> scan_stmt cbs s1; scan_stmt cbs s2
+  | Parallel { p1=p1; p2=p2; q1=q1; q2=q2; b1=b1; b2=b2 } ->
+    scan_slprop cbs p1;
+    scan_slprop cbs p2;
+    scan_slprop cbs q1;
+    scan_slprop cbs q2;
+    scan_stmt cbs b1;
+    scan_stmt cbs b2
+  | ProofHintWithBinders { hint_type=ht; binders=bs } ->
+    scan_hint_type cbs ht;
+    iter (scan_binder cbs) bs
+  | WithInvariants { names=n; body=b; returns_=r } ->
+    iter cbs.scan_term n;
+    scan_stmt cbs b;
+    iopt (scan_ensures_slprop cbs) r
+and scan_let_init (cbs:A.dep_scan_callbacks) (i:let_init) =
+  match i with
+  | Array_initializer a -> cbs.scan_term a.init; cbs.scan_term a.len
+  | Default_initializer t -> cbs.scan_term t
+  | Lambda_initializer l -> scan_fn_defn cbs l
+  | Stmt_initializer s -> scan_stmt cbs s
+and scan_ensures_slprop (cbs:A.dep_scan_callbacks) (e:ensures_slprop) =
+  let h, s, t = e in
+  iopt (fun (i, t) -> cbs.scan_term t) h;
+  scan_slprop cbs s;
+  iopt cbs.scan_term t
+and scan_hint_type (cbs:A.dep_scan_callbacks) (h:hint_type) =
+  match h with
+  | ASSERT s -> scan_slprop cbs s
+  | UNFOLD (ns, s) -> scan_slprop cbs s
+  | FOLD (ns, s) -> scan_slprop cbs s
+  | RENAME (ts, g, t) -> iter (fun (t1, t2) -> cbs.scan_term t1; cbs.scan_term t2) ts; iopt (scan_slprop cbs) g; iopt cbs.scan_term t
+  | REWRITE (s1, s2, t) -> scan_slprop cbs s1; scan_slprop cbs s2; iopt cbs.scan_term t
+  | WILD -> ()
+  | SHOW_PROOF_STATE _ -> ()
+
 let range_of_decl (d:decl) =
   match d with
   | FnDefn f -> f.range

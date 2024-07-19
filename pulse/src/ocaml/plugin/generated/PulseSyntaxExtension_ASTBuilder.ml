@@ -268,22 +268,24 @@ let (parse_extension_lang :
                            (FStar_Syntax_Syntax.Lazy_extension
                               "pulse_sugar_decl")
                            (FStar_Pervasives_Native.Some r1) in
+                       let unpack_blob t =
+                         FStar_Syntax_Util.unlazy_as_t
+                           (FStar_Syntax_Syntax.Lazy_extension
+                              "pulse_sugar_decl") t in
                        let eq t1 t2 =
-                         let d1 =
-                           FStar_Syntax_Util.unlazy_as_t
-                             (FStar_Syntax_Syntax.Lazy_extension
-                                "pulse_sugar_decl") t1 in
-                         let d2 =
-                           FStar_Syntax_Util.unlazy_as_t
-                             (FStar_Syntax_Syntax.Lazy_extension
-                                "pulse_sugar_decl") t2 in
+                         let d1 = unpack_blob t1 in
+                         let d2 = unpack_blob t2 in
                          PulseSyntaxExtension_Sugar.eq_decl d1 d2 in
+                       let dep_scan cbs t =
+                         let d1 = unpack_blob t in
+                         PulseSyntaxExtension_Sugar.scan_decl cbs d1 in
                        tm
                          (FStar_Parser_AST.DesugaredBlob
                             {
                               FStar_Parser_AST.tag = "pulse_sugar_decl";
                               FStar_Parser_AST.blob = blob;
-                              FStar_Parser_AST.eq = eq
+                              FStar_Parser_AST.eq = eq;
+                              FStar_Parser_AST.dep_scan = dep_scan
                             }) r1 in
                      let splicer =
                        let head =
@@ -354,13 +356,13 @@ let (parse_extension_lang :
                (match uu___2 with
                 | (uu___3, decls2) ->
                     FStar_Pervasives.Inr (FStar_Compiler_List.rev decls2)))
-let (uu___153 : unit) =
+let (uu___159 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___154 : unit) =
+let (uu___160 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl

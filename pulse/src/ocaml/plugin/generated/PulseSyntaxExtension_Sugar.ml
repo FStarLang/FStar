@@ -881,6 +881,167 @@ and (eq_pat : pat -> pat -> Prims.bool) =
          { head = h2; args = a2;_}) ->
           (eq_lident h1 h2) && (forall2 eq_pat a1 a2)
       | (uu___, uu___1) -> false
+let rec iter : 'a . ('a -> unit) -> 'a Prims.list -> unit =
+  fun f -> fun l -> match l with | [] -> () | x::xs -> (f x; iter f xs)
+let iopt : 'a . ('a -> unit) -> 'a FStar_Pervasives_Native.option -> unit =
+  fun f ->
+    fun o ->
+      match o with
+      | FStar_Pervasives_Native.Some x -> f x
+      | FStar_Pervasives_Native.None -> ()
+let ieither :
+  'a 'b .
+    ('a -> unit) -> ('b -> unit) -> ('a, 'b) FStar_Pervasives.either -> unit
+  =
+  fun f ->
+    fun g ->
+      fun e ->
+        match e with
+        | FStar_Pervasives.Inl x -> f x
+        | FStar_Pervasives.Inr x -> g x
+let rec (scan_decl : FStar_Parser_AST.dep_scan_callbacks -> decl -> unit) =
+  fun cbs ->
+    fun d ->
+      match d with
+      | FnDefn f -> scan_fn_defn cbs f
+      | FnDecl d1 -> scan_fn_decl cbs d1
+and (scan_fn_decl : FStar_Parser_AST.dep_scan_callbacks -> fn_decl -> unit) =
+  fun cbs ->
+    fun f ->
+      iter (scan_binder cbs) f.binders3; scan_ascription cbs f.ascription2
+and (scan_fn_defn : FStar_Parser_AST.dep_scan_callbacks -> fn_defn -> unit) =
+  fun cbs ->
+    fun f ->
+      iter (scan_binder cbs) f.binders2;
+      ieither (scan_computation_type cbs)
+        (iopt cbs.FStar_Parser_AST.scan_term) f.ascription1;
+      iopt cbs.FStar_Parser_AST.scan_term f.measure;
+      ieither (scan_stmt cbs) (scan_lambda cbs) f.body3
+and (scan_binder : FStar_Parser_AST.dep_scan_callbacks -> binder -> unit) =
+  fun cbs -> fun b -> cbs.FStar_Parser_AST.scan_binder b
+and (scan_ascription :
+  FStar_Parser_AST.dep_scan_callbacks ->
+    (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
+      FStar_Pervasives.either -> unit)
+  =
+  fun cbs ->
+    fun a ->
+      ieither (scan_computation_type cbs)
+        (iopt cbs.FStar_Parser_AST.scan_term) a
+and (scan_computation_type :
+  FStar_Parser_AST.dep_scan_callbacks -> computation_type -> unit) =
+  fun cbs ->
+    fun c ->
+      scan_slprop cbs c.precondition;
+      cbs.FStar_Parser_AST.scan_term c.return_type;
+      scan_slprop cbs c.postcondition;
+      iopt cbs.FStar_Parser_AST.scan_term c.opens
+and (scan_slprop : FStar_Parser_AST.dep_scan_callbacks -> slprop -> unit) =
+  fun cbs ->
+    fun s ->
+      let uu___ = s.v in
+      match uu___ with | SLPropTerm s1 -> cbs.FStar_Parser_AST.scan_term s1
+and (scan_lambda : FStar_Parser_AST.dep_scan_callbacks -> lambda -> unit) =
+  fun cbs ->
+    fun l ->
+      iter (scan_binder cbs) l.binders1;
+      iopt (scan_computation_type cbs) l.ascription;
+      scan_stmt cbs l.body2
+and (scan_stmt : FStar_Parser_AST.dep_scan_callbacks -> stmt -> unit) =
+  fun cbs ->
+    fun s ->
+      match s.s with
+      | Open l -> cbs.FStar_Parser_AST.add_open l
+      | Expr e -> cbs.FStar_Parser_AST.scan_term e.e
+      | Assignment { lhs = l; value = v;_} ->
+          (cbs.FStar_Parser_AST.scan_term l; cbs.FStar_Parser_AST.scan_term v)
+      | ArrayAssignment { arr = a; index = i; value1 = v;_} ->
+          (cbs.FStar_Parser_AST.scan_term a;
+           cbs.FStar_Parser_AST.scan_term i;
+           cbs.FStar_Parser_AST.scan_term v)
+      | LetBinding { qualifier = q; id = i; typ = t; init1 = init;_} ->
+          (iopt (scan_let_init cbs) init;
+           iopt cbs.FStar_Parser_AST.scan_term t)
+      | Block { stmt = s1;_} -> scan_stmt cbs s1
+      | If { head1 = h; join_slprop = j; then_ = t; else_opt = e;_} ->
+          (cbs.FStar_Parser_AST.scan_term h;
+           iopt (scan_ensures_slprop cbs) j;
+           scan_stmt cbs t;
+           iopt (scan_stmt cbs) e)
+      | Match { head2 = h; returns_annot = r; branches = b;_} ->
+          (cbs.FStar_Parser_AST.scan_term h;
+           iopt (scan_ensures_slprop cbs) r;
+           iter
+             (fun uu___2 ->
+                match uu___2 with
+                | (p, s1) ->
+                    (cbs.FStar_Parser_AST.scan_pattern p; scan_stmt cbs s1))
+             b)
+      | While { guard = g; id1 = id; invariant = i; body = b;_} ->
+          (scan_stmt cbs g; scan_slprop cbs i; scan_stmt cbs b)
+      | Introduce { slprop = s1; witnesses = w;_} ->
+          (scan_slprop cbs s1; iter cbs.FStar_Parser_AST.scan_term w)
+      | Sequence { s1; s2;_} -> (scan_stmt cbs s1; scan_stmt cbs s2)
+      | Parallel { p1; p2; q1; q2; b1; b2;_} ->
+          (scan_slprop cbs p1;
+           scan_slprop cbs p2;
+           scan_slprop cbs q1;
+           scan_slprop cbs q2;
+           scan_stmt cbs b1;
+           scan_stmt cbs b2)
+      | ProofHintWithBinders { hint_type = ht; binders = bs;_} ->
+          (scan_hint_type cbs ht; iter (scan_binder cbs) bs)
+      | WithInvariants { names = n; body1 = b; returns_ = r;_} ->
+          (iter cbs.FStar_Parser_AST.scan_term n;
+           scan_stmt cbs b;
+           iopt (scan_ensures_slprop cbs) r)
+and (scan_let_init : FStar_Parser_AST.dep_scan_callbacks -> let_init -> unit)
+  =
+  fun cbs ->
+    fun i ->
+      match i with
+      | Array_initializer a ->
+          (cbs.FStar_Parser_AST.scan_term a.init;
+           cbs.FStar_Parser_AST.scan_term a.len)
+      | Default_initializer t -> cbs.FStar_Parser_AST.scan_term t
+      | Lambda_initializer l -> scan_fn_defn cbs l
+      | Stmt_initializer s -> scan_stmt cbs s
+and (scan_ensures_slprop :
+  FStar_Parser_AST.dep_scan_callbacks -> ensures_slprop -> unit) =
+  fun cbs ->
+    fun e ->
+      let uu___ = e in
+      match uu___ with
+      | (h, s, t) ->
+          (iopt
+             (fun uu___2 ->
+                match uu___2 with
+                | (i, t1) -> cbs.FStar_Parser_AST.scan_term t1) h;
+           scan_slprop cbs s;
+           iopt cbs.FStar_Parser_AST.scan_term t)
+and (scan_hint_type :
+  FStar_Parser_AST.dep_scan_callbacks -> hint_type -> unit) =
+  fun cbs ->
+    fun h ->
+      match h with
+      | ASSERT s -> scan_slprop cbs s
+      | UNFOLD (ns, s) -> scan_slprop cbs s
+      | FOLD (ns, s) -> scan_slprop cbs s
+      | RENAME (ts, g, t) ->
+          (iter
+             (fun uu___1 ->
+                match uu___1 with
+                | (t1, t2) ->
+                    (cbs.FStar_Parser_AST.scan_term t1;
+                     cbs.FStar_Parser_AST.scan_term t2)) ts;
+           iopt (scan_slprop cbs) g;
+           iopt cbs.FStar_Parser_AST.scan_term t)
+      | REWRITE (s1, s2, t) ->
+          (scan_slprop cbs s1;
+           scan_slprop cbs s2;
+           iopt cbs.FStar_Parser_AST.scan_term t)
+      | WILD -> ()
+      | SHOW_PROOF_STATE uu___ -> ()
 let (range_of_decl : decl -> rng) =
   fun d -> match d with | FnDefn f -> f.range3 | FnDecl d1 -> d1.range4
 let (mk_comp :
