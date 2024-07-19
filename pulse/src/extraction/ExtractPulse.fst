@@ -30,13 +30,6 @@ let pulse_translate_type_without_decay : translate_type_without_decay_t = fun en
     ->
       TBuf (translate_type_without_decay env arg)
 
-  | MLTY_Named ([_inv], p) when
-    (let p = Syntax.string_of_mlpath p in
-     p = "Pulse.Lib.Core.inv"
-    )
-    ->
-      TUnit
-
   | _ -> raise NotSupportedByKrmlExtension
 
 let flatten_app e =
