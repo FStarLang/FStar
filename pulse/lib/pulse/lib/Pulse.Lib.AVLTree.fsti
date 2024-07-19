@@ -20,16 +20,13 @@
 //----------------------------------------------------------------------------------------------------------
 module Pulse.Lib.AVLTree
 open Pulse.Lib.Pervasives
-module S = Pulse.Lib.Stick.Util
-module FA = Pulse.Lib.Forall.Util
-open FStar.List.Tot
 
-module T = Spec.AVLTree
+module T = Pulse.Lib.Spec.AVLTree
 module G = FStar.Ghost
 
-val node (a:Type u#0) : Type u#0
+//val node (a:Type u#0) : Type u#0
 
-val node_ptr (a:Type u#0) : Type u#0
+//val node_ptr (a:Type u#0) : Type u#0
 
 val tree_t  (a:Type u#0): Type u#0
 

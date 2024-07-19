@@ -1,5 +1,5 @@
 //This file is copied verbatim from the steel repository except delete_avl.
-module Spec.AVLTree
+module Pulse.Lib.Spec.AVLTree
 
 module M = FStar.Math.Lib
 

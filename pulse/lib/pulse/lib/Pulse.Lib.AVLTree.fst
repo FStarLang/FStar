@@ -19,9 +19,8 @@
 //----------------------------------------------------------------------------------------------------------
 module Pulse.Lib.AVLTree
 open Pulse.Lib.Pervasives
-open FStar.List.Tot
 
-module T = Spec.AVLTree
+module T = Pulse.Lib.Spec.AVLTree
 
 noeq
 type node (t:Type0) = {
