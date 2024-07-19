@@ -28,8 +28,9 @@ let (pulse_translate_type_without_decay :
       match t with
       | FStar_Extraction_ML_Syntax.MLTY_Named (arg::[], p) when
           let p1 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
-          (((p1 = "Pulse.Lib.Reference.ref") ||
-              (p1 = "Pulse.Lib.Array.Core.array"))
+          ((((p1 = "Pulse.Lib.Reference.ref") ||
+               (p1 = "Pulse.Lib.Array.Core.array"))
+              || (p1 = "Pulse.Lib.ArrayPtr.ptr"))
              || (p1 = "Pulse.Lib.Vec.vec"))
             || (p1 = "Pulse.Lib.Box.box")
           ->
@@ -407,6 +408,87 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | FStar_Extraction_ML_Syntax.MLE_App
            ({
               FStar_Extraction_ML_Syntax.expr =
+                FStar_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStar_Extraction_ML_Syntax.expr =
+                     FStar_Extraction_ML_Syntax.MLE_Name p;
+                   FStar_Extraction_ML_Syntax.mlty = uu___1;
+                   FStar_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStar_Extraction_ML_Syntax.mlty = uu___4;
+              FStar_Extraction_ML_Syntax.loc = uu___5;_},
+            e2::i::_p::_fp::_w::[])
+           when
+           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.ArrayPtr.op_Array_Access" ->
+           let uu___6 =
+             let uu___7 = FStar_Extraction_Krml.translate_expr env e2 in
+             let uu___8 = FStar_Extraction_Krml.translate_expr env i in
+             (uu___7, uu___8) in
+           FStar_Extraction_Krml.EBufRead uu___6
+       | FStar_Extraction_ML_Syntax.MLE_App
+           ({
+              FStar_Extraction_ML_Syntax.expr =
+                FStar_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStar_Extraction_ML_Syntax.expr =
+                     FStar_Extraction_ML_Syntax.MLE_Name p;
+                   FStar_Extraction_ML_Syntax.mlty = uu___1;
+                   FStar_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStar_Extraction_ML_Syntax.mlty = uu___4;
+              FStar_Extraction_ML_Syntax.loc = uu___5;_},
+            x::_p::_w::[])
+           when
+           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.ArrayPtr.from_array" ->
+           FStar_Extraction_Krml.translate_expr env x
+       | FStar_Extraction_ML_Syntax.MLE_App
+           ({
+              FStar_Extraction_ML_Syntax.expr =
+                FStar_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStar_Extraction_ML_Syntax.expr =
+                     FStar_Extraction_ML_Syntax.MLE_Name p;
+                   FStar_Extraction_ML_Syntax.mlty = uu___1;
+                   FStar_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStar_Extraction_ML_Syntax.mlty = uu___4;
+              FStar_Extraction_ML_Syntax.loc = uu___5;_},
+            a::_p::_fp::_w::i::[])
+           when
+           let uu___6 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___6 = "Pulse.Lib.ArrayPtr.split" ->
+           let uu___6 =
+             let uu___7 = FStar_Extraction_Krml.translate_expr env a in
+             let uu___8 = FStar_Extraction_Krml.translate_expr env i in
+             (uu___7, uu___8) in
+           FStar_Extraction_Krml.EBufSub uu___6
+       | FStar_Extraction_ML_Syntax.MLE_App
+           ({
+              FStar_Extraction_ML_Syntax.expr =
+                FStar_Extraction_ML_Syntax.MLE_TApp
+                ({
+                   FStar_Extraction_ML_Syntax.expr =
+                     FStar_Extraction_ML_Syntax.MLE_Name p;
+                   FStar_Extraction_ML_Syntax.mlty = uu___1;
+                   FStar_Extraction_ML_Syntax.loc = uu___2;_},
+                 uu___3);
+              FStar_Extraction_ML_Syntax.mlty = uu___4;
+              FStar_Extraction_ML_Syntax.loc = uu___5;_},
+            e2::i::v::uu___6)
+           when
+           let uu___7 = FStar_Extraction_ML_Syntax.string_of_mlpath p in
+           uu___7 = "Pulse.Lib.ArrayPtr.op_Array_Assignment" ->
+           let uu___7 =
+             let uu___8 = FStar_Extraction_Krml.translate_expr env e2 in
+             let uu___9 = FStar_Extraction_Krml.translate_expr env i in
+             let uu___10 = FStar_Extraction_Krml.translate_expr env v in
+             (uu___8, uu___9, uu___10) in
+           FStar_Extraction_Krml.EBufWrite uu___7
+       | FStar_Extraction_ML_Syntax.MLE_App
+           ({
+              FStar_Extraction_ML_Syntax.expr =
                 FStar_Extraction_ML_Syntax.MLE_Name p;
               FStar_Extraction_ML_Syntax.mlty = uu___1;
               FStar_Extraction_ML_Syntax.loc = uu___2;_},
@@ -477,7 +559,7 @@ let (pulse_translate_expr : FStar_Extraction_Krml.translate_expr_t) =
        | uu___1 ->
            FStar_Compiler_Effect.raise
              FStar_Extraction_Krml.NotSupportedByKrmlExtension)
-let (uu___272 : unit) =
+let (uu___331 : unit) =
   FStar_Extraction_Krml.register_pre_translate_type_without_decay
     pulse_translate_type_without_decay;
   FStar_Extraction_Krml.register_pre_translate_expr pulse_translate_expr
