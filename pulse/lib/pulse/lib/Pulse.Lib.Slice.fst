@@ -15,7 +15,7 @@ let pts_to #t s #p v =
     AP.pts_to s.elt #p s.fp v **
     pure (Seq.length v == SZ.v s.len)
 
-let pts_to_is_small x p v = ()
+let pts_to_is_slprop2 x p v = ()
 
 ```pulse
 ghost
@@ -156,7 +156,7 @@ let is_split #t s p i s1 s2 =
         SZ.v s.len == SZ.v s1.len + SZ.v s2.len
     )
 
-let is_split_is_small s p i s1 s2 = ()
+let is_split_is_slprop2 s p i s1 s2 = ()
 
 ```pulse
 fn split (#t: Type) (mutb: bool) (s: slice t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) (i: SZ.t)

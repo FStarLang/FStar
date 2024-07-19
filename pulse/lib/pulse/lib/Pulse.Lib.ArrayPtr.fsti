@@ -11,13 +11,13 @@ val ptr : Type0 -> Type0
 [@@erasable]
 val footprint : Type0 -> Type0
 
-val pts_to (#t: Type) (s: ptr t) (#[exact (`1.0R)] p: perm) (fp: footprint t) (v: Seq.seq t) : vprop
+val pts_to (#t: Type) (s: ptr t) (#[exact (`1.0R)] p: perm) (fp: footprint t) (v: Seq.seq t) : slprop
 
-val pts_to_is_small (#a:Type) (x:ptr a) (p:perm) (fp: footprint a) (s:Seq.seq a)
-  : Lemma (is_small (pts_to x #p fp s))
-          [SMTPat (is_small (pts_to x #p fp s))]
+val pts_to_is_slprop2 (#a:Type) (x:ptr a) (p:perm) (fp: footprint a) (s:Seq.seq a)
+  : Lemma (is_slprop2 (pts_to x #p fp s))
+          [SMTPat (is_slprop2 (pts_to x #p fp s))]
 
-val is_from_array (#t: Type) (p: perm) (fp: footprint t) (a: A.array t) : vprop
+val is_from_array (#t: Type) (p: perm) (fp: footprint t) (a: A.array t) : slprop
 
 val from_array (#t: Type) (a: A.array t) (#p: perm) (#v: Ghost.erased (Seq.seq t)) : stt (ptr t)
     (A.pts_to a #p v)

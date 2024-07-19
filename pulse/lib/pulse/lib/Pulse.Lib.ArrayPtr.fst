@@ -17,7 +17,7 @@ let pts_to s #p fp v =
     A.pts_to_range s.base (SZ.v s.offset) (SZ.v s.offset + SZ.v fp.len) #p v **
     pure (fp.elt == s)
 
-let pts_to_is_small x p fp s = ()
+let pts_to_is_slprop2 x p fp s = ()
 
 let is_from_array p fp a =
     pure (fp.elt.base == a /\ SZ.v fp.len == A.length a)
