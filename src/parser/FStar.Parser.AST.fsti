@@ -37,12 +37,6 @@ type quote_kind =
   | Static
   | Dynamic
 
-type desugared_blob = {
-  tag:string;
-  blob: S.term;
-  eq: S.term -> S.term -> bool;
-}
-
 type term' =
   | Wild
   | Const     of sconst
@@ -82,7 +76,7 @@ type term' =
   | Paren     of term
   | Requires  of term & option string
   | Ensures   of term & option string
-  | LexList   of list term  (* a decreases clause mentions either a lexicographically ordered list, *)
+  | LexList   of list term  (* a decreases clause mentions either a lexicographically or dered list, *)
   | WFOrder   of term & term  (* or a well-founded relation or some type and an expression of the same type *)
   | Decreases of term & option string
   | Labeled   of term & string & bool
@@ -104,6 +98,22 @@ type term' =
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
   | DesugaredBlob of desugared_blob
 and term = {tm:term'; range:range; level:level}
+
+and dep_scan_callbacks = {
+   scan_term: term -> unit;
+   scan_binder: binder -> unit;
+   scan_pattern: pattern -> unit;
+   add_lident: lident -> unit;
+   add_open: lident -> unit;
+}
+
+and desugared_blob = {
+  tag:string;
+  blob: S.term;
+  eq: S.term -> S.term -> bool;
+  dep_scan: dep_scan_callbacks -> S.term -> unit
+}
+
 
 (* (as y)? returns t *)
 and match_returns_annotation = option ident & term & bool
