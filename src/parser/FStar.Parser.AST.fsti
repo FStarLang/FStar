@@ -282,6 +282,7 @@ val lid_of_modul : modul -> lid
 
 (* Smart constructors *)
 val mk_decl : decl' -> range -> list decoration -> decl
+val add_decorations: decl -> list decoration -> decl
 val mk_binder_with_attrs : binder' -> range -> level -> aqual -> list term -> binder
 val mk_binder : binder' -> range -> level -> aqual -> binder
 val mk_term : term' -> range -> level -> term
