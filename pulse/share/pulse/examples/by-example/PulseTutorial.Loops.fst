@@ -15,9 +15,10 @@
 *)
 
 module PulseTutorial.Loops
+#lang-pulse
 open Pulse.Lib.Pervasives
 
-```pulse //count_down$
+ //count_down$
 fn count_down (x:ref nat)
 requires pts_to x 'v
 ensures pts_to x 0
@@ -43,9 +44,9 @@ ensures pts_to x 0
         }
     }
 }
-```
 
-```pulse //count_down3$
+
+ //count_down3$
 fn count_down3 (x:ref nat)
 requires pts_to x 'v
 ensures pts_to x 0
@@ -68,9 +69,9 @@ ensures pts_to x 0
         pure (b == false ==> v == 0)
     { () }
 }
-```
 
-```pulse //count_down_loopy$
+
+ //count_down_loopy$
 fn count_down_loopy (x:ref nat)
 requires pts_to x 'v
 ensures pts_to x 0
@@ -93,10 +94,10 @@ ensures pts_to x 0
         pure (b == false ==> v == 0)
     { () }
 }
-```
+
 open FStar.Mul
 
-```pulse //multiply_by_repeated_addition$
+ //multiply_by_repeated_addition$
 fn multiply_by_repeated_addition (x y:nat)
     requires emp
     returns z:nat
@@ -123,7 +124,7 @@ fn multiply_by_repeated_addition (x y:nat)
     };
     !acc
 }
-```
+
 
 noextract
 //SNIPPET_START: sum$
@@ -144,7 +145,7 @@ let rec sum_lemma (n:nat)
 //SNIPPET_START: isum$
 #push-options "--z3cliopt 'smt.arith.nl=false'"
 noextract
-```pulse
+
 fn isum (n:nat)
 requires emp
 returns z:nat
@@ -172,7 +173,7 @@ ensures pure ((n * (n + 1) / 2) == z)
     sum_lemma n; //call an F* lemma inside Pulse
     !acc;
 }
-```
+
 #pop-options
 //SNIPPET_END: isum$
 
@@ -184,7 +185,7 @@ let rec fib (n:nat) : nat =
 //fib$
 
 noextract
-```pulse //fib_rec$
+ //fib_rec$
 fn rec fib_rec (n:pos) (out:ref (nat & nat))
 requires
     pts_to out 'v
@@ -210,9 +211,9 @@ ensures
     out := (snd v, fst v + snd v);
   }
 }
-```
 
-```pulse //fib_loop$
+
+ //fib_loop$
 fn fib_loop (k:pos)
   requires emp
   returns r:nat
@@ -247,7 +248,7 @@ fn fib_loop (k:pos)
   };
   !j
 }
-```
+
 
 
 noextract
@@ -263,7 +264,7 @@ module U32 = FStar.UInt32
 
 
 noextract
-```pulse
+
 fn fibonacci32 (k:U32.t)
   requires pure (0ul < k /\ fib (v k) < pow2 32)
   returns r:U32.t
@@ -297,4 +298,4 @@ fn fibonacci32 (k:U32.t)
   };
   !j
 }
-```
+

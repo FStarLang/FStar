@@ -15,6 +15,7 @@
 *)
 
 module Bug45
+#lang-pulse
 
 open Pulse.Main
 open Pulse.Lib.Pervasives
@@ -38,7 +39,7 @@ let rec fib0 (n:nat) : nat =
 let just #a (x:a) : stt a emp (fun _ -> emp) =
   sub_stt _ _ (magic()) (magic ()) (Pulse.Lib.Core.return_stt_noeq x (fun _ -> emp))
 
-```pulse
+
 fn pth (n:pos) ()
   requires emp
   returns n:nat
@@ -46,10 +47,10 @@ fn pth (n:pos) ()
 {
   fib0 (n-1)
 }
-```
+
 
 [@@expect_failure]
-```pulse
+
 fn pfib (n:nat)
   requires emp
   returns n:nat
@@ -65,4 +66,4 @@ fn pfib (n:nat)
     r
   }
 }
-```
+

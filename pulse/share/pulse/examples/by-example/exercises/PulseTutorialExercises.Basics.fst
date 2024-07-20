@@ -1,9 +1,10 @@
 module PulseTutorialExercises.Basics
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 let fstar_five : int = 5
 
-```pulse
+
 fn five ()
 requires emp
 returns n:int
@@ -11,9 +12,9 @@ ensures pure (n == 5)
 { 
   fstar_five
 }
-```
 
-```pulse
+
+
 fn incr (r:ref int) (#n:erased int) // since n is purely specificational, it is erased
   requires pts_to r n
   ensures pts_to r (n + 1)
@@ -21,9 +22,9 @@ fn incr (r:ref int) (#n:erased int) // since n is purely specificational, it is 
     let x = !r;
     r := x + 1
 }
-```
 
-```pulse
+
+
 fn read (r:ref int) p (n:erased int) // any permission is ok for reading
 requires pts_to r #p n
 returns x:int
@@ -31,9 +32,9 @@ ensures pts_to r #p n ** pure (x == n)
 {
     !r
 }
-```
 
-```pulse
+
+
 fn write (r:ref int) (n:erased int) // write requires full permission
   requires pts_to r #full_perm n
   ensures pts_to r #full_perm n
@@ -41,10 +42,10 @@ fn write (r:ref int) (n:erased int) // write requires full permission
     let y = !r;
     r := y
 }
-```
+
 
 [@@ expect_failure] // fails
-```pulse
+
 fn write (r:ref int) p (n:erased int)
   requires pts_to r #p n
   ensures pts_to r #p n
@@ -52,9 +53,9 @@ fn write (r:ref int) p (n:erased int)
     let y = !r;
     r := y
 }
-```
 
-```pulse
+
+
 fn incr2 (r1 r2:ref int)
   requires pts_to r1 'n1 ** pts_to r2 'n2
   ensures pts_to r1 ('n1 + 1) ** pts_to r2 ('n2 + 1)
@@ -67,9 +68,9 @@ fn incr2 (r1 r2:ref int)
 
     // pts_to r1 (‘n1 + 1) ** pts_to r2 (‘n2 + 1)
 }
-```
 
-```pulse
+
+
 fn incr_stack ()
   requires emp
   returns x:int
@@ -79,10 +80,10 @@ fn incr_stack ()
     incr i;
     !i  // explicit dereference, no need to free i, automatically reclaimed when the function returns
 }
-```
+
 
 module Box = Pulse.Lib.Box
-```pulse
+
 fn incr_heap ()
   requires emp
   returns x:int
@@ -96,14 +97,14 @@ fn incr_heap ()
     Box.free r;  // need to free explicitly
     x
 }
-```
+
 
 //Exercise 1: Fill in the spec and implementation of swap
-```pulse
+
 fn swap #a (r1 r2:ref a)
 requires emp
 ensures emp
 {
     admit()
 }
-```
+

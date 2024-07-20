@@ -15,6 +15,7 @@
 *)
 
 module Example.RefineCase
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 noeq
@@ -39,7 +40,7 @@ let t_perm (x:t) (v:t_rep) : slprop =
       | _ -> pure False
     )
 
-```pulse
+
 ghost
 fn elim_false (#a:Type0) (p: (a -> slprop))
     requires pure False
@@ -50,10 +51,10 @@ fn elim_false (#a:Type0) (p: (a -> slprop))
     rewrite emp as (p x);
     x
 }
-```
+
 
 //can't reveal in a match scrutinee yet
-```pulse
+
 ghost
 fn refine (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
@@ -75,10 +76,10 @@ fn refine (x:ref int) (v:erased t_rep)
     }
   }
 }
-```
+
 
 //Or this style
-```pulse
+
 ghost
 fn refine_alt (x:ref int) (v:t_rep)
   requires t_perm (A x) v
@@ -98,10 +99,10 @@ fn refine_alt (x:ref int) (v:t_rep)
     }
   }
 }
-```
 
 
-```pulse
+
+
 ghost
 fn refine_ghost (x:ref int) (v:erased t_rep)
   requires t_perm (A x) v
@@ -111,7 +112,7 @@ fn refine_ghost (x:ref int) (v:erased t_rep)
    let r = refine_alt x v;
    hide r
 }
-```
+
    
 
 // assume

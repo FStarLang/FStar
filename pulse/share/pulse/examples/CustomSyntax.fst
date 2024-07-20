@@ -15,6 +15,7 @@
 *)
 
 module CustomSyntax
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
@@ -25,7 +26,7 @@ assume val g : unit -> stt unit emp (fun _ -> p)
 
 let folded_pts_to (r:ref U32.t) (n:erased U32.t) : slprop = pts_to r n
 
-```pulse
+
 fn unfold_test (r:ref U32.t) 
   requires folded_pts_to r 'n
   ensures folded_pts_to r 'n
@@ -33,9 +34,9 @@ fn unfold_test (r:ref U32.t)
   unfold folded_pts_to;
   fold folded_pts_to
 }
-```
 
-```pulse
+
+
 fn test_write_10 (x:ref U32.t)
    requires pts_to x 'n
    ensures  pts_to x 0ul
@@ -43,9 +44,9 @@ fn test_write_10 (x:ref U32.t)
     x := 1ul;
     x := 0ul;
 }
-```
 
-```pulse
+
+
 fn test_read (r:ref U32.t) (#pm:perm)
    requires pts_to r #pm 'n
    returns x : U32.t
@@ -53,9 +54,9 @@ fn test_read (r:ref U32.t) (#pm:perm)
 {
   !r
 }
-```
 
-```pulse
+
+
 fn swap (r1 r2:ref U32.t)
   requires 
       pts_to r1 'n1 **
@@ -69,10 +70,10 @@ fn swap (r1 r2:ref U32.t)
   r1 := y;
   r2 := x
 }
-```
 
 
-```pulse
+
+
 fn call_swap2 (r1 r2:ref U32.t)
    requires
        pts_to r1 'n1 **
@@ -84,10 +85,10 @@ fn call_swap2 (r1 r2:ref U32.t)
    swap r1 r2;
    swap r1 r2
 }
-```
 
 
-```pulse
+
+
 fn swap_with_elim_pure (#n1 #n2:erased U32.t)
                        (r1 r2:ref U32.t)
    requires
@@ -102,9 +103,9 @@ fn swap_with_elim_pure (#n1 #n2:erased U32.t)
    r1 := y;
    r2 := x
 }
-```
 
-```pulse
+
+
 fn intro_pure_example (r:ref U32.t)
    requires 
      (pts_to r 'n1  **
@@ -115,10 +116,10 @@ fn intro_pure_example (r:ref U32.t)
 {
   ()
 }
-```
 
 
-```pulse
+
+
 fn if_example (r:ref U32.t)
               (n:(n:erased U32.t{U32.v (reveal n) == 1}))
               (b:bool)
@@ -137,9 +138,9 @@ fn if_example (r:ref U32.t)
      write_atomic r 3ul
    }
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_intro_exists2 (r:ref U32.t)
    requires 
@@ -149,7 +150,7 @@ fn elim_intro_exists2 (r:ref U32.t)
 {
   introduce exists* n. pts_to r n with _
 }
-```
+
 
 assume
 val pred (b:bool) : slprop
@@ -157,7 +158,7 @@ assume
 val read_pred () (#b:erased bool)
     : stt bool (pred b) (fun r -> pred r)
 
-```pulse
+
 fn while_test_alt (r:ref U32.t)
   requires 
     exists* b n.
@@ -173,9 +174,9 @@ fn while_test_alt (r:ref U32.t)
     ()
   }
 }
-```
 
-```pulse
+
+
 fn infer_read_ex (r:ref U32.t)
   requires
     exists* n. pts_to r n
@@ -184,10 +185,10 @@ fn infer_read_ex (r:ref U32.t)
   let x = !r;
   ()
 }
-```
 
 
-```pulse
+
+
 fn while_count2 (r:ref U32.t)
   requires exists* (n:U32.t). (pts_to r n)
   ensures (pts_to r 10ul)
@@ -209,10 +210,10 @@ fn while_count2 (r:ref U32.t)
     }
   }
 }
-```
 
 
-```pulse
+
+
 fn test_par (r1 r2:ref U32.t)
   requires 
      pts_to r1 'n1  **
@@ -234,12 +235,12 @@ fn test_par (r1 r2:ref U32.t)
   };
   ()
 }
-```
+
 
 // A test for rewrite
 let mpts_to (r:ref U32.t) (n:erased U32.t) : slprop = pts_to r n
 
-```pulse
+
 fn rewrite_test (r:ref U32.t)
    requires (mpts_to r 'n)
    ensures  (mpts_to r 1ul)
@@ -250,9 +251,9 @@ fn rewrite_test (r:ref U32.t)
   rewrite (pts_to r 1ul)
        as (mpts_to r 1ul)
 }
-```
 
-```pulse
+
+
 fn test_local (r:ref U32.t)
    requires (pts_to r 'n)
    ensures  (pts_to r 0ul)
@@ -261,9 +262,9 @@ fn test_local (r:ref U32.t)
   let y = Pulse.Lib.Reference.op_Bang x;
   r := y
 }
-```
 
-```pulse
+
+
 fn count_local (r:ref int) (n:int)
    requires (pts_to r (hide 0))
    ensures (pts_to r n)
@@ -281,7 +282,7 @@ fn count_local (r:ref int) (n:int)
   let x = !i;
   r := x
 }
-```
+
 
 
 let rec sum_spec (n:nat) : GTot nat =
@@ -291,7 +292,7 @@ noextract
 inline_for_extraction
 let zero : nat = 0
 
-```pulse
+
 fn sum (r:ref nat) (n:nat)
    requires exists* i. (pts_to r i)
    ensures (pts_to r (sum_spec n))
@@ -330,9 +331,9 @@ fn sum (r:ref nat) (n:nat)
    introduce exists* s. (pts_to sum s)
    with _
 }
-```
 
-```pulse
+
+
 fn sum2 (r:ref nat) (n:nat)
    requires exists* i. pts_to r i
    ensures pts_to r (sum_spec n)
@@ -355,9 +356,9 @@ fn sum2 (r:ref nat) (n:nat)
    r := s;
    ()
 }
-```
 
-```pulse
+
+
 fn if_then_else_in_specs (r:ref U32.t)
   requires (if true
               then pts_to r 0ul
@@ -373,9 +374,9 @@ fn if_then_else_in_specs (r:ref U32.t)
   let x = !r;
   r := U32.add x 1ul
 }
-```
 
-```pulse
+
+
 fn test_tot_let (r:ref U32.t)
   requires (pts_to r 0ul)
   ensures  (pts_to r 2ul)
@@ -384,10 +385,10 @@ fn test_tot_let (r:ref U32.t)
   let y = 1ul;
   r := U32.add x y
 }
-```
+
 
 // Ascriptions coming in the way
-// ```pulse
+// 
 // fn if_then_else_in_specs2 (r:ref U32.t) (b:bool)
 //   requires (pts_to r (if b then 0ul else 1ul))
 //   ensures (pts_to r (if b then 1ul else 2ul))
@@ -395,10 +396,10 @@ fn test_tot_let (r:ref U32.t)
 //   let x = !r;
 //   r := U32.add x 1ul
 // }
-// ```
+// 
 
 
-```pulse
+
 fn incr (x:nat)
   requires emp
   returns r : (r:nat { r > x })
@@ -406,7 +407,7 @@ fn incr (x:nat)
 {  let y = x + 1;
   ( y <: r:nat { r > x } )
 }
-```
+
 
 open Pulse.Lib.PCM.Fraction
 
@@ -414,7 +415,7 @@ open Pulse.Lib.PCM.Fraction
 // The example checks that ghost_pcm_ref is considered non-informative
 //
 
-```pulse
+
 fn test_ghost_ref_non_informative (#a:Type u#1) (y:a)
   requires emp
   ensures emp
@@ -423,4 +424,4 @@ fn test_ghost_ref_non_informative (#a:Type u#1) (y:a)
   let r = ghost_alloc #_ #(pcm_frac #a) (hide (Some (y, 1.0R)));
   drop_ (ghost_pcm_pts_to r _);
 }
-```
+

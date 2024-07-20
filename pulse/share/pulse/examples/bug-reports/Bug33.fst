@@ -15,10 +15,11 @@
 *)
 
 module Bug33
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn test (z:int)
   requires emp
   returns _:unit
@@ -26,4 +27,4 @@ fn test (z:int)
 {
   admit();
 }
-```
+

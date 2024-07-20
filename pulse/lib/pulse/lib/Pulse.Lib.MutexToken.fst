@@ -14,6 +14,7 @@
 *)
 
 module Pulse.Lib.MutexToken
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -55,7 +56,7 @@ let replace (#a:Type0) (mg:mutex_guard a) (y:a) (#x:erased a)
   
   R.replace #a mg y #x
 
-```pulse
+
 fn new_mutex (#a:Type0) (v:a -> slprop { forall (x:a). is_storable (v x) }) (x:a)
   requires v x
   returns _:mutex v
@@ -66,12 +67,12 @@ fn new_mutex (#a:Type0) (v:a -> slprop { forall (x:a). is_storable (v x) }) (x:a
   let m = {r; l};
   m
 }
-```
+
 
 let belongs_to (#a:Type0) (#v:a -> slprop) (mg:mutex_guard a) (m:mutex v) : slprop =
   pure (mg == B.box_to_ref m.r) ** L.lock_acquired m.l
 
-```pulse
+
 fn lock (#a:Type0) (#v:a -> slprop) (m:mutex v)
   requires emp
   returns mg:mutex_guard a
@@ -84,9 +85,9 @@ fn lock (#a:Type0) (#v:a -> slprop) (m:mutex v)
   fold ((B.box_to_ref m.r) `belongs_to` m);
   B.box_to_ref m.r
 }
-```
 
-```pulse
+
+
 fn unlock (#a:Type0) (#v:a -> slprop) (m:mutex v) (mg:mutex_guard a)
   requires mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures emp
@@ -96,4 +97,4 @@ fn unlock (#a:Type0) (#v:a -> slprop) (m:mutex v) (mg:mutex_guard a)
   B.to_box_pts_to m.r;
   L.release m.l
 }
-```
+

@@ -15,13 +15,14 @@
 *)
 
 module Pulse.Lib.ArraySwap
+#lang-pulse
 module R = Pulse.Lib.Reference
 module Prf = Pulse.Lib.ArraySwap.Proof
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 1"
 #restart-solver
 
 inline_for_extraction
-```pulse
+
 fn gcd (n0: SZ.t) (l0: SZ.t)
   requires (emp ** pure (
     SZ.v l0 < SZ.v n0
@@ -54,7 +55,7 @@ fn gcd (n0: SZ.t) (l0: SZ.t)
   let res = !pn;
   res
 }
-```
+
 
 inline_for_extraction
 let impl_jump
@@ -106,7 +107,7 @@ let size_sub
 #push-options "--z3rlimit_factor 4"
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t {SZ.v mb > SZ.v lb /\ SZ.v mb < SZ.v rb})) (bz: Prf.bezout (SZ.v rb - SZ.v lb) (SZ.v mb - SZ.v lb)) (d: SZ.t) (q: SZ.t) (#s0: Ghost.erased (Seq.seq t))
   requires (
     A.pts_to_range a (Ghost.reveal (SZ.v lb)) (Ghost.reveal (SZ.v rb)) s0 **
@@ -168,7 +169,7 @@ fn array_swap_aux(#t: Type0) (a: A.array t) (lb: SZ.t) (rb: SZ.t) (mb: (mb: SZ.t
     };
     ()
 }
-```
+
 
 #pop-options
 
@@ -189,7 +190,7 @@ let intro_array_swap_post2 (lb rb mb:SZ.t) (mb':SZ.t)
 
 #push-options "--fuel 0 --ifuel 0 --split_queries no"
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn array_swap
   (#t: Type0)
   (a: A.array t)
@@ -265,5 +266,5 @@ ensures (
     mb'
   }
 }
-```
+
 #pop-options

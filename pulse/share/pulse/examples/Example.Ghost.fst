@@ -15,11 +15,12 @@
 *)
 
 module Example.Ghost
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 //calling a function declared in F* as ghost fails
 [@@expect_failure]
-```pulse
+
 ghost
 fn test_elim_false (a:Type0) (p:(a -> slprop))
     requires pure False
@@ -28,9 +29,9 @@ fn test_elim_false (a:Type0) (p:(a -> slprop))
 {
     elim_false a p;
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_false_alt (a:Type0) (p:(a -> slprop))
     requires pure False
@@ -41,10 +42,10 @@ fn elim_false_alt (a:Type0) (p:(a -> slprop))
     rewrite emp as (p x);
     x
 }
-```
 
 
-```pulse
+
+
 ghost
 fn test_elim_false_alt (a:Type0) (p:(a -> slprop))
     requires pure False
@@ -53,10 +54,10 @@ fn test_elim_false_alt (a:Type0) (p:(a -> slprop))
 {
     elim_false_alt a p;
 }
-```
+
 
 // You can return anything in Ghost, it doesn't have to be non-informative
-```pulse
+
 ghost
 fn ret (#a:Type0) (x:a)
     requires emp
@@ -65,11 +66,11 @@ fn ret (#a:Type0) (x:a)
 {
     x
 }
-```
+
 
 
 //You can also return it as erased, though you don't have to
-```pulse
+
 ghost
 fn ret2 (#a:Type0) (x:a)
     requires emp
@@ -78,10 +79,10 @@ fn ret2 (#a:Type0) (x:a)
 {
     hide x
 }
-```
+
 
 //Admit is overloaded to work in all the effects, include ghost
-```pulse
+
 ghost
 fn use_admit (t:Type0) (p:slprop)
     requires emp
@@ -90,7 +91,7 @@ fn use_admit (t:Type0) (p:slprop)
 {
     admit()
 }
-```
+
 
 assume
 val p : slprop
@@ -99,7 +100,7 @@ val q : slprop
 assume
 val r : slprop
 
-```pulse
+
 ghost
 fn p_q ()
 requires p
@@ -107,9 +108,9 @@ ensures q
 {
     admit()
 }
-```
 
-```pulse
+
+
 ghost
 fn q_r ()
 requires q
@@ -117,9 +118,9 @@ ensures r
 {
     admit()
 }
-```
 
-```pulse
+
+
 ghost
 fn p_r ()
 requires p
@@ -128,5 +129,5 @@ ensures r
    p_q();
    q_r();
 }
-```
+
 

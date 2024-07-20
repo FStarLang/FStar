@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.CancellableInvariant
+#lang-pulse
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 open Pulse.Lib.Pervasives
 
@@ -44,7 +45,7 @@ let active_is_slprop2 p c = ()
 
 let iname_of c = c.i
 
-```pulse
+
 ghost
 fn new_cancellable_invariant (v:slprop { is_storable v })
   requires v
@@ -62,12 +63,12 @@ fn new_cancellable_invariant (v:slprop { is_storable v })
   with _p _v. rewrite (GR.pts_to r #_p _v) as (active c 1.0R);
   c
 }
-```
+
 
 let unpacked c _v = GR.pts_to c.r #0.5R true
 
 
-```pulse
+
 ghost
 fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   requires cinv_vp c v ** active c p
@@ -82,9 +83,9 @@ fn unpack_cinv_vp (#p:perm) (#v:slprop) (c:cinv)
   fold (active c p);
   fold (unpacked c v)
 }
-```
 
-```pulse
+
+
 ghost
 fn pack_cinv_vp (#v:slprop) (c:cinv)
   requires v ** unpacked c v
@@ -96,9 +97,9 @@ fn pack_cinv_vp (#v:slprop) (c:cinv)
   fold (cinv_vp_aux c.r v);
   fold (cinv_vp c v)
 }
-```
 
-```pulse
+
+
 ghost
 fn share (#p:perm) (c:cinv)
   requires active c p
@@ -110,11 +111,11 @@ fn share (#p:perm) (c:cinv)
   fold active;
   fold active
 }
-```
+
 
 let share2 c = share #1.0R c
 
-```pulse
+
 ghost
 fn gather (#p1 #p2:perm) (c:cinv)
   requires active c p1 ** active c p2
@@ -125,11 +126,11 @@ fn gather (#p1 #p2:perm) (c:cinv)
   GR.gather c.r #_ #_ #(p1 /. 2.0R) #(p2 /. 2.0R);
   fold active c (p1 +. p2);
 }
-```
+
 
 let gather2 c = gather #0.5R #0.5R c
 
-```pulse
+
 ghost
 fn cancel_ (#v:slprop) (c:cinv)
 requires cinv_vp c v **
@@ -150,9 +151,9 @@ opens []
   fold (cinv_vp c v);
   drop_ (GR.pts_to c.r #0.5R _)
 }
-```
 
-```pulse
+
+
 ghost
 fn cancel (#v:slprop) (c:cinv)
   requires inv (iname_of c) (cinv_vp c v) ** active c 1.0R
@@ -167,4 +168,4 @@ fn cancel (#v:slprop) (c:cinv)
   };
   drop_ (inv (iname_of c) _)
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostWitness
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -23,7 +24,7 @@ let sqeq (p : Type) (_ : squash p) : erased p =
 
 let psquash (a:Type u#a) : prop = squash a
 
-```pulse
+
 ghost
 fn ghost_witness (a:Type u#0) (_:squash a)
 requires emp
@@ -36,9 +37,9 @@ ensures emp
   let i = reveal i;
   i
 }
-```
 
-```pulse
+
+
 ghost
 fn ghost_witness2 (a:Type u#4) (_:squash a)
 requires emp
@@ -51,9 +52,9 @@ ensures emp
   let i = reveal i;
   i
 }
-```
 
-```pulse
+
+
 ghost
 fn ghost_witness_exists (a:Type u#0)
 requires pure (exists (x:a). True)
@@ -62,9 +63,9 @@ ensures emp
 {
   ghost_witness a ();
 }
-```
 
-```pulse
+
+
 ghost
 fn ghost_witness_exists2 (a:Type u#4)
 requires pure (exists (x:a). True)
@@ -73,11 +74,11 @@ ensures emp
 {
   ghost_witness2 a ();
 }
-```
+
 
 
 // fails
-// ```pulse
+// 
 // fn ghost_witness_exists_star (a:Type u#0)
 // requires exists* (x:a). emp
 // returns xx:int
@@ -85,4 +86,4 @@ ensures emp
 // {
 //   with i. _;
 // }
-// ```
+// 

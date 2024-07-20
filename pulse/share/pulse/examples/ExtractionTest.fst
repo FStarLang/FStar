@@ -15,6 +15,7 @@
 *)
 
 module ExtractionTest
+#lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.UInt32
 module U32 = FStar.UInt32
@@ -22,7 +23,7 @@ inline_for_extraction
 let zero () = 0ul
 
 
-```pulse
+
 fn test_read_write (x:ref U32.t)
   requires pts_to x 'n
   ensures pts_to x 'n
@@ -30,11 +31,11 @@ fn test_read_write (x:ref U32.t)
   let n = !x;
   x := n +^ (zero());
 }
-```
+
 
 
 [@@"inline"]
-```pulse
+
 fn test_write_10 (x:ref U32.t)
    requires pts_to x 'n
    ensures  pts_to x 0ul
@@ -43,10 +44,10 @@ fn test_write_10 (x:ref U32.t)
     test_read_write x;
     x := 0ul;
 }
-```
+
 
 #push-options "--ext 'pulse:rvalues'"
-```pulse
+
 fn write10 (x:ref U32.t)
   requires pts_to x 'n
   ensures pts_to x 0ul
@@ -65,12 +66,12 @@ fn write10 (x:ref U32.t)
     ctr := ctr -^ 1ul;
   }
 }
-```
+
 
 module SZ = FStar.SizeT
 module A = Pulse.Lib.Array
 
-```pulse
+
 fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
   requires A.pts_to x 's ** pure (A.length x == SZ.v n)
   ensures exists* s. A.pts_to x s ** pure (Seq.equal s (Seq.create (SZ.v n) v))
@@ -91,7 +92,7 @@ fn fill_array (x:array U32.t) (n:SZ.t) (v:U32.t)
     i := i `SZ.add` 1sz;
   }
 }
-```
+
 
 module SZ = FStar.SizeT
 let test0 (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 })) = let open SZ in x %^ y
@@ -110,7 +111,7 @@ let my_safe_add (x y : SZ.t)
     )
     else None
      
-```pulse
+
 fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
   requires emp
   returns z:SZ.t
@@ -119,9 +120,9 @@ fn testbi (x:SZ.t) (y:(y:SZ.t { SZ.v y <> 0 }))
   open SZ;
   (x %^ y)
 }
-```
 
-```pulse
+
+
 fn testbi2 (x:SZ.t) (y:SZ.t)
   requires emp
   returns o:opt SZ.t
@@ -129,9 +130,9 @@ fn testbi2 (x:SZ.t) (y:SZ.t)
 {
   (my_safe_add x y)
 }
-```
 
-```pulse
+
+
 fn extract_match (x:opt bool)
   requires emp
   returns b:bool
@@ -148,9 +149,9 @@ fn extract_match (x:opt bool)
     }
   }
 }
-```
 
-```pulse
+
+
 fn rec fib (x:nat)
   requires emp
   returns y:nat
@@ -167,9 +168,9 @@ fn rec fib (x:nat)
     (x1 + x2)
   }
 }
-```
 
-```pulse
+
+
 fn fib2 (x:nat)
 requires emp
 returns y:nat
@@ -179,4 +180,3 @@ ensures emp
   let m = fib (x + 1);
   (m + n)
 }
-```

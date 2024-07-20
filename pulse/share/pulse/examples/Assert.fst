@@ -15,9 +15,10 @@
 *)
 
 module Assert
+#lang-pulse
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn test_assert (r0 r1: ref nat)
                (#p0 #p1:perm)
                (#v0:nat)
@@ -32,4 +33,4 @@ fn test_assert (r0 r1: ref nat)
     assert_ (pts_to r0 #p0 (v0 + 0));
     ()
 }
-```
+

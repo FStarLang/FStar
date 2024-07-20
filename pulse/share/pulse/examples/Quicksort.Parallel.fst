@@ -15,6 +15,7 @@
 *)
 
 module Quicksort.Parallel
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
@@ -23,7 +24,7 @@ module SZ = FStar.SizeT
 
 open Quicksort.Base
 
-```pulse
+
 fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: erased int) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
   ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
@@ -53,10 +54,10 @@ fn rec quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: eras
     quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
   }
 }
-```
+
 
 (* This version cuts the recursion off when the array is small enough. *)
-```pulse
+
 fn rec autostop_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb rb: erased int) (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)
   ensures exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
@@ -101,4 +102,4 @@ fn rec autostop_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb
     quicksort_proof a lo r._1 r._2 hi lb rb pivot #s0 s1' s2 s3';
   }
 }
-```
+

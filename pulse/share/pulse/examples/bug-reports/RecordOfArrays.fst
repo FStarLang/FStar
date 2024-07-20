@@ -15,6 +15,7 @@
 *)
 
 module RecordOfArrays
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
@@ -43,7 +44,7 @@ let rec_array_perm (r:rec_array) (v:rec_array_repr)
 //leads to strange type inference errors
 let mk_rec_array_repr (v1 v2:Seq.seq U8.t) = { v1=v1; v2=v2 }
 
-```pulse
+
 ghost
 fn fold_rec_array_perm (r:rec_array) (#v1 #v2:erased (Seq.seq U8.t))
   requires
@@ -54,11 +55,11 @@ fn fold_rec_array_perm (r:rec_array) (#v1 #v2:erased (Seq.seq U8.t))
 {
   fold (rec_array_perm r (mk_rec_array_repr v1 v2))
 }
-```
+
 
 
 // Then, mutating a one of the arrays of the record involves:
-```pulse
+
 fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 > 0 }))
   requires rec_array_perm r v
   ensures exists* (v_:rec_array_repr) .
@@ -69,11 +70,11 @@ fn mutate_r2 (r:rec_array) (#v:(v:Ghost.erased rec_array_repr { Seq.length v.v2 
   fold_rec_array_perm r;       //3. folding it back up
   ()
 }
-```
+
 
 // Some alternate more explicit ways
 
-```pulse
+
 fn get_witness_array (x:A.array U8.t) (#y:Ghost.erased (Seq.seq U8.t))
 requires A.pts_to x y
 returns z:Ghost.erased (Seq.seq U8.t)
@@ -81,11 +82,11 @@ ensures A.pts_to x y ** pure (y==z)
 {   
     y
 }
-```
+
 
 let rec_array_repr_with_v2 (r:rec_array_repr) v2 = {r with v2}
 
-```pulse
+
 fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr)
   requires (
     rec_array_perm r v **
@@ -109,4 +110,4 @@ fn mutate_rec_get_witness (l:US.t) (r:rec_array) (#v:Ghost.erased rec_array_repr
     
   ()
 }
-```
+

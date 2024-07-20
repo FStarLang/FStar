@@ -15,6 +15,7 @@
 *)
 
 module MSort.Base
+#lang-pulse
 
 open FStar.Ghost
 open Pulse.Lib.Pervasives
@@ -25,7 +26,7 @@ open MSort.SeqLemmas
 
 #set-options "--z3rlimit 20"
 
-```pulse
+
 fn
 copy_array
   (src tgt : array int)
@@ -71,9 +72,9 @@ copy_array
 
   ()
 }
-```
 
-```pulse
+
+
 fn
 merge_impl
   (a : array int) (lo mid hi : SZ.t)
@@ -192,4 +193,4 @@ merge_impl
   A.free sw1;
   A.free sw2;
 }
-```
+

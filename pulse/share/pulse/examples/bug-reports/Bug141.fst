@@ -15,15 +15,16 @@
 *)
 
 module Bug141
+#lang-pulse
 
 open Pulse.Main
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn rec loop (#t:Type0) (l:list t)
 requires emp
 ensures emp
 {
   loop l;
 }
-```
+

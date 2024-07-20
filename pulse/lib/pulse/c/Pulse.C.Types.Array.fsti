@@ -1,4 +1,5 @@
 module Pulse.C.Types.Array
+#lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Base
 open Pulse.C.Typenat
@@ -276,7 +277,7 @@ val array_ptr_is_null
 #set-options "--print_implicits"
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_is_null
   (#t: Type)
 //  (#opened: _)
@@ -301,7 +302,7 @@ ensures
     as (array_pts_to_or_null r v);
   res
 }
-```
+
 val array_pts_to_length
   (#t: Type)
   (#td: typedef t)
@@ -416,7 +417,7 @@ val array_ref_of_base
     ))
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_of_base
   (#t: Type)
   (#tn: Type0)
@@ -440,7 +441,7 @@ ensures
     as (array_pts_to a (seq_of_base_array v));
   a
 }
-```
+
 
 val unarray_of_base
   (#t: Type)
@@ -491,7 +492,7 @@ val array_ptr_alloc
     ))
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_alloc
   (#t: Type)
   (td: typedef t)
@@ -518,7 +519,7 @@ ensures
     as (freeable_or_null_array ar);
   ar
 }
-```
+
 
 let full_seq (#t: Type) (td: typedef t) (v: Seq.seq t) : GTot prop =
   forall (i: nat { i < Seq.length v }) . {:pattern (Seq.index v i)} full td (Seq.index v i)
@@ -545,7 +546,7 @@ val array_ref_free
     (fun _ -> emp)
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_free
   (#t: Type)
   (#td: typedef t)
@@ -563,7 +564,7 @@ ensures emp
   rewrite (array_pts_to a s) as (array_pts_to (mk_array al n) s);
   array_ref_free al n
 }
-```
+
 
 (*
 val has_array_of_ref
@@ -789,7 +790,7 @@ val array_ref_cell
     (fun r -> array_pts_to (mk_array a len) (Seq.upd s (SZ.v i) (unknown td)) ** pts_to r (Seq.index s (SZ.v i)) ** has_array_cell (mk_array a len) i r)
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_cell
   (#t: Type)
   (#td: typedef t)
@@ -812,7 +813,7 @@ ensures
   rewrite (has_array_cell (mk_array al len) i r) as (has_array_cell a i r);
   r
 }
-```
+
 
 val unarray_cell
   (#t: Type)
@@ -931,7 +932,7 @@ val array_ref_split
     ))
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_split
   (#t: Type)
   (#td: typedef t)
@@ -966,7 +967,7 @@ ensures
     as (array_pts_to a' sr);
   a'
 }
-```
+
 
 val array_join
   (#t: Type)
@@ -1093,7 +1094,7 @@ val array_blit_ptr
     ))
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_blit
   (#t: Type)
   (#td: typedef t)
@@ -1132,10 +1133,10 @@ ensures
     as (array_pts_to dst v_dst');
   v_dst'
 }
-```
+
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn array_memcpy
   (#t: Type)
   (#td: typedef t)
@@ -1154,4 +1155,4 @@ ensures
   rewrite (array_pts_to dst v_dst')
     as (array_pts_to dst v_src);
 }
-```
+

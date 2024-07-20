@@ -1,4 +1,5 @@
 module Unfold
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -8,20 +9,20 @@ val p : slprop
 [@@pulse_unfold]
 let q = p
 
-```pulse
+
 fn test_pq ()
   requires p
   ensures q
 {
   ();
 }
-```
 
-```pulse
+
+
 fn test_qp ()
   requires q
   ensures p
 {
   ();
 }
-```
+

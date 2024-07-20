@@ -15,11 +15,12 @@
 *)
 
 module Pulse.Lib.InvList
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module T0 = Pulse.Lib.Priv.Trade0
 
-```pulse
+
 ghost
 fn rec dup_invlist_inv (is:invlist)
   requires invlist_inv is
@@ -41,9 +42,9 @@ fn rec dup_invlist_inv (is:invlist)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn shift_invlist_one
   (#a:Type0)
@@ -72,9 +73,9 @@ fn shift_invlist_one
     (p ** invlist_v is);
   v
 }
-```
 
-```pulse
+
+
 ghost
 fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
   (is : invlist)
@@ -109,9 +110,9 @@ fn rec with_invlist (#a:Type0) (#pre : slprop) (#post : a -> slprop)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn iname_inj
   (p1 p2 : slprop)
@@ -122,7 +123,7 @@ fn iname_inj
   invariant_name_identifies_invariant #p1 #p2 i1 i2;
   ()
 }
-```
+
 
 let invlist_mem_split (i : iname) (is : invlist)
     (_ : squash (FStar.GhostSet.mem i (invlist_names is)))
@@ -131,7 +132,7 @@ let invlist_mem_split (i : iname) (is : invlist)
               is == l @ [( p, ii )] @ r)
   = admit()
 
-```pulse
+
 ghost
 fn __invlist_sub_split
   (is1 is2 : invlist) (_: squash (invlist_sub is1 is2))
@@ -172,9 +173,9 @@ fn __invlist_sub_split
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn invlist_sub_split
   (is1 is2 : invlist)
@@ -183,7 +184,7 @@ fn invlist_sub_split
 {
   __invlist_sub_split is1 is2 ()
 }
-```
+
 
 
 let invlist_sub_inv = admit ()

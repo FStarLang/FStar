@@ -15,25 +15,25 @@
 *)
 
 module PulseLambdas
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 let stt_trivial a = stt a emp (fun _ -> emp)
 
-[@@expect_failure]
-```pulse
+(*
 fn test_trivial_function (x:int)
 : stt_trivial int
 = { //should allow nullary "lambdas"
     (x + 1)
   }
-```
+*)
 
 let swap_fun = #a:Type0 -> x:ref a -> y:ref a -> #vx:erased a -> #vy:erased a -> stt unit
     (requires pts_to x vx ** pts_to y vy)
     (ensures fun _ -> pts_to x vy ** pts_to y vx)
 
 
-```pulse
+
 fn s1 () 
   : swap_fun 
   = (#a:Type0) (x y #_vx #_vy:_)
@@ -43,12 +43,12 @@ fn s1 ()
       x := vy;
       y := vx;
     }
-```
+
 
 let ss = s1
 
 [@@expect_failure]
-```pulse
+
 fn s2 ()
   : swap_fun 
   = (#a:Type0) (x y:_) //make it so that implicit binders in the type can be left out
@@ -58,10 +58,8 @@ fn s2 ()
       x := vy;
       y := vx;
     }
-```
 
-[@@expect_failure]
-```pulse
+(*
 fn s3 () : swap_fun
   = (#a:Type0) (x y #_vx #_vy:_)
     requires pts_to x _vx ** pts_to y _vy //reject repeated annotation
@@ -78,9 +76,9 @@ fn s3 () : swap_fun
       x := vy;
       y := vx;
     }
-```
+*)
 
-```pulse
+
 fn test_inner_lambda (#a:Type0)
                      (x y:ref int)
 requires pts_to x 'vx ** pts_to y 'vy
@@ -97,4 +95,4 @@ ensures  pts_to x 'vy ** pts_to y 'vy
   write_helper x vy;
   write_helper y vy;
 } 
-```
+

@@ -15,12 +15,13 @@
 *)
 
 module Bug96
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
 let mini_t = int
 
-```pulse
+
 fn test (z: unit)
   requires emp
   returns y: int
@@ -28,8 +29,8 @@ fn test (z: unit)
 {
   42;
 }
-```
-```pulse
+
+
 fn test2 (z: unit)
   requires emp
   returns y: mini_t
@@ -37,4 +38,4 @@ fn test2 (z: unit)
 {
   test ()
 }
-```
+

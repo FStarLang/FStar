@@ -15,6 +15,7 @@
 *)
 
 module PulseTutorial.AtomicsAndInvariants
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 
@@ -22,7 +23,7 @@ module U32 = FStar.UInt32
 let owns (x:ref U32.t) : v:slprop { is_slprop3 v }= exists* v. pts_to x v
 //owns$
 
-```pulse //create_invariant$
+ //create_invariant$
 ghost
 fn create_invariant (r:ref U32.t) (v:erased U32.t)
 requires pts_to r v
@@ -32,10 +33,10 @@ ensures inv i (owns r)
     fold owns;
     new_invariant (owns r)
 }
-```
+
 
 [@@expect_failure [228; 19]]
-```pulse //create_non_boxable$
+ //create_non_boxable$
 ghost
 fn create_non_boxable_inv (p:slprop)
 requires p
@@ -44,9 +45,9 @@ ensures inv i p
 {
   new_invariant p;
 }
-```
 
-```pulse //update_ref_atomic$
+
+ //update_ref_atomic$
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
@@ -59,9 +60,9 @@ opens [i]
      fold owns;          //ghost step;  owns r
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn pts_to_dup_impossible #a (x:ref a)
 requires pts_to x 'v ** pts_to x 'u
@@ -71,11 +72,11 @@ ensures  pts_to x 'v ** pts_to x 'u ** pure False
     pts_to_perm_bound x;
     share x;    
 }
-```
+
 
 //double_open_bad$
 [@@expect_failure]
-```pulse
+
 fn double_open_bad (r:ref U32.t) (i:inv (owns r))
 requires emp
 ensures pure False
@@ -90,11 +91,11 @@ ensures pure False
       }
     }
 }
-```
+
 //double_open_bad$
 
 
-```pulse //update_ref$
+ //update_ref$
 fn update_ref (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
@@ -105,11 +106,11 @@ ensures inv i (owns r)
      fold owns;          //ghost step;  owns r
   }
 }
-```
+
 
 //update_ref_fail$
 [@@expect_failure]
-```pulse 
+ 
 fn update_ref_fail (r:ref U32.t) (i:iname) (v:U32.t)
 requires inv i (owns r)
 ensures inv i (owns r)
@@ -120,7 +121,7 @@ ensures inv i (owns r)
     fold owns;
   }
 }
-```
+
 //update_ref_fail$
 
 
@@ -128,7 +129,7 @@ ensures inv i (owns r)
 let readable (r:ref U32.t) : v:slprop { is_slprop3 v } = exists* p v. pts_to r #p v
 
 
-```pulse
+
 ghost
 fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
   requires pts_to r #p v
@@ -136,9 +137,9 @@ fn intro_readable (r:ref U32.t) (p:perm) (v:U32.t)
 {
   fold readable
 }
-```
 
-```pulse //split_readable$
+
+ //split_readable$
 ghost
 fn split_readable (r:ref U32.t) (i:iname)
 requires inv i (readable r)
@@ -156,4 +157,4 @@ opens [i]
         intro_readable r (p /. 2.0R) _;
     };
 }
-```
+

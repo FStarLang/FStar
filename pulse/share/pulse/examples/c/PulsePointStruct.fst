@@ -15,13 +15,14 @@
 *)
 
 module PulsePointStruct
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.C.Types
 
 module U32 = FStar.UInt32
 // module C = C // for _zero_for_deref
 
-```pulse
+
 fn swap (#v1 #v2: Ghost.erased U32.t) (r1 r2: ref (scalar U32.t))
 requires
   ((r1 `pts_to` mk_scalar (Ghost.reveal v1)) ** (r2 `pts_to` mk_scalar (Ghost.reveal v2)))
@@ -34,7 +35,7 @@ ensures
   write r1 x2;
   write r2 x1;
 }
-```
+
 
 #set-options "--print_implicits"
 
@@ -62,7 +63,7 @@ let point = struct0 _point "PulsePointStruct.point" point_fields
 
 #push-options "--fuel 0"
 
-```pulse
+
 fn swap_struct (p: ref point) (v: Ghost.erased (typeof point))
 requires
     (p `pts_to` v ** pure (
@@ -84,6 +85,6 @@ ensures
   let _ = unstruct_field_and_drop p "y" py;
   ()
 }
-```
+
 
 #pop-options

@@ -15,6 +15,7 @@
 *)
 
 module Example.StructPCM
+#lang-pulse
 
 open FStar.PCM
 open Pulse.Lib.Core
@@ -79,7 +80,7 @@ let pcm_upd_xy #a #b (x1 x2:a) (y1 y2:b) : frame_preserving_upd (spcm a b) (G.hi
 
 type ref a b : Type0 = pcm_ref (spcm a b)
 
-```pulse
+
 fn alloc #a #b (x:a) (y:b)
   requires emp
   returns r:ref a b
@@ -87,9 +88,9 @@ fn alloc #a #b (x:a) (y:b)
 {
   Pulse.Lib.Core.alloc #_ #(spcm a b) (XY x y)
 }
-```
 
-```pulse
+
+
 fn share #a #b (r:ref a b) (#x:a) (#y:b)
   requires pcm_pts_to r (XY x y)
   ensures pcm_pts_to r (X x) **
@@ -97,38 +98,38 @@ fn share #a #b (r:ref a b) (#x:a) (#y:b)
 {
   rewrite pcm_pts_to r (XY x y) as
           pcm_pts_to r (X x `FStar.PCM.op (spcm a b)` Y y);
-  Pulse.Lib.Core.share r (Ghost.hide (X x)) (Ghost.hide (Y y));
+  Pulse.Lib.Core.share r (G.hide (X x)) (G.hide (Y y));
 }
-```
 
-```pulse
+
+
 fn upd_x #a #b (r:ref a b) (x1 x2:a)
   requires pcm_pts_to r (X x1)
   ensures pcm_pts_to r (X x2)
 {
   Pulse.Lib.Core.write r _ _ (pcm_upd_x x1 x2)
 }
-```
 
-```pulse
+
+
 fn upd_y #a #b (r:ref a b) (y1 y2:b)
   requires pcm_pts_to r (Y y1)
   ensures pcm_pts_to r (Y y2)
 {
   Pulse.Lib.Core.write r _ _ (pcm_upd_y y1 y2)
 }
-```
 
-```pulse
+
+
 fn upd #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   requires pcm_pts_to r (XY x1 y1)
   ensures pcm_pts_to r (XY x2 y2)
 {
   Pulse.Lib.Core.write r _ _ (pcm_upd_xy x1 x2 y1 y2)
 }
-```
 
-```pulse
+
+
 fn gather #a #b (r:ref a b) (#x:a) (#y:b)
   requires pcm_pts_to r (X x) **
            pcm_pts_to r (Y y)
@@ -139,9 +140,9 @@ fn gather #a #b (r:ref a b) (#x:a) (#y:b)
             pcm_pts_to r (XY x y)
 
 }
-```
 
-```pulse
+
+
 fn upd_par #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   requires pcm_pts_to r (XY x1 y1)
   ensures  pcm_pts_to r (XY x2 y2)
@@ -157,4 +158,4 @@ fn upd_par #a #b (r:ref a b) (x1 x2:a) (y1 y2:b)
   
   gather r
 }
-```
+

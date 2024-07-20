@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Forall.Util
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 include Pulse.Lib.Forall
@@ -23,7 +24,7 @@ module I = Pulse.Lib.Stick.Util
 let intro #a #p = Pulse.Lib.Forall.intro_forall #a #p
 let elim #a #p = Pulse.Lib.Forall.elim_forall #a #p
  
-```pulse
+
 ghost
 fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop)
                  (f: a -> GTot b) (g: b -> GTot c)
@@ -47,9 +48,9 @@ fn trans_compose (#a #b #c:Type0) (p:a -> slprop) (q:b -> slprop) (r:c -> slprop
     };
     intro_forall _ aux
 }
-```
 
-```pulse
+
+
 ghost
 fn trans (#a:Type0) (p q r: a -> slprop)
     requires (forall* x. p x @==> q x) ** (forall* x. q x @==> r x)
@@ -57,9 +58,9 @@ fn trans (#a:Type0) (p q r: a -> slprop)
 {
     trans_compose p q r id id
 }
-```
 
-```pulse
+
+
 ghost fn elim_forall_imp (#a:Type0) (p q: a -> slprop) (x:a)
     requires (forall* x. p x @==> q x) ** p x
     ensures q x
@@ -67,9 +68,9 @@ ghost fn elim_forall_imp (#a:Type0) (p q: a -> slprop) (x:a)
     elim #_ #(fun x -> p x @==> q x) x;
     I.elim _ _
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_forall_imp (#a:Type0) (p q: a -> slprop) (r:slprop)
     (elim: (u:a -> stt_ghost unit
@@ -94,4 +95,4 @@ ensures forall* x. p x @==> q x
     };
     intro _ aux
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module PledgeArith
+#lang-pulse
 
 (* automation wishlist for pledges *)
 
@@ -22,7 +23,7 @@ open Pulse.Lib.Pervasives
 module T = Pulse.Lib.Task
 open Pulse.Lib.Pledge
 
-```pulse
+
 ghost
 fn pledge_return_now (f:slprop) (r : ref int)
   requires pts_to r 123
@@ -30,9 +31,9 @@ fn pledge_return_now (f:slprop) (r : ref int)
 {
   return_pledge f (pts_to r 123); // ideally automated
 }
-```
 
-```pulse
+
+
 ghost
 fn pledge_join (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f v1 ** pledge emp_inames f v2
@@ -40,9 +41,9 @@ fn pledge_join (f:slprop) (v1 v2 : slprop)
 {
   join_pledge #emp_inames #f v1 v2; // ideally automated
 }
-```
 
-```pulse
+
+
 fn pledge_comm (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (v2 ** v1)
   ensures pledge emp_inames f (v1 ** v2)
@@ -69,9 +70,9 @@ fn pledge_comm (f:slprop) (v1 v2 : slprop)
   *)
   // where the block is checked at the type of the `pf` function above
 }
-```
 
-```pulse
+
+
 ghost
 fn pledge_squash (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (pledge emp_inames f v1)
@@ -79,9 +80,9 @@ fn pledge_squash (f:slprop) (v1 v2 : slprop)
 {
   squash_pledge emp_inames f v1;  // ideally automated
 }
-```
 
-```pulse
+
+
 ghost
 fn pledge_squash_and_join (f:slprop) (v1 v2 : slprop)
   requires pledge emp_inames f (pledge emp_inames f v1) ** pledge emp_inames f v2
@@ -90,4 +91,4 @@ fn pledge_squash_and_join (f:slprop) (v1 v2 : slprop)
   squash_pledge emp_inames f v1;  // ideally automated
   join_pledge #emp_inames #f v1 v2; // ideally automated
 }
-```
+

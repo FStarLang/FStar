@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Mutex
+#lang-pulse
 open Pulse.Lib.Core
 
 open Pulse.Lib.Reference
@@ -45,7 +46,7 @@ let op_Bang #a mg #x #p = R.op_Bang #a mg #x #p
 let op_Colon_Equals #a r y #x = R.op_Colon_Equals #a r y #x
 let replace #a r y #x = R.replace #a r y #x
 
-```pulse
+
 fn new_mutex (#a:Type0) (v:a -> slprop { forall x. is_storable (v x) }) (x:a)
   requires v x
   returns m:mutex a
@@ -60,12 +61,12 @@ fn new_mutex (#a:Type0) (v:a -> slprop { forall x. is_storable (v x) }) (x:a)
   fold (mutex_live m v);
   m
 }
-```
+
 
 let belongs_to (#a:Type0) (r:mutex_guard a) (m:mutex a) : slprop =
   pure (r == B.box_to_ref m.r) ** lock_acquired m.l
 
-```pulse
+
 fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
   returns r:mutex_guard a
@@ -81,9 +82,9 @@ fn lock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
                    (pts_to (B.box_to_ref m.r) _x);
   B.box_to_ref m.r
 } 
-```
 
-```pulse
+
+
 fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   requires mutex_live m #p v ** mg `belongs_to` m ** (exists* x. pts_to mg x ** v x)
   ensures mutex_live m #p v
@@ -96,9 +97,9 @@ fn unlock (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a) (mg:mutex_guard a)
   release m.l;
   fold (mutex_live m #p v)
 }
-```
 
-```pulse
+
+
 ghost
 fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   requires mutex_live m #p v
@@ -109,9 +110,9 @@ fn share (#a:Type0) (#v:a -> slprop) (#p:perm) (m:mutex a)
   fold (mutex_live m #(p /. 2.0R) v);
   fold (mutex_live m #(p /. 2.0R) v);
 }
-```
 
-```pulse
+
+
 ghost
 fn gather (#a:Type0) (#v:a -> slprop) (#p1 #p2:perm) (m:mutex a)
   requires mutex_live m #p1 v ** mutex_live m #p2 v
@@ -122,4 +123,4 @@ fn gather (#a:Type0) (#v:a -> slprop) (#p1 #p2:perm) (m:mutex a)
   Pulse.Lib.SpinLock.gather m.l;
   fold (mutex_live m #(p1 +. p2) v)
 }
-```
+

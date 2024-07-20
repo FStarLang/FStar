@@ -15,6 +15,7 @@
 *)
 
 module Async
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
@@ -43,7 +44,7 @@ let eta_post #a #b #pre #post (f : (x:a -> stt b (pre x) (post x)))
         (intro_slprop_post_equiv _ _ (fun y -> slprop_equiv_refl _))
         (f x)
 
-```pulse
+
 fn async_fill
   (#a : Type0)
   (#pre : slprop)
@@ -61,9 +62,9 @@ fn async_fill
   Box.op_Colon_Equals r (Some v);
   fold (box_solves_post r post)
 }
-```
 
-```pulse
+
+
 fn __async
   (#a : Type0)
   (#pre : slprop)
@@ -84,10 +85,10 @@ fn __async
        as (async_joinable #_ #post res);
   res
 }
-```
+
 let async = __async
 
-```pulse
+
 fn __await
   (#a : Type0)
   (#post : (a -> slprop))
@@ -122,10 +123,10 @@ fn __await
     }
   }
 }
-```
+
 let await = __await
 
-```pulse
+
 fn __map
   (#a : Type0)
   (#b : Type0)
@@ -155,5 +156,5 @@ fn __map
   fold (async_joinable h');
   h'
 }
-```
+
 let map = __map

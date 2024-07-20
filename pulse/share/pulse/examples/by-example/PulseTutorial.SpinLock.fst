@@ -15,6 +15,7 @@
 *)
 
 module PulseTutorial.SpinLock
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -39,7 +40,7 @@ let lock_alive (l:lock) (p:slprop) =
   inv l.i (lock_inv l.r p)
 //lock$
 
-```pulse //dup_lock_alive$
+ //dup_lock_alive$
 ghost
 fn dup_lock_alive (l:lock) (p:slprop)
   requires lock_alive l p
@@ -50,9 +51,9 @@ fn dup_lock_alive (l:lock) (p:slprop)
   fold lock_alive;
   fold lock_alive
 }
-```
 
-```pulse //new_lock$
+
+ //new_lock$
 fn new_lock (p:slprop { is_storable p })
 requires p
 returns l:lock
@@ -68,9 +69,9 @@ ensures lock_alive l p
    fold lock_alive;
    l
 }
-```
 
-```pulse
+
+
 //acquire_sig$
 fn rec acquire (#p:slprop) (l:lock)
 requires lock_alive l p
@@ -108,9 +109,9 @@ ensures lock_alive l p ** p
   if b { rewrite (maybe b p) as p; }
   else { rewrite (maybe b p) as emp; acquire l }
 }
-```
 
-```pulse //release$
+
+ //release$
 fn release (#p:slprop) (l:lock)
 requires lock_alive l p ** p
 ensures lock_alive l p
@@ -128,4 +129,4 @@ ensures lock_alive l p
   };
   fold lock_alive
 }
-```
+

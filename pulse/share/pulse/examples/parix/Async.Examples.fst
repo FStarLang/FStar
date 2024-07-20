@@ -15,11 +15,12 @@
 *)
 
 module Async.Examples
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Async
 
-```pulse
+
 fn mock_http_req (cb : (string -> stt int emp (fun _ -> emp)))
   requires emp
   returns _:int
@@ -32,9 +33,9 @@ fn mock_http_req (cb : (string -> stt int emp (fun _ -> emp)))
   let v = v1+v2;
   v
 }
-```
 
-```pulse
+
+
 fn mock_http_req2_retasync (cb : (string -> stt int emp (fun _ -> emp)))
   requires emp
   returns r:(asynch int (fun _ -> emp))
@@ -45,4 +46,4 @@ fn mock_http_req2_retasync (cb : (string -> stt int emp (fun _ -> emp)))
   let v1 = await t1;
   t2
 }
-```
+

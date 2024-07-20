@@ -1,4 +1,5 @@
 module PulseExample.ConditionVarUseCodes
+#lang-pulse
 open Pulse.Lib.Pervasives
 module CV = Pulse.Lib.ConditionVarWithCodes
 
@@ -60,7 +61,7 @@ let code_of_recv_core #c
   laws = ()
 }
 
-```pulse
+
 fn wait_indirect #c1 #c2 (cv1:CV.cvar_t c1) (cv2:CV.cvar_t c2) (#p:slprop)
 requires
   CV.cvinv cv1 p **
@@ -73,18 +74,18 @@ ensures
   CV.recompose_send cv1 _;
   CV.signal cv1;
 }
-```
 
-```pulse
+
+
 fn wait_direct #c (cv:CV.cvar_t c) (#p:slprop3)
 requires CV.recv cv p
 ensures p
 {
   CV.wait cv;
 }
-```
 
-```pulse
+
+
 fn test_two (p:slprop2)
 requires p
 ensures p
@@ -95,4 +96,4 @@ ensures p
   CV.signal cv2;
   par (fun _ -> wait_indirect cv1 cv2) (fun _ -> wait_direct cv1);
 }
-```
+

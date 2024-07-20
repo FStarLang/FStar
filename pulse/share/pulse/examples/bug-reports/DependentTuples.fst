@@ -15,6 +15,7 @@
 *)
 
 module DependentTuples
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -37,7 +38,7 @@ assume val get_v #v (l:t v) : stt unit emp (fun _ -> v)
 
 #set-options "--print_implicits"
 
-```pulse
+
 fn tuple ()
   requires emp
   ensures emp
@@ -52,7 +53,7 @@ fn tuple ()
   assert ((exists* n. pts_to global_tup._1 n));
   admit()
 }
-```
+
 
 // the same program with a record instead of a dependent tuple works
 
@@ -64,7 +65,7 @@ type rec_t =
 assume
 val global_rec : rec_t
 
-```pulse
+
 fn record ()
   requires emp
   ensures emp
@@ -75,4 +76,4 @@ fn record ()
   assert (exists* n. pts_to global_rec.r n);
   admit()
 }
-```
+

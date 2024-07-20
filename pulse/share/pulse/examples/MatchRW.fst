@@ -1,4 +1,5 @@
 module MatchRW
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -14,7 +15,7 @@ val foo1 () : stt_ghost unit [] (p true) (fun _ -> q)
 assume
 val foo2 () : stt_ghost unit [] (p false) (fun _ -> q)
 
-```pulse
+
 fn test (b:bool)
   requires p b
   ensures  q
@@ -32,10 +33,10 @@ fn test (b:bool)
     }
   }
 }
-```
 
 
-```pulse
+
+
 fn test_if (b:bool)
   requires p b
   ensures  q
@@ -50,4 +51,4 @@ fn test_if (b:bool)
     foo2 ();
   }
 }
-```
+

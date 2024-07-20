@@ -15,6 +15,7 @@
 *)
 
 module Bug.SpinLock
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
@@ -23,7 +24,7 @@ let test_fstar (r:R.ref int) =
   let my_lock = new_lock (exists* v. R.pts_to r v) in
   ()
 
-```pulse
+
 fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
   requires R.pts_to r v_
   returns l:lock
@@ -31,10 +32,10 @@ fn lock_ref (r:R.ref int) (#v_:Ghost.erased int)
 {
   new_lock (exists* v. R.pts_to r v)
 }
-```
+
 
 [@@expect_failure]
-```pulse
+
 fn create_and_lock_ref ()
   requires emp
   ensures emp
@@ -43,4 +44,4 @@ fn create_and_lock_ref ()
   let my_lock = new_lock (exists* v. R.pts_to r v);
   ()
 }
-```
+

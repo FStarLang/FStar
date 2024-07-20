@@ -15,6 +15,7 @@
 *)
 
 module Demo.MultiplyByRepeatedAddition
+#lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
@@ -27,7 +28,7 @@ let rec multiply (x y:nat) : z:nat { z == x * y} =
     if x = 0 then 0
     else multiply (x - 1) y + y
 
-```pulse
+
 fn mult (x y:nat)
     requires emp
     returns z:nat
@@ -49,12 +50,12 @@ fn mult (x y:nat)
     };
     acc
 }
-```
+
 
 open Pulse.Lib.BoundedIntegers
 
 #push-options "--z3rlimit 75 --split_queries always --retry 5"  // batch mode fails without these options, IDE works
-```pulse
+
 fn mult32 (x y:U32.t)
     requires pure (fits #U32.t (v x * v y))
     returns z:U32.t
@@ -76,12 +77,12 @@ fn mult32 (x y:U32.t)
     };
     acc
 }
-```
+
 #pop-options
 
 open FStar.UInt32
 let i (x:U32.t) : GTot int = U32.v x 
-```pulse
+
 fn mult32' (x y:U32.t)
     requires pure (i x * i y <= 0xffffffff)
     returns z:U32.t
@@ -103,4 +104,4 @@ fn mult32' (x y:U32.t)
     };
     acc
 }
-```
+

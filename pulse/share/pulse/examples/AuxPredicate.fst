@@ -15,6 +15,7 @@
 *)
 
 module AuxPredicate
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
@@ -32,7 +33,7 @@ let my_inv (b:bool) (r:R.ref int) : slprop
     
 
 
-```pulse
+
 fn invar_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 1
@@ -63,11 +64,11 @@ fn invar_introduces_ghost (r:R.ref int)
   // unfold after the loop for the postcondition 
   unfold (my_inv false r)
 }
-```
+
 
 
 [@@expect_failure]
-```pulse
+
 fn invar_introduces_orig (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 1
@@ -85,11 +86,11 @@ fn invar_introduces_orig (r:R.ref int)
 
   ()   
 }
-```
+
 
 // If you don't introduce the indirection of my_inv
 // it just works without further ado
-```pulse
+
 fn invar_introduces_ghost_alt (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 1
@@ -105,11 +106,11 @@ fn invar_introduces_ghost_alt (r:R.ref int)
     r := 1;
   }
 }
-```
+
 
 // Some other examples
 
-```pulse
+
 fn exists_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures exists* v. R.pts_to r v ** pure (v == 0 \/ v == 1)
@@ -123,9 +124,9 @@ fn exists_introduces_ghost (r:R.ref int)
   // you lose knowledge about it, i.e., we do not know that r = 0
   with b. unfold (my_inv b r)
 }
-```
 
-```pulse
+
+
 fn with_assert_OK (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 0
@@ -141,4 +142,3 @@ fn with_assert_OK (r:R.ref int)
   assert (my_inv true r);
   unfold (my_inv true r);
 }
-```

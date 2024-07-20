@@ -1,4 +1,5 @@
 module Ambig
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -13,7 +14,7 @@ val foo () (#x:erased int)
   : stt unit (p x) (fun _ -> emp)
 
 [@@expect_failure]
-```pulse
+
 fn ambig ()
   requires p 1 ** p 2
   ensures  p 1
@@ -21,7 +22,7 @@ fn ambig ()
   foo ();
   ()
 }
-```
+
 
 (* TODO: can we support a syntax like:
 
@@ -36,7 +37,7 @@ fn ambig ()
     which would force the pre of foo() to be proven from p 1? Essentially
     a small block. *)
 
-```pulse
+
 fn ok1 ()
   requires p 1 ** p 2
   ensures p 2
@@ -44,9 +45,9 @@ fn ok1 ()
   foo () #1;
   ()
 }
-```
 
-```pulse
+
+
 fn ok2 ()
   requires p 1 ** p 2
   ensures p 1
@@ -54,11 +55,11 @@ fn ok2 ()
   foo () #2;
   ()
 }
-```
+
 
 (* This is "ambiguous" in that there are two (p 1), but since they are
 syntactically equal we do not complain. *)
-```pulse
+
 fn ok3 ()
   requires p 1 ** p 1
   ensures emp
@@ -67,7 +68,7 @@ fn ok3 ()
   foo ();
   ()
 }
-```
+
 
 [@@allow_ambiguous]
 assume val foo2 () (#x #y:erased int)
@@ -75,7 +76,7 @@ assume val foo2 () (#x #y:erased int)
 
 (* This one is more ambiguous... but would probably be OK. Could we not fail here?
 This is a problem for any use of gather, really. *)
-```pulse
+
 fn ok4 ()
   requires p 2 ** p 1
   ensures emp
@@ -83,12 +84,12 @@ fn ok4 ()
   foo2 ();
   ()
 }
-```
+
 
 (* This one is awkward due to the existentials. It can work
 by asserting a _syntactically equal_ slprop to obtain one of the two
 variables and then disambiguate. *)
-```pulse
+
 fn ok5 ()
   requires (exists* x. p (12+x)) **
            (exists* y. p (34+y))
@@ -99,7 +100,7 @@ fn ok5 ()
   foo () #(12+x);
   foo ();
 }
-```
+
 
 (* If we do not have a way to distinguish the two existentials,
 as below, we can use an ambiguous auxiliary function. *)
@@ -109,7 +110,7 @@ assume
 val foo' () (#x:erased int)
   : stt unit (p x) (fun _ -> emp)
 
-```pulse
+
 fn ok6 ()
   requires (exists* x. p x) **
            (exists* y. p y)
@@ -118,4 +119,4 @@ fn ok6 ()
   foo' ();
   foo ();
 }
-```
+

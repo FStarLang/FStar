@@ -15,9 +15,11 @@
 *)
 
 module GhostBag
+#lang-pulse
 
 //
 // This module implements the ghost bag data structure from
+#lang-pulse
 //   Expressive modular fine-grained concurrency specification, POPL 2011 (Sec. 6)
 //
 //
@@ -243,7 +245,7 @@ let gbagh #a (r:ghost_pcm_ref (gbag_pcm a)) (x:a) : slprop =
   ghost_pcm_pts_to r (P (Map.upd (Map.const None) x (Some 0.5R)))
 
 
-```pulse
+
 ghost
 fn gbag_create (a:eqtype)
   requires emp
@@ -256,9 +258,9 @@ fn gbag_create (a:eqtype)
   fold (gbag r Set.empty);
   r
 }
-```
 
-```pulse
+
+
 ghost
 fn gbag_add #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
   requires gbag r s **
@@ -282,9 +284,9 @@ fn gbag_add #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
   with _v. rewrite (ghost_pcm_pts_to r (Ghost.reveal (Ghost.hide _v))) as
                    (gbagh r x)
 }
-```
 
-```pulse
+
+
 ghost
 fn gbag_remove #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
   requires gbag r s **
@@ -304,4 +306,4 @@ fn gbag_remove #a (r:ghost_pcm_ref (gbag_pcm a)) (s:Set.set a) (x:a)
   ghost_write r (F mop) (F (Map.upd mop x None)) (fp_upd_rem mop x);
   fold (gbag r (Set.remove x s))
 }
-```
+

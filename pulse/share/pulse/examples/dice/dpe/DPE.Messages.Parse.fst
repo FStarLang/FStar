@@ -15,6 +15,7 @@
 *)
 
 module DPE.Messages.Parse
+#lang-pulse
 open Pulse.Lib.Pervasives
 open CBOR.Spec
 open CBOR.Pulse
@@ -31,7 +32,7 @@ val dbg : slprop
 
 open Pulse.Lib.Stick
 
-```pulse
+
 ghost
 fn elim_implies (#p #q:slprop) ()
    requires (p @==> q) ** p
@@ -40,7 +41,7 @@ fn elim_implies (#p #q:slprop) ()
   open Pulse.Lib.Stick;
   elim_stick p q
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_session_message1 : impl_typ Spec.session_message =
@@ -52,7 +53,7 @@ let impl_session_message1 : impl_typ Spec.session_message =
 
 
 (*
-```pulse
+
 fn impl_session_message0
     (c: cbor)
     (#p: perm)
@@ -70,7 +71,7 @@ ensures
 {
   eval_impl_typ impl_session_message1 c
 }
-```
+
 *)
 
 noextract [@@noextract_to "krml"]
@@ -113,7 +114,7 @@ let impl_command_message1 : impl_typ Spec.command_message = // Wow, the equivale
   )
 
 (*
-```pulse
+
 fn impl_command_message0
     (c: cbor)
     (#p: perm)
@@ -131,7 +132,7 @@ ensures
 {
   eval_impl_typ impl_command_message1 c
 }
-```
+
 *)
 
 noextract [@@noextract_to "krml"]
@@ -215,7 +216,7 @@ let parse_dpe_cmd_post
       )
 
 
-```pulse
+
 fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
                  (#p:perm)
                  (len:SZ.t)
@@ -298,6 +299,6 @@ fn parse_dpe_cmd (#s:erased (Seq.seq U8.t))
         }
     }
 }
-```
+
 
 #pop-options

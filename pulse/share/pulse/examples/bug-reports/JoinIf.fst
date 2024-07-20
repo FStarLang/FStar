@@ -15,6 +15,7 @@
 *)
 
 module JoinIf
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
@@ -28,7 +29,7 @@ let sorted (s0 s:Seq.seq U32.t) =
 
 //Pulse does not yet implement join point inference
 [@@expect_failure [228]]
-```pulse
+
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
@@ -67,11 +68,10 @@ fn sort3_alt (a:array U32.t)
    (a.(2sz) <- z);
    ()
 }
-```
+
 
 //But, an explicitly annotated version doesn't work either
 [@@expect_failure]
-```pulse
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
@@ -87,8 +87,8 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vy = !y;
    if (vy <^ vx) //Fails to typecheck the join annotation, claiming vy has type vy has type stt U32.t ... instead of just U32.t
-   returns (
-    R.pts_to x (if vy <^ vx then vy else vx) `star`
+   ensures (
+    R.pts_to x (if vy <^ vx then vy else vx) **
     R.pts_to y (if vy <^ vx then vx else vy)
    )
    {
@@ -98,8 +98,8 @@ fn sort3_alt (a:array U32.t)
    let vx = !x;
    let vz = !z;
    if (vz <^ vx)
-   returns (
-    R.pts_to x (if vz <^ vx then vz else vx) `star`
+   ensures (
+    R.pts_to x (if vz <^ vx then vz else vx) **
     R.pts_to z (if vz <^ vx then vx else vz)
    )
    {
@@ -109,7 +109,7 @@ fn sort3_alt (a:array U32.t)
    let vy = !y;
    let vz = !z;
    if (vz <^ vy)
-   returns (
+   ensures (
     R.pts_to y (if vz <^ vy then vz else vy) `star`
     R.pts_to z (if vz <^ vy then vy else vz)
    )
@@ -122,4 +122,3 @@ fn sort3_alt (a:array U32.t)
    (a.(2sz) <- z);
    ()
 }
-```

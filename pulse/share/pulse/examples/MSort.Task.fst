@@ -15,6 +15,7 @@
 *)
 
 module MSort.Task
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module S = FStar.Seq
@@ -23,7 +24,7 @@ open MSort.SeqLemmas
 open MSort.Base
 open Pulse.Lib.Task
 
-```pulse
+
 fn rec t_msort_par
   (p : pool)
   (f : perm)
@@ -57,9 +58,9 @@ fn rec t_msort_par
     merge_impl a lo mid hi () (sort s1) (sort s2);
   }
 }
-```
 
-```pulse
+
+
 fn rec msort
   (nthr : pos)
   (a : array int)
@@ -75,4 +76,4 @@ fn rec msort
   teardown_pool p;
   drop_ (pool_done p);
 }
-```
+

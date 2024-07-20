@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HigherReference
+#lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main
 open FStar.PCM
@@ -26,7 +27,7 @@ let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 let pts_to_is_slprop2 _ _ _ = ()
 
 
-```pulse
+
 fn alloc' (#a:Type u#1) (x:a)
 requires emp
 returns r:ref a
@@ -37,7 +38,7 @@ ensures pts_to r x
   fold (pts_to r #1.0R x);
   r
 }
-```
+
 let alloc = alloc'
 
 let read_compat (#a:Type u#1) (x:fractional a)
@@ -46,7 +47,7 @@ let read_compat (#a:Type u#1) (x:fractional a)
                            FStar.PCM.frame_compatible pcm_frac x v y })
   = x
 
-```pulse
+
 fn read' (#a:Type u#1) (r:ref a) (#n:erased a) (#p:perm)
 requires pts_to r #p n
 returns x:a
@@ -60,11 +61,11 @@ ensures pts_to r #p n ** pure (reveal n == x)
   fold (pts_to r #p n);
   fst (Some?.v x)
 }
-```
+
 let read = read'
 let ( ! ) #a = read #a
 
-```pulse
+
 fn write (#a:Type u#1) (r:ref a) (x:a) (#n:erased a)
 requires pts_to r #1.0R n
 ensures pts_to r #1.0R x
@@ -74,10 +75,10 @@ ensures pts_to r #1.0R x
   Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd n x);
   fold pts_to r #1.0R x;
 }
-```
+
 let ( := ) #a = write #a
 
-```pulse
+
 fn free' #a (r:ref a) (#n:erased a)
 requires pts_to r #1.0R n
 ensures emp
@@ -87,10 +88,10 @@ ensures emp
   Pulse.Lib.Core.write r _ _ (mk_frame_preserving_upd_none n);
   Pulse.Lib.Core.drop_ _;
 }
-```
+
 let free = free'
    
-```pulse
+
 ghost
 fn share' #a (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
@@ -103,10 +104,10 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
   fold (pts_to r #(p /. 2.0R) v);
   fold (pts_to r #(p /. 2.0R) v);
 }
-```
+
 let share = share'
 
-```pulse
+
 ghost
 fn gather' #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
@@ -117,20 +118,20 @@ ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
   Pulse.Lib.Core.gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
   fold (pts_to r #(p0 +. p1) x0)
 }
-```
+
 let gather = gather'
 
 let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
 
-```pulse
+
 fn free_with_frame #a (r:ref a) (frame:slprop)
 requires frame ** (exists* (x:a). pts_to r x)
 ensures frame
 {
   free r;
 }
-```
+
 
 (* this is universe-polymorphic in ret_t; so can't define it in Pulse yet *)
 let with_local
@@ -157,7 +158,7 @@ let with_local
   in
   bind_stt m1 body
   
-```pulse
+
 ghost
 fn pts_to_injective_eq'
     (#a:Type)
@@ -174,10 +175,10 @@ ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
   fold pts_to r #p0 v0;
   fold pts_to r #p1 v1;
 }
-```
+
 let pts_to_injective_eq = pts_to_injective_eq'
 
-```pulse
+
 ghost
 fn pts_to_perm_bound' (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
@@ -186,5 +187,5 @@ ensures pts_to r #p v ** pure (p <=. 1.0R)
   unfold pts_to r #p v;
   fold pts_to r #p v;
 }
-```
+
 let pts_to_perm_bound = pts_to_perm_bound'

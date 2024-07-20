@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.FlippableInv
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -27,18 +28,18 @@ val mk_finv (p:slprop { is_storable p }) : stt (finv p) emp (fun x -> off x)
 
 val iname_of #p (f : finv p) : iname
 
-```pulse
+
 atomic
-val fn flip_on (#p:slprop) (fi : finv p)
+fn flip_on (#p:slprop) (fi : finv p)
   requires off fi ** p
   ensures on fi
   opens [iname_of fi]
-```
 
-```pulse
+
+
 atomic
-val fn flip_off (#p:slprop) (fi : finv p)
+fn flip_off (#p:slprop) (fi : finv p)
   requires on fi
   ensures  off fi ** p
   opens [iname_of fi]
-```
+

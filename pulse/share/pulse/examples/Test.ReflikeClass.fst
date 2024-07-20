@@ -1,4 +1,5 @@
 module Test.ReflikeClass
+#lang-pulse
 
 open FStar.Tactics.Typeclasses
 open Pulse.Lib.Pervasives
@@ -27,7 +28,7 @@ instance reflike_box (a:Type) : reflike a (Box.box a) = {
   ( := )  = (fun r v #v0 -> Pulse.Lib.Box.op_Colon_Equals r v #v0);
 }
 
-```pulse
+
 fn test1 (r : ref int)
   requires r |-> 1
   ensures  r |-> 2
@@ -39,9 +40,9 @@ fn test1 (r : ref int)
   assert (pure (y == 2));
   ()
 }
-```
 
-```pulse
+
+
 fn test2 (r : Box.box int)
   requires r |-> 1
   ensures  r |-> 2
@@ -53,4 +54,4 @@ fn test2 (r : Box.box int)
   assert (pure (y == 2));
   ()
 }
-```
+

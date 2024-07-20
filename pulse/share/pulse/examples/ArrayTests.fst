@@ -15,6 +15,7 @@
 *)
 
 module ArrayTests
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
@@ -25,7 +26,7 @@ module R = Pulse.Lib.Reference
 
 let some_f (x:'a) : GTot _ = ()
 
-```pulse
+
 fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larray t (US.v l))
   requires (
     A.pts_to a1 #p1 s1 **
@@ -59,9 +60,9 @@ fn compare (#t:eqtype) (#p1 #p2:perm) (l:US.t) (#s1 #s2:elseq t l) (a1 a2:A.larr
   let res = vi = l;
   res
 }
-```
 
-```pulse
+
+
 fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == US.v l }))
    requires (A.pts_to a s)
@@ -89,9 +90,9 @@ fn fill_array (#t:Type0) (l:US.t) (a:(a:A.array t{ US.v l == A.length a })) (v:t
    };
    ()
 }
-```
 
-```pulse
+
+
 fn array_of_zeroes (n:US.t)
    requires emp
    returns a: array U32.t
@@ -103,10 +104,10 @@ fn array_of_zeroes (n:US.t)
    let a = A.alloc 0ul n;
    a
 }
-```
+
 
 //this is not a recommended way to do this, since s is not erased, but it works
-```pulse
+
 fn read_at_offset_0 (#t:Type0) (#p:perm) (#s:Seq.seq t) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
@@ -121,9 +122,9 @@ fn read_at_offset_0 (#t:Type0) (#p:perm) (#s:Seq.seq t) (a:array t) (i:US.t)
    let x = a.(i);
    x
 } 
-```
 
-```pulse
+
+
 fn read_at_offset_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t)
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
@@ -137,9 +138,9 @@ fn read_at_offset_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:arr
    let x = a.(i);
    x
 } 
-```
 
-```pulse
+
+
 fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a #p s **
              pure (US.v i < Seq.length s))
@@ -153,7 +154,7 @@ fn read_at_offset (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U
    let x = a.(i);
    x
 } 
-```
+
 
 assume
 val test_array_access
@@ -171,7 +172,7 @@ val test_array_access
             US.v i < Seq.length s /\
             res == Seq.index s (US.v i)))
 
-```pulse
+
 fn read_at_offset_refine (#p:perm) (#s:Ghost.erased (Seq.seq U32.t)) (a:array U32.t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
@@ -187,10 +188,10 @@ fn read_at_offset_refine (#p:perm) (#s:Ghost.erased (Seq.seq U32.t)) (a:array U3
    let x = test_array_access a i;
    x
 } 
-```
 
 
-```pulse
+
+
 fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t)) (a:array t) (i:US.t) 
    requires (A.pts_to a #p s **
              pure (US.v i < A.length a \/ US.v i < Seq.length s))
@@ -206,7 +207,7 @@ fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t))
    let x = test_array_access a i;
    x
 } 
-```
+
 //Error message is correctly localizded to Seq.index in the return type
 //This type is genuinely incorrect, since the return type does not assume
 //the validity of the pure conjuncts in the requires
@@ -214,7 +215,7 @@ fn read_at_offset_refine_poly (#t:Type0) (#p:perm) (#s:Ghost.erased (Seq.seq t))
 //Maybe we should find a way to allow the pure conjuncts to be assumed in the returns
 //Megan correctly remarks that this is unintuitive ... let's see if we can fix it
 [@@expect_failure]
-```pulse
+
 fn read_at_offset_refine_fail (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a #p s ** pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
@@ -228,10 +229,10 @@ fn read_at_offset_refine_fail (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erase
                     US.v i < A.length a /\
                     x == Seq.index s (US.v i)}))
 } 
-```
+
 
 //But if we hoist the pure payload into a refinement, then it can be used for typing throughout the spec & body
-```pulse
+
 fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a #p s)
    returns x: (x:U32.t { Seq.length s == A.length a /\
@@ -243,9 +244,9 @@ fn read_at_offset_refine_post (a:array U32.t) (i:(i:US.t { US.v i < A.length a})
    let x = test_array_access a i;
    x
 }
-```
 
-```pulse
+
+
 fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.erased (Seq.seq U32.t))
    requires (A.pts_to a #p s ** pure (US.v i < A.length a))
    returns x: (x:U32.t { Seq.length s == A.length a /\
@@ -258,9 +259,9 @@ fn read_at_offset_refine_post2 (a:array U32.t) (i:US.t) (#p:perm) (#s:Ghost.eras
    let x = test_array_access a i;
    x
 } 
-```
 
-```pulse
+
+
 fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
                    (#s:(s:Ghost.erased (Seq.seq t) {US.v i < Seq.length s}))
    requires (A.pts_to a s)
@@ -270,7 +271,7 @@ fn write_at_offset (#t:Type0) (a:array t) (i:US.t) (v:t)
 {
    a.(i) <- v
 }
-```
+
 
 noextract
 let sorted (s0 s:Seq.seq U32.t) : GTot _ =
@@ -284,7 +285,7 @@ let permutation (s:Seq.seq U32.t) (l:list U32.t) =
 open FStar.UInt32
 // #push-options "--query_stats"
 
-```pulse
+
 fn sort3 (a:array U32.t)
          (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
@@ -340,11 +341,11 @@ fn sort3 (a:array U32.t)
       }
    }
 }
-```
+
 
 //Pulse does not yet implement join point inference
 [@@expect_failure [228]]
-```pulse
+
 fn sort3_alt (a:array U32.t)
              (#s:(s:Ghost.erased (Seq.seq U32.t) {Seq.length s == 3}))
    requires (A.pts_to a s)
@@ -397,9 +398,9 @@ fn sort3_alt (a:array U32.t)
    a.(2sz) <- z;
    ()
 }
-```
 
-```pulse
+
+
 fn test_local_array0 ()
   requires emp
   returns  b:bool
@@ -411,9 +412,9 @@ fn test_local_array0 ()
   A.free a2;
   b
 }
-```
 
-```pulse
+
+
 fn test_local_array1 ()
   requires emp
   returns  i:int
@@ -424,10 +425,10 @@ fn test_local_array1 ()
   fill_array 2sz a 3;
   read_at_offset_refine_poly a 1sz
 }
-```
+
 
 [@@ expect_failure]  // cannot call free on a local array
-```pulse
+
 fn test_local_array2 ()
   requires emp
   ensures  emp
@@ -435,10 +436,10 @@ fn test_local_array2 ()
   let mut a = [| 1; 2sz |];
   A.free a
 }
-```
+
 
 [@@ expect_failure]  // cannot return a local array
-```pulse
+
 fn test_local_array3 ()
   requires emp
   returns  a:array int
@@ -449,10 +450,10 @@ fn test_local_array3 ()
   let mut a = [| 0; 2sz |];
   a
 }
-```
+
 
 [@@ expect_failure]  // immutable local arrays are not yet supported
-```pulse
+
 fn test_local_array4 ()
   requires emp
   ensures  emp
@@ -460,9 +461,9 @@ fn test_local_array4 ()
   let a = [| 0; 2sz |];
   ()
 }
-```
 
-```pulse
+
+
 fn test_array_swap
   (a: A.array U32.t)
   (#s: Ghost.erased (Seq.seq U32.t))
@@ -478,4 +479,4 @@ ensures exists* s' .
   A.pts_to_range_elim a _ _;
   ()
 }
-```
+

@@ -1,4 +1,5 @@
 module Test.Matcher
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open FStar.Tactics.V2
@@ -16,26 +17,26 @@ assume val dpts_to
   (v : erased a)
   : slprop
 
-```pulse
+
 fn d_basic_self (r:dref int)
   requires dpts_to r 1
   ensures  dpts_to r 1
 { (); }
-```
 
-```pulse
+
+
 fn d_basic_id (r:dref int)
   requires dpts_to (id r) 1
   ensures  dpts_to r 1
 { (); }
-```
 
-```pulse
+
+
 fn d_basic_perm_comm (r:dref int) (p:perm)
   requires dpts_to r #(p +. 0.1R) 1
   ensures  dpts_to r #(0.1R +. p) 1
 { (); }
-```
+
 
 (******* Fast matching on the permission. *)
 assume val fref (a : Type0) : Type0
@@ -46,27 +47,27 @@ assume val fpts_to
   (v : erased a)
   : slprop
 
-```pulse
+
 fn f_basic_self (r:fref int)
   requires fpts_to r 1
   ensures  fpts_to r 1
 { (); }
-```
 
-```pulse
+
+
 fn f_basic_id (r:fref int)
   requires fpts_to (id r) 1
   ensures  fpts_to r 1
 { (); }
-```
+
 
 [@@expect_failure] // fastunif will not commute nor generate guards
-```pulse
+
 fn f_basic_perm_comm (r:fref int) (p:perm)
   requires fpts_to r #(p +. 0.1R) 1
   ensures  fpts_to r #(0.1R +. p) 1
 { (); }
-```
+
 
 
 (******* Syntactic matchin on the permission. *)
@@ -80,24 +81,24 @@ assume val spts_to
   (v : erased a)
   : slprop
 
-```pulse
+
 fn s_basic_self (r:sref int)
   requires spts_to r 1
   ensures  spts_to r 1
 { (); }
-```
 
-```pulse
+
+
 fn s_basic_id (r:sref int)
   requires spts_to (id r) 1
   ensures  spts_to r 1
 { (); }
-```
+
 
 [@@expect_failure] // fastunif will not commute nor generate guards
-```pulse
+
 fn s_basic_perm_comm (r:sref int) (p:perm)
   requires spts_to r #(p +. 0.1R) 1
   ensures  spts_to r #(p +. 0.10R) 1
 { (); }
-```
+

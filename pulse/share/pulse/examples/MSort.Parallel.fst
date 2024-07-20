@@ -1,4 +1,5 @@
 module MSort.Parallel
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module S = FStar.Seq
@@ -6,7 +7,7 @@ module SZ = FStar.SizeT
 open MSort.SeqLemmas
 open MSort.Base
 
-```pulse
+
 fn
 rec
 msort
@@ -40,4 +41,4 @@ msort
     merge_impl a lo mid hi () (sort s1) (sort s2);
   }
 }
-```
+

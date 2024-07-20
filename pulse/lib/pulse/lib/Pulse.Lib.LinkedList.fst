@@ -402,7 +402,6 @@ fn forall_intro_is_list_idem (#t:Type) (x:llist t)
 }
 
 
-open FStar.List.Tot
 
 
 fn move_next_forall (#t:Type) (x:llist t)

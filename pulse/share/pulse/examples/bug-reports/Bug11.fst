@@ -1,4 +1,5 @@
 module Bug11
+#lang-pulse
 
 open FStar.Seq
 open Pulse.Lib.Pervasives
@@ -10,17 +11,17 @@ let tru_intro () : Lemma tru = ()
 let f (n: nat{tru}) : nat = 42
 
 // The postcondition of `g` now typechecks if we have facts from FStar.Seq.Base
-```pulse
+
 fn g () requires emp returns n:nat ensures pure (f n == 42) {
   42
 }
-```
+
 
 #set-options "--using_facts_from '-FStar.Seq'"
 
 let h' () = g () // works
 
-```pulse
+
 fn h ()
   requires emp
   returns n:nat
@@ -29,4 +30,4 @@ fn h ()
   let n = g (); // used to fail because the postcondition of `g` didn't typecheck
   n
 }
-```
+

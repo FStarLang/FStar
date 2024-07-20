@@ -15,6 +15,7 @@
 *)
 
 module IntroGhost
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 
@@ -31,7 +32,7 @@ let my_inv (b:bool) (r:R.ref int) : slprop
     
 
 [@@expect_failure]
-```pulse
+
 fn invar_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 1
@@ -49,14 +50,14 @@ fn invar_introduces_ghost (r:R.ref int)
 
   ()
 }
-```
+
 
 (* 
   intro exists* pattern exhibits the 
   same issue as the invariant pattern 
 *)
 [@@expect_failure]
-```pulse
+
 fn exists_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 0
@@ -69,14 +70,14 @@ fn exists_introduces_ghost (r:R.ref int)
                                             // but typing context has: my_inv true r
   ()
 }
-```
+
 
 (* 
   building on above example: providing a witness 
   helps but then we lose access to the witness
 *)
 [@@expect_failure]
-```pulse
+
 fn exists_with_witness_introduces_ghost (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 0
@@ -92,13 +93,13 @@ fn exists_with_witness_introduces_ghost (r:R.ref int)
   unfold (my_inv true r);
   ()
 }
-```
+
 
 (* 
   building on above example: this checks! 
   use the with...assert... pattern to maintain the witness 
 *)
-```pulse
+
 fn with_assert_OK (r:R.ref int)
   requires R.pts_to r 0
   ensures R.pts_to r 0
@@ -115,4 +116,3 @@ fn with_assert_OK (r:R.ref int)
   unfold (my_inv true r);
   ()
 }
-```
