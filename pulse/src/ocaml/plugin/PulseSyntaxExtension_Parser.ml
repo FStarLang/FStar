@@ -193,7 +193,8 @@ let rewrite_token (tok:FP.token)
     | UNFOLD -> PP.UNFOLD 
     | UNFOLDABLE -> PP.UNFOLDABLE 
     | UNIV_HASH -> PP.UNIV_HASH 
-    | UNOPTEQUALITY -> PP.UNOPTEQUALITY 
+    | UNOPTEQUALITY -> PP.UNOPTEQUALITY
+    | USE_LANG_BLOB s -> PP.USE_LANG_BLOB s
     | VAL -> PP.VAL 
     | WHEN -> PP.WHEN 
     | WITH -> PP.WITH 
