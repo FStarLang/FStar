@@ -24,7 +24,6 @@ module ToSyntax = FStar.ToSyntax.ToSyntax
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
-module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
@@ -149,7 +148,7 @@ let prepend_ctx_issue (c : Pprint.document) (i : Errors.issue) : Errors.issue =
 let tosyntax' (env:env_t) (t:A.term)
   : err S.term
   = try 
-      return (ToSyntax.desugar_term env.tcenv.dsenv t)
+      return (ToSyntax.desugar_term env.dsenv t)
     with 
       | e -> 
         match FStar.Errors.issue_of_exn e with
@@ -801,19 +800,19 @@ and desugar_decl (env:env_t)
     let! qbs = map2 faux bs bvs in
     return (SW.fn_decl range id qbs comp)
 
-let initialize_env (env:TcEnv.env)
-                   (open_namespaces: list name)
-                   (module_abbrevs: list (string & name))
+let reinitialize_env (dsenv:D.env)
+                     (curmod:Ident.lident)
+                     (open_namespaces: list name)
+                     (module_abbrevs: list (string & name))
   : env_t
-  = let dsenv = env.dsenv in
-    let dsenv = D.set_current_module dsenv (TcEnv.current_module env) in
+  = let dsenv = D.set_current_module dsenv curmod in
     let dsenv =
       L.fold_right
         (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_))
         open_namespaces
         dsenv
     in
-    let dsenv = D.push_namespace dsenv (TcEnv.current_module env) in
+    let dsenv = D.push_namespace dsenv curmod in
     let dsenv =
       L.fold_left
         (fun env (m, n) -> 
@@ -821,8 +820,9 @@ let initialize_env (env:TcEnv.env)
         dsenv
         module_abbrevs
     in
-    let env = { env with dsenv } in
     { 
-      tcenv = env;
+      dsenv;
       local_refs = []
     }
+  
+let mk_env dsenv = { dsenv; local_refs = [] }

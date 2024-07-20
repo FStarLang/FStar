@@ -31,7 +31,7 @@ let r_ = FStar.Compiler.Range.dummyRange
 
 #push-options "--warn_error -272" //intentional top-level effect
 let pulse_checker_tac = Ident.lid_of_path ["Pulse"; "Main"; "check_pulse"] r_
-let pulse_checker_after_parse_tac = Ident.lid_of_path ["Pulse"; "Main"; "check_pulse_after_parse"] r_
+let pulse_checker_after_desugar_tac = Ident.lid_of_path ["Pulse"; "Main"; "check_pulse_after_desugar"] r_
 #pop-options
 let tm t r = { tm=t; range=r; level=Un}
 
@@ -164,30 +164,17 @@ let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (co
           | FnDefn { decorations }
           | FnDecl { decorations } -> decorations
         in
-        let decl_as_term = 
-          let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_sugar_decl") (Some r) in
-          let unpack_blob t : PulseSyntaxExtension.Sugar.decl = FStar.Syntax.Util.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") t in
-          let eq (t1 t2: FStar.Syntax.Syntax.term) =
-             let d1 = unpack_blob t1 in
-             let d2 = unpack_blob t2 in
-             PulseSyntaxExtension.Sugar.eq_decl d1 d2
-          in
-          let dep_scan cbs t =
-            let d = unpack_blob t in
-            PulseSyntaxExtension.Sugar.scan_decl cbs d
-          in
-          tm (DesugaredBlob {tag="pulse_sugar_decl"; blob; eq; dep_scan}) r
+        let d =
+          let open FStar.Compiler.Dyn in
+          DeclToBeDesugared {
+            lang_name="pulse";
+            blob=mkdyn d;
+            idents=[id];
+            to_string=(fun d -> "<TBD>");
+            eq=(fun d1 d2 -> PulseSyntaxExtension.Sugar.eq_decl (undyn d1) (undyn d2));
+            dep_scan=(fun cbs d -> PulseSyntaxExtension.Sugar.scan_decl cbs (undyn d));
+          }
         in
-        let splicer =
-          let head = tm (Var pulse_checker_after_parse_tac) r in
-          let namespaces, abbrevs = encode_open_namespaces_and_abbreviations ctx r in
-          mkApp head [(namespaces, Nothing);
-                      (abbrevs, Nothing);
-                      (decl_as_term, Nothing);
-                      (str id_txt r, Nothing)]
-                      r
-        in
-        let d = Splice (true, [id], splicer) in
         let d =
           let attrs, quals = List.partition DeclAttributes? decors in
           let attrs =
@@ -241,8 +228,7 @@ module TcEnv = FStar.TypeChecker.Env
 module D = PulseSyntaxExtension.Desugar
 module L = FStar.Compiler.List
 module R = FStar.Compiler.Range
-
-
+module DsEnv = FStar.Syntax.DsEnv
 let sugar_decl = PulseSyntaxExtension.Sugar.decl
 let desugar_pulse (env:TcEnv.env) 
                   (namespaces:list string)
@@ -251,10 +237,36 @@ let desugar_pulse (env:TcEnv.env)
 : either PulseSyntaxExtension.SyntaxWrapper.decl (option (string & R.range))
 = let namespaces = L.map Ident.path_of_text namespaces in
   let module_abbrevs = L.map (fun (x, l) -> x, Ident.path_of_text l) module_abbrevs in
-  let env = D.initialize_env env namespaces module_abbrevs in
+  let env = D.reinitialize_env env.dsenv (TcEnv.current_module env) namespaces module_abbrevs in
   fst (D.desugar_decl env sugar 0)
 
-  
+module S = FStar.Syntax.Syntax
+let desugar_pulse_decl_callback
+      (env:DsEnv.env)
+      (blob:FStar.Compiler.Dyn.dyn)
+      (lids:list lident)
+      (rng:R.range)
+: list FStar.Syntax.Syntax.sigelt'
+= let d = D.desugar_decl (D.mk_env env) (FStar.Compiler.Dyn.undyn blob) 0 in
+  match fst d with
+  | Inr None ->
+    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse extension text") rng
+  | Inr (Some (msg, rng)) ->
+    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, msg) rng
+  | Inl d ->
+    let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_decl") (Some rng) in
+    let splicer =
+      let head = S.lid_as_fv pulse_checker_after_desugar_tac None |> S.fv_to_tm in
+      S.mk_Tm_app head [(blob, None)] rng
+    in
+    [S.Sig_splice {is_typed=true; lids; tac=splicer}]
+
+
+
+#push-options "--warn_error -272" //intentional top-level effect
+let _ = FStar.ToSyntax.ToSyntax.register_extension_tosyntax "pulse" desugar_pulse_decl_callback
+#pop-options
+
 let parse_pulse (env:TcEnv.env) 
                 (namespaces:list string)
                 (module_abbrevs:list (string & string))

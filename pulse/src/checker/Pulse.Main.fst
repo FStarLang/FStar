@@ -210,7 +210,7 @@ let check_fndecl
   in
   ([], (false, se, None), [])
 
-let main' (nm:string) (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
+let main' (d:decl) (pre:term) (g:RT.fstar_top_env) (expected_t:option term)
   : T.Tac (RT.dsl_tac_result_t g expected_t)
   = match Pulse.Soundness.Common.check_top_level_environment g with
     | None -> T.fail "pulse main: top-level environment does not include stt at the expected types"
@@ -267,7 +267,7 @@ let parse_guard_policy (s:string) : Tac guard_policy =
   // | "Drop" -> Drop (* terribly unsound, so not even allowing it here *)
   | _ -> Tactics.fail ("Unknown guard policy: " ^ s)
 
-let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
+let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   (* We use the ForceSMT policy by default, to discharge guards
   immediately when they show, allowing SMT. This
   proofstate and discharge them all at the end, potentially joining
@@ -278,7 +278,7 @@ let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   if ext_getv "pulse:guard_policy" <> "" then
     set_guard_policy (parse_guard_policy (ext_getv "pulse:guard_policy"));
 
-  let res = main' nm t pre g expected_t in
+  let res = main' t pre g expected_t in
 
   if ext_getv "pulse:join" = "1"
      (* || ext_getv "pulse:join" <> "" *)
@@ -289,14 +289,13 @@ let main nm t pre : RT.dsl_tac_t = fun (g, expected_t) ->
 
 let check_pulse_core 
         (as_decl: unit -> Dv (either Pulse.Syntax.decl (option (string & R.range))))
-        (nm:string)
   : RT.dsl_tac_t
   = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then
         set_dump_on_failure false;
       match as_decl () with
       | Inl decl ->
-        main nm decl tm_emp (env, expected_t)
+        main decl tm_emp (env, expected_t)
 
       | Inr None ->
         T.fail "Pulse parser failed"
@@ -325,21 +324,15 @@ let check_pulse (namespaces:list string)
   = fun (env, expected_t) ->
       check_pulse_core
         (fun () -> PulseSyntaxExtension.ASTBuilder.parse_pulse env namespaces module_abbrevs content file_name line col)
-        nm
         (env, expected_t)
 
 [@@plugin]
-let check_pulse_after_parse
-      (namespaces:list string)
-      (module_abbrevs:list (string & string))
+let check_pulse_after_desugar
       (decl:'a)
-      (nm:string)
 : RT.dsl_tac_t
 = fun (env, expected_t) ->
     check_pulse_core
         (fun () -> 
-          let open PulseSyntaxExtension.ASTBuilder in
-          let decl : sugar_decl = RU.unembed_pulse_sugar_decl decl in
-          desugar_pulse env namespaces module_abbrevs decl)
-        nm
+          let decl : Pulse.Syntax.decl = RU.unembed_pulse_decl decl in
+          Inl decl)
         (env, expected_t)

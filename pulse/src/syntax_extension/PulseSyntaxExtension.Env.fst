@@ -23,7 +23,6 @@ module D = FStar.Syntax.DsEnv
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
-module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
@@ -70,17 +69,15 @@ let read (x:ident) =
 
 (* Environments and name handling utilities *)
 type env_t = { 
-  tcenv: TcEnv.env;
+  dsenv: D.env;
   local_refs: list ident
 }
 
 let name = list string
 
 let push_bv env x =
-  let dsenv, bv = D.push_bv env.tcenv.dsenv x in
-  let tcenv = { env.tcenv with dsenv = dsenv } in
-  let env = { env with tcenv } in
-  env, bv
+  let dsenv, bv = D.push_bv env.dsenv x in
+  { env with dsenv }, bv
 
 let rec push_bvs env xs =
   match xs with
@@ -91,15 +88,13 @@ let rec push_bvs env xs =
     env, bv::bvs
 
 let push_namespace env lid =
-  let dsenv = D.push_namespace env.tcenv.dsenv lid in
-  let tcenv = { env.tcenv with dsenv } in
-  let env = {env with tcenv} in
-  env
+  let dsenv = D.push_namespace env.dsenv lid in
+  {env with dsenv}
 
 
 let resolve_lid (env:env_t) (lid:lident)
   : err lident
-  = match D.try_lookup_lid env.tcenv.dsenv lid with
+  = match D.try_lookup_lid env.dsenv lid with
     | None -> 
       fail (BU.format1 "Name %s not found" (show lid)) (pos lid)
     | Some t ->
@@ -133,7 +128,7 @@ let free_vars_list (#a:Type0) (f : env_t -> a -> list ident) (env:env_t) (xs : l
   L.collect (f env) xs
 
 let rec free_vars_term (env:env_t) (t:A.term) =
-  ToSyntax.free_vars false env.tcenv.dsenv t
+  ToSyntax.free_vars false env.dsenv t
 
 and free_vars_binders (env:env_t) (bs:Sugar.binders)
   : env_t & list ident
