@@ -61,6 +61,11 @@ let mk_fn_defn q id is_rec bs body range =
     | Inr (lambda, typ) ->
       PulseSyntaxExtension_Sugar.mk_fn_defn id is_rec (List.flatten bs) (Inr typ) None (Inr lambda) range
 
+let add_decorations decors ds =
+  List.map (function
+    | Inl p -> Inl (PulseSyntaxExtension_Sugar.add_decorations p decors)
+    | Inr d -> Inr (FStar_Parser_AST.add_decorations d decors)) ds
+
 %}
 
 /* pulse specific tokens; rest are inherited from F* */
@@ -103,27 +108,32 @@ iLangDeclOrEOF:
   | ds=incrementalLangDecl { Some ds }
 
 incrementalLangDecl:
-  | p=pulseDecl snap=startOfNextPulseDeclToken { [Inl p], snap }
-  | d=decl snap=startOfNextPulseDeclToken { List.map (fun x -> Inr x) d, snap }
+  | ds=list(decoration) d=declBody snap=startOfNextPulseDeclToken { add_decorations ds d,snap }
+  | d=noDecorationDecl snap=startOfNextPulseDeclToken { List.map (fun x -> Inr x) d,snap }
+
+declBody:
+  | p=pulseDecl { [Inl p] }
+  | d=decoratableDecl { List.map (fun x -> Inr x) d }
 
 pulseDecl:
   | q=option(qual)
     FN isRec=maybeRec lid=lident bs=pulseBinderList
     rest=pulseAscriptionMaybeBody
     {
+      let decors = [] in
       match rest with
       | Inl (ascription, None) ->
         let open PulseSyntaxExtension_Sugar in
         let ascription = with_computation_tag ascription q in
-        FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) (rr $loc))
+        FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) decors (rr $loc))
       
       | Inl (ascription, Some (measure, body)) ->
         let body = Inl (ascription, measure, body) in
-        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body (rr $loc))
+        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body decors (rr $loc))
 
       | Inr (typ, Some lambda) ->
         let body = Inr (lambda, typ) in
-        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body (rr $loc))
+        PulseSyntaxExtension_Sugar.FnDefn (mk_fn_defn q lid isRec bs body decors (rr $loc))
 
       | Inr (typ, None) ->
         raise_error (Fatal_SyntaxError, "Ascriptions of lambdas without bodies are not yet supported") (rr $loc)
@@ -159,7 +169,7 @@ pulseDeclEOF:
     {
       let open PulseSyntaxExtension_Sugar in
       let ascription = with_computation_tag ascription q in
-      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) (rr $loc))
+      FnDecl (mk_fn_decl lid (List.flatten bs) (Inl ascription) [] (rr $loc))
     }
 
 pulseBinderList:
@@ -172,7 +182,7 @@ localFnDefn:
     bs=pulseBinderList
     body=fnBody
     {
-      lid, mk_fn_defn q lid false bs body (rr $loc)
+      lid, mk_fn_defn q lid false bs body [] (rr $loc)
     }
 
 fnBody:

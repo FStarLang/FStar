@@ -2176,6 +2176,8 @@ and (desugar_bind :
                                                                   =
                                                                   FStar_Pervasives.Inl
                                                                   stmt;
+                                                                PulseSyntaxExtension_Sugar.decorations
+                                                                  = uu___2;
                                                                 PulseSyntaxExtension_Sugar.range3
                                                                   = range;_}
                                                               ->
@@ -2193,31 +2195,31 @@ and (desugar_bind :
                                                                     PulseSyntaxExtension_Sugar.range2
                                                                     = range
                                                                    } in
-                                                                 let uu___2 =
+                                                                 let uu___3 =
                                                                    desugar_lambda
                                                                     env lam in
                                                                  FStar_Class_Monad.op_let_Bang
                                                                    PulseSyntaxExtension_Err.err_monad
                                                                    () ()
                                                                    (Obj.magic
-                                                                    uu___2)
+                                                                    uu___3)
                                                                    (fun
-                                                                    uu___3 ->
+                                                                    uu___4 ->
                                                                     (fun lam1
                                                                     ->
                                                                     let lam1
                                                                     =
                                                                     Obj.magic
                                                                     lam1 in
-                                                                    let uu___3
+                                                                    let uu___4
                                                                     =
                                                                     mk_bind b
                                                                     lam1 s21
                                                                     r in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
-                                                                    uu___3))
-                                                                    uu___3))
+                                                                    uu___4))
+                                                                    uu___4))
                                                           | PulseSyntaxExtension_Sugar.Lambda_initializer
                                                               uu___2 ->
                                                               Obj.repr
@@ -3035,30 +3037,31 @@ and (desugar_decl :
                    FStar_Pervasives.Inl ascription;
                  PulseSyntaxExtension_Sugar.measure = measure;
                  PulseSyntaxExtension_Sugar.body3 = FStar_Pervasives.Inl body;
+                 PulseSyntaxExtension_Sugar.decorations = uu___;
                  PulseSyntaxExtension_Sugar.range3 = range;_}
                ->
-               let uu___ = desugar_binders env binders in
+               let uu___1 = desugar_binders env binders in
                Obj.magic
                  (FStar_Class_Monad.op_let_Bang
                     PulseSyntaxExtension_Err.err_monad () ()
-                    (Obj.magic uu___)
-                    (fun uu___1 ->
-                       (fun uu___1 ->
-                          let uu___1 = Obj.magic uu___1 in
-                          match uu___1 with
+                    (Obj.magic uu___1)
+                    (fun uu___2 ->
+                       (fun uu___2 ->
+                          let uu___2 = Obj.magic uu___2 in
+                          match uu___2 with
                           | (env1, bs, bvs) ->
                               let fvs =
                                 PulseSyntaxExtension_Env.free_vars_comp env1
                                   ascription in
-                              let uu___2 = idents_as_binders env1 fvs in
+                              let uu___3 = idents_as_binders env1 fvs in
                               Obj.magic
                                 (FStar_Class_Monad.op_let_Bang
                                    PulseSyntaxExtension_Err.err_monad () ()
-                                   (Obj.magic uu___2)
-                                   (fun uu___3 ->
-                                      (fun uu___3 ->
-                                         let uu___3 = Obj.magic uu___3 in
-                                         match uu___3 with
+                                   (Obj.magic uu___3)
+                                   (fun uu___4 ->
+                                      (fun uu___4 ->
+                                         let uu___4 = Obj.magic uu___4 in
+                                         match uu___4 with
                                          | (env2, bs', bvs') ->
                                              let bs1 =
                                                FStar_List_Tot_Base.op_At bs
@@ -3066,24 +3069,24 @@ and (desugar_decl :
                                              let bvs1 =
                                                FStar_List_Tot_Base.op_At bvs
                                                  bvs' in
-                                             let uu___4 =
+                                             let uu___5 =
                                                desugar_computation_type env2
                                                  ascription in
                                              Obj.magic
                                                (FStar_Class_Monad.op_let_Bang
                                                   PulseSyntaxExtension_Err.err_monad
-                                                  () () (Obj.magic uu___4)
-                                                  (fun uu___5 ->
+                                                  () () (Obj.magic uu___5)
+                                                  (fun uu___6 ->
                                                      (fun comp ->
                                                         let comp =
                                                           Obj.magic comp in
-                                                        let uu___5 =
-                                                          let uu___6 =
-                                                            let uu___7 =
+                                                        let uu___6 =
+                                                          let uu___7 =
+                                                            let uu___8 =
                                                               FStar_Options.ext_getv
                                                                 "pulse:rvalues" in
-                                                            uu___7 <> "" in
-                                                          if uu___6
+                                                            uu___8 <> "" in
+                                                          if uu___7
                                                           then
                                                             PulseSyntaxExtension_TransformRValues.transform
                                                               env2 body
@@ -3095,14 +3098,14 @@ and (desugar_decl :
                                                              PulseSyntaxExtension_Err.err_monad
                                                              () ()
                                                              (Obj.magic
-                                                                uu___5)
-                                                             (fun uu___6 ->
+                                                                uu___6)
+                                                             (fun uu___7 ->
                                                                 (fun body1 ->
                                                                    let body1
                                                                     =
                                                                     Obj.magic
                                                                     body1 in
-                                                                   let uu___6
+                                                                   let uu___7
                                                                     =
                                                                     PulseSyntaxExtension_Err.map_err_opt
                                                                     (desugar_term
@@ -3113,22 +3116,22 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___6)
+                                                                    uu___7)
                                                                     (fun
-                                                                    uu___7 ->
+                                                                    uu___8 ->
                                                                     (fun meas
                                                                     ->
                                                                     let meas
                                                                     =
                                                                     Obj.magic
                                                                     meas in
-                                                                    let uu___7
+                                                                    let uu___8
                                                                     =
                                                                     if is_rec
                                                                     then
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (let uu___8
+                                                                    (let uu___9
                                                                     =
                                                                     mk_knot_arr
                                                                     env2
@@ -3139,15 +3142,16 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___8)
+                                                                    uu___9)
                                                                     (fun
-                                                                    uu___9 ->
+                                                                    uu___10
+                                                                    ->
                                                                     (fun ty
                                                                     ->
                                                                     let ty =
                                                                     Obj.magic
                                                                     ty in
-                                                                    let uu___9
+                                                                    let uu___10
                                                                     =
                                                                     desugar_term
                                                                     env2 ty in
@@ -3156,20 +3160,20 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___9)
+                                                                    uu___10)
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___11
                                                                     ->
                                                                     (fun ty1
                                                                     ->
                                                                     let ty1 =
                                                                     Obj.magic
                                                                     ty1 in
-                                                                    let uu___10
+                                                                    let uu___11
                                                                     =
                                                                     PulseSyntaxExtension_Env.push_bv
                                                                     env2 id in
-                                                                    match uu___10
+                                                                    match uu___11
                                                                     with
                                                                     | 
                                                                     (env3,
@@ -3188,8 +3192,8 @@ and (desugar_decl :
                                                                     (FStar_List_Tot_Base.op_At
                                                                     bvs1 
                                                                     [bv]))))
+                                                                    uu___11)))
                                                                     uu___10)))
-                                                                    uu___9)))
                                                                     else
                                                                     Obj.magic
                                                                     (Obj.repr
@@ -3202,22 +3206,22 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___7)
+                                                                    uu___8)
                                                                     (fun
-                                                                    uu___8 ->
+                                                                    uu___9 ->
                                                                     (fun
-                                                                    uu___8 ->
-                                                                    let uu___8
+                                                                    uu___9 ->
+                                                                    let uu___9
                                                                     =
                                                                     Obj.magic
-                                                                    uu___8 in
-                                                                    match uu___8
+                                                                    uu___9 in
+                                                                    match uu___9
                                                                     with
                                                                     | 
                                                                     (env3,
                                                                     bs2,
                                                                     bvs2) ->
-                                                                    let uu___9
+                                                                    let uu___10
                                                                     =
                                                                     desugar_stmt
                                                                     env3
@@ -3227,9 +3231,9 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___9)
+                                                                    uu___10)
                                                                     (fun
-                                                                    uu___10
+                                                                    uu___11
                                                                     ->
                                                                     (fun
                                                                     body2 ->
@@ -3237,7 +3241,7 @@ and (desugar_decl :
                                                                     =
                                                                     Obj.magic
                                                                     body2 in
-                                                                    let uu___10
+                                                                    let uu___11
                                                                     =
                                                                     PulseSyntaxExtension_Err.map2
                                                                     faux bs2
@@ -3247,16 +3251,16 @@ and (desugar_decl :
                                                                     PulseSyntaxExtension_Err.err_monad
                                                                     () ()
                                                                     (Obj.magic
-                                                                    uu___10)
+                                                                    uu___11)
                                                                     (fun
-                                                                    uu___11
+                                                                    uu___12
                                                                     ->
                                                                     (fun qbs
                                                                     ->
                                                                     let qbs =
                                                                     Obj.magic
                                                                     qbs in
-                                                                    let uu___11
+                                                                    let uu___12
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.fn_defn
                                                                     range id
@@ -3266,14 +3270,14 @@ and (desugar_decl :
                                                                     body2 in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
-                                                                    uu___11))
+                                                                    uu___12))
+                                                                    uu___12)))
                                                                     uu___11)))
-                                                                    uu___10)))
+                                                                    uu___9)))
                                                                     uu___8)))
-                                                                    uu___7)))
-                                                                  uu___6)))
-                                                       uu___5))) uu___3)))
-                         uu___1))
+                                                                  uu___7)))
+                                                       uu___6))) uu___4)))
+                         uu___2))
            | PulseSyntaxExtension_Sugar.FnDefn
                { PulseSyntaxExtension_Sugar.id2 = id;
                  PulseSyntaxExtension_Sugar.is_rec = false;
@@ -3283,78 +3287,79 @@ and (desugar_decl :
                  PulseSyntaxExtension_Sugar.measure =
                    FStar_Pervasives_Native.None;
                  PulseSyntaxExtension_Sugar.body3 = FStar_Pervasives.Inr body;
+                 PulseSyntaxExtension_Sugar.decorations = uu___;
                  PulseSyntaxExtension_Sugar.range3 = range;_}
                ->
-               let uu___ = desugar_binders env binders in
+               let uu___1 = desugar_binders env binders in
                Obj.magic
                  (FStar_Class_Monad.op_let_Bang
                     PulseSyntaxExtension_Err.err_monad () ()
-                    (Obj.magic uu___)
-                    (fun uu___1 ->
-                       (fun uu___1 ->
-                          let uu___1 = Obj.magic uu___1 in
-                          match uu___1 with
+                    (Obj.magic uu___1)
+                    (fun uu___2 ->
+                       (fun uu___2 ->
+                          let uu___2 = Obj.magic uu___2 in
+                          match uu___2 with
                           | (env1, bs, bvs) ->
-                              let uu___2 =
+                              let uu___3 =
                                 match ascription with
                                 | FStar_Pervasives_Native.None ->
                                     Obj.magic
                                       (Obj.repr
-                                         (let uu___3 =
-                                            let uu___4 =
+                                         (let uu___4 =
+                                            let uu___5 =
                                               PulseSyntaxExtension_SyntaxWrapper.tm_unknown
                                                 range in
                                             PulseSyntaxExtension_SyntaxWrapper.mk_tot
-                                              uu___4 in
+                                              uu___5 in
                                           PulseSyntaxExtension_Err.return
-                                            uu___3))
+                                            uu___4))
                                 | FStar_Pervasives_Native.Some t ->
                                     Obj.magic
                                       (Obj.repr
-                                         (let uu___3 = desugar_term env1 t in
+                                         (let uu___4 = desugar_term env1 t in
                                           FStar_Class_Monad.op_let_Bang
                                             PulseSyntaxExtension_Err.err_monad
-                                            () () (Obj.magic uu___3)
-                                            (fun uu___4 ->
+                                            () () (Obj.magic uu___4)
+                                            (fun uu___5 ->
                                                (fun t1 ->
                                                   let t1 = Obj.magic t1 in
-                                                  let uu___4 =
+                                                  let uu___5 =
                                                     PulseSyntaxExtension_SyntaxWrapper.mk_tot
                                                       t1 in
                                                   Obj.magic
                                                     (PulseSyntaxExtension_Err.return
-                                                       uu___4)) uu___4))) in
+                                                       uu___5)) uu___5))) in
                               Obj.magic
                                 (FStar_Class_Monad.op_let_Bang
                                    PulseSyntaxExtension_Err.err_monad () ()
-                                   (Obj.magic uu___2)
-                                   (fun uu___3 ->
+                                   (Obj.magic uu___3)
+                                   (fun uu___4 ->
                                       (fun comp ->
                                          let comp = Obj.magic comp in
-                                         let uu___3 =
+                                         let uu___4 =
                                            desugar_lambda env1 body in
                                          Obj.magic
                                            (FStar_Class_Monad.op_let_Bang
                                               PulseSyntaxExtension_Err.err_monad
-                                              () () (Obj.magic uu___3)
-                                              (fun uu___4 ->
+                                              () () (Obj.magic uu___4)
+                                              (fun uu___5 ->
                                                  (fun body1 ->
                                                     let body1 =
                                                       Obj.magic body1 in
-                                                    let uu___4 =
+                                                    let uu___5 =
                                                       PulseSyntaxExtension_Err.map2
                                                         faux bs bvs in
                                                     Obj.magic
                                                       (FStar_Class_Monad.op_let_Bang
                                                          PulseSyntaxExtension_Err.err_monad
                                                          () ()
-                                                         (Obj.magic uu___4)
-                                                         (fun uu___5 ->
+                                                         (Obj.magic uu___5)
+                                                         (fun uu___6 ->
                                                             (fun qbs ->
                                                                let qbs =
                                                                  Obj.magic
                                                                    qbs in
-                                                               let uu___5 =
+                                                               let uu___6 =
                                                                  PulseSyntaxExtension_SyntaxWrapper.fn_defn
                                                                    range id
                                                                    false qbs
@@ -3363,52 +3368,53 @@ and (desugar_decl :
                                                                    body1 in
                                                                Obj.magic
                                                                  (PulseSyntaxExtension_Err.return
-                                                                    uu___5))
-                                                              uu___5)))
-                                                   uu___4))) uu___3))) uu___1))
+                                                                    uu___6))
+                                                              uu___6)))
+                                                   uu___5))) uu___4))) uu___2))
            | PulseSyntaxExtension_Sugar.FnDecl
                { PulseSyntaxExtension_Sugar.id3 = id;
                  PulseSyntaxExtension_Sugar.binders3 = binders;
                  PulseSyntaxExtension_Sugar.ascription2 =
                    FStar_Pervasives.Inl ascription;
+                 PulseSyntaxExtension_Sugar.decorations1 = uu___;
                  PulseSyntaxExtension_Sugar.range4 = range;_}
                ->
-               let uu___ = desugar_binders env binders in
+               let uu___1 = desugar_binders env binders in
                Obj.magic
                  (FStar_Class_Monad.op_let_Bang
                     PulseSyntaxExtension_Err.err_monad () ()
-                    (Obj.magic uu___)
-                    (fun uu___1 ->
-                       (fun uu___1 ->
-                          let uu___1 = Obj.magic uu___1 in
-                          match uu___1 with
+                    (Obj.magic uu___1)
+                    (fun uu___2 ->
+                       (fun uu___2 ->
+                          let uu___2 = Obj.magic uu___2 in
+                          match uu___2 with
                           | (env1, bs, bvs) ->
-                              let uu___2 =
+                              let uu___3 =
                                 desugar_computation_type env1 ascription in
                               Obj.magic
                                 (FStar_Class_Monad.op_let_Bang
                                    PulseSyntaxExtension_Err.err_monad () ()
-                                   (Obj.magic uu___2)
-                                   (fun uu___3 ->
+                                   (Obj.magic uu___3)
+                                   (fun uu___4 ->
                                       (fun comp ->
                                          let comp = Obj.magic comp in
-                                         let uu___3 =
+                                         let uu___4 =
                                            PulseSyntaxExtension_Err.map2 faux
                                              bs bvs in
                                          Obj.magic
                                            (FStar_Class_Monad.op_let_Bang
                                               PulseSyntaxExtension_Err.err_monad
-                                              () () (Obj.magic uu___3)
-                                              (fun uu___4 ->
+                                              () () (Obj.magic uu___4)
+                                              (fun uu___5 ->
                                                  (fun qbs ->
                                                     let qbs = Obj.magic qbs in
-                                                    let uu___4 =
+                                                    let uu___5 =
                                                       PulseSyntaxExtension_SyntaxWrapper.fn_decl
                                                         range id qbs comp in
                                                     Obj.magic
                                                       (PulseSyntaxExtension_Err.return
-                                                         uu___4)) uu___4)))
-                                        uu___3))) uu___1))) uu___1 uu___
+                                                         uu___5)) uu___5)))
+                                        uu___4))) uu___2))) uu___1 uu___
 let (initialize_env :
   FStar_TypeChecker_Env.env ->
     PulseSyntaxExtension_Env.name Prims.list ->

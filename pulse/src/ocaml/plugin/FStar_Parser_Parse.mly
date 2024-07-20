@@ -260,7 +260,7 @@ attribute:
   | LBRACK_AT_AT x = semiColonTermList RBRACK
       { x }
 
-
+%public
 decoration:
   | x=attribute
       { DeclAttributes x }
@@ -292,6 +292,35 @@ decl:
         let d = mk_decl decl (rr $loc(decl)) ds in
         [{ d with attrs = extra_attrs @ d.attrs }]
       }
+
+%public
+noDecorationDecl:
+  | ASSUME lid=uident COLON phi=formula
+      { [mk_decl (Assume(lid, phi)) (rr $loc) [ Qualifier Assumption ]] }
+
+  | blob=USE_LANG_BLOB
+      {
+        let ext_name, contents, pos, snap = blob in
+        (* blob_range is the full range of the blob, starting from the #lang pragma *)
+        let blob_range = rr (snd snap, snd $loc) in
+        (* extension_syntax_start_range is where the extension syntax starts not including
+           the "#lang ident" prefix *)
+        let extension_syntax_start_range = (rr (pos, pos)) in
+        let ds = parse_use_lang_blob ext_name contents blob_range extension_syntax_start_range in
+        mk_decl (UseLangDecls ext_name) extension_syntax_start_range [] :: ds
+      }
+      
+%public
+decoratableDecl:
+  | decl=rawDecl
+      { [mk_decl decl (rr $loc(decl)) []] }
+
+  | decl=typeclassDecl
+      { let (decl, extra_attrs) = decl in
+        let d = mk_decl decl (rr $loc(decl)) [] in
+        [{ d with attrs = extra_attrs }]
+      }
+
 
 typeclassDecl:
   | CLASS tcdef=typeDecl

@@ -880,6 +880,7 @@ let rec (transform_stmt_with_reads :
                              PulseSyntaxExtension_Sugar.ascription1 = uu___4;
                              PulseSyntaxExtension_Sugar.measure = uu___5;
                              PulseSyntaxExtension_Sugar.body3 = uu___6;
+                             PulseSyntaxExtension_Sugar.decorations = uu___7;
                              PulseSyntaxExtension_Sugar.range3 = range;_})
                            ->
                            Obj.magic

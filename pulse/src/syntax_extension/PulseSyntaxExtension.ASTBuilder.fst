@@ -158,6 +158,12 @@ let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (co
       : decl
       = let id, r = id_and_range_of_decl d in  
         let id_txt = Ident.string_of_id id in
+        let decors =
+          let open PulseSyntaxExtension.Sugar in
+          match d with
+          | FnDefn { decorations }
+          | FnDecl { decorations } -> decorations
+        in
         let decl_as_term = 
           let blob = FStar.Syntax.Util.mk_lazy d S.t_bool (S.Lazy_extension "pulse_sugar_decl") (Some r) in
           let unpack_blob t : PulseSyntaxExtension.Sugar.decl = FStar.Syntax.Util.unlazy_as_t (S.Lazy_extension "pulse_sugar_decl") t in
@@ -182,7 +188,16 @@ let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (co
                       r
         in
         let d = Splice (true, [id], splicer) in
-        let d = { d; drange = r; quals = [ Irreducible ]; attrs = [str "uninterpreted_by_smt" r]; interleaved = false  } in
+        let d =
+          let attrs, quals = List.partition DeclAttributes? decors in
+          let attrs =
+            match attrs with
+            | [] -> [DeclAttributes[ str "uninterpreted_by_smt" r ]]
+            | DeclAttributes attrs :: tl -> DeclAttributes (str "uninterpreted_by_smt" r::attrs) :: tl
+          in
+          let decors = Qualifier Irreducible::quals@attrs in
+          mk_decl d r decors
+        in
         d
       in
       let maybe_extend_ctx ctx d =
