@@ -1132,7 +1132,6 @@ let validate_query st (q: query) : query =
 
 open FStar.Class.Show
 let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
-  BU.print1 "Running query with repl_lang=%s\n" (show st.repl_lang);
   match q.qq with
   | Exit -> as_json_list (run_exit st)
   | DescribeProtocol -> as_json_list (run_describe_protocol st)
