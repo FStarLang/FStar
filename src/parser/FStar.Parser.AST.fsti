@@ -96,23 +96,9 @@ type term' =
   | ElimImplies of term & term & term                             (* elim_implies P Q with e *)
   | ElimOr of term & term & term & binder & term & binder & term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
-  | DesugaredBlob of desugared_blob
+
 and term = {tm:term'; range:range; level:level}
 
-and dep_scan_callbacks = {
-   scan_term: term -> unit;
-   scan_binder: binder -> unit;
-   scan_pattern: pattern -> unit;
-   add_lident: lident -> unit;
-   add_open: lident -> unit;
-}
-
-and desugared_blob = {
-  tag:string;
-  blob: S.term;
-  eq: S.term -> S.term -> bool;
-  dep_scan: dep_scan_callbacks -> S.term -> unit
-}
 
 
 (* (as y)? returns t *)
@@ -234,6 +220,23 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph
 
+type dep_scan_callbacks = {
+   scan_term: term -> unit;
+   scan_binder: binder -> unit;
+   scan_pattern: pattern -> unit;
+   add_lident: lident -> unit;
+   add_open: lident -> unit;
+}
+
+type to_be_desugared = {
+  lang_name: string;
+  blob: FStar.Compiler.Dyn.dyn;
+  idents: list ident;
+  to_string: FStar.Compiler.Dyn.dyn -> string;
+  eq: FStar.Compiler.Dyn.dyn -> FStar.Compiler.Dyn.dyn -> bool;
+  dep_scan: dep_scan_callbacks -> FStar.Compiler.Dyn.dyn -> unit
+}
+
 type decl' =
   | TopLevelModule of lid
   | Open of lid
@@ -258,6 +261,7 @@ type decl' =
      The second range is the start point of the extension syntax itself *)
   | DeclSyntaxExtension of string & string & range & range
   | UseLangDecls of string
+  | DeclToBeDesugared of to_be_desugared
   | Unparseable
 
 and decl = {

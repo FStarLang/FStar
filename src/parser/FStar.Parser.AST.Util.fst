@@ -360,8 +360,6 @@ and eq_term' (t1 t2:term')
       eq_binder b1 b3 &&
       eq_binder b2 b4 &&      
       eq_term t4 t8
-    | DesugaredBlob d1, DesugaredBlob d2 ->
-      d1.tag = d2.tag && d1.eq d1.blob d2.blob
     | _ -> false
 
 and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
@@ -547,6 +545,9 @@ let rec eq_decl' (d1 d2:decl') : bool =
     s1 = s2 && t1 = t2
   | UseLangDecls p1, UseLangDecls p2 ->
     p1 = p2
+  | DeclToBeDesugared tbs1, DeclToBeDesugared tbs2 ->
+    tbs1.lang_name = tbs2.lang_name &&
+    tbs1.eq tbs1.blob tbs2.blob
   | _ -> false
 
 and eq_effect_decl (t1 t2: effect_decl) =
@@ -709,7 +710,8 @@ let rec lidents_of_decl (d:decl) =
   | Pragma _ -> []
   | Assume (_, t) -> lidents_of_term t
   | Splice (_, _, t) -> lidents_of_term t
-  | DeclSyntaxExtension _ -> []
+  | DeclSyntaxExtension _
+  | DeclToBeDesugared _ -> []
 
 and lidents_of_effect_decl (ed:effect_decl) =
   match ed with

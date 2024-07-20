@@ -96,24 +96,10 @@ type term' =
   | ElimImplies of (term * term * term) 
   | ElimOr of (term * term * term * binder * term * binder * term) 
   | ElimAnd of (term * term * term * binder * binder * term) 
-  | DesugaredBlob of desugared_blob 
 and term = {
   tm: term' ;
   range: FStar_Compiler_Range_Type.range ;
   level: level }
-and dep_scan_callbacks =
-  {
-  scan_term: term -> unit ;
-  scan_binder: binder -> unit ;
-  scan_pattern: pattern -> unit ;
-  add_lident: FStar_Ident.lident -> unit ;
-  add_open: FStar_Ident.lident -> unit }
-and desugared_blob =
-  {
-  tag: Prims.string ;
-  blob: FStar_Syntax_Syntax.term ;
-  eq: FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool ;
-  dep_scan: dep_scan_callbacks -> FStar_Syntax_Syntax.term -> unit }
 and calc_step =
   | CalcStep of (term * term * term) 
 and binder' =
@@ -431,11 +417,6 @@ let (uu___is_ElimAnd : term' -> Prims.bool) =
 let (__proj__ElimAnd__item___0 :
   term' -> (term * term * term * binder * binder * term)) =
   fun projectee -> match projectee with | ElimAnd _0 -> _0
-let (uu___is_DesugaredBlob : term' -> Prims.bool) =
-  fun projectee ->
-    match projectee with | DesugaredBlob _0 -> true | uu___ -> false
-let (__proj__DesugaredBlob__item___0 : term' -> desugared_blob) =
-  fun projectee -> match projectee with | DesugaredBlob _0 -> _0
 let (__proj__Mkterm__item__tm : term -> term') =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> tm
@@ -445,51 +426,6 @@ let (__proj__Mkterm__item__range : term -> FStar_Compiler_Range_Type.range) =
 let (__proj__Mkterm__item__level : term -> level) =
   fun projectee ->
     match projectee with | { tm; range; level = level1;_} -> level1
-let (__proj__Mkdep_scan_callbacks__item__scan_term :
-  dep_scan_callbacks -> term -> unit) =
-  fun projectee ->
-    match projectee with
-    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
-        scan_term
-let (__proj__Mkdep_scan_callbacks__item__scan_binder :
-  dep_scan_callbacks -> binder -> unit) =
-  fun projectee ->
-    match projectee with
-    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
-        scan_binder
-let (__proj__Mkdep_scan_callbacks__item__scan_pattern :
-  dep_scan_callbacks -> pattern -> unit) =
-  fun projectee ->
-    match projectee with
-    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
-        scan_pattern
-let (__proj__Mkdep_scan_callbacks__item__add_lident :
-  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
-  fun projectee ->
-    match projectee with
-    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
-        add_lident
-let (__proj__Mkdep_scan_callbacks__item__add_open :
-  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
-  fun projectee ->
-    match projectee with
-    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
-        add_open
-let (__proj__Mkdesugared_blob__item__tag : desugared_blob -> Prims.string) =
-  fun projectee -> match projectee with | { tag; blob; eq; dep_scan;_} -> tag
-let (__proj__Mkdesugared_blob__item__blob :
-  desugared_blob -> FStar_Syntax_Syntax.term) =
-  fun projectee ->
-    match projectee with | { tag; blob; eq; dep_scan;_} -> blob
-let (__proj__Mkdesugared_blob__item__eq :
-  desugared_blob ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term -> Prims.bool)
-  =
-  fun projectee -> match projectee with | { tag; blob; eq; dep_scan;_} -> eq
-let (__proj__Mkdesugared_blob__item__dep_scan :
-  desugared_blob -> dep_scan_callbacks -> FStar_Syntax_Syntax.term -> unit) =
-  fun projectee ->
-    match projectee with | { tag; blob; eq; dep_scan;_} -> dep_scan
 let (uu___is_CalcStep : calc_step -> Prims.bool) = fun projectee -> true
 let (__proj__CalcStep__item___0 : calc_step -> (term * term * term)) =
   fun projectee -> match projectee with | CalcStep _0 -> _0
@@ -863,6 +799,83 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
+type dep_scan_callbacks =
+  {
+  scan_term: term -> unit ;
+  scan_binder: binder -> unit ;
+  scan_pattern: pattern -> unit ;
+  add_lident: FStar_Ident.lident -> unit ;
+  add_open: FStar_Ident.lident -> unit }
+let (__proj__Mkdep_scan_callbacks__item__scan_term :
+  dep_scan_callbacks -> term -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_term
+let (__proj__Mkdep_scan_callbacks__item__scan_binder :
+  dep_scan_callbacks -> binder -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_binder
+let (__proj__Mkdep_scan_callbacks__item__scan_pattern :
+  dep_scan_callbacks -> pattern -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_pattern
+let (__proj__Mkdep_scan_callbacks__item__add_lident :
+  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        add_lident
+let (__proj__Mkdep_scan_callbacks__item__add_open :
+  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        add_open
+type to_be_desugared =
+  {
+  lang_name: Prims.string ;
+  blob: FStar_Compiler_Dyn.dyn ;
+  idents: FStar_Ident.ident Prims.list ;
+  to_string: FStar_Compiler_Dyn.dyn -> Prims.string ;
+  eq: FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool ;
+  dep_scan: dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit }
+let (__proj__Mkto_be_desugared__item__lang_name :
+  to_be_desugared -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> lang_name
+let (__proj__Mkto_be_desugared__item__blob :
+  to_be_desugared -> FStar_Compiler_Dyn.dyn) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> blob
+let (__proj__Mkto_be_desugared__item__idents :
+  to_be_desugared -> FStar_Ident.ident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> idents
+let (__proj__Mkto_be_desugared__item__to_string :
+  to_be_desugared -> FStar_Compiler_Dyn.dyn -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> to_string
+let (__proj__Mkto_be_desugared__item__eq :
+  to_be_desugared ->
+    FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> eq
+let (__proj__Mkto_be_desugared__item__dep_scan :
+  to_be_desugared -> dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> dep_scan
 type decl' =
   | TopLevelModule of FStar_Ident.lid 
   | Open of FStar_Ident.lid 
@@ -885,6 +898,7 @@ type decl' =
   | DeclSyntaxExtension of (Prims.string * Prims.string *
   FStar_Compiler_Range_Type.range * FStar_Compiler_Range_Type.range) 
   | UseLangDecls of Prims.string 
+  | DeclToBeDesugared of to_be_desugared 
   | Unparseable 
 and decl =
   {
@@ -994,6 +1008,11 @@ let (uu___is_UseLangDecls : decl' -> Prims.bool) =
     match projectee with | UseLangDecls _0 -> true | uu___ -> false
 let (__proj__UseLangDecls__item___0 : decl' -> Prims.string) =
   fun projectee -> match projectee with | UseLangDecls _0 -> _0
+let (uu___is_DeclToBeDesugared : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DeclToBeDesugared _0 -> true | uu___ -> false
+let (__proj__DeclToBeDesugared__item___0 : decl' -> to_be_desugared) =
+  fun projectee -> match projectee with | DeclToBeDesugared _0 -> _0
 let (uu___is_Unparseable : decl' -> Prims.bool) =
   fun projectee ->
     match projectee with | Unparseable -> true | uu___ -> false
@@ -2277,7 +2296,6 @@ let rec (term_to_string : term -> Prims.string) =
         let uu___3 = term_to_string e2 in
         FStar_Compiler_Util.format4 "_intro_ %s /\\ %s with %s and %s" uu___
           uu___1 uu___2 uu___3
-    | DesugaredBlob uu___ -> "<DesugaredBlob>"
 and (binders_to_string : Prims.string -> binder Prims.list -> Prims.string) =
   fun sep ->
     fun bs ->
@@ -2579,6 +2597,10 @@ let rec (decl_to_string : decl -> Prims.string) =
     | DeclSyntaxExtension (id, content, uu___, uu___1) ->
         Prims.strcat "```"
           (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
+    | DeclToBeDesugared tbs ->
+        let uu___ =
+          let uu___1 = tbs.to_string tbs.blob in Prims.strcat uu___1 ")" in
+        Prims.strcat "(to_be_desugared: " uu___
     | UseLangDecls str -> FStar_Compiler_Util.format1 "#lang-%s" str
     | Unparseable -> "unparseable"
 let (modul_to_string : modul -> Prims.string) =

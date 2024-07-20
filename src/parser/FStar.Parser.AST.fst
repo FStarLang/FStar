@@ -637,9 +637,6 @@ let rec term_to_string (x:term) = match x.tm with
       (term_to_string e1)
       (term_to_string e2)
     
-  | DesugaredBlob _ ->
-    "<DesugaredBlob>"
-      
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
 
@@ -777,6 +774,8 @@ let rec decl_to_string (d:decl) = match d.d with
   | Pragma p -> "pragma #" ^ string_of_pragma p
   | DeclSyntaxExtension (id, content, _, _) -> 
     "```" ^ id ^ "\n" ^ content ^ "\n```"
+  | DeclToBeDesugared tbs ->
+    "(to_be_desugared: " ^ tbs.to_string tbs.blob^ ")"
   | UseLangDecls str ->
     format1 "#lang-%s" str
   | Unparseable ->

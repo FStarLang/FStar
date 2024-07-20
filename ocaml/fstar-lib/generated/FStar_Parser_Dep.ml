@@ -1359,6 +1359,17 @@ let (collect_one :
                  -> collect_term t
              | FStar_Parser_AST.Polymonadic_subcomp (uu___1, uu___2, t) ->
                  collect_term t
+             | FStar_Parser_AST.DeclToBeDesugared tbs ->
+                 tbs.FStar_Parser_AST.dep_scan
+                   {
+                     FStar_Parser_AST.scan_term = collect_term;
+                     FStar_Parser_AST.scan_binder = collect_binder;
+                     FStar_Parser_AST.scan_pattern = collect_pattern;
+                     FStar_Parser_AST.add_lident =
+                       (fun lid -> add_to_parsing_data (P_lid lid));
+                     FStar_Parser_AST.add_open =
+                       (fun lid -> add_to_parsing_data (P_open (true, lid)))
+                   } tbs.FStar_Parser_AST.blob
              | FStar_Parser_AST.UseLangDecls uu___1 -> ()
              | FStar_Parser_AST.Pragma uu___1 -> ()
              | FStar_Parser_AST.DeclSyntaxExtension uu___1 -> ()
@@ -1796,17 +1807,6 @@ let (collect_one :
                   collect_binder y;
                   collect_term e;
                   collect_term e')
-             | FStar_Parser_AST.DesugaredBlob b ->
-                 b.FStar_Parser_AST.dep_scan
-                   {
-                     FStar_Parser_AST.scan_term = collect_term;
-                     FStar_Parser_AST.scan_binder = collect_binder;
-                     FStar_Parser_AST.scan_pattern = collect_pattern;
-                     FStar_Parser_AST.add_lident =
-                       (fun lid -> add_to_parsing_data (P_lid lid));
-                     FStar_Parser_AST.add_open =
-                       (fun lid -> add_to_parsing_data (P_open (true, lid)))
-                   } b.FStar_Parser_AST.blob
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat

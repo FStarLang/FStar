@@ -1,4 +1,22 @@
 open Prims
+type extension_tosyntax_decl_t =
+  FStar_Syntax_DsEnv.env ->
+    FStar_Compiler_Dyn.dyn ->
+      FStar_Ident.lident Prims.list ->
+        FStar_Compiler_Range_Type.range ->
+          FStar_Syntax_Syntax.sigelt' Prims.list
+let (extension_tosyntax_table :
+  extension_tosyntax_decl_t FStar_Compiler_Util.smap) =
+  FStar_Compiler_Util.smap_create (Prims.of_int (20))
+let (register_extension_tosyntax :
+  Prims.string -> extension_tosyntax_decl_t -> unit) =
+  fun lang_name ->
+    fun cb ->
+      FStar_Compiler_Util.smap_add extension_tosyntax_table lang_name cb
+let (lookup_extension_tosyntax :
+  Prims.string -> extension_tosyntax_decl_t FStar_Pervasives_Native.option) =
+  fun lang_name ->
+    FStar_Compiler_Util.smap_try_find extension_tosyntax_table lang_name
 let (dbg_attrs : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "attrs"
 let (dbg_ToSyntax : Prims.bool FStar_Compiler_Effect.ref) =
@@ -5260,8 +5278,6 @@ and (desugar_term_maybe_top :
                     FStar_Syntax_Syntax.mk_Tm_app head args
                       top.FStar_Parser_AST.range in
                   (uu___3, noaqs))
-         | FStar_Parser_AST.DesugaredBlob t ->
-             ((t.FStar_Parser_AST.blob), noaqs)
          | uu___2 when top.FStar_Parser_AST.level = FStar_Parser_AST.Formula
              -> let uu___3 = desugar_formula env top in (uu___3, noaqs)
          | uu___2 ->
@@ -10097,7 +10113,52 @@ and (desugar_decl_core :
                           FStar_Parser_AST.interleaved =
                             (d.FStar_Parser_AST.interleaved)
                         }))
-and (desugar_decls :
+        | FStar_Parser_AST.DeclToBeDesugared tbs ->
+            let uu___ =
+              lookup_extension_tosyntax tbs.FStar_Parser_AST.lang_name in
+            (match uu___ with
+             | FStar_Pervasives_Native.None ->
+                 let uu___1 =
+                   let uu___2 =
+                     FStar_Compiler_Util.format1
+                       "Could not find desugaring callback for extension %s"
+                       tbs.FStar_Parser_AST.lang_name in
+                   (FStar_Errors_Codes.Fatal_SyntaxError, uu___2) in
+                 FStar_Errors.raise_error uu___1 d.FStar_Parser_AST.drange
+             | FStar_Pervasives_Native.Some desugar ->
+                 let mk_sig sigel =
+                   let top_attrs = d_attrs in
+                   let se =
+                     let uu___1 =
+                       FStar_Compiler_List.map
+                         (trans_qual1 FStar_Pervasives_Native.None)
+                         d.FStar_Parser_AST.quals in
+                     let uu___2 = FStar_Syntax_DsEnv.opens_and_abbrevs env in
+                     {
+                       FStar_Syntax_Syntax.sigel = sigel;
+                       FStar_Syntax_Syntax.sigrng =
+                         (d.FStar_Parser_AST.drange);
+                       FStar_Syntax_Syntax.sigquals = uu___1;
+                       FStar_Syntax_Syntax.sigmeta =
+                         FStar_Syntax_Syntax.default_sigmeta;
+                       FStar_Syntax_Syntax.sigattrs = top_attrs;
+                       FStar_Syntax_Syntax.sigopens_and_abbrevs = uu___2;
+                       FStar_Syntax_Syntax.sigopts =
+                         FStar_Pervasives_Native.None
+                     } in
+                   se in
+                 let lids =
+                   FStar_Compiler_List.map (FStar_Syntax_DsEnv.qualify env)
+                     tbs.FStar_Parser_AST.idents in
+                 let sigelts' =
+                   desugar env tbs.FStar_Parser_AST.blob lids
+                     d.FStar_Parser_AST.drange in
+                 let sigelts = FStar_Compiler_List.map mk_sig sigelts' in
+                 let env1 =
+                   FStar_Compiler_List.fold_left
+                     FStar_Syntax_DsEnv.push_sigelt env sigelts in
+                 (env1, sigelts))
+let (desugar_decls :
   env_t ->
     FStar_Parser_AST.decl Prims.list ->
       (env_t * FStar_Syntax_Syntax.sigelt Prims.list))

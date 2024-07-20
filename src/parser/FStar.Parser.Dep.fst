@@ -848,6 +848,16 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
+        | DeclToBeDesugared tbs ->
+            tbs.dep_scan 
+            { scan_term = collect_term;
+              scan_binder = collect_binder;
+              scan_pattern = collect_pattern;
+              add_lident = (fun lid -> add_to_parsing_data (P_lid lid));
+              add_open = (fun lid -> add_to_parsing_data (P_open (true, lid)))
+            }
+            tbs.blob
+
         | UseLangDecls _
         | Pragma _
         | DeclSyntaxExtension _
@@ -1136,16 +1146,6 @@ let collect_one
           collect_term e;
           collect_term e'
         
-        | DesugaredBlob b ->
-          b.dep_scan 
-            { scan_term = collect_term;
-              scan_binder = collect_binder;
-              scan_pattern = collect_pattern;
-              add_lident = (fun lid -> add_to_parsing_data (P_lid lid));
-              add_open = (fun lid -> add_to_parsing_data (P_open (true, lid)))
-            }
-            b.blob
-
       and collect_patterns ps =
         List.iter collect_pattern ps
 

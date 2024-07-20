@@ -359,11 +359,6 @@ and (eq_term' :
               (eq_binder b1 b3))
              && (eq_binder b2 b4))
             && (eq_term t4 t8)
-      | (FStar_Parser_AST.DesugaredBlob d1, FStar_Parser_AST.DesugaredBlob
-         d2) ->
-          (d1.FStar_Parser_AST.tag = d2.FStar_Parser_AST.tag) &&
-            (d1.FStar_Parser_AST.eq d1.FStar_Parser_AST.blob
-               d2.FStar_Parser_AST.blob)
       | uu___ -> false
 and (eq_calc_step :
   FStar_Parser_AST.calc_step -> FStar_Parser_AST.calc_step -> Prims.bool) =
@@ -607,6 +602,12 @@ let rec (eq_decl' :
           (s1 = s2) && (t1 = t2)
       | (FStar_Parser_AST.UseLangDecls p1, FStar_Parser_AST.UseLangDecls p2)
           -> p1 = p2
+      | (FStar_Parser_AST.DeclToBeDesugared tbs1,
+         FStar_Parser_AST.DeclToBeDesugared tbs2) ->
+          (tbs1.FStar_Parser_AST.lang_name = tbs2.FStar_Parser_AST.lang_name)
+            &&
+            (tbs1.FStar_Parser_AST.eq tbs1.FStar_Parser_AST.blob
+               tbs2.FStar_Parser_AST.blob)
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)
@@ -1036,6 +1037,7 @@ let rec (lidents_of_decl :
     | FStar_Parser_AST.Assume (uu___, t) -> lidents_of_term t
     | FStar_Parser_AST.Splice (uu___, uu___1, t) -> lidents_of_term t
     | FStar_Parser_AST.DeclSyntaxExtension uu___ -> []
+    | FStar_Parser_AST.DeclToBeDesugared uu___ -> []
 and (lidents_of_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Ident.lident Prims.list) =
   fun ed ->
