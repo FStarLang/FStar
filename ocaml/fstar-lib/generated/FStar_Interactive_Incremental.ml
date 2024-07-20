@@ -337,7 +337,7 @@ let reload_deps :
                return uu___4) in
     pop_until_deps repl_stack
 let (parse_code :
-  Prims.string FStar_Pervasives_Native.option ->
+  FStar_Parser_ParseIt.lang_opts ->
     Prims.string -> FStar_Parser_ParseIt.parse_result)
   =
   fun lang ->
@@ -534,7 +534,7 @@ let (format_code :
             FStar_Parser_AST.drange = uu___; FStar_Parser_AST.quals = uu___1;
             FStar_Parser_AST.attrs = uu___2;
             FStar_Parser_AST.interleaved = uu___3;_}::uu___4 ->
-            FStar_Pervasives_Native.Some l in
+            FStar_Pervasives_Native.Some (l, FStar_Pervasives_Native.None) in
       let parse_result = parse_code maybe_lang code in
       match parse_result with
       | FStar_Parser_ParseIt.IncrementalFragment

@@ -58,7 +58,10 @@ type parse_result =
     | Term of AST.term
     | ParseError of parse_error
 
-val parse: option string -> parse_frag -> parse_result // either (AST.inputFragment * list (string * Range.range)) , (string * Range.range)
+let lang_opts = option (string & option FStar.Parser.AST.Util.open_namespaces_and_abbreviations)
+val parse (ext_lang:lang_opts)
+          (frag:parse_frag)
+: parse_result
 val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting

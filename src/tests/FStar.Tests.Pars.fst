@@ -288,7 +288,7 @@ let parse_incremental_decls () =
 
 open FStar.Class.Show
 
-let parse_somelang (s:string) (r:FStar.Compiler.Range.range)
+let parse_somelang _ (s:string) (r:FStar.Compiler.Range.range)
 : either FStar.Parser.AST.Util.error_message (list FStar.Parser.AST.decl)
 = BU.print1 "Parsing somelang: <%s>\n" s;    
   match FStar.Parser.ParseIt.parse_string_incrementally s with

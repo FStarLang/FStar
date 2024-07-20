@@ -1120,18 +1120,40 @@ let (lookup_extension_parser :
 type extension_lang_parser =
   {
   parse_decls:
-    Prims.string ->
-      FStar_Compiler_Range_Type.range ->
-        (error_message, FStar_Parser_AST.decl Prims.list)
-          FStar_Pervasives.either
+    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
+      Prims.string ->
+        FStar_Compiler_Range_Type.range ->
+          (error_message, FStar_Parser_AST.decl Prims.list)
+            FStar_Pervasives.either
     }
 let (__proj__Mkextension_lang_parser__item__parse_decls :
   extension_lang_parser ->
-    Prims.string ->
-      FStar_Compiler_Range_Type.range ->
-        (error_message, FStar_Parser_AST.decl Prims.list)
-          FStar_Pervasives.either)
+    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
+      Prims.string ->
+        FStar_Compiler_Range_Type.range ->
+          (error_message, FStar_Parser_AST.decl Prims.list)
+            FStar_Pervasives.either)
   = fun projectee -> match projectee with | { parse_decls;_} -> parse_decls
+let (as_open_namespaces_and_abbrevs :
+  FStar_Parser_AST.decl Prims.list -> open_namespaces_and_abbreviations) =
+  fun ls ->
+    FStar_Compiler_List.fold_right
+      (fun d ->
+         fun out ->
+           match d.FStar_Parser_AST.d with
+           | FStar_Parser_AST.Open lid ->
+               {
+                 open_namespaces = (lid :: (out.open_namespaces));
+                 module_abbreviations = (out.module_abbreviations)
+               }
+           | FStar_Parser_AST.ModuleAbbrev (i, lid) ->
+               {
+                 open_namespaces = (out.open_namespaces);
+                 module_abbreviations = ((i, lid) ::
+                   (out.module_abbreviations))
+               }
+           | uu___ -> out) ls
+      { open_namespaces = []; module_abbreviations = [] }
 let (extension_lang_parser_table :
   extension_lang_parser FStar_Compiler_Util.smap) =
   FStar_Compiler_Util.smap_create (Prims.of_int (20))
@@ -1146,26 +1168,28 @@ let (lookup_extension_lang_parser :
     FStar_Compiler_Util.smap_try_find extension_lang_parser_table ext
 let (parse_extension_lang :
   Prims.string ->
-    Prims.string ->
-      FStar_Compiler_Range_Type.range -> FStar_Parser_AST.decl Prims.list)
+    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
+      Prims.string ->
+        FStar_Compiler_Range_Type.range -> FStar_Parser_AST.decl Prims.list)
   =
   fun lang_name ->
-    fun raw_text ->
-      fun raw_text_pos ->
-        let extension_parser1 = lookup_extension_lang_parser lang_name in
-        match extension_parser1 with
-        | FStar_Pervasives_Native.None ->
-            let uu___ =
-              let uu___1 =
-                FStar_Compiler_Util.format1 "Unknown language extension %s"
-                  lang_name in
-              (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
-            FStar_Errors.raise_error uu___ raw_text_pos
-        | FStar_Pervasives_Native.Some parser ->
-            let uu___ = parser.parse_decls raw_text raw_text_pos in
-            (match uu___ with
-             | FStar_Pervasives.Inl error ->
-                 FStar_Errors.raise_error
-                   (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
-                   error.range
-             | FStar_Pervasives.Inr ds -> ds)
+    fun ops ->
+      fun raw_text ->
+        fun raw_text_pos ->
+          let extension_parser1 = lookup_extension_lang_parser lang_name in
+          match extension_parser1 with
+          | FStar_Pervasives_Native.None ->
+              let uu___ =
+                let uu___1 =
+                  FStar_Compiler_Util.format1 "Unknown language extension %s"
+                    lang_name in
+                (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
+              FStar_Errors.raise_error uu___ raw_text_pos
+          | FStar_Pervasives_Native.Some parser ->
+              let uu___ = parser.parse_decls ops raw_text raw_text_pos in
+              (match uu___ with
+               | FStar_Pervasives.Inl error ->
+                   FStar_Errors.raise_error
+                     (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
+                     error.range
+               | FStar_Pervasives.Inr ds -> ds)

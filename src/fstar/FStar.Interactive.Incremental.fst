@@ -335,7 +335,7 @@ let format_code (st:repl_state) (code:string)
   = let maybe_lang =
       match st.repl_lang with
       | [] -> None
-      | {d=FStar.Parser.AST.UseLangDecls l}::_ -> Some l
+      | {d=FStar.Parser.AST.UseLangDecls l}::_ -> Some (l, None)
     in
     let parse_result = parse_code maybe_lang code in
     match parse_result with

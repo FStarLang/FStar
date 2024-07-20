@@ -160,6 +160,7 @@ let init_env deps : TcEnv.env =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+    let open FStar.Parser.AST in
   // We use file_of_range instead of `Options.file_list ()` because no file
   // is passed as a command-line argument in LSP mode.
   let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
@@ -175,6 +176,16 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
     | _ -> Range.dummyRange in
 
+  let filter_lang_decls (d:FStar.Parser.AST.decl) =
+    match d.d with
+    | UseLangDecls _
+    | Open _
+    | ModuleAbbrev _ -> true
+    | _ -> false
+  in
+  let use_lang_decl (ds:lang_decls_t) =
+    List.tryFind (fun d -> UseLangDecls? d.d) ds
+  in
   let check_module_name_declaration ast_modul = 
       (* It may seem surprising that this function, whose name indicates that
          it type-checks a fragment, can actually parse an entire module.
@@ -204,7 +215,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
           | Module (_, decls)
           | Interface (_, decls, _) -> decls
         in
-        List.filter (fun (d:FStar.Parser.AST.decl) -> Parser.AST.UseLangDecls? d.d) decls
+        List.filter filter_lang_decls decls
       in
       Some modul, env, lang_decls
   in
@@ -228,7 +239,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_more_partial_modul env modul sigelts in
-      Some modul, env, List.filter (fun (d:FStar.Parser.AST.decl) -> Parser.AST.UseLangDecls? d.d) ast_decls
+      Some modul, env, List.filter filter_lang_decls ast_decls
   in
   match frag with
   | Inr d -> (
@@ -242,11 +253,14 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 
   | Inl (frag, lang_decls) -> (
     let parse_frag frag =
-      match lang_decls with
-      | [] ->
-        Parser.Driver.parse_fragment None frag
-      | {d=FStar.Parser.AST.UseLangDecls lang}::_ ->
-        Parser.Driver.parse_fragment (Some lang) frag
+      match use_lang_decl lang_decls with
+      | None -> Parser.Driver.parse_fragment None frag
+      | Some {d=UseLangDecls lang} ->
+        let lang_opts = 
+          lang,
+          Some <| FStar.Parser.AST.Util.as_open_namespaces_and_abbrevs lang_decls
+        in
+        Parser.Driver.parse_fragment (Some lang_opts) frag
     in
     match parse_frag frag with
     | Parser.Driver.Empty

@@ -324,7 +324,9 @@ let parse_string_incrementally (s:string) =
     let r = FStar_Compiler_Range.mk_range filename pos pos in
     Inr (Some ("ParseStringIncrementally: Error " ^ Printexc.to_string e, r))
 
-let parse_lang lang fn =
+type lang_opts = (string * FStar_Parser_AST_Util.open_namespaces_and_abbreviations option) option
+
+let parse_lang (lang, opens) fn =
   match fn with
   | Filename _ ->
     failwith "parse_lang: only in incremental mode"
@@ -334,14 +336,14 @@ let parse_lang lang fn =
     try
       let frag_pos = FStar_Compiler_Range.mk_pos s.frag_line s.frag_col in
       let rng = FStar_Compiler_Range.mk_range s.frag_fname frag_pos frag_pos in
-      let decls = FStar_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
+      let decls = FStar_Parser_AST_Util.parse_extension_lang lang opens s.frag_text rng in
       let comments = FStar_Parser_Util.flush_comments () in
       ASTFragment (Inr decls, comments)
     with
     | FStar_Errors.Error(e, msg, r, _ctx) ->
       ParseError (e, msg, r)
 
-let parse lang_opt fn =
+let parse (lang_opt:lang_opts) fn =
   FStar_Parser_Util.warningHandler := (function
     | e -> Printf.printf "There was some warning (TODO)\n");
   match lang_opt with

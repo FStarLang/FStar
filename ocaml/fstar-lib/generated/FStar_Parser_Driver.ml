@@ -26,7 +26,7 @@ let (__proj__DeclsWithContent__item___0 :
     (FStar_Parser_AST.decl * FStar_Parser_ParseIt.code_fragment) Prims.list)
   = fun projectee -> match projectee with | DeclsWithContent _0 -> _0
 let (parse_fragment :
-  Prims.string FStar_Pervasives_Native.option ->
+  FStar_Parser_ParseIt.lang_opts ->
     FStar_Parser_ParseIt.input_frag -> fragment)
   =
   fun lang_opt ->

@@ -17,6 +17,7 @@ module FStar.Parser.Driver
 
 module Range      = FStar.Compiler.Range
 module AST        = FStar.Parser.AST
+module AU         = FStar.Parser.AST.Util
 module ParseIt    = FStar.Parser.ParseIt
 
 val is_cache_file : string -> bool
@@ -27,7 +28,7 @@ type fragment =
     | Decls of list AST.decl // a partial set of declarations
     | DeclsWithContent of list (AST.decl & ParseIt.code_fragment)
 
-val parse_fragment : option string -> ParseIt.input_frag -> fragment
+val parse_fragment : ParseIt.lang_opts -> ParseIt.input_frag -> fragment
 
 (* Returns a non-desugared AST (as in [parser/ast.fs]) or aborts. *)
 val parse_file : string -> AST.file & list (string & Range.range)

@@ -795,6 +795,16 @@ let (tc_one_fragment :
                uu___6)
               -> d
           | uu___ -> FStar_Compiler_Range_Type.dummyRange in
+        let filter_lang_decls d =
+          match d.FStar_Parser_AST.d with
+          | FStar_Parser_AST.UseLangDecls uu___ -> true
+          | FStar_Parser_AST.Open uu___ -> true
+          | FStar_Parser_AST.ModuleAbbrev uu___ -> true
+          | uu___ -> false in
+        let use_lang_decl ds =
+          FStar_Compiler_List.tryFind
+            (fun d ->
+               FStar_Parser_AST.uu___is_UseLangDecls d.FStar_Parser_AST.d) ds in
         let check_module_name_declaration ast_modul =
           let uu___ =
             let uu___1 =
@@ -841,10 +851,7 @@ let (tc_one_fragment :
                                  decls1
                              | FStar_Parser_AST.Interface
                                  (uu___4, decls1, uu___5) -> decls1 in
-                           FStar_Compiler_List.filter
-                             (fun d ->
-                                FStar_Parser_AST.uu___is_UseLangDecls
-                                  d.FStar_Parser_AST.d) decls in
+                           FStar_Compiler_List.filter filter_lang_decls decls in
                          ((FStar_Pervasives_Native.Some modul1), env3,
                            lang_decls)))) in
         let check_decls ast_decls =
@@ -893,10 +900,8 @@ let (tc_one_fragment :
                         (match uu___2 with
                          | (modul1, uu___3, env3) ->
                              let uu___4 =
-                               FStar_Compiler_List.filter
-                                 (fun d ->
-                                    FStar_Parser_AST.uu___is_UseLangDecls
-                                      d.FStar_Parser_AST.d) ast_decls in
+                               FStar_Compiler_List.filter filter_lang_decls
+                                 ast_decls in
                              ((FStar_Pervasives_Native.Some modul1), env3,
                                uu___4)))) in
         match frag with
@@ -908,17 +913,27 @@ let (tc_one_fragment :
              | uu___ -> check_decls [d])
         | FStar_Pervasives.Inl (frag1, lang_decls) ->
             let parse_frag frag2 =
-              match lang_decls with
-              | [] ->
+              let uu___ = use_lang_decl lang_decls in
+              match uu___ with
+              | FStar_Pervasives_Native.None ->
                   FStar_Parser_Driver.parse_fragment
                     FStar_Pervasives_Native.None frag2
-              | { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls lang;
-                  FStar_Parser_AST.drange = uu___;
-                  FStar_Parser_AST.quals = uu___1;
-                  FStar_Parser_AST.attrs = uu___2;
-                  FStar_Parser_AST.interleaved = uu___3;_}::uu___4 ->
+              | FStar_Pervasives_Native.Some
+                  { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls lang;
+                    FStar_Parser_AST.drange = uu___1;
+                    FStar_Parser_AST.quals = uu___2;
+                    FStar_Parser_AST.attrs = uu___3;
+                    FStar_Parser_AST.interleaved = uu___4;_}
+                  ->
+                  let lang_opts =
+                    let uu___5 =
+                      let uu___6 =
+                        FStar_Parser_AST_Util.as_open_namespaces_and_abbrevs
+                          lang_decls in
+                      FStar_Pervasives_Native.Some uu___6 in
+                    (lang, uu___5) in
                   FStar_Parser_Driver.parse_fragment
-                    (FStar_Pervasives_Native.Some lang) frag2 in
+                    (FStar_Pervasives_Native.Some lang_opts) frag2 in
             let uu___ = parse_frag frag1 in
             (match uu___ with
              | FStar_Parser_Driver.Empty -> (curmod, env, [])

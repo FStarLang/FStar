@@ -48,7 +48,8 @@ val parse_incremental_decls :
          ('semantic_value list * FStar_Sedlexing.snap option) option) ->
 'semantic_value list * parse_error option
 
-val parse: string option -> parse_frag -> parse_result
+type lang_opts = (string * FStar_Parser_AST_Util.open_namespaces_and_abbreviations option) option
+val parse: lang_opts -> parse_frag -> parse_result
 
 val find_file: string -> string
 

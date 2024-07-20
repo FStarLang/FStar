@@ -729,13 +729,24 @@ let lookup_extension_parser (ext:string) =
   FStar.Compiler.Util.smap_try_find extension_parser_table ext
 
 
+let as_open_namespaces_and_abbrevs (ls:list decl)
+: open_namespaces_and_abbreviations
+= List.fold_right
+    (fun d out ->
+      match d.d with
+      | Open lid -> {out with open_namespaces = lid :: out.open_namespaces}
+      | ModuleAbbrev (i, lid) -> {out with module_abbreviations = (i, lid) :: out.module_abbreviations}
+      | _ -> out)
+    ls
+    {open_namespaces = []; module_abbreviations = []}
+
 let extension_lang_parser_table : BU.smap extension_lang_parser = FStar.Compiler.Util.smap_create 20
 let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
   FStar.Compiler.Util.smap_add extension_lang_parser_table ext parser
 let lookup_extension_lang_parser (ext:string) =
   FStar.Compiler.Util.smap_try_find extension_lang_parser_table ext
 
-let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:range)
+let parse_extension_lang (lang_name:string) (ops:option open_namespaces_and_abbreviations) (raw_text:string) (raw_text_pos:range)
 : list decl
 = let extension_parser = lookup_extension_lang_parser lang_name in
   match extension_parser with
@@ -745,7 +756,7 @@ let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:rang
          BU.format1 "Unknown language extension %s" lang_name)
         raw_text_pos
   | Some parser ->
-    match parser.parse_decls raw_text raw_text_pos with
+    match parser.parse_decls ops raw_text raw_text_pos with
     | Inl error ->
       raise_error
           (Errors.Fatal_SyntaxError, error.message)
