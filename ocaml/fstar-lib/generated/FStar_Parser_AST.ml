@@ -1103,60 +1103,6 @@ let at_most_one :
                   "At most one %s is allowed on declarations" s in
               (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___2) in
             FStar_Errors.raise_error uu___1 r
-let (add_decorations : decl -> decoration Prims.list -> decl) =
-  fun d ->
-    fun decorations ->
-      let decorations1 =
-        let uu___ =
-          FStar_Compiler_List.partition uu___is_DeclAttributes decorations in
-        match uu___ with
-        | (attrs, quals) ->
-            let attrs1 =
-              match (attrs, (d.attrs)) with
-              | (attrs2, []) -> attrs2
-              | ((DeclAttributes a)::[], attrs2) ->
-                  [DeclAttributes (FStar_Compiler_List.op_At a attrs2)]
-              | uu___1 ->
-                  FStar_Errors.raise_error
-                    (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration,
-                      "At most one attribute set is allowed on declarations")
-                    d.drange in
-            let uu___1 =
-              FStar_Compiler_List.map (fun uu___2 -> Qualifier uu___2)
-                d.quals in
-            FStar_Compiler_List.op_At uu___1
-              (FStar_Compiler_List.op_At quals attrs1) in
-      let attributes_1 =
-        let uu___ =
-          FStar_Compiler_List.choose
-            (fun uu___1 ->
-               match uu___1 with
-               | DeclAttributes a -> FStar_Pervasives_Native.Some a
-               | uu___2 -> FStar_Pervasives_Native.None) decorations1 in
-        at_most_one "attribute set" d.drange uu___ in
-      let attributes_2 = FStar_Compiler_Util.dflt [] attributes_1 in
-      let qualifiers1 =
-        FStar_Compiler_List.choose
-          (fun uu___ ->
-             match uu___ with
-             | Qualifier q -> FStar_Pervasives_Native.Some q
-             | uu___1 -> FStar_Pervasives_Native.None) decorations1 in
-      {
-        d = (d.d);
-        drange = (d.drange);
-        quals = qualifiers1;
-        attrs = attributes_2;
-        interleaved = (d.interleaved)
-      }
-let (mk_decl :
-  decl' -> FStar_Compiler_Range_Type.range -> decoration Prims.list -> decl)
-  =
-  fun d ->
-    fun r ->
-      fun decorations ->
-        let d1 =
-          { d; drange = r; quals = []; attrs = []; interleaved = false } in
-        add_decorations d1 decorations
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range_Type.range ->
@@ -2644,3 +2590,77 @@ let (showable_decl : decl FStar_Class_Show.showable) =
   { FStar_Class_Show.show = decl_to_string }
 let (showable_term : term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
+let (add_decorations : decl -> decoration Prims.list -> decl) =
+  fun d ->
+    fun decorations ->
+      let decorations1 =
+        let uu___ =
+          FStar_Compiler_List.partition uu___is_DeclAttributes decorations in
+        match uu___ with
+        | (attrs, quals) ->
+            let attrs1 =
+              match (attrs, (d.attrs)) with
+              | (attrs2, []) -> attrs2
+              | ((DeclAttributes a)::[], attrs2) ->
+                  [DeclAttributes (FStar_Compiler_List.op_At a attrs2)]
+              | ([], attrs2) -> [DeclAttributes attrs2]
+              | uu___1 ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Compiler_List.map
+                            (fun uu___6 ->
+                               match uu___6 with
+                               | DeclAttributes a ->
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        showable_term) a
+                               | uu___7 -> "") attrs in
+                        FStar_Compiler_String.concat ", " uu___5 in
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Compiler_List.map
+                            (FStar_Class_Show.show showable_term) d.attrs in
+                        FStar_Compiler_String.concat ", " uu___6 in
+                      FStar_Compiler_Util.format2
+                        "At most one attribute set is allowed on declarations\n got %s;\n and %s"
+                        uu___4 uu___5 in
+                    (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___3) in
+                  FStar_Errors.raise_error uu___2 d.drange in
+            let uu___1 =
+              FStar_Compiler_List.map (fun uu___2 -> Qualifier uu___2)
+                d.quals in
+            FStar_Compiler_List.op_At uu___1
+              (FStar_Compiler_List.op_At quals attrs1) in
+      let attributes_1 =
+        let uu___ =
+          FStar_Compiler_List.choose
+            (fun uu___1 ->
+               match uu___1 with
+               | DeclAttributes a -> FStar_Pervasives_Native.Some a
+               | uu___2 -> FStar_Pervasives_Native.None) decorations1 in
+        at_most_one "attribute set" d.drange uu___ in
+      let attributes_2 = FStar_Compiler_Util.dflt [] attributes_1 in
+      let qualifiers1 =
+        FStar_Compiler_List.choose
+          (fun uu___ ->
+             match uu___ with
+             | Qualifier q -> FStar_Pervasives_Native.Some q
+             | uu___1 -> FStar_Pervasives_Native.None) decorations1 in
+      {
+        d = (d.d);
+        drange = (d.drange);
+        quals = qualifiers1;
+        attrs = attributes_2;
+        interleaved = (d.interleaved)
+      }
+let (mk_decl :
+  decl' -> FStar_Compiler_Range_Type.range -> decoration Prims.list -> decl)
+  =
+  fun d ->
+    fun r ->
+      fun decorations ->
+        let d1 =
+          { d; drange = r; quals = []; attrs = []; interleaved = false } in
+        add_decorations d1 decorations

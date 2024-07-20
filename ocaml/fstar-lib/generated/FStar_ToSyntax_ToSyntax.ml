@@ -10128,6 +10128,21 @@ and (desugar_decl_core :
              | FStar_Pervasives_Native.Some desugar ->
                  let mk_sig sigel =
                    let top_attrs = d_attrs in
+                   let sigel1 =
+                     if d.FStar_Parser_AST.interleaved
+                     then
+                       match sigel with
+                       | FStar_Syntax_Syntax.Sig_splice s ->
+                           FStar_Syntax_Syntax.Sig_splice
+                             {
+                               FStar_Syntax_Syntax.is_typed =
+                                 (s.FStar_Syntax_Syntax.is_typed);
+                               FStar_Syntax_Syntax.lids2 = [];
+                               FStar_Syntax_Syntax.tac =
+                                 (s.FStar_Syntax_Syntax.tac)
+                             }
+                       | uu___1 -> sigel
+                     else sigel in
                    let se =
                      let uu___1 =
                        FStar_Compiler_List.map
@@ -10135,7 +10150,7 @@ and (desugar_decl_core :
                          d.FStar_Parser_AST.quals in
                      let uu___2 = FStar_Syntax_DsEnv.opens_and_abbrevs env in
                      {
-                       FStar_Syntax_Syntax.sigel = sigel;
+                       FStar_Syntax_Syntax.sigel = sigel1;
                        FStar_Syntax_Syntax.sigrng =
                          (d.FStar_Parser_AST.drange);
                        FStar_Syntax_Syntax.sigquals = uu___1;

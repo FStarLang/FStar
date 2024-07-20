@@ -4244,7 +4244,16 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         d.drange
     | Some desugar ->
       let mk_sig sigel = 
-        let top_attrs = d_attrs in    
+        let top_attrs = d_attrs in
+        let sigel =
+          if d.interleaved
+          then (
+            match sigel with
+            | Sig_splice s -> Sig_splice { s with lids = [] }
+            | _ -> sigel
+          )
+          else sigel
+        in
         let se = { 
             sigel;
             sigquals = List.map (trans_qual None) d.quals;
