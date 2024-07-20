@@ -1122,19 +1122,17 @@ let (lookup_extension_parser :
 type extension_lang_parser =
   {
   parse_decls:
-    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
-      Prims.string ->
-        FStar_Compiler_Range_Type.range ->
-          (error_message, FStar_Parser_AST.decl Prims.list)
-            FStar_Pervasives.either
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (error_message, FStar_Parser_AST.decl Prims.list)
+          FStar_Pervasives.either
     }
 let (__proj__Mkextension_lang_parser__item__parse_decls :
   extension_lang_parser ->
-    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
-      Prims.string ->
-        FStar_Compiler_Range_Type.range ->
-          (error_message, FStar_Parser_AST.decl Prims.list)
-            FStar_Pervasives.either)
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (error_message, FStar_Parser_AST.decl Prims.list)
+          FStar_Pervasives.either)
   = fun projectee -> match projectee with | { parse_decls;_} -> parse_decls
 let (as_open_namespaces_and_abbrevs :
   FStar_Parser_AST.decl Prims.list -> open_namespaces_and_abbreviations) =
@@ -1170,28 +1168,26 @@ let (lookup_extension_lang_parser :
     FStar_Compiler_Util.smap_try_find extension_lang_parser_table ext
 let (parse_extension_lang :
   Prims.string ->
-    open_namespaces_and_abbreviations FStar_Pervasives_Native.option ->
-      Prims.string ->
-        FStar_Compiler_Range_Type.range -> FStar_Parser_AST.decl Prims.list)
+    Prims.string ->
+      FStar_Compiler_Range_Type.range -> FStar_Parser_AST.decl Prims.list)
   =
   fun lang_name ->
-    fun ops ->
-      fun raw_text ->
-        fun raw_text_pos ->
-          let extension_parser1 = lookup_extension_lang_parser lang_name in
-          match extension_parser1 with
-          | FStar_Pervasives_Native.None ->
-              let uu___ =
-                let uu___1 =
-                  FStar_Compiler_Util.format1 "Unknown language extension %s"
-                    lang_name in
-                (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
-              FStar_Errors.raise_error uu___ raw_text_pos
-          | FStar_Pervasives_Native.Some parser ->
-              let uu___ = parser.parse_decls ops raw_text raw_text_pos in
-              (match uu___ with
-               | FStar_Pervasives.Inl error ->
-                   FStar_Errors.raise_error
-                     (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
-                     error.range
-               | FStar_Pervasives.Inr ds -> ds)
+    fun raw_text ->
+      fun raw_text_pos ->
+        let extension_parser1 = lookup_extension_lang_parser lang_name in
+        match extension_parser1 with
+        | FStar_Pervasives_Native.None ->
+            let uu___ =
+              let uu___1 =
+                FStar_Compiler_Util.format1 "Unknown language extension %s"
+                  lang_name in
+              (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
+            FStar_Errors.raise_error uu___ raw_text_pos
+        | FStar_Pervasives_Native.Some parser ->
+            let uu___ = parser.parse_decls raw_text raw_text_pos in
+            (match uu___ with
+             | FStar_Pervasives.Inl error ->
+                 FStar_Errors.raise_error
+                   (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
+                   error.range
+             | FStar_Pervasives.Inr ds -> ds)

@@ -798,8 +798,6 @@ let (tc_one_fragment :
         let filter_lang_decls d =
           match d.FStar_Parser_AST.d with
           | FStar_Parser_AST.UseLangDecls uu___ -> true
-          | FStar_Parser_AST.Open uu___ -> true
-          | FStar_Parser_AST.ModuleAbbrev uu___ -> true
           | uu___ -> false in
         let use_lang_decl ds =
           FStar_Compiler_List.tryFind
@@ -925,15 +923,8 @@ let (tc_one_fragment :
                     FStar_Parser_AST.attrs = uu___3;
                     FStar_Parser_AST.interleaved = uu___4;_}
                   ->
-                  let lang_opts =
-                    let uu___5 =
-                      let uu___6 =
-                        FStar_Parser_AST_Util.as_open_namespaces_and_abbrevs
-                          lang_decls in
-                      FStar_Pervasives_Native.Some uu___6 in
-                    (lang, uu___5) in
                   FStar_Parser_Driver.parse_fragment
-                    (FStar_Pervasives_Native.Some lang_opts) frag2 in
+                    (FStar_Pervasives_Native.Some lang) frag2 in
             let uu___ = parse_frag frag1 in
             (match uu___ with
              | FStar_Parser_Driver.Empty -> (curmod, env, [])

@@ -20,7 +20,7 @@ open FStar.Compiler.Util
 open FStar
 open FStar.Compiler
 open FStar.Errors
-
+module AU = FStar.Parser.AST.Util
 type filename = string
 
 type input_frag = {
@@ -58,7 +58,7 @@ type parse_result =
     | Term of AST.term
     | ParseError of parse_error
 
-let lang_opts = option (string & option FStar.Parser.AST.Util.open_namespaces_and_abbreviations)
+let lang_opts = option string
 val parse (ext_lang:lang_opts)
           (frag:parse_frag)
 : parse_result
@@ -66,6 +66,5 @@ val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting
 
-(* useful for unit testing *)
-val parse_string_incrementally (s:string)
-: either (list FStar.Parser.AST.decl & option parse_error) (option (string & FStar.Compiler.Range.range))
+(* useful for unit testing and registered a #lang-fstar parser *)
+val parse_fstar_incrementally : AU.extension_lang_parser

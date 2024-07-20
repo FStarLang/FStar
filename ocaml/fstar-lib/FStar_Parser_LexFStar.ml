@@ -698,8 +698,6 @@ match %sedlex lexbuf with
 
 and use_lang_blob snap name pos buffer lexbuf =
 match %sedlex lexbuf with
- | "#end-lang" ->
-   USE_LANG_BLOB(name, Buffer.contents buffer, pos, snap)  
  | eof ->
    L.rollback lexbuf; (* leave the eof to be consumed later *)
    USE_LANG_BLOB(name, Buffer.contents buffer, pos, snap)  

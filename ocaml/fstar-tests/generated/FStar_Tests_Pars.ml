@@ -759,42 +759,12 @@ let (parse_incremental_decls : unit -> unit) =
     | uu___2 ->
         FStar_Compiler_Effect.failwith
           "Incremental parsing failed: Unexpected output"
-let parse_somelang :
-  'uuuuu .
-    'uuuuu ->
-      Prims.string ->
-        FStar_Compiler_Range_Type.range ->
-          (FStar_Parser_AST_Util.error_message,
-            FStar_Parser_AST.decl Prims.list) FStar_Pervasives.either
-  =
-  fun uu___ ->
-    fun s ->
-      fun r ->
-        FStar_Compiler_Util.print1 "Parsing somelang: <%s>\n" s;
-        (let uu___2 = FStar_Parser_ParseIt.parse_string_incrementally s in
-         match uu___2 with
-         | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
-             FStar_Compiler_Effect.failwith "Pulse parser failed"
-         | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (err, r1)) ->
-             FStar_Pervasives.Inl
-               {
-                 FStar_Parser_AST_Util.message = err;
-                 FStar_Parser_AST_Util.range = r1
-               }
-         | FStar_Pervasives.Inl (decls, first_error) ->
-             ((let uu___4 =
-                 FStar_Class_Show.show
-                   (FStar_Class_Show.show_list FStar_Parser_AST.showable_decl)
-                   decls in
-               FStar_Compiler_Util.print1 "Parsed somelang decls: %s\n"
-                 uu___4);
-              FStar_Pervasives.Inr decls))
 let (parse_incremental_decls_use_lang : unit -> unit) =
   fun uu___ ->
     let source0 =
       "module Demo\nlet x = 0\n#lang-somelang\nval f : t\nlet g x = f x\n#restart-solver" in
     FStar_Parser_AST_Util.register_extension_lang_parser "somelang"
-      { FStar_Parser_AST_Util.parse_decls = parse_somelang };
+      FStar_Parser_ParseIt.parse_fstar_incrementally;
     (let input0 =
        FStar_Parser_ParseIt.Incremental
          {

@@ -298,35 +298,57 @@ let parse_incremental_fragment
   let decls = List.map (fun d -> d, contents_at (range_of d)) decls in
   decls, comments, err_opt
 
-let parse_string_incrementally (s:string) =
-  let open FStar_Pervasives in
-  let lexbuf = create s "<input>" 0 0 in
-  let filename = "<input>" in
-  let contents = s in
-  let lexer () =
-    let tok = FStar_Parser_LexFStar.token lexbuf in
-    (tok, lexbuf.start_p, lexbuf.cur_p)
+let parse_fstar_incrementally
+: FStar_Parser_AST_Util.extension_lang_parser 
+= let f =
+    fun (s:string) (r:FStar_Compiler_Range.range) ->
+      let open FStar_Pervasives in
+      let open FStar_Compiler_Range in
+      let lexbuf =
+        create s
+             (file_of_range r)
+             (Z.to_int (line_of_pos (start_of_range r)))
+             (Z.to_int (col_of_pos (start_of_range r)))
+      in
+      let filename = file_of_range r in 
+      let contents = s in
+      let lexer () =
+        let tok = FStar_Parser_LexFStar.token lexbuf in
+        (tok, lexbuf.start_p, lexbuf.cur_p)
+      in
+      try 
+        let decls, err_opt = 
+          parse_incremental_decls
+            filename
+            contents
+            lexbuf
+            lexer
+            (fun (d:FStar_Parser_AST.decl) -> d.drange)
+            FStar_Parser_Parse.oneDeclOrEOF
+        in
+        match err_opt with
+        | None -> Inr decls
+        | Some (_, msg, r) -> 
+          let open FStar_Parser_AST in
+          let err_decl = mk_decl Unparseable r [] in
+          Inr (decls @ [err_decl])
+      with
+      | FStar_Errors.Error(e, msg, r, _ctx) ->
+        let msg = FStar_Errors_Msg.rendermsg msg in
+        let err : FStar_Parser_AST_Util.error_message = { message = msg; range = r } in
+        Inl err
+      | e ->
+        let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+        let r = FStar_Compiler_Range.mk_range filename pos pos in
+        let err : FStar_Parser_AST_Util.error_message = { message = "Syntax error parsing #lang-fstar block: "; range = r } in
+        Inl err
   in
-  try 
-    let decls, err_opt = 
-      parse_incremental_decls
-        filename
-        contents
-        lexbuf
-        lexer
-        (fun (d:FStar_Parser_AST.decl) -> d.drange)
-        FStar_Parser_Parse.oneDeclOrEOF
-    in
-    Inl (decls, err_opt)
-  with
-  | e ->
-    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
-    let r = FStar_Compiler_Range.mk_range filename pos pos in
-    Inr (Some ("ParseStringIncrementally: Error " ^ Printexc.to_string e, r))
+  { parse_decls = f }
+let _ = FStar_Parser_AST_Util.register_extension_lang_parser "fstar" parse_fstar_incrementally
 
-type lang_opts = (string * FStar_Parser_AST_Util.open_namespaces_and_abbreviations option) option
+type lang_opts = string option
 
-let parse_lang (lang, opens) fn =
+let parse_lang lang fn =
   match fn with
   | Filename _ ->
     failwith "parse_lang: only in incremental mode"
@@ -336,7 +358,7 @@ let parse_lang (lang, opens) fn =
     try
       let frag_pos = FStar_Compiler_Range.mk_pos s.frag_line s.frag_col in
       let rng = FStar_Compiler_Range.mk_range s.frag_fname frag_pos frag_pos in
-      let decls = FStar_Parser_AST_Util.parse_extension_lang lang opens s.frag_text rng in
+      let decls = FStar_Parser_AST_Util.parse_extension_lang lang s.frag_text rng in
       let comments = FStar_Parser_Util.flush_comments () in
       ASTFragment (Inr decls, comments)
     with

@@ -178,9 +178,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
 
   let filter_lang_decls (d:FStar.Parser.AST.decl) =
     match d.d with
-    | UseLangDecls _
-    | Open _
-    | ModuleAbbrev _ -> true
+    | UseLangDecls _ -> true
     | _ -> false
   in
   let use_lang_decl (ds:lang_decls_t) =
@@ -256,11 +254,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       match use_lang_decl lang_decls with
       | None -> Parser.Driver.parse_fragment None frag
       | Some {d=UseLangDecls lang} ->
-        let lang_opts = 
-          lang,
-          Some <| FStar.Parser.AST.Util.as_open_namespaces_and_abbrevs lang_decls
-        in
-        Parser.Driver.parse_fragment (Some lang_opts) frag
+        Parser.Driver.parse_fragment (Some lang) frag
     in
     match parse_frag frag with
     | Parser.Driver.Empty

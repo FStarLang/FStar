@@ -288,18 +288,6 @@ let parse_incremental_decls () =
 
 open FStar.Class.Show
 
-let parse_somelang _ (s:string) (r:FStar.Compiler.Range.range)
-: either FStar.Parser.AST.Util.error_message (list FStar.Parser.AST.decl)
-= BU.print1 "Parsing somelang: <%s>\n" s;    
-  match FStar.Parser.ParseIt.parse_string_incrementally s with
-  | Inr None ->
-    failwith "Pulse parser failed"
-  | Inr (Some (err,r)) -> 
-    Inl ( { message = err; range = r } <: FStar.Parser.AST.Util.error_message)
-  | Inl (decls, first_error) ->
-    BU.print1 "Parsed somelang decls: %s\n" <| show decls;
-    Inr decls
-
 let parse_incremental_decls_use_lang () =
   let source0 =
     "module Demo\n\
@@ -309,7 +297,7 @@ let parse_incremental_decls_use_lang () =
      let g x = f x\n\
      #restart-solver"
   in
-  FStar.Parser.AST.Util.register_extension_lang_parser "somelang" {parse_decls=parse_somelang};
+  FStar.Parser.AST.Util.register_extension_lang_parser "somelang" FStar.Parser.ParseIt.parse_fstar_incrementally;
   let open FStar.Parser.ParseIt in
   let input0 = Incremental { frag_fname = "Demo.fst";
                              frag_text = source0;
