@@ -135,7 +135,7 @@ let maybe_report_error first_error decls =
       Inr <| (decls @ [Inr <| FStar.Parser.AST.(mk_decl Unparseable r [])])
     )
 open FStar.Class.Show
-let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (contents:string) (r:FStar.Compiler.Range.range)
+let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
 : either AU.error_message (list decl)
 = match Parser.parse_lang contents r with
   | Inr None ->
@@ -153,7 +153,6 @@ let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (co
         | FnDecl { id; range } -> id, range
       in
       let splice_decl
-          (ctx:open_namespaces_and_abbreviations)
           (d:PulseSyntaxExtension.Sugar.decl)
       : decl
       = let id, r = id_and_range_of_decl d in  
@@ -187,34 +186,12 @@ let parse_extension_lang (opens:option AU.open_namespaces_and_abbreviations) (co
         in
         d
       in
-      let maybe_extend_ctx ctx d =
-        match d.d with
-        | Open lid -> { ctx with open_namespaces = lid::ctx.open_namespaces }
-        | ModuleAbbrev (i, l) -> { ctx with module_abbreviations = (i, l)::ctx.module_abbreviations }
-        | _ -> ctx
-      in
-      let ns_abbrevs = 
-        let default_opens = [ 
-            FStar.Parser.Const.pervasives_lid;
-            FStar.Parser.Const.prims_lid;
-            FStar.Parser.Const.fstar_ns_lid ]
-        in
-        match opens with
-        | None -> 
-          { open_namespaces = default_opens; module_abbreviations = [] }
-        | Some ns_abbrevs ->
-          { ns_abbrevs with open_namespaces=ns_abbrevs.open_namespaces@default_opens }
-      in
-      let _, decls =
-        List.fold_left 
-          (fun (ctx, out) d ->
-            match d with
-            | Inr d -> maybe_extend_ctx ctx d, d::out
-            | Inl d -> ctx, splice_decl ctx d :: out)
-          (ns_abbrevs, [])
-          decls
-      in
-      Inr <| List.rev decls
+      Inr <|
+      List.map
+        (function
+          | Inl d -> splice_decl d
+          | Inr d -> d)
+        decls
     )
   
 
