@@ -63,7 +63,7 @@ let parse_use_lang_blob (extension_name:string)
                          (blob_range:range)
                          (extension_syntax_start:range) 
 : FStar_Parser_AST.decl list
-= FStar_Parser_AST_Util.parse_extension_lang extension_name s extension_syntax_start
+= FStar_Parser_AST_Util.parse_extension_lang extension_name None s extension_syntax_start
 
 %}
 

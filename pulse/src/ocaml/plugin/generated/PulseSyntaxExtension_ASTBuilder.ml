@@ -213,156 +213,173 @@ let maybe_report_error :
                FStar_List_Tot_Base.op_At decls uu___2 in
              FStar_Pervasives.Inr uu___1)
 let (parse_extension_lang :
-  Prims.string ->
-    FStar_Compiler_Range_Type.range ->
-      (FStar_Parser_AST_Util.error_message, FStar_Parser_AST.decl Prims.list)
-        FStar_Pervasives.either)
+  FStar_Parser_AST_Util.open_namespaces_and_abbreviations
+    FStar_Pervasives_Native.option ->
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (FStar_Parser_AST_Util.error_message,
+          FStar_Parser_AST.decl Prims.list) FStar_Pervasives.either)
   =
-  fun contents ->
-    fun r ->
-      let uu___ = PulseSyntaxExtension_Parser.parse_lang contents r in
-      match uu___ with
-      | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
-          FStar_Pervasives.Inl
-            {
-              FStar_Parser_AST_Util.message = "#lang-pulse: Parsing failed";
-              FStar_Parser_AST_Util.range = r
-            }
-      | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (err, r1)) ->
-          FStar_Pervasives.Inl
-            {
-              FStar_Parser_AST_Util.message = err;
-              FStar_Parser_AST_Util.range = r1
-            }
-      | FStar_Pervasives.Inl (decls, first_error) ->
-          let uu___1 = maybe_report_error first_error decls in
-          (match uu___1 with
-           | FStar_Pervasives.Inl err -> FStar_Pervasives.Inl err
-           | FStar_Pervasives.Inr decls1 ->
-               let id_and_range_of_decl d =
-                 match d with
-                 | PulseSyntaxExtension_Sugar.FnDefn
-                     { PulseSyntaxExtension_Sugar.id2 = id;
-                       PulseSyntaxExtension_Sugar.is_rec = uu___2;
-                       PulseSyntaxExtension_Sugar.binders2 = uu___3;
-                       PulseSyntaxExtension_Sugar.ascription1 = uu___4;
-                       PulseSyntaxExtension_Sugar.measure = uu___5;
-                       PulseSyntaxExtension_Sugar.body3 = uu___6;
-                       PulseSyntaxExtension_Sugar.range3 = range;_}
-                     -> (id, range)
-                 | PulseSyntaxExtension_Sugar.FnDecl
-                     { PulseSyntaxExtension_Sugar.id3 = id;
-                       PulseSyntaxExtension_Sugar.binders3 = uu___2;
-                       PulseSyntaxExtension_Sugar.ascription2 = uu___3;
-                       PulseSyntaxExtension_Sugar.range4 = range;_}
-                     -> (id, range) in
-               let splice_decl ctx d =
-                 let uu___2 = id_and_range_of_decl d in
-                 match uu___2 with
-                 | (id, r1) ->
-                     let id_txt = FStar_Ident.string_of_id id in
-                     let decl_as_term =
-                       let blob =
-                         FStar_Syntax_Util.mk_lazy d
-                           FStar_Syntax_Syntax.t_bool
-                           (FStar_Syntax_Syntax.Lazy_extension
-                              "pulse_sugar_decl")
-                           (FStar_Pervasives_Native.Some r1) in
-                       let unpack_blob t =
-                         FStar_Syntax_Util.unlazy_as_t
-                           (FStar_Syntax_Syntax.Lazy_extension
-                              "pulse_sugar_decl") t in
-                       let eq t1 t2 =
-                         let d1 = unpack_blob t1 in
-                         let d2 = unpack_blob t2 in
-                         PulseSyntaxExtension_Sugar.eq_decl d1 d2 in
-                       let dep_scan cbs t =
-                         let d1 = unpack_blob t in
-                         PulseSyntaxExtension_Sugar.scan_decl cbs d1 in
-                       tm
-                         (FStar_Parser_AST.DesugaredBlob
-                            {
-                              FStar_Parser_AST.tag = "pulse_sugar_decl";
-                              FStar_Parser_AST.blob = blob;
-                              FStar_Parser_AST.eq = eq;
-                              FStar_Parser_AST.dep_scan = dep_scan
-                            }) r1 in
-                     let splicer =
-                       let head =
+  fun opens ->
+    fun contents ->
+      fun r ->
+        let uu___ = PulseSyntaxExtension_Parser.parse_lang contents r in
+        match uu___ with
+        | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
+            FStar_Pervasives.Inl
+              {
+                FStar_Parser_AST_Util.message = "#lang-pulse: Parsing failed";
+                FStar_Parser_AST_Util.range = r
+              }
+        | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (err, r1)) ->
+            FStar_Pervasives.Inl
+              {
+                FStar_Parser_AST_Util.message = err;
+                FStar_Parser_AST_Util.range = r1
+              }
+        | FStar_Pervasives.Inl (decls, first_error) ->
+            let uu___1 = maybe_report_error first_error decls in
+            (match uu___1 with
+             | FStar_Pervasives.Inl err -> FStar_Pervasives.Inl err
+             | FStar_Pervasives.Inr decls1 ->
+                 let id_and_range_of_decl d =
+                   match d with
+                   | PulseSyntaxExtension_Sugar.FnDefn
+                       { PulseSyntaxExtension_Sugar.id2 = id;
+                         PulseSyntaxExtension_Sugar.is_rec = uu___2;
+                         PulseSyntaxExtension_Sugar.binders2 = uu___3;
+                         PulseSyntaxExtension_Sugar.ascription1 = uu___4;
+                         PulseSyntaxExtension_Sugar.measure = uu___5;
+                         PulseSyntaxExtension_Sugar.body3 = uu___6;
+                         PulseSyntaxExtension_Sugar.range3 = range;_}
+                       -> (id, range)
+                   | PulseSyntaxExtension_Sugar.FnDecl
+                       { PulseSyntaxExtension_Sugar.id3 = id;
+                         PulseSyntaxExtension_Sugar.binders3 = uu___2;
+                         PulseSyntaxExtension_Sugar.ascription2 = uu___3;
+                         PulseSyntaxExtension_Sugar.range4 = range;_}
+                       -> (id, range) in
+                 let splice_decl ctx d =
+                   let uu___2 = id_and_range_of_decl d in
+                   match uu___2 with
+                   | (id, r1) ->
+                       let id_txt = FStar_Ident.string_of_id id in
+                       let decl_as_term =
+                         let blob =
+                           FStar_Syntax_Util.mk_lazy d
+                             FStar_Syntax_Syntax.t_bool
+                             (FStar_Syntax_Syntax.Lazy_extension
+                                "pulse_sugar_decl")
+                             (FStar_Pervasives_Native.Some r1) in
+                         let unpack_blob t =
+                           FStar_Syntax_Util.unlazy_as_t
+                             (FStar_Syntax_Syntax.Lazy_extension
+                                "pulse_sugar_decl") t in
+                         let eq t1 t2 =
+                           let d1 = unpack_blob t1 in
+                           let d2 = unpack_blob t2 in
+                           PulseSyntaxExtension_Sugar.eq_decl d1 d2 in
+                         let dep_scan cbs t =
+                           let d1 = unpack_blob t in
+                           PulseSyntaxExtension_Sugar.scan_decl cbs d1 in
                          tm
-                           (FStar_Parser_AST.Var
-                              pulse_checker_after_parse_tac) r1 in
-                       let uu___3 =
-                         encode_open_namespaces_and_abbreviations ctx r1 in
-                       match uu___3 with
-                       | (namespaces, abbrevs) ->
-                           FStar_Parser_AST.mkApp head
-                             [(namespaces, FStar_Parser_AST.Nothing);
-                             (abbrevs, FStar_Parser_AST.Nothing);
-                             (decl_as_term, FStar_Parser_AST.Nothing);
-                             ((str id_txt r1), FStar_Parser_AST.Nothing)] r1 in
-                     let d1 = FStar_Parser_AST.Splice (true, [id], splicer) in
-                     let d2 =
+                           (FStar_Parser_AST.DesugaredBlob
+                              {
+                                FStar_Parser_AST.tag = "pulse_sugar_decl";
+                                FStar_Parser_AST.blob = blob;
+                                FStar_Parser_AST.eq = eq;
+                                FStar_Parser_AST.dep_scan = dep_scan
+                              }) r1 in
+                       let splicer =
+                         let head =
+                           tm
+                             (FStar_Parser_AST.Var
+                                pulse_checker_after_parse_tac) r1 in
+                         let uu___3 =
+                           encode_open_namespaces_and_abbreviations ctx r1 in
+                         match uu___3 with
+                         | (namespaces, abbrevs) ->
+                             FStar_Parser_AST.mkApp head
+                               [(namespaces, FStar_Parser_AST.Nothing);
+                               (abbrevs, FStar_Parser_AST.Nothing);
+                               (decl_as_term, FStar_Parser_AST.Nothing);
+                               ((str id_txt r1), FStar_Parser_AST.Nothing)]
+                               r1 in
+                       let d1 = FStar_Parser_AST.Splice (true, [id], splicer) in
+                       let d2 =
+                         {
+                           FStar_Parser_AST.d = d1;
+                           FStar_Parser_AST.drange = r1;
+                           FStar_Parser_AST.quals =
+                             [FStar_Parser_AST.Irreducible];
+                           FStar_Parser_AST.attrs =
+                             [str "uninterpreted_by_smt" r1];
+                           FStar_Parser_AST.interleaved = false
+                         } in
+                       d2 in
+                 let maybe_extend_ctx ctx d =
+                   match d.FStar_Parser_AST.d with
+                   | FStar_Parser_AST.Open lid ->
                        {
-                         FStar_Parser_AST.d = d1;
-                         FStar_Parser_AST.drange = r1;
-                         FStar_Parser_AST.quals =
-                           [FStar_Parser_AST.Irreducible];
-                         FStar_Parser_AST.attrs =
-                           [str "uninterpreted_by_smt" r1];
-                         FStar_Parser_AST.interleaved = false
+                         FStar_Parser_AST_Util.open_namespaces = (lid ::
+                           (ctx.FStar_Parser_AST_Util.open_namespaces));
+                         FStar_Parser_AST_Util.module_abbreviations =
+                           (ctx.FStar_Parser_AST_Util.module_abbreviations)
+                       }
+                   | FStar_Parser_AST.ModuleAbbrev (i1, l) ->
+                       {
+                         FStar_Parser_AST_Util.open_namespaces =
+                           (ctx.FStar_Parser_AST_Util.open_namespaces);
+                         FStar_Parser_AST_Util.module_abbreviations =
+                           ((i1, l) ::
+                           (ctx.FStar_Parser_AST_Util.module_abbreviations))
+                       }
+                   | uu___2 -> ctx in
+                 let ns_abbrevs =
+                   let default_opens =
+                     [FStar_Parser_Const.pervasives_lid;
+                     FStar_Parser_Const.prims_lid;
+                     FStar_Parser_Const.fstar_ns_lid] in
+                   match opens with
+                   | FStar_Pervasives_Native.None ->
+                       {
+                         FStar_Parser_AST_Util.open_namespaces =
+                           default_opens;
+                         FStar_Parser_AST_Util.module_abbreviations = []
+                       }
+                   | FStar_Pervasives_Native.Some ns_abbrevs1 ->
+                       {
+                         FStar_Parser_AST_Util.open_namespaces =
+                           (FStar_List_Tot_Base.op_At
+                              ns_abbrevs1.FStar_Parser_AST_Util.open_namespaces
+                              default_opens);
+                         FStar_Parser_AST_Util.module_abbreviations =
+                           (ns_abbrevs1.FStar_Parser_AST_Util.module_abbreviations)
                        } in
-                     d2 in
-               let maybe_extend_ctx ctx d =
-                 match d.FStar_Parser_AST.d with
-                 | FStar_Parser_AST.Open lid ->
-                     {
-                       FStar_Parser_AST_Util.open_namespaces = (lid ::
-                         (ctx.FStar_Parser_AST_Util.open_namespaces));
-                       FStar_Parser_AST_Util.module_abbreviations =
-                         (ctx.FStar_Parser_AST_Util.module_abbreviations)
-                     }
-                 | FStar_Parser_AST.ModuleAbbrev (i1, l) ->
-                     {
-                       FStar_Parser_AST_Util.open_namespaces =
-                         (ctx.FStar_Parser_AST_Util.open_namespaces);
-                       FStar_Parser_AST_Util.module_abbreviations = (
-                         (i1, l) ::
-                         (ctx.FStar_Parser_AST_Util.module_abbreviations))
-                     }
-                 | uu___2 -> ctx in
-               let default_opens =
-                 [FStar_Parser_Const.pervasives_lid;
-                 FStar_Parser_Const.prims_lid;
-                 FStar_Parser_Const.fstar_ns_lid] in
-               let uu___2 =
-                 FStar_Compiler_List.fold_left
-                   (fun uu___3 ->
-                      fun d ->
-                        match uu___3 with
-                        | (ctx, out) ->
-                            (match d with
-                             | FStar_Pervasives.Inr d1 ->
-                                 ((maybe_extend_ctx ctx d1), (d1 :: out))
-                             | FStar_Pervasives.Inl d1 ->
-                                 let uu___4 =
-                                   let uu___5 = splice_decl ctx d1 in uu___5
-                                     :: out in
-                                 (ctx, uu___4)))
-                   ({
-                      FStar_Parser_AST_Util.open_namespaces = default_opens;
-                      FStar_Parser_AST_Util.module_abbreviations = []
-                    }, []) decls1 in
-               (match uu___2 with
-                | (uu___3, decls2) ->
-                    FStar_Pervasives.Inr (FStar_Compiler_List.rev decls2)))
-let (uu___159 : unit) =
+                 let uu___2 =
+                   FStar_Compiler_List.fold_left
+                     (fun uu___3 ->
+                        fun d ->
+                          match uu___3 with
+                          | (ctx, out) ->
+                              (match d with
+                               | FStar_Pervasives.Inr d1 ->
+                                   ((maybe_extend_ctx ctx d1), (d1 :: out))
+                               | FStar_Pervasives.Inl d1 ->
+                                   let uu___4 =
+                                     let uu___5 = splice_decl ctx d1 in
+                                     uu___5 :: out in
+                                   (ctx, uu___4))) (ns_abbrevs, []) decls1 in
+                 (match uu___2 with
+                  | (uu___3, decls2) ->
+                      FStar_Pervasives.Inr (FStar_Compiler_List.rev decls2)))
+let (uu___164 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___160 : unit) =
+let (uu___165 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl

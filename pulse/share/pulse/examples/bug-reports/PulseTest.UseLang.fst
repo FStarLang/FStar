@@ -41,5 +41,3 @@ ensures pure (FStar.Mul.(r == 2 * z)) //dep scanning inside Pulse
   let v = return_z ();
   (v + x + y)
 }
-
-let fixit = 0
