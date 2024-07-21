@@ -217,7 +217,8 @@ let (repl_state_init :
       FStar_Interactive_Ide_Types.repl_stdin = uu___;
       FStar_Interactive_Ide_Types.repl_names =
         FStar_Interactive_CompletionTable.empty;
-      FStar_Interactive_Ide_Types.repl_buffered_input_queries = []
+      FStar_Interactive_Ide_Types.repl_buffered_input_queries = [];
+      FStar_Interactive_Ide_Types.repl_lang = []
     }
 type optresponse =
   FStar_Interactive_JsonHelper.assoct FStar_Pervasives_Native.option

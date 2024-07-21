@@ -42,6 +42,19 @@ module P = FStar.Syntax.Print
 module EMB = FStar.Syntax.Embeddings
 module SS = FStar.Syntax.Subst
 
+let extension_tosyntax_table 
+: BU.smap extension_tosyntax_decl_t
+= FStar.Compiler.Util.smap_create 20
+
+let register_extension_tosyntax
+    (lang_name:string)
+    (cb:extension_tosyntax_decl_t)
+= FStar.Compiler.Util.smap_add extension_tosyntax_table lang_name cb
+
+let lookup_extension_tosyntax
+    (lang_name:string)
+= FStar.Compiler.Util.smap_try_find extension_tosyntax_table lang_name
+
 let dbg_attrs    = Debug.get_toggle "attrs"
 let dbg_ToSyntax = Debug.get_toggle "ToSyntax"
 
@@ -4189,7 +4202,15 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     let env = push_sigelt env se in
     env, [se]
 
-  | DeclSyntaxExtension (extension_name, code, _, range) ->
+  | UseLangDecls _ ->
+    env, []
+
+  | Unparseable ->
+    raise_error 
+      (Errors.Fatal_SyntaxError, "Syntax error")
+      d.drange
+
+  | DeclSyntaxExtension (extension_name, code, _, range) -> (
     let extension_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
     match extension_parser with
     | None ->
@@ -4212,6 +4233,45 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
         let quals = d'.quals @ d.quals in
         let attrs = d'.attrs @ d.attrs in
         desugar_decl_maybe_fail_attr env { d' with quals; attrs; drange=d.drange; interleaved=d.interleaved }
+  )
+
+  | DeclToBeDesugared tbs -> (
+    match lookup_extension_tosyntax tbs.lang_name with
+    | None -> 
+      raise_error 
+        (Errors.Fatal_SyntaxError,
+         BU.format1 "Could not find desugaring callback for extension %s" tbs.lang_name)
+        d.drange
+    | Some desugar ->
+      let mk_sig sigel = 
+        let top_attrs = d_attrs in
+        let sigel =
+          if d.interleaved
+          then (
+            match sigel with
+            | Sig_splice s -> Sig_splice { s with lids = [] }
+            | _ -> sigel
+          )
+          else sigel
+        in
+        let se = { 
+            sigel;
+            sigquals = List.map (trans_qual None) d.quals;
+            sigrng = d.drange;
+            sigmeta = default_sigmeta;
+            sigattrs = top_attrs;
+            sigopts = None;
+            sigopens_and_abbrevs = opens_and_abbrevs env
+          } 
+        in
+        se
+      in
+      let lids = List.map (qualify env) tbs.idents in
+      let sigelts' = desugar env tbs.blob lids d.drange in
+      let sigelts = List.map mk_sig sigelts' in
+      let env = List.fold_left push_sigelt env sigelts in
+      env, sigelts
+  )
 
 let desugar_decls env decls =
   let env, sigelts =

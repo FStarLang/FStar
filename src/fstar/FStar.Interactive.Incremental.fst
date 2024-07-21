@@ -240,8 +240,8 @@ let reload_deps repl_stack =
   pop_until_deps repl_stack
 
 (* A utility to parse a chunk, used both in full_buffer and formatting *)
-let parse_code (code:string) =
-    P.parse (Incremental { 
+let parse_code lang (code:string) =
+    P.parse lang (Incremental { 
                          frag_fname = Range.file_of_range initial_range;
                          frag_text = code;
                          frag_line = Range.line_of_pos (Range.start_of_range initial_range);
@@ -268,7 +268,7 @@ let run_full_buffer (st:repl_state)
                     (with_symbols:bool)
                     (write_full_buffer_fragment_progress: fragment_progress -> unit)
   : list query & list json
-  = let parse_result = parse_code code in
+  = let parse_result = parse_code None code in
     let log_syntax_issues err =
       match err with
       | None -> ()
@@ -332,7 +332,12 @@ let run_full_buffer (st:repl_state)
 
 (* See comment in interface file *)
 let format_code (st:repl_state) (code:string)
-  = let parse_result = parse_code code in
+  = let maybe_lang =
+      match st.repl_lang with
+      | [] -> None
+      | {d=FStar.Parser.AST.UseLangDecls l}::_ -> Some l
+    in
+    let parse_result = parse_code maybe_lang code in
     match parse_result with
     | IncrementalFragment (decls, comments, None) ->
       let doc_to_string doc =

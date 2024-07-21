@@ -120,8 +120,9 @@ let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
 (* In public interface *)
+let maybe_module_name_of_file f = check_and_strip_suffix (basename f)
 let module_name_of_file f =
-    match check_and_strip_suffix (basename f) with
+    match maybe_module_name_of_file f with
     | Some longname ->
       longname
     | None ->
@@ -847,8 +848,20 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
+        | DeclToBeDesugared tbs ->
+            tbs.dep_scan 
+            { scan_term = collect_term;
+              scan_binder = collect_binder;
+              scan_pattern = collect_pattern;
+              add_lident = (fun lid -> add_to_parsing_data (P_lid lid));
+              add_open = (fun lid -> add_to_parsing_data (P_open (true, lid)))
+            }
+            tbs.blob
+
+        | UseLangDecls _
         | Pragma _
-        | DeclSyntaxExtension _ ->
+        | DeclSyntaxExtension _
+        | Unparseable ->
             ()
         | TopLevelModule lid ->
             incr num_of_toplevelmods;
@@ -1132,7 +1145,7 @@ let collect_one
           collect_binder y;
           collect_term e;
           collect_term e'
-
+        
       and collect_patterns ps =
         List.iter collect_pattern ps
 

@@ -9108,7 +9108,7 @@ let (string_to_term :
           FStar_Parser_ParseIt.frag_col = Prims.int_zero
         } in
       let uu___ =
-        FStar_Parser_ParseIt.parse
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
           (FStar_Parser_ParseIt.Fragment (frag_of_text s)) in
       match uu___ with
       | FStar_Parser_ParseIt.Term t ->

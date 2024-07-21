@@ -128,11 +128,14 @@ let list_of_pair :
     match uu___ with
     | (intf, impl) ->
         FStar_Compiler_List.op_At (list_of_option intf) (list_of_option impl)
+let (maybe_module_name_of_file :
+  Prims.string -> Prims.string FStar_Pervasives_Native.option) =
+  fun f ->
+    let uu___ = FStar_Compiler_Util.basename f in
+    check_and_strip_suffix uu___
 let (module_name_of_file : Prims.string -> Prims.string) =
   fun f ->
-    let uu___ =
-      let uu___1 = FStar_Compiler_Util.basename f in
-      check_and_strip_suffix uu___1 in
+    let uu___ = maybe_module_name_of_file f in
     match uu___ with
     | FStar_Pervasives_Native.Some longname -> longname
     | FStar_Pervasives_Native.None ->
@@ -1356,8 +1359,21 @@ let (collect_one :
                  -> collect_term t
              | FStar_Parser_AST.Polymonadic_subcomp (uu___1, uu___2, t) ->
                  collect_term t
+             | FStar_Parser_AST.DeclToBeDesugared tbs ->
+                 tbs.FStar_Parser_AST.dep_scan
+                   {
+                     FStar_Parser_AST.scan_term = collect_term;
+                     FStar_Parser_AST.scan_binder = collect_binder;
+                     FStar_Parser_AST.scan_pattern = collect_pattern;
+                     FStar_Parser_AST.add_lident =
+                       (fun lid -> add_to_parsing_data (P_lid lid));
+                     FStar_Parser_AST.add_open =
+                       (fun lid -> add_to_parsing_data (P_open (true, lid)))
+                   } tbs.FStar_Parser_AST.blob
+             | FStar_Parser_AST.UseLangDecls uu___1 -> ()
              | FStar_Parser_AST.Pragma uu___1 -> ()
              | FStar_Parser_AST.DeclSyntaxExtension uu___1 -> ()
+             | FStar_Parser_AST.Unparseable -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
                  (FStar_Compiler_Util.incr num_of_toplevelmods;
                   (let uu___2 =

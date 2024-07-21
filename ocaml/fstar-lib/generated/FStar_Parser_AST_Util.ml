@@ -600,6 +600,14 @@ let rec (eq_decl' :
       | (FStar_Parser_AST.DeclSyntaxExtension (s1, t1, uu___, uu___1),
          FStar_Parser_AST.DeclSyntaxExtension (s2, t2, uu___2, uu___3)) ->
           (s1 = s2) && (t1 = t2)
+      | (FStar_Parser_AST.UseLangDecls p1, FStar_Parser_AST.UseLangDecls p2)
+          -> p1 = p2
+      | (FStar_Parser_AST.DeclToBeDesugared tbs1,
+         FStar_Parser_AST.DeclToBeDesugared tbs2) ->
+          (tbs1.FStar_Parser_AST.lang_name = tbs2.FStar_Parser_AST.lang_name)
+            &&
+            (tbs1.FStar_Parser_AST.eq tbs1.FStar_Parser_AST.blob
+               tbs2.FStar_Parser_AST.blob)
       | uu___ -> false
 and (eq_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Parser_AST.effect_decl -> Prims.bool)
@@ -1029,6 +1037,7 @@ let rec (lidents_of_decl :
     | FStar_Parser_AST.Assume (uu___, t) -> lidents_of_term t
     | FStar_Parser_AST.Splice (uu___, uu___1, t) -> lidents_of_term t
     | FStar_Parser_AST.DeclSyntaxExtension uu___ -> []
+    | FStar_Parser_AST.DeclToBeDesugared uu___ -> []
 and (lidents_of_effect_decl :
   FStar_Parser_AST.effect_decl -> FStar_Ident.lident Prims.list) =
   fun ed ->
@@ -1110,3 +1119,75 @@ let (register_extension_parser : Prims.string -> extension_parser -> unit) =
 let (lookup_extension_parser :
   Prims.string -> extension_parser FStar_Pervasives_Native.option) =
   fun ext -> FStar_Compiler_Util.smap_try_find extension_parser_table ext
+type extension_lang_parser =
+  {
+  parse_decls:
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (error_message, FStar_Parser_AST.decl Prims.list)
+          FStar_Pervasives.either
+    }
+let (__proj__Mkextension_lang_parser__item__parse_decls :
+  extension_lang_parser ->
+    Prims.string ->
+      FStar_Compiler_Range_Type.range ->
+        (error_message, FStar_Parser_AST.decl Prims.list)
+          FStar_Pervasives.either)
+  = fun projectee -> match projectee with | { parse_decls;_} -> parse_decls
+let (as_open_namespaces_and_abbrevs :
+  FStar_Parser_AST.decl Prims.list -> open_namespaces_and_abbreviations) =
+  fun ls ->
+    FStar_Compiler_List.fold_right
+      (fun d ->
+         fun out ->
+           match d.FStar_Parser_AST.d with
+           | FStar_Parser_AST.Open lid ->
+               {
+                 open_namespaces = (lid :: (out.open_namespaces));
+                 module_abbreviations = (out.module_abbreviations)
+               }
+           | FStar_Parser_AST.ModuleAbbrev (i, lid) ->
+               {
+                 open_namespaces = (out.open_namespaces);
+                 module_abbreviations = ((i, lid) ::
+                   (out.module_abbreviations))
+               }
+           | uu___ -> out) ls
+      { open_namespaces = []; module_abbreviations = [] }
+let (extension_lang_parser_table :
+  extension_lang_parser FStar_Compiler_Util.smap) =
+  FStar_Compiler_Util.smap_create (Prims.of_int (20))
+let (register_extension_lang_parser :
+  Prims.string -> extension_lang_parser -> unit) =
+  fun ext ->
+    fun parser ->
+      FStar_Compiler_Util.smap_add extension_lang_parser_table ext parser
+let (lookup_extension_lang_parser :
+  Prims.string -> extension_lang_parser FStar_Pervasives_Native.option) =
+  fun ext ->
+    FStar_Compiler_Util.smap_try_find extension_lang_parser_table ext
+let (parse_extension_lang :
+  Prims.string ->
+    Prims.string ->
+      FStar_Compiler_Range_Type.range -> FStar_Parser_AST.decl Prims.list)
+  =
+  fun lang_name ->
+    fun raw_text ->
+      fun raw_text_pos ->
+        let extension_parser1 = lookup_extension_lang_parser lang_name in
+        match extension_parser1 with
+        | FStar_Pervasives_Native.None ->
+            let uu___ =
+              let uu___1 =
+                FStar_Compiler_Util.format1 "Unknown language extension %s"
+                  lang_name in
+              (FStar_Errors_Codes.Fatal_SyntaxError, uu___1) in
+            FStar_Errors.raise_error uu___ raw_text_pos
+        | FStar_Pervasives_Native.Some parser ->
+            let uu___ = parser.parse_decls raw_text raw_text_pos in
+            (match uu___ with
+             | FStar_Pervasives.Inl error ->
+                 FStar_Errors.raise_error
+                   (FStar_Errors_Codes.Fatal_SyntaxError, (error.message))
+                   error.range
+             | FStar_Pervasives.Inr ds -> ds)

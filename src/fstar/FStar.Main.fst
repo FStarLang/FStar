@@ -133,6 +133,8 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
 
+        load_native_tactics ();
+
         (* Set the unionfind graph to read-only mode.
          * This will be unset by the typechecker and other pieces
          * of code that intend to use it. It helps us catch errors. *)
@@ -164,7 +166,6 @@ let go _ =
 
         (* For the following cases we might need native tactics, try to load *)
         else begin
-        load_native_tactics ();
 
         (* --ide, --in: Interactive mode *)
         if Options.interactive () then begin
