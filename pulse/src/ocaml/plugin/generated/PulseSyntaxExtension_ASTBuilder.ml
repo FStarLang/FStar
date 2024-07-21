@@ -184,14 +184,9 @@ let maybe_report_error :
                 (match uu___2 with
                  | FStar_Pervasives_Native.None -> true
                  | FStar_Pervasives_Native.Some fn ->
-                     ((let uu___4 = FStar_Compiler_Util.basename file in
-                       let uu___5 = FStar_Compiler_Util.basename fn in
-                       FStar_Compiler_Util.print2
-                         "Hard error?: filename=%s; ide filename=%s\n" uu___4
-                         uu___5);
-                      (let uu___4 = FStar_Compiler_Util.basename fn in
-                       let uu___5 = FStar_Compiler_Util.basename file in
-                       uu___4 <> uu___5))) in
+                     let uu___3 = FStar_Compiler_Util.basename fn in
+                     let uu___4 = FStar_Compiler_Util.basename file in
+                     uu___3 <> uu___4) in
           if should_fail_on_error
           then
             let uu___ =
@@ -338,13 +333,13 @@ let (parse_extension_lang :
                       | FStar_Pervasives.Inl d -> splice_decl d
                       | FStar_Pervasives.Inr d -> d) decls1 in
                FStar_Pervasives.Inr uu___2)
-let (uu___145 : unit) =
+let (uu___144 : unit) =
   FStar_Parser_AST_Util.register_extension_parser "pulse"
     {
       FStar_Parser_AST_Util.parse_decl_name = parse_decl_name;
       FStar_Parser_AST_Util.parse_decl = parse_decl
     }
-let (uu___146 : unit) =
+let (uu___145 : unit) =
   FStar_Parser_AST_Util.register_extension_lang_parser "pulse"
     { FStar_Parser_AST_Util.parse_decls = parse_extension_lang }
 type sugar_decl = PulseSyntaxExtension_Sugar.decl
@@ -426,7 +421,7 @@ let (desugar_pulse_decl_callback :
                    FStar_Syntax_Syntax.lids2 = lids;
                    FStar_Syntax_Syntax.tac = splicer
                  }]
-let (uu___174 : unit) =
+let (uu___173 : unit) =
   FStar_ToSyntax_ToSyntax.register_extension_tosyntax "pulse"
     desugar_pulse_decl_callback
 let (parse_pulse :

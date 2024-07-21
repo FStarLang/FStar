@@ -122,7 +122,6 @@ let maybe_report_error first_error decls =
         match FStar.Options.ide_filename() with
         | None -> true //we're not in IDE mode, parsing failures are fatal
         | Some fn ->
-          BU.print2 "Hard error?: filename=%s; ide filename=%s\n" (BU.basename file) (BU.basename fn);
           BU.basename fn <> BU.basename file  //we're in IDE mode, failures are not fatal in the current file
     in
     if should_fail_on_error
