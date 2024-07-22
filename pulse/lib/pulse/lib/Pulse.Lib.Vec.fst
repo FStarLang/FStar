@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Vec
+#lang-pulse
 
 open Pulse.Lib.Core
 open Pulse.Lib.Pervasives
@@ -36,16 +37,26 @@ let share v = A.share v
 let gather v = A.gather v
 
 let vec_to_array v = v
-let to_array_pts_to v #p #s =
-  rewrite (pts_to v #p s)
-          (A.pts_to (vec_to_array v) #p s)
-          (slprop_equiv_refl _)
-let to_vec_pts_to v #p #s =
-  rewrite (A.pts_to (vec_to_array v) #p s)
-          (pts_to v #p s)
-          (slprop_equiv_refl _)
 
-```pulse
+ghost
+fn to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
+requires pts_to v #p s
+ensures A.pts_to (vec_to_array v) #p s
+{
+  rewrite (pts_to v #p s) as
+          (A.pts_to (vec_to_array v) #p s);
+}
+
+ghost
+fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
+requires A.pts_to (vec_to_array v) #p s
+ensures pts_to v #p s
+{
+   rewrite (A.pts_to (vec_to_array v) #p s)
+        as (pts_to v #p s)
+
+}
+
 fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
@@ -61,9 +72,9 @@ fn read_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t)
        as (pts_to (reveal v) s);
   x
 }
-```
 
-```pulse
+
+
 fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
@@ -78,9 +89,9 @@ fn write_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   rewrite (pts_to vc s)
        as (pts_to (reveal v) s)
 }
-```
 
-```pulse
+
+
 fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   (#s:(s:erased (Seq.seq a) { SZ.v i < Seq.length s }))
   requires pts_to v s
@@ -91,9 +102,9 @@ fn replace_i (#a:Type0) (v:vec a) (i:SZ.t) (x:a)
   op_Array_Assignment v i x;
   y
 }
-```
 
-```pulse
+
+
 fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
   (#v:erased (vec a))
   (#s:erased (Seq.seq a) { SZ.v i < Seq.length s })
@@ -111,4 +122,4 @@ fn replace_i_ref (#a:Type0) (r:R.ref (vec a)) (i:SZ.t) (x:a)
        as (pts_to v s);
   y
 }
-```
+

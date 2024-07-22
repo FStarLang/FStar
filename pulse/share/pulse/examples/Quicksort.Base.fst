@@ -15,6 +15,7 @@
 *)
 
 module Quicksort.Base
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
@@ -22,6 +23,7 @@ module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 (* Base module with proof of correctness of Quicksort, partition, etc.
+#lang-pulse
 Actual implementations are Quicksort.Sequential, Quicksort.Parallel and
 Quicksort.Task. *)
 
@@ -182,7 +184,7 @@ let op_Array_Assignment
 
 (** Partitioning **)
 
-```pulse
+
 fn swap (a: A.array int) (i j: nat) (#l:nat{l <= i /\ l <= j}) (#r:nat{i < r /\ j < r})
   (#s0: Ghost.erased (Seq.seq int))
   requires A.pts_to_range a l r s0
@@ -200,9 +202,9 @@ fn swap (a: A.array int) (i j: nat) (#l:nat{l <= i /\ l <= j}) (#r:nat{i < r /\ 
   (a.(SZ.uint_to_t j) <- vi);
   ()
 }
-```
 
-```pulse
+
+
 fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)
   (#s0: Ghost.erased (Seq.seq int))
@@ -285,7 +287,7 @@ fn partition (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   swap a vj (hi - 1);
   (vi, vj', pivot)
 }
-```
+
 
 #restart-solver
 #push-options "--retry 5"
@@ -341,7 +343,7 @@ let transfer_equal_slice
   ()
 
 #push-options "--z3rlimit_factor 8 --retry 5"
-```pulse
+
 fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   (lb rb: erased int)
   (#s0: Ghost.erased (Seq.seq int))
@@ -394,7 +396,7 @@ fn partition_wrapper (a: A.array int) (lo: nat) (hi:(hi:nat{lo < hi}))
   
   r
 }
-```
+
 #pop-options
 
 (** QuickSort **)
@@ -416,7 +418,7 @@ let pure_post_quicksort (a: A.array int) (lo: nat) (hi:(hi:nat{lo <= hi})) (lb r
     between_bounds s lb rb /\
     permutation s0 s
 
-```pulse
+
 // this could probably be refactored into just joining two adjacent sorted arrays, and then define this calling that function twice
 ghost
 fn quicksort_proof
@@ -452,7 +454,7 @@ fn quicksort_proof
   let _ = lemma_sorted_append_squash s1' (Seq.append s2 s3') lb pivot pivot rb ();
   ()
 }
-```
+
 
 let quicksort_pre a lo hi s0 lb rb : slprop =
   A.pts_to_range a lo hi s0 ** pure (pure_pre_quicksort a lo hi lb rb s0)

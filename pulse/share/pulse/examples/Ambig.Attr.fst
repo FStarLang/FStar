@@ -1,4 +1,5 @@
 module Ambig.Attr
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -10,7 +11,7 @@ assume val foo () (#x:erased int)
 
 (* unlucky *)
 [@@expect_failure]
-```pulse
+
 fn ambig1 ()
   requires p 1 ** p 2
   ensures p 1
@@ -18,10 +19,10 @@ fn ambig1 ()
   foo ();
   ()
 }
-```
+
 
 (* lucky *)
-```pulse
+
 fn ambig2 ()
   requires p 1 ** p 2
   ensures p 2
@@ -29,9 +30,9 @@ fn ambig2 ()
   foo ();
   ()
 }
-```
 
-```pulse
+
+
 fn ambig ()
   requires p 1 ** p 2
   ensures emp
@@ -40,4 +41,4 @@ fn ambig ()
   foo ();
   ()
 }
-```
+

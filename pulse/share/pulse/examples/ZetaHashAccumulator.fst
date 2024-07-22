@@ -38,6 +38,7 @@
   * Author: N. Swamy
   *)
 module ZetaHashAccumulator
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module U8 = FStar.UInt8
@@ -179,7 +180,7 @@ let ha_val_core (core:ha_core) (h:hash_value_t)
 // Working with records and representation predicates involves a bit of boilerplate
 // This ghost function packages up permission on the fields of a ha_core into
 // ha_val_core using Pulse's primitive `fold` operation
-```pulse
+
 ghost
 fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
   requires
@@ -190,11 +191,11 @@ fn fold_ha_val_core (#acc:Seq.lseq U8.t 32) (h:ha_core)
 {
   fold (ha_val_core h (acc, U32.v 'n));
 }
-```
+
 
 // This too is a bit of boilerplate. It use fold_ha_val_core, but also 
 // creates and returns a new ha_core value
-```pulse
+
 fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref U32.t)
   requires A.pts_to acc vacc **
            pts_to ctr 'vctr 
@@ -207,7 +208,7 @@ fn package_core (#vacc:erased (Seq.lseq U8.t 32)) (acc:hash_value_buf) (ctr:ref 
    fold_ha_val_core core;
    core
 }
-```
+
 
 // A quirk of the Blake spec is that we need a dummy buffer to pass to it
 // which could contain a key, but we're not using it in keyed mode
@@ -234,7 +235,7 @@ let ha_val (h:ha) (s:hash_value_t) =
 // If we were generating this automatically and inserting folds also in the prover,
 // then it would be more systematic to replace the first to conjuncts with an ha_val_core
 // But, this version is more convenient to use in a manual setting.
-```pulse
+
 ghost
 fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
   requires
@@ -248,12 +249,12 @@ fn fold_ha_val (#acc #s:Seq.lseq U8.t 32) (h:ha)
     fold_ha_val_core h.core; //fails with ill-typed subst, in case of missing implicit arg
     fold (ha_val h (acc, U32.v 'n))
 }
-```
+
 
 // A function that builds a ha record from its fields
 // Again, if we were to do generate this, then the first two conjuncts
 // and acc, ctr arguments would be replaced by ha_core/ha_val_core
-```pulse
+
 fn package
   (#vacc:erased (Seq.lseq U8.t 32))
   (#vtmp:erased (Seq.lseq U8.t 32))
@@ -272,12 +273,12 @@ fn package
    fold_ha_val ha;
    ha
 }
-```
+
 
 // End boilerplate
 
 // Allocting a new instance of ha
-```pulse
+
 fn create ()
     requires emp
     returns h:ha
@@ -289,10 +290,10 @@ fn create ()
     let dummy = A.alloc 0uy 1sz;
     package acc ctr tmp dummy
 }
-```
+
 
 // Free'ing an ha
-```pulse
+
 fn reclaim (#h:hash_value_t) (s:ha)
     requires ha_val s h
     ensures emp
@@ -304,7 +305,7 @@ fn reclaim (#h:hash_value_t) (s:ha)
     A.free s.tmp;
     A.free s.dummy
 }
-```
+
 
 
 
@@ -321,7 +322,7 @@ fn reclaim (#h:hash_value_t) (s:ha)
 // in the invariant to constrain its length, but that led to various problems.
 // I should try that again and open issues. 
 #push-options "--retry 2 --ext 'pulse:rvalues'" // GM: Part of this VC fails on batch mode, not on ide...
-```pulse
+
 fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
                         (b1 b2: hash_value_buf)
   requires 
@@ -349,14 +350,14 @@ fn aggregate_raw_hashes (#s1 #s2:e_raw_hash_value_t)
     };
     assert (pure (xor_bytes_pfx s1 s2 32 `Seq.equal` xor_bytes s1 s2))
 }
-```
+
 #pop-options
 
 // Aggregates hashes has to handle the case where the ctr overflows
 // Again, this is cleaner than the Steel version, has fewer rewrites
 // and auxiliary definitions, e.g., using an `if` in the ensures works
 // fine here but not in Steel
-```pulse
+
 fn aggregate (b1 b2: ha_core)
   requires
     ha_val_core b1 'h1 **
@@ -385,10 +386,10 @@ fn aggregate (b1 b2: ha_core)
     }
   }
 }
-```
+
 
 // compare compares the underlying arrays and the counters
-```pulse
+
 fn compare (b1 b2:ha)
   requires
     ha_val b1 'h1 **
@@ -417,7 +418,7 @@ fn compare (b1 b2:ha)
     res
   }
 }
-```
+
 
 // Finally, `add` hashes a new input and accumulates it into the h:ha
 // The main work is to break the ha into two ha_cores
@@ -426,7 +427,7 @@ fn compare (b1 b2:ha)
 //    the hash of the input
 // And then aggregate these two ha_cores into the first one
 // And then to repackage it as an ha
-```pulse
+
 fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_length}))
        (#s:(s:erased bytes {Seq.length s == SZ.v l}))
        (#p:perm)
@@ -451,4 +452,4 @@ fn add (ha:ha) (input:hashable_buffer) (l:(l:SZ.t {SZ.v l <= blake2_max_input_le
    rewrite each ha'.ctr as ctr;
    v
 }
-```
+

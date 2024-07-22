@@ -15,10 +15,11 @@
 *)
 
 module Bug137
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn test_elim_pure (x:option bool)
 requires exists* q. q ** pure (Some? x)
 ensures exists* q. q ** pure (Some? x)
@@ -26,12 +27,12 @@ ensures exists* q. q ** pure (Some? x)
     let v = Some?.v x;
     ()
 }
-```
+
 
 // This previously had an exists for p,q in the pre and post,
 // but then that's very ambiguous. I think this captures the idea
 // of the test anyway.
-```pulse
+
 fn test_elim_pure2 (x:option bool) (p q : slprop)
 requires p ** (exists* r. r ** pure (Some? x)) ** q
 ensures  p ** q ** (exists* r. r ** pure (Some? x))
@@ -39,4 +40,4 @@ ensures  p ** q ** (exists* r. r ** pure (Some? x))
     let v = Some?.v x;
     ()
 }
-```
+

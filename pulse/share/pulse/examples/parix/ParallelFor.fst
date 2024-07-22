@@ -15,6 +15,7 @@
 *)
 
 module ParallelFor
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Fixpoints
@@ -25,7 +26,7 @@ open Pulse.Lib.OnRange
 
 module P = Pulse.Lib.Pledge
 
-```pulse
+
 ghost
 fn aux_squash_pledge (f v : slprop) (_:unit)
   requires f ** pledge emp_inames f (pledge emp_inames f v)
@@ -34,9 +35,9 @@ fn aux_squash_pledge (f v : slprop) (_:unit)
   P.squash_pledge emp_inames f v;
   P.redeem_pledge emp_inames f v
 }
-```
 
-```pulse
+
+
 ghost
 fn squash_pledge (f v : slprop)
   requires pledge emp_inames f (pledge emp_inames f v)
@@ -44,7 +45,7 @@ fn squash_pledge (f v : slprop)
 {
   Pulse.Lib.Pledge.squash_pledge emp_inames f v
 }
-```
+
 
 let div_perm (p:perm) (n:pos) : perm =
   let open PulseCore.FractionalPermission in
@@ -54,9 +55,9 @@ let div_perm (p:perm) (n:pos) : perm =
 
 (* First, a sequential one. *)
 
-let rewrite_ = Pulse.Lib.Core.rewrite
+// let rewrite_ = Pulse.Lib.Core.rewrite
 
-// ```pulse
+// 
 // ghost
 // fn p_join (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 //   requires on_range p i j ** on_range p j k
@@ -64,18 +65,18 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 // {
 //   rewrite_ _ _ (p_join_equiv p i j k ())
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // fn p_split (p : (nat->slprop)) (i j k : nat) (_ : squash (i <= j /\ j <= k))
 //   requires on_range p i k
 //   ensures on_range p i j ** on_range p j k
 // {
 //   rewrite_ _ _ (slprop_equiv_sym _ _ (p_join_equiv p i j k ()))
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn p_join_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
 //   requires on_range p 0 (n-1) ** p (n-1)
@@ -83,9 +84,9 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 // {
 //   rewrite_ _ _ (slprop_equiv_sym _ _ (p_join_last_equiv p n))
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn p_split_last (p : (nat->slprop)) (n : nat) (_ : squash (n > 0))
 //   requires on_range p 0 n
@@ -93,9 +94,9 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 // {
 //   rewrite_ _ _ (p_join_last_equiv p n)
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn p_combine (p1 p2 : (nat->slprop)) (i j : nat)
 //   requires on_range p1 i j ** on_range p2 i j
@@ -104,9 +105,9 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
 // //   rewrite_ _ _ (slprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn p_uncombine (p1 p2 : (nat->slprop)) (i j : nat)
 //   requires on_range (fun i -> p1 i ** p2 i) i j
@@ -115,9 +116,9 @@ let rewrite_ = Pulse.Lib.Core.rewrite
 // //   rewrite_ _ _ (p_combine_equiv p1 p2 i j)
 //   rewrite_ _ _ (slprop_equiv_sym _ _ (p_combine_equiv p1 p2 i j))
 // }
-// ```
+// 
 
-```pulse
+
 fn rec simple_for
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
@@ -139,9 +140,9 @@ fn rec simple_for
     ()
   }
 }
-```
 
-```pulse
+
+
 fn for_loop
    (pre post : (nat -> slprop))
    (r : slprop) // This resource is passed around through iterations.
@@ -199,7 +200,7 @@ fn for_loop
   as
     on_range post lo hi;
 }
-```
+
 
 assume val frac_n (n:pos) (p:pool) (e:perm)
   : stt unit (pool_alive #e p)
@@ -209,7 +210,7 @@ assume val unfrac_n (n:pos) (p:pool) (e:perm)
   : stt unit (on_range (fun i -> pool_alive #(div_perm e n) p) 0 n)
              (fun () -> pool_alive #e p)
 
-```pulse
+
 fn spawned_f_i
   (p:pool)
   (pre : (nat -> slprop))
@@ -222,10 +223,10 @@ fn spawned_f_i
 {
   spawn_ #(pre i) #(post i) p #e (fun () -> f i)
 }
-```
+
 
 // In pulse, using fixpoint combinator below. Should be a ghost step eventually
-```pulse
+
 fn rec redeem_range
   (p : (nat -> slprop))
   (f : slprop)
@@ -248,9 +249,9 @@ fn rec redeem_range
     // p_join_last p n ()
   }
 }
-```
 
-```pulse
+
+
 fn
 parallel_for
   (pre : (nat -> slprop))
@@ -293,10 +294,10 @@ parallel_for
 
   ()
 }
-```
 
 
-```pulse
+
+
 fn spawned_f_i_alt
   (p:pool)
   (pre : (nat -> slprop))
@@ -308,11 +309,11 @@ fn spawned_f_i_alt
 {
   spawn_ #(pre i) #(post i) p #1.0R (fun () -> f i)
 }
-```
+
 
 (* Alternative; not splitting the pool_alive resource. We are anyway
 spawning sequentially. *)
-```pulse
+
 fn
 parallel_for_alt
   (pre : (nat -> slprop))
@@ -336,7 +337,7 @@ parallel_for_alt
   drop_ (pool_done p);
   ()
 }
-```
+
 
 let wsr_loop_inv_f
   (pre : (nat -> slprop))
@@ -363,7 +364,7 @@ let wsr_loop_inv_tf
   exists* (b:bool). wsr_loop_inv_f pre post full_post n i b
 
 (* This can be ghost. *)
-```pulse
+
 fn rec ffold
   (p : (nat -> slprop))
   (fp : (nat -> slprop))
@@ -385,10 +386,10 @@ fn rec ffold
      ()
    }
 }
-```
+
 
 (* This can be ghost. *)
-```pulse
+
 fn rec funfold
   (p : (nat -> slprop))
   (fp : (nat -> slprop))
@@ -410,9 +411,9 @@ fn rec funfold
      on_range_snoc ();
    }
 }
-```
 
-```pulse
+
+
 fn
 parallel_for_wsr
   (pre : (nat -> slprop))
@@ -430,7 +431,7 @@ parallel_for_wsr
   parallel_for pre post f n;
   ffold post full_post fold_post n 0
 }
-```
+
 
 assume
 val frame_stt_left
@@ -440,7 +441,7 @@ val frame_stt_left
   (e:stt a pre post)
   : stt a (frame ** pre) (fun x -> frame ** post x)
 
-```pulse
+
 fn rec h_for_task
   (p:pool)
   (e:perm)
@@ -504,7 +505,7 @@ fn rec h_for_task
     ()
   }
 }
-```
+
 
 (* Assuming a wait that only needs epsilon permission. We would actually
 need one that takes epsilon permission + a pledge emp_inames for (1-e), or something
@@ -516,7 +517,7 @@ val wait_pool
   (e:perm)
   : stt unit (pool_alive #e p) (fun _ -> pool_done p)
 
-```pulse
+
 fn
 parallel_for_hier
   (pre : (nat -> slprop))
@@ -571,4 +572,4 @@ parallel_for_hier
     drop_ (pool_done p)
   }
 }
-```
+

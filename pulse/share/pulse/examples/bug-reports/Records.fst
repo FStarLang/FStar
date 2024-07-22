@@ -15,6 +15,7 @@
 *)
 
 module Records
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 module U8 = FStar.UInt8
@@ -44,7 +45,7 @@ let rec_perm (r:rec2) (v:rec_repr)
 // Eventually, it would be nice to auto-generate this 
 // ghost function from the predicate definition.
 // #push-options "--debug Records --debug_level Extreme"
-```pulse
+
 ghost
 fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
   requires
@@ -55,10 +56,10 @@ fn fold_rec_perm (r:rec2) (#v1 #v2:erased U8.t)
 {
   fold (rec_perm r {v1; v2})
 }
-```
+
 
 // Then, mutating a single field of the record involves:
-```pulse
+
 fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists* (v_:rec_repr) .
@@ -69,9 +70,9 @@ fn mutate_r2 (r:rec2) (#v:Ghost.erased rec_repr)
   fold_rec_perm r;       //3. folding it back up
   ()
 }
-```
 
-```pulse
+
+
 fn alloc_rec (v1 v2:U8.t)
   requires emp
   returns r:rec2
@@ -89,10 +90,10 @@ fn alloc_rec (v1 v2:U8.t)
   fold_rec_perm r;
   r
 }
-```
+
 
 //Here's another more compact way, using rename
-```pulse
+
 fn alloc_rec_alt (v1 v2:U8.t)
   requires emp
   returns r:rec2
@@ -105,10 +106,10 @@ fn alloc_rec_alt (v1 v2:U8.t)
   fold_rec_perm r;
   r
 }
-```
+
 
 //Here's yet another way, a bit more explicit
-```pulse
+
 fn alloc_rec_alt_alt (v1 v2:U8.t)
   requires emp
   returns r:rec2
@@ -123,12 +124,12 @@ fn alloc_rec_alt_alt (v1 v2:U8.t)
   fold_rec_perm r;
   r
 }
-```
+
 //Some alternate ways to do it, useful test cases
 
 // helpers 
 
-```pulse
+
 fn get_witness (x:R.ref U8.t) (#y:Ghost.erased U8.t)
 requires R.pts_to x y
 returns z:Ghost.erased U8.t
@@ -136,9 +137,9 @@ ensures R.pts_to x y ** pure (y==z)
 {   
     y
 }
-```
 
-```pulse
+
+
 fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists* (v_:rec_repr) . rec_perm r v_
@@ -153,9 +154,9 @@ fn unfold_and_fold_manually (r:rec2) (#v:Ghost.erased rec_repr)
   
   ()
 }
-```
 
-```pulse
+
+
 fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists* (v_:rec_repr) . rec_perm r v_
@@ -172,9 +173,9 @@ fn explicit_unfold_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
     as    (rec_perm r {v with v2});
   ()
 }
-```
 
-```pulse
+
+
 fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.erased rec_repr)
   requires rec_perm r v
   ensures exists* (v_:rec_repr) . rec_perm r v_
@@ -191,4 +192,4 @@ fn explicit_unfold_slightly_better_witness_taking_and_fold (r:rec2) (#v:Ghost.er
 
   ()
 }
-```
+

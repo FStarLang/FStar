@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.GhostReference
+#lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main
 module H = Pulse.Lib.HigherGhostReference
@@ -34,7 +35,7 @@ let pts_to
 
 let pts_to_is_slprop2 r p x = H.pts_to_is_slprop2 r p (U.raise_val x)
 
-```pulse
+
 ghost
 fn alloc (#a:Type u#0) (v:a)
 requires emp
@@ -45,9 +46,9 @@ ensures pts_to r v
   fold (pts_to r #1.0R v);
   r
 }
-```
 
-```pulse
+
+
 ghost
 fn read (#a:Type) (r:ref a) (#n:erased a) (#p:perm)
 requires pts_to r #p n
@@ -59,10 +60,10 @@ ensures pts_to r #p n ** pure (n == x)
   fold (pts_to r #p n);
   hide (U.downgrade_val (reveal k))
 }
-```
+
 let ( ! ) #a = read #a
 
-```pulse
+
 ghost
 fn op_Colon_Equals (#a:Type) (r:ref a) (x:erased a) (#n:erased a)
 requires pts_to r #1.0R n
@@ -72,9 +73,9 @@ ensures pts_to r #1.0R x
   H.(r := (U.raise_val x));
   fold (pts_to r #1.0R x)
 }
-```
 
-```pulse
+
+
 ghost
 fn free #a (r:ref a) (#n:erased a)
 requires pts_to r #1.0R n
@@ -83,9 +84,9 @@ ensures emp
   unfold (pts_to r #1.0R n);
   H.free r;
 }
-```
 
-```pulse
+
+
 ghost
 fn share (#a:Type) (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
@@ -96,9 +97,9 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
   fold pts_to r #(p /. 2.0R) v;
   fold pts_to r #(p /. 2.0R) v
 }
-```
 
-```pulse
+
+
 ghost
 fn raise_inj (a:Type u#0) (x0 x1:a)
 requires pure (U.raise_val u#0 u#1 x0 == U.raise_val u#0 u#1 x1)
@@ -107,9 +108,9 @@ ensures pure (x0 == x1)
   assert pure (U.downgrade_val (U.raise_val u#0 u#1 x0) == x0);
   assert pure (U.downgrade_val (U.raise_val u#0 u#1 x1) == x1);
 }
-```
 
-```pulse
+
+
 ghost
 fn gather (#a:Type) (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
@@ -121,14 +122,14 @@ ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
   fold (pts_to r #(p1 +. p0) x0);
   raise_inj a x0 x1;
 }
-```
+
 
 let share2 (#a:Type) (r:ref a) (#v:erased a) = share #a r #v
 
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r
 
 
-```pulse
+
 ghost
 fn pts_to_injective_eq
   (#a:Type0)
@@ -147,9 +148,9 @@ ensures
   fold pts_to r #q v1;
   raise_inj _ v0 v1;
 }
-```
 
-```pulse
+
+
 ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
@@ -159,4 +160,4 @@ ensures pts_to r #p v ** pure (p <=. 1.0R)
   H.pts_to_perm_bound r;
   fold pts_to r #p v;
 }
-```
+

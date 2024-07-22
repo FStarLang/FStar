@@ -15,6 +15,7 @@
 *)
 
 module QuickSort.Task
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
@@ -29,7 +30,7 @@ open Pulse.Lib.Pledge
 let quicksort_post a lo hi s0 lb rb : slprop =
   exists* s. (A.pts_to_range a lo hi s ** pure (pure_post_quicksort a lo hi lb rb s0 s))
 
-```pulse
+
 fn rec t_quicksort
   (p : T.pool)
   (#f : perm)
@@ -98,7 +99,7 @@ fn rec t_quicksort
     );
   }
 }
-```
+
 
 assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
   : stt_atomic iname
@@ -106,7 +107,7 @@ assume val split_pledge (#is:inames) (#f:slprop) (v1:slprop) (v2:slprop)
                (pledge is f (v1 ** v2))
                (fun i -> pledge (add_inv is i) f v1 ** pledge (add_inv is i) f v2)
 
-```pulse
+
 fn rec quicksort
   (nthr : pos)
   (a : A.array int)
@@ -131,4 +132,4 @@ fn rec quicksort
   redeem_pledge _ _ _;
   drop_ (T.pool_done p)
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module DPE_CBOR
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Mutex
 
@@ -41,7 +42,7 @@ val dbg : slprop
 
 open Pulse.Lib.Stick
 
-```pulse
+
 ghost
 fn elim_implies () (#p #q:slprop)
    requires (p @==> q) ** p
@@ -50,9 +51,9 @@ fn elim_implies () (#p #q:slprop)
   open Pulse.Lib.Stick;
   elim_stick p q
 }
-```
 
-```pulse
+
+
 fn finish (c:cbor_read_t)
           (input:_)
           (#p:perm)
@@ -74,12 +75,12 @@ fn finish (c:cbor_read_t)
     drop 'uds_is_enabled;
     false
 }
-```
+
 
 assume Fits_u64 : squash (SZ.fits_u64)
 
 #push-options "--z3rlimit 20"
-```pulse
+
 fn initialize_context (len:SZ.t)
                       (input:A.larray U8.t (SZ.v len))
                       (#s:erased (Seq.seq U8.t))
@@ -141,7 +142,7 @@ fn initialize_context (len:SZ.t)
       }
     }
 }
-```
+
 #pop-options
 
 #pop-options

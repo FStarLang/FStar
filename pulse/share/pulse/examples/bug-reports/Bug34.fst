@@ -1,4 +1,5 @@
 module Bug34
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -10,7 +11,7 @@ instance eq_int : eq int = {
   (=?) = (=);
 }
 
-```pulse
+
 fn test (#a:Type0) {| eq a |} (x:a)
   requires emp
   returns _:bool
@@ -18,9 +19,9 @@ fn test (#a:Type0) {| eq a |} (x:a)
 {
   (x =? x)
 }
-```
 
-```pulse
+
+
 fn call ()
   requires emp
   ensures  emp
@@ -28,4 +29,4 @@ fn call ()
   let x : bool = test 123;
   ()
 }
-```
+

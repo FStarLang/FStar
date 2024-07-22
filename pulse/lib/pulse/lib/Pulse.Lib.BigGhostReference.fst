@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.BigGhostReference
+#lang-pulse
 open Pulse.Lib.Core
 open Pulse.Main
 open FStar.PCM
@@ -29,7 +30,7 @@ instance non_informative_gref (a:Type u#2) : NonInformative.non_informative (ref
 let pts_to (#a:Type) (r:ref a) (#[T.exact (`1.0R)] p:perm) (n:a)
 = big_ghost_pcm_pts_to r (Some (n, p)) ** pure (perm_ok p)
 
-```pulse
+
 ghost
 fn full_values_compatible (#a:Type u#2) (x:a)
 requires emp
@@ -37,9 +38,9 @@ ensures pure (compatible pcm_frac (Some (x, 1.0R)) (Some (x, 1.0R)))
 {
    assert pure (FStar.PCM.composable pcm_frac (Some(x, 1.0R)) None);
 }
-```
 
-```pulse
+
+
 ghost
 fn alloc (#a:Type u#2) (x:a)
 requires emp
@@ -51,7 +52,7 @@ ensures pts_to r x
   fold (pts_to r #1.0R x);
   r
 }
-```
+
 
 let read_compat (#a:Type u#2) (x:fractional a)
                 (v:fractional a { compatible pcm_frac x v })
@@ -59,7 +60,7 @@ let read_compat (#a:Type u#2) (x:fractional a)
                            FStar.PCM.frame_compatible pcm_frac x v y })
   = x
 
-```pulse
+
 ghost
 fn read (#a:Type u#2) (r:ref a) (#n:erased a) (#p:perm)
 requires pts_to r #p n
@@ -74,10 +75,10 @@ ensures pts_to r #p n ** pure (n == x)
   fold (pts_to r #p n);
   hide (fst (Some?.v x))
 }
-```
+
 let ( ! ) #a = read #a
 
-```pulse
+
 ghost
 fn op_Colon_Equals (#a:Type u#2) (r:ref a) (x:erased a) (#n:erased a)
 requires pts_to r #1.0R n
@@ -88,9 +89,9 @@ ensures pts_to r #1.0R x
   Pulse.Lib.Core.big_ghost_write r _ _ (mk_frame_preserving_upd n x);
   fold pts_to r #1.0R x;
 }
-```
 
-```pulse
+
+
 ghost
 fn free (#a:Type u#2) (r:ref a) (#n:erased a)
 requires pts_to r #1.0R n
@@ -100,9 +101,9 @@ ensures emp
   Pulse.Lib.Core.big_ghost_write r _ _ (mk_frame_preserving_upd_none n);
   Pulse.Lib.Core.drop_ _;
 }
-```
+
    
-```pulse
+
 ghost
 fn share #a (r:ref a) (#v:erased a) (#p:perm)
 requires pts_to r #p v
@@ -115,9 +116,9 @@ ensures pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
   fold (pts_to r #(p /. 2.0R) v);
   fold (pts_to r #(p /. 2.0R) v);
 }
-```
 
-```pulse
+
+
 ghost
 fn gather #a (r:ref a) (#x0 #x1:erased a) (#p0 #p1:perm)
 requires pts_to r #p0 x0 ** pts_to r #p1 x1
@@ -128,12 +129,12 @@ ensures pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
   Pulse.Lib.Core.big_ghost_gather r (Some (reveal x0, p0)) (Some (reveal x1, p1));
   fold (pts_to r #(p0 +. p1) x0)
 }
-```
+
 
 let share2 (#a:Type) (r:ref a) (#v:erased a) = share r #v #1.0R
 let gather2 (#a:Type) (r:ref a) (#x0 #x1:erased a) = gather r #x0 #x1 #0.5R #0.5R
          
-```pulse
+
 ghost
 fn pts_to_injective_eq
     (#a:Type)
@@ -150,9 +151,9 @@ ensures pts_to r #p0 v0 ** pts_to r #p1 v1 ** pure (v0 == v1)
   fold pts_to r #p0 v0;
   fold pts_to r #p1 v1;
 }
-```
 
-```pulse
+
+
 ghost
 fn pts_to_perm_bound (#a:_) (#p:_) (r:ref a) (#v:a)
 requires pts_to r #p v
@@ -161,4 +162,4 @@ ensures pts_to r #p v ** pure (p <=. 1.0R)
   unfold pts_to r #p v;
   fold pts_to r #p v;
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module UnfoldPure
+#lang-pulse
 open Pulse.Lib.Pervasives
 module US = FStar.SizeT
 
@@ -24,7 +25,7 @@ module US = FStar.SizeT
 let pre0 (x:nat) : prop = x > 2
 let pre1 (x:nat) : prop = pre0 x (* unnecessarily-nested props to test this *)
 
-```pulse
+
 fn unfold_pure1 (#x:nat)
   requires pure (pre1 x)
   ensures pure (x > 1)
@@ -37,14 +38,14 @@ fn unfold_pure1 (#x:nat)
   // x > 1 in the current context (which since it includes squash (pre1 x) is
   // sufficient to prove x > 2)
 }
-```
+
 
 
 (* unfold necessary - pulse won't automatically unfold a slprop *)
 
 let pre2 (x:nat) : slprop = pure (x > 2)
 
-```pulse
+
 fn unfold_pure2 (#x:nat)
   requires pre2 x
   ensures pure (x > 1)
@@ -55,7 +56,7 @@ fn unfold_pure2 (#x:nat)
   //now things work as in the previous example
   ()
 }
-```
+
 
 
 (* Note, you can't call unfold/fold on `pure p` since `pure` is a primitive
@@ -65,7 +66,7 @@ fn unfold_pure2 (#x:nat)
         Prims.op_GreaterThan x 2) is a primitive term that cannot be folded or unfolded
 *)
 [@@expect_failure]
-```pulse
+
 fn unfold_pure3 (#x:nat)
   requires pure (x > 2)
   ensures pure (x > 1)
@@ -73,4 +74,3 @@ fn unfold_pure3 (#x:nat)
   unfold (pure (x > 2));
   ()
 }
-```

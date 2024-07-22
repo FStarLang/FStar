@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.HashTable
+#lang-pulse
 open Pulse.Lib.Pervasives
 module V = Pulse.Lib.Vec
 module R = Pulse.Lib.Reference
@@ -46,7 +47,7 @@ let models_is_slprop2 #kt #vt (ht:ht_t kt vt) (pht:pht_t kt vt)
   : Lemma (is_slprop2 (models ht pht))
           [SMTPat (is_slprop2 (models ht pht))] = ()
 
-```pulse
+
 fn alloc
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
@@ -63,9 +64,9 @@ fn alloc
   fold models;
   ht
 }
-```
 
-```pulse
+
+
 fn dealloc
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] v:Type0)
@@ -77,14 +78,14 @@ fn dealloc
   unfold models;
   V.free ht.contents;
 }
-```
+
 
 let size_t_mod (x:SZ.t) (y : SZ.t { y =!= 0sz })
 : z:SZ.t { SZ.v z == SZ.v x % SZ.v y }
   = SZ.(x %^ y)
 
 #push-options "--fuel 1 --ifuel 1"
-```pulse
+
 fn lookup
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -196,10 +197,10 @@ fn lookup
   rewrite (models ht pht) as (models (fst res) pht);
   res
 }
-```
+
 #pop-options
 
-```pulse
+
 fn replace
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -241,10 +242,10 @@ fn replace
     }
   }
 }
-```
+
 
 #push-options "--fuel 1 --ifuel 2"
-```pulse
+
 fn insert
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -413,7 +414,7 @@ fn insert
     res
   }
 }
-```
+
 
 let is_used
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] k:eqtype)
@@ -423,7 +424,7 @@ let is_used
   | Used _ _ -> true, c
   | _ -> false, c
 
-```pulse
+
 fn not_full
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -489,9 +490,9 @@ fn not_full
   rewrite (models ht pht) as (models (fst b) pht);
   b
 }
-```
 
-```pulse
+
+
 fn insert_if_not_full
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -511,7 +512,7 @@ fn insert_if_not_full
   let b = not_full ht;
   if snd b
   {
-    Pulse.Lib.HashTable.insert (fst b) k v
+    insert (fst b) k v
   }
   else
   {
@@ -520,9 +521,9 @@ fn insert_if_not_full
     res
   }
 }
-```
 
-```pulse
+
+
 fn delete
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] kt:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] vt:Type0)
@@ -634,9 +635,9 @@ fn delete
     res
   }
 }
-```
 
-// ```pulse
+
+// 
 // fn test_mono ()
 //   requires emp
 //   ensures emp
@@ -672,4 +673,4 @@ fn delete
 //     dealloc htc
 //    }
 // }
-// ```
+// 

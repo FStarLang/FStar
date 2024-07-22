@@ -15,6 +15,7 @@
 *)
 
 module Invariant
+#lang-pulse
 
 // #set-options "--error_contexts true"
 // #set-options "--print_implicits --print_universes"
@@ -32,7 +33,7 @@ assume val r : slprop
 
 assume val f () : stt_atomic unit emp_inames (p ** q) (fun _ -> p ** r)
 
-```pulse
+
 atomic
 fn g (i:iname)
   requires inv i p ** q
@@ -43,12 +44,12 @@ fn g (i:iname)
     f ()
   }
 }
-```
+
 
 #push-options "--fuel 0"
 (* Does it work without fuel? Requires the iname_list coercion
 to normalize away. *)
-```pulse
+
 atomic
 fn g2 (i:iname)
   requires inv i p ** q
@@ -59,12 +60,12 @@ fn g2 (i:iname)
     f ()
   }
 }
-```
+
 #pop-options
 
 assume val f_ghost () : stt_ghost unit emp_inames (p ** q) (fun _ -> p ** r)
 
-```pulse
+
 ghost
 fn g_ghost (i:iname)
   requires (inv i p ** q)
@@ -75,7 +76,7 @@ fn g_ghost (i:iname)
     f_ghost ()
   }
 }
-```
+
 
 let test (i:iname) = assert (
   add_inv emp_inames i
@@ -87,7 +88,7 @@ assume
 val atomic_write_int (r : ref int) (v : int) :
   stt_atomic unit emp_inames (exists* v0. pts_to r v0) (fun _ -> pts_to r v)
 
-```pulse
+
 atomic
 fn test_atomic (r : ref int)
   requires pts_to r 'v
@@ -95,9 +96,9 @@ fn test_atomic (r : ref int)
 {
   atomic_write_int r 0;
 }
-```
 
-```pulse
+
+
 fn package (r:ref int)
    requires pts_to r 123
    returns i : iname
@@ -106,9 +107,9 @@ fn package (r:ref int)
   let i = new_invariant (pts_to r 123);
   i
 }
-```
 
-```pulse
+
+
 fn test2 ()
   requires emp
   ensures emp
@@ -123,11 +124,11 @@ fn test2 ()
   };
   drop_ (inv i _)
 }
-```
+
 
 // Fails as the with_invariants block is not atomic/ghost
 [@@expect_failure]
-```pulse
+
 fn test3 ()
   requires emp
   ensures emp
@@ -141,12 +142,12 @@ fn test3 ()
   };
   drop_ (inv i _)
 }
-```
+
 
 //
 // Ghost code overclaiming
 //
-```pulse
+
  ghost
  fn t00 () (i:iname)
    requires (inv i emp)
@@ -155,9 +156,9 @@ fn test3 ()
  {
   ()
  }
-```
 
-```pulse
+
+
 atomic
 fn t0 () (i:iname)
   requires inv i emp
@@ -168,13 +169,13 @@ fn t0 () (i:iname)
     ()
   }
 }
-```
+
 
 
 assume val i : iname
 assume val i2 : iname
 
-```pulse
+
 ghost
 fn basic_ghost ()
   requires emp
@@ -182,11 +183,11 @@ fn basic_ghost ()
 {
   (); ()
 }
-```
+
 
 (* Using invariants while claiming not to. *)
 [@@expect_failure]
-```pulse
+
 atomic
 fn t1 ()
   requires inv i emp
@@ -197,10 +198,10 @@ fn t1 ()
     ()
   }
 }
-```
+
 
 (* Overclaiming, OK *)
-```pulse
+
 atomic
 fn t3 ()
   requires inv i emp
@@ -211,10 +212,10 @@ fn t3 ()
     ()
   }
 }
-```
+
 
 (* Works, no need to declare opens as its an effectful fn *)
-```pulse
+
 fn t2 ()
   requires emp
   returns _:int
@@ -229,14 +230,14 @@ fn t2 ()
   drop_ (inv j _);
   123
 }
-```
+
 
 assume val p_to_q : unit -> stt_atomic unit emp_inames p (fun _ -> p ** q)
 assume val ghost_p_to_q : unit -> stt_ghost unit emp_inames p (fun _ -> p ** q)
 
 let folded_inv (i:iname) = inv i p
 
-```pulse
+
 atomic
 fn test_returns0 (i:iname) (b:bool)
   requires folded_inv i
@@ -255,9 +256,9 @@ fn test_returns0 (i:iname) (b:bool)
   };
   fold folded_inv i
 }
-```
 
-```pulse
+
+
 ghost
 fn test_returns1 (i:iname)
   requires folded_inv i
@@ -272,15 +273,15 @@ fn test_returns1 (i:iname)
   };
   fold folded_inv i
 }
-```
+
 
 (* Testing that the with_invariants checker respects
-pulse_unfold. *)
+_unfold. *)
 
 [@@pulse_unfold]
 let pp = p
 
-```pulse
+
 ghost
 fn test_returns2 (i:iname)
   requires folded_inv i
@@ -295,4 +296,4 @@ fn test_returns2 (i:iname)
   };
   fold folded_inv i
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module DPETypes
+#lang-pulse
 open Pulse.Lib.Pervasives
 open HACL
 open EngineTypes
@@ -303,7 +304,7 @@ let context_and_repr_tag_related (c:context_t) (r:context_repr_t) : bool =
   | L1_context _, L1_context_repr _ -> true
   | _ -> false
 
-```pulse
+
 ghost
 fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
   requires context_perm c r
@@ -317,9 +318,9 @@ fn intro_context_and_repr_tag_related (c:context_t) (r:context_repr_t)
     unreachable ()
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_context_perm_engine (ec:engine_context_t) (#r:context_repr_t)
   requires context_perm (Engine_context ec) r
@@ -346,9 +347,9 @@ fn rewrite_context_perm_engine (ec:engine_context_t) (#r:context_repr_t)
 
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_context_perm_l0 (lc:l0_context_t) (#r:context_repr_t)
   requires context_perm (L0_context lc) r
@@ -372,9 +373,9 @@ fn rewrite_context_perm_l0 (lc:l0_context_t) (#r:context_repr_t)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_context_perm_l1 (lc:l1_context_t) (#r:context_repr_t)
   requires context_perm (L1_context lc) r
@@ -398,7 +399,7 @@ fn rewrite_context_perm_l1 (lc:l1_context_t) (#r:context_repr_t)
     }
   }
 }
-```
+
 
 noeq
 type record_t =
@@ -422,7 +423,7 @@ let record_perm_and_repr_tag_related (r:record_t) (repr:repr_t) : bool =
   | L0_record _, L0_repr _ -> true
   | _ -> false
 
-```pulse
+
 ghost
 fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
   requires record_perm r p repr
@@ -437,9 +438,9 @@ fn intro_record_and_repr_tag_related (r:record_t) (p:perm) (repr:repr_t)
     unreachable ()
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_record_perm_engine (er:engine_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm (Engine_record er) p repr
@@ -458,9 +459,9 @@ fn rewrite_record_perm_engine (er:engine_record_t) (#p:perm) (#repr:repr_t)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_record_perm_l0 (lr:l0_record_t) (#p:perm) (#repr:repr_t)
   requires record_perm (L0_record lr) p repr
@@ -479,4 +480,4 @@ fn rewrite_record_perm_l0 (lr:l0_record_t) (#p:perm) (#repr:repr_t)
     }
   }
 }
-```
+

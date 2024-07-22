@@ -23,7 +23,6 @@ module D = FStar.Syntax.DsEnv
 module S = FStar.Syntax.Syntax
 module L = FStar.Compiler.List
 module U = FStar.Syntax.Util
-module TcEnv = FStar.TypeChecker.Env
 module SS = FStar.Syntax.Subst
 module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
@@ -98,7 +97,7 @@ let resolve_mut (m:menv) (e:A.term)
   = let open A in
     match e.tm with
     | Var l -> (
-      let topt = FStar.Syntax.DsEnv.try_lookup_lid m.env.tcenv.dsenv l in
+      let topt = FStar.Syntax.DsEnv.try_lookup_lid m.env.dsenv l in
       match topt with
       | Some {n=S.Tm_name x} -> 
         L.tryFind (fun (_, y, _) -> S.bv_eq x y) m.map 

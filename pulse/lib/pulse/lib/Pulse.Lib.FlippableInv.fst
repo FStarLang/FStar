@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.FlippableInv
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module GR = Pulse.Lib.GhostReference
@@ -34,7 +35,7 @@ let off #p (fi : finv p) : slprop =
 let on  #p (fi : finv p) : slprop =
   GR.pts_to fi.r #0.5R true ** inv fi.i (finv_p p fi.r)
 
-```pulse
+
 fn mk_finv (p:slprop { is_storable p })
    requires emp
    returns f:(finv p)
@@ -54,12 +55,12 @@ fn mk_finv (p:slprop { is_storable p })
    fold (off #p fi);
    fi
 }
-```
+
 
 
 let iname_of #p (f : finv p) : iname = f.i
 
-```pulse
+
 atomic
 fn flip_on (#p:slprop) (fi:finv p)
    requires off fi ** p
@@ -84,9 +85,9 @@ fn flip_on (#p:slprop) (fi:finv p)
   };
   fold (on fi)
 }
-```
 
-```pulse
+
+
 atomic
 fn flip_off (#p:slprop) (fi : finv p)
    requires on fi
@@ -111,4 +112,4 @@ fn flip_off (#p:slprop) (fi : finv p)
   };
   fold (off fi)
 }
-```
+

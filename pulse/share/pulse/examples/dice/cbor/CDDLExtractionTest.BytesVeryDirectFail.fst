@@ -15,12 +15,13 @@
 *)
 
 module CDDLExtractionTest.BytesVeryDirectFail
+#lang-pulse
 open CBOR.Spec
 open CDDL.Spec
 open CBOR.Pulse
 open CDDL.Pulse
 
-```pulse
+
 fn test
     (c: cbor)
     (v: Ghost.erased raw_data_item)
@@ -33,4 +34,4 @@ ensures
     let unused = impl_bytes () c; // successfully typechecks, but fails to extract
     ()
 }
-```
+

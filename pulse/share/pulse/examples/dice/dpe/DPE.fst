@@ -15,6 +15,7 @@
 *)
 
 module DPE
+#lang-pulse
 open Pulse.Lib.Pervasives
 open DPETypes
 open HACL
@@ -53,7 +54,7 @@ assume SZ_fits_u32 : SZ.fits_u32
 let sid_hash (s:sid_t) : SZ.t = SZ.uint16_to_sizet s
 
 [@@ Rust_const_fn]
-```pulse
+
 fn initialize_global_state ()
   requires emp
   returns b:(r:gref & mutex (dpe_inv r))
@@ -66,7 +67,7 @@ fn initialize_global_state ()
   let m = new_mutex (dpe_inv r) None;
   ((| r, m |) <: (r:gref & mutex (dpe_inv r)))
 }
-```
+
 
 let gst : (r:gref & mutex (dpe_inv r)) = run_stt (initialize_global_state ())
 
@@ -84,7 +85,7 @@ let trace_ref = dfst gst
 //
 // This version works much better
 //
-```pulse
+
 ghost
 fn gather_ (r:gref)
   (v0 v1:pcm_t)
@@ -97,7 +98,7 @@ fn gather_ (r:gref)
   with _v. rewrite (ghost_pcm_pts_to r _v) as
                    (ghost_pcm_pts_to r (PCM.op pcm v0 v1))
 }
-```
+
 
 //
 // A gather to work with map pcm
@@ -106,7 +107,7 @@ fn gather_ (r:gref)
 //   v is `Map.equal` to op of v0 and v1
 //
 // 
-```pulse
+
 ghost
 fn gather_v (r:gref)
   (v0 v1 v:pcm_t)
@@ -120,12 +121,12 @@ fn gather_v (r:gref)
   with _v. rewrite (ghost_pcm_pts_to r _v) as
                    (ghost_pcm_pts_to r v)
 }
-```
+
 
 //
 // Corresponding share, with a Map.equal proof in the precondition
 //
-```pulse
+
 ghost
 fn share_ (r:gref)
   (v v0 v1:pcm_t)
@@ -139,7 +140,7 @@ fn share_ (r:gref)
           (ghost_pcm_pts_to r (PCM.op pcm v0 v1));
   ghost_share r v0 v1;
 }
-```
+
 
 noextract
 let full (t0:trace) = Some #perm 1.0R, t0
@@ -147,7 +148,7 @@ let full (t0:trace) = Some #perm 1.0R, t0
 noextract
 let half (t0:trace) = Some #perm 0.5R, t0
 
-```pulse
+
 ghost
 fn upd_sid_pts_to
   (r:gref) (sid:sid_t)
@@ -192,7 +193,7 @@ fn upd_sid_pts_to
   fold (sid_pts_to r sid (next_trace t0 s));
   fold (sid_pts_to r sid (next_trace t0 s));
 }
-```
+
 
 let safe_incr (i:U16.t)
   : r:option U16.t { Some? r ==> (U16.v (Some?.v r) == U16.v i + 1) } =
@@ -209,7 +210,7 @@ let session_table_eq_on_range
   : prop =
   forall (k:sid_t). i <= U16.v k && U16.v k < j ==> PHT.lookup pht0 k == PHT.lookup pht1 k
 
-```pulse
+
 ghost
 fn frame_session_perm_at_sid
   (r:gref)
@@ -233,9 +234,9 @@ fn frame_session_perm_at_sid
             (session_perm r pht1 sid)
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn frame_session_perm_on_range
   (r:gref)
@@ -251,12 +252,12 @@ fn frame_session_perm_on_range
     i j
     (frame_session_perm_at_sid r pht0 pht1 i j ())
 }
-```
+
 
 let emp_to_start_valid () : Lemma (valid_transition emp_trace G_SessionStart) = ()
 
 #push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
-```pulse
+
 fn __open_session (s:st)
   requires dpe_inv trace_ref (Some s)
   returns b:(st & option sid_t)
@@ -335,10 +336,10 @@ fn __open_session (s:st)
     }
   }
 }
-```
+
 #pop-options
 
-```pulse
+
 fn maybe_mk_session_tbl (sopt:option st)
   requires dpe_inv trace_ref sopt
   returns s:st
@@ -372,9 +373,9 @@ fn maybe_mk_session_tbl (sopt:option st)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn to_dpe_inv_trace_ref (#s:option st) ()
   requires dpe_inv (Mkdtuple2?._1 gst) s
@@ -383,9 +384,9 @@ fn to_dpe_inv_trace_ref (#s:option st) ()
   rewrite (dpe_inv (Mkdtuple2?._1 gst) s) as
           (dpe_inv trace_ref s)
 }
-```
 
-```pulse
+
+
 ghost
 fn from_dpe_inv_trace_ref (#s:option st) ()
   requires dpe_inv trace_ref s
@@ -394,9 +395,9 @@ fn from_dpe_inv_trace_ref (#s:option st) ()
   rewrite (dpe_inv trace_ref s) as
           (dpe_inv (Mkdtuple2?._1 gst) s)
 }
-```
 
-```pulse
+
+
 fn open_session ()
   requires emp
   returns r:(option sid_t)
@@ -421,10 +422,10 @@ fn open_session ()
   
   sid_opt
 }
-```
+
 
 [@@allow_ambiguous]
-```pulse
+
 ghost
 fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
   requires sid_pts_to trace_ref sid t0 **
@@ -440,9 +441,9 @@ fn gather_sid_pts_to (sid:sid_t) (#t0 #t1:trace)
   rewrite (ghost_pcm_pts_to trace_ref v) as
           (ghost_pcm_pts_to trace_ref (singleton sid 1.0R t0))
 }
-```
 
-```pulse
+
+
 ghost
 fn share_sid_pts_to (sid:sid_t) (#t:trace)
   requires ghost_pcm_pts_to trace_ref (singleton sid 1.0R t)
@@ -455,9 +456,9 @@ fn share_sid_pts_to (sid:sid_t) (#t:trace)
   fold sid_pts_to;
   fold sid_pts_to
 }
-```
 
-```pulse
+
+
 ghost
 fn upd_singleton
   (sid:sid_t)
@@ -484,10 +485,10 @@ fn upd_singleton
     (singleton sid 1.0R (next_trace t s))
     fp;
 }
-```
+
 
 #push-options "--fuel 0 --ifuel 2 --split_queries no --z3rlimit_factor 2"
-```pulse
+
 fn replace_session
   (sid:sid_t)
   (t:G.erased trace)
@@ -587,10 +588,10 @@ fn replace_session
     }
   }
 }
-```
+
 #pop-options
 
-```pulse
+
 fn init_engine_ctxt
   (uds:A.array U8.t { A.length uds == SZ.v uds_len })
   (#p:perm)
@@ -618,7 +619,7 @@ fn init_engine_ctxt
        as (context_perm ctxt (Engine_context_repr uds_bytes));
   ctxt
 }
-```
+
 
 let session_state_tag_related (s:session_state) (gs:g_session_state) : GTot bool =
   match s, gs with
@@ -630,7 +631,7 @@ let session_state_tag_related (s:session_state) (gs:g_session_state) : GTot bool
   | _ -> false
 
 
-```pulse
+
 ghost
 fn intro_session_state_tag_related (s:session_state) (gs:g_session_state)
   requires session_state_related s gs
@@ -646,10 +647,10 @@ fn intro_session_state_tag_related (s:session_state) (gs:g_session_state)
     unreachable ()
   }
 }
-```
+
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
-```pulse
+
 fn initialize_context (sid:sid_t) 
   (t:G.erased trace { trace_valid_for_initialize_context t })
   (#p:perm) (#uds_bytes:Ghost.erased (Seq.seq U8.t))
@@ -699,10 +700,10 @@ fn initialize_context (sid:sid_t)
     }
   }
 }
-```
+
 #pop-options
 
-```pulse
+
 fn init_l0_ctxt
   (cdi:A.array U8.t { A.length cdi == SZ.v dice_digest_len })
   (#engine_repr:erased engine_record_repr)
@@ -730,9 +731,9 @@ fn init_l0_ctxt
   fold (l0_context_perm l0_context l0_context_repr);
   l0_context
 }
-```
 
-```pulse
+
+
 fn init_l1_ctxt
   (cdi:erased (Seq.seq U8.t))
   (deviceID_label_len:(n:erased U32.t { valid_hkdf_lbl_len n }))
@@ -810,9 +811,9 @@ fn init_l1_ctxt
   fold (l1_context_perm ctxt l1_ctxt_repr);
   ctxt
 }
-```
 
-```pulse
+
+
 ghost
 fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
   requires l0_record_perm r1 p repr **
@@ -831,7 +832,7 @@ fn l0_record_perm_aux (r1 r2:l0_record_t) (#p:perm) (#repr:l0_record_repr_t)
        as (V.pts_to r2.aliasKey_label #p repr.aliasKey_label);
   fold (l0_record_perm r2 p repr)
 }
-```
+
 
 noextract
 let context_derives_from_input (r:context_repr_t) (rrepr:repr_t) : prop =
@@ -856,7 +857,7 @@ let valid_context_and_record_for_derive_child (c:context_repr_t) (r:repr_t) : pr
   | L0_context_repr _, L0_repr _ -> True
   | _ -> False
 
-```pulse 
+ 
 fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
   requires context_perm ctxt repr
   ensures emp
@@ -887,9 +888,9 @@ fn destroy_ctxt (ctxt:context_t) (#repr:erased context_repr_t)
     }
   }
 }
-```
 
-```pulse
+
+
 fn derive_child_from_context
     (context:context_t)
     (record:record_t)
@@ -1077,9 +1078,9 @@ fn derive_child_from_context
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_session_state_related_available
   context
@@ -1096,10 +1097,10 @@ fn rewrite_session_state_related_available
           (context_perm context repr);
   hide repr
 }
-```
+
 
 #push-options "--fuel 2 --ifuel 2 --split_queries no"
-```pulse
+
 fn derive_child (sid:sid_t)
   (t:G.erased trace)
   (record:record_t)
@@ -1210,9 +1211,9 @@ fn derive_child (sid:sid_t)
     }
   }
 }
-```
 
-```pulse
+
+
 fn destroy_session_state (s:session_state) (t:G.erased trace)
   requires session_state_related s (current_state t)
   ensures emp
@@ -1238,9 +1239,9 @@ fn destroy_session_state (s:session_state) (t:G.erased trace)
 
   }
 }
-```
 
-```pulse
+
+
 fn close_session (sid:sid_t)
   (t:G.erased trace { trace_valid_for_close t })
   requires sid_pts_to trace_ref sid t
@@ -1260,10 +1261,10 @@ fn close_session (sid:sid_t)
   with _x _y. rewrite (session_state_related _x _y) as emp;
   fold (session_closed_client_perm sid t)
 }
-```
+
 
 #push-options "--z3rlimit_factor 4 --fuel 2 --ifuel 1 --split_queries no"
-```pulse
+
 fn certify_key (sid:sid_t)
   (pub_key:A.larray U8.t 32)
   (crt_len:U32.t)
@@ -1361,11 +1362,11 @@ fn certify_key (sid:sid_t)
     }
   }
 }
-```
+
 #pop-options
 
 #push-options "--split_queries no"
-```pulse
+
 fn sign (sid:sid_t)
   (signature:A.larray U8.t 64)
   (msg_len:SZ.t { SZ.v msg_len < pow2 32 })
@@ -1444,14 +1445,14 @@ fn sign (sid:sid_t)
 
   }
 }
-```
+
 #pop-options
 
 (*
   GetProfile: Part of DPE API 
   Get the DPE's profile. 
 *)
-```pulse
+
 fn get_profile ()
   requires emp
   returns d:profile_descriptor_t
@@ -1528,4 +1529,4 @@ fn get_profile ()
     (*supports_unseal_policy=*)false// irrelevant by supports_sealing
     (*unseal_policy_format=*)"" // irrelevant by supports_unseal_policy 
 }
-```
+

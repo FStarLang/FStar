@@ -1,4 +1,5 @@
 module Pulse.Lib.GhostPCMReference
+#lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.PCM
 module PR = Pulse.Lib.PCM.Raise
@@ -14,7 +15,7 @@ let pts_to
 
 let alloc #a #p x = ghost_alloc #_ #(PR.raise p) (U.raise_val x)
   
-```pulse
+
 ghost
 fn read
     (#a:Type u#0)
@@ -39,7 +40,7 @@ ensures pts_to r (f v)
   fold (pts_to r (f v));
   v
 }
-```
+
 
 let identity_frame_compatible
       #a (p:FStar.PCM.pcm a)

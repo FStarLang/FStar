@@ -193,7 +193,8 @@ let rewrite_token (tok:FP.token)
     | UNFOLD -> PP.UNFOLD 
     | UNFOLDABLE -> PP.UNFOLDABLE 
     | UNIV_HASH -> PP.UNIV_HASH 
-    | UNOPTEQUALITY -> PP.UNOPTEQUALITY 
+    | UNOPTEQUALITY -> PP.UNOPTEQUALITY
+    | USE_LANG_BLOB s -> PP.USE_LANG_BLOB s
     | VAL -> PP.VAL 
     | WHEN -> PP.WHEN 
     | WITH -> PP.WITH 
@@ -216,7 +217,7 @@ let parse_decl (s:string) (r:range) =
   let fn = file_of_range r in
   let lexbuf, lexer = lexbuf_and_lexer s r in
   try
-    let d = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDecl lexer in
+    let d = MenhirLib.Convert.Simplified.traditional2revised PP.pulseDeclEOF lexer in
     Inl d
   with
   | e ->
@@ -243,3 +244,20 @@ let parse_peek_id (s:string) (r:range) : (string, string * range) either =
           (Printexc.get_backtrace()) in
     Inr (msg, r)
 
+
+let parse_lang (s:string) (r:range) =
+  let fn = file_of_range r in
+  let lexbuf, lexer = lexbuf_and_lexer s r in
+  let range_of_either (d: (PulseSyntaxExtension_Sugar.decl, FStar_Parser_AST.decl) either) =
+      match d with 
+      | Inl d -> PulseSyntaxExtension_Sugar.range_of_decl d
+      | Inr f -> f.drange
+  in
+  try
+    let ds, err = FStar_Parser_ParseIt.parse_incremental_decls fn s lexbuf lexer range_of_either PP.iLangDeclOrEOF in
+    Inl (ds, err)
+  with
+  | e ->
+    let pos = FStar_Parser_Util.pos_of_lexpos (lexbuf.cur_p) in
+    let r = FStar_Compiler_Range.mk_range fn pos pos in
+    Inr (Some ("#lang-pulse: Syntax error", r))

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.C.Types.Scalar
+#lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Base
 
@@ -47,7 +48,7 @@ val mk_scalar_inj
   (ensures (v1 == v2 /\ p1 == p2))
   [SMTPat [mk_fraction (scalar t) (mk_scalar v1) p1; mk_fraction (scalar t) (mk_scalar v2) p2]]
 
-```pulse
+
 ghost
 fn scalar_unique
   (#t: Type)
@@ -65,7 +66,7 @@ ensures
   let _ = mk_scalar_inj v1 v2 1.0R 1.0R;
   ()
 }
-```
+
 
 [@@noextract_to "krml"] // primitive
 val read0 (#t: Type) (#v: Ghost.erased t) (#p: perm) (r: ref (scalar t))
@@ -150,7 +151,7 @@ let indefinite_description_tot0 (a:Type) (p:(a -> prop)) (q: squash (exists x. p
 = FStar.IndefiniteDescription.indefinite_description_tot a p
 
 inline_for_extraction [@@noextract_to "krml"]
-```pulse
+
 fn read (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t))
 requires
   (pts_to r v ** pure (
@@ -170,7 +171,7 @@ ensures
   rewrite (pts_to r (mk_fraction (scalar t) (mk_scalar (Ghost.reveal v0)) p)) as (pts_to r v);
   v1
 }
-```
+
 
 [@@noextract_to "krml"] // primitive
 val write (#t: Type) (#v: Ghost.erased (scalar_t t)) (r: ref (scalar t)) (v': t)

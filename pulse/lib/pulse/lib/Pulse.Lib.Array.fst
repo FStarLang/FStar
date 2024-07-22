@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Array
+#lang-pulse
 module PM = Pulse.Main
 open Pulse.Lib.Core
 open Pulse.Lib.Reference
@@ -27,7 +28,7 @@ module A = Pulse.Lib.Array.Core
 module R = Pulse.Lib.Reference
 
 #set-options "--print_implicits"
-```pulse
+
 fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   requires pts_to a1 #p1 's1
         ** pts_to a2 #p2 's2
@@ -60,9 +61,9 @@ fn compare (#t:eqtype) (l:US.t) (a1 a2:larray t (US.v l)) (#p1 #p2:perm)
   let res = vi = l;
   res
 }
-```
 
-```pulse 
+
+ 
 fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
            (#p:perm) (#src0 #dst0:Ghost.erased (Seq.seq t))
   requires A.pts_to src #p src0 **
@@ -98,9 +99,9 @@ fn memcpy_l (#t:eqtype) (l:US.t) (src dst:(a:array t { US.v l <= A.length a }))
                                          (Seq.slice dst0 (US.v l) (A.length dst)))));
   ()
 }
-```
 
-```pulse
+
+
 fn memcpy
   (#t:eqtype)
   (l:SZ.t)
@@ -117,9 +118,9 @@ fn memcpy
   assert_ (pure (Seq.equal s src0));
   ()
 }
-```
 
-```pulse
+
+
 fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
   requires A.pts_to a 's
   ensures exists* (s:Seq.seq t).
@@ -142,9 +143,9 @@ fn fill (#t:Type0) (l:US.t) (a:larray t (US.v l)) (v:t)
     i := vi + 1sz;
   }
 }
-```
 
-```pulse
+
+
 fn zeroize (l:US.t) (a:larray U8.t (US.v l))
   requires A.pts_to a 's
   ensures exists* (s:Seq.seq U8.t).
@@ -154,4 +155,4 @@ fn zeroize (l:US.t) (a:larray U8.t (US.v l))
   pts_to_len a #1.0R #'s;
   fill l a 0uy
 }
-```
+

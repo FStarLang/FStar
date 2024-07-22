@@ -1,4 +1,5 @@
 module OrderDepHigherOrder
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Mutex
@@ -8,7 +9,7 @@ should not affect the result. *)
 
 assume
 val p : int -> slprop
-```pulse
+
 fn test (m:mutex int)
   requires mutex_live m p
   ensures  mutex_live m p
@@ -17,9 +18,9 @@ fn test (m:mutex int)
   unlock m r;
   ()
 }
-```
 
-```pulse
+
+
 fn test2 (m:mutex int)
   requires mutex_live m p
   ensures  mutex_live m p
@@ -30,20 +31,20 @@ fn test2 (m:mutex int)
   unlock m r;
   ()
 }
-```
+
 
 
 [@@allow_ambiguous]
-```pulse
+
 fn flip (#p #q : slprop) (_:unit)
   requires p ** q
   ensures  q ** p
 {
   ()
 }
-```
 
-```pulse
+
+
 fn test3 (m:mutex int)
   requires mutex_live m p
   ensures  mutex_live m p
@@ -53,5 +54,5 @@ fn test3 (m:mutex int)
   unlock m r;
   ()
 }
-```
+
 

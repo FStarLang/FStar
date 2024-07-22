@@ -1,4 +1,5 @@
 module Pulse.Lib.Forall
+#lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core
 module F = FStar.FunctionalExtensionality
@@ -38,7 +39,7 @@ let extract_q #a (v:slprop) (p:a -> slprop) (pf:squash (is_forall v p))
   in
   Ghost.reveal x
 
-```pulse
+
 ghost
 fn elim_forall'
     (#a:Type u#0)
@@ -55,7 +56,7 @@ ensures p x
     f x;
     rewrite ((F.on_dom a (fun x -> p x)) x) as (p x);
 }
-```
+
 
 let elim_forall
     (#a:Type u#a)

@@ -1,4 +1,5 @@
 module Pulse.Lib.Deque
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
@@ -48,7 +49,7 @@ let rec is_deque_suffix
           v.dprev == prev /\
           v.dnext == (Some np))
           
-```pulse
+
 ghost
 fn fold_is_deque_suffix_cons
   (#t:Type0)
@@ -73,7 +74,7 @@ fn fold_is_deque_suffix_cons
   rewrite each ns as (n' :: ns');
   fold (is_deque_suffix p (n::n'::ns') prev tail last);
 }
-```
+
 
 
 let is_deque #t (x:deque t) (l:list t)
@@ -86,7 +87,7 @@ let is_deque #t (x:deque t) (l:list t)
           is_deque_suffix hp ns None tp None **
           pure (x.head == (Some hp) /\ x.tail == (Some tp))
 
-```pulse
+
 fn mk_empty (#t:Type) (_:unit)
   requires emp
   returns  p : deque t
@@ -96,9 +97,9 @@ fn mk_empty (#t:Type) (_:unit)
   fold (is_deque p []);
   p
 }
-```
 
-```pulse
+
+
 fn push_front_empty (#t:Type) (l : deque t) (x : t)
   requires is_deque l []
   returns  l' : deque t
@@ -123,9 +124,9 @@ fn push_front_empty (#t:Type) (l : deque t) (x : t)
   fold (is_deque l' [x]);
   l'
 }
-```
 
-```pulse
+
+
 ghost
 fn is_deque_null_head_ptr
   (#t:Type)
@@ -152,9 +153,9 @@ fn is_deque_null_head_ptr
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn is_deque_some_head_ptr
   (#t:Type)
@@ -180,9 +181,9 @@ fn is_deque_some_head_ptr
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn some_head_then_some_tail
   (#t:Type)
@@ -205,10 +206,10 @@ fn some_head_then_some_tail
     }
   }
 }
-```
+
 
 (* This is really the contrarreciprocal of the `is_deque_null_head_ptr` lemma above. *)
-```pulse
+
 ghost
 fn is_deque_cons_not_none
   (#t:Type)
@@ -227,10 +228,10 @@ fn is_deque_cons_not_none
     is_deque_null_head_ptr l;
   }
 }
-```
+
 
 (* This function VERY brittle. See #112. *)
-```pulse
+
 ghost
 fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
   requires is_deque l xs ** pure (Cons? xs)
@@ -250,7 +251,7 @@ fn unfold_is_deque_cons (#t:Type) (l : deque t) (#xs : (list t){Cons? xs})
     }
   }
 }
-```
+
 
 (* In support of the definition below. It is hard to work with
 (triggers #112) without this. *)
@@ -287,7 +288,7 @@ let is_deque_suffix_factored
       ) **
       is_deque_suffix_factored_next x l tail last v.dnext
 
-```pulse
+
 ghost
 fn factor_is_deque_suffix
   (#t:Type0)
@@ -317,9 +318,9 @@ fn factor_is_deque_suffix
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn unfactor_is_deque_suffix
   (#t:Type)
@@ -349,9 +350,9 @@ fn unfactor_is_deque_suffix
     }
   }
 }
-```
 
-```pulse
+
+
 fn set_back_pointer
   (#t:Type) (x : node_ptr t)
   (prev' : option (node_ptr t))
@@ -375,9 +376,9 @@ fn set_back_pointer
   fold (is_deque_suffix_factored x l prev' tail);
   unfactor_is_deque_suffix x l prev' tail;
 }
-```
 
-```pulse
+
+
 fn push_front_cons (#t:Type) (l : deque t) (x : t) (#xs : erased (list t))
   requires is_deque l xs ** pure (Cons? xs)
   returns  l' : deque t
@@ -417,9 +418,9 @@ fn push_front_cons (#t:Type) (l : deque t) (x : t) (#xs : erased (list t))
   fold (is_deque l' (x::xs));
   l'
 }
-```
 
-```pulse
+
+
 fn push_front (#t:Type) (l : deque t) (x : t)
   (#xs:erased (list t))
   requires is_deque l xs
@@ -437,10 +438,10 @@ fn push_front (#t:Type) (l : deque t) (x : t)
     }
   }
 }
-```
+
 
 (* Popping the last element *)
-```pulse
+
 fn pop_front_nil (#t:Type) (l : deque t)
   (#x : erased t)
   requires is_deque l [reveal x]
@@ -478,9 +479,9 @@ fn pop_front_nil (#t:Type) (l : deque t)
 
   (l', x)
 }
-```
 
-```pulse
+
+
 fn pop_front_cons (#t:Type) (l : deque t)
   (#x : erased t)
   (#xs : erased (list t))
@@ -520,9 +521,9 @@ fn pop_front_cons (#t:Type) (l : deque t)
 
   (l', retv)
 }
-```
 
-```pulse
+
+
 ghost
 fn suffix_factored_none_helper
   (#t:_)
@@ -544,9 +545,9 @@ fn suffix_factored_none_helper
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn suffix_factored_some_helper
   (#t:_)
@@ -571,9 +572,9 @@ fn suffix_factored_some_helper
     }
   }
 }
-```
 
-```pulse
+
+
 fn is_singleton
   (#t:Type) (p : deque t)
   (#x : erased t)
@@ -630,9 +631,9 @@ fn is_singleton
     false;
   }
 }
-```
 
-```pulse
+
+
 fn pop_front (#t:Type) (l : deque t)
   (#x : erased t)
   (#xs : erased (list t))
@@ -647,12 +648,12 @@ fn pop_front (#t:Type) (l : deque t)
     pop_front_cons l;
   }
 }
-```
+
 
 val snoc : #t:_ -> list t -> t -> l':list t{Cons? l'}
 let snoc xs x = xs @ [x]
 
-```pulse
+
 ghost
 fn rec join_last 
   (#t:Type) (headp : node_ptr t) (tailp : node_ptr t) (tailp' : node_ptr t)
@@ -702,12 +703,12 @@ fn rec join_last
     }
   }
 }
-```
+
 
 let tag_pure p = pure p
 
 (* This should really be just a consequence of proving a pure lemma. *)
-```pulse
+
 ghost
 fn rec unsnoc_list (#t:Type0) (l : list t)
   requires pure (Cons? l)
@@ -736,9 +737,9 @@ fn rec unsnoc_list (#t:Type0) (l : list t)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn fold_is_deque_cons
   (#t:Type0)
@@ -758,9 +759,9 @@ fn fold_is_deque_cons
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec sep_last 
   (#t:Type) (headp : node_ptr t) (tailp : node_ptr t)
@@ -817,7 +818,7 @@ fn rec sep_last
     }
   };
 }
-```
+
 
 let rec is_deque_suffix_nolast 
   (#t:Type0)
@@ -837,7 +838,7 @@ let rec is_deque_suffix_nolast
           v.dprev == prev /\
           v.dnext == (Some np))
 
-```pulse
+
 ghost
 fn rec is_deque_suffix_nolast_helper
   (#t:Type0)
@@ -914,9 +915,9 @@ fn rec is_deque_suffix_nolast_helper
     }
   }
 }
-```
 
-```pulse
+
+
 fn set_forward_pointer
   (#t:Type) (headp : node_ptr t)
   (last' : option (node_ptr t))
@@ -935,9 +936,9 @@ fn set_forward_pointer
   
   elim_trade _ _;
 }
-```
 
-```pulse
+
+
 fn push_back_cons (#t:Type0) (l : deque t)
   (x : t)
   (#xs : erased (list t))
@@ -976,9 +977,9 @@ fn push_back_cons (#t:Type0) (l : deque t)
   fold_is_deque_cons l';
   l'
 }
-```
 
-```pulse
+
+
 fn push_back_nil (#t:Type0) (l : deque t)
   (x : t)
   (#xs : erased (list t))
@@ -988,9 +989,9 @@ fn push_back_nil (#t:Type0) (l : deque t)
 {
   push_front_empty l x;
 }
-```
 
-```pulse
+
+
 fn push_back (#t:Type) (l : deque t) (x : t)
   (#xs : erased (list t))
   requires is_deque l xs
@@ -1008,9 +1009,9 @@ fn push_back (#t:Type) (l : deque t) (x : t)
     }
   }
 }
-```
 
-```pulse
+
+
 fn pop_back_cons (#t:Type0) (l : deque t)
   (#x : erased t)
   (#xs : erased (list t))
@@ -1038,10 +1039,10 @@ fn pop_back_cons (#t:Type0) (l : deque t)
   fold_is_deque_cons l';
   (l', v)
 }
-```
 
 
-```pulse
+
+
 fn pop_back_nil (#t:Type0) (l : deque t)
   (#x : erased t)
   requires is_deque l [reveal x]
@@ -1050,9 +1051,9 @@ fn pop_back_nil (#t:Type0) (l : deque t)
 {
   pop_front_nil l;
 }
-```
 
-```pulse
+
+
 fn is_singleton_snoc
   (#t:Type) (p : deque t)
   (#x : erased t)
@@ -1071,9 +1072,9 @@ fn is_singleton_snoc
   snoc is Nil iff `t` above is nil. *)
   is_singleton p;
 }
-```
 
-```pulse
+
+
 fn pop_back (#t:Type0) (l : deque t)
   (#x : erased t)
   (#xs : erased (list t))
@@ -1089,4 +1090,4 @@ fn pop_back (#t:Type0) (l : deque t)
     pop_back_cons l;
   }
 }
-```
+

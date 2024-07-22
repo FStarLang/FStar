@@ -18,6 +18,7 @@
 //Pulse AVL tree implementation. Inspired from Steel. The FStar spec file is adopted from Steel
 //----------------------------------------------------------------------------------------------------------
 module Pulse.Lib.AVLTree
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 module T = Pulse.Lib.Spec.AVLTree
@@ -43,7 +44,7 @@ let rec is_tree #t ct ft = match ft with
       is_tree lct left' **
       is_tree rct right'
 
-```pulse
+
 ghost
 fn elim_is_tree_leaf (#t:Type0) (x:tree_t t)
 requires is_tree x T.Leaf 
@@ -51,9 +52,9 @@ ensures pure (x == None)
 {
    unfold (is_tree x T.Leaf) 
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_is_tree_leaf (#t:Type0) (x:tree_t t) 
 requires pure (x == None) 
@@ -61,9 +62,9 @@ ensures is_tree x T.Leaf
 {
   fold (is_tree x T.Leaf); 
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_is_tree_node (#t:Type0) (ct:tree_t t) (data:t) (ltree:T.tree t) (rtree:T.tree t)
 requires is_tree ct (T.Node data ltree rtree)
@@ -77,11 +78,11 @@ ensures (
 {
   unfold is_tree
 }
-```
+
 
 module G = FStar.Ghost
 
-```pulse
+
 ghost
 fn intro_is_tree_node (#t:Type0) (ct:tree_t t) (v:node_ptr t) (#node:node t) (#ltree:T.tree t) (#rtree:T.tree t)
 requires
@@ -94,7 +95,7 @@ ensures
 {
   fold (is_tree ct (T.Node node.data ltree rtree))
 }
-```
+
 
 let is_tree_cases #t x ft
 = match x with
@@ -107,7 +108,7 @@ let is_tree_cases #t x ft
       is_tree n.right rtree
 
 
-```pulse 
+ 
 ghost
 fn cases_of_is_tree #t (x:tree_t t) (ft:T.tree t)
 requires is_tree x ft
@@ -126,9 +127,9 @@ ensures  is_tree_cases x ft
   }
 }
 
-```
 
-```pulse 
+
+ 
 ghost
 fn is_tree_case_none (#t:Type) (x:tree_t t) (#l:T.tree t)
 requires is_tree x l ** pure (x == None)
@@ -139,9 +140,9 @@ ensures  is_tree x l ** pure (l == T.Leaf)
   intro_is_tree_leaf x;
 }
 
-```
 
-```pulse 
+
+ 
 ghost
 fn is_tree_case_some (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
 requires is_tree x ft ** pure (x == Some v)
@@ -156,11 +157,11 @@ ensures
   cases_of_is_tree (Some v) ft;
   unfold is_tree_cases;
 }
-```
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
-```pulse 
+ 
 fn rec height (#t:Type0) (x:tree_t t)
 requires is_tree x 'l
 returns n:nat
@@ -185,9 +186,9 @@ ensures is_tree x 'l ** pure (n == T.height 'l)
     }
   }
 }
-```
 
-```pulse
+
+
 fn is_empty (#t:Type) (x:tree_t t) (#ft:G.erased(T.tree t))
   requires is_tree x ft
   returns b:bool
@@ -205,12 +206,12 @@ fn is_empty (#t:Type) (x:tree_t t) (#ft:G.erased(T.tree t))
     }
   }
 }
-```
+
 
 let null_tree_t (t:Type0) : tree_t t = None
 
 
-```pulse
+
 fn create (t:Type0)
   requires emp
   returns x:tree_t t
@@ -220,8 +221,8 @@ fn create (t:Type0)
   intro_is_tree_leaf tree;
   tree
 }
-```
-```pulse
+
+
 fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) (#r:(T.tree t)) 
   requires is_tree ltree l  **
            is_tree rtree r  //functional equivalent of x is 'l; x is the tail of the constructed tree.
@@ -234,11 +235,11 @@ fn node_cons (#t:Type0) (v:t) (ltree:tree_t t) (rtree:tree_t t) (#l:(T.tree t)) 
   intro_is_tree_node (Some y) y;
   Some y
 }
-```
+
 
 
 /// Appends value [v] at the leftmost leaf of the tree that [ptr] points to.
-```pulse
+
 fn rec append_left_none (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
 requires is_tree x ft ** pure (None? x)
 returns y:tree_t t
@@ -249,9 +250,9 @@ ensures is_tree x ft  ** is_tree y (T.Node v T.Leaf T.Leaf)
   let y = node_cons v left right;
   y 
 }
-```
 
-```pulse
+
+
 fn rec append_left (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
 requires is_tree x ft
 returns y:tree_t t
@@ -304,10 +305,10 @@ ensures is_tree y  (T.append_left ft v)
     }
   }
 } 
-```
 
 
-```pulse
+
+
 fn rec append_right (#t:Type0) (x:tree_t t) (v:t) (#ft:G.erased (T.tree t))
 requires is_tree x ft
 returns y:tree_t t
@@ -360,10 +361,10 @@ ensures is_tree y  (T.append_right ft v)
     }
   }
 } 
-```
 
 
-```pulse
+
+
 fn node_data (#t:Type) (x:tree_t t) (#ft:G.erased (T.tree t))
     requires is_tree x ft  ** (pure (Some? x))
     returns v:t
@@ -384,9 +385,9 @@ fn node_data (#t:Type) (x:tree_t t) (#ft:G.erased (T.tree t))
   intro_is_tree_node x np;
   v
 }
-```
 
-```pulse
+
+
 fn rec mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
     requires is_tree x ft
     returns b:bool
@@ -422,10 +423,10 @@ fn rec mem (#t:eqtype) (x:tree_t t) (v: t) (#ft:G.erased (T.tree t))
         }
     }
 }
-```
 
 
-```pulse
+
+
 fn get_some_ref (#t:Type) (x:tree_t t)
 requires is_tree x 'l ** pure (T.Node? 'l)
 returns v:node_ptr t
@@ -448,9 +449,9 @@ ensures
     }
   }
 }
-```
 
-```pulse
+
+
 fn rotate_left (#t:Type0) (tree:tree_t t) (#l: G.erased (T.tree t){ Some? (T.rotate_left l) })
 requires is_tree tree l
 returns y:tree_t t 
@@ -471,10 +472,10 @@ ensures (is_tree y (Some?.v (T.rotate_left l)))
   
   Some vl
 }
-```
 
 
-```pulse
+
+
 fn rotate_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_right l) })
 requires is_tree tree l
 returns y:tree_t t 
@@ -494,10 +495,10 @@ ensures (is_tree y (Some?.v (T.rotate_right l)))
   intro_is_tree_node (Some vl) vl #{data = nl.data; left = nl.left; right = Some vll};
   Some vl
 }
-```
 
 
-```pulse
+
+
 fn rotate_right_left (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_right_left l) })
 requires is_tree tree l
 returns y:tree_t t 
@@ -528,9 +529,9 @@ ensures (is_tree y (Some?.v (T.rotate_right_left l)))
 
   Some vl
 }
-```
 
-```pulse
+
+
 fn rotate_left_right (#t:Type0) (tree:tree_t t) (#l:G.erased (T.tree t){ Some? (T.rotate_left_right l) })
 requires is_tree tree l
 returns y:tree_t t 
@@ -566,11 +567,11 @@ ensures (is_tree y (Some?.v (T.rotate_left_right l)))
   
   Some vl
 }
-```
+
 
 module M = FStar.Math.Lib
 
-```pulse
+
 fn rec is_balanced (#t:Type0) (tree:tree_t t)
 requires is_tree tree 'l
 returns b:bool
@@ -603,9 +604,9 @@ ensures is_tree tree 'l ** pure (b <==> (T.is_balanced 'l))
   }
 }
 
-```
 
-```pulse
+
+
 fn rec  rebalance_avl (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t))
 requires is_tree tree l
 returns y:tree_t t 
@@ -713,9 +714,9 @@ ensures (is_tree y (T.rebalance_avl l))
     }
   }
 }
-```
 
-```pulse
+
+
 fn rec insert_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
 requires is_tree tree 'l
 returns y:tree_t t 
@@ -764,8 +765,8 @@ ensures (is_tree y (T.insert_avl cmp 'l key))
     }
   }
 }
-```
-```pulse 
+
+ 
 ghost
 fn is_tree_case_some1 (#t:Type) (x:tree_t t) (v:node_ptr t) (#ft:T.tree t) 
 requires is_tree x ft ** pure (x == Some v)
@@ -776,10 +777,10 @@ ensures  is_tree x ft ** pure (T.Node? ft)
   intro_is_tree_node (Some v) v;
 }
 
-```
+
 #set-options "--print_full_names"
 
-```pulse
+
 fn rec tree_max_c (#t:Type0) (tree:tree_t t) (#l:G.erased(T.tree t){T.Node? l})
 requires is_tree tree l 
 returns y:t 
@@ -812,9 +813,9 @@ ensures is_tree tree l ** pure (y == T.tree_max l)
     }
   }
 }
-```
 
-```pulse
+
+
 fn rec delete_avl (#t:Type0) (cmp: T.cmp t) (tree:tree_t t) (key: t)
 requires is_tree tree 'l
 returns y:tree_t t 
@@ -913,5 +914,5 @@ ensures (is_tree y (T.delete_avl cmp 'l key))
    }
   }
 }
-```
+
 

@@ -15,6 +15,7 @@
 *)
 
 module CBOR.Pulse
+#lang-pulse
 include CBOR.Spec.Constants
 include CBOR.Pulse.Extern
 open Pulse.Lib.Pervasives
@@ -124,7 +125,7 @@ let impl_compare_u64_correct
 = ()
 
 
-```pulse
+
 fn byte_array_compare
   (sz: SZ.t)
   (a1: A.larray U8.t (SZ.v sz))
@@ -169,12 +170,12 @@ ensures
     };
     !pres
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let i16_neq_0 (x: I16.t) : Tot bool = x <> 0s // FIXME: WHY WHY WHY?
 
-```pulse
+
 fn rec cbor_compare
   (a1: cbor)
   (a2: cbor)
@@ -392,9 +393,9 @@ ensures
     }
 }
 
-```
 
-```pulse
+
+
 fn cbor_is_equal
   (a1: cbor)
   (a2: cbor)
@@ -414,7 +415,7 @@ ensures
     let test = cbor_compare a1 a2;
     (test = 0s)
 }
-```
+
 
 noeq
 type cbor_map_get_t =
@@ -495,7 +496,7 @@ let cbor_map_get_invariant
           list_ghost_assoc (Ghost.reveal vkey) l
     )
 
-```pulse
+
 ghost
 fn cbor_map_get_invariant_end
   (pmap: perm)
@@ -538,9 +539,9 @@ ensures
         }
     }
 }
-```
 
-```pulse
+
+
 fn cbor_map_get
   (key: cbor)
   (map: cbor)
@@ -628,7 +629,7 @@ ensures
     cbor_map_get_invariant_end pmap vkey vmap map gres res i l;
     res
 }
-```
+
 
 module SM = Pulse.Lib.SeqMatch
 module AS = Pulse.Lib.ArraySwap
@@ -691,7 +692,7 @@ let seq_helper_2 (#a:Type) (s:Seq.seq a) (x:a)
   : Lemma (requires 0 < Seq.length s /\ Seq.head s == x)
           (ensures s `Seq.equal` Seq.cons x (Seq.tail s)) = ()
 
-```pulse
+
 fn cbor_map_sort_merge
     (a: A.array cbor_map_entry)
     (lo: SZ.t)
@@ -860,9 +861,9 @@ ensures exists* c l .
     SM.seq_list_match_append_intro (raw_data_item_map_entry_match 1.0R) c accu (c1 `Seq.append` c2) (l1 `List.Tot.append` l2);
     !pres
 }
-```
 
-```pulse
+
+
 fn rec cbor_map_sort_aux
     (a: A.array cbor_map_entry)
     (lo hi: SZ.t)
@@ -918,9 +919,9 @@ ensures exists* (c': Seq.seq cbor_map_entry) (l': list (Cbor.raw_data_item & Cbo
         }
     }
 }
-```
 
-```pulse
+
+
 fn cbor_map_sort
     (a: A.array cbor_map_entry)
     (len: SZ.t)
@@ -950,4 +951,4 @@ ensures exists* c' l' .
     A.pts_to_range_elim a 1.0R c';
     res
 }
-```
+

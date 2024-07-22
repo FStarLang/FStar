@@ -1,4 +1,5 @@
 module PulseTutorial.PCMParallelIncrement
+#lang-pulse
 open Pulse.Lib.Pervasives
 module M = FStar.Algebra.CommMonoid
 module MS = Pulse.Lib.PCM.MonoidShares
@@ -11,7 +12,7 @@ module CI = Pulse.Lib.CancellableInvariant
 // We could use a ref U32 and use Pulse.Lib.Primitives
 // but that adds needless noise, unrelated to the main point
 // of this example
-```pulse
+
 atomic
 fn atomic_incr (r:ref nat)
 requires pts_to r 'i
@@ -19,7 +20,7 @@ ensures pts_to r ('i + 1)
 {
   admit()
 }
-```
+
 
 (* This example illustrates the use of a custom PCM
    to reason about the "contributions" of multiple threads to
@@ -87,7 +88,7 @@ let owns_tank_units #n (g:tank n) (i:nat)
 
 
 // You cannot own more than the tank capacity
-```pulse
+
 ghost
 fn extract_tank_bound (#n:nat) (g:tank n) (#i:erased nat)
 requires
@@ -99,11 +100,11 @@ ensures
   let v = GPR.read_simple g; 
   fold owns_tank_units;
 }
-```
+
 
 // Ownership of tank units can be combined additively
 [@@allow_ambiguous]
-```pulse
+
 ghost
 fn gather_tank_units (#n:nat) (g:tank n) (#i #j:erased nat)
 requires
@@ -121,10 +122,10 @@ ensures
   fold owns_tank_units;
   extract_tank_bound g;
 }
-```
+
 
 // Ownership of a unit can also split out and shared
-```pulse
+
 ghost
 fn share_tank_units (#n:nat) (g:tank n) (#u #v:nat)
 requires
@@ -141,9 +142,9 @@ ensures
   fold (owns_tank_units g u);
   fold (owns_tank_units g v)
 }
-```
 
-```pulse
+
+
 ghost
 fn share_one_tank_units (#n:nat) (g:tank n) (#u:nat { u > 0 })
 requires
@@ -163,9 +164,9 @@ ensures
   fold (owns_tank_units g 1);
   (hide #nat (u - 1))
 }
-```
 
-// ```pulse
+
+// 
 // ghost
 // fn share_owns_tank_units_unit (#n:nat) (g:tank n) (#v:nat)
 // requires
@@ -182,7 +183,7 @@ ensures
 //   fold (owns_tank_units g v);
 //   fold owns_tank_units
 // }
-// ```
+// 
 
 // The ghost state is a pair of tanks of capacity `n`
 [@@erasable]
@@ -211,7 +212,7 @@ let contributions
     owns_tank_units gs.to_give t **
     pure (v == initial + g /\ g + t == n)
 
-```pulse
+
 ghost
 fn fold_contribs 
     (n:nat)
@@ -229,7 +230,7 @@ ensures
 {
   fold (contributions n initial gs r)
 }
-```
+
 
 
 // can_give gs k: Knowledge that the given tank has at least `k` units
@@ -242,7 +243,7 @@ let can_give #n (gs:ghost_state n) (k:nat) = owns_tank_units gs.given k
 let has_given #n (gs:ghost_state n) (k:nat) = owns_tank_units gs.to_give k
 
 // A utility to share out can_give units
-```pulse
+
 ghost
 fn share_can_give (#n:nat) (gs:ghost_state n) (#i:nat { i > 0 })
 requires can_give gs i
@@ -253,11 +254,11 @@ ensures can_give gs (i - 1) ** can_give gs 1
   fold (can_give gs (i - 1));
   fold can_give;
 }
-```
+
 
 // A utility to gather has_given units
 [@@allow_ambiguous]
-```pulse
+
 ghost
 fn gather_has_given (#n:nat) (gs:ghost_state n) (#i #j:nat)
 requires has_given gs i ** has_given gs j
@@ -268,11 +269,11 @@ ensures has_given gs (i + j)
   gather_tank_units gs.to_give;
   fold (has_given gs (i + j));
 }
-```
+
 
 
 // Initializing the ghost state and building the invariant
-```pulse
+
 ghost
 fn init_ghost_state (initial:nat) (capacity:nat) (r:ref nat)
 requires pts_to r initial
@@ -294,10 +295,10 @@ ensures contributions capacity initial gs r **
   fold (contributions capacity initial gs r);
   gs
 }
-```
+
 
 // Tearing down the ghost state and recovering the main postcondition
-```pulse
+
 ghost
 fn elim_ghost_state (initial:nat) (capacity:nat) (r:ref nat) (gs:ghost_state capacity)
 requires
@@ -312,10 +313,10 @@ ensures
   drop_ (owns_tank_units gs.to_give _);
   drop_ (owns_tank_units gs.given _);
 }
-```
+
 
 // The core function to increment a reference
-```pulse
+
 atomic
 fn incr_core
     (#n:erased nat)
@@ -335,10 +336,10 @@ ensures
    let remaining = share_one_tank_units gs.to_give; fold (has_given gs 1);
    fold (contributions n initial gs r)
 }
-```
+
 
 // The core function to increment a reference
-```pulse
+
 atomic
 fn increment 
     (#n:erased nat)
@@ -366,12 +367,12 @@ opens [CI.iname_of i] //we used the invariant
     CI.pack_cinv_vp i;
   }
 }
-```
+
 
 
 // First, a simple variant to increment a reference in parallel in two threads,
 // the classic Owicki-Gries example
-```pulse
+
 fn incr2 (r:ref nat)
 requires pts_to r 'i
 ensures pts_to r ('i + 2)
@@ -402,14 +403,14 @@ ensures pts_to r ('i + 2)
   // recover the postcondition by the main ghost state eliminator lemma
   elim_ghost_state _ _ _ gs;
 }
-```
+
 
 // We can now generalize this to an arbitrary number of threads
 
 
 // We first need an auxilary function that allows us to take
 // ownership of 0 units of the has_given tank from the invariant
-```pulse
+
 ghost
 fn has_given_zero 
         (#initial:erased nat)
@@ -440,11 +441,11 @@ opens [CI.iname_of ci]
     CI.pack_cinv_vp #(contributions capacity initial gs r) ci;
   }
 }
-```
+
 
 
 // Now, we can recursively spawn `n` threads to increment `r`
-```pulse
+
 fn rec incr_n_aux
         (#capacity:erased nat)
         (#initial:erased nat)
@@ -483,10 +484,10 @@ decreases remaining
     gather_has_given gs;
   }
 }
-```
+
 
 /// Finally, the main `incr_n r n`
-```pulse
+
 fn incr_n (r:ref nat) (n:nat)
 requires pts_to r 'i
 ensures pts_to r ('i + n)
@@ -497,4 +498,4 @@ ensures pts_to r ('i + n)
   CI.cancel ci;
   elim_ghost_state _ _ _ gs; //elim_ghost_state 'i _ r gs;
 }
-```
+

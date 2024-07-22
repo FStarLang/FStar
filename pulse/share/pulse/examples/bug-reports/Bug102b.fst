@@ -1,4 +1,5 @@
 module Bug102b
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -23,7 +24,7 @@ let rec is_list #t (x:llist t) (l:list t)
         pts_to v { head; tail } **
         is_list tail tl
 
-```pulse
+
 ghost
 fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
   requires is_list x (head::tl)
@@ -36,9 +37,9 @@ fn elim_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
 {
   unfold (is_list x (head::tl));
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
   requires (
@@ -50,4 +51,4 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (head:t) (tl:list t)
 {
   fold (is_list x (head::tl));
 }
-```
+

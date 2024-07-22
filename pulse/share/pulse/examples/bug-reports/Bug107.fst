@@ -1,11 +1,12 @@
 module Bug107
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
 val foo : int -> int -> slprop
 let foo x y = emp
 
-```pulse
+
 fn test0 ()
   requires foo 1 2
   ensures emp
@@ -13,9 +14,9 @@ fn test0 ()
   unfold foo 1 2;
   ()
 }
-```
 
-```pulse
+
+
 fn test1 ()
   requires foo 1 2
   ensures emp
@@ -23,9 +24,9 @@ fn test1 ()
   unfold foo;
   ()
 }
-```
 
-```pulse
+
+
 fn test2 ()
   requires foo 1 2
   ensures emp
@@ -33,10 +34,10 @@ fn test2 ()
   unfold foo 1;
   ()
 }
-```
+
 
 [@@expect_failure] // should work
-```pulse
+
 fn test3 ()
   requires foo 1 2
   ensures emp
@@ -44,10 +45,10 @@ fn test3 ()
   unfold foo 1 _;
   ()
 }
-```
+
 
 [@@expect_failure] // should work
-```pulse
+
 fn test4 ()
   requires foo 1 2
   ensures emp
@@ -55,4 +56,4 @@ fn test4 ()
   unfold foo _ 2;
   ()
 }
-```
+

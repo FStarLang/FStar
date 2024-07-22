@@ -15,10 +15,11 @@
 *)
 
 module Example.Unreachable
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 
-```pulse
+
 fn test (x:option bool)
     requires pure (Some? x)
     returns b:bool 
@@ -29,4 +30,4 @@ fn test (x:option bool)
      None -> { unreachable () }
     }
 }
-```
+

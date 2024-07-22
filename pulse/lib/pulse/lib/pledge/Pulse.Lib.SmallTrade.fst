@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SmallTrade
+#lang-pulse
 
 open FStar.Ghost
 open Pulse.Lib.Core
@@ -38,7 +39,7 @@ let trade #is hyp concl : slprop = __trade #is hyp concl
 let trade_is_slprop2 (#is:inames) (hyp concl:slprop)
   : Lemma (is_slprop2 (trade #is hyp concl)) = ()
 
-```pulse
+
 ghost
 fn intro_trade
   (#is:inames)
@@ -57,14 +58,14 @@ fn intro_trade
   fold (__trade #is hyp concl);
   fold (trade #is hyp concl)
 }
-```
+
 
 let sqeq (p : Type) (_ : squash p) : erased p =
   FStar.IndefiniteDescription.elim_squash #p ()
 
 let psquash (a:Type u#a) : prop = squash a
 
-```pulse
+
 ghost
 fn pextract (a:Type u#4) (_:squash a)
 requires emp
@@ -77,9 +78,9 @@ ensures emp
   let i = reveal i;
   i
 }
-```
 
-```pulse
+
+
 ghost
 fn deconstruct_trade (is:inames) (hyp concl:slprop)
   requires trade #is hyp concl
@@ -100,9 +101,9 @@ fn deconstruct_trade (is:inames) (hyp concl:slprop)
   rewrite extra as (dfst res);
   res
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_trade
   (#is:inames)
@@ -115,9 +116,9 @@ fn elim_trade
   let f = dsnd res;
   f ()
 }
-```
 
-```pulse
+
+
 ghost
 fn trade_sub_inv
   (#is1:inames)
@@ -140,9 +141,9 @@ fn trade_sub_inv
   
   intro_trade #is2 hyp concl (dfst res) aux
 }
-```
 
-```pulse
+
+
 ghost
 fn trade_map
   (#os : inames)
@@ -162,9 +163,9 @@ fn trade_map
   };
   intro_trade #os p r (trade #os p q) aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn trade_compose
   (#os : inames)
@@ -184,4 +185,4 @@ fn trade_compose
   slprop2_star (trade #os p q) (trade #os q r);
   intro_trade #os p r (trade #os p q ** trade #os q r) aux;
 }
-```
+

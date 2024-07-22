@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Priv.Trade0
+#lang-pulse
 open PulseCore.Observability
 open Pulse.Lib.Pervasives
 
@@ -37,7 +38,7 @@ let stick (p q:slprop)
 : slprop
 = exists* (v:slprop). ctx v ** pure (exists_implication (v ** p) q)
 
-```pulse
+
 fn return (#a:Type u#2) (x:a)
 requires emp
 returns v:a
@@ -45,12 +46,12 @@ ensures pure (v == x)
 {
   x
 }
-```
+
 
 (* Fake squash *)
 let psquash (a:Type u#a) : prop = squash a
 
-```pulse
+
 ghost
 fn elim_stick (hyp concl: slprop)
 requires stick hyp concl ** hyp
@@ -66,9 +67,9 @@ ensures concl
   unfold ctx;
   f ();
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_stick
   (hyp concl: slprop)
@@ -85,9 +86,9 @@ ensures stick hyp concl
   fold (ctx v);
   fold (stick hyp concl);
 }
-```
 
-```pulse
+
+
 ghost
 fn frame_stick
   (hyp concl: slprop)
@@ -104,4 +105,4 @@ ensures stick (hyp ** f) (concl ** f)
   };
   intro_stick (hyp ** f) (concl ** f) (stick hyp concl) aux;
 }
-```
+

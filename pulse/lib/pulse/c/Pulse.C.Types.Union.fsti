@@ -15,6 +15,7 @@
 *)
 
 module Pulse.C.Types.Union
+#lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Fields
 open Pulse.C.Typestring
@@ -442,7 +443,7 @@ val ununion_field
       Ghost.reveal res == union_set_field tn n fields field (coerce_eq () (Ghost.reveal v'))
     ))
 
-```pulse
+
 ghost
 fn ununion_field_and_drop
   (#tn: Type0)
@@ -469,7 +470,7 @@ ensures
   drop_ (has_union_field r field r');
   res
 }
-```
+
 
 // NOTE: we DO NOT support preservation of struct prefixes
 

@@ -15,6 +15,7 @@
 *)
 
 module PulseCorePaper.S2.Lock
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module Box = Pulse.Lib.Box
@@ -39,7 +40,7 @@ let lock_inv r p : v:slprop { is_storable p ==> is_storable v } = exists* v. Box
 [@@pulse_unfold]
 let protects l p = inv l.i (lock_inv l.r p)
 
-```pulse
+
 atomic
 fn mk_lock (r:Box.box U32.t) (i:iname) #p
 requires inv i (lock_inv r p)
@@ -50,9 +51,9 @@ ensures protects l p
   rewrite each r as res.r, i as res.i; (* proof hint *)
   res
 }
-```
 
-```pulse
+
+
 fn create (p:storable)
 requires p
 returns l:lock
@@ -62,9 +63,9 @@ ensures protects l p
    let i = new_invariant (lock_inv r p);
    mk_lock r i
 }
-```
 
-```pulse
+
+
 fn release (#p:slprop) (l:lock)
 requires protects l p ** p
 ensures protects l p
@@ -75,9 +76,9 @@ ensures protects l p
     Pulse.Lib.Primitives.write_atomic_box l.r 0ul;
   }
 }
-```
 
-```pulse
+
+
 fn rec acquire #p (l:lock)
 requires protects l p
 ensures protects l p ** p
@@ -91,4 +92,4 @@ ensures protects l p ** p
   };
   if retry { acquire l }
 }
-```
+

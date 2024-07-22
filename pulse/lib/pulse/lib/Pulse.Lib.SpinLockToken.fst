@@ -14,6 +14,7 @@
 *)
 
 module Pulse.Lib.SpinLockToken
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
@@ -31,7 +32,7 @@ type lock (v:slprop) : Type u#4 = {
   t2 : T.token i (exists* (p:perm). L.lock_active #p l)
 }
 
-```pulse
+
 fn new_lock (v:slprop { is_storable v })
   requires v
   returns _:lock v
@@ -46,12 +47,12 @@ fn new_lock (v:slprop { is_storable v })
   let l = { l; i; t1; t2 };
   l
 }
-```
+
 
 let lock_acquired (#v:slprop) (l:lock v) : slprop =
   L.lock_acquired l.l
 
-```pulse
+
 fn lock_alive (#v:slprop) (l:lock v)
   requires emp
   ensures exists* (p:perm). L.lock_alive l.l #p v
@@ -70,9 +71,9 @@ fn lock_alive (#v:slprop) (l:lock v)
   elim_stick _ _;
   drop_ (inv _ _)
 }
-```
 
-```pulse
+
+
 fn acquire (#v:slprop) (l:lock v)
   requires emp
   ensures v ** lock_acquired l
@@ -83,9 +84,9 @@ fn acquire (#v:slprop) (l:lock v)
   fold (lock_acquired l);
   drop_ (L.lock_alive l.l #p v)
 }
-```
 
-```pulse
+
+
 fn release (#v:slprop) (l:lock v)
   requires v ** lock_acquired l
   ensures emp
@@ -96,4 +97,4 @@ fn release (#v:slprop) (l:lock v)
   L.release l.l;
   drop_ (L.lock_alive l.l #p v)
 }
-```
+

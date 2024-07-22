@@ -15,13 +15,14 @@
 *)
 
 module PulseTutorial.Array
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Array
 
 module SZ = FStar.SizeT
 
-```pulse //readi$
+ //readi$
 fn read_i
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type)
   (arr:array t)
@@ -34,34 +35,34 @@ fn read_i
 {
   arr.(i)
 }
-```
 
-```pulse //writei$
+
+ //writei$
 fn write_i (#t:Type) (arr:array t) (#s:erased (Seq.seq t)) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr s
   ensures pts_to arr (Seq.upd s (SZ.v i) x)
 {
   arr.(i) <- x
 }
-```
+
 
 //writeipbegin$
 [@@ expect_failure]
-```pulse
+
 fn write_ip #t (arr:array t) (#p:perm) (#s:erased _) (x:t) (i:SZ.t { SZ.v i < Seq.length s })
   requires pts_to arr #p s
   ensures pts_to arr #p (Seq.upd s (SZ.v i) x)
 {
   arr.(i) <- x
 }
-```
+
 //writeipend$
 
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 open FStar.SizeT
 
-```pulse
+
 //comparesigbegin$
 fn compare
   (#[@@@ Rust_generics_bounds ["PartialEq"; "Copy"]] t:eqtype)
@@ -113,9 +114,9 @@ fn compare
   res
 }
 //compareimplend$
-```
 
-```pulse //copy$
+
+ //copy$
 fn copy
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
   (a1 a2:A.array t)
@@ -155,9 +156,9 @@ fn copy
     i := vi +^ 1sz
   }
 }
-```
 
-```pulse
+
+
 //copy2sigbegin$
 fn copy2
   (#[@@@ Rust_generics_bounds ["Copy"]] t:Type0)
@@ -205,9 +206,9 @@ fn copy2
   ()
   //copy2rewritingend$
 }
-```
 
-```pulse //compare_stack_arrays$
+
+ //compare_stack_arrays$
 fn compare_stack_arrays ()
   requires emp
   ensures emp
@@ -220,11 +221,11 @@ fn compare_stack_arrays ()
   let b = compare a1 a2 2sz;
   assert (pure b)
 }
-```
+
 
 //ret_stack_array$
 [@@ expect_failure]
-```pulse
+
 fn ret_stack_array ()
   requires emp
   returns a:array int
@@ -233,13 +234,13 @@ fn ret_stack_array ()
   let mut a1 = [| 0; 2sz |];
   a1  // cannot prove pts_to a (Seq.create 0 2) in the context emp
 }
-```
+
 //ret_stack_array_end$
 
 //heaparray$
 module V = Pulse.Lib.Vec
 
-```pulse 
+ 
 fn heap_arrays ()
   requires emp
   returns a:V.vec int
@@ -250,10 +251,10 @@ fn heap_arrays ()
   V.free a1;
   a2  // returning vec is ok
 }
-```
+
 //heaparrayend$
 
-```pulse //copyuse$
+ //copyuse$
 fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
   requires exists* s. V.pts_to v s ** pure (Seq.length s == 2)
   ensures V.pts_to v (Seq.create 2 0)
@@ -267,4 +268,3 @@ fn copy_app ([@@@ Rust_mut_binder] v:V.vec int)
   V.to_vec_pts_to v
   // v, s |- V.pts_to v (Seq.create 2 0) ** ...
 }
-```

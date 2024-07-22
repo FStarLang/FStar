@@ -15,13 +15,14 @@
 *)
 
 module Test.Namespace
+#lang-pulse
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn test ()
    requires emp
    ensures emp
 {
     ()
 }
-```
+

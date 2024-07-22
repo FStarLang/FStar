@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Pledge.Simple
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -24,7 +25,7 @@ let pledge (f:slprop) (v:slprop) : slprop =
   exists* is. P.pledge is f v
 
 (* Anything that holds now holds in the future too. *)
-```pulse
+
 ghost
 fn return_pledge (f v : slprop)
   requires v
@@ -33,9 +34,9 @@ fn return_pledge (f v : slprop)
   P.return_pledge f v;
   fold pledge;
 }
-```
 
-```pulse
+
+
 ghost
 fn make_pledge
   (#is:inames)
@@ -47,7 +48,7 @@ fn make_pledge
   P.make_pledge is f v extra k;
   fold pledge;
 }
-```
+
 
 // FIXME: marking this ghost gives an awful error, but it should just
 // fail saying that `is` is not `emp_inames`
@@ -59,7 +60,7 @@ fn make_pledge
 //   >>> app arg (FStar.Ghost.reveal _)
 //   >>>> app arg (_)
 //   Variable not found: _#6
-```pulse
+
 fn redeem_pledge (f v:slprop)
   requires f ** pledge f v
   ensures f ** v
@@ -67,9 +68,9 @@ fn redeem_pledge (f v:slprop)
   unfold (pledge f v);
   P.redeem_pledge _ f v;
 }
-```
 
-```pulse
+
+
 ghost
 fn join_pledge (#f v1 v2:slprop)
   requires pledge f v1 ** pledge f v2
@@ -84,9 +85,9 @@ fn join_pledge (#f v1 v2:slprop)
   P.join_pledge #(join_inames is1 is2) #f v1 v2;
   fold pledge
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_pledge
   (#f v1 v2:slprop)
@@ -101,4 +102,4 @@ fn rewrite_pledge
   P.rewrite_pledge #(join_inames is is_k) #f v1 v2 #is_k k;
   fold pledge
 }
-```
+

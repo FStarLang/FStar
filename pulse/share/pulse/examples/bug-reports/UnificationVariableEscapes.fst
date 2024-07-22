@@ -15,13 +15,14 @@
 *)
 
 module UnificationVariableEscapes
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module R = Pulse.Lib.Reference
 
-```pulse
+
 fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:t)
               (#s:(s:Ghost.erased (Seq.seq t) { Seq.length s == A.length a }))
    requires (A.pts_to a s)
@@ -49,4 +50,3 @@ fn fill_array (#t:Type0) (a:A.array t) (l:(l:US.t { US.v l == A.length a })) (v:
    };
    ()
 }
-```

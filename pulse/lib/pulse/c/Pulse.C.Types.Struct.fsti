@@ -15,6 +15,7 @@
 *)
 
 module Pulse.C.Types.Struct
+#lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.C.Types.Fields
 open Pulse.C.Typestring
@@ -334,7 +335,7 @@ val unstruct_field
       Ghost.reveal res == struct_set_field field (coerce_eq () (Ghost.reveal v')) v
     ))
 
-```pulse
+
 ghost
 fn unstruct_field_and_drop
   (#tn: Type0)
@@ -364,9 +365,9 @@ ensures
   drop_ (has_struct_field r field r');
   res
 }
-```
 
-```pulse
+
+
 ghost
 fn unstruct_field_alt
   (#tn: Type0)
@@ -390,7 +391,7 @@ ensures
 {
   unstruct_field r field r'
 }
-```
+
 
 val fractionable_struct
   (#tn: Type0)

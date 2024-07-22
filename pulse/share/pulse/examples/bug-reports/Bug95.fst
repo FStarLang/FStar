@@ -1,4 +1,5 @@
 module Bug95
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
@@ -34,7 +35,7 @@ let rec is_list_suffix
           v.dllnext == (Some np))
 
 (* This fold used to fail. *)
-```pulse
+
 ghost
 fn intro_is_list_singleton
   (#t:Type)
@@ -50,4 +51,4 @@ fn intro_is_list_singleton
 {
   fold (is_list_suffix x [n] None x);
 }
-```
+

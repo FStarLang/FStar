@@ -15,11 +15,12 @@
 *)
 
 module Example.RValues
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --ext 'pulse:rvalues'"
 
-```pulse
+
 fn test ()
   requires emp
   returns x:nat
@@ -29,4 +30,4 @@ fn test ()
   y := y + 1;
   y
 }
-```  
+  

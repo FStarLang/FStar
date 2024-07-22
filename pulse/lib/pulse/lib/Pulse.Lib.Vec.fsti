@@ -15,7 +15,7 @@
 *)
 
 module Pulse.Lib.Vec
-
+#lang-pulse
 open FStar.Ghost
 open PulseCore.FractionalPermission
 open Pulse.Lib.Core
@@ -118,15 +118,15 @@ val gather
 
 val vec_to_array (#a:Type0) (v:vec a) : arr:A.array a { A.length arr == length v }
 
-val to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit emp_inames
-      (pts_to v #p s)
-      (fun _ → A.pts_to (vec_to_array v) #p s)
+ghost
+fn to_array_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
+requires pts_to v #p s
+ensures A.pts_to (vec_to_array v) #p s
 
-val to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
-  : stt_ghost unit emp_inames
-      (A.pts_to (vec_to_array v) #p s)
-      (fun _ → pts_to v #p s)
+ghost
+fn to_vec_pts_to (#a:Type0) (v:vec a) (#p:perm) (#s:Seq.seq a)
+requires A.pts_to (vec_to_array v) #p s
+ensures pts_to v #p s
 
 val read_ref (#a:Type0) (r:R.ref (vec a))
   (i:SZ.t)

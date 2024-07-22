@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Pervasives
+#lang-pulse
 include Pulse.Main
 include Pulse.Lib.Core
 include Pulse.Lib.Forall
@@ -36,9 +37,9 @@ val perform
 let perform f = f ()
 
 val perform_ghost
-  (#a #opens #pre #post : _)
-  (f : unit -> stt_ghost a opens pre post)
-  : stt_ghost a opens pre post
+  (#a #opens_ #pre #post : _)
+  (f : unit -> stt_ghost a opens_ pre post)
+  : stt_ghost a opens_ pre post
 let perform_ghost f = f ()
 
 (* TEMPORARY! REMOVE! *)
@@ -63,7 +64,7 @@ let inames_join_self (is1 : inames)
 //
 // Native extraction in the Rust backend
 //
-```pulse
+
 fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
   requires pts_to r f
   returns y:b
@@ -72,7 +73,7 @@ fn ref_apply (#a #b:Type) (r:ref (a -> b)) (x:a) (#f:erased (a -> b))
   let f = !r;
   f x
 }
-```
+
 
 //
 // Native extraction in the Rust backend
@@ -85,7 +86,7 @@ let tthd (x:'a & 'b & 'c) : 'c = Mktuple3?._3 x
 module T = FStar.Tactics
 let default_arg (t:T.term) = T.exact t
 
-```pulse
+
 ghost
 fn call_ghost 
       (#a:Type0)
@@ -102,9 +103,9 @@ ensures post x y
   rewrite (post x y) as (post x (reveal (hide y)));
   hide y
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_cond_true (b:bool) (p q:slprop)
 requires (cond b p q ** pure (b == true))
@@ -112,9 +113,9 @@ ensures p
 {
   rewrite (cond b p q) as p;
 }  
-```
 
-```pulse
+
+
 ghost
 fn elim_cond_false b p q
 requires (cond b p q ** pure (b == false))
@@ -122,9 +123,9 @@ ensures q
 {
   rewrite (cond b p q) as q;
 }  
-```
 
-```pulse
+
+
 ghost
 fn intro_cond_true (p q:slprop)
 requires p
@@ -132,9 +133,9 @@ ensures cond true p q
 {
   fold (cond true p q);
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_cond_false (p q:slprop)
 requires q
@@ -142,9 +143,9 @@ ensures cond false p q
 {
   fold (cond false p q);
 }
-```
 
-```pulse
+
+
 fn par (#pf #pg #qf #qg:_)
        (f: unit -> stt unit pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
@@ -158,9 +159,9 @@ ensures qf ** qg
   { g () };
   ()
 }
-```
 
-```pulse
+
+
 fn par_atomic (#is #js #pf #pg #qf #qg:_)
        (f: unit -> stt_atomic unit is pf (fun _ -> qf))
        (g: unit -> stt_atomic unit js pg (fun _ -> qg))
@@ -174,9 +175,9 @@ ensures qf ** qg
   { g () };
   ()
 }
-```
 
-```pulse
+
+
 fn par_atomic_l (#is #pf #pg #qf #qg:_)
        (f: unit -> stt_atomic unit is pf (fun _ -> qf))
        (g: unit -> stt unit pg (fun _ -> qg))
@@ -190,7 +191,7 @@ ensures qf ** qg
   { g () };
   ()
 }
-```
+
 
 type rust_extraction_attr =
   | Rust_const_fn

@@ -6,7 +6,7 @@ endif
 # source files in your project are under the same namespace, say
 # MyNamespace, then you can set this variable to *,-MyNamespace
 ALREADY_CACHED_LIST ?= Prims,FStar,PulseCore,Pulse
-FSTAR_OPTIONS += --already_cached $(ALREADY_CACHED_LIST)
+#FSTAR_OPTIONS += --already_cached $(ALREADY_CACHED_LIST)
 
 # FIXME: do we still need separate subdirectories for pledges, classes?
 INCLUDE_PATHS += $(PULSE_HOME)/lib/pulse $(PULSE_HOME)/lib/pulse/lib $(PULSE_HOME)/lib/pulse/lib/class $(PULSE_HOME)/lib/pulse/lib/pledge $(PULSE_HOME)/lib/pulse/core

@@ -15,6 +15,7 @@
 *)
 
 module RecordWithRefs
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U8 = FStar.UInt8
 module R = Pulse.Lib.Reference
@@ -37,7 +38,7 @@ let u8_pair_pred (p:u8_pair) (v:u8_pair_repr) : slprop =
     R.pts_to p.b (snd v)
 
 
-```pulse
+
 ghost
 fn fold_u8_pair_pred (x:u8_pair) (#u #v:erased U8.t)
   requires
@@ -48,9 +49,9 @@ fn fold_u8_pair_pred (x:u8_pair) (#u #v:erased U8.t)
 {
    fold (u8_pair_pred x (reveal u, reveal v))
 }
-```
 
-```pulse
+
+
 fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
   requires 
     u8_pair_pred p v
@@ -69,10 +70,10 @@ fn swap_pair (p: u8_pair) (#v: erased u8_pair_repr)
         as (u8_pair_pred p (snd v, fst v));
     ()
 }
-```
 
 
-```pulse
+
+
 fn swap_pair_alt (p: u8_pair) (#v: erased u8_pair_repr)
   requires 
     u8_pair_pred p v
@@ -90,9 +91,9 @@ fn swap_pair_alt (p: u8_pair) (#v: erased u8_pair_repr)
 
     ()
 }
-```
 
-```pulse
+
+
 fn swap_pair_alt2 (p: u8_pair) (#v: erased u8_pair_repr)
   requires 
     u8_pair_pred p v
@@ -111,11 +112,11 @@ fn swap_pair_alt2 (p: u8_pair) (#v: erased u8_pair_repr)
     fold [fst; snd] u8_pair_pred p (_v1, _v2);
     ()
 }
-```
 
 
 
-```pulse
+
+
 fn swap_pair_alt3 (p: u8_pair) (#v: erased u8_pair_repr)
   requires 
     u8_pair_pred p v
@@ -132,4 +133,4 @@ fn swap_pair_alt3 (p: u8_pair) (#v: erased u8_pair_repr)
     
     fold_u8_pair_pred p
 }
-```
+
