@@ -15,6 +15,7 @@
 *)
 
 module PulseExample.UseBigRef
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.BigReference
 
@@ -25,7 +26,7 @@ let thunk (p q : slprop2_base) = unit -> stt unit (up2 p) (fun _ -> up2 q)
 let closure = (p:slprop2_base & q:slprop2_base & thunk p q)
 let closure_list = B.ref (list closure)
 
-```pulse
+
 fn mk_closure_list ()
 requires emp
 returns r:closure_list
@@ -33,7 +34,7 @@ ensures B.pts_to r []
 {
   B.alloc #(list closure) []
 }
-```
+
 
 let mk_closure
     (#p #q:slprop2)
@@ -42,7 +43,7 @@ let mk_closure
 = (| down2 p, down2 q, f |)
 
 
-```pulse
+
 fn push (l:closure_list)
         (#p #q:slprop2)
         (f: unit -> stt unit p (fun _ -> q))
@@ -53,7 +54,7 @@ ensures B.pts_to l (mk_closure f :: 'xs)
   let xs = !l;
   l := (mk_closure f :: xs)
 }
-```
+
 
 let pre_of (c:closure) : slprop2 =
   let (| p, _, _ |) = c in
@@ -65,7 +66,7 @@ let rec inv (l:list closure) : v:slprop { is_slprop2 v } =
   | [] -> emp
   | hd :: tl -> pre_of hd ** inv tl
 
-```pulse
+
 ghost
 fn intro_inv_nil (l:list closure)
 requires pure (l == [])
@@ -73,9 +74,9 @@ ensures inv l
 {
   fold (inv [])
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_inv_nil (l:list closure)
 requires inv l ** pure (l == [])
@@ -83,9 +84,9 @@ ensures emp
 {
   unfold (inv [])
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_inv_cons
         (l:list closure)
@@ -96,9 +97,9 @@ ensures inv l
 {
   fold (inv (c :: tl))
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_inv_cons
         (l:list closure)
@@ -109,7 +110,7 @@ ensures pre_of c ** inv tl
 {
   unfold (inv (c :: tl))
 }
-```
+
 
 let lock_inv (r:closure_list) : v:slprop { is_slprop3 v } =
   exists* (l:list closure). 
@@ -122,7 +123,7 @@ type taskp = {
   lock: Pulse.Lib.SpinLock.lock
 }
 
-```pulse
+
 fn create_taskp ()
 requires emp
 returns t:taskp
@@ -137,7 +138,7 @@ ensures L.lock_alive t.lock (lock_inv t.task_list)
   rewrite each lock as l.lock;
   l
 }
-```
+
 
 let post_of (c:closure) =
   let (| _, q, _ |) = c in
@@ -147,7 +148,7 @@ let run_thunk_of_closure (c:closure)
 : unit -> stt unit (pre_of c) (fun _ -> post_of c)
 = let (| p, q, f |) = c in f
 
-```pulse
+
 fn run_closure (c:closure)
 requires pre_of c
 ensures emp
@@ -155,9 +156,9 @@ ensures emp
   run_thunk_of_closure c ();
   drop_ (post_of c)
 }
-```
 
-```pulse
+
+
 fn rec run_task (t:taskp)
 requires L.lock_alive t.lock (lock_inv t.task_list)
 ensures emp
@@ -182,4 +183,4 @@ ensures emp
     }
   }
 }
-```
+

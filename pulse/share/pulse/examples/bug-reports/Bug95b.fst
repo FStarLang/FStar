@@ -1,4 +1,5 @@
 module Bug95b
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -12,7 +13,7 @@ let rec is_list_suffix
         pure (v == n)
     | _ -> emp
 
-```pulse
+
 ghost
 fn intro_is_list_singleton
   (#t:Type)
@@ -27,4 +28,4 @@ fn intro_is_list_singleton
   fold (is_list_suffix x [n]);
   admit();
 }
-```
+

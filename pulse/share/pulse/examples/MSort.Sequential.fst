@@ -1,4 +1,5 @@
 module MSort.Sequential
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 module S = FStar.Seq
@@ -6,7 +7,7 @@ module SZ = FStar.SizeT
 open MSort.SeqLemmas
 open MSort.Base
 
-```pulse
+
 fn rec msort
   (a : array int)
   (lo hi : SZ.t)
@@ -33,4 +34,4 @@ fn rec msort
     merge_impl a lo mid hi () (sort s1) (sort s2);
   }
 }
-```
+

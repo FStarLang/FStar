@@ -15,6 +15,7 @@
 *)
 
 module Test.Basic2
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -23,7 +24,7 @@ open Pulse.Lib.Pervasives
 
 open Pulse.Lib.Stick.Util
 
-```pulse
+
 ghost
 fn test_trans (p q r:slprop)
 requires (p @==> q) ** (q @==> r)
@@ -31,4 +32,4 @@ ensures  (p @==> r)
 {
     trans p _ r;
 }
-```
+

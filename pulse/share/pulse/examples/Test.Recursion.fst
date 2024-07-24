@@ -15,10 +15,11 @@
 *)
 
 module Test.Recursion
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn rec test1
   (x:unit)
   requires emp
@@ -26,11 +27,11 @@ fn rec test1
 {
   test1 ()
 }
-```
+
 
 let _ = test1
 
-```pulse
+
 fn test_call_1
   (z:unit)
   requires emp
@@ -38,9 +39,9 @@ fn test_call_1
 {
   test1()
 }
-```
 
-```pulse
+
+
 fn rec test2
   (y:nat)
   requires emp
@@ -50,9 +51,9 @@ fn rec test2
     test2 (y-1)
   }
 }
-```
 
-```pulse
+
+
 fn rec test3
   (z:nat)
   (y:nat)
@@ -66,9 +67,9 @@ fn rec test3
     z
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec test_ghost_nop
   (x:unit)
@@ -78,11 +79,11 @@ fn rec test_ghost_nop
 {
   ()
 }
-```
+
 
 (* Should not succeed. *)
 [@@expect_failure]
-```pulse
+
 ghost
 fn rec test_ghost_loop
   (x:unit)
@@ -92,9 +93,9 @@ fn rec test_ghost_loop
 {
   test_ghost_loop ()
 }
-```
 
-```pulse
+
+
 fn rec test4
   (r : ref int)
   (v : erased int)
@@ -108,9 +109,9 @@ fn rec test4
     test4 r (v+1) (y-1);
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec test5
   (z:nat)
@@ -123,11 +124,11 @@ fn rec test5
     test5 (z-1) (y-1)
   }
 }
-```
+
 
 // This should print 'Could not prove termination'
 [@@expect_failure]
-```pulse
+
 ghost
 fn rec test5'
   (z:int)
@@ -140,9 +141,9 @@ fn rec test5'
     test5' (z-1) (y-1)
   }
 }
-```
 
-```pulse
+
+
 fn rec test6
   (x:unit) (y:int)
   requires emp
@@ -152,4 +153,4 @@ fn rec test6
   test5 10 10;
   ()
 }
-```
+

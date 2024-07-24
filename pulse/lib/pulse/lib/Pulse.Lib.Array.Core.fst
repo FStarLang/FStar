@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Array.Core
+#lang-pulse
 open Pulse.Main
 open Pulse.Lib.Core
 module H = Pulse.Lib.HigherArray
@@ -57,7 +58,7 @@ let pts_to #a
 
 let pts_to_is_slprop2 _ _ _ = ()
 
-```pulse
+
 ghost
 fn pts_to_len (#t:Type) (a:array t) (#p:perm) (#x:FStar.Seq.seq t)
 requires pts_to a #p x
@@ -67,9 +68,9 @@ ensures pts_to a #p x ** pure (length a == Seq.length x)
   H.pts_to_len a;
   fold (pts_to a #p x)
 }
-```
 
-```pulse
+
+
 fn alloc (#elt:Type0) (x:elt) (n:SZ.t)
 requires emp
 returns a:array elt
@@ -83,9 +84,9 @@ ensures
   fold (pts_to a (Seq.create (SZ.v n) x));
   a
 }
-```
 
-```pulse
+
+
 fn op_Array_Access
     (#t: Type)
     (a: array t)
@@ -104,9 +105,9 @@ ensures
   fold (pts_to a #p s);
   U.downgrade_val res
 }
-```
 
-```pulse
+
+
 fn op_Array_Assignment
     (#t: Type)
     (a: array t)
@@ -124,9 +125,9 @@ ensures
   assert pure (raise_seq (Seq.upd s (SZ.v i) v) `Seq.equal` w);
   fold (pts_to a (Seq.upd s (SZ.v i) v))
 }
-```
 
-```pulse
+
+
 fn free
     (#elt: Type)
     (a: array elt)
@@ -139,7 +140,7 @@ ensures
   unfold (pts_to a s);
   H.free a;
 }
-```
+
 
 let share #a arr #s #p = H.share arr #(raise_seq s) #p
 
@@ -159,7 +160,7 @@ let downgrade_seq_inv (#elt:Type0) (x:FStar.Seq.seq (U.raise_t u#0 u#1 elt))
         [SMTPat (downgrade_seq x)]
 = ()
 
-```pulse
+
 ghost
 fn gather
   (#a:Type)
@@ -174,7 +175,7 @@ ensures pts_to arr #(p0 +. p1) s0 ** pure (s0 == s1)
   H.gather arr #_ #_ #p0 #p1;
   fold (pts_to arr #(p0 +. p1) s0);
 }
-```
+
 
 let pts_to_range
   (#a:Type)
@@ -187,7 +188,7 @@ let pts_to_range
 
 let pts_to_range_is_slprop2 _ _ _ _ _ = ()
 
-```pulse
+
 ghost
 fn pts_to_range_prop
   (#elt: Type)
@@ -207,11 +208,11 @@ ensures
   H.pts_to_range_prop a #i #j #p #(raise_seq s);
   fold (pts_to_range a i j #p s);
 }
-```
+
 let pts_to_range_intro a p s = H.pts_to_range_intro a p (raise_seq s)
 let pts_to_range_elim a p s = H.pts_to_range_elim a p (raise_seq s)
 
-```pulse
+
 ghost
 fn pts_to_range_split
   (#elt: Type0)
@@ -246,9 +247,9 @@ ensures exists* s1 s2.
     s `Seq.equal` Seq.append s1 s2
   )
 }
-```
 
-```pulse
+
+
 ghost
 fn pts_to_range_join
   (#elt: Type0)
@@ -271,9 +272,9 @@ ensures
   );
   fold (pts_to_range a i j #p (s1 `Seq.append` s2));
 }
-```
 
-```pulse
+
+
 fn pts_to_range_index
   (#t: Type)
   (a: array t)
@@ -295,9 +296,9 @@ ensures
   fold (pts_to_range a l r #p s);
   U.downgrade_val res
 }
-```
 
-```pulse
+
+
 fn pts_to_range_upd
   (#t: Type)
   (a: array t)
@@ -325,7 +326,7 @@ ensures
   );
   fold (pts_to_range a l r (Seq.upd s0 (SZ.v i - l) v));
 }
-```
+
 
 let with_pre (pre:slprop) (#a:Type) (#post:a -> slprop)(m:stt a emp post)
 : stt a pre (fun v -> pre ** post v)
@@ -335,7 +336,7 @@ let with_pre (pre:slprop) (#a:Type) (#post:a -> slprop)(m:stt a emp post)
   in
   sub_stt _ _ (slprop_equiv_unit pre) pf_post m1
 
-```pulse
+
 fn alloc_with_pre
     (#a:Type u#0)
     (init:a)
@@ -351,16 +352,16 @@ ensures (pre **
 {
   alloc init len
 }
-```
 
-```pulse
+
+
 fn free_with_post (#a:Type u#0) (arr:array a) (post:slprop)
 requires (post ** (exists* v. pts_to arr v)) ** pure (is_full_array arr)
 ensures post
 {
   free arr  
 }
-```
+
 
 ```pulse
 ghost

@@ -15,6 +15,7 @@
 *)
 
 module Pulse.C.Types.Base
+#lang-pulse
 open Pulse.Lib.Pervasives
 
 /// Helper to compose two permissions into one
@@ -136,7 +137,7 @@ val is_null
       res == true <==> p == null _
     ))
 
-```pulse
+
 ghost
 fn assert_null
   (#t: Type)
@@ -151,9 +152,9 @@ ensures emp
 {
   rewrite (pts_to_or_null p v) as emp
 }
-```
 
-```pulse
+
+
 ghost
 fn assert_not_null
   (#t: Type)
@@ -170,7 +171,7 @@ ensures
 {
   rewrite (pts_to_or_null p v) as (pts_to p v)
 }
-```
+
 
 [@@noextract_to "krml"] // primitive
 // val void_ptr_of_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td) : STAtomicBase void_ptr false opened Unobservable
@@ -182,7 +183,7 @@ val void_ptr_of_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ptr td)
 
 [@@noextract_to "krml"] inline_for_extraction
 // let void_ptr_of_ref (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: ref td) : STAtomicBase void_ptr false opened Unobservable
-```pulse
+
 fn void_ptr_of_ref (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: ref td)
 requires
   (pts_to x v)
@@ -197,7 +198,7 @@ ensures
   rewrite (pts_to_or_null x v) as (pts_to x v);
   res
 }
-```
+
 
 [@@noextract_to "krml"] // primitive
 // val ptr_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) : STAtomicBase (ptr td) false opened Unobservable
@@ -209,7 +210,7 @@ val ptr_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_pt
 
 [@@noextract_to "krml"] inline_for_extraction
 // let ref_of_void_ptr (#t: Type) (#opened: _) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td)) : STAtomicBase (ref td) false opened Unobservable
-```pulse
+
 fn ref_of_void_ptr (#t: Type) (#td: typedef t) (#v: Ghost.erased t) (x: void_ptr) (y': Ghost.erased (ref td))
 requires
   (pts_to y' v ** pure (
@@ -226,7 +227,7 @@ ensures
   rewrite (pts_to_or_null y v) as (pts_to y v);
   y
 }
-```
+
 
 val ref_equiv
   (#t: Type)

@@ -1,9 +1,10 @@
 module Val
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
-```pulse
-val fn foo ()
+
+fn foo ()
   requires emp
   ensures emp
-```
+

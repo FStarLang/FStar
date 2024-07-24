@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SpinLock
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.CancellableInvariant
@@ -49,7 +50,7 @@ let lock_alive l #p v =
 
 let lock_acquired l = GR.pts_to l.gr #0.5R 1ul
 
-```pulse
+
 fn new_lock (v:slprop { is_storable v })
   requires v
   returns l:lock
@@ -69,9 +70,9 @@ fn new_lock (v:slprop { is_storable v })
   fold (lock_alive l #1.0R v);
   l
 }
-```
 
-```pulse
+
+
 fn rec acquire (#v:slprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
   ensures v **  lock_alive l #p v ** lock_acquired l
@@ -126,9 +127,9 @@ fn rec acquire (#v:slprop) (#p:perm) (l:lock)
     acquire l
   }
 }
-```
 
-```pulse
+
+
 fn release (#v:slprop) (#p:perm) (l:lock)
   requires lock_alive l #p v ** lock_acquired l ** v
   ensures lock_alive l #p v
@@ -155,9 +156,9 @@ fn release (#v:slprop) (#p:perm) (l:lock)
 
   fold (lock_alive l #p v)
 }
-```
 
-```pulse
+
+
 ghost
 fn share (#v:slprop) (#p:perm) (l:lock)
   requires lock_alive l #p v
@@ -169,11 +170,11 @@ fn share (#v:slprop) (#p:perm) (l:lock)
   fold (lock_alive l #(p /. 2.0R) v);
   fold (lock_alive l #(p /. 2.0R) v)
 } 
-```
+
 
 let share2 #v l = share #v #1.0R l
 
-```pulse
+
 ghost
 fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
   requires lock_alive l #p1 v ** lock_alive l #p2 v
@@ -185,11 +186,11 @@ fn gather (#v:slprop) (#p1 #p2 :perm) (l:lock)
   fold (lock_alive l #(p1 +. p2) v);
   drop_ (inv _ _)
 } 
-```
+
 
 let gather2 #v l = gather #v #0.5R #0.5R l
 
-```pulse
+
 fn free (#v:slprop) (l:lock)
   requires lock_alive l #1.0R v ** lock_acquired l
   ensures emp
@@ -204,9 +205,9 @@ fn free (#v:slprop) (l:lock)
   GR.free l.gr;
   rewrite (if (1ul = 0ul) then v else emp) as emp
 }
-```
 
-```pulse
+
+
 ghost
 fn lock_alive_inj
   (l:lock) (#p1 #p2 :perm) (#v1 #v2 :slprop)
@@ -227,13 +228,13 @@ fn lock_alive_inj
   fold (lock_alive l #p1 v1);
   fold (lock_alive l #p2 v1);
 }
-```
+
 
 let iname_of l = CInv.iname_of l.i
 let iname_v_of l v = cinv_vp l.i (lock_inv l.r l.gr v)
 let lock_active #p l = active l.i p
 
-```pulse
+
 ghost
 fn share_lock_active (#p:perm) (l:lock)
   requires lock_active #p l
@@ -244,9 +245,9 @@ fn share_lock_active (#p:perm) (l:lock)
   fold (lock_active #(p /. 2.0R) l);
   fold (lock_active #(p /. 2.0R) l)
 }
-```
 
-```pulse
+
+
 ghost
 fn gather_lock_active (#p1 #p2:perm) (l:lock)
   requires lock_active #p1 l ** lock_active #p2 l
@@ -257,9 +258,9 @@ fn gather_lock_active (#p1 #p2:perm) (l:lock)
   CInv.gather #p1 #p2 l.i;
   fold (lock_active #(p1 +. p2) l)
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
   requires emp
@@ -279,9 +280,9 @@ fn elim_inv_and_active_into_alive (l:lock) (v:slprop) (#p:perm)
 
   intro_stick _ _ _ aux
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
   requires emp
@@ -300,4 +301,4 @@ fn elim_alive_into_inv_and_active (l:lock) (v:slprop) (#p:perm)
   };
   intro_stick _ _ _ aux
 }
-```
+

@@ -1,4 +1,5 @@
 module Test.RewriteBy
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open FStar.Tactics.V2
@@ -10,7 +11,7 @@ let tac () : Tac unit =
    dump "test";
    tadmit ()
 
-```pulse
+
 fn test1 ()
   requires p
   ensures  q
@@ -19,11 +20,11 @@ fn test1 ()
        as q
        by tadmit ();
 }
-```
+
 
 (* lambdas are broken, looks like F* bug? *)
 [@@expect_failure]
-```pulse
+
 fn test ()
   requires p
   ensures  q
@@ -35,13 +36,13 @@ fn test ()
          tac ()
        );
 }
-```
+
 
 let dump_trefl (s:string) : Tac unit =
   dump s;
   slprop_equiv_norm ()
 
-```pulse
+
 fn test ()
   requires p
   ensures  p
@@ -50,4 +51,4 @@ fn test ()
        as p
        by dump_trefl "test";
 }
-```
+

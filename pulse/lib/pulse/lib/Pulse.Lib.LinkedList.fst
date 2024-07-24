@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.LinkedList
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick.Util
 open FStar.List.Tot
@@ -56,7 +57,6 @@ let is_list_cases #t (x:llist t) (l:list t)
         pure (l == n.head::tl) **
         is_list n.tail tl
 
-```pulse
 ghost
 fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:list t)
     requires pts_to v node ** is_list node.tail tl ** pure (x == Some v)
@@ -64,9 +64,7 @@ fn intro_is_list_cons (#t:Type0) (x:llist t) (v:node_ptr t) (#node:node t) (#tl:
 {
     fold (is_list x (node.head::tl));
 }
-```
 
-```pulse
 ghost
 fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
     requires is_list x l
@@ -89,9 +87,7 @@ fn cases_of_is_list (#t:Type) (x:llist t) (l:list t)
         }
     }
 }
-```
 
-```pulse
 ghost
 fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
     requires is_list_cases x l
@@ -109,10 +105,8 @@ fn is_list_of_cases (#t:Type) (x:llist t) (l:list t)
         }
     }
 }
-```
 
 
-```pulse
 ghost
 fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
     requires is_list x l ** pure (x == None)
@@ -122,10 +116,8 @@ fn is_list_cases_none (#t:Type) (x:llist t) (#l:list t)
     rewrite (is_list_cases x l) as pure (l == []);
     fold (is_list x []);
 }
-```
 
 
-```pulse
 ghost
 fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t) 
     requires is_list x l ** pure (x == Some v)
@@ -138,11 +130,11 @@ fn is_list_cases_some (#t:Type) (x:llist t) (v:node_ptr t) (#l:list t)
     rewrite (is_list_cases x l) as (is_list_cases (Some v) l);
     unfold (is_list_cases (Some v) l);
 }
-```
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
-```pulse
+
 fn is_empty (#t:Type) (x:llist t) 
     requires is_list x 'l
     returns b:bool
@@ -160,9 +152,9 @@ fn is_empty (#t:Type) (x:llist t)
         }
     }
 }
-```
 
-```pulse
+
+
 fn rec length (#t:Type0) (x:llist t)
               (#l:erased (list t))
     requires is_list x l
@@ -185,11 +177,11 @@ fn rec length (#t:Type0) (x:llist t)
     }
    }
 }
-```
+
 
 let null_llist #t : llist t = None #(node_ptr t)
 
-```pulse
+
 fn create (t:Type)
     requires emp
     returns x:llist t
@@ -198,9 +190,9 @@ fn create (t:Type)
     fold (is_list null_llist ([] <: list t));
     null_llist #t
 }
-```
 
-```pulse
+
+
 fn cons (#t:Type) (v:t) (x:llist t)
     requires is_list x 'l
     returns y:llist t
@@ -211,9 +203,9 @@ fn cons (#t:Type) (v:t) (x:llist t)
     fold (is_list (Some y) (v::'l));
     Some y
 }
-```
 
-```pulse
+
+
 fn rec append (#t:Type0) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
@@ -237,9 +229,9 @@ ensures is_list x ('l1 @ 'l2)
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn intro_yields_cons (#t:Type) 
                      (v:node_ptr t)
@@ -266,9 +258,9 @@ ensures
   };
   I.intro _ _ _ (fun _ -> yields_elim v n tl);
 }
-```
 
-```pulse
+
+
 fn move_next (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
@@ -285,9 +277,9 @@ fn move_next (#t:Type) (x:llist t)
     intro_yields_cons np;
     node.tail
 }
-```
 
-```pulse
+
+
 fn length_iter (#t:Type) (x: llist t)
     requires is_list x 'l
     returns n:nat
@@ -325,9 +317,9 @@ fn length_iter (#t:Type) (x: llist t)
   let n = !ctr;
   n
 }
-```
 
-```pulse
+
+
 fn is_last_cell (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns b:bool
@@ -352,11 +344,11 @@ fn is_last_cell (#t:Type) (x:llist t)
     }
   }
 }
-```
 
 
 
-```pulse
+
+
 fn append_at_last_cell (#t:Type) (x y:llist t)
 requires
   is_list x 'l1 **
@@ -384,9 +376,9 @@ ensures
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn non_empty_list (#t:Type0) (x:llist t)
     requires is_list x 'l ** pure (Cons? 'l)
@@ -398,9 +390,9 @@ fn non_empty_list (#t:Type0) (x:llist t)
     rewrite each tail as n.tail;
     intro_is_list_cons x v #n #tl;
 }
-```
 
-```pulse
+
+
 ghost
 fn forall_intro_is_list_idem (#t:Type) (x:llist t)
     requires emp
@@ -408,11 +400,10 @@ fn forall_intro_is_list_idem (#t:Type) (x:llist t)
 {
     intro_forall emp (fun l -> I.refl (is_list x l))
 }
-```
 
-open FStar.List.Tot
 
-```pulse
+
+
 fn move_next_forall (#t:Type) (x:llist t)
     requires is_list x 'l ** pure (Some? x)
     returns y:llist t
@@ -441,7 +432,7 @@ fn move_next_forall (#t:Type) (x:llist t)
     FA.intro _ aux;
     node.tail
 }
-```
+
 
 let append_assoc_singleton (l1 l2:list 'a) (x:'a) 
 : Lemma 
@@ -451,7 +442,7 @@ let append_assoc_singleton (l1 l2:list 'a) (x:'a)
 
 let trigger (x:'a) : slprop = emp
 
-```pulse
+
 fn append_iter (#t:Type) (x y:llist t)
 requires is_list x 'l1 ** is_list y 'l2 ** pure (Some? x)
 ensures is_list x ('l1 @ 'l2)
@@ -505,10 +496,10 @@ ensures is_list x ('l1 @ 'l2)
   List.Tot.Properties.append_assoc pfx sfx 'l2;
   ()
 }
-```
 
 
-```pulse
+
+
 fn detach_next (#t:Type) (x:llist t)
 requires is_list x 'l ** pure (Some? x)
 returns y:llist t
@@ -528,12 +519,12 @@ ensures exists* hd tl.
   intro_is_list_cons x v;
   nodev.tail
 }
-```
+
 
 module U32 = FStar.UInt32
 open Pulse.Lib.BoundedIntegers
 #push-options "--fuel 1 --ifuel 1"
- ```pulse 
+  
  fn split (#t:Type0) (x:llist t) (n:U32.t) (#xl:erased (list t))
  requires is_list x xl ** pure (Some? x /\ 0 < v n /\ v n <= List.Tot.length xl)
  returns  y:llist t
@@ -599,9 +590,9 @@ open Pulse.Lib.BoundedIntegers
   List.Tot.append_length pfx [hd];
   y
  }
- ```
+ 
 
-```pulse
+
 fn insert (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
 requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
 ensures exists* l0 l1.
@@ -617,9 +608,9 @@ ensures exists* l0 l1.
   append x z;
   with m. rewrite (is_list x m) as (is_list x (l0 @ item :: l1));
 }
-```
 
-```pulse
+
+
 fn delete (#kk:Type0) (x:llist kk) (item:kk) (pos:U32.t) (#xl:erased (list kk))
 requires is_list x xl ** pure (Some? x /\ 0 < v pos /\ v pos < List.Tot.length xl)
 ensures exists* l0 l1.
@@ -635,4 +626,3 @@ ensures exists* l0 l1.
   append x z;
   with m. rewrite (is_list x m) as (is_list x (l0 @ item :: l1));
 }
-```

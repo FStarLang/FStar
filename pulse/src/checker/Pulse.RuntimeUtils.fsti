@@ -40,6 +40,7 @@ val env_set_range (g:env) (r:range) : g':env{g==g'}
 val env_set_context (g:env) (ctx:context) : g':env{g==g'}
 val embed_st_term_for_extraction (d:'a) (r:option range): T.term
 val unembed_st_term_for_extraction (d:T.term) : 'a
+val unembed_pulse_decl (d:'a) : 'b
 module R = FStar.Reflection.V2
 val debug_subst (s:list R.subst_elt) (t:T.term) (r1 r2:T.term): y:T.term{ y == r1 }
 val deep_compress (t:T.term) : r:T.term { t == r }

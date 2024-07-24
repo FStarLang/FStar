@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Reference
+#lang-pulse
 
 open FStar.Tactics
 open FStar.Ghost
@@ -36,18 +37,17 @@ val pts_to_is_slprop2 (#a:Type) (r:ref a) (p:perm) (x:a)
           [SMTPat (is_slprop2 (pts_to r #p x))]
 
 [@@deprecated "Reference.alloc is unsound; use Box.alloc instead"]
-```pulse
-val fn alloc
+fn alloc
   (#a:Type)
   (x:a)
   requires emp
   returns  r : ref a
   ensures  pts_to r x
-```
 
-```pulse
+
+
 (* ! *)
-val fn op_Bang
+fn op_Bang
   (#a:Type)
   (r:ref a)
   (#n:erased a)
@@ -55,73 +55,73 @@ val fn op_Bang
   requires pts_to r #p n
   returns  x : a
   ensures  pts_to r #p n ** pure (reveal n == x)
-```
 
-```pulse
+
+
 (* := *)
-val fn op_Colon_Equals
+fn op_Colon_Equals
   (#a:Type)
   (r:ref a)
   (x:a)
   (#n:erased a)
   requires pts_to r n
   ensures  pts_to r x
-```
+
 
 [@@deprecated "Reference.free is unsound; use Box.free instead"]
-```pulse
-val fn free
+
+fn free
   (#a:Type)
   (r:ref a)
   (#n:erased a)
   requires pts_to r n
   ensures  emp
-```
 
-```pulse
+
+
 ghost
-val fn share
+fn share
   (#a:Type)
   (r:ref a)
   (#v:erased a)
   (#p:perm)
   requires pts_to r #p v
   ensures  pts_to r #(p /. 2.0R) v ** pts_to r #(p /. 2.0R) v
-```
+
 
 [@@allow_ambiguous]
-```pulse
+
 ghost
-val fn gather
+fn gather
   (#a:Type)
   (r:ref a)
   (#x0 #x1:erased a)
   (#p0 #p1:perm)
   requires pts_to r #p0 x0 ** pts_to r #p1 x1
   ensures  pts_to r #(p0 +. p1) x0 ** pure (x0 == x1)
-```
+
 
 (* Share/gather specialized to half permission *)
-```pulse
+
 ghost
-val fn share2
+fn share2
   (#a:Type)
   (r:ref a)
   (#v:erased a)
   requires pts_to r v
   ensures  pts_to r #0.5R v ** pts_to r #0.5R v
-```
+
 
 [@@allow_ambiguous]
-```pulse
+
 ghost
-val fn gather2
+fn gather2
   (#a:Type)
   (r:ref a)
   (#x0 #x1:erased a)
   requires pts_to r #0.5R x0 ** pts_to r #0.5R x1
   ensures  pts_to r x0 ** pure (x0 == x1)
-```
+
 
 let cond b (p q:slprop) = if b then p else q
 
@@ -136,10 +136,10 @@ val with_local
   : stt ret_t pre post
 (* NOTE: Pulse does not have  universe polymorphism yet,
 (and ret_t is in a polymorphic universe), so we retain the val above.
-The val fn below is what it would look like internally in Pulse, but we have to
+The fn below is what it would look like internally in Pulse, but we have to
 fix a universe for ret_t. *)
-// ```pulse
-// val fn with_local
+// 
+// fn with_local
 //   (#a:Type0)
 //   (init:a)
 //   (#pre:slprop)
@@ -150,33 +150,33 @@ fix a universe for ret_t. *)
 //   requires pre
 //   returns  v : ret_t
 //   ensures  post v
-// ```
+// 
 
 [@@allow_ambiguous]
-```pulse
+
 ghost
-val fn pts_to_injective_eq
+fn pts_to_injective_eq
   (#a:Type0)
   (#p #q:perm)
   (#v0 #v1:a)
   (r:ref a)
   requires pts_to r #p v0 ** pts_to r #q v1
   ensures  pts_to r #p v0 ** pts_to r #q v1 ** pure (v0 == v1)
-```
 
-```pulse
+
+
 ghost
-val fn pts_to_perm_bound
+fn pts_to_perm_bound
   (#a:Type0)
   (#p:perm)
   (r:ref a)
   (#v:a)
   requires pts_to r #p v
   ensures  pts_to r #p v ** pure (p <=. 1.0R)
-```
 
-```pulse
-val fn replace
+
+
+fn replace
   (#a:Type0)
   (r:ref a)
   (x:a)
@@ -184,4 +184,4 @@ val fn replace
   requires pts_to r v
   returns  res : a
   ensures  pts_to r x ** pure (res == reveal v)
-```
+

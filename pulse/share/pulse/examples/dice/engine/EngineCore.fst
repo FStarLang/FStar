@@ -15,6 +15,7 @@
 *)
 
 module EngineCore
+#lang-pulse
 open Pulse.Lib.Pervasives
 module R = Pulse.Lib.Reference
 module A = Pulse.Lib.Array
@@ -37,7 +38,7 @@ let cdi_functional_correctness (c0:Seq.seq U8.t) (uds_bytes:Seq.seq U8.t) (repr:
   = Seq.length uds_bytes == US.v uds_len /\
     c0 == spec_hmac dice_hash_alg (spec_hash dice_hash_alg uds_bytes) (spec_hash dice_hash_alg repr.l0_binary)
 
-```pulse
+
 fn authenticate_l0_image ([@@@ Rust_mut_binder] record:engine_record_t) (#repr:Ghost.erased engine_record_repr) (#p:perm)
     requires engine_record_perm record p repr
     returns b:(engine_record_t & bool)
@@ -88,9 +89,9 @@ fn authenticate_l0_image ([@@@ Rust_mut_binder] record:engine_record_t) (#repr:G
     res
   };
 }
-```
 
-```pulse
+
+
 fn compute_cdi
   (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
   (uds:A.larray U8.t (US.v uds_len))
@@ -126,9 +127,9 @@ fn compute_cdi
   
   record
 }
-```
 
-```pulse
+
+
 fn engine_main
   (cdi:A.larray U8.t (SZ.v (digest_len dice_hash_alg)))
   (uds:A.larray U8.t (US.v uds_len)) (record:engine_record_t)
@@ -162,4 +163,4 @@ fn engine_main
     res    
   }
 }
-```
+

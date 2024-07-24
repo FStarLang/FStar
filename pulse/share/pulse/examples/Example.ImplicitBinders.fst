@@ -15,6 +15,7 @@
 *)
 
 module Example.ImplicitBinders
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --print_implicits"
@@ -24,7 +25,7 @@ module U32 = FStar.UInt32
 // Pulse checker adds implicit binders for 'n1 and 'n2
 //   at erased types
 //
-```pulse
+
 fn swap (r1 r2:ref U32.t)
   requires 
       pts_to r1 'n1 **
@@ -38,14 +39,14 @@ fn swap (r1 r2:ref U32.t)
   r1 := y;
   r2 := x
 }
-```
+
 
 //
 // Since p and n are non tick variables,
 //   this gives an error "Identifiers (n, p) not found, consider adding them as binders"
 //
 [@@ expect_failure]
-```pulse
+
 fn test_read (r:ref U32.t)
    requires pts_to r #p n
    returns x : U32.t
@@ -53,4 +54,4 @@ fn test_read (r:ref U32.t)
 {
   !r
 }
-```
+

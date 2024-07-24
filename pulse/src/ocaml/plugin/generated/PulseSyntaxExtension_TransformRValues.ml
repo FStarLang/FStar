@@ -141,8 +141,7 @@ let (resolve_mut :
       | FStar_Parser_AST.Var l ->
           let topt =
             FStar_Syntax_DsEnv.try_lookup_lid
-              ((m.env).PulseSyntaxExtension_Env.tcenv).FStar_TypeChecker_Env.dsenv
-              l in
+              (m.env).PulseSyntaxExtension_Env.dsenv l in
           (match topt with
            | FStar_Pervasives_Native.Some
                { FStar_Syntax_Syntax.n = FStar_Syntax_Syntax.Tm_name x;
@@ -880,6 +879,7 @@ let rec (transform_stmt_with_reads :
                              PulseSyntaxExtension_Sugar.ascription1 = uu___4;
                              PulseSyntaxExtension_Sugar.measure = uu___5;
                              PulseSyntaxExtension_Sugar.body3 = uu___6;
+                             PulseSyntaxExtension_Sugar.decorations = uu___7;
                              PulseSyntaxExtension_Sugar.range3 = range;_})
                            ->
                            Obj.magic

@@ -16,6 +16,8 @@
 
 module PulseSyntaxExtension.ASTBuilder
 module R = FStar.Reflection
+val sugar_decl : Type0
+
 val parse_pulse (env:R.env) 
                 (namespaces:list string)
                 (module_abbrevs:list (string & string))
@@ -24,3 +26,9 @@ val parse_pulse (env:R.env)
                 (line col:int)
   : Dv (either Pulse.Syntax.decl (option (string & R.range)))
   // Option can be empty if all errors were already logged.
+
+val desugar_pulse (env:R.env) 
+                  (namespaces:list string)
+                  (module_abbrevs:list (string & string))
+                  (sugar:sugar_decl)
+  : Dv (either Pulse.Syntax.decl (option (string & R.range)))

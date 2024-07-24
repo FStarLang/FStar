@@ -15,6 +15,7 @@
 *)
 
 module CDDL.Pulse
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 open CBOR.Spec
@@ -41,7 +42,7 @@ let impl_typ
         ))
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_coerce_to_bounded_typ
     (b: Ghost.erased (option raw_data_item))
     (#t: typ)
@@ -53,10 +54,10 @@ fn impl_coerce_to_bounded_typ
 {
     f c;
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_t_choice
     (#b: Ghost.erased (option raw_data_item))
     (#t1 #t2: bounded_typ_gen b)
@@ -76,7 +77,7 @@ fn impl_t_choice
         f2 c
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 and t2 by reducing (reveal (hide None)) to None?
@@ -87,7 +88,7 @@ let impl_t_choice_none // FIXME: WHY WHY WHY can F* not automatically infer t1 a
 = impl_t_choice #None #t1 #t2 f1 f2
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_any
     (_: unit)
 : impl_typ #None any
@@ -98,10 +99,10 @@ fn impl_any
 {
     true
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_uint
     (_: unit)
 : impl_typ #None uint
@@ -113,14 +114,14 @@ fn impl_uint
     let mt = cbor_get_major_type c;
     (mt = cbor_major_type_uint64)
 }
-```
+
 
 module U64 = FStar.UInt64
 
 (* FIXME: WHY WHY WHY does this one not work?
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_uint_literal
     (n: U64.t)
 : impl_typ #None (t_uint_literal n)
@@ -137,12 +138,12 @@ fn impl_uint_literal
         false
     }
 }
-```
+
 
 *)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_uint_literal'
     (n: U64.t)
     (c: cbor)
@@ -167,7 +168,7 @@ ensures
         false
     }
 }
-```
+
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_uint_literal
     (n: U64.t)
@@ -175,7 +176,7 @@ let impl_uint_literal
 = impl_uint_literal' n
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_bytes
     (_: unit)
 : impl_typ #None bytes
@@ -187,7 +188,7 @@ fn impl_bytes
     let mt = cbor_get_major_type c;
     (mt = cbor_major_type_byte_string)
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_array_group3
@@ -214,7 +215,7 @@ let impl_array_group3
             )
         )
 
-```pulse
+
 ghost
 fn intro_impl_array_group3_post
     (#b: option raw_data_item)
@@ -252,10 +253,10 @@ ensures
 {
     ()
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_array_group3_concat
     (#b: Ghost.erased (option raw_data_item))
     (#g1: array_group3 b)
@@ -278,10 +279,10 @@ fn impl_array_group3_concat
         false
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_array_group3_item
     (#b: Ghost.erased (option raw_data_item))
     (#ty: bounded_typ_gen b)
@@ -327,10 +328,10 @@ fn impl_array_group3_item
         }
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_t_array
     (#b: Ghost.erased (option raw_data_item))
     (#g: (array_group3 b))
@@ -361,7 +362,7 @@ fn impl_t_array
         false
     }
 }
-```
+
 
 module U8 = FStar.UInt8
 
@@ -446,7 +447,7 @@ let mk_cbor_read_error
 = {res with cbor_read_is_success = false}
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn cbor_read_with_typ
   (#t: typ)
   (ft: impl_typ t)
@@ -489,7 +490,7 @@ ensures cbor_read_with_typ_post t a p va res
         res
     }
 }
-```
+
 noextract [@@noextract_to "krml"]
 let cbor_read_deterministically_encoded_with_typ_success_postcond
   (t: typ)
@@ -565,7 +566,7 @@ let cbor_read_deterministically_encoded_with_typ_post
 module SZ = FStar.SizeT
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn cbor_read_deterministically_encoded_with_typ
   (#t: typ)
   (ft: impl_typ t)
@@ -608,7 +609,7 @@ ensures cbor_read_deterministically_encoded_with_typ_post t a p va res
         res
     }
 }
-```
+
 
 noextract
 let cbor_map_get_with_typ_post_found
@@ -660,7 +661,7 @@ let cbor_map_get_post_eq_found
   ))
 = ()
 
-```pulse
+
 ghost
 fn manurewrite
     (pre post: slprop)
@@ -672,9 +673,9 @@ ensures
     rewrite pre as post
 }
 
-```
 
-```pulse
+
+
 ghost
 fn cbor_map_get_found_elim
   (p: perm)
@@ -692,10 +693,10 @@ ensures
     manurewrite (cbor_map_get_post p vkey vmap map res) (cbor_map_get_post_found p vkey vmap map fres)
     // rewrite ... as ... fails: WHY WHY WHY??
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn cbor_map_get_with_typ
   (#t: typ)
   (ft: impl_typ t)
@@ -741,7 +742,7 @@ ensures
         res
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_group
@@ -762,7 +763,7 @@ let impl_matches_map_group
         )
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_t_map
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
@@ -780,7 +781,7 @@ fn impl_t_map
         false
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more
@@ -804,7 +805,7 @@ let impl_matches_map_entry_zero_or_more
 (* FIXME: WHY WHY WHY does this one not work?
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_matches_map_entry_zero_or_more_nil
     (b: Ghost.erased (option raw_data_item))
 : impl_matches_map_entry_zero_or_more #b map_group_empty
@@ -815,11 +816,11 @@ fn impl_matches_map_entry_zero_or_more_nil
 {
     false
 }
-```
+
 
 *)
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_matches_map_entry_zero_or_more_nil'
     (b: Ghost.erased (option raw_data_item))
     (c: cbor_map_entry)
@@ -840,7 +841,7 @@ ensures
 {
     false
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_matches_map_entry_zero_or_more_nil
@@ -849,7 +850,7 @@ let impl_matches_map_entry_zero_or_more_nil
 = impl_matches_map_entry_zero_or_more_nil' b
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_matches_map_entry_zero_or_more_cons
     (#b: Ghost.erased (option raw_data_item))
     (e: map_group_entry b)
@@ -883,10 +884,10 @@ fn impl_matches_map_entry_zero_or_more_cons
         f_g c;
     }
 }
-```
+
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_matches_map_group_no_restricted
     (#b: Ghost.erased (option raw_data_item))
     (#g: map_group b)
@@ -940,12 +941,12 @@ fn impl_matches_map_group_no_restricted
     elim_stick0 ();
     !pres
 }
-```
+
 
 (* FIXME: WHY WHY WHY does this one not work?
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_str_size
     (ty: major_type_byte_string_or_text_string)
     (sz: (sz: SZ.t { SZ.fits_u64 }))
@@ -964,12 +965,12 @@ fn impl_str_size
         false
     }
 }
-```
+
 
 *)
 
 inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn impl_str_size'
     (ty: major_type_byte_string_or_text_string)
     (sz: (sz: SZ.t { SZ.fits_u64 }))
@@ -996,7 +997,7 @@ ensures
         false
     }
 }
-```
+
 inline_for_extraction noextract [@@noextract_to "krml"]
 let impl_str_size
     (ty: major_type_byte_string_or_text_string)

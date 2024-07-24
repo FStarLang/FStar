@@ -15,6 +15,7 @@
 *)
 
 module Promises.Examples3
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
@@ -34,7 +35,7 @@ let inv_p : v:slprop { is_slprop3 v } =
     ** pure (v_done ==> Some? v_res)
 
 (* Explicit introduction for inv_p, sometimes needed to disambiguate. *)
-```pulse
+
 ghost
 fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
   requires
@@ -48,13 +49,13 @@ fn intro_inv_p (v_done:bool) (v_res:option int) (v_claimed:bool)
 {
   fold inv_p;
 }
-```
+
 
 let goal : slprop =
   exists* v_res. pts_to res #0.5R v_res ** pure (Some? v_res)
 
 
-```pulse
+
 atomic
 fn proof
    (i : iname) (_:unit)
@@ -111,7 +112,7 @@ fn proof
     ()
   }
 }
-```
+
 
 let cheat_proof (i:iname)
   : (_:unit) ->
@@ -122,7 +123,7 @@ let cheat_proof (i:iname)
 
 // #set-options "--debug SMTQuery"
 
-```pulse
+
 fn setup (_:unit)
    requires pts_to done 'v_done ** pts_to res 'v_res ** GR.pts_to claimed 'v_claimed
    returns i:iname
@@ -153,10 +154,10 @@ fn setup (_:unit)
 
   i
 }
-```
+
 
 [@@expect_failure] // block is not atomic/ghost
-```pulse
+
 fn worker (i : iname) (_:unit)
    requires inv i inv_p ** pts_to done #0.5R false
    ensures  inv i inv_p ** pts_to done #0.5R true
@@ -207,4 +208,4 @@ fn worker (i : iname) (_:unit)
     ()
   };
 }
-```
+

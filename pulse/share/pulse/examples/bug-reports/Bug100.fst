@@ -1,4 +1,5 @@
 module Bug100
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -18,7 +19,7 @@ val pts_to (a:Type u#0) (x:array a) (s: Seq.seq a) : slprop
 let tst (a : array int) (s : Seq.seq nat) = pts_to int a s
 
 [@@expect_failure [228; 19]]
-```pulse
+
 fn init (a1 : array int) (s1 : Seq.Base.seq nat)
   requires pts_to int a1 s1
   ensures  emp
@@ -26,4 +27,4 @@ fn init (a1 : array int) (s1 : Seq.Base.seq nat)
   admit();
   ()
 }
-```
+

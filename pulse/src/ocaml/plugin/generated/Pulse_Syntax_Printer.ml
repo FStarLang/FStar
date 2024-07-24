@@ -6299,4 +6299,4 @@ let (decl_to_string :
                           uu___1))))
           (fun uu___1 ->
              FStar_Tactics_Effect.lift_div_tac
-               (fun uu___2 -> Prims.strcat "val fn " uu___1))
+               (fun uu___2 -> Prims.strcat "fn " uu___1))

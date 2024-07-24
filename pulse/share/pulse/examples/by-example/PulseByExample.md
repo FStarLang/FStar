@@ -1,7 +1,7 @@
 # Pulse By Example
 
 Pulse is a syntax extension and typechecker extension of F*. 
-A pulse program is embedded in an F* program, delimited by the syntax extension notation ` ```pulse ... ``` `. 
+A pulse program is embedded in an F* program, delimited by the syntax extension notation `  ...  `. 
 The first code snippet demonstrates an embedded Pulse program `five`, which produces the integer 5. 
 The rest of the file is a normal F* program. 
 
@@ -16,7 +16,7 @@ Generally, pure `prop`s are used to specify mathematical/logical constraints and
 Returning to our code snippet, the separation logic proposition `emp` means that the program does not own any resources or have any knowledge. 
 So the Pulse program `five` begins with no resources/knowledge and returns with the knowledge that the return value is logically equal to 5. 
 
-```ocaml
+ocaml
 module PM = Pulse.Main
 open Pulse.Lib.Core
 
@@ -31,7 +31,7 @@ fn five ()
   5
 }
 ``
-```
+
 
 Let's make things more interesting. 
 The next code snippet `ref_swap` swaps the values of two integer references. 
@@ -47,7 +47,7 @@ Pulse syntax spotlight: The program body demonstrates Pulse syntax for
 - reference read: `!r1`
 - reference write: `r1 := ...`
 
-```ocaml
+ocaml
 open Pulse.Lib.Reference
 module R = Pulse.Lib.Reference
 
@@ -64,12 +64,14 @@ fn ref_swap (r1 r2:ref int)
   r2 := v1
 }
 ``
-```
+
 
 You've seen references; now we'll introduce arrays. 
 But first, a note on integers. 
 In the following code snippet, we use non-primitive integers for the first time: `FStar.SizeT` is a module for machine integers of at least 16 bits, depending on the machine. 
+#lang-pulse
 The module `Pulse.Class.BoundedIntegers` offers arithmetic operations on various types of bounded integers, including `FStar.SizeT` and `FStar.U32`. 
+#lang-pulse
 The bounded integer class overloads arithmetic operators, like `<`, to allow, e.g., the comparison of `SizeT`s `i < n` on line X and comparison of `nat`s `k < v n` on line X (`v` elaborates to `SZ.v` and converts a `SizeT` to a nat). 
 
 Let's get back to arrays. 
@@ -85,7 +87,7 @@ Pulse syntax spotlight: The program body demonstrates Pulse syntax for
 - array read: `a.(i)`
 - array write: `a.(i) <- ...`
 
-```ocaml
+ocaml
 open Pulse.Lib.Array
 module A = Pulse.Lib.Array
 module SZ = FStar.SizeT
@@ -109,7 +111,7 @@ fn arr_swap (#t:Type0) (n i j:SZ.t) (a:larray t (v n))
   a.(j) <- vi;
 }
 ``
-```
+
 
 The last example introduces loops. 
 The Pulse program `max` computes the maximum value in an array of `nat`s. 
@@ -147,7 +149,7 @@ Pulse syntax spotlight: The program body demonstrates Pulse syntax for
 - loop invariant: `invariant b ...`
 - custom proof syntax: `with ... assert ...`
 
-```ocaml
+ocaml
 ``pulse
 fn max (n:SZ.t) (a:larray nat (v n))
   requires A.pts_to a #'p 's ** pure (Seq.length 's == v n)
@@ -185,7 +187,7 @@ fn max (n:SZ.t) (a:larray nat (v n))
   vmax
 }
 ``
-```
+
 
 In this tutorial, you have seen custom Pulse proof syntax:
 - `requires`, `ensures`

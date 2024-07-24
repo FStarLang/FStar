@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.SeqMatch
+#lang-pulse
 include Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
 
@@ -242,7 +243,7 @@ val seq_list_match_index
         seq_list_match s1 s2 p)
     )
 
-```pulse
+
 ghost
 fn rec
 seq_list_match_append_intro
@@ -276,9 +277,9 @@ decreases
       as (seq_list_match (c1 `Seq.append` c2) (l1 `List.Tot.append` l2) item_match)
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec
 seq_list_match_append_elim
@@ -323,7 +324,7 @@ decreases
       as (seq_list_match c1 l1 item_match)
   }
 }
-```
+
 
 (* Random array access
 

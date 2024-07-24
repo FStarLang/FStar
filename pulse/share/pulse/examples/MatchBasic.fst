@@ -15,9 +15,10 @@
 *)
 
 module MatchBasic
+#lang-pulse
 open Pulse.Lib.Pervasives
 
-```pulse
+
 fn test1 (n:nat)
   requires emp
   returns r:int
@@ -29,9 +30,9 @@ fn test1 (n:nat)
     _ -> { 0 }
   }
 }
-```
 
-```pulse
+
+
 fn test2 (n:nat)
   requires emp
   returns r:int
@@ -43,9 +44,9 @@ fn test2 (n:nat)
     x -> { x }
   }
 }
-```
 
-```pulse
+
+
 fn test3 (n:nat)
   requires emp
   returns r:int
@@ -57,11 +58,11 @@ fn test3 (n:nat)
   }
 }
 
-```
+
 
 // FIXME: Need to qualifiy the constructors or otherwise they desugar to
 // the (not yet in scope) type below. Only in batch mode apparently.
-```pulse
+
 fn test3_5 (n:option int) (z:bool)
   requires emp
   returns r:int
@@ -72,14 +73,14 @@ fn test3_5 (n:option int) (z:bool)
     Pervasives.Some x -> { x }
   }
 }
-```
+
 
 noeq
 type optionint =
   | None
   | Some of int
 
-```pulse
+
 fn test4 (n:optionint) (z:bool)
   requires emp
   returns r:int
@@ -90,9 +91,9 @@ fn test4 (n:optionint) (z:bool)
     Some x -> { x }
   }
 }
-```
 
-```pulse
+
+
 fn test5 (n:option int) (z:bool)
   requires emp
   returns r:int
@@ -103,9 +104,9 @@ fn test5 (n:option int) (z:bool)
     Pervasives.Some x -> { x }
   }
 }
-```
 
-```pulse
+
+
 fn listid (xs : list int)
   requires emp
   returns r:(list int)
@@ -116,9 +117,9 @@ fn listid (xs : list int)
     Cons hd tl -> { Cons #int hd tl }
   }
 }
-```
 
-```pulse
+
+
 fn hd (xs : list int)
   requires emp
   returns r:(int)
@@ -129,9 +130,9 @@ fn hd (xs : list int)
     Cons hd tl -> { let t = tl; hd }
   }
 }
-```
 
-```pulse
+
+
 fn tl (xs : list int)
   requires emp
   returns r:(list u#0 int)
@@ -142,10 +143,10 @@ fn tl (xs : list int)
     Cons hd tl -> { tl }
   }
 }
-```
+
 
 [@@expect_failure [228]]
-```pulse
+
 fn incomplete (xs : list int)
   requires emp
   returns r:int
@@ -155,9 +156,9 @@ fn incomplete (xs : list int)
     Nil -> { 1 }
   }
 }
-```
 
-```pulse
+
+
 fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
   requires emp
   returns r:int
@@ -167,9 +168,9 @@ fn partial_complete (xs : (xs:list int{List.Tot.length xs == 0}))
     Nil -> { 1 }
   }
 }
-```
 
-```pulse
+
+
 fn breq_1 (xs : list int)
   requires emp
   returns r:int
@@ -180,9 +181,9 @@ fn breq_1 (xs : list int)
     Cons _ _ -> { 1 } // assert (pure (isCons xs)); cons_hd xs }
   }
 }
-```
 
-```pulse
+
+
 fn breq_2 (xs : list int)
   requires emp
   returns r:int
@@ -193,4 +194,4 @@ fn breq_2 (xs : list int)
     Cons _ _ -> { Cons?.hd xs }
   }
 }
-```
+

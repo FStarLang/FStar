@@ -1,4 +1,5 @@
 module Bug59
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 
@@ -6,7 +7,7 @@ open Pulse.Lib.Pervasives
 the precondition fails to typecheck, the error code is not
 really giving us that. *)
 [@@expect_failure [228; 19]]
-```pulse
+
 ghost
 fn bad_pre (#a #b : Type0) (x:a) (y:b)
   requires pure (x == y)
@@ -16,4 +17,4 @@ fn bad_pre (#a #b : Type0) (x:a) (y:b)
   assert (pure (1 == 2));
   admit();
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module Fibo32
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --fuel 2 --ifuel 2"
@@ -33,7 +34,7 @@ let rec fib_mono (n:nat) (m:nat { m <= n})
 open Pulse.Lib.BoundedIntegers
 
 #push-options "--z3rlimit_factor 4"
-```pulse
+
 fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   requires emp
   returns r:U32.t
@@ -66,5 +67,5 @@ fn fibo32 (k:U32.t) (_:squash(0ul < k /\ fits #U32.t (fib (v k))))
   let r = !j;
   r
 }
-```
+
 

@@ -1,4 +1,5 @@
 module Pulse.Lib.OnRange
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Stick
@@ -87,7 +88,7 @@ let rec on_range_is_slprop3 (p:nat -> slprop) (i:nat) (j:nat)
   then ()
   else on_range_is_slprop3 p (i + 1) j
 
-```pulse
+
 ghost
 fn on_range_le
     (p: (nat -> slprop))
@@ -105,9 +106,9 @@ ensures on_range p i j ** pure (i <= j)
     ()
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_empty
   (p: (nat -> slprop))
@@ -117,9 +118,9 @@ ensures on_range p i i
 {
   rewrite emp as on_range p i i;
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_empty_elim
   (p: (nat -> slprop))
@@ -129,9 +130,9 @@ ensures emp
 {
   rewrite (on_range p i i) as emp;
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_singleton_intro
   (p: (nat -> slprop))
@@ -143,9 +144,9 @@ ensures on_range p i (i + 1)
   rewrite (p i ** on_range p (i + 1) (i + 1))
       as  (on_range p i (i + 1))
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_singleton_elim
   ()
@@ -158,9 +159,9 @@ ensures p i
   rewrite (on_range p i j) as (p i ** on_range p (i + 1) j);
   rewrite (on_range p (i + 1) j) as emp;
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_split
   (j:nat)
@@ -182,9 +183,9 @@ decreases (j - i)
     rewrite (p i ** on_range p (i + 1) j) as (on_range p i j);
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_join
   (i j k: nat)
@@ -206,9 +207,9 @@ decreases (j - i)
     rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_cons
   (i:nat)
@@ -221,9 +222,9 @@ ensures on_range p i k
   on_range_le p #j #k;
   rewrite (p i ** on_range p j k) as (on_range p i k);
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_uncons
   ()
@@ -235,9 +236,9 @@ ensures p i ** on_range p (i + 1) k
 {
   rewrite (on_range p i k) as (p i ** on_range p (i + 1) k);
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_cons_with_implies
   (i:nat)
@@ -257,10 +258,10 @@ ensures on_range p i k ** (on_range p i k @==> (p i ** on_range p (i + 1) k))
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
   rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
 }
-```
 
 
-```pulse
+
+
 ghost
 fn rec on_range_snoc
   ()
@@ -284,9 +285,9 @@ decreases (if j <= i then 0 else j - i)
     rewrite (p i ** on_range p (i + 1) (j + 1)) as (on_range p i (j + 1));
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_unsnoc
   ()
@@ -308,9 +309,9 @@ decreases (k - i)
     rewrite (p i ** on_range p (i + 1) (k - 1)) as (on_range p i (k - 1));
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn on_range_snoc_with_implies
   ()
@@ -332,9 +333,9 @@ ensures on_range p i (j + 1) **  (on_range p i (j + 1) @==> (on_range p i j ** p
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
   on_range_snoc()
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_get
   (j:nat)
@@ -357,9 +358,9 @@ decreases (j - i)
     rewrite (p i ** on_range p (i + 1) j) as (on_range p i j);
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_put
   (i:nat)
@@ -383,10 +384,10 @@ decreases (j - i)
     rewrite (p i ** on_range p (i + 1) k) as (on_range p i k);
   }
 }
-```
 
 
-```pulse
+
+
 ghost
 fn on_range_focus
   (j:nat)
@@ -406,10 +407,10 @@ ensures p j ** (p j @==> on_range p i k)
   };
   Pulse.Lib.Stick.intro_stick _ _ _ aux;
 }
-```
 
 
-```pulse
+
+
 ghost
 fn rec on_range_weaken_and_shift
   (p p': (nat -> slprop))
@@ -442,7 +443,7 @@ decreases (if j <= i then 0 else j - i)
     on_range_cons (i + delta) #p' #_ #_;
   }
 }
-```
+
 
 let on_range_weaken
   (p p': (nat -> slprop))
@@ -454,7 +455,7 @@ let on_range_weaken
     (fun _ -> on_range p' i j)
 = on_range_weaken_and_shift p p' 0 i j phi
 
-```pulse
+
 ghost
 fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
   requires on_range p i j ** on_range q i j
@@ -476,9 +477,9 @@ fn rec on_range_zip (p q:nat -> slprop) (i j:nat)
     on_range_cons i #(fun k -> p k ** q k);
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
   requires on_range (fun k -> p k ** q k) i j
@@ -500,4 +501,4 @@ fn rec on_range_unzip (p q:nat -> slprop) (i j:nat)
     on_range_cons i #q;
   }
 }
-```
+

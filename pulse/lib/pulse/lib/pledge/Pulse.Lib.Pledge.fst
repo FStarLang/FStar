@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.Pledge
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Trade
@@ -33,7 +34,7 @@ let pledge is f v = (==>*) #is f (f ** v)
 
 let pledge_sub_inv is1 is2 (f:slprop) (v:slprop) = trade_sub_inv _ _
 
-```pulse
+
 ghost
 fn return_pledge (f v : slprop)
   requires v
@@ -50,9 +51,9 @@ fn return_pledge (f v : slprop)
   fold ((==>*) #emp_inames f (f ** v));
   fold pledge;
 }
-```
 
-```pulse
+
+
 ghost
 fn make_pledge
   (is:inames) (f v extra:slprop)
@@ -73,9 +74,9 @@ fn make_pledge
   fold ((==>*) #is f (f ** v));
   fold pledge;
 }
-```
 
-```pulse
+
+
 ghost
 fn redeem_pledge (is:inames) (f v:slprop)
   requires f ** pledge is f v
@@ -86,9 +87,9 @@ fn redeem_pledge (is:inames) (f v:slprop)
   unfold ((==>*) #is f (f ** v));
   elim_trade #is f (f ** v);
 }
-```
 
-// ```pulse
+
+// 
 // ghost
 // fn pledge_invs_aux (is:invlist) (f:slprop) (v:slprop)
 //   requires pledge is f v
@@ -100,11 +101,11 @@ fn redeem_pledge (is:inames) (f v:slprop)
 //   fold ((==>*) #is f (f ** v));
 //   fold pledge
 // }
-// ```
+// 
 
 // let pledge_invs = pledge_invs_aux
 
-```pulse
+
 ghost
 fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   requires pledge is f (pledge is f v1)
@@ -121,9 +122,9 @@ fn squash_pledge (is:inames) (f:slprop) (v1:slprop)
   };
   make_pledge is f v1 (pledge is f (pledge is f v1)) aux
 }
-```
 
-```pulse
+
+
 ghost
 fn bind_pledge
   (#is:inames)
@@ -146,9 +147,9 @@ fn bind_pledge
   make_pledge is f (pledge is f v2) (extra ** pledge is f v1) aux;
   squash_pledge is f v2
 }
-```
 
-```pulse
+
+
 ghost
 fn bind_pledge'
   (#is:inames)
@@ -168,9 +169,9 @@ fn bind_pledge'
   };
   bind_pledge #is #f #v1 #v2 extra aux
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_pledge_full
   (#is:inames)
@@ -192,9 +193,9 @@ fn rewrite_pledge_full
   
   make_pledge is f v2 (pledge is f v1) aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn rewrite_pledge
   (#is:inames)
@@ -215,9 +216,9 @@ fn rewrite_pledge
 
   rewrite_pledge_full #is #f v1 v2 aux  
 }
-```
 
-```pulse
+
+
 ghost
 fn join_pledge
   (#is:inames)
@@ -237,9 +238,9 @@ fn join_pledge
   
   make_pledge is f (v1 ** v2) (pledge is f v1 ** pledge is f v2) aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn squash_pledge'
   (is1 is2 is:inames)
@@ -261,7 +262,7 @@ fn squash_pledge'
   
   make_pledge is f v1 (pledge is1 f (pledge is2 f v1)) aux
 }
-```
+
 
 //
 // This proof below requires inv_p to be big ...
@@ -281,7 +282,7 @@ fn squash_pledge'
 // let inv_p (is:invlist) (f v1 v2 : slprop) (r1 r2 : GR.ref bool) : slprop =
 //   exists* b1 b2. inv_p' is f v1 v2 r1 r2 b1 b2
 
-// ```pulse
+// 
 // ghost
 // fn elim_body_l
 //   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
@@ -357,9 +358,9 @@ fn squash_pledge'
 //     drop_ (invlist_inv _)
 //   }
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn flip_invp
 //   (is:invlist) (f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
@@ -393,9 +394,9 @@ fn squash_pledge'
 //   fold (inv_p' is f v2 v1 r2 r1 b2 b1);
 //   fold inv_p;
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn elim_body_r
 //   (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop) (r1 r2 : GR.ref bool)
@@ -408,9 +409,9 @@ fn squash_pledge'
 //   elim_body_l #is #f v2 v1 r2 r1 ();
 //   flip_invp is f v2 v1 r2 r1;
 // }
-// ```
+// 
 
-// ```pulse
+// 
 // ghost
 // fn __split_pledge (#is:invlist) (#f:slprop) (v1:slprop) (v2:slprop)
 //   requires pledge is f (v1 ** v2)
@@ -457,7 +458,7 @@ fn squash_pledge'
 
 //   // pi
 // }
-// ```
+// 
 
 // let split_pledge = __split_pledge
 

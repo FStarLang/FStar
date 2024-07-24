@@ -15,6 +15,7 @@
 *)
 
 module Pulse.Lib.ConditionVarWithCodes
+#lang-pulse
 open Pulse.Lib.Pervasives
 // open Pulse.Lib.Codeable
 module PM = Pulse.Lib.PCMMap
@@ -107,7 +108,7 @@ let recv #c (b:cvar_t c) (q:slprop)
     big_ghost_pcm_pts_to b.core.gref (singleton i #0.5R code) **
     pure (c.up code == q)
 
-```pulse
+
 ghost
 fn unfold_map_invariant0 #c v (m:carrier c) n p
 requires map_invariant #c v m n p ** pure (v == 0ul)
@@ -117,9 +118,9 @@ ensures pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
   unfold map_invariant;
   unfold map_invariant0;
 }
-```
 
-```pulse
+
+
 ghost
 fn fold_map_invariant0 #c (m:carrier c) n p
 requires pure (p == OR.on_range (predicate_at m) 0 n /\ all_perms m 0 n 0.5R)
@@ -128,9 +129,9 @@ ensures map_invariant 0ul m n p
   fold (map_invariant0 m n p);
   fold (map_invariant 0ul m n p)
 }
-```
 
-```pulse
+
+
 ghost
 fn fold_map_invariant1 #c v (m:carrier c) n p
 requires
@@ -143,9 +144,9 @@ ensures
   rewrite (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R))
   as      map_invariant v m n p
 }
-```
 
-```pulse
+
+
 ghost
 fn unfold_map_invariant1 #c v (m:carrier c) n p
 requires map_invariant v m n p ** pure (v =!= 0ul)
@@ -156,10 +157,10 @@ ensures
   rewrite (map_invariant v m n p)
        as (OR.on_range (predicate_at m) 0 n ** pure (all_perms m 0 n 0.5R));
 }
-```
 
 
-```pulse
+
+
 ghost
 fn map_invariant_all_perms #c v (m:carrier c) n p
 requires map_invariant v m n p
@@ -176,9 +177,9 @@ ensures  map_invariant v m n p ** pure (all_perms m 0 n 0.5R)
     fold_map_invariant1 v m n p;
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn flip_map_invariant #c (v:U32.t) (p:slprop) (m:carrier c) (n:nat)
 requires map_invariant v m n p ** p ** pure (v == 0ul)
@@ -188,7 +189,7 @@ ensures map_invariant 1ul m n p
   rewrite p as OR.on_range (predicate_at m) 0 n;
   fold_map_invariant1 1ul m n p;
 }
-```
+
 
 let composable #c (c0:carrier c) (c1:carrier c)
 = PM.composable_maps PF.pcm_frac c0 c1
@@ -212,7 +213,7 @@ let on_range_singleton (#c:code) (p:c.t)
   }
   
   
-```pulse
+
 ghost
 fn intro_init_map_invariant (#c:code) (p:slprop) (code_of_p:codeable c p)
 requires emp
@@ -221,14 +222,14 @@ ensures map_invariant 0ul (singleton 0 #0.5R code_of_p.c) 1 p
   on_range_singleton code_of_p.c; //inlining the calc does not work
   fold_map_invariant0 (singleton 0 #0.5R code_of_p.c) 1 p;
 }
-```
+
 
 let initial_map (#c:code) (p:c.t)
 : c:carrier c { small_slprop_map.refine c }
 = comp (singleton 0 #1.0R p) (empty_map_below 1)
 
 
-```pulse
+
 ghost
 fn fold_cvar_inv #c (b: cvar_t_core c) (p:slprop)
                     (v n m:_)
@@ -243,9 +244,9 @@ ensures
 {
   fold cvar_inv
 }
-```
 
-```pulse
+
+
 ghost
 fn frame_predicate_at #c (m0:carrier c) (i j:nat) (k:nat) (v:_)
 requires OR.on_range (predicate_at m0) i j ** 
@@ -256,9 +257,9 @@ ensures OR.on_range (predicate_at (Map.upd m0 k v)) i j
   rewrite (OR.on_range (predicate_at m0) i j)
        as (OR.on_range (predicate_at (Map.upd m0 k v)) i j);
 }
-```
 
-```pulse
+
+
 ghost
 fn predicate_at_singleton #c (m:carrier c) (i:nat) (q:slprop) (code_of_q:codeable c q)
 requires q ** pure (Map.sel m i == Some (code_of_q.c, 0.5R))
@@ -266,10 +267,10 @@ ensures predicate_at m i
 {
   rewrite q as (predicate_at m i)
 }
-```
 
 
-```pulse
+
+
 fn create (#c:code) (p:slprop) (code_of_p:codeable c p)
 requires emp
 returns b:cvar_t c
@@ -301,10 +302,10 @@ ensures send b p ** recv b p
   fold (recv bb p);
   bb
 }
-```
 
 
-```pulse
+
+
 fn signal #c (b:cvar_t c) (#p:slprop)
 requires send b p ** p
 ensures emp
@@ -325,7 +326,7 @@ ensures emp
   };
   drop_ (inv b.i _)
 }
-```
+
 
 
 let predicate_at_i_is_q_lemma #c (m:carrier c) (i:nat) (n:nat) (q:c.t)
@@ -350,7 +351,7 @@ let predicate_at_i_is_q_lemma #c (m:carrier c) (i:nat) (n:nat) (q:c.t)
       ()
   )
 
-```pulse
+
 ghost
 fn elim_on_range_at_i #c (m:carrier c) (i n:nat)
 requires OR.on_range (predicate_at m) 0 n ** pure (i < n)
@@ -368,9 +369,9 @@ ensures OR.on_range (predicate_at m) 0 n ** pure (Some? (Map.sel m i))
     }
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn composable_three #c (gref:ghost_pcm_ref small_slprop_map) (c0 c1 c2:carrier c)
 requires
@@ -388,9 +389,9 @@ ensures
   big_ghost_share gref (comp c0 c1) c2;
   big_ghost_share gref c0 c1;
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_predicate_at_alt #c (m:carrier c) (i:nat) (_:squash (Some? (Map.sel m i)))
 requires predicate_at m i
@@ -399,9 +400,9 @@ ensures c.up (fst (Some?.v (Map.sel m i)))
   rewrite (predicate_at m i) 
       as  (c.up (fst (Some?.v (Map.sel m i))));
 }
-```
 
-```pulse
+
+
 ghost
 fn q_at_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
 requires
@@ -421,9 +422,9 @@ ensures
   predicate_at_i_is_q_lemma m i n q;
   ()
 }
-```
 
-```pulse
+
+
 ghost
 fn predicate_at_i_is_q #c (#gref:ghost_pcm_ref small_slprop_map) (#v:U32.t) (#m:carrier c) (#i #n:nat) (#p:slprop) (#q:c.t) ()
 requires
@@ -459,12 +460,12 @@ ensures
     }   
   }
 }
-```
+
 
 let code_of_emp #c : codeable c emp =  { c = c.emp; laws = () }
 
 
-```pulse
+
 ghost
 fn clear_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i #n:nat) (#q:c.t) ()
 requires
@@ -505,9 +506,9 @@ ensures
       as  OR.on_range (predicate_at (reveal (hide (Map.upd m i (Some (c.emp, 0.5R))) ))) 0 n;
   hide #(carrier c) (Map.upd m i (Some (c.emp, 0.5R))) 
 }
-```
 
-```pulse
+
+
 fn rec wait #c (b:cvar_t c) (#q:slprop)
 requires recv b q
 ensures q
@@ -560,7 +561,7 @@ ensures q
     wait b #q;
   }
 }
-```
+
 
 let split_aux_post #c (b:cvar_t c) (q r:c.t)
 : slprop
@@ -571,7 +572,7 @@ let split_aux_post #c (b:cvar_t c) (q r:c.t)
 
 
 
-```pulse
+
 ghost
 fn upd_i #c (#gref:ghost_pcm_ref small_slprop_map) (#m:carrier c) (#i:nat) (#q:c.t) ()
 requires
@@ -598,9 +599,9 @@ ensures
   drop_ (big_ghost_pcm_pts_to gref (singleton i #0.5R c.emp));
   hide #(carrier c) (Map.upd m i (Some (c.emp, 0.5R))) 
 }
-```
 
-```pulse
+
+
 ghost
 fn alloc #c (#b:cvar_t_core c) (#n:nat) (q:c.t)
 requires big_ghost_pcm_pts_to b.gref (empty_map_below n) **
@@ -632,7 +633,7 @@ ensures  GR.pts_to b.ctr (n + 1) **
   as      (big_ghost_pcm_pts_to b.gref (comp (singleton n #0.5R q) (singleton n #0.5R q)));
   big_ghost_share b.gref (singleton n #0.5R q) (singleton n #0.5R q);
 }
-```
+
 
 let up_i #c (m:carrier c) (i:nat) (p:c.t) = Map.upd m i (Some (p, 0.5R))
 let split_map #c (m:carrier c) (i n:nat) (q r:c.t) = (up_i (up_i (up_i m i c.emp) n q) (n + 1) r)
@@ -683,7 +684,7 @@ let split_lemma #c
     OR.on_range (predicate_at m') 0 (n + 2);
   }
 
-```pulse
+
 ghost
 fn split_aux #c (b:cvar_t c) (p:erased slprop) 
     (q r:slprop)
@@ -730,9 +731,9 @@ ensures  cvar_inv b.core p ** split_aux_post b cq.c cr.c
   }
  
 }
-```
 
-```pulse
+
+
 ghost
 fn fold_recv #c (b:cvar_t c) (q:slprop) (#code:c.t) (#p:slprop) (#i:nat)
 requires
@@ -744,9 +745,9 @@ ensures
 {
   fold (recv b q)
 }
-```
 
-```pulse
+
+
 ghost
 fn split #c (b:cvar_t c) (#q #r:slprop) (cq:codeable c q) (cr:codeable c r)
 requires recv b (q ** r)
@@ -773,12 +774,12 @@ opens [b.i]
   fold (cvar b p);
   fold (recv b r)
 }
-```
+
 
 
 let cvinv #c (cv:cvar_t c) (p:slprop): slprop = cvar cv p
 
-```pulse
+
 ghost
 fn dup_cvinv #c (cv:cvar_t c) (#p:slprop)
 requires cvinv cv p
@@ -792,12 +793,12 @@ ensures cvinv cv p ** cvinv cv p
   fold (cvinv cv p);
   fold (cvinv cv p);
 }
-```
+
 
 let send_core #c (cv:cvar_t c) : slprop3 =
   Box.pts_to cv.core.r #0.5R 0ul
 
-```pulse
+
 ghost
 fn decompose_send #c (cv:cvar_t c) (p:slprop)
 requires send cv p
@@ -807,9 +808,9 @@ ensures cvinv cv p ** send_core cv
   fold (cvinv cv p);
   fold (send_core cv);
 }
-```
 
-```pulse
+
+
 ghost
 fn recompose_send #c (cv:cvar_t c) (p:slprop)
 requires cvinv cv p ** send_core cv
@@ -819,7 +820,7 @@ ensures send cv p
   unfold cvinv;
   fold send;
 }
-```
+
 
 let recv_core #c (cv:cvar_t c) (q:slprop)
 : slprop3
@@ -827,7 +828,7 @@ let recv_core #c (cv:cvar_t c) (q:slprop)
     big_ghost_pcm_pts_to cv.core.gref (singleton i #0.5R code) **
     pure (c.up code == q)
 
-```pulse
+
 ghost
 fn decompose_recv #c (cv:cvar_t c) (p:slprop)
 requires recv cv p
@@ -837,9 +838,9 @@ ensures (exists* q. cvinv cv q) ** recv_core cv p
   fold cvinv;
   fold recv_core;
 }
-```
 
-```pulse
+
+
 ghost
 fn recompose_recv #c (cv:cvar_t c) (p:slprop) (#q:_)
 requires cvinv cv q ** recv_core cv p
@@ -849,4 +850,4 @@ ensures recv cv p
   unfold cvinv;
   fold recv;
 }
-```
+

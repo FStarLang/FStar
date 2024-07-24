@@ -15,6 +15,7 @@
 *)
 
 module GhostStateMachine
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Reference
 open Pulse.Lib.SpinLock
@@ -93,7 +94,7 @@ val some_payload : payload_t
 // so we can't include the API before the implementation of init
 // val init () : stt locked_state_t emp (fun st -> pure_handle_has_state st.ph Init)
 
-```pulse
+
 fn init ()
   requires emp
   returns st:locked_state_t
@@ -119,11 +120,11 @@ fn init ()
 
   locked_st
 }
-```
+
 
 let global_locked_state : locked_state_t = run_stt (init ())
 
-```pulse
+
 fn next ()
   requires pure_handle_has_state global_locked_state.ph Init **
            lock_alive global_locked_state.lk #1.0R (lock_inv global_locked_state.h global_locked_state.ph)
@@ -159,9 +160,9 @@ fn next ()
   fold (lock_inv global_locked_state.h global_locked_state.ph);
   release global_locked_state.lk;
 }
-```
 
-```pulse
+
+
 fn close ()
   requires pure_handle_has_state global_locked_state.ph Next **
            lock_alive global_locked_state.lk #1.0R (lock_inv global_locked_state.h global_locked_state.ph)
@@ -197,4 +198,4 @@ fn close ()
   fold (lock_inv global_locked_state.h global_locked_state.ph);
   release global_locked_state.lk;
 }
-```
+

@@ -15,6 +15,7 @@
 *)
 
 module TaskPool.Examples
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open Pulse.Lib.Pledge
@@ -27,7 +28,7 @@ val qsc : n:nat -> stt unit emp (fun _ -> qsv n)
 
 let spawn_ #pre #post p f = spawn_ #pre #post p #1.0R f
 
-```pulse
+
 fn qs (n:nat)
   requires emp
   returns _:unit
@@ -45,9 +46,9 @@ fn qs (n:nat)
   redeem_pledge emp_inames (pool_done p) (qsv 4);
   drop_ (pool_done p)
 }
-```
 
-```pulse
+
+
 fn qs_joinpromises (n:nat)
   requires emp
   returns _:unit
@@ -65,9 +66,9 @@ fn qs_joinpromises (n:nat)
   redeem_pledge emp_inames (pool_done p) (qsv 3 ** qsv 4);
   drop_ (pool_done p)
 }
-```
 
-```pulse
+
+
 fn qs12 (_:unit)
   requires emp
   returns _:unit
@@ -76,9 +77,9 @@ fn qs12 (_:unit)
     qsc 1;
     qsc 2
   }
-```
 
-```pulse
+
+
 fn qsh (n:nat)
   requires emp
   returns _:unit
@@ -96,9 +97,9 @@ fn qsh (n:nat)
   redeem_pledge emp_inames (pool_done p) (qsv 4);
   drop_ (pool_done p)
 }
-```
 
-```pulse
+
+
 fn qs12_par (p:pool)
   requires pool_alive p
   returns _:unit
@@ -108,10 +109,10 @@ fn qs12_par (p:pool)
     spawn_ p (fun () -> qsc 2);
     ()
   }
-```
+
 
 [@@expect_failure]
-```pulse
+
 fn qsh_par (n:nat)
   requires emp
   returns _:unit
@@ -133,4 +134,4 @@ fn qsh_par (n:nat)
   redeem_pledge (pool_done p) (qsv 4);
   drop_ (pool_done p)
 }
-```
+

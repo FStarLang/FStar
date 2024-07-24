@@ -1,4 +1,5 @@
 module HACL
+#lang-pulse
 
 // let alg_t = (a: EverCrypt.HMAC.supported_alg { US.fits_u32 })
 
@@ -20,7 +21,7 @@ let spec_hash
 = EverCrypt.Hash.Incremental.spec_hash a s
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn hacl_hash0
               (alg:alg_t)
               (src_len: hashable_len)
@@ -40,7 +41,7 @@ ensures
   EverCrypt.Hash.Incremental.hash alg dst src psrc src_seq (US.sizet_to_uint32 src_len);
   drop_ EverCrypt.AutoConfig2.initialized
 }
-```
+
 
 let hacl_hash = hacl_hash0
 
@@ -54,7 +55,7 @@ let spec_hmac
   else Seq.create (US.v (digest_len a)) 0uy (* dummy *)
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn hacl_hmac0 (alg:alg_t { alg == Spec.Hash.Definitions.sha2_256 })
               (dst:A.larray U8.t (US.v (digest_len alg)))
               (key:A.array U8.t)
@@ -78,7 +79,7 @@ ensures    (
   rewrite (A.pts_to dst (EverCrypt.HMAC.spec_hmac alg key_seq msg_seq))
     as (A.pts_to dst (spec_hmac alg key_seq msg_seq))
 }
-```
+
 
 let hacl_hmac = hacl_hmac0
 
@@ -93,7 +94,7 @@ let spec_ed25519_verify
   EverCrypt.Ed25519.spec_ed25519_verify pubk hdr sig == true
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn ed25519_verify0
   (pubk:A.larray U8.t (US.v v32us))
   (hdr:A.array U8.t)
@@ -116,7 +117,7 @@ ensures
 {
   EverCrypt.Ed25519.verify ppubk pubk_seq pubk (US.sizet_to_uint32 hdr_len) phdr hdr_seq hdr psig sig_seq sig
 }
-```
+
 
 let ed25519_verify = ed25519_verify0
 
@@ -130,7 +131,7 @@ let spec_ed25519_sign
   else Seq.empty // dummy
 
 // inline_for_extraction noextract [@@noextract_to "krml"]
-```pulse
+
 fn ed25519_sign0
   (buf:A.larray U8.t 64)
   (privk:A.larray U8.t (US.v v32us))
@@ -154,7 +155,7 @@ ensures
   let prf = EverCrypt.Ed25519.sign buf pprivk privk_seq privk (US.sizet_to_uint32 len) pmsg msg_seq msg;
   ()
 }
-```
+
 
 let ed25519_sign = ed25519_sign0
 

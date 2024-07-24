@@ -15,6 +15,7 @@
 *)
 
 module Pulse.C.Types.UserStruct
+#lang-pulse
 open Pulse.Lib.Pervasives
 open Pulse.C.Types.Struct.Aux
 
@@ -210,7 +211,7 @@ val unstruct_field
     ))
     (fun _ -> has_struct_field r field r' ** pts_to r (set sd v field v'))
 
-```pulse
+
 ghost
 fn unstruct_field_alt
   (#t: Type)
@@ -233,7 +234,7 @@ ensures
   unstruct_field r field r';
   Ghost.hide (set sd v field v')
 }
-```
+
 
 val fractionable_struct
   (#t: Type)

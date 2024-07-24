@@ -15,6 +15,7 @@
 *)
 
 module Fibonacci
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 #push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --ext 'pulse:rvalues'"
@@ -33,7 +34,6 @@ open FStar.UInt32
 open Pulse.Lib.BoundedIntegers
 
 
-```pulse
 fn fibonacci (k:pos)
   requires emp
   returns r:int
@@ -61,9 +61,8 @@ fn fibonacci (k:pos)
   };
   j
 }
-```
 
-```pulse
+
 fn fibonacci32 (k:U32.t)
   requires pure (0ul < k /\ fib (v k) < pow2 32)
   returns r:U32.t
@@ -92,9 +91,9 @@ fn fibonacci32 (k:U32.t)
   };
   j
 }
-```
 
-```pulse
+
+
 fn fibo (n:pos)
   requires emp
   returns r:int
@@ -122,9 +121,8 @@ fn fibo (n:pos)
   };
   j
 }
-```
 
-```pulse
+
 fn fibo2 (n:pos)
   requires emp
   returns r:nat
@@ -152,9 +150,7 @@ fn fibo2 (n:pos)
   };
   j
 }
-```
 
-```pulse
 fn fibo3 (n:pos)
   requires emp
   returns r: (r:nat { r == fib n })
@@ -182,5 +178,5 @@ fn fibo3 (n:pos)
   };
   j
 }
-```
+
  

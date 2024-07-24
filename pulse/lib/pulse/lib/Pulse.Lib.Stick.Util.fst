@@ -15,10 +15,11 @@
 *)
 
 module Pulse.Lib.Stick.Util
+#lang-pulse
 open Pulse.Lib.Pervasives
 include Pulse.Lib.Stick
 
-```pulse
+
 ghost
 fn intro
   (hyp concl: slprop)
@@ -33,9 +34,9 @@ ensures hyp @==> concl
 {
     intro_stick _ _ _ f_elim
 }
-```
 
-```pulse
+
+
 ghost
 fn elim (p q:slprop)
    requires (p @==> q) ** p
@@ -43,10 +44,10 @@ fn elim (p q:slprop)
 {
   elim_stick p q;
 }
-```
 
 
-```pulse
+
+
 ghost
 fn refl (p:slprop)
    requires emp
@@ -58,9 +59,9 @@ fn refl (p:slprop)
     { () };
     intro _ _ _ aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn curry (p q r:slprop)
    requires (p ** q) @==> r
@@ -80,10 +81,10 @@ fn curry (p q r:slprop)
     };
     intro _ _ _ aux;
 }
-```
 
 
-```pulse
+
+
 ghost
 fn trans (p q r:slprop)
     requires (p @==> q) ** (q @==> r)
@@ -98,9 +99,9 @@ fn trans (p q r:slprop)
    };
    intro _ _ _ aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn comm_l (p q r:slprop)
    requires (p ** q) @==> r
@@ -114,9 +115,9 @@ fn comm_l (p q r:slprop)
     };
     intro _ _ _ aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn comm_r (p q r:slprop)
    requires p @==> (q ** r)
@@ -130,9 +131,9 @@ fn comm_r (p q r:slprop)
     };
     intro _ _ _ aux; 
 }
-```
 
-```pulse
+
+
 ghost
 fn assoc_l (p q r s:slprop)
    requires (p ** (q ** r)) @==> s
@@ -146,9 +147,9 @@ fn assoc_l (p q r s:slprop)
     };
     intro _ _ _ aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn assoc_r (p q r s:slprop)
    requires p @==> ((q ** r) ** s)
@@ -162,9 +163,9 @@ fn assoc_r (p q r s:slprop)
     };
     intro _ _ _ aux;
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_hyp_l (p q r:slprop)
     requires ((p ** q) @==> r) ** p
@@ -173,9 +174,9 @@ fn elim_hyp_l (p q r:slprop)
     curry _ _ _;
     elim _ _;
 }
-```
 
-```pulse
+
+
 ghost
 fn elim_hyp_r (p q r:slprop)
     requires ((p ** q) @==> r) ** q
@@ -185,4 +186,4 @@ fn elim_hyp_r (p q r:slprop)
     curry _ _ _;
     elim _ _;
 }
-```
+

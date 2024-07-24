@@ -15,6 +15,7 @@
 *)
 
 module DPE.TestClient
+#lang-pulse
 
 open Pulse.Lib.Pervasives
 open EngineTypes
@@ -44,7 +45,7 @@ assume val get_l0_record ()  // used only for testing a client
            pure (L0_record? r) **
            (exists* repr. pure (L0_repr? repr) ** record_perm r 1.0R repr))
 
-```pulse
+
 fn dpe_client ()
   requires emp
   ensures emp
@@ -77,10 +78,10 @@ fn dpe_client ()
     }
   }
 }
-```
+
 
 [@@ expect_failure]
-```pulse
+
 fn dpe_client_err ()
   requires emp
   ensures emp
@@ -103,4 +104,4 @@ fn dpe_client_err ()
   }
 
 }
-```
+

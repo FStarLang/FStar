@@ -1,10 +1,11 @@
 module PulseTutorialExercies.AtomicsAndInvariants
+#lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
 
 let owns (x:ref U32.t) = exists* v. pts_to x v
 
-```pulse
+
 fn create_invariant (r:ref U32.t) (v:erased U32.t)
 requires pts_to r v
 returns i:inv (owns r)
@@ -13,9 +14,9 @@ ensures emp
     fold owns;
     new_invariant (owns r)
 }
-```
 
-```pulse
+
+
 atomic
 fn update_ref_atomic (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 requires emp
@@ -28,9 +29,9 @@ opens [i]
      fold owns;          //ghost step;  owns r
   }
 }
-```
 
-```pulse
+
+
 ghost
 fn pts_to_dup_impossible #a (x:ref a)
 requires pts_to x 'v ** pts_to x 'u
@@ -40,10 +41,10 @@ ensures  pts_to x 'v ** pts_to x 'u ** pure False
     pts_to_perm_bound x;
     share x;    
 }
-```
+
 
 [@@expect_failure]
-```pulse
+
 fn double_open_bad (r:ref U32.t) (i:inv (owns r))
 requires emp
 ensures pure False
@@ -58,10 +59,10 @@ ensures pure False
       }
     }
 }
-```
 
 
-```pulse
+
+
 fn update_ref (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 requires emp
 ensures emp
@@ -72,10 +73,10 @@ ensures emp
      fold owns;          //ghost step;  owns r
   }
 }
-```
+
 
 [@@expect_failure]
-```pulse 
+ 
 fn update_ref_fail (r:ref U32.t) (i:inv (owns r)) (v:U32.t)
 requires emp
 ensures emp
@@ -86,7 +87,7 @@ ensures emp
     fold owns;
   }
 }
-```
+
 
 
 
@@ -94,7 +95,7 @@ let readable (r:ref U32.t) = exists* p v. pts_to r #p v
 
 //Finish the implementation of this function
 //hint: you also need to adjust the spec slightly
-```pulse //split_readable$
+ //split_readable$
 atomic
 fn split_readable (r:ref U32.t) (i:inv (readable r))
 requires emp
@@ -102,7 +103,7 @@ ensures readable r
 {
   admit()
 }
-```
+
 
 
 
