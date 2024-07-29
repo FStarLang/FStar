@@ -32,7 +32,3 @@ install: [
 dev-repo: "git://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
-url {
-  src: "https://github.com/FStarLang/FStar/archive/V0.9.7.0-alpha1.zip"
-  checksum: "md5=78414a6a5a0ca0c7770a43a36c5f31f7"
-}
