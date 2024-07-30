@@ -854,7 +854,13 @@ let rec extract_dv (p:st_term) : T.Tac ECL.term =
 
     | Tm_Return { term } -> ECL.mk_return (ECL.rt_term_to_term term)
 
-    | Tm_STApp { head; arg } -> ECL.mk_app (ECL.rt_term_to_term head) (ECL.rt_term_to_term arg)
+    | Tm_STApp { head; arg_qual; arg } ->
+      let q =
+        match arg_qual with
+        | Some Implicit -> Some ECL.implicit_arg_qual
+        | _ -> None in
+
+      ECL.mk_app (ECL.rt_term_to_term head) q (ECL.rt_term_to_term arg)
 
     | Tm_Bind { binder; head; body } ->
       let b = extract_dv_binder binder None in
@@ -883,7 +889,9 @@ let rec extract_dv (p:st_term) : T.Tac ECL.term =
       let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
       ECL.mk_app
         (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Dv"; "while_"]))
+                    None
                     (ECL.mk_abs (unit_binder "while_cond") condition))
+        None
         (ECL.mk_abs (unit_binder "while_body") body)
 
     | Tm_Par { body1; body2 } ->
@@ -892,7 +900,9 @@ let rec extract_dv (p:st_term) : T.Tac ECL.term =
       let unit_binder ppname = ECL.mk_binder ECL.unit_ty ppname None [] in
       ECL.mk_app
         (ECL.mk_app (ECL.mk_fv_tm (ECL.mk_fv ["Pulse"; "Dv"; "par_"]))
+                    None
                     (ECL.mk_abs (unit_binder "par_b1") body1))
+        None
         (ECL.mk_abs (unit_binder "par_b2") body2)
 
     | Tm_WithLocal _ -> T.fail "Pulse extraction to dv : WithLocal not yet supported"
