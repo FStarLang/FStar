@@ -120,11 +120,10 @@ val term : Type0
 val binder : Type0
 val unit_tm : term
 val unit_ty : term
-val qualifier : Type0
-val implicit_qual : qualifier
-val meta_qual : qualifier
+val binder_qualifier : Type0
+val implicit_qual : binder_qualifier
 val rt_term_to_term (t:R.term) : Dv term
-val mk_binder (sort:term) (ppname:string) (q:option qualifier) (attrs:list term)
+val mk_binder (sort:term) (ppname:string) (q:option binder_qualifier) (attrs:list term)
   : Dv binder
 val mk_abs (b:binder) (body:term) : Dv term
 val mk_return (t:term) : Dv term

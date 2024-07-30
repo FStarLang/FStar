@@ -184,3 +184,21 @@ type iface = MLModul.iface
 type exp_binding = UEnv.exp_binding
 let iface_of_bindings (l:(S.fv * exp_binding) list) = MLModul.iface_of_bindings l
 let extend_fv (g:uenv) (x:S.fv) (tysc:mltyscheme) = UEnv.extend_fv g x tysc false
+
+module U = FStar_Syntax_Util
+
+type const = S.sconst
+type fv = S.fv
+type term = S.term
+type binder = S.binder
+let unit_tm = S.unit_const
+let unit_ty = S.t_unit
+type binder_qualifier = S.binder_qualifier
+let implicit_qual = S.Implicit false
+let rt_term_to_term (t:term) : term = t
+let mk_binder (sort:term) (ppname:string) (q:binder_qualifier option) (attrs:term list) : S.binder =
+  S.mk_binder_with_attrs (S.gen_bv ppname None sort) q None attrs
+let mk_abs (b:binder) (body:term) : term =
+  S.mk (S.Tm_abs {bs=[b];body=body;rc_opt=None}) FStar_Compiler_Range.dummyRange
+// let mk_return (t:term) : term =
+  
