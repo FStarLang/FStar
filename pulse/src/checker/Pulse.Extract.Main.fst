@@ -806,6 +806,101 @@ let extract_attrs (g:uenv) (se:R.sigelt) : T.Tac (list mlexpr) =
   se |> RU.get_attributes
      |> T.map (fun t -> let mlattr, _, _ = ECL.term_as_mlexpr g t in mlattr)
 
+assume val const : Type0
+assume val fv : Type0
+assume val term : Type0
+assume val binder : Type0
+assume val unit_tm : term
+assume val qualifier : Type0
+assume val implicit_qual : qualifier
+assume val meta_qual : qualifier
+assume val rt_term_to_term (t:R.term) : term
+assume val mk_binder (sort:term) (ppname:string) (q:option qualifier) (attrs:list term)
+  : binder
+assume val mk_tm_abs (b:binder) (body:term) : term
+assume val mk_return (t:term) : term
+assume val mk_app (head arg:term) : term
+assume val mk_let (b:binder) (head body:term) : term
+assume val mk_if (b then_ else_:term) : term
+assume val pattern : Type0
+assume val mk_fv (s:list string) : fv
+assume val mk_pat_cons (fv:fv) (pats:list pattern) : pattern
+assume val mk_pat_constant (c:const) : pattern
+assume val mk_const (c:R.vconst) : const
+
+let extract_binder (b:Pulse.Syntax.Base.binder) (q:option Pulse.Syntax.Base.qualifier)
+  : T.Tac binder =
+  let q =
+    match q with
+    | Some Implicit -> Some implicit_qual
+    | _ -> None in
+  mk_binder
+    (rt_term_to_term b.binder_ty)
+    (T.unseal b.binder_ppname.name)
+    q
+    (FStar.List.Tot.map rt_term_to_term (T.unseal b.binder_attrs))
+
+let rec extract_pattern (p:Pulse.Syntax.Base.pattern) : T.Tac pattern =
+  match p with
+  | Pat_Cons fv pats ->
+    let fv = mk_fv fv.fv_name in
+    let pats = T.map extract_pattern (List.Tot.map fst pats) in
+    mk_pat_cons fv pats
+  | Pat_Constant c -> c |> mk_const |> mk_pat_constant
+  | Pat_Var ppname sort ->
+  | _ -> admit ()    
+
+let rec extract_dv (p:st_term) : T.Tac term =
+  if is_erasable p then unit_tm
+  else begin
+    match p.term with
+    | Tm_IntroPure _
+    | Tm_ElimExists _
+    | Tm_IntroExists _ 
+    | Tm_Rewrite _ -> unit_tm
+
+    | Tm_Abs { b; q; body } ->
+      let b = extract_binder b q in
+      let body = extract_dv body in
+      mk_tm_abs b body
+
+    | Tm_Return { term } -> mk_return (rt_term_to_term term)
+
+    | Tm_STApp { head; arg } -> mk_app (rt_term_to_term head) (rt_term_to_term arg)
+
+    | Tm_Bind { binder; head; body } ->
+      let b = extract_binder binder None in
+      let e1 = extract_dv head in
+      let e2 = extract_dv body in
+      mk_let b e1 e2
+    
+    | Tm_TotBind { binder; head; body } ->
+      let b = extract_binder binder None in
+      let e1 = mk_return (rt_term_to_term head) in
+      let e2 = extract_dv body in
+      mk_let b e1 e2
+    
+    | Tm_If { b; then_; else_ } ->
+      let b = rt_term_to_term b in
+      let then_ = extract_dv then_ in
+      let else_ = extract_dv else_ in
+      mk_if b then_ else_
+
+    | Tm_Match { sc; brs } -> admit ()
+
+    | _ -> admit ()
+
+  end
+
+let extract_pulse_dv (uenv:uenv) (p:st_term) : T.Tac R.term =
+  let g = { uenv_inner=uenv; coreenv=initial_core_env uenv } in
+  let p = erase_ghost_subterms g p in
+  let p = simplify_st_term g p in
+
+  let t = extract_dv p in
+  
+  admit ()
+
 let extract_pulse (uenv:uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either mlmodule string) =
   
