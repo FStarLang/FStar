@@ -143,4 +143,10 @@ val mk_const (c:R.vconst) : Dv const
 val branch : Type0
 val mk_branch (pat:pattern) (body:term) : Dv branch
 val mk_match (scrutinee:term) (brs:list branch) : Dv term
+val mk_arrow (bs:list binder) (t:term) : Dv term
+val sigelt : Type0
+val mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt
+
 val term_to_string (t:term) : Dv string
+val sigelt_to_string (s:sigelt) : Dv string
+

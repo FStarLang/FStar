@@ -866,6 +866,9 @@ let rec extract_dv (p:st_term) : T.Tac ECL.term =
       let b = extract_dv_binder binder None in
       let e1 = extract_dv head in
       let e2 = extract_dv body in
+      //
+      // TODO: type is same as the sort in b?
+      //
       ECL.mk_let b e1 e2
     
     | Tm_TotBind { binder; head; body } ->
@@ -922,20 +925,43 @@ and extract_dv_branch (b:Pulse.Syntax.Base.branch) : T.Tac ECL.branch =
   let pat, body = b in
   ECL.mk_branch (extract_dv_pattern pat) (extract_dv body)
 
+let extract_dv_typ (t:R.typ) : T.Tac ECL.term =
+  let bs, c = R.collect_arr_ln_bs t in
+  let bs = T.map (fun b ->
+    let bview = R.inspect_binder b in
+    ECL.mk_binder
+      (ECL.rt_term_to_term bview.sort)
+      (T.unseal bview.ppname)
+      (match bview.qual with
+       | R.Q_Implicit -> Some ECL.implicit_qual
+       | _ -> None)
+      []) bs in
+  match (R.inspect_comp c) with
+  | R.C_Total t -> begin
+    let hd, args = R.collect_app_ln t in
+    //
+    // TODO: (sanity?) check hd for the effect
+    //
+    if L.length args = 0
+    then T.fail (Printf.sprintf "Unexpected return type in extract_dv_typ: %s" (T.term_to_string t))
+    else let ret_typ = args |> L.hd |> fst |> ECL.rt_term_to_term in
+         ECL.mk_arrow bs ret_typ
+    end
+  | _ ->
+    T.fail
+      (Printf.sprintf "Unexpected arrow comp in extract_dv_typ: %s" (T.term_to_string t))
+
 let extract_pulse_dv (uenv:ECL.uenv) (p:st_term) : T.Tac ECL.term =
   let g = { uenv_inner=uenv; coreenv=ECL.initial_core_env uenv } in
   let p = erase_ghost_subterms g p in
   let p = simplify_st_term g p in
 
-  let t = extract_dv p in
-  
-  admit ()
+  extract_dv p
 
 let extract_pulse (uenv:ECL.uenv) (selt:R.sigelt) (p:st_term)
   : T.Tac (either ECL.mlmodule string) =
   
   let g = { uenv_inner=uenv; coreenv=ECL.initial_core_env uenv } in
-  // T.print (Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   debug g (fun _ -> Printf.sprintf "About to extract:\n%s\n" (st_term_to_string p));
   let open T in
   try
@@ -949,14 +975,25 @@ let extract_pulse (uenv:ECL.uenv) (selt:R.sigelt) (p:st_term)
         match is_recursive g lb_fv selt with
         | Some _ ->
           extract_recursive_knot g p lb_fv lb_typ
-        | _ -> 
-          let g, tys, lb_typ, Some p = generalize g lb_typ (Some p) in
-          let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
+        | _ ->
+          let p = erase_ghost_subterms g p in
+          let p = simplify_st_term g p in
+          let t = extract_pulse_dv uenv p in
+          let ty = extract_dv_typ lb_typ in
           let fv_name = R.inspect_fv lb_fv in
           if Nil? fv_name
           then T.raise (Extraction_failure "Unexpected empty name");
-          let p = erase_ghost_subterms g p in
-          let p = simplify_st_term g p in
+          //
+          // TODO: where do we get sigqual from? Support in reflection?
+          //
+          let sg = ECL.mk_non_rec_siglet
+            (L.last fv_name)
+            t
+            ty in
+          T.print (FStar.Printf.sprintf "Sigelt: %s" (ECL.sigelt_to_string sg));
+          T.fail "Exiting";
+          let g, tys, lb_typ, Some p = generalize g lb_typ (Some p) in
+          let mlty = ECL.term_as_mlty g.uenv_inner lb_typ in
           let tm, tag = extract g p in
           let fv_name = FStar.List.Tot.last fv_name in
           debug_ g (fun _ -> Printf.sprintf "Extracted term (%s): %s\n" fv_name (ECL.mlexpr_to_string tm));
