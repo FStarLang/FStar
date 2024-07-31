@@ -243,3 +243,25 @@ let mk_match (scrutinee:term) (brs:branch list) : term =
     (S.Tm_match { scrutinee; ret_opt=None; brs; rc_opt1=None })
     FStar_Compiler_Range.dummyRange
 let term_to_string (t:term) : string = FStar_Syntax_Print.term_to_string t
+let mk_arrow (bs:binder list) (t:term) : term =
+  let c =
+    S.mk
+      (S.Comp {comp_univs=[]; effect_name=C.effect_DIV_lid; result_typ=t; effect_args=[]; flags=[]})
+      FStar_Compiler_Range.dummyRange in
+  S.mk (S.Tm_arrow {bs1=bs;comp=c}) FStar_Compiler_Range.dummyRange
+type sigelt = S.sigelt
+let mk_non_rec_siglet (nm:string) (t:term) (ty:term) : sigelt =
+  let lbname = FStar_Pervasives.Inr
+    {S.fv_name=S.withinfo (FStar_Ident.lid_of_str nm) FStar_Compiler_Range.dummyRange;
+     S.fv_qual=None} in
+  let lb = U.mk_letbinding lbname [] ty C.effect_PURE_lid t [] FStar_Compiler_Range.dummyRange in
+  {
+    sigel=S.Sig_let {lbs1=(false,[lb]); lids1=[FStar_Ident.lid_of_str nm]};
+    sigquals=[];
+    sigmeta=S.default_sigmeta;
+    sigattrs=[];
+    sigopts=None;
+    sigopens_and_abbrevs=[];
+    sigrng=FStar_Compiler_Range.dummyRange
+  }
+let sigelt_to_string (s:sigelt) : string = FStar_Syntax_Print.sigelt_to_string s
