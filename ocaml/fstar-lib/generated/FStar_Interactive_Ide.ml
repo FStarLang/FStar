@@ -1683,7 +1683,6 @@ let (run_push_without_deps :
                  (uu___.FStar_TypeChecker_Env.is_iface);
                FStar_TypeChecker_Env.admit =
                  (uu___.FStar_TypeChecker_Env.admit);
-               FStar_TypeChecker_Env.lax = (uu___.FStar_TypeChecker_Env.lax);
                FStar_TypeChecker_Env.lax_universes =
                  (uu___.FStar_TypeChecker_Env.lax_universes);
                FStar_TypeChecker_Env.phase1 =

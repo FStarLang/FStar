@@ -54,7 +54,6 @@ let with_dsenv_of_tcenv :
                 (tcenv.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit =
                 (tcenv.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (tcenv.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (tcenv.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -314,7 +313,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (env.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -403,7 +401,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env1.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env1.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env1.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env1.FStar_TypeChecker_Env.phase1);
@@ -497,7 +494,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env2.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env2.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env2.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env2.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env2.FStar_TypeChecker_Env.phase1);
@@ -591,7 +587,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env3.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env3.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env3.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env3.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env3.FStar_TypeChecker_Env.phase1);
@@ -684,7 +679,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env4.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env4.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env4.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env4.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env4.FStar_TypeChecker_Env.phase1);
@@ -1205,32 +1199,49 @@ let (tc_one_file :
              match r1 with
              | FStar_Pervasives_Native.None ->
                  ((let uu___3 =
-                     let uu___4 = FStar_Parser_Dep.module_name_of_file fn in
-                     FStar_Options.should_be_already_cached uu___4 in
+                     (let uu___4 = FStar_Parser_Dep.module_name_of_file fn in
+                      FStar_Options.should_be_already_cached uu___4) &&
+                       (let uu___4 = FStar_Options.force () in
+                        Prims.op_Negation uu___4) in
                    if uu___3
                    then
                      let uu___4 =
                        let uu___5 =
-                         FStar_Compiler_Util.format1
-                           "Expected %s to already be checked" fn in
+                         let uu___6 =
+                           let uu___7 =
+                             FStar_Compiler_Util.format1
+                               "Expected %s to already be checked." fn in
+                           FStar_Errors_Msg.text uu___7 in
+                         [uu___6] in
                        (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___5) in
-                     FStar_Errors.raise_err uu___4
+                     FStar_Errors.raise_err_doc uu___4
                    else ());
                   (let uu___4 =
-                     (let uu___5 = FStar_Options.codegen () in
-                      FStar_Compiler_Option.isSome uu___5) &&
-                       (FStar_Options.cmi ()) in
+                     ((let uu___5 = FStar_Options.codegen () in
+                       FStar_Compiler_Option.isSome uu___5) &&
+                        (FStar_Options.cmi ()))
+                       &&
+                       (let uu___5 = FStar_Options.force () in
+                        Prims.op_Negation uu___5) in
                    if uu___4
                    then
                      let uu___5 =
                        let uu___6 =
-                         FStar_Compiler_Util.format1
-                           "Cross-module inlining expects all modules to be checked first; %s was not checked"
-                           fn in
+                         let uu___7 =
+                           FStar_Errors_Msg.text
+                             "Cross-module inlining expects all modules to be checked first." in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               FStar_Compiler_Util.format1
+                                 "Module %s was not checked." fn in
+                             FStar_Errors_Msg.text uu___10 in
+                           [uu___9] in
+                         uu___7 :: uu___8 in
                        (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___6) in
-                     FStar_Errors.raise_err uu___5
+                     FStar_Errors.raise_err_doc uu___5
                    else ());
                   (let uu___4 = tc_source_file () in
                    match uu___4 with

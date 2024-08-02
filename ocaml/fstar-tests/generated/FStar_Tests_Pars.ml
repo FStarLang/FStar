@@ -132,7 +132,6 @@ let (init_once : unit -> unit) =
              FStar_TypeChecker_Env.is_iface =
                (env.FStar_TypeChecker_Env.is_iface);
              FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-             FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
              FStar_TypeChecker_Env.lax_universes =
                (env.FStar_TypeChecker_Env.lax_universes);
              FStar_TypeChecker_Env.phase1 =
@@ -241,8 +240,6 @@ let (init_once : unit -> unit) =
                     (env2.FStar_TypeChecker_Env.is_iface);
                   FStar_TypeChecker_Env.admit =
                     (env2.FStar_TypeChecker_Env.admit);
-                  FStar_TypeChecker_Env.lax =
-                    (env2.FStar_TypeChecker_Env.lax);
                   FStar_TypeChecker_Env.lax_universes =
                     (env2.FStar_TypeChecker_Env.lax_universes);
                   FStar_TypeChecker_Env.phase1 =
@@ -401,10 +398,9 @@ let (tc' :
         FStar_TypeChecker_Env.is_iface =
           (tcenv.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (tcenv.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (tcenv.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (tcenv.FStar_TypeChecker_Env.lax_universes);
-        FStar_TypeChecker_Env.phase1 = (tcenv.FStar_TypeChecker_Env.phase1);
+        FStar_TypeChecker_Env.phase1 = true;
         FStar_TypeChecker_Env.failhard =
           (tcenv.FStar_TypeChecker_Env.failhard);
         FStar_TypeChecker_Env.flychecking =
@@ -505,7 +501,6 @@ let (tc_term : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
         FStar_TypeChecker_Env.is_iface =
           (tcenv.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (tcenv.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (tcenv.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (tcenv.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (tcenv.FStar_TypeChecker_Env.phase1);

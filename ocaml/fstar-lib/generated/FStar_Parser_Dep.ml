@@ -11,6 +11,8 @@ let (uu___is_Open_namespace : open_kind -> Prims.bool) =
 type module_name = Prims.string
 let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "Dep"
+let (dbg_CheckedFiles : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CheckedFiles"
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
@@ -560,17 +562,29 @@ let (cache_file_name : Prims.string -> Prims.string) =
                  expected_cache_file) in
           if uu___2 then expected_cache_file else path))
     | FStar_Pervasives_Native.None ->
-        let uu___1 = FStar_Options.should_be_already_cached mname in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Util.format1
-                "Expected %s to be already checked but could not find it"
-                mname in
-            (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure, uu___3) in
-          FStar_Errors.raise_err uu___2
-        else FStar_Options.prepend_cache_dir cache_fn in
+        ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_CheckedFiles in
+          if uu___2
+          then
+            let uu___3 = FStar_Compiler_Util.basename cache_fn in
+            FStar_Compiler_Util.print1 "find_file(%s) returned None\n" uu___3
+          else ());
+         (let uu___3 = FStar_Options.should_be_already_cached mname in
+          if uu___3
+          then
+            let uu___4 =
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Compiler_Util.format1
+                      "Expected %s to be already checked but could not find it."
+                      mname in
+                  FStar_Errors_Msg.text uu___7 in
+                [uu___6] in
+              (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
+                uu___5) in
+            FStar_Errors.raise_err_doc uu___4
+          else ());
+         FStar_Options.prepend_cache_dir cache_fn) in
   let memo = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
   let memo1 f x =
     let uu___ = FStar_Compiler_Util.smap_try_find memo x in

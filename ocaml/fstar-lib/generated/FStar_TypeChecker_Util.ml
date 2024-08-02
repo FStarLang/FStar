@@ -846,8 +846,7 @@ let (mk_wp_return :
                    else
                      (let wp =
                         let uu___4 =
-                          env.FStar_TypeChecker_Env.lax &&
-                            (FStar_Options.ml_ish ()) in
+                          (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
                         if uu___4
                         then FStar_Syntax_Syntax.tun
                         else
@@ -1188,8 +1187,7 @@ let (close_wp_comp :
          if uu___1
          then c
          else
-           (let uu___3 =
-              env.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
+           (let uu___3 = (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
             if uu___3
             then c
             else
@@ -2815,7 +2813,7 @@ let (strengthen_comp :
         fun f ->
           fun flags ->
             let uu___ =
-              env.FStar_TypeChecker_Env.lax ||
+              env.FStar_TypeChecker_Env.phase1 ||
                 (FStar_TypeChecker_Env.too_early_in_prims env) in
             if uu___
             then (c, FStar_TypeChecker_Env.trivial_guard)
@@ -2973,7 +2971,7 @@ let (weaken_precondition :
           match uu___1 with
           | (c, g_c) ->
               let uu___2 =
-                env.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
+                (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
               if uu___2
               then (c, g_c)
               else
@@ -3040,34 +3038,35 @@ let (strengthen_precondition :
                  let uu___3 = FStar_TypeChecker_Common.lcomp_comp lc in
                  match uu___3 with
                  | (c, g_c) ->
-                     if env.FStar_TypeChecker_Env.lax
+                     let uu___4 = FStar_Options.lax () in
+                     if uu___4
                      then (c, g_c)
                      else
                        (let g01 = FStar_TypeChecker_Rel.simplify_guard env g0 in
-                        let uu___5 = FStar_TypeChecker_Env.guard_form g01 in
-                        match uu___5 with
+                        let uu___6 = FStar_TypeChecker_Env.guard_form g01 in
+                        match uu___6 with
                         | FStar_TypeChecker_Common.Trivial -> (c, g_c)
                         | FStar_TypeChecker_Common.NonTrivial f ->
-                            ((let uu___7 = FStar_Compiler_Debug.extreme () in
-                              if uu___7
+                            ((let uu___8 = FStar_Compiler_Debug.extreme () in
+                              if uu___8
                               then
-                                let uu___8 =
+                                let uu___9 =
                                   FStar_TypeChecker_Normalize.term_to_string
                                     env e_for_debugging_only in
-                                let uu___9 =
+                                let uu___10 =
                                   FStar_TypeChecker_Normalize.term_to_string
                                     env f in
                                 FStar_Compiler_Util.print2
                                   "-------------Strengthening pre-condition of term %s with guard %s\n"
-                                  uu___8 uu___9
+                                  uu___9 uu___10
                               else ());
-                             (let uu___7 =
+                             (let uu___8 =
                                 strengthen_comp env reason c f flags in
-                              match uu___7 with
+                              match uu___8 with
                               | (c1, g_s) ->
-                                  let uu___8 =
+                                  let uu___9 =
                                     FStar_TypeChecker_Env.conj_guard g_c g_s in
-                                  (c1, uu___8)))) in
+                                  (c1, uu___9)))) in
                let uu___2 =
                  let uu___3 =
                    FStar_TypeChecker_Env.norm_eff_name env
@@ -3208,8 +3207,7 @@ let (bind :
                           else flags) in
                      let bind_it uu___2 =
                        let uu___3 =
-                         env.FStar_TypeChecker_Env.lax &&
-                           (FStar_Options.ml_ish ()) in
+                         (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
                        if uu___3
                        then
                          let u_t =
@@ -3753,7 +3751,7 @@ let (maybe_assume_result_eq_pure_term_in_m :
       fun e ->
         fun lc ->
           let should_return1 =
-            (((Prims.op_Negation env.FStar_TypeChecker_Env.lax) &&
+            (((Prims.op_Negation env.FStar_TypeChecker_Env.phase1) &&
                 (let uu___ = FStar_TypeChecker_Env.too_early_in_prims env in
                  Prims.op_Negation uu___))
                && (should_return env (FStar_Pervasives_Native.Some e) lc))
@@ -4535,7 +4533,7 @@ let (bind_cases :
               let bind_cases1 uu___1 =
                 let u_res_t = env.FStar_TypeChecker_Env.universe_of env res_t in
                 let uu___2 =
-                  env.FStar_TypeChecker_Env.lax && (FStar_Options.ml_ish ()) in
+                  (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
                 if uu___2
                 then
                   let uu___3 = lax_mk_tot_or_comp_l eff u_res_t res_t [] in
@@ -5583,9 +5581,6 @@ let (find_coercion :
                                                                     =
                                                                     (env.FStar_TypeChecker_Env.is_iface);
                                                                     FStar_TypeChecker_Env.admit
-                                                                    =
-                                                                    (env.FStar_TypeChecker_Env.admit);
-                                                                    FStar_TypeChecker_Env.lax
                                                                     = true;
                                                                     FStar_TypeChecker_Env.lax_universes
                                                                     =
@@ -5702,10 +5697,8 @@ let (maybe_coerce_lc :
       fun lc ->
         fun exp_t ->
           let should_coerce =
-            ((env.FStar_TypeChecker_Env.phase1 ||
-                env.FStar_TypeChecker_Env.lax)
-               || (FStar_Options.lax ()))
-              && (Prims.op_Negation env.FStar_TypeChecker_Env.nocoerce) in
+            (env.FStar_TypeChecker_Env.phase1 || (FStar_Options.lax ())) &&
+              (Prims.op_Negation env.FStar_TypeChecker_Env.nocoerce) in
           if Prims.op_Negation should_coerce
           then
             ((let uu___1 = FStar_Compiler_Effect.op_Bang dbg_Coercions in
@@ -6065,8 +6058,7 @@ let (weaken_result_typ :
                         } in
                       let strengthen uu___2 =
                         let uu___3 =
-                          env.FStar_TypeChecker_Env.lax &&
-                            (FStar_Options.ml_ish ()) in
+                          (FStar_Options.lax ()) && (FStar_Options.ml_ish ()) in
                         if uu___3
                         then FStar_TypeChecker_Common.lcomp_comp lc
                         else
@@ -8043,7 +8035,6 @@ let (update_env_sub_eff :
               FStar_TypeChecker_Env.is_iface =
                 (env.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (env.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -8144,7 +8135,6 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.is_iface =
             (env1.FStar_TypeChecker_Env.is_iface);
           FStar_TypeChecker_Env.admit = (env1.FStar_TypeChecker_Env.admit);
-          FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
           FStar_TypeChecker_Env.lax_universes =
             (env1.FStar_TypeChecker_Env.lax_universes);
           FStar_TypeChecker_Env.phase1 = (env1.FStar_TypeChecker_Env.phase1);
