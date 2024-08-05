@@ -37,7 +37,7 @@ module ST = FStar.HyperStack.ST
 type u64 = FStar.UInt64.t
 
 // JP: see comment in Buffer.Utils.fst
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 (*** Chacha 20 ***)
 

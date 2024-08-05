@@ -92,7 +92,7 @@ let __do_rewrite
         Errors.with_ctx "While typechecking a subterm for ctrl_rewrite" (fun () ->
           (* NS: Should we use Core here? *)
           
-          Some (env.tc_term ({ env with Env.lax = true }) tm))
+          Some (env.tc_term ({ env with admit = true }) tm))
       with
       | Errors.Error (Errors.Error_LayeredMissingAnnot, _, _, _) -> None
       | e -> raise e

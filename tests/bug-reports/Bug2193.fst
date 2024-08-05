@@ -1,6 +1,6 @@
 module Bug2193
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 type foo: Type u#m = | FOO
 

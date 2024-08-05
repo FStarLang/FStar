@@ -133,7 +133,7 @@ instance hashable_env : hashable env = {
     hash e.gamma `mix`
     hash e.gamma_sig `mix`
     hash e.proof_ns `mix`
-    hash (e.admit, e.lax)
+    hash e.admit
   );
 }
 

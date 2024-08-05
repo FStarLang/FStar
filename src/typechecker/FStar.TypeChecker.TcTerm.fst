@@ -303,7 +303,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
         if (Options.ml_ish()
             && Ident.lid_equals (Const.effect_ALL_lid()) (U.comp_effect_name c))
         || (Options.ml_ish ()
-            && env.lax
+            && Options.lax ()
             && not (U.is_pure_or_ghost_comp c))
         then Some (U.ml_comp ct e.pos), c, None
         else if U.is_tot_or_gtot_comp c //these are already the defaults for their particular effects
@@ -835,7 +835,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
         (* Typechecked the quoted term just to elaborate it *)
         let env', _ = Env.clear_expected_typ env in
-        let env' = { env' with lax = true } in
+        let env' = { env' with admit = true } in
         let qt, _, g = tc_term env' qt in
         let g0 = { g with guard_f = Trivial } in //explicitly dropping the logical guard; this is just a quotation
         let g0 = Rel.resolve_implicits env' g0 in
@@ -1300,7 +1300,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
     //Don't instantiate head; instantiations will be computed below, accounting for implicits/explicits
     let head, chead, g_head = tc_term (no_inst env) head in
     let chead, g_head = TcComm.lcomp_comp chead |> (fun (c, g) -> c, Env.conj_guard g_head g) in
-    let e, c, g = if not env.lax && not (Options.lax()) && TcUtil.short_circuit_head head
+    let e, c, g = if not env.admit && not (Options.lax()) && TcUtil.short_circuit_head head
                   then let e, c, g = check_short_circuit_args env head chead g_head args (Env.expected_typ env0) in
                        // //TODO: this is not efficient:
                        // //      It is quadratic in the size of boolean terms
@@ -1314,10 +1314,9 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
                   else check_application_args env head chead g_head args (Env.expected_typ env0) in
     let e, c, implicits =
         if TcComm.is_tot_or_gtot_lcomp c
-        //Also instantiate in phase1, dropping any precondition,
-        //since it will be recomputed correctly in phase2. Also in lax.
-        // Essentially we are checking that we are *not* in a phase2.
-        || ((env.phase1 || not (Env.should_verify env)) && TcComm.is_pure_or_ghost_lcomp c)
+        // Also instantiate in phase1, dropping any precondition,
+        // since it will be recomputed correctly in phase2.
+        || (env.phase1 && TcComm.is_pure_or_ghost_lcomp c)
         then let e, res_typ, implicits = TcUtil.maybe_instantiate env0 e c.res_typ in
              e, TcComm.set_result_typ_lc c res_typ, implicits
         else e, c, Env.trivial_guard
@@ -3836,7 +3835,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
            //note, we are explicitly setting lax = true, since these terms apply projectors
            //which we know are sound as per the branch guard, but hard to convince the typechecker
            //AR: TODO: should we instead do the non-lax typechecking but drop the logical payload in the guard?
-           let env = { (Env.push_bv env scrutinee) with lax = true } in
+           let env = { (Env.push_bv env scrutinee) with admit = true } in
            List.fold_left2 (fun (substs, acc) pat_bv_tm bv ->
              let expected_t = SS.subst substs bv.sort in
              //we also substitute in the pat_bv_tm, since in the case of nested patterns,
@@ -4577,7 +4576,7 @@ let level_of_type env e t =
           then let t = Normalize.normalize [Env.UnfoldUntil delta_constant] env t in
                aux false t
           else let t_u, u = U.type_u() in
-               let env = {env with lax=true} in
+               let env = {env with admit = true} in
                (*
                 * AR: This is a little harsh
                 *     If t is a uvar, then this prevents t to be inferred as something more
@@ -4749,7 +4748,7 @@ let rec universe_of_aux env e : term =
           type_of_head false env hd args
         | _ ->
           let env, _ = Env.clear_expected_typ env in
-          let env = {env with lax=true; top_level=false} in
+          let env = {env with admit=true; top_level=false} in
           if !dbg_UniverseOf
           then BU.print2 "%s: About to type-check %s\n"
                         (Range.string_of_range (Env.get_range env))

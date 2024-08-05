@@ -250,7 +250,7 @@ let lemma_modifies_one_trans_1 (#a:Type) (b:buffer a) (h0:t) (h1:t) (h2:t): Lemm
   = ()
 
 #reset-options "--z3timeout 100"
-#set-options "--lax" // TODO: remove 
+#set-options "--admit_smt_queries true" // TODO: remove
 
 (* TODO: simplify, add triggers ? *)
 private val blit_aux: #a:Type -> b:buffer a -> idx_b:uint32{v idx_b<=length b} -> 

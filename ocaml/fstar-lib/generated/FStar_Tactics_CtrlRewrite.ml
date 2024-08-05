@@ -95,8 +95,7 @@ let (__do_rewrite :
                                             FStar_TypeChecker_Env.is_iface =
                                               (env.FStar_TypeChecker_Env.is_iface);
                                             FStar_TypeChecker_Env.admit =
-                                              (env.FStar_TypeChecker_Env.admit);
-                                            FStar_TypeChecker_Env.lax = true;
+                                              true;
                                             FStar_TypeChecker_Env.lax_universes
                                               =
                                               (env.FStar_TypeChecker_Env.lax_universes);

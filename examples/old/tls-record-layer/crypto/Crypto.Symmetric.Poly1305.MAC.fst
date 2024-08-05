@@ -398,7 +398,7 @@ let mac #i st l acc tag =
     end
 //16-09-24 why?
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 val verify: #i:id -> st:state i -> l:itext -> computed:accB i -> tag:tagB ->
   Stack bool

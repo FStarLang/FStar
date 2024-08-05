@@ -348,7 +348,7 @@ val get_guard_policy : unit -> Tac guard_policy
 val set_guard_policy : guard_policy -> Tac unit
 
 (** [lax_on] returns true iff the current environment has the
-`--lax` option set, and thus drops all verification conditions. *)
+`--admit_smt_queries true` option set, and thus drops all verification conditions. *)
 val lax_on : unit -> Tac bool
 
 (** Admit the current goal and set the witness to the given term.

@@ -25,7 +25,7 @@ open Math.Lib
 open Curve.Parameters
 open Curve.Bigint
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 module U8  = FStar.UInt8
 module U32 = FStar.UInt32

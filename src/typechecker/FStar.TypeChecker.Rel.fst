@@ -3061,7 +3061,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
               let t_last_arg, _ =
                 let env = p_env wl orig in
                 env.typeof_well_typed_tot_or_gtot_term
-                  ({env with lax=true; expected_typ=None})
+                  ({env with admit=true; expected_typ=None})
                   (fst last_arg_rhs)
                   false
               in  //AR: 03/30: WARNING: dropping the guard
@@ -3181,7 +3181,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
         else (
           let t_head, _ =
              env.typeof_well_typed_tot_or_gtot_term
-                  ({env with lax=true; expected_typ=None})
+                  ({env with admit=true; expected_typ=None})
                   head
                   false
           in
@@ -4653,7 +4653,7 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                        solve (attempt [prob] wl)
                   else
                       let g =
-                         if env.lax then
+                         if Options.lax () then
                             U.t_true
                          else let wpc1_2 = lift_c1 () |> (fun ct -> List.hd ct.effect_args) in
                               if is_null_wp_2
@@ -5196,9 +5196,13 @@ let discharge_guard' use_env_range_msg env (g:guard_t) (use_smt:bool) : option g
   let debug : bool = !dbg_Rel || !dbg_SMTQuery || !dbg_Discharge in
   let diag_doc = Errors.diag_doc (Env.get_range env) in
   let ret_g = {g with guard_f = Trivial} in
-  if not (Env.should_verify env) then (
-    if debug && not env.phase1 then
-      diag_doc [text "Skipping VC because verification is disabled"];
+  if env.admit then (
+    let open FStar.Class.PP in
+    if debug && not (Trivial? g.guard_f) && not env.phase1 then
+      diag_doc [
+        text "Skipping VC because verification is disabled.";
+        text "VC =" ^/^ pp g;
+      ];
     Some ret_g
   ) else (
     let g = simplify_guard_full_norm env g in
@@ -5388,12 +5392,12 @@ let check_implicit_solution_and_discharge_guard env
       (fun () ->
        let skip_core =
          env.phase1 ||
-         env.lax ||
+         env.admit ||
          Allow_untyped? uvar_should_check ||
          Already_checked? uvar_should_check in
 
        let must_tot = not (env.phase1 ||
-                           env.lax    ||
+                           env.admit ||
                            Allow_ghost? uvar_should_check) in
 
        if skip_core

@@ -750,7 +750,7 @@ let solve_implicits (env:Env.env) (tau:term) (imps:Env.implicits) : unit =
           begin
             if !dbg_Tac then
               BU.print1 "Synthesis left a goal: %s\n" (show vc);
-            if not (Options.admit_smt_queries())
+            if not env.admit
             then (
               let guard = { guard_f = NonTrivial vc
                           ; deferred_to_tac = []
@@ -891,7 +891,7 @@ let splice
             : list goal & dsl_tac_result_t =
             run_tactic_on_ps tau.pos tau.pos false
               FStar.Tactics.Typeclasses.solve
-              ({env with lax=false; admit=false; gamma=[]}, val_t)
+              ({env with admit=false; gamma=[]}, val_t)
               FStar.Tactics.Typeclasses.solve
               tau
               tactic_already_typed

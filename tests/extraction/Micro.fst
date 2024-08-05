@@ -30,7 +30,7 @@ let weird0 (a:Type) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
 let weird1 (a:Type) (f: (int -> unit)) : Pure a (requires (a == unit)) (ensures fun _ -> True) =
   f1 0
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 let weird2 (a:Type) (f: int -> unit) : Pure a (requires (a == (int -> unit))) (ensures fun _ -> True) =
   f1
 #reset-options
@@ -41,7 +41,7 @@ let h4 (#a:Type) (x:nat) : GTot nat = f4 x
 
 assume
 val f5 : nat -> Dv bool
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 let h5 (x:nat) = f5 x && f5 x
 #reset-options
 

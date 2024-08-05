@@ -76,7 +76,7 @@ let list_assoc_append (#t: Type) (x: t) (l1 l2: list t) : Lemma
 = L.append_assoc (L.rev l1) [x] l2;
   L.rev_append [x] l1
 
-#set-options "--z3rlimit 64 --max_ifuel 8"
+#set-options "--z3rlimit 96 --max_ifuel 8"
 
 let parse_nlist_impl_inv_false_intro
   (#t: Type0)

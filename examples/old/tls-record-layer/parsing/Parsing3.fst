@@ -24,7 +24,7 @@ open FStar.Int.Cast
 open FStar.Buffer
 open Low.Bytes
 
-#set-options "--lax"
+#set-options "--admit_smt_queries true"
 
 val read_length: b:bytes -> n:UInt32.t{v n = 1 \/ v n = 2 \/ v n = 3} -> STL UInt32.t
   (requires (fun h -> Buffer.live h b /\ v n <= Buffer.length b))

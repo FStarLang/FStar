@@ -18,7 +18,7 @@ all: prep verify special_cases
 # * miniparse: Needs Krml to build
 
 
-EXCLUDE_DIRS=old/ hello/ native_tactics/ kv_parsing/ miniparse/ 
+EXCLUDE_DIRS=old/ hello/ native_tactics/ kv_parsing/ miniparse/ sample_project/
 
 # F* contrib directory needed by crypto/ . Since this Makefile
 # supersedes crypto/Makefile, we need to determine the location of the
@@ -45,6 +45,7 @@ verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked, $(ALL_CHECKED_FILES))
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
+SPECIAL_CASES += sample_project
 ifneq (,$(HAS_OCAML))
 SPECIAL_CASES += hello
 SPECIAL_CASES += native_tactics

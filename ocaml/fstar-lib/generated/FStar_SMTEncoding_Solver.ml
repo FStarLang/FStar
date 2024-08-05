@@ -1965,7 +1965,7 @@ let (ask_solver :
                   | (configs, next_hint) ->
                       let default_settings = FStar_Compiler_List.hd configs in
                       let skip =
-                        ((FStar_Options.admit_smt_queries ()) ||
+                        (env.FStar_TypeChecker_Env.admit ||
                            (FStar_TypeChecker_Env.too_early_in_prims env))
                           ||
                           (let uu___1 = FStar_Options.admit_except () in
@@ -2432,21 +2432,20 @@ let (do_solve_maybe_split :
   fun use_env_msg ->
     fun tcenv ->
       fun q ->
-        let uu___ = FStar_Options.admit_smt_queries () in
-        if uu___
+        if tcenv.FStar_TypeChecker_Env.admit
         then ()
         else
-          (let uu___2 = FStar_Options.split_queries () in
-           match uu___2 with
+          (let uu___1 = FStar_Options.split_queries () in
+           match uu___1 with
            | FStar_Options.No -> do_solve false false use_env_msg tcenv q
            | FStar_Options.OnFailure ->
                let can_split =
-                 let uu___3 =
-                   let uu___4 = FStar_Options.quake_hi () in
-                   uu___4 > Prims.int_one in
-                 Prims.op_Negation uu___3 in
+                 let uu___2 =
+                   let uu___3 = FStar_Options.quake_hi () in
+                   uu___3 > Prims.int_one in
+                 Prims.op_Negation uu___2 in
                (try
-                  (fun uu___3 ->
+                  (fun uu___2 ->
                      match () with
                      | () -> do_solve can_split false use_env_msg tcenv q) ()
                 with
