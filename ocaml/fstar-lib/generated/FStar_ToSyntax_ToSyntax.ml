@@ -1,7 +1,7 @@
 open Prims
 type extension_tosyntax_decl_t =
   FStar_Syntax_DsEnv.env ->
-    FStar_Compiler_Dyn.dyn ->
+    FStar_Dyn.dyn ->
       FStar_Ident.lident Prims.list ->
         FStar_Compiler_Range_Type.range ->
           FStar_Syntax_Syntax.sigelt' Prims.list
