@@ -205,12 +205,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                   match uu___ with
                   | (l, lst) ->
                       let blob = FStar_ImmutableArray_Base.of_list lst in
-                      let uu___1 =
-                        let uu___2 =
-                          let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
-                          (l, uu___3) in
-                        (universes, elt_t, uu___2) in
-                      FStar_Pervasives_Native.Some uu___1)),
+                      FStar_Pervasives_Native.Some
+                        (universes, elt_t, (l, (FStar_Dyn.mkdyn blob))))),
       (FStar_TypeChecker_NBETerm.mixed_binary_op
          (fun uu___ ->
             match uu___ with
@@ -265,12 +261,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                 match uu___ with
                 | (l, lst) ->
                     let blob = FStar_ImmutableArray_Base.of_list lst in
-                    let uu___1 =
-                      let uu___2 =
-                        let uu___3 = FStar_Compiler_Dyn.mkdyn blob in
-                        (l, uu___3) in
-                      (universes, elt_t, uu___2) in
-                    FStar_Pervasives_Native.Some uu___1))) in
+                    FStar_Pervasives_Native.Some
+                      (universes, elt_t, (l, (FStar_Dyn.mkdyn blob)))))) in
   let arg1_as_elt_t x =
     FStar_Pervasives_Native.Some (FStar_Pervasives_Native.fst x) in
   let arg2_as_blob x =
@@ -306,9 +298,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
       FStar_TypeChecker_Primops_Base.embed_simple
         FStar_Syntax_Embeddings.e_int r i in
     let run_op blob =
-      let uu___ =
-        let uu___1 = FStar_Compiler_Dyn.undyn blob in
-        FStar_Compiler_Util.array_length uu___1 in
+      let uu___ = FStar_Compiler_Util.array_length (FStar_Dyn.undyn blob) in
       FStar_Pervasives_Native.Some uu___ in
     (FStar_Parser_Const.immutable_array_length_lid, (Prims.of_int (2)),
       Prims.int_one,
@@ -334,8 +324,8 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
                 fun blob ->
                   fun i ->
                     let uu___ =
-                      let uu___1 = FStar_Compiler_Dyn.undyn blob in
-                      FStar_Compiler_Util.array_index uu___1 i in
+                      FStar_Compiler_Util.array_index (FStar_Dyn.undyn blob)
+                        i in
                     FStar_Pervasives_Native.Some uu___)),
       (FStar_TypeChecker_NBETerm.mixed_ternary_op
          (fun uu___ ->
@@ -347,8 +337,7 @@ let (ops : FStar_TypeChecker_Primops_Base.primitive_step Prims.list) =
               fun blob ->
                 fun i ->
                   let uu___ =
-                    let uu___1 = FStar_Compiler_Dyn.undyn blob in
-                    FStar_Compiler_Util.array_index uu___1 i in
+                    FStar_Compiler_Util.array_index (FStar_Dyn.undyn blob) i in
                   FStar_Pervasives_Native.Some uu___))) in
   FStar_Compiler_List.map (as_primitive_step true)
     [of_list_op; length_op; index_op]

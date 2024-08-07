@@ -214,9 +214,8 @@ let (e_proofstate_nbe :
   FStar_Tactics_Types.proofstate FStar_TypeChecker_NBETerm.embedding) =
   let embed_proofstate _cb ps =
     let li =
-      let uu___ = FStar_Compiler_Dyn.mkdyn ps in
       {
-        FStar_Syntax_Syntax.blob = uu___;
+        FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_proofstate;
         FStar_Syntax_Syntax.ltyp = (fstar_tactics_proofstate.t);
         FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
@@ -241,9 +240,7 @@ let (e_proofstate_nbe :
            FStar_Syntax_Syntax.ltyp = uu___1;
            FStar_Syntax_Syntax.rng = uu___2;_},
          uu___3)
-        ->
-        let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___4
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -271,9 +268,8 @@ let (e_goal_nbe :
   FStar_Tactics_Types.goal FStar_TypeChecker_NBETerm.embedding) =
   let embed_goal _cb ps =
     let li =
-      let uu___ = FStar_Compiler_Dyn.mkdyn ps in
       {
-        FStar_Syntax_Syntax.blob = uu___;
+        FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn ps);
         FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_goal;
         FStar_Syntax_Syntax.ltyp = (fstar_tactics_goal.t);
         FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
@@ -297,9 +293,7 @@ let (e_goal_nbe :
            FStar_Syntax_Syntax.ltyp = uu___1;
            FStar_Syntax_Syntax.rng = uu___2;_},
          uu___3)
-        ->
-        let uu___4 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___4
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___1 ->
         ((let uu___3 =
             FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
@@ -909,9 +903,7 @@ let e_tref :
             FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_tref;
             FStar_Syntax_Syntax.ltyp = uu___3;
             FStar_Syntax_Syntax.rng = uu___4;_}
-          ->
-          let uu___5 = FStar_Compiler_Dyn.undyn blob in
-          FStar_Pervasives_Native.Some uu___5
+          -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn blob)
       | uu___3 -> FStar_Pervasives_Native.None in
     FStar_Syntax_Embeddings_Base.mk_emb_full em un (fun uu___1 -> t_tref)
       (fun i -> "tref")
@@ -927,9 +919,8 @@ let e_tref_nbe :
   fun uu___ ->
     let embed_tref _cb r =
       let li =
-        let uu___1 = FStar_Compiler_Dyn.mkdyn r in
         {
-          FStar_Syntax_Syntax.blob = uu___1;
+          FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn r);
           FStar_Syntax_Syntax.lkind = FStar_Syntax_Syntax.Lazy_tref;
           FStar_Syntax_Syntax.ltyp = t_tref;
           FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
@@ -953,9 +944,7 @@ let e_tref_nbe :
              FStar_Syntax_Syntax.ltyp = uu___2;
              FStar_Syntax_Syntax.rng = uu___3;_},
            uu___4)
-          ->
-          let uu___5 = FStar_Compiler_Dyn.undyn b in
-          FStar_Pervasives_Native.Some uu___5
+          -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
       | uu___2 ->
           ((let uu___4 =
               FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in

@@ -52,13 +52,13 @@ let (__proj__Mkiface__item__iface_type_names :
 type extension_sigelt_extractor =
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.sigelt ->
-      FStar_Compiler_Dyn.dyn ->
+      FStar_Dyn.dyn ->
         (FStar_Extraction_ML_Syntax.mlmodule, Prims.string)
           FStar_Pervasives.either
 type extension_sigelt_iface_extractor =
   FStar_Extraction_ML_UEnv.uenv ->
     FStar_Syntax_Syntax.sigelt ->
-      FStar_Compiler_Dyn.dyn ->
+      FStar_Dyn.dyn ->
         ((FStar_Extraction_ML_UEnv.uenv * iface), Prims.string)
           FStar_Pervasives.either
 type extension_extractor =

@@ -40,7 +40,7 @@ module U       = FStar.Syntax.Util
 module Z       = FStar.BigInt
 
 open FStar.Reflection.V2.Builtins //needed for inspect_fv, but that feels wrong
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.Syntax.Embeddings.AppEmb
 open FStar.Class.Monad
 

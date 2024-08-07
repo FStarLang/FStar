@@ -24,7 +24,7 @@ open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Compiler.Dyn
+open FStar.Dyn
 open FStar.VConfig
 
 open FStar.Class.Ord

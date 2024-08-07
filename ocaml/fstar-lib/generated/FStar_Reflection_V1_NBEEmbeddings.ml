@@ -57,9 +57,8 @@ let mk_lazy :
       fun ty ->
         fun kind ->
           let li =
-            let uu___ = FStar_Compiler_Dyn.mkdyn obj in
             {
-              FStar_Syntax_Syntax.blob = uu___;
+              FStar_Syntax_Syntax.blob = (FStar_Dyn.mkdyn obj);
               FStar_Syntax_Syntax.lkind = kind;
               FStar_Syntax_Syntax.ltyp = ty;
               FStar_Syntax_Syntax.rng = FStar_Compiler_Range_Type.dummyRange
@@ -85,9 +84,7 @@ let (e_bv : FStar_Syntax_Syntax.bv FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -111,9 +108,7 @@ let (e_binder :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -254,9 +249,7 @@ let (e_fv : FStar_Syntax_Syntax.fv FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -279,9 +272,7 @@ let (e_comp : FStar_Syntax_Syntax.comp FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -305,9 +296,7 @@ let (e_env : FStar_TypeChecker_Env.env FStar_TypeChecker_NBETerm.embedding) =
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -468,9 +457,7 @@ let (e_universe :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -680,7 +667,7 @@ let unlazy_as_t :
           when
           FStar_Class_Deq.op_Equals_Question
             FStar_Syntax_Syntax.deq_lazy_kind k k'
-          -> FStar_Compiler_Dyn.undyn v
+          -> FStar_Dyn.undyn v
       | uu___ ->
           FStar_Compiler_Effect.failwith
             "Not a Lazy of the expected kind (NBE)"
@@ -1703,9 +1690,7 @@ let (e_sigelt :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn b in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn b)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
@@ -1834,9 +1819,7 @@ let (e_letbinding :
            FStar_Syntax_Syntax.ltyp = uu___;
            FStar_Syntax_Syntax.rng = uu___1;_},
          uu___2)
-        ->
-        let uu___3 = FStar_Compiler_Dyn.undyn lb in
-        FStar_Pervasives_Native.Some uu___3
+        -> FStar_Pervasives_Native.Some (FStar_Dyn.undyn lb)
     | uu___ ->
         ((let uu___2 =
             let uu___3 =

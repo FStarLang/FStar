@@ -25,9 +25,9 @@ module S = FStar.Syntax.Syntax
 val iface : Type0
 
 type extension_sigelt_extractor =
-  uenv -> sigelt -> FStar.Compiler.Dyn.dyn -> either mlmodule string
+  uenv -> sigelt -> FStar.Dyn.dyn -> either mlmodule string
 type extension_sigelt_iface_extractor =
-  uenv -> sigelt -> FStar.Compiler.Dyn.dyn -> either (uenv & iface) string
+  uenv -> sigelt -> FStar.Dyn.dyn -> either (uenv & iface) string
 
 type extension_extractor = {
    extract_sigelt : extension_sigelt_extractor;

@@ -839,18 +839,18 @@ let (__proj__Mkdep_scan_callbacks__item__add_open :
 type to_be_desugared =
   {
   lang_name: Prims.string ;
-  blob: FStar_Compiler_Dyn.dyn ;
+  blob: FStar_Dyn.dyn ;
   idents: FStar_Ident.ident Prims.list ;
-  to_string: FStar_Compiler_Dyn.dyn -> Prims.string ;
-  eq: FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool ;
-  dep_scan: dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit }
+  to_string: FStar_Dyn.dyn -> Prims.string ;
+  eq: FStar_Dyn.dyn -> FStar_Dyn.dyn -> Prims.bool ;
+  dep_scan: dep_scan_callbacks -> FStar_Dyn.dyn -> unit }
 let (__proj__Mkto_be_desugared__item__lang_name :
   to_be_desugared -> Prims.string) =
   fun projectee ->
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> lang_name
 let (__proj__Mkto_be_desugared__item__blob :
-  to_be_desugared -> FStar_Compiler_Dyn.dyn) =
+  to_be_desugared -> FStar_Dyn.dyn) =
   fun projectee ->
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> blob
@@ -860,19 +860,17 @@ let (__proj__Mkto_be_desugared__item__idents :
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> idents
 let (__proj__Mkto_be_desugared__item__to_string :
-  to_be_desugared -> FStar_Compiler_Dyn.dyn -> Prims.string) =
+  to_be_desugared -> FStar_Dyn.dyn -> Prims.string) =
   fun projectee ->
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> to_string
 let (__proj__Mkto_be_desugared__item__eq :
-  to_be_desugared ->
-    FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool)
-  =
+  to_be_desugared -> FStar_Dyn.dyn -> FStar_Dyn.dyn -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> eq
 let (__proj__Mkto_be_desugared__item__dep_scan :
-  to_be_desugared -> dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit) =
+  to_be_desugared -> dep_scan_callbacks -> FStar_Dyn.dyn -> unit) =
   fun projectee ->
     match projectee with
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> dep_scan

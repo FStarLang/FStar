@@ -140,7 +140,7 @@ let lazy_unembed :
                     else ());
                    res)
                 else
-                  (let a1 = FStar_Compiler_Dyn.undyn b in
+                  (let a1 = FStar_Dyn.undyn b in
                    (let uu___5 =
                       FStar_Compiler_Effect.op_Bang
                         FStar_Options.debug_embedding in
