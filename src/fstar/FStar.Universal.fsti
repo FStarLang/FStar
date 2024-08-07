@@ -41,12 +41,14 @@ val init_env : Dep.deps -> TcEnv.env
 
 val core_check: TcEnv.core_check_t
 
+type lang_decls_t = list FStar.Parser.AST.decl
+
 (* Interactive mode: checking a fragment of code. *)
 val tc_one_fragment :
     option Syntax.modul ->
     TcEnv.env_t ->
-    either FStar.Parser.ParseIt.input_frag FStar.Parser.AST.decl ->
-    option Syntax.modul & TcEnv.env
+    either (FStar.Parser.ParseIt.input_frag & lang_decls_t) FStar.Parser.AST.decl ->
+    option Syntax.modul & TcEnv.env & lang_decls_t
 
 (* Load an interface file into the dsenv. *)
 val load_interface_decls :

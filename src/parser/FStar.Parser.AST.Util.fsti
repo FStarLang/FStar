@@ -23,6 +23,9 @@ open FStar.Parser.AST
 
 (* Check if two decls are equal, ignoring range metadata.
    Used in FStar.Interactive.Incremental *)
+val eq_term (t1 t2:term) : bool
+val eq_binder (b1 b2:binder) : bool
+val eq_pattern (p1 p2:pattern) : bool
 val eq_decl (d1 d2:decl) : bool
 
 val lidents_of_decl (t:decl) : list FStar.Ident.lident
@@ -52,3 +55,16 @@ type extension_parser = {
 
 val register_extension_parser (extension_name:string) (parser:extension_parser) : unit
 val lookup_extension_parser (extension_name:string) : option extension_parser
+
+
+type extension_lang_parser = {
+  parse_decls:
+   (contents:string ->
+    p:FStar.Compiler.Range.range ->
+    either error_message (list decl))
+}
+
+val as_open_namespaces_and_abbrevs (ls:list decl) : open_namespaces_and_abbreviations
+val register_extension_lang_parser (extension_name:string) (parser:extension_lang_parser) : unit
+val lookup_extension_lang_parser (extension_name:string) : option extension_lang_parser
+val parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:FStar.Compiler.Range.range) : list decl

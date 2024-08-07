@@ -40,6 +40,7 @@ let main argv =
           FStar.Main.setup_hooks();
           Pars.init() |> ignore;
           Pars.parse_incremental_decls();
+          Pars.parse_incremental_decls_use_lang ();
           Norm.run_all ();
           if Unif.run_all () then () else exit 1;
           Data.run_all ();

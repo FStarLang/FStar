@@ -46,6 +46,12 @@ let (definition_lids :
              | uu___3 -> []) tys
     | FStar_Parser_AST.Splice (uu___, ids, uu___1) ->
         FStar_Compiler_List.map (fun id -> FStar_Ident.lid_of_ids [id]) ids
+    | FStar_Parser_AST.DeclToBeDesugared
+        { FStar_Parser_AST.lang_name = uu___; FStar_Parser_AST.blob = uu___1;
+          FStar_Parser_AST.idents = ids; FStar_Parser_AST.to_string = uu___2;
+          FStar_Parser_AST.eq = uu___3; FStar_Parser_AST.dep_scan = uu___4;_}
+        ->
+        FStar_Compiler_List.map (fun id -> FStar_Ident.lid_of_ids [id]) ids
     | FStar_Parser_AST.DeclSyntaxExtension
         (extension_name, code, uu___, range) ->
         let ext_parser =

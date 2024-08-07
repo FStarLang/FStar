@@ -58,7 +58,9 @@ let definition_lids d =
                 | TyconVariant(id, _, _, _) ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
-    | Splice (_, ids, _) -> List.map (fun id -> Ident.lid_of_ids [id]) ids
+    | Splice (_, ids, _)
+    | DeclToBeDesugared { idents=ids } -> List.map (fun id -> Ident.lid_of_ids [id]) ids
+    
     | DeclSyntaxExtension (extension_name, code, _, range) -> begin
       let ext_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
       match ext_parser with

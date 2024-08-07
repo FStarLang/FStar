@@ -20,7 +20,7 @@ open FStar.Compiler.Util
 open FStar
 open FStar.Compiler
 open FStar.Errors
-
+module AU = FStar.Parser.AST.Util
 type filename = string
 
 type input_frag = {
@@ -49,13 +49,22 @@ type code_fragment = {
     range: FStar.Compiler.Range.range;
 }
 
+type incremental_result 'a = 
+    list ('a & code_fragment) & list (string & Range.range) & option parse_error
+
 type parse_result =
     | ASTFragment of (AST.inputFragment & list (string & Range.range))
-    | IncrementalFragment of (list (AST.decl & code_fragment) & list (string & Range.range) & option parse_error)
+    | IncrementalFragment of incremental_result AST.decl
     | Term of AST.term
     | ParseError of parse_error
 
-val parse: parse_frag -> parse_result // either (AST.inputFragment * list (string * Range.range)) , (string * Range.range)
+let lang_opts = option string
+val parse (ext_lang:lang_opts)
+          (frag:parse_frag)
+: parse_result
 val find_file: string -> string
 
 val parse_warn_error: string -> list FStar.Errors.error_setting
+
+(* useful for unit testing and registered a #lang-fstar parser *)
+val parse_fstar_incrementally : AU.extension_lang_parser

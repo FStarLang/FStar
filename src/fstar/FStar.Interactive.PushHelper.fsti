@@ -55,7 +55,9 @@ val pop_repl : string -> repl_state -> repl_state
 val deps_and_repl_ld_tasks_of_our_file : string -> list string & list repl_task & deps_t
 
 // Core functionality, directly copied over from IDE
-val run_repl_task : optmod_t -> env_t -> repl_task -> optmod_t & env_t
+val run_repl_task 
+: optmod_t -> env_t -> repl_task -> FStar.Universal.lang_decls_t ->
+  optmod_t & env_t & FStar.Universal.lang_decls_t
 
 // Factored out from IDE for use by LSP as well
 val update_task_timestamps : repl_task -> repl_task

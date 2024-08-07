@@ -54,7 +54,6 @@ let with_dsenv_of_tcenv :
                 (tcenv.FStar_TypeChecker_Env.is_iface);
               FStar_TypeChecker_Env.admit =
                 (tcenv.FStar_TypeChecker_Env.admit);
-              FStar_TypeChecker_Env.lax = (tcenv.FStar_TypeChecker_Env.lax);
               FStar_TypeChecker_Env.lax_universes =
                 (tcenv.FStar_TypeChecker_Env.lax_universes);
               FStar_TypeChecker_Env.phase1 =
@@ -314,7 +313,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (env.FStar_TypeChecker_Env.use_eq_strict);
         FStar_TypeChecker_Env.is_iface = (env.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env.FStar_TypeChecker_Env.phase1);
@@ -403,7 +401,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env1.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env1.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env1.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env1.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env1.FStar_TypeChecker_Env.phase1);
@@ -497,7 +494,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env2.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env2.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env2.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env2.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env2.FStar_TypeChecker_Env.phase1);
@@ -591,7 +587,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env3.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env3.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env3.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env3.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env3.FStar_TypeChecker_Env.phase1);
@@ -684,7 +679,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.is_iface =
           (env4.FStar_TypeChecker_Env.is_iface);
         FStar_TypeChecker_Env.admit = (env4.FStar_TypeChecker_Env.admit);
-        FStar_TypeChecker_Env.lax = (env4.FStar_TypeChecker_Env.lax);
         FStar_TypeChecker_Env.lax_universes =
           (env4.FStar_TypeChecker_Env.lax_universes);
         FStar_TypeChecker_Env.phase1 = (env4.FStar_TypeChecker_Env.phase1);
@@ -747,13 +741,14 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
           (env4.FStar_TypeChecker_Env.missing_decl)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
+type lang_decls_t = FStar_Parser_AST.decl Prims.list
 let (tc_one_fragment :
   FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option ->
     FStar_TypeChecker_Env.env_t ->
-      (FStar_Parser_ParseIt.input_frag, FStar_Parser_AST.decl)
-        FStar_Pervasives.either ->
+      ((FStar_Parser_ParseIt.input_frag * lang_decls_t),
+        FStar_Parser_AST.decl) FStar_Pervasives.either ->
         (FStar_Syntax_Syntax.modul FStar_Pervasives_Native.option *
-          FStar_TypeChecker_Env.env))
+          FStar_TypeChecker_Env.env * lang_decls_t))
   =
   fun curmod ->
     fun env ->
@@ -794,6 +789,14 @@ let (tc_one_fragment :
                uu___6)
               -> d
           | uu___ -> FStar_Compiler_Range_Type.dummyRange in
+        let filter_lang_decls d =
+          match d.FStar_Parser_AST.d with
+          | FStar_Parser_AST.UseLangDecls uu___ -> true
+          | uu___ -> false in
+        let use_lang_decl ds =
+          FStar_Compiler_List.tryFind
+            (fun d ->
+               FStar_Parser_AST.uu___is_UseLangDecls d.FStar_Parser_AST.d) ds in
         let check_module_name_declaration ast_modul =
           let uu___ =
             let uu___1 =
@@ -833,7 +836,16 @@ let (tc_one_fragment :
                        else FStar_TypeChecker_Tc.tc_partial_modul env2 modul in
                      match uu___3 with
                      | (modul1, env3) ->
-                         ((FStar_Pervasives_Native.Some modul1), env3)))) in
+                         let lang_decls =
+                           let decls =
+                             match ast_modul1 with
+                             | FStar_Parser_AST.Module (uu___4, decls1) ->
+                                 decls1
+                             | FStar_Parser_AST.Interface
+                                 (uu___4, decls1, uu___5) -> decls1 in
+                           FStar_Compiler_List.filter filter_lang_decls decls in
+                         ((FStar_Pervasives_Native.Some modul1), env3,
+                           lang_decls)))) in
         let check_decls ast_decls =
           match curmod with
           | FStar_Pervasives_Native.None ->
@@ -879,7 +891,11 @@ let (tc_one_fragment :
                               modul sigelts in
                         (match uu___2 with
                          | (modul1, uu___3, env3) ->
-                             ((FStar_Pervasives_Native.Some modul1), env3)))) in
+                             let uu___4 =
+                               FStar_Compiler_List.filter filter_lang_decls
+                                 ast_decls in
+                             ((FStar_Pervasives_Native.Some modul1), env3,
+                               uu___4)))) in
         match frag with
         | FStar_Pervasives.Inr d ->
             (match d.FStar_Parser_AST.d with
@@ -887,11 +903,26 @@ let (tc_one_fragment :
                  check_module_name_declaration
                    (FStar_Parser_AST.Module (lid, [d]))
              | uu___ -> check_decls [d])
-        | FStar_Pervasives.Inl frag1 ->
-            let uu___ = FStar_Parser_Driver.parse_fragment frag1 in
+        | FStar_Pervasives.Inl (frag1, lang_decls) ->
+            let parse_frag frag2 =
+              let uu___ = use_lang_decl lang_decls in
+              match uu___ with
+              | FStar_Pervasives_Native.None ->
+                  FStar_Parser_Driver.parse_fragment
+                    FStar_Pervasives_Native.None frag2
+              | FStar_Pervasives_Native.Some
+                  { FStar_Parser_AST.d = FStar_Parser_AST.UseLangDecls lang;
+                    FStar_Parser_AST.drange = uu___1;
+                    FStar_Parser_AST.quals = uu___2;
+                    FStar_Parser_AST.attrs = uu___3;
+                    FStar_Parser_AST.interleaved = uu___4;_}
+                  ->
+                  FStar_Parser_Driver.parse_fragment
+                    (FStar_Pervasives_Native.Some lang) frag2 in
+            let uu___ = parse_frag frag1 in
             (match uu___ with
-             | FStar_Parser_Driver.Empty -> (curmod, env)
-             | FStar_Parser_Driver.Decls [] -> (curmod, env)
+             | FStar_Parser_Driver.Empty -> (curmod, env, [])
+             | FStar_Parser_Driver.Decls [] -> (curmod, env, [])
              | FStar_Parser_Driver.Modul ast_modul ->
                  check_module_name_declaration ast_modul
              | FStar_Parser_Driver.Decls ast_decls -> check_decls ast_decls)
@@ -900,7 +931,7 @@ let (load_interface_decls :
   fun env ->
     fun interface_file_name ->
       let r =
-        FStar_Parser_ParseIt.parse
+        FStar_Parser_ParseIt.parse FStar_Pervasives_Native.None
           (FStar_Parser_ParseIt.Filename interface_file_name) in
       match r with
       | FStar_Parser_ParseIt.ASTFragment
@@ -1168,32 +1199,49 @@ let (tc_one_file :
              match r1 with
              | FStar_Pervasives_Native.None ->
                  ((let uu___3 =
-                     let uu___4 = FStar_Parser_Dep.module_name_of_file fn in
-                     FStar_Options.should_be_already_cached uu___4 in
+                     (let uu___4 = FStar_Parser_Dep.module_name_of_file fn in
+                      FStar_Options.should_be_already_cached uu___4) &&
+                       (let uu___4 = FStar_Options.force () in
+                        Prims.op_Negation uu___4) in
                    if uu___3
                    then
                      let uu___4 =
                        let uu___5 =
-                         FStar_Compiler_Util.format1
-                           "Expected %s to already be checked" fn in
+                         let uu___6 =
+                           let uu___7 =
+                             FStar_Compiler_Util.format1
+                               "Expected %s to already be checked." fn in
+                           FStar_Errors_Msg.text uu___7 in
+                         [uu___6] in
                        (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___5) in
-                     FStar_Errors.raise_err uu___4
+                     FStar_Errors.raise_err_doc uu___4
                    else ());
                   (let uu___4 =
-                     (let uu___5 = FStar_Options.codegen () in
-                      FStar_Compiler_Option.isSome uu___5) &&
-                       (FStar_Options.cmi ()) in
+                     ((let uu___5 = FStar_Options.codegen () in
+                       FStar_Compiler_Option.isSome uu___5) &&
+                        (FStar_Options.cmi ()))
+                       &&
+                       (let uu___5 = FStar_Options.force () in
+                        Prims.op_Negation uu___5) in
                    if uu___4
                    then
                      let uu___5 =
                        let uu___6 =
-                         FStar_Compiler_Util.format1
-                           "Cross-module inlining expects all modules to be checked first; %s was not checked"
-                           fn in
+                         let uu___7 =
+                           FStar_Errors_Msg.text
+                             "Cross-module inlining expects all modules to be checked first." in
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 =
+                               FStar_Compiler_Util.format1
+                                 "Module %s was not checked." fn in
+                             FStar_Errors_Msg.text uu___10 in
+                           [uu___9] in
+                         uu___7 :: uu___8 in
                        (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
                          uu___6) in
-                     FStar_Errors.raise_err uu___5
+                     FStar_Errors.raise_err_doc uu___5
                    else ());
                   (let uu___4 = tc_source_file () in
                    match uu___4 with

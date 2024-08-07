@@ -213,7 +213,8 @@ and repl_state =
   repl_env: FStar_TypeChecker_Env.env ;
   repl_stdin: FStar_Compiler_Util.stream_reader ;
   repl_names: FStar_Interactive_CompletionTable.table ;
-  repl_buffered_input_queries: query Prims.list }
+  repl_buffered_input_queries: query Prims.list ;
+  repl_lang: FStar_Universal.lang_decls_t }
 let (uu___is_Exit : query' -> Prims.bool) =
   fun projectee -> match projectee with | Exit -> true | uu___ -> false
 let (uu___is_DescribeProtocol : query' -> Prims.bool) =
@@ -312,61 +313,68 @@ let (__proj__Mkrepl_state__item__repl_line : repl_state -> Prims.int) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_line
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_line
 let (__proj__Mkrepl_state__item__repl_column : repl_state -> Prims.int) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_column
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_column
 let (__proj__Mkrepl_state__item__repl_fname : repl_state -> Prims.string) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_fname
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_fname
 let (__proj__Mkrepl_state__item__repl_deps_stack :
   repl_state -> (repl_depth_t * (repl_task * repl_state)) Prims.list) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_deps_stack
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_deps_stack
 let (__proj__Mkrepl_state__item__repl_curmod : repl_state -> optmod_t) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_curmod
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_curmod
 let (__proj__Mkrepl_state__item__repl_env :
   repl_state -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_env
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_env
 let (__proj__Mkrepl_state__item__repl_stdin :
   repl_state -> FStar_Compiler_Util.stream_reader) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_stdin
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_stdin
 let (__proj__Mkrepl_state__item__repl_names :
   repl_state -> FStar_Interactive_CompletionTable.table) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_names
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_names
 let (__proj__Mkrepl_state__item__repl_buffered_input_queries :
   repl_state -> query Prims.list) =
   fun projectee ->
     match projectee with
     | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
-        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;_} ->
-        repl_buffered_input_queries
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_buffered_input_queries
+let (__proj__Mkrepl_state__item__repl_lang :
+  repl_state -> FStar_Universal.lang_decls_t) =
+  fun projectee ->
+    match projectee with
+    | { repl_line; repl_column; repl_fname; repl_deps_stack; repl_curmod;
+        repl_env; repl_stdin; repl_names; repl_buffered_input_queries;
+        repl_lang;_} -> repl_lang
 type callback_t =
   repl_state ->
     ((query_status * FStar_Json.json Prims.list) * (repl_state, Prims.int)

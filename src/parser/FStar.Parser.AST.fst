@@ -24,7 +24,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.Errors
 open FStar.Ident
-
+open FStar.Class.Show
 module C = FStar.Parser.Const
 
 let lid_of_modul (m:modul) : lid =
@@ -42,21 +42,6 @@ let at_most_one s r l = match l with
   | [ x ] -> Some x
   | [] -> None
   | _ -> raise_error (Fatal_MoreThanOneDeclaration, (Util.format1 "At most one %s is allowed on declarations" s)) r
-
-let mk_decl d r decorations =
-  let attributes_ = at_most_one "attribute set" r (
-    List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
-  ) in
-  let attributes_ = Util.dflt [] attributes_ in
-  let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
-  (* for syntax extensions, take the range stored there rather than the callers
-     range, which may be inaccurate *)
-  let range = 
-    match d with
-    | DeclSyntaxExtension(_, _, r, _) -> r
-    | _ -> r
-  in
-  { d=d; drange=range; quals=qualifiers; attrs=attributes_; interleaved=false }
 
 let mk_binder_with_attrs b r l i attrs = {b=b; brange=r; blevel=l; aqual=i; battributes=attrs}
 let mk_binder b r l i = mk_binder_with_attrs b r l i []
@@ -627,7 +612,7 @@ let rec term_to_string (x:term) = match x.tm with
       (term_to_string q)
       (term_to_string e1)
       (term_to_string e2)
-      
+    
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep
 
@@ -736,7 +721,7 @@ let string_of_pragma = function
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
 
-let decl_to_string (d:decl) = match d.d with
+let rec decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
   | Open l -> "open " ^ (string_of_lid l)
   | Friend l -> "friend " ^ (string_of_lid l)
@@ -765,6 +750,12 @@ let decl_to_string (d:decl) = match d.d with
   | Pragma p -> "pragma #" ^ string_of_pragma p
   | DeclSyntaxExtension (id, content, _, _) -> 
     "```" ^ id ^ "\n" ^ content ^ "\n```"
+  | DeclToBeDesugared tbs ->
+    "(to_be_desugared: " ^ tbs.to_string tbs.blob^ ")"
+  | UseLangDecls str ->
+    format1 "#lang-%s" str
+  | Unparseable ->
+    "unparseable"
 
 let modul_to_string (m:modul) = match m with
     | Module (_, decls)
@@ -800,3 +791,36 @@ instance showable_decl : showable decl = {
 instance showable_term : showable term = {
   show = term_to_string;
 }
+
+let add_decorations d decorations =
+  let decorations = 
+    let attrs, quals = List.partition DeclAttributes? decorations in
+    let attrs =
+      match attrs, d.attrs with
+      | attrs, [] -> attrs
+      | [DeclAttributes a], attrs -> [DeclAttributes (a @ attrs)]
+      | [], attrs -> [DeclAttributes attrs]
+      | _ ->
+        raise_error
+          (Fatal_MoreThanOneDeclaration, 
+           format2
+            "At most one attribute set is allowed on declarations\n got %s;\n and %s"
+            (String.concat ", " (List.map (function DeclAttributes a -> show a | _ -> "") attrs))
+            (String.concat ", " (List.map show d.attrs))
+            ) d.drange
+    in
+    List.map Qualifier d.quals @
+    quals @
+    attrs
+  in
+  let attributes_ = at_most_one "attribute set" d.drange (
+    List.choose (function DeclAttributes a -> Some a | _ -> None) decorations
+  ) in
+  let attributes_ = Util.dflt [] attributes_ in
+  let qualifiers = List.choose (function Qualifier q -> Some q | _ -> None) decorations in
+  { d with quals=qualifiers; attrs=attributes_ }
+
+let mk_decl d r decorations =
+  let d = { d=d; drange=r; quals=[]; attrs=[]; interleaved=false } in
+  add_decorations d decorations
+

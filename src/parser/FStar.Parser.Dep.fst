@@ -39,7 +39,8 @@ open FStar.Class.Show
 module Const = FStar.Parser.Const
 module BU = FStar.Compiler.Util
 
-let dbg = Debug.get_toggle "Dep"
+let dbg              = Debug.get_toggle "Dep"
+let dbg_CheckedFiles = Debug.get_toggle "CheckedFiles"
 
 let profile f c = Profiling.profile f None c
 
@@ -120,8 +121,9 @@ let list_of_pair (intf, impl) =
   list_of_option intf @ list_of_option impl
 
 (* In public interface *)
+let maybe_module_name_of_file f = check_and_strip_suffix (basename f)
 let module_name_of_file f =
-    match check_and_strip_suffix (basename f) with
+    match maybe_module_name_of_file f with
     | Some longname ->
       longname
     | None ->
@@ -322,12 +324,13 @@ let cache_file_name =
         then expected_cache_file
         else path
       | None ->
-          if mname |> Options.should_be_already_cached
-          then
-            FStar.Errors.raise_err
-              (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-               BU.format1 "Expected %s to be already checked but could not find it" mname)
-          else FStar.Options.prepend_cache_dir cache_fn
+        if !dbg_CheckedFiles then
+          BU.print1 "find_file(%s) returned None\n" (cache_fn |> Util.basename);
+        if mname |> Options.should_be_already_cached then
+          FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+             text (BU.format1 "Expected %s to be already checked but could not find it." mname)
+           ]);
+        FStar.Options.prepend_cache_dir cache_fn
     in
     let memo = Util.smap_create 100 in
     let memo f x =
@@ -847,8 +850,20 @@ let collect_one
         | Polymonadic_bind (_, _, _, t)
         | Polymonadic_subcomp (_, _, t) -> collect_term t  //collect deps from the effect lids?
 
+        | DeclToBeDesugared tbs ->
+            tbs.dep_scan 
+            { scan_term = collect_term;
+              scan_binder = collect_binder;
+              scan_pattern = collect_pattern;
+              add_lident = (fun lid -> add_to_parsing_data (P_lid lid));
+              add_open = (fun lid -> add_to_parsing_data (P_open (true, lid)))
+            }
+            tbs.blob
+
+        | UseLangDecls _
         | Pragma _
-        | DeclSyntaxExtension _ ->
+        | DeclSyntaxExtension _
+        | Unparseable ->
             ()
         | TopLevelModule lid ->
             incr num_of_toplevelmods;
@@ -1132,7 +1147,7 @@ let collect_one
           collect_binder y;
           collect_term e;
           collect_term e'
-
+        
       and collect_patterns ps =
         List.iter collect_pattern ps
 

@@ -643,7 +643,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
                            (show t)
                            (Env.all_binders e |> Print.binders_to_string ", "));!
     let e = {e with uvar_subtyping=false} in
-    let e = {e with lax = true} in
+    let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
     try return (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
@@ -1638,16 +1638,9 @@ let set_options (s : string) : tac unit = wrap_err "set_options" <| (
 let top_env     () : tac env  = let! ps = get in return <| ps.main_context
 
 let lax_on () : tac bool =
-  return ();!
-  if Options.lax () || Options.admit_smt_queries () then
-   return true
-  else
-    (* Check the goal if any *)
-    match! trytac cur_goal with
-    | Some g ->
-      return ((goal_env g).lax || (goal_env g).admit)
-    | None ->
-      return false
+  (* Check the goal if any??? *)
+  let! ps = get in
+  return ps.main_context.admit
 
 let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     if_verbose (fun () -> BU.print1 "unquote: tm = %s\n" (show tm)) ;!
@@ -1929,7 +1922,7 @@ let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
+                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with admit = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash S.U_zero (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
@@ -2039,7 +2032,7 @@ let string_to_term (e: Env.env) (s: string): tac term
     let frag_of_text s = { frag_fname= "<string_of_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in
-    match parse (Fragment (frag_of_text s)) with
+    match parse None (Fragment (frag_of_text s)) with
     | Term t ->
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
       begin try return (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with
@@ -2456,7 +2449,7 @@ let refl_tc_term (g:env) (e:term) : tac (option (term & (Core.tot_or_ghost & typ
     // lax check to elaborate
     //
     let e =
-      let g = {g with phase1 = true; lax = true} in
+      let g = {g with phase1 = true; admit = true} in
       //
       // AR: we are lax checking to infer implicits,
       //     ghost is ok
@@ -2607,7 +2600,7 @@ let refl_instantiate_implicits (g:env) (e:term) (expected_typ : option term)
       | None -> Env.clear_expected_typ g |> fst
       | Some typ -> Env.set_expected_typ g typ
     in
-    let g = {g with instantiate_imp=false; phase1=true; lax=true} in
+    let g = {g with instantiate_imp=false; phase1=true; admit=true} in
     let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
     //
     // We don't worry about the logical payload,
@@ -2700,7 +2693,7 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
       BU.pimap_add tbl uv_id (ctx_u.ctx_uvar_head, bv)
     ) (Env.trivial_guard, [], (BU.pimap_empty ())) uvs in
     let t0, t1 = SS.subst ss t0, SS.subst ss t1 in
-    let g = { g with phase1=true; lax=true } in
+    let g = { g with phase1=true; admit=true } in
     let guard_eq =
       let smt_ok = true in
       Rel.try_teq smt_ok g t0 t1 in

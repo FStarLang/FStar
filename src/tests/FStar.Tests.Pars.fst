@@ -44,7 +44,7 @@ let test_mod_ref = mk_ref (Some ({name=test_lid;
                                   is_interface=false}))
 
 let parse_mod mod_name dsenv =
-    match parse (Filename mod_name) with
+    match parse None (Filename mod_name) with
     | ASTFragment (Inl m, _) ->
         let m, env'= ToSyntax.ast_modul_to_modul m dsenv in
         let env' , _ = DsEnv.prepare_module_or_interface false false env' (FStar.Ident.lid_of_path ["Test"] (FStar.Compiler.Range.dummyRange)) DsEnv.default_mii in
@@ -120,7 +120,7 @@ let frag_of_text s = {frag_fname=" input"; frag_text=s; frag_line=1; frag_col=0}
 let pars s =
     try
         let tcenv = init() in
-        match parse (Fragment <| frag_of_text s) with
+        match parse None (Fragment <| frag_of_text s) with
         | Term t ->
             ToSyntax.desugar_term tcenv.dsenv t
         | ParseError (e, msg, r) ->
@@ -139,7 +139,9 @@ let pars s =
 let tc' s =
     let tm = pars s in
     let tcenv = init() in
-    let tcenv = {tcenv with top_level=false} in
+    (* We set phase1=true to allow the typechecker to insert
+    coercions. *)
+    let tcenv = {tcenv with phase1=true; top_level=false} in
     let tm, _, g = TcTerm.tc_tot_or_gtot_term tcenv tm in
     Rel.force_trivial_guard tcenv g;
     let tm = FStar.Syntax.Compress.deep_compress false false tm in
@@ -164,7 +166,7 @@ let pars_and_tc_fragment (s:string) =
         let tcenv = init() in
         let frag = frag_of_text s in
         try
-          let test_mod', tcenv' = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (Inl frag) in
+          let test_mod', tcenv', _ = FStar.Universal.tc_one_fragment !test_mod_ref tcenv (Inl (frag, [])) in
           test_mod_ref := test_mod';
           tcenv_ref := Some tcenv';
           let n = get_err_count () in
@@ -235,7 +237,7 @@ let parse_incremental_decls () =
                              frag_line = 1;
                              frag_col = 0 } in
   let open FStar.Compiler.Range in
-  match parse input0, parse input1 with
+  match parse None input0, parse None input1 with
   | IncrementalFragment (decls0, _, parse_err0),
     IncrementalFragment (decls1, _, parse_err1) -> (
       let check_range r l c =
@@ -275,6 +277,53 @@ let parse_incremental_decls () =
 
   | ParseError (code, message, range), _
   | _, ParseError (code, message, range) ->
+      let msg =
+        format2 "Incremental parsing failed: Syntax error @ %s: %s"
+                (Range.string_of_range range)
+                (Errors.rendermsg message) // FIXME
+      in
+      failwith msg
+
+  | _ ->
+      failwith "Incremental parsing failed: Unexpected output"
+
+
+open FStar.Class.Show
+
+let parse_incremental_decls_use_lang () =
+  let source0 =
+    "module Demo\n\
+     let x = 0\n\
+     #lang-somelang\n\
+     val f : t\n\
+     let g x = f x\n\
+     #restart-solver"
+  in
+  FStar.Parser.AST.Util.register_extension_lang_parser "somelang" FStar.Parser.ParseIt.parse_fstar_incrementally;
+  let open FStar.Parser.ParseIt in
+  let input0 = Incremental { frag_fname = "Demo.fst";
+                             frag_text = source0;
+                             frag_line = 1;
+                             frag_col = 0 } in
+  let open FStar.Compiler.Range in
+  match parse None input0 with
+  | IncrementalFragment (decls0, _, parse_err0) -> (
+      let _ =
+        match parse_err0 with
+        | None -> ()
+        | Some _ ->
+          failwith "Incremental parsing failed: ..."
+      in
+      let open FStar.Parser.AST in
+      let ds = List.map fst decls0 in
+      match ds with
+      | [{d=TopLevelModule _}; {d=TopLevelLet _}; {d=UseLangDecls _}; {d=Val _}; {d=TopLevelLet _}; {d=Pragma _}] -> ()
+      | _ ->
+       failwith ("Incremental parsing failed; unexpected decls: " ^ show ds)
+      )
+
+
+  | ParseError (code, message, range) ->
       let msg =
         format2 "Incremental parsing failed: Syntax error @ %s: %s"
                 (Range.string_of_range range)

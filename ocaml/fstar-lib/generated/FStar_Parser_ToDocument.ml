@@ -1406,6 +1406,9 @@ and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
           let uu___3 = FStar_Pprint.doc_of_string "```" in
           FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
+    | FStar_Parser_AST.DeclToBeDesugared tbs ->
+        let uu___ = tbs.FStar_Parser_AST.to_string tbs.FStar_Parser_AST.blob in
+        FStar_Pprint.arbitrary_string uu___
 and (p_pragma : FStar_Parser_AST.pragma -> FStar_Pprint.document) =
   fun uu___ ->
     match uu___ with

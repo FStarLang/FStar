@@ -824,6 +824,8 @@ and p_rawDecl d = match d.d with
     doc_of_string ("```"^tag) ^^
     arbitrary_string blob ^^
     doc_of_string "```"
+  | DeclToBeDesugared tbs ->
+    arbitrary_string <| tbs.to_string tbs.blob
 
 and p_pragma = function
   | SetOptions s -> str "#set-options" ^^ space ^^ dquotes (str s)
@@ -1579,7 +1581,7 @@ and p_noSeqTerm' ps pb e = match e.tm with
     str "eliminate" ^^ space ^^ p ^^ space ^^ str "/\\" ^^ space ^^ q ^^ hardline ^^
     str "returns" ^^ space ^^ r ^^ hardline ^^
     str "with" ^^ space ^^ xy ^^ space ^^ str "." ^^ space ^^ e
-
+    
   | _ -> p_typ ps pb e
 
 and p_dec_wf ps pb rel e =

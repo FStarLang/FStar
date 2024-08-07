@@ -30,6 +30,7 @@ module BU = FStar.Compiler.Util
 type open_kind = | Open_module | Open_namespace
 type module_name = string
 
+val maybe_module_name_of_file : string -> option string
 val module_name_of_file : string -> string
 val lowercase_module_name : string -> string
 

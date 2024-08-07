@@ -543,6 +543,11 @@ let rec eq_decl' (d1 d2:decl') : bool =
     eq_term t1 t2
   | DeclSyntaxExtension (s1, t1, _, _), DeclSyntaxExtension (s2, t2, _, _) ->
     s1 = s2 && t1 = t2
+  | UseLangDecls p1, UseLangDecls p2 ->
+    p1 = p2
+  | DeclToBeDesugared tbs1, DeclToBeDesugared tbs2 ->
+    tbs1.lang_name = tbs2.lang_name &&
+    tbs1.eq tbs1.blob tbs2.blob
   | _ -> false
 
 and eq_effect_decl (t1 t2: effect_decl) =
@@ -705,7 +710,8 @@ let rec lidents_of_decl (d:decl) =
   | Pragma _ -> []
   | Assume (_, t) -> lidents_of_term t
   | Splice (_, _, t) -> lidents_of_term t
-  | DeclSyntaxExtension _ -> []
+  | DeclSyntaxExtension _
+  | DeclToBeDesugared _ -> []
 
 and lidents_of_effect_decl (ed:effect_decl) =
   match ed with
@@ -723,3 +729,39 @@ let register_extension_parser (ext:string) (parser:extension_parser) =
   FStar.Compiler.Util.smap_add extension_parser_table ext parser
 let lookup_extension_parser (ext:string) =
   FStar.Compiler.Util.smap_try_find extension_parser_table ext
+
+
+let as_open_namespaces_and_abbrevs (ls:list decl)
+: open_namespaces_and_abbreviations
+= List.fold_right
+    (fun d out ->
+      match d.d with
+      | Open lid -> {out with open_namespaces = lid :: out.open_namespaces}
+      | ModuleAbbrev (i, lid) -> {out with module_abbreviations = (i, lid) :: out.module_abbreviations}
+      | _ -> out)
+    ls
+    {open_namespaces = []; module_abbreviations = []}
+
+let extension_lang_parser_table : BU.smap extension_lang_parser = FStar.Compiler.Util.smap_create 20
+let register_extension_lang_parser (ext:string) (parser:extension_lang_parser) =
+  FStar.Compiler.Util.smap_add extension_lang_parser_table ext parser
+let lookup_extension_lang_parser (ext:string) =
+  FStar.Compiler.Util.smap_try_find extension_lang_parser_table ext
+
+let parse_extension_lang (lang_name:string) (raw_text:string) (raw_text_pos:range)
+: list decl
+= let extension_parser = lookup_extension_lang_parser lang_name in
+  match extension_parser with
+  | None ->
+    raise_error 
+        (Errors.Fatal_SyntaxError,
+         BU.format1 "Unknown language extension %s" lang_name)
+        raw_text_pos
+  | Some parser ->
+    match parser.parse_decls raw_text raw_text_pos with
+    | Inl error ->
+      raise_error
+          (Errors.Fatal_SyntaxError, error.message)
+          error.range
+    | Inr ds ->
+      ds

@@ -721,7 +721,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
              let fsym = mk_fv (varops.fresh module_name "f", Term_sort) in
              let f = mkFreeV  fsym in
              let app = mk_Apply f vars in
-             let tcenv_bs = { env'.tcenv with lax=true } in
+             let tcenv_bs = { env'.tcenv with admit=true } in
              let pre_opt, res_t = TcUtil.pure_or_ghost_pre_and_post tcenv_bs res in
              let res_pred, decls' = encode_term_pred None res_t env' app in
              let guards, guard_decls = match pre_opt with
@@ -1231,7 +1231,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 //            let reified_body = TcUtil.reify_body env.tcenv body in
 //            let c = match c with
 //              | Inl lc ->
-//                let typ = reify_comp ({env.tcenv with lax=true}) (lc.comp ()) U_unknown in
+//                let typ = reify_comp ({env.tcenv with admit=true}) (lc.comp ()) U_unknown in
 //                Inl (U.lcomp_of_comp (S.mk_Total typ))
 //
 //              (* In this case we don't have enough information to reconstruct the *)

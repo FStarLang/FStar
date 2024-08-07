@@ -311,7 +311,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
       else begin
         if !dbg
         then begin
-          BU.print4 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+          BU.print4 "FAILING to load.\nExpected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
             (BU.string_of_int (List.length deps_dig'))
             (FStar.Parser.Dep.print_digest deps_dig')
             (BU.string_of_int (List.length deps_dig))

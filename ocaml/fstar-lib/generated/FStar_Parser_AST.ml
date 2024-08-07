@@ -799,6 +799,83 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
+type dep_scan_callbacks =
+  {
+  scan_term: term -> unit ;
+  scan_binder: binder -> unit ;
+  scan_pattern: pattern -> unit ;
+  add_lident: FStar_Ident.lident -> unit ;
+  add_open: FStar_Ident.lident -> unit }
+let (__proj__Mkdep_scan_callbacks__item__scan_term :
+  dep_scan_callbacks -> term -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_term
+let (__proj__Mkdep_scan_callbacks__item__scan_binder :
+  dep_scan_callbacks -> binder -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_binder
+let (__proj__Mkdep_scan_callbacks__item__scan_pattern :
+  dep_scan_callbacks -> pattern -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        scan_pattern
+let (__proj__Mkdep_scan_callbacks__item__add_lident :
+  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        add_lident
+let (__proj__Mkdep_scan_callbacks__item__add_open :
+  dep_scan_callbacks -> FStar_Ident.lident -> unit) =
+  fun projectee ->
+    match projectee with
+    | { scan_term; scan_binder; scan_pattern; add_lident; add_open;_} ->
+        add_open
+type to_be_desugared =
+  {
+  lang_name: Prims.string ;
+  blob: FStar_Compiler_Dyn.dyn ;
+  idents: FStar_Ident.ident Prims.list ;
+  to_string: FStar_Compiler_Dyn.dyn -> Prims.string ;
+  eq: FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool ;
+  dep_scan: dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit }
+let (__proj__Mkto_be_desugared__item__lang_name :
+  to_be_desugared -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> lang_name
+let (__proj__Mkto_be_desugared__item__blob :
+  to_be_desugared -> FStar_Compiler_Dyn.dyn) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> blob
+let (__proj__Mkto_be_desugared__item__idents :
+  to_be_desugared -> FStar_Ident.ident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> idents
+let (__proj__Mkto_be_desugared__item__to_string :
+  to_be_desugared -> FStar_Compiler_Dyn.dyn -> Prims.string) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> to_string
+let (__proj__Mkto_be_desugared__item__eq :
+  to_be_desugared ->
+    FStar_Compiler_Dyn.dyn -> FStar_Compiler_Dyn.dyn -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> eq
+let (__proj__Mkto_be_desugared__item__dep_scan :
+  to_be_desugared -> dep_scan_callbacks -> FStar_Compiler_Dyn.dyn -> unit) =
+  fun projectee ->
+    match projectee with
+    | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> dep_scan
 type decl' =
   | TopLevelModule of FStar_Ident.lid 
   | Open of FStar_Ident.lid 
@@ -820,6 +897,9 @@ type decl' =
   | Splice of (Prims.bool * FStar_Ident.ident Prims.list * term) 
   | DeclSyntaxExtension of (Prims.string * Prims.string *
   FStar_Compiler_Range_Type.range * FStar_Compiler_Range_Type.range) 
+  | UseLangDecls of Prims.string 
+  | DeclToBeDesugared of to_be_desugared 
+  | Unparseable 
 and decl =
   {
   d: decl' ;
@@ -923,6 +1003,19 @@ let (__proj__DeclSyntaxExtension__item___0 :
     (Prims.string * Prims.string * FStar_Compiler_Range_Type.range *
       FStar_Compiler_Range_Type.range))
   = fun projectee -> match projectee with | DeclSyntaxExtension _0 -> _0
+let (uu___is_UseLangDecls : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | UseLangDecls _0 -> true | uu___ -> false
+let (__proj__UseLangDecls__item___0 : decl' -> Prims.string) =
+  fun projectee -> match projectee with | UseLangDecls _0 -> _0
+let (uu___is_DeclToBeDesugared : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DeclToBeDesugared _0 -> true | uu___ -> false
+let (__proj__DeclToBeDesugared__item___0 : decl' -> to_be_desugared) =
+  fun projectee -> match projectee with | DeclToBeDesugared _0 -> _0
+let (uu___is_Unparseable : decl' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unparseable -> true | uu___ -> false
 let (__proj__Mkdecl__item__d : decl -> decl') =
   fun projectee ->
     match projectee with | { d; drange; quals; attrs; interleaved;_} -> d
@@ -1010,38 +1103,6 @@ let at_most_one :
                   "At most one %s is allowed on declarations" s in
               (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___2) in
             FStar_Errors.raise_error uu___1 r
-let (mk_decl :
-  decl' -> FStar_Compiler_Range_Type.range -> decoration Prims.list -> decl)
-  =
-  fun d ->
-    fun r ->
-      fun decorations ->
-        let attributes_1 =
-          let uu___ =
-            FStar_Compiler_List.choose
-              (fun uu___1 ->
-                 match uu___1 with
-                 | DeclAttributes a -> FStar_Pervasives_Native.Some a
-                 | uu___2 -> FStar_Pervasives_Native.None) decorations in
-          at_most_one "attribute set" r uu___ in
-        let attributes_2 = FStar_Compiler_Util.dflt [] attributes_1 in
-        let qualifiers1 =
-          FStar_Compiler_List.choose
-            (fun uu___ ->
-               match uu___ with
-               | Qualifier q -> FStar_Pervasives_Native.Some q
-               | uu___1 -> FStar_Pervasives_Native.None) decorations in
-        let range =
-          match d with
-          | DeclSyntaxExtension (uu___, uu___1, r1, uu___2) -> r1
-          | uu___ -> r in
-        {
-          d;
-          drange = range;
-          quals = qualifiers1;
-          attrs = attributes_2;
-          interleaved = false
-        }
 let (mk_binder_with_attrs :
   binder' ->
     FStar_Compiler_Range_Type.range ->
@@ -2397,7 +2458,7 @@ let (string_of_pragma : pragma -> Prims.string) =
     | PopOptions -> "pop-options"
     | RestartSolver -> "restart-solver"
     | PrintEffectsGraph -> "print-effects-graph"
-let (decl_to_string : decl -> Prims.string) =
+let rec (decl_to_string : decl -> Prims.string) =
   fun d ->
     match d.d with
     | TopLevelModule l ->
@@ -2482,6 +2543,12 @@ let (decl_to_string : decl -> Prims.string) =
     | DeclSyntaxExtension (id, content, uu___, uu___1) ->
         Prims.strcat "```"
           (Prims.strcat id (Prims.strcat "\n" (Prims.strcat content "\n```")))
+    | DeclToBeDesugared tbs ->
+        let uu___ =
+          let uu___1 = tbs.to_string tbs.blob in Prims.strcat uu___1 ")" in
+        Prims.strcat "(to_be_desugared: " uu___
+    | UseLangDecls str -> FStar_Compiler_Util.format1 "#lang-%s" str
+    | Unparseable -> "unparseable"
 let (modul_to_string : modul -> Prims.string) =
   fun m ->
     match m with
@@ -2523,3 +2590,77 @@ let (showable_decl : decl FStar_Class_Show.showable) =
   { FStar_Class_Show.show = decl_to_string }
 let (showable_term : term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = term_to_string }
+let (add_decorations : decl -> decoration Prims.list -> decl) =
+  fun d ->
+    fun decorations ->
+      let decorations1 =
+        let uu___ =
+          FStar_Compiler_List.partition uu___is_DeclAttributes decorations in
+        match uu___ with
+        | (attrs, quals) ->
+            let attrs1 =
+              match (attrs, (d.attrs)) with
+              | (attrs2, []) -> attrs2
+              | ((DeclAttributes a)::[], attrs2) ->
+                  [DeclAttributes (FStar_Compiler_List.op_At a attrs2)]
+              | ([], attrs2) -> [DeclAttributes attrs2]
+              | uu___1 ->
+                  let uu___2 =
+                    let uu___3 =
+                      let uu___4 =
+                        let uu___5 =
+                          FStar_Compiler_List.map
+                            (fun uu___6 ->
+                               match uu___6 with
+                               | DeclAttributes a ->
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        showable_term) a
+                               | uu___7 -> "") attrs in
+                        FStar_Compiler_String.concat ", " uu___5 in
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Compiler_List.map
+                            (FStar_Class_Show.show showable_term) d.attrs in
+                        FStar_Compiler_String.concat ", " uu___6 in
+                      FStar_Compiler_Util.format2
+                        "At most one attribute set is allowed on declarations\n got %s;\n and %s"
+                        uu___4 uu___5 in
+                    (FStar_Errors_Codes.Fatal_MoreThanOneDeclaration, uu___3) in
+                  FStar_Errors.raise_error uu___2 d.drange in
+            let uu___1 =
+              FStar_Compiler_List.map (fun uu___2 -> Qualifier uu___2)
+                d.quals in
+            FStar_Compiler_List.op_At uu___1
+              (FStar_Compiler_List.op_At quals attrs1) in
+      let attributes_1 =
+        let uu___ =
+          FStar_Compiler_List.choose
+            (fun uu___1 ->
+               match uu___1 with
+               | DeclAttributes a -> FStar_Pervasives_Native.Some a
+               | uu___2 -> FStar_Pervasives_Native.None) decorations1 in
+        at_most_one "attribute set" d.drange uu___ in
+      let attributes_2 = FStar_Compiler_Util.dflt [] attributes_1 in
+      let qualifiers1 =
+        FStar_Compiler_List.choose
+          (fun uu___ ->
+             match uu___ with
+             | Qualifier q -> FStar_Pervasives_Native.Some q
+             | uu___1 -> FStar_Pervasives_Native.None) decorations1 in
+      {
+        d = (d.d);
+        drange = (d.drange);
+        quals = qualifiers1;
+        attrs = attributes_2;
+        interleaved = (d.interleaved)
+      }
+let (mk_decl :
+  decl' -> FStar_Compiler_Range_Type.range -> decoration Prims.list -> decl)
+  =
+  fun d ->
+    fun r ->
+      fun decorations ->
+        let d1 =
+          { d; drange = r; quals = []; attrs = []; interleaved = false } in
+        add_decorations d1 decorations

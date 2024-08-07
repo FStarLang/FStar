@@ -634,7 +634,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
                            (show t)
                            (Env.all_binders e |> Print.binders_to_string ", ")) (fun () ->
     let e = {e with uvar_subtyping=false} in
-    let e = {e with lax = true} in
+    let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
     try ret (TcTerm.tc_term e t)
     with | Errors.Err (_, msg, _)
@@ -1611,7 +1611,7 @@ let top_env     () : tac env  = bind get (fun ps -> ret <| ps.main_context)
 
 let lax_on () : tac bool =
     let! g = cur_goal in
-    ret (Options.lax () || (goal_env g).lax)
+    ret (Options.lax () || (goal_env g).admit)
 
 let unquote (ty : term) (tm : term) : tac term = wrap_err "unquote" <| (
     if_verbose (fun () -> BU.print1 "unquote: tm = %s\n" (show tm)) ;!
@@ -1882,7 +1882,7 @@ let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
                         let cod = goal_type g in
                         let equ = env.universe_of env s_ty in
                         (* Typecheck the pattern, to fill-in the universes and get an expression out of it *)
-                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with lax = true }) s_ty pat in
+                        let _ , _, _, _, pat_t, _, _guard_pat, _erasable = TcTerm.tc_pat ({ env with admit = true }) s_ty pat in
                         let eq_b = S.gen_bv "breq" None (U.mk_squash S.U_zero (U.mk_eq2 equ s_ty s_tm pat_t)) in
                         let cod = U.arrow [S.mk_binder eq_b] (mk_Total cod) in
 
@@ -2206,7 +2206,7 @@ let string_to_term (e: Env.env) (s: string): tac term
     let frag_of_text s = { frag_fname= "<string_to_term>"
                          ; frag_line = 1 ; frag_col  = 0
                          ; frag_text = s } in
-    match parse (Fragment (frag_of_text s)) with
+    match parse None (Fragment (frag_of_text s)) with
     | Term t ->
       let dsenv = FStar.Syntax.DsEnv.set_current_module e.dsenv (current_module e) in
       begin try ret (FStar.ToSyntax.ToSyntax.desugar_term dsenv t) with

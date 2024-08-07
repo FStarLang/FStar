@@ -3565,7 +3565,6 @@ let (settable : Prims.string -> Prims.bool) =
     | "initial_ifuel" -> true
     | "ide_id_info_off" -> true
     | "keep_query_captions" -> true
-    | "lax" -> true
     | "load" -> true
     | "load_cmxs" -> true
     | "log_queries" -> true
@@ -3645,7 +3644,7 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___660 :
+let (uu___659 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3662,11 +3661,11 @@ let (uu___660 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___660 with
+  match uu___659 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___660 with
+  match uu___659 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
@@ -4078,6 +4077,24 @@ let (hint_file_for_src : Prims.string -> Prims.string) =
 let (ide : unit -> Prims.bool) = fun uu___ -> get_ide ()
 let (ide_id_info_off : unit -> Prims.bool) =
   fun uu___ -> get_ide_id_info_off ()
+let (ide_file_name_st :
+  ((Prims.string -> unit) *
+    (unit -> Prims.string FStar_Pervasives_Native.option)))
+  =
+  let v = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
+  let set1 f =
+    let uu___ = FStar_Compiler_Effect.op_Bang v in
+    match uu___ with
+    | FStar_Pervasives_Native.None ->
+        FStar_Compiler_Effect.op_Colon_Equals v
+          (FStar_Pervasives_Native.Some f)
+    | FStar_Pervasives_Native.Some uu___1 ->
+        FStar_Compiler_Effect.failwith "ide_file_name_st already set" in
+  let get uu___ = FStar_Compiler_Effect.op_Bang v in (set1, get)
+let (set_ide_filename : Prims.string -> unit) =
+  FStar_Pervasives_Native.fst ide_file_name_st
+let (ide_filename : unit -> Prims.string FStar_Pervasives_Native.option) =
+  FStar_Pervasives_Native.snd ide_file_name_st
 let (print : unit -> Prims.bool) = fun uu___ -> get_print ()
 let (print_in_place : unit -> Prims.bool) =
   fun uu___ -> get_print_in_place ()

@@ -30,6 +30,9 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+type extension_tosyntax_decl_t = env -> FStar.Compiler.Dyn.dyn -> lids:list lident -> Range.range -> list sigelt'
+val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : unit
+
 val as_interface:            AST.modul -> AST.modul
 val desugar_term:            env -> term -> S.term
 val desugar_machine_integer: env -> repr:string

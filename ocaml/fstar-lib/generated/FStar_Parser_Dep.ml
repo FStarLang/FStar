@@ -11,6 +11,8 @@ let (uu___is_Open_namespace : open_kind -> Prims.bool) =
 type module_name = Prims.string
 let (dbg : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "Dep"
+let (dbg_CheckedFiles : Prims.bool FStar_Compiler_Effect.ref) =
+  FStar_Compiler_Debug.get_toggle "CheckedFiles"
 let profile : 'uuuuu . (unit -> 'uuuuu) -> Prims.string -> 'uuuuu =
   fun f -> fun c -> FStar_Profiling.profile f FStar_Pervasives_Native.None c
 let with_file_outchannel :
@@ -128,11 +130,14 @@ let list_of_pair :
     match uu___ with
     | (intf, impl) ->
         FStar_Compiler_List.op_At (list_of_option intf) (list_of_option impl)
+let (maybe_module_name_of_file :
+  Prims.string -> Prims.string FStar_Pervasives_Native.option) =
+  fun f ->
+    let uu___ = FStar_Compiler_Util.basename f in
+    check_and_strip_suffix uu___
 let (module_name_of_file : Prims.string -> Prims.string) =
   fun f ->
-    let uu___ =
-      let uu___1 = FStar_Compiler_Util.basename f in
-      check_and_strip_suffix uu___1 in
+    let uu___ = maybe_module_name_of_file f in
     match uu___ with
     | FStar_Pervasives_Native.Some longname -> longname
     | FStar_Pervasives_Native.None ->
@@ -557,17 +562,29 @@ let (cache_file_name : Prims.string -> Prims.string) =
                  expected_cache_file) in
           if uu___2 then expected_cache_file else path))
     | FStar_Pervasives_Native.None ->
-        let uu___1 = FStar_Options.should_be_already_cached mname in
-        if uu___1
-        then
-          let uu___2 =
-            let uu___3 =
-              FStar_Compiler_Util.format1
-                "Expected %s to be already checked but could not find it"
-                mname in
-            (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure, uu___3) in
-          FStar_Errors.raise_err uu___2
-        else FStar_Options.prepend_cache_dir cache_fn in
+        ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_CheckedFiles in
+          if uu___2
+          then
+            let uu___3 = FStar_Compiler_Util.basename cache_fn in
+            FStar_Compiler_Util.print1 "find_file(%s) returned None\n" uu___3
+          else ());
+         (let uu___3 = FStar_Options.should_be_already_cached mname in
+          if uu___3
+          then
+            let uu___4 =
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Compiler_Util.format1
+                      "Expected %s to be already checked but could not find it."
+                      mname in
+                  FStar_Errors_Msg.text uu___7 in
+                [uu___6] in
+              (FStar_Errors_Codes.Error_AlreadyCachedAssertionFailure,
+                uu___5) in
+            FStar_Errors.raise_err_doc uu___4
+          else ());
+         FStar_Options.prepend_cache_dir cache_fn) in
   let memo = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
   let memo1 f x =
     let uu___ = FStar_Compiler_Util.smap_try_find memo x in
@@ -1356,8 +1373,21 @@ let (collect_one :
                  -> collect_term t
              | FStar_Parser_AST.Polymonadic_subcomp (uu___1, uu___2, t) ->
                  collect_term t
+             | FStar_Parser_AST.DeclToBeDesugared tbs ->
+                 tbs.FStar_Parser_AST.dep_scan
+                   {
+                     FStar_Parser_AST.scan_term = collect_term;
+                     FStar_Parser_AST.scan_binder = collect_binder;
+                     FStar_Parser_AST.scan_pattern = collect_pattern;
+                     FStar_Parser_AST.add_lident =
+                       (fun lid -> add_to_parsing_data (P_lid lid));
+                     FStar_Parser_AST.add_open =
+                       (fun lid -> add_to_parsing_data (P_open (true, lid)))
+                   } tbs.FStar_Parser_AST.blob
+             | FStar_Parser_AST.UseLangDecls uu___1 -> ()
              | FStar_Parser_AST.Pragma uu___1 -> ()
              | FStar_Parser_AST.DeclSyntaxExtension uu___1 -> ()
+             | FStar_Parser_AST.Unparseable -> ()
              | FStar_Parser_AST.TopLevelModule lid ->
                  (FStar_Compiler_Util.incr num_of_toplevelmods;
                   (let uu___2 =

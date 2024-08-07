@@ -121,7 +121,8 @@ let repl_state_init (fname: string) : repl_state =
     repl_deps_stack = [];
     repl_stdin = open_stdin ();
     repl_names = CompletionTable.empty;
-    repl_buffered_input_queries = [] }
+    repl_buffered_input_queries = [];
+    repl_lang = [] }
 
 type optresponse = option assoct // Contains [("result", ...)], [("error", ...)], but is not
                                   // the full response; call json_of_response for that

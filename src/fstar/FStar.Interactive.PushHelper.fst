@@ -42,7 +42,7 @@ module CTable = FStar.Interactive.CompletionTable
 let repl_stack: ref repl_stack_t = U.mk_ref []
 
 let set_check_kind env check_kind =
-  { env with lax = (check_kind = LaxCheck || Options.lax());
+  { env with admit = (check_kind = LaxCheck || Options.lax());
              dsenv = DsEnv.set_syntax_only env.dsenv (check_kind = SyntaxCheck)}
 
 (** Build a list of dependency loading tasks from a list of dependencies **)
@@ -169,19 +169,26 @@ let tc_one (env:env_t) intf_opt modf =
   let _, env = tc_one_file_for_ide env intf_opt modf parse_data in
   env
 
+open FStar.Class.Show
 (** Load the file or files described by `task` **)
-let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) : optmod_t & env_t =
+let run_repl_task (curmod: optmod_t) (env: env_t) (task: repl_task) lds : optmod_t & env_t & lang_decls_t =
   match task with
   | LDInterleaved (intf, impl) ->
-    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname
+    curmod, tc_one env (Some intf.tf_fname) impl.tf_fname, []
   | LDSingle intf_or_impl ->
-    curmod, tc_one env None intf_or_impl.tf_fname
+    curmod, tc_one env None intf_or_impl.tf_fname, []
   | LDInterfaceOfCurrentFile intf ->
-    curmod, Universal.load_interface_decls env intf.tf_fname
+    curmod, Universal.load_interface_decls env intf.tf_fname, []
   | PushFragment (frag, _, _) ->
-    tc_one_fragment curmod env frag
+    let frag =
+      match frag with
+      | Inl frag -> Inl (frag, lds)
+      | Inr decl -> Inr decl
+    in
+    let o, e, langs = tc_one_fragment curmod env frag in
+    o, e, langs
   | Noop ->
-    curmod, env
+    curmod, env, []
 
 (*******************************************)
 (* Name tracking: required for completions *)
@@ -265,8 +272,8 @@ let repl_tx st push_kind task =
   try
     let st = push_repl "repl_tx" (Some push_kind) task st in
     let env, finish_name_tracking = track_name_changes st.repl_env in // begin name tracking
-    let curmod, env = run_repl_task st.repl_curmod env task in
-    let st = { st with repl_curmod = curmod; repl_env = env } in
+    let curmod, env, lds = run_repl_task st.repl_curmod env task st.repl_lang in
+    let st = { st with repl_curmod = curmod; repl_env = env; repl_lang=List.rev lds @ st.repl_lang } in
     let env, name_events = finish_name_tracking env in // end name tracking
     None, commit_name_tracking st name_events
   with

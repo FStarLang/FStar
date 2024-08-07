@@ -160,6 +160,7 @@ let init_env deps : TcEnv.env =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+    let open FStar.Parser.AST in
   // We use file_of_range instead of `Options.file_list ()` because no file
   // is passed as a command-line argument in LSP mode.
   let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
@@ -175,6 +176,14 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
     | _ -> Range.dummyRange in
 
+  let filter_lang_decls (d:FStar.Parser.AST.decl) =
+    match d.d with
+    | UseLangDecls _ -> true
+    | _ -> false
+  in
+  let use_lang_decl (ds:lang_decls_t) =
+    List.tryFind (fun d -> UseLangDecls? d.d) ds
+  in
   let check_module_name_declaration ast_modul = 
       (* It may seem surprising that this function, whose name indicates that
          it type-checks a fragment, can actually parse an entire module.
@@ -197,7 +206,16 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
           if DsEnv.syntax_only env.dsenv then modul, env
           else Tc.tc_partial_modul env modul
       in
-      (Some modul, env)
+      let lang_decls =
+        let open FStar.Parser.AST in
+        let decls =
+          match ast_modul with
+          | Module (_, decls)
+          | Interface (_, decls, _) -> decls
+        in
+        List.filter filter_lang_decls decls
+      in
+      Some modul, env, lang_decls
   in
   
   let check_decls ast_decls =
@@ -219,7 +237,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_more_partial_modul env modul sigelts in
-      (Some modul, env)
+      Some modul, env, List.filter filter_lang_decls ast_decls
   in
   match frag with
   | Inr d -> (
@@ -231,11 +249,17 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       check_decls [d]
   )
 
-  | Inl frag -> (
-    match Parser.Driver.parse_fragment frag with
+  | Inl (frag, lang_decls) -> (
+    let parse_frag frag =
+      match use_lang_decl lang_decls with
+      | None -> Parser.Driver.parse_fragment None frag
+      | Some {d=UseLangDecls lang} ->
+        Parser.Driver.parse_fragment (Some lang) frag
+    in
+    match parse_frag frag with
     | Parser.Driver.Empty
     | Parser.Driver.Decls [] ->
-      (curmod, env)
+      curmod, env, []
 
     | Parser.Driver.Modul ast_modul ->
       check_module_name_declaration ast_modul
@@ -245,7 +269,7 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
   )
     
 let load_interface_decls env interface_file_name : TcEnv.env_t =
-  let r = Pars.parse (Pars.Filename interface_file_name) in
+  let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
@@ -420,16 +444,18 @@ let tc_one_file
       match r with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Expected %s to already be checked" fn);
+        && not (Options.force ())
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text <| BU.format1 "Expected %s to already be checked." fn
+               ]);
 
         if (Option.isSome (Options.codegen())
         && Options.cmi())
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
-                            fn);
+        && not (Options.force ())
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text "Cross-module inlining expects all modules to be checked first.";
+                 text <| BU.format1 "Module %s was not checked." fn;
+               ]);
 
         let tc_result, mllib, env = tc_source_file () in
 

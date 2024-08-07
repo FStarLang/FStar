@@ -375,7 +375,7 @@ let (load_checked_file_with_tc_result :
                                let uu___10 =
                                  FStar_Parser_Dep.print_digest deps_dig in
                                FStar_Compiler_Util.print4
-                                 "Expected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
+                                 "FAILING to load.\nExpected (%s) hashes:\n%s\n\nGot (%s) hashes:\n\t%s\n"
                                  uu___7 uu___8 uu___9 uu___10);
                               if
                                 (FStar_Compiler_List.length deps_dig) =

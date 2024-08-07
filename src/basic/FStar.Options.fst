@@ -1503,7 +1503,6 @@ let settable = function
     | "initial_ifuel"
     | "ide_id_info_off"
     | "keep_query_captions"
-    | "lax"
     | "load"
     | "load_cmxs"
     | "log_queries"
@@ -1875,6 +1874,16 @@ let hint_file_for_src src_filename =
         Util.format1 "%s.hints" file_name
 let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
+let ide_file_name_st =
+  let v = Util.mk_ref (None #string) in
+  let set f = 
+    match !v with
+    | None -> v := Some f
+    | Some _ -> failwith "ide_file_name_st already set" in
+  let get () = !v in
+  set, get
+let set_ide_filename = fst ide_file_name_st
+let ide_filename = snd ide_file_name_st
 let print                        () = get_print                       ()
 let print_in_place               () = get_print_in_place              ()
 let initial_fuel                 () = min (get_initial_fuel ()) (get_max_fuel ())
