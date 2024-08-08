@@ -1,0 +1,20 @@
+>> Got issues: [
+* Error 168 at Bug.DesugaringError.fst(7,0-7,0):
+  - Failed to desugar pulse declaration
+
+* Error 72 at Bug.DesugaringError.fst(11,4-11,5):
+  - Failed to desugar Pulse term
+  - Identifier not found: [a]
+
+>>]
+>> Got issues: [
+* Error 168 at Bug.DesugaringError.fst(15,0-15,0):
+  - Failed to desugar pulse declaration
+
+* Error 72 at Bug.DesugaringError.fst(16,12-16,21):
+  - Failed to desugar Pulse term
+  - Identifier not found: [something]
+
+>>]
+Verified module: Bug.DesugaringError
+All verification conditions discharged successfully
