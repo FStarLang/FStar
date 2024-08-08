@@ -394,9 +394,13 @@ let (desugar_pulse_decl_callback :
             uu___ Prims.int_zero in
           match FStar_Pervasives_Native.fst d with
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.None) ->
+              let start = FStar_Compiler_Range_Ops.start_of_range rng in
+              let rng1 =
+                let uu___ = FStar_Compiler_Range_Ops.file_of_range rng in
+                FStar_Compiler_Range_Type.mk_range uu___ start start in
               FStar_Errors.raise_error
                 (FStar_Errors_Codes.Fatal_SyntaxError,
-                  "Failed to desugar pulse extension text") rng
+                  "Failed to desugar pulse declaration") rng1
           | FStar_Pervasives.Inr (FStar_Pervasives_Native.Some (msg, rng1))
               ->
               FStar_Errors.raise_error
@@ -421,7 +425,7 @@ let (desugar_pulse_decl_callback :
                    FStar_Syntax_Syntax.lids2 = lids;
                    FStar_Syntax_Syntax.tac = splicer
                  }]
-let (uu___173 : unit) =
+let (uu___175 : unit) =
   FStar_ToSyntax_ToSyntax.register_extension_tosyntax "pulse"
     desugar_pulse_decl_callback
 let (parse_pulse :

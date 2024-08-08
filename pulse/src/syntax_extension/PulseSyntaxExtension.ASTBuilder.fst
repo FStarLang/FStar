@@ -225,8 +225,11 @@ let desugar_pulse_decl_callback
 : list FStar.Syntax.Syntax.sigelt'
 = let d = D.desugar_decl (D.mk_env env) (FStar.Compiler.Dyn.undyn blob) 0 in
   match fst d with
-  | Inr None ->
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse extension text") rng
+  | Inr None -> //All errors were logged via the error API
+    //Raise one final error at the start of the decl to stop further processing
+    let start = FStar.Compiler.Range.start_of_range rng in
+    let rng = FStar.Compiler.Range.mk_range (FStar.Compiler.Range.file_of_range rng) start start in
+    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse declaration") rng
   | Inr (Some (msg, rng)) ->
     FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, msg) rng
   | Inl d ->
