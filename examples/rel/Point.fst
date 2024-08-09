@@ -29,10 +29,10 @@ private type move_t (inv:heap -> fp -> Type0) =
                  (ensures  (fun h0 _ h1  -> inv h1 s))
 
 private type get_t (inv:heap -> fp -> Type0) =
-  s:fp -> ST (nat * nat) (requires (fun h0       -> inv h0 s))
+  s:fp -> ST (nat & nat) (requires (fun h0       -> inv h0 s))
                      (ensures  (fun h0 _ h1  -> inv h1 s))
 
-private type point_t (inv:heap -> fp -> Type0) = move_t inv * get_t inv
+private type point_t (inv:heap -> fp -> Type0) = move_t inv & get_t inv
 
 noeq type point =
   | C: inv:(heap -> fp -> Type0) -> fp:fp -> p:(point_t inv) -> point
@@ -50,7 +50,7 @@ let live (p:point) (h:heap) = (C?.inv p) h (C?.fp p)
       m fp
 
  let get
-  (p:point) :ST (nat * nat) (fun h0 -> live p h0) (fun h0 _ h1 -> live p h1)
+  (p:point) :ST (nat & nat) (fun h0 -> live p h0) (fun h0 _ h1 -> live p h1)
   = match p with
     | C _ fp f ->
       let _, g = f in

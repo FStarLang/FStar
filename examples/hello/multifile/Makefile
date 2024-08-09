@@ -1,22 +1,25 @@
 .PHONY: all clean
 
-FSTAR_HOME?=../../..
 ROOTS=$(wildcard *.fst) #scan these files for dependences
 OUTPUT_DIR=output
 MAIN=Main.fst #this is the main entry point file of your project
 EXECUTABLE=$(subst .fst,.exe, $(MAIN))
 INCLUDE_PATHS=
 
-ifeq ($(OS),Windows_NT)
-  FSTAR_EXE := $(shell cygpath -m $(FSTAR_HOME)/bin/fstar.exe)
+ifdef FSTAR_HOME
+  ifeq ($(OS),Windows_NT)
+    FSTAR_EXE := $(shell cygpath -m $(FSTAR_HOME)/bin/fstar.exe)
+  else
+    FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+  endif
 else
-  FSTAR_EXE := $(FSTAR_HOME)/bin/fstar.exe
+  FSTAR_EXE := fstar.exe
 endif
 
 #cache_dir: where to find checked files
 #odir: where to put all output artifacts
 #include: where to find source and checked files
-#already_cached: fstarlib is already built
+#already_cached: fstar ulib is already built
 
 FSTAR=$(FSTAR_EXE) \
 	--cache_dir $(OUTPUT_DIR) \

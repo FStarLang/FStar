@@ -16,6 +16,7 @@
 
 module FStar.NMSTTotal
 
+module W = FStar.Witnessed.Core
 module P = FStar.Preorder
 
 module M = FStar.MSTTotal
@@ -93,13 +94,19 @@ let if_then_else
     (fun s0 -> (p ==> req_then s0) /\ ((~ p) ==> req_else s0))
     (fun s0 x s1 -> (p ==> ens_then s0 x s1) /\ ((~ p) ==> ens_else s0 x s1))
 
+[@@ primitive_extraction]
 total
 reflectable
 effect {
-  NMSTATETOT (a:Type) (state:Type u#2) (rel:P.preorder state) (req:M.pre_t state) (ens:M.post_t state a)
+  NMSTATETOT (a:Type)
+             ([@@@ effect_param] state:Type u#2)
+             ([@@@ effect_param] rel:P.preorder state)
+             (req:M.pre_t state)
+             (ens:M.post_t state a)
   with { repr; return; bind; subcomp; if_then_else }
 }
 
+[@@ noextract_to "krml"]
 let get (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATETOT state state rel
       (fun _ -> True)
@@ -107,6 +114,7 @@ let get (#state:Type u#2) (#rel:P.preorder state) ()
     =
   NMSTATETOT?.reflect (fun (_, n) -> MSTTotal.get (), n)
 
+[@@ noextract_to "krml"]
 let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     : NMSTATETOT unit state rel
       (fun s0 -> rel s0 s)
@@ -114,29 +122,27 @@ let put (#state:Type u#2) (#rel:P.preorder state) (s:state)
     =
   NMSTATETOT?.reflect (fun (_, n) -> MSTTotal.put s, n)
 
-type s_predicate (state:Type u#2) = state -> Type0
 
-let stable (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
-  forall s0 s1. (p s0 /\ rel s0 s1) ==> p s1
-
-let witnessed (state:Type u#2) (rel:P.preorder state) (p:s_predicate state) =
-  M.witnessed state rel p
-
-let witness (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
-    : NMSTATETOT unit state rel
-      (fun s0 -> p s0 /\ stable state rel p)
-      (fun s0 _ s1 -> s0 == s1 /\ witnessed state rel p)
+[@@ noextract_to "krml"]
+let witness (state:Type u#2) (rel:P.preorder state) (p:W.s_predicate state)
+    : NMSTATETOT (W.witnessed state rel p) state rel
+      (fun s0 -> p s0 /\ W.stable state rel p)
+      (fun s0 _ s1 -> s0 == s1)
     =
   NMSTATETOT?.reflect (fun (_, n) -> M.witness state rel p, n)
 
-let recall (state:Type u#2) (rel:P.preorder state) (p:s_predicate state)
+[@@ noextract_to "krml"]
+let recall (state:Type u#2)
+           (rel:P.preorder state)
+           (p:W.s_predicate state)
+           (w:W.witnessed state rel p)
     : NMSTATETOT unit state rel
-      (fun _ -> witnessed state rel p)
+      (fun _ -> True)
       (fun s0 _ s1 -> s0 == s1 /\ p s1)
     =
-  NMSTATETOT?.reflect (fun (_, n) -> M.recall state rel p, n)
+  NMSTATETOT?.reflect (fun (_, n) -> M.recall state rel p w, n)
 
-
+[@@ noextract_to "krml"]
 let sample (#state:Type u#2) (#rel:P.preorder state) ()
     : NMSTATETOT bool state rel
       (fun _ -> True)
@@ -146,9 +152,9 @@ let sample (#state:Type u#2) (#rel:P.preorder state) ()
 
 let lift_pure_nmst
       (a:Type)
+      (wp:pure_wp a)
       (state:Type u#2)
       (rel:P.preorder state)
-      (wp:pure_wp a)
       (f:eqtype_as_type unit -> PURE a wp)
     : repr a state rel
       (fun s0 -> wp (fun _ -> True))

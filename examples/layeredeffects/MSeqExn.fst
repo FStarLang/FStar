@@ -60,13 +60,15 @@ let grows : Preorder.preorder state =
 
 type pre_t = state -> Type0
 type post_t (a:Type) = result a -> state -> Type0
-type wp_t (a:Type) = post_t a -> pre_t
+type wp_t0 (a:Type) = post_t a -> pre_t
 
-assume WP_t_monotonic:
-  forall (a:Type) (wp:wp_t a).
-    (forall (p q:post_t a).
-       (forall (r:result a) (s:state). p r s ==> q r s) ==>
-       (forall (s:state). wp p s ==> wp q s))
+unfold
+let wpt_monotonic (#a:Type) (wp:wp_t0 a) =
+  forall (p q:post_t a).
+    (forall (r:result a) (s:state). p r s ==> q r s) ==>
+    (forall (s:state). wp p s ==> wp q s)
+
+type wp_t (a:Type) = wp:wp_t0 a{wpt_monotonic wp}
 
 open FStar.Monotonic.Pure
 
@@ -112,25 +114,23 @@ let if_then_else (a:Type)
     ((~ p) ==> wp_else post s0))
 
 reifiable reflectable
-layered_effect {
-  MSeqEXN : a:Type -> wp_t a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  MSeqEXN (a:Type) (_:wp_t a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
+unfold
+let lift_pure_wp (#a:Type) (wp:pure_wp a) : wp_t a =
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun p s0 -> wp (fun x -> p (Success x) s0)
 
-let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> PURE a wp)
-: repr a (fun p s0 -> wp (fun x -> p (Success x) s0))
+let lift_pure_mseqexn (a:Type) (wp:pure_wp a) (f:unit -> PURE a wp)
+: repr a (lift_pure_wp wp)
 = elim_pure_wp_monotonicity_forall (); fun s0 -> Success (f ()), s0
 
 sub_effect PURE ~> MSeqEXN = lift_pure_mseqexn
 
-
-effect MSeqExn (a:Type) (req:state -> Type0) (ens:(s0:state{req s0} -> result a -> state -> Type0)) =
+effect MSeqExn (a:Type) (req:state -> Type0) (ens:(state -> result a -> state -> Type0)) =
   MSeqEXN a (fun post s0 -> req s0 /\ (forall (x:result a) (s1:state). ens s0 x s1 ==> post x s1))
 
 
@@ -233,6 +233,7 @@ let index (i:nat)
 : MSeqExn event
   (fun s0 -> i < Seq.length s0)
   (fun s0 r s1 ->
+    i < Seq.length s0 /\
     r == Success (Seq.index s0 i) /\
     s0 == s1)
 = let s0 = get () in

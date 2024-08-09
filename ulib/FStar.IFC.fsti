@@ -122,7 +122,7 @@ val join (#sl: _) (#l1 #l2: lattice_element sl) (#a: _) (x: protected l1 (protec
     As such, any computation that observes the protected value held in
     [x] has a secrecy level at least as secret as [x] itself *)
 unfold
-let bind
+let (let>>)
       #sl
       (#l1: lattice_element sl)
       #a

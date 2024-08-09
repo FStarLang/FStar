@@ -120,7 +120,7 @@ val for_readonly2 :
   inv:(vs1:seq a1{length vs1 == B.length buf1} ->
        vs2:seq a2{length vs2 == B.length buf2} ->
        i:nat{i <= U32.v finish} -> t -> bool -> GTot Type0) ->
-  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t * bool)
+  f:(i:U32.t{U32.(v start <= v i /\ v i < v finish)} -> v:t -> Stack (t & bool)
      (requires (fun h0 -> B.live h0 buf1 /\
                        B.live h0 buf2 /\
                        inv (B.as_seq h0 buf1) (B.as_seq h0 buf2) (U32.v i) v false))
@@ -132,7 +132,7 @@ val for_readonly2 :
                            inv (B.as_seq h0 buf1) (B.as_seq h0 buf2) (U32.v i) v false /\
                            inv (B.as_seq h1 buf1) (B.as_seq h1 buf2) U32.(v i + 1) v' break /\
                            modifies_none h0 h1))) ->
-  Stack (U32.t * t * bool)
+  Stack (U32.t & t & bool)
     (requires (fun h0 -> B.live h0 buf1 /\
                       B.live h0 buf2 /\
                       inv (B.as_seq h0 buf1) (B.as_seq h0 buf2) (U32.v start) init false))
@@ -205,7 +205,7 @@ val lookup_in_entries_st : buf:bslice -> num_entries:U32.t -> key:bslice -> Stac
                          | None -> lookup_in_entries es key_bs == None))))
 let lookup_in_entries_st buf num_entries key =
   admit();
-  let (_, st, break) = for_readonly2 #(n:U32.t{U32.v n <= U32.v buf.len} * option entry_st) (0ul, None)
+  let (_, st, break) = for_readonly2 #((n:U32.t{U32.v n <= U32.v buf.len}) & option entry_st) (0ul, None)
     0ul num_entries buf.p key.p
     (fun bs key_bs i st break ->
        let (off, m_ee) = st in

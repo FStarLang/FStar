@@ -20,7 +20,7 @@ include MiniParse.Spec.Int
 include MiniParse.Spec.List
 include MiniParse.Spec.TEnum
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module L = FStar.List.Tot
 
 noeq
@@ -39,13 +39,13 @@ let package_parser (#t: Type0) (p: package t) : Tot (parser_spec t) =
 let package_serializer (#t: Type0) (p: package t) : Tot (serializer_spec (package_parser p)) =
   Package?.s p
 
-let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
+let rec gen_package' (p: T.term) : T.Tac (T.term & T.term) =
   let (hd, tl) = app_head_tail p in
-  if hd `T.term_eq` (`(FStar.UInt8.t))
+  if hd `T.is_fvar` (`%FStar.UInt8.t)
   then begin
     ((`(parse_u8)), (`(serialize_u8)))
   end else
-  if hd `T.term_eq` (`(tuple2))
+  if hd `T.is_fvar` (`%tuple2)
   then match tl with
   | [(t1, _); (t2, _)] ->
     let (p1, s1) = gen_package' t1 in
@@ -69,7 +69,7 @@ let rec gen_package' (p: T.term) : T.Tac (T.term * T.term) =
     (p, s)
   | _ -> tfail "Not enough arguments to nondep_then"
   else
-  if hd `T.term_eq` (`(nlist))
+  if hd `T.is_fvar` (`%nlist)
   then match tl with
   | [(n, _); (t, _)] ->
     let (p, s) = gen_package' t in
@@ -110,6 +110,6 @@ let gen_specs = gen_package
 
 type u8 = FStar.UInt8.t
 
-type t = (u8 * (nlist 79 u8 * u8))
+type t = (u8 & (nlist 79 u8 & u8))
 
 let p : package t = T.synth_by_tactic (fun () -> gen_package T.Goal (`t))

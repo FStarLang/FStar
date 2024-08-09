@@ -52,7 +52,7 @@ if [ ! -d fstarlang.github.io ]; then
     git clone git@github.com:FStarLang/fstarlang.github.io
 fi
 pushd fstarlang.github.io
-git config user.email "everbld@microsoft.com"
+git config user.email "24394600+dzomo@users.noreply.github.com"
 git config user.name "Dzomo the everest Yak"
 
 pushd docs

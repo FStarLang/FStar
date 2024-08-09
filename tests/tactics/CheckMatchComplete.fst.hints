@@ -1,0 +1,38 @@
+[
+  "Ï¸œ¨\u0018Ã¾< ö_¿É‡Ñi",
+  [
+    [
+      "CheckMatchComplete.test_wild",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "9fb4b9c8f7f2587d7ead72e22fc668e9"
+    ],
+    [
+      "CheckMatchComplete.test_const_two",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "d007eef94c304602c234fdf09a06fd43"
+    ],
+    [
+      "CheckMatchComplete.test_const_two'",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Sealed.Inhabited.is_sealed", "true_interp"
+      ],
+      0,
+      "0eb8ac71c197850522b5768916e47ff2"
+    ]
+  ]
+]

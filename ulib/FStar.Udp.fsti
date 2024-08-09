@@ -37,7 +37,7 @@ val send: socket -> bytes -> EXT (optResult string unit)
 val close: socket -> EXT unit
 
 (* Helper functions *)
-val socket_split: socket -> EXT (sock_in_channel * sock_out_channel)
+val socket_split: socket -> EXT (sock_in_channel & sock_out_channel)
 val flush: sock_out_channel -> EXT unit
 
 (* Unimplemented *)

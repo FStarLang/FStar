@@ -1,5 +1,5 @@
 [
-  "\u000eö ∑Áà\u001d‰≥≠ég„\"&î",
+  "\u0013c∑\u000eÚFJH±\u0017\u001aØçåEÛ",
   [
     [
       "Part1.Lemmas.factorial",
@@ -16,7 +16,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "6723fae8a4a893ee8c89a1c8e2e2ee55"
+      "f9c94fc66b3269e24d815d11c523908c"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "c5e103e88efc35516f433d425058cd55"
+      "a27ad98f8986293fce4dce9519a412a5"
     ],
     [
       "Part1.Lemmas.factorial_is_greater_than_arg",
@@ -46,7 +46,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "7f88a493d799e33c2362ee88bd4f787e"
+      "7e3df34fe8f75803c789bdc57f98a25c"
     ],
     [
       "Part1.Lemmas.fibonacci",
@@ -63,7 +63,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2e3b81ae85e0423a59d074cb3304c778"
+      "d24c385c4cd8f24640dae79b9aa5d8d0"
     ],
     [
       "Part1.Lemmas.app",
@@ -78,7 +78,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "0c8214724577dd16b75dcc8658f05346"
+      "c9be94b5712325f49d0230f2700aacd7"
     ],
     [
       "Part1.Lemmas.length",
@@ -96,7 +96,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "a7bbff90a24f47e724e0f08a39a85bca"
+      "740d136855953779fc3a9e174617b6bb"
     ],
     [
       "Part1.Lemmas.append",
@@ -111,7 +111,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f4effdb22f51702366f25b31c050373d"
+      "faf2849d3e9de19740c28d6b0577e886"
     ],
     [
       "Part1.Lemmas.reverse",
@@ -126,7 +126,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "2088f01a895c651cbf57d0a10676222e"
+      "c04dd54b1f4e0967cd947434dc53664b"
     ],
     [
       "Part1.Lemmas.map",
@@ -141,7 +141,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e4448e6793db749e04f7a90202aeb563"
+      "ae0750eed1a77b103c535689c53fad7f"
     ],
     [
       "Part1.Lemmas.find",
@@ -156,7 +156,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "68c24062e5c6abf3979eae25cfe244e6"
+      "b96db2f1be57ef39074e4f9fb19c55f2"
     ],
     [
       "Part1.Lemmas.find_alt",
@@ -171,7 +171,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ab90581048facdb69349c7d9a3f5765f"
+      "e2032ef0e34624818e7ac38fc08e3ff2"
     ],
     [
       "Part1.Lemmas.find_alt_ok",
@@ -202,7 +202,7 @@
         "subterm_ordering_Prims.Cons", "typing_Part1.Lemmas.find_alt"
       ],
       0,
-      "70776c8c126c28b2d96eb346a51d3a23"
+      "31c29dce5e3a9f19c53a42528bcba555"
     ],
     [
       "Part1.Lemmas.fold_left",
@@ -217,7 +217,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "6a31ead82f13687ceffe73b0bd9cb706"
+      "3e2dfc115c4c8d6aead42da0c7134b31"
     ],
     [
       "Part1.Lemmas.rev_aux",
@@ -232,24 +232,25 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "716f276df27b9d67084113b38172318d"
+      "93afc9b3088112206e984a0858051231"
     ],
     [
-      "Part1.Lemmas.fib_aux",
+      "Part1.Lemmas.fib",
       1,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0",
-        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1", "equation_Prims.nat",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_1",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2", "equation_Prims.nat",
         "int_inversion", "int_typing", "primitive_Prims.op_Addition",
         "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "well-founded-ordering-on-nat"
       ],
       0,
-      "a8c86338ebc163aaf33989d1a1d5f9c0"
+      "1ed0b713ec7ea40fa03a3f374e6fcbb1"
     ]
   ]
 ]

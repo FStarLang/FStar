@@ -35,7 +35,7 @@ let sel (r:reg_file) (x:int) = r x
 let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 
 
-//#set-options "--debug_level print_normalized_terms --debug_level NBE"
+//#set-options "--debug print_normalized_terms,NBE"
 
 // let test = 
 //   assert (norm_simple (if 0 = 0 then true else false) == true)
@@ -48,10 +48,10 @@ let upd (r:reg_file) (x:int) (v:int) = fun y -> if x=y then v else sel r y
 ////////////////////////////////////////////////////////////////////////////////
 // Something a bit more involved, but more representative of Vale's quick code
 ////////////////////////////////////////////////////////////////////////////////
-//#reset-options "--z3rlimit 10 --lax"
+//#reset-options "--z3rlimit 10 --admit_smt_queries true"
 
-#set-options "--debug_level NBE"
-//#set-options "--debug_level print_normalized_terms --debug_level NBE"
+#set-options "--debug NBE"
+//#set-options "--debug print_normalized_terms,NBE"
 
 noeq type state = {
   ok: bool;
@@ -86,7 +86,7 @@ unfold let normal (x:Type0) : Type0 =
   norm [iota; zeta; simplify; primops; delta_attr [`%qattr]; delta_only normal_steps] x
 
 
-[@@ "opaque_to_smt" qattr]
+[@@ "opaque_to_smt"; qattr]
 let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0 =
   let sM = s0 in
 // COMMENT OUT 1-3 OF THE FOLLOWING LINES TO SPEED UP:
@@ -95,8 +95,8 @@ let wp_compute_ghash_incremental (x:int) (s0:state) (k:(state -> Type0)) : Type0
   let sM = up_xmm 6 x (up_xmm 5 x (up_xmm 4 x sM)) in
   (k sM)
 
-//#reset-options "--z3rlimit 10 --debug_level NBE --debug_level SMTQuery"
-#reset-options "--z3rlimit 10 --admit_smt_queries true --debug_level SMTQuery"
+//#reset-options "--z3rlimit 10 --debug NBE --debug SMTQuery"
+#reset-options "--z3rlimit 10 --admit_smt_queries true --debug SMTQuery"
 
 let lemma_gcm_core (s0:state) (x:int) : Lemma True =
   let k s =

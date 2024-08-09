@@ -27,6 +27,7 @@ type t : eqtype =
 
 let v x = x.v
 
+irreducible
 let uint_to_t x = Mk x
 
 let uv_inv _ = ()

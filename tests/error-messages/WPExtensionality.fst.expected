@@ -1,5 +1,10 @@
 >> Got issues: [
-WPExtensionality.fst(118,3-118,34): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(434,71-434,83))
+* Error 19 at WPExtensionality.fst(61,3-61,34):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(430,90-430,102)
+
 >>]
 Verified module: WPExtensionality
 All verification conditions discharged successfully

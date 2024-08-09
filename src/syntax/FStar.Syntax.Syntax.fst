@@ -14,9 +14,6 @@
    limitations under the License.
 *)
 module FStar.Syntax.Syntax
-(* Prims is used for bootstrapping *)
-open Prims
-open FStar.Pervasives
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 (* Type definitions for the core AST *)
@@ -27,13 +24,67 @@ open FStar.Compiler.Util
 open FStar.Compiler.Range
 open FStar.Ident
 open FStar.Const
-open FStar.Compiler.Dyn
-module O = FStar.Options
-module PC = FStar.Parser.Const
+open FStar.Dyn
 open FStar.VConfig
+
+open FStar.Class.Ord
+open FStar.Class.HasRange
+open FStar.Class.Setlike
+
+module O    = FStar.Options
+module PC   = FStar.Parser.Const
+module Err  = FStar.Errors
+module GS   = FStar.GenSym
+module FlatSet  = FStar.Compiler.FlatSet
+
+let rec emb_typ_to_string = function
+    | ET_abstract -> "abstract"
+    | ET_app (h, []) -> h
+    | ET_app(h, args) -> "(" ^h^ " " ^ (List.map emb_typ_to_string args |> String.concat " ")  ^")"
+    | ET_fun(a, b) -> "(" ^ emb_typ_to_string a ^ ") -> " ^ emb_typ_to_string b
+
+instance showable_emb_typ = {
+  show = emb_typ_to_string;
+}
+
+
+let rec delta_depth_to_string = function
+    | Delta_constant_at_level i   -> "Delta_constant_at_level " ^ string_of_int i
+    | Delta_equational_at_level i -> "Delta_equational_at_level " ^ string_of_int i
+    | Delta_abstract d -> "Delta_abstract (" ^ delta_depth_to_string d ^ ")"
+
+instance showable_delta_depth = {
+  show = delta_depth_to_string;
+}
+
+instance showable_should_check_uvar = {
+  show = (function
+          | Allow_unresolved s -> "Allow_unresolved " ^ s
+          | Allow_untyped s -> "Allow_untyped " ^ s
+          | Allow_ghost s -> "Allow_ghost " ^ s
+          | Strict -> "Strict"
+          | Already_checked -> "Already_checked");
+}
 
 // This is set in FStar.Main.main, where all modules are in-scope.
 let lazy_chooser : ref (option (lazy_kind -> lazyinfo -> term)) = mk_ref None
+
+let is_internal_qualifier (q:qualifier) : bool =
+  match q with
+  | Visible_default
+  | Discriminator _
+  | Projector _
+  | RecordType _
+  | RecordConstructor _
+  | Action _
+  | ExceptionConstructor
+  | HasMaskedEffect
+  | Effect
+  | OnlyName
+  | InternalAssumption ->
+      true
+  | _ ->
+      false
 
 let mod_name (m: modul) = m.name
 
@@ -46,14 +97,8 @@ let contains_reflectable (l: list qualifier): bool =
 let withinfo v r = {v=v; p=r}
 let withsort v = withinfo v dummyRange
 
-let bv_eq (bv1:bv) (bv2:bv) =
-    ident_equals bv1.ppname bv2.ppname && bv1.index=bv2.index
-
-let order_bv x y =
-  let i = String.compare (string_of_id x.ppname) (string_of_id y.ppname) in
-  if i = 0
-  then x.index - y.index
-  else i
+let order_bv (x y : bv) : int  = x.index - y.index
+let bv_eq    (x y : bv) : bool = order_bv x y = 0
 
 let order_ident x y = String.compare (string_of_id x) (string_of_id y)
 let order_fv x y = String.compare (string_of_lid x) (string_of_lid y)
@@ -68,47 +113,64 @@ let set_range_of_bv x r = {x with ppname = set_id_range r x.ppname }
 
 (* Helpers *)
 let on_antiquoted (f : (term -> term)) (qi : quoteinfo) : quoteinfo =
-    let aq = List.map (fun (bv, t) -> (bv, f t)) qi.antiquotes in
-    { qi with antiquotes = aq }
+  let (s, aqs) = qi.antiquotations in
+  let aqs' = List.map f aqs in
+  { qi with antiquotations = (s, aqs') }
 
-let lookup_aq (bv : bv) (aq : antiquotations) : option term =
-    match List.tryFind (fun (bv', _) -> bv_eq bv bv') aq with
-    | Some (_, e) -> Some e
-    | None -> None
+(* Requires that bv.index is in scope. *)
+let lookup_aq (bv : bv) (aq : antiquotations) : term =
+    try List.nth (snd aq) (List.length (snd aq) - 1 - bv.index + fst aq) // subtract shift
+    with
+    | _ ->
+      failwith "antiquotation out of bounds"
 
 (*********************************************************************************)
 (* Syntax builders *)
 (*********************************************************************************)
 
+// Cleanup this mess please
+let deq_instance_from_cmp f = {
+  (=?) = (fun x y -> Order.eq (f x y));
+}
+let ord_instance_from_cmp f = {
+  super = deq_instance_from_cmp f;
+  cmp = f;
+}
+let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
+
+instance deq_bv : deq bv =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
+instance deq_ident : deq ident =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
+instance deq_fv : deq lident =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
+instance deq_univ_name : deq univ_name =
+  deq_instance_from_cmp (fun x y -> Order.order_from_int (order_univ_name x y))
+instance deq_delta_depth : deq delta_depth = {
+  (=?) = (fun x y -> x = y);
+}
+
+instance ord_bv : ord bv =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_bv x y))
+instance ord_ident : ord ident =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_ident x y))
+instance ord_fv : ord lident =
+  ord_instance_from_cmp (fun x y -> Order.order_from_int (order_fv x y))
+
 let syn p k f = f k p
 let mk_fvs () = Util.mk_ref None
 let mk_uvs () = Util.mk_ref None
-let new_bv_set () : set bv = Util.new_set order_bv
-let new_id_set () : set ident = Util.new_set order_ident
-let new_fv_set () :set lident = Util.new_set order_fv
-let order_univ_name x y = String.compare (Ident.string_of_id x) (Ident.string_of_id y)
-let new_universe_names_set () : set univ_name = Util.new_set order_univ_name
 
-let eq_binding b1 b2 =
-    match b1, b2 with
-    | Binding_var bv1, Binding_var bv2 -> bv_eq bv1 bv2
-    | Binding_lid (lid1, _), Binding_lid (lid2, _) -> lid_equals lid1 lid2
-    | Binding_univ u1, Binding_univ u2 -> ident_equals u1 u2
-    | _ -> false
-
-let no_names  = new_bv_set()
-let no_fvars  = new_fv_set()
-let no_universe_names = new_universe_names_set ()
 //let memo_no_uvs = Util.mk_ref (Some no_uvs)
 //let memo_no_names = Util.mk_ref (Some no_names)
-let freenames_of_list l = List.fold_right Util.set_add l no_names
-let list_of_freenames (fvs:freenames) = Util.set_elements fvs
+let list_of_freenames (fvs:freenames) = elems fvs
 
 (* Constructors for each term form; NO HASH CONSING; just makes all the auxiliary data at each node *)
 let mk (t:'a) r = {
     n=t;
     pos=r;
     vars=Util.mk_ref None;
+    hash_code=Util.mk_ref None;
 }
 
 let bv_to_tm   bv :term = mk (Tm_bvar bv) (range_of_bv bv)
@@ -117,7 +179,7 @@ let binders_to_names (bs:binders) : list term = bs |> List.map (fun b -> bv_to_n
 let mk_Tm_app (t1:typ) (args:list arg) p =
     match args with
     | [] -> t1
-    | _ -> mk (Tm_app (t1, args)) p
+    | _ -> mk (Tm_app {hd=t1; args}) p
 let mk_Tm_uinst (t:term) (us:universes) =
   match t.n with
   | Tm_fvar _ ->
@@ -128,14 +190,12 @@ let mk_Tm_uinst (t:term) (us:universes) =
   | _ -> failwith "Unexpected universe instantiation"
 
 let extend_app_n t args' r = match t.n with
-    | Tm_app(head, args) -> mk_Tm_app head (args@args') r
+    | Tm_app {hd; args} -> mk_Tm_app hd (args@args') r
     | _ -> mk_Tm_app t args' r
 let extend_app t arg r = extend_app_n t [arg] r
-let mk_Tm_delayed lr pos : term = mk (Tm_delayed lr) pos
-let mk_Total' t  u: comp  = mk (Total(t, u)) t.pos
-let mk_GTotal' t u: comp = mk (GTotal(t, u)) t.pos
-let mk_Total t = mk_Total' t None
-let mk_GTotal t = mk_GTotal' t None
+let mk_Tm_delayed lr pos : term = mk (Tm_delayed {tm=fst lr; substs=snd lr}) pos
+let mk_Total t = mk (Total t) t.pos
+let mk_GTotal t : comp = mk (GTotal t) t.pos
 let mk_Comp (ct:comp_typ) : comp  = mk (Comp ct) ct.result_typ.pos
 let mk_lb (x, univs, eff, t, e, attrs, pos) = {
     lbname=x;
@@ -155,44 +215,82 @@ let mk_Tac t =
                flags = [SOMETRIVIAL; TRIVIAL_POSTCONDITION];
             })
 
-let default_sigmeta = { sigmeta_active=true; sigmeta_fact_db_ids=[]; sigmeta_admit=false }
-let mk_sigelt (e: sigelt') = { sigel = e; sigrng = Range.dummyRange; sigquals=[]; sigmeta=default_sigmeta; sigattrs = [] ; sigopts = None }
+let default_sigmeta = {
+    sigmeta_active=true;
+    sigmeta_fact_db_ids=[];
+    sigmeta_spliced=false;
+    sigmeta_admit=false;
+    sigmeta_already_checked=false;
+    sigmeta_extension_data=[]
+}
+let mk_sigelt (e: sigelt') = { 
+    sigel = e;
+    sigrng = Range.dummyRange;
+    sigquals=[];
+    sigmeta=default_sigmeta;
+    sigattrs = [] ;
+    sigopts = None;
+    sigopens_and_abbrevs = [] }
 let mk_subst (s:subst_t)   = s
 let extend_subst x s : subst_t = x::s
 let argpos (x:arg) = (fst x).pos
 
 let tun : term = mk (Tm_unknown) dummyRange
 let teff : term = mk (Tm_constant Const_effect) dummyRange
+
+(* no compress call? *)
 let is_teff (t:term) = match t.n with
     | Tm_constant Const_effect -> true
     | _ -> false
+(* no compress call? *)
 let is_type (t:term) = match t.n with
     | Tm_type _ -> true
     | _ -> false
+
+(* Gen sym *)
 let null_id  = mk_ident("_", dummyRange)
-let null_bv k = {ppname=null_id; index=0; sort=k}
-let mk_binder_with_attrs bv aqual attrs = {
+let null_bv k = {ppname=null_id; index=GS.next_id(); sort=k}
+
+let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
+let is_null_binder (b:binder) = is_null_bv b.binder_bv
+let range_of_ropt = function
+    | None -> dummyRange
+    | Some r -> r
+
+let gen_bv' (id : ident) (r : option Range.range) (t : typ) : bv =
+  {ppname=id; index=GS.next_id(); sort=t}
+
+let gen_bv (s : string) (r : option Range.range) (t : typ) : bv =
+  let id = mk_ident(s, range_of_ropt r) in
+  gen_bv' id r t
+
+let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
+let freshen_bv bv =
+    if is_null_bv bv
+    then new_bv (Some (range_of_bv bv)) bv.sort
+    else {bv with index=GS.next_id()}
+let mk_binder_with_attrs bv aqual pqual attrs = {
   binder_bv = bv;
   binder_qual = aqual;
+  binder_positivity = pqual;
   binder_attrs = attrs
 }
-let mk_binder a = mk_binder_with_attrs a None []
+let mk_binder a = mk_binder_with_attrs a None None []
 let null_binder t : binder = mk_binder (null_bv t)
 let imp_tag = Implicit false
 let iarg t : arg = t, Some ({ aqual_implicit = true; aqual_attributes = [] })
 let as_arg t : arg = t, None
-let is_null_bv (b:bv) = string_of_id b.ppname = string_of_id null_id
-let is_null_binder (b:binder) = is_null_bv b.binder_bv
+
 
 let is_top_level = function
     | {lbname=Inr _}::_ -> true
     | _ -> false
 
 let freenames_of_binders (bs:binders) : freenames =
-    List.fold_right (fun b out -> Util.set_add b.binder_bv out) bs no_names
+    List.fold_right (fun b out -> add b.binder_bv out) bs (empty ())
 
 let binders_of_list fvs : binders = (fvs |> List.map (fun t -> mk_binder t))
-let binders_of_freenames (fvs:freenames) = Util.set_elements fvs |> binders_of_list
+let binders_of_freenames (fvs:freenames) = elems fvs |> binders_of_list
 let is_bqual_implicit = function Some (Implicit _) -> true | _ -> false
 let is_aqual_implicit = function Some { aqual_implicit = b } -> b | _ -> false
 let is_bqual_implicit_or_meta = function Some (Implicit _) | Some (Meta _) -> true | _ -> false
@@ -202,30 +300,16 @@ let pat_bvs (p:pat) : list bv =
     let rec aux b p = match p.v with
         | Pat_dot_term _
         | Pat_constant _ -> b
-        | Pat_wild x
         | Pat_var x -> x::b
         | Pat_cons(_, _, pats) -> List.fold_left (fun b (p, _) -> aux b p) b pats
     in
   List.rev <| aux [] p
 
-(* Gen sym *)
-let range_of_ropt = function
-    | None -> dummyRange
-    | Some r -> r
-let gen_bv : string -> option Range.range -> typ -> bv = fun s r t ->
-  let id = mk_ident(s, range_of_ropt r) in
-  {ppname=id; index=Ident.next_id(); sort=t}
-let new_bv ropt t = gen_bv Ident.reserved_prefix ropt t
-
-let freshen_bv bv =
-    if is_null_bv bv
-    then new_bv (Some (range_of_bv bv)) bv.sort
-    else {bv with index=Ident.next_id()}
 
 let freshen_binder (b:binder) = { b with binder_bv = freshen_bv b.binder_bv }
 
 let new_univ_name ropt =
-    let id = Ident.next_id() in
+    let id = GS.next_id() in
     mk_ident (Ident.reserved_prefix ^ Util.string_of_int id, range_of_ropt ropt)
 let lbname_eq l1 l2 = match l1, l2 with
   | Inl x, Inl y -> bv_eq x y
@@ -236,13 +320,17 @@ let fv_eq_lid fv lid = lid_equals fv.fv_name.v lid
 
 let set_bv_range bv r = {bv with ppname = set_id_range r bv.ppname}
 
-let lid_as_fv l dd dq : fv = {
+let lid_and_dd_as_fv l dq : fv = {
     fv_name=withinfo l (range_of_lid l);
-    fv_delta=dd;
+    fv_qual =dq;
+}
+let lid_as_fv l dq : fv = {
+    fv_name=withinfo l (range_of_lid l);
     fv_qual =dq;
 }
 let fv_to_tm (fv:fv) : term = mk (Tm_fvar fv) (range_of_lid fv.fv_name.v)
-let fvar l dd dq =  fv_to_tm (lid_as_fv l dd dq)
+let fvar_with_dd l dq =  fv_to_tm (lid_and_dd_as_fv l dq)
+let fvar l dq = fv_to_tm (lid_as_fv l dq)
 let lid_of_fv (fv:fv) = fv.fv_name.v
 let range_of_fv (fv:fv) = range_of_lid (lid_of_fv fv)
 let set_range_of_fv (fv:fv) (r:Range.range) =
@@ -270,8 +358,7 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
               | _ -> false)
         else false
     | Pat_var _, Pat_var _ -> true
-    | Pat_wild _, Pat_wild _ -> true
-    | Pat_dot_term (bv1, t1), Pat_dot_term (bv2, t2) -> true //&& term_eq t1 t2
+    | Pat_dot_term _, Pat_dot_term _ -> true
     | _, _ -> false
 
 ///////////////////////////////////////////////////////////////////////
@@ -279,10 +366,10 @@ let rec eq_pat (p1 : pat) (p2 : pat) : bool =
 ///////////////////////////////////////////////////////////////////////
 let delta_constant = Delta_constant_at_level 0
 let delta_equational = Delta_equational_at_level 0
-let fvconst l = lid_as_fv l delta_constant None
+let fvconst l = lid_and_dd_as_fv l None
 let tconst l = mk (Tm_fvar (fvconst l)) Range.dummyRange
-let tabbrev l = mk (Tm_fvar(lid_as_fv l (Delta_constant_at_level 1) None)) Range.dummyRange
-let tdataconstr l = fv_to_tm (lid_as_fv l delta_constant (Some Data_ctor))
+let tabbrev l = mk (Tm_fvar(lid_and_dd_as_fv l None)) Range.dummyRange
+let tdataconstr l = fv_to_tm (lid_and_dd_as_fv l (Some Data_ctor))
 let t_unit      = tconst PC.unit_lid
 let t_bool      = tconst PC.bool_lid
 let t_int       = tconst PC.int_lid
@@ -292,6 +379,7 @@ let t_real      = tconst PC.real_lid
 let t_float     = tconst PC.float_lid
 let t_char      = tabbrev PC.char_lid
 let t_range     = tconst PC.range_lid
+let t___range   = tconst PC.__range_lid
 let t_vconfig   = tconst PC.vconfig_lid
 let t_term      = tconst PC.term_lid
 let t_term_view = tabbrev PC.term_view_lid
@@ -334,6 +422,87 @@ let t_either_of t1 t2 = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
   [as_arg t1; as_arg t2]
   Range.dummyRange
+let t_sealed_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.sealed_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
+let t_erased_of t = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.erased_lid) [U_zero])
+  [as_arg t]
+  Range.dummyRange
 
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
+
+instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
+  pos = (fun (t:syntax a) -> t.pos);
+  setPos = (fun r t -> { t with pos = r });
+}
+
+instance has_range_withinfo #a (_:unit) : Tot (hasRange (withinfo_t a)) = {
+  pos = (fun t -> t.p);
+  setPos = (fun r t -> { t with p = r });
+}
+
+instance has_range_sigelt : hasRange sigelt = {
+  pos = (fun t -> t.sigrng);
+  setPos = (fun r t -> { t with sigrng = r });
+}
+
+instance showable_lazy_kind = {
+  show = (function
+          | BadLazy -> "BadLazy"
+          | Lazy_bv -> "Lazy_bv"
+          | Lazy_namedv -> "Lazy_namedv"
+          | Lazy_binder -> "Lazy_binder"
+          | Lazy_optionstate -> "Lazy_optionstate"
+          | Lazy_fvar -> "Lazy_fvar"
+          | Lazy_comp -> "Lazy_comp"
+          | Lazy_env -> "Lazy_env"
+          | Lazy_proofstate -> "Lazy_proofstate"
+          | Lazy_goal -> "Lazy_goal"
+          | Lazy_sigelt -> "Lazy_sigelt"
+          | Lazy_letbinding -> "Lazy_letbinding"
+          | Lazy_uvar -> "Lazy_uvar"
+          | Lazy_universe -> "Lazy_universe"
+          | Lazy_universe_uvar -> "Lazy_universe_uvar"
+          | Lazy_issue -> "Lazy_issue"
+          | Lazy_doc -> "Lazy_doc"
+          | Lazy_ident -> "Lazy_ident"
+          | Lazy_tref -> "Lazy_tref"
+          | Lazy_embedding _ -> "Lazy_embedding _"
+          | Lazy_extension s -> "Lazy_extension " ^ s
+          | _ -> failwith "FIXME! lazy_kind_to_string must be complete"
+  );
+}
+
+instance deq_lazy_kind : deq lazy_kind = {
+  (=?) = (fun k k' ->
+(* NOTE: Lazy_embedding compares false to itself, by design. *)
+          match k, k' with
+          | BadLazy, BadLazy
+          | Lazy_bv, Lazy_bv
+          | Lazy_namedv, Lazy_namedv
+          | Lazy_binder, Lazy_binder
+          | Lazy_optionstate, Lazy_optionstate
+          | Lazy_fvar, Lazy_fvar
+          | Lazy_comp, Lazy_comp
+          | Lazy_env, Lazy_env
+          | Lazy_proofstate, Lazy_proofstate
+          | Lazy_goal, Lazy_goal
+          | Lazy_sigelt, Lazy_sigelt
+          | Lazy_letbinding, Lazy_letbinding
+          | Lazy_uvar, Lazy_uvar
+          | Lazy_universe, Lazy_universe
+          | Lazy_universe_uvar, Lazy_universe_uvar
+          | Lazy_issue, Lazy_issue
+          | Lazy_ident, Lazy_ident
+          | Lazy_doc, Lazy_doc
+          | Lazy_tref, Lazy_tref
+            -> true
+          | Lazy_extension s, Lazy_extension t ->
+            s = t
+          | Lazy_embedding _, _
+          | _, Lazy_embedding _ -> false
+          | _ -> false);
+}

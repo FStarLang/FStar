@@ -1,0 +1,386 @@
+[
+  "=ÊDæ/ÄJí}f<uˇ∑K\u0010",
+  [
+    [
+      "ClassicalSugar.test_elim_exists_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.squash", "int_inversion",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_d1d6314f1eadc65e858ae8863c98b1dc"
+      ],
+      0,
+      "d3b6df0b1de2db5e516605239314b4a9"
+    ],
+    [
+      "ClassicalSugar.test_elim_exists_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_30ea3b86ec6bf1246dbb233c8ef248b6"
+      ],
+      0,
+      "b37d1a5e306d31db14b5d0a6510f9ee7"
+    ],
+    [
+      "ClassicalSugar.test_elim_exists_3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "equation_Prims.squash", "int_inversion",
+        "refinement_interpretation_Tm_refine_0dd378b4e023943f6b53df9b142691ad",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+      ],
+      0,
+      "4740e390b236b2c30ff1978ce0ad6c82"
+    ],
+    [
+      "ClassicalSugar.test_elim_forall_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "refinement_interpretation_Tm_refine_226717771801e984f2f4a6a20e2daf91"
+      ],
+      0,
+      "f3ec1bfdb8418381c62dc5028ff8a296"
+    ],
+    [
+      "ClassicalSugar.test_elim_forall_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "9813ca0d818517e338c4f30a7f4885e4"
+    ],
+    [
+      "ClassicalSugar.test_elim_implies_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
+      ],
+      0,
+      "b32eca16ad017b17dfa064d91533b494"
+    ],
+    [
+      "ClassicalSugar.test_elim_implies_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "df4507e0a74c6836a97a692440044314"
+    ],
+    [
+      "ClassicalSugar.test_elim_or_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
+      ],
+      0,
+      "45340b3966c48b91a3c1eca64c903e4b"
+    ],
+    [
+      "ClassicalSugar.test_elim_or_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
+      ],
+      0,
+      "c2e4eb488b66060da6986a2e5497a5b2"
+    ],
+    [
+      "ClassicalSugar.test_elim_and_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
+      ],
+      0,
+      "87873ecb8f87dd1975737b40e408f7c8"
+    ],
+    [
+      "ClassicalSugar.test_elim_and_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "29bf164851aff24d75bc6e07f6bfafd5"
+    ],
+    [
+      "ClassicalSugar.test_forall_intro_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_573fe6e4f1ba7ae2548033cb6b92d4b3"
+      ],
+      0,
+      "68fbe02a5acbe507620527e59df0be20"
+    ],
+    [
+      "ClassicalSugar.test_exists_intro_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_7b5789257792eca0fcedb42d77c8c85a"
+      ],
+      0,
+      "a58612f9110abdc7a3d8380410ac2193"
+    ],
+    [
+      "ClassicalSugar.test_implies_intro_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
+      ],
+      0,
+      "078ee78ff3a687d84c0228682f629fdc"
+    ],
+    [
+      "ClassicalSugar.test_or_intro_left_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "945e60c1314973f98a4b4d1aab068056"
+    ],
+    [
+      "ClassicalSugar.test_or_intro_right_2",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8d615325863fffff05b8e28d66ed70cf"
+    ],
+    [
+      "ClassicalSugar.test_and_intro_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
+      ],
+      0,
+      "99973364a749ad20a437e0a4edece559"
+    ],
+    [
+      "ClassicalSugar.test_excluded_middle",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_953a6e4e702e848a7213bd619baaa22d"
+      ],
+      0,
+      "e122dd02e474d059dcb8345187104248"
+    ],
+    [
+      "ClassicalSugar.test_forall_implies_2_1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_24320fd6680943bf8bf24a74aa54ac25",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "622b31157185df50ee5bf03dcc33fdd5"
+    ],
+    [
+      "ClassicalSugar.test_forall_implies_2_2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_24320fd6680943bf8bf24a74aa54ac25",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "19dfe625d6ffc01997ef88585edb10fd"
+    ],
+    [
+      "ClassicalSugar.test_forall_implies_2_3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_24320fd6680943bf8bf24a74aa54ac25",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "54a75ed99e3c14e0b2897fd995a5b77e"
+    ],
+    [
+      "ClassicalSugar.test_bias_implies",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "int_inversion", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_5a4c3b99f3ffb8db4a66f2cb8d94b9a2",
+        "refinement_interpretation_Tm_refine_985dd1507393b8aad382f3d9b75a36c5"
+      ],
+      0,
+      "22f98f9e560faf20cb57edd062e52a25"
+    ],
+    [
+      "ClassicalSugar.test_bias_and",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "function_token_typing_ClassicalSugar.is_nat", "int_inversion",
+        "interpretation_Tm_abs_e9f4b00164232bcf576a33de8ad7474b",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_985dd1507393b8aad382f3d9b75a36c5",
+        "refinement_interpretation_Tm_refine_f003cdd572e39848a577979d59db90a4"
+      ],
+      0,
+      "0c6ca84f46b540d22e348e66f6761651"
+    ],
+    [
+      "ClassicalSugar.test_bias_or",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def", "equation_Prims.squash",
+        "int_inversion", "primitive_Prims.op_LessThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_86a971e132555c4cc0e9db987df49c95",
+        "refinement_interpretation_Tm_refine_985dd1507393b8aad382f3d9b75a36c5",
+        "refinement_interpretation_Tm_refine_a8b9421949c799363cbb16701b324d79"
+      ],
+      0,
+      "bb5ca9a04477e8eaffff82a8658f2ebb"
+    ],
+    [
+      "ClassicalSugar.test_bias_or_alt",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "function_token_typing_ClassicalSugar.is_nat", "int_inversion",
+        "interpretation_Tm_abs_e9f4b00164232bcf576a33de8ad7474b",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_294fa547161d908b7e1a8979f2e80db4",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_86a971e132555c4cc0e9db987df49c95",
+        "refinement_interpretation_Tm_refine_985dd1507393b8aad382f3d9b75a36c5",
+        "refinement_interpretation_Tm_refine_a8b9421949c799363cbb16701b324d79"
+      ],
+      0,
+      "368b7d57fca355bdb6b7ed1261faad04"
+    ],
+    [
+      "ClassicalSugar.admit_implies_elim",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "refinement_interpretation_Tm_refine_913239c2cf9dc8a14e1f047e0206138d"
+      ],
+      0,
+      "9637afa5cbc4cb5883d9ded9496ea0cd"
+    ],
+    [
+      "ClassicalSugar.admit_or_intro_left",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
+      ],
+      0,
+      "73c8885833502119b8f855a08d478a36"
+    ],
+    [
+      "ClassicalSugar.admit_or_intro_right",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_fe5dc86c0b5ea8bea91e659ca9e2937e"
+      ],
+      0,
+      "732d6952e4a745707132b991e1e0c0bf"
+    ],
+    [
+      "ClassicalSugar.admit_and_intro",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_b88b26704ce5354755b4f9e280b3a2d9"
+      ],
+      0,
+      "5ac5dbe51c70cfc7413ffdf564861296"
+    ]
+  ]
+]

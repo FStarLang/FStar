@@ -1,42 +1,137 @@
 >> Got issues: [
-NegativeTests.Termination.fst(21,28-21,29): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(18,12-21,29))
+* Error 19 at NegativeTests.Termination.fst(21,28-21,29):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(18,12-21,29)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(28,26-28,35): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(25,23-28,35))
+* Error 19 at NegativeTests.Termination.fst(28,26-28,35):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(25,23-28,35)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(35,43-35,44): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(31,19-36,54))
+* Error 19 at NegativeTests.Termination.fst(35,43-35,44):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(31,19-36,54)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(42,28-42,29): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(40,23-42,29))
+* Error 19 at NegativeTests.Termination.fst(42,28-42,29):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(40,23-42,29)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(55,15-55,29): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(53,2-55,29))
+* Error 19 at NegativeTests.Termination.fst(55,15-55,29):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(53,2-55,29)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(67,19-67,29): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(64,2-67,29))
+* Error 19 at NegativeTests.Termination.fst(67,19-67,29):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(64,2-67,29)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(75,34-75,35): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(71,13-75,35))
+* Error 19 at NegativeTests.Termination.fst(75,34-75,35):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(71,13-75,35)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(80,2-82,14): (Error 19) Patterns are incomplete; The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 19 at NegativeTests.Termination.fst(80,2-82,14):
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(89,29-89,31): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(86,15-89,31))
+* Error 19 at NegativeTests.Termination.fst(89,29-89,31):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(86,15-89,31)
+
 >>]
 >> Got issues: [
-NegativeTests.Termination.fst(96,20-96,26): (Error 19) Could not prove termination of this recursive call; The SMT solver could not prove the query. Use --query_stats for more details. (see also NegativeTests.Termination.fst(94,2-96,26))
+* Error 19 at NegativeTests.Termination.fst(96,20-96,26):
+  - Could not prove termination of this recursive call
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also NegativeTests.Termination.fst(94,2-96,26)
+
 >>]
-NegativeTests.Termination.fst(18,4-18,9): (Warning 240) Admitting NegativeTests.Termination.bug15 without a definition
-NegativeTests.Termination.fst(23,4-23,18): (Warning 240) Admitting NegativeTests.Termination.repeat_diverge without a definition
-NegativeTests.Termination.fst(31,4-31,17): (Warning 240) Admitting NegativeTests.Termination.ackermann_bad without a definition
-NegativeTests.Termination.fst(38,4-38,14): (Warning 240) Admitting NegativeTests.Termination.length_bad without a definition
-NegativeTests.Termination.fst(50,4-50,18): (Warning 240) Admitting NegativeTests.Termination.strangeZeroBad without a definition
-NegativeTests.Termination.fst(61,4-61,6): (Warning 240) Admitting NegativeTests.Termination.t1 without a definition
-NegativeTests.Termination.fst(69,4-69,8): (Warning 240) Admitting NegativeTests.Termination.plus without a definition
-NegativeTests.Termination.fst(77,4-77,9): (Warning 240) Admitting NegativeTests.Termination.plus' without a definition
-NegativeTests.Termination.fst(84,4-84,9): (Warning 240) Admitting NegativeTests.Termination.minus without a definition
-NegativeTests.Termination.fst(91,4-91,7): (Warning 240) Admitting NegativeTests.Termination.xxx without a definition
+* Warning 240 at NegativeTests.Termination.fst(18,4-18,9):
+  - NegativeTests.Termination.bug15 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(23,4-23,18):
+  - NegativeTests.Termination.repeat_diverge
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(31,4-31,17):
+  - NegativeTests.Termination.ackermann_bad
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(38,4-38,14):
+  - NegativeTests.Termination.length_bad is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(50,4-50,18):
+  - NegativeTests.Termination.strangeZeroBad
+    is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(61,4-61,6):
+  - NegativeTests.Termination.t1 is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(69,4-69,8):
+  - NegativeTests.Termination.plus is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(77,4-77,9):
+  - NegativeTests.Termination.plus' is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(84,4-84,9):
+  - NegativeTests.Termination.minus is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(91,4-91,7):
+  - NegativeTests.Termination.xxx is declared but no definition was found
+  - Add an 'assume' if this is intentional
+
+* Warning 240 at NegativeTests.Termination.fst(93,0-96,26):
+  - Missing definitions in module NegativeTests.Termination:
+      ackermann_bad
+      bug15
+      length_bad
+      minus
+      plus
+      plus'
+      repeat_diverge
+      strangeZeroBad
+      t1
+      xxx
+
 Verified module: NegativeTests.Termination
 All verification conditions discharged successfully

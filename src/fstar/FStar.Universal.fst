@@ -35,32 +35,33 @@ open FStar.TypeChecker
 open FStar.CheckedFiles
 
 (* Module abbreviations for the universal type-checker  *)
-module DsEnv   = FStar.Syntax.DsEnv
-module TcEnv   = FStar.TypeChecker.Env
-module Syntax  = FStar.Syntax.Syntax
-module Util    = FStar.Syntax.Util
-module Desugar = FStar.ToSyntax.ToSyntax
-module SMT     = FStar.SMTEncoding.Solver
-module Const   = FStar.Parser.Const
-module Pars    = FStar.Parser.ParseIt
-module Tc      = FStar.TypeChecker.Tc
-module TcTerm  = FStar.TypeChecker.TcTerm
-module BU      = FStar.Compiler.Util
-module Dep     = FStar.Parser.Dep
-module NBE     = FStar.TypeChecker.NBE
-module Ch      = FStar.CheckedFiles
+module DsEnv    = FStar.Syntax.DsEnv
+module TcEnv    = FStar.TypeChecker.Env
+module Syntax   = FStar.Syntax.Syntax
+module Util     = FStar.Syntax.Util
+module Desugar  = FStar.ToSyntax.ToSyntax
+module SMT      = FStar.SMTEncoding.Solver
+module Const    = FStar.Parser.Const
+module Pars     = FStar.Parser.ParseIt
+module Tc       = FStar.TypeChecker.Tc
+module TcTerm   = FStar.TypeChecker.TcTerm
+module BU       = FStar.Compiler.Util
+module Dep      = FStar.Parser.Dep
+module NBE      = FStar.TypeChecker.NBE
+module Ch       = FStar.CheckedFiles
+module MLSyntax = FStar.Extraction.ML.Syntax
 
 let module_or_interface_name m = m.is_interface, m.name
 
-let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a * TcEnv.env =
+let with_dsenv_of_tcenv (tcenv:TcEnv.env) (f:DsEnv.withenv 'a) : 'a & TcEnv.env =
     let a, dsenv = f tcenv.dsenv in
     a, ({tcenv with dsenv = dsenv})
 
-let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a * TcEnv.env) : 'a * uenv =
+let with_tcenv_of_env (e:uenv) (f:TcEnv.env -> 'a & TcEnv.env) : 'a & uenv =
      let a, t' = f (tcenv_of_uenv e) in
      a, (set_tcenv e t')
 
-let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a * uenv =
+let with_dsenv_of_env (e:uenv) (f:DsEnv.withenv 'a) : 'a & uenv =
      let a, tcenv = with_dsenv_of_tcenv (tcenv_of_uenv e) f in
      a, (set_tcenv e tcenv)
 
@@ -86,7 +87,7 @@ let env_of_tcenv (env:TcEnv.env) =
 (***********************************************************************)
 let parse (env:uenv) (pre_fn: option string) (fn:string)
   : Syntax.modul
-  * uenv =
+  & uenv =
   let ast, _ = Parser.Driver.parse_file fn in
   let ast, env = match pre_fn with
     | None ->
@@ -108,6 +109,20 @@ let parse (env:uenv) (pre_fn: option string) (fn:string)
 (***********************************************************************)
 (* Initialize a clean environment                                      *)
 (***********************************************************************)
+let core_check : TcEnv.core_check_t =
+  fun env tm t must_tot ->
+    let open FStar.TypeChecker.Core in
+    if not (Options.compat_pre_core_should_check ())
+    then Inl None
+    else match check_term env tm t must_tot with
+         | Inl None -> Inl None
+         | Inl (Some g) ->
+           if Options.compat_pre_core_set ()
+           then Inl None
+           else Inl (Some g)
+         | Inr err ->
+           Inr (fun b -> if b then print_error_short err else print_error err)
+    
 let init_env deps : TcEnv.env =
   let solver =
     if Options.lax()
@@ -130,6 +145,7 @@ let init_env deps : TcEnv.env =
         Const.prims_lid
         (NBE.normalize
           (FStar.Tactics.Interpreter.primitive_steps ()))
+        core_check
   in
   (* Set up some tactics callbacks *)
   let env = { env with synth_hook       = FStar.Tactics.Hooks.synthesize } in
@@ -144,6 +160,7 @@ let init_env deps : TcEnv.env =
 (* Interactive mode: checking a fragment of a code                     *)
 (***********************************************************************)
 let tc_one_fragment curmod (env:TcEnv.env_t) frag =
+    let open FStar.Parser.AST in
   // We use file_of_range instead of `Options.file_list ()` because no file
   // is passed as a command-line argument in LSP mode.
   let fname env = if Options.lsp_server () then Range.file_of_range (TcEnv.get_range env)
@@ -159,35 +176,49 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
     | Parser.AST.Interface (_, { Parser.AST.drange = d } :: _, _) -> d
     | _ -> Range.dummyRange in
 
-  match Parser.Driver.parse_fragment frag with
-  | Parser.Driver.Empty
-  | Parser.Driver.Decls [] ->
-    (curmod, env)
-
-  | Parser.Driver.Modul ast_modul ->
-    (* It may seem surprising that this function, whose name indicates that
-       it type-checks a fragment, can actually parse an entire module.
-       Actually, this is an abuse, and just means that we're type-checking the
-       first chunk. *)
-    let ast_modul, env =
-      with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
-    let modul, env =
-      with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
-    if not (acceptable_mod_name modul) then
-    begin
-       let msg : string =
-           BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
-                       (Parser.Dep.module_name_of_file (fname env))
-       in
-       Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
-                             (range_of_first_mod_decl ast_modul)
-    end;
-    let modul, env =
-        if DsEnv.syntax_only env.dsenv then modul, env
-        else Tc.tc_partial_modul env modul
-    in
-    (Some modul, env)
-  | Parser.Driver.Decls ast_decls ->
+  let filter_lang_decls (d:FStar.Parser.AST.decl) =
+    match d.d with
+    | UseLangDecls _ -> true
+    | _ -> false
+  in
+  let use_lang_decl (ds:lang_decls_t) =
+    List.tryFind (fun d -> UseLangDecls? d.d) ds
+  in
+  let check_module_name_declaration ast_modul = 
+      (* It may seem surprising that this function, whose name indicates that
+         it type-checks a fragment, can actually parse an entire module.
+         Actually, this is an abuse, and just means that we're type-checking the
+         first chunk. *)
+      let ast_modul, env =
+        with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.interleave_module ast_modul false in
+      let modul, env =
+        with_dsenv_of_tcenv env <| Desugar.partial_ast_modul_to_modul curmod ast_modul in
+      if not (acceptable_mod_name modul) then
+      begin
+        let msg : string =
+            BU.format1 "Interactive mode only supports a single module at the top-level. Expected module %s"
+                                    (Parser.Dep.module_name_of_file (fname env))
+        in
+        Errors.raise_error (Errors.Fatal_NonSingletonTopLevelModule, msg)
+                                                                     (range_of_first_mod_decl ast_modul)
+      end;
+      let modul, env =
+          if DsEnv.syntax_only env.dsenv then modul, env
+          else Tc.tc_partial_modul env modul
+      in
+      let lang_decls =
+        let open FStar.Parser.AST in
+        let decls =
+          match ast_modul with
+          | Module (_, decls)
+          | Interface (_, decls, _) -> decls
+        in
+        List.filter filter_lang_decls decls
+      in
+      Some modul, env, lang_decls
+  in
+  
+  let check_decls ast_decls =
     match curmod with
     | None ->
       let { Parser.AST.drange = rng } = List.hd ast_decls in
@@ -206,10 +237,39 @@ let tc_one_fragment curmod (env:TcEnv.env_t) frag =
       let sigelts, env = with_dsenv_of_tcenv env <| Desugar.decls_to_sigelts (List.flatten ast_decls_l) in
       let modul, _, env  = if DsEnv.syntax_only env.dsenv then (modul, [], env)
                         else Tc.tc_more_partial_modul env modul sigelts in
-      (Some modul, env)
+      Some modul, env, List.filter filter_lang_decls ast_decls
+  in
+  match frag with
+  | Inr d -> (
+    //We already have a parsed decl, usually from FStar.Interactive.Incremental
+    match d.d with
+    | FStar.Parser.AST.TopLevelModule lid ->
+      check_module_name_declaration (FStar.Parser.AST.Module(lid, [d]))
+    | _ -> 
+      check_decls [d]
+  )
 
+  | Inl (frag, lang_decls) -> (
+    let parse_frag frag =
+      match use_lang_decl lang_decls with
+      | None -> Parser.Driver.parse_fragment None frag
+      | Some {d=UseLangDecls lang} ->
+        Parser.Driver.parse_fragment (Some lang) frag
+    in
+    match parse_frag frag with
+    | Parser.Driver.Empty
+    | Parser.Driver.Decls [] ->
+      curmod, env, []
+
+    | Parser.Driver.Modul ast_modul ->
+      check_module_name_declaration ast_modul
+
+    | Parser.Driver.Decls ast_decls ->
+      check_decls ast_decls
+  )
+    
 let load_interface_decls env interface_file_name : TcEnv.env_t =
-  let r = Pars.parse (Pars.Filename interface_file_name) in
+  let r = Pars.parse None (Pars.Filename interface_file_name) in
   match r with
   | Pars.ASTFragment (Inl (FStar.Parser.AST.Interface(l, decls, _)), _) ->
     snd (with_dsenv_of_tcenv env <| FStar.ToSyntax.Interleave.initialize_interface l decls)
@@ -227,7 +287,7 @@ let load_interface_decls env interface_file_name : TcEnv.env_t =
 (***********************************************************************)
 
 (* Extraction to OCaml, F# or Krml *)
-let emit (mllibs:list FStar.Extraction.ML.Syntax.mllib) =
+let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
   let opt = Options.codegen () in
   if opt <> None then
     let ext = match opt with
@@ -235,25 +295,51 @@ let emit (mllibs:list FStar.Extraction.ML.Syntax.mllib) =
       | Some Options.OCaml
       | Some Options.Plugin -> ".ml"
       | Some Options.Krml -> ".krml"
+      | Some Options.Extension -> ".ast"
       | _ -> failwith "Unrecognized option"
     in
     match opt with
     | Some Options.FSharp | Some Options.OCaml | Some Options.Plugin ->
-        (* When bootstrapped in F#, this will use the old printer in
-           FStar.Extraction.ML.Code for both OCaml and F# extraction.
-           When bootstarpped in OCaml, this will use the old printer
-           for F# extraction and the new printer for OCaml extraction. *)
-        let outdir = Options.output_dir() in
-        List.iter (FStar.Extraction.ML.PrintML.print outdir ext) mllibs
+      (* When bootstrapped in F#, this will use the old printer in
+         FStar.Extraction.ML.Code for both OCaml and F# extraction.
+         When bootstarpped in OCaml, this will use the old printer
+         for F# extraction and the new printer for OCaml extraction. *)
+      let outdir = Options.output_dir() in
+      List.iter (FStar.Extraction.ML.PrintML.print outdir ext) (List.map snd mllibs)
+
+    | Some Options.Extension ->
+      //
+      // In the Extension mode, we dump (list mname & bindings_of_uenv & ml decls)
+      //   in the binary format to a file
+      // The first component is the list of dependencies
+      //
+      List.iter (fun (env, m) ->
+        let MLSyntax.MLLib ms = m in
+        List.iter (fun m ->
+          let mname, modul, _ = m in
+          let filename = String.concat "_" (fst mname @ [snd mname]) in
+          match modul with
+          | Some (_, decls) ->
+            let bindings = FStar.Extraction.ML.UEnv.bindings_of_uenv env in
+            let deps : list string = Dep.deps_of_modul dep_graph (MLSyntax.string_of_mlpath mname) in
+            save_value_to_file (Options.prepend_output_dir (filename^ext)) (deps, bindings, decls)
+          | None ->
+            failwith "Unexpected ml modul in Extension extraction mode"
+        ) ms
+      ) mllibs
+
     | Some Options.Krml ->
-        let programs = List.collect Extraction.Krml.translate mllibs in
-        let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
-        begin match programs with
-        | [ name, _ ] ->
-            save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
-        | _ ->
-            save_value_to_file (Options.prepend_output_dir "out.krml") bin
-        end
+      let programs =
+        mllibs |> List.collect (fun (ue, mllibs) ->
+                                  Extraction.Krml.translate ue mllibs)
+      in
+      let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
+      begin match programs with
+            | [ name, _ ] ->
+              save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
+            | _ ->
+             save_value_to_file (Options.prepend_output_dir "out.krml") bin
+      end
    | _ -> failwith "Unrecognized option"
 
 let tc_one_file
@@ -262,9 +348,9 @@ let tc_one_file
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //passed by the caller, ONLY for caching purposes at this point
     : tc_result
-    * option FStar.Extraction.ML.Syntax.mllib
-    * uenv =
-  Ident.reset_gensym();
+    & option MLSyntax.mllib
+    & uenv =
+  GenSym.reset_gensym();
 
   (*
    * AR: smt encode_modul functions are now here instead of in Tc.fs
@@ -345,7 +431,7 @@ let tc_one_file
       else check_mod () //don't add a hints file for modules that are not actually verified
   in
   if not (Options.cache_off()) then
-      let r = Ch.load_module_from_cache env fn in
+      let r = Ch.load_module_from_cache (tcenv_of_uenv env) fn in
       let r =
         (* If --force and this file was given in the command line,
          * forget about the cache we just loaded and recheck the file.
@@ -358,16 +444,18 @@ let tc_one_file
       match r with
       | None ->
         if Options.should_be_already_cached (FStar.Parser.Dep.module_name_of_file fn)
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Expected %s to already be checked" fn);
+        && not (Options.force ())
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text <| BU.format1 "Expected %s to already be checked." fn
+               ]);
 
         if (Option.isSome (Options.codegen())
         && Options.cmi())
-        then FStar.Errors.raise_err
-                (FStar.Errors.Error_AlreadyCachedAssertionFailure,
-                 BU.format1 "Cross-module inlining expects all modules to be checked first; %s was not checked"
-                            fn);
+        && not (Options.force ())
+        then FStar.Errors.raise_err_doc (FStar.Errors.Error_AlreadyCachedAssertionFailure, [
+                 text "Cross-module inlining expects all modules to be checked first.";
+                 text <| BU.format1 "Module %s was not checked." fn;
+               ]);
 
         let tc_result, mllib, env = tc_source_file () in
 
@@ -377,7 +465,7 @@ let tc_one_file
         //but we will not write out a .checked file for an unverified dependence
         //of some file that should be checked
         //(i.e. we DO write .checked.lax files for dependencies even if not provided as an argument)
-        then Ch.store_module_to_cache env fn parsing_data tc_result;
+        then Ch.store_module_to_cache (tcenv_of_uenv env) fn parsing_data tc_result;
         tc_result, mllib, env
 
       | Some tc_result ->
@@ -439,7 +527,7 @@ let tc_one_file_for_ide
         (fn:string) //file name
         (parsing_data:FStar.Parser.Dep.parsing_data)  //threaded along, ONLY for caching purposes at this point
     : tc_result
-    * TcEnv.env_t
+    & TcEnv.env_t
     =
     let env = env_of_tcenv env in
     let tc_result, _, env = tc_one_file env pre_fn fn parsing_data in
@@ -473,23 +561,30 @@ let tc_one_file_from_remaining (remaining:list string) (env:uenv)
   remaining, nmods, mllib, env
 
 let rec tc_fold_interleave (deps:FStar.Parser.Dep.deps)  //used to query parsing data
-                           (acc:list tc_result * list FStar.Extraction.ML.Syntax.mllib * uenv)
+                           (acc:list tc_result &
+                                list (uenv & MLSyntax.mllib) &  // initial env in which this module is extracted
+                                uenv)
                            (remaining:list string) =
-  let as_list = function None -> [] | Some l -> [l] in
+  let as_list env mllib =
+    match mllib with
+    | None -> []
+    | Some mllib -> [env, mllib] in
+
   match remaining with
     | [] -> acc
     | _  ->
-      let mods, mllibs, env = acc in
-      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env deps in
-      if not (Options.profile_group_by_decls())
+      let mods, mllibs, env_before = acc in
+      let remaining, nmod, mllib, env = tc_one_file_from_remaining remaining env_before deps in
+      if not (Options.profile_group_by_decl())
       then Profiling.report_and_clear (Ident.string_of_lid nmod.checked_module.name);
-      tc_fold_interleave deps (mods@[nmod], mllibs@as_list mllib, env) remaining
+      tc_fold_interleave deps (mods@[nmod], mllibs@(as_list env mllib), env) remaining
 
 (***********************************************************************)
 (* Batch mode: checking many files                                     *)
 (***********************************************************************)
+let dbg_dep = Debug.get_toggle "Dep"
 let batch_mode_tc filenames dep_graph =
-  if Options.debug_at_level_no_module (Options.Other "Dep") then begin
+  if !dbg_dep then begin
     FStar.Compiler.Util.print_endline "Auto-deps kicked in; here's some info.";
     FStar.Compiler.Util.print1 "Here's the list of filenames we will process: %s\n"
       (String.concat " " filenames);
@@ -499,7 +594,7 @@ let batch_mode_tc filenames dep_graph =
   let env = FStar.Extraction.ML.UEnv.new_uenv (init_env dep_graph) in
   let all_mods, mllibs, env = tc_fold_interleave dep_graph ([], [], env) filenames in
   if FStar.Errors.get_err_count() = 0 then
-    emit mllibs;
+    emit dep_graph mllibs;
   let solver_refresh env =
       snd <|
       with_tcenv_of_env env (fun tcenv ->

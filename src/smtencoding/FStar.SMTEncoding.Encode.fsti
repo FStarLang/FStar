@@ -22,17 +22,17 @@ module Env = FStar.TypeChecker.Env
 
 val push: string -> unit
 val pop:  string -> unit
-val snapshot: string -> (Env.solver_depth_t * unit)
+val snapshot: string -> (Env.solver_depth_t & unit)
 val rollback: string -> option Env.solver_depth_t -> unit
 val init: Env.env -> unit
 val encode_sig: Env.env -> S.sigelt -> unit
-val encode_modul: Env.env -> S.modul -> decls_t * list FStar.SMTEncoding.Env.fvar_binding
+val encode_modul: Env.env -> S.modul -> decls_t & list FStar.SMTEncoding.Env.fvar_binding
 //the lident is the module name
-val encode_modul_from_cache: Env.env -> S.modul -> (decls_t * list FStar.SMTEncoding.Env.fvar_binding) -> unit
+val encode_modul_from_cache: Env.env -> S.modul -> (decls_t & list FStar.SMTEncoding.Env.fvar_binding) -> unit
 val encode_query: option (unit -> string)
                 -> Env.env
                 -> S.term
                 ->  list decl  //prelude, translation of tcenv
-                  * list ErrorReporting.label //labels in the query
-                  * decl        //the query itself
-                  * list decl  //suffix, evaluating labels in the model, etc
+                  & list ErrorReporting.label //labels in the query
+                  & decl        //the query itself
+                  & list decl  //suffix, evaluating labels in the model, etc

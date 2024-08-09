@@ -28,13 +28,14 @@ open FStar.Errors
 open FStar.TypeChecker.Normalize
 open FStar.TypeChecker.NBETerm
 module Cfg = FStar.TypeChecker.Cfg
+module PO = FStar.TypeChecker.Primops
 
 val normalize_for_unit_test : steps:list Env.step
                -> env : Env.env
                -> e:term
                -> term
 
-val normalize   : list Cfg.primitive_step
+val normalize   : list PO.primitive_step
                 -> list Env.step
                 -> Env.env
                 -> term

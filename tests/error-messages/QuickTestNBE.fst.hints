@@ -1,0 +1,160 @@
+[
+  ";!ì>ájEbI½zx/—`<",
+  [
+    [
+      "QuickTestNBE.label",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "993118fcf00bc5e76e356694fa93684f"
+    ],
+    [
+      "QuickTestNBE.__proj__QEmpty__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_094f3af0eb1394cef01fbb0cf7a0b6a2"
+      ],
+      0,
+      "49a184cea1c4090c9ad0cd304d1f723f"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__r",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "2d2e1b5f1ccb765812e4f386d7a89300"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__msg",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "639c12ed17a8eb6f77244deb34e1f5af"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item__pre",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "f37ac3d44cfd1e8d009124d1cb4245ec"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item___3",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "1142db6d93a2a0961cb37ad51cbdfcf7"
+    ],
+    [
+      "QuickTestNBE.__proj__QPURE__item___4",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_0e3e5b83231dd782c32cd3cd1715c5c4"
+      ],
+      0,
+      "74514ffe9a9ee2abb17034e2f8c21a97"
+    ],
+    [
+      "QuickTestNBE.wp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_fa10b5986d234da3d5bdfe9ba7efb81b_1",
+        "disc_equation_QuickTestNBE.QEmpty",
+        "disc_equation_QuickTestNBE.QPURE",
+        "fuel_guarded_inversion_QuickTestNBE.quickCodes",
+        "projection_inverse_BoxBool_proj_0",
+        "subterm_ordering_QuickTestNBE.QPURE"
+      ],
+      0,
+      "af0db1ca0551de2e564e823132bc7e30"
+    ],
+    [
+      "QuickTestNBE.qblock",
+      1,
+      2,
+      1,
+      [ "@query", "equation_QuickTestNBE.t_ensure" ],
+      0,
+      "aac4724fd1212c40f16d58716b99f03e"
+    ],
+    [
+      "QuickTestNBE.va_qcode_Test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565", "eq2-interp",
+        "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "interpretation_Tm_abs_17de2bb0f4accb34f2f48a2c39070416",
+        "interpretation_Tm_abs_2b6bc9164ee5f4bd38b214e1ff8a50f8",
+        "interpretation_Tm_abs_f0dd0e3bdd29bb942e87b897c66b101a",
+        "l_and-interp", "l_quant_interp_0c168580a82b5ed0782124081acd3faa",
+        "primitive_Prims.op_Subtraction",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "1dd968de9b7667141861e2b8d3fa741e"
+    ],
+    [
+      "QuickTestNBE.va_lemma_Test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "primitive_Prims.op_Subtraction",
+        "unit_inversion"
+      ],
+      0,
+      "fba427b2ffceacae1f8532dccfede3b0"
+    ],
+    [
+      "QuickTestNBE.va_qcode_Test2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_Prims.pure_wp_monotonic0",
+        "function_token_typing_Prims.pure_wp_monotonic",
+        "interpretation_Tm_abs_65576f223b9f28958f7512067494db64",
+        "l_and-interp", "l_quant_interp_0c168580a82b5ed0782124081acd3faa",
+        "token_correspondence_Prims.pure_wp_monotonic0"
+      ],
+      0,
+      "9a85ba3fabe998feb4116a37326259c7"
+    ]
+  ]
+]

@@ -1,0 +1,77 @@
+[
+  "i\u000fÔ‹E\u0017\u0015x¸\u0010^!Û?@3",
+  [
+    [
+      "NatHeap.alloc_ref",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "4602643613dfcb9cb5da85ceac6dd403"
+    ],
+    [
+      "NatHeap.upd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "520168bc5e4bfef00a18f916c75d6cb3"
+    ],
+    [
+      "NatHeap.sel_upd1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "7a640f27a13ad9a8401c5678b590fdda"
+    ],
+    [
+      "NatHeap.sel_upd2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_upd",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "57bcddaaf62443a632d2e099036b938d"
+    ],
+    [
+      "NatHeap.sel_concat1",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat1",
+        "refinement_interpretation_Tm_refine_241ad8bfe898ca08359d47be04127cb2"
+      ],
+      0,
+      "a016295f42189ad7734f73aa1e3f3aec"
+    ],
+    [
+      "NatHeap.sel_concat2",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "lemma_NatHeap.contains_concat2",
+        "refinement_interpretation_Tm_refine_bd8b23217d2ca10ddfdabbb5d0948e96"
+      ],
+      0,
+      "c4b420df90fda5a0b008b810e771ea1e"
+    ]
+  ]
+]

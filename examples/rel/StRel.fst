@@ -21,10 +21,10 @@ open FStar.ST
 (* Pure relational reasoning about stateful functions *)
 
   (* Pure functions using heap passing *)
-val f1_hp : heap -> ref int -> GTot (heap * int)
+val f1_hp : heap -> ref int -> GTot (heap & int)
 let f1_hp h x = h, sel h x
 
-val f2_hp : heap -> ref int -> Tot (heap * int)
+val f2_hp : heap -> ref int -> Tot (heap & int)
 let f2_hp h x = h, 0
 
   (* Stateful functions implementing these pure functions *)

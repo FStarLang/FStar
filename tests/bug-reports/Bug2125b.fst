@@ -1,7 +1,7 @@
 module Bug2125b
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Calc
 
 open FStar.FunctionalExtensionality

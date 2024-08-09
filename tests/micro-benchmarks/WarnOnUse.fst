@@ -49,3 +49,9 @@ let ff (x:int) : False = admit()
 [@@(expect_failure [335])]
 let ff (x:int) : False = admit()
 #pop-options
+
+// A simple inductive internally creates a hasEq axiom.
+// This should not be reported.
+type t = | T of nat
+
+#pop-options

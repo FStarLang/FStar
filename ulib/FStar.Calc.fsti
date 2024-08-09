@@ -83,7 +83,7 @@ val calc_finish
       (requires (norm [delta_only [`%calc_chain_compatible; `%calc_chain_related];
                        iota;
                        zeta]
-                      (labeled range_0
+                      (Range.labeled (range_of pf)
                          "Could not prove that this calc-chain is compatible"
                          (calc_chain_compatible rs p))))
       (ensures (p x y))

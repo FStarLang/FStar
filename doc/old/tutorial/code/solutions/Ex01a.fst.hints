@@ -1,0 +1,42 @@
+[
+  "\u0002û\u0016\u0013ŒM\u00165pšëÝ\u001dýÕ–",
+  [
+    [
+      "Ex01a.staticChecking",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Pervasives.V", "equation_Ex01a.canRead",
+        "equation_Ex01a.canWrite", "equation_Ex01a.readme",
+        "equation_Ex01a.tmp",
+        "fuel_guarded_inversion_FStar.Pervasives.result",
+        "primitive_Prims.op_BarBar", "primitive_Prims.op_Equality",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Pervasives.V_a",
+        "projection_inverse_FStar.Pervasives.V_v"
+      ],
+      0,
+      "ccb8aa15bb937941d7dcdf7c752aac30"
+    ],
+    [
+      "Ex01a.checkedRead",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "2bb8f6de95f4fbdcd999ed4a3762d423"
+    ],
+    [
+      "Ex01a.checkedWrite",
+      1,
+      2,
+      1,
+      [ "@query", "projection_inverse_BoxBool_proj_0" ],
+      0,
+      "4183b978039bfb689e2361924ad897f9"
+    ]
+  ]
+]

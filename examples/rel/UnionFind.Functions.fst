@@ -23,6 +23,7 @@ open FStar.DM4F.Heap
 open FStar.DM4F.Heap.ST
 
 open UnionFind.Forest
+module ST = FStar.DM4F.Heap.ST
 
 (* helpers for getting the parent, height, and the subtree *)
 unfold let parent  (#n:nat) (uf:uf_forest n) (i:id n) (h:heap) :GTot (id n)    = Mktuple3?._1 (sel h (index uf i))
@@ -70,7 +71,7 @@ let diff (n:nat) (s:subtree_t) :Tot nat = size (minus (set_n n) s)
   = let (p, d, s) = get uf i in
     if p = i then i
     else
-      let h = STATE?.get () in
+      let h = ST.get () in
       let p' = find_opt uf p h in
       set uf i (p', d, s);
       p'
@@ -84,8 +85,8 @@ let well_formed_decreases_lemma (#n:nat) (uf:uf_forest n) (i:id n) (h:heap{live 
  let merge (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   : ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
             (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
-  = let r_1 = find uf i_1 (STATE?.get ()) in
-    let r_2 = find uf i_2 (STATE?.get ()) in
+  = let r_1 = find uf i_1 (ST.get ()) in
+    let r_2 = find uf i_2 (ST.get ()) in
 
     let _, d_1, s_1 = get uf r_1 in
     let _, d_2, s_2 = get uf r_2 in
@@ -100,8 +101,8 @@ let well_formed_decreases_lemma (#n:nat) (uf:uf_forest n) (i:id n) (h:heap{live 
  let merge_opt (#n:nat) (uf:uf_forest n) (i_1:id n) (i_2:id n)
   :ST unit (requires (fun h0      -> live uf h0 /\ well_formed uf h0))
            (ensures  (fun h0 _ h1 -> live uf h1 /\ well_formed uf h1))
-  = let r_1 = find uf i_1 (STATE?.get ()) in
-    let r_2 = find uf i_2 (STATE?.get ()) in
+  = let r_1 = find uf i_1 (ST.get ()) in
+    let r_2 = find uf i_2 (ST.get ()) in
 
     let _, d_1, s_1 = get uf r_1 in
     let _, d_2, s_2 = get uf r_2 in

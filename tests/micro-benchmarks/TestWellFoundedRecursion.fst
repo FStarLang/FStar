@@ -103,10 +103,12 @@ noeq
 type test2 (a:Type) =
   | Test2: g:test1 (test2 a) -> test2 a
 
+[@@expect_failure [19]] //we don't generate an axiom for Test1.f, and neither for the instantiation 
 let wf_test1 (#a:_) (x:test1 a) (y:nat)
   : Lemma (Test1?.f x y << x)
   = ()
 
+[@@expect_failure]
 let rec map_test2 (#a #b:Type) (t:test2 a) (f: a -> b) : test2 b =
     let Test2 (Test1 g) = t in
     Test2 (Test1 (fun (x:nat) -> wf_test1 (Test1 g) x; map_test2 #a #b (g x) f))
@@ -259,3 +261,35 @@ let rec count_steps_to_none
   match start with
   | None -> 0
   | Some x -> 1 + count_steps_to_none a wfr stepper (stepper x)
+
+
+noeq
+type my_fun_dep (a: Type) (b: a -> Type) =
+  | MyFunDep : (y: a -> b y) -> my_fun_dep a b
+
+type my_fun (a: Type u#n) (b: Type u#m) = my_fun_dep a (fun _ -> b)
+
+let app_dep (#a: Type) (#b: a -> Type) (f: my_fun_dep a b) (x: a) 
+  : b x
+  = let MyFunDep f_inner = f in
+    f_inner x
+
+let app (#a: Type u#n) (#b: Type u#m) (f: my_fun a b) (x: a) : b =
+  let MyFunDep f_inner = f in
+  f_inner x
+
+[@@expect_failure [19]]
+let lemma_my_fun_dep (#a: Type) (#b: (a -> Type)) (f: my_fun_dep a b) (x: a)
+  : Lemma (app_dep f x << f)
+  = ()
+
+[@@expect_failure [19]]
+let lemma_my_fun (#a: Type u#n) (#b: Type u#m) (f: my_fun a b) (x: a)
+  : Lemma (app f x << f)
+  = ()
+
+
+//variant universe levels should be rejected
+[@@expect_failure [90]]
+noeq
+type ind = | Mk : (int -> ind u#0) -> ind u#aa

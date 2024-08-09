@@ -1,0 +1,26 @@
+[
+  "³l––ÆBn`õÚþ\u001b}Ë‡Ò",
+  [
+    [
+      "Bug2184.coerce",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f6dd87ea360114ec1596c0358f9c81f1"
+      ],
+      0,
+      "58a448cb38f2010a0c720b999a485034"
+    ],
+    [
+      "Bug2184.test_alt",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug2184.ty" ],
+      0,
+      "854ba1ae93d0c8fc0569a5d4cbf3b0f7"
+    ]
+  ]
+]

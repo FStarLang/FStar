@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "4f4a89023bc64fb99de0ac6686787c6b"
+      "47f0a87c64c903022ba2a43967659691"
     ],
     [
       "Vec.__proj__ECons__item___0",
@@ -20,7 +20,7 @@
         "refinement_interpretation_Tm_refine_fb118a40a2834de6ebe952e4660e7f51"
       ],
       0,
-      "242539ea65dd9fc7a9ca0a3fa620d8bc"
+      "35c485c68a54771e63e244224ca1ef35"
     ],
     [
       "Vec.__proj__ECons__item___1",
@@ -32,7 +32,7 @@
         "refinement_interpretation_Tm_refine_fb118a40a2834de6ebe952e4660e7f51"
       ],
       0,
-      "5332801936cba7d5db948d428e0e0503"
+      "5784398b1dee3d80d8cf9f8ec6d96bee"
     ],
     [
       "Vec.elength",
@@ -52,7 +52,7 @@
         "subterm_ordering_Vec.ECons"
       ],
       0,
-      "27fa816a732050647b0b0d1acf94b1a1"
+      "ed00cab69c339847995a3b5cc1b5a163"
     ],
     [
       "Vec.elength",
@@ -69,7 +69,7 @@
         "subterm_ordering_Vec.OCons"
       ],
       0,
-      "2cf7e6270bcfe5b6e7db8120f14067bc"
+      "b60bbe4ea9814702db2088fbacacfa10"
     ],
     [
       "Vec.even_or_odd_list",
@@ -78,7 +78,7 @@
       1,
       [ "@query" ],
       0,
-      "2ecc15f3cdd61979fe0eeaa24c8e7af0"
+      "a2a51af684ffa595f71e37cb725713e9"
     ],
     [
       "Vec.__proj__EOCons__item___0",
@@ -90,7 +90,7 @@
         "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
       ],
       0,
-      "2eac727e4c13f5026ef99f99dbf3b22a"
+      "18ce2a45fb3419ee1ec9e4b3a4ad9255"
     ],
     [
       "Vec.__proj__EOCons__item__b",
@@ -102,7 +102,7 @@
         "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
       ],
       0,
-      "a33ee762382a0276d7e70d072db3fdce"
+      "48925e4714f4b34daab1e2fc8b8c4568"
     ],
     [
       "Vec.__proj__EOCons__item___2",
@@ -115,7 +115,7 @@
         "refinement_interpretation_Tm_refine_0a79ad1d8fdf24780d923a3e59d4efae"
       ],
       0,
-      "42c7c85120aa77cc22d30d6b24d91f7d"
+      "3942be7d06390ded1ea1ed9eb092f872"
     ],
     [
       "Vec.eo_length",
@@ -137,7 +137,7 @@
         "subterm_ordering_Vec.EOCons"
       ],
       0,
-      "d8c399e7da948ab4f20742ed8d883110"
+      "50395020650a75e6c126ffdab68bd734"
     ],
     [
       "Vec.vec",
@@ -150,7 +150,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "565ca8b804f17e34d7839ad61c73f5b7"
+      "2e2ef999ae0e67b0c8ec396de570c0ce"
     ],
     [
       "Vec.vec",
@@ -165,7 +165,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "30c9c4558ffda79482eb2efcff560ce7"
+      "34f77d4374510ae98874b14ae96136ca"
     ],
     [
       "Vec.__proj__Cons__item__n",
@@ -177,7 +177,7 @@
         "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
       ],
       0,
-      "e4956deccefa251efe6598256dfcba32"
+      "af5489c59dcadc01086c6797d32c8383"
     ],
     [
       "Vec.__proj__Cons__item__hd",
@@ -189,7 +189,7 @@
         "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
       ],
       0,
-      "b41b8b1cab9737c446bf7afd4868cdf9"
+      "49b5319a0af22e819821a253895c7bd3"
     ],
     [
       "Vec.__proj__Cons__item__tl",
@@ -201,24 +201,11 @@
         "refinement_interpretation_Tm_refine_27cc4d268b550376309de84f8f59c70e"
       ],
       0,
-      "ff1fd862c544ebda5861fc440b5e04ce"
+      "3ead07b936506f87e04ce87bf76a5596"
     ],
     [
       "Vec.get",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
-      ],
-      0,
-      "095f57fe5777c60a61154a685bc4c53d"
-    ],
-    [
-      "Vec.get",
-      2,
       2,
       1,
       [
@@ -240,25 +227,24 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2549b9869edcca4dcb0527d79b490805"
+      "fd78b3df462e7bf42765b2d8da10e053"
     ],
     [
-      "Vec.split_at",
-      1,
+      "Vec.get",
+      2,
       2,
       1,
       [
         "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
       ],
       0,
-      "a03812ee9911beda2d8544d7d72ee7e8"
+      "1224a9957b94388b58aa7f6890ac1733"
     ],
     [
       "Vec.split_at",
-      2,
+      1,
       2,
       1,
       [
@@ -279,7 +265,21 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "29ed450e2aedc0e7aa018435bb7319d4"
+      "70462cc92f436874b9b67f916ca50218"
+    ],
+    [
+      "Vec.split_at",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+      ],
+      0,
+      "9205943af151915ca1fc66273b0564eb"
     ],
     [
       "Vec.append",
@@ -287,12 +287,20 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_74df369ef327b18ded5ed26a252bac6e_4",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_2",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_3", "data_elim_Vec.Cons",
+        "data_elim_Vec.Nil", "disc_equation_Vec.Cons",
+        "disc_equation_Vec.Nil", "equation_Prims.nat",
+        "fuel_guarded_inversion_Vec.vec", "int_inversion", "int_typing",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "e3e6769deb143db26ca436b5e7b4d6e3"
+      "7442cb2945262834b6d895394305f4ed"
     ],
     [
       "Vec.append",
@@ -313,7 +321,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "47b6ea2ca03541382bbe00631bc158c0"
+      "3e5716f6214bf5e03ce01550b92f10bd"
     ],
     [
       "Vec.reverse",
@@ -334,7 +342,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "1c63275d0317972ef5780482ae571db7"
+      "60e8a35469921a01275e052dce844bfc"
     ],
     [
       "Vec.split_at_tail",
@@ -342,12 +350,21 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "data_elim_Vec.Cons", "disc_equation_Vec.Cons", "equation_Prims.nat",
+        "fuel_guarded_inversion_Vec.vec",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0", "projection_inverse_Vec.Cons_n",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d"
+        "refinement_interpretation_Tm_refine_7e0b9b2dbca36eab00de093c1b701c6d",
+        "well-founded-ordering-on-nat"
       ],
       0,
-      "f04cad9e6182403b36a12c0a3ca2451c"
+      "e022c91a6da8cbbd133aecfb1555e1d3"
     ],
     [
       "Vec.split_at_tail",
@@ -370,7 +387,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "992e97cb13405d57588a46c318e12558"
+      "5ecbe97872e6f10d249b7b396af5f341"
     ],
     [
       "Vec.foldr",
@@ -390,7 +407,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "bc9677931210cc2a9a4aa8e93c1ddd55"
+      "b2da6f59b5ff0416393148bd601b19f1"
     ],
     [
       "Vec.pow2",
@@ -407,7 +424,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "b432602beeaeda4a3e3887d5353462b6"
+      "55770f5509dcfa827f48aa0d4663f684"
     ],
     [
       "Vec.proof_by_normalization",
@@ -416,7 +433,7 @@
       1,
       [ "@query" ],
       0,
-      "18f4325d2474489f5553465e88fb2e46"
+      "3669a9dadba7dafad60dbf25a0919541"
     ],
     [
       "Vec.fold_right",
@@ -431,7 +448,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "08f691d1f98ab670e42b3be6bbd4cc94"
+      "0783018198ba632b6a30a4e1b0311b1a"
     ],
     [
       "Vec.imp_intro_lem",
@@ -440,7 +457,7 @@
       1,
       [ "@query" ],
       0,
-      "8180bf7c2c0966be73ce971e0a1f30f4"
+      "d7612b21e08c3ab88168c5033aa7e02e"
     ],
     [
       "Vec.split_lem",
@@ -452,7 +469,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "f7ade8c66824737319c463504ee5f022"
+      "c4163ad0a8da59fed0ea2275eec81541"
     ],
     [
       "Vec.split_lem'",
@@ -461,7 +478,7 @@
       1,
       [ "@query" ],
       0,
-      "d1f56617cc37768f8f747dbe3fb307de"
+      "9bf8077f47766e3eb337ad5cdb23e7a1"
     ]
   ]
 ]

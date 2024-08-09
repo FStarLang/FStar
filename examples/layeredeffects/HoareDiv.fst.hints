@@ -1,5 +1,5 @@
 [
-  "{Y3…käÚB˛LV˚jã¨Ó",
+  "™mB›z‚≤GnIv\u0007ù‘æß",
   [
     [
       "HoareDiv.repr",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b81c3cf5afb0fc32113e2c03a54e2661"
+      "31fb43d5b8d518d00855287d5a52222d"
     ],
     [
       "HoareDiv.bind",
@@ -17,20 +17,29 @@
       1,
       [ "@query" ],
       0,
-      "6926107a2bc74e6834ef544bf7f9866f"
+      "def5851cf9c5e3757cc8e3c55a838ff0"
     ],
     [
       "HoareDiv.subcomp",
       1,
       2,
       1,
-      [ "@query", "equation_HoareDiv.repr" ],
+      [ "@query" ],
       0,
-      "c414005f933a56808f0cefd1b4bcb6c9"
+      "9e7e6c45e5911a5cb32aba5bc5caac62"
     ],
     [
       "HoareDiv.HoareDiv",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "6bf89a37c86335aacbbf22d887337329"
+    ],
+    [
+      "HoareDiv.HoareDiv",
+      2,
       2,
       1,
       [
@@ -38,11 +47,11 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "0373b276a58645377ae2119086150467"
+      "49ffadcc6131228eaa9af67779e9454a"
     ],
     [
       "HoareDiv.HoareDiv",
-      2,
+      3,
       2,
       1,
       [
@@ -50,7 +59,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "28951ee89a5b6ff643d0787cde384160"
+      "d449917935cc40dbc2cbd404a903cd29"
     ],
     [
       "HoareDiv.lift_pure_meff",
@@ -61,8 +70,7 @@
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
         "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
-        "assumption_HoareDiv.WP_pure_monotonic", "eq2-interp",
-        "equation_Prims.l_True", "equation_Prims.logical",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.logical",
         "equation_Prims.pure_post", "equation_Prims.pure_post_",
         "function_token_typing_Prims.l_True",
         "interpretation_Tm_abs_2d04d138904bd71a6adce46b0ec78292",
@@ -76,7 +84,7 @@
         "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
       ],
       0,
-      "c2007ead9bd20bca786decadd261e1c1"
+      "fb5d62ab822b041f35deb081f04acda6"
     ]
   ]
 ]

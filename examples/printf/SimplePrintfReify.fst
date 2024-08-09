@@ -101,9 +101,10 @@ let rec string_of_dirs ds (k:string -> Tot string) : Tot (dir_type ds) =
   match ds with
   | [] -> k ""
   | Lit c :: ds' ->
-    (string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
-     <: dir_type' ds' //this is an ugly workaround for #606
+    coerce_eq () (
+      string_of_dirs ds' (fun res -> k (string_of_char c ^ res))
     )
+     
   | Arg a :: ds' -> fun (x : arg_type a) ->
       string_of_dirs ds' (fun res -> k (match a with
                                         | Bool -> string_of_bool x
@@ -139,8 +140,8 @@ let parse_format_pure (s:list char) : option (list dir) =
 let rec parse_format_string (s:string) : Tot (option (list dir)) =
   parse_format_pure (list_of_string s)
 
-let sprintf (s:string{Some? (parse_format_string s)})
-  : Tot (dir_type (Some?.v (parse_format_string s))) =
+let sprintf (s:string{normalize_term #bool (Some? (parse_format_string s))})
+  : Tot (normalize_term (dir_type (Some?.v (parse_format_string s)))) =
   string_of_dirs (Some?.v (parse_format_string s)) (fun s -> s)
 
 let yyy = parse_format_pure ['%'] == None
@@ -163,10 +164,7 @@ let example4_lemma () :
   assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String])
 
 let example5 : string =
-  (* Requiring such an assert_norm on each usage seems quite bad for usability *)
-  assert_norm (parse_format_string "%d=%s" == Some [Arg Int; Lit '='; Arg String]);
-  (sprintf "%d=%s" <: int -> string -> Tot string) 42 " answer"
-  (* We also requires a pesky type annotation, but that seems more acceptable *)
+  sprintf "%d=%s" 42 " answer"
 
 let rec concat_lemma (s1 s2 : list char) (l1 l2:list dir)
   : Lemma (requires (reify (parse_format s1) () = Some l1 /\ reify (parse_format s2) () = Some l2))

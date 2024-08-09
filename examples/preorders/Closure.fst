@@ -156,7 +156,7 @@ noeq type t = | C_State: HST.mreference client_state mrel -> t
 
 /// Testing monotonicity
 
-open HST
+open FStar.HyperStack.ST
 
 let p (r:mreference client_state mrel) (o:offer) h0 =
   st_offer (HS.sel h0 r) == Some o

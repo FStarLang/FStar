@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2018 Microsoft Research
+   Copyright 2008-2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,19 +15,17 @@
 *)
 
 module FStar.Dyn
-open FStar.All
 
-///  Dynamic casts, realized by OCaml's [Obj]
-///
-///  NOTE: THIS PROVIDES CASTS BETWEEN ARBITRARY TYPES
-///  BUT ONLY IN [False] CONTEXTS. USE WISELY.
-assume new
-type dyn 
+/// Dynamic casts
 
-(** Promoting a value of type ['a] to [dyn] *)
-val mkdyn: 'a -> EXT dyn
+val dyn : Type0
 
-(** This coerces a value of type [dyn] to any type ['a],
-    but only with [False] precondition *)
-val undyn (d: dyn{false}) : EXT 'a
+(** [dyn_has_ty d a] is true if [d] was promoted from type [a] *)
+val dyn_has_ty (d: dyn) (a: Type u#a) : prop
 
+(** Promoting a value of type [a] to [dyn] *)
+val mkdyn (#a: Type u#a) (x: a) : d:dyn { dyn_has_ty d a }
+
+(** This coerces a value of type [dyn] to its original type [a],
+    with [dyn_has_ty d a] as precondition *)
+val undyn (#a: Type u#a) (d: dyn { dyn_has_ty d a }) : Dv a

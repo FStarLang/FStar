@@ -16,8 +16,8 @@
 module Rewrite.Monoid
 open FStar.Algebra.Monoid
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 open FStar.Tactics.CanonMonoid
 
 
@@ -52,7 +52,7 @@ let replace_point (#a:Type) (m:monoid a) (rhs:exp a) =
      (* dump "after replace norm"; *)
      trefl ())
 
-let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool * int) =
+let should_rewrite (#a:Type) (m:monoid a) (everywhere:bool) (t:term) : Tac (bool & int) =
   let m_mult = norm_term [delta;zeta;iota] (quote (Monoid?.mult m)) in
   let m_unit = norm_term [delta;zeta;iota] (quote (Monoid?.unit m)) in
   // debug "should_rewrite: ";
@@ -82,8 +82,8 @@ let rewrite_int (everywhere:bool) =
           (rewrite_monoid int_plus_monoid)
 
 let elim_implies #p #q  (_:(p ==> q)) (_:p) : squash q = ()
-let apply_imp (h:binder) =
-    mapply (mk_app (`elim_implies) [(pack (Tv_Var (bv_of_binder h)), Q_Explicit)])
+let apply_imp (h:binding) =
+    mapply (mk_app (`elim_implies) [(pack (Tv_Var (binding_to_namedv h)), Q_Explicit)])
 let refl (#a:Type) (x:a) : (x==x) = FStar.Squash.return_squash Refl
 let test (a b : int) (p:Type) =
     assert ((((a + b + 0) == (a + b)) ==> p) ==> p)

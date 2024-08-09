@@ -1,0 +1,35 @@
+[
+  "Dñpí)¤Âü\u0007úµ­ã\u0015ÖØ",
+  [
+    [
+      "Calc.op_Amp_Equals",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "6b1d826a6eaac4d5c626c4f55d5025fa"
+    ],
+    [
+      "Calc.op_Amp_Bar",
+      1,
+      1,
+      0,
+      [ "@query" ],
+      0,
+      "dc620118f0218ace46acb55212502082"
+    ],
+    [
+      "Calc.op_Amp_Bar_Bar",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3d3ce46a7902034504bfa0107c776516"
+      ],
+      0,
+      "71906e35a94987c83f635f2c9c74d6de"
+    ]
+  ]
+]

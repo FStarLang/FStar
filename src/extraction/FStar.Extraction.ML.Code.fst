@@ -33,8 +33,8 @@ module BU = FStar.Compiler.Util
 (* -------------------------------------------------------------------- *)
 type assoc  = | ILeft | IRight | Left | Right | NonAssoc
 type fixity = | Prefix | Postfix | Infix of assoc
-type opprec = int * fixity
-type level  = opprec * assoc
+type opprec = int & fixity
+type level  = opprec & assoc
 
 let t_prio_fun  = (10, Infix Right)
 let t_prio_tpl  = (20, Infix NonAssoc)
@@ -92,7 +92,7 @@ let hbox (d : doc) = d (* FIXME *)
 (*copied from ocaml-asttrans.fs*)
 
 (* -------------------------------------------------------------------- *)
-let rec in_ns (x: (list 'a * list 'a)) : bool = match x with
+let rec in_ns (x: (list 'a & list 'a)) : bool = match x with
     | [], _ -> true
     | x1::t1, x2::t2 when (x1 = x2) -> in_ns (t1, t2)
     | _, _ -> false
@@ -276,6 +276,9 @@ let string_of_mlconstant (sctt : mlconstant) =
   | MLC_Int (s, Some (Signed, Int64)) -> s ^"L"
   | MLC_Int (s, Some (_, Int8))
   | MLC_Int (s, Some (_, Int16)) -> s
+  | MLC_Int (v, Some (_, Sizet)) ->
+   let z =  "(Prims.parse_int \"" ^ v ^ "\")" in
+   "(FStar_SizeT.uint_to_t (" ^ z ^ "))"
   | MLC_Int (v, Some (s, w)) ->
     let sign = match s with
       | Signed -> "Int"
@@ -285,7 +288,6 @@ let string_of_mlconstant (sctt : mlconstant) =
       | Int16 -> "16"
       | Int32 -> "32"
       | Int64 -> "64" in
-
     let z =  "(Prims.parse_int \"" ^ v ^ "\")" in
     let u = match s with
       | Signed -> ""
@@ -381,7 +383,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
     | MLE_Name path ->
         text (ptsym currentModule path)
 
-    | MLE_Record (path, fields) ->
+    | MLE_Record (path, _, fields) ->
         let for1 (name, e) =
             let doc = doc_of_expr currentModule (min_op_prec, NonAssoc) e in
             reduce1 [text (ptsym currentModule (path, name)); text "="; doc] in
@@ -429,7 +431,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
         match e.expr, args with
         | MLE_Name p, [
             ({ expr = MLE_Fun ([ _ ], scrutinee) });
-            ({ expr = MLE_Fun ([ (arg, _) ], possible_match)})
+            ({ expr = MLE_Fun ([ {mlbinder_name=arg} ], possible_match)})
           ] when (string_of_mlpath p = "FStar.Compiler.Effect.try_with" ||
                   string_of_mlpath p = "FStar.All.try_with") ->
             let branches =
@@ -475,7 +477,7 @@ let rec doc_of_expr (currentModule : mlsymbol) (outer : level) (e : mlexpr) : do
                           (match xt with | Some xxt -> reduce1 [text " : "; doc_of_mltype currentModule outer xxt] | _ -> text "");
                           text ")"]
             else text x in
-        let ids  = List.map (fun (x ,xt) -> bvar_annot x (Some xt)) ids in
+        let ids  = List.map (fun {mlbinder_name=x;mlbinder_ty=xt} -> bvar_annot x (Some xt)) ids in
         let body = doc_of_expr currentModule (min_op_prec, NonAssoc) body in
         let doc  = reduce1 [text "fun"; reduce1 ids; text "->"; body] in
         parens doc
@@ -627,7 +629,9 @@ and doc_of_lets (currentModule : mlsymbol) (rec_, top_level, lets) =
                       reduce1 [text ":"; ty]
                     | Some (vs, ty) ->
                       let ty = doc_of_mltype currentModule (min_op_prec, NonAssoc) ty in
-                      let vars = vs |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x)) |>  reduce1  in
+                      let vars = vs |> ty_param_names
+                                    |> List.map (fun x -> doc_of_mltype currentModule (min_op_prec, NonAssoc) (MLTY_Var x))
+                                    |>  reduce1  in
                       reduce1 [text ":"; vars; text "."; ty]
             else text "" in
         reduce1 [text name; reduce1 ids; ty_annot; text "="; e] in
@@ -656,6 +660,7 @@ let doc_of_mltydecl (currentModule : mlsymbol) (decls : mltydecl) =
                 | None -> x
                 | Some y -> y in
         let tparams =
+            let tparams = ty_param_names tparams in
             match tparams with
             | []  -> empty
             | [x] -> text x
@@ -741,7 +746,7 @@ and doc_of_sig (currentModule : mlsymbol) (s : mlsig) =
 
 (* -------------------------------------------------------------------- *)
 let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
-    match m with
+    match m.mlmodule1_m with
     | MLM_Exn (x, []) ->
         reduce1 [text "exception"; text x]
 
@@ -770,7 +775,7 @@ let doc_of_mod1 (currentModule : mlsymbol) (m : mlmodule1) =
 let doc_of_mod (currentModule : mlsymbol) (m : mlmodule) =
     let docs = List.map (fun x ->
         let doc = doc_of_mod1 currentModule x in
-        [doc; (match x with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
+        [doc; (match x.mlmodule1_m with | MLM_Loc _ -> empty | _ -> hardline); hardline]) m in
     reduce (List.flatten docs)
 
 (* -------------------------------------------------------------------- *)
@@ -845,3 +850,7 @@ let string_of_mlexpr cmod (e:mlexpr) =
 let string_of_mlty (cmod) (e:mlty) =
     let doc = doc_of_mltype (Util.flatten_mlpath cmod) (min_op_prec, NonAssoc) e in
     pretty 0 doc
+
+instance showable_mlexpr : showable mlexpr = {
+  show = string_of_mlexpr ([], "");
+}

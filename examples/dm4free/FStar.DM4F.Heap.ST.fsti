@@ -30,7 +30,17 @@ open FStar.DM4F.ST
 // Instruct F* to build a new STATE effect from the elaborated effect STATE_h
 ////////////////////////////////////////////////////////////////////////////////
 
-reifiable reflectable total new_effect STATE = STATE_h heap
+reifiable reflectable total new_effect {
+  STATE  : a:Type -> Effect
+  with repr     = st heap
+     ; bind     = bind_st heap
+     ; return   = return_st heap
+     ; get      = get heap
+     ; put      = put heap
+}
+
+let get = STATE?.get
+let put = STATE?.put
 
 unfold let lift_pure_state (a:Type) (wp:pure_wp a) (h:heap) (p:STATE?.post a) = wp (fun a -> p (a, h))
 sub_effect PURE ~> STATE = lift_pure_state
@@ -173,6 +183,8 @@ let rec zero (x:ref nat) (ghost_heap:heap{ghost_heap `contains_a_well_typed` x})
         let h = STATE?.get () in //see #881
         zero x h)
 
+//we can no longer provably enrich f's spec with its reification
+[@@expect_failure]
 let refine_st (#a:Type)
               (#b:Type)
               (#pre : a -> Tot STATE?.pre)
@@ -183,7 +195,7 @@ let refine_st (#a:Type)
                               reify (f x) h0 == (z, h1) /\
                               post x h0 z h1)
   = let g (h0:heap)
-      : Pure (b * heap)
+      : Pure (b & heap)
              (pre x h0)
              (fun (z,h1) -> pre x h0 /\
                        reify (f x) h0 == (z, h1) /\
@@ -191,6 +203,17 @@ let refine_st (#a:Type)
       = reify (f x) h0
     in
     STATE?.reflect g
+
+//assume it
+val refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STATE?.pre)
+              (#post : a -> Tot (heap -> b -> heap -> Tot Type0))
+              ($f :(x:a -> ST b (pre x) (post x)))
+              (x:a)
+  : ST b (pre x) (fun h0 z h1 -> pre x h0 /\
+                              reify (f x) h0 == (z, h1) /\
+                              post x h0 z h1)
 
 ////////////////////////////////////////////////////////////////////////////////
 //An unsafe higher-order example, rightly rejected by an universe inconsistency
@@ -220,92 +243,3 @@ val runST :
     (requires True)
     (ensures (fun x -> exists h0 h1. post h0 x h1))
 
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//
-//
-//
-////////////////////////////////////////////////////////////////////////////////
-
-
-(* val ghost_reify : a:Type -> wp:(STATE.wp a) -> (unit -> STATE a wp) -> Tot (STATE.repr a wp) *)
-(* let ghost_reify a wp f = reify (f ()) *)
-(* Bogus error:
-./FStar.DM4F.Heap.ST.fst(157,17-157,18) : (Error) Expected expression of type "(STATE_repr<n158855> a wp)";
-got expression "a" of type "Type(n158855)" *)
-
-(* let ghost_reify (#a:Type) (#wp:STATE.wp a) f = reify (f ()) *)
-
-(* let ghost_reify (a:Type) (wp:(STATE.wp a)) (f:(unit -> STATE a wp)) : GTot (STATE.repr a wp) = reify (f ()) *)
-
-(* let refine_st (#a:Type) *)
-(*                 (#b:Type) *)
-(*                 (pre : a -> Tot pre_st) *)
-(*                 (post : a -> Tot (post_st b)) *)
-(*                 ($f :(x:a -> ST b (pre x) (post x))) *)
-(*                 (x:a) *)
-(*   : ST b (pre x) (fun h0 z h1 -> pre x h0 /\ *)
-(*                               ghost_reify (fun _ -> f x) h0 == (z, h1) /\ *)
-(*                               post x h0 z h1) *)
-(*   = let g (h0:heap) *)
-(*       : Pure (b * heap) *)
-(*              (pre x h0) *)
-(*              (fun (z,h1) -> pre x h0 /\ *)
-(*                        ghost_reify (fun _ -> f x) h0 == (z, h1) /\ *)
-(*                        post x h0 z h1) *)
-(*       = reify (f x) h0 *)
-(*     in *)
-(*     STATE.reflect g *)
-
-(* let refine_st (#a:Type) *)
-(*                 (#b:Type) *)
-(*                 (#pre : a -> Tot STATE?.pre) *)
-(*                 (#post : a -> Tot (STATE?.post b)) *)
-(*                 ($f :(x:a -> ST b (pre x) (post x))) *)
-(*                 (x:a) *)
-(*   : ST b (pre x) (fun h0 z h1 -> pre x h0 /\ *)
-(*                               reify (f x) h0 == (z, h1) /\ *)
-(*                               post x h0 z h1) *)
-(*   = let g (h0:heap) *)
-(*       : Pure (b * heap) *)
-(*              (pre x h0) *)
-(*              (fun (z,h1) -> pre x h0 /\ *)
-(*                        reify (f x) h0 == (z, h1) /\ *)
-(*                        post x h0 z h1) *)
-(*       = reify (f x) h0 *)
-(*     in *)
-(*     STATE?.reflect g *)
-
-(*  let incr' (r:ref int) *)
-(*     :  ST unit *)
-(* 	  (requires (fun h -> h `contains_a_well_typed` r)) *)
-(* 	  (ensures (fun h0 s h1 -> h1 `contains_a_well_typed` r)) *)
-(*     = let x  = read r in write r (x + 1) *)
-
-(* #reset-options "--debug_level Norm" *)
-(* let chose (h0 : heap) (r:(ref int){h0 `contains_a_well_typed` r}) = assert (snd (normalize_term (reify (write r 42) h0)) == upd h0 r 42) *)
-(* #reset-options "" *)
-(* let bidule (h0:heap) (r:(ref int){h0 `contains_a_well_typed` r}) = assert (snd (normalize_term (reify (incr' r) h0)) == upd h0 r (sel h0 r)) *)
-
-(* let incr_increases (s0:heap) = assert (snd (reify (incr'()) s0) = s0 + 1) *)
-
-(* #reset-options *)
-(* let yyy (r:ref int) (h0:heap) *)
-(*   : Lemma (requires (h0 `contains_a_well_typed` r)) *)
-(*      (ensures (h0 `contains_a_well_typed` r ==> *)
-(*                sel (snd (reify (incr' r) h0)) r == sel h0 r + 1)) = () *)
-
-(* let xxx (_:unit) : STNull unit = *)
-(*   let r = alloc 42 in *)
-(*   let i = !r in *)
-(*   let h0 = STATE.get() in *)
-(*   refine_st incr' r; *)
-(*   let h1 = STATE.get() in *)
-(*   assert(reify (incr' r) h0 == ((), h1)); *)
-(*   (\* assert(sel h1 r == sel h0 r + 1); *\) *)
-(*   assert(h1 `contains_a_well_typed` r); *)
-(*   let j = !r in *)
-(*   (\* assert(i < j); *\) *)
-(*   (\* assert(sel h0 r < sel h1 r);*\) *)
-(*   () *)

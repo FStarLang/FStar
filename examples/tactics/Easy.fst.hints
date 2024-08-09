@@ -1,5 +1,5 @@
 [
-  "Ú©§\\ÄÞß÷fLÏ{R×û\"",
+  "¬?1Xš¿°\u0011™+€W©\u0001ƒ\u0000",
   [
     [
       "Easy.plus_assoc",
@@ -7,23 +7,20 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "int_inversion",
+        "@MaxIFuel_assumption", "@query", "int_inversion", "int_typing",
         "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0"
       ],
       0,
-      "e2574dcd336f04e8baf25e0db186b37c"
+      "a50c72a009d20689e10daf0f3c9b5933"
     ],
     [
       "Easy.plus_comm",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "int_inversion",
-        "primitive_Prims.op_Addition"
-      ],
+      [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "9a3e83b1e38e7edde886d08010d4f757"
+      "59171f1d1fb29cc7aa8e6e3856523ec7"
     ]
   ]
 ]

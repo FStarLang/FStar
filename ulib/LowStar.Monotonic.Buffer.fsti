@@ -707,8 +707,8 @@ val loc_includes_loc_buffer_from_to
 /// If the contents of a buffer are equal in two given heaps, then so
 /// are the contents of any of its sub-buffers.
 
-val loc_includes_as_seq (#a:Type0) (#rrel1 #rrel2 #rel1 #rel2:srel a)
-  (h1 h2:HS.mem) (larger:mbuffer a rrel1 rel1) (smaller:mbuffer a rrel2 rel2)
+val loc_includes_as_seq (#a:Type0) (#rrel #rel1 #rel2:srel a)
+  (h1 h2:HS.mem) (larger:mbuffer a rrel rel1) (smaller:mbuffer a rrel rel2)
   :Lemma (requires (loc_includes (loc_buffer larger) (loc_buffer smaller) /\
                     as_seq h1 larger == as_seq h2 larger /\
 		    (live h1 larger \/ live h1 smaller) /\ (live h2 larger \/ live h2 smaller)))
@@ -1474,12 +1474,12 @@ val modifies_loc_buffer_from_to_intro
 
 val does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : GTot Type0
 
 val not_live_region_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (~ (HS.live_region h (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
@@ -1495,7 +1495,7 @@ val unused_in_does_not_contain_addr
 
 val addr_unused_in_does_not_contain_addr
   (h: HS.mem)
-  (ra: HS.rid * nat)
+  (ra: HS.rid & nat)
 : Lemma
   (requires (HS.live_region h (fst ra) ==> snd ra `Heap.addr_unused_in` (Map.sel (HS.get_hmap h) (fst ra))))
   (ensures (h `does_not_contain_addr` ra))
@@ -1505,7 +1505,7 @@ val free_does_not_contain_addr
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     HS.is_mm r /\
@@ -1523,7 +1523,7 @@ val does_not_contain_addr_elim
   (#rel: Preorder.preorder a)
   (r: HS.mreference a rel)
   (m: HS.mem)
-  (x: HS.rid * nat)
+  (x: HS.rid & nat)
 : Lemma
   (requires (
     m `does_not_contain_addr` x /\

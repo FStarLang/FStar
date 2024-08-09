@@ -1,0 +1,275 @@
+Module after desugaring:
+module DTuples
+Declarations: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+Exports: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+
+Module before type checking:
+module DTuples
+Declarations: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+Exports: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+
+Module after type checking:
+module DTuples
+Declarations: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+Exports: [
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & c: Prims.int{c == a + b}
+private
+let _ = a: Prims.int & z: b: Prims.int{a > b} & c: Prims.int{c == a + z}
+private
+let _ = a: Prims.int & b: Prims.int{a > b} & Prims.unit
+private
+let _ = a: Prims.int & b: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & Prims.int
+private
+let _ = a: Prims.int & b: Prims.int & c: Prims.int & d: Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & Prims.int & Prims.int & Prims.int & Prims.int
+private
+let _ = Prims.int & (Prims.int & Prims.int)
+private
+let _ = Prims.int & (Prims.int & (Prims.int & Prims.int))
+private
+let _ = Prims.int & (Prims.int & (Prims.int & (Prims.int & Prims.int)))
+private
+let _ = FStar.Pervasives.Native.tuple4 Prims.int Prims.bool
+private
+let _ = Prims.int & Prims.bool & Prims.string & Prims.unit
+private
+let _ = FStar.Pervasives.dtuple4 Prims.int (fun _ -> Prims.bool)
+let t1 = 1, 2, 3
+let t2 = (1, 2), 3
+let t3 = 1, (2, 3)
+let d1 = (| 1, 2, 3 |)
+let d2 = (| (1, 2), 3 |)
+let d3 = (| 1, (2, 3) |)
+let dd2 = (| (| 1, 2 |), 3 |)
+let dd3 = (| 1, (| 2, 3 |) |)
+]
+
+Verified module: DTuples
+All verification conditions discharged successfully

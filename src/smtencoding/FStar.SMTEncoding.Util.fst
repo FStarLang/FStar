@@ -79,6 +79,11 @@ let mkBvShr sz = norng (mkBvShr sz)
 let mkBvUdiv sz = norng (mkBvUdiv sz)
 let mkBvMod sz = norng (mkBvMod sz)
 let mkBvMul sz = norng (mkBvMul sz)
+let mkBvShl' sz = norng (mkBvShl' sz)
+let mkBvShr' sz = norng (mkBvShr' sz)
+let mkBvUdivUnsafe sz = norng (mkBvUdivUnsafe sz)
+let mkBvModUnsafe  sz = norng (mkBvModUnsafe sz)
+let mkBvMul' sz = norng (mkBvMul' sz)
 let mkBvUlt = norng mkBvUlt
 let mkBvUext sz = norng (mkBvUext sz)
 let mkBvToNat = norng mkBvToNat
@@ -130,6 +135,6 @@ let is_smt_reifiable_rc (en:TcEnv.env) (rc:S.residual_comp) : bool =
 
 let is_smt_reifiable_function (en:TcEnv.env) (t:S.term) : bool =
   match (SS.compress t).n with
-  | Tm_arrow (_, c) ->
+  | Tm_arrow {comp=c} ->
     c |> U.comp_effect_name |> is_smt_reifiable_effect en
   | _ -> false

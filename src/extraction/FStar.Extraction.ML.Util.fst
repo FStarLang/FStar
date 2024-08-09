@@ -47,9 +47,8 @@ let pruneNones (l : list (option 'a)) : list 'a =
                           | None -> ll) l []
 
 
-let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["Prims"], "mk_range")
+let mk_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "mk_range")
 let dummy_range_mle = with_ty MLTY_Top <| MLE_Name (["FStar"; "Range"], "dummyRange")
-let fstar_real_of_string = with_ty MLTY_Top <| MLE_Name (["FStar";"Real"], "of_string")
 
 (* private *)
 let mlconst_of_const' (sctt : sconst) =
@@ -57,15 +56,10 @@ let mlconst_of_const' (sctt : sconst) =
   | Const_effect       -> failwith "Unsupported constant"
 
   | Const_range _
-  | Const_unit         -> MLC_Unit
-  | Const_char   c     -> MLC_Char  c
-  | Const_int    (s, i)-> MLC_Int   (s, i)
-  | Const_bool   b     -> MLC_Bool  b
-  | Const_float  d     -> MLC_Float d
-
-  | Const_bytearray (bytes, _) ->
-      MLC_Bytes bytes
-
+  | Const_unit          -> MLC_Unit
+  | Const_char   c      -> MLC_Char  c
+  | Const_int    (s, i) -> MLC_Int   (s, i)
+  | Const_bool   b      -> MLC_Bool  b
   | Const_string (s, _) -> MLC_String (s)
 
   | Const_range_of
@@ -73,7 +67,7 @@ let mlconst_of_const' (sctt : sconst) =
     failwith "Unhandled constant: range_of/set_range_of"
 
   | Const_real _
-  | Const_reify
+  | Const_reify _
   | Const_reflect _ ->
     failwith "Unhandled constant: real/reify/reflect"
 
@@ -88,9 +82,17 @@ let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cstr (s : string) : mlexpr =
         MLC_String s |> MLE_Const |> with_ty ml_string_ty
     in
+    let drop_path = BU.basename in
+
     // This is not being fully faithful since it disregards
     // the use_range, but I assume that's not too bad.
-    MLE_App (mk_range_mle, [Range.file_of_range r |> cstr;
+    //
+    // We drop the path of the file to be independent of the machine
+    // where this was extracted. Otherwise we run into some headaches
+    // with CI, stability, and moving ml files between hosts. The idea
+    // is that the pathless filename is enough to locate the actual file,
+    // since it must have been loaded as a dependency by F*.
+    MLE_App (mk_range_mle, [Range.file_of_range r |> drop_path |> cstr;
                             Range.start_of_range r |> Range.line_of_pos |> cint;
                             Range.start_of_range r |> Range.col_of_pos  |> cint;
                             Range.end_of_range r   |> Range.line_of_pos |> cint;
@@ -104,14 +106,10 @@ let mlexpr_of_const (p:Range.range) (c:sconst) : mlexpr' =
     | Const_range r ->
         mlexpr_of_range r
 
-    | Const_real s ->
-        let str = mlconst_of_const p (Const_string(s, p)) in
-        MLE_App(fstar_real_of_string, [with_ty ml_string_ty <| MLE_Const str])
-
     | _ ->
         MLE_Const (mlconst_of_const p c)
 
-let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
+let rec subst_aux (subst:list (mlident & mlty)) (t:mlty)  : mlty =
     match t with
     | MLTY_Var  x -> (match BU.find_opt (fun (y, _) -> y=x) subst with
                      | Some ts -> snd ts
@@ -125,7 +123,7 @@ let rec subst_aux (subst:list (mlident * mlty)) (t:mlty)  : mlty =
 let try_subst ((formals, t):mltyscheme) (args:list mlty) : option mlty =
     if List.length formals <> List.length args
     then None
-    else Some (subst_aux (List.zip formals args) t)
+    else Some (subst_aux (List.zip (ty_param_names formals) args) t)
 
 let subst ts args =
     match try_subst ts args with
@@ -176,7 +174,7 @@ let join r f f' = match f, f' with
 
 let join_l r fs = List.fold_left (join r) E_PURE fs
 
-let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
+let mk_ty_fun = List.fold_right (fun {mlbinder_ty} t -> MLTY_Fun(mlbinder_ty, E_PURE, t))
 
 (* type_leq is essentially the lifting of the sub-effect relation, eff_leq, into function types.
    type_leq_c is a coercive variant of type_leq, which implements an optimization to erase the bodies of ghost functions.
@@ -184,7 +182,7 @@ let mk_ty_fun = List.fold_right (fun (_, t0) t -> MLTY_Fun(t0, E_PURE, t))
    In the case where f is a function literal, \x. e, subsuming it to (t -> Ghost t') means that we can simply
    erase e to unit right away.
 *)
-let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool * option mlexpr) =
+let rec type_leq_c (unfold_ty:unfold_t) (e:option mlexpr) (t:mlty) (t':mlty) : (bool & option mlexpr) =
     match t, t' with
     | MLTY_Var x, MLTY_Var y ->
         if x = y
@@ -361,7 +359,8 @@ let rec eraseTypeDeep unfold_ty (t:mlty) : mlty =
     | _ ->  t
 
 let prims_op_equality = with_ty MLTY_Top <| MLE_Name (["Prims"], "op_Equality")
-let prims_op_amp_amp  = with_ty (mk_ty_fun [("x", ml_bool_ty); ("y", ml_bool_ty)] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
+let prims_op_amp_amp  = with_ty (mk_ty_fun [{mlbinder_name="x";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]};
+                                            {mlbinder_name="y";mlbinder_ty=ml_bool_ty;mlbinder_attrs=[]}] ml_bool_ty) <| MLE_Name (["Prims"], "op_AmpAmp")
 let conjoin e1 e2 = with_ty ml_bool_ty <| MLE_App(prims_op_amp_amp, [e1;e2])
 let conjoin_opt e1 e2 = match e1, e2 with
     | None, None -> None
@@ -374,7 +373,7 @@ let mlloc_of_range (r: Range.range) =
     let line = Range.line_of_pos pos in
     line, Range.file_of_range r
 
-let rec doms_and_cod (t:mlty) : list mlty * mlty =
+let rec doms_and_cod (t:mlty) : list mlty & mlty =
     match t with
       | MLTY_Fun (a,_,b) ->
         let ds, c = doms_and_cod b in
@@ -392,376 +391,13 @@ let rec uncurry_mlty_fun t =
         a::args, res
     | _ -> [], t
 
-(* helper functions used to extract, alongside a tactic, its corresponding call
-   to FStar.Tactics.Native.register_tactic *)
-module RC = FStar.Reflection.Constants
-module SEmb = FStar.Syntax.Embeddings
-module REmb = FStar.Reflection.Embeddings
-
-exception NoTacticEmbedding of string
-
-let not_implemented_warning r t msg =
-    Errors.log_issue r
-        (Errors.Warning_PluginNotImplemented,
-         BU.format3 "Plugin %s can not run natively because %s (use --warn_error -%s to carry on)."
-                        t
-                        msg
-                        (string_of_int <| Errors.error_number (Errors.lookup Errors.Warning_PluginNotImplemented)))
-
-type emb_loc =
-    | Syntax_term (* FStar.Syntax.Embeddings *)
-    | Refl_emb    (* FStar.Reflection.Embeddings *)
-    | NBE_t       (* FStar.TypeChecker.NBETerm *)
-    | NBERefl_emb (* FStar.Reflection.NBEEmbeddings *)
-
-type wrapped_term = mlexpr * mlexpr * int * bool
-
-let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:option int) (ml_fv:mlexpr')
-    : option wrapped_term =
-    let fv_lid = fv.fv_name.v in
-    let tcenv = UEnv.tcenv_of_uenv env in
-    let t = N.normalize [
-      Env.EraseUniverses;
-      Env.AllowUnboundUniverses;
-      Env.UnfoldUntil S.delta_constant; // unfold abbreviations such as nat
-      Env.ForExtraction
-    ] tcenv t in
-    let w = with_ty MLTY_Top in
-    let as_name mlp       = with_ty MLTY_Top <| MLE_Name mlp in
-    let lid_to_name l     = with_ty MLTY_Top <| MLE_Name (UEnv.mlpath_of_lident env l) in
-    let str_to_name s     = as_name ([], s) in
-    let fstar_tc_nbe_prefix s = as_name (["FStar_TypeChecker_NBETerm"], s) in
-    let fstar_syn_emb_prefix s = as_name (["FStar_Syntax_Embeddings"], s) in
-    let fstar_refl_emb_prefix s = as_name (["FStar_Reflection_Embeddings"], s) in
-    let fstar_refl_nbeemb_prefix s = as_name (["FStar_Reflection_NBEEmbeddings"], s) in
-    let fv_lid_embedded =
-        with_ty MLTY_Top <|
-            MLE_App (as_name (["FStar_Ident"],"lid_of_str"),
-                     [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid))])
-    in
-    let emb_prefix = function
-        | Syntax_term -> fstar_syn_emb_prefix
-        | Refl_emb -> fstar_refl_emb_prefix
-        | NBE_t -> fstar_tc_nbe_prefix
-        | NBERefl_emb -> fstar_refl_nbeemb_prefix
-    in
-    let mk_tactic_interpretation l arity =
-      if arity > FStar.Tactics.InterpFuns.max_tac_arity then
-        raise (NoTacticEmbedding("tactic plugins can only take up to 20 arguments"))
-      else
-      let idroot =
-        match l with
-        | Syntax_term ->
-          "mk_tactic_interpretation_"
-        | _ ->
-          "mk_nbe_tactic_interpretation_"
-      in
-      as_name (["FStar_Tactics_InterpFuns"], idroot^string_of_int arity)
-    in
-    let mk_from_tactic l arity =
-      let idroot =
-        match l with
-        | Syntax_term -> "from_tactic_"
-        | _ -> "from_nbe_tactic_"
-      in
-      as_name (["FStar_Tactics_Native"], idroot^string_of_int arity)
-    in
-    let mk_basic_embedding (l:emb_loc) (s: string): mlexpr =
-        if s = "norm_step" (* hack, ignore me *)
-        then
-          match l with
-          | Syntax_term -> as_name (["FStar_Tactics_Builtins"], "e_norm_step'")
-          | NBE_t -> as_name (["FStar_Tactics_Builtins"], "e_norm_step_nbe'")
-          | _ -> failwith "impossible: mk_basic_embedding norm_step"
-        else emb_prefix l ("e_" ^ s)
-    in
-    let mk_arrow_as_prim_step l (arity: int): mlexpr =
-        emb_prefix l ("arrow_as_prim_step_" ^ string_of_int arity)
-    in
-    let mk_any_embedding l (s: string): mlexpr =
-        w <| MLE_App(emb_prefix l "mk_any_emb", [str_to_name s])
-    in
-    let mk_lam nm e =
-        w <| MLE_Fun ([(nm, MLTY_Top)], e)
-    in
-    let emb_arrow l e1 e2 =
-        w <| MLE_App(emb_prefix l "e_arrow", [e1; e2])
-    in
-    let known_type_constructors =
-        let term_cs =
-            [ (PC.int_lid, 0, "int"), Syntax_term;
-              (PC.bool_lid, 0, "bool"), Syntax_term;
-              (PC.unit_lid, 0, "unit"), Syntax_term;
-              (PC.string_lid, 0, "string"), Syntax_term;
-              (PC.norm_step_lid, 0, "norm_step"), Syntax_term;
-              (PC.list_lid, 1, "list"), Syntax_term;
-              (PC.option_lid, 1, "option"), Syntax_term;
-              (PC.mk_tuple_lid 2 Range.dummyRange, 2, "tuple2"), Syntax_term;
-              (RC.fstar_refl_types_lid "term", 0, "term"), Refl_emb;
-              (RC.fstar_refl_types_lid "sigelt", 0, "sigelt"), Refl_emb;
-              (RC.fstar_refl_types_lid "fv", 0, "fv"), Refl_emb;
-              (RC.fstar_refl_types_lid "binder", 0, "binder"), Refl_emb;
-              (RC.fstar_refl_syntax_lid "binders", 0, "binders"), Refl_emb;
-              (RC.fstar_refl_data_lid "exp", 0, "exp"), Refl_emb
-            ]
-       in
-       let nbe_cs =
-           List.map (function
-              | x, Syntax_term -> x, NBE_t
-              | x, Refl_emb -> x, NBERefl_emb
-              | _ -> failwith "Impossible")
-           term_cs
-       in
-       function
-       | Syntax_term
-       | Refl_emb -> term_cs
-       | _ -> nbe_cs
-    in
-    let is_known_type_constructor l (fv:S.fv) (n:int) =
-        BU.for_some
-            (fun ((x, args, _), _) -> fv_eq_lid fv x && n = args)
-            (known_type_constructors l)
-    in
-    let find_env_entry bv (bv', _) = S.bv_eq bv bv' in
-    (*  Generates the ML syntax of a term of type
-           `FStar.Syntax.Embeddings.embedding [[t]]`
-        where [[t]] is the ML denotation of the F* type t
-    *)
-    let rec mk_embedding l (env:list (bv * string)) (t: term): mlexpr =
-        let t = FStar.TypeChecker.Normalize.unfold_whnf' [Env.ForExtraction] tcenv t in
-        match (FStar.Syntax.Subst.compress t).n with
-        | Tm_name bv
-             when BU.for_some (find_env_entry bv) env ->
-          mk_any_embedding l <| snd (BU.must (BU.find_opt (find_env_entry bv) env))
-
-        | Tm_refine (x, _) ->
-          (* Refinements are irrelevant to generate embeddings. *)
-          mk_embedding l env x.sort
-
-        | Tm_ascribed (t, _, _) ->
-          mk_embedding l env t
-
-        | Tm_arrow ([b], c) when U.is_pure_comp c ->
-          let bs, c = FStar.Syntax.Subst.open_comp [b] c in
-          let t0 = (List.hd bs).binder_bv.sort in
-          let t1 = U.comp_result c in
-          emb_arrow l (mk_embedding l env t0) (mk_embedding l env t1)
-
-        | Tm_arrow(b::more::bs, c) ->
-          let tail = S.mk (Tm_arrow(more::bs, c)) t.pos in
-          let t = S.mk (Tm_arrow([b], S.mk_Total tail)) t.pos in
-          mk_embedding l env t
-
-        | Tm_fvar _
-        | Tm_uinst _
-        | Tm_app _ ->
-          let head, args = U.head_and_args t in
-          let n_args = List.length args in
-          begin
-          match (U.un_uinst head).n with
-          | Tm_fvar fv
-              when is_known_type_constructor l fv n_args ->
-            begin
-            let arg_embeddings =
-                args
-                |> List.map (fun (t, _) -> mk_embedding l env t)
-            in
-            let nm = string_of_id (ident_of_lid fv.fv_name.v) in
-            let (_, t_arity, _trepr_head), loc_embedding =
-                BU.find_opt
-                    (fun ((x, _, _), _) -> fv_eq_lid fv x)
-                    (known_type_constructors l)
-                |> BU.must
-            in
-            let head = mk_basic_embedding loc_embedding nm in
-            match t_arity with
-            | 0 ->
-                head
-            | n ->
-                w <| MLE_App (head, arg_embeddings)
-            end
-
-          | _ ->
-            raise (NoTacticEmbedding("Embedding not defined for type " ^ (Print.term_to_string t)))
-          end
-
-        | _ ->
-          raise (NoTacticEmbedding("Embedding not defined for type " ^ (Print.term_to_string t)))
-    in
-    (* abstract_tvars:
-         body is an implicitly polymorphic function over tvar_names
-        whose type is of the form `args -> term`
-
-       returns an mlexpr that explicitly abstracts over FStar.Syntax.term
-               representations of those type arguments
-               peeling away a prefix of args corresponding to the type arguments
-     *)
-    let abstract_tvars tvar_names (body:mlexpr) : mlexpr =
-        match tvar_names with
-        | [] ->
-          let body =
-              w <| MLE_App(as_name (["FStar_Syntax_Embeddings"], "debug_wrap"),
-                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
-                             mk_lam "_" (w <| MLE_App(body, [str_to_name "args"]))])
-          in
-          mk_lam "args" body
-        | _ ->
-          let args_tail = MLP_Var "args_tail" in
-          let mk_cons hd_pat tail_pat =
-              MLP_CTor ((["Prims"], "Cons"), [hd_pat; tail_pat])
-          in
-          let fst_pat v =
-              MLP_Tuple [MLP_Var v; MLP_Wild]
-          in
-          let pattern =
-              List.fold_right
-                (fun hd_var -> mk_cons (fst_pat hd_var))
-                tvar_names
-                args_tail
-          in
-          let branch =
-             pattern,
-             None,
-             w <| MLE_App(body, [as_name ([], "args")])
-          in
-          let default_branch =
-              MLP_Wild,
-              None,
-              w <| MLE_App(str_to_name "failwith",
-                            [w <| mlexpr_of_const
-                                   Range.dummyRange
-                                   (FStar.Const.Const_string("arity mismatch", Range.dummyRange))])
-          in
-          let body =
-              w <| MLE_Match(as_name ([], "args"), [branch; default_branch])
-          in
-          let body =
-              w <| MLE_App(as_name (["FStar_Syntax_Embeddings"], "debug_wrap"),
-                            [with_ty MLTY_Top <| MLE_Const (MLC_String (Ident.string_of_lid fv_lid));
-                             mk_lam "_" body])
-          in
-          mk_lam "args" body
-    in
-    (* We're trying to register a plugin or tactic
-       ml_fv which has source F* type t *)
-    let bs, c = U.arrow_formals_comp t in
-    let bs, c =
-        match arity_opt with
-        | None -> bs, c
-        | Some n ->
-          let n_bs = List.length bs in
-          if n = n_bs then bs, c
-          else if n < n_bs
-          then let bs, rest = BU.first_N n bs in
-               let c = S.mk_Total <| U.arrow rest c in
-               bs, c
-          else // n > bs
-               let msg =
-                BU.format3
-                    "Embedding not defined for %s; expected arity at least %s; got %s"
-                    (Ident.string_of_lid fv_lid)
-                    (BU.string_of_int n)
-                    (BU.string_of_int n_bs) in
-               raise (NoTacticEmbedding msg)
-    in
-    let result_typ = U.comp_result c in
-    let arity = List.length bs in
-    let type_vars, bs =
-        match
-            BU.prefix_until
-                (fun ({binder_bv=b}) ->
-                    match (Subst.compress b.sort).n with
-                    | Tm_type _ -> false
-                    | _ -> true)
-               bs
-        with
-        | None ->
-          bs, []
-        | Some (tvars, x, rest) ->
-          tvars, x::rest
-    in
-    (* Explicit polymorphism in the source type `t`
-       is turned into implicit polymorphism in ML.
-
-           `t` is really `forall type_vars. bs -> result_typ`
-    *)
-    let tvar_arity = List.length type_vars in
-    let non_tvar_arity = List.length bs in
-    let tvar_names = List.mapi (fun i tv -> ("tv_" ^ string_of_int i)) type_vars in
-    let tvar_context : list (bv * string) = List.map2 (fun b nm -> b.binder_bv, nm) type_vars tvar_names in
-    // The tvar_context records all the ML type variables in scope
-    // All their embeddings will be just identity embeddings
-
-    (* aux: The main function that builds the registration code
-
-        accum_embeddings: all the embeddings of the arguments (in reverse order)
-        bs: the remaining arguments
-
-        returns (mlexpr, //the registration code
-                 int,    //the arity of the compiled code (+1 for tactics)
-                 bool)   //true if this is a tactic
-    *)
-    let rec aux loc (accum_embeddings:list mlexpr) bs : (mlexpr * int * bool) =
-        match bs with
-        | [] ->
-          let arg_unembeddings = List.rev accum_embeddings in
-          let res_embedding = mk_embedding loc tvar_context result_typ in
-          let fv_lid = fv.fv_name.v in
-          if U.is_pure_comp c
-          then begin
-            let cb = str_to_name "cb" in
-            let embed_fun_N = mk_arrow_as_prim_step loc non_tvar_arity in
-            let args = arg_unembeddings
-                    @ [res_embedding;
-                       lid_to_name fv_lid;
-                       with_ty MLTY_Top <| MLE_Const (MLC_Int(string_of_int tvar_arity, None));
-                       fv_lid_embedded;
-                       cb]
-            in
-            let fun_embedding = w <| MLE_App(embed_fun_N, args) in
-            let tabs = abstract_tvars tvar_names fun_embedding in
-            let cb_tabs = mk_lam "cb" tabs in
-            ((if loc = NBE_t then cb_tabs else mk_lam "_psc" cb_tabs),
-             arity,
-             true)
-          end
-          else if Ident.lid_equals (FStar.TypeChecker.Env.norm_eff_name tcenv (U.comp_effect_name c))
-                                    PC.effect_TAC_lid
-          then begin
-            let h = mk_tactic_interpretation loc non_tvar_arity in
-            let tac_fun = w <| MLE_App (mk_from_tactic loc non_tvar_arity,
-                                      [lid_to_name fv_lid])
-            in
-            let psc = str_to_name "psc" in
-            let ncb = str_to_name "ncb" in
-            let all_args = str_to_name "args" in
-            let args =
-                [tac_fun] @
-                arg_unembeddings @
-                [res_embedding;
-                 psc;
-                 ncb] in
-            let tabs =
-              match tvar_names with
-              | [] -> mk_lam "args" (w <| MLE_App (h, args@[all_args]))
-              | _ -> abstract_tvars tvar_names (w <| MLE_App (h, args))
-            in
-            (mk_lam "psc" (mk_lam "ncb" tabs),
-             arity + 1,
-             false)
-          end
-          else raise (NoTacticEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
-
-        | ({binder_bv=b})::bs ->
-          aux loc (mk_embedding loc tvar_context b.sort::accum_embeddings) bs
-    in
-    try
-        let w, a, b = aux Syntax_term [] bs in
-        let w', _, _ = aux NBE_t [] bs in
-        Some (w, w', a, b)
-    with
-    | NoTacticEmbedding msg ->
-      not_implemented_warning (range_of_lid fv.fv_name.v)
-                              (FStar.Syntax.Print.fv_to_string fv)
-                              msg;
-      None
+let list_elements (e:mlexpr) : option (list mlexpr) =
+  let rec list_elements acc e =
+    match e.expr with
+    | MLE_CTor (([ "Prims" ], "Cons" ), [ hd; tl ]) ->
+      list_elements (hd :: acc) tl
+    | MLE_CTor (([ "Prims" ], "Nil" ), []) ->
+      List.rev acc |> Some
+    | _ -> None
+  in
+  list_elements [] e

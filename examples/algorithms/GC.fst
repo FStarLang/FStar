@@ -34,8 +34,8 @@ type mem_addr  = i:int{is_mem_addr i}
 type color_map = mem_addr -> Tot color
 type abs_map   = mem_addr -> Tot abs_node
 
-type field_map     = mem_addr * field -> Tot mem_addr
-type abs_field_map = abs_node * field -> Tot abs_node
+type field_map     = mem_addr & field -> Tot mem_addr
+type abs_field_map = abs_node & field -> Tot abs_node
 
 type trigger (i:int) = True
 
@@ -283,8 +283,8 @@ let rec alloc root abs =
           let gc = get () in
           if gc.color ptr = Unalloc
           then
-          begin let fields = upd_map #(mem_addr * field) #mem_addr gc.fields (ptr, F1) ptr in
-                let fields = upd_map #(mem_addr * field) #mem_addr fields (ptr, F2) ptr in
+          begin let fields = upd_map #(mem_addr & field) #mem_addr gc.fields (ptr, F1) ptr in
+                let fields = upd_map #(mem_addr & field) #mem_addr fields (ptr, F2) ptr in
                 let gc' = { gc with
                               to_abs=upd_map gc.to_abs ptr abs;
                               color =upd_map gc.color ptr White;

@@ -23,7 +23,7 @@ module FStar.PartialMap
 
 /// The main map type
 
-val t (k:eqtype) (v:Type u#a) : Type u#a
+val t (k:eqtype) ([@@@strictly_positive] v:Type u#a) : Type u#a
 
 /// An empty map
 

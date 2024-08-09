@@ -15,6 +15,8 @@
 *)
 module RangeOf
 
+open FStar.Range
+
 (* This is very basic, but we cannot really test that we assign
  * proper ranges because we keep them completely opaque to 
  * guarantee soundness. *)

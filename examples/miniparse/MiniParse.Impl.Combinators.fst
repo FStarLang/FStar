@@ -90,7 +90,7 @@ let serialize_nondep_then_impl
   (#s2: serializer_spec p2)
   (s2' : serializer_impl s2)
 : Tot (serializer_impl (serialize_nondep_then s1 s2))
-= fun (output: buffer8) (l: U32.t { l == B.len output } ) (input: t1 * t2) ->
+= fun (output: buffer8) (l: U32.t { l == B.len output } ) (input: t1 & t2) ->
   match input with
   | (fs, sn) ->
     begin match s1' output l fs with

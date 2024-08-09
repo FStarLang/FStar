@@ -1,5 +1,5 @@
 [
-  "\u001aﬂ\u001c=¬ËÂft`{óêä.",
+  "Á§)≤LåàâD7ó¨\u0016˜∏!",
   [
     [
       "Z3EncodingIssue.return",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "b0f5ca6f6dba373cc887fc4c3f161472"
+      "3170c05931e04119bb2841ad3d34d793"
     ],
     [
       "Z3EncodingIssue.subcomp",
@@ -18,7 +18,7 @@
       [
         "@query", "equation_FStar.Integers.uint_8",
         "equation_LowStar.Buffer.buffer", "equation_Z3EncodingIssue.post_t",
-        "equation_Z3EncodingIssue.repr", "equation_Z3EncodingIssue.u8",
+        "equation_Z3EncodingIssue.u8",
         "function_token_typing_FStar.Integers.uint_8",
         "typing_LowStar.Buffer.trivial_preorder",
         "typing_LowStar.Monotonic.Buffer.as_seq",
@@ -26,11 +26,20 @@
         "typing_Z3EncodingIssue.buf"
       ],
       0,
-      "cffcaa692db4f41058ca852cf9aa58b8"
+      "de6d4a1b302a59b68e1d1c54a4e90efd"
     ],
     [
       "Z3EncodingIssue.CHACHA",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "ab528e8e9b398c8d88661df1a526fc56"
+    ],
+    [
+      "Z3EncodingIssue.CHACHA",
+      2,
       2,
       1,
       [
@@ -38,11 +47,11 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "1fd3d57922471589fe02a26a8edb29d7"
+      "1ccd19cfec083d345b63ad51f81887ab"
     ],
     [
       "Z3EncodingIssue.CHACHA",
-      2,
+      3,
       2,
       1,
       [
@@ -50,7 +59,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "dd7c2a6c6a272a63c4f43265f5c9c0cc"
+      "57d5919ecd6e3808b73d8bb98a62a205"
     ],
     [
       "Z3EncodingIssue.lift_div_chacha",
@@ -60,17 +69,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Z3EncodingIssue_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
-        "assumption_Z3EncodingIssue.PURE_wp_monotonic",
-        "equation_Prims.logical",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
         "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
         "interpretation_Tm_abs_e8e7dd3fad251651880a411e491cc508",
         "l_quant_interp_b5171de4a304faabedc012f6b839d31f",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
         "typing_Tm_abs_e8e7dd3fad251651880a411e491cc508"
       ],
       0,
-      "c5e4bf850ec779a1c5fe0a803bc79dfb"
+      "a80f817584d9fba5da949527fb84b46f"
     ],
     [
       "Z3EncodingIssue.chacha_fn_ok",
@@ -79,7 +89,7 @@
       1,
       [ "@query" ],
       0,
-      "1548b0cb2f4c315065d6e772689aa36b"
+      "f7f27752b4cd0ebba4c3fe839e50cb0d"
     ],
     [
       "Z3EncodingIssue.hreturn",
@@ -88,7 +98,7 @@
       1,
       [ "@query" ],
       0,
-      "bbc213dce04d5a77a7d6a87bd58cea6f"
+      "89ec281e10ec40439f9bac448a8225d9"
     ],
     [
       "Z3EncodingIssue.hsubcomp",
@@ -100,7 +110,6 @@
         "equation_FStar.Heap.trivial_preorder",
         "equation_FStar.Integers.int", "equation_FStar.ST.mref",
         "equation_FStar.ST.ref", "equation_Z3EncodingIssue.hpost_t",
-        "equation_Z3EncodingIssue.hrepr",
         "function_token_typing_FStar.Integers.int",
         "refinement_interpretation_Tm_refine_e33ef751d600ad1c7f71142479103c47",
         "typing_FStar.Heap.trivial_preorder",
@@ -109,11 +118,20 @@
         "typing_Z3EncodingIssue.state"
       ],
       0,
-      "d765366f9931aa8b5e051860fb572146"
+      "b901b2911210fe97f58c377ae12675ad"
     ],
     [
       "Z3EncodingIssue.REF",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "a4415e2413e41c02ea59cfd2145f4d80"
+    ],
+    [
+      "Z3EncodingIssue.REF",
+      2,
       2,
       1,
       [
@@ -121,11 +139,11 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "cfcd7b1ac6299efbde5648755360714e"
+      "a6ee4c29607405cbe341deeeef70b75f"
     ],
     [
       "Z3EncodingIssue.REF",
-      2,
+      3,
       2,
       1,
       [
@@ -133,7 +151,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "60c0e219e4ba87ca32fcf41208dd4a13"
+      "ffa1fa227ea84b59957ec97f730f0c5a"
     ],
     [
       "Z3EncodingIssue.lift_div_ref",
@@ -143,17 +161,18 @@
       [
         "@MaxIFuel_assumption", "@query",
         "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
-        "Z3EncodingIssue_interpretation_Tm_arrow_8aae13b96fb0be58b929fe6db466cb69",
-        "equation_Prims.logical",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
         "interpretation_Tm_abs_a0cb05867128c2eb9c8989bdba119d4c",
         "interpretation_Tm_abs_d0f415a5361a9d7988d8e425dc193472",
         "l_quant_interp_484c4546d233ef5202deee8c490f22b1",
-        "refinement_interpretation_Tm_refine_9c79c4ef8bf28fdd5d01e604e0426830",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
         "typing_Tm_abs_a0cb05867128c2eb9c8989bdba119d4c",
         "typing_Tm_abs_d0f415a5361a9d7988d8e425dc193472"
       ],
       0,
-      "96c1f0ef026eeee70bbc78c349ce574c"
+      "a3ee2e1adad437123a597f679683bacf"
     ],
     [
       "Z3EncodingIssue.ref_hfn",
@@ -171,7 +190,7 @@
         "unit_typing"
       ],
       0,
-      "a18b40b31196c66074faa1553c0612be"
+      "d9cb421e9cc513241489687f482ff1c5"
     ]
   ]
 ]

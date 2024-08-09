@@ -39,3 +39,5 @@ all: $(FST_FILES:.fst=.uver)
 
 extract-c: $(EXTRACT_FILES)
 	krml -skip-compilation -warn-error +11 $(EXTRACT_FILES)
+
+clean:

@@ -108,8 +108,9 @@ let with_uf_enabled (f : unit -> 'a) : 'a =
 
 let fail_if_ro () =
     if (get ()).ro then
-      raise_error (Fatal_BadUvar, "Internal error: UF graph was in read-only mode")
-                  Range.dummyRange
+      raise_error_doc (Fatal_BadUvar, [
+          text "Internal error: UF graph was in read-only mode";
+        ]) Range.dummyRange
 
 let set (u:uf) =
     fail_if_ro ();
@@ -146,20 +147,22 @@ let set_term_graph tg =
 (*private*)
 let chk_v_t (su:S.uvar) = 
     let u, v, rng = su in
-    let uvar_to_string u = "?" ^ (PU.puf_id (get_term_graph ()) u |> BU.string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
     then u
     else
-      raise_error (Fatal_BadUvar,
-                   BU.format3 "Internal error: incompatible version for term unification variable %s: current version is %s; got version %s"
-                        (uvar_to_string u)
-                        (version_to_string expected)
-                        (version_to_string v))
-                  rng
+      let open FStar.Pprint in
+      raise_error_doc (Fatal_BadUvar, [
+        text "Internal error: incompatible version for term unification variable"
+          ^/^ doc_of_string (uvar_to_string u);
+        text "Current version: " ^/^ doc_of_string (version_to_string expected);
+        text "Got version: " ^/^ doc_of_string (version_to_string v);
+      ]) rng
 
 let uvar_id u  = PU.puf_id (get_term_graph()) (chk_v_t u)
+let uvar_unique_id u = PU.puf_unique_id (chk_v_t u)
 let fresh decoration (rng:Range.range)  =
     fail_if_ro ();
     PU.puf_fresh (get_term_graph()) (None, decoration), get_version(), rng
@@ -181,18 +184,19 @@ let get_univ_graph () = (get()).univ_graph
 
 (*private*)
 let chk_v_u (u, v, rng) =
-    let uvar_to_string u = "?" ^ (PU.puf_id (get_univ_graph ()) u |> BU.string_of_int) in
+    let uvar_to_string u = "?" ^ (PU.puf_unique_id u |> BU.string_of_int) in
     let expected = get_version () in
     if v.major = expected.major
     && v.minor <= expected.minor
     then u
     else
-      raise_error (Fatal_BadUvar,
-                   BU.format3 "Internal error: incompatible version for universe unification variable %s: current version is %s; got version %s"
-                        (uvar_to_string u)
-                        (version_to_string expected)
-                        (version_to_string v))
-                  rng
+      let open FStar.Pprint in
+      raise_error_doc (Fatal_BadUvar, [
+        text "Internal error: incompatible version for universe unification variable"
+          ^/^ doc_of_string (uvar_to_string u);
+        text "Current version: " ^/^ doc_of_string (version_to_string expected);
+        text "Got version: " ^/^ doc_of_string (version_to_string v);
+      ]) rng
 
 (*private*)
 let set_univ_graph (ug:ugraph) =

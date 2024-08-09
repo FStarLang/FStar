@@ -72,7 +72,9 @@ let impl_intro_gen #p #q f =
 
 (*** Universal quantification *)
 let get_forall #a p =
-  assert_norm ((forall (x: a). p x) == squash ((x: a -> GTot (p x))));
+  let t = (forall (x:a). p x) in
+  assert (norm [delta; delta_only [`%l_Forall]] t == (squash (x:a -> GTot (p x))));
+  norm_spec [delta; delta_only [`%l_Forall]] t;
   get_squashed #(x: a -> GTot (p x)) (forall (x: a). p x)
 
 (* TODO: Maybe this should move to FStar.Squash.fst *)

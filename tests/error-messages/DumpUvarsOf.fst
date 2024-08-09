@@ -1,6 +1,6 @@
 module DumpUvarsOf
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : bool -> int -> Type
 assume val q : Type

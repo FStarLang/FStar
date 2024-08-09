@@ -11,13 +11,12 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_2a246f8b1e4c98ca8a72fac9ab3f4a64_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Queens.board",
-        "fuel_guarded_inversion_Prims.list",
+        "equation_Queens.board", "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "613216b10cf3ebb4c10eb32b331dfb4b"
+      "5754c6c89045dd4811ae1930b855a9d9"
     ],
     [
       "Queens.no_clash_minus",
@@ -29,13 +28,12 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_2a246f8b1e4c98ca8a72fac9ab3f4a64_1",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equation_Queens.board",
-        "fuel_guarded_inversion_Prims.list",
+        "equation_Queens.board", "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ff4e6da0b71273c64fa59a0158be8107"
+      "c78d03bca8737b889a93cb5344ad2f07"
     ],
     [
       "Queens.valid",
@@ -44,22 +42,15 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_0da546199211a769a972571cdb3aec67",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_2a246f8b1e4c98ca8a72fac9ab3f4a64_0",
         "disc_equation_Prims.Cons", "disc_equation_Prims.Nil",
-        "equality_tok_Prims.LexTop@tok", "equality_tok_Prims.T@tok",
-        "equation_Prims.l_True", "equation_Prims.l_and",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
         "equation_Queens.board", "fuel_guarded_inversion_Prims.list",
         "function_token_typing_Prims.__cache_version_number__",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "projection_inverse_BoxBool_proj_0",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
-        "subterm_ordering_Prims.Cons", "typing_tok_Prims.T@tok"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "f91c233cd16362e11897776f3e4bc1cd"
+      "612652318917f6050015cc32b31a30df"
     ],
     [
       "Queens.pickn",
@@ -75,12 +66,11 @@
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "assumption_Queens.FlipArity",
         "binder_x_f26957a7e62b271a8736230b1e9c83c1_0",
-        "constructor_distinct_Prims.Nil", "data_typing_intro_Alg.Raise@tok",
+        "constructor_distinct_Prims.Nil", "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "equality_tok_Prims.LexTop@tok",
-        "equation_Alg.ops", "equation_Alg.sublist",
-        "equation_FStar.List.Tot.Base.op_At", "equation_Prims.pos",
-        "equation_Queens.flipOp",
+        "data_typing_intro_Prims.Nil@tok", "equation_Alg.ops",
+        "equation_Alg.sublist", "equation_FStar.List.Tot.Base.op_At",
+        "equation_Prims.pos", "equation_Queens.flipOp",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "function_token_typing_Prims.__cache_version_number__",
         "int_inversion", "int_typing", "kinding_Alg.op@tok",
@@ -89,12 +79,11 @@
         "primitive_Prims.op_Equality", "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxInt_proj_0", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
-        "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.op_At", "typing_Queens.flipOp",
         "unit_typing", "well-founded-ordering-on-nat"
       ],
       0,
-      "a42ee41e91bc8d03a6d890bd38c36029"
+      "7aed1bc5534fc3075339f14cc7c353b0"
     ],
     [
       "Queens._queens",
@@ -112,6 +101,7 @@
         "@fuel_irrelevance_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_irrelevance_Queens.valid.fuel_instrumented", "@query",
         "Alg_pretyping_65df54ce4d63ba5b9686604a5875adf8",
+        "FStar.List.Tot.Base_interpretation_Tm_arrow_54e38bdd456bab4cdb32b5d540c2274c",
         "FStar.List.Tot.Base_interpretation_Tm_arrow_84543425b818e2d10a976186b8e8c250",
         "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "Queens_interpretation_Tm_arrow_2b00b574e3c859da902fc1b8ce85c0f1",
@@ -121,20 +111,21 @@
         "binder_x_f26957a7e62b271a8736230b1e9c83c1_0", "bool_inversion",
         "constructor_distinct_BoxBool", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "constructor_distinct_Tm_unit",
-        "data_elim_Prims.Cons", "data_typing_intro_Alg.Raise@tok",
+        "data_elim_Prims.Cons", "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
-        "data_typing_intro_Prims.Nil@tok", "equality_tok_Prims.LexTop@tok",
-        "equation_Alg.ops", "equation_Alg.sublist",
-        "equation_FStar.List.Tot.Base.op_At", "equation_Prims.eqtype",
-        "equation_Prims.nat", "equation_Prims.pos", "equation_Queens.board",
-        "equation_Queens.flipOp", "equation_Queens.ok1",
-        "equation_Queens.quitOp", "equation_Queens.valid_board",
+        "data_typing_intro_Prims.Nil@tok", "equation_Alg.ops",
+        "equation_Alg.sublist", "equation_FStar.List.Tot.Base.op_At",
+        "equation_Prims.eqtype", "equation_Prims.nat", "equation_Prims.pos",
+        "equation_Queens.board", "equation_Queens.flipOp",
+        "equation_Queens.ok1", "equation_Queens.quitOp",
+        "equation_Queens.valid_board",
         "equation_with_fuel_FStar.List.Tot.Base.append.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.for_all.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_Queens.valid.fuel_instrumented",
         "fuel_guarded_inversion_Alg.empty",
         "fuel_guarded_inversion_Prims.list",
+        "function_token_typing_FStar.List.Tot.Base.op_At",
         "function_token_typing_Prims.__cache_version_number__",
         "function_token_typing_Prims.int", "int_inversion", "int_typing",
         "kinding_Alg.op@tok", "l_and-interp", "lemma_Alg.append_single",
@@ -155,6 +146,7 @@
         "refinement_interpretation_Tm_refine_ba4c91b92f4c4f6a09c95f79852bd4f3",
         "token_correspondence_FStar.List.Tot.Base.append.fuel_instrumented",
         "token_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
+        "typing_FStar.List.Tot.Base.append",
         "typing_FStar.List.Tot.Base.for_all",
         "typing_FStar.List.Tot.Base.length",
         "typing_FStar.List.Tot.Base.op_At", "typing_Queens.flipOp",
@@ -163,7 +155,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "0b598cc652232361f32e45ebb8fde7df"
+      "3cbc99f6cdf23cb44d6799d19a44c499"
     ],
     [
       "Queens.queens",
@@ -180,12 +172,13 @@
         "assumption_Queens.FlipArity", "bool_typing",
         "constructor_distinct_Alg.Other", "constructor_distinct_Prims.Cons",
         "constructor_distinct_Prims.Nil", "data_elim_Prims.Cons",
-        "data_typing_intro_Alg.Raise@tok",
+        "data_typing_intro_Alg.Write@tok",
         "data_typing_intro_Prims.Cons@tok",
         "data_typing_intro_Prims.Nil@tok", "disc_equation_Alg.Other",
-        "eq2-interp", "equation_Alg.sublist", "equation_Prims.eqtype",
-        "equation_Prims.pos", "equation_Queens.board",
-        "equation_Queens.flipOp", "equation_Queens.quitOp",
+        "eq2-interp", "equation_Alg.ops", "equation_Alg.sublist",
+        "equation_Prims.eqtype", "equation_Prims.pos",
+        "equation_Queens.board", "equation_Queens.flipOp",
+        "equation_Queens.quitOp",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_Queens.valid.fuel_instrumented", "false_interp",
@@ -204,7 +197,7 @@
         "true_interp", "typing_Queens.flipOp", "typing_Queens.quitOp"
       ],
       0,
-      "318ca83391c3e38f52d96f132bdbd349"
+      "48d2848a2f315ca099de271b6d22ddb0"
     ]
   ]
 ]

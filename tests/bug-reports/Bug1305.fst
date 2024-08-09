@@ -15,7 +15,7 @@
 *)
 module Bug1305
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ =
   assert True

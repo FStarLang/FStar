@@ -29,11 +29,15 @@ let rec factorial_is_increasing = function
   | 2 -> ()
   | x -> factorial_is_increasing (x - 1)
 
-//As we move to non-linear arithmetic, we need to give the solver more time
-#set-options "--z3rlimit 25 --max_fuel 4 --initial_fuel 4 --max_ifuel 0"
+//
+// For the base case, we use normalization to compute the two sides
+//   as opposed to relying on the solver to compute itself
+//
 val factorial_is_doubling: x:nat{x >= 3} -> Lemma (factorial x >= 2 * x)
 let rec factorial_is_doubling x = match x with
-  | 3 -> ()
+  | 3 ->
+    assert_norm (factorial 3 == 6);
+    assert_norm (3 * 2 == 6)
   | x -> factorial_is_doubling (x - 1)
 
 (* These next two are already getting too unpredictable with Z3's

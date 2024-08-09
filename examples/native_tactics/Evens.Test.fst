@@ -15,9 +15,9 @@
 *)
 module Evens.Test
 open Evens
-open FStar.Tactics
+open FStar.Tactics.V2
 
-#set-options "--__temp_fast_implicits"
 let even_test () =
- assert (even (normalize_term (nat2unary 1024)))
-     by prove_even ()
+ assert (even (nat2unary 1024))
+     by (norm [nbe; delta_only [`%nat2unary]; zeta; iota; primops];
+         prove_even ())

@@ -1,5 +1,5 @@
 [
-  "#yF_ö²Šô‚¹‹§N\u0017ÿ",
+  "†g±ßç¹±0>B\b,<\t\u001cd",
   [
     [
       "DijkstraStateMonad.__proj__Ret__item___0",
@@ -8,12 +8,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_DijkstraStateMonad.Ret",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_ef13a5ff0d90c6079d56c261caecb696"
       ],
       0,
-      "728f336bb1203b49b83f0fc6351ba02e"
+      "c54ecd2be1d08d4de7e78b57f9d290ca"
     ],
     [
       "DijkstraStateMonad.__proj__Get__item___0",
@@ -22,12 +20,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_DijkstraStateMonad.Get",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_147432991a8dc1876cc4a286c219c78a"
       ],
       0,
-      "1e5fd4d1745df8bf5212050c9a357f26"
+      "d6e166438dedf4fb2f600ccda8d60eac"
     ],
     [
       "DijkstraStateMonad.__proj__Put__item__x",
@@ -36,12 +32,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_DijkstraStateMonad.Put",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_d1cce375ab9fd25f8df281ce8e9ef48a"
       ],
       0,
-      "2662399732d6656d54b0c221626714e2"
+      "fb65308dbff249d72baf0df8cf54f7a9"
     ],
     [
       "DijkstraStateMonad.__proj__Put__item___1",
@@ -50,12 +44,10 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "disc_equation_DijkstraStateMonad.Put",
-        "projection_inverse_BoxBool_proj_0",
         "refinement_interpretation_Tm_refine_d1cce375ab9fd25f8df281ce8e9ef48a"
       ],
       0,
-      "5fc2f30be67b946a29e329f87b3ef793"
+      "8223e4af2f264c303eacf213cdb50247"
     ],
     [
       "DijkstraStateMonad.bind_m",
@@ -74,7 +66,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "1ddc1790bac16247ab5d0f85e75978ad"
+      "fb1dfa3437473ecdcc26e8b217079f60"
     ],
     [
       "DijkstraStateMonad.wp_of",
@@ -93,7 +85,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "ad643e386bb00ba8552cbb18cebdfc27"
+      "5af8e6a3e8f41f447b6c4a502aba8266"
     ],
     [
       "DijkstraStateMonad.run",
@@ -162,7 +154,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "a63b6efb1bc67a748588069c00fd2eee"
+      "33077aebd3ba166a1009061dfb841859"
     ],
     [
       "DijkstraStateMonad.ireturn",
@@ -181,7 +173,7 @@
         "projection_inverse_DijkstraStateMonad.Ret_s"
       ],
       0,
-      "127b52a669650f20b1c521293618c0df"
+      "c18cc515a52217446e13a16d332de1bb"
     ],
     [
       "DijkstraStateMonad.lem_on_comp",
@@ -197,7 +189,7 @@
         "typing_DijkstraStateMonad.op_Star_Dot"
       ],
       0,
-      "a4e04ed5482473cb6f94f745c3a0e992"
+      "17d13a3f43acfc2623150cb6bdf21e07"
     ],
     [
       "DijkstraStateMonad.bind_wp_lem'",
@@ -265,7 +257,7 @@
         "well_founded_ordering_on_codomain_DijkstraStateMonad.Get"
       ],
       0,
-      "9e10487a0a8e1a171abe436267df5f87"
+      "a5ffb19d22149330937ed7af84ab2b27"
     ],
     [
       "DijkstraStateMonad.bind_wp_lem",
@@ -296,7 +288,7 @@
         "typing_Tm_abs_99791d40815b747907d6296c0fa69faa"
       ],
       0,
-      "8ec425be446f9d03151b362d4263065a"
+      "3107dab8efc10549a4cedeb218054b97"
     ],
     [
       "DijkstraStateMonad.ibind",
@@ -312,8 +304,8 @@
         "DijkstraStateMonad_interpretation_Tm_arrow_a23ab4563cc8dfe91f2ec70b2a7b2321",
         "DijkstraStateMonad_interpretation_Tm_arrow_a4a0961821d2f8c8f1686bf6d10a1620",
         "DijkstraStateMonad_interpretation_Tm_arrow_b88e8c323dbe4e561a4fdcb24f6f2d87",
-        "FStar.Classical_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "FStar.Sealed_interpretation_Tm_arrow_6980332764c4493a7b0df5c02f7aefbe",
         "equation_DijkstraStateMonad.bind_wp",
         "equation_DijkstraStateMonad.irepr",
         "equation_DijkstraStateMonad.op_Star_Dot",
@@ -342,7 +334,7 @@
         "typing_Tm_abs_989e925b5e0283d1284e522415177fbe", "unit_typing"
       ],
       0,
-      "95f633914982e5ac57811b979b3862f2"
+      "d26ef7cb2552440bd6756a931ef93ddf"
     ],
     [
       "DijkstraStateMonad.iget",
@@ -351,7 +343,7 @@
       1,
       [ "@query", "equation_FStar.FunctionalExtensionality.feq" ],
       0,
-      "a42f739cf487e1e7accc12a8c212f6ce"
+      "355cb4df606d6eca219c269d2c36ea9f"
     ],
     [
       "DijkstraStateMonad.iput",
@@ -360,11 +352,20 @@
       1,
       [ "@query", "equation_FStar.FunctionalExtensionality.feq" ],
       0,
-      "daaa35a6f11e6d9ffe29a5de2a4e8fa6"
+      "5445a3eda126f4e437fa307d797595c0"
     ],
     [
       "DijkstraStateMonad.IFST",
       1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "b90514046974067f6b4057ea3101ad5f"
+    ],
+    [
+      "DijkstraStateMonad.IFST",
+      2,
       2,
       1,
       [
@@ -372,11 +373,11 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "d0938b01c4e861794052d6f82ec77228"
+      "eae644d5fb60a3c59940c53bbf43b38a"
     ],
     [
       "DijkstraStateMonad.IFST",
-      2,
+      3,
       2,
       1,
       [
@@ -384,7 +385,7 @@
         "refinement_interpretation_Tm_refine_de09779676242898794a0b057d5f5bb4"
       ],
       0,
-      "61a63dba0e14e7ce8d47ce8f232ec5e2"
+      "bddd44c8f995ea3a05861b87b3cdb323"
     ],
     [
       "DijkstraStateMonad.iincr",
@@ -395,7 +396,7 @@
         "@query", "int_typing", "primitive_Prims.op_Addition", "unit_typing"
       ],
       0,
-      "5e80c654bd3ac2d286b19ccb93e54e08"
+      "68ff54d1d2cabe9eff41a91ec15eb5f3"
     ]
   ]
 ]

@@ -1,23 +1,82 @@
 [
-  "åg˛vÆX_“ﬁS“\u0005CW\u0000£",
+  "|\u0006Ø˜±'èù3\u0013§'¿À\u001eˇ",
   [
     [
-      "Splice.uu___5",
+      "Splice.make_42",
       1,
       2,
       1,
-      [ "@query", "equation_Splice.x" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
       0,
-      "dd4263f11b7d29a65e6b648f0bf7fbbe"
+      "0387366a45124a06372f4ad5d1b2ed83"
     ],
     [
-      "Splice.uu___5",
-      2,
+      "Splice.uu___6",
+      1,
       2,
       1,
       [ "@query", "equation_Splice.x" ],
       0,
-      "f4d4b7644af5b9ece2d6bdae94b5830e"
+      "720fa6617bc70362e209db0689c23d7f"
+    ],
+    [
+      "Splice.recursive",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Failed",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_FStar.Tactics.NamedView.Sg_Let",
+        "disc_equation_FStar.Tactics.NamedView.Unk",
+        "equation_FStar.Stubs.Reflection.Types.typ",
+        "equation_FStar.Tactics.NamedView.simple_binder",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_exn",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Failed_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "5d5f755280dd7dc6e8ee0e81911befe0"
+    ],
+    [
+      "Splice.recursive",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "binder_x_bb4e1c9af0265270f8e7a5f250f730e2_0", "equation_Prims.nat",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_GreaterThanOrEqual",
+        "primitive_Prims.op_Subtraction", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "well-founded-ordering-on-nat"
+      ],
+      0,
+      "bba8e58566a9d68af4d9b736bb3ec535"
     ]
   ]
 ]

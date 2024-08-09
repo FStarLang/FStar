@@ -19,12 +19,23 @@ open FStar.DM4F.ST
 
 // A simple variant of state with a single integer as the state
 // Here is where all the DM4F magic happens
-total reifiable reflectable new_effect STINT = STATE_h int
+let state = int
+total reifiable reflectable new_effect {
+  STINT  : a:Type -> Effect
+  with repr     = st state
+     ; bind     = bind_st state
+     ; return   = return_st state
+     ; get      = get state
+     ; put      = put state
+}
+
 // Some abbreviations
 let repr = STINT?.repr
 let post = STINT?.post
 let pre = STINT?.pre
 let wp = STINT?.wp
+let get = STINT?.get
+let put = STINT?.put
 
 // We define a lift between PURE and STINT
 //    -- this is analogous to the return for the monad
@@ -40,7 +51,7 @@ effect StInt (a:Type) (pre: pre) (post: (int -> a -> int -> GTot Type0)) =
 
 // Another effect abbreviation for the trivial pre-post conditions
 effect StNull (a:Type) =
-  STINT a (fun (n0:int) (p:(a * int) -> Type0) -> forall (x:(a * int)). p x)
+  STINT a (fun (n0:int) (p:(a & int) -> Type0) -> forall (x:(a & int)). p x)
 
 // We define an increment function that we verify intrinsically
 
@@ -123,9 +134,11 @@ let reflect_on_the_fly u =
 
 
 
+
 (* Refining the specification of a reifiable impure function using reify/reflect *)
 (* Note that unless we internalize monotonicity for wps we need to define
    refine_st using pre/post condition                                           *)
+[@@expect_failure]
 let refine_st (#a:Type)
               (#b:Type)
               (#pre : a -> Tot STINT?.pre)
@@ -136,7 +149,7 @@ let refine_st (#a:Type)
                                  reify (f x) h0 == (z, h1) /\
                                  post x h0 z h1)
   = let g (h0:int)
-      : Pure (b * int)
+      : Pure (b & int)
              (pre x h0)
              (fun (z,h1) -> pre x h0 /\
                        reify (f x) h0 == (z, h1) /\
@@ -144,6 +157,17 @@ let refine_st (#a:Type)
       = reify (f x) h0
     in
     STINT?.reflect g
+
+assume
+val refine_st (#a:Type)
+              (#b:Type)
+              (#pre : a -> Tot STINT?.pre)
+              (#post : a -> Tot (int -> b -> int -> Tot Type0))
+              ($f :(x:a -> StInt b (pre x) (post x)))
+              (x:a)
+  : StInt b (pre x) (fun h0 z h1 -> pre x h0 /\
+                                 reify (f x) h0 == (z, h1) /\
+                                 post x h0 z h1)
 
 (* This is a little annoying but we need an explicit pre/post effect *)
  val incr_pre_post : unit ->
@@ -153,8 +177,8 @@ let incr_pre_post u =
   let n = STINT?.get() in
   STINT?.put (n + 1)
 
-(* let refine_st_incr_test (_:unit) : StNull unit = *)
-(*   let n0 = STINT?.get() in *)
-(*   refine_st incr_pre_post (); *)
-(*   let n1 = STINT?.get() in *)
-(*   assert(n1 == n0 + 1) *)
+let refine_st_incr_test (_:unit) : StNull unit =
+  let n0 = STINT?.get() in
+  refine_st incr_pre_post ();
+  let n1 = STINT?.get() in
+  assert(n1 == n0 + 1)

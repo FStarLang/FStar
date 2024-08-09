@@ -28,7 +28,7 @@ open FStar.Ident
 open FStar.Syntax.Subst
 open FStar.TypeChecker.Common
 
-type lcomp_with_binder = option bv * lcomp
+type lcomp_with_binder = option bv & lcomp
 
 module SS = FStar.Syntax.Subst
 module S = FStar.Syntax.Syntax
@@ -37,6 +37,8 @@ module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 
+let dbg_Patterns = Debug.get_toggle "Patterns"
+
 (************************************************************************)
 (* Utilities on patterns  *)
 (************************************************************************)
@@ -44,7 +46,7 @@ module C = FStar.Parser.Const
 let rec elaborate_pat env p = //Adds missing implicit patterns to constructor patterns
     let maybe_dot inaccessible a r =
         if inaccessible
-        then withinfo (Pat_dot_term(a, tun)) r
+        then withinfo (Pat_dot_term None) r
         else withinfo (Pat_var a) r
     in
     match p.v with
@@ -91,7 +93,8 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               | Pat_dot_term _ ->
                 (p, true)::aux formals' pats'
 
-              | Pat_wild _ -> //it's ok; it's not going to be bound anyway
+              // Only allow it if it won't be bound
+              | Pat_var v when string_of_id (v.ppname) = Ident.reserved_prefix ->
                 let a = Syntax.new_bv (Some p.p) tun in
                 let p = maybe_dot inaccessible a (range_of_lid fv.fv_name.v) in
                 (p, true)::aux formals' pats'
@@ -120,7 +123,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
 
 exception Raw_pat_cannot_be_translated
 let raw_pat_as_exp (env:Env.env) (p:pat)
-  : option (term * list bv)
+  : option (term & list bv)
   = let rec aux bs p = 
         match p.v with
         | Pat_constant c ->
@@ -133,15 +136,13 @@ let raw_pat_as_exp (env:Env.env) (p:pat)
           in
           e, bs
 
-        | Pat_dot_term(_, t) ->
+        | Pat_dot_term eopt ->
           begin
-          let t = SS.compress t in
-          match t.n with
-          | Tm_unknown -> raise Raw_pat_cannot_be_translated
-          | _ -> t, bs
+            match eopt with
+            | None -> raise Raw_pat_cannot_be_translated
+            | Some e -> SS.compress e, bs
           end
 
-        | Pat_wild x
         | Pat_var x ->
           mk (Tm_name x) p.p, x::bs
 
@@ -175,25 +176,26 @@ let pat_as_exp (introduce_bv_uvars:bool)
                (env:Env.env)
                (p:pat)
     : (list bv          (* pattern-bound variables (which may appear in the branch of match) *)
-     * term              (* expressions corresponding to the pattern *)
-     * guard_t           (* guard with just the implicit variables introduced in the pattern *)
-     * pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
-    let intro_bv (env:Env.env) (x:bv) :(bv * guard_t * Env.env) =
+     & term              (* expressions corresponding to the pattern *)
+     & guard_t           (* guard with just the implicit variables introduced in the pattern *)
+     & pat)   =          (* decorated pattern, with all the missing implicit args in p filled in *)
+    let intro_bv (env:Env.env) (x:bv) :(bv & guard_t & Env.env) =
         if not introduce_bv_uvars
         then {x with sort=S.tun}, Env.trivial_guard, env
         else let t, _ = U.type_u() in
-             let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t Allow_untyped None in
+             let t_x, _, guard = new_implicit_var_aux "pattern bv type" (S.range_of_bv x) env t (Allow_untyped "pattern bv type") None in
              let x = {x with sort=t_x} in
              x, guard, Env.push_bv env x
     in
+    // TODO: remove wildcards
     let rec pat_as_arg_with_env env (p:pat) :
                                     (list bv    //all pattern-bound vars including wild-cards, in proper order
-                                    * list bv   //just the accessible vars, for the disjunctive pattern test
-                                    * list bv   //just the wildcards
-                                    * Env.env    //env extending with the pattern-bound variables
-                                    * term       //the pattern as a term/typ
-                                    * guard_t    //guard with all new implicits
-                                    * pat) =     //the elaborated pattern itself
+                                    & list bv   //just the accessible vars, for the disjunctive pattern test
+                                    & list bv   //just the wildcards
+                                    & Env.env    //env extending with the pattern-bound variables
+                                    & term       //the pattern as a term/typ
+                                    & guard_t    //guard with all new implicits
+                                    & pat) =     //the elaborated pattern itself
         match p.v with
            | Pat_constant c ->
              let e =
@@ -205,18 +207,21 @@ let pat_as_exp (introduce_bv_uvars:bool)
              in
              ([], [], [], env, e, trivial_guard, p)
 
-           | Pat_dot_term(x, _) ->
-             let k, _ = U.type_u () in
-             let t, _, g = new_implicit_var_aux "pat_dot_term type" (S.range_of_bv x) env k Allow_ghost None in
-             let x = {x with sort=t} in
-             let e, _,  g' = new_implicit_var_aux "pat_dot_term" (S.range_of_bv x) env t Allow_ghost None in
-             let p = {p with v=Pat_dot_term(x, e)} in
-             ([], [], [], env, e, conj_guard g g', p)
-
-           | Pat_wild x ->
-             let x, g, env = intro_bv env x in
-             let e = mk (Tm_name x) p.p in
-             ([x], [], [x], env, e, g, p)
+           | Pat_dot_term eopt ->
+             (match eopt with
+              | None ->
+                if !dbg_Patterns
+                then begin
+                  if not env.phase1
+                  then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
+                         (Print.pat_to_string p)
+                end;
+                let k, _ = U.type_u () in
+                let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k (Allow_ghost "pat dot term type") None in
+                let e, _,  g' = new_implicit_var_aux "pat_dot_term" p.p env t (Allow_ghost "pat dot term") None in
+                let p = {p with v=Pat_dot_term (Some e)} in
+                [], [], [], env, e, conj_guard g g', p
+              | Some e -> [], [], [], env, e, Env.trivial_guard, p)
 
            | Pat_var x ->
              let x, g, env = intro_bv env x in

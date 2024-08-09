@@ -1,5 +1,5 @@
 [
-  "Š\u0014×ƒè£óÔ8žPçÏ“\u0012ê",
+  "\u001e\u0003~W\u0004¢\u0017¡Kú\f±=í?’",
   [
     [
       "RecordFieldAttributes.fv_eq",
@@ -13,7 +13,7 @@
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "e0492339c6f4cccfe8758bc779c14c04"
+      "c7f9bb559240255a3981b9f60f98950a"
     ],
     [
       "RecordFieldAttributes.unpack_field",
@@ -22,11 +22,12 @@
       1,
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
-        "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
+        "disc_equation_Prims.Nil", "equation_FStar.Tactics.NamedView.term",
+        "fuel_guarded_inversion_Prims.list",
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "f0369fc8aa97835b4e8266c24656e771"
+      "3c42f0e41153b753de9abed3b80cd722"
     ],
     [
       "RecordFieldAttributes.get_record_fields",
@@ -37,20 +38,27 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.length.fuel_instrumented",
         "@query", "Prims_pretyping_ae567c2fb75be05905677af440075565",
-        "constructor_distinct_BoxInt", "constructor_distinct_Tm_unit",
-        "disc_equation_Prims.Cons", "equation_FStar.Reflection.Data.ctor",
-        "equation_FStar.Reflection.Types.name",
+        "constructor_distinct_BoxInt",
+        "constructor_distinct_FStar.Pervasives.Native.Some",
+        "constructor_distinct_Tm_unit",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "disc_equation_Prims.Cons",
+        "equation_FStar.Stubs.Reflection.Types.name",
+        "equation_FStar.Stubs.Reflection.V2.Data.ctor",
         "equation_with_fuel_FStar.List.Tot.Base.length.fuel_instrumented",
-        "function_token_typing_FStar.Reflection.Data.ctor",
-        "function_token_typing_FStar.Reflection.Types.sigelt",
+        "fuel_guarded_inversion_FStar.Stubs.Tactics.Result.__result",
+        "function_token_typing_FStar.Stubs.Reflection.Types.sigelt",
+        "function_token_typing_FStar.Stubs.Reflection.V2.Data.ctor",
         "function_token_typing_Prims.__cache_version_number__",
         "lemma_FStar.Pervasives.invertOption", "primitive_Prims.op_Equality",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0",
-        "typing_FStar.Reflection.Builtins.lookup_typ"
+        "projection_inverse_FStar.Pervasives.Native.Some_a",
+        "projection_inverse_FStar.Pervasives.Native.Some_v",
+        "typing_FStar.Stubs.Reflection.V2.Builtins.lookup_typ"
       ],
       0,
-      "e3373dd6d56103553c615c08b11bd113"
+      "e951b794be9cf0d9c904ef5b3eb93291"
     ]
   ]
 ]

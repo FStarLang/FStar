@@ -17,7 +17,7 @@ module Fail
 
 // Making sure the unification engine respects failures
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : Type
 assume val q : Type

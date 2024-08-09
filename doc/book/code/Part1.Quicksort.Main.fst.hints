@@ -1,0 +1,35 @@
+[
+  "²Á´1;•!*‘öÖ>\u0013¸Ä_",
+  [
+    [
+      "Part1.Quicksort.Main.main",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part1.Quicksort.Generic.total_order", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0,
+      "1c31ec85ed9fdb1dab2e059dbbd5a8ea"
+    ],
+    [
+      "Part1.Quicksort.Main.uu___5",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "equation_Part1.Quicksort.Generic.total_order", "int_inversion",
+        "primitive_Prims.op_LessThanOrEqual",
+        "projection_inverse_BoxBool_proj_0",
+        "token_correspondence_Prims.op_LessThanOrEqual"
+      ],
+      0,
+      "6462055863ced217f42d18e7b4da61b9"
+    ]
+  ]
+]

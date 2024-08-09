@@ -17,7 +17,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "2a6826db58700f50dfaf8aa84a231e48"
+      "1a2c3f7ffb485a9504a2e9c0bf250e40"
     ],
     [
       "Simple.poly_id",
@@ -35,7 +35,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "335efa53e461fc9e9ab74fb5862ff79a"
+      "afdae5e80fba039bcbffb8cb38de1b28"
     ],
     [
       "Simple.mk_n_list",
@@ -50,7 +50,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "4473b8a9cc8cee23dce6e970c23e9b50"
+      "46294d2f1cae4034252124fb68a08d45"
     ],
     [
       "Simple.poly_list_id",
@@ -60,10 +60,10 @@
       [
         "@MaxIFuel_assumption", "@query", "disc_equation_Prims.Cons",
         "disc_equation_Prims.Nil", "fuel_guarded_inversion_Prims.list",
-        "subterm_ordering_Prims.Cons"
+        "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "ff6889c66dfb90d8f7e3271bbef86404"
+      "5c99f0e7b0369962392160ff2377358a"
     ],
     [
       "Simple.eq_int_list",
@@ -73,13 +73,11 @@
       [
         "@MaxIFuel_assumption", "@query",
         "binder_x_66b03f5c7897b05649fed8196554c587_0",
-        "equality_tok_Prims.LexTop@tok",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__1",
         "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
         "subterm_ordering_Prims.Cons"
       ],
       0,
-      "12094bfe86c1326e6634b623a029764a"
+      "0fa5c5034fe3ba6c430854101193d286"
     ]
   ]
 ]

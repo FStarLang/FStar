@@ -180,13 +180,13 @@ val inverse_image_to_wfr
 /// wfr_a wfr_b` as defined below.
 
 let lex_nondep_relation (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
-                        (xy1: a * b) (xy2: a * b)
+                        (xy1: a & b) (xy2: a & b)
   : Type0 =
   let (x1, y1), (x2, y2) = xy1, xy2 in
   wfr_a.relation x1 x2 \/ (x1 == x2 /\ wfr_b.relation y1 y2)
 
 val lex_nondep_wfr (#a: Type u#a) (#b: Type u#b) (wfr_a: wfr_t a) (wfr_b: wfr_t b)
-  : wfr: wfr_t (a * b){wfr.relation == lex_nondep_relation wfr_a wfr_b}
+  : wfr: wfr_t (a & b){wfr.relation == lex_nondep_relation wfr_a wfr_b}
 
 /// `lex_dep_wfr wfr_a a_to_wfr_b` is a `wfr_t` describing
 /// lexicographic precedence for dependent tuples of type `(x: a & b

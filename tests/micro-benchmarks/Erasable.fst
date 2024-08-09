@@ -74,6 +74,7 @@ let e_unit_5 = t
 type repr (a:Type) (_:eqtype_as_type unit) = a
 let return (a:Type) (x:a) : repr a () = x
 let bind (a b:Type) (f:repr a ()) (g:a -> repr b ()) : repr b () = g f
+[@@ primitive_extraction]
 total
 effect {
   MPURE (a:Type) (_:eqtype_as_type unit) with {repr; return; bind}

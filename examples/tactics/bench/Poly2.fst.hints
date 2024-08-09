@@ -1,0 +1,45 @@
+[
+  "‰½Á`…žò:c´ò\u000fÎ-æj",
+  [
+    [
+      "Poly2.modulo_addition_lemma",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "24faac2b22b60914826e1fbd86fb4f97"
+    ],
+    [
+      "Poly2.lemma_div_mod",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
+      ],
+      0,
+      "5f1f0c8ca22f07961f54e9345885bfb2"
+    ],
+    [
+      "Poly2.lemma_poly_multiply",
+      1,
+      0,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.pos",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "primitive_Prims.op_Division", "primitive_Prims.op_Modulus",
+        "primitive_Prims.op_Multiply", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5",
+        "true_interp"
+      ],
+      0,
+      "8be7f7ca3975bfb6d4fd72e12b1fc6f5"
+    ]
+  ]
+]

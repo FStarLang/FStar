@@ -1,35 +1,91 @@
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(21,4-21,8)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 178 at PatternMatch.fst(15,27-15,34):
+  - Type ascriptions within patterns are only allowed on variables
+
 >>]
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(24,4-24,11)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 178 at PatternMatch.fst(18,29-18,48):
+  - Type ascriptions within patterns are only allowed on variables
+
 >>]
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(29,4-29,8)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 178 at PatternMatch.fst(41,3-41,24):
+  - Type ascriptions within patterns are only allowed on variables
+
 >>]
 >> Got issues: [
-PatternMatch.fst(32,4-32,9): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(21,4-21,8)
+
 >>]
 >> Got issues: [
-PatternMatch.fst(35,4-35,5): (Error 114) Type of pattern (PatternMatch.ab) does not match type of scrutinee (Prims.int); head mismatch PatternMatch.ab vs Prims.int
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(24,4-24,11)
+
 >>]
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(38,4-38,5)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(29,4-29,8)
+
 >>]
 >> Got issues: [
-PatternMatch.fst(55,4-55,8): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+* Error 114 at PatternMatch.fst(32,4-32,9):
+  - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+
 >>]
 >> Got issues: [
-PatternMatch.fst(58,4-58,16): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+* Error 114 at PatternMatch.fst(35,4-35,5):
+  - Type of pattern PatternMatch.ab does not match type of scrutinee Prims.int
+  - Head mismatch PatternMatch.ab vs Prims.int
+
 >>]
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(61,5-61,12)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(38,4-38,5)
+
 >>]
 >> Got issues: [
-(Error 19) Patterns are incomplete (Also see: PatternMatch.fst(64,5-64,20)); The SMT solver could not prove the query. Use --query_stats for more details.
+* Error 114 at PatternMatch.fst(55,4-55,8):
+  - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+
 >>]
 >> Got issues: [
-PatternMatch.fst(69,5-69,15): (Error 114) Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+* Error 114 at PatternMatch.fst(58,4-58,16):
+  - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+
+>>]
+>> Got issues: [
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(61,5-61,12)
+
+>>]
+>> Got issues: [
+* Error 19:
+  - Patterns are incomplete
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - Also see: PatternMatch.fst(64,5-64,20)
+
+>>]
+>> Got issues: [
+* Error 114 at PatternMatch.fst(69,5-69,15):
+  - Type of pattern (Prims.bool) does not match type of scrutinee (Prims.int)
+
 >>]
 Verified module: PatternMatch
 All verification conditions discharged successfully

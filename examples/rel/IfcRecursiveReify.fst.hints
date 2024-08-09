@@ -8,14 +8,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_ae567c2fb75be05905677af440075565_2",
-        "equality_tok_Prims.LexTop@tok", "int_typing",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "be4ead72eb51e40ff3733ad879b15c1b"
+      "1c52cf069c0148f531a1b38d2a197d05"
     ],
     [
       "IfcRecursiveReify.ni_p1",
@@ -43,7 +45,6 @@
         "equation_FStar.Pervasives.Native.snd",
         "equation_IfcRecursiveReify.low_equiv",
         "equation_IfcRecursiveReify.p1_r", "equation_Prims.eqtype",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_IfcRecursiveReify.p1.fuel_instrumented",
         "fuel_guarded_inversion_Rel.rel",
         "function_token_typing_Prims.__cache_version_number__",
@@ -70,7 +71,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d09075e6af2b8ad31aa160b96f6e3d50"
+      "88eabc365f7ea9cf007ea806a81070e3"
     ],
     [
       "IfcRecursiveReify.p2",
@@ -79,14 +80,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
         "binder_x_ae567c2fb75be05905677af440075565_2",
-        "equality_tok_Prims.LexTop@tok", "int_typing",
-        "primitive_Prims.op_GreaterThan", "primitive_Prims.op_Subtraction",
+        "function_token_typing_Prims.__cache_version_number__",
+        "int_inversion", "int_typing", "primitive_Prims.op_GreaterThan",
+        "primitive_Prims.op_Subtraction",
         "projection_inverse_BoxBool_proj_0",
         "projection_inverse_BoxInt_proj_0", "well-founded-ordering-on-nat"
       ],
       0,
-      "b76ab5ef002a6a6cc0d2cd0e48f3195d"
+      "b0871f0b98be002a9a0761e45da35554"
     ],
     [
       "IfcRecursiveReify.ni_p2",
@@ -114,7 +117,6 @@
         "equation_FStar.Pervasives.Native.snd",
         "equation_IfcRecursiveReify.low_equiv",
         "equation_IfcRecursiveReify.p2_r", "equation_Prims.eqtype",
-        "equation_Prims.op_Equals_Equals_Equals",
         "equation_with_fuel_IfcRecursiveReify.p2.fuel_instrumented",
         "fuel_guarded_inversion_Rel.rel",
         "function_token_typing_Prims.__cache_version_number__",
@@ -142,7 +144,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "d2b4f608d3b26f640c1d7ec6689fdcf9"
+      "cf926bcfff7c41c69aa6bc84c34c3599"
     ],
     [
       "IfcRecursiveReify.ni_p3",
@@ -151,20 +153,16 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
-        "Prims_pretyping_f8666440faa91836cc5a13998af863fc",
         "equation_FStar.Pervasives.Native.snd",
         "equation_IfcRecursiveReify.low_equiv",
         "equation_IfcRecursiveReify.p1_r", "equation_IfcRecursiveReify.p2_r",
         "equation_IfcRecursiveReify.p3", "equation_IfcRecursiveReify.p3_r",
-        "int_inversion",
-        "interpretation_IfcRecursiveReify_Tm_abs_e623790d0041b8ab0f32b77ab855f0f0",
-        "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
+        "int_inversion", "proj_equation_FStar.Pervasives.Native.Mktuple2__2",
         "proj_equation_Rel.R_l", "proj_equation_Rel.R_r",
-        "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r",
-        "unit_typing"
+        "projection_inverse_Rel.R_l", "projection_inverse_Rel.R_r"
       ],
       0,
-      "b81cde8d40306718dd2f32581a175f14"
+      "2e3455377ba0c84e6d403a5b71735a4e"
     ]
   ]
 ]

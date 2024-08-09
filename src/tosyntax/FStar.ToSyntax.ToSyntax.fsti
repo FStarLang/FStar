@@ -30,23 +30,31 @@ open FStar.Ident
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
 
+type extension_tosyntax_decl_t = env -> FStar.Dyn.dyn -> lids:list lident -> Range.range -> list sigelt'
+val register_extension_tosyntax (lang_name:string) (cb:extension_tosyntax_decl_t) : unit
+
 val as_interface:            AST.modul -> AST.modul
 val desugar_term:            env -> term -> S.term
 val desugar_machine_integer: env -> repr:string
-                           -> (FStar.Const.signedness * FStar.Const.width)
+                           -> (FStar.Const.signedness & FStar.Const.width)
                            -> Range.range -> Syntax.term
+val free_vars (tvars_only:bool) (e:env) (t:term) : list ident
 val close:                   env -> term -> term
 
 val ast_modul_to_modul:          AST.modul -> withenv Syntax.modul
 val decls_to_sigelts:            list AST.decl -> withenv sigelts
 val partial_ast_modul_to_modul:  option S.modul -> AST.modul -> withenv Syntax.modul
 
+val add_partial_modul_to_env: Syntax.modul
+                    -> module_inclusion_info
+                    -> erase_univs:(S.term -> S.term)
+                    -> withenv unit
 val add_modul_to_env: Syntax.modul
                     -> module_inclusion_info
                     -> erase_univs:(S.term -> S.term)
                     -> withenv unit
 
-val parse_attr_with_list : bool -> S.term -> lident -> option (list int) * bool
+val parse_attr_with_list : bool -> S.term -> lident -> option (list int) & bool
 
-val get_fail_attr1 : bool -> S.term       -> option (list int * bool)
-val get_fail_attr  : bool -> list S.term -> option (list int * bool)
+val get_fail_attr1 : bool -> S.term       -> option (list int & bool)
+val get_fail_attr  : bool -> list S.term -> option (list int & bool)

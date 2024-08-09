@@ -3,7 +3,7 @@
   (name Main)
   (libraries
     batteries
-    fstarlib
+    fstar.lib
   )
   (preprocess (pps ppx_deriving_yojson))
   (flags (:standard -w -8-9-11-26-27-33-39))

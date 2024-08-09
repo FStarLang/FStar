@@ -30,7 +30,6 @@ module Err = FStar.Errors
 module U = FStar.Compiler.Util
 module S = FStar.Syntax.Syntax
 
-
 ///////////////////////////////////////////////////////////////////////////
 // A few utility functions for working with lists of parallel substitutions
 ///////////////////////////////////////////////////////////////////////////
@@ -76,7 +75,7 @@ let compose_subst s1 s2 =
 //composing it with any other delayed substitution that may already be there
 let delay t s =
  match t.n with
- | Tm_delayed (t', s') ->
+ | Tm_delayed {tm=t'; substs=s'} ->
     //s' is the subsitution already associated with this node;
     //s is the new subsitution to add to it
     //compose substitutions by concatenating them
@@ -129,6 +128,8 @@ let rec compress_univ u = match u with
 let subst_bv a s = U.find_map s (function
     | DB (i, x) when (i=a.index) ->
       Some (bv_to_name (Syntax.set_range_of_bv x (Syntax.range_of_bv a)))
+    | DT (i, t) when (i=a.index) ->
+      Some t
     | _ -> None)
 let subst_nm a s = U.find_map s (function
     | NM (x, i) when bv_eq a x -> Some (bv_to_tm ({a with index=i}))
@@ -206,7 +207,7 @@ let rec subst' (s:subst_ts) (t:term) : term =
     | Tm_constant _                      //a constant cannot be substituted
     | Tm_fvar _ -> tag_with_range t0 s   //fvars are never subject to substitution
 
-    | Tm_delayed (t', s') ->
+    | Tm_delayed {tm=t';substs=s'} ->
         //s' is the subsitution already associated with this node;
         //s is the new subsitution to add to it
         //compose substitutions by concatenating them
@@ -264,8 +265,8 @@ let subst_comp' s t =
   | [[]], NoUseRange -> t
   | _ ->
     match t.n with
-      | Total (t, uopt) -> mk_Total' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
-      | GTotal (t, uopt) -> mk_GTotal' (subst' s t) (Option.map (subst_univ (fst s)) uopt)
+      | Total t -> mk_Total (subst' s t)
+      | GTotal t -> mk_GTotal (subst' s t)
       | Comp ct -> mk_Comp(subst_comp_typ' s ct)
 
 let subst_ascription' s (asc:ascription) =
@@ -279,6 +280,7 @@ let subst_ascription' s (asc:ascription) =
 
 let shift n s = match s with
     | DB(i, t) -> DB(i+n, t)
+    | DT(i, t) -> DT(i+n, t)
     | UN(i, t) -> UN(i+n, t)
     | NM(x, i) -> NM(x, i+n)
     | UD(x, i) -> UD(x, i+n)
@@ -289,6 +291,7 @@ let subst_binder' s b =
   S.mk_binder_with_attrs
     ({ b.binder_bv with sort = subst' s b.binder_bv.sort })
     (subst_bqual' s b.binder_qual)
+    b.binder_positivity
     (b.binder_attrs |> List.map (subst' s))
 
 
@@ -310,8 +313,8 @@ let subst_univs_opt sub us_opt =
     | None -> None
     | Some us -> Some (List.map (subst_univ sub) us)
 
-let subst_pat' s p : (pat * int) =
-    let rec aux n p : (pat * int) = match p.v with
+let subst_pat' s p : (pat & int) =
+    let rec aux n p : (pat & int) = match p.v with
       | Pat_constant _ -> p, n
 
       | Pat_cons(fv, us_opt, pats) ->
@@ -326,21 +329,22 @@ let subst_pat' s p : (pat * int) =
         let x = {x with sort=subst' s x.sort} in
         {p with v=Pat_var x}, n + 1
 
-      | Pat_wild x ->
+      | Pat_dot_term eopt ->
         let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        {p with v=Pat_wild x}, n + 1 //these may be in scope in the inferred types of other terms, so shift the index
-
-      | Pat_dot_term(x, t0) ->
-        let s = shift_subst' n s in
-        let x = {x with sort=subst' s x.sort} in
-        let t0 = subst' s t0 in
-        {p with v=Pat_dot_term(x, t0)}, n //these are not in scope, so don't shift the index
+        let eopt = U.map_option (subst' s) eopt in
+        {p with v=Pat_dot_term eopt}, n
   in aux 0 p
 
 let push_subst_lcomp s lopt = match lopt with
     | None -> None
-    | Some rc -> Some ({rc with residual_typ = FStar.Compiler.Util.map_opt rc.residual_typ (subst' s)})
+    | Some rc ->
+        let residual_typ = U.map_opt rc.residual_typ (subst' s) in
+        (* NB: residual flags MUST be closed. DECREASES cannot
+        appear there *)
+        let rc = { residual_effect = rc.residual_effect
+                 ; residual_typ    = residual_typ
+                 ; residual_flags  = rc.residual_flags } in
+        Some rc
 
 let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     let should_retain x =
@@ -371,11 +375,17 @@ let compose_uvar_subst (u:ctx_uvar) (s0:subst_ts) (s:subst_ts) : subst_ts =
     | [] -> [], snd s
     |  s' -> [s'], snd s
 
-let rec push_subst s t =
+//
+// If resolve_uvars is true, it will lookup the unionfind graph
+//   and use uvar solution, if it has already been solved
+//   see the Tm_uvar case in this function
+// Otherwise it will just compose s with the uvar subst
+// 
+let rec push_subst_aux (resolve_uvars:bool) s t =
     //makes a syntax node, setting it's use range as appropriate from s
     let mk t' = Syntax.mk t' (mk_range t.pos s) in
     match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
+    | Tm_delayed _ -> failwith "Impossible (delayed node in push_subst)"
 
     | Tm_lazy i ->
         begin match i.lkind with
@@ -384,7 +394,7 @@ let rec push_subst s t =
              * The hope is that this does not occur often and so
              * we still get good performance. *)
           let t = must !lazy_chooser i.lkind i in // Can't call Syntax.Util from here
-          push_subst s t
+          push_subst_aux resolve_uvars s t
         | _ ->
             (* All others must be closed, so don't bother *)
             tag_with_range t s
@@ -395,11 +405,14 @@ let rec push_subst s t =
     | Tm_unknown -> tag_with_range t s //these are always closed
 
     | Tm_uvar (uv, s0) ->
-      begin
-      match (Unionfind.find uv.ctx_uvar_head) with
-      | None -> tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
-      | Some t -> push_subst (compose_subst s0 s) t
-      end
+      let fallback () =
+        tag_with_range ({t with n = Tm_uvar(uv, compose_uvar_subst uv s0 s)}) s
+      in
+      if not resolve_uvars
+      then fallback ()
+      else (match (Unionfind.find uv.ctx_uvar_head) with
+            | None -> fallback ()
+            | Some t -> push_subst_aux resolve_uvars (compose_subst s0 s) t)
 
     | Tm_type _
     | Tm_bvar _
@@ -411,26 +424,26 @@ let rec push_subst s t =
         let us = List.map (subst_univ (fst s)) us in
         tag_with_range (mk (Tm_uinst (t', us))) s
 
-    | Tm_app(t0, args) -> mk (Tm_app(subst' s t0, subst_args' s args))
+    | Tm_app {hd=t0; args} -> mk (Tm_app {hd=subst' s t0; args=subst_args' s args})
 
-    | Tm_ascribed(t0, asc, lopt) ->
-      mk (Tm_ascribed(subst' s t0, subst_ascription' s asc, lopt))
+    | Tm_ascribed {tm=t0; asc; eff_opt=lopt} ->
+      mk (Tm_ascribed {tm=subst' s t0; asc=subst_ascription' s asc; eff_opt=lopt})
 
-    | Tm_abs(bs, body, lopt) ->
+    | Tm_abs {bs; body; rc_opt=lopt} ->
         let n = List.length bs in
         let s' = shift_subst' n s in
-        mk (Tm_abs(subst_binders' s bs, subst' s' body, push_subst_lcomp s' lopt))
+        mk (Tm_abs {bs=subst_binders' s bs; body=subst' s' body; rc_opt=push_subst_lcomp s' lopt})
 
-    | Tm_arrow(bs, comp) ->
+    | Tm_arrow {bs; comp} ->
         let n = List.length bs in
-        mk (Tm_arrow(subst_binders' s bs, subst_comp' (shift_subst' n s) comp))
+        mk (Tm_arrow {bs=subst_binders' s bs;comp=subst_comp' (shift_subst' n s) comp})
 
-    | Tm_refine(x, phi) ->
+    | Tm_refine {b=x; phi} ->
         let x = {x with sort=subst' s x.sort} in
         let phi = subst' (shift_subst' 1 s) phi in
-        mk (Tm_refine(x, phi))
+        mk (Tm_refine {b=x; phi})
 
-    | Tm_match(t0, asc_opt, pats, lopt) ->
+    | Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=lopt} ->
         let t0 = subst' s t0 in
         let pats = pats |> List.map (fun (pat, wopt, branch) ->
           let pat, n = subst_pat' s pat in
@@ -447,9 +460,9 @@ let rec push_subst s t =
             let b = subst_binder' s b in
             let asc = subst_ascription' (shift_subst' 1 s) asc in
             Some (b, asc) in
-        mk (Tm_match(t0, asc_opt, pats, push_subst_lcomp s lopt))
+        mk (Tm_match {scrutinee=t0; ret_opt=asc_opt; brs=pats; rc_opt=push_subst_lcomp s lopt})
 
-    | Tm_let((is_rec, lbs), body) ->
+    | Tm_let {lbs=(is_rec, lbs); body} ->
         let n = List.length lbs in
         let sn = shift_subst' n s in
         let body = subst' sn body in
@@ -464,16 +477,16 @@ let rec push_subst s t =
           in
           let lbattrs = List.map (subst' s) lb.lbattrs in
           {lb with lbname=lbname; lbtyp=lbt; lbdef=lbd; lbattrs=lbattrs}) in
-        mk (Tm_let((is_rec, lbs), body))
+        mk (Tm_let {lbs=(is_rec, lbs); body})
 
-    | Tm_meta(t0, Meta_pattern (bs, ps)) ->
-        mk (Tm_meta(subst' s t0, Meta_pattern (List.map (subst' s) bs, ps |> List.map (subst_args' s))))
+    | Tm_meta {tm=t0; meta=Meta_pattern (bs, ps)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_pattern (List.map (subst' s) bs, ps |> List.map (subst_args' s))})
 
-    | Tm_meta(t0, Meta_monadic (m, t)) ->
-        mk (Tm_meta(subst' s t0, Meta_monadic(m, subst' s t)))
+    | Tm_meta {tm=t0; meta=Meta_monadic (m, t)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_monadic(m, subst' s t)})
 
-    | Tm_meta(t0, Meta_monadic_lift (m1, m2, t)) ->
-        mk (Tm_meta(subst' s t0, Meta_monadic_lift (m1, m2, subst' s t)))
+    | Tm_meta {tm=t0; meta=Meta_monadic_lift (m1, m2, t)} ->
+        mk (Tm_meta {tm=subst' s t0; meta=Meta_monadic_lift (m1, m2, subst' s t)})
 
     | Tm_quoted (tm, qi) ->
         begin match qi.qkind with
@@ -483,8 +496,21 @@ let rec push_subst s t =
             mk (Tm_quoted (tm, qi))
         end
 
-    | Tm_meta(t, m) ->
-        mk (Tm_meta(subst' s t,  m))
+    | Tm_meta {tm=t; meta=m} ->
+        mk (Tm_meta {tm=subst' s t; meta=m})
+
+let push_subst s t = push_subst_aux true s t
+
+//
+// Only push the pending substitution down,
+//   no resolving uvars
+//
+let compress_subst t =
+  match t.n with
+  | Tm_delayed {tm=t; substs=s} ->
+    let resolve_uvars = false in
+    push_subst_aux resolve_uvars s t
+  | _ -> t
 
 (* compress:
       This is used pervasively, throughout the codebase
@@ -516,13 +542,13 @@ let rec push_subst s t =
 let rec compress_slow (t:term) =
     let t = force_uvar t in
     match t.n with
-    | Tm_delayed (t', s) ->
+    | Tm_delayed {tm=t'; substs=s} ->
         compress (push_subst s t')
     | _ ->
         t
 and compress (t:term) =
   match t.n with
-    | Tm_delayed (_, _) | Tm_uvar(_, _) ->
+    | Tm_delayed _ | Tm_uvar _ ->
         let r = compress_slow t in
         (* begin match r.n with *)
         (* | Tm_delayed _ -> failwith "compress attempting to return a Tm_delayed" *)
@@ -554,7 +580,7 @@ let open_binders' bs =
           let attrs = b.binder_attrs |> List.map (subst o) in
           let o = DB(0, x')::shift_subst 1 o in
           let bs', o = aux bs' o in
-          (S.mk_binder_with_attrs x' imp attrs)::bs', o in
+          (S.mk_binder_with_attrs x' imp b.binder_positivity attrs)::bs', o in
    aux bs []
 let open_binders (bs:binders) = fst (open_binders' bs)
 let open_term' (bs:binders) t =
@@ -570,7 +596,7 @@ let open_ascription bs asc =
   let bs', opening = open_binders' bs in
   bs', subst_ascription opening asc
 
-let open_pat (p:pat) : pat * subst_t =
+let open_pat (p:pat) : pat & subst_t =
     let rec open_pat_aux sub p =
         match p.v with
         | Pat_constant _ -> p, sub
@@ -587,15 +613,9 @@ let open_pat (p:pat) : pat * subst_t =
             let sub = DB(0, x')::shift_subst 1 sub in
             {p with v=Pat_var x'}, sub
 
-        | Pat_wild x ->
-            let x' = {freshen_bv x with sort=subst sub x.sort} in
-            let sub = DB(0, x')::shift_subst 1 sub in
-            {p with v=Pat_wild x'}, sub
-
-        | Pat_dot_term(x, t0) ->
-            let x = {x with sort=subst sub x.sort} in
-            let t0 = subst sub t0 in
-            {p with v=Pat_dot_term(x, t0)}, sub //these are not in scope, so don't shift the index
+        | Pat_dot_term eopt ->
+            let eopt = U.map_option (subst sub) eopt in
+            {p with v=Pat_dot_term eopt}, sub
     in
     open_pat_aux [] p
 
@@ -621,7 +641,7 @@ let close_binders (bs:binders) : binders =
           let imp = subst_bqual s b.binder_qual in
           let attrs = b.binder_attrs |> List.map (subst s) in
           let s' = NM(x, 0)::shift_subst 1 s in
-          (S.mk_binder_with_attrs x imp attrs)::aux s' tl in
+          (S.mk_binder_with_attrs x imp b.binder_positivity attrs)::aux s' tl in
     aux [] bs
 let close_ascription (bs:binders) (asc:ascription) =
   subst_ascription (closing_subst bs) asc
@@ -642,15 +662,9 @@ let close_pat p =
          let sub = NM(x, 0)::shift_subst 1 sub in
          {p with v=Pat_var x}, sub
 
-       | Pat_wild x ->
-         let x = {x with sort=subst sub x.sort} in
-         let sub = NM(x, 0)::shift_subst 1 sub in
-         {p with v=Pat_wild x}, sub
-
-       | Pat_dot_term(x, t0) ->
-         let x = {x with sort=subst sub x.sort} in
-         let t0 = subst sub t0 in
-         {p with v=Pat_dot_term(x, t0)}, sub in //these are not in scope, so don't shift the index
+       | Pat_dot_term eopt ->
+         let eopt = U.map_option (subst sub) eopt in
+         {p with v=Pat_dot_term eopt}, sub in
     aux [] p
 
 let close_branch (p, wopt, e) =
@@ -670,12 +684,12 @@ let univ_var_closing (us:univ_names) =
     let n = List.length us - 1 in
     us |> List.mapi (fun i u -> UD(u, n - i))
 
-let open_univ_vars  (us:univ_names) (t:term)  : univ_names * term =
+let open_univ_vars  (us:univ_names) (t:term)  : univ_names & term =
     let s, us' = univ_var_opening us in
     let t = subst s t in
     us', t
 
-let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names * comp =
+let open_univ_vars_comp (us:univ_names) (c:comp) : univ_names & comp =
     let s, us' = univ_var_opening us in
     us', subst_comp s c
 
@@ -796,257 +810,3 @@ let open_term_bv bv t =
     match open_term_bvs [bv] t with
     | [bv], t -> bv, t
     | _ -> failwith "impossible: open_term_bv"
-
-
-
-(* deep_compress_*: eliminating all unification variables and
-delayed substitutions in a sigelt. We traverse the entire syntactic
-structure to evaluate the explicit lazy substitutions (Tm_delayed) and
-to replace uvar nodes (Tm_uvar/U_unif) with their solutions.
-
-The return value of this function should *never* contain a lambda. This
-applies to every component of the term/sigelt: attributes, metadata, BV
-sorts, universes, memoized free variables, substitutions, etc.
-
-This is done to later dump the term/sigelt into a file (via
-OCaml's output_value, for instance). This marshalling does not handle
-closures[1] and we do not store the UF graph, so we cannot have any
-lambdas and every uvar node that must be replaced by its solution (and
-hence must have been resolved).
-
-Eliminating the substitutions and resolving uvars is all done by the
-`compress` call at the top, so this all looks like a big identity
-function.
-
-[1] OCaml's Marshal module can actually serialize closures, but this
-makes .checked files more brittle, so we don't do it.
-*)
-let rec deep_compress (t:term) : term =
-    let mk x = S.mk x t.pos in
-    let t = compress t in
-    let elim_bv x = {x with sort=deep_compress x.sort} in
-    match t.n with
-    | Tm_delayed _ -> failwith "Impossible"
-    | Tm_fvar _
-    | Tm_constant _
-    (* NOTE: the BVs here contain a sort, but it is not reached
-     * by substitutions, so we do not need to go into it. *)
-    | Tm_bvar _
-    | Tm_name _
-    | Tm_unknown ->
-        { t with vars = U.mk_ref None }
-
-    | Tm_uinst (f, us) ->
-      let us = List.map deep_compress_univ us in
-      mk (Tm_uinst (f, us))
-
-    | Tm_type u ->
-      let u = deep_compress_univ u in
-      mk (Tm_type u)
-
-    (* We also use this function to unfold lazy embeddings:
-     * they may contain lambdas and cannot be written into
-     * .checked files. *)
-    | Tm_lazy li ->
-      let t = must !lazy_chooser li.lkind li in // Can't call Syntax.Util from here
-      deep_compress t
-
-    | Tm_abs(bs, t, rc_opt) ->
-      mk (Tm_abs (deep_compress_binders bs,
-                  deep_compress t,
-                  map_opt rc_opt elim_rc))
-
-    | Tm_arrow(bs, c) ->
-      mk (Tm_arrow(deep_compress_binders bs, deep_compress_comp c))
-
-    | Tm_refine(bv, phi) ->
-      mk (Tm_refine(elim_bv bv, deep_compress phi))
-
-    | Tm_app(t, args) ->
-      mk (Tm_app(deep_compress t, deep_compress_args args))
-
-    | Tm_match(t, asc_opt, branches, rc_opt) ->
-      let rec elim_pat (p:pat) =
-        match p.v with
-        | Pat_var x ->
-          {p with v=Pat_var (elim_bv x)}
-        | Pat_wild x ->
-          {p with v=Pat_wild (elim_bv x)}
-        | Pat_dot_term(x, t0) ->
-          {p with v=Pat_dot_term(elim_bv x, deep_compress t0)}
-        | Pat_cons (fv, us_opt, pats) ->
-          let us_opt =
-            match us_opt with
-            | None -> None
-            | Some us -> Some (List.map deep_compress_univ us)
-          in
-          {p with v=Pat_cons(fv, us_opt, List.map (fun (x, b) -> elim_pat x, b) pats)}
-
-        (* Nothing to inline *)
-        | Pat_constant _ ->
-          p
-      in
-      let elim_branch (pat, wopt, t) =
-          (elim_pat pat,
-           map_opt wopt deep_compress,
-           deep_compress t)
-      in
-      let asc_opt =
-        match asc_opt with
-        | None -> None
-        | Some (b, asc) ->
-          Some (deep_compress_binder b, elim_ascription asc) in
-      mk (Tm_match(deep_compress t, asc_opt, List.map elim_branch branches, map_opt rc_opt elim_rc))
-
-    | Tm_ascribed(t, a, lopt) ->
-      mk (Tm_ascribed(deep_compress t, elim_ascription a, lopt))
-
-    | Tm_let(lbs, t) ->
-      let elim_lb (lb:letbinding) : letbinding = {
-        lbname  = (match lb.lbname with
-                   | Inl bv -> Inl (elim_bv bv)
-                   | Inr fv -> Inr fv);
-        lbtyp   = deep_compress lb.lbtyp;
-        lbdef   = deep_compress lb.lbdef;
-
-        lbunivs = lb.lbunivs; // these are names, nothing to inline
-        lbeff   = lb.lbeff;
-        lbattrs = lb.lbattrs;
-        lbpos   = lb.lbpos;
-      }
-      in
-      mk (Tm_let((fst lbs, List.map elim_lb (snd lbs)),
-                  deep_compress t))
-
-    | Tm_uvar _ ->
-      // GM: Currently, this function is only called from the normalizer
-      // on a sigelt that has already been typechecked, so this case should
-      // be impossible.
-      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     "Internal error: unexpected unresolved uvar in deep_compress")
-
-    | Tm_quoted (tm, qi) ->
-      let qi = S.on_antiquoted deep_compress qi in
-      mk (Tm_quoted (deep_compress tm, qi))
-
-    | Tm_meta(t, md) ->
-      mk (Tm_meta(deep_compress t, deep_compress_meta md))
-
-and elim_ascription (tc, topt, b) =
-  (match tc with
-   | Inl t -> Inl (deep_compress t)
-   | Inr c -> Inr (deep_compress_comp c)),
-  map_opt topt deep_compress,
-  b
-
-and elim_rc (rc:residual_comp) : residual_comp = {
-  residual_effect = rc.residual_effect;
-  residual_typ    = map_opt rc.residual_typ deep_compress;
-  residual_flags  = deep_compress_cflags rc.residual_flags
-}
-
-and deep_compress_dec_order = function
-  | Decreases_lex l -> Decreases_lex (l |> List.map deep_compress)
-  | Decreases_wf (rel, e) -> Decreases_wf (deep_compress rel, deep_compress e)
-
-and deep_compress_cflags flags =
-    List.map
-        (fun f -> match f with
-        | DECREASES dec_order -> DECREASES (deep_compress_dec_order dec_order)
-
-        (* All of these do not have a subterm, so do nothing *)
-        | TOTAL
-        | MLEFFECT
-        | LEMMA
-        | RETURN
-        | PARTIAL_RETURN
-        | SOMETRIVIAL
-        | TRIVIAL_POSTCONDITION
-        | SHOULD_NOT_INLINE
-        | CPS ->
-            f)
-        flags
-
-and deep_compress_comp (c:comp) : comp =
-    let mk x = S.mk x c.pos in
-    match c.n with
-    | Total (t, uopt) ->
-      let uopt = map_opt uopt deep_compress_univ in
-      mk (Total (deep_compress t, uopt))
-
-    | GTotal (t, uopt) ->
-      let uopt = map_opt uopt deep_compress_univ in
-      mk (GTotal (deep_compress t, uopt))
-
-    | Comp ct ->
-      let ct = {
-        comp_univs  = List.map deep_compress_univ ct.comp_univs;
-        effect_name = ct.effect_name;
-        result_typ  = deep_compress ct.result_typ;
-        effect_args = deep_compress_args ct.effect_args;
-        flags       = deep_compress_cflags ct.flags
-      }
-      in
-      mk (Comp ct)
-
-and deep_compress_univ (u:universe) : universe =
-  let u = compress_univ u in
-  match u with
-  | U_max us ->
-    U_max (List.map deep_compress_univ us)
-
-  | U_succ u ->
-    U_succ (deep_compress_univ u)
-
-  | U_zero
-  | U_bvar _
-  | U_name _
-  | U_unknown ->
-    u
-
-  | U_unif _ ->
-      // GM: Same as for Tm_uvar
-      Err.raise_err (Err.Error_UnexpectedUnresolvedUvar,
-                     "Internal error: unexpected unresolved (universe) uvar in deep_compress")
-
-and deep_compress_meta = function
-  | Meta_pattern (names, args) ->
-    Meta_pattern (List.map deep_compress names,
-                  List.map deep_compress_args args)
-
-  | Meta_monadic (m, t) ->
-    Meta_monadic (m, deep_compress t)
-
-  | Meta_monadic_lift (m1, m2, t) ->
-    Meta_monadic_lift (m1, m2, deep_compress t)
-
-  | m -> m
-
-and deep_compress_args args =
-    List.map (fun (t, q) ->
-            let t = deep_compress t in
-            let q = deep_compress_aqual q in // this should be useless
-            t, q) args
-
-and deep_compress_bqual (q:bqual) : bqual =
-  match q with
-  | Some (S.Meta t) ->
-    Some (S.Meta (deep_compress t))
-
-  | _ -> q
-
-and deep_compress_aqual (q:aqual) : aqual =
-  match q with
-  | Some a ->
-    Some ({a with aqual_attributes = List.map deep_compress a.aqual_attributes })
-
-  | _ -> q
-
-and deep_compress_binder b =
-  let x = {b.binder_bv with sort=deep_compress b.binder_bv.sort} in
-  let q = deep_compress_bqual b.binder_qual in
-  let attrs = b.binder_attrs |> List.map deep_compress in
-  S.mk_binder_with_attrs x q attrs
-
-and deep_compress_binders bs =
-  bs |> List.map deep_compress_binder

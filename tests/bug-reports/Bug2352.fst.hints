@@ -1,0 +1,50 @@
+[
+  "\n!\u0005·\u0007sjZ¾D·ùAC^;",
+  [
+    [
+      "Bug2352.test_fails",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "e40aae2b13482cc5616f48d75f47cc4e"
+    ],
+    [
+      "Bug2352.test_ok",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "2fdef646fbe4306ec4c7fab4ea4dc13a"
+    ],
+    [
+      "Bug2352.test_also_fails",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.squash",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
+      ],
+      0,
+      "6d1ff87a1b09d4472b703c26b42b1c48"
+    ],
+    [
+      "Bug2352.test_also_ok",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "0d95a3adacb12d2647874172037e74dd"
+    ]
+  ]
+]

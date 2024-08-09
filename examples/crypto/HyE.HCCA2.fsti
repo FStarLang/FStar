@@ -39,8 +39,8 @@ val access_pkraw (pk:pkey) : RSA.pkey
 val skey : Type0
 
 type p = P.t
-type c = C.cipher * A.cipher //lbytes(C.ciphersize + A.ciphersize)
+type c = C.cipher & A.cipher //lbytes(C.ciphersize + A.ciphersize)
 
-val keygen: parent:C.rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey * skey)
+val keygen: parent:C.rid{HyperStack.ST.witnessed (region_contains_pred parent)} -> ML (pkey & skey)
 val encrypt: pkey -> p -> ML c
 val decrypt: skey -> c -> ML (option p )

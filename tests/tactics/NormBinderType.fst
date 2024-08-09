@@ -15,7 +15,7 @@
 *)
 module NormBinderType
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 assume val p : int
 assume val q : int
@@ -27,11 +27,11 @@ let g =
             (fun () ->
                 let b = intro () in
 
-                norm_binder_type [delta; primops] b;
+                norm_binding_type [delta; primops] b;
 
-                match binders_of_env (cur_env ()) with
+                match vars_of_env (cur_env ()) with
                 | [b] ->
-                    let t = type_of_binder b in
+                    let t = b.sort in
                     let q = quote (eq2 #int 5 7) in
                     if FStar.Order.ne (compare_term t q)
                     then fail "type was not normalized"

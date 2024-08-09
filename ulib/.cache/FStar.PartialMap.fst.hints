@@ -21,7 +21,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "214d487d36624cd7fb5cc0d2f22e7bc4"
+      "c8b479fde9a9c86f21c8c8323b290e8e"
     ],
     [
       "FStar.PartialMap.sel_literal",
@@ -45,7 +45,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "ae2f2630a2c0c2b3073a7e223088db36"
+      "62fca5e9d3e99e78cd81b674e246a12f"
     ],
     [
       "FStar.PartialMap.sel_upd",
@@ -68,7 +68,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "df0ceb5ec1f4428bc15efef5e71c6f39"
+      "0d8f35d09e4b8fce3610a45537f05af8"
     ],
     [
       "FStar.PartialMap.sel_upd_distinct_key",
@@ -93,7 +93,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "f0f8e15b5903bd61a33fa84c06011a58"
+      "d67239830ceb34a69f4da322e4ac8eca"
     ],
     [
       "FStar.PartialMap.sel_remove",
@@ -116,7 +116,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "cd404eb2ee830fc3153640d38bc78daa"
+      "14677ab48e7af3b84b67dd97d28008be"
     ],
     [
       "FStar.PartialMap.sel_remove_distinct_key",
@@ -141,21 +141,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "ccb3f706ce87e54bf5f6c89bfb13cded"
-    ],
-    [
-      "FStar.PartialMap.equal",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.auto_squash",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "159848fa9d7db0aedd9d1263189e10b3"
+      "5152f774429555ce33032863a411d1c5"
     ],
     [
       "FStar.PartialMap.eq_intro",
@@ -167,7 +153,7 @@
         "equation_FStar.PartialMap.equal", "equation_FStar.PartialMap.sel"
       ],
       0,
-      "4a161354b9e33a271312dd0bd64f0456"
+      "ecb19157e3fa7462d82c0eee3f7f0698"
     ],
     [
       "FStar.PartialMap.eq_elim",
@@ -186,7 +172,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "89e711d84ea404c87dee130d4e715d5f"
+      "67f20a1a4fb3ad9d2246a13b505417af"
     ]
   ]
 ]

@@ -15,7 +15,7 @@
 *)
 module Print
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 [@@plugin]
 let just_print (s: string): Tac unit =

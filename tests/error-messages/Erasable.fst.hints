@@ -1,0 +1,55 @@
+[
+  ".Jw=Ä¡òA\u001b\u0011Ì\u0005˜ÓN\u001b",
+  [
+    [
+      "Erasable.__proj__This__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_3c192a2edf78cec4f1eb553cb69a4e8f"
+      ],
+      0,
+      "8adc37f666910daea07c84544e4efd62"
+    ],
+    [
+      "Erasable.__proj__That__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_ec597d6979f8847712206596e24a9e2d"
+      ],
+      0,
+      "42134be33d3fcff972752dda24bdacbd"
+    ],
+    [
+      "Erasable.test",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.That",
+        "disc_equation_Erasable.This", "fuel_guarded_inversion_Erasable.t",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "ecef0254d3791d5c9529fc4015426eb2"
+    ],
+    [
+      "Erasable.test_promotion",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "disc_equation_Erasable.That",
+        "disc_equation_Erasable.This", "fuel_guarded_inversion_Erasable.t",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "73d557394d70e82308a22e7c9d9f72af"
+    ]
+  ]
+]

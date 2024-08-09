@@ -1,0 +1,102 @@
+[
+  "¾¥D\u000bÄNvÍÙùýq\u001e¶I,",
+  [
+    [
+      "VecErased.vec",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "primitive_Prims.op_Addition", "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal"
+      ],
+      0,
+      "cc41f7825e4d228a655b6d892e7b1368"
+    ],
+    [
+      "VecErased.__proj__Cons__item__n",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_89ad9f0bb71c6b24164c0f8a26765165"
+      ],
+      0,
+      "9a4255baf7c7dba28efc086ab7d24f3c"
+    ],
+    [
+      "VecErased.__proj__Cons__item__hd",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_89ad9f0bb71c6b24164c0f8a26765165"
+      ],
+      0,
+      "57491970b97ebae8e681b3453246df42"
+    ],
+    [
+      "VecErased.__proj__Cons__item__tl",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "data_elim_VecErased.Cons",
+        "refinement_interpretation_Tm_refine_89ad9f0bb71c6b24164c0f8a26765165"
+      ],
+      0,
+      "1a5a9423ac5cf1ef86a73769095a926c"
+    ],
+    [
+      "VecErased.append",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_181dc88309add257216c3fb3e4e843d5_4",
+        "binder_x_b513ddacc5d7615736c68c89260be2e6_2",
+        "binder_x_b513ddacc5d7615736c68c89260be2e6_3",
+        "data_elim_VecErased.Cons", "data_elim_VecErased.Nil",
+        "disc_equation_VecErased.Cons", "disc_equation_VecErased.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_VecErased.vec",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "80ecd0201b9b75b49c1125707122a5f4"
+    ],
+    [
+      "VecErased.append",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "binder_x_181dc88309add257216c3fb3e4e843d5_4",
+        "binder_x_b513ddacc5d7615736c68c89260be2e6_2",
+        "binder_x_b513ddacc5d7615736c68c89260be2e6_3",
+        "data_elim_VecErased.Cons", "data_elim_VecErased.Nil",
+        "disc_equation_VecErased.Cons", "disc_equation_VecErased.Nil",
+        "equation_Prims.nat", "fuel_guarded_inversion_VecErased.vec",
+        "int_inversion", "int_typing", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_kinding_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "typing_FStar.Ghost.reveal", "well-founded-ordering-on-nat"
+      ],
+      0,
+      "b62a356aebfeacb76924f5f25b4ce782"
+    ]
+  ]
+]

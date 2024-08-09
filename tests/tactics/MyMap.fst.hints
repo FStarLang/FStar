@@ -1,0 +1,31 @@
+[
+  "è'∑e\u000bxérBÂF%2#\u000e&",
+  [
+    [
+      "MyMap.sel_upd1",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_MyMap.sel", "equation_MyMap.upd",
+        "interpretation_Tm_abs_c949098ee5a6a1d16a9b3ac1fa6e078f",
+        "primitive_Prims.op_Equality"
+      ],
+      0,
+      "b6d4dcdf331e1475b038f7967c22fdb3"
+    ],
+    [
+      "MyMap.sel_upd2",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_MyMap.sel", "equation_MyMap.upd",
+        "interpretation_Tm_abs_c949098ee5a6a1d16a9b3ac1fa6e078f",
+        "primitive_Prims.op_Equality", "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "9891f8cadfe75fb40935f124450600cb"
+    ]
+  ]
+]

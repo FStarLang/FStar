@@ -15,7 +15,7 @@
 *)
 module Fresh
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True
             by (let n = fresh () in

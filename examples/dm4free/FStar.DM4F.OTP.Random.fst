@@ -18,10 +18,10 @@ module FStar.DM4F.OTP.Random
 open FStar.DM4F.OTP.Heap
 
 (* for some reason this `unfold` makes everything 25% faster *)
-unfold type store = (id * tape)
+unfold type store = (id & tape)
 
 (** Read-only tape with a pointer to the next unread position *)
-type rand (a:Type) = (id * tape) -> M (option a * id)
+type rand (a:Type) = (id & tape) -> M (option a & id)
 
 let return (a:Type) (x:a) : rand a = fun (next,_) -> Some x, next
 
@@ -52,7 +52,7 @@ total reifiable reflectable new_effect {
 }
 
 effect Rand (a:Type) =
-  RAND a (fun initial_tape post -> forall (x:option a * id). post x)
+  RAND a (fun initial_tape post -> forall (x:option a & id). post x)
 
 
 (** If not past the end of the tape, read a value and advance pointer *)
@@ -70,11 +70,16 @@ let sample () =
     RAND?.raise elem ()
 
 
-let test_sample_some (v:elem) (t:tape{sel t (to_id 0) == v}) =
-  let f = reify (sample ()) in
+let test_sample_some (v:elem) (t:tape{
+  sel t (to_id 0) == v /\
+  incrementable (to_id 0) /\
+  incr (to_id 0) == to_id 1
+}) =
+  let f = reify (sample()) in
   assert (f (to_id 0,t) == (Some v, to_id 1))
+  
 
-let test_sample_none (v:elem) (t:tape) =
+let test_sample_none (v:elem) (t:tape { not (incrementable (to_id 9)) } ) =
   let f = reify (sample ()) in
   assert (f (to_id 9,t) == (None, to_id 9))
 
@@ -116,7 +121,7 @@ let sum_extensional f g =
     When `p:a -> {0,1}` and `tape` is finite
     Pr[f : p] == 1/|tape| * sum_{h:tape} p (f h) == 1/|tape| * mass f p
 *)
-val mass: #a:Type -> f:(store -> M (a * id)) -> p:(a -> nat) -> nat
+val mass: #a:Type -> f:(store -> M (a & id)) -> p:(a -> nat) -> nat
 let mass #a f p = sum (fun h -> let r,_ = f (to_id 0,h) in p r)
 
 val point: #a:eqtype -> x:a -> y:option a -> nat
@@ -128,8 +133,8 @@ let point #a x = fun y -> if y = Some x then 1 else 0
     on the result of `c2`, then the measure of `p1` wrt `c1` is less than or
     equal to the measure of `p2` wrt `c2` *)
 val pr_leq: #a:Type -> #b:Type ->
-  c1:(store -> M (a * id)) ->
-  c2:(store -> M (b * id)) ->
+  c1:(store -> M (a & id)) ->
+  c2:(store -> M (b & id)) ->
   p1:(a -> nat) ->
   p2:(b -> nat) ->
   bij:bijection -> Lemma
@@ -150,8 +155,8 @@ let pr_leq #a #b c1 c2 p1 p2 bij =
 (** Corollary *)
 
 val pr_eq: #a:Type -> #b:Type ->
-  c1:(store -> M (a * id)) ->
-  c2:(store -> M (b * id)) ->
+  c1:(store -> M (a & id)) ->
+  c2:(store -> M (b & id)) ->
   p1:(a -> nat) ->
   p2:(b -> nat) ->
   bij:bijection -> Lemma
@@ -169,10 +174,10 @@ val cond: #a:Type ->
   post:(a -> a -> Type) ->
   b1:bool ->
   b2:bool ->
-  c1 :(store -> M (a * id)) ->
-  c1':(store -> M (a * id)) ->
-  c2 :(store -> M (a * id)) ->
-  c2':(store -> M (a * id)) ->
+  c1 :(store -> M (a & id)) ->
+  c1':(store -> M (a & id)) ->
+  c2 :(store -> M (a & id)) ->
+  c2':(store -> M (a & id)) ->
   h:tape ->
   Lemma
   (requires (

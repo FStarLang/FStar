@@ -1,0 +1,59 @@
+[
+  "nÎ§\u0000\u007fû\u001ešÊ\u0011\u001dsUeÆÚ",
+  [
+    [
+      "Benton2004.RHL.gvar",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Benton2004.RHL.Left",
+        "disc_equation_Benton2004.RHL.Right",
+        "fuel_guarded_inversion_Benton2004.RHL.pos",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "76fd598650d044268717659f746a960e"
+    ],
+    [
+      "Benton2004.RHL.gsubst",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Benton2004.RHL.Left",
+        "disc_equation_Benton2004.RHL.Right",
+        "fuel_guarded_inversion_Benton2004.RHL.pos",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "b3b5153285b93d786a585893b9cbe0b9"
+    ],
+    [
+      "Benton2004.RHL.gsubst_gvar_other",
+      1,
+      2,
+      1,
+      [ "@query", "assumption_Benton2004.RHL.pos__uu___haseq" ],
+      0,
+      "c32e5d1f3b77cf095ec5eec40510c53b"
+    ],
+    [
+      "Benton2004.RHL.exp_to_gexp",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Benton2004.RHL.Left",
+        "disc_equation_Benton2004.RHL.Right",
+        "fuel_guarded_inversion_Benton2004.RHL.pos",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "73dd717a18e3a3f8b155bcab71ba8aab"
+    ]
+  ]
+]

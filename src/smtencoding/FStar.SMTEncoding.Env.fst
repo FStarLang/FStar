@@ -31,7 +31,9 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
-exception Inner_let_rec of list (string * Range.range) //name of the inner let-rec(s) and their locations
+let dbg_PartialApp = Debug.get_toggle "PartialApp"
+
+exception Inner_let_rec of list (string & Range.range) //name of the inner let-rec(s) and their locations
 
 let add_fuel x tl = if (Options.unthrottle_inductives()) then tl else x::tl
 let withenv c (a, b) = (a,b,c)
@@ -45,7 +47,7 @@ let primitive_projector_by_pos env lid i =
     let fail () = failwith (BU.format2 "Projector %s on data constructor %s not found" (string_of_int i) (string_of_lid lid)) in
     let _, t = Env.lookup_datacon env lid in
     match (SS.compress t).n with
-        | Tm_arrow(bs, c) ->
+        | Tm_arrow {bs; comp=c} ->
           let binders, _ = SS.open_comp bs c in
           if ((i < 0) || i >= List.length binders) //this has to be within bounds!
           then fail ()
@@ -63,7 +65,7 @@ let mk_data_tester env l x = mk_tester (escape (string_of_lid l)) x
 type varops_t = {
     push: unit -> unit;
     pop: unit -> unit;
-    snapshot: unit -> (int * unit);
+    snapshot: unit -> (int & unit);
     rollback: option int -> unit;
     new_var:ident -> int -> string; (* each name is distinct and has a prefix corresponding to the name used in the program text *)
     new_fvar:lident -> string;
@@ -117,7 +119,7 @@ type fvar_binding = {
     smt_arity: int;
     smt_id:    string;
     smt_token: option term;
-    smt_fuel_partial_app:option (term * term);
+    smt_fuel_partial_app:option (term & term);
     fvb_thunked: bool
 }
 let fvb_to_string fvb =
@@ -132,8 +134,9 @@ let fvb_to_string fvb =
         (Term.print_smt_term s0)
         (Term.print_smt_term s1)
   in
-  BU.format5 "{ lid = %s;\n  smt_id = %s;\n  smt_token = %s;\n smt_fuel_partial_app = %s;\n fvb_thunked = %s }"
+  BU.format6 "{ lid = %s;\n  smt_arity = %s;\n  smt_id = %s;\n  smt_token = %s;\n  smt_fuel_partial_app = %s;\n  fvb_thunked = %s }"
     (Ident.string_of_lid fvb.fvar_lid)
+    (string_of_int fvb.smt_arity)
     fvb.smt_id
     (term_opt_to_string fvb.smt_token)
     (term_pair_opt_to_string fvb.smt_fuel_partial_app)
@@ -155,8 +158,8 @@ let check_valid_fvb fvb =
 let binder_of_eithervar v = (v, None)
 
 type env_t = {
-    bvar_bindings: BU.psmap (BU.pimap (bv * term));
-    fvar_bindings: (BU.psmap fvar_binding * list fvar_binding);  //list of fvar bindings for the current module
+    bvar_bindings: BU.psmap (BU.pimap (bv & term));
+    fvar_bindings: (BU.psmap fvar_binding & list fvar_binding);  //list of fvar bindings for the current module
                                                                    //remember them so that we can store them in the checked file
     depth:int; //length of local var/tvar bindings
     tcenv:Env.env;
@@ -205,26 +208,36 @@ let fresh_fvar mname x s = let xsym = varops.fresh mname x in xsym, mkFreeV <| m
 let gen_term_var (env:env_t) (x:bv) =
     let ysym = "@x"^(string_of_int env.depth) in
     let y = mkFreeV <| mk_fv (ysym, Term_sort) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings; depth=env.depth + 1}
+    (* Note: the encoding of impure function arrows (among other places
+    probably) relies on the fact that this is exactly a FreeV. See getfreeV in
+    FStar.SMTEncoding.EncodeTerm.fst *)
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x
+                     ; depth = env.depth + 1 }
+
 let new_term_constant (env:env_t) (x:bv) =
     let ysym = varops.new_var x.ppname x.index in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x}
+
 let new_term_constant_from_string (env:env_t) (x:bv) str =
     let ysym = varops.mk_unique str in
     let y = mkApp(ysym, []) in
-    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings}
+    ysym, y, {env with bvar_bindings=add_bvar_binding (x, y) env.bvar_bindings
+                     ; tcenv = Env.push_bv env.tcenv x}
+
 let push_term_var (env:env_t) (x:bv) (t:term) =
-    {env with bvar_bindings=add_bvar_binding (x,t) env.bvar_bindings}
+    {env with bvar_bindings=add_bvar_binding (x,t) env.bvar_bindings
+            ; tcenv = Env.push_bv env.tcenv x}
+
 let lookup_term_var env a =
     match lookup_bvar_binding env a with
-    | None ->
-        (match lookup_bvar_binding env a with
-         | None -> failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                                        (Print.bv_to_string a)
-                                        (print_env env))
-         | Some (b,t) -> t)
     | Some (b,t) -> t
+    | None ->
+      failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
+                           (Print.bv_to_string a)
+                           (print_env env))
 
 (* Qualified term names *)
 let mk_fvb lid fname arity ftok fuel_partial_app thunked =
@@ -288,13 +301,13 @@ let push_zfuel_name env (x:lident) f ftok =
 let force_thunk fvb =
     if not (fvb.fvb_thunked) || fvb.smt_arity <> 0
     then failwith "Forcing a non-thunk in the SMT encoding";
-    mkFreeV <| (fvb.smt_id, Term_sort, true)
+    mkFreeV <| FV (fvb.smt_id, Term_sort, true)
 module TcEnv = FStar.TypeChecker.Env
 let try_lookup_free_var env l =
     match lookup_fvar_binding env l with
     | None -> None
     | Some fvb ->
-      if TcEnv.debug env.tcenv <| Options.Other "PartialApp"
+      if !dbg_PartialApp
       then BU.print2 "Looked up %s found\n%s\n"
              (Ident.string_of_lid l)
              (fvb_to_string fvb);

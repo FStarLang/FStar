@@ -116,12 +116,14 @@ let test8 (l:list int)
 
 /// Testing reification
 
+assume val st_reify (#a:Type) (#pre:_) (#post:_) ($e:unit -> HoareST a pre post)
+  : HoareST.repr a pre post
+
 #reset-options "--using_facts_from '*'"
 
 let test9 ()
 : FStar.ST.STATE int (fun p _ -> forall h1. p 3 h1)
-= reify (test6 ()) ()
-
+= st_reify (fun _ -> test6 ()) ()
 
 assume val some_pred : Type0
 

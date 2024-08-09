@@ -1,0 +1,43 @@
+[
+  "³ò¡i5&Ò#\u0012®3XÛµjc",
+  [
+    [
+      "X64.Vale.Regs_i.lemma_equal_intro",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "X64.Machine_s_pretyping_b7c45855ed90996ceceb34aa61de24e7",
+        "equality_tok_X64.Machine_s.Rax@tok",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_X64.Vale.Regs_i.equal", "typing_tok_X64.Machine_s.Rax@tok"
+      ],
+      0,
+      "591a001ca2a231eabfc9fe802ca754fa"
+    ],
+    [
+      "X64.Vale.Regs_i.lemma_equal_elim",
+      1,
+      1,
+      0,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "X64.Machine_s_pretyping_b7c45855ed90996ceceb34aa61de24e7",
+        "X64.Vale.Regs_i_interpretation_Tm_arrow_73862e447730cb7be03c891c89cb5703",
+        "equality_tok_X64.Machine_s.Rax@tok",
+        "equation_FStar.FunctionalExtensionality.is_restricted",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "equation_X64.Vale.Regs_i.equal", "equation_X64.Vale.Regs_i.t",
+        "kinding_X64.Machine_s.reg@tok",
+        "lemma_FStar.FunctionalExtensionality.extensionality",
+        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "typing_Tm_abs_bde726dfeb2837d96e43a155f7c873f5",
+        "typing_tok_X64.Machine_s.Rax@tok"
+      ],
+      0,
+      "cd93a963bb75f30d1aa17dab82faaedf"
+    ]
+  ]
+]

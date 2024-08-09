@@ -17,10 +17,13 @@ module FStar.Tactics.CanonCommMonoid
 
 open FStar.Algebra.CommMonoid
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
+
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (* An expression canonizer for commutative monoids.
    Inspired by:
@@ -53,14 +56,14 @@ let rec exp_to_string (e:exp) : string =
 // (1) its denotation that should be treated abstractly (type a) and
 // (2) user-specified extra information depending on its term (type b)
 
-let vmap (a b:Type) = list (var * (a*b)) * (a * b)
+let vmap (a b:Type) = list (var & (a&b)) & (a & b)
 let const (#a #b:Type) (xa:a) (xb:b) : vmap a b = [], (xa,xb)
 let select (#a #b:Type) (x:var) (vm:vmap a b) : Tot a =
-  match assoc #var #(a * b) x (fst vm) with
+  match assoc #var #(a & b) x (fst vm) with
   | Some (a, _) -> a
   | _ -> fst (snd vm)
 let select_extra (#a #b:Type) (x:var) (vm:vmap a b) : Tot b =
-  match assoc #var #(a * b) x (fst vm) with
+  match assoc #var #(a & b) x (fst vm) with
   | Some (_, b) -> b
   | _ -> snd (snd vm)
 let update (#a #b:Type) (x:var) (xa:a) (xb:b) (vm:vmap a b) : vmap a b =
@@ -230,18 +233,18 @@ let monoid_reflect (#a #b:Type) (p:permute b) (pc:permute_correct p)
 (* Finds the position of first occurrence of x in xs.
    This is now specialized to terms and their funny term_eq. *)
 let rec where_aux (n:nat) (x:term) (xs:list term) :
-    Tot (option nat) (decreases xs) =
+    Tac (option nat) =
   match xs with
   | [] -> None
-  | x'::xs' -> if term_eq x x' then Some n else where_aux (n+1) x xs'
+  | x'::xs' -> if term_eq_old x x' then Some n else where_aux (n+1) x xs'
 let where = where_aux 0
 
 // This expects that mult, unit, and t have already been normalized
 let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
     (vm:vmap a b) (f:term->Tac b)
-    (mult unit t : term) : Tac (exp * list term * vmap a b) =
+    (mult unit t : term) : Tac (exp & list term & vmap a b) =
   let hd, tl = collect_app_ref t in
-  let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp * list term * vmap a b) =
+  let fvar (t:term) (ts:list term) (vm:vmap a b) : Tac (exp & list term & vmap a b) =
     match where t ts with
     | Some v -> (Var v, ts, vm)
     | None -> let vfresh = length ts in let z = unquotea t in
@@ -249,13 +252,13 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
   in
   match inspect hd, list_unref tl with
   | Tv_FVar fv, [(t1, Q_Explicit) ; (t2, Q_Explicit)] ->
-    if term_eq (pack (Tv_FVar fv)) mult
+    if term_eq_old (pack (Tv_FVar fv)) mult
     then (let (e1,ts,vm) = reification_aux unquotea ts vm f mult unit t1 in
           let (e2,ts,vm) = reification_aux unquotea ts vm f mult unit t2 in
           (Mult e1 e2, ts, vm))
     else fvar t ts vm
   | _, _ ->
-    if term_eq t unit
+    if term_eq_old t unit
     then (Unit, ts, vm)
     else fvar t ts vm
 
@@ -263,7 +266,7 @@ let rec reification_aux (#a #b:Type) (unquotea:term->Tac a) (ts:list term)
 let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
     (unquotea:term->Tac a) (quotea:a -> Tac term) (tmult tunit:term) (munit:a)
     (ts:list term) :
-    Tac (list exp * vmap a b) =
+    Tac (list exp & vmap a b) =
   let tmult: term = norm_term [delta;zeta;iota] tmult in
   let tunit: term = norm_term [delta;zeta;iota] tunit in
   let ts   = Tactics.Util.map (norm_term [delta;zeta;iota]) ts in
@@ -278,13 +281,13 @@ let reification (b:Type) (f:term->Tac b) (def:b) (#a:Type)
       ([],[], const munit def) ts
   in (List.Tot.Base.rev es,vm)
 
-val term_mem: term -> list term -> Tot bool
+val term_mem: term -> list term -> Tac bool
 let rec term_mem x = function
   | [] -> false
-  | hd::tl -> if term_eq hd x then true else term_mem x tl
+  | hd::tl -> if term_eq_old hd x then true else term_mem x tl
 
 let unfold_topdown (ts: list term) =
-  let should_rewrite (s:term) : Tac (bool * int) =
+  let should_rewrite (s:term) : Tac (bool & int) =
     (term_mem s ts, 0)
   in
   let rewrite () : Tac unit =
@@ -303,11 +306,11 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a->Tac term) (xs:list a) :
 
 let quote_vm (#a #b:Type) (ta tb: term)
     (quotea:a->Tac term) (quoteb:b->Tac term) (vm:vmap a b) : Tac term =
-  let quote_pair (p:a*b) : Tac term =
+  let quote_pair (p:a&b) : Tac term =
     mk_app (`Mktuple2) [(ta, Q_Implicit); (tb, Q_Implicit);
            (quotea (fst p), Q_Explicit); (quoteb (snd p), Q_Explicit)] in
   let t_a_star_b = mk_e_app (`tuple2) [ta;tb] in
-  let quote_map_entry (p:(nat*(a*b))) : Tac term =
+  let quote_map_entry (p:(nat&(a&b))) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (t_a_star_b, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quote_pair (snd p), Q_Explicit)] in
@@ -337,7 +340,7 @@ let canon_monoid_aux
   | Comp (Eq (Some t)) t1 t2 ->
       // dump ("t1 =" ^ term_to_string t1 ^
       //     "; t2 =" ^ term_to_string t2);
-      if term_eq t ta then
+      if term_eq_old t ta then
         match reification b f def unquotea quotea tmult tunit munit [t1;t2] with
         | [r1;r2], vm ->
           // dump ("r1=" ^ exp_to_string r1 ^
@@ -373,32 +376,37 @@ let canon_monoid_aux
           // would like to do only this norm [primops] but ...
           // for now having to do all this mess
           norm [delta_only [// term_to_string tp;
-                            "FStar.Tactics.CanonCommMonoid.canon";
-                            "FStar.Tactics.CanonCommMonoid.xsdenote";
-                            "FStar.Tactics.CanonCommMonoid.flatten";
-                            "FStar.Tactics.CanonCommMonoid.select";
-                            "FStar.Tactics.CanonCommMonoid.select_extra";
-                            "FStar.Tactics.CanonCommMonoid.quote_list";
-                            "FStar.Tactics.CanonCommMonoid.quote_vm";
-                            "FStar.Tactics.CanonCommMonoid.quote_exp";
+                            `%canon;
+                            `%xsdenote;
+                            `%flatten;
+                            `%select;
+                            `%select_extra;
+                            `%quote_list;
+                            `%quote_vm;
+                            `%quote_exp;
+
+                            (* Defined ahead *)
                             "FStar.Tactics.CanonCommMonoid.const_compare";
                             "FStar.Tactics.CanonCommMonoid.special_compare";
-                            "FStar.List.Tot.Base.assoc";
-                            "FStar.Pervasives.Native.fst";
-                            "FStar.Pervasives.Native.snd";
-                            "FStar.Pervasives.Native.__proj__Mktuple2__item___1";
-                            "FStar.Pervasives.Native.__proj__Mktuple2__item___2";
-                            "FStar.List.Tot.Base.op_At";
-                            "FStar.List.Tot.Base.append";
+
+                            `%FStar.Pervasives.Native.fst;
+                            `%FStar.Pervasives.Native.snd;
+                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
+                            `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
+
+                            `%FStar.List.Tot.assoc;
+                            `%FStar.List.Tot.op_At;
+                            `%FStar.List.Tot.append;
+
             (* TODO: the rest is a super brittle stop-gap, know thy instances *)
                             "SL.AutoTactic.compare_b";
                             "SL.AutoTactic.compare_v";
-                            "FStar.Order.int_of_order";
-                            "FStar.Reflection.Derived.compare_term";
-                            "FStar.List.Tot.Base.sortWith";
-                            "FStar.List.Tot.Base.partition";
-                            "FStar.List.Tot.Base.bool_of_compare";
-                            "FStar.List.Tot.Base.compare_of_bool";
+                            `%FStar.Order.int_of_order;
+                            `%FStar.Reflection.V2.compare_term;
+                            `%FStar.List.Tot.sortWith;
+                            `%FStar.List.Tot.partition;
+                            `%FStar.List.Tot.bool_of_compare;
+                            `%FStar.List.Tot.compare_of_bool;
              ]; zeta; iota; primops] // TODO: restrict primops to "less than" only
                          // - would need this even if unfold_def did it's job?
           // ; dump "done"

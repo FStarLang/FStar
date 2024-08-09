@@ -6,12 +6,11 @@ a tree will not change the state, effectively allowing to strengthen a
 WP from intensional information about the operations in the tree. *)
 
 open FStar.List.Tot
-open Common
 open FStar.Calc
 module FE = FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 module ID5 = ID5
 open Alg
 
@@ -91,6 +90,7 @@ let interp_as_wp2 #a #l (t : rwtree a l) : Alg (st_wp a) [] =
 
 (* Bug: defining this as a FStar.Preorder.preorder
 causes stupid failures ahead *)
+unfold
 val stronger : (#a:Type) -> st_wp a -> st_wp a -> Type0
 let stronger w1 w2 = forall p s. w1 p s ==> w2 p s
 
@@ -156,8 +156,7 @@ let rec interp_morph #a #b #l1 #l2 (c : rwtree a l1) (f : a -> rwtree b l2) (p:_
       in
       Classical.forall_intro aux
 
-    | _ ->
-      unreachable ()
+    | _ -> () // this branch is unreachable
 #pop-options
 
 val interp_bind (#a #b:Type) (#l1 #l2 : rwops)
@@ -188,14 +187,14 @@ let return (a:Type) (x:a) : repr a noops (return_wp x) =
   Return x
 
 let bind (a : Type) (b : Type)
-  (#l1 #l2 : rwops)
-  (#wp_v : st_wp a) (#wp_f: a -> st_wp b)
+  (#l1 : rwops) (#wp_v : st_wp a)
+  (#l2 : rwops) (#wp_f: a -> st_wp b)
   (v : repr a l1 wp_v) (f : (x:a -> repr b l2 (wp_f x)))
   : repr b (l1@@l2) (bind_wp wp_v wp_f)
   = interp_bind v f wp_v wp_f;
     tbind v f
 
-let subcomp (a:Type) (#l1 #l2 : rwops) (#w1 #w2: st_wp a)
+let subcomp (a:Type) (#l1 : rwops) (#w1 : st_wp a) (#l2 : rwops) (#w2: st_wp a)
   (f : repr a l1 w1)
   : Pure (repr a l2 w2)
          (requires w2 `stronger` w1 /\ l1 `subops` l2)
@@ -203,25 +202,20 @@ let subcomp (a:Type) (#l1 #l2 : rwops) (#w1 #w2: st_wp a)
   = f
 
 let if_then_else (a : Type)
-  (l1 l2 : rwops)
-  (w1 w2 : st_wp a)
+  (l1 : rwops) (w1 : st_wp a)
+  (l2 : rwops) (w2 : st_wp a)
   (f : repr a l1 w1)
   (g : repr a l2 w2)
   (b : bool)
   : Type
   = repr a (l1@@l2) (if b then w1 else w2)
 
-[@@allow_informative_binders]
 total
 reifiable
 reflectable
-layered_effect {
-  AlgWP : a:Type -> rwops -> st_wp a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp;
-       if_then_else = if_then_else
+effect {
+  AlgWP (a:Type) (_:rwops) (_:st_wp a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 let get () : AlgWP state [Read] read_wp =
@@ -232,16 +226,16 @@ let put (s:state) : AlgWP unit [Write] (write_wp s) =
 
 unfold
 let lift_pure_wp (#a:Type) (wp : pure_wp a) : st_wp a =
-  FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall ();
+  FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun s0 p -> wp (fun x -> p (x, s0))
 
-let lift_pure_algwp (a:Type) wp (f:(eqtype_as_type unit -> PURE a wp))
+let lift_pure_algwp (a:Type) wp (f:unit -> PURE a wp)
   : Pure (repr a noops (lift_pure_wp wp)) // can't call f() here, so lift its wp instead
          (requires (wp (fun _ -> True)))
          (ensures (fun _ -> True))
   =
-    let v : a = elim_pure f (fun _ -> True) in
-    FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall (); // need this lemma
+    let v : a = FStar.Monotonic.Pure.elim_pure f (fun _ -> True) in
+    FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp; // need this lemma
     assert (forall p. wp p ==> p v); // this is key fact needed for the proof
     assert_norm (stronger (lift_pure_wp wp) (return_wp v));
     Return v
@@ -262,16 +256,6 @@ let add_via_state (x y : int) : AlgWP int [Read;Write] (fun s0 p -> p ((x+y), s0
   let r = get () in
   put o;
   r
-
-
-// Why does this admit fail? Only with the 'rec'...
-//
-// let rec interp_sem #a #wp (t : repr a wp) (s0:state)
-//   : PURE (a & state) (fun p -> wp s0 p)
-//   = admit ()
-//
-// literally zero difference in the VC a tactic sees. Also, seems only
-// for the builtin Pure???
 
 open FStar.Monotonic.Pure
 
@@ -295,12 +279,14 @@ let is_ro #a (w : st_wp a) : Type0 =
 let sanity_1 = assert (forall s0 p. quotient_ro read_wp s0 p <==> read_wp s0 p)
 let sanity_2 = assert (forall s0 p s1. p ((), s0) ==> quotient_ro (write_wp s1) s0 p)
 
+#push-options "--z3rlimit 20"
 let rec interp_ro #a (t : rwtree a [Read]) (s0:state)
   : ID5.ID (a & state) (as_pure_wp (quotient_ro (interp_as_wp t) s0))
   = match t with
     | Return x -> (x, s0)
     | Op Read i k -> 
       interp_ro (k s0) s0
+#pop-options
 
 let st_soundness_aux #a #wp (t : repr a [Read; Write] wp)
   : Tot (s0:state -> ID5.ID (a & state) (as_pure_wp (wp s0)))
@@ -331,12 +317,11 @@ let ro_soundness_pre_post #a #wp (t : unit -> AlgWP a [Read] wp)
                        (ensures (fun (r, s1) -> s0 == s1))
   = ro_soundness t s0
 
-(* Same thing here sadly *)
 let bind_ro #a #b (w : st_wp a) (f : a -> st_wp b)
   : Lemma (requires is_ro w /\ (forall x. is_ro (f x)))
           (ensures is_ro (bind_wp w f))
-  = assume (is_mono w)
-  
+  = ()
+
 let quot_mono #a #b (w1 w2 : st_wp a)
   : Lemma (requires w1 `stronger` w2)
           (ensures quotient_ro w1 `stronger` quotient_ro w2)

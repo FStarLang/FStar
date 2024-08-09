@@ -282,14 +282,6 @@ let subtype_of (p1 p2: Type) = forall (x: p1). has_type x p2
     *)
 type prop = a: Type0{a `subtype_of` unit}
 
-(** [range] is a type for the internal representations of source
-   ranges The functions that follow below allow manipulating ranges
-   abstractly.  Importantly, while we allow constructing ranges, we do
-   not allow destructing them, since that would reveal that
-   internally, set_range_of is not an identity function.  *)
-assume new
-type range : Type0 
-
 (**** The PURE effect *)
 
 (** The type of pure preconditions *)
@@ -338,7 +330,8 @@ type guard_free : Type0 -> Type0
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_return *)
 unfold
-let pure_return0 (a: Type) (x: a) (p: pure_post a) =
+let pure_return0 (a: Type) (x: a) : pure_wp a =
+  fun (p: pure_post a) ->
   forall (return_val: a). return_val == x ==> p return_val
 
 (** Sequential composition for the PURE effect
@@ -350,8 +343,9 @@ let pure_bind_wp0
       (a b: Type)
       (wp1: pure_wp a)
       (wp2: (a -> GTot (pure_wp b)))
-      (p: pure_post b)
-     = wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
+      : pure_wp b
+     = fun (p: pure_post b) ->
+       wp1 (fun (bind_result_1: a) -> wp2 bind_result_1 p)
 
 (** Conditional composition for the PURE effect 
 
@@ -369,7 +363,8 @@ let pure_bind_wp0
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_if_then_else *)
 unfold
-let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post a) =
+let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) : pure_wp a =
+  fun (post: pure_post a) ->
   wp_then post /\ (~p ==> wp_else post)
 
 (** Conditional composition for the PURE effect, while trying to avoid
@@ -381,7 +376,8 @@ let pure_if_then_else0 (a p: Type) (wp_then wp_else: pure_wp a) (post: pure_post
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_ite_wp *)
 unfold
-let pure_ite_wp0 (a: Type) (wp: pure_wp a) (post: pure_post a) =
+let pure_ite_wp0 (a: Type) (wp: pure_wp a) : pure_wp a =
+  fun (post: pure_post a) ->
   forall (k: pure_post a). (forall (x: a). {:pattern (guard_free (k x))} post x ==> k x) ==> wp k
 
 (** Subsumption for the PURE effect *)
@@ -393,7 +389,7 @@ let pure_stronger (a: Type) (wp1 wp2: pure_wp a) = forall (p: pure_post a). wp1 
     Clients should not use it directly,
     instead use FStar.Pervasives.pure_close_wp *)
 unfold
-let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) (p: pure_post a) = forall (b: b). wp b p
+let pure_close_wp0 (a b: Type) (wp: (b -> GTot (pure_wp a))) : pure_wp a = fun (p: pure_post a) -> forall (b: b). wp b p
 
 (** Trivial WP for PURE: Prove the WP with the trivial postcondition *)
 unfold
@@ -431,7 +427,7 @@ effect Admit (a: Type) = PURE a (fun (p: pure_post a) -> True)
 
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_null_wp *)
 unfold
-let pure_null_wp0 (a: Type) (p: pure_post a) = forall (any_result: a). p any_result
+let pure_null_wp0 (a: Type) : pure_wp a = fun (p: pure_post a) -> forall (any_result: a). p any_result
 
 (** [Tot]: From here on, we have [Tot] as a defined symbol in F*. *)
 effect Tot (a: Type) = PURE a (pure_null_wp0 a)
@@ -439,12 +435,12 @@ effect Tot (a: Type) = PURE a (pure_null_wp0 a)
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_assert_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assert_wp0 (p: Type) (post: pure_post unit) = p /\ post ()
+let pure_assert_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p /\ post ()
 
 (** Clients should not use it directly, instead use FStar.Pervasives.pure_assume_wp *)
 [@@ "opaque_to_smt"]
 unfold
-let pure_assume_wp0 (p: Type) (post: pure_post unit) = p ==> post ()
+let pure_assume_wp0 (p: Type) : pure_wp unit = fun (post: pure_post unit) -> p ==> post ()
 
 (**** The [GHOST] effect *)
 
@@ -495,14 +491,6 @@ type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
     extraction and to the SMT sort of integers *)
 assume new
 type int : eqtype 
-
-(** A dummy range constant *)
-assume
-val range_0:range
-
-(** Building a range constant *)
-assume
-val mk_range (file: string) (from_line from_col to_line to_col: int) : Tot range
 
 (**** Basic operators on booleans and integers *)
 
@@ -618,42 +606,42 @@ let returnM (a: Type) (x: a) : M a = x
 (** [as_requires] turns a WP into a precondition, by applying it to
     a trivial postcondition *)
 unfold
-let as_requires (#a: Type) (wp: pure_wp a) = wp (fun x -> True)
+let as_requires (#a: Type) (wp: pure_wp a) : pure_pre = wp (fun x -> True)
 
 (** [as_ensures] turns a WP into a postcondition, relying on a kind of
     double negation translation. *)
 unfold
-let as_ensures (#a: Type) (wp: pure_wp a) (x: a) = ~(wp (fun y -> (y =!= x)))
+let as_ensures (#a: Type) (wp: pure_wp a) : pure_post a = fun (x:a) -> ~(wp (fun y -> (y =!= x)))
 
 (** The keyword term-level keyword [assume] is desugared to [_assume].
     It explicitly provides an escape hatch to assume a given property
     [p]. *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val _assume (p: Type) : Pure unit (requires (True)) (ensures (fun x -> p))
 
 (** [admit] is another escape hatch: It discards the continuation and
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admit: #a: Type -> unit -> Admit a
 
 (** [magic] is another escape hatch: It retains the continuation but
     returns a value of any type *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val magic: #a: Type -> unit -> Tot a
 
 (** [unsafe_coerce] is another escape hatch: It coerces an [a] to a
     [b].  *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 irreducible
 let unsafe_coerce (#a #b: Type) (x: a) : b =
   admit ();
   x
 
 (** [admitP]: TODO: Unused ... remove? *)
-[@@ warn_on_use "uses an axiom"]
+[@@ warn_on_use "Uses an axiom"]
 assume
 val admitP (p: Type) : Pure unit True (fun x -> p)
 
@@ -717,13 +705,7 @@ val string_of_bool: bool -> Tot string
 assume
 val string_of_int: int -> Tot string
 
-(** [labeled] is used internally to the SMT encoding to associate a
-    source-code location with an assertion. *)
-irreducible
-let labeled (r: range) (msg: string) (b: Type) : Type = b
-
-
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 43
+let __cache_version_number__ = 67

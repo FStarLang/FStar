@@ -189,7 +189,7 @@ let itest r a k =
 ////////////////////////////////////////////////////////////////////////////////
 //Mapping functions over monotone sequences
 ////////////////////////////////////////////////////////////////////////////////
-val un_snoc: #a: Type -> s:seq a {Seq.length s > 0} -> Tot(seq a * a)
+val un_snoc: #a: Type -> s:seq a {Seq.length s > 0} -> Tot(seq a & a)
 let un_snoc #a s =
   let last = Seq.length s - 1 in
   Seq.slice s 0 last, Seq.index s last

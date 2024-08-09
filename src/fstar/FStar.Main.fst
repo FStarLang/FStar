@@ -22,14 +22,23 @@ open FStar.Ident
 open FStar.CheckedFiles
 open FStar.Universal
 open FStar.Compiler
+
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
+module RE = FStar.Reflection.V2.Embeddings
 
 let _ = FStar.Version.dummy ()
 
+(* These modules only mentioned to put them in the dep graph
+and hence compile and link them in. They do not export anything,
+instead they register primitive steps in the normalizer during
+initialization. *)
+module X1 = FStar.Reflection.V1.Interpreter
+module X2 = FStar.Reflection.V2.Interpreter
+
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
-let process_args () : parse_cmdline_res * list string =
+let process_args () : parse_cmdline_res & list string =
   Options.parse_cmd_line ()
 
 (* cleanup: kills background Z3 processes; relevant when --n_cores > 1 *)
@@ -89,10 +98,8 @@ let load_native_tactics () =
               end
     in
     let cmxs_files = (modules_to_load@cmxs_to_load) |> List.map cmxs_file in
-    if Options.debug_any () then
-      Util.print1 "Will try to load cmxs files: %s\n" (String.concat ", " cmxs_files);
-    if not (Options.no_load_fstartaclib ()) then
-        Tactics.Load.try_load_lib ();
+    if Debug.any () then
+      Util.print1 "Will try to load cmxs files: [%s]\n" (String.concat ", " cmxs_files);
     Tactics.Load.load_tactics cmxs_files;
     iter_opt (Options.use_native_tactics ()) Tactics.Load.load_tactics_dir;
     ()
@@ -109,6 +116,9 @@ let fstar_files: ref (option (list string)) = Util.mk_ref None
 let go _ =
   let res, filenames = process_args () in
   match res with
+    | Empty ->
+        Options.display_usage(); exit 1
+
     | Help ->
         Options.display_usage(); exit 0
 
@@ -122,6 +132,8 @@ let go _ =
 
     | Success ->
         fstar_files := Some filenames;
+
+        load_native_tactics ();
 
         (* Set the unionfind graph to read-only mode.
          * This will be unset by the typechecker and other pieces
@@ -152,9 +164,8 @@ let go _ =
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
 
-        (* For the following cases we might need fstartaclib/native tactics, try to load *)
+        (* For the following cases we might need native tactics, try to load *)
         else begin
-        load_native_tactics ();
 
         (* --ide, --in: Interactive mode *)
         if Options.interactive () then begin
@@ -199,28 +210,42 @@ let go _ =
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
 let lazy_chooser k i = match k with
-    | FStar.Syntax.Syntax.BadLazy -> failwith "lazy chooser: got a BadLazy"
-    | FStar.Syntax.Syntax.Lazy_bv         -> FStar.Reflection.Embeddings.unfold_lazy_bv          i
-    | FStar.Syntax.Syntax.Lazy_binder     -> FStar.Reflection.Embeddings.unfold_lazy_binder      i
-    | FStar.Syntax.Syntax.Lazy_letbinding -> FStar.Reflection.Embeddings.unfold_lazy_letbinding  i
-    | FStar.Syntax.Syntax.Lazy_optionstate -> FStar.Reflection.Embeddings.unfold_lazy_optionstate i
-    | FStar.Syntax.Syntax.Lazy_fvar       -> FStar.Reflection.Embeddings.unfold_lazy_fvar        i
-    | FStar.Syntax.Syntax.Lazy_comp       -> FStar.Reflection.Embeddings.unfold_lazy_comp        i
-    | FStar.Syntax.Syntax.Lazy_env        -> FStar.Reflection.Embeddings.unfold_lazy_env         i
-    | FStar.Syntax.Syntax.Lazy_sigelt     -> FStar.Reflection.Embeddings.unfold_lazy_sigelt      i
-    | FStar.Syntax.Syntax.Lazy_proofstate -> FStar.Tactics.Embedding.unfold_lazy_proofstate i
-    | FStar.Syntax.Syntax.Lazy_goal       -> FStar.Tactics.Embedding.unfold_lazy_goal i
-    | FStar.Syntax.Syntax.Lazy_uvar       -> FStar.Syntax.Util.exp_string "((uvar))"
-    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
-    | FStar.Syntax.Syntax.Lazy_universe   -> FStar.Reflection.Embeddings.unfold_lazy_universe    i
-    | FStar.Syntax.Syntax.Lazy_universe_uvar -> FStar.Syntax.Util.exp_string "((universe_uvar))"
+    (* TODO: explain *)
+    | FStar.Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
+    | FStar.Syntax.Syntax.Lazy_bv               -> RE.unfold_lazy_bv          i
+    | FStar.Syntax.Syntax.Lazy_namedv           -> RE.unfold_lazy_namedv      i
+    | FStar.Syntax.Syntax.Lazy_binder           -> RE.unfold_lazy_binder      i
+    | FStar.Syntax.Syntax.Lazy_letbinding       -> RE.unfold_lazy_letbinding  i
+    | FStar.Syntax.Syntax.Lazy_optionstate      -> RE.unfold_lazy_optionstate i
+    | FStar.Syntax.Syntax.Lazy_fvar             -> RE.unfold_lazy_fvar        i
+    | FStar.Syntax.Syntax.Lazy_comp             -> RE.unfold_lazy_comp        i
+    | FStar.Syntax.Syntax.Lazy_env              -> RE.unfold_lazy_env         i
+    | FStar.Syntax.Syntax.Lazy_sigelt           -> RE.unfold_lazy_sigelt      i
+    | FStar.Syntax.Syntax.Lazy_universe         -> RE.unfold_lazy_universe    i
 
+    | FStar.Syntax.Syntax.Lazy_proofstate       -> Tactics.Embedding.unfold_lazy_proofstate i
+    | FStar.Syntax.Syntax.Lazy_goal             -> Tactics.Embedding.unfold_lazy_goal i
+
+    | FStar.Syntax.Syntax.Lazy_doc              -> RE.unfold_lazy_doc i
+
+    | FStar.Syntax.Syntax.Lazy_uvar             -> FStar.Syntax.Util.exp_string "((uvar))"
+    | FStar.Syntax.Syntax.Lazy_universe_uvar    -> FStar.Syntax.Util.exp_string "((universe_uvar))"
+    | FStar.Syntax.Syntax.Lazy_issue            -> FStar.Syntax.Util.exp_string "((issue))"
+    | FStar.Syntax.Syntax.Lazy_ident            -> FStar.Syntax.Util.exp_string "((ident))"
+    | FStar.Syntax.Syntax.Lazy_tref             -> FStar.Syntax.Util.exp_string "((tref))"
+
+    | FStar.Syntax.Syntax.Lazy_embedding (_, t) -> Thunk.force t
+    | FStar.Syntax.Syntax.Lazy_extension s      -> FStar.Syntax.Util.exp_string (format1 "((extension %s))" s)
+  
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
+    FStar.Syntax.DsEnv.ugly_sigelt_to_string_hook := FStar.Syntax.Print.sigelt_to_string;
     FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
     FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
-    FStar.TypeChecker.Normalize.unembed_binder_knot := Some FStar.Reflection.Embeddings.e_binder;
+    FStar.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
+    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
+    List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;
     ()
 
 let handle_error e =

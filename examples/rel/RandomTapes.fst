@@ -54,7 +54,7 @@ val otp_eq : x:(rel int) -> r:(rel_random_tape (otp_rand x)) ->
 let otp_eq x r = ()
 
   (* Same thing for a pair of values *)
-val otp2 : int -> int -> random_tape -> int -> int -> Tot (int * int)
+val otp2 : int -> int -> random_tape -> int -> int -> Tot (int & int)
 let otp2 n m r i j = (n + r i, m + r j)
 
 val otp2_rand : x:(rel int) -> y:(rel int) -> int -> Tot (bij #int #int)

@@ -7,54 +7,23 @@
       2,
       1,
       [
-        "@MaxIFuel_assumption", "@query", "assumption_Prims.HasEq_string",
-        "disc_equation_FStar.Pervasives.Inl",
-        "disc_equation_FStar.Pervasives.Inr", "equation_GEXN.exn",
-        "fuel_guarded_inversion_FStar.Pervasives.either"
-      ],
-      0,
-      "241cef622f53e37e6d9b2d33bc8897a1"
-    ],
-    [
-      "GEXN._dm4f_GEXN_bind_wp",
-      1,
-      2,
-      1,
-      [
         "@MaxIFuel_assumption", "@query",
         "disc_equation_FStar.Pervasives.Inl",
         "disc_equation_FStar.Pervasives.Inr",
-        "fuel_guarded_inversion_FStar.Pervasives.either"
+        "fuel_guarded_inversion_FStar.Pervasives.either",
+        "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "815c823b04aacc65bbeece5d9ea1732b"
-    ],
-    [
-      "GEXN._dm4f_GEXN___proj__GEXN__item__raise_elab",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "21e28eaacc229e3a6bb1ad82a27e8008"
-    ],
-    [
-      "GEXN.GEXN",
-      1,
-      2,
-      1,
-      [ "@query", "assumption_Prims.HasEq_string" ],
-      0,
-      "2aeb9f881660b82b2d0b757b822f03a9"
+      "725af1bfbf04accd4ceb5122ac082d5a"
     ],
     [
       "GEXN.raise",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_string", "equation_GEXN.exn" ],
+      [ "@query", "equation_GEXN.exn" ],
       0,
-      "15242df8fb088d545fef0585f1d3bd6e"
+      "e83f8e2fb2a6a8694cfcd6863a800a0a"
     ]
   ]
 ]

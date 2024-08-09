@@ -1,0 +1,53 @@
+[
+  "Íñd\u001d%ð\u0002Üuª.>\f¼?g",
+  [
+    [
+      "Platform.Error.optResult",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "5c0b9248ba715e1cfb2c374f049cc7a0"
+    ],
+    [
+      "Platform.Error.__proj__Error__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_6f0151274b30a829262d92da67e89984"
+      ],
+      0,
+      "204be63c42535feb6fbf1fbfa87ca565"
+    ],
+    [
+      "Platform.Error.__proj__Correct__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_f6771d5d983d498fcfe07b607b8afdbe"
+      ],
+      0,
+      "ef343b34746ce1a3ad37643c81ca744e"
+    ],
+    [
+      "Platform.Error.invertOptResult",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "disc_equation_Platform.Error.Correct",
+        "disc_equation_Platform.Error.Error",
+        "fuel_guarded_inversion_Platform.Error.optResult",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "f49ed29a7e2f4aebddc83e93f11e1409"
+    ]
+  ]
+]

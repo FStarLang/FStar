@@ -373,7 +373,7 @@ let shift_right_value_aux_1 #n a s =
 
 let shift_right_value_aux_2 #n a = assert_norm (pow2 0 == 1)
 
-#push-options "--z3rlimit 20"
+#push-options "--z3rlimit 50"
 let shift_right_value_aux_3 #n a s =
   append_lemma #s #(n - s) (zero_vec #s) (slice (to_vec a) 0 (n - s));
   slice_left_lemma #n (to_vec a) (n - s)
@@ -384,7 +384,9 @@ let shift_right_value_lemma #n a s =
   else if s = 0 then shift_right_value_aux_2 #n a
   else shift_right_value_aux_3 #n a s
 
+#push-options "--z3rlimit 10"
 let lemma_msb_pow2 #n a = if n = 1 then () else from_vec_propriety (to_vec a) 1
+#pop-options
 
 val plus_one_mod : p:pos -> a:nat ->
     Lemma (requires (a < p /\ ((a + 1) % p == 0))) (ensures (a == p - 1))
@@ -451,6 +453,7 @@ let lemma_zero_extend #n a =
   from_vec_propriety #(n+1) eav 1;
   assert (r = a)
 
+#push-options "--z3rlimit 40"
 let lemma_one_extend #n a =
   let hd1 = Seq.create 1 true in
   let av = to_vec a in
@@ -460,6 +463,7 @@ let lemma_one_extend #n a =
   assert (r = from_vec eav);
   from_vec_propriety #(n+1) eav 1;
   assert (r = pow2 n + a)
+#pop-options
 
 #push-options "--fuel 1 --ifuel 0 --z3rlimit 40"
 let lemma_lognot_zero_ext #n a =

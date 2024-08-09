@@ -18,7 +18,7 @@ module IfcDelimitedReleaseReify
 open FStar.DM4F.Heap.IntStoreFixed
 open FStar.DM4F.IntStoreFixed
 open Rel
-
+module X = FStar.DM4F.IntStoreFixed
 module List = FStar.List.Tot
 
 type label =
@@ -255,26 +255,28 @@ let rec wallet_attack_loop h0 l =
       write k (pow2 (x - 1)) ;
       wallet [x_h;k;x_l] ;
       write n (x - 1) ;
-      let h = IS?.get () in
+      let h = X.get () in
       wallet_attack_loop h l
     end
   | _ -> ()
 
- val wallet_attack : prog 4
+val wallet_attack : prog 4
 let wallet_attack [n;x_h;k;x_l] =
   write x_l 0;
-  let h = IS?.get () in
+  let h = X.get () in
   wallet_attack_loop h [n;x_h;k;x_l]
 
 (* This does not verify, as expected
-   However, also does not verify with x_h : Low, which should be fine *) (*
-val verify_wallet_attack (n x_h k x_l : id):
+   However, also does not verify with x_h : Low, which should be fine *) 
+
+[@@expect_failure]
+let verify_wallet_attack (n x_h k x_l : id):
   Lemma begin
     let m = 4 in
-    let env : env = (fun r -> if r = x_h then (*High*) Low else Low) in
+    let env : env = (fun r -> if r = x_h then High else Low) in
     let l = [n; x_h; k; x_l] in
     let b h = fst (reify (read x_h >= read k) h) in
     del_rel m env l [] [b] wallet_attack
   end
-let verify_wallet_attack n x_h k x_l = ()
-*)
+ = ()
+

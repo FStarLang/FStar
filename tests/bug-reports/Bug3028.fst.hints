@@ -1,0 +1,26 @@
+[
+  "&Ô⁄“ \u001c n€Ò\u0001j:v\u0016ö",
+  [
+    [
+      "Bug3028.uu___3",
+      1,
+      2,
+      1,
+      [ "@query", "equation_Bug3028.mk2" ],
+      0,
+      "e945bb6fa70943fb774a6929806e45b9"
+    ],
+    [
+      "Bug3028.uu___14",
+      1,
+      2,
+      1,
+      [
+        "@query", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "e22c56fdb507bfaad34cd6380279a6e4"
+    ]
+  ]
+]

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <OtherFlags>--nowarn:0086 --mlcompatibility --nologo</OtherFlags>
-    <OutputPath>..\..\bin\</OutputPath>
+    <OutputType>Library</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentation>True</GenerateDocumentation>
     <GenerateDependencyFile>false</GenerateDependencyFile>

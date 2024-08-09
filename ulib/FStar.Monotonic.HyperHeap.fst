@@ -24,9 +24,9 @@ open FStar.Ghost
 (*
  * This is a temporary assumption, we should fix the model to get rid of it
  *)
-assume HasEq_rid: hasEq (erased (list (int * int * bool)))
+assume HasEq_rid: hasEq (erased (list (int & int & bool)))
 
-let rid = erased (list (int * int * bool))
+let rid = erased (list (int & int & bool))
 
 let reveal r = FStar.List.Tot.map (fun (i, j, _) -> i, j) (reveal r)
 
@@ -42,13 +42,15 @@ let rid_freeable r =
 
 let root = hide []
 
+let root_last_component () = ()
+
 let lemma_root_has_color_zero _ = ()
 
 let root_is_not_freeable () = ()
 
 let rid_length r = List.Tot.length (reveal r)
 
-let rid_tail r = elift1_p (tot_to_gtot Cons?.tl) r
+let rid_tail (r:rid{rid_length r > 0}) = elift1_p (tot_to_gtot Cons?.tl) r
 
 let rec includes r1 r2 =
   if r1 = r2 then true

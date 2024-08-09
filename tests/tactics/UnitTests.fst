@@ -15,7 +15,7 @@
 *)
 module UnitTests
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let _ = assert True by trivial ()
 let _ = assert (1 + 1 = 2) by trivial ()
@@ -144,7 +144,9 @@ let pwtest x =
     assert (match x with | CC a b -> a == a /\ (b == true \/ b == false) | BB -> true)
         by (pointwise trefl)
 
+#push-options "--warn_error -328" (* Recursive definition not used in its body *)
 let rec frec (x:nat) : nat = x
+#pop-options
 
 let _ =
     assert True

@@ -1,0 +1,7 @@
+>> Got issues: [
+* Error 360 at BadEmptyRecord.fst(9,6-9,8):
+  - Could not resolve the type for this record.
+
+>>]
+Verified module: BadEmptyRecord
+All verification conditions discharged successfully

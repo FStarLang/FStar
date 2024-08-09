@@ -16,7 +16,7 @@
 module Bug706
 
 (* Define an effect via DM4F *)
-let exnst h a = h -> M (option (a * h))
+let exnst h a = h -> M (option (a & h))
 
 val return : (h:Type) -> (a:Type) -> (x:a) -> Tot (exnst h a)
 let return h a x = fun s -> Some (x, s)

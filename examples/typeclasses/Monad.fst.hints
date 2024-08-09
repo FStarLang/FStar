@@ -9,15 +9,17 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Monad.bind",
         "equation_Monad.return", "fuel_guarded_inversion_Monad.monad",
-        "interpretation_Tm_abs_7e0972babf629178f399d8ce42293ce3",
-        "interpretation_Tm_abs_a0faf8ac82f106d2f81e4f58d8caae04",
+        "interpretation_Tm_abs_0adce631eac67f824f4c0bb34d3ca4d8",
+        "interpretation_Tm_abs_18e4cb8b775f6da62be8dae2bc35e95e",
+        "proj_equation_Monad.Mkmonad_bind",
+        "proj_equation_Monad.Mkmonad_return",
         "token_correspondence_Monad.__proj__Mkmonad__item__bind",
         "token_correspondence_Monad.__proj__Mkmonad__item__return",
         "token_correspondence_Monad.bind",
         "token_correspondence_Monad.return"
       ],
       0,
-      "84b12989aaa22b09982db8538b6460ee"
+      "b228610386fd48700edb765f594f42d5"
     ],
     [
       "Monad.g'",
@@ -27,15 +29,17 @@
       [
         "@MaxIFuel_assumption", "@query", "equation_Monad.bind",
         "equation_Monad.return", "fuel_guarded_inversion_Monad.monad",
-        "interpretation_Tm_abs_7e0972babf629178f399d8ce42293ce3",
-        "interpretation_Tm_abs_a0faf8ac82f106d2f81e4f58d8caae04",
+        "interpretation_Tm_abs_0adce631eac67f824f4c0bb34d3ca4d8",
+        "interpretation_Tm_abs_18e4cb8b775f6da62be8dae2bc35e95e",
+        "proj_equation_Monad.Mkmonad_bind",
+        "proj_equation_Monad.Mkmonad_return",
         "token_correspondence_Monad.__proj__Mkmonad__item__bind",
         "token_correspondence_Monad.__proj__Mkmonad__item__return",
         "token_correspondence_Monad.bind",
         "token_correspondence_Monad.return"
       ],
       0,
-      "9f0f095063d7dd6f9c1c1eb36dbb9e92"
+      "9dc84a7cd1544e69932342ee47330554"
     ]
   ]
 ]

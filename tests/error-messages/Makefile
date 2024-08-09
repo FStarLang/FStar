@@ -6,7 +6,7 @@ FSTAR_FILES=$(wildcard *.fst)
 # 241: "unable to load checked file"
 # 247: "checked file was not written"
 # 333: "unable to read hints"
-OTHERFLAGS+=--warn_error -241-247-333-274
+OTHERFLAGS+=--warn_error -241-247-333-274+240
 
 # Sorry, without this we can get noise in error locations.
 # See issue #1993. Also, warnings from dependencies would
@@ -21,8 +21,15 @@ OTHERFLAGS := $(filter-out --hint_info, $(OTHERFLAGS))
 check-all: $(addsuffix .check, $(FSTAR_FILES))
 all: check-all
 
+# For these tests, we check that the resugared output
+# matches the expected file.
 Bug1997.fst.output: OTHERFLAGS+=--dump_module Bug1997
+Bug2820.fst.output: OTHERFLAGS+=--dump_module Bug2820
+Bug3145.fst.output: OTHERFLAGS+=--dump_module Bug3145
+Bug3227.fst.output: OTHERFLAGS+=--dump_module Bug3227
+Bug3292.fst.output: OTHERFLAGS+=--dump_module Bug3292
 CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
+DTuples.fst.output: OTHERFLAGS+=--dump_module DTuples
 
 include $(FSTAR_HOME)/examples/Makefile.common
 
@@ -34,7 +41,7 @@ include $(FSTAR_HOME)/examples/Makefile.common
 	$(Q)cp $< $(patsubst %.output,%.expected,$<)
 
 clean:
-	@echo "[CLEAN]"
+	$(call msg, "CLEAN", $<)
 	$(Q)rm -f .depend
 	$(Q)rm -f *.check
 	$(Q)rm -f *.output

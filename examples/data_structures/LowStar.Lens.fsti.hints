@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "31d5dc6f6073a319bf8589a262178e07"
+      "afd65e48621299bae53a6524f0fab6c1"
     ],
     [
       "LowStar.Lens.reveal_inv",
@@ -17,26 +17,11 @@
       1,
       [ "@query" ],
       0,
-      "e41a1a6bcd1a46bd20a812ea5ef99f6c"
+      "38ca8ce7e59b57d5dc2856e412b3c797"
     ],
     [
       "LowStar.Lens.for_n",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
-      ],
-      0,
-      "163b0a9b998884b69ef1f07da37d734b"
-    ],
-    [
-      "LowStar.Lens.for_n",
-      2,
       2,
       1,
       [
@@ -61,7 +46,22 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "5e90d2fa1521090db806694ceded63fb"
+      "8a8b55bcb07309f317d98655a67df738"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "a3527d34d30a3d7a9cd016347218c482"
     ]
   ]
 ]

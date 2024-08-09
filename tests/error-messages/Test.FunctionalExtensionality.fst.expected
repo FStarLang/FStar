@@ -1,14 +1,37 @@
 >> Got issues: [
-Test.FunctionalExtensionality.fst(36,49-36,50): (Error 19) Subtyping check failed; expected type Prims.nat ^-> Prims.int; got type Prims.int ^-> Prims.int; The SMT solver could not prove the query. Use --query_stats for more details. (see also FStar.FunctionalExtensionality.fsti(102,60-102,77))
+* Error 19 at Test.FunctionalExtensionality.fst(36,49-36,50):
+  - Subtyping check failed
+  - Expected type Prims.nat ^-> Prims.int got type Prims.int ^-> Prims.int
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
 >>]
 >> Got issues: [
-Test.FunctionalExtensionality.fst(80,2-80,8): (Error 19) assertion failed; The SMT solver could not prove the query. Use --query_stats for more details. (see also Test.FunctionalExtensionality.fst(80,9-80,43))
+* Error 19 at Test.FunctionalExtensionality.fst(80,2-80,8):
+  - Assertion failed
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also Test.FunctionalExtensionality.fst(80,9-80,43)
+
 >>]
 >> Got issues: [
-Test.FunctionalExtensionality.fst(92,36-92,47): (Error 19) Subtyping check failed; expected type _: Prims.int -> Prims.int; got type Prims.nat ^-> Prims.int; The SMT solver could not prove the query. Use --query_stats for more details. (see also prims.fst(671,18-671,24))
+* Error 19 at Test.FunctionalExtensionality.fst(92,36-92,47):
+  - Subtyping check failed
+  - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also prims.fst(659,18-659,24)
+
 >>]
 >> Got issues: [
-Test.FunctionalExtensionality.fst(142,57-142,58): (Error 19) Subtyping check failed; expected type Prims.int ^-> Prims.int; got type Prims.int ^-> Prims.nat; The SMT solver could not prove the query. Use --query_stats for more details. (see also FStar.FunctionalExtensionality.fsti(102,60-102,77))
+* Error 19 at Test.FunctionalExtensionality.fst(142,57-142,58):
+  - Subtyping check failed
+  - Expected type Prims.int ^-> Prims.int got type Prims.int ^-> Prims.nat
+  - The SMT solver could not prove the query. Use --query_stats for more
+    details.
+  - See also FStar.FunctionalExtensionality.fsti(102,60-102,77)
+
 >>]
 Verified module: Test.FunctionalExtensionality
 All verification conditions discharged successfully

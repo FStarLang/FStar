@@ -44,9 +44,12 @@ module FStar.Tactics.CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Tactics
-open FStar.Reflection
+open FStar.Reflection.V2
+open FStar.Tactics.V2
 open FStar.Algebra.CommMonoid
+
+private
+let term_eq = FStar.Reflection.TermEq.Simple.term_eq
 
 (** An attribute for marking definitions to unfold by the tactic *)
 irreducible let canon_attr = ()
@@ -366,7 +369,7 @@ let spolynomial_simplify #a r p =
  * The representation is inefficient. For large terms it might be worthwhile
  * using a better data structure.
 **)
-let vmap a = list (var * a) * a
+let vmap a = list (var & a) & a
 
 (** Add a new entry in a variable map *)
 let update (#a:Type) (x:var) (xa:a) (vm:vmap a) : vmap a =
@@ -383,7 +386,7 @@ let rec quote_list (#a:Type) (ta:term) (quotea:a -> Tac term) (xs:list a) :
 
 (** Quotes a variable map *)
 let quote_vm (#a:Type) (ta: term) (quotea:a -> Tac term) (vm:vmap a) : Tac term =
-  let quote_map_entry (p:(nat * a)) : Tac term =
+  let quote_map_entry (p:(nat & a)) : Tac term =
     mk_app (`Mktuple2) [(`nat, Q_Implicit); (ta, Q_Implicit);
       (pack (Tv_Const (C_Int (fst p))), Q_Explicit);
       (quotea (snd p), Q_Explicit)] in
@@ -1499,7 +1502,7 @@ let ddump m = if debugging () then dump m
  * Finds the position of first occurrence of x in xs.
  * This is specialized to terms and their funny term_eq.
 **)
-let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases xs) =
+let rec find_aux (n:nat) (x:term) (xs:list term) : Tac (option nat) =
   match xs with
   | [] -> None
   | x'::xs' -> if term_eq x x' then Some n else find_aux (n+1) x xs'
@@ -1507,7 +1510,7 @@ let rec find_aux (n:nat) (x:term) (xs:list term) : Tot (option nat) (decreases x
 let find = find_aux 0
 
 let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
-  (vm:vmap a) : Tac (polynomial a * list term * vmap a) =
+  (vm:vmap a) : Tac (polynomial a & list term & vmap a) =
   match find t ts with
   | Some v -> (Pvar v, ts, vm)
   | None ->
@@ -1516,7 +1519,7 @@ let make_fvar (#a:Type) (t:term) (unquotea:term -> Tac a) (ts:list term)
     (Pvar vfresh, ts @ [t], update vfresh z vm)
 
 (** This expects that add, opp, mone mult, and t have already been normalized *)
-let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a * list term * vmap a) =
+let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vmap a) (add opp mone mult t: term) : Tac (polynomial a & list term & vmap a) =
   // ddump ("term = " ^ term_to_string t ^ "\n");
   let hd, tl = collect_app_ref t in
   match inspect hd, list_unref tl with
@@ -1524,7 +1527,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     //ddump ("add = " ^ term_to_string add ^ "
     //     \nmul = " ^ term_to_string mult);
     //ddump ("fv = " ^ term_to_string (pack (Tv_FVar fv)));
-    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let binop (op:polynomial a -> polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e1, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       let (e2, ts, vm) = reification_aux unquotea ts vm add opp mone mult t2 in
       (op e1 e2, ts, vm)
@@ -1533,7 +1536,7 @@ let rec reification_aux (#a:Type) (unquotea:term -> Tac a) (ts:list term) (vm:vm
     if term_eq (pack (Tv_FVar fv)) mult then binop Pmult else
     make_fvar t unquotea ts vm
   | Tv_FVar fv, [(t1, _)] ->
-    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a * list term * vmap a) =
+    let monop (op:polynomial a -> polynomial a) : Tac (polynomial a & list term & vmap a) =
       let (e, ts, vm) = reification_aux unquotea ts vm add opp mone mult t1 in
       (op e, ts, vm)
       in
@@ -1561,20 +1564,20 @@ let steps =
       `%__proj__CR__item__cm_add;
       `%__proj__CR__item__opp;
       `%__proj__CR__item__cm_mult;
-      `%FStar.List.Tot.Base.assoc;
+      `%FStar.List.Tot.assoc;
       `%FStar.Pervasives.Native.fst;
       `%FStar.Pervasives.Native.snd;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___1;
       `%FStar.Pervasives.Native.__proj__Mktuple2__item___2;
-      `%FStar.List.Tot.Base.op_At;
-      `%FStar.List.Tot.Base.append;
+      `%FStar.List.Tot.op_At;
+      `%FStar.List.Tot.append;
     ]
   ]
 
 let canon_norm () : Tac unit = norm steps
 
 let reification (#a:Type)
-  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) * vmap a) =
+  (unquotea:term -> Tac a) (quotea:a -> Tac term) (tadd topp tmone tmult:term) (munit:a) (ts:list term) : Tac (list (polynomial a) & vmap a) =
   // Be careful not to normalize operations too much
   // E.g. we don't want to turn ( +% ) into (a + b) % prime
   // or we won't be able to spot ring operations

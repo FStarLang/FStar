@@ -1,0 +1,54 @@
+[
+  "•\u0004:\u001aâá«Ñò\n§Åˆ[§›",
+  [
+    [
+      "Part3.MonadsAndFunctors.get_put_identity",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.FunctionalExtensionality.feq",
+        "equation_Part3.MonadsAndFunctors.get",
+        "equation_Part3.MonadsAndFunctors.get_put",
+        "equation_Part3.MonadsAndFunctors.noop",
+        "equation_Part3.MonadsAndFunctors.op_let_Bang",
+        "equation_Part3.MonadsAndFunctors.put",
+        "equation_Part3.MonadsAndFunctors.return",
+        "equation_Part3.MonadsAndFunctors.st_monad",
+        "interpretation_Tm_abs_2aa0b1a96b161b2d053b39fd53381fc4",
+        "interpretation_Tm_abs_6fe7781f05550e647ef9348567de2f4a",
+        "interpretation_Tm_abs_79991cb66008561c642fa3e96942b94c",
+        "interpretation_Tm_abs_80bae2cedda8810a1873ff1bc009da67",
+        "interpretation_Tm_abs_c0d0000c389ad35def48694f32ab1308",
+        "interpretation_Tm_abs_c7f914ae4514878746f35d4ed5a7aacc",
+        "interpretation_Tm_abs_e63dccd4c4d84c40c92b7577b02d7e3b",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_op_let_Bang",
+        "projection_inverse_Part3.MonadsAndFunctors.Mkmonad_return",
+        "token_correspondence_Part3.MonadsAndFunctors.op_let_Bang",
+        "token_correspondence_Part3.MonadsAndFunctors.return"
+      ],
+      0,
+      "26958a87e15195f8b6390028e850c732"
+    ],
+    [
+      "Part3.MonadsAndFunctors.opt_monad",
+      1,
+      2,
+      1,
+      [ "@query", "lemma_FStar.Pervasives.invertOption" ],
+      0,
+      "248bb95dd8faa963a2061c75353f0dba"
+    ],
+    [
+      "Part3.MonadsAndFunctors.div",
+      1,
+      2,
+      1,
+      [ "@query", "primitive_Prims.op_Equality" ],
+      0,
+      "27fd0bee43731411187f70b88a58f448"
+    ]
+  ]
+]

@@ -20,15 +20,15 @@ instance monoid_nat_plus : monoid nat =
 //SNIPPET_END: monoid$
 
 //SNIPPET_START: graded_monad$
-class graded_monad (#index:Type)
-                   (m: monoid index -> index -> Type -> Type) = 
+class graded_monad (#index:Type) {| monoid index |}
+                   (m : index -> Type -> Type) = 
 {
-  return : #a:Type -> #im:monoid index -> x:a -> m im one a;
+  return : #a:Type -> x:a -> m one a;
   
-  bind   : #a:Type -> #b:Type -> #ia:index -> #ib:index -> #im:monoid index ->
-           m im ia a -> 
-           (a -> m im ib b) ->
-           m im (op ia ib) b
+   ( let+ )   : #a:Type -> #b:Type -> #ia:index -> #ib:index ->
+           m ia a -> 
+           (a -> m ib b) ->
+           m (op ia ib) b
 
 }
 //SNIPPET_END: graded_monad$
@@ -36,26 +36,37 @@ class graded_monad (#index:Type)
 //we now have do notation for graded monads
 
 //SNIPPET_START: counting$
-let st (s:Type) monoid_nat_plus (count:nat) (a:Type) = s -> a & s
-instance st_graded (s:Type) : graded_monad (st s) =
+let count_st (s:Type) (count:nat) (a:Type) = s -> a & s & z:nat{z==count}
+
+let count_return (#s:Type) (#a:Type) (x:a) : count_st s one a = fun s -> x, s, one #nat
+
+let count_bind (#s:Type) (#a:Type) (#b:Type) (#ia:nat) (#ib:nat)
+               (f:count_st s ia a)
+               (g:(a -> count_st s ib b))
+  : count_st s (op ia ib) b
+  = fun s -> let x, s, n = f s in
+          let y, s', m = g x s in
+          y, s', op #nat n m
+
+instance count_st_graded (s:Type) : graded_monad (count_st s) =
 { 
-  return = (fun #a #im (x:a) s -> x, s);
-  bind = (fun #a #b #ia #ib #im f g s -> let x, s = f s in g x s)
+  return = count_return #s;
+  ( let+ ) = count_bind #s;
 }
 
 // A write-counting grade monad
-let get #s : st s monoid_nat_plus 0 s = fun s -> s, s
-let put #s (x:s) : st s monoid_nat_plus 1 unit = fun _ -> (), x
+let get #s : count_st s 0 s = fun s -> s, s, 0
+let put #s (x:s) : count_st s 1 unit = fun _ -> (), x, 1
 //SNIPPET_END: counting$
 
 //SNIPPET_START: test$
 let test #s =
-  x <-- get #s ;
+  let+ x = get #s in
   put x
 
 //F* + SMT automatically proves that the index simplifies to 2
-let test2 #s : st s monoid_nat_plus 2 unit =
-  x <-- get #s;
-  put x;;
+let test2 #s : count_st s 2 unit =
+  let+ x = get in
+  put x ;+
   put x
 //SNIPPET_END: test$

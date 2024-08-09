@@ -1,5 +1,5 @@
 [
-  "5õ†!œxõ¿‡uN\u001dŸm\u001fÎ",
+  "´ë;nn¯çÖcíAˆ‰§\u001a6",
   [
     [
       "Bug1966a.conversion",
@@ -11,7 +11,37 @@
         "refinement_interpretation_Tm_refine_0dee8cb03258a67c2f7ec66427696212"
       ],
       0,
-      "3e0c5a2b1fada41e12eab61a0df9a80c"
+      "080fa75da2e85b07d7a96c3da3ce93a8"
+    ],
+    [
+      "Bug1966a.q_as_lem",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
+      ],
+      0,
+      "82c4f6712e4439d6b1e02af634b27965"
+    ],
+    [
+      "Bug1966a.congruence_fun'",
+      1,
+      2,
+      1,
+      [ "@query", "true_interp" ],
+      0,
+      "052197eeaf8f828f286e5bbc0e1ccb3f"
+    ],
+    [
+      "Bug1966a.congruence_fun",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "8755d870ae46295a460ad2b7b953725d"
     ],
     [
       "Bug1966a.__forall_inst",
@@ -23,7 +53,7 @@
         "refinement_interpretation_Tm_refine_eee646ed2c0261b2e37307734e5990b8"
       ],
       0,
-      "75b98e3c0660857f75d7116d189da43b"
+      "13e7fe81ef1f8ef07f0f8c283ebaaca2"
     ],
     [
       "Bug1966a.fun_ext'",
@@ -35,25 +65,7 @@
         "refinement_interpretation_Tm_refine_1aaad12ccaab375dde7c624ef1057c2b"
       ],
       0,
-      "9d6d3de5b800ad2de9883401082067f2"
-    ],
-    [
-      "Bug1966a.fun_ext'",
-      2,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "f76492b232dcd6a9bc2e8a8f2e12378d"
-    ],
-    [
-      "Bug1966a.fun_ext'",
-      3,
-      2,
-      1,
-      [ "@query" ],
-      0,
-      "49b10efb9ed202a8ee33819eaa0bab64"
+      "b5f1d9c453c3553bff266d093e0ef413"
     ]
   ]
 ]

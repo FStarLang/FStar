@@ -26,4 +26,5 @@ module FStar.DM4F.Heap.ST
 open FStar.DM4F.Heap
 open FStar.DM4F.ST
 
+let refine_st #a = admit()
 let runST #a #post s = fst (reify (s ()) FStar.DM4F.Heap.emp)

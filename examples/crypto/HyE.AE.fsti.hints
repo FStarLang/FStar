@@ -1,0 +1,35 @@
+[
+  "G‡ð\u0013þ_V|¾Zá€«ð¢\u0011",
+  [
+    [
+      "HyE.AE.aes_key",
+      1,
+      2,
+      1,
+      [
+        "@query", "constructor_distinct_CoreCrypto.AES_128_GCM",
+        "equality_tok_CoreCrypto.AES_128_GCM@tok",
+        "equation_CoreCrypto.aeadKeySize", "equation_HyE.AE.keysize",
+        "projection_inverse_BoxInt_proj_0"
+      ],
+      0,
+      "204e91dcbcd08a2d024d77e5a0cf4b51"
+    ],
+    [
+      "HyE.AE.decrypt",
+      1,
+      2,
+      1,
+      [
+        "@query", "assumption_FStar.Pervasives.Native.tuple2__uu___haseq",
+        "assumption_HyE.Plain.Plain_hasEq",
+        "assumption_Platform.Bytes.HasEq_bytes", "equation_HyE.AE.cipher",
+        "equation_HyE.AE.msg", "function_token_typing_HyE.Plain.t",
+        "haseqTm_refine_d5f38576f4c9b6353149d27af7052546",
+        "refinement_kinding_Tm_refine_d5f38576f4c9b6353149d27af7052546"
+      ],
+      0,
+      "a55b6684b8d7cc75fa69bda56d232e40"
+    ]
+  ]
+]

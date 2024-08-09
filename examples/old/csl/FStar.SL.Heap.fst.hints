@@ -1,0 +1,21 @@
+[
+  "l›”≤\u00014îPÚT∂◊ç≥Ï.",
+  [
+    [
+      "FStar.SL.Heap.trivial_preorder",
+      1,
+      2,
+      1,
+      [
+        "@query", "equation_FStar.Preorder.preorder_rel",
+        "equation_FStar.Preorder.reflexive",
+        "equation_FStar.Preorder.transitive",
+        "equation_FStar.SL.Heap.trivial_rel",
+        "interpretation_Tm_abs_568747eb5009c1dec504311dee989dc2",
+        "true_interp"
+      ],
+      0,
+      "945ca68f537dea4857a85b0ee96d5711"
+    ]
+  ]
+]

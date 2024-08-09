@@ -95,7 +95,7 @@ let merge'_stable #a l r k = merge'_filter_eq_inv l r k
 
 (** split_n splits a list at index n **)
 val split_n: #a:eqtype -> (l:list a) -> n:nat{0 < n /\ n < length l} ->
-  Tot (l_tup:(list a * list a){(fst l_tup)@(snd l_tup) = l
+  Tot (l_tup:(list a & list a){(fst l_tup)@(snd l_tup) = l
     /\ length (fst l_tup) < length l
     /\ length (snd l_tup) < length l
     /\ permutation_2 l (fst l_tup) (snd l_tup)})
@@ -106,7 +106,7 @@ let rec split_n #a l n =
 
 (** split_half splits a list halfway **)
 val split_half: #a:eqtype -> (l:list a{length l >= 2}) ->
-  Tot (l_tup:(list a * list a))
+  Tot (l_tup:(list a & list a))
 let split_half #a l = split_n l ((length l) / 2)
 
 (** Define mergesort **)

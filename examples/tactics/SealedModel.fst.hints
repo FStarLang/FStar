@@ -1,0 +1,123 @@
+[
+  "Ò¨:É d¨|\u0013\u0017…\u001e—½ÞH",
+  [
+    [
+      "SealedModel.sealed_singl",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "eac21d2b3c44311659d5e4e638b9e4ce"
+    ],
+    [
+      "SealedModel.seal",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "data_typing_intro_FStar.Stubs.Tactics.Result.Success@tok",
+        "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v"
+      ],
+      0,
+      "da030538016812f3a6f8b6a98a594eb0"
+    ],
+    [
+      "SealedModel.unseal",
+      1,
+      2,
+      1,
+      [ "@query" ],
+      0,
+      "efb03d4b2532b9db3dacd24e6927cb53"
+    ],
+    [
+      "SealedModel.map_seal",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "cec0a8d38e0f9dac8c5d9fcac25760bb"
+    ],
+    [
+      "SealedModel.bind_seal",
+      1,
+      2,
+      1,
+      [
+        "@query", "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "projection_inverse_BoxBool_proj_0"
+      ],
+      0,
+      "4c2d614f2e3164ee4071e2647a7010fa"
+    ],
+    [
+      "SealedModel.__proj__X__item___0",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "refinement_interpretation_Tm_refine_783aa278341fef507c697eec496b82d6"
+      ],
+      0,
+      "8c19b0c629da80f575f9a2530b40d93c"
+    ],
+    [
+      "SealedModel.prec_no_x",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "SealedModel_pretyping_62f760e00c09d3170a3281451bb320e6",
+        "data_typing_intro_SealedModel.Y@tok", "disc_equation_SealedModel.X",
+        "equality_tok_SealedModel.Y@tok", "equation_Prims.squash",
+        "equation_SealedModel.seal", "fuel_guarded_inversion_SealedModel.t",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c",
+        "subterm_ordering_SealedModel.X"
+      ],
+      0,
+      "d75938a3b5c6204cdc73143b03e1ada5"
+    ],
+    [
+      "SealedModel.contra_map_seal_precedes",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_pretyping_ae567c2fb75be05905677af440075565",
+        "constructor_distinct_FStar.Stubs.Tactics.Result.Success",
+        "constructor_distinct_SealedModel.X",
+        "constructor_distinct_SealedModel.Y",
+        "data_typing_intro_FStar.Stubs.Tactics.Result.Success@tok",
+        "disc_equation_FStar.Stubs.Tactics.Result.Success",
+        "disc_equation_SealedModel.X", "disc_equation_SealedModel.Y",
+        "equality_tok_SealedModel.Y@tok", "equation_Prims.eqtype",
+        "fuel_guarded_inversion_SealedModel.t",
+        "function_token_typing_Prims.__cache_version_number__",
+        "function_token_typing_Prims.int",
+        "projection_inverse_BoxBool_proj_0",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_a",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_ps",
+        "projection_inverse_FStar.Stubs.Tactics.Result.Success_v",
+        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
+        "refinement_interpretation_Tm_refine_ddb39e4ca8967888ba670c6fdec9bf69"
+      ],
+      0,
+      "596f8f77457b4bfe75576ea490a9342c"
+    ]
+  ]
+]

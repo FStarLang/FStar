@@ -81,7 +81,7 @@ let morphism_laws_via_eq m n eqn return_m bind_m return_n bind_n lift = ()
 (* ******************************************************************************)
 assume type s : Type //an abstract type of the state
 
-let st (a:Type) = restricted_t s (fun _ -> a * s)
+let st (a:Type) = restricted_t s (fun _ -> a & s)
 
 let eq_st (a:Type) (x:st a) (y:st a) = is_restricted s x /\ is_restricted s y /\ feq x y //extensional equality on st
 
@@ -132,7 +132,7 @@ let ex_laws = monad_laws_via_eq ex eq_ex return_ex bind_ex
 (* ******************************************************************************)
 (* Effect (stexn a) : A combined monad, exceptions over state                   *)
 (* ******************************************************************************)
-let stexn (a:Type) = restricted_t s (fun _ -> (option a * s))
+let stexn (a:Type) = restricted_t s (fun _ -> (option a & s))
 
 let eq_stexn (a:Type) (x:stexn a) (y:stexn a) = is_restricted s x /\ is_restricted s y /\ feq x y
 
@@ -151,7 +151,7 @@ let stexn_laws = monad_laws_via_eq stexn eq_stexn return_stexn bind_stexn
 (* ******************************************************************************)
 (* Effect (exnst a) : A combined monad, state over exceptions                   *)
 (* ******************************************************************************)
-let exnst (a:Type) = restricted_t s (fun _ -> (option (a * s)))
+let exnst (a:Type) = restricted_t s (fun _ -> (option (a & s)))
 
 let eq_exnst (a:Type) (x:exnst a) (y:exnst a) = is_restricted s x /\ is_restricted s y /\ feq x y
 

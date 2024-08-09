@@ -33,10 +33,10 @@ module Plain = EtM.Plain
 type rid = erid
 
 /// An AE cipher includes a mac tag
-type cipher = (CPA.cipher * MAC.tag)
+type cipher = (CPA.cipher & MAC.tag)
 
 /// An AE log pairs plain texts with MAC'd ciphers
-let log_entry = Plain.plain * cipher
+let log_entry = Plain.plain & cipher
 type log_t (r:rid) = m_rref r (seq log_entry) grows
 
 /// An AE key pairs an encryption key, ke, with a MAC'ing key, km,

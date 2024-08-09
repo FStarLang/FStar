@@ -1,6 +1,6 @@
 module RecordFieldAttributes
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 
 type description (d : string) = ()
 
@@ -23,22 +23,18 @@ let rec fv_eq (fv1 : list string) (fv2 : list string) : bool =
     | x :: xs, y :: ys -> if x = y then fv_eq xs ys else false
     | _, _ -> false
 
-let unpack_field (b : T.binder) : T.Tac (string * option T.term * T.term) = 
-    let (bv, (_, attrs)) = T.inspect_binder b in
-    let attr_opt = match attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd attrs) in
-    let bvv = T.inspect_bv bv in
-    // Need to make fields of bv_view 
-    let open FStar.Tactics in
-    (bvv.bv_ppname, attr_opt, bvv.bv_sort)
+let unpack_field (b : T.binder) : T.Tac (string & option T.term & T.term) =
+    let attr_opt = match b.attrs with | [] -> None | _ -> Some (FStar.List.Tot.hd b.attrs) in
+    (T.unseal b.ppname, attr_opt, b.sort)
 
 // returns a list of (field name, optional attribute, field type)
-let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string * option T.term * T.term)) = 
+let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string & option T.term & T.term)) = 
     // type of the constructor should contain an Arrow type (there's at least one field in a record)
-    match T.inspect_ln ty with
+    match T.inspect ty with
     | T.Tv_Arrow binder comp -> begin
         let f = unpack_field binder in
         match T.inspect_comp comp with
-        | T.C_Total ty2 _ _ -> f :: unpack_fields qname ty2
+        | T.C_Total ty2 -> f :: unpack_fields qname ty2
         | _ -> T.fail "Unsupported computation type"
         end
     | T.Tv_FVar fv -> begin
@@ -50,14 +46,14 @@ let rec unpack_fields (qname : list string) (ty : T.term) : T.Tac (list (string 
         end
     | _ -> T.fail "Expected an arrow type"
 
-let get_record_fields (env : T.env) (qname : list string) : T.Tac (list (string * option T.term * T.term)) = 
+let get_record_fields (env : T.env) (qname : list string) : T.Tac (list (string & option T.term & T.term)) = 
     match T.lookup_typ env qname with
     | Some s -> begin
         // Check if sig in an enum definition
         match T.inspect_sigelt s with
-        | T.Sg_Inductive _ _ _ _ cts -> begin
-            if List.Tot.length cts = 1
-                then unpack_fields qname (snd (List.Tot.hd cts))
+        | T.Sg_Inductive {ctors} -> begin
+            if List.Tot.length ctors = 1
+                then unpack_fields qname (snd (List.Tot.hd ctors))
                 else T.fail "Expected record, got inductive with more than one constructor"
             end
         | _ -> T.fail ("Expected inductive, got " ^ (T.term_to_string (T.pack (T.Tv_FVar (T.pack_fv qname)))))
@@ -65,9 +61,9 @@ let get_record_fields (env : T.env) (qname : list string) : T.Tac (list (string 
     | None -> T.fail ("Could not find type " ^ (T.implode_qn qname))
 
 let validate_attribute (expectedDescription : string) (attr : T.term) : T.Tac unit = 
-    match T.inspect_ln attr with
+    match T.inspect attr with
     | T.Tv_App attr_type (attr_value, _) -> begin
-        match T.inspect_ln attr_type, T.inspect_ln attr_value with
+        match T.inspect attr_type, T.inspect attr_value with
         | T.Tv_FVar fv, T.Tv_Const c -> begin
             let desc = 
                 match c with 

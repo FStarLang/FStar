@@ -1,5 +1,5 @@
 [
-  ";{\u0018(ù»\r\n2àíºkI6\u000b",
+  "ºqdÍ\u0003\u0017ùccLˆ/Á\u0011\u0013X",
   [
     [
       "MetaArgs.uu___2",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_MetaArgs.test1" ],
       0,
-      "048e9373e0480b80e5f1be4f542a4ad8"
+      "20658fc4dd5ba757ced6a88363e1a1dc"
     ],
     [
       "MetaArgs.uu___7",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "d98609c5ce236e69331ec1ccb83353a9"
+      "70759022a75b7ee7e1d5b3fb98703ba3"
     ],
     [
       "MetaArgs.uu___8",
@@ -26,51 +26,7 @@
       1,
       [ "@query", "equation_MetaArgs.diag" ],
       0,
-      "081da25e426d565cd51f686a497350c2"
-    ],
-    [
-      "MetaArgs.uu___2",
-      2,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.test1" ],
-      0,
-      "89d9e858c4c3fddb833eca20f532f4ad"
-    ],
-    [
-      "MetaArgs.same_as",
-      1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "bool_inversion",
-        "disc_equation_FStar.Tactics.Result.Failed",
-        "disc_equation_FStar.Tactics.Result.Success",
-        "function_token_typing_FStar.Reflection.Types.term",
-        "lemma_FStar.Tactics.Result.result_split",
-        "projection_inverse_BoxBool_proj_0",
-        "typing_FStar.Tactics.Result.uu___is_Failed"
-      ],
-      0,
-      "8e17aaa181142e715ebd8b9bd55c4b7c"
-    ],
-    [
-      "MetaArgs.uu___7",
-      2,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.diag" ],
-      0,
-      "edacb5cddabbb2bafd3b88364949eecc"
-    ],
-    [
-      "MetaArgs.uu___8",
-      2,
-      2,
-      1,
-      [ "@query", "equation_MetaArgs.diag" ],
-      0,
-      "ea059251b977d9f7bfafbbb1cba5ec4f"
+      "cf76fa4d7f1b99407a2fb05bc5d74c29"
     ]
   ]
 ]

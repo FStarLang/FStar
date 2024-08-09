@@ -76,7 +76,7 @@ let list_assoc_append (#t: Type) (x: t) (l1 l2: list t) : Lemma
 = L.append_assoc (L.rev l1) [x] l2;
   L.rev_append [x] l1
 
-#set-options "--z3rlimit 64 --max_ifuel 8"
+#set-options "--z3rlimit 96 --max_ifuel 8"
 
 let parse_nlist_impl_inv_false_intro
   (#t: Type0)
@@ -203,7 +203,7 @@ let list_rev_inv
   (#t: Type)
   (l: list t)
   (b: bool)
-  (x: list t * list t)
+  (x: list t & list t)
 : GTot Type0
 = let (rem, acc) = x in
   L.rev l == L.rev_acc rem acc /\
@@ -254,7 +254,7 @@ let parse_nlist_impl
   let l = BO.op_Bang_Star rr in
   let l' = list_rev l in
   let consumed = BO.op_Bang_Star rb in
-  let res : option (nlist n t * U32.t) =
+  let res : option (nlist n t & U32.t) =
     if stop
     then None
     else Some (l', consumed)
@@ -325,6 +325,7 @@ let serialize_nlist_impl_inv
     ser == Seq.append (B.as_seq h bl) (serialize (serialize_nlist (n - i) s) ll)
   ))
 
+#push-options "--z3rlimit 128"
 inline_for_extraction
 let serialize_nlist_impl_body
   (n: nat)
@@ -376,6 +377,7 @@ let serialize_nlist_impl_body
     in
     phi ();
     false
+#pop-options
 
 inline_for_extraction
 let serialize_nlist_impl

@@ -1,35 +1,6 @@
 [
-  "én¬ÿa2²\t‡‹Ð.\u0011œS\u0007",
+  "Jáµ½æ'¦\u000e*\u000ep\u0015_rt„",
   [
-    [
-      "FStar.Math.Euclid.divides",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Exists",
-        "equation_Prims.squash", "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "7561c72d1044cf9c3a08e7b2814a75ae"
-    ],
-    [
-      "FStar.Math.Euclid.is_gcd",
-      1,
-      0,
-      0,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.l_Forall",
-        "equation_Prims.l_and", "equation_Prims.squash",
-        "equation_Prims.subtype_of",
-        "l_quant_interp_5b2993f9f2c0eba3627049a3b4167c7a",
-        "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
-      ],
-      0,
-      "97084f4030e1003ae4d61b06542a2e46"
-    ],
     [
       "FStar.Math.Euclid.euclid",
       1,
@@ -40,7 +11,7 @@
         "refinement_interpretation_Tm_refine_774ba3f728d91ead8ef40be66c9802e5"
       ],
       0,
-      "5b0e4c3e14501a54e697c416c6bfdbc6"
+      "5e99344d2d742f25f2d74f707ce2084a"
     ],
     [
       "FStar.Math.Euclid.euclid_prime",
@@ -54,7 +25,7 @@
         "refinement_interpretation_Tm_refine_bcc53e0d0118ae334bf1ccba10e6ca4e"
       ],
       0,
-      "fe3a502b4213ff72384f8a0c4bc54414"
+      "dc97b50f13df80114f98e6bd67414347"
     ]
   ]
 ]

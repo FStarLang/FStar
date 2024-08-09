@@ -67,6 +67,6 @@ let generate (m: printing_mode) filenames =
 
         | Some outf ->
           append_to_file outf <| P.pretty_string (float_of_string "1.0") 100 left_over_doc;
-          close_file outf
+          close_out_channel outf
     in
     List.iter (parse_and_prettyprint m) filenames

@@ -1,5 +1,5 @@
 [
-  " Y^¥~\u007fz²\u0001ÄÒ$ñ[š™",
+  "Š6ÖÆ Ð$÷7œŒ\u0014<\u000564",
   [
     [
       "LemmaArgs.lemma_example1",
@@ -11,16 +11,16 @@
         "refinement_interpretation_Tm_refine_b80473856ccf72c395276ef95e2db4d6"
       ],
       0,
-      "48c45a604eb8d34a8e7f48d8f8d37ef8"
+      "3471aea301668660edaa03be23df0a2c"
     ],
     [
       "LemmaArgs.example0",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      [ "@query", "true_interp" ],
       0,
-      "3b0ae7dc186584ffb87eec868ef36327"
+      "1fea3733078cb61bbe4420878ae52fa7"
     ],
     [
       "LemmaArgs.example0",
@@ -32,16 +32,16 @@
         "refinement_interpretation_Tm_refine_db815536b8c60a25cb27b439971d8826"
       ],
       0,
-      "c2c5e673d8c66cbdbe2796399e6d411c"
+      "4aace03593a86ce2022f42a8bc87dce1"
     ],
     [
       "LemmaArgs.example1",
       1,
       2,
       1,
-      [ "@query", "assumption_Prims.HasEq_int", "true_interp" ],
+      [ "@query", "true_interp" ],
       0,
-      "3919fbd6450b64c01463a103988b92f1"
+      "5f44ebb836ccdd4d8d4ee15d49b26de0"
     ]
   ]
 ]

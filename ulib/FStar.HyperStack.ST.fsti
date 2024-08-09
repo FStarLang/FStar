@@ -17,7 +17,6 @@ module FStar.HyperStack.ST
 
 open FStar.HyperStack
 
-module W  = FStar.Monotonic.Witnessed
 module HS = FStar.HyperStack
 
 open FStar.Preorder
@@ -322,6 +321,7 @@ val pop_frame (_:unit)
   :Unsafe unit (requires (fun m -> poppable m))
                (ensures (fun (m0:mem) _ (m1:mem) -> poppable m0 /\ m1 == pop m0 /\ popped m0 m1))
 
+#push-options "--z3rlimit 40"
 let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
                 (s:mreference a rel{is_stack_region (frameOf s)}) (m1:mem)
   = is_stack_region (get_tip m0)                          /\
@@ -330,6 +330,7 @@ let salloc_post (#a:Type) (#rel:preorder a) (init:a) (m0:mem)
     frameOf s   = get_tip m1                              /\
     HS.fresh_ref s m0 m1                                  /\  //it's a fresh reference in the top frame
     m1 == HyperStack.upd m0 s init  //and it's been initialized
+#pop-options
 
 (**
  * Allocates on the top-most stack frame
@@ -340,12 +341,12 @@ val salloc (#a:Type) (#rel:preorder a) (init:a)
   
 // JP, AR: these are not supported in C, and `salloc` already benefits from
 // automatic memory management.
-[@@ (deprecated "use salloc instead") ]
+[@@ (deprecated "Use salloc instead") ]
 val salloc_mm (#a:Type) (#rel:preorder a) (init:a)
   :StackInline (mmmstackref a rel) (requires (fun m -> is_stack_region (get_tip m)))
                                    (ensures  salloc_post init)
 
-[@@ (deprecated "use salloc instead") ]
+[@@ (deprecated "Use salloc instead") ]
 val sfree (#a:Type) (#rel:preorder a) (r:mmmstackref a rel)
   :StackInline unit (requires (fun m0 -> frameOf r = get_tip m0 /\ m0 `contains` r))
                     (ensures (fun m0 _ m1 -> m0 `contains` r /\ m1 == HS.free r m0))
@@ -596,3 +597,10 @@ val ralloc_drgn_mm (#a:Type) (#rel:preorder a) (d:drgn) (init:a)
     HS.is_mm r /\
     ralloc_post (rid_of_drgn d) init m0 r m1)
 
+
+(* This causes the verification conditition for the continuation
+of the call to this function to be done in a separate Z3 query. *)
+inline_for_extraction
+let break_vc ()
+  : STATE unit (fun p h -> spinoff (squash (p () h)))
+  = ()

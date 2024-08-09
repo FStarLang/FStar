@@ -8,7 +8,7 @@
       1,
       [ "@query", "equation_LowStar.Lens.inv" ],
       0,
-      "4924e43f54e85179b09bb5524d9c6828"
+      "735744bbbea9b8ed938390de56adf27f"
     ],
     [
       "LowStar.Lens.LensST",
@@ -17,20 +17,16 @@
       1,
       [ "@query" ],
       0,
-      "58110703298be2464d5fca2c8c4a3b25"
+      "eff5f8e358c9f26100bc0ec7cad1e9ac"
     ],
     [
       "LowStar.Lens.reveal_inv",
       1,
       2,
       1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_LowStar.Lens.inv",
-        "equation_LowStar.Lens.mods", "equation_LowStar.Lens.view",
-        "fuel_guarded_inversion_LowStar.Lens.hs_lens"
-      ],
+      [ "@query" ],
       0,
-      "d56f7fa48fa8fe48eb93c415654f2cb8"
+      "38ca8ce7e59b57d5dc2856e412b3c797"
     ],
     [
       "LowStar.Lens.reveal_inv",
@@ -43,26 +39,11 @@
         "fuel_guarded_inversion_LowStar.Lens.hs_lens"
       ],
       0,
-      "869ca3fe5a18927054f70c6aa99c90dd"
+      "087c1ce243422fe6f6e038331a2f255f"
     ],
     [
       "LowStar.Lens.for_n",
       1,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
-        "int_inversion", "primitive_Prims.op_Addition",
-        "projection_inverse_BoxInt_proj_0",
-        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
-        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
-      ],
-      0,
-      "a383f892b37f25eb1446f967daf4294c"
-    ],
-    [
-      "LowStar.Lens.for_n",
-      2,
       2,
       1,
       [
@@ -87,7 +68,22 @@
         "typing_FStar.Monotonic.HyperStack.get_tip"
       ],
       0,
-      "052ef7386545e39cef51db48fd51eae2"
+      "8a8b55bcb07309f317d98655a67df738"
+    ],
+    [
+      "LowStar.Lens.for_n",
+      2,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "equation_Prims.nat",
+        "int_inversion", "primitive_Prims.op_Addition",
+        "projection_inverse_BoxInt_proj_0",
+        "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
+        "refinement_interpretation_Tm_refine_c1424615841f28cac7fc34e92b7ff33c"
+      ],
+      0,
+      "a3527d34d30a3d7a9cd016347218c482"
     ]
   ]
 ]

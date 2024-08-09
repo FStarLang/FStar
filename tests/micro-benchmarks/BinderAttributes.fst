@@ -1,6 +1,7 @@
 module BinderAttributes
 
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
+module R = FStar.Reflection.V2
 open FStar.List.Tot
 
 let default_to (def : 'a) (x : option 'a) : Tot 'a =
@@ -20,6 +21,9 @@ let f (#[@@@ description "x_imp"] x_imp:int) ([@@@ description "y"] y:string) : 
 
 let f2 (#[@@@ description "x_imp"]x_imp [@@@ description "y"]y : int) : Tot unit =
     ()
+
+let attributes_with_local_name (s: string)
+  = [@@@ description s] y:string -> unit
 
 type binder =
     {
@@ -55,19 +59,17 @@ let rec binders_to_string (b : binders) : Tot string =
         (binder_to_string ba) ^ " :: " ^ (binders_to_string bs)
 
 let binder_from_term (b : T.binder) : T.Tac binder =
-    let (bv, (qual, attrs)) = T.inspect_binder b in
+    let {ppname; attrs; qual} = b in
     let desc_opt = match attrs with | [] -> None | a :: _ -> Some (get_description a) in
     let q = match qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Meta _ -> "Meta" in
-    let bvv = T.inspect_bv bv in
-    let open FStar.Tactics in
-    { name = bvv.bv_ppname; qual = q; desc = desc_opt }
+    { name = T.unseal ppname; qual = q; desc = desc_opt }
 
 let rec binders_from_arrow (ty : T.term) : T.Tac binders =
-    match T.inspect_ln ty with
+    match T.inspect ty with
     | T.Tv_Arrow b comp -> begin
         let ba = binder_from_term b in
         match T.inspect_comp comp with
-        | T.C_Total ty2 _ _ -> ba :: binders_from_arrow ty2
+        | T.C_Total ty2 -> ba :: binders_from_arrow ty2
         | _ -> T.fail "Unsupported computation type"
         end
     | T.Tv_FVar fv -> [] //last part
@@ -78,12 +80,12 @@ let binders_from_term (env : T.env) (qname : list string) : T.Tac (list binders)
         match T.lookup_typ env qname with
         | Some s -> begin
             match T.inspect_sigelt s with
-            | T.Sg_Let _ lbs -> begin
-                let lbv = T.lookup_lb_view lbs qname in
+            | T.Sg_Let {lbs} -> begin
+                let lbv = T.lookup_lb lbs qname in
                 [ binders_from_arrow T.(lbv.lb_typ) ] // single binder in letbinding
                 end
-            | T.Sg_Inductive _ _ _ _ cts -> begin
-                T.map (fun ctr -> binders_from_arrow (snd ctr)) cts
+            | T.Sg_Inductive {ctors} -> begin
+                T.map (fun ctr -> binders_from_arrow (snd ctr)) ctors
                 end
             | _ -> T.fail "Expected let binding or inductive"
             end
@@ -143,4 +145,13 @@ let _ =
         let bss = T.map (fun b -> binders_to_string b) b in
         let expected = [[{ name = "x_imp"; qual = "Implicit"; desc = Some "x_imp"; }; { name = "y"; qual = "Explicit"; desc = Some "y"; }]] in
         iter2 (fun ex bs -> validate ex bs) expected b
+    end
+
+let _ =
+    // Substitution within attributes
+    assert True by begin
+        let foo = "foo" in
+        let t = attributes_with_local_name foo in
+        let bs = binders_from_arrow (quote t) in
+        validate [{ name = "y"; qual = "Explicit"; desc = Some foo; }] bs
     end

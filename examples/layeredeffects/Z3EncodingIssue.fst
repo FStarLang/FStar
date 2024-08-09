@@ -109,27 +109,23 @@ let if_then_else (a:Type)
 
 
 reifiable reflectable
-layered_effect {
-  CHACHA : a:Type -> wp_t a -> Effect
-  with
-  repr = repr;
-  return = return;
-  bind = bind;
-  subcomp = subcomp;
-  if_then_else = if_then_else
+effect {
+  CHACHA (a:Type) (_:wp_t a)
+  with {repr = repr;
+        return = return;
+        bind = bind;
+        subcomp = subcomp;
+        if_then_else = if_then_else}
 }
 
 
 /// Lift from DIV
 
-assume PURE_wp_monotonic:
-  forall (a:Type) (wp:pure_wp a).
-    (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q))
-
 let lift_div_chacha (a:Type)
-  (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
+  (wp:pure_wp a) (f:unit -> DIV a wp)
 : repr a (fun p s -> wp (fun x -> p x s))
-= fun _ -> f ()
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
+  fun _ -> f ()
 
 
 sub_effect DIV ~> CHACHA = lift_div_chacha
@@ -271,19 +267,18 @@ let hif_then_else (a:Type)
 
 
 reifiable reflectable
-layered_effect {
-  REF : a:Type -> wp:hwp_t a -> Effect
-  with
-  repr = hrepr;
-  return = hreturn;
-  bind = hbind;
-  subcomp = hsubcomp;
-  if_then_else = hif_then_else
+effect {
+  REF (a:Type) (wp:hwp_t a)
+  with {repr = hrepr;
+        return = hreturn;
+        bind = hbind;
+        subcomp = hsubcomp;
+        if_then_else = hif_then_else}
 }
 
-let lift_div_ref (a:Type) (wp:pure_wp a) (f:eqtype_as_type unit -> DIV a wp)
+let lift_div_ref (a:Type) (wp:pure_wp a) (f:unit -> DIV a wp)
 : hrepr a (fun p n -> wp (fun x -> p x n))
-= assume (forall p q. (forall x. p x ==> q x) ==> (wp p ==> wp q));
+= FStar.Monotonic.Pure.elim_pure_wp_monotonicity wp;
   fun _ -> f ()
 
 sub_effect DIV ~> REF = lift_div_ref

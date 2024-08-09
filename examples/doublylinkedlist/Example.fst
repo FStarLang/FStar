@@ -22,7 +22,7 @@ module B = LowStar.Buffer
 module DLL = DoublyLinkedListIface
 module L = FStar.List.Tot
 
-open DLL
+open DoublyLinkedListIface
 
 let rec l_reverse (l:list 'a) : GTot (list 'a) =
   match l with

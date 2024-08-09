@@ -14,8 +14,7 @@
    limitations under the License.
 *)
 module Split
-open FStar.Tactics
-open FStar.Reflection.Types
+open FStar.Tactics.V2
 
 private val split_lem : (#a:Type) -> (#b:Type) ->
                         squash a -> squash b -> Lemma (a /\ b)

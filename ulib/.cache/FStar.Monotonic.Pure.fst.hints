@@ -1,5 +1,5 @@
 [
-  "ДI¬:…ом_>нҐД¦\u0001х¤",
+  "г+\bФ\u0000 ШX<+\u001b\u0015<3Е_",
   [
     [
       "FStar.Monotonic.Pure.elim_pure_wp_monotonicity",
@@ -15,7 +15,7 @@
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "ed90870c6d176a2c556d6ce28d2a644c"
+      "910ad9ef8dc766cf5abc91b68677c81f"
     ],
     [
       "FStar.Monotonic.Pure.elim_pure_wp_monotonicity_forall",
@@ -31,7 +31,7 @@
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "f5377e8f80127fc1de90f408b74f0e98"
+      "b58733ae8c6cea1f806fb5ad458eeb82"
     ],
     [
       "FStar.Monotonic.Pure.intro_pure_wp_monotonicity",
@@ -45,7 +45,7 @@
         "token_correspondence_Prims.pure_wp_monotonic0"
       ],
       0,
-      "769b19251a92964a3bee1e0dea39a6ab"
+      "b60d37fb184004dec63050559925f8fa"
     ],
     [
       "FStar.Monotonic.Pure.as_pure_wp",
@@ -54,7 +54,26 @@
       1,
       [ "@query" ],
       0,
-      "f34699464aaa46d5a5c4e4dea0cb7e1f"
+      "11534e4c0af6baebdbb77856602f5dec"
+    ],
+    [
+      "FStar.Monotonic.Pure.elim_pure",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Prims_interpretation_Tm_arrow_2eaa01e78f73e9bab5d0955fc1a662da",
+        "Prims_interpretation_Tm_arrow_92458cff82f9ffee1f6e26a1c0c579f3",
+        "eq2-interp", "equation_Prims.l_True", "equation_Prims.pure_post",
+        "equation_Prims.pure_post_",
+        "interpretation_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec",
+        "l_imp-interp", "l_quant_interp_904a74cfe3507104488fdcb4d014247a",
+        "refinement_interpretation_Tm_refine_8d65e998a07dd53ec478e27017d9dba5",
+        "typing_Tm_abs_b66a28ec01f7bbb11191891e2b8510ec"
+      ],
+      0,
+      "ac69d641b4d5fa7a7658bf7efbd0cac8"
     ]
   ]
 ]

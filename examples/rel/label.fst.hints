@@ -1,0 +1,24 @@
+[
+  "¢_»|¤’OSF5Á”<h‡c",
+  [
+    [
+      "Label.universal_property_meet",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query",
+        "Label_pretyping_ed8014fc6ac81aa9f68d67ea36895982", "bool_inversion",
+        "constructor_distinct_Label.High",
+        "data_typing_intro_Label.High@tok", "equality_tok_Label.High@tok",
+        "equation_Label.meet", "equation_Label.op_Less_Equals",
+        "fuel_guarded_inversion_Label.label",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__1",
+        "projection_inverse_FStar.Pervasives.Native.Mktuple2__2",
+        "typing_Label.meet", "typing_Label.op_Less_Equals"
+      ],
+      0,
+      "e635eea91865e73eedc9490a2c214273"
+    ]
+  ]
+]

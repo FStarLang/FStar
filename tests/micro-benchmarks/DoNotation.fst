@@ -17,7 +17,7 @@ module DoNotation
 
 (* Making sure do notation works *)
 
-let st t = int -> t * int
+let st t = int -> t & int
 
 let return (x : 'a) : st 'a =
     fun s -> (x, s)

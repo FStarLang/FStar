@@ -17,7 +17,7 @@
 module FStar.FunctionalExtensionality
 
 inline_for_extraction
-let on_domain (a:Type) (#b:a -> Type) (f:arrow a b)
+let on_domain (a:Type) (#b:a -> Type) ([@@@strictly_positive] f:arrow a b)
   = fun (x:a) -> f x
 
 let feq_on_domain (#a:Type) (#b:a -> Type) (f:arrow a b)
@@ -32,9 +32,9 @@ let quantifier_as_lemma (#a:Type) (#b: a -> Type)
     : Lemma (b x)
     = ()
 
-open FStar.Tactics.Builtins
-open FStar.Reflection.Types
-open FStar.Tactics.Types
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Tactics.Types
 open FStar.Tactics.Effect
 (* we're early enough in the module stack that we need to reimplement
    a few of the tactic helpers *)

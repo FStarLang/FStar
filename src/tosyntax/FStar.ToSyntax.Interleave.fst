@@ -25,6 +25,11 @@ open FStar.Ident
 open FStar.Errors
 open FStar.Syntax.Syntax
 open FStar.Parser.AST
+open FStar.Class.Show
+open FStar.Pprint
+open FStar.Class.PP
+
+module BU = FStar.Compiler.Util
 
 (* Some basic utilities *)
 let id_eq_lid i (l:lident) = (string_of_id i) = (string_of_id (ident_of_lid l))
@@ -38,7 +43,10 @@ let is_type x d = match d.d with
         tys |> Util.for_some (fun t -> id_of_tycon t = (string_of_id x))
     | _ -> false
 
-//is d of of the form 'let x = ...' or 'type x = ...'
+//
+//is d of of the form 'let x = ...' or 'type x = ...' or 'splice[..., x, ...] tac'
+// returns unqualified lids
+//
 let definition_lids d =
     match d.d with
     | TopLevelLet(_, defs) ->
@@ -46,10 +54,30 @@ let definition_lids d =
     | Tycon(_, _, tys) ->
         tys |> List.collect (function
                 | TyconAbbrev (id, _, _, _)
-                | TyconRecord (id, _, _, _)
+                | TyconRecord (id, _, _, _, _)
                 | TyconVariant(id, _, _, _) ->
                   [Ident.lid_of_ids [id]]
                 | _ -> [])
+    | Splice (_, ids, _)
+    | DeclToBeDesugared { idents=ids } -> List.map (fun id -> Ident.lid_of_ids [id]) ids
+    
+    | DeclSyntaxExtension (extension_name, code, _, range) -> begin
+      let ext_parser = FStar.Parser.AST.Util.lookup_extension_parser extension_name in
+      match ext_parser with
+      | None ->
+        raise_error
+          (Errors.Fatal_SyntaxError,
+           BU.format1 "Unknown syntax extension %s" extension_name)
+          d.drange
+       | Some parser ->
+         match parser.parse_decl_name code range with
+         | Inl error ->
+           raise_error
+             (Errors.Fatal_SyntaxError, error.message)
+             error.range
+         | Inr id ->
+           [Ident.lid_of_ids [id]]
+      end
     | _ -> []
 
 let is_definition_of x d =
@@ -128,7 +156,7 @@ let rec prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
    : list decl  //remaining iface decls
-   * list decl =  //d prefixed with relevant bits from iface
+   & list decl =  //d prefixed with relevant bits from iface
    let qualify_karamel_private impl =
        let karamel_private =
            FStar.Parser.AST.mk_term
@@ -143,41 +171,51 @@ let rec prefix_with_iface_decls
    | iface_hd::iface_tl -> begin
      match iface_hd.d with
      | Tycon(_, _, tys) when (tys |> Util.for_some (function (TyconAbstract _)  -> true | _ -> false)) ->
-        raise_error (Errors.Fatal_AbstractTypeDeclarationInInterface, "Interface contains an abstract 'type' declaration; use 'val' instead") impl.drange
+        raise_error_doc (Errors.Fatal_AbstractTypeDeclarationInInterface, [
+            text "Interface contains an abstract 'type' declaration; use 'val' instead."
+          ]) impl.drange
 
-     | Val(x, t) ->
+     | Splice (_, [x], _)
+     | Val(x, _) ->
        //we have a 'val x' in the interface
        //take impl as is, unless it is a
        //       let x (or a `type abbreviation x`)
        //or an  inductive type x
+       //or a splice that defines x
        //in which case prefix it with iface_hd
        let def_ids = definition_lids impl in
        let defines_x = Util.for_some (id_eq_lid x) def_ids in
-       if not defines_x
-       then if def_ids |> Util.for_some (fun y ->
+       if not defines_x then (
+         if def_ids |> Util.for_some (fun y ->
                iface_tl |> Util.for_some (is_val (ident_of_lid y)))
-            then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "Expected the definition of %s to precede %s"
-                                           (string_of_id x)
-                                           (def_ids |> List.map Ident.string_of_lid |> String.concat ", "))) impl.drange
-            else iface, [qualify_karamel_private impl]
-       else let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
-            let rec aux mutuals iface =
-                match mutuals, iface with
-                | [], _ -> [], iface
-                | _::_, [] -> [], []
-                | y::ys, iface_hd::iface_tl ->
-                  if is_val (ident_of_lid y) iface_hd
-                  then let val_ys, iface = aux ys iface_tl in
-                       iface_hd::val_ys, iface
-                  else if Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl
-                  then raise_error (Errors.Fatal_WrongDefinitionOrder, (Util.format2 "%s is out of order with the definition of %s"
-                                            (decl_to_string iface_hd)
-                                            (Ident.string_of_lid y))) iface_hd.drange
-                  else aux ys iface //no val given for 'y'; ok
-            in
-            let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
-            rest_iface, iface_hd::take_iface@[impl]
+         then
+           raise_error_doc (Errors.Fatal_WrongDefinitionOrder, [
+               text "Expected the definition of" ^/^ pp x ^/^ text "to precede"
+               ^/^ (pp def_ids)
+             ]) impl.drange;
+         iface, [qualify_karamel_private impl]
+       ) else (
+         let mutually_defined_with_x = def_ids |> List.filter (fun y -> not (id_eq_lid x y)) in
+         let rec aux mutuals iface =
+           match mutuals, iface with
+           | [], _ -> [], iface
+           | _::_, [] -> [], []
+           | y::ys, iface_hd::iface_tl when is_val (ident_of_lid y) iface_hd ->
+             let val_ys, iface = aux ys iface_tl in
+             iface_hd::val_ys, iface
 
+           | y::ys, iface_hd::iface_tl when Option.isSome <| List.tryFind (is_val (ident_of_lid y)) iface_tl ->
+             raise_error_doc (Errors.Fatal_WrongDefinitionOrder, [
+                 text (Util.format2 "%s is out of order with the definition of %s"
+                                         (show iface_hd)
+                                         (Ident.string_of_lid y))
+               ]) iface_hd.drange
+           | y::ys, iface_hd::iface_tl ->
+             aux ys iface //no val given for 'y'; ok
+         in
+         let take_iface, rest_iface = aux mutually_defined_with_x iface_tl in
+         rest_iface, iface_hd::take_iface@[impl]
+       )
 
      | Pragma _ ->
         (* Don't interleave pragmas on interface into implementation *)
@@ -222,7 +260,7 @@ let ml_mode_prefix_with_iface_decls
         (iface:list decl)
         (impl:decl)
    : list decl    //remaining iface decls
-   * list decl =  //impl prefixed with relevant bits from iface
+   & list decl =  //impl prefixed with relevant bits from iface
 
 
    match impl.d with
@@ -231,8 +269,22 @@ let ml_mode_prefix_with_iface_decls
    | Friend _
    | Include _
    | ModuleAbbrev _ ->
-     iface, [impl]
+     let iface_prefix_opens, iface =
+       List.span (fun d -> match d.d with | Open _ | ModuleAbbrev _ -> true | _ -> false) iface     
+     in
+     let iface =
+       List.filter 
+         (fun d ->
+           match d.d with
+           | Val _
+           | Tycon _ -> true //only retain the vals in --MLish mode
+           | _ -> false)
+         iface
+     in
+     iface, [impl]@iface_prefix_opens
+     
    | _ ->
+
      let iface_prefix_tycons, iface =
        List.span (fun d -> match d.d with | Tycon _ -> true | _ -> false) iface
      in
@@ -260,12 +312,10 @@ let ml_mode_check_initial_interface mname (iface:list decl) =
                    "Interface contains an abstract 'type' declaration; \
                     use 'val' instead") d.drange
     | Tycon _
-    | Val _ -> true
+    | Val _
+    | Open _
+    | ModuleAbbrev _ -> true
     | _ -> false)
-  // iface |> List.filter (fun d ->
-  // match d.d with
-  // | Val _ -> true //only retain the vals in --MLish mode
-  // | _ -> false)
 
 let ulib_modules = [
   "FStar.Calc";
@@ -303,7 +353,7 @@ let apply_ml_mode_optimizations (mname:lident) : bool =
    *     But until then ... (sigh)
    *)  
   Options.ml_ish () &&
-  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules))) &&
+  (not (List.contains (Ident.string_of_lid mname) (Parser.Dep.core_modules ()))) &&
   (not (List.contains (Ident.string_of_lid mname) ulib_modules))
 
 let prefix_one_decl mname iface impl =
@@ -333,15 +383,29 @@ let initialize_interface (mname:Ident.lid) (l:list decl) : E.withenv unit =
     | None ->
       (), E.set_iface_decls env mname decls
 
+let fixup_interleaved_decls (iface : list decl) : list decl =
+  let fix1 (d : decl) : decl =
+    let d = { d with interleaved = true } in
+    d
+  in
+  iface |> List.map fix1
+
 let prefix_with_interface_decls mname (impl:decl) : E.withenv (list decl) =
   fun (env:E.env) ->
-    match E.iface_decls env (E.current_module env) with
-    | None ->
-      [impl], env
-    | Some iface ->
-      let iface, impl = prefix_one_decl mname iface impl in
-      let env = E.set_iface_decls env (E.current_module env) iface in
-      impl, env
+    let decls, env = 
+      match E.iface_decls env (E.current_module env) with
+      | None ->
+        [impl], env
+      | Some iface ->
+        let iface = fixup_interleaved_decls iface in
+        let iface, impl = prefix_one_decl mname iface impl in
+        let env = E.set_iface_decls env (E.current_module env) iface in
+        impl, env
+    in
+    if Options.dump_module (Ident.string_of_lid mname)
+    then Util.print1 "Interleaved decls:\n%s\n" (show decls);
+    decls,env
+    
 
 let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
   fun (env:E.env)  ->
@@ -351,6 +415,7 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
       match E.iface_decls env l with
       | None -> a, env
       | Some iface ->
+        let iface = fixup_interleaved_decls iface in
         let iface, impls =
             List.fold_left
                 (fun (iface, impls) impl ->
@@ -360,7 +425,9 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
                 impls
         in
         let iface_lets, remaining_iface_vals =
-            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true | _ -> false) iface with
+            match FStar.Compiler.Util.prefix_until (function {d=Val _} -> true
+                                                           | {d=Splice _} -> true
+            | _ -> false) iface with
             | None -> iface, []
             | Some (lets, one_val, rest) -> lets, one_val::rest
         in
@@ -375,10 +442,13 @@ let interleave_module (a:modul) (expect_complete_modul:bool) : E.withenv modul =
         let a = Module(l, impls) in
         match remaining_iface_vals with
         | _::_ when expect_complete_modul ->
-          let err = List.map FStar.Parser.AST.decl_to_string remaining_iface_vals |> String.concat "\n\t" in
-          raise_error (Errors.Fatal_InterfaceNotImplementedByModule, (Util.format2 "Some interface elements were not implemented by module %s:\n\t%s"
-                                    (Ident.string_of_lid l)
-                                    err)) (Ident.range_of_lid l)
+          FStar.Pprint.(log_issue_doc (Ident.range_of_lid l)
+            (Errors.Fatal_InterfaceNotImplementedByModule,
+              [text (Util.format1 "Some interface elements were not implemented by module %s:" (Ident.string_of_lid l))
+                ^^ sublist empty (List.map (fun d -> doc_of_string (show d)) remaining_iface_vals)]) );
+          a, env
         | _ ->
+          if Options.dump_module (string_of_lid l)
+          then Util.print1 "Interleaved module is:\n%s\n" (FStar.Parser.AST.modul_to_string a);
           a, env
       end

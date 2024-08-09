@@ -31,14 +31,23 @@ type state = {secret:int;
               public:int;
               release:bool}
 
-total reifiable reflectable new_effect STATE = STATE_h state
+(* Instantiating the effect template in FStar.DM4F.ST leads to universe issues *)
+total reifiable reflectable new_effect {
+  STATE  : a:Type -> Effect
+  with repr     = st state
+     ; bind     = bind_st state
+     ; return   = return_st state
+     ; get      = get state
+     ; put      = put state
+}
+
 
 effect ST (a:Type) (pre: STATE?.pre) (post: (state -> a -> state -> GTot Type0)) =
   STATE a (fun n0 p -> pre n0 /\
             (forall a n1. pre n0 /\ post n0 a n1 ==> p (a, n1)))
 
 effect St (a:Type) =
-  STATE a (fun (_:state) (p:(a * state) -> Type0) -> forall (x:(a * state)). p x)
+  STATE a (fun (_:state) (p:(a & state) -> Type0) -> forall (x:(a & state)). p x)
 
 (* equivalence *)
 

@@ -1,11 +1,11 @@
 module GenericTotalDM4A
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Calc
 open FStar.FunctionalExtensionality
 module F = FStar.FunctionalExtensionality
 module W = FStar.WellFounded
-module T = FStar.Tactics
+module T = FStar.Tactics.V2
 open FStar.Preorder
 
 // m is a monad.
@@ -75,13 +75,9 @@ let if_then_else (a : Type) (w1 w2 : w a) (f : repr a w1) (g : repr a w2) (b : b
 total
 reifiable
 reflectable
-layered_effect {
-  DM4A : a:Type -> w a -> Effect
-  with repr         = repr;
-       return       = return;
-       bind         = bind;
-       subcomp      = subcomp; 
-       if_then_else = if_then_else
+effect {
+  DM4A (a:Type) (wp:w a)
+  with {repr; return; bind; subcomp; if_then_else}
 }
 
 (*

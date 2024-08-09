@@ -520,7 +520,7 @@ let test (m:UInt64.t) (l:UInt32.t) (#r:_) (#s:_) (x:LB.mbuffer bool r s{LB.len x
               "bye"
               done //dummy universe coercion
 
-let test2 (x:(int * int)) (print_pair:(int * int) -> StTrivial unit)
+let test2 (x:(int & int)) (print_pair:(int & int) -> StTrivial unit)
   : Stack unit
     (requires (fun h0 -> True))
     (ensures (fun h0 _ h1 -> h0 == h1))

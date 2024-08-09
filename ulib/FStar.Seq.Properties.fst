@@ -189,6 +189,12 @@ let lemma_swap_permutes_aux #_ s i j x =
   end
 #pop-options  
 
+let append_permutations #a s1 s2 s1' s2' =
+  (
+    lemma_append_count s1 s2;
+    lemma_append_count s1' s2'
+  )
+
 let lemma_swap_permutes #a s i j
   = FStar.Classical.forall_intro
                     #a
@@ -380,10 +386,8 @@ module L = FStar.List.Tot
 
 let lemma_seq_of_list_induction #_ l
   = match l with
-    | []    -> assert_norm (seq_of_list l == Seq.empty)
-    | hd::tl ->
-      assert_norm (seq_of_list (hd::tl) == create 1 hd @| seq_of_list tl);
-      lemma_tl hd (seq_of_list tl)
+    | [] -> ()
+    | hd::tl -> lemma_tl hd (seq_of_list tl)
 
 let rec lemma_seq_list_bij': #a:Type -> s:seq a -> Lemma
   (requires (True))
@@ -421,6 +425,7 @@ let rec lemma_index_is_nth': #a:Type -> s:seq a -> i:nat{i < length s} -> Lemma
   (ensures  (L.index (seq_to_list s) i == index s i))
   (decreases i)
 = fun #_ s i ->
+  assert (s `equal` cons (head s) (tail s));
   if i = 0 then ()
   else (
     lemma_index_is_nth' (slice s 1 (length s)) (i-1)
@@ -561,6 +566,7 @@ let intro_of_list' = intro_of_list''
 
 let intro_of_list #_ s l = intro_of_list' 0 s l
 
+#push-options "--z3rlimit 20"
 let rec elim_of_list'': #a:Type ->
   i:nat ->
   s:seq a ->
@@ -580,6 +586,7 @@ let rec elim_of_list'': #a:Type ->
   | hd :: tl ->
       lemma_seq_of_list_induction l;
       elim_of_list'' (i + 1) s tl
+#pop-options
 
 let elim_of_list' = elim_of_list''
 
@@ -587,7 +594,10 @@ let elim_of_list #_ l = elim_of_list' 0 (seq_of_list l) l
 
 let rec lemma_seq_to_list_permutation' (#a:eqtype) (s:seq a)
   :Lemma (requires True) (ensures (forall x. count x s == List.Tot.Base.count x (seq_to_list s))) (decreases (length s))
-  = if length s > 0 then lemma_seq_to_list_permutation' (slice s 1 (length s))
+  = if length s > 0 then (
+      assert (equal s (cons (head s) (tail s)));
+      lemma_seq_to_list_permutation' (slice s 1 (length s))
+    )
 
 let lemma_seq_to_list_permutation = lemma_seq_to_list_permutation'
 

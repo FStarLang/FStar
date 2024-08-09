@@ -44,8 +44,8 @@ let with_printed_effect_args k =
 let term_to_string tcenv t =
   with_printed_effect_args (fun () -> FStar.TypeChecker.Normalize.term_to_string tcenv t)
 
-let sigelt_to_string se =
-  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string se)
+let sigelt_to_string tcenv se =
+  with_printed_effect_args (fun () -> Syntax.Print.sigelt_to_string' (DsEnv.set_current_module tcenv.dsenv tcenv.curmodule) se)
 
 let symlookup tcenv symbol pos_opt requested_info =
   let info_of_lid_str lid_str =
@@ -57,7 +57,7 @@ let symlookup tcenv symbol pos_opt requested_info =
 
   let def_of_lid lid =
     U.bind_opt (TcEnv.lookup_qname tcenv lid) (function
-      | (Inr (se, _), _) -> Some (sigelt_to_string se)
+      | (Inr (se, _), _) -> Some (sigelt_to_string tcenv se)
       | _ -> None) in
 
   let info_at_pos_opt =
@@ -76,6 +76,9 @@ let symlookup tcenv symbol pos_opt requested_info =
         match name_or_lid with
         | Inl name -> name
         | Inr lid -> Ident.string_of_lid lid in
+      let str_of_opt = function
+        | None -> "<none>"
+        | Some s -> s in
       let typ_str =
         if List.mem "type" requested_info then
           Some (term_to_string tcenv typ)
@@ -90,7 +93,6 @@ let symlookup tcenv symbol pos_opt requested_info =
         | _ -> None in
       let def_range =
         if List.mem "defined-at" requested_info then Some rng else None in
-
       Some ({ slr_name = name; slr_def_range = def_range;
              slr_typ = typ_str; slr_doc = doc_str; slr_def = def_str })
 

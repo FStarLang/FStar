@@ -1,6 +1,6 @@
 module GTWP
 
-open FStar.Tactics
+open FStar.Tactics.V2
 open FStar.Universe
 open FStar.Monotonic.Pure
 
@@ -48,25 +48,33 @@ let d_bind #a #b #wc #wf (c : m a D wc) (f : (x:a -> m b D (wf x))) : m b D (bin
   raise_val (fun () -> let y = downgrade_val c () in // cannot inline this
                     downgrade_val (f y) ())
 
-let bind (a b : Type) wc wf (i:idx) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
+let bind (a b : Type) (i:idx) (wc:wp a) (wf:a -> wp b) (c : m a i wc) (f : (x:a -> m b i (wf x))) : m b i (bind_wp wc wf) =
   elim_pure_wp_monotonicity_forall ();
   match i with
   | T -> t_bind #_ #_ #wc #wf c f
   | G -> g_bind #_ #_ #wc #wf c f
-  | D -> coerce (d_bind #_ #_ #wc #wf c f)
+  | D -> coerce (d_bind #_ #_ #wc #wf (coerce c) f)
 // GM: would be nice to skip the annotations.
 
-let subcomp (a:Type) (i:idx) (wp1 : wp a)
-                             (wp2 : wp a)
-                             (f : m a i wp1)
+let subcomp (a:Type u#aa) (i:idx)
+            (wp1 : wp a)
+            (wp2 : wp a)
+            (f : m a i wp1)
    : Pure (m a i wp2)
           (requires (forall p. wp2 p ==> wp1 p))
           (ensures (fun _ -> True))
    = match i with
      | T -> f
      | G -> f
-     | D -> coerce f
+     | D ->
+       (* This case needs some handholding. *)
+       let f : raise_t (unit -> DIV a wp1) = f in
+       let f : unit -> DIV a wp1 = downgrade_val f in
+       let f : unit -> DIV a wp2 = f in
+       assert_norm (m a i wp2 == raise_t (unit -> DIV a wp2));
+       coerce (raise_val f)
 
+unfold
 let ite_wp #a (w1 w2 : wp a) (b:bool) : wp a =
   elim_pure_wp_monotonicity_forall ();
   as_pure_wp (fun p -> if b then w1 p else w2 p)
@@ -82,23 +90,17 @@ let if_then_else (a:Type) (i:idx) (w1 w2 : wp a)
 //     e.g. the [idx] in [return] needs to come after [x], otherwise
 //     we get an assertion failure trying to prove [forall (a: Type). idx == a].
 
-[@@allow_informative_binders]
 reifiable
 reflectable
-layered_effect {
-  GTD : a:Type -> idx -> wp a -> Effect
-  with
-  repr         = m;
-  return       = return;
-  bind         = bind;
-  subcomp      = subcomp;
-  if_then_else = if_then_else
+effect {
+  GTD (a:Type) ([@@@ effect_param] _:idx) (_:wp a)
+  with {
+    repr = m; return; bind; subcomp; if_then_else;
+  }
 }
 
-let unmon #a (w:wp a) : pure_wp a = elim_pure_wp_monotonicity_forall (); as_pure_wp (fun p -> w p)
-
 let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
-                  (f : eqtype_as_type unit -> PURE a (unmon w))
+                  (f : unit -> PURE a w)
                  : Pure (m a i w)
                         (requires True)
                         (ensures (fun _ -> True))
@@ -116,19 +118,14 @@ let lift_pure_gtd (a:Type) (w : wp a) (i : idx)
 
 sub_effect PURE ~> GTD = lift_pure_gtd
 
-// GM: This crashes F* if we forget to write the WPs.
-
-//let rec map #a #b #i (f : a -> GTD b i) (xs : list a) : GTD (list b) i =
-//  match xs with
-//  | [] -> []
-//  | x::xs -> (f x)::(map f xs)
-
-unfold
-let null_wp0 (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. p x)
+[@@ expect_failure]  // wp is not specified
+let rec map #a #b #i (f : a -> GTD b i) (xs : list a) : GTD (list b) i =
+ match xs with
+ | [] -> []
+ | x::xs -> (f x)::(map f xs)
 
 unfold
-let null_wp  (a:Type) : wp a =
-  null_wp0 a
+let null_wp (a:Type) : pure_wp a = as_pure_wp (fun p -> forall x. p x)
 
 effect Gtd (a:Type) (i:idx) = GTD a i (null_wp a)
 
@@ -139,7 +136,7 @@ let rec map #a #b #i (f : a -> Gtd b i) (xs : list a) : Gtd (list b) i (* by (ex
 
 let app #a #b #i #wp (f : a -> GTD b i wp) (x : a) : GTD b i wp = f x
 
-open FStar.Tactics
+open FStar.Tactics.V2
 
 let rec appn #a #i (n:nat) (f : a -> Gtd a i) (x : a) : Gtd a i =
   match n with
@@ -164,10 +161,7 @@ let labs #i (n:int) : Gtd nat i =
   then -n
   else n
 
-// GM: This works now that we have WPs. (though we still can't prove the assume, which
-//     is fine)
 let test #a #i (n:int) : Gtd nat i =
   let r = labs0 n in
   assume (r >= 0);
   r
-

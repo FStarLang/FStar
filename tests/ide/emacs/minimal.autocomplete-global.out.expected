@@ -1,3 +1,3 @@
 {"kind": "protocol-info", "rest": "[...]"}
 {"kind": "response", "query-id": "1", "response": [], "status": "success"}
-{"kind": "response", "query-id": "2", "response": [[14, "", "Prims.Mkdtuple2"]], "status": "success"}
+{"kind": "response", "query-id": "2", "response": [[14, "", "Prims.Mkdtuple2"], [0, "<search term>", "Pr.Mkdtuple"]], "status": "success"}

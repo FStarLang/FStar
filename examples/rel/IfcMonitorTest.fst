@@ -18,7 +18,16 @@ module IfcMonitorTest
 open Label
 open IfcMonitor
 open FStar.DM4F.Heap.IntStoreFixed
+module T = FStar.Tactics
 
+assume val from_id (x:id) : GTot int
+assume
+val to_from_inv (x:nat{x `op_LessThan` store_size})
+  : Lemma
+    (ensures from_id (to_id x) == x)
+    [SMTPat (to_id x)]
+  
+  
 
 (* Some test cases *)
 
@@ -27,7 +36,10 @@ let env x = if x = to_id 3 || x = to_id 4 then High else Low
 
 (* l1 := h1 *)
 let p1 = Assign (to_id 1) (AVar (to_id 3))
-let test1 = assert_norm (None? (interpret_com h0 p1 env Low))
+let test1 = 
+  assert (None? (interpret_com h0 p1 env Low))
+
+          
 
 (* l1 := l2 *)
 let p2 = Assign (to_id 1) (AVar (to_id 2))

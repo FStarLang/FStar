@@ -29,7 +29,7 @@ module BU = FStar.Compiler.Util
 type label = error_label
 type labels = list label
 
-val label_goals : option (unit -> string) -> range -> q:term -> labels * term
+val label_goals : option (unit -> string) -> range -> q:term -> labels & term
 
 val detail_errors :  bool //detail_hint_replay?
                   -> TypeChecker.Env.env

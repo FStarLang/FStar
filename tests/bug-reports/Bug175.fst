@@ -20,7 +20,7 @@ type exp =
 
 type heap = int -> Tot int
 
-type config = heap * exp
+type config = heap & exp
 
 noeq type step : config -> Type =
   | SApp1 : h:heap ->

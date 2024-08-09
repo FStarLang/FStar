@@ -19,11 +19,12 @@ open FStar.Compiler.Effect
 open FStar.Syntax.Syntax
 open FStar.TypeChecker.Env
 open FStar.Tactics.Common
-module Cfg = FStar.TypeChecker.Cfg
-module N = FStar.TypeChecker.Normalize
-module Range = FStar.Compiler.Range
-module BU = FStar.Compiler.Util
-module O = FStar.Options
+
+module BU      = FStar.Compiler.Util
+module Cfg     = FStar.TypeChecker.Cfg
+module Core    = FStar.TypeChecker.Core
+module PO      = FStar.TypeChecker.Primops
+module Range   = FStar.Compiler.Range
 
 (*
    f: x:int -> P
@@ -46,7 +47,9 @@ type goal = {
 type guard_policy =
     | Goal
     | SMT
+    | SMTSync
     | Force
+    | ForceSMT
     | Drop // unsound
 
 type proofstate = {
@@ -64,7 +67,7 @@ type proofstate = {
 
     depth        : int;          //depth for tracing and debugging
     __dump       : proofstate -> string -> unit; // callback to dump_proofstate, to avoid an annoying circularity
-    psc          : Cfg.psc;        //primitive step context where we started execution
+    psc          : PO.psc;       //primitive step context where we started execution
     entry_range  : Range.range;  //position of entry, set by the use
     guard_policy : guard_policy; //guard policy: what to do with guards arising during tactic exec
     freshness    : int;          //a simple freshness counter for the fresh tactic
@@ -75,18 +78,22 @@ type proofstate = {
     urgency      : int;          // When printing a proofstate due to an error, this
                                  // is used by emacs to decide whether it should pop
                                  // open a buffer or not (default: 1).
+
+    dump_on_failure : bool;      // Whether to dump the proofstate to the user when a failure occurs.
 }
 
 val decr_depth : proofstate -> proofstate
 val incr_depth : proofstate -> proofstate
-val tracepoint_with_psc : Cfg.psc -> proofstate -> bool
+val tracepoint_with_psc : PO.psc -> proofstate -> bool
 val tracepoint : proofstate -> bool
 val set_proofstate_range : proofstate -> Range.range -> proofstate
 
-val set_ps_psc : Cfg.psc -> proofstate -> proofstate
+val set_ps_psc : PO.psc -> proofstate -> proofstate
 val goal_env: goal -> env
+val goal_range: goal -> Range.range
 val goal_witness: goal -> term
 val goal_type: goal -> term
+val goal_opts: goal -> Options.optionstate
 val goal_with_env: goal -> env -> goal
 val is_guard : goal -> bool
 
@@ -98,7 +105,7 @@ val smt_goals_of : proofstate -> list goal
 
 val mk_goal: env -> ctx_uvar -> FStar.Options.optionstate -> bool -> string -> goal
 
-val goal_of_goal_ty : env -> typ -> goal * guard_t
+val goal_of_goal_ty : env -> typ -> goal & guard_t
 val goal_of_implicit : env -> implicit -> goal
 val goal_of_ctx_uvar: goal -> ctx_uvar -> goal
 
@@ -113,5 +120,13 @@ type direction =
 
 val check_goal_solved' : goal -> option term
 val check_goal_solved  : goal -> bool
-val get_phi            : goal -> option term
-val is_irrelevant      : goal -> bool
+
+type tref (a:Type) = ref a
+
+(*** These are here for userspace, the library has an interface into this module. *)
+(* Typing reflection *)
+val non_informative_token (g:env) (t:typ) : Type0
+val subtyping_token (g:env) (t0 t1:typ) : Type0
+val equiv_token (g:env) (t0 t1:typ) : Type0
+val typing_token (g:env) (e:term) (c:Core.tot_or_ghost & typ) : Type0
+val match_complete_token (g:env) (sc:term) (t:typ) (pats:list pattern) : Type0

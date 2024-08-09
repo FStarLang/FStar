@@ -1,7 +1,7 @@
 module Bug2471_A
 
 open FStar.List.Tot
-open FStar.Tactics
+open FStar.Tactics (* Using V1 *)
 
 let id_tac (x:'a): Tac 'a = x
 let implicit1 (): Tac term = Tv_FVar (pack_fv (id_tac ["a"]))
