@@ -371,25 +371,29 @@ let run_unembedded_tactic_on_ps
           do_dump_proofstate ps "at the time of failure";
         let open FStar.Pprint in
         let texn_to_doc e =
-          match e with
-          | TacticFailure msg ->
-              msg
-          | EExn t ->
-              [doc_of_string <| "Uncaught exception: " ^ (show t)]
-          | e ->
-              raise e
+            match e with
+            | TacticFailure msg ->
+                msg
+            | EExn t ->
+                [doc_of_string <| "Uncaught exception: " ^ (show t)],
+                None
+            | e ->
+                raise e
         in
+        let doc, rng = texn_to_doc e in
         let rng =
           if background
           then match ps.goals with
                | g::_ -> g.goal_ctx_uvar.ctx_uvar_range
                | _ -> rng_call
-          else ps.entry_range
+          else match rng with
+              | Some r -> r
+              | _ -> ps.entry_range
         in
         let open FStar.Pprint in
         Err.raise_error_doc (Err.Fatal_UserTacticFailure, (
                               (if ps.dump_on_failure then [doc_of_string "Tactic failed"] else [])
-                              @ texn_to_doc e)
+                              @ doc)
                             )
                           rng
 

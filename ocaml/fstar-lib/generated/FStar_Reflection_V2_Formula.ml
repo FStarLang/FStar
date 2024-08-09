@@ -574,7 +574,7 @@ let (term_as_formula' :
          (Obj.magic
             (FStar_Range.mk_range "FStar.Reflection.V2.Formula.fst"
                (Prims.of_int (90)) (Prims.of_int (4)) (Prims.of_int (166))
-               (Prims.of_int (46))))) (Obj.magic (inspect_unascribe t))
+               (Prims.of_int (76))))) (Obj.magic (inspect_unascribe t))
       (fun uu___ ->
          (fun uu___ ->
             match uu___ with
@@ -987,7 +987,9 @@ let (term_as_formula' :
                   (Obj.repr
                      (FStar_Tactics_Effect.raise
                         (FStar_Tactics_Common.TacticFailure
-                           [FStar_Pprint.arbitrary_string "???"])))) uu___)
+                           ([FStar_Pprint.arbitrary_string
+                               "Unexpected: term_as_formula"],
+                             FStar_Pervasives_Native.None))))) uu___)
 let _ =
   FStar_Tactics_Native.register_tactic
     "FStar.Reflection.V2.Formula.term_as_formula'" (Prims.of_int (2))

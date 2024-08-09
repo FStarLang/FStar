@@ -1085,33 +1085,41 @@ let run_unembedded_tactic_on_ps :
                            let uu___2 =
                              let uu___3 =
                                let uu___4 =
-                                 FStar_Class_Show.show
-                                   FStar_Syntax_Print.showable_term t in
-                               Prims.strcat "Uncaught exception: " uu___4 in
-                             FStar_Pprint.doc_of_string uu___3 in
-                           [uu___2]
+                                 let uu___5 =
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term t in
+                                 Prims.strcat "Uncaught exception: " uu___5 in
+                               FStar_Pprint.doc_of_string uu___4 in
+                             [uu___3] in
+                           (uu___2, FStar_Pervasives_Native.None)
                        | e2 -> FStar_Compiler_Effect.raise e2 in
-                     let rng =
-                       if background
-                       then
-                         match ps3.FStar_Tactics_Types.goals with
-                         | g::uu___2 ->
-                             (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
-                         | uu___2 -> rng_call
-                       else ps3.FStar_Tactics_Types.entry_range in
-                     let uu___2 =
-                       let uu___3 =
-                         let uu___4 =
-                           if ps3.FStar_Tactics_Types.dump_on_failure
+                     let uu___2 = texn_to_doc e in
+                     match uu___2 with
+                     | (doc, rng) ->
+                         let rng1 =
+                           if background
                            then
+                             match ps3.FStar_Tactics_Types.goals with
+                             | g::uu___3 ->
+                                 (g.FStar_Tactics_Types.goal_ctx_uvar).FStar_Syntax_Syntax.ctx_uvar_range
+                             | uu___3 -> rng_call
+                           else
+                             (match rng with
+                              | FStar_Pervasives_Native.Some r -> r
+                              | uu___4 -> ps3.FStar_Tactics_Types.entry_range) in
+                         let uu___3 =
+                           let uu___4 =
                              let uu___5 =
-                               FStar_Pprint.doc_of_string "Tactic failed" in
-                             [uu___5]
-                           else [] in
-                         let uu___5 = texn_to_doc e in
-                         FStar_Compiler_List.op_At uu___4 uu___5 in
-                       (FStar_Errors_Codes.Fatal_UserTacticFailure, uu___3) in
-                     FStar_Errors.raise_error_doc uu___2 rng)))
+                               if ps3.FStar_Tactics_Types.dump_on_failure
+                               then
+                                 let uu___6 =
+                                   FStar_Pprint.doc_of_string "Tactic failed" in
+                                 [uu___6]
+                               else [] in
+                             FStar_Compiler_List.op_At uu___5 doc in
+                           (FStar_Errors_Codes.Fatal_UserTacticFailure,
+                             uu___4) in
+                         FStar_Errors.raise_error_doc uu___3 rng1)))
 let run_tactic_on_ps' :
   'a 'b .
     FStar_Compiler_Range_Type.range ->

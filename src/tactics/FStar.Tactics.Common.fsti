@@ -10,6 +10,6 @@ each other. *)
 open FStar.Syntax.Syntax
 
 exception NotAListLiteral
-exception TacticFailure of FStar.Errors.Msg.error_message
+exception TacticFailure of FStar.Errors.Msg.error_message & option FStar.Compiler.Range.range
 exception EExn of term
 exception SKIP (* used by ctrl_rewrite *)

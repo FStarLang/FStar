@@ -1669,7 +1669,8 @@ let (compute_eterm_info :
                          (fun uu___1 ->
                             (fun uu___1 ->
                                match uu___1 with
-                               | FStar_Tactics_Common.TacticFailure msg ->
+                               | FStar_Tactics_Common.TacticFailure
+                                   (msg, uu___2) ->
                                    Obj.magic
                                      (Obj.repr
                                         (FStar_InteractiveHelpers_Base.mfail_doc

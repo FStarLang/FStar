@@ -308,7 +308,8 @@ let fail_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac =
             FStar_Tactics_Printing.do_dump_proofstate ps uu___2
           else ());
          FStar_Tactics_Result.Failed
-           ((FStar_Tactics_Common.TacticFailure msg), ps))
+           ((FStar_Tactics_Common.TacticFailure
+               (msg, FStar_Pervasives_Native.None)), ps))
 let fail : 'a . Prims.string -> 'a tac =
   fun msg ->
     let uu___ = let uu___1 = FStar_Errors_Msg.text msg in [uu___1] in
@@ -954,10 +955,10 @@ let wrap_err_doc : 'a . FStar_Errors_Msg.error_message -> 'a tac -> 'a tac =
            | FStar_Tactics_Result.Success (a1, q) ->
                FStar_Tactics_Result.Success (a1, q)
            | FStar_Tactics_Result.Failed
-               (FStar_Tactics_Common.TacticFailure msg, q) ->
+               (FStar_Tactics_Common.TacticFailure (msg, r), q) ->
                FStar_Tactics_Result.Failed
                  ((FStar_Tactics_Common.TacticFailure
-                     (FStar_Compiler_List.op_At pref msg)), q)
+                     ((FStar_Compiler_List.op_At pref msg), r)), q)
            | FStar_Tactics_Result.Failed (e, q) ->
                FStar_Tactics_Result.Failed (e, q))
 let wrap_err : 'a . Prims.string -> 'a tac -> 'a tac =

@@ -156,7 +156,8 @@ let fail : 'a . Prims.string -> ('a, unit) FStar_Tactics_Effect.tac_repr =
     (fun m ->
        Obj.magic
          (FStar_Tactics_Effect.raise
-            (FStar_Tactics_Common.TacticFailure (FStar_Errors_Msg.mkmsg m))))
+            (FStar_Tactics_Common.TacticFailure
+               ((FStar_Errors_Msg.mkmsg m), FStar_Pervasives_Native.None))))
       uu___
 let rec (mk_arr :
   FStar_Reflection_Types.binder Prims.list ->

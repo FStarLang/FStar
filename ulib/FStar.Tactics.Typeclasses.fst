@@ -304,8 +304,8 @@ let tcresolve () : Tac unit =
         prefix 2 1 (text "Could not solve constraint")
           (term_to_doc (cur_goal ()));
       ]
-    | TacticFailure msg ->
-      fail_doc ([text "Typeclass resolution failed."] @ msg)
+    | TacticFailure (msg,r) ->
+      fail_doc_at ([text "Typeclass resolution failed."] @ msg) r
     | e -> raise e
 
 (**** Generating methods from a class ****)

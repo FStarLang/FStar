@@ -317,6 +317,46 @@ let (e_goal_nbe :
     FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_goal.fv)
   }
+let (e_range : FStar_Range.range FStar_Syntax_Embeddings_Base.embedding) =
+  let embed_range r rng uu___ uu___1 =
+    FStar_Syntax_Syntax.mk
+      (FStar_Syntax_Syntax.Tm_constant
+         (FStar_Const.Const_range (FStar_Pervasives.coerce_eq () r))) rng in
+  let unembed_range t uu___ =
+    match t.FStar_Syntax_Syntax.n with
+    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
+        FStar_Pervasives_Native.Some (FStar_Pervasives.coerce_eq () r)
+    | uu___1 -> FStar_Pervasives_Native.None in
+  FStar_Syntax_Embeddings_Base.mk_emb_full embed_range unembed_range
+    (fun uu___ -> FStar_Syntax_Syntax.t_range) (fun uu___ -> "(range)")
+    (fun uu___ ->
+       let uu___1 =
+         let uu___2 =
+           FStar_Class_Show.show FStar_Ident.showable_lident
+             FStar_Parser_Const.range_lid in
+         (uu___2, []) in
+       FStar_Syntax_Syntax.ET_app uu___1)
+let (e_range_nbe : FStar_Range.range FStar_TypeChecker_NBETerm.embedding) =
+  let embed_range cb e =
+    {
+      FStar_TypeChecker_NBETerm.nbe_t =
+        (FStar_TypeChecker_NBETerm.Constant
+           (FStar_TypeChecker_NBETerm.Range (FStar_Pervasives.coerce_eq () e)));
+      FStar_TypeChecker_NBETerm.nbe_r = (FStar_Pervasives.coerce_eq () e)
+    } in
+  let unembed_range cb t =
+    let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
+    match uu___ with
+    | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Range r)
+        -> FStar_Pervasives_Native.Some (FStar_Pervasives.coerce_eq () r)
+    | uu___1 -> FStar_Pervasives_Native.None in
+  let fv_range = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.range_lid in
+  {
+    FStar_TypeChecker_NBETerm.em = embed_range;
+    FStar_TypeChecker_NBETerm.un = unembed_range;
+    FStar_TypeChecker_NBETerm.typ = (fun uu___ -> mkFV fv_range [] []);
+    FStar_TypeChecker_NBETerm.e_typ = (fun uu___ -> fv_as_emb_typ fv_range)
+  }
 let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
   let embed_exn e rng uu___ uu___1 =
     match e with
@@ -325,8 +365,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
           let uu___3 =
             let uu___4 =
               embed
-                (FStar_Syntax_Embeddings.e_list
-                   FStar_Syntax_Embeddings.e_document) rng s in
+                (FStar_Syntax_Embeddings.e_tuple2
+                   (FStar_Syntax_Embeddings.e_list
+                      FStar_Syntax_Embeddings.e_document)
+                   (FStar_Syntax_Embeddings.e_option
+                      FStar_Syntax_Embeddings.e_range)) rng s in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
@@ -373,8 +416,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
         let uu___3 =
           unembed'
-            (FStar_Syntax_Embeddings.e_list
-               FStar_Syntax_Embeddings.e_document) s in
+            (FStar_Syntax_Embeddings.e_tuple2
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_document)
+               (FStar_Syntax_Embeddings.e_option
+                  FStar_Syntax_Embeddings.e_range)) s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some
@@ -400,8 +446,11 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
           let uu___1 =
             let uu___2 =
               FStar_TypeChecker_NBETerm.embed
-                (FStar_TypeChecker_NBETerm.e_list
-                   FStar_TypeChecker_NBETerm.e_document) cb s in
+                (FStar_TypeChecker_NBETerm.e_tuple2
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_TypeChecker_NBETerm.e_document)
+                   (FStar_TypeChecker_NBETerm.e_option
+                      FStar_TypeChecker_NBETerm.e_range)) cb s in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct fstar_tactics_TacticFailure.fv [] uu___
@@ -418,8 +467,11 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
         let uu___3 =
           FStar_TypeChecker_NBETerm.unembed
-            (FStar_TypeChecker_NBETerm.e_list
-               FStar_TypeChecker_NBETerm.e_document) cb s in
+            (FStar_TypeChecker_NBETerm.e_tuple2
+               (FStar_TypeChecker_NBETerm.e_list
+                  FStar_TypeChecker_NBETerm.e_document)
+               (FStar_TypeChecker_NBETerm.e_option
+                  FStar_TypeChecker_NBETerm.e_range)) cb s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some

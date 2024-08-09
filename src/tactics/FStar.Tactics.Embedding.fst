@@ -209,6 +209,49 @@ let e_goal_nbe =
     ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fstar_tactics_goal.fv)
      }
 
+(* In embeddings of FStar.Range:
+   We use an ugly coerce_eq, since we have a mismatch between
+   FStar.Compiler.Range and FStar.Range, though they are actually
+   the same type. *)
+let range_as_c_range (r:FStar.Range.range)
+: FStar.Compiler.Range.range
+= coerce_eq () r
+let c_range_as_range (r:FStar.Compiler.Range.range)
+: FStar.Range.range
+= coerce_eq () r
+instance e_range : embedding FStar.Range.range =
+  let embed_range (r:FStar.Range.range) (rng:Range.range) _ _ : term = 
+     S.mk (Tm_constant (FStar.Const.Const_range (range_as_c_range r))) rng
+  in
+  let unembed_range (t:term) _ : option FStar.Range.range =
+    match t.n with
+    | Tm_constant (FStar.Const.Const_range r) -> Some (c_range_as_range r)
+    | _ -> None
+  in
+  mk_emb_full
+      embed_range
+      unembed_range
+      (fun () -> t_range)
+      (fun _ -> "(range)")
+      (fun () -> ET_app (show PC.range_lid, []))
+
+instance e_range_nbe : NBET.embedding FStar.Range.range =
+    let embed_range cb (e:FStar.Range.range) : NBET.t =
+      { nbe_t = NBETerm.Constant (NBET.Range (range_as_c_range e));
+        nbe_r = range_as_c_range e }
+    in
+    let unembed_range cb (t:NBET.t) : option FStar.Range.range =
+        match NBETerm.nbe_t_of_t t with
+        | NBET.Constant (NBETerm.Range r) -> Some (c_range_as_range r)
+        | _ ->
+            None
+    in
+    let fv_range = S.fvconst PC.range_lid in
+    { NBETerm.em = embed_range
+    ; NBETerm.un = unembed_range
+    ; NBETerm.typ = (fun () -> mkFV fv_range [] [])
+    ; NBETerm.e_typ = (fun () -> fv_as_emb_typ fv_range) }
+
 instance e_exn : embedding exn =
     let embed_exn (e:exn) (rng:Range.range) _ _ : term =
         match e with

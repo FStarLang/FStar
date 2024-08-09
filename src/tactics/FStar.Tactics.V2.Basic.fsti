@@ -108,7 +108,6 @@ val comp_to_string         : comp -> tac string
 val term_to_doc            : term -> tac Pprint.document
 val comp_to_doc            : comp -> tac Pprint.document
 val range_to_string        : Range.range -> tac string
-
 val term_eq_old            : term -> term -> tac bool
 val with_compat_pre_core   : Z.t -> tac 'a -> tac 'a
 

@@ -163,7 +163,7 @@ let term_as_formula' (t:term) : Tac formula =
 
     (* Should not occur, we're using inspect *)
     | Tv_BVar _ -> F_Unknown
-    | _ -> raise (TacticFailure (mkmsg "???"))
+    | _ -> raise (TacticFailure (mkmsg "Unexpected: term_as_formula", None))
 
 // Unsquashing
 let term_as_formula (t:term) : Tac formula =
