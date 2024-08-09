@@ -186,7 +186,7 @@ let maybe_fail_doc (issues:list FStar.Issue.issue)
   in
   if has_localized_error
   then let message = FStar.Stubs.Pprint.(pretty_string RU.float_one 80 (concat doc)) in
-       T.fail message (* Would be nice to tag this failure with the provided range *)
+       T.fail_at message (Some <| RU.start_of_range rng)
   else fail_doc g (Some rng) doc
 
 let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) =
@@ -200,7 +200,7 @@ let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) =
     let open Pulse.PP in
     maybe_fail_doc issues
          g rng [
-              prefix 4 1 (text "Could not infer implicit arguments in")
+              prefix 4 1 (text ("Could not check term:"))
                         (pp t0)
             ]
   )
@@ -210,8 +210,7 @@ let instantiate_term_implicits (g:env) (t0:term) (expected:option typ) =
       let open Pulse.PP in
       maybe_fail_doc []
         g rng [
-          prefix 4 1 (text "check_term: could not infer implicit arguments in")
-                        (pp t0)
+          prefix 4 1 (text "Could not check term:") (pp t0)
         ]
     else t, ty
 
@@ -226,7 +225,7 @@ let instantiate_term_implicits_uvs (g:env) (t0:term) =
     let open Pulse.PP in
     maybe_fail_doc issues
          g rng [
-              prefix 4 1 (text "Could not infer implicit arguments in")
+              prefix 4 1 (text "Could not check term:")
                         (pp t0)
             ]
   )
