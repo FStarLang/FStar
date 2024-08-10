@@ -362,15 +362,22 @@ typeclassDecl:
         (d, [at])
       }
 
+restriction:
+  | LBRACE ids=separated_list(COMMA, id=ident renamed=option(AS id=ident {id} ) {(id, renamed)}) RBRACE
+      { FStar_Syntax_Syntax.AllowList ids }
+  |   { FStar_Syntax_Syntax.Unrestricted  }
+
 rawDecl:
   | p=pragma
       { Pragma p }
-  | OPEN uid=quident
-      { Open uid }
+  | OPEN uid=quident r=restriction
+      { Open (uid, r) }
   | FRIEND uid=quident
       { Friend uid }
-  | INCLUDE uid=quident
-      { Include uid }
+  | INCLUDE uid=quident r=restriction
+      { Include (uid, r) }
+  | MODULE UNDERSCORE EQUALS uid=quident
+      { Open (uid, FStar_Syntax_Syntax.AllowList []) }
   | MODULE uid1=uident EQUALS uid2=quident
       { ModuleAbbrev(uid1, uid2) }
   | MODULE q=qlident

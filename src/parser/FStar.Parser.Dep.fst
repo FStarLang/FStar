@@ -817,8 +817,8 @@ let collect_one
 
       and collect_decl d =
         match d with
-        | Include lid
-        | Open lid ->
+        | Include (lid, _)
+        | Open (lid, _) ->
             add_to_parsing_data (P_open (false, lid))
         | Friend lid ->
             add_to_parsing_data (P_dep (true, (lowercase_join_longident lid true |> Ident.lid_of_str)))

@@ -1538,7 +1538,7 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
       mk (Tm_meta {tm; meta=Meta_desugared Sequence}), s
 
     | LetOpen (lid, e) ->
-      let env = Env.push_namespace env lid in
+      let env = Env.push_namespace env lid Unrestricted in
       (if Env.expect_typ env then desugar_typ_aq else desugar_term_aq) env e
 
     | LetOpenRecord (r, rty, e) ->
@@ -3729,8 +3729,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
 
   | TopLevelModule id -> env, []
 
-  | Open lid ->
-    let env = Env.push_namespace env lid in
+  | Open (lid, restriction) ->
+    let env = Env.push_namespace env lid restriction in
     env, []
 
   | Friend lid ->
@@ -3748,8 +3748,8 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
                       "'friend' module has not been loaded; recompute dependences (C-c C-r) if in interactive mode") d.drange
     else env, []
 
-  | Include lid ->
-    let env = Env.push_include env lid in
+  | Include (lid, restriction) ->
+    let env = Env.push_include env lid restriction in
     env, []
 
   | ModuleAbbrev(x, l) ->
@@ -4290,8 +4290,8 @@ let desugar_decls env decls =
   env, sigelts
 
 let open_prims_all =
-    [AST.mk_decl (AST.Open C.prims_lid) Range.dummyRange;
-     AST.mk_decl (AST.Open C.all_lid) Range.dummyRange]
+    [AST.mk_decl (AST.Open (C.prims_lid, Unrestricted)) Range.dummyRange;
+     AST.mk_decl (AST.Open (C.all_lid, Unrestricted)) Range.dummyRange]
 
 (* Top-level functionality: from AST to a module
    Keeps track of the name of variables and so on (in the context)

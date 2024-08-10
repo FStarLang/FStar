@@ -116,8 +116,8 @@ val push_bv': env -> ident -> env & bv & used_marker
 val push_bv: env -> ident -> env & bv
 val push_top_level_rec_binding: env -> ident -> env & ref bool
 val push_sigelt: env -> sigelt -> env
-val push_namespace: env -> lident -> env
-val push_include: env -> lident -> env
+val push_namespace: env -> lident -> restriction -> env
+val push_include: env -> lident -> restriction -> env
 val push_module_abbrev : env -> ident -> lident -> env
 val resolve_name: env -> lident -> option (either bv fv)
 

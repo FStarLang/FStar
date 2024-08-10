@@ -645,7 +645,16 @@ type open_kind =                                          (* matters only for re
 | Open_module                                             (* only opens the module, not the namespace *)
 | Open_namespace  
 
-type open_module_or_namespace = (lident & open_kind)      (* lident fully qualified name, already resolved. *)
+type ident_alias = option ident
+
+(** A restriction imposed on a `open` or `include` declaration. *)
+type restriction = 
+     (** No restriction, the entire module is opened or included. *)
+     | Unrestricted
+     (** Only a specific subset of the exported definition of a module is opened or included. *)
+     | AllowList of list (ident & ident_alias)
+
+type open_module_or_namespace = (lident & open_kind & restriction)      (* lident fully qualified name, already resolved. *)
 type module_abbrev = (ident & lident)                     (* module X = A.B.C, where A.B.C is fully qualified and already resolved *)
 
 (*
@@ -894,6 +903,19 @@ val t_erased_of     : term -> term
 
 val unit_const_with_range : Range.range -> term
 val unit_const            : term
+
+(** Checks wether an identity `id` is allowed by a include/open
+restriction `r`. If it is not allowed,
+`is_ident_allowed_by_restriction id r` returns `None`, otherwise it
+returns `Some renamed`, where `renamed` is either `id` (when no there
+is no `as` clause) or another identity pointing to the actual source
+identity in the source module.
+
+For example, if we have `open Foo { my_type as the_type }`,
+`is_ident_allowed_by_restriction <the_type> <{ my_type as the_type }>`
+will return `Some <my_type>`.
+*)
+val is_ident_allowed_by_restriction: ident -> restriction -> option ident
 
 instance val has_range_syntax #a : unit -> Tot (hasRange (syntax a))
 instance val has_range_withinfo #a : unit -> Tot (hasRange (withinfo_t a))
