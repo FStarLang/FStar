@@ -343,6 +343,8 @@ let (admit_termination_lid : FStar_Ident.lident) =
   psconst "admit_termination"
 let (attr_substitute_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Substitute"]
+let (desugar_of_variant_record_lid : FStar_Ident.lident) =
+  psconst "desugar_of_variant_record"
 let (well_founded_relation_lid : FStar_Ident.lident) =
   p2l ["FStar"; "WellFounded"; "well_founded_relation"]
 let (gen_reset : ((unit -> Prims.int) * (unit -> unit))) =

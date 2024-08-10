@@ -1756,7 +1756,21 @@ let (uu___is_Open_module : open_kind -> Prims.bool) =
 let (uu___is_Open_namespace : open_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Open_namespace -> true | uu___ -> false
-type open_module_or_namespace = (FStar_Ident.lident * open_kind)
+type ident_alias = FStar_Ident.ident FStar_Pervasives_Native.option
+type restriction =
+  | Unrestricted 
+  | AllowList of (FStar_Ident.ident * ident_alias) Prims.list 
+let (uu___is_Unrestricted : restriction -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Unrestricted -> true | uu___ -> false
+let (uu___is_AllowList : restriction -> Prims.bool) =
+  fun projectee ->
+    match projectee with | AllowList _0 -> true | uu___ -> false
+let (__proj__AllowList__item___0 :
+  restriction -> (FStar_Ident.ident * ident_alias) Prims.list) =
+  fun projectee -> match projectee with | AllowList _0 -> _0
+type open_module_or_namespace =
+  (FStar_Ident.lident * open_kind * restriction)
 type module_abbrev = (FStar_Ident.ident * FStar_Ident.lident)
 type sigelt'__Sig_inductive_typ__payload =
   {
@@ -2899,6 +2913,73 @@ let (unit_const_with_range : FStar_Compiler_Range_Type.range -> term) =
   fun r -> mk (Tm_constant FStar_Const.Const_unit) r
 let (unit_const : term) =
   unit_const_with_range FStar_Compiler_Range_Type.dummyRange
+let (show_restriction : restriction FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Unrestricted -> "Unrestricted"
+         | AllowList allow_list ->
+             let uu___1 =
+               let uu___2 =
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_list
+                      (FStar_Class_Show.show_tuple2
+                         FStar_Ident.showable_ident
+                         (FStar_Class_Show.show_option
+                            FStar_Ident.showable_ident))) allow_list in
+               Prims.strcat uu___2 ")" in
+             Prims.strcat "(AllowList " uu___1)
+  }
+let (is_ident_allowed_by_restriction' :
+  FStar_Ident.ident ->
+    restriction -> FStar_Ident.ident FStar_Pervasives_Native.option)
+  =
+  fun id ->
+    fun uu___ ->
+      match uu___ with
+      | Unrestricted -> FStar_Pervasives_Native.Some id
+      | AllowList allow_list ->
+          let uu___1 =
+            FStar_Compiler_List.find
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (dest_id, renamed_id) ->
+                     FStar_Class_Deq.op_Equals_Question deq_univ_name
+                       (FStar_Compiler_Util.dflt dest_id renamed_id) id)
+              allow_list in
+          FStar_Compiler_Util.map_opt uu___1 FStar_Pervasives_Native.fst
+let (is_ident_allowed_by_restriction :
+  FStar_Ident.ident ->
+    restriction -> FStar_Ident.ident FStar_Pervasives_Native.option)
+  =
+  let debug = FStar_Compiler_Debug.get_toggle "open_include_restrictions" in
+  fun id ->
+    fun restriction1 ->
+      let result = is_ident_allowed_by_restriction' id restriction1 in
+      (let uu___1 = FStar_Compiler_Effect.op_Bang debug in
+       if uu___1
+       then
+         let uu___2 =
+           let uu___3 =
+             let uu___4 = FStar_Class_Show.show FStar_Ident.showable_ident id in
+             let uu___5 =
+               let uu___6 =
+                 let uu___7 =
+                   FStar_Class_Show.show show_restriction restriction1 in
+                 let uu___8 =
+                   let uu___9 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.show_option
+                          FStar_Ident.showable_ident) result in
+                   Prims.strcat ") = " uu___9 in
+                 Prims.strcat uu___7 uu___8 in
+               Prims.strcat ", " uu___6 in
+             Prims.strcat uu___4 uu___5 in
+           Prims.strcat "is_ident_allowed_by_restriction(" uu___3 in
+         FStar_Compiler_Util.print_endline uu___2
+       else ());
+      result
 let has_range_syntax : 'a . unit -> 'a syntax FStar_Class_HasRange.hasRange =
   fun uu___ ->
     {

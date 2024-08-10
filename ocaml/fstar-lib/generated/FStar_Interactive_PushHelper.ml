@@ -433,13 +433,13 @@ let (update_names_from_event :
               FStar_Interactive_CompletionTable.register_alias table uu___1
                 [] uu___2
             else table
-        | NTOpen (host, (included, kind)) ->
-            let uu___ = is_cur_mod host in
-            if uu___
+        | NTOpen (host, (included, kind, uu___)) ->
+            let uu___1 = is_cur_mod host in
+            if uu___1
             then
-              let uu___1 = query_of_lid included in
+              let uu___2 = query_of_lid included in
               FStar_Interactive_CompletionTable.register_open table
-                (kind = FStar_Syntax_Syntax.Open_module) [] uu___1
+                (kind = FStar_Syntax_Syntax.Open_module) [] uu___2
             else table
         | NTInclude (host, included) ->
             let uu___ =

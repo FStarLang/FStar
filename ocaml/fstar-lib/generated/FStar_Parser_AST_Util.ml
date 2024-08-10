@@ -544,6 +544,21 @@ let (eq_qualifier :
 let (eq_qualifiers :
   FStar_Parser_AST.qualifiers -> FStar_Parser_AST.qualifiers -> Prims.bool) =
   fun t1 -> fun t2 -> eq_list eq_qualifier t1 t2
+let (eq_restriction :
+  FStar_Syntax_Syntax.restriction ->
+    FStar_Syntax_Syntax.restriction -> Prims.bool)
+  =
+  fun restriction1 ->
+    fun restriction2 ->
+      match (restriction1, restriction2) with
+      | (FStar_Syntax_Syntax.Unrestricted, FStar_Syntax_Syntax.Unrestricted)
+          -> true
+      | (FStar_Syntax_Syntax.AllowList l1, FStar_Syntax_Syntax.AllowList l2)
+          ->
+          let eq_tuple eq_fst eq_snd uu___ uu___1 =
+            match (uu___, uu___1) with
+            | ((a, b), (c, d)) -> (eq_fst a c) && (eq_snd b d) in
+          eq_list (eq_tuple eq_ident (eq_option eq_ident)) l1 l2
 let rec (eq_decl' :
   FStar_Parser_AST.decl' -> FStar_Parser_AST.decl' -> Prims.bool) =
   fun d1 ->
@@ -551,12 +566,14 @@ let rec (eq_decl' :
       match (d1, d2) with
       | (FStar_Parser_AST.TopLevelModule lid1,
          FStar_Parser_AST.TopLevelModule lid2) -> eq_lid lid1 lid2
-      | (FStar_Parser_AST.Open lid1, FStar_Parser_AST.Open lid2) ->
-          eq_lid lid1 lid2
+      | (FStar_Parser_AST.Open (lid1, restriction1), FStar_Parser_AST.Open
+         (lid2, restriction2)) ->
+          (eq_lid lid1 lid2) && (eq_restriction restriction1 restriction2)
       | (FStar_Parser_AST.Friend lid1, FStar_Parser_AST.Friend lid2) ->
           eq_lid lid1 lid2
-      | (FStar_Parser_AST.Include lid1, FStar_Parser_AST.Include lid2) ->
-          eq_lid lid1 lid2
+      | (FStar_Parser_AST.Include (lid1, restriction1),
+         FStar_Parser_AST.Include (lid2, restriction2)) ->
+          (eq_lid lid1 lid2) && (eq_restriction restriction1 restriction2)
       | (FStar_Parser_AST.ModuleAbbrev (i1, lid1),
          FStar_Parser_AST.ModuleAbbrev (i2, lid2)) ->
           (eq_ident i1 i2) && (eq_lid lid1 lid2)
@@ -1004,9 +1021,9 @@ let rec (lidents_of_decl :
   fun d ->
     match d.FStar_Parser_AST.d with
     | FStar_Parser_AST.TopLevelModule uu___ -> []
-    | FStar_Parser_AST.Open l -> [l]
+    | FStar_Parser_AST.Open (l, uu___) -> [l]
     | FStar_Parser_AST.Friend l -> [l]
-    | FStar_Parser_AST.Include l -> [l]
+    | FStar_Parser_AST.Include (l, uu___) -> [l]
     | FStar_Parser_AST.ModuleAbbrev (uu___, l) -> [l]
     | FStar_Parser_AST.TopLevelLet (_q, lbs) ->
         (concat_map ())
@@ -1141,7 +1158,7 @@ let (as_open_namespaces_and_abbrevs :
       (fun d ->
          fun out ->
            match d.FStar_Parser_AST.d with
-           | FStar_Parser_AST.Open lid ->
+           | FStar_Parser_AST.Open (lid, uu___) ->
                {
                  open_namespaces = (lid :: (out.open_namespaces));
                  module_abbreviations = (out.module_abbreviations)
