@@ -2898,7 +2898,7 @@ let mk_typ_abbrev env d lid uvs typars kopt t lids quals rng =
       sigopens_and_abbrevs = opens_and_abbrevs env
     }
 
-let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t & sigelts) =
+let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs : (env_t & sigelts) =
   let rng = d.drange in
   let tycon_id = function
     | TyconAbstract(id, _, _)
@@ -2922,7 +2922,14 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
                   let record_id = mk_ident (string_of_id id ^ "__" ^ string_of_id cid ^ "__payload", range_of_id cid) in
                   let record_id_t = {tm = lid_of_ns_and_id [] record_id |> Var; range = range_of_id cid; level = Type_level} in
                   let payload_typ = mkApp record_id_t (List.map (fun bd -> binder_to_term bd, Nothing) bds) (range_of_id record_id) in
-                  TyconRecord (record_id, bds, None, attrs, r) |> Some
+                  let desugar_marker = 
+                    let range = range_of_id record_id in
+                    let desugar_attr_fv = {fv_name = {v = FStar.Parser.Const.desugar_of_variant_record_lid; p = range}; fv_qual = None} in
+                    let desugar_attr = S.mk (Tm_fvar desugar_attr_fv) range in
+                    let cid_as_constant = S.mk (Const_string (qualify env cid |> string_of_lid, range) |> S.Tm_constant) range in
+                    S.mk_Tm_app desugar_attr [(cid_as_constant, None)] range
+                  in
+                  (TyconRecord (record_id, bds, None, attrs, r), desugar_marker::d_attrs_initial) |> Some
                 , (cid, Some ( match k with
                              | None   -> VpOfNotation payload_typ
                              | Some k -> 
@@ -2936,8 +2943,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
             ) variants |> unzip in
          // TODO: [concat_options] should live somewhere else
          let concat_options = filter_map (fun r -> r) in
-         concat_options additional_records @ [TyconVariant (id, bds, k, variants)]
-    | tycon -> [tycon] in
+         concat_options additional_records @ [(TyconVariant (id, bds, k, variants), d_attrs_initial)]
+    | tycon -> [(tycon, d_attrs_initial)] in
   let tcs = concatMap desugar_tycon_variant_record tcs in
   let tot rng = mk_term (Name (C.effect_Tot_lid)) rng Expr in
   let with_constructor_effect t = mk_term (App(tot t.range, t, Nothing)) t.range t.level in
@@ -2966,7 +2973,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
 
       TyconVariant(id, parms, kopt, [(constrName, Some (VpArbitrary constrTyp), attrs)]), fields |> List.map (fun (f, _, _, _) -> f)
     | _ -> failwith "impossible" in
-  let desugar_abstract_tc quals _env mutuals = function
+  let desugar_abstract_tc quals _env mutuals d_attrs = function
     | TyconAbstract(id, binders, kopt) ->
       let _env', typars = typars_of_binders _env binders in
       let k = match kopt with
@@ -3001,12 +3008,12 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
         env, (mk_binder_with_attrs y b.binder_qual b.binder_attrs)::tps) (env, []) bs in
     env, List.rev bs in
   match tcs with
-    | [TyconAbstract(id, bs, kopt)] ->
+    | [(TyconAbstract(id, bs, kopt), d_attrs)] ->
         let kopt = match kopt with
             | None -> Some (tm_type_z (range_of_id id))
             | _ -> kopt in
         let tc = TyconAbstract(id, bs, kopt) in
-        let _, _, se, _ = desugar_abstract_tc quals env [] tc in
+        let _, _, se, _ = desugar_abstract_tc quals env [] d_attrs tc in
         let se = match se.sigel with
            | Sig_inductive_typ {lid=l; params=typars; t=k; mutuals=[]; ds=[]} ->
              let quals = se.sigquals in
@@ -3027,7 +3034,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
         (* let _ = pr "Pushed %s\n" (string_of_lid (qualify env (tycon_id tc))) in *)
         env, [se]
 
-    | [TyconAbbrev(id, binders, kopt, t)] ->
+    | [(TyconAbbrev(id, binders, kopt, t), _d_attrs)] ->
         let env', typars = typars_of_binders env binders in
         let kopt = match kopt with
             | None ->
@@ -3081,31 +3088,32 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs:list S.term) quals tcs : (env_t
         let env = push_sigelt env se in
         env, [se]
 
-    | [TyconRecord _] ->
-      let trec = List.hd tcs in
+    | [(TyconRecord payload, d_attrs)] ->
+      let trec = TyconRecord payload in
       let t, fs = tycon_record_as_variant trec in
       desugar_tycon env d d_attrs (RecordType (ids_of_lid (current_module env), fs)::quals) [t]
 
     |  _::_ ->
       let env0 = env in
-      let mutuals = List.map (fun x -> qualify env <| tycon_id x) tcs in
-      let rec collect_tcs quals et tc =
+      let mutuals = List.map (fun (x, _) -> qualify env <| tycon_id x) tcs in
+      let rec collect_tcs quals et (tc, d_attrs) =
         let (env, tcs) = et in
         match tc with
           | TyconRecord _ ->
             let trec = tc in
             let t, fs = tycon_record_as_variant trec in
-            collect_tcs (RecordType (ids_of_lid (current_module env), fs)::quals) (env, tcs) t
+            collect_tcs (RecordType (ids_of_lid (current_module env), fs)::quals) (env, tcs) (t, d_attrs)
           | TyconVariant(id, binders, kopt, constructors) ->
-            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inl(se, constructors, tconstr, quals)::tcs
+            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals d_attrs (TyconAbstract(id, binders, kopt)) in
+            env, (Inl(se, constructors, tconstr, quals), d_attrs)::tcs
           | TyconAbbrev(id, binders, kopt, t) ->
-            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals (TyconAbstract(id, binders, kopt)) in
-            env, Inr(se, binders, t, quals)::tcs
+            let env, _, se, tconstr = desugar_abstract_tc quals env mutuals d_attrs (TyconAbstract(id, binders, kopt)) in
+            env, (Inr(se, binders, t, quals), d_attrs)::tcs
           | _ -> raise_error (Errors.Fatal_NonInductiveInMutuallyDefinedType, ("Mutually defined type contains a non-inductive element")) rng in
       let env, tcs = List.fold_left (collect_tcs quals) (env, []) tcs in
       let tcs = List.rev tcs in
-      let tps_sigelts = tcs |> List.collect (function
+      let tps_sigelts = tcs |> List.collect (fun (tc, d_attrs) -> 
+          match tc with
         | Inr ({ sigel = Sig_inductive_typ {lid=id;
                                             us=uvs;
                                             params=tpars;
