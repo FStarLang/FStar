@@ -11,6 +11,7 @@ ALL_TEST_DIRS += machine_integers
 ALL_TEST_DIRS += micro-benchmarks
 ALL_TEST_DIRS += prettyprinting
 ALL_TEST_DIRS += projectors
+ALL_TEST_DIRS += restricted_includes
 ALL_TEST_DIRS += semiring
 ALL_TEST_DIRS += struct
 ALL_TEST_DIRS += tactics
