@@ -334,12 +334,16 @@ let emit dep_graph (mllibs:list (uenv & MLSyntax.mllib)) =
                                   Extraction.Krml.translate ue mllibs)
       in
       let bin: Extraction.Krml.binary_format = Extraction.Krml.current_version, programs in
-      begin match programs with
-            | [ name, _ ] ->
-              save_value_to_file (Options.prepend_output_dir (name ^ ext)) bin
-            | _ ->
-             save_value_to_file (Options.prepend_output_dir "out.krml") bin
-      end
+      let oname : string =
+        match Options.krmloutput () with
+        | Some fname -> fname (* NB: no prepending odir nor adding extension, user chose a explicit path *)
+        | _ ->
+          match programs with
+          | [ name, _ ] -> name ^ ext  |> Options.prepend_output_dir
+          | _ -> "out" ^ ext |> Options.prepend_output_dir
+      in
+      save_value_to_file oname bin
+
    | _ -> failwith "Unrecognized option"
 
 let tc_one_file
