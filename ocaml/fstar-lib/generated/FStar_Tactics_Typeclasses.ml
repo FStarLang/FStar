@@ -2289,16 +2289,17 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     uu___6)))
                                                                     | 
                                                                     FStar_Tactics_Common.TacticFailure
-                                                                    msg ->
+                                                                    (msg, r)
+                                                                    ->
                                                                     Obj.magic
                                                                     (Obj.repr
-                                                                    (FStar_Tactics_V2_Derived.fail_doc
+                                                                    (FStar_Tactics_V2_Derived.fail_doc_at
                                                                     ((op_At
                                                                     ())
                                                                     [
                                                                     FStar_Pprint.arbitrary_string
                                                                     "Typeclass resolution failed."]
-                                                                    msg)))
+                                                                    msg) r))
                                                                     | 
                                                                     e ->
                                                                     Obj.magic

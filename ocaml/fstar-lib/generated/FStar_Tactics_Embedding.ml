@@ -325,8 +325,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
           let uu___3 =
             let uu___4 =
               embed
-                (FStar_Syntax_Embeddings.e_list
-                   FStar_Syntax_Embeddings.e_document) rng s in
+                (FStar_Syntax_Embeddings.e_tuple2
+                   (FStar_Syntax_Embeddings.e_list
+                      FStar_Syntax_Embeddings.e_document)
+                   (FStar_Syntax_Embeddings.e_option
+                      FStar_Syntax_Embeddings.e_range)) rng s in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
@@ -360,8 +363,12 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
           let uu___3 =
             let uu___4 =
               embed
-                (FStar_Syntax_Embeddings.e_list
-                   FStar_Syntax_Embeddings.e_document) rng msg in
+                (FStar_Syntax_Embeddings.e_tuple2
+                   (FStar_Syntax_Embeddings.e_list
+                      FStar_Syntax_Embeddings.e_document)
+                   (FStar_Syntax_Embeddings.e_option
+                      FStar_Syntax_Embeddings.e_range)) rng
+                (msg, FStar_Pervasives_Native.None) in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
@@ -373,8 +380,11 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
         let uu___3 =
           unembed'
-            (FStar_Syntax_Embeddings.e_list
-               FStar_Syntax_Embeddings.e_document) s in
+            (FStar_Syntax_Embeddings.e_tuple2
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_document)
+               (FStar_Syntax_Embeddings.e_option
+                  FStar_Syntax_Embeddings.e_range)) s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some
@@ -400,8 +410,11 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
           let uu___1 =
             let uu___2 =
               FStar_TypeChecker_NBETerm.embed
-                (FStar_TypeChecker_NBETerm.e_list
-                   FStar_TypeChecker_NBETerm.e_document) cb s in
+                (FStar_TypeChecker_NBETerm.e_tuple2
+                   (FStar_TypeChecker_NBETerm.e_list
+                      FStar_TypeChecker_NBETerm.e_document)
+                   (FStar_TypeChecker_NBETerm.e_option
+                      FStar_TypeChecker_NBETerm.e_range)) cb s in
             FStar_TypeChecker_NBETerm.as_arg uu___2 in
           [uu___1] in
         mkConstruct fstar_tactics_TacticFailure.fv [] uu___
@@ -418,8 +431,11 @@ let (e_exn_nbe : Prims.exn FStar_TypeChecker_NBETerm.embedding) =
         FStar_Syntax_Syntax.fv_eq_lid fv fstar_tactics_TacticFailure.lid ->
         let uu___3 =
           FStar_TypeChecker_NBETerm.unembed
-            (FStar_TypeChecker_NBETerm.e_list
-               FStar_TypeChecker_NBETerm.e_document) cb s in
+            (FStar_TypeChecker_NBETerm.e_tuple2
+               (FStar_TypeChecker_NBETerm.e_list
+                  FStar_TypeChecker_NBETerm.e_document)
+               (FStar_TypeChecker_NBETerm.e_option
+                  FStar_TypeChecker_NBETerm.e_range)) cb s in
         FStar_Compiler_Util.bind_opt uu___3
           (fun s1 ->
              FStar_Pervasives_Native.Some

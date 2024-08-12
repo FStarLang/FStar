@@ -162,7 +162,7 @@ let fail_doc (msg:error_message) =
     mk_tac (fun ps ->
         if !dbg_TacFail then
           do_dump_proofstate ps ("TACTIC FAILING: " ^ renderdoc (hd msg));
-        Failed (TacticFailure msg, ps)
+        Failed (TacticFailure (msg, None), ps)
     )
 
 let fail msg = fail_doc [text msg]
@@ -373,8 +373,8 @@ let wrap_err_doc (pref:error_message) (t : tac 'a) : tac 'a =
             | Success (a, q) ->
                 Success (a, q)
 
-            | Failed (TacticFailure msg, q) ->
-                Failed (TacticFailure (pref @ msg), q)
+            | Failed (TacticFailure (msg, r), q) ->
+                Failed (TacticFailure (pref @ msg, r), q)
 
             | Failed (e, q) ->
                 Failed (e, q)

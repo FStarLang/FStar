@@ -232,7 +232,7 @@ instance e_exn : embedding exn =
            ]
           in
           S.mk_Tm_app fstar_tactics_TacticFailure.t
-              [S.as_arg (embed rng msg)]
+              [S.as_arg (embed rng (msg, None #Range.range))]
               rng
     in
     let unembed_exn (t:term) _ : option exn =

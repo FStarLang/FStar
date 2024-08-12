@@ -215,7 +215,7 @@ let compute_eterm_info (dbg : bool) (e : env) (t : term) =
       mk_eterm_info einfo hd parameters
     end
   with
-  | TacticFailure msg ->
+  | TacticFailure (msg, _) ->
     mfail_doc ([text "compute_eterm_info: failure"] @ msg)
   | e -> raise e
 #pop-options

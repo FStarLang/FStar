@@ -9,6 +9,6 @@ exception NotAListLiteral
 
 (* We should attempt to not use this one and define more exceptions
 above. *)
-exception TacticFailure of error_message
+exception TacticFailure of error_message & option FStar.Range.range
 
 exception SKIP
