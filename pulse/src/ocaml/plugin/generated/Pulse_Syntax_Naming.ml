@@ -472,7 +472,10 @@ let (shift_subst :
 let (r_subst_of_rt_subst_elt : subst_elt -> FStar_Syntax_Syntax.subst_elt) =
   fun x ->
     match x with
-    | FStar_Reflection_Typing.DT (i, t) -> FStar_Syntax_Syntax.DT (i, t)
+    | FStar_Reflection_Typing.DT (i, t) ->
+        (match FStar_Reflection_V2_Builtins.inspect_ln t with
+         | FStar_Reflection_V2_Data.Tv_Var n -> FStar_Syntax_Syntax.DB (i, n)
+         | uu___ -> FStar_Syntax_Syntax.DT (i, t))
     | FStar_Reflection_Typing.NT (x1, t) ->
         FStar_Syntax_Syntax.NT
           ((FStar_Reflection_Typing.var_as_namedv x1), t)
@@ -1068,28 +1071,32 @@ let (close_st_term :
 let (close_comp :
   Pulse_Syntax_Base.comp -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.comp)
   = fun t -> fun v -> close_comp' t v Prims.int_zero
+let close_n :
+  'a .
+    'a ->
+      ('a -> Pulse_Syntax_Base.var -> Pulse_Syntax_Base.index -> 'a) ->
+        Pulse_Syntax_Base.var Prims.list -> 'a
+  =
+  fun x ->
+    fun f ->
+      fun vs ->
+        let rec aux i vs1 x1 =
+          match vs1 with
+          | [] -> x1
+          | v::vs2 -> aux (i + Prims.int_one) vs2 (f x1 v i) in
+        aux Prims.int_zero (FStar_List_Tot_Base.rev vs) x
 let (close_term_n :
   Pulse_Syntax_Base.term ->
     Pulse_Syntax_Base.var Prims.list -> Pulse_Syntax_Base.term)
-  =
-  fun t ->
-    fun vs ->
-      let rec aux i vs1 t1 =
-        match vs1 with
-        | [] -> t1
-        | v::vs2 -> aux (i + Prims.int_one) vs2 (close_term' t1 v i) in
-      aux Prims.int_zero (FStar_List_Tot_Base.rev vs) t
+  = fun t -> fun vs -> close_n t close_term' vs
 let (close_st_term_n :
   Pulse_Syntax_Base.st_term ->
     Pulse_Syntax_Base.var Prims.list -> Pulse_Syntax_Base.st_term)
-  =
-  fun t ->
-    fun vs ->
-      let rec aux i vs1 t1 =
-        match vs1 with
-        | [] -> t1
-        | v::vs2 -> aux (i + Prims.int_one) vs2 (close_st_term' t1 v i) in
-      aux Prims.int_zero (FStar_List_Tot_Base.rev vs) t
+  = fun t -> fun vs -> close_n t close_st_term' vs
+let (close_comp_n :
+  Pulse_Syntax_Base.comp ->
+    Pulse_Syntax_Base.var Prims.list -> Pulse_Syntax_Base.comp)
+  = fun c -> fun vs -> close_n c close_comp' vs
 let (open_ascription' :
   Pulse_Syntax_Base.comp_ascription ->
     Pulse_Syntax_Base.term ->
