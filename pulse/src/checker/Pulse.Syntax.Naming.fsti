@@ -679,23 +679,17 @@ let close_term t v = close_term' t v 0
 let close_st_term t v = close_st_term' t v 0
 let close_comp t v = close_comp' t v 0
 
-let close_term_n t vs =
-  let rec aux (i:nat) (vs:list var) (t:term) : Tot term (decreases vs) =
+let close_n (x:'a) (f:'a -> var -> index -> 'a) (vs:list var) : 'a =
+  let rec aux (i:nat) (vs:list var) (x:'a) : Tot 'a (decreases vs) =
     match vs with
-    | [] -> t
-    | v::vs ->
-      aux (i+1) vs (close_term' t v i)
+    | [] -> x
+    | v::vs -> aux (i+1) vs (f x v i)
   in
-  aux 0 (List.rev vs) t
+  aux 0 (List.rev vs) x
 
-let close_st_term_n t vs =
-  let rec aux (i:nat) (vs:list var) (t:st_term) : Tot st_term (decreases vs) =
-    match vs with
-    | [] -> t
-    | v::vs ->
-      aux (i+1) vs (close_st_term' t v i)
-  in
-  aux 0 (List.rev vs) t
+let close_term_n t vs = close_n t close_term' vs
+let close_st_term_n t vs = close_n t close_st_term' vs
+let close_comp_n (c:comp) vs : comp = close_n c close_comp' vs
 
 val close_open_inverse' (t:term) 
                         (x:var { ~(x `Set.mem` freevars t) } )

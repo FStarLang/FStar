@@ -186,6 +186,7 @@ let close_term t v = Pulse_Syntax_Naming.close_term t v
 let close_st_term t v = Pulse_Syntax_Naming.close_st_term t v
 let close_st_term_n t v = Pulse_Syntax_Naming.close_st_term_n t v
 let close_comp t v = Pulse_Syntax_Naming.close_comp t v
+let close_comp_n t v = Pulse_Syntax_Naming.close_comp_n t v
 let comp_pre c =
   match c with
    | C_ST st

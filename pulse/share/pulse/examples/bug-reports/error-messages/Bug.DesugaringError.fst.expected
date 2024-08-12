@@ -16,5 +16,14 @@
   - Identifier not found: [something]
 
 >>]
+>> Got issues: [
+* Error 228 at Bug.DesugaringError.fst(31,4-31,4):
+  - Could not check term: Bug.DesugaringError.id x y
+
+* Error 189 at Bug.DesugaringError.fst(31,9-31,10):
+  - Expected expression of type Prims.nat got expression y of type Prims.bool
+  - Raised within Tactics.refl_instantiate_implicits
+
+>>]
 Verified module: Bug.DesugaringError
 All verification conditions discharged successfully

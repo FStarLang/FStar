@@ -52,7 +52,10 @@ let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =
     { b with FStar_Syntax_Syntax.binder_bv = (bv_set_range b.FStar_Syntax_Syntax.binder_bv r) }
 let binder_range (b:FStar_Syntax_Syntax.binder) = bv_range b.FStar_Syntax_Syntax.binder_bv
-let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
+let start_of_range (r:FStar_Range.range) =
+  let open FStar_Compiler_Range in
+  mk_range (file_of_range r) (start_of_range r) (start_of_range r)
+  let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
 let set_use_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = FStar_Syntax_Subst.set_use_range r t
 let error_code_uninstantiated_variable () = FStar_Errors.errno FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic
 let is_range_zero (r:FStar_Range.range) = r = FStar_Range.range_0

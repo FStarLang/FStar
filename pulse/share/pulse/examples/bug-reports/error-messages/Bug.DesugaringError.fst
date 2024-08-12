@@ -19,3 +19,14 @@ ensures emp
 {
     ()
 }
+
+let id (#a:Type) (x y:a) = x
+
+[@@expect_failure]
+fn test3 (x:nat) (y:bool)
+requires emp
+returns z:nat
+ensures emp
+{
+    id x y
+}
