@@ -317,59 +317,6 @@ let (e_goal_nbe :
     FStar_TypeChecker_NBETerm.e_typ =
       (fun uu___ -> fv_as_emb_typ fstar_tactics_goal.fv)
   }
-let (range_as_c_range : FStar_Range.range -> FStar_Compiler_Range_Type.range)
-  = fun r -> FStar_Pervasives.coerce_eq () r
-let (c_range_as_range : FStar_Compiler_Range_Type.range -> FStar_Range.range)
-  = fun r -> FStar_Pervasives.coerce_eq () r
-let (e_range : FStar_Range.range FStar_Syntax_Embeddings_Base.embedding) =
-  let embed_range r rng uu___ uu___1 =
-    let uu___2 =
-      let uu___3 =
-        let uu___4 = range_as_c_range r in FStar_Const.Const_range uu___4 in
-      FStar_Syntax_Syntax.Tm_constant uu___3 in
-    FStar_Syntax_Syntax.mk uu___2 rng in
-  let unembed_range t uu___ =
-    match t.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_constant (FStar_Const.Const_range r) ->
-        let uu___1 = c_range_as_range r in
-        FStar_Pervasives_Native.Some uu___1
-    | uu___1 -> FStar_Pervasives_Native.None in
-  FStar_Syntax_Embeddings_Base.mk_emb_full embed_range unembed_range
-    (fun uu___ -> FStar_Syntax_Syntax.t_range) (fun uu___ -> "(range)")
-    (fun uu___ ->
-       let uu___1 =
-         let uu___2 =
-           FStar_Class_Show.show FStar_Ident.showable_lident
-             FStar_Parser_Const.range_lid in
-         (uu___2, []) in
-       FStar_Syntax_Syntax.ET_app uu___1)
-let (e_range_nbe : FStar_Range.range FStar_TypeChecker_NBETerm.embedding) =
-  let embed_range cb e =
-    let uu___ =
-      let uu___1 =
-        let uu___2 = range_as_c_range e in
-        FStar_TypeChecker_NBETerm.Range uu___2 in
-      FStar_TypeChecker_NBETerm.Constant uu___1 in
-    let uu___1 = range_as_c_range e in
-    {
-      FStar_TypeChecker_NBETerm.nbe_t = uu___;
-      FStar_TypeChecker_NBETerm.nbe_r = uu___1
-    } in
-  let unembed_range cb t =
-    let uu___ = FStar_TypeChecker_NBETerm.nbe_t_of_t t in
-    match uu___ with
-    | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Range r)
-        ->
-        let uu___1 = c_range_as_range r in
-        FStar_Pervasives_Native.Some uu___1
-    | uu___1 -> FStar_Pervasives_Native.None in
-  let fv_range = FStar_Syntax_Syntax.fvconst FStar_Parser_Const.range_lid in
-  {
-    FStar_TypeChecker_NBETerm.em = embed_range;
-    FStar_TypeChecker_NBETerm.un = unembed_range;
-    FStar_TypeChecker_NBETerm.typ = (fun uu___ -> mkFV fv_range [] []);
-    FStar_TypeChecker_NBETerm.e_typ = (fun uu___ -> fv_as_emb_typ fv_range)
-  }
 let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
   let embed_exn e rng uu___ uu___1 =
     match e with
@@ -416,8 +363,12 @@ let (e_exn : Prims.exn FStar_Syntax_Embeddings_Base.embedding) =
           let uu___3 =
             let uu___4 =
               embed
-                (FStar_Syntax_Embeddings.e_list
-                   FStar_Syntax_Embeddings.e_document) rng msg in
+                (FStar_Syntax_Embeddings.e_tuple2
+                   (FStar_Syntax_Embeddings.e_list
+                      FStar_Syntax_Embeddings.e_document)
+                   (FStar_Syntax_Embeddings.e_option
+                      FStar_Syntax_Embeddings.e_range)) rng
+                (msg, FStar_Pervasives_Native.None) in
             FStar_Syntax_Syntax.as_arg uu___4 in
           [uu___3] in
         FStar_Syntax_Syntax.mk_Tm_app fstar_tactics_TacticFailure.t uu___2
