@@ -1040,14 +1040,19 @@ let (emit :
                    | (ue, mllibs1) ->
                        FStar_Extraction_Krml.translate ue mllibs1) mllibs in
             let bin = (FStar_Extraction_Krml.current_version, programs) in
-            (match programs with
-             | (name, uu___)::[] ->
-                 let uu___1 =
-                   FStar_Options.prepend_output_dir (Prims.strcat name ext) in
-                 FStar_Compiler_Util.save_value_to_file uu___1 bin
-             | uu___ ->
-                 let uu___1 = FStar_Options.prepend_output_dir "out.krml" in
-                 FStar_Compiler_Util.save_value_to_file uu___1 bin)
+            let oname =
+              let uu___ = FStar_Options.krmloutput () in
+              match uu___ with
+              | FStar_Pervasives_Native.Some fname -> fname
+              | uu___1 ->
+                  (match programs with
+                   | (name, uu___2)::[] ->
+                       FStar_Options.prepend_output_dir
+                         (Prims.strcat name ext)
+                   | uu___2 ->
+                       FStar_Options.prepend_output_dir
+                         (Prims.strcat "out" ext)) in
+            FStar_Compiler_Util.save_value_to_file oname bin
         | uu___ -> FStar_Compiler_Effect.failwith "Unrecognized option"
       else ()
 let (tc_one_file :
