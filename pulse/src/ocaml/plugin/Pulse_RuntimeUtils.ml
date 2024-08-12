@@ -153,7 +153,7 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
           | _ ->
             let g = TcEnv.set_range g e.pos in
             let must_tot = false in
-            let g = {g with instantiate_imp=false; phase1=true; lax=true} in
+            let g = {g with instantiate_imp=false; phase1=true; admit=true} in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = FStar_TypeChecker_Rel.resolve_implicits g guard in
             let uvs = FlatSet.union Free.ord_ctx_uvar (Free.uvars e) (Free.uvars t) in

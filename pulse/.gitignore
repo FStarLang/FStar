@@ -1,6 +1,7 @@
 *~
 *.checked
 *.checked.lax
+*.check
 .depend*
 *.cm*
 lib/pulse/*.a

@@ -116,8 +116,8 @@ declBody:
   | d=decoratableDecl { List.map (fun x -> Inr x) d }
 
 pulseDecl:
-  | q=option(qual)
-    FN isRec=maybeRec lid=lident bs=pulseBinderList
+  | q=qualOptFn (* workaround what seems to be a menhir bug *)
+    isRec=maybeRec lid=lident bs=pulseBinderList
     rest=pulseAscriptionMaybeBody
     {
       let decors = [] in
@@ -139,6 +139,12 @@ pulseDecl:
         raise_error (Fatal_SyntaxError, "Ascriptions of lambdas without bodies are not yet supported") (rr $loc)
     }
  
+(* defining this as two tokens, option(qual) FN, seems to cause menhir to report an
+   incorrect range when the first token is empty *)
+qualOptFn:
+  | FN { None }
+  | q=qual FN { Some q }
+
 pulseAscriptionMaybeBody:
   | ascription=pulseComputationType body=option(pulseBody)
     { Inl (ascription, body) }
