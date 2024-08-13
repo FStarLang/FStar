@@ -29,6 +29,7 @@ open FStar.Ident
 open FStar.Errors
 
 open FStar.Class.Show
+open FStar.Class.Monad
 open FStar.Class.Setlike
 
 let ugly_sigelt_to_string_hook : ref (sigelt -> string) = BU.mk_ref (fun _ -> "")
@@ -1091,16 +1092,17 @@ let elab_restriction f env ns restriction =
          types that comes from a "record-on-a-variant" desugar. E.g. `A`
          is mapped to `Mka__A__payload` for a `type a = | A {x:int}`. *)
       let constructor_lid_to_desugared_record_lids: list (ident * ident) =
-        env.modules
-        |> List.concatMap (fun (_, {declarations}) -> declarations)
-        |> List.concatMap (fun sigelt -> match sigelt.sigel with | Sig_bundle {ses} -> ses | _ -> [])
-        |> List.concatMap (fun sigelt -> lids_of_sigelt sigelt |> List.map (fun lid -> (lid, sigelt.sigattrs)))
-        |> List.filter_map
-          (fun (lid, attrs) -> match U.get_attribute Const.desugar_of_variant_record_lid attrs with
-                            | Some [({n = Tm_constant (FStar.Const.Const_string (s, _))}, None)]
-                                -> Some (lid_of_str s, lid)
-                            | _ -> None)
-        |> List.filter (fun (cons, lid) -> ns_of_lid cons =? ns_of_lid lid && ns_of_lid lid =? ids_of_lid ns)
+        begin let! (_, {declarations}) = env.modules in
+              let! sigelt = declarations in
+              let! sigelt = match sigelt.sigel with | Sig_bundle {ses} -> ses | _ -> [] in
+              let! lid = lids_of_sigelt sigelt in
+              match U.get_attribute Const.desugar_of_variant_record_lid sigelt.sigattrs with
+            | Some [({n = Tm_constant (FStar.Const.Const_string (s, _))}, None)]
+                -> [(lid_of_str s, lid)]
+            | _ -> []
+        end
+        |> List.filter (fun (cons, lid) -> ns_of_lid cons =?  ns_of_lid lid
+                                    && ns_of_lid lid  =? ids_of_lid ns)
         |> List.map (fun (cons, lid) -> (ident_of_lid cons, ident_of_lid lid))
       in constructor_lid_to_desugared_record_lids
        |> List.filter (fun (cons, _) -> List.find (fun (lid, _) -> lid =? cons) l |> Some?)
