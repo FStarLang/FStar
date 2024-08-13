@@ -1061,9 +1061,6 @@ let find_binders_for_datacons env (lid:lident) =
       | _ -> None in
   resolve_in_open_namespaces' env lid (fun _ -> None) (fun _ -> None) k_global_def
 
-// let x (xx: (lident & list term)) = show xx
-
-
 (** Elaborates a `restriction`: this function adds implicit names
 (projectors, discriminators, record fields) that F* generates
 automatically. It also checks that all the idents the user added
