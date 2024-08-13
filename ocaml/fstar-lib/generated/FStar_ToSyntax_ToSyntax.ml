@@ -6798,17 +6798,15 @@ let rec (desugar_tycon :
                                         let uu___4 =
                                           let uu___5 =
                                             let uu___6 =
-                                              let uu___7 =
-                                                let uu___8 =
-                                                  FStar_Syntax_DsEnv.qualify
-                                                    env cid in
-                                                FStar_Ident.string_of_lid
-                                                  uu___8 in
-                                              (uu___7, range) in
-                                            FStar_Const.Const_string uu___6 in
-                                          FStar_Syntax_Syntax.Tm_constant
+                                              FStar_Syntax_DsEnv.qualify env
+                                                cid in
+                                            FStar_Ident.string_of_lid uu___6 in
+                                          FStar_Syntax_Embeddings_Base.embed
+                                            FStar_Syntax_Embeddings.e_string
                                             uu___5 in
-                                        FStar_Syntax_Syntax.mk uu___4 range in
+                                        uu___4 range
+                                          FStar_Pervasives_Native.None
+                                          FStar_Syntax_Embeddings_Base.id_norm_cb in
                                       FStar_Syntax_Syntax.mk_Tm_app
                                         desugar_attr
                                         [(cid_as_constant,

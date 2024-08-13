@@ -2757,62 +2757,103 @@ let elab_restriction :
                 let constructor_lid_to_desugared_record_lids =
                   let uu___ =
                     let uu___1 =
-                      let uu___2 =
-                        let uu___3 =
-                          let uu___4 =
-                            FStar_Compiler_List.concatMap
-                              (fun uu___5 ->
-                                 match uu___5 with
-                                 | (uu___6,
-                                    { FStar_Syntax_Syntax.name = uu___7;
+                      Obj.magic
+                        (FStar_Class_Monad.op_let_Bang
+                           FStar_Class_Monad.monad_list () ()
+                           (Obj.magic env1.modules)
+                           (fun uu___2 ->
+                              (fun uu___2 ->
+                                 let uu___2 = Obj.magic uu___2 in
+                                 match uu___2 with
+                                 | (uu___3,
+                                    { FStar_Syntax_Syntax.name = uu___4;
                                       FStar_Syntax_Syntax.declarations =
                                         declarations;
                                       FStar_Syntax_Syntax.is_interface =
-                                        uu___8;_})
-                                     -> declarations) env1.modules in
-                          FStar_Compiler_List.concatMap
-                            (fun sigelt ->
-                               match sigelt.FStar_Syntax_Syntax.sigel with
-                               | FStar_Syntax_Syntax.Sig_bundle
-                                   { FStar_Syntax_Syntax.ses = ses;
-                                     FStar_Syntax_Syntax.lids = uu___5;_}
-                                   -> ses
-                               | uu___5 -> []) uu___4 in
-                        FStar_Compiler_List.concatMap
-                          (fun sigelt ->
-                             FStar_Compiler_List.map
-                               (fun lid ->
-                                  (lid,
-                                    (sigelt.FStar_Syntax_Syntax.sigattrs)))
-                               (FStar_Syntax_Util.lids_of_sigelt sigelt))
-                          uu___3 in
-                      FStar_Compiler_List.filter_map
-                        (fun uu___3 ->
-                           match uu___3 with
-                           | (lid, attrs) ->
-                               let uu___4 =
-                                 FStar_Syntax_Util.get_attribute
-                                   FStar_Parser_Const.desugar_of_variant_record_lid
-                                   attrs in
-                               (match uu___4 with
-                                | FStar_Pervasives_Native.Some
-                                    (({
-                                        FStar_Syntax_Syntax.n =
-                                          FStar_Syntax_Syntax.Tm_constant
-                                          (FStar_Const.Const_string
-                                          (s, uu___5));
-                                        FStar_Syntax_Syntax.pos = uu___6;
-                                        FStar_Syntax_Syntax.vars = uu___7;
-                                        FStar_Syntax_Syntax.hash_code =
-                                          uu___8;_},
-                                      FStar_Pervasives_Native.None)::[])
-                                    ->
-                                    let uu___9 =
-                                      let uu___10 = FStar_Ident.lid_of_str s in
-                                      (uu___10, lid) in
-                                    FStar_Pervasives_Native.Some uu___9
-                                | uu___5 -> FStar_Pervasives_Native.None))
-                        uu___2 in
+                                        uu___5;_})
+                                     ->
+                                     Obj.magic
+                                       (FStar_Class_Monad.op_let_Bang
+                                          FStar_Class_Monad.monad_list () ()
+                                          (Obj.magic declarations)
+                                          (fun uu___6 ->
+                                             (fun sigelt ->
+                                                let sigelt = Obj.magic sigelt in
+                                                Obj.magic
+                                                  (FStar_Class_Monad.op_let_Bang
+                                                     FStar_Class_Monad.monad_list
+                                                     () ()
+                                                     (match sigelt.FStar_Syntax_Syntax.sigel
+                                                      with
+                                                      | FStar_Syntax_Syntax.Sig_bundle
+                                                          {
+                                                            FStar_Syntax_Syntax.ses
+                                                              = ses;
+                                                            FStar_Syntax_Syntax.lids
+                                                              = uu___6;_}
+                                                          -> Obj.magic ses
+                                                      | uu___6 ->
+                                                          Obj.magic [])
+                                                     (fun uu___6 ->
+                                                        (fun sigelt1 ->
+                                                           let sigelt1 =
+                                                             Obj.magic
+                                                               sigelt1 in
+                                                           Obj.magic
+                                                             (FStar_Class_Monad.op_let_Bang
+                                                                FStar_Class_Monad.monad_list
+                                                                () ()
+                                                                (Obj.magic
+                                                                   (FStar_Syntax_Util.lids_of_sigelt
+                                                                    sigelt1))
+                                                                (fun uu___6
+                                                                   ->
+                                                                   (fun lid
+                                                                    ->
+                                                                    let lid =
+                                                                    Obj.magic
+                                                                    lid in
+                                                                    let uu___6
+                                                                    =
+                                                                    FStar_Syntax_Util.get_attribute
+                                                                    FStar_Parser_Const.desugar_of_variant_record_lid
+                                                                    sigelt1.FStar_Syntax_Syntax.sigattrs in
+                                                                    match uu___6
+                                                                    with
+                                                                    | 
+                                                                    FStar_Pervasives_Native.Some
+                                                                    (({
+                                                                    FStar_Syntax_Syntax.n
+                                                                    =
+                                                                    FStar_Syntax_Syntax.Tm_constant
+                                                                    (FStar_Const.Const_string
+                                                                    (s,
+                                                                    uu___7));
+                                                                    FStar_Syntax_Syntax.pos
+                                                                    = uu___8;
+                                                                    FStar_Syntax_Syntax.vars
+                                                                    = uu___9;
+                                                                    FStar_Syntax_Syntax.hash_code
+                                                                    = uu___10;_},
+                                                                    FStar_Pervasives_Native.None)::[])
+                                                                    ->
+                                                                    let uu___11
+                                                                    =
+                                                                    let uu___12
+                                                                    =
+                                                                    FStar_Ident.lid_of_str
+                                                                    s in
+                                                                    (uu___12,
+                                                                    lid) in
+                                                                    Obj.magic
+                                                                    [uu___11]
+                                                                    | 
+                                                                    uu___7 ->
+                                                                    Obj.magic
+                                                                    [])
+                                                                    uu___6)))
+                                                          uu___6))) uu___6)))
+                                uu___2)) in
                     FStar_Compiler_List.filter
                       (fun uu___2 ->
                          match uu___2 with
