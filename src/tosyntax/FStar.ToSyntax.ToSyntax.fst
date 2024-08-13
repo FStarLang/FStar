@@ -2926,7 +2926,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                     let range = range_of_id record_id in
                     let desugar_attr_fv = {fv_name = {v = FStar.Parser.Const.desugar_of_variant_record_lid; p = range}; fv_qual = None} in
                     let desugar_attr = S.mk (Tm_fvar desugar_attr_fv) range in
-                    let cid_as_constant = S.mk (Const_string (qualify env cid |> string_of_lid, range) |> S.Tm_constant) range in
+                    let cid_as_constant = EMB.embed (string_of_lid (qualify env cid)) range None EMB.id_norm_cb in
                     S.mk_Tm_app desugar_attr [(cid_as_constant, None)] range
                   in
                   (TyconRecord (record_id, bds, None, attrs, r), desugar_marker::d_attrs_initial) |> Some
