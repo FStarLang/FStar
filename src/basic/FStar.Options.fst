@@ -217,6 +217,7 @@ let defaults =
       ("no_tactics"                   , Bool false);
       ("normalize_pure_terms_for_extraction"
                                       , Bool false);
+      ("krmloutput"                   , Unset);
       ("odir"                         , Unset);
       ("output_deps_to"               , Unset);
       ("prims"                        , Unset);
@@ -405,6 +406,7 @@ let get_no_plugins              ()      = lookup_opt "no_plugins"               
 let get_no_smt                  ()      = lookup_opt "no_smt"                   as_bool
 let get_normalize_pure_terms_for_extraction
                                 ()      = lookup_opt "normalize_pure_terms_for_extraction" as_bool
+let get_krmloutput              ()      = lookup_opt "krmloutput"               (as_option as_string)
 let get_odir                    ()      = lookup_opt "odir"                     (as_option as_string)
 let get_output_deps_to          ()      = lookup_opt "output_deps_to"           (as_option as_string)
 let get_ugly                    ()      = lookup_opt "ugly"                     as_bool
@@ -1042,6 +1044,12 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "normalize_pure_terms_for_extraction",
     Const (Bool true),
     text "Extract top-level pure terms after normalizing them. This can lead to very large code, but can result in more partial evaluation and compile-time specialization.");
+
+  ( noshort,
+    "krmloutput",
+    PathStr "filename",
+    text "Place KaRaMeL extraction output in file <filename>. The path can be relative or absolute and does not depend\
+    on the --odir option.");
 
   ( noshort,
     "odir",
@@ -1912,6 +1920,7 @@ let normalize_pure_terms_for_extraction
 let no_location_info             () = get_no_location_info            ()
 let no_plugins                   () = get_no_plugins                  ()
 let no_smt                       () = get_no_smt                      ()
+let krmloutput                   () = get_krmloutput                  ()
 let output_dir                   () = get_odir                        ()
 let output_deps_to               () = get_output_deps_to              ()
 let ugly                         () = get_ugly                        ()
