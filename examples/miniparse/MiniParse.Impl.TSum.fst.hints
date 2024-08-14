@@ -10,6 +10,7 @@
         "@MaxIFuel_assumption", "@query",
         "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
         "FStar.UInt32_pretyping_2ab3c8ba2d08b0172817fc70b5994868",
+        "MiniParse.Spec.Combinators_interpretation_Tm_arrow_21c34ab6214876c3f64c3607461881fc",
         "MiniParse.Spec.Combinators_interpretation_Tm_arrow_fe391d6680769aaad08ee4cff3d82de3",
         "MiniParse.Spec.TSum_interpretation_Tm_arrow_3eceb8781c126a3d01c6e46f4545621c",
         "b2t_def", "bool_inversion", "bool_typing",
@@ -49,7 +50,6 @@
         "function_token_typing_FStar.Monotonic.Heap.heap",
         "function_token_typing_LowStar.Buffer.trivial_preorder",
         "function_token_typing_MiniParse.Spec.Combinators.coerce_to_bare_param_parser",
-        "function_token_typing_MiniParse.Spec.TSum.synth_tagged_union_data",
         "int_inversion", "int_typing",
         "interpretation_Tm_abs_1fb4b12c5e13644b16cddd2d7e9d02d4",
         "interpretation_Tm_abs_5a56d64ec9685d0352c27644697b3e56",
@@ -88,10 +88,10 @@
         "refinement_interpretation_Tm_refine_4818621566d3edde8f9c0dac6c867ee2",
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2",
         "refinement_interpretation_Tm_refine_81407705a0828c2c1b1976675443f647",
-        "refinement_interpretation_Tm_refine_95482e91a565bbc8d113ac6e95692d97",
         "refinement_interpretation_Tm_refine_f13070840248fced9d9d60d77bdae3ec",
         "refinement_interpretation_Tm_refine_f1ef48729dd48b5741a77671cc117cd5",
         "token_correspondence_MiniParse.Spec.Combinators.coerce_to_bare_param_parser",
+        "token_correspondence_MiniParse.Spec.TSum.synth_tagged_union_data",
         "true_interp", "typing_FStar.Map.contains",
         "typing_FStar.Monotonic.HyperHeap.rid",
         "typing_FStar.Monotonic.HyperStack.get_hmap",
@@ -104,7 +104,6 @@
         "typing_LowStar.Monotonic.Buffer.as_seq",
         "typing_LowStar.Monotonic.Buffer.loc_buffer",
         "typing_LowStar.Monotonic.Buffer.loc_none",
-        "typing_MiniParse.Spec.Base.__proj__Parser__item__f",
         "typing_MiniParse.Spec.Base.bparse",
         "typing_MiniParse.Spec.Base.parse",
         "typing_MiniParse.Spec.TSum.parse_tagged_union",
@@ -220,7 +219,7 @@
         "typing_Tm_abs_af29ad29472c21419b347a48927a4840"
       ],
       0,
-      "8c55922b2726d1984bb04b84ab352ae4"
+      "1b4314f2ad13c2f6ae0ab3c104533f9e"
     ]
   ]
 ]

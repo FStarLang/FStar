@@ -11,7 +11,7 @@
         "equation_Cap.byte", "equation_Platform.Bytes.bytes"
       ],
       0,
-      "ec1ea1543061e2a9558eaa8bc80533ad"
+      "a18a3a992d57f2bc664e5511f502bb34"
     ],
     [
       "Cap.issue",
@@ -28,7 +28,7 @@
         "string_inversion", "token_correspondence_Cap.capRead"
       ],
       0,
-      "06e398d9c5506404ec464719cd50c8f5"
+      "51c222d03800de29dc839e33acf272ef"
     ],
     [
       "Cap.main",
@@ -54,7 +54,7 @@
         "typing_Platform.Bytes.equalBytes"
       ],
       0,
-      "22c8368a400149d91da43a5495db141c"
+      "c165adcb791fcd85e937fb472e476908"
     ]
   ]
 ]

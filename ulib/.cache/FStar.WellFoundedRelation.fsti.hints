@@ -1,5 +1,5 @@
 [
-  "ﬂ–”pQıuS¡OÔ7*\\\u0007ﬁ",
+  "ï»Ö\u0007\tS®6üklÿ øk9",
   [
     [
       "FStar.WellFoundedRelation.lex_dep_relation",
@@ -8,7 +8,7 @@
       1,
       [ "@query" ],
       0,
-      "5f06c98406408fdc9c914edd7531cbda"
+      "3023ce70f4daf6b190ba429ac2bf524e"
     ],
     [
       "FStar.WellFoundedRelation.option_relation",
@@ -17,7 +17,7 @@
       1,
       [ "@query", "lemma_FStar.Pervasives.invertOption" ],
       0,
-      "b00c48467ca1ac1f2078fac74901aae8"
+      "fb41d579a835064fe11e6cf4fd11a143"
     ]
   ]
 ]

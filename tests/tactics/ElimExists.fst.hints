@@ -6,21 +6,12 @@
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
-      0,
-      "9099c0c1ad9c8c3867963dc9999e9bdc"
-    ],
-    [
-      "ElimExists.lem",
-      2,
-      2,
-      1,
       [
         "@MaxIFuel_assumption", "@query",
         "refinement_interpretation_Tm_refine_17693b9c0be6584f79f76d61935752d0"
       ],
       0,
-      "d912fd31b8290ca7d153c57e4522fdd0"
+      "6503175bf6c35098ef73a3adff8a9b09"
     ]
   ]
 ]

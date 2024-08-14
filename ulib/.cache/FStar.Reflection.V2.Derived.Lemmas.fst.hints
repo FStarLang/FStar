@@ -1,5 +1,5 @@
 [
-  "4å-è\u0004Áˇ•4ÓöªJÇ©",
+  "fÉR∆d-\u001f˘snÜ£¡%\u0013⁄",
   [
     [
       "FStar.Reflection.V2.Derived.Lemmas.forall_list",
@@ -14,7 +14,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "877aaebef92def6955f035a10503c102"
+      "9f9023c31d27847218a90db948c4e9e6"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.list_ref",
@@ -38,7 +38,7 @@
         "projection_inverse_Prims.Cons_tl", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "7870b38ad88f132be9b53d3b2c632bda"
+      "c60be253f2afd2a5397984fe4271958c"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_app_order'",
@@ -88,7 +88,7 @@
         "typing_FStar.Reflection.V2.Derived.inspect_ln_unascribe"
       ],
       0,
-      "0f05f04151811ec5c2c577a4c4a9c2fa"
+      "320cf2a432d328cd68c25a4653a91c1f"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_app_order",
@@ -99,11 +99,12 @@
         "@MaxFuel_assumption", "@MaxIFuel_assumption",
         "@fuel_correspondence_FStar.List.Tot.Base.memP.fuel_instrumented",
         "@fuel_correspondence_FStar.Reflection.V2.Derived.collect_app_ln_.fuel_instrumented",
+        "@fuel_correspondence_FStar.Reflection.V2.Derived.inspect_ln_unascribe.fuel_instrumented",
         "@fuel_irrelevance_FStar.Reflection.V2.Derived.collect_app_ln_.fuel_instrumented",
         "@query",
         "FStar.Stubs.Reflection.V2.Data_pretyping_250ec2f946e12594618df379d0cb7f9b",
         "FStar.Stubs.Reflection.V2.Data_pretyping_25489d564b00c456a9aebf5245eb3f03",
-        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e",
+        "Prims_pretyping_3862c4e8ff39bfc3871b6a47e7ff5b2e", "bool_inversion",
         "constructor_distinct_FStar.Stubs.Reflection.V2.Data.Tv_App",
         "constructor_distinct_Prims.Cons", "constructor_distinct_Prims.Nil",
         "data_typing_intro_FStar.Stubs.Reflection.V2.Data.Q_Explicit@tok",
@@ -116,6 +117,7 @@
         "equation_FStar.Stubs.Reflection.V2.Data.argv",
         "equation_with_fuel_FStar.List.Tot.Base.memP.fuel_instrumented",
         "equation_with_fuel_FStar.Reflection.V2.Derived.collect_app_ln_.fuel_instrumented",
+        "equation_with_fuel_FStar.Reflection.V2.Derived.inspect_ln_unascribe.fuel_instrumented",
         "false_interp",
         "fuel_guarded_inversion_FStar.Pervasives.Native.tuple2",
         "function_token_typing_FStar.Stubs.Reflection.V2.Data.argv",
@@ -130,10 +132,11 @@
         "projection_inverse_Prims.Cons_tl", "projection_inverse_Prims.Nil_a",
         "refinement_interpretation_Tm_refine_5bdd45d3da8bcffc0601859dc0f3192e",
         "subterm_ordering_FStar.Stubs.Reflection.V2.Data.Tv_App",
-        "typing_FStar.Reflection.V2.Derived.inspect_ln_unascribe"
+        "typing_FStar.Reflection.V2.Derived.inspect_ln_unascribe",
+        "typing_FStar.Stubs.Reflection.V2.Data.uu___is_Tv_App"
       ],
       0,
-      "ed0190a317fe18ce9ffe05abffd1657a"
+      "ca89a1e713399094841e372e566c0333"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_app_ref",
@@ -161,7 +164,7 @@
         "subterm_ordering_FStar.Pervasives.Native.Mktuple2"
       ],
       0,
-      "f2720a3a7340d7c5b6157ad1a7e93575"
+      "abc247fbe32bfacfe2aaf8db474870f2"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_abs_order'",
@@ -209,7 +212,7 @@
         "typing_FStar.Reflection.V2.Derived.inspect_ln_unascribe"
       ],
       0,
-      "b4ddeba5254d71f0b7e816d1a2123c86"
+      "1bbf84f3197188a44e1e4864702aa64c"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_abs_ln_order",
@@ -253,7 +256,7 @@
         "typing_FStar.Reflection.V2.Derived.inspect_ln_unascribe"
       ],
       0,
-      "7216a4d84d18e801785809038a750f67"
+      "a8964c4db30b5e84cb6a8e38320ab06a"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_abs_ln_ref",
@@ -273,7 +276,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "52138ef30e4683a7045fe4bc0eaf9261"
+      "17c48bda4c5d3b92bd4d98a2ab1d15e1"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_arr_order'",
@@ -331,7 +334,7 @@
         "unit_inversion", "unit_typing"
       ],
       0,
-      "21b33d17a85b89884f238b2b60d00e44"
+      "e524933669b5453df2dbfee759d994fe"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_arr_ln_bs_order",
@@ -385,7 +388,7 @@
         "typing_FStar.Stubs.Reflection.V2.Builtins.pack_comp"
       ],
       0,
-      "653f3f629164b767dd38eff612724c28"
+      "00ddf3815cdd001c5742a156a0062acf"
     ],
     [
       "FStar.Reflection.V2.Derived.Lemmas.collect_arr_ln_bs_ref",
@@ -405,7 +408,7 @@
         "projection_inverse_Prims.Nil_a"
       ],
       0,
-      "5290cc7fae073ac2db53cb2b5e06208a"
+      "25250b065abdd046cd69c9dc5fcc1079"
     ]
   ]
 ]

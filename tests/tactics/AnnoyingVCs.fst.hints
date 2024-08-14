@@ -3,16 +3,7 @@
   [
     [
       "AnnoyingVCs.test1",
-      1,
       2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "720edec45b30dec732186e79fe061f77"
-    ],
-    [
-      "AnnoyingVCs.test1",
-      3,
       2,
       1,
       [
@@ -27,9 +18,12 @@
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [
+        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
+        "projection_inverse_BoxBool_proj_0"
+      ],
       0,
-      "bf45db17e9484ea156b8761d24ee8811"
+      "42c7bf87fe888d1fa6988cb4fef749d8"
     ],
     [
       "AnnoyingVCs.test2",
@@ -41,19 +35,7 @@
         "projection_inverse_BoxBool_proj_0"
       ],
       0,
-      "572c0bd5644471911d2ef1c02d622d14"
-    ],
-    [
-      "AnnoyingVCs.test2",
-      3,
-      2,
-      1,
-      [
-        "@query", "b2t_def", "primitive_Prims.op_GreaterThanOrEqual",
-        "projection_inverse_BoxBool_proj_0"
-      ],
-      0,
-      "96a419420fa01dde231f89b267a7f0f7"
+      "a624f76503695b5a469ec5b0a0943958"
     ]
   ]
 ]
