@@ -18,8 +18,8 @@ module FStar.Stubs.Reflection.V1.Data
 (* What's this!? Well, the compiler now works fully with V2, so whenever
 we need to reason/extract a term, we need things like V2.Tv_App and V2.pack_ln
 in scope. So, force them into scope here. *)
-module X = FStar.Stubs.Reflection.V2.Data
-module X = FStar.Stubs.Reflection.V2.Builtins
+open FStar.Stubs.Reflection.V2.Data {}
+open FStar.Stubs.Reflection.V2.Builtins {}
 
 open FStar.Stubs.Reflection.Types
 
