@@ -3476,9 +3476,11 @@ let (reinitialize_env :
                  fun env ->
                    let uu___ =
                      FStar_Ident.lid_of_path ns PulseSyntaxExtension_Env.r_ in
-                   FStar_Syntax_DsEnv.push_namespace env uu___)
-              open_namespaces dsenv1 in
-          let dsenv3 = FStar_Syntax_DsEnv.push_namespace dsenv2 curmod in
+                   FStar_Syntax_DsEnv.push_namespace env uu___
+                     FStar_Syntax_Syntax.Unrestricted) open_namespaces dsenv1 in
+          let dsenv3 =
+            FStar_Syntax_DsEnv.push_namespace dsenv2 curmod
+              FStar_Syntax_Syntax.Unrestricted in
           let dsenv4 =
             FStar_Compiler_List.fold_left
               (fun env ->

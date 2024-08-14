@@ -88,7 +88,7 @@ let rec push_bvs env xs =
     env, bv::bvs
 
 let push_namespace env lid =
-  let dsenv = D.push_namespace env.dsenv lid in
+  let dsenv = D.push_namespace env.dsenv lid S.Unrestricted in
   {env with dsenv}
 
 

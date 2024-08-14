@@ -822,11 +822,11 @@ let reinitialize_env (dsenv:D.env)
   = let dsenv = D.set_current_module dsenv curmod in
     let dsenv =
       L.fold_right
-        (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_))
+        (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_) S.Unrestricted)
         open_namespaces
         dsenv
     in
-    let dsenv = D.push_namespace dsenv curmod in
+    let dsenv = D.push_namespace dsenv curmod S.Unrestricted in
     let dsenv =
       L.fold_left
         (fun env (m, n) -> 
