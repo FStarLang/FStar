@@ -29,7 +29,7 @@ open FStar.Class.Show
 open FStar.Class.Hashable
 
 (* import instances *)
-module XXX0     = FStar.Syntax.Hash
+open FStar.Syntax.Hash {}
 
 instance hashable_lident : hashable Ident.lident = {
   hash = (fun l -> hash (show l));
