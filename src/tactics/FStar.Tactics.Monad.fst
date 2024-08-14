@@ -169,6 +169,7 @@ let fail msg = fail_doc [text msg]
 
 let catch (t : tac 'a) : tac (either exn 'a) =
     mk_tac (fun ps ->
+            let idtable = !ps.main_context.identifier_info in
             let tx = UF.new_transaction () in
             match run t ps with
             | Success (a, q) ->
@@ -176,6 +177,7 @@ let catch (t : tac 'a) : tac (either exn 'a) =
                 Success (Inr a, q)
             | Failed (m, q) ->
                 UF.rollback tx;
+                ps.main_context.identifier_info := idtable;
                 let ps = { ps with freshness = q.freshness } in //propagate the freshness even on failures
                 Success (Inl m, ps)
            )
