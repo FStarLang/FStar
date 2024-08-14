@@ -1167,8 +1167,6 @@ conjunctivePat:
 
 simpleTerm:
   | e=tmIff { e }
-  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
-      { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
 
 maybeFocusArrow:
   | RARROW          { false }
@@ -1420,6 +1418,8 @@ atomicTerm:
     { x }
   | x=opPrefixTerm(atomicTermQUident)
     { x }
+  | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
+      { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
 
 atomicTermQUident:
   | id=quident
