@@ -318,6 +318,9 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
   fun t ->
     mk_tac
       (fun ps ->
+         let idtable =
+           FStar_Compiler_Effect.op_Bang
+             (ps.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.identifier_info in
          let tx = FStar_Syntax_Unionfind.new_transaction () in
          let uu___ = run t ps in
          match uu___ with
@@ -326,6 +329,9 @@ let catch : 'a . 'a tac -> (Prims.exn, 'a) FStar_Pervasives.either tac =
               FStar_Tactics_Result.Success ((FStar_Pervasives.Inr a1), q))
          | FStar_Tactics_Result.Failed (m, q) ->
              (FStar_Syntax_Unionfind.rollback tx;
+              FStar_Compiler_Effect.op_Colon_Equals
+                (ps.FStar_Tactics_Types.main_context).FStar_TypeChecker_Env.identifier_info
+                idtable;
               (let ps1 =
                  {
                    FStar_Tactics_Types.main_context =
