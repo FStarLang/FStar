@@ -13,7 +13,7 @@
         "lemma_FStar.Pervasives.invertOption"
       ],
       0,
-      "f670fddd1aca4e8b0ca2b96e877d1365"
+      "95207a578928ff455db7158d3848b2dc"
     ],
     [
       "Bug1299.test",
@@ -22,13 +22,24 @@
       1,
       [
         "@MaxIFuel_assumption", "@query",
+        "FStar.Pervasives.Native_pretyping_b53dbd183c526bc5d0f20d7b966ae125",
+        "data_typing_intro_FStar.Pervasives.Native.Mktuple2@tok",
+        "data_typing_intro_FStar.Pervasives.Native.None@tok",
         "data_typing_intro_FStar.Stubs.Tactics.Common.TacticFailure@tok",
         "data_typing_intro_FStar.Stubs.Tactics.Result.Failed@tok",
-        "equation_FStar.Pervasives.pattern",
-        "function_token_typing_FStar.Pervasives.pattern", "string_typing"
+        "data_typing_intro_Prims.Cons@tok",
+        "data_typing_intro_Prims.Nil@tok",
+        "equation_FStar.Pervasives.pattern", "equation_FStar.Range.range",
+        "equation_FStar.Stubs.Errors.Msg.error_message",
+        "function_token_typing_FStar.Pervasives.pattern",
+        "function_token_typing_FStar.Range.range",
+        "function_token_typing_FStar.Stubs.Errors.Msg.error_message",
+        "function_token_typing_FStar.Stubs.Pprint.document",
+        "kinding_FStar.Pervasives.Native.option@tok", "string_typing",
+        "typing_FStar.Stubs.Pprint.arbitrary_string"
       ],
       0,
-      "8240ffeccb72007e98551057a1b802fc"
+      "f0921066fe67e3bb91f3fd22caef7889"
     ]
   ]
 ]

@@ -1,0 +1,35 @@
+[
+  "nn‰ûgÔ¯N;ø¦ ¡\u001b¶\u0011",
+  [
+    [
+      "FStar.FunctionalQueue.lemma_dequeue_ok",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.FunctionalQueue.not_empty", "l_and-interp",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9d36978bdc8e3c7dc67574bf23a79168"
+      ],
+      0,
+      "8b104afcf1894c9c4270be224ceeff87"
+    ],
+    [
+      "FStar.FunctionalQueue.lemma_peek_ok",
+      1,
+      2,
+      1,
+      [
+        "@MaxIFuel_assumption", "@query", "b2t_def",
+        "equation_FStar.FunctionalQueue.not_empty", "l_and-interp",
+        "primitive_Prims.op_GreaterThan",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_9d36978bdc8e3c7dc67574bf23a79168"
+      ],
+      0,
+      "93a54cc6e59095a0a27fed091d002af7"
+    ]
+  ]
+]

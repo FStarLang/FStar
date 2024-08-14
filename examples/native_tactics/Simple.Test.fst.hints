@@ -1,5 +1,5 @@
 [
-  "\u0006xƒ3¿\u0010\bº´~,5 Y\n:",
+  " ¿D¯¾S\f\u0019„ã7\u001eš{“í",
   [
     [
       "Simple.Test.test1",
@@ -8,7 +8,7 @@
       1,
       [ "@query", "assumption_Simple.Test.t__uu___haseq" ],
       0,
-      "3d6e531f4a7e4ee15ece7f1c78468b55"
+      "e143874d16f512b88d5784dd35cdda31"
     ],
     [
       "Simple.Test.test2",
@@ -20,7 +20,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "79c63259e2f3d42cb9e4264757c21958"
+      "04a89e59e8d0a65efca18104c83bcbc2"
     ],
     [
       "Simple.Test.test3",
@@ -32,7 +32,7 @@
         "assumption_Simple.Test.t__uu___haseq", "kinding_Simple.Test.t@tok"
       ],
       0,
-      "e9dbfe333e78bb457482f6d9968c6dc7"
+      "87f61f6241acd0e3bd66c60afa13ea3b"
     ]
   ]
 ]

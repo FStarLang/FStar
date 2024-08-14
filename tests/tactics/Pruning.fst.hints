@@ -8,7 +8,7 @@
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "8f952eb0f55c858491eb579a22dbe379"
+      "f74a936054dc2bde06dbbda805850600"
     ],
     [
       "Pruning.uu___1",
@@ -31,29 +31,20 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "3926f04dcbfa2a4827f1de64b56a4b8a"
+      "803645cf75e48831aea9f286c16bd047"
     ],
     [
       "Pruning.uu___6",
       1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "63d52d02ed209327573e53003904ce8a"
-    ],
-    [
-      "Pruning.uu___6",
-      2,
       2,
       1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "0c370ac8897c8da2a4b87ca707bceb6d"
+      "1d596fed13d0ef683ad82cf09272aa72"
     ],
     [
       "Pruning.uu___6",
-      3,
+      2,
       4,
       2,
       [
@@ -78,22 +69,13 @@
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
-      0,
-      "02e97c90153c2e21b84888fb584917aa"
-    ],
-    [
-      "Pruning.uu___16",
-      2,
-      2,
-      1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "1d5442c2df9ea49522c409d661cb4983"
+      "a11bd57e52188e704aa642ee2db6a0ed"
     ],
     [
       "Pruning.uu___16",
-      3,
+      2,
       4,
       2,
       [
@@ -118,49 +100,22 @@
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
-      0,
-      "0a9ac468c381e45650cae6b328dba3a8"
-    ],
-    [
-      "Pruning.uu___27",
-      2,
-      2,
-      1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "fe7c1b7f7e022fe8794c4ad7cd3dda0f"
+      "4d1fb9ac59ee094beda3722d96acb574"
     ],
     [
       "Pruning.uu___36",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
-      0,
-      "0a9ac468c381e45650cae6b328dba3a8"
-    ],
-    [
-      "Pruning.uu___36",
-      2,
-      2,
-      1,
       [ "@query", "primitive_Prims.op_Addition" ],
       0,
-      "fe7c1b7f7e022fe8794c4ad7cd3dda0f"
+      "567a6340bd7d325f7f343ed30c768f44"
     ],
     [
       "Pruning.uu___45",
-      1,
       2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "0a9ac468c381e45650cae6b328dba3a8"
-    ],
-    [
-      "Pruning.uu___45",
-      3,
       4,
       2,
       [

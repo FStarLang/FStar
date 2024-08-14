@@ -1,5 +1,5 @@
 [
-  "â©Ÿ] ÒCŸ\u001dt\u0019Ú\u0011aÄ)",
+  "Â'-mjÀ.\u001d§’ýðrÙkÔ",
   [
     [
       "FStar.FiniteMap.Base.elements",
@@ -11,7 +11,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "c42cc512b83a0c9167bca98fb9075d89"
+      "b15ae8f0294d58445f111dc35cb6da44"
     ],
     [
       "FStar.FiniteMap.Base.key_in_item_list",
@@ -27,7 +27,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "bbe4272ace865ec34142e149b0126f91"
+      "7fe038901c9a0597e5bb3bdfa1800b52"
     ],
     [
       "FStar.FiniteMap.Base.item_list_doesnt_repeat_keys",
@@ -43,7 +43,7 @@
         "projection_inverse_BoxBool_proj_0", "subterm_ordering_Prims.Cons"
       ],
       0,
-      "82faa9ba7e5d5394f72757faf0d86c8e"
+      "69d08975018cd75c54f7b675fa298281"
     ],
     [
       "FStar.FiniteMap.Base.key_list_to_item_list",
@@ -99,7 +99,7 @@
         "typing_FStar.FiniteSet.Base.mem", "typing_FStar.List.Tot.Base.mem"
       ],
       0,
-      "d0567a6a182292ac508e2d13c0c9bddd"
+      "070b5ff5e42c9a9c5641f88df453d913"
     ],
     [
       "FStar.FiniteMap.Base.map_as_list",
@@ -118,7 +118,7 @@
         "typing_FStar.FiniteSet.Base.set_as_list"
       ],
       0,
-      "c848b1bc2f38a9d18fe284cac81b205e"
+      "1c95fb7faacbbe3b7ec4100fd1fed8a9"
     ],
     [
       "FStar.FiniteMap.Base.lookup",
@@ -137,7 +137,7 @@
         "typing_FStar.FiniteMap.Base.elements"
       ],
       0,
-      "3bc26a61037570f7535ef9c03d8ba226"
+      "23fa61b1ed19800fcc66b8880a406855"
     ],
     [
       "FStar.FiniteMap.Base.emptymap",
@@ -167,7 +167,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "08cd691c0890dc5ea61d849dd32a66c5"
+      "10cd47a97bcbb21a337bb8db31e93c0e"
     ],
     [
       "FStar.FiniteMap.Base.insert",
@@ -210,7 +210,7 @@
         "typing_Tm_abs_fb9acaeb86461f02bd24e1fd771e9687"
       ],
       0,
-      "4a2948cc294da568d061d8be452ff639"
+      "2e29ace9bd6b49730b395d2c61c5b653"
     ],
     [
       "FStar.FiniteMap.Base.merge",
@@ -249,7 +249,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "0865cfd0e03334037267bd44dd4bc7c5"
+      "13cd3ce34ef7accc9ba28613355a76fa"
     ],
     [
       "FStar.FiniteMap.Base.subtract",
@@ -289,7 +289,7 @@
         "typing_Tm_abs_e2aae21cccda41e2ae80ca9d9c5abee1"
       ],
       0,
-      "84fe97e7224dec42a80ac97b1548cc1d"
+      "22f99b7ed826259f9286419296afb796"
     ],
     [
       "FStar.FiniteMap.Base.choose",
@@ -304,7 +304,7 @@
         "refinement_interpretation_Tm_refine_fae28b35ce14492a5b997a1f26404042"
       ],
       0,
-      "b3249b835d0bcd07457886c468d1bf70"
+      "bdb2662b6d9d8047b1aaf502ecb35138"
     ],
     [
       "FStar.FiniteMap.Base.map_cardinality_matches_domain_fact",
@@ -318,7 +318,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "0a4c71b86886137e13c10f42b200c5b0"
+      "3d799be365ee8b6f237941c097ac7ef3"
     ],
     [
       "FStar.FiniteMap.Base.insert_member_cardinality_fact",
@@ -332,7 +332,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "47cfd8b11163427dab902ecc04a3048a"
+      "0229ad41997cf0b926d1f17525705fe8"
     ],
     [
       "FStar.FiniteMap.Base.cardinality_zero_iff_empty_lemma",
@@ -384,7 +384,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "a1b9356904d33866a2fbbece63faa07d"
+      "20801c92dc095e13559a62bc8f840844"
     ],
     [
       "FStar.FiniteMap.Base.empty_or_domain_occupied_lemma",
@@ -416,7 +416,7 @@
         "typing_FStar.FiniteMap.Base.domain"
       ],
       0,
-      "c02bf6382173ba238f7ce6dc941a5153"
+      "1169483df938a634f59f9b051fe84c9f"
     ],
     [
       "FStar.FiniteMap.Base.empty_or_values_occupied_lemma",
@@ -471,7 +471,7 @@
         "typing_FStar.FiniteMap.Base.mem", "typing_FStar.FiniteSet.Base.mem"
       ],
       0,
-      "989267363cd0374b3d4c56cce6b54a29"
+      "04bc0217cbdc73be098dc7e07ad8be8c"
     ],
     [
       "FStar.FiniteMap.Base.empty_or_items_occupied_lemma",
@@ -538,7 +538,7 @@
         "typing_FStar.FiniteMap.Base.mem", "typing_FStar.FiniteSet.Base.mem"
       ],
       0,
-      "e762620245d9f223f1c2314b88a0163f"
+      "73f96df4084351049cbedc2586c4fe66"
     ],
     [
       "FStar.FiniteMap.Base.map_cardinality_matches_domain_lemma",
@@ -550,7 +550,7 @@
         "equation_FStar.FiniteMap.Base.map_cardinality_matches_domain_fact"
       ],
       0,
-      "c526239a77a3887736b4cdb6571082a8"
+      "ff55cdc864ab3c91bae10c1c43d82c8d"
     ],
     [
       "FStar.FiniteMap.Base.values_contains_lemma",
@@ -581,7 +581,7 @@
         "token_correspondence_FStar.FiniteMap.Base.values"
       ],
       0,
-      "a85fa5d6b2c27c46e1818ffbcac6c1b9"
+      "1e59b4d764255f9dab464d212d8731a7"
     ],
     [
       "FStar.FiniteMap.Base.items_contains_lemma",
@@ -613,7 +613,7 @@
         "typing_FStar.Pervasives.Native.fst"
       ],
       0,
-      "2a4fb454160c5aa051d86a1caa1c931a"
+      "723be50f83fdc50ee126554897dbaab6"
     ],
     [
       "FStar.FiniteMap.Base.empty_domain_empty_lemma",
@@ -634,7 +634,7 @@
         "refinement_interpretation_Tm_refine_2de20c066034c13bf76e9c0b94f4806c"
       ],
       0,
-      "ab1de5e26ab52ce3a544b074e9fccc1c"
+      "4b42213452271beb1bdec3777cb94023"
     ],
     [
       "FStar.FiniteMap.Base.glue_domain_lemma",
@@ -648,7 +648,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "e79868b32952755c65621b2796d135a4"
+      "883d020f994e6f0c763dc7c0404eefd6"
     ],
     [
       "FStar.FiniteMap.Base.glue_elements_lemma",
@@ -664,7 +664,7 @@
         "projection_inverse_Prims.Mkdtuple2__2"
       ],
       0,
-      "ecae3c4fb02fc785028d89208b43c4e0"
+      "97bbb43d8a294dcbc62152772de2b051"
     ],
     [
       "FStar.FiniteMap.Base.insert_elements_lemma",
@@ -711,7 +711,7 @@
         "typing_Tm_abs_fb9acaeb86461f02bd24e1fd771e9687"
       ],
       0,
-      "91f82794b5e6371b4df5872843e889ab"
+      "e6f1ce1c34ab215b832904e91c8098a8"
     ],
     [
       "FStar.FiniteMap.Base.insert_member_cardinality_lemma",
@@ -734,7 +734,7 @@
         "typing_FStar.FiniteMap.Base.domain"
       ],
       0,
-      "107cab5a9d733c772c880cbbbb4aca43"
+      "578181e9478b8ab922408c38977c1f8f"
     ],
     [
       "FStar.FiniteMap.Base.insert_nonmember_cardinality_lemma",
@@ -757,7 +757,7 @@
         "typing_FStar.FiniteMap.Base.domain"
       ],
       0,
-      "50461385bd9380bba7663e7502b07836"
+      "2514dd691f1bb9ee2f783dc6797e1132"
     ],
     [
       "FStar.FiniteMap.Base.merge_domain_is_union_lemma",
@@ -771,7 +771,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "9f283c00885e04a95ccd1170a4a76422"
+      "f922386dfc0daf4be649a11bc8885b50"
     ],
     [
       "FStar.FiniteMap.Base.merge_element_lemma",
@@ -809,7 +809,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "51a17f25b7f3c02a2ae50f5f7a2be30c"
+      "f37be41d8d4c7f0f931e5ca47a756d69"
     ],
     [
       "FStar.FiniteMap.Base.subtract_domain_lemma",
@@ -823,7 +823,7 @@
         "projection_inverse_Prims.Mkdtuple2__1"
       ],
       0,
-      "7d567b0b751fbdf69e5c0c4994e16d88"
+      "aa20374c5c3a6d5b27225ad2f3a2ca25"
     ],
     [
       "FStar.FiniteMap.Base.subtract_element_lemma",
@@ -861,16 +861,32 @@
         "typing_Tm_abs_e2aae21cccda41e2ae80ca9d9c5abee1"
       ],
       0,
-      "0bf5955a89f40fd59816f30e7ebc822e"
+      "bb355f2a0b1836281179bacc546544bb"
     ],
     [
       "FStar.FiniteMap.Base.map_equal_lemma",
       1,
       2,
       1,
-      [ "@query", "true_interp" ],
+      [
+        "@MaxIFuel_assumption", "@query",
+        "FStar.FunctionalExtensionality_interpretation_Tm_arrow_a7d5cc170be69663c495e8582d2bc62a",
+        "disc_equation_FStar.Pervasives.Native.Some",
+        "equation_FStar.FiniteMap.Base.domain",
+        "equation_FStar.FiniteMap.Base.equal",
+        "equation_FStar.FiniteMap.Base.setfun_t",
+        "equation_FStar.FunctionalExtensionality.feq",
+        "equation_FStar.FunctionalExtensionality.restricted_t",
+        "fuel_guarded_inversion_FStar.Pervasives.Native.option",
+        "function_token_typing_FStar.FiniteMap.Base.elements",
+        "interpretation_Tm_abs_d956af1c4d42fc396b46c75e8016525b",
+        "projection_inverse_BoxBool_proj_0",
+        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
+        "refinement_interpretation_Tm_refine_b9153550910e17f890b4ca9562727433",
+        "typing_FStar.FiniteMap.Base.elements"
+      ],
       0,
-      "ffd37045ec04ec24c8a96fee8a385220"
+      "865d7241b1d97a9e9523e1799979ff9f"
     ],
     [
       "FStar.FiniteMap.Base.map_equal_lemma",
@@ -895,31 +911,7 @@
         "typing_FStar.FiniteMap.Base.elements"
       ],
       0,
-      "6e1ad2d2559fdb6fa8ea50c28e5781e8"
-    ],
-    [
-      "FStar.FiniteMap.Base.map_equal_lemma",
-      3,
-      2,
-      1,
-      [
-        "@MaxIFuel_assumption", "@query",
-        "equation_FStar.FiniteMap.Base.domain",
-        "equation_FStar.FiniteMap.Base.equal",
-        "equation_FStar.FiniteMap.Base.setfun_t",
-        "equation_FStar.FunctionalExtensionality.is_restricted",
-        "equation_FStar.FunctionalExtensionality.restricted_t",
-        "equation_Prims.eqtype",
-        "function_token_typing_FStar.FiniteMap.Base.elements",
-        "lemma_FStar.FunctionalExtensionality.extensionality",
-        "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f",
-        "refinement_interpretation_Tm_refine_7e4a6c5999db731b5d17d0418dfeea3e",
-        "refinement_interpretation_Tm_refine_b9153550910e17f890b4ca9562727433",
-        "typing_FStar.FiniteMap.Base.elements",
-        "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
-      ],
-      0,
-      "614ba77c84bddb03f51d82dff9e4a5d9"
+      "a860265ed6924a4b71789d8b36480128"
     ],
     [
       "FStar.FiniteMap.Base.map_extensionality_lemma",
@@ -957,7 +949,7 @@
         "typing_Tm_abs_d956af1c4d42fc396b46c75e8016525b"
       ],
       0,
-      "aea59766ba592516e16ebb1979f7d39e"
+      "b42537fec1a8adf219ad36ebe1cceb55"
     ],
     [
       "FStar.FiniteMap.Base.disjoint_lemma",
@@ -981,7 +973,7 @@
         "typing_FStar.FiniteSet.Base.mem"
       ],
       0,
-      "98f7179c4afaef638deb9de71c7ba3e5"
+      "0cf925c0e0e968c9905ea348763c56e1"
     ],
     [
       "FStar.FiniteMap.Base.all_finite_map_facts_lemma",
@@ -990,7 +982,7 @@
       1,
       [ "@query", "equation_FStar.FiniteMap.Base.all_finite_map_facts" ],
       0,
-      "f487ac6e0b758eb2e60647fd3f145d19"
+      "87e50302d40b6db8249f48803f1b7645"
     ]
   ]
 ]

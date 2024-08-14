@@ -27,115 +27,7 @@
         "typing_FStar.UInt32.v"
       ],
       0,
-      "4611f3bf33a8105986cd6c7777a7ea0d"
-    ],
-    [
-      "Bug2699.testu8_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "389ee18146939fba1c7f7bd8857fad07"
-    ],
-    [
-      "Bug2699.testu8_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "dc5afd8ec252b9906fd8fc46e62528b3"
-    ],
-    [
-      "Bug2699.testu8_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "227fde8f1b74b1904c08221d61edb951"
-    ],
-    [
-      "Bug2699.testu16_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "c29016f4da512d6b61b3f055c134b872"
-    ],
-    [
-      "Bug2699.testu16_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "fa814871b51a8c88b2e42ea13245800e"
-    ],
-    [
-      "Bug2699.testu16_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "ea89443fd51195d0a4a70ac2c4b7a588"
-    ],
-    [
-      "Bug2699.testu32_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "c2ff0b7ac82b8f799e80bbb33339d99a"
-    ],
-    [
-      "Bug2699.testu32_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "739dc0d5bc1159a905ac79022dc68f02"
-    ],
-    [
-      "Bug2699.testu32_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "070e2adf6039db378466e19b4f33c10b"
-    ],
-    [
-      "Bug2699.testu64_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "2a1362c3cbdea9b672dbee3f545b0573"
-    ],
-    [
-      "Bug2699.testu64_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "04fc9b6fae6e964c6c144b70aa40c993"
-    ],
-    [
-      "Bug2699.testu64_muL_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "0764e2653ea7fa51fd926f8a46f04c5e"
+      "2956bfba341037a2347b9f34cf617540"
     ],
     [
       "Bug2699.testu128_add_mod",
@@ -159,7 +51,7 @@
         "true_interp"
       ],
       0,
-      "ce39e53e2543dd4d05ede25b1782c50b"
+      "4b6e2f5f9e476ce8aa17d2d7640fc61c"
     ],
     [
       "Bug2699.testu128_sub_mod",
@@ -183,7 +75,7 @@
         "true_interp"
       ],
       0,
-      "e1ab82badbcefd8a34c3163f3f53bf93"
+      "3225845ab937d2173de71f725853de46"
     ],
     [
       "Bug2699.testu128_gt",
@@ -206,7 +98,7 @@
         "true_interp"
       ],
       0,
-      "5f815075e0e6ef7945d5a017603ef6b0"
+      "0a54cd3184965e3b7bb988f31a29fe92"
     ],
     [
       "Bug2699.testu128_gte",
@@ -229,7 +121,7 @@
         "true_interp"
       ],
       0,
-      "f34c828750a2b849146b19f99e62e7ea"
+      "d58cecd843d32a4eaa466bfe521cc9e2"
     ],
     [
       "Bug2699.testu128_lt",
@@ -252,7 +144,7 @@
         "true_interp"
       ],
       0,
-      "96d92eebc1fea1b28d927f41534a66fc"
+      "90e3ff380169ea43ecdf305970e8ee9b"
     ],
     [
       "Bug2699.testu128_lte",
@@ -275,115 +167,7 @@
         "true_interp"
       ],
       0,
-      "a2e56ad7297b3eab9137a7a93fbe1e75"
-    ],
-    [
-      "Bug2699.nbe_testu8_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "e5cbdcbfe4755f9d9de34a124b36063e"
-    ],
-    [
-      "Bug2699.nbe_testu8_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "11b95a180ebbcb7186d59c1b52deb534"
-    ],
-    [
-      "Bug2699.nbe_testu8_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "cfe6cd6157cabd7ff6787b4a945d5e4f"
-    ],
-    [
-      "Bug2699.nbe_testu16_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "a209e9538c52fd658aacec1567d1b410"
-    ],
-    [
-      "Bug2699.nbe_testu16_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "bb8a2eb4053e21766f814e3cf92dbbb4"
-    ],
-    [
-      "Bug2699.nbe_testu16_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "6c38d492244db477c04b8183a0fdda3f"
-    ],
-    [
-      "Bug2699.nbe_testu32_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "079e932e2d279c3ad6680304de4c3d90"
-    ],
-    [
-      "Bug2699.nbe_testu32_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "9bd8da59b260b47c0720ac0c26459a10"
-    ],
-    [
-      "Bug2699.nbe_testu32_mul_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "6ecaaaedf654a65ed61434529e783e40"
-    ],
-    [
-      "Bug2699.nbe_testu64_add_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "e772230eab3dd2c0fb4adc1027bab6fc"
-    ],
-    [
-      "Bug2699.nbe_testu64_sub_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "1e1fe00ecaf292ac79385f0c8cfd988d"
-    ],
-    [
-      "Bug2699.nbe_testu64_muL_mod",
-      1,
-      2,
-      1,
-      [ "@query", "true_interp" ],
-      0,
-      "166990f67b94142eca7c61e396e95d1f"
+      "fd1b5c56dc57554e72366b3a53c28250"
     ],
     [
       "Bug2699.nbe_testu128_add_mod",
@@ -407,7 +191,7 @@
         "true_interp"
       ],
       0,
-      "84f98617b22d9ad7616b3c4c83a29983"
+      "6021e438c98975d2faed3ab1ed2464a7"
     ],
     [
       "Bug2699.nbe_testu128_sub_mod",
@@ -431,7 +215,7 @@
         "true_interp"
       ],
       0,
-      "cdcdb9e090fc174ac14aef9a80879f27"
+      "09630860ae187d749cbb5cf28f2a73a3"
     ],
     [
       "Bug2699.nbe_testu128_gt",
@@ -454,7 +238,7 @@
         "true_interp"
       ],
       0,
-      "6429ad0e05fc95c931fb862db9ce4cbc"
+      "3dfca921bed6fe86f6d7cfca157199ea"
     ],
     [
       "Bug2699.nbe_testu128_gte",
@@ -477,7 +261,7 @@
         "true_interp"
       ],
       0,
-      "68bc0dc4fe49409cd9dda607d143ef80"
+      "9324e9d877afcb03aa1826145d5938d0"
     ],
     [
       "Bug2699.nbe_testu128_lt",
@@ -500,7 +284,7 @@
         "true_interp"
       ],
       0,
-      "e88dce6ac55d4523110b2efea4ba57b0"
+      "dbfd810980a9cea007570e19cfb3c91d"
     ],
     [
       "Bug2699.nbe_testu128_lte",
@@ -523,7 +307,7 @@
         "true_interp"
       ],
       0,
-      "fd785e4e1043a557ad37027899c1570b"
+      "0db408c3717c6b0b2471e84f26b4f209"
     ]
   ]
 ]

@@ -15,7 +15,7 @@
         "well-founded-ordering-on-nat"
       ],
       0,
-      "11682df8155a12c8a9a128564f627103"
+      "de88080cd73de96270d7177a031f9bd8"
     ],
     [
       "Normalization.pow2_values",
@@ -24,7 +24,7 @@
       0,
       [ "@query" ],
       0,
-      "f26f4d181e3914706b1561cb2c36cd17"
+      "3f23f18e01804b5d21c2f2637c081c12"
     ],
     [
       "Normalization.test_sort",
@@ -38,7 +38,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "a9b46e3f90f65ad67f5f004b0cb2996d"
+      "707ccc3888a08decbe97895b1d3a2a7b"
     ],
     [
       "Normalization.test_sort1",
@@ -52,7 +52,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "339a34a05c8eef0b26627999fedb9418"
+      "c0c932e7d04bf3a0b2154ae0d92a8a9e"
     ],
     [
       "Normalization.f_1529_3",
@@ -64,7 +64,7 @@
         "interpretation_Tm_abs_8284a06c98cf4d08ee876bb3cd7024dc"
       ],
       0,
-      "81fd258b5bcfe226e66d621e70fdd1cb"
+      "f56d5d5b32254f70a70824f897a9a530"
     ]
   ]
 ]

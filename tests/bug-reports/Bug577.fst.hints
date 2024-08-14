@@ -8,7 +8,7 @@
       1,
       [ "@MaxIFuel_assumption", "@query", "data_elim_Bug577.Multi_step" ],
       0,
-      "d6ec9ec73e67320efeb2682075005c8e"
+      "5b6416871d428550c5d8b35734f98e54"
     ],
     [
       "Bug577.steps_preserves_red",
@@ -20,7 +20,7 @@
         "fuel_guarded_inversion_Bug577.step"
       ],
       0,
-      "0e2873365172b7c4ae92201a0c8d042e"
+      "22141ce1a2f63928071b94cf6de22f71"
     ]
   ]
 ]

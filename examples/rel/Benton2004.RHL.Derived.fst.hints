@@ -16,7 +16,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "63f5d7bd12a2a6af4bf6030151688f3d"
+      "6d17485dae36e5f1f2d7821622500fa5"
     ],
     [
       "Benton2004.RHL.Derived.r_dassl_derived",
@@ -33,7 +33,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "ae7acc0767e8344eff4740e8f7fc774e"
+      "5b1e91d7493262c2532135a1ac99ec65"
     ],
     [
       "Benton2004.RHL.Derived.flip_flip",
@@ -46,7 +46,7 @@
         "token_correspondence_Benton2004.RHL.flip"
       ],
       0,
-      "017a505bc72266e185e875fdddbbc446"
+      "077900fea20aff5bae979339875e10c8"
     ],
     [
       "Benton2004.RHL.Derived.r_dassr",
@@ -73,7 +73,7 @@
         "typing_Tm_abs_cd87913e3c4ab036f83cda6c807ee908"
       ],
       0,
-      "623e64ae7a864116ba49bbee1f3ca2fb"
+      "5b690a1e35710cc9bbc92528f8a5c350"
     ],
     [
       "Benton2004.RHL.Derived.d_su1'_flip",
@@ -85,7 +85,7 @@
         "typing_Benton2004.seq", "typing_Benton2004.skip"
       ],
       0,
-      "9f4ca19828145af52c8722e37544c993"
+      "65d9bb2b3a6d8381b5958db37842faee"
     ]
   ]
 ]

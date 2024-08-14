@@ -13,7 +13,7 @@
         "projection_inverse_FStar.Algebra.Monoid.Monoid_unit"
       ],
       0,
-      "ad2df9fb8d79bab95dc9f5e52de886f0"
+      "bc84a1e332e278742a8742e04abe5e72"
     ],
     [
       "FStar.Algebra.Monoid.nat_plus_monoid",
@@ -31,7 +31,7 @@
         "refinement_interpretation_Tm_refine_542f9d4f129664613f2483a6c88bc7c2"
       ],
       0,
-      "7661a929d41f6b2bcec6e60b35aba1c6"
+      "94edced5446b15e5413c462026080dc6"
     ],
     [
       "FStar.Algebra.Monoid.int_plus_monoid",
@@ -50,7 +50,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "f59297d8199435b872e2a32fd84c8833"
+      "3b182c15bbe5414f8b1f7ae12edb293d"
     ],
     [
       "FStar.Algebra.Monoid.conjunction_monoid",
@@ -76,7 +76,7 @@
         "typing_tok_Prims.T@tok"
       ],
       0,
-      "c3b12d6412fb9d509e5a3ba1023ac211"
+      "6661aa2e08a47a4de23dac9450b71b3d"
     ],
     [
       "FStar.Algebra.Monoid.disjunction_monoid",
@@ -98,7 +98,7 @@
         "typing_FStar.Pervasives.singleton"
       ],
       0,
-      "e10389a99083eb9c18f717fb6b9fe0a6"
+      "81fa50a69f97f6661cf58f9edd13cfd7"
     ],
     [
       "FStar.Algebra.Monoid.bool_and_monoid",
@@ -117,7 +117,7 @@
         "typing_Tm_abs_8939a34eb92f993c93075a413a93c17c"
       ],
       0,
-      "714ef26ac1bd8b3d1f99abfbe895ca84"
+      "7221bf0e1dc1882904d7ea21c8cdebb8"
     ],
     [
       "FStar.Algebra.Monoid.bool_or_monoid",
@@ -136,7 +136,7 @@
         "typing_Tm_abs_97a476600c466721ac503386d260fe4f"
       ],
       0,
-      "237c61200807da17dada6ea1fd69c571"
+      "96bfe801880e9992e56f30c55eee4b68"
     ],
     [
       "FStar.Algebra.Monoid.bool_xor_monoid",
@@ -156,7 +156,7 @@
         "typing_Tm_abs_5043f38a94b5783f1a2853ffc23a082c"
       ],
       0,
-      "2f3e72bead1edda4901e52f8532a0afc"
+      "e7ddcc6a3dca39f72da6b829d588da91"
     ],
     [
       "FStar.Algebra.Monoid.lift_monoid_option",
@@ -192,7 +192,7 @@
         "typing_Tm_abs_9bee8d4e0220718dda8a4314b261cdec"
       ],
       0,
-      "0c3ce44a2e0340cccc141c280dad555d"
+      "46a8569a70ff33f6bca26427365eec9c"
     ],
     [
       "FStar.Algebra.Monoid.monoid_morphism",
@@ -206,7 +206,7 @@
         "refinement_interpretation_Tm_refine_414d0a9f578ab0048252f8c8f552b99f"
       ],
       0,
-      "cfc13360b4febfce2171cb18cc44cc2a"
+      "d121d252eb105b600eeaada437ff94e9"
     ],
     [
       "FStar.Algebra.Monoid.intro_monoid_morphism",
@@ -215,7 +215,7 @@
       1,
       [ "@query" ],
       0,
-      "18656242a70f47e45d579874bfada26c"
+      "591f8ea9be0ca3e9fcb6e12894f9999d"
     ],
     [
       "FStar.Algebra.Monoid.uu___181",
@@ -243,7 +243,7 @@
         "token_correspondence_Prims.op_Addition"
       ],
       0,
-      "cc97fa1f11a1ae1018a30e4e92cf315d"
+      "d262ad7a7b4a3baeaf4b7d74b5768551"
     ],
     [
       "FStar.Algebra.Monoid.uu___183",
@@ -279,7 +279,7 @@
         "typing_FStar.Pervasives.singleton", "typing_tok_Prims.T@tok"
       ],
       0,
-      "65a140d2ab7e9fc769f503b956fd4fb9"
+      "e8d64f2cc993663ea15e89a7eee85604"
     ],
     [
       "FStar.Algebra.Monoid.uu___192",
@@ -312,7 +312,7 @@
         "typing_FStar.Pervasives.singleton"
       ],
       0,
-      "1487458e49d50401fca3853ea33add7a"
+      "0a017a71240189b0a5c998f63c79e2c7"
     ]
   ]
 ]

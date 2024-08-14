@@ -18,7 +18,7 @@
         "typing_FStar.Stubs.Reflection.V2.Builtins.vars_of_env"
       ],
       0,
-      "66c1852bb9361e5a0097fe7c8c9d813e"
+      "39249f6dfe23c6e48cac615b971ead8d"
     ],
     [
       "Bug1270.test",
@@ -37,7 +37,7 @@
         "typing_FStar.Stubs.Reflection.V2.Builtins.vars_of_env"
       ],
       0,
-      "82435779b343aed1c25bd213399444fb"
+      "fac863198f3504538f5346971cf7a0c7"
     ]
   ]
 ]
