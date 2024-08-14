@@ -1202,7 +1202,7 @@ let fail_doc_env :
                (Obj.magic
                   (FStar_Range.mk_range "Pulse.Typing.Env.fst"
                      (Prims.of_int (393)) (Prims.of_int (26))
-                     (Prims.of_int (406)) (Prims.of_int (31)))))
+                     (Prims.of_int (406)) (Prims.of_int (43)))))
             (Obj.magic (get_range g r))
             (fun uu___ ->
                (fun r1 ->
@@ -1217,7 +1217,7 @@ let fail_doc_env :
                           (Obj.magic
                              (FStar_Range.mk_range "Pulse.Typing.Env.fst"
                                 (Prims.of_int (403)) (Prims.of_int (4))
-                                (Prims.of_int (406)) (Prims.of_int (31)))))
+                                (Prims.of_int (406)) (Prims.of_int (43)))))
                        (Obj.magic
                           (FStar_Tactics_Effect.tac_bind
                              (FStar_Sealed.seal
@@ -1411,7 +1411,7 @@ let fail_doc_env :
                                            (Prims.of_int (405))
                                            (Prims.of_int (2))
                                            (Prims.of_int (406))
-                                           (Prims.of_int (31)))))
+                                           (Prims.of_int (43)))))
                                   (Obj.magic
                                      (FStar_Tactics_Effect.tac_bind
                                         (FStar_Sealed.seal
@@ -1459,14 +1459,16 @@ let fail_doc_env :
                                                       (Prims.of_int (406))
                                                       (Prims.of_int (2))
                                                       (Prims.of_int (406))
-                                                      (Prims.of_int (31)))))
+                                                      (Prims.of_int (43)))))
                                              (Obj.magic
                                                 (FStar_Tactics_V2_Builtins.log_issues
                                                    [issue]))
                                              (fun uu___ ->
-                                                FStar_Tactics_V2_Derived.fail
-                                                  "Pulse checker failed")))
-                                       uu___))) uu___))) uu___)
+                                                FStar_Tactics_V2_Derived.fail_at
+                                                  "Pulse checker failed"
+                                                  (FStar_Pervasives_Native.Some
+                                                     r1)))) uu___))) uu___)))
+                 uu___)
 let fail_doc :
   'a .
     env ->
