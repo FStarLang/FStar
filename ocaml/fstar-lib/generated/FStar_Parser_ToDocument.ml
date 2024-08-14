@@ -1181,10 +1181,10 @@ and (p_justSig : FStar_Parser_AST.decl -> FStar_Pprint.document) =
              let uu___1 = let uu___2 = str "let" in p_letlhs uu___2 lb false in
              FStar_Pprint.group uu___1) lbs
     | uu___ -> FStar_Pprint.empty
-and (p_list :
-  (FStar_Ident.ident -> FStar_Pprint.document) ->
-    FStar_Pprint.document ->
-      FStar_Ident.ident Prims.list -> FStar_Pprint.document)
+and p_list :
+  't .
+    ('t -> FStar_Pprint.document) ->
+      FStar_Pprint.document -> 't Prims.list -> FStar_Pprint.document
   =
   fun f ->
     fun sep ->
@@ -1203,19 +1203,46 @@ and (p_list :
           let uu___2 = p_list' l in
           let uu___3 = str "]" in FStar_Pprint.op_Hat_Hat uu___2 uu___3 in
         FStar_Pprint.op_Hat_Hat uu___ uu___1
+and (p_restriction :
+  FStar_Syntax_Syntax.restriction -> FStar_Pprint.document) =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Unrestricted -> FStar_Pprint.empty
+    | FStar_Syntax_Syntax.AllowList ids ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = str ", " in
+              p_list
+                (fun uu___5 ->
+                   match uu___5 with
+                   | (id, renamed) ->
+                       let uu___6 = p_ident id in
+                       let uu___7 = FStar_Pprint.optional p_ident renamed in
+                       FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7) uu___4
+                ids in
+            FStar_Pprint.op_Hat_Hat uu___3 FStar_Pprint.rbrace in
+          FStar_Pprint.op_Hat_Hat FStar_Pprint.lbrace uu___2 in
+        FStar_Pprint.op_Hat_Hat FStar_Pprint.space uu___1
 and (p_rawDecl : FStar_Parser_AST.decl -> FStar_Pprint.document) =
   fun d ->
     match d.FStar_Parser_AST.d with
-    | FStar_Parser_AST.Open uid ->
+    | FStar_Parser_AST.Open (uid, r) ->
         let uu___ =
           let uu___1 = str "open" in
-          let uu___2 = p_quident uid in
+          let uu___2 =
+            let uu___3 = p_quident uid in
+            let uu___4 = p_restriction r in
+            FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
           FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
         FStar_Pprint.group uu___
-    | FStar_Parser_AST.Include uid ->
+    | FStar_Parser_AST.Include (uid, r) ->
         let uu___ =
           let uu___1 = str "include" in
-          let uu___2 = p_quident uid in
+          let uu___2 =
+            let uu___3 = p_quident uid in
+            let uu___4 = p_restriction r in
+            FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
           FStar_Pprint.op_Hat_Slash_Hat uu___1 uu___2 in
         FStar_Pprint.group uu___
     | FStar_Parser_AST.Friend uid ->

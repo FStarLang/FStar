@@ -434,6 +434,28 @@ let t_erased_of t = mk_Tm_app
 let unit_const_with_range r = mk (Tm_constant FStar.Const.Const_unit) r
 let unit_const = unit_const_with_range Range.dummyRange
 
+instance show_restriction: showable restriction = {
+   show = (function
+          | Unrestricted -> "Unrestricted"
+          | AllowList allow_list -> "(AllowList " ^ show allow_list ^ ")")
+}
+
+let is_ident_allowed_by_restriction' id
+  = function | Unrestricted         -> Some id
+             | AllowList allow_list ->
+               map_opt (find FStar.Class.Deq.(fun (dest_id, renamed_id) ->
+                       dflt dest_id renamed_id =? id
+               ) allow_list) fst
+
+let is_ident_allowed_by_restriction
+  = let debug = FStar.Compiler.Debug.get_toggle "open_include_restrictions" in
+    fun id restriction ->
+    let result = is_ident_allowed_by_restriction' id restriction in
+    if !debug then print_endline ( "is_ident_allowed_by_restriction(" ^ show id ^ ", "
+                                                                      ^ show restriction ^ ") = "
+                                                                      ^ show result );
+    result
+
 instance has_range_syntax #a (_:unit) : Tot (hasRange (syntax a)) = {
   pos = (fun (t:syntax a) -> t.pos);
   setPos = (fun r t -> { t with pos = r });

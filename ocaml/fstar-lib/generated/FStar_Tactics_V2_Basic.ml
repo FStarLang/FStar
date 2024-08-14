@@ -12370,7 +12370,8 @@ let (push_open_namespace :
            let uu___ =
              let uu___1 =
                FStar_Syntax_DsEnv.push_namespace
-                 e.FStar_TypeChecker_Env.dsenv lid in
+                 e.FStar_TypeChecker_Env.dsenv lid
+                 FStar_Syntax_Syntax.Unrestricted in
              {
                FStar_TypeChecker_Env.solver =
                  (e.FStar_TypeChecker_Env.solver);

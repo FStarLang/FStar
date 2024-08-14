@@ -1314,9 +1314,9 @@ let (collect_one :
                    | uu___3 -> ())) decls
            and collect_decl d =
              match d with
-             | FStar_Parser_AST.Include lid ->
+             | FStar_Parser_AST.Include (lid, uu___1) ->
                  add_to_parsing_data (P_open (false, lid))
-             | FStar_Parser_AST.Open lid ->
+             | FStar_Parser_AST.Open (lid, uu___1) ->
                  add_to_parsing_data (P_open (false, lid))
              | FStar_Parser_AST.Friend lid ->
                  let uu___1 =

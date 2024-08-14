@@ -756,7 +756,7 @@ and p_justSig d = match d.d with
   | _ ->
       empty
 
-and p_list f sep l =
+and p_list #t (f: t -> _) sep l =
     let rec p_list' = function
         | [] -> empty
         | [x] -> f x
@@ -764,11 +764,22 @@ and p_list f sep l =
     in
     str "[" ^^ p_list' l ^^ str "]"
 
+and p_restriction
+  = let open FStar.Syntax.Syntax in
+    function | Unrestricted -> empty
+             | AllowList ids ->
+                space
+             ^^ lbrace
+             ^^ p_list (fun (id, renamed) ->
+                   p_ident id ^/^ optional p_ident renamed
+                ) (str ", ") ids
+             ^^ rbrace
+
 and p_rawDecl d = match d.d with
-  | Open uid ->
-    group (str "open" ^/^ p_quident uid)
-  | Include uid ->
-    group (str "include" ^/^ p_quident uid)
+  | Open (uid, r) ->
+    group (str "open" ^/^ p_quident uid ^/^ p_restriction r)
+  | Include (uid, r) ->
+    group (str "include" ^/^ p_quident uid ^/^ p_restriction r)
   | Friend uid ->
     group (str "friend" ^/^ p_quident uid)
   | ModuleAbbrev (uid1, uid2) ->

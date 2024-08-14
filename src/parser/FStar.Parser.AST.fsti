@@ -239,9 +239,9 @@ type to_be_desugared = {
 
 type decl' =
   | TopLevelModule of lid
-  | Open of lid
+  | Open of lid & FStar.Syntax.Syntax.restriction
   | Friend of lid
-  | Include of lid
+  | Include of lid & FStar.Syntax.Syntax.restriction
   | ModuleAbbrev of ident & lid
   | TopLevelLet of let_qualifier & list (pattern & term)
   | Tycon of bool & bool & list tycon

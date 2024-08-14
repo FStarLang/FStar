@@ -1216,3 +1216,11 @@ unfold let eqtype_as_type (a:eqtype) : Type = a
 let coerce_eq (#a:Type) (#b:Type) (_:squash (a == b)) (x:a) : b = x
 
 val coercion : unit
+
+(** Marks a record type as being the result of an automatic desugar of
+    a constructor with a record payload.
+    For example, in a module `M`, `type foo = | A {x: int}` desugars
+    to the type `M.foo` and a type `M.foo__A__payload`. That latter
+    type `foo__A__payload` is decorated with an attribute
+    `desugar_of_variant_record ["M.A"]`. *)
+val desugar_of_variant_record (type_name: string): unit

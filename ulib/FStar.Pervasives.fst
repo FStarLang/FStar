@@ -200,3 +200,5 @@ let admit_termination = ()
 let singleton #_ x = x
 
 let coercion = ()
+
+let desugar_of_variant_record _ = ()

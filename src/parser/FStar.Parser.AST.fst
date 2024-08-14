@@ -721,11 +721,16 @@ let string_of_pragma = function
   | RestartSolver -> "restart-solver"
   | PrintEffectsGraph -> "print-effects-graph"
 
+let restriction_to_string: FStar.Syntax.Syntax.restriction -> string =
+  let open FStar.Syntax.Syntax in
+  function | Unrestricted -> ""
+           | AllowList allow_list  -> " {" ^ String.concat ", " (List.map (fun (id, renamed) -> string_of_id id ^ dflt "" (map_opt renamed (fun renamed -> " as " ^ string_of_id renamed))) allow_list)  ^ "}"
+
 let rec decl_to_string (d:decl) = match d.d with
   | TopLevelModule l -> "module " ^ (string_of_lid l)
-  | Open l -> "open " ^ (string_of_lid l)
+  | Open (l, r) -> "open " ^ string_of_lid l ^ restriction_to_string r
   | Friend l -> "friend " ^ (string_of_lid l)
-  | Include l -> "include " ^ (string_of_lid l)
+  | Include (l, r) -> "include " ^ string_of_lid l ^ restriction_to_string r
   | ModuleAbbrev (i, l) -> Util.format2 "module %s = %s" (string_of_id i) (string_of_lid l)
   | TopLevelLet(_, pats) -> "let " ^ (lids_of_let pats |> List.map (fun l -> (string_of_lid l)) |> String.concat ", ")
   | Assume(i, _) -> "assume " ^ (string_of_id i)

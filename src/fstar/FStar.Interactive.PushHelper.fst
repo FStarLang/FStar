@@ -209,7 +209,7 @@ let update_names_from_event cur_mod_str table evt =
         table (string_of_id id) [] (query_of_lid included)
     else
       table
-  | NTOpen (host, (included, kind)) ->
+  | NTOpen (host, (included, kind, _)) ->
     if is_cur_mod host then
       CTable.register_open
         table (kind = FStar.Syntax.Syntax.Open_module) [] (query_of_lid included)

@@ -876,9 +876,9 @@ let (__proj__Mkto_be_desugared__item__dep_scan :
     | { lang_name; blob; idents; to_string; eq; dep_scan;_} -> dep_scan
 type decl' =
   | TopLevelModule of FStar_Ident.lid 
-  | Open of FStar_Ident.lid 
+  | Open of (FStar_Ident.lid * FStar_Syntax_Syntax.restriction) 
   | Friend of FStar_Ident.lid 
-  | Include of FStar_Ident.lid 
+  | Include of (FStar_Ident.lid * FStar_Syntax_Syntax.restriction) 
   | ModuleAbbrev of (FStar_Ident.ident * FStar_Ident.lid) 
   | TopLevelLet of (let_qualifier * (pattern * term) Prims.list) 
   | Tycon of (Prims.bool * Prims.bool * tycon Prims.list) 
@@ -916,7 +916,8 @@ let (__proj__TopLevelModule__item___0 : decl' -> FStar_Ident.lid) =
   fun projectee -> match projectee with | TopLevelModule _0 -> _0
 let (uu___is_Open : decl' -> Prims.bool) =
   fun projectee -> match projectee with | Open _0 -> true | uu___ -> false
-let (__proj__Open__item___0 : decl' -> FStar_Ident.lid) =
+let (__proj__Open__item___0 :
+  decl' -> (FStar_Ident.lid * FStar_Syntax_Syntax.restriction)) =
   fun projectee -> match projectee with | Open _0 -> _0
 let (uu___is_Friend : decl' -> Prims.bool) =
   fun projectee -> match projectee with | Friend _0 -> true | uu___ -> false
@@ -924,7 +925,8 @@ let (__proj__Friend__item___0 : decl' -> FStar_Ident.lid) =
   fun projectee -> match projectee with | Friend _0 -> _0
 let (uu___is_Include : decl' -> Prims.bool) =
   fun projectee -> match projectee with | Include _0 -> true | uu___ -> false
-let (__proj__Include__item___0 : decl' -> FStar_Ident.lid) =
+let (__proj__Include__item___0 :
+  decl' -> (FStar_Ident.lid * FStar_Syntax_Syntax.restriction)) =
   fun projectee -> match projectee with | Include _0 -> _0
 let (uu___is_ModuleAbbrev : decl' -> Prims.bool) =
   fun projectee ->
@@ -2456,19 +2458,50 @@ let (string_of_pragma : pragma -> Prims.string) =
     | PopOptions -> "pop-options"
     | RestartSolver -> "restart-solver"
     | PrintEffectsGraph -> "print-effects-graph"
+let (restriction_to_string : FStar_Syntax_Syntax.restriction -> Prims.string)
+  =
+  fun uu___ ->
+    match uu___ with
+    | FStar_Syntax_Syntax.Unrestricted -> ""
+    | FStar_Syntax_Syntax.AllowList allow_list ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              FStar_Compiler_List.map
+                (fun uu___4 ->
+                   match uu___4 with
+                   | (id, renamed) ->
+                       let uu___5 = FStar_Ident.string_of_id id in
+                       let uu___6 =
+                         let uu___7 =
+                           FStar_Compiler_Util.map_opt renamed
+                             (fun renamed1 ->
+                                let uu___8 =
+                                  FStar_Ident.string_of_id renamed1 in
+                                Prims.strcat " as " uu___8) in
+                         FStar_Compiler_Util.dflt "" uu___7 in
+                       Prims.strcat uu___5 uu___6) allow_list in
+            FStar_Compiler_String.concat ", " uu___3 in
+          Prims.strcat uu___2 "}" in
+        Prims.strcat " {" uu___1
 let rec (decl_to_string : decl -> Prims.string) =
   fun d ->
     match d.d with
     | TopLevelModule l ->
         let uu___ = FStar_Ident.string_of_lid l in
         Prims.strcat "module " uu___
-    | Open l ->
-        let uu___ = FStar_Ident.string_of_lid l in Prims.strcat "open " uu___
+    | Open (l, r) ->
+        let uu___ =
+          let uu___1 = FStar_Ident.string_of_lid l in
+          let uu___2 = restriction_to_string r in Prims.strcat uu___1 uu___2 in
+        Prims.strcat "open " uu___
     | Friend l ->
         let uu___ = FStar_Ident.string_of_lid l in
         Prims.strcat "friend " uu___
-    | Include l ->
-        let uu___ = FStar_Ident.string_of_lid l in
+    | Include (l, r) ->
+        let uu___ =
+          let uu___1 = FStar_Ident.string_of_lid l in
+          let uu___2 = restriction_to_string r in Prims.strcat uu___1 uu___2 in
         Prims.strcat "include " uu___
     | ModuleAbbrev (i, l) ->
         let uu___ = FStar_Ident.string_of_id i in

@@ -2774,7 +2774,7 @@ let refl_maybe_unfold_head (g:env) (e:term) : tac (option term & issues) =
 
 let push_open_namespace (e:env) (ns:list string) =
   let lid = Ident.lid_of_path ns Range.dummyRange in
-  return { e with dsenv = FStar.Syntax.DsEnv.push_namespace e.dsenv lid }
+  return { e with dsenv = FStar.Syntax.DsEnv.push_namespace e.dsenv lid Unrestricted }
 
 let push_module_abbrev (e:env) (n:string) (m:list string) =
   let mlid = Ident.lid_of_path m Range.dummyRange in

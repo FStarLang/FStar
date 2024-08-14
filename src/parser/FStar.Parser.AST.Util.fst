@@ -489,18 +489,28 @@ let eq_qualifier (t1 t2: qualifier) =
 
 let eq_qualifiers (t1 t2: qualifiers) =
   eq_list eq_qualifier t1 t2
-  
+
+let eq_restriction (restriction1 restriction2: FStar.Syntax.Syntax.restriction) =
+  let open FStar.Syntax.Syntax in
+  match restriction1, restriction2 with
+  | (Unrestricted, Unrestricted) -> true
+  | (AllowList l1, AllowList l2) ->
+    let eq_tuple eq_fst eq_snd (a, b) (c, d) = eq_fst a c && eq_snd b d in
+    eq_list (eq_tuple eq_ident (eq_option eq_ident)) l1 l2
+
 let rec eq_decl' (d1 d2:decl') : bool =
   //generate the cases of this comparison starting with TopLevelModule
   match d1, d2 with
   | TopLevelModule lid1, TopLevelModule lid2 ->
     eq_lid lid1 lid2
-  | Open lid1, Open lid2 ->
-    eq_lid lid1 lid2
+  | Open (lid1, restriction1), Open (lid2, restriction2) ->
+    eq_lid lid1 lid2 &&
+    eq_restriction restriction1 restriction2
   | Friend lid1, Friend lid2 ->
     eq_lid lid1 lid2
-  | Include lid1, Include lid2 ->
-    eq_lid lid1 lid2
+  | Include (lid1, restriction1), Include (lid2, restriction2) ->
+    eq_lid lid1 lid2 &&
+    eq_restriction restriction1 restriction2
   | ModuleAbbrev (i1, lid1), ModuleAbbrev (i2, lid2) ->
     eq_ident i1 i2 &&
     eq_lid lid1 lid2
@@ -693,9 +703,9 @@ let lidents_of_lift (l:lift) =
 let rec lidents_of_decl (d:decl) =
   match d.d with
   | TopLevelModule _ -> []
-  | Open l
+  | Open (l, _)
   | Friend l
-  | Include l
+  | Include (l, _)
   | ModuleAbbrev (_, l) -> [l]
   | TopLevelLet (_q, lbs) -> concat_map (fun (p, t) -> lidents_of_pattern p @ lidents_of_term t) lbs
   | Tycon (_, _, tcs) -> concat_map lidents_of_tycon tcs
@@ -736,7 +746,7 @@ let as_open_namespaces_and_abbrevs (ls:list decl)
 = List.fold_right
     (fun d out ->
       match d.d with
-      | Open lid -> {out with open_namespaces = lid :: out.open_namespaces}
+      | Open (lid, _) -> {out with open_namespaces = lid :: out.open_namespaces}
       | ModuleAbbrev (i, lid) -> {out with module_abbreviations = (i, lid) :: out.module_abbreviations}
       | _ -> out)
     ls
