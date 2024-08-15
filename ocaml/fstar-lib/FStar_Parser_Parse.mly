@@ -1009,12 +1009,12 @@ noSeqTerm:
         let branches = focusBranches pbs (rr2 $loc($1) $loc(pbs)) in
         mk_function branches (rr $loc) (rr2 $loc($1) $loc(pbs))
       }
-  | a=ASSUME e=atomicTerm
+  | a=ASSUME e=noSeqTerm
       { let a = set_lid_range assume_lid (rr $loc(a)) in
         mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
       }
 
-  | a=ASSERT e=atomicTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
+  | a=ASSERT e=noSeqTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
       {
         match tactic_opt with
         | None ->
