@@ -26,6 +26,8 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 
+open FStar.Class.Show
+
 (* -------------------------------------------------------------------- *)
 type mlsymbol = string
 type mlident  = mlsymbol
@@ -427,5 +429,9 @@ let mlmodule1_to_string (m:mlmodule1) : string =
   | MLM_Top e -> BU.format1 "MLM_Top %s" (mlexpr_to_string e)
   | MLM_Loc _mlloc -> "MLM_Loc"
 
+instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
+
 let mlmodule_to_string (m:mlmodule) : string =
   BU.format1 "[ %s ]" (List.map mlmodule1_to_string m |> String.concat ";\n")
+
+instance showable_mlmodule : showable mlmodule = { show = mlmodule_to_string }
