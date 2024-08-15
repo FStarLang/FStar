@@ -174,5 +174,4 @@ function build_fstar() {
 # Some environment variables we want
 export V=1 # Make sure to get verbose output from makefiles
 export OCAMLRUNPARAM=b
-export OTHERFLAGS="--use_hints"
 export MAKEFLAGS="$MAKEFLAGS -Otarget" # Group make output by target
