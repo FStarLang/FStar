@@ -23,6 +23,8 @@ open FStar.CheckedFiles
 open FStar.Universal
 open FStar.Compiler
 
+open FStar.Class.Show
+
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
 module RE = FStar.Reflection.V2.Embeddings
@@ -160,6 +162,20 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
                          reindenting is not known to work yet with this version"
 
+        (* --read_checked: read and print a checked file *)
+        else if Some? (Options.read_checked_file ()) then
+          let path = Some?.v <| Options.read_checked_file () in
+          let env = Universal.init_env Parser.Dep.empty_deps in
+          let res = FStar.CheckedFiles.load_tc_result path in
+          match res with
+          | None ->
+            let open FStar.Pprint in
+            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+                Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
+              ])
+
+          | Some (_, tcr) ->
+            print1 "%s\n" (show tcr.checked_module)
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
