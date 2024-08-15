@@ -638,7 +638,7 @@ let (iface_union : iface -> iface -> iface) =
       }
 let (iface_union_l : iface Prims.list -> iface) =
   fun ifs -> FStar_Compiler_List.fold_right iface_union ifs empty_iface
-let (mlpath_to_string : FStar_Extraction_ML_Syntax.mlpath -> Prims.string) =
+let (string_of_mlpath : FStar_Extraction_ML_Syntax.mlpath -> Prims.string) =
   fun p ->
     FStar_Compiler_String.concat ". "
       (FStar_Compiler_List.op_At (FStar_Pervasives_Native.fst p)
@@ -718,7 +718,7 @@ let (iface_to_string : iface -> Prims.string) =
       FStar_Compiler_String.concat "\n" uu___3 in
     FStar_Compiler_Util.format4
       "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
-      (mlpath_to_string iface1.iface_module_name) uu___ uu___1 uu___2
+      (string_of_mlpath iface1.iface_module_name) uu___ uu___1 uu___2
 let (gamma_to_string : FStar_Extraction_ML_UEnv.uenv -> Prims.string) =
   fun env ->
     let cm = FStar_Extraction_ML_UEnv.current_module_of_uenv env in
@@ -885,14 +885,15 @@ let (extract_typ_abbrev :
                                FStar_Extraction_ML_Syntax.MLM_Ty [td] in
                              let def2 =
                                let uu___4 =
-                                 let uu___5 =
-                                   let uu___6 = extract_attrs env2 attrs in
+                                 FStar_Extraction_ML_Syntax.mk_mlmodule1
+                                   loc_mlmodule1 in
+                               let uu___5 =
+                                 let uu___6 =
+                                   let uu___7 = extract_attrs env2 attrs in
                                    FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
-                                     ty_mlmodule1 uu___6 in
-                                 [uu___5] in
-                               (FStar_Extraction_ML_Syntax.mk_mlmodule1
-                                  loc_mlmodule1)
-                                 :: uu___4 in
+                                     ty_mlmodule1 uu___7 in
+                                 [uu___6] in
+                               uu___4 :: uu___5 in
                              (env2, iface1, def2))))
 let (extract_let_rec_type :
   FStar_Extraction_ML_UEnv.uenv ->
@@ -962,14 +963,15 @@ let (extract_let_rec_type :
                           FStar_Extraction_ML_Syntax.MLM_Ty [td] in
                         let def =
                           let uu___4 =
-                            let uu___5 =
-                              let uu___6 = extract_attrs env2 attrs in
+                            FStar_Extraction_ML_Syntax.mk_mlmodule1
+                              loc_mlmodule1 in
+                          let uu___5 =
+                            let uu___6 =
+                              let uu___7 = extract_attrs env2 attrs in
                               FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
-                                td_mlmodule1 uu___6 in
-                            [uu___5] in
-                          (FStar_Extraction_ML_Syntax.mk_mlmodule1
-                             loc_mlmodule1)
-                            :: uu___4 in
+                                td_mlmodule1 uu___7 in
+                            [uu___6] in
+                          uu___4 :: uu___5 in
                         let iface1 = iface_of_tydefs [tydef] in
                         (env2, iface1, def)))
 let (extract_bundle_iface :
@@ -1182,10 +1184,11 @@ let (extract_reifiable_effect :
             FStar_Extraction_ML_Syntax.mllb_meta = [];
             FStar_Extraction_ML_Syntax.print_typ = false
           } in
-        ((iface_of_bindings [(fv, exp_binding)]),
-          (FStar_Extraction_ML_Syntax.mk_mlmodule1
-             (FStar_Extraction_ML_Syntax.MLM_Let
-                (FStar_Extraction_ML_Syntax.NonRec, [lb])))) in
+        let uu___ =
+          FStar_Extraction_ML_Syntax.mk_mlmodule1
+            (FStar_Extraction_ML_Syntax.MLM_Let
+               (FStar_Extraction_ML_Syntax.NonRec, [lb])) in
+        ((iface_of_bindings [(fv, exp_binding)]), uu___) in
       let rec extract_fv tm =
         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
          if uu___1
@@ -1209,9 +1212,11 @@ let (extract_reifiable_effect :
               | { FStar_Extraction_ML_UEnv.exp_b_name = uu___3;
                   FStar_Extraction_ML_UEnv.exp_b_expr = uu___4;
                   FStar_Extraction_ML_UEnv.exp_b_tscheme = tysc;_} ->
-                  ((FStar_Extraction_ML_Syntax.with_ty
+                  let uu___5 =
+                    FStar_Extraction_ML_Syntax.with_ty
                       FStar_Extraction_ML_Syntax.MLTY_Top
-                      (FStar_Extraction_ML_Syntax.MLE_Name mlp)), tysc))
+                      (FStar_Extraction_ML_Syntax.MLE_Name mlp) in
+                  (uu___5, tysc))
          | uu___2 ->
              let uu___3 =
                let uu___4 =
@@ -2077,9 +2082,12 @@ let (extract_bundle :
           let uu___12 = extract_ctor env [] env { dname = l; dtyp = t } in
           (match uu___12 with
            | (env1, ctor) ->
-               (env1,
-                 [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
-                    (FStar_Extraction_ML_Syntax.MLM_Exn ctor) mlattrs]))
+               let uu___13 =
+                 let uu___14 =
+                   FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                     (FStar_Extraction_ML_Syntax.MLM_Exn ctor) mlattrs in
+                 [uu___14] in
+               (env1, uu___13))
       | (FStar_Syntax_Syntax.Sig_bundle
          { FStar_Syntax_Syntax.ses = ses; FStar_Syntax_Syntax.lids = uu___;_},
          quals) ->
@@ -2096,9 +2104,12 @@ let (extract_bundle :
                    FStar_Compiler_Util.fold_map extract_one_family env1 ifams in
                  (match uu___4 with
                   | (env2, td) ->
-                      (env2,
-                        [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
-                           (FStar_Extraction_ML_Syntax.MLM_Ty td) mlattrs])))
+                      let uu___5 =
+                        let uu___6 =
+                          FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                            (FStar_Extraction_ML_Syntax.MLM_Ty td) mlattrs in
+                        [uu___6] in
+                      (env2, uu___5)))
       | uu___ ->
           FStar_Compiler_Effect.failwith "Unexpected signature element"
 let (lb_irrelevant : env_t -> FStar_Syntax_Syntax.letbinding -> Prims.bool) =
@@ -2316,18 +2327,23 @@ let rec (extract_sig :
                                                         =
                                                         (mllb.FStar_Extraction_ML_Syntax.print_typ)
                                                     } in
-                                                  (g2,
-                                                    (FStar_Compiler_List.op_At
-                                                       decls1
-                                                       [FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                                  let uu___11 =
+                                                    let uu___12 =
+                                                      let uu___13 =
+                                                        FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
                                                           (FStar_Extraction_ML_Syntax.MLM_Let
                                                              (maybe_rec,
                                                                [mllb1]))
-                                                          mlattrs])))
+                                                          mlattrs in
+                                                      [uu___13] in
+                                                    FStar_Compiler_List.op_At
+                                                      decls1 uu___12 in
+                                                  (g2, uu___11))
                                          | uu___9 ->
                                              let uu___10 =
                                                let uu___11 =
-                                                 FStar_Extraction_ML_Syntax.mlmodule1_to_string
+                                                 FStar_Class_Show.show
+                                                   FStar_Extraction_ML_Syntax.showable_mlmodule1
                                                    d in
                                                FStar_Compiler_Util.format1
                                                  "Unexpected ML decl returned by the extension: %s"
@@ -2890,12 +2906,15 @@ and (extract_sig_let :
                                       uu___12 in
                                   FStar_Extraction_ML_Syntax.mk_mlmodule1
                                     uu___11 in
-                                [uu___10;
-                                FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
-                                  (FStar_Extraction_ML_Syntax.MLM_Let
-                                     (flavor,
-                                       (FStar_Compiler_List.rev ml_lbs')))
-                                  mlattrs] in
+                                let uu___11 =
+                                  let uu___12 =
+                                    FStar_Extraction_ML_Syntax.mk_mlmodule1_with_attrs
+                                      (FStar_Extraction_ML_Syntax.MLM_Let
+                                         (flavor,
+                                           (FStar_Compiler_List.rev ml_lbs')))
+                                      mlattrs in
+                                  [uu___12] in
+                                uu___10 :: uu___11 in
                               let uu___10 =
                                 FStar_Extraction_ML_RegEmb.maybe_register_plugin
                                   g1 se in
@@ -2948,10 +2967,18 @@ let (extract' :
                        FStar_Compiler_String.concat ", " uu___4 in
                      (FStar_Compiler_Util.print1 "+++About to extract {%s}\n"
                         nm;
-                      (let uu___5 =
-                         FStar_Compiler_Util.format1 "---Extracted {%s}" nm in
-                       FStar_Compiler_Util.measure_execution_time uu___5
-                         (fun uu___6 -> extract_sig g4 se)))
+                      (let r =
+                         let uu___5 =
+                           FStar_Compiler_Util.format1 "---Extracted {%s}" nm in
+                         FStar_Compiler_Util.measure_execution_time uu___5
+                           (fun uu___6 -> extract_sig g4 se) in
+                       (let uu___6 =
+                          FStar_Class_Show.show
+                            FStar_Extraction_ML_Syntax.showable_mlmodule
+                            (FStar_Pervasives_Native.snd r) in
+                        FStar_Compiler_Util.print1 "Extraction result: %s\n"
+                          uu___6);
+                       r))
                    else extract_sig g4 se) g3
               m.FStar_Syntax_Syntax.declarations in
           (match uu___2 with
