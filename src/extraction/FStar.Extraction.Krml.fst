@@ -1218,8 +1218,10 @@ let translate_let' env flavor lb: option decl =
         with e ->
           // JP: TODO: figure out what are the remaining things we don't extract
           let msg = BU.print_exn e in
-          Errors. log_issue Range.dummyRange
-          (Errors.Warning_FunctionNotExtacted, (BU.format2 "Error while extracting %s to KaRaMeL (%s)\n" (Syntax.string_of_mlpath name) msg));
+          Errors.log_issue_doc Range.dummyRange (Errors.Warning_FunctionNotExtacted, [
+            Errors.Msg.text <| BU.format1 "Error while extracting %s to KaRaMeL." (Syntax.string_of_mlpath name);
+            Pprint.arbitrary_string msg;
+          ]);
           let msg = "This function was not extracted:\n" ^ msg in
           Some (DFunction (cc, meta, List.length tvars, t, name, binders, EAbortS msg))
         end
