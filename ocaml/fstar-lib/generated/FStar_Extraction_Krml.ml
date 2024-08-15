@@ -2986,14 +2986,22 @@ let (translate_let' :
                          ((let uu___10 =
                              let uu___11 =
                                let uu___12 =
-                                 FStar_Extraction_ML_Syntax.string_of_mlpath
-                                   name2 in
-                               FStar_Compiler_Util.format2
-                                 "Error while extracting %s to KaRaMeL (%s)\n"
-                                 uu___12 msg in
+                                 let uu___13 =
+                                   let uu___14 =
+                                     FStar_Extraction_ML_Syntax.string_of_mlpath
+                                       name2 in
+                                   FStar_Compiler_Util.format1
+                                     "Error while extracting %s to KaRaMeL."
+                                     uu___14 in
+                                 FStar_Errors_Msg.text uu___13 in
+                               let uu___13 =
+                                 let uu___14 =
+                                   FStar_Pprint.arbitrary_string msg in
+                                 [uu___14] in
+                               uu___12 :: uu___13 in
                              (FStar_Errors_Codes.Warning_FunctionNotExtacted,
                                uu___11) in
-                           FStar_Errors.log_issue
+                           FStar_Errors.log_issue_doc
                              FStar_Compiler_Range_Type.dummyRange uu___10);
                           (let msg1 =
                              Prims.strcat

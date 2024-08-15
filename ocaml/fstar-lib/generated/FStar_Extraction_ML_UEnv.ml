@@ -526,7 +526,7 @@ let (initial_mlident_map : unit -> Prims.string FStar_Compiler_Util.psmap) =
             | FStar_Pervasives_Native.Some (FStar_Options.Plugin) ->
                 FStar_Extraction_ML_Syntax.ocamlkeywords
             | FStar_Pervasives_Native.Some (FStar_Options.Krml) ->
-                FStar_Extraction_ML_Syntax.krml_keywords ()
+                FStar_Extraction_ML_Syntax.krml_keywords
             | FStar_Pervasives_Native.Some (FStar_Options.Extension) -> []
             | FStar_Pervasives_Native.None -> [] in
           let uu___3 = FStar_Compiler_Util.psmap_empty () in
@@ -744,12 +744,15 @@ let (extend_bv :
                   else
                     if add_unit
                     then
-                      FStar_Extraction_ML_Syntax.with_ty
-                        FStar_Extraction_ML_Syntax.MLTY_Top
-                        (FStar_Extraction_ML_Syntax.MLE_App
-                           ((FStar_Extraction_ML_Syntax.with_ty
-                               FStar_Extraction_ML_Syntax.MLTY_Top mlx),
-                             [FStar_Extraction_ML_Syntax.ml_unit]))
+                      (let uu___2 =
+                         let uu___3 =
+                           let uu___4 =
+                             FStar_Extraction_ML_Syntax.with_ty
+                               FStar_Extraction_ML_Syntax.MLTY_Top mlx in
+                           (uu___4, [FStar_Extraction_ML_Syntax.ml_unit]) in
+                         FStar_Extraction_ML_Syntax.MLE_App uu___3 in
+                       FStar_Extraction_ML_Syntax.with_ty
+                         FStar_Extraction_ML_Syntax.MLTY_Top uu___2)
                     else FStar_Extraction_ML_Syntax.with_ty ml_ty mlx in
                 let t_x1 =
                   if add_unit
@@ -858,12 +861,15 @@ let (extend_fv :
                 let mly1 =
                   if add_unit
                   then
+                    let uu___2 =
+                      let uu___3 =
+                        let uu___4 =
+                          FStar_Extraction_ML_Syntax.with_ty
+                            FStar_Extraction_ML_Syntax.MLTY_Top mly in
+                        (uu___4, [FStar_Extraction_ML_Syntax.ml_unit]) in
+                      FStar_Extraction_ML_Syntax.MLE_App uu___3 in
                     FStar_Extraction_ML_Syntax.with_ty
-                      FStar_Extraction_ML_Syntax.MLTY_Top
-                      (FStar_Extraction_ML_Syntax.MLE_App
-                         ((FStar_Extraction_ML_Syntax.with_ty
-                             FStar_Extraction_ML_Syntax.MLTY_Top mly),
-                           [FStar_Extraction_ML_Syntax.ml_unit]))
+                      FStar_Extraction_ML_Syntax.MLTY_Top uu___2
                   else FStar_Extraction_ML_Syntax.with_ty ml_ty mly in
                 let t_x1 =
                   if add_unit

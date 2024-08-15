@@ -32,6 +32,8 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax *)
 
+open FStar.Class.Show
+
 module Term   = FStar.Extraction.ML.Term
 module Print  = FStar.Syntax.Print
 module MLS    = FStar.Extraction.ML.Syntax
@@ -288,7 +290,7 @@ let iface_union if1 if2 = {
 
 let iface_union_l ifs = List.fold_right iface_union ifs empty_iface
 
-let mlpath_to_string (p:mlpath) =
+let string_of_mlpath (p:mlpath) =
     String.concat ". " (fst p @ [snd p])
 let tscheme_to_string cm ts =
         (Code.string_of_mlty cm (snd ts))
@@ -315,7 +317,7 @@ let iface_to_string iface =
     let cm = iface.iface_module_name in
     let print_type_name (tn, _) = Print.fv_to_string tn in
     BU.format4 "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
-        (mlpath_to_string iface.iface_module_name)
+        (string_of_mlpath iface.iface_module_name)
         (List.map (print_binding cm) iface.iface_bindings |> String.concat "\n")
         (List.map (print_tydef cm) iface.iface_tydefs |> String.concat "\n")
         (List.map print_type_name iface.iface_type_names |> String.concat "\n")
@@ -1085,7 +1087,7 @@ let rec extract_sig (g:env_t) (se:sigelt) : env_t & list mlmodule1 =
               let mllb = { mllb with mllb_name = mlid; mllb_attrs = mlattrs; mllb_meta = meta } in
               g, decls@[mk_mlmodule1_with_attrs (MLM_Let (maybe_rec, [mllb])) mlattrs]
             | _ ->
-              failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (mlmodule1_to_string d))
+              failwith (BU.format1 "Unexpected ML decl returned by the extension: %s" (show d))
           ) (g, []) decls
         | Inr err ->
           Errors.raise_error
@@ -1295,9 +1297,12 @@ let extract' (g:uenv) (m:modul) : uenv & option mllib =
             if Debug.any ()
             then let nm = FStar.Syntax.Util.lids_of_sigelt se |> List.map Ident.string_of_lid |> String.concat ", " in
                  BU.print1 "+++About to extract {%s}\n" nm;
-                 FStar.Compiler.Util.measure_execution_time
+                 let r = FStar.Compiler.Util.measure_execution_time
                        (BU.format1 "---Extracted {%s}" nm)
                        (fun () -> extract_sig g se)
+                 in
+                 BU.print1 "Extraction result: %s\n" (Class.Show.show (snd r));
+                 r
             else extract_sig g se)
         g m.declarations in
   let mlm : mlmodule = List.flatten sigs in

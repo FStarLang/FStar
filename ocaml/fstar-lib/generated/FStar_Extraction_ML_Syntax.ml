@@ -2,7 +2,7 @@ open Prims
 type mlsymbol = Prims.string
 type mlident = mlsymbol
 type mlpath = (mlsymbol Prims.list * mlsymbol)
-let krml_keywords : 'uuuuu . unit -> 'uuuuu Prims.list = fun uu___ -> []
+let (krml_keywords : Prims.string Prims.list) = []
 let (ocamlkeywords : Prims.string Prims.list) =
   ["and";
   "as";
@@ -164,7 +164,7 @@ let (fsharpkeywords : Prims.string Prims.list) =
   "trait";
   "virtual";
   "volatile"]
-let (string_of_mlpath : mlpath -> mlsymbol) =
+let (string_of_mlpath : mlpath -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | (p, s) ->
@@ -763,8 +763,6 @@ let (ml_bool_ty : mlty) = MLTY_Named ([], (["Prims"], "bool"))
 let (ml_int_ty : mlty) = MLTY_Named ([], (["Prims"], "int"))
 let (ml_string_ty : mlty) = MLTY_Named ([], (["Prims"], "string"))
 let (ml_unit : mlexpr) = with_ty ml_unit_ty (MLE_Const MLC_Unit)
-let (mlp_lalloc : (Prims.string Prims.list * Prims.string)) =
-  (["SST"], "lalloc")
 let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
   fun x ->
     fun t ->
@@ -775,7 +773,7 @@ let (apply_obj_repr : mlexpr -> mlty -> mlexpr) =
         if uu___ then MLE_Name ([], "box") else MLE_Name (["Obj"], "repr") in
       let obj_repr = with_ty (MLTY_Fun (t, E_PURE, MLTY_Top)) repr_name in
       with_ty_loc MLTY_Top (MLE_App (obj_repr, [x])) x.loc
-let (ty_param_names : ty_param Prims.list -> mlident Prims.list) =
+let (ty_param_names : ty_param Prims.list -> Prims.string Prims.list) =
   fun tys ->
     FStar_Compiler_List.map
       (fun uu___ ->
@@ -800,12 +798,6 @@ let (pop_unit : mltyscheme -> mltyscheme) =
          | uu___1 ->
              FStar_Compiler_Effect.failwith
                "unexpected: pop_unit: not a function type")
-let (mlpath_to_string :
-  (Prims.string Prims.list * Prims.string) -> Prims.string) =
-  fun mlp ->
-    Prims.strcat
-      (FStar_Compiler_String.concat "." (FStar_Pervasives_Native.fst mlp))
-      (Prims.strcat "." (FStar_Pervasives_Native.snd mlp))
 let rec (mlty_to_string : mlty -> Prims.string) =
   fun t ->
     match t with
@@ -818,8 +810,8 @@ let rec (mlty_to_string : mlty -> Prims.string) =
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
           FStar_Compiler_String.concat " " uu___1 in
-        FStar_Compiler_Util.format2 "(<MLTY_Named> %s %s)" uu___
-          (mlpath_to_string p)
+        let uu___1 = string_of_mlpath p in
+        FStar_Compiler_Util.format2 "(<MLTY_Named> %s %s)" uu___ uu___1
     | MLTY_Tuple ts ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlty_to_string ts in
@@ -884,11 +876,11 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
         FStar_Compiler_Util.format3 "(MLE_Coerce (%s, %s, %s))" uu___ uu___1
           uu___2
     | MLE_CTor (p, es) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_Compiler_String.concat "; " uu___1 in
-        FStar_Compiler_Util.format2 "(MLE_CTor (%s, [%s]))"
-          (mlpath_to_string p) uu___
+        let uu___ = string_of_mlpath p in
+        let uu___1 =
+          let uu___2 = FStar_Compiler_List.map mlexpr_to_string es in
+          FStar_Compiler_String.concat "; " uu___2 in
+        FStar_Compiler_Util.format2 "(MLE_CTor (%s, [%s]))" uu___ uu___1
     | MLE_Seq es ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
@@ -914,8 +906,8 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
              (FStar_Compiler_List.op_At p [n])) uu___
     | MLE_Proj (e1, p) ->
         let uu___ = mlexpr_to_string e1 in
-        FStar_Compiler_Util.format2 "(MLE_Proj (%s, %s))" uu___
-          (mlpath_to_string p)
+        let uu___1 = string_of_mlpath p in
+        FStar_Compiler_Util.format2 "(MLE_Proj (%s, %s))" uu___ uu___1
     | MLE_If (e1, e2, FStar_Pervasives_Native.None) ->
         let uu___ = mlexpr_to_string e1 in
         let uu___1 = mlexpr_to_string e2 in
@@ -927,21 +919,18 @@ let rec (mlexpr_to_string : mlexpr -> Prims.string) =
         FStar_Compiler_Util.format3 "(MLE_If (%s, %s, %s))" uu___ uu___1
           uu___2
     | MLE_Raise (p, es) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_List.map mlexpr_to_string es in
-          FStar_Compiler_String.concat "; " uu___1 in
-        FStar_Compiler_Util.format2 "(MLE_Raise (%s, [%s]))"
-          (mlpath_to_string p) uu___
+        let uu___ = string_of_mlpath p in
+        let uu___1 =
+          let uu___2 = FStar_Compiler_List.map mlexpr_to_string es in
+          FStar_Compiler_String.concat "; " uu___2 in
+        FStar_Compiler_Util.format2 "(MLE_Raise (%s, [%s]))" uu___ uu___1
     | MLE_Try (e1, bs) ->
         let uu___ = mlexpr_to_string e1 in
         let uu___1 =
           let uu___2 = FStar_Compiler_List.map mlbranch_to_string bs in
           FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLE_Try (%s, [%s]))" uu___ uu___1
-and (mlbranch_to_string :
-  (mlpattern * mlexpr FStar_Pervasives_Native.option * mlexpr) ->
-    Prims.string)
-  =
+and (mlbranch_to_string : mlbranch -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | (p, e1, e2) ->
@@ -956,8 +945,7 @@ and (mlbranch_to_string :
              let uu___3 = mlexpr_to_string e2 in
              FStar_Compiler_Util.format3 "(%s, Some %s, %s)" uu___1 uu___2
                uu___3)
-and (mlletbinding_to_string :
-  (mlletflavor * mllb Prims.list) -> Prims.string) =
+and (mlletbinding_to_string : mlletbinding -> Prims.string) =
   fun lbs ->
     match lbs with
     | (Rec, lbs1) ->
@@ -1007,28 +995,11 @@ and (mlpattern_to_string : mlpattern -> Prims.string) =
         FStar_Compiler_Util.format1 "(MLP_Const %s)" uu___
     | MLP_Var x -> FStar_Compiler_Util.format1 "(MLP_Var %s)" x
     | MLP_CTor (p, ps) ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
-          FStar_Compiler_String.concat "; " uu___1 in
-        FStar_Compiler_Util.format2 "(MLP_CTor (%s, [%s]))"
-          (mlpath_to_string p) uu___
-    | MLP_Branch ps ->
-        let uu___ =
-          let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
-          FStar_Compiler_String.concat "; " uu___1 in
-        FStar_Compiler_Util.format1 "(MLP_Branch [%s])" uu___
-    | MLP_Record (p, ps) ->
-        let uu___ =
-          let uu___1 =
-            FStar_Compiler_List.map
-              (fun uu___2 ->
-                 match uu___2 with
-                 | (x, p1) ->
-                     let uu___3 = mlpattern_to_string p1 in
-                     FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) ps in
-          FStar_Compiler_String.concat "; " uu___1 in
-        FStar_Compiler_Util.format2 "(MLP_Record (%s, [%s]))"
-          (FStar_Compiler_String.concat "; " p) uu___
+        let uu___ = string_of_mlpath p in
+        let uu___1 =
+          let uu___2 = FStar_Compiler_List.map mlpattern_to_string ps in
+          FStar_Compiler_String.concat "; " uu___2 in
+        FStar_Compiler_Util.format2 "(MLP_CTor (%s, [%s]))" uu___ uu___1
     | MLP_Tuple ps ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
@@ -1115,3 +1086,13 @@ let (mlmodule_to_string : mlmodule -> Prims.string) =
       let uu___1 = FStar_Compiler_List.map mlmodule1_to_string m in
       FStar_Compiler_String.concat ";\n" uu___1 in
     FStar_Compiler_Util.format1 "[ %s ]" uu___
+let (showable_mlty : mlty FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = mlty_to_string }
+let (showable_mlconstant : mlconstant FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = mlconstant_to_string }
+let (showable_mlexpr : mlexpr FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = mlexpr_to_string }
+let (showable_mlmodule1 : mlmodule1 FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = mlmodule1_to_string }
+let (showable_mlmodule : mlmodule FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = mlmodule_to_string }
