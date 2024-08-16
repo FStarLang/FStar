@@ -10386,7 +10386,8 @@ let (desugar_modul :
                       if uu___5
                       then
                         let uu___6 =
-                          FStar_Syntax_Print.modul_to_string modul1 in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_modul modul1 in
                         FStar_Compiler_Util.print1
                           "Module after desugaring:\n%s\n" uu___6
                       else ());

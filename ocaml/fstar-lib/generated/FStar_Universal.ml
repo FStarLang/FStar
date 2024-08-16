@@ -1277,7 +1277,9 @@ let (tc_one_file :
                      FStar_Options.dump_module uu___4 in
                    if uu___3
                    then
-                     let uu___4 = FStar_Syntax_Print.modul_to_string tcmod in
+                     let uu___4 =
+                       FStar_Class_Show.show
+                         FStar_Syntax_Print.showable_modul tcmod in
                      FStar_Compiler_Util.print1
                        "Module after type checking:\n%s\n" uu___4
                    else ());

@@ -5556,7 +5556,8 @@ let (check_module :
            FStar_Options.dump_module uu___3 in
          if uu___2
          then
-           let uu___3 = FStar_Syntax_Print.modul_to_string m in
+           let uu___3 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_modul m in
            FStar_Compiler_Util.print1 "Module before type checking:\n%s\n"
              uu___3
          else ());
@@ -5783,7 +5784,8 @@ let (check_module :
                  FStar_Options.dump_module uu___5 in
                if uu___4
                then
-                 let uu___5 = FStar_Syntax_Print.modul_to_string m1 in
+                 let uu___5 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_modul m1 in
                  FStar_Compiler_Util.print1
                    "Module after type checking:\n%s\n" uu___5
                else ());
@@ -5874,7 +5876,8 @@ let (check_module :
                        (m1.FStar_Syntax_Syntax.is_interface)
                    } in
                  let uu___6 =
-                   FStar_Syntax_Print.modul_to_string normalized_module in
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_modul
+                     normalized_module in
                  FStar_Compiler_Util.print1 "%s\n" uu___6
                else ());
               (m1, env2)))
