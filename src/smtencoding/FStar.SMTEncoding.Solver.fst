@@ -530,30 +530,114 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
 let report_errors tried_recovery qry_settings =
     FStar.Errors.add_errors (errors_to_report tried_recovery qry_settings)
 
+
+type unique_string_accumulator = {
+  add: string -> unit;
+  get: unit -> list string;
+  clear: unit -> unit
+}
+
+(* A generic accumulator of unique strings,
+   extracted in sorted order *)
+let mk_unique_string_accumulator ()
+: unique_string_accumulator
+= let strings = BU.mk_ref [] in
+  let add m =
+    let ms = !strings in
+    if List.contains m ms then ()
+    else strings := m :: ms
+  in
+  let get () = 
+    !strings |> BU.sort_with String.compare
+  in
+  let clear () = strings := [] in
+  { add ; get; clear }
+
+type profile_query_context = {
+  set_current_decl: list Ident.lident -> unit;
+  report_current_decl: unit -> unit;
+  report_global: unit -> list string;
+  add_module: string -> unit;
+  clear: unit -> unit
+}
+let pqc : profile_query_context = 
+  let current_decl_name = BU.mk_ref None in
+  let current_decl_context = mk_unique_string_accumulator () in
+  let global_context = mk_unique_string_accumulator () in
+  let set_current_decl d =
+    current_decl_name := Some d;
+    current_decl_context.clear ()
+  in
+  let report_current_decl () =
+    match !current_decl_name with
+    | None -> ()
+    | Some d ->
+      let ctx = current_decl_context.get () in
+      match ctx with
+      | [] -> ()
+      | _ ->  BU.print2 "Profile query context: %s uses modules\n\t%s\n" (String.concat ", " <| List.map Ident.string_of_lid d) (String.concat "\n\t" ctx)
+  in
+  let report_global () = global_context.get () in
+  let add_module str =
+    current_decl_context.add str;
+    global_context.add str
+  in
+  let clear () = (current_decl_name := None; current_decl_context.clear (); global_context.clear ()) in
+  { set_current_decl; report_current_decl; report_global; add_module; clear }
+let set_current_decl = pqc.set_current_decl
+let report_context_current_decl = pqc.report_current_decl
+let report_context_global mlid all_modules opens =
+  let uses = pqc.report_global () in
+  BU.print2 "Profile query context: %s uses modules\n\t%s\n" 
+    (Ident.string_of_lid mlid)
+    (String.concat "\n\t" uses);
+  let uses = List.map Ident.path_of_text uses in
+  let opens = List.map Ident.path_of_lid (mlid::opens) in
+  let opens = List.filter (fun o -> o <> ["FStar"]) opens in
+  // BU.print1 "All opens: %s\n" (String.concat "; " <| List.map (String.concat ".") opens);
+  let path_includes (short long:list string) =
+    let n = List.length short in
+    if List.length long < n then false
+    else let long', _ = BU.first_N n long in
+        short = long'
+  in
+  let missing_opens =
+    uses |> List.filter (fun u ->
+      not (BU.for_some (fun o -> path_includes o u) opens))
+  in
+  let extra_opens =
+    opens |> List.filter (fun o ->
+      not (BU.for_some (fun u -> path_includes o u) uses))
+  in
+  let as_list ids = String.concat " " (List.map (String.concat ".") ids) in
+  (match missing_opens with
+   | [] -> ()
+   | _ -> BU.print2 "Missing opens in %s: %s\n" (Ident.string_of_lid mlid) (as_list missing_opens));
+  (match extra_opens with
+   | [] -> ()
+   | _ -> BU.print2 "Extra opens in %s: %s\n" (Ident.string_of_lid mlid) (as_list extra_opens));
+  let all_opens = opens @ missing_opens in
+  let all_modules = List.map Ident.path_of_lid all_modules in
+  let would_prune = all_modules |> List.filter (fun m -> not (all_opens |> BU.for_some (fun o -> path_includes o m))) in 
+  BU.print2 "For module %s, retaining only opens would prune %s\n" (Ident.string_of_lid mlid) (as_list would_prune);
+  ()
+    // List.filter (fun m ->
+    //   not (BU.for_some (fun s -> String.contains s '.') opens))
+    //    not (List.contains m uses)) users
+let clear_profile_context = pqc.clear
 let query_info settings z3result =
     let process_unsat_core (core:unsat_core) =
-        (* A generic accumulator of unique strings,
-           extracted in sorted order *)
-        let accumulator () =
-            let r : ref (list string) = BU.mk_ref [] in
-            let add, get =
-                let module_names = BU.mk_ref [] in
-                (fun m ->
-                    let ms = !module_names in
-                    if List.contains m ms then ()
-                    else module_names := m :: ms),
-                (fun () ->
-                    !module_names |> BU.sort_with String.compare)
-            in
-            add, get
-       in
        (* Accumulator for module names *)
-       let add_module_name, get_module_names =
-           accumulator()
+       let { add=add_module_name; get=get_module_names } =
+         mk_unique_string_accumulator ()
        in
+       let add_module_name s =
+         pqc.add_module s;
+         add_module_name s
+      in
        (* Accumulator for discarded names *)
-       let add_discarded_name, get_discarded_names =
-           accumulator()
+       let { add=add_discarded_name; get=get_discarded_names } =
+         mk_unique_string_accumulator ()
        in
        (* SMT Axioms are named using an ad hoc naming convention
           that includes the F* source name within it.
@@ -573,6 +657,7 @@ let query_info settings z3result =
           into a module name + a top-level identifier
        *)
        let parse_axiom_name (s:string) =
+            // BU.print1 "Parsing axiom name <%s>\n" s;
             let chars = String.list_of_string s in
             let first_upper_index =
                 BU.try_find_index BU.is_upper chars
@@ -614,14 +699,13 @@ let query_info settings z3result =
                     match components with
                     | [] -> []
                     | _ ->
-                      let module_name, last = BU.prefix components in
-                      let components = module_name @ exclude_suffix last in
+                      let lident, last = BU.prefix components in
+                      let components = lident @ exclude_suffix last in
+                      let module_name = components |> BU.prefix_until (fun s -> not <| BU.is_upper (BU.char_at s 0)) in
                       let _ =
-                          match components with
-                          | []
-                          | [_] -> () //no module name
-                          | _ ->
-                            add_module_name (String.concat "." module_name)
+                          match module_name with
+                          | None -> ()
+                          | Some (m, _, _) -> add_module_name (String.concat "." m)
                       in
                       components
                 in
@@ -629,17 +713,20 @@ let query_info settings z3result =
                 then (add_discarded_name s; [])
                 else [ components |> String.concat "."]
         in
+        let should_log = Options.hint_info () || Options.query_stats () in
+        let maybe_log (f:unit -> unit) = if should_log then f () in
         match core with
         | None ->
-           BU.print_string "no unsat core\n"
+           maybe_log <| (fun _ -> BU.print_string "no unsat core\n")
         | Some core ->
            let core = List.collect parse_axiom_name core in
-           BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
-                     (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
-           BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
-                     (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
-           BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
-                     (get_discarded_names() |> String.concat ", ")
+           maybe_log <| (fun _ ->
+            BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
+                      (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
+            BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
+                      (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
+            BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+                      (get_discarded_names() |> String.concat ", "))
     in
     if Options.hint_info()
     || Options.query_stats()
@@ -679,6 +766,10 @@ let query_info settings z3result =
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
             FStar.Errors.log_issue_doc range (FStar.Errors.Warning_HitReplayFailed, msg))
     end
+    else if Options.ext_getv "profile_context" <> ""
+    then match z3result.z3result_status with
+         | UNSAT core -> process_unsat_core core
+         | _ -> ()
 
 //caller must ensure that the recorded_hints is already initiailized
 let store_hint hint =

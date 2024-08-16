@@ -928,32 +928,197 @@ let (report_errors : Prims.bool -> query_settings -> unit) =
     fun qry_settings ->
       let uu___ = errors_to_report tried_recovery qry_settings in
       FStar_Errors.add_errors uu___
+type unique_string_accumulator =
+  {
+  add: Prims.string -> unit ;
+  get: unit -> Prims.string Prims.list ;
+  clear: unit -> unit }
+let (__proj__Mkunique_string_accumulator__item__add :
+  unique_string_accumulator -> Prims.string -> unit) =
+  fun projectee -> match projectee with | { add; get; clear;_} -> add
+let (__proj__Mkunique_string_accumulator__item__get :
+  unique_string_accumulator -> unit -> Prims.string Prims.list) =
+  fun projectee -> match projectee with | { add; get; clear;_} -> get
+let (__proj__Mkunique_string_accumulator__item__clear :
+  unique_string_accumulator -> unit -> unit) =
+  fun projectee -> match projectee with | { add; get; clear;_} -> clear
+let (mk_unique_string_accumulator : unit -> unique_string_accumulator) =
+  fun uu___ ->
+    let strings = FStar_Compiler_Util.mk_ref [] in
+    let add m =
+      let ms = FStar_Compiler_Effect.op_Bang strings in
+      if FStar_Compiler_List.contains m ms
+      then ()
+      else FStar_Compiler_Effect.op_Colon_Equals strings (m :: ms) in
+    let get uu___1 =
+      let uu___2 = FStar_Compiler_Effect.op_Bang strings in
+      FStar_Compiler_Util.sort_with FStar_Compiler_String.compare uu___2 in
+    let clear uu___1 = FStar_Compiler_Effect.op_Colon_Equals strings [] in
+    { add; get; clear }
+type profile_query_context =
+  {
+  set_current_decl: FStar_Ident.lident Prims.list -> unit ;
+  report_current_decl: unit -> unit ;
+  report_global: unit -> Prims.string Prims.list ;
+  add_module: Prims.string -> unit ;
+  clear1: unit -> unit }
+let (__proj__Mkprofile_query_context__item__set_current_decl :
+  profile_query_context -> FStar_Ident.lident Prims.list -> unit) =
+  fun projectee ->
+    match projectee with
+    | { set_current_decl; report_current_decl; report_global; add_module;
+        clear1 = clear;_} -> set_current_decl
+let (__proj__Mkprofile_query_context__item__report_current_decl :
+  profile_query_context -> unit -> unit) =
+  fun projectee ->
+    match projectee with
+    | { set_current_decl; report_current_decl; report_global; add_module;
+        clear1 = clear;_} -> report_current_decl
+let (__proj__Mkprofile_query_context__item__report_global :
+  profile_query_context -> unit -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { set_current_decl; report_current_decl; report_global; add_module;
+        clear1 = clear;_} -> report_global
+let (__proj__Mkprofile_query_context__item__add_module :
+  profile_query_context -> Prims.string -> unit) =
+  fun projectee ->
+    match projectee with
+    | { set_current_decl; report_current_decl; report_global; add_module;
+        clear1 = clear;_} -> add_module
+let (__proj__Mkprofile_query_context__item__clear :
+  profile_query_context -> unit -> unit) =
+  fun projectee ->
+    match projectee with
+    | { set_current_decl; report_current_decl; report_global; add_module;
+        clear1 = clear;_} -> clear
+let (pqc : profile_query_context) =
+  let current_decl_name =
+    FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
+  let current_decl_context = mk_unique_string_accumulator () in
+  let global_context = mk_unique_string_accumulator () in
+  let set_current_decl d =
+    FStar_Compiler_Effect.op_Colon_Equals current_decl_name
+      (FStar_Pervasives_Native.Some d);
+    current_decl_context.clear () in
+  let report_current_decl uu___ =
+    let uu___1 = FStar_Compiler_Effect.op_Bang current_decl_name in
+    match uu___1 with
+    | FStar_Pervasives_Native.None -> ()
+    | FStar_Pervasives_Native.Some d ->
+        let ctx = current_decl_context.get () in
+        (match ctx with
+         | [] -> ()
+         | uu___2 ->
+             let uu___3 =
+               let uu___4 =
+                 FStar_Compiler_List.map FStar_Ident.string_of_lid d in
+               FStar_Compiler_String.concat ", " uu___4 in
+             FStar_Compiler_Util.print2
+               "Profile query context: %s uses modules\n\t%s\n" uu___3
+               (FStar_Compiler_String.concat "\n\t" ctx)) in
+  let report_global uu___ = global_context.get () in
+  let add_module str = current_decl_context.add str; global_context.add str in
+  let clear uu___ =
+    FStar_Compiler_Effect.op_Colon_Equals current_decl_name
+      FStar_Pervasives_Native.None;
+    current_decl_context.clear ();
+    global_context.clear () in
+  {
+    set_current_decl;
+    report_current_decl;
+    report_global;
+    add_module;
+    clear1 = clear
+  }
+let (set_current_decl : FStar_Ident.lident Prims.list -> unit) =
+  pqc.set_current_decl
+let (report_context_current_decl : unit -> unit) = pqc.report_current_decl
+let (report_context_global :
+  FStar_Ident.lident ->
+    FStar_Ident.lident Prims.list -> FStar_Ident.lident Prims.list -> unit)
+  =
+  fun mlid ->
+    fun all_modules ->
+      fun opens ->
+        let uses = pqc.report_global () in
+        (let uu___1 = FStar_Ident.string_of_lid mlid in
+         FStar_Compiler_Util.print2
+           "Profile query context: %s uses modules\n\t%s\n" uu___1
+           (FStar_Compiler_String.concat "\n\t" uses));
+        (let uses1 = FStar_Compiler_List.map FStar_Ident.path_of_text uses in
+         let opens1 =
+           FStar_Compiler_List.map FStar_Ident.path_of_lid (mlid :: opens) in
+         let opens2 =
+           FStar_Compiler_List.filter (fun o -> o <> ["FStar"]) opens1 in
+         let path_includes short long =
+           let n = FStar_Compiler_List.length short in
+           if (FStar_Compiler_List.length long) < n
+           then false
+           else
+             (let uu___2 = FStar_Compiler_Util.first_N n long in
+              match uu___2 with | (long', uu___3) -> short = long') in
+         let missing_opens =
+           FStar_Compiler_List.filter
+             (fun u ->
+                let uu___1 =
+                  FStar_Compiler_Util.for_some (fun o -> path_includes o u)
+                    opens2 in
+                Prims.op_Negation uu___1) uses1 in
+         let extra_opens =
+           FStar_Compiler_List.filter
+             (fun o ->
+                let uu___1 =
+                  FStar_Compiler_Util.for_some (fun u -> path_includes o u)
+                    uses1 in
+                Prims.op_Negation uu___1) opens2 in
+         let as_list ids =
+           let uu___1 =
+             FStar_Compiler_List.map (FStar_Compiler_String.concat ".") ids in
+           FStar_Compiler_String.concat " " uu___1 in
+         (match missing_opens with
+          | [] -> ()
+          | uu___2 ->
+              let uu___3 = FStar_Ident.string_of_lid mlid in
+              let uu___4 = as_list missing_opens in
+              FStar_Compiler_Util.print2 "Missing opens in %s: %s\n" uu___3
+                uu___4);
+         (match extra_opens with
+          | [] -> ()
+          | uu___3 ->
+              let uu___4 = FStar_Ident.string_of_lid mlid in
+              let uu___5 = as_list extra_opens in
+              FStar_Compiler_Util.print2 "Extra opens in %s: %s\n" uu___4
+                uu___5);
+         (let all_opens = FStar_Compiler_List.op_At opens2 missing_opens in
+          let all_modules1 =
+            FStar_Compiler_List.map FStar_Ident.path_of_lid all_modules in
+          let would_prune =
+            FStar_Compiler_List.filter
+              (fun m ->
+                 let uu___3 =
+                   FStar_Compiler_Util.for_some (fun o -> path_includes o m)
+                     all_opens in
+                 Prims.op_Negation uu___3) all_modules1 in
+          let uu___4 = FStar_Ident.string_of_lid mlid in
+          let uu___5 = as_list would_prune in
+          FStar_Compiler_Util.print2
+            "For module %s, retaining only opens would prune %s\n" uu___4
+            uu___5))
+let (clear_profile_context : unit -> unit) = pqc.clear1
 let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
   fun settings ->
     fun z3result ->
       let process_unsat_core core =
-        let accumulator uu___ =
-          let r = FStar_Compiler_Util.mk_ref [] in
-          let uu___1 =
-            let module_names = FStar_Compiler_Util.mk_ref [] in
-            ((fun m ->
-                let ms = FStar_Compiler_Effect.op_Bang module_names in
-                if FStar_Compiler_List.contains m ms
-                then ()
-                else
-                  FStar_Compiler_Effect.op_Colon_Equals module_names (m ::
-                    ms)),
-              (fun uu___2 ->
-                 let uu___3 = FStar_Compiler_Effect.op_Bang module_names in
-                 FStar_Compiler_Util.sort_with FStar_Compiler_String.compare
-                   uu___3)) in
-          match uu___1 with | (add, get) -> (add, get) in
-        let uu___ = accumulator () in
+        let uu___ = mk_unique_string_accumulator () in
         match uu___ with
-        | (add_module_name, get_module_names) ->
-            let uu___1 = accumulator () in
-            (match uu___1 with
-             | (add_discarded_name, get_discarded_names) ->
+        | { add = add_module_name; get = get_module_names; clear = uu___1;_}
+            ->
+            let add_module_name1 s = pqc.add_module s; add_module_name s in
+            let uu___2 = mk_unique_string_accumulator () in
+            (match uu___2 with
+             | { add = add_discarded_name; get = get_discarded_names;
+                 clear = uu___3;_} ->
                  let parse_axiom_name s =
                    let chars = FStar_Compiler_String.list_of_string s in
                    let first_upper_index =
@@ -984,10 +1149,10 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                              (fun sfx ->
                                 if FStar_Compiler_Util.contains s2 sfx
                                 then
-                                  let uu___2 =
+                                  let uu___4 =
                                     FStar_Compiler_List.hd
                                       (FStar_Compiler_Util.split s2 sfx) in
-                                  FStar_Pervasives_Native.Some uu___2
+                                  FStar_Pervasives_Native.Some uu___4
                                 else FStar_Pervasives_Native.None) in
                          match sopt with
                          | FStar_Pervasives_Native.None ->
@@ -997,49 +1162,66 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                        let components1 =
                          match components with
                          | [] -> []
-                         | uu___2 ->
-                             let uu___3 =
+                         | uu___4 ->
+                             let uu___5 =
                                FStar_Compiler_Util.prefix components in
-                             (match uu___3 with
-                              | (module_name, last) ->
+                             (match uu___5 with
+                              | (lident, last) ->
                                   let components2 =
-                                    let uu___4 = exclude_suffix last in
-                                    FStar_Compiler_List.op_At module_name
-                                      uu___4 in
-                                  ((match components2 with
-                                    | [] -> ()
-                                    | uu___5::[] -> ()
-                                    | uu___5 ->
-                                        add_module_name
-                                          (FStar_Compiler_String.concat "."
-                                             module_name));
+                                    let uu___6 = exclude_suffix last in
+                                    FStar_Compiler_List.op_At lident uu___6 in
+                                  let module_name =
+                                    FStar_Compiler_Util.prefix_until
+                                      (fun s1 ->
+                                         let uu___6 =
+                                           let uu___7 =
+                                             FStar_Compiler_Util.char_at s1
+                                               Prims.int_zero in
+                                           FStar_Compiler_Util.is_upper
+                                             uu___7 in
+                                         Prims.op_Negation uu___6)
+                                      components2 in
+                                  ((match module_name with
+                                    | FStar_Pervasives_Native.None -> ()
+                                    | FStar_Pervasives_Native.Some
+                                        (m, uu___7, uu___8) ->
+                                        add_module_name1
+                                          (FStar_Compiler_String.concat "." m));
                                    components2)) in
                        if components1 = []
                        then (add_discarded_name s; [])
                        else [FStar_Compiler_String.concat "." components1] in
+                 let should_log =
+                   (FStar_Options.hint_info ()) ||
+                     (FStar_Options.query_stats ()) in
+                 let maybe_log f = if should_log then f () else () in
                  (match core with
                   | FStar_Pervasives_Native.None ->
-                      FStar_Compiler_Util.print_string "no unsat core\n"
+                      maybe_log
+                        (fun uu___4 ->
+                           FStar_Compiler_Util.print_string "no unsat core\n")
                   | FStar_Pervasives_Native.Some core1 ->
                       let core2 =
                         FStar_Compiler_List.collect parse_axiom_name core1 in
-                      ((let uu___3 =
-                          let uu___4 = get_module_names () in
-                          FStar_Compiler_String.concat "\nZ3 Proof Stats:\t"
-                            uu___4 in
-                        FStar_Compiler_Util.print1
-                          "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
-                          uu___3);
-                       FStar_Compiler_Util.print1
-                         "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
-                         (FStar_Compiler_String.concat
-                            "\nZ3 Proof Stats (Detail 1):\t" core2);
-                       (let uu___4 =
-                          let uu___5 = get_discarded_names () in
-                          FStar_Compiler_String.concat ", " uu___5 in
-                        FStar_Compiler_Util.print1
-                          "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
-                          uu___4)))) in
+                      maybe_log
+                        (fun uu___4 ->
+                           (let uu___6 =
+                              let uu___7 = get_module_names () in
+                              FStar_Compiler_String.concat
+                                "\nZ3 Proof Stats:\t" uu___7 in
+                            FStar_Compiler_Util.print1
+                              "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
+                              uu___6);
+                           FStar_Compiler_Util.print1
+                             "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
+                             (FStar_Compiler_String.concat
+                                "\nZ3 Proof Stats (Detail 1):\t" core2);
+                           (let uu___7 =
+                              let uu___8 = get_discarded_names () in
+                              FStar_Compiler_String.concat ", " uu___8 in
+                            FStar_Compiler_Util.print1
+                              "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+                              uu___7)))) in
       let uu___ =
         (FStar_Options.hint_info ()) || (FStar_Options.query_stats ()) in
       if uu___
@@ -1156,7 +1338,16 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                            FStar_Errors.log_issue_doc range1
                              (FStar_Errors_Codes.Warning_HitReplayFailed,
                                msg1)) errs))
-      else ()
+      else
+        (let uu___2 =
+           let uu___3 = FStar_Options.ext_getv "profile_context" in
+           uu___3 <> "" in
+         if uu___2
+         then
+           match z3result.FStar_SMTEncoding_Z3.z3result_status with
+           | FStar_SMTEncoding_Z3.UNSAT core -> process_unsat_core core
+           | uu___3 -> ()
+         else ())
 let (store_hint : FStar_Compiler_Hints.hint -> unit) =
   fun hint ->
     let uu___ = FStar_Compiler_Effect.op_Bang recorded_hints in
@@ -1342,7 +1533,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___552 : answer FStar_Class_Show.showable) =
+let (uu___678 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->

@@ -18,5 +18,13 @@ module FStar.SMTEncoding.Solver
 open FStar.Compiler.Effect
 
 val with_hints_db : string -> (unit -> 'a) -> 'a
+val set_current_decl (_:list Ident.lident) : unit
+val report_context_current_decl (_:unit) : unit
+val report_context_global 
+    (modul:Ident.lident)
+    (all_modules:list Ident.lident)
+    (opens:list Ident.lident)
+: unit
+val clear_profile_context (_:unit) : unit
 val dummy: FStar.TypeChecker.Env.solver_t
 val solver: FStar.TypeChecker.Env.solver_t

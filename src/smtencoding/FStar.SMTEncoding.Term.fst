@@ -796,7 +796,7 @@ let rec declToSmt' print_captions z3options decl =
   match decl with
   | DefPrelude ->
     mkPrelude z3options
-  | Module (s, decls) ->
+  | Module (s, decls, _) ->
     let res = List.map (declToSmt' print_captions z3options) decls |> String.concat "\n" in
     if Options.keep_query_captions()
     then BU.format5 "\n;;; Start %s\n%s\n;;; End %s (%s decls; total size %s)"
@@ -1128,3 +1128,25 @@ instance showable_smt_term = {
 instance showable_decl = {
   show = declToSmt_no_caps "";
 }
+
+let module_of_name n  = ""
+let module_of_var n   = ""
+let module_deps_of_term (t:term)
+: list string
+= let rec aux (acc:list string) (t:term)
+  : list string
+  = match t.tm with
+    | Integer _
+    | String _
+    | Real _
+    | BoundV _ -> acc
+    | FreeV (FV (name, _, _)) -> module_of_name name :: acc
+    | App (Var name, args) -> 
+      List.fold_left aux (module_of_var name::acc) args
+    | Quant (_, pats, _, _, body) ->
+      aux acc body
+    | Let (tms, t) ->
+      List.fold_left aux acc (t::tms)
+    | Labeled (t, _, _)
+    | LblPos (t, _) -> aux acc t
+  in aux [] t
