@@ -38,6 +38,8 @@ let cur_sigint_handler : Sys.signal_behavior ref =
 exception SigInt
 type sigint_handler = Sys.signal_behavior
 
+let sigint_handler_f f = Sys.Signal_handle f
+
 let sigint_ignore: sigint_handler =
   Sys.Signal_ignore
 
@@ -59,6 +61,9 @@ let raise_sigint_maybe_delay _ =
 
 let sigint_raise: sigint_handler =
   Sys.Signal_handle raise_sigint_maybe_delay
+
+let get_sigint_handler () =
+  !cur_sigint_handler
 
 let set_sigint_handler sigint_handler =
   cur_sigint_handler := sigint_handler;

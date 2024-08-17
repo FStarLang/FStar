@@ -187,8 +187,10 @@ val stack_dump : unit -> string
 
 exception SigInt
 type sigint_handler
+val sigint_handler_f : (int -> unit) -> sigint_handler
 val sigint_ignore: sigint_handler
 val sigint_raise: sigint_handler
+val get_sigint_handler: unit -> sigint_handler
 val set_sigint_handler: sigint_handler -> unit
 val with_sigint_handler: sigint_handler -> (unit -> 'a) -> 'a
 
