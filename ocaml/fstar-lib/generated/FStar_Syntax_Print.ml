@@ -1996,6 +1996,8 @@ let (showable_const : FStar_Const.sconst FStar_Class_Show.showable) =
 let (showable_letbinding :
   FStar_Syntax_Syntax.letbinding FStar_Class_Show.showable) =
   { FStar_Class_Show.show = lb_to_string }
+let (showable_modul : FStar_Syntax_Syntax.modul FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = modul_to_string }
 let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = term_to_doc }
 let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =

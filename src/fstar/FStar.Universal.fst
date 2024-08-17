@@ -34,6 +34,8 @@ open FStar.Syntax.DsEnv
 open FStar.TypeChecker
 open FStar.CheckedFiles
 
+open FStar.Class.Show
+
 (* Module abbreviations for the universal type-checker  *)
 module DsEnv    = FStar.Syntax.DsEnv
 module TcEnv    = FStar.TypeChecker.Env
@@ -476,7 +478,7 @@ let tc_one_file
         let tcmod = tc_result.checked_module in
         let smt_decls = tc_result.smt_decls in
         if Options.dump_module (string_of_lid tcmod.name)
-        then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
+        then BU.print1 "Module after type checking:\n%s\n" (show tcmod);
 
         let extend_tcenv tcmod tcenv =
             if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();

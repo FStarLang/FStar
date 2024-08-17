@@ -1217,7 +1217,7 @@ let check_module env0 m b =
   if Debug.any()
   then BU.print2 "Checking %s: %s\n" (if m.is_interface then "i'face" else "module") (Print.lid_to_string m.name);
   if Options.dump_module (string_of_lid m.name)
-  then BU.print1 "Module before type checking:\n%s\n" (Print.modul_to_string m);
+  then BU.print1 "Module before type checking:\n%s\n" (show m);
 
   let env = {env0 with admit = not (Options.should_verify (string_of_lid m.name))} in
   let m, env = tc_modul env m b in
@@ -1226,7 +1226,7 @@ let check_module env0 m b =
 
   (* Debug information for level Normalize : normalizes all toplevel declarations an dump the current module *)
   if Options.dump_module (string_of_lid m.name)
-  then BU.print1 "Module after type checking:\n%s\n" (Print.modul_to_string m);
+  then BU.print1 "Module after type checking:\n%s\n" (show m);
   if Options.dump_module (string_of_lid m.name) && !dbg_Normalize
   then begin
     let normalize_toplevel_lets = fun se -> match se.sigel with
@@ -1240,7 +1240,7 @@ let check_module env0 m b =
         | _ -> se
     in
     let normalized_module = { m with declarations = List.map normalize_toplevel_lets m.declarations } in
-    BU.print1 "%s\n" (Print.modul_to_string normalized_module)
+    BU.print1 "%s\n" (show normalized_module)
   end;
 
   m, env

@@ -185,6 +185,7 @@ val quake_hi                    : unit    -> int
 val quake_keep                  : unit    -> bool
 val query_cache                 : unit    -> bool
 val query_stats                 : unit    -> bool
+val read_checked_file           : unit    -> option string
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
 val retry                       : unit    -> bool

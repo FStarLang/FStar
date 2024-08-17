@@ -4341,7 +4341,7 @@ let desugar_modul env (m:AST.modul) : env_t & Syntax.modul =
     let env, modul, pop_when_done = desugar_modul_common None env m in
     let env, modul = Env.finish_module_or_interface env modul in
     if Options.dump_module (string_of_lid modul.name)
-    then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
+    then BU.print1 "Module after desugaring:\n%s\n" (show modul);
     (if pop_when_done then export_interface modul.name env else env), modul
   )
 
