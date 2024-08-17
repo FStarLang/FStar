@@ -29,7 +29,7 @@ build: [
 install: [
   [make "PREFIX=%{prefix}%" "install"]
 ]
-dev-repo: "git://github.com/FStarLang/FStar"
+dev-repo: "git+https://github.com/FStarLang/FStar"
 bug-reports: "https://github.com/FStarLang/FStar/issues"
 synopsis: "Verification system for effectful programs"
 url {
