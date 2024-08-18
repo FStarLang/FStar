@@ -94,17 +94,23 @@ let cases f d = function
  * exact same object in memory. See read_memo and set_memo below. *)
 type cfg_memo 'a = memo (Cfg.cfg & 'a)
 
-let fresh_memo (#a:Type) () : cfg_memo a = BU.mk_ref None
+let fresh_memo (#a:Type) () : memo a = BU.mk_ref None
 
 type closure =
   | Clos of env & term & cfg_memo (env & term) & bool //memo for lazy evaluation; bool marks whether or not this is a fixpoint
   | Univ of universe                               //universe terms do not have free variables
   | Dummy                                          //Dummy is a placeholder for a binder when doing strong reduction
-and env = list (option binder&closure)
+and env = list (option binder & closure & memo subst_t)
+
+instance showable_memo (a:Type) (_ : showable a) : Tot (showable (memo a)) = {
+  show = (fun m -> match !m with
+                   | None -> "no_memo"
+                   | Some x -> "memo=" ^ show x)
+}
 
 let empty_env : env = []
 
-let dummy : option binder & closure = None,Dummy
+let dummy () : (option binder & closure & memo subst_t) = (None, Dummy, fresh_memo ())
 
 type branches = list (pat & option term & term)
 
@@ -172,7 +178,7 @@ let is_empty = function
     | _ -> false
 
 let lookup_bvar (env : env) x =
-    try snd (List.nth env x.index)
+    try (List.nth env x.index)._2
     with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (Print.db_to_string x) (show env))
 
 let downgrade_ghost_effect_name l =
@@ -217,7 +223,7 @@ let norm_universe cfg (env:env) u =
         match u with
           | U_bvar x ->
             begin
-                try match snd (List.nth env x) with
+                try match (List.nth env x)._2 with
                       | Univ u ->
                            if !dbg_univ_norm then
                                BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
@@ -270,361 +276,53 @@ let norm_universe cfg (env:env) u =
         | [u] -> u
         | us -> U_max us
 
+let memo_or (m : memo 'a) (f : unit -> 'a) : 'a =
+  match !m with
+  | Some v -> v
+  | None ->
+    let v = f () in
+    m := Some v;
+    v
 
-(*******************************************************************)
-(* closure_as_term env t --- t is a closure with environment env   *)
-(* closure_as_term env t                                           *)
-(*      is a closed term with all its free variables               *)
-(*      subsituted with their closures in env (recursively closed) *)
-(* This is used when computing WHNFs                               *)
-(*******************************************************************)
-let rec inline_closure_env cfg (env:env) stack t =
-    log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
-    match env with
-    | [] when not <| cfg.steps.compress_uvars ->
-      rebuild_closure cfg env stack t
-
-    | _ ->
-      match t.n with
-      | Tm_delayed _ ->
-        inline_closure_env cfg env stack (compress t)
-
-      | Tm_unknown
-      | Tm_constant _
-      | Tm_name _
-      | Tm_lazy _
-      | Tm_fvar _ ->
-        rebuild_closure cfg env stack t
-
-      | Tm_uvar (uv, s) ->
-        if cfg.steps.check_no_uvars
-        then let t = compress t in
-             match t.n with
-             | Tm_uvar _ ->
-               failwith (BU.format2 "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
-                        (Range.string_of_range t.pos)
-                        (show t))
-             | _ ->
-              inline_closure_env cfg env stack t
-        else
-            let s' = fst s |> List.map (fun s ->
-                    s |> List.map (function
-                | NT(x, t) ->
-                  NT(x, inline_closure_env cfg env [] t)
-                | NM(x, i) ->
-                  let x_i = S.bv_to_tm ({x with index=i}) in
-                  let t = inline_closure_env cfg env [] x_i in
-                  (match t.n with
-                   | Tm_bvar x_j -> NM(x, x_j.index)
-                   | _ -> NT(x, t))
-                | _ -> failwith "Impossible: subst invariant of uvar nodes"))
-             in
-             //let _ = match s with
-             //        | [], _
-             //        | [[]], _ -> ()
-             //        | _::_, _ -> BU.print2 "inline_closure_env\n\tBefore %s\n\t After %s"
-             //                               (List.map Print.subst_to_string (fst s) |> String.concat "@")
-             //                               (List.map Print.subst_to_string s' |> String.concat "@")
-             //        | _ -> () in
-             let t = {t with n=Tm_uvar(uv, (s', snd s))} in
-             rebuild_closure cfg env stack t
-
-      | Tm_type u ->
-        let t = mk (Tm_type (norm_universe cfg env u)) t.pos in
-        rebuild_closure cfg env stack t
-
-      | Tm_uinst(t', us) -> (* head symbol must be an fvar *)
-        let t = mk_Tm_uinst t' (List.map (norm_universe cfg env) us) in
-        rebuild_closure cfg env stack t
-
-      | Tm_bvar x ->
-        begin
-            match lookup_bvar env x with
-            | Univ _ -> failwith "Impossible: term variable is bound to a universe"
-            | Dummy ->
-              let x = {x with sort = S.tun} in
-              let t = mk (Tm_bvar x) t.pos in
-              rebuild_closure cfg env stack t
-            | Clos(env, t0, _, _) ->
-              inline_closure_env cfg env stack t0
-        end
-
-      | Tm_app {hd=head; args} ->
-        let stack =
-            stack |> List.fold_right
-            (fun (a, aq) stack -> Arg (Clos(env, a, fresh_memo (), false),aq,t.pos)::stack)
-            args
-        in
-        inline_closure_env cfg env stack head
-
-      | Tm_abs {bs; body; rc_opt=lopt} ->
-        let env' =
-            env |> List.fold_right
-            (fun _b env -> (None, Dummy)::env)
-            bs
-        in
-        let stack = (Abs(env, bs, env', lopt, t.pos)::stack) in
-        inline_closure_env cfg env' stack body
-
-      | Tm_arrow {bs; comp=c} ->
-        let bs, env' = close_binders cfg env bs in
-        let c = close_comp cfg env' c in
-        let t = mk (Tm_arrow {bs; comp=c}) t.pos in
-        rebuild_closure cfg env stack t
-
-      | Tm_refine {b=x}
-          when cfg.steps.for_extraction
-             || cfg.steps.unrefine ->
-        inline_closure_env cfg env stack x.sort
-
-      | Tm_refine {b=x; phi} ->
-        let x, env = close_binders cfg env [mk_binder x] in
-        let phi = non_tail_inline_closure_env cfg env phi in
-        let t = mk (Tm_refine {b=(List.hd x).binder_bv; phi}) t.pos in
-        rebuild_closure cfg env stack t
-
-      | Tm_ascribed {tm=t1; asc; eff_opt=lopt} ->
-        let asc = close_ascription cfg env asc in
-        let t =
-            mk (Tm_ascribed {tm=non_tail_inline_closure_env cfg env t1;
-                             asc;
-                             eff_opt=lopt}) t.pos
-        in
-        rebuild_closure cfg env stack t
-
-      | Tm_quoted (t', qi) ->
-        let t =
-            match qi.qkind with
-            | Quote_dynamic ->
-              mk (Tm_quoted(non_tail_inline_closure_env cfg env t', qi)) t.pos
-            | Quote_static  ->
-              let qi = S.on_antiquoted (non_tail_inline_closure_env cfg env) qi in
-              mk (Tm_quoted(t', qi)) t.pos
-        in
-        rebuild_closure cfg env stack t
-
-      | Tm_meta {tm=t'; meta=m} ->
-        let stack = Meta(env, m, t.pos)::stack in
-        inline_closure_env cfg env stack t'
-
-      | Tm_let {lbs=(false, [lb]); body} -> //non-recursive let
-        let env0 = env in
-        let env = List.fold_left (fun env _ -> dummy::env) env lb.lbunivs in
-        let typ = non_tail_inline_closure_env cfg env lb.lbtyp in
-        let def = non_tail_inline_closure_env cfg env lb.lbdef in
-        let nm, body =
-            if S.is_top_level [lb]
-            then lb.lbname, body
-            else let x = BU.left lb.lbname in
-                 Inl ({x with sort=typ}),
-                 non_tail_inline_closure_env cfg (dummy::env0) body
-        in
-        let attrs = List.map (non_tail_inline_closure_env cfg env0) lb.lbattrs in
-        let lb = {lb with lbname=nm; lbtyp=typ; lbdef=def; lbattrs=attrs} in
-        let t = mk (Tm_let {lbs=(false, [lb]); body}) t.pos in
-        rebuild_closure cfg env0 stack t
-
-      | Tm_let {lbs=(_,lbs); body} -> //recursive let
-        let norm_one_lb env lb =
-            let env_univs = List.fold_right (fun _ env -> dummy::env) lb.lbunivs env in
-            let env =
-                if S.is_top_level lbs
-                then env_univs
-                else List.fold_right (fun _ env -> dummy::env) lbs env_univs in
-            let ty = non_tail_inline_closure_env cfg env_univs lb.lbtyp in
-            let nm =
-                if S.is_top_level lbs
-                then lb.lbname
-                else let x = BU.left lb.lbname in
-                     Inl ({x with sort=ty})
-            in
-            {lb with lbname=nm;
-                     lbtyp=ty;
-                     lbdef=non_tail_inline_closure_env cfg env lb.lbdef}
-        in
-        let lbs = lbs |> List.map (norm_one_lb env) in
-        let body =
-            let body_env = List.fold_right (fun _ env -> dummy::env) lbs env in
-            non_tail_inline_closure_env cfg body_env body in
-        let t = mk (Tm_let {lbs=(true, lbs); body}) t.pos in
-        rebuild_closure cfg env stack t
-
-      | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lopt} ->
-        let stack = Match(env, asc_opt, branches, lopt, cfg, t.pos)::stack in
-        inline_closure_env cfg env stack head
-
-and non_tail_inline_closure_env cfg env t =
-    inline_closure_env cfg env [] t
-
-and rebuild_closure cfg env stack t =
-    log cfg (fun () -> BU.print4 ">>> %s (env=%s, stack=%s)\nRebuild closure_as_term %s\n" (Print.tag_of_term t) (show env) (show stack) (show t));
-    match stack with
-    | [] -> t
-
-    | Arg (Clos(env_arg, tm, _, _), aq, r) :: stack ->
-      let stack = App(env, t, aq, r)::stack in
-      inline_closure_env cfg env_arg stack tm
-
-    | App(env, head, aq, r)::stack ->
-      let t = S.extend_app head (t,aq) r in
-      rebuild_closure cfg env stack t
-
-    | CBVApp(env, head, aq, r)::stack ->
-      let t = S.extend_app head (t,aq) r in
-      rebuild_closure cfg env stack t
-
-    | Abs (env', bs, env'', lopt, r)::stack ->
-      let bs, _ = close_binders cfg env' bs in
-      let lopt = close_lcomp_opt cfg env'' lopt in
-      rebuild_closure cfg env stack ({abs bs t lopt with pos=r})
-
-    | Match(env, asc_opt, branches, lopt, cfg, r)::stack ->
-      let lopt = close_lcomp_opt cfg env lopt in
-      let close_one_branch env (pat, w_opt, tm) =
-          let rec norm_pat env p =
-            match p.v with
-            | Pat_constant _ ->
-              p, env
-            | Pat_cons(fv, us_opt, pats) ->
-              let us_opt =
-                if cfg.steps.erase_universes
-                then None
-                else (
-                  match us_opt with
-                  | None -> None
-                  | Some us -> Some (List.map (norm_universe cfg env) us)
-                )
-              in
-              let pats, env =
-                  pats |> List.fold_left
-                  (fun (pats, env) (p, b) ->
-                    let p, env = norm_pat env p in (p,b)::pats, env)
-                  ([], env)
-              in
-              {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
-            | Pat_var x ->
-              let x = {x with sort=non_tail_inline_closure_env cfg env x.sort} in
-              {p with v=Pat_var x}, dummy::env
-            | Pat_dot_term eopt ->
-              let eopt = BU.map_option (non_tail_inline_closure_env cfg env) eopt in
-              {p with v=Pat_dot_term eopt}, env
-          in
-          let pat, env = norm_pat env pat in
-          let w_opt =
-              match w_opt with
-              | None -> None
-              | Some w -> Some (non_tail_inline_closure_env cfg env w) in
-          let tm = non_tail_inline_closure_env cfg env tm in
-          (pat, w_opt, tm)
-      in
-      let t =
-          mk (Tm_match {scrutinee=t;
-                        ret_opt=close_match_returns cfg env asc_opt;
-                        brs=branches |> List.map (close_one_branch env);
-                        rc_opt=lopt}) t.pos
-      in
-      rebuild_closure cfg env stack t
-
-    | Meta(env_m, m, r)::stack ->
-      let m =
-          match m with
-          | Meta_pattern (names, args) ->
-            Meta_pattern (names |> List.map (non_tail_inline_closure_env cfg env_m),
-                          args |> List.map (fun args ->
-                                            args |> List.map (fun (a, q) ->
-                                            non_tail_inline_closure_env cfg env_m a, q)))
-
-          | Meta_monadic(m, tbody) ->
-            Meta_monadic(m, non_tail_inline_closure_env cfg env_m tbody)
-
-          | Meta_monadic_lift(m1, m2, tbody) ->
-            Meta_monadic_lift(m1, m2, non_tail_inline_closure_env cfg env_m tbody)
-
-          | _ -> //other metadata's do not have any embedded closures
-            m
-      in
-      let t = mk (Tm_meta {tm=t; meta=m}) r in
-      rebuild_closure cfg env stack t
-
-    | _ -> failwith "Impossible: unexpected stack element"
-
-
-and close_match_returns cfg env ret_opt =
-  match ret_opt with
-  | None -> None
-  | Some (b, asc) ->
-    let bs, env = close_binders cfg env [b] in
-    let asc = close_ascription cfg env asc in
-    Some (List.hd bs, asc)
-
-and close_ascription cfg env (annot, tacopt, use_eq) =
-  let annot =
-    match annot with
-    | Inl t -> Inl (non_tail_inline_closure_env cfg env t)
-    | Inr c -> Inr (close_comp cfg env c) in
-  let tacopt = BU.map_opt tacopt (non_tail_inline_closure_env cfg env) in
-  annot, tacopt, use_eq
-
-and close_imp cfg env imp =
-    match imp with
-    | Some (S.Meta t) -> Some (S.Meta (inline_closure_env cfg env [] t))
-    | i -> i
-
-and close_binders cfg env bs =
-    let env, bs = bs |> List.fold_left (fun (env, out) ({binder_bv=b; binder_qual=imp; binder_positivity=pqual; binder_attrs=attrs}) ->
-            let b = {b with sort = inline_closure_env cfg env [] b.sort} in
-            let imp = close_imp cfg env imp in
-            let attrs = List.map (non_tail_inline_closure_env cfg env) attrs in
-            let env = dummy::env in
-            env, ((S.mk_binder_with_attrs b imp pqual attrs)::out)) (env, []) in
-    List.rev bs, env
-
-and close_comp cfg env c =
-    match env with
-    | [] when not <| cfg.steps.compress_uvars -> c
-    | _ ->
-      match c.n with
-      | Total t ->
-        mk_Total (inline_closure_env cfg env [] t)
-
-      | GTotal t ->
-        mk_GTotal (inline_closure_env cfg env [] t)
-
-      | Comp c ->
-        let rt = inline_closure_env cfg env [] c.result_typ in
-        let args =
-            c.effect_args |>
-            List.map (fun (a, q) -> inline_closure_env cfg env [] a, q)
-        in
-        let flags =
-            c.flags |>
-            List.map (function
-                | DECREASES (Decreases_lex l) ->
-                  DECREASES (l |> List.map (inline_closure_env cfg env []) |> Decreases_lex)
-                | DECREASES (Decreases_wf (rel, e)) ->
-                  DECREASES (Decreases_wf (inline_closure_env cfg env [] rel,
-                                           inline_closure_env cfg env [] e))
-                | f -> f)
-        in
-        mk_Comp ({c with comp_univs=List.map (norm_universe cfg env) c.comp_univs;
-                result_typ=rt;
-                effect_args=args;
-                flags=flags})
-
-and close_lcomp_opt cfg env lopt = match lopt with
-    | Some rc ->
-      let flags =
-          rc.residual_flags |>
-          List.filter (function DECREASES _ -> false | _ -> true) in
-      let rc = {rc with residual_flags=flags; residual_typ=BU.map_opt rc.residual_typ (inline_closure_env cfg env [])} in
-      Some rc
-    | _ -> lopt
+let rec env_subst (env:env) : subst_t =
+  let compute () =
+    let (s, _) =
+      List.fold_left (fun (s, i) (_, c, _) ->
+          match c with
+          | Clos (e, t, memo, (* closed_memo, *) fix) ->
+              // let es = memo_or closed_memo (fun () -> env_subst e) in
+              let es = env_subst e in
+              let t = SS.subst es t |> SS.compress in
+              (DT (i, t) :: s, i+1)
+          | Univ u -> (UN (i, u) :: s, i+1)
+          | Dummy -> (s,i+1)
+      ) ([], 0) env
+    in
+    (* NB: The order of the list does not matter, we are building
+      a parallel substitution. *)
+    s
+  in
+  match env with
+  | [] -> []
+  | (_, _, memo) :: _ ->
+    match !memo with
+    | Some s -> s
+    | None ->
+      let s = compute () in
+      memo := Some s;
+      s
 
 let filter_out_lcomp_cflags flags =
     (* TODO : lc.comp might have more cflags than lcomp.cflags *)
     flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
-let closure_as_term cfg env t = non_tail_inline_closure_env cfg env t
+let closure_as_term cfg (env:env) (t:term) : term =
+  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
+  let es = env_subst env in
+  let t = SS.subst es t in
+  (* Compress the top only since clients expect a compressed term *)
+  let t = SS.compress t in
+  t
 
 (* A hacky knot, set by FStar.Main *)
 let unembed_binder_knot : ref (option (EMB.embedding binder)) = BU.mk_ref None
@@ -635,9 +333,9 @@ let unembed_binder (t : term) : option S.binder =
         Errors.log_issue t.pos (Errors.Warning_UnembedBinderKnot, "unembed_binder_knot is unset!");
         None
 
-let mk_psc_subst cfg env =
+let mk_psc_subst cfg (env:env) =
     List.fold_right
-        (fun (binder_opt, closure) subst ->
+        (fun (binder_opt, closure, _) subst ->
             match binder_opt, closure with
             | Some b, Clos(env, term, _, _) ->
                 // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
@@ -662,7 +360,7 @@ let mk_psc_subst cfg env =
 (* Boolean indicates whether further normalization of the result is
 required. It is usually false, unless we call into a 'renorm' primitive
 step. *)
-let reduce_primops norm_cb cfg env tm : term & bool =
+let reduce_primops norm_cb cfg (env:env) tm : term & bool =
     if not cfg.steps.primops
     then tm, false
     else begin
@@ -1373,7 +1071,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
               then let t = closure_as_term cfg env t in
                    rebuild cfg env stack t
               else let bs, body, opening = open_term' bs body in
-                   let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
+                   let env' = bs |> List.fold_left (fun env _ -> dummy () ::env) env in
                    let rc_opt =
                      let open FStar.Class.Monad in
                      let! rc = rc_opt in
@@ -1386,49 +1084,49 @@ let rec norm : cfg -> env -> stack -> term -> term =
                    rebuild cfg env stack body_norm
             in
             begin match stack with
-                | UnivArgs _::_ ->
-                  failwith "Ill-typed term: universes cannot be applied to term abstraction"
+            | UnivArgs _::_ ->
+              failwith "Ill-typed term: universes cannot be applied to term abstraction"
 
-                | Arg(c, _, _)::stack_rest ->
-                  begin match c with
-                    | Univ _ -> //universe variables do not have explicit binders
-                      norm cfg ((None,c)::env) stack_rest t
+            | Arg (Univ u, _, _)::stack_rest ->
+              norm cfg ((None, Univ u, fresh_memo ()) :: env) stack_rest t
+              // universe variables do not have explicit binders
 
-                    | _ ->
-                     (* Note: we peel off one application at a time.
-                              An optimization to attempt would be to push n-args are once,
-                              and try to pop all of them at once, in the common case of a full application.
-                      *)
-                      begin match bs with
-                        | [] -> failwith "Impossible"
-                        | [b] ->
-                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
-                          norm cfg ((Some b, c) :: env) stack_rest body
-                        | b::tl ->
-                          log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
-                          let body = mk (Tm_abs {bs=tl; body; rc_opt}) t.pos in
-                          norm cfg ((Some b, c) :: env) stack_rest body
-                      end
-                  end
+            | Arg (c, _, _)::stack_rest ->
+              (* Note: we peel off one application at a time.
+                       An optimization to attempt would be to push n-args are once,
+                       and try to pop all of them at once, in the common case of a full application.
+               *)
+              begin match bs with
+              | [] -> failwith "Impossible"
+              | [b] ->
+                log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
+                norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
+              | b::tl ->
+                log cfg  (fun () -> BU.print1 "\tShifted %s\n" (show c));
+                let body = mk (Tm_abs {bs=tl; body; rc_opt}) t.pos in
+                norm cfg ((Some b, c, fresh_memo()) :: env) stack_rest body
+              end
 
-                | MemoLazy r :: stack ->
-                  set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
-                  log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (show t));
-                  norm cfg env stack t
-                | Meta _::_ ->
-                  //
-                  //Top of the stack is a meta, try stripping meta DIV nodes that
-                  //  may be blocking reduction
-                  //
-                  (match maybe_strip_meta_divs stack with
-                   | None -> fallback ()
-                   | Some stack -> norm cfg env stack t)
-                | Match _::_
-                | Let _ :: _
-                | App _ :: _
-                | CBVApp _ :: _
-                | Abs _ :: _
-                | [] -> fallback ()
+            | MemoLazy r :: stack ->
+              set_memo cfg r (env, t); //We intentionally do not memoize the strong normal form; only the WHNF
+              log cfg  (fun () -> BU.print1 "\tSet memo %s\n" (show t));
+              norm cfg env stack t
+
+            | Meta _::_ ->
+              //
+              //Top of the stack is a meta, try stripping meta DIV nodes that
+              //  may be blocking reduction
+              //
+              (match maybe_strip_meta_divs stack with
+               | None -> fallback ()
+               | Some stack -> norm cfg env stack t)
+            | Match _::_
+            | Let _ :: _
+            | App _ :: _
+            | CBVApp _ :: _
+            | Abs _ :: _
+            | [] ->
+              fallback ()
             end
 
           | Tm_app {hd=head; args} ->
@@ -1518,7 +1216,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     | _ -> rebuild cfg env stack (closure_as_term cfg env t)
             else let t_x = norm cfg env [] x.sort in
                  let closing, f = open_term [mk_binder x] f in
-                 let f = norm cfg (dummy::env) [] f in
+                 let f = norm cfg (dummy () ::env) [] f in
                  let t = mk (Tm_refine {b={x with sort=t_x}; phi=close closing f}) t.pos in
                  rebuild cfg env stack t
 
@@ -1526,8 +1224,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
             if cfg.steps.weak
             then rebuild cfg env stack (closure_as_term cfg env t)
             else let bs, c = open_comp bs c in
-                 let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy::env) env) c in
-                 let bs = if cfg.steps.hnf then (close_binders cfg env bs)._1 else norm_binders cfg env bs in
+                 let c = norm_comp cfg (bs |> List.fold_left (fun env _ -> dummy () ::env) env) c in
+                 let close_binders env (bs:binders) : binders =
+                   SS.subst_binders (env_subst env) bs
+                 in
+                 let bs = if cfg.steps.hnf then close_binders env bs else norm_binders cfg env bs in
                  let t = arrow bs c in
                  rebuild cfg env stack t
 
@@ -1597,7 +1298,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                   * computation. We need to remove it to maintain a proper
                   * term structure. See the discussion in PR #2024. *)
                  let def = U.unmeta_lift lb.lbdef in
-                 let env = (Some binder, Clos(env, def, fresh_memo(), false))::env in
+                 let env = (Some binder, Clos(env, def, fresh_memo(), false), fresh_memo ())::env in
                  log cfg (fun () -> BU.print_string "+++ Reducing Tm_let\n");
                  norm cfg env stack body
 
@@ -1625,7 +1326,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                                    lbtyp=ty;
                                    lbdef=norm cfg env [] lb.lbdef;
                                    lbattrs=List.map (norm cfg env []) lb.lbattrs} in
-                 let env' = bs |> List.fold_left (fun env _ -> dummy::env) env in
+                 let env' = bs |> List.fold_left (fun env _ -> dummy () ::env) env in
                  log cfg (fun () -> BU.print_string "+++ Normalizing Tm_let -- body\n");
                  let cfg' = { cfg with strong = true } in
                  let body_norm = norm cfg' env' (Let (env, bs, lb, t.pos) :: []) body in
@@ -1642,8 +1343,8 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 let lbname = Inl ({BU.left lb.lbname with sort=ty}) in
                 let xs, def_body, lopt = U.abs_formals lb.lbdef in
                 let xs = norm_binders cfg env xs in
-                let env = List.map (fun _ -> dummy) xs //first the bound vars for the arguments
-                        @ List.map (fun _ -> dummy) lbs //then the recursively bound names
+                let env = List.map (fun _ -> dummy ()) xs //first the bound vars for the arguments
+                        @ List.map (fun _ -> dummy ()) lbs //then the recursively bound names
                         @ env in
                 let def_body = norm cfg env [] def_body in
                 let lopt =
@@ -1654,7 +1355,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
                 { lb with lbname = lbname;
                           lbtyp = ty;
                           lbdef = def}) lbs in
-            let env' = List.map (fun _ -> dummy) lbs @ env in
+            let env' = List.map (fun _ -> dummy ()) lbs @ env in
             let body = norm cfg env' [] body in
             let lbs, body = Subst.close_let_rec lbs body in
             let t = {t with n=Tm_let {lbs=(true, lbs); body}} in
@@ -1679,12 +1380,12 @@ let rec norm : cfg -> env -> stack -> term -> term =
                     let f_i = Syntax.bv_to_tm bv in
                     let fix_f_i = mk (Tm_let {lbs; body=f_i}) t.pos in
                     let memo = fresh_memo () in
-                    let rec_env = (None, Clos(env, fix_f_i, memo, true))::rec_env in
+                    let rec_env = (None, Clos(env, fix_f_i, memo, true), fresh_memo ())::rec_env in
                     rec_env, memo::memos, i + 1) (snd lbs) (env, [], 0) in
             let _ = List.map2 (fun lb memo -> memo := Some (cfg, (rec_env, lb.lbdef))) (snd lbs) memos in //tying the knot
             // NB: fold_left, since the binding structure of lbs is that righmost is closer, while in the env leftmost
             // is closer. In other words, the last element of lbs is index 0 for body, hence needs to be pushed last.
-            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, fresh_memo(), false))::env)
+            let body_env = List.fold_left (fun env lb -> (None, Clos(rec_env, lb.lbdef, fresh_memo(), false), fresh_memo())::env)
                                env (snd lbs) in
             log cfg (fun () -> BU.print1 "reducing with knot %s\n" "");
             norm cfg body_env stack body
@@ -1770,12 +1471,11 @@ let rec norm : cfg -> env -> stack -> term -> term =
           failwith "impossible: Tm_delayed on norm"
 
         | Tm_uvar _ ->
-          if cfg.steps.check_no_uvars
-          then failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
-                                  (Range.string_of_range t.pos)
-                                  (show t))
-          else rebuild cfg env stack (inline_closure_env cfg env [] t)
-
+          if cfg.steps.check_no_uvars then
+            failwith (BU.format2 "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
+                                  (show t.pos) (show t));
+          let t = Errors.with_ctx "inlining" (fun () -> closure_as_term cfg env t) in
+          rebuild cfg env stack t
 
 (* NOTE: we do not need any environment here, since an fv does not
  * have any free indices. Hence, we use empty_env as environment when needed. *)
@@ -1805,7 +1505,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
                   if !dbg_univ_norm then
                       List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
                   else ();
-                  let env = us' |> List.fold_left (fun env u -> (None, Univ u)::env) empty_env in
+                  let env = us' |> List.fold_left (fun env u -> (None, Univ u, fresh_memo ())::env) empty_env in
                   norm cfg env stack t
                 | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
                   norm cfg empty_env stack t
@@ -2249,7 +1949,7 @@ and norm_binders : cfg -> env -> binders -> binders =
     fun cfg env bs ->
         let nbs, _ = List.fold_left (fun (nbs', env) b ->
             let b = norm_binder cfg env b in
-            (b::nbs', dummy::env) (* crossing a binder, so shift environment *))
+            (b::nbs', dummy () ::env) (* crossing a binder, so shift environment *))
             ([], env)
             bs in
         List.rev nbs
@@ -2797,7 +2497,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
               {p with v=Pat_cons(fv, us_opt, List.rev pats)}, env
             | Pat_var x ->
               let x = {x with sort=norm_or_whnf env x.sort} in
-              {p with v=Pat_var x}, dummy::env
+              {p with v=Pat_var x}, dummy () ::env
             | Pat_dot_term eopt ->
               let eopt = BU.map_option (norm_or_whnf env) eopt in
               {p with v=Pat_dot_term eopt}, env
@@ -2976,7 +2676,8 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                 //In that case, do not set the memo reference
                 let env = List.fold_left
                       (fun env (bv, t) -> (Some (S.mk_binder bv),
-                                        Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false))::env)
+                                           Clos([], t, BU.mk_ref (if cfg.steps.hnf then None else Some (cfg, ([], t))), false),
+                                           fresh_memo ()) :: env)
                       env s in
                 norm cfg env stack (guard_when_clause wopt b rest)
         in
@@ -2991,7 +2692,7 @@ and norm_match_returns cfg env ret_opt =
   | Some (b, asc) ->
     let b = norm_binder cfg env b in
     let subst, asc = SS.open_ascription [b] asc in
-    let asc = norm_ascription cfg (dummy::env) asc in
+    let asc = norm_ascription cfg (dummy()::env) asc in
     Some (b, SS.close_ascription subst asc)
 
 and norm_ascription cfg env (tc, tacopt, use_eq) =
@@ -3006,7 +2707,7 @@ and norm_residual_comp cfg env (rc:residual_comp) : residual_comp =
 
 let reflection_env_hook = BU.mk_ref None
 
-let normalize_with_primitive_steps ps s e t =
+let normalize_with_primitive_steps ps s e (t:term) =
   let is_nbe = is_nbe_request s in
   let maybe_nbe = if is_nbe then " (NBE)" else "" in
   Errors.with_ctx ("While normalizing a term" ^ maybe_nbe) (fun () ->
@@ -3041,14 +2742,14 @@ let normalize_comp s e c =
     let cfg = config s e in
     reflection_env_hook := Some e;
     plugin_unfold_warn_ctr := 10;
-    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (Print.comp_to_string c));
+    log_top cfg (fun () -> BU.print1 "Starting normalizer for computation (%s) {\n" (show c));
     log_top cfg (fun () -> BU.print1 ">>> cfg = %s\n" (show cfg));
     def_check_scoped c.pos "normalize_comp call" e c;
     let (c, ms) = Errors.with_ctx "While normalizing a computation type" (fun () ->
                     BU.record_time (fun () ->
                       norm_comp cfg [] c))
     in
-    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (Print.comp_to_string c) (string_of_int ms));
+    log_top cfg (fun () -> BU.print2 "}\nNormalization result = (%s) in %s ms\n" (show c) (show ms));
     c)
   (Some (Ident.string_of_lid (Env.current_module e)))
   "FStar.TypeChecker.Normalize.normalize_comp"
