@@ -144,6 +144,11 @@ let parse_use_lang_blob (extension_name:string)
 %nonassoc THEN
 %nonassoc ELSE
 
+%nonassoc ASSERT
+%nonassoc EQUALTYPE
+%nonassoc SUBTYPE
+%nonassoc BY
+
 %right COLON_COLON
 %right AMP
 
@@ -879,7 +884,7 @@ thunk2(X):
        mk_term (Abs ([mk_pattern (PatWild (None, [])) (rr $loc)], t)) (rr $loc) Expr }
 
 ascribeTyp:
-  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(atomicTerm) {tactic}) { t, tacopt }
+  | COLON t=tmArrow(tmNoEq) tacopt=option(BY tactic=thunk(trailingTerm) {tactic}) { t, tacopt }
 
 (* Remove for stratify *)
 ascribeKind:
@@ -921,14 +926,23 @@ match_returning:
 %public
 noSeqTerm:
   | t=typ  { t }
-  | e=tmIff SUBTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
-      { mk_term (Ascribed(e,{t with level=Expr},tactic_opt,false)) (rr2 $loc(e) $loc(tactic_opt)) Expr }
-  | e=tmIff EQUALTYPE t=tmIff tactic_opt=option(BY tactic=thunk(typ) {tactic})
+  | e=tmIff SUBTYPE t=tmIff
+      { mk_term (Ascribed(e,{t with level=Expr},None,false)) (rr $loc(e)) Expr }
+  | e=tmIff SUBTYPE t=tmIff BY tactic=thunk(typ)
+      { mk_term (Ascribed(e,{t with level=Expr},Some tactic,false)) (rr2 $loc(e) $loc(tactic)) Expr }
+  | e=tmIff EQUALTYPE t=tmIff
       {
         log_issue_text (rr $loc)
 	          (Warning_BleedingEdge_Feature,
 		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
-        mk_term (Ascribed(e,{t with level=Expr},tactic_opt,true)) (rr2 $loc(e) $loc(tactic_opt)) Expr
+        mk_term (Ascribed(e,{t with level=Expr},None,true)) (rr $loc(e)) Expr
+      }
+  | e=tmIff EQUALTYPE t=tmIff BY tactic=thunk(typ)
+      {
+        log_issue_text (rr $loc)
+	          (Warning_BleedingEdge_Feature,
+		   "Equality type ascriptions is an experimental feature subject to redesign in the future");
+        mk_term (Ascribed(e,{t with level=Expr},Some tactic,true)) (rr2 $loc(e) $loc(tactic)) Expr
       }
   | e1=atomicTermNotQUident op_expr=dotOperator LARROW e3=noSeqTerm
       {
@@ -1014,15 +1028,16 @@ noSeqTerm:
         mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
       }
 
-  | a=ASSERT e=noSeqTerm tactic_opt=option(BY tactic=thunk2(typ) {tactic})
+  | a=ASSERT e=noSeqTerm
       {
-        match tactic_opt with
-        | None ->
-          let a = set_lid_range assert_lid (rr $loc(a)) in
-          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
-        | Some tac ->
-          let a = set_lid_range assert_by_tactic_lid (rr $loc(a)) in
-          mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e; tac] (rr $loc)
+        let a = set_lid_range assert_lid (rr $loc(a)) in
+        mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e] (rr $loc)
+      }
+
+  | a=ASSERT e=noSeqTerm BY tactic=thunk2(typ)
+      {
+        let a = set_lid_range assert_by_tactic_lid (rr $loc(a)) in
+        mkExplicitApp (mk_term (Var a) (rr $loc(a)) Expr) [e; tactic] (rr $loc)
       }
 
    | u=UNDERSCORE BY tactic=thunk(atomicTerm)
@@ -1165,7 +1180,7 @@ disjunctivePats:
 conjunctivePat:
   | pats=separated_nonempty_list(SEMICOLON, appTerm)          { pats }
 
-simpleTerm:
+%inline simpleTerm:
   | e=tmIff { e }
 
 maybeFocusArrow:
@@ -1289,6 +1304,9 @@ tmEqWith(X):
   | e=tmNoEqWith(X)
       { e }
 
+%inline recordTerm:
+  | LBRACE e=recordExp RBRACE { e }
+
 tmNoEqWith(X):
   | e1=tmNoEqWith(X) COLON_COLON e2=tmNoEqWith(X)
       { consTerm (rr $loc) e1 e2 }
@@ -1316,7 +1334,7 @@ tmNoEqWith(X):
       { mkApp op [ e1, Infix; e2, Nothing ] (rr $loc) }
  | e1=tmNoEqWith(X) op=OPINFIX4 e2=tmNoEqWith(X)
       { mk_term (Op(mk_ident(op, rr $loc(op)), [e1; e2])) (rr $loc) Un}
-  | LBRACE e=recordExp RBRACE { e }
+  | e=recordTerm { e }
   | BACKTICK_PERC e=atomicTerm
       { mk_term (VQuote e) (rr $loc) Un }
   | op=TILDE e=atomicTerm
@@ -1378,22 +1396,30 @@ simpleDef:
   | e=separated_pair(qlidentOrOperator, EQUALS, noSeqTerm) { e }
   | lid=qlidentOrOperator { lid, mk_term (Name (lid_of_ids [ ident_of_lid lid ])) (rr $loc(lid)) Un }
 
-%inline appTermCommon(argTerm):
-  | head=indexingTerm args=list(argTerm)
+appTermArgs:
+  | h=maybeHash a=onlyTrailingTerm { [h, a] }
+  | h=maybeHash a=indexingTerm rest=appTermArgs { (h, a) :: rest }
+  | h=maybeHash a=recordTerm rest=appTermArgs { (h, a) :: rest }
+  | a=universe rest=appTermArgs { a :: rest }
+  | { [] }
+
+appTermCommon(args):
+  | head=indexingTerm args=args
       { mkApp head (map (fun (x,y) -> (y,x)) args) (rr2 $loc(head) $loc(args)) }
 
 %public
 appTerm:
-  | t=appTermCommon(t=argTerm {t} | h=maybeHash LBRACE t=recordExp RBRACE {h, t}) {t}
+  | t=onlyTrailingTerm { t }
+  | t=appTermCommon(appTermArgs) { t }
+
+appTermArgsNoRecordExp:
+  | h=maybeHash a=indexingTerm rest=appTermArgsNoRecordExp { (h, a) :: rest }
+  | a=universe rest=appTermArgsNoRecordExp { a :: rest }
+  | { [] }
 
 %public
 appTermNoRecordExp:
-  | t=appTermCommon(argTerm) {t}
-
-%public
-argTerm:
-  | x=pair(maybeHash, indexingTerm) { x }
-  | u=universe { u }
+  | t=appTermCommon(appTermArgsNoRecordExp) {t}
 
 %inline maybeHash:
   |      { Nothing }
@@ -1418,6 +1444,14 @@ atomicTerm:
     { x }
   | x=opPrefixTerm(atomicTermQUident)
     { x }
+
+trailingTerm:
+  | x=atomicTerm
+    { x }
+  | x=onlyTrailingTerm
+    { x }
+
+onlyTrailingTerm:
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
 
