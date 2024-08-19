@@ -14245,7 +14245,10 @@ let (sub_or_eq_comp :
                       match uu___5 with
                       | (r, ms) ->
                           ((let uu___7 =
-                              FStar_Compiler_Effect.op_Bang dbg_RelBench in
+                              ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                                 (FStar_Compiler_Effect.op_Bang dbg_RelTop))
+                                ||
+                                (FStar_Compiler_Effect.op_Bang dbg_RelBench) in
                             if uu___7
                             then
                               let uu___8 =

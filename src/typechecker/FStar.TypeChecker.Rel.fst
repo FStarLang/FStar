@@ -4905,7 +4905,7 @@ let sub_or_eq_comp env (use_eq:bool) c1 c2 =
     let (r, ms) = BU.record_time
                   (fun () -> with_guard env prob <| solve_and_commit (singleton wl prob true)  (fun _ -> None))
     in
-    if !dbg_RelBench then
+    if !dbg_Rel || !dbg_RelTop || !dbg_RelBench then
       BU.print4 "sub_comp of %s --and-- %s --with-- %s --- solved in %s ms\n" (show c1) (show c2) (if rel = EQ then "EQ" else "SUB") (string_of_int ms);
     r)
   (Some (Ident.string_of_lid (Env.current_module env)))
