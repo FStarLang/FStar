@@ -160,7 +160,7 @@ let rec univ_kernel u = match Subst.compress_univ u with
     | U_max _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
+    | U_bvar i -> failwith ("Imposible: univ_kernel (U_bvar " ^ show i ^ ")")
 
 //requires: kernel u = U_zero, n
 //returns: n
