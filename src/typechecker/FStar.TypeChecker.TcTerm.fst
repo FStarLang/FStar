@@ -353,7 +353,8 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
              else None, c, None
   in
   def_check_scoped c.pos "check_expected_effect.c.before_norm" env c;
-  let c = norm_c env c in
+  let c = Errors.with_ctx "While normalizing actual computation type in check_expected_effect"
+            (fun () -> norm_c env c) in
   def_check_scoped c.pos "check_expected_effect.c.after_norm" env c;
   match expected_c_opt with
     | None ->
@@ -372,7 +373,7 @@ let check_expected_effect env (use_eq:bool) (copt:option comp) (ec : term & comp
                  (show e)
                  (show c)
                  (show expected_c)
-                 (string_of_bool use_eq);
+                 (show use_eq);
        let e, _, g = TcUtil.check_comp env use_eq e c expected_c in
        let g = TcUtil.label_guard (Env.get_range env) (Errors.mkmsg "Could not prove post-condition") g in
        if Debug.medium ()
@@ -2275,27 +2276,16 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
     (* topt is the expected type of the expression obtained from the env *)
     let env, topt = Env.clear_expected_typ env in
 
-    if Debug.high ()
-    then BU.print2 "!!!!!!!!!!!!!!!Expected type is (%s), top_level=%s\n"
-          (match topt with
-           | None -> "None"
-           | Some (t, use_eq) -> show t ^ ", use_eq = " ^ string_of_bool use_eq)
-          (show env.top_level);
+    if Debug.high () then
+      BU.print2 "!!!!!!!!!!!!!!!Expected type is (%s), top_level=%s\n"
+          (show topt) (show env.top_level);
 
     let tfun_opt, bs, letrec_binders, c_opt, envbody, body, g_env =
       tc_abs_expected_function_typ env bs topt body in
 
-    if Debug.extreme ()
-    then BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
-           (match tfun_opt with
-            | None -> "None"
-            | Some t -> show t)
-           (match c_opt with
-            | None -> "None"
-            | Some t -> show t)
-           (match Env.expected_typ envbody with
-            | None -> "None"
-            | Some (t, use_eq) -> show t ^ ", use_eq = " ^ string_of_bool use_eq);
+    if Debug.extreme () then
+      BU.print3 "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
+           (show tfun_opt) (show c_opt) (show (Env.expected_typ envbody));
 
     if !dbg_NYC
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
@@ -2359,10 +2349,10 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
       match should_check_expected_effect with
       | Inl use_eq ->
         let cbody, g_lc = TcComm.lcomp_comp cbody in
-        let body, cbody, guard = check_expected_effect
-          envbody
-          use_eq
-          c_opt (body, cbody) in
+        let body, cbody, guard =
+          Errors.with_ctx "While checking that lambda abstraction has expected effect" (fun () ->
+            check_expected_effect envbody use_eq c_opt (body, cbody))
+        in
         body, cbody, Env.conj_guard guard_body (Env.conj_guard g_lc guard)
       | Inr _ ->
         let cbody, g_lc = TcComm.lcomp_comp cbody in
