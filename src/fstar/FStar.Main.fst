@@ -117,6 +117,21 @@ let fstar_files: ref (option (list string)) = Util.mk_ref None
 (****************************************************************************)
 let go _ =
   let res, filenames = process_args () in
+  if Options.trace_error () then begin
+    let h = get_sigint_handler () in
+    let h' s =
+      let open FStar.Pprint in
+      let open FStar.Errors.Msg in
+      Debug.enable (); (* make sure diag is printed *)
+      Options.set_option "error_contexts" (Options.Bool true);
+      (* ^ Print context. Stack trace will be added since we have trace_error. *)
+      Errors.diag_doc Range.dummyRange [
+        text "GOT SIGINT! Exiting";
+      ];
+      exit 1
+    in
+    set_sigint_handler (sigint_handler_f h')
+  end;
   match res with
     | Empty ->
         Options.display_usage(); exit 1
