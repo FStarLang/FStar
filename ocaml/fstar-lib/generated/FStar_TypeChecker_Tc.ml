@@ -165,7 +165,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.core_check =
               (env.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env.FStar_TypeChecker_Env.missing_decl)
+              (env.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env.FStar_TypeChecker_Env.pending_lemmas)
           }
       | FStar_Pervasives_Native.None ->
           let lids = FStar_Syntax_Util.lids_of_sigelt se in
@@ -277,7 +279,9 @@ let (set_hint_correlator :
             FStar_TypeChecker_Env.core_check =
               (env.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env.FStar_TypeChecker_Env.missing_decl)
+              (env.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env.FStar_TypeChecker_Env.pending_lemmas)
           }
 let (log : FStar_TypeChecker_Env.env -> Prims.bool) =
   fun env ->
@@ -1145,7 +1149,9 @@ let (tc_sig_let :
                           FStar_TypeChecker_Env.core_check =
                             (env1.FStar_TypeChecker_Env.core_check);
                           FStar_TypeChecker_Env.missing_decl =
-                            (env1.FStar_TypeChecker_Env.missing_decl)
+                            (env1.FStar_TypeChecker_Env.missing_decl);
+                          FStar_TypeChecker_Env.pending_lemmas =
+                            (env1.FStar_TypeChecker_Env.pending_lemmas)
                         } in
                       let e1 =
                         let uu___3 = do_two_phases env' in
@@ -1385,7 +1391,10 @@ let (tc_sig_let :
                                               (env'.FStar_TypeChecker_Env.core_check);
                                             FStar_TypeChecker_Env.missing_decl
                                               =
-                                              (env'.FStar_TypeChecker_Env.missing_decl)
+                                              (env'.FStar_TypeChecker_Env.missing_decl);
+                                            FStar_TypeChecker_Env.pending_lemmas
+                                              =
+                                              (env'.FStar_TypeChecker_Env.pending_lemmas)
                                           } e in
                                       match uu___7 with
                                       | (e3, uu___8, uu___9) -> e3) uu___5
@@ -1648,7 +1657,10 @@ let (tc_sig_let :
                                         FStar_TypeChecker_Env.core_check =
                                           (env'1.FStar_TypeChecker_Env.core_check);
                                         FStar_TypeChecker_Env.missing_decl =
-                                          (env'1.FStar_TypeChecker_Env.missing_decl)
+                                          (env'1.FStar_TypeChecker_Env.missing_decl);
+                                        FStar_TypeChecker_Env.pending_lemmas
+                                          =
+                                          (env'1.FStar_TypeChecker_Env.pending_lemmas)
                                       } e1) uu___5
                                  "FStar.TypeChecker.Tc.tc_sig_let-tc-phase2" in
                              let uu___5 =
@@ -1853,7 +1865,10 @@ let (tc_sig_let :
                                          FStar_TypeChecker_Env.core_check =
                                            (env'1.FStar_TypeChecker_Env.core_check);
                                          FStar_TypeChecker_Env.missing_decl =
-                                           (env'1.FStar_TypeChecker_Env.missing_decl)
+                                           (env'1.FStar_TypeChecker_Env.missing_decl);
+                                         FStar_TypeChecker_Env.pending_lemmas
+                                           =
+                                           (env'1.FStar_TypeChecker_Env.pending_lemmas)
                                        } in
                                      let err s pos =
                                        FStar_Errors.raise_error
@@ -2140,7 +2155,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.core_check =
                        (env.FStar_TypeChecker_Env.core_check);
                      FStar_TypeChecker_Env.missing_decl =
-                       (env.FStar_TypeChecker_Env.missing_decl)
+                       (env.FStar_TypeChecker_Env.missing_decl);
+                     FStar_TypeChecker_Env.pending_lemmas =
+                       (env.FStar_TypeChecker_Env.pending_lemmas)
                    }
                  else env in
                let env'1 = FStar_TypeChecker_Env.push env' "expect_failure" in
@@ -2361,7 +2378,9 @@ let (tc_decl' :
                                     FStar_TypeChecker_Env.core_check =
                                       (env1.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (env1.FStar_TypeChecker_Env.missing_decl)
+                                      (env1.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (env1.FStar_TypeChecker_Env.pending_lemmas)
                                   } ses se2.FStar_Syntax_Syntax.sigquals
                                   se2.FStar_Syntax_Syntax.sigattrs lids in
                               FStar_Pervasives_Native.fst uu___6 in
@@ -2653,7 +2672,9 @@ let (tc_decl' :
                                        FStar_TypeChecker_Env.core_check =
                                          (env.FStar_TypeChecker_Env.core_check);
                                        FStar_TypeChecker_Env.missing_decl =
-                                         (env.FStar_TypeChecker_Env.missing_decl)
+                                         (env.FStar_TypeChecker_Env.missing_decl);
+                                       FStar_TypeChecker_Env.pending_lemmas =
+                                         (env.FStar_TypeChecker_Env.pending_lemmas)
                                      } ne se2.FStar_Syntax_Syntax.sigquals
                                      se2.FStar_Syntax_Syntax.sigattrs in
                                  {
@@ -2871,7 +2892,9 @@ let (tc_decl' :
                                   FStar_TypeChecker_Env.core_check =
                                     (env.FStar_TypeChecker_Env.core_check);
                                   FStar_TypeChecker_Env.missing_decl =
-                                    (env.FStar_TypeChecker_Env.missing_decl)
+                                    (env.FStar_TypeChecker_Env.missing_decl);
+                                  FStar_TypeChecker_Env.pending_lemmas =
+                                    (env.FStar_TypeChecker_Env.pending_lemmas)
                                 } (lid, uvs, tps, c) r in
                             match uu___7 with
                             | (lid1, uvs1, tps1, c1) ->
@@ -3099,7 +3122,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.core_check =
                                   (env1.FStar_TypeChecker_Env.core_check);
                                 FStar_TypeChecker_Env.missing_decl =
-                                  (env1.FStar_TypeChecker_Env.missing_decl)
+                                  (env1.FStar_TypeChecker_Env.missing_decl);
+                                FStar_TypeChecker_Env.pending_lemmas =
+                                  (env1.FStar_TypeChecker_Env.pending_lemmas)
                               } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                           match uu___6 with
                           | (uvs1, t1) ->
@@ -3283,7 +3308,9 @@ let (tc_decl' :
                                 FStar_TypeChecker_Env.core_check =
                                   (env1.FStar_TypeChecker_Env.core_check);
                                 FStar_TypeChecker_Env.missing_decl =
-                                  (env1.FStar_TypeChecker_Env.missing_decl)
+                                  (env1.FStar_TypeChecker_Env.missing_decl);
+                                FStar_TypeChecker_Env.pending_lemmas =
+                                  (env1.FStar_TypeChecker_Env.pending_lemmas)
                               } (uvs, t) se2.FStar_Syntax_Syntax.sigrng in
                           match uu___6 with
                           | (uvs1, t1) ->
@@ -3555,7 +3582,9 @@ let (tc_decl' :
                      FStar_TypeChecker_Env.core_check =
                        (env.FStar_TypeChecker_Env.core_check);
                      FStar_TypeChecker_Env.missing_decl =
-                       (env.FStar_TypeChecker_Env.missing_decl)
+                       (env.FStar_TypeChecker_Env.missing_decl);
+                     FStar_TypeChecker_Env.pending_lemmas =
+                       (env.FStar_TypeChecker_Env.pending_lemmas)
                    } in
                  (let uu___4 = FStar_Compiler_Debug.low () in
                   if uu___4
@@ -3711,7 +3740,9 @@ let (tc_decl' :
                                     FStar_TypeChecker_Env.core_check =
                                       (env.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (env.FStar_TypeChecker_Env.missing_decl)
+                                      (env.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (env.FStar_TypeChecker_Env.pending_lemmas)
                                   } m n p t in
                               match uu___9 with
                               | (t2, ty, uu___10) ->
@@ -3956,7 +3987,9 @@ let (tc_decl' :
                                     FStar_TypeChecker_Env.core_check =
                                       (env.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (env.FStar_TypeChecker_Env.missing_decl)
+                                      (env.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (env.FStar_TypeChecker_Env.pending_lemmas)
                                   } m n t in
                               match uu___9 with
                               | (t2, ty, uu___10) ->
@@ -4181,7 +4214,9 @@ let (tc_decl :
             FStar_TypeChecker_Env.core_check =
               (env1.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env1.FStar_TypeChecker_Env.missing_decl)
+              (env1.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env1.FStar_TypeChecker_Env.pending_lemmas)
           }
         else env1 in
       (let uu___1 = FStar_Compiler_Debug.any () in
@@ -4317,7 +4352,9 @@ let (tc_decl :
                     FStar_TypeChecker_Env.core_check =
                       (env2.FStar_TypeChecker_Env.core_check);
                     FStar_TypeChecker_Env.missing_decl =
-                      (env2.FStar_TypeChecker_Env.missing_decl)
+                      (env2.FStar_TypeChecker_Env.missing_decl);
+                    FStar_TypeChecker_Env.pending_lemmas =
+                      (env2.FStar_TypeChecker_Env.pending_lemmas)
                   } se in
               result1)
            else
@@ -4448,7 +4485,9 @@ let (tc_decl :
                       FStar_TypeChecker_Env.core_check =
                         (env3.FStar_TypeChecker_Env.core_check);
                       FStar_TypeChecker_Env.missing_decl =
-                        (env3.FStar_TypeChecker_Env.missing_decl)
+                        (env3.FStar_TypeChecker_Env.missing_decl);
+                      FStar_TypeChecker_Env.pending_lemmas =
+                        (env3.FStar_TypeChecker_Env.pending_lemmas)
                     }) in
             result1))
 let (add_sigelt_to_env :
@@ -4617,7 +4656,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.core_check =
                          (env1.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (env1.FStar_TypeChecker_Env.missing_decl)
+                         (env1.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (env1.FStar_TypeChecker_Env.pending_lemmas)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PopOptions) ->
@@ -4729,7 +4770,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.core_check =
                          (env1.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (env1.FStar_TypeChecker_Env.missing_decl)
+                         (env1.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (env1.FStar_TypeChecker_Env.pending_lemmas)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.SetOptions uu___2) ->
@@ -4841,7 +4884,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.core_check =
                          (env1.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (env1.FStar_TypeChecker_Env.missing_decl)
+                         (env1.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (env1.FStar_TypeChecker_Env.pending_lemmas)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.ResetOptions uu___2) ->
@@ -4953,7 +4998,9 @@ let (add_sigelt_to_env :
                        FStar_TypeChecker_Env.core_check =
                          (env1.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (env1.FStar_TypeChecker_Env.missing_decl)
+                         (env1.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (env1.FStar_TypeChecker_Env.pending_lemmas)
                      })
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.RestartSolver) ->
@@ -5358,7 +5405,9 @@ let (tc_partial_modul :
            FStar_TypeChecker_Env.core_check =
              (env.FStar_TypeChecker_Env.core_check);
            FStar_TypeChecker_Env.missing_decl =
-             (env.FStar_TypeChecker_Env.missing_decl)
+             (env.FStar_TypeChecker_Env.missing_decl);
+           FStar_TypeChecker_Env.pending_lemmas =
+             (env.FStar_TypeChecker_Env.pending_lemmas)
          } in
        let env2 =
          FStar_TypeChecker_Env.set_current_module env1
@@ -5713,7 +5762,9 @@ let (check_module :
              FStar_TypeChecker_Env.core_check =
                (env0.FStar_TypeChecker_Env.core_check);
              FStar_TypeChecker_Env.missing_decl =
-               (env0.FStar_TypeChecker_Env.missing_decl)
+               (env0.FStar_TypeChecker_Env.missing_decl);
+             FStar_TypeChecker_Env.pending_lemmas =
+               (env0.FStar_TypeChecker_Env.pending_lemmas)
            } in
          let uu___2 = tc_modul env m b in
          match uu___2 with
@@ -5822,7 +5873,9 @@ let (check_module :
                  FStar_TypeChecker_Env.core_check =
                    (env1.FStar_TypeChecker_Env.core_check);
                  FStar_TypeChecker_Env.missing_decl =
-                   (env1.FStar_TypeChecker_Env.missing_decl)
+                   (env1.FStar_TypeChecker_Env.missing_decl);
+                 FStar_TypeChecker_Env.pending_lemmas =
+                   (env1.FStar_TypeChecker_Env.pending_lemmas)
                } in
              ((let uu___4 =
                  let uu___5 =

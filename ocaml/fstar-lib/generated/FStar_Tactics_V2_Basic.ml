@@ -956,7 +956,9 @@ let (tc_unifier_solved_implicits :
                          FStar_TypeChecker_Env.core_check =
                            (env1.FStar_TypeChecker_Env.core_check);
                          FStar_TypeChecker_Env.missing_decl =
-                           (env1.FStar_TypeChecker_Env.missing_decl)
+                           (env1.FStar_TypeChecker_Env.missing_decl);
+                         FStar_TypeChecker_Env.pending_lemmas =
+                           (env1.FStar_TypeChecker_Env.pending_lemmas)
                        } in
                      let must_tot1 =
                        must_tot &&
@@ -2119,7 +2121,9 @@ let (__tc :
                                      FStar_TypeChecker_Env.core_check =
                                        (e.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e.FStar_TypeChecker_Env.missing_decl)
+                                       (e.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  Obj.magic
                                    (try
@@ -2354,7 +2358,9 @@ let (__tc_ghost :
                                      FStar_TypeChecker_Env.core_check =
                                        (e.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e.FStar_TypeChecker_Env.missing_decl)
+                                       (e.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  let e2 =
                                    {
@@ -2470,7 +2476,9 @@ let (__tc_ghost :
                                      FStar_TypeChecker_Env.core_check =
                                        (e1.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e1.FStar_TypeChecker_Env.missing_decl)
+                                       (e1.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e1.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  Obj.magic
                                    (try
@@ -2717,7 +2725,9 @@ let (__tc_lax :
                                      FStar_TypeChecker_Env.core_check =
                                        (e.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e.FStar_TypeChecker_Env.missing_decl)
+                                       (e.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  let e2 =
                                    {
@@ -2833,7 +2843,9 @@ let (__tc_lax :
                                      FStar_TypeChecker_Env.core_check =
                                        (e1.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e1.FStar_TypeChecker_Env.missing_decl)
+                                       (e1.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e1.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  let e3 =
                                    {
@@ -2949,7 +2961,9 @@ let (__tc_lax :
                                      FStar_TypeChecker_Env.core_check =
                                        (e2.FStar_TypeChecker_Env.core_check);
                                      FStar_TypeChecker_Env.missing_decl =
-                                       (e2.FStar_TypeChecker_Env.missing_decl)
+                                       (e2.FStar_TypeChecker_Env.missing_decl);
+                                     FStar_TypeChecker_Env.pending_lemmas =
+                                       (e2.FStar_TypeChecker_Env.pending_lemmas)
                                    } in
                                  Obj.magic
                                    (try
@@ -6377,7 +6391,9 @@ let (_t_trefl :
                                     FStar_TypeChecker_Env.core_check =
                                       (uu___12.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (uu___12.FStar_TypeChecker_Env.missing_decl)
+                                      (uu___12.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (uu___12.FStar_TypeChecker_Env.pending_lemmas)
                                   } in
                                 let uu___12 =
                                   FStar_TypeChecker_Core.compute_term_type_handle_guards
@@ -6902,7 +6918,9 @@ let (join_goals :
                                     FStar_TypeChecker_Env.core_check =
                                       (uu___3.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (uu___3.FStar_TypeChecker_Env.missing_decl)
+                                      (uu___3.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (uu___3.FStar_TypeChecker_Env.pending_lemmas)
                                   } in
                                 let uu___3 =
                                   FStar_Tactics_Monad.mk_irrelevant_goal
@@ -7538,7 +7556,9 @@ let (unshelve : FStar_Syntax_Syntax.term -> unit FStar_Tactics_Monad.tac) =
                       FStar_TypeChecker_Env.core_check =
                         (env1.FStar_TypeChecker_Env.core_check);
                       FStar_TypeChecker_Env.missing_decl =
-                        (env1.FStar_TypeChecker_Env.missing_decl)
+                        (env1.FStar_TypeChecker_Env.missing_decl);
+                      FStar_TypeChecker_Env.pending_lemmas =
+                        (env1.FStar_TypeChecker_Env.pending_lemmas)
                     } in
                   let g =
                     FStar_Tactics_Types.mk_goal env2 ctx_uvar opts false "" in
@@ -9039,7 +9059,10 @@ let (t_destruct :
                                                                     (env1.FStar_TypeChecker_Env.core_check);
                                                                     FStar_TypeChecker_Env.missing_decl
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.missing_decl)
+                                                                    (env1.FStar_TypeChecker_Env.missing_decl);
+                                                                    FStar_TypeChecker_Env.pending_lemmas
+                                                                    =
+                                                                    (env1.FStar_TypeChecker_Env.pending_lemmas)
                                                                     } s_ty1
                                                                     pat in
                                                                     match uu___33
@@ -9740,7 +9763,9 @@ let (push_bv_dsenv :
                     FStar_TypeChecker_Env.core_check =
                       (e.FStar_TypeChecker_Env.core_check);
                     FStar_TypeChecker_Env.missing_decl =
-                      (e.FStar_TypeChecker_Env.missing_decl)
+                      (e.FStar_TypeChecker_Env.missing_decl);
+                    FStar_TypeChecker_Env.pending_lemmas =
+                      (e.FStar_TypeChecker_Env.pending_lemmas)
                   }, uu___2) in
                Obj.magic
                  (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -10920,7 +10945,9 @@ let (refl_tc_term :
                              FStar_TypeChecker_Env.core_check =
                                (g1.FStar_TypeChecker_Env.core_check);
                              FStar_TypeChecker_Env.missing_decl =
-                               (g1.FStar_TypeChecker_Env.missing_decl)
+                               (g1.FStar_TypeChecker_Env.missing_decl);
+                             FStar_TypeChecker_Env.pending_lemmas =
+                               (g1.FStar_TypeChecker_Env.pending_lemmas)
                            } in
                          let e1 =
                            let g3 =
@@ -11029,7 +11056,9 @@ let (refl_tc_term :
                                FStar_TypeChecker_Env.core_check =
                                  (g2.FStar_TypeChecker_Env.core_check);
                                FStar_TypeChecker_Env.missing_decl =
-                                 (g2.FStar_TypeChecker_Env.missing_decl)
+                                 (g2.FStar_TypeChecker_Env.missing_decl);
+                               FStar_TypeChecker_Env.pending_lemmas =
+                                 (g2.FStar_TypeChecker_Env.pending_lemmas)
                              } in
                            let must_tot = false in
                            let uu___4 =
@@ -11648,7 +11677,9 @@ let (refl_instantiate_implicits :
                                  FStar_TypeChecker_Env.core_check =
                                    (g2.FStar_TypeChecker_Env.core_check);
                                  FStar_TypeChecker_Env.missing_decl =
-                                   (g2.FStar_TypeChecker_Env.missing_decl)
+                                   (g2.FStar_TypeChecker_Env.missing_decl);
+                                 FStar_TypeChecker_Env.pending_lemmas =
+                                   (g2.FStar_TypeChecker_Env.pending_lemmas)
                                } in
                              let uu___4 =
                                g3.FStar_TypeChecker_Env.typeof_tot_or_gtot_term
@@ -12099,7 +12130,10 @@ let (refl_try_unify :
                                                 (g1.FStar_TypeChecker_Env.core_check);
                                               FStar_TypeChecker_Env.missing_decl
                                                 =
-                                                (g1.FStar_TypeChecker_Env.missing_decl)
+                                                (g1.FStar_TypeChecker_Env.missing_decl);
+                                              FStar_TypeChecker_Env.pending_lemmas
+                                                =
+                                                (g1.FStar_TypeChecker_Env.pending_lemmas)
                                             } in
                                           let guard_eq =
                                             let smt_ok = true in
@@ -12471,7 +12505,9 @@ let (push_open_namespace :
                FStar_TypeChecker_Env.core_check =
                  (e.FStar_TypeChecker_Env.core_check);
                FStar_TypeChecker_Env.missing_decl =
-                 (e.FStar_TypeChecker_Env.missing_decl)
+                 (e.FStar_TypeChecker_Env.missing_decl);
+               FStar_TypeChecker_Env.pending_lemmas =
+                 (e.FStar_TypeChecker_Env.pending_lemmas)
              } in
            Obj.magic
              (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -12596,7 +12632,9 @@ let (push_module_abbrev :
                    FStar_TypeChecker_Env.core_check =
                      (e.FStar_TypeChecker_Env.core_check);
                    FStar_TypeChecker_Env.missing_decl =
-                     (e.FStar_TypeChecker_Env.missing_decl)
+                     (e.FStar_TypeChecker_Env.missing_decl);
+                   FStar_TypeChecker_Env.pending_lemmas =
+                     (e.FStar_TypeChecker_Env.pending_lemmas)
                  } in
                Obj.magic
                  (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac ()
@@ -12755,7 +12793,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.core_check =
               (env2.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env2.FStar_TypeChecker_Env.missing_decl)
+              (env2.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env2.FStar_TypeChecker_Env.pending_lemmas)
           } in
         let env4 =
           {
@@ -12856,7 +12896,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.core_check =
               (env3.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env3.FStar_TypeChecker_Env.missing_decl)
+              (env3.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env3.FStar_TypeChecker_Env.pending_lemmas)
           } in
         let env5 =
           {
@@ -12957,7 +12999,9 @@ let (tac_env : FStar_TypeChecker_Env.env -> FStar_TypeChecker_Env.env) =
             FStar_TypeChecker_Env.core_check =
               (env4.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env4.FStar_TypeChecker_Env.missing_decl)
+              (env4.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env4.FStar_TypeChecker_Env.pending_lemmas)
           } in
         env5
 let (proofstate_of_goals :
@@ -13103,7 +13147,9 @@ let (proofstate_of_goal_ty :
             FStar_TypeChecker_Env.core_check =
               (env1.FStar_TypeChecker_Env.core_check);
             FStar_TypeChecker_Env.missing_decl =
-              (env1.FStar_TypeChecker_Env.missing_decl)
+              (env1.FStar_TypeChecker_Env.missing_decl);
+            FStar_TypeChecker_Env.pending_lemmas =
+              (env1.FStar_TypeChecker_Env.pending_lemmas)
           } in
         let env3 = tac_env env2 in
         let uu___ = FStar_Tactics_Types.goal_of_goal_ty env3 typ in

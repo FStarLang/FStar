@@ -126,7 +126,7 @@ type decl =
   | DefineFun  of string & list sort & sort & term & caption
   | Assume     of assumption
   | Caption    of string
-  | Module     of string & list decl & list string //deps
+  | Module     of string & list decl
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list string
@@ -323,9 +323,6 @@ val print_smt_term_list: list term -> string
 val print_smt_term_list_list: list (list term) -> string
 
 val dummy_sort : sort
-
-val module_deps_of_term (_:term) : list string
-val module_deps_of_decl (_:decl) : list string
 
 instance val showable_smt_term : Class.Show.showable term
 instance val showable_decl : showable decl

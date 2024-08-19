@@ -43,6 +43,56 @@ module TcComm = FStar.TypeChecker.Common
 
 open FStar.Defensive
 
+let lemma_triggers = list (list (list lident))
+
+type pending_lemma_patterns = {
+  //lemma -> list (list (list lident))
+  //   SMTPatOr [ SMTPat [ p11; p12...];
+  //              SMTPat [ p21; p22...]; ...]
+  //remaining triggers for each lemma
+  pending_lemma_triggers: BU.psmap lemma_triggers;
+  //lid -> list lemma; lemmas whose patterns mention lid
+  lidents_to_pending_lemmas: BU.psmap (list lident); 
+}
+
+let empty_pending_lemma_patterns = {
+  pending_lemma_triggers = BU.psmap_empty();
+  lidents_to_pending_lemmas = BU.psmap_empty();
+}
+
+let remove_pending_lemma (lid:lident) (p:pending_lemma_patterns)
+: pending_lemma_patterns
+= let lid_str = Ident.string_of_lid lid in
+  let pending_lemmas = BU.psmap_remove p.lidents_to_pending_lemmas lid_str in
+  { p with lidents_to_pending_lemmas=pending_lemmas}
+
+let remove_trigger_for_lemma (pat:lident) (lem:lident) (ctxt:pending_lemma_patterns)
+: pending_lemma_patterns & bool
+= let pat_str = Ident.string_of_lid pat in
+  let lem_str = Ident.string_of_lid lem in
+  let pending_triggers_for_lem = BU.psmap_try_find ctxt.pending_lemma_triggers lem_str in
+  match pending_triggers_for_lem with
+  | None -> ctxt, false //should not happen
+  | Some triggers ->
+    let triggers = 
+      triggers |> List.map (fun disjunct ->
+      disjunct |> List.map (fun conjunct ->
+      conjunct |> List.filter (fun x -> Ident.string_of_lid x <> pat_str)))
+    in
+    let eligible =
+      triggers |> BU.for_some (fun disjunct ->
+      disjunct |> List.for_all (fun conjunct -> Nil? conjunct))
+    in
+    let pending_lemma_triggers = BU.psmap_add ctxt.pending_lemma_triggers lem_str triggers in
+    {ctxt with pending_lemma_triggers}, eligible
+
+let find_lemmas_waiting_on_trigger (lid:lident) (ctxt:pending_lemma_patterns)
+: list lident
+= let lid_str = Ident.string_of_lid lid in
+  match BU.psmap_try_find ctxt.lidents_to_pending_lemmas lid_str with
+  | None -> []
+  | Some lems -> lems
+
 let dbg_ImplicitTrace = Debug.get_toggle "ImplicitTrace"
 let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
 
@@ -262,12 +312,34 @@ let initial_env deps
     core_check;
 
     missing_decl = empty();
+    pending_lemmas = empty_pending_lemma_patterns;
   }
 
 let dsenv env = env.dsenv
 let sigtab env = env.sigtab
 let attrtab env = env.attrtab
 let gamma_cache env = env.gamma_cache
+
+let maybe_add_pending_lemma (e:env) (lem:lident) (t:typ)
+: env
+= if not <| U.is_smt_lemma t then e else
+  let triggers = U.triggers_of_smt_lemma t in
+  let { pending_lemma_triggers; lidents_to_pending_lemmas } = e.pending_lemmas in
+  let pending_lemma_triggers =
+     BU.psmap_add pending_lemma_triggers (string_of_lid lem) triggers
+  in
+  let lidents_to_pending_lemmas = 
+    triggers |> List.fold_left (fun acc disjunct ->
+    disjunct |> List.fold_left (fun acc conjunct ->
+    conjunct |> List.fold_left (fun acc lident ->
+      match BU.psmap_try_find lidents_to_pending_lemmas (string_of_lid lident) with
+      | None -> 
+        BU.psmap_add acc (string_of_lid lident) [lem]
+      | Some lems ->
+        BU.psmap_add acc (string_of_lid lident) (lem::lems)) acc) acc) lidents_to_pending_lemmas
+  in
+  let p = { pending_lemma_triggers; lidents_to_pending_lemmas } in
+  { e with pending_lemmas = p }
 
 (* Marking and resetting the environment, for the interactive mode *)
 
@@ -1465,7 +1537,14 @@ let push_sigelt' (force:bool) env s =
   add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   let env = record_vals_and_defns env s in
-  env
+  match s.sigel with
+  | Sig_declare_typ { lid ; t } ->
+    maybe_add_pending_lemma env lid t
+  | Sig_let { lbs } ->
+    List.fold_left
+      (fun env lb ->maybe_add_pending_lemma env (S.lid_of_fv (right lb.lbname)) lb.lbtyp)
+      env (snd lbs)
+  | _ -> env
 
 let push_sigelt = push_sigelt' false
 let push_sigelt_force = push_sigelt' true

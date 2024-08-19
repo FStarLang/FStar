@@ -755,7 +755,9 @@ let run_unembedded_tactic_on_ps :
                        FStar_TypeChecker_Env.core_check =
                          (uu___.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (uu___.FStar_TypeChecker_Env.missing_decl)
+                         (uu___.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (uu___.FStar_TypeChecker_Env.pending_lemmas)
                      });
                   FStar_Tactics_Types.all_implicits =
                     (ps.FStar_Tactics_Types.all_implicits);
@@ -889,7 +891,9 @@ let run_unembedded_tactic_on_ps :
                        FStar_TypeChecker_Env.core_check =
                          (uu___.FStar_TypeChecker_Env.core_check);
                        FStar_TypeChecker_Env.missing_decl =
-                         (uu___.FStar_TypeChecker_Env.missing_decl)
+                         (uu___.FStar_TypeChecker_Env.missing_decl);
+                       FStar_TypeChecker_Env.pending_lemmas =
+                         (uu___.FStar_TypeChecker_Env.pending_lemmas)
                      });
                   FStar_Tactics_Types.all_implicits =
                     (ps1.FStar_Tactics_Types.all_implicits);

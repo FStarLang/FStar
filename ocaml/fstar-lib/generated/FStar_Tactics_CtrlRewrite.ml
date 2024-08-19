@@ -184,7 +184,10 @@ let (__do_rewrite :
                                               (env.FStar_TypeChecker_Env.core_check);
                                             FStar_TypeChecker_Env.missing_decl
                                               =
-                                              (env.FStar_TypeChecker_Env.missing_decl)
+                                              (env.FStar_TypeChecker_Env.missing_decl);
+                                            FStar_TypeChecker_Env.pending_lemmas
+                                              =
+                                              (env.FStar_TypeChecker_Env.pending_lemmas)
                                           } tm in
                                       FStar_Pervasives_Native.Some uu___3))
                             ()

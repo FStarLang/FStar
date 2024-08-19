@@ -1593,7 +1593,9 @@ and (encode_term :
                             FStar_TypeChecker_Env.core_check =
                               (uu___6.FStar_TypeChecker_Env.core_check);
                             FStar_TypeChecker_Env.missing_decl =
-                              (uu___6.FStar_TypeChecker_Env.missing_decl)
+                              (uu___6.FStar_TypeChecker_Env.missing_decl);
+                            FStar_TypeChecker_Env.pending_lemmas =
+                              (uu___6.FStar_TypeChecker_Env.pending_lemmas)
                           } in
                         let uu___6 =
                           FStar_TypeChecker_Util.pure_or_ghost_pre_and_post

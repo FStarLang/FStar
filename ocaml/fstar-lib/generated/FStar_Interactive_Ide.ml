@@ -1746,7 +1746,9 @@ let (run_push_without_deps :
                FStar_TypeChecker_Env.core_check =
                  (uu___.FStar_TypeChecker_Env.core_check);
                FStar_TypeChecker_Env.missing_decl =
-                 (uu___.FStar_TypeChecker_Env.missing_decl)
+                 (uu___.FStar_TypeChecker_Env.missing_decl);
+               FStar_TypeChecker_Env.pending_lemmas =
+                 (uu___.FStar_TypeChecker_Env.pending_lemmas)
              });
           FStar_Interactive_Ide_Types.repl_stdin =
             (st1.FStar_Interactive_Ide_Types.repl_stdin);

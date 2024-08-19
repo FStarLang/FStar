@@ -138,7 +138,9 @@ let (set_check_kind :
         FStar_TypeChecker_Env.core_check =
           (env.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env.FStar_TypeChecker_Env.missing_decl)
+          (env.FStar_TypeChecker_Env.missing_decl);
+        FStar_TypeChecker_Env.pending_lemmas =
+          (env.FStar_TypeChecker_Env.pending_lemmas)
       }
 let (repl_ld_tasks_of_deps :
   Prims.string Prims.list ->

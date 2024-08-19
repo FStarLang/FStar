@@ -1580,7 +1580,9 @@ let (encode_free_var :
                                     FStar_TypeChecker_Env.core_check =
                                       (tcenv_comp.FStar_TypeChecker_Env.core_check);
                                     FStar_TypeChecker_Env.missing_decl =
-                                      (tcenv_comp.FStar_TypeChecker_Env.missing_decl)
+                                      (tcenv_comp.FStar_TypeChecker_Env.missing_decl);
+                                    FStar_TypeChecker_Env.pending_lemmas =
+                                      (tcenv_comp.FStar_TypeChecker_Env.pending_lemmas)
                                   } comp FStar_Syntax_Syntax.U_unknown in
                               FStar_Syntax_Syntax.mk_Total uu___7
                             else comp in
@@ -2456,7 +2458,9 @@ let (encode_top_level_let :
                   FStar_TypeChecker_Env.core_check =
                     (uu___1.FStar_TypeChecker_Env.core_check);
                   FStar_TypeChecker_Env.missing_decl =
-                    (uu___1.FStar_TypeChecker_Env.missing_decl)
+                    (uu___1.FStar_TypeChecker_Env.missing_decl);
+                  FStar_TypeChecker_Env.pending_lemmas =
+                    (uu___1.FStar_TypeChecker_Env.pending_lemmas)
                 } in
               let subst_comp formals actuals comp =
                 let subst =
