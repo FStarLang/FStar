@@ -779,7 +779,10 @@ let (check_expected_effect :
                       FStar_Syntax_Print.pretty_comp
                       c1.FStar_Syntax_Syntax.pos
                       "check_expected_effect.c.before_norm" env c1;
-                    (let c2 = norm_c env c1 in
+                    (let c2 =
+                       FStar_Errors.with_ctx
+                         "While normalizing actual computation type in check_expected_effect"
+                         (fun uu___3 -> norm_c env c1) in
                      FStar_Defensive.def_check_scoped
                        FStar_TypeChecker_Env.hasBinders_env
                        FStar_Class_Binders.hasNames_comp
@@ -829,7 +832,9 @@ let (check_expected_effect :
                                         FStar_Syntax_Print.showable_comp
                                         expected_c in
                                     let uu___12 =
-                                      FStar_Compiler_Util.string_of_bool
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.printableshow
+                                           FStar_Class_Printable.printable_bool)
                                         use_eq in
                                     FStar_Compiler_Util.print4
                                       "In check_expected_effect, asking rel to solve the problem on e=(%s) and c=(%s), expected_c=(%s), and use_eq=%s\n"
@@ -6375,17 +6380,12 @@ and (tc_abs :
                 if uu___2
                 then
                   let uu___3 =
-                    match topt with
-                    | FStar_Pervasives_Native.None -> "None"
-                    | FStar_Pervasives_Native.Some (t, use_eq) ->
-                        let uu___4 =
-                          FStar_Class_Show.show
-                            FStar_Syntax_Print.showable_term t in
-                        let uu___5 =
-                          let uu___6 =
-                            FStar_Compiler_Util.string_of_bool use_eq in
-                          Prims.strcat ", use_eq = " uu___6 in
-                        Prims.strcat uu___4 uu___5 in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_option
+                         (FStar_Class_Show.show_tuple2
+                            FStar_Syntax_Print.showable_term
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_bool))) topt in
                   let uu___4 =
                     FStar_Class_Show.show
                       (FStar_Class_Show.printableshow
@@ -6403,31 +6403,23 @@ and (tc_abs :
                       if uu___4
                       then
                         let uu___5 =
-                          match tfun_opt with
-                          | FStar_Pervasives_Native.None -> "None"
-                          | FStar_Pervasives_Native.Some t ->
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_term t in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_option
+                               FStar_Syntax_Print.showable_term) tfun_opt in
                         let uu___6 =
-                          match c_opt with
-                          | FStar_Pervasives_Native.None -> "None"
-                          | FStar_Pervasives_Native.Some t ->
-                              FStar_Class_Show.show
-                                FStar_Syntax_Print.showable_comp t in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_option
+                               FStar_Syntax_Print.showable_comp) c_opt in
                         let uu___7 =
                           let uu___8 =
                             FStar_TypeChecker_Env.expected_typ envbody in
-                          match uu___8 with
-                          | FStar_Pervasives_Native.None -> "None"
-                          | FStar_Pervasives_Native.Some (t, use_eq) ->
-                              let uu___9 =
-                                FStar_Class_Show.show
-                                  FStar_Syntax_Print.showable_term t in
-                              let uu___10 =
-                                let uu___11 =
-                                  FStar_Compiler_Util.string_of_bool use_eq in
-                                Prims.strcat ", use_eq = " uu___11 in
-                              Prims.strcat uu___9 uu___10 in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_option
+                               (FStar_Class_Show.show_tuple2
+                                  FStar_Syntax_Print.showable_term
+                                  (FStar_Class_Show.printableshow
+                                     FStar_Class_Printable.printable_bool)))
+                            uu___8 in
                         FStar_Compiler_Util.print3
                           "After expected_function_typ, tfun_opt: %s, c_opt: %s, and expected type in envbody: %s\n"
                           uu___5 uu___6 uu___7
@@ -6655,8 +6647,12 @@ and (tc_abs :
                                       (match uu___8 with
                                        | (cbody1, g_lc) ->
                                            let uu___9 =
-                                             check_expected_effect envbody2
-                                               use_eq c_opt (body3, cbody1) in
+                                             FStar_Errors.with_ctx
+                                               "While checking that lambda abstraction has expected effect"
+                                               (fun uu___10 ->
+                                                  check_expected_effect
+                                                    envbody2 use_eq c_opt
+                                                    (body3, cbody1)) in
                                            (match uu___9 with
                                             | (body4, cbody2, guard) ->
                                                 let uu___10 =

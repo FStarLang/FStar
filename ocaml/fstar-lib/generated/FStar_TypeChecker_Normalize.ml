@@ -26,10 +26,12 @@ let (maybe_debug :
                 FStar_Class_Show.show
                   (FStar_Class_Show.printableshow
                      FStar_Class_Printable.printable_int) uu___1 in
-              let uu___1 = FStar_Syntax_Print.term_to_string tm in
+              let uu___1 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
               let uu___2 =
                 FStar_Class_Show.show FStar_TypeChecker_Cfg.showable_cfg cfg in
-              let uu___3 = FStar_Syntax_Print.term_to_string t in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
               FStar_Compiler_Util.print4
                 "Normalizer result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
                 uu___ uu___1 uu___2 uu___3
@@ -230,7 +232,7 @@ let (closure_to_string : closure -> Prims.string) =
     | Clos (env1, t, uu___1, uu___2) ->
         let uu___3 =
           FStar_Compiler_Util.string_of_int (FStar_Compiler_List.length env1) in
-        let uu___4 = FStar_Syntax_Print.term_to_string t in
+        let uu___4 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
         FStar_Compiler_Util.format2 "(env=%s elts; %s)" uu___3 uu___4
     | Univ uu___1 -> "Univ"
     | Dummy -> "dummy"
@@ -493,7 +495,8 @@ let rec (inline_closure_env :
                                FStar_Compiler_Range_Ops.string_of_range
                                  t1.FStar_Syntax_Syntax.pos in
                              let uu___5 =
-                               FStar_Syntax_Print.term_to_string t1 in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term t1 in
                              FStar_Compiler_Util.format2
                                "(%s): CheckNoUvars: Unexpected unification variable remains: %s"
                                uu___4 uu___5 in
@@ -1768,7 +1771,8 @@ let (rejig_norm_request :
                  "Impossible! invalid rejig_norm_request for norm")
       | uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string hd in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term hd in
             Prims.strcat "Impossible! invalid rejig_norm_request for: %s"
               uu___3 in
           FStar_Compiler_Effect.failwith uu___2
@@ -1871,7 +1875,8 @@ let (nbe_eval :
           else [FStar_TypeChecker_Env.NoDelta] in
         FStar_TypeChecker_Cfg.log_nbe cfg
           (fun uu___1 ->
-             let uu___2 = FStar_Syntax_Print.term_to_string tm in
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
              FStar_Compiler_Util.print1 "Invoking NBE with  %s\n" uu___2);
         (let tm_norm =
            let uu___1 = FStar_TypeChecker_Cfg.cfg_env cfg in
@@ -1879,7 +1884,9 @@ let (nbe_eval :
              tm in
          FStar_TypeChecker_Cfg.log_nbe cfg
            (fun uu___2 ->
-              let uu___3 = FStar_Syntax_Print.term_to_string tm_norm in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                  tm_norm in
               FStar_Compiler_Util.print1 "Result of NBE is  %s\n" uu___3);
          tm_norm)
 let firstn :
@@ -2252,7 +2259,8 @@ let (is_applied :
       fun t ->
         if (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
         then
-          (let uu___1 = FStar_Syntax_Print.term_to_string t in
+          (let uu___1 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
            let uu___2 = FStar_Syntax_Print.tag_of_term t in
            FStar_Compiler_Util.print2 "WPE> is_applied %s -- %s\n" uu___1
              uu___2)
@@ -2269,9 +2277,13 @@ let (is_applied :
                   (if
                      (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
                    then
-                     (let uu___4 = FStar_Syntax_Print.term_to_string t in
+                     (let uu___4 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term t in
                       let uu___5 = FStar_Syntax_Print.bv_to_string bv in
-                      let uu___6 = FStar_Syntax_Print.term_to_string hd in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term hd in
                       FStar_Compiler_Util.print3
                         "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
                         uu___4 uu___5 uu___6)
@@ -2289,7 +2301,8 @@ let (is_applied_maybe_squashed :
       fun t ->
         if (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
         then
-          (let uu___1 = FStar_Syntax_Print.term_to_string t in
+          (let uu___1 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
            let uu___2 = FStar_Syntax_Print.tag_of_term t in
            FStar_Compiler_Util.print2
              "WPE> is_applied_maybe_squashed %s -- %s\n" uu___1 uu___2)
@@ -2401,9 +2414,11 @@ let (is_quantified_const :
                                       (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.wpe
                                     then
                                       (let uu___4 =
-                                         FStar_Syntax_Print.term_to_string p in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term p in
                                        let uu___5 =
-                                         FStar_Syntax_Print.term_to_string q in
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Print.showable_term q in
                                        FStar_Compiler_Util.print2
                                          "WPE> p = (%s); q = (%s)\n" uu___4
                                          uu___5)
@@ -2765,7 +2780,8 @@ let rec (norm :
             then
               (match t.FStar_Syntax_Syntax.n with
                | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
-                   let uu___2 = FStar_Syntax_Print.term_to_string t in
+                   let uu___2 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                    FStar_Compiler_Util.print1 "NORM delayed: %s\n" uu___2
                | uu___1 -> ())
             else ();
@@ -2815,7 +2831,9 @@ let rec (norm :
                ->
                (FStar_TypeChecker_Cfg.log_unfolding cfg
                   (fun uu___4 ->
-                     let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                     let uu___5 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t1 in
                      FStar_Compiler_Util.print1
                        " >> This is a constructor: %s\n" uu___5);
                 rebuild cfg empty_env stack2 t1)
@@ -2826,7 +2844,9 @@ let rec (norm :
                ->
                (FStar_TypeChecker_Cfg.log_unfolding cfg
                   (fun uu___5 ->
-                     let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                     let uu___6 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t1 in
                      FStar_Compiler_Util.print1
                        " >> This is a constructor: %s\n" uu___6);
                 rebuild cfg empty_env stack2 t1)
@@ -2843,7 +2863,9 @@ let rec (norm :
                     uu___3 = Prims.int_zero ->
                     (FStar_TypeChecker_Cfg.log_unfolding cfg
                        (fun uu___5 ->
-                          let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                          let uu___6 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term t1 in
                           FStar_Compiler_Util.print1
                             " >> This is a constant: %s\n" uu___6);
                      rebuild cfg empty_env stack2 t1)
@@ -2895,7 +2917,9 @@ let rec (norm :
                (if
                   (cfg.FStar_TypeChecker_Cfg.debug).FStar_TypeChecker_Cfg.print_normalized
                 then
-                  (let uu___3 = FStar_Syntax_Print.term_to_string hd in
+                  (let uu___3 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       hd in
                    let uu___4 = FStar_Syntax_Print.args_to_string args in
                    FStar_Compiler_Util.print2
                      "Potential norm request with hd = %s and args = %s ... \n"
@@ -3043,12 +3067,15 @@ let rec (norm :
                            FStar_Class_Show.show
                              (FStar_Class_Show.printableshow
                                 FStar_Class_Printable.printable_int) uu___6 in
-                         let uu___6 = FStar_Syntax_Print.term_to_string tm' in
+                         let uu___6 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term tm' in
                          let uu___7 =
                            FStar_Class_Show.show
                              FStar_TypeChecker_Cfg.showable_cfg cfg'1 in
                          let uu___8 =
-                           FStar_Syntax_Print.term_to_string tm_norm in
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term tm_norm in
                          FStar_Compiler_Util.print4
                            "NBE result timing (%s ms){\nOn term {\n%s\n}\nwith steps {%s}\nresult is{\n\n%s\n}\n}\n"
                            uu___5 uu___6 uu___7 uu___8)
@@ -3241,9 +3268,11 @@ let rec (norm :
                            (FStar_TypeChecker_Cfg.log cfg
                               (fun uu___5 ->
                                  let uu___6 =
-                                   FStar_Syntax_Print.term_to_string t1 in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term t1 in
                                  let uu___7 =
-                                   FStar_Syntax_Print.term_to_string t' in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term t' in
                                  FStar_Compiler_Util.print2
                                    "Lazy hit: %s cached to %s\n" uu___6
                                    uu___7);
@@ -3410,7 +3439,9 @@ let rec (norm :
                     (set_memo cfg r (env1, t1);
                      FStar_TypeChecker_Cfg.log cfg
                        (fun uu___4 ->
-                          let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                          let uu___5 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term t1 in
                           FStar_Compiler_Util.print1 "\tSet memo %s\n" uu___5);
                      norm cfg env1 stack3 t1)
                 | (Meta uu___2)::uu___3 ->
@@ -4432,7 +4463,9 @@ let rec (norm :
                    let uu___4 =
                      FStar_Compiler_Range_Ops.string_of_range
                        t1.FStar_Syntax_Syntax.pos in
-                   let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                   let uu___5 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       t1 in
                    FStar_Compiler_Util.format2
                      "(%s) CheckNoUvars: Unexpected unification variable remains: %s"
                      uu___4 uu___5 in
@@ -4598,7 +4631,9 @@ and (do_reify_monadic :
                  FStar_TypeChecker_Cfg.log cfg
                    (fun uu___2 ->
                       let uu___3 = FStar_Syntax_Print.tag_of_term top1 in
-                      let uu___4 = FStar_Syntax_Print.term_to_string top1 in
+                      let uu___4 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term top1 in
                       FStar_Compiler_Util.print2 "Reifying: (%s) %s\n" uu___3
                         uu___4);
                  (let top2 = FStar_Syntax_Util.unmeta_safe top1 in
@@ -4894,7 +4929,8 @@ and (do_reify_monadic :
                                                                    uu___20 in
                                                                FStar_Pervasives_Native.snd
                                                                  uu___19 in
-                                                             FStar_Syntax_Print.term_to_string
+                                                             FStar_Class_Show.show
+                                                               FStar_Syntax_Print.showable_term
                                                                uu___18 in
                                                            FStar_Compiler_Util.format3
                                                              "bind_wp for layered effect %s is not an arrow with >= %s arguments (%s)"
@@ -5127,10 +5163,12 @@ and (do_reify_monadic :
                                              FStar_TypeChecker_Cfg.log cfg
                                                (fun uu___11 ->
                                                   let uu___12 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       top0 in
                                                   let uu___13 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       reified in
                                                   FStar_Compiler_Util.print2
                                                     "Reified (1) <%s> to %s\n"
@@ -5172,7 +5210,8 @@ and (do_reify_monadic :
                              let uu___6 =
                                let uu___7 =
                                  let uu___8 =
-                                   FStar_Syntax_Print.term_to_string top2 in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term top2 in
                                  FStar_Compiler_Util.format1
                                    "Incompatibility between typechecker and normalizer; this monadic application contains impure terms %s\n"
                                    uu___8 in
@@ -5185,7 +5224,8 @@ and (do_reify_monadic :
                           FStar_TypeChecker_Cfg.log cfg
                             (fun uu___6 ->
                                let uu___7 =
-                                 FStar_Syntax_Print.term_to_string top0 in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term top0 in
                                FStar_Compiler_Util.print2
                                  "Reified (2) <%s> to %s\n" uu___7 "");
                           (let uu___6 = FStar_Compiler_List.tl stack1 in
@@ -5197,7 +5237,8 @@ and (do_reify_monadic :
                           FStar_TypeChecker_Cfg.log cfg
                             (fun uu___6 ->
                                let uu___7 =
-                                 FStar_Syntax_Print.term_to_string top0 in
+                                 FStar_Class_Show.show
+                                   FStar_Syntax_Print.showable_term top0 in
                                FStar_Compiler_Util.print2
                                  "Reified (3) <%s> to %s\n" uu___7 "");
                           (let uu___6 = FStar_Compiler_List.tl stack1 in
@@ -5264,7 +5305,8 @@ and (do_reify_monadic :
                       (FStar_TypeChecker_Cfg.log cfg
                          (fun uu___4 ->
                             let uu___5 =
-                              FStar_Syntax_Print.term_to_string lifted in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term lifted in
                             FStar_Compiler_Util.print1
                               "Reified lift to (2): %s\n" uu___5);
                        (let uu___4 = FStar_Compiler_List.tl stack1 in
@@ -5314,7 +5356,8 @@ and (reify_lift :
               (fun uu___1 ->
                  let uu___2 = FStar_Ident.string_of_lid msrc in
                  let uu___3 = FStar_Ident.string_of_lid mtgt in
-                 let uu___4 = FStar_Syntax_Print.term_to_string e in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                  FStar_Compiler_Util.print3 "Reifying lift %s -> %s: %s\n"
                    uu___2 uu___3 uu___4);
             (let uu___1 =
@@ -7174,7 +7217,9 @@ and (do_rebuild :
               (set_memo cfg r (env1, t);
                FStar_TypeChecker_Cfg.log cfg
                  (fun uu___2 ->
-                    let uu___3 = FStar_Syntax_Print.term_to_string t in
+                    let uu___3 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t in
                     FStar_Compiler_Util.print1 "\tSet memo %s\n" uu___3);
                rebuild cfg env1 stack2 t)
           | (Let (env', bs, lb, r))::stack2 ->
@@ -7257,7 +7302,9 @@ and (do_rebuild :
               let fallback msg uu___ =
                 FStar_TypeChecker_Cfg.log cfg
                   (fun uu___2 ->
-                     let uu___3 = FStar_Syntax_Print.term_to_string t in
+                     let uu___3 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t in
                      FStar_Compiler_Util.print2 "Not reifying%s: %s\n" msg
                        uu___3);
                 (let t1 = FStar_Syntax_Syntax.extend_app head (t, aq) r in
@@ -7399,7 +7446,8 @@ and (do_rebuild :
                    (FStar_TypeChecker_Cfg.log cfg
                       (fun uu___2 ->
                          let uu___3 =
-                           FStar_Syntax_Print.term_to_string lifted in
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term lifted in
                          FStar_Compiler_Util.print1
                            "Reified lift to (1): %s\n" uu___3);
                     (let uu___2 = FStar_Compiler_List.tl stack1 in
@@ -7477,7 +7525,9 @@ and (do_rebuild :
                   lopt in
               (FStar_TypeChecker_Cfg.log cfg1
                  (fun uu___1 ->
-                    let uu___2 = FStar_Syntax_Print.term_to_string t in
+                    let uu___2 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t in
                     FStar_Compiler_Util.print1
                       "Rebuilding with match, scrutinee is %s ...\n" uu___2);
                (let scrutinee_env = env1 in
@@ -7487,7 +7537,8 @@ and (do_rebuild :
                   FStar_TypeChecker_Cfg.log cfg1
                     (fun uu___3 ->
                        let uu___4 =
-                         FStar_Syntax_Print.term_to_string scrutinee in
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term scrutinee in
                        let uu___5 =
                          let uu___6 =
                            FStar_Compiler_List.map
@@ -7975,7 +8026,8 @@ and (do_rebuild :
                                        (fun uu___7 ->
                                           match uu___7 with
                                           | (uu___8, t1) ->
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 t1) s in
                                    FStar_Compiler_String.concat "; " uu___6 in
                                  FStar_Compiler_Util.print2
