@@ -322,17 +322,23 @@ let default_univ_uvars_to_zero (t:term) : term =
     | U_unif _ -> U_zero
     | _ -> u) t
 
+let _erase_universes (t:term) : term =
+  Visit.visit_term_univs (fun t -> t) (fun u -> U_unknown) t
+
 let closure_as_term cfg (env:env) (t:term) : term =
   log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
   let es = env_subst env in
   let t = SS.subst es t in
   let t =
-     if cfg.steps.default_univs_to_zero
+     if cfg.steps.erase_universes
+     then _erase_universes t
+     else if cfg.steps.default_univs_to_zero
      then default_univ_uvars_to_zero t
      else t
   in
   (* Compress the top only since clients expect a compressed term *)
   let t = SS.compress t in
+  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term RESULT %s\n" (Print.tag_of_term t) (show env) (show t));
   t
 
 (* A hacky knot, set by FStar.Main *)
