@@ -18,3 +18,9 @@ let assert_does_not_require_parens : unit =
 let assume_does_not_require_parens : False =
   assume 0 == 1;
   ()
+
+let forall_does_not_require_parens () : Lemma (True /\ forall x. x <= x) =
+  ()
+
+let exists_does_not_require_parens () : Lemma (True /\ exists x. x <= x) =
+  ()

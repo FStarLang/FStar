@@ -1139,22 +1139,9 @@ calcStep:
          CalcStep (rel, justif, next)
      }
 
-%public
-typX(X,Y):
-  | t=Y { t }
-
-  | q=quantifier bs=binders DOT trigger=trigger e=X
-      {
-        match bs with
-        | [] ->
-          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
-        | _ ->
-          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
-          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
-      }
-
+%inline
 typ:
-  | t=typX(noSeqTerm,simpleTerm) { t }
+  | t=simpleTerm { t }
 
 %inline quantifier:
   | FORALL { fun x -> QForall x }
@@ -1454,6 +1441,15 @@ trailingTerm:
 onlyTrailingTerm:
   | FUN pats=nonempty_list(patternOrMultibinder) RARROW e=term
       { mk_term (Abs(flatten pats, e)) (rr2 $loc($1) $loc(e)) Un }
+  | q=quantifier bs=binders DOT trigger=trigger e=term
+      {
+        match bs with
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
+        | _ ->
+          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
+          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+      }
 
 atomicTermQUident:
   | id=quident
