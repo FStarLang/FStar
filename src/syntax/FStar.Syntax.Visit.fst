@@ -18,11 +18,11 @@ instance _ : monad id = {
 
 let (<<) f g = fun x -> f (g x)
 
-let visit_term vt t =
-  I?.run (visitM_term (I << vt) t)
+let visit_term pq vt t =
+  I?.run (visitM_term pq (I << vt) t)
 
-let visit_term_univs vt vu t =
-  I?.run (visitM_term_univs (I << vt) (I << vu) t)
+let visit_term_univs pq vt vu t =
+  I?.run (visitM_term_univs pq (I << vt) (I << vu) t)
 
-let visit_sigelt vt vu se =
-  I?.run (visitM_sigelt (I << vt) (I << vu) se)
+let visit_sigelt pq vt vu se =
+  I?.run (visitM_sigelt pq (I << vt) (I << vu) se)

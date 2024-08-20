@@ -583,7 +583,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
 
   (* Visit the sigelt and rely on side effects to capture all
   the names. This goes roughly in left-to-right order. *)
-  let _ = Visit.visit_sigelt
+  let _ = Visit.visit_sigelt false
             (fun t -> t)
             (fun u -> ignore (match u with
                               | U_name nm -> reg nm

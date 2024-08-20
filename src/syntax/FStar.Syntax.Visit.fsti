@@ -34,12 +34,26 @@ operator is applied to anything but constants, and leave everything else
 unchanged. As the traversal is bottom-up, this should fold expressions
 like (1+2)+(3+4) in a single call.
 *)
-val visit_term : (term -> term) -> term -> term
+val visit_term
+  (proc_quotes : bool)
+  (f : term -> term)
+  (t : term)
+  : term
 
 (* As above, but a callback for universes can also be provided that works
 in the same manner. In visit_term, it just defaults to the identity. *)
-val visit_term_univs : (term -> term) -> (universe -> universe) -> (term -> term)
+val visit_term_univs
+  (proc_quotes : bool)
+  (ft : term -> term)
+  (fu : universe -> universe)
+  (t : term)
+  : term
 
 (* As above, but works on any sigelt, visiting all of its underlying
 terms and universes. *)
-val visit_sigelt : (term -> term) -> (universe -> universe) -> (sigelt -> sigelt)
+val visit_sigelt
+  (proc_quotes : bool)
+  (vt : term -> term)
+  (vu : universe -> universe)
+  (t : sigelt)
+  : sigelt

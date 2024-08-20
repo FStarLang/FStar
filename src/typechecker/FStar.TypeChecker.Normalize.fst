@@ -317,13 +317,13 @@ let filter_out_lcomp_cflags flags =
     flags |> List.filter (function DECREASES _ -> false | _ -> true)
 
 let default_univ_uvars_to_zero (t:term) : term =
-  Visit.visit_term_univs (fun t -> t) (fun u ->
+  Visit.visit_term_univs false (fun t -> t) (fun u ->
     match u with
     | U_unif _ -> U_zero
     | _ -> u) t
 
 let _erase_universes (t:term) : term =
-  Visit.visit_term_univs (fun t -> t) (fun u -> U_unknown) t
+  Visit.visit_term_univs false (fun t -> t) (fun u -> U_unknown) t
 
 let closure_as_term cfg (env:env) (t:term) : term =
   log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
@@ -773,7 +773,7 @@ let is_quantified_const cfg (bv:bv) (phi : term) : option term =
     in
     let replace_full_applications_with (bv:S.bv) (arity:int) (s:term) (t:term) : term & bool =
       let chgd = BU.mk_ref false in
-      let t' = t |> Syntax.Visit.visit_term (fun t ->
+      let t' = t |> Syntax.Visit.visit_term false (fun t ->
                       let hd, args = U.head_and_args t in
                       if List.length args = arity && is_bv bv hd then (
                         chgd := true;
