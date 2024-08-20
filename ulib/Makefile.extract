@@ -64,6 +64,9 @@ include $(DEPEND)
 # so we do not need to extract it.
 all-ml: $(filter-out %/prims.ml, $(ALL_ML_FILES))
 
+%.checked:
+	+$(MAKE) -f Makefile.verify $@
+
 intfiles:
 	+$(MAKE) -C ml intfiles
 

@@ -30,7 +30,7 @@ dune-fstar-snapshot:
 dune-verify-ulib:
 	+$(MAKE) -C ../../ulib
 
-dune-stdlib-snapshot: dune-verify-ulib
+dune-stdlib-snapshot:
 	$(MAKE) -C ../../ulib -f Makefile.extract dune-snapshot
 
 dune-snapshot: dune-fstar-snapshot dune-stdlib-snapshot
