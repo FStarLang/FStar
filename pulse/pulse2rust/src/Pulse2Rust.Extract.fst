@@ -680,8 +680,8 @@ and extract_mlexpr (g:env) (e:S.mlexpr) : expr =
 
   | S.MLE_CTor (p, args) ->
     let is_native =
-      S.mlpath_to_string p = "FStar.Pervasives.Native.Some" ||
-      S.mlpath_to_string p = "FStar.Pervasives.Native.None" in
+      S.string_of_mlpath p = "FStar.Pervasives.Native.Some" ||
+      S.string_of_mlpath p = "FStar.Pervasives.Native.None" in
     let ty_name =
       match e.mlty with
       | S.MLTY_Named (_, p) -> p |> snd |> enum_or_struct_name
