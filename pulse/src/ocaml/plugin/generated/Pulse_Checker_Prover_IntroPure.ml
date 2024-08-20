@@ -751,8 +751,8 @@ let (pure_uvar_heursitics : pure_uv_heuristic_t) =
                           (Obj.magic
                              (FStar_Range.mk_range
                                 "Pulse.Checker.Prover.IntroPure.fst"
-                                (Prims.of_int (179)) (Prims.of_int (16))
-                                (Prims.of_int (179)) (Prims.of_int (23)))))
+                                (Prims.of_int (179)) (Prims.of_int (10))
+                                (Prims.of_int (181)) (Prims.of_int (48)))))
                        (Obj.magic (h2 uvs t))
                        (fun uu___ ->
                           (fun uu___ ->
