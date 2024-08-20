@@ -167,7 +167,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
           (* Use the monadic visitor to check whether the reduced head
           contains an admit, which is a common error *)
           let r : option term =
-            Syntax.VisitM.visitM_term (fun t ->
+            Syntax.VisitM.visitM_term false (fun t ->
               match t.n with
               | Tm_fvar fv when fv_eq_lid fv PC.admit_lid -> None
               | _ -> Some t) h_result

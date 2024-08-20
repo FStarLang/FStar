@@ -154,7 +154,7 @@ type relation =
 let relation_to_string = function
   | EQUALITY -> "=?="
   | SUBTYPING None -> "<:?"
-  | SUBTYPING (Some tm) -> BU.format1 "( <:? %s)" (P.term_to_string tm)
+  | SUBTYPING (Some tm) -> BU.format1 "( <:? %s)" (show tm)
 
 type context_term =
   | CtxTerm : term -> context_term
@@ -162,12 +162,12 @@ type context_term =
 
 let context_term_to_string (c:context_term) =
   match c with
-  | CtxTerm term -> P.term_to_string term
+  | CtxTerm term -> show term
   | CtxRel t0 r t1 ->
     BU.format3 "%s %s %s"
-              (P.term_to_string t0)
+              (show t0)
               (relation_to_string r)
-              (P.term_to_string t1)
+              (show t1)
 
 type context = {
   no_guard : bool;
@@ -322,7 +322,7 @@ let is_type (g:env) (t:term)
           return u
 
         | _ ->
-          fail (BU.format1 "Expected a type; got %s" (P.term_to_string t))
+          fail (BU.format1 "Expected a type; got %s" (show t))
     in
     with_context "is_type" (Some (CtxTerm t)) (fun _ ->
       handle_with
@@ -390,7 +390,7 @@ let rec is_arrow (g:env) (t:term)
           aux t
 
         | _ ->
-          fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (P.term_to_string t))
+          fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (show t))
     in
     with_context "is_arrow" None (fun _ ->
       handle_with
@@ -541,7 +541,7 @@ let no_guard (g:result 'a)
   = fun ctx ->
       match g ({ ctx with no_guard = true}) with
       | Success (x, None) -> Success (x, None)
-      | Success (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (P.term_to_string g)) ctx
+      | Success (x, Some g) -> fail (BU.format1 "Unexpected guard: %s" (show g)) ctx
       | err -> err
 
 let equatable g t =
@@ -598,11 +598,12 @@ let lookup (g:env) (e:term) : result (tot_or_ghost & typ) =
      if he.he_gamma `context_included` g.tcenv.gamma
      then (
        record_cache_hit();
-       // BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
-       //   (show g.tcenv.gamma)
-       //   (P.term_to_string e)
-       //   (P.term_to_string (snd (fst he.he_res)))
-       //   (show he.he_gamma);
+       if !dbg then
+         BU.print4 "cache hit\n %s |- %s : %s\nmatching env %s\n"
+           (show g.tcenv.gamma)
+           (show e)
+           (show (snd (fst he.he_res)))
+           (show he.he_gamma);
        fun _ -> Success he.he_res
      )
      else (
@@ -768,12 +769,12 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
         match rel with
         | EQUALITY ->
           fail (BU.format2 "not equal terms: %s <> %s"
-                           (P.term_to_string t0)
-                           (P.term_to_string t1))
+                           (show t0)
+                           (show t1))
         | _ ->
           fail (BU.format2 "%s is not a subtype of %s"
-                           (P.term_to_string t0)
-                           (P.term_to_string t1))
+                           (show t0)
+                           (show t1))
     in
     let rel_to_string rel =
       match rel with
@@ -1273,7 +1274,7 @@ and do_check (g:env) (e:term)
     begin
     match Env.try_lookup_bv g.tcenv x with
     | None ->
-      fail (BU.format1 "Variable not found: %s" (P.bv_to_string x))
+      fail (BU.format1 "Variable not found: %s" (show x))
     | Some (t, _) ->
       return (E_Total, t)
     end
@@ -1393,7 +1394,7 @@ and do_check (g:env) (e:term)
       let Some (eff, t) = comp_as_tot_or_ghost_and_type c in
       return (eff, t)
     )
-    else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (P.comp_to_string c))
+    else fail (BU.format1 "Effect ascriptions are not fully handled yet: %s" (show c))
 
   | Tm_let {lbs=(false, [lb]); body} ->
     let Inl x = lb.lbname in
@@ -1690,8 +1691,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
   = let open Env in
     let err (s:string) =
       fail (BU.format3 "Scrutinee type %s and Pattern type %s are not compatible because %s"
-              (P.term_to_string t_sc)
-              (P.term_to_string t_pat)
+              (show t_sc)
+              (show t_pat)
               s) in
 
     let head_sc, args_sc = U.head_and_args t_sc in
@@ -1712,7 +1713,7 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
 
     (if Env.is_type_constructor g.tcenv (lid_of_fv t_fv)
      then return t_fv
-     else err (BU.format1 "%s is not a type constructor" (P.fv_to_string t_fv)));!
+     else err (BU.format1 "%s is not a type constructor" (show t_fv)));!
 
     (if List.length args_sc = List.length args_pat then return t_fv
      else err (BU.format2 "Number of arguments don't match (%s and %s)"
@@ -1860,13 +1861,11 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
   : __result ((tot_or_ghost & S.typ) & precondition)
   = if !dbg_Eq
     then BU.print1 "(%s) Entering core ... \n"
-                   (BU.string_of_int (get_goal_ctr()));
+                   (show (get_goal_ctr()));
 
     if !dbg || !dbg_Top
     then BU.print3 "(%s) Entering core with %s <: %s\n"
-                   (BU.string_of_int (get_goal_ctr()))
-                   (P.term_to_string e)
-                   (match topt with None -> "" | Some t -> P.term_to_string t);
+                   (show (get_goal_ctr())) (show e) (show topt);
     THT.reset_counters table;
     reset_cache_stats();
     let ctx = { unfolding_ok = true; no_guard = false; error_context = [("Top", None)] } in
@@ -1891,15 +1890,15 @@ let check_term_top_gh g e topt (must_tot:bool) (gh:option guard_handler_t)
         then begin
           BU.print3 "(%s) Exiting core: Simplified guard from {{%s}} to {{%s}}\n"
             (BU.string_of_int (get_goal_ctr()))
-            (P.term_to_string guard0)
-            (P.term_to_string guard);
+            (show guard0)
+            (show guard);
           let guard_names = Syntax.Free.names guard |> elems in
           match List.tryFind (fun bv -> List.for_all (fun binding_env ->
             match binding_env with
             | Binding_var bv_env -> not (S.bv_eq bv_env bv)
             | _ -> true) g.gamma) guard_names with
           | Some bv ->
-            BU.print1 "WARNING: %s is free in the core generated guard\n" (P.term_to_string (S.bv_to_name bv))
+            BU.print1 "WARNING: %s is free in the core generated guard\n" (show (S.bv_to_name bv))
           | _ -> ()
         end;
         Success (et, Some guard)

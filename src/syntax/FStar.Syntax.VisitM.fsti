@@ -9,12 +9,14 @@ open FStar.Class.Monad
 
 val visitM_term
   (#m:_) {| monad m |}
+  (proc_quotes : bool)
   (v : term -> m term)
   (t : term)
   : m term
 
 val visitM_term_univs
   (#m:_) {| monad m |}
+  (proc_quotes : bool)
   (vt : term -> m term)
   (vu : universe -> m universe)
   (t : term)
@@ -22,6 +24,7 @@ val visitM_term_univs
 
 val visitM_sigelt
   (#m:_) {| monad m |}
+  (proc_quotes : bool)
   (vt : term -> m term)
   (vu : universe -> m universe)
   (t : sigelt)

@@ -72,7 +72,7 @@ makes .checked files more brittle, so we don't do it.
 *)
 let deep_compress (allow_uvars:bool) (allow_names: bool) (tm : term) : term =
   Err.with_ctx ("While deep-compressing a term") (fun () ->
-    Visit.visit_term_univs
+    Visit.visit_term_univs true
       (compress1_t allow_uvars allow_names)
       (compress1_u allow_uvars allow_names)
       tm
@@ -83,7 +83,7 @@ let deep_compress_uvars = deep_compress false true
 let deep_compress_if_no_uvars (tm : term) : option term =
   Err.with_ctx ("While deep-compressing a term") (fun () ->
     try 
-      Some (Visit.visit_term_univs
+      Some (Visit.visit_term_univs true
               (compress1_t false true)
               (compress1_u false true)
               tm)
@@ -93,7 +93,7 @@ let deep_compress_if_no_uvars (tm : term) : option term =
 
 let deep_compress_se (allow_uvars:bool) (allow_names:bool) (se : sigelt) : sigelt =
   Err.with_ctx (format1 "While deep-compressing %s" (Syntax.Print.sigelt_to_string_short se)) (fun () ->
-    Visit.visit_sigelt
+    Visit.visit_sigelt true
       (compress1_t allow_uvars allow_names)
       (compress1_u allow_uvars allow_names)
       se

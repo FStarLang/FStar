@@ -117,11 +117,9 @@ let (deep_compress :
       fun tm ->
         FStar_Errors.with_ctx "While deep-compressing a term"
           (fun uu___ ->
-             let uu___1 =
-               let uu___2 = compress1_t allow_uvars allow_names in
-               let uu___3 = compress1_u allow_uvars allow_names in
-               FStar_Syntax_Visit.visit_term_univs uu___2 uu___3 in
-             uu___1 tm)
+             let uu___1 = compress1_t allow_uvars allow_names in
+             let uu___2 = compress1_u allow_uvars allow_names in
+             FStar_Syntax_Visit.visit_term_univs true uu___1 uu___2 tm)
 let (deep_compress_uvars :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   deep_compress false true
@@ -137,11 +135,9 @@ let (deep_compress_if_no_uvars :
               match () with
               | () ->
                   let uu___2 =
-                    let uu___3 =
-                      let uu___4 = compress1_t false true in
-                      let uu___5 = compress1_u false true in
-                      FStar_Syntax_Visit.visit_term_univs uu___4 uu___5 in
-                    uu___3 tm in
+                    let uu___3 = compress1_t false true in
+                    let uu___4 = compress1_u false true in
+                    FStar_Syntax_Visit.visit_term_univs true uu___3 uu___4 tm in
                   FStar_Pervasives_Native.Some uu___2) ()
          with
          | FStar_Errors.Err
@@ -160,8 +156,6 @@ let (deep_compress_se :
           FStar_Compiler_Util.format1 "While deep-compressing %s" uu___1 in
         FStar_Errors.with_ctx uu___
           (fun uu___1 ->
-             let uu___2 =
-               let uu___3 = compress1_t allow_uvars allow_names in
-               let uu___4 = compress1_u allow_uvars allow_names in
-               FStar_Syntax_Visit.visit_sigelt uu___3 uu___4 in
-             uu___2 se)
+             let uu___2 = compress1_t allow_uvars allow_names in
+             let uu___3 = compress1_u allow_uvars allow_names in
+             FStar_Syntax_Visit.visit_sigelt true uu___2 uu___3 se)
