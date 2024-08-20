@@ -305,8 +305,16 @@ let rec (univ_kernel :
     | FStar_Syntax_Syntax.U_succ u1 ->
         let uu___1 = univ_kernel u1 in
         (match uu___1 with | (k, n) -> (k, (n + Prims.int_one)))
-    | FStar_Syntax_Syntax.U_bvar uu___1 ->
-        FStar_Compiler_Effect.failwith "Imposible: univ_kernel (U_bvar _)"
+    | FStar_Syntax_Syntax.U_bvar i ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) i in
+            Prims.strcat uu___3 ")" in
+          Prims.strcat "Imposible: univ_kernel (U_bvar " uu___2 in
+        FStar_Compiler_Effect.failwith uu___1
 let (constant_univ_as_nat : FStar_Syntax_Syntax.universe -> Prims.int) =
   fun u -> let uu___ = univ_kernel u in FStar_Pervasives_Native.snd uu___
 let rec (compare_univs :

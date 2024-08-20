@@ -437,14 +437,12 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
         in
 
         if Debug.medium () || !dbg_TwoPhases then
-          BU.print1 "Let binding after phase 1, before removing uvars: %s\n"
-            (Print.term_to_string e);
+          BU.print1 "Let binding after phase 1, before removing uvars: %s\n" (show e);
 
         let e = N.remove_uvar_solutions env' e |> drop_lbtyp in
 
         if Debug.medium () || !dbg_TwoPhases then
-          BU.print1 "Let binding after phase 1, uvars removed: %s\n"
-            (Print.term_to_string e);
+          BU.print1 "Let binding after phase 1, uvars removed: %s\n" (show e);
         e)
       else e
     in

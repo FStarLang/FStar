@@ -1397,7 +1397,8 @@ let (tc_sig_let :
                                 if uu___6
                                 then
                                   let uu___7 =
-                                    FStar_Syntax_Print.term_to_string e2 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term e2 in
                                   FStar_Compiler_Util.print1
                                     "Let binding after phase 1, before removing uvars: %s\n"
                                     uu___7
@@ -1414,7 +1415,8 @@ let (tc_sig_let :
                                  if uu___7
                                  then
                                    let uu___8 =
-                                     FStar_Syntax_Print.term_to_string e3 in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term e3 in
                                    FStar_Compiler_Util.print1
                                      "Let binding after phase 1, uvars removed: %s\n"
                                      uu___8
