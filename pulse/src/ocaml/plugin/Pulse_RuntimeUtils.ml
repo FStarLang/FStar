@@ -116,6 +116,7 @@ let builtin_lids = [
 
 let deep_transform_to_unary_applications (t:S.term) =
   FStar_Syntax_Visit.visit_term
+    false
     (fun t -> 
       let open S in
       match t.n with
