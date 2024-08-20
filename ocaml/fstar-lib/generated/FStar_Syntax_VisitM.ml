@@ -694,16 +694,8 @@ let on_sub_term : 'm . 'm lvm -> FStar_Syntax_Syntax.term -> 'm =
                              Obj.magic
                                (FStar_Class_Monad.return (_lvm_monad d) ()
                                   (Obj.magic uu___2))) uu___2))) uu___1)
-      | FStar_Syntax_Syntax.Tm_quoted (tm2, qi) ->
-          let uu___ = f_term d tm2 in
-          FStar_Class_Monad.op_let_Bang (_lvm_monad d) () () uu___
-            (fun uu___1 ->
-               (fun tm3 ->
-                  let tm3 = Obj.magic tm3 in
-                  let uu___1 = mk (FStar_Syntax_Syntax.Tm_quoted (tm3, qi)) in
-                  Obj.magic
-                    (FStar_Class_Monad.return (_lvm_monad d) ()
-                       (Obj.magic uu___1))) uu___1)
+      | FStar_Syntax_Syntax.Tm_quoted (qtm, qi) ->
+          FStar_Class_Monad.return (_lvm_monad d) () (Obj.magic tm1)
       | FStar_Syntax_Syntax.Tm_meta
           { FStar_Syntax_Syntax.tm2 = t; FStar_Syntax_Syntax.meta = md;_} ->
           let uu___ = f_term d t in
