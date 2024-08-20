@@ -179,11 +179,11 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
     let! t = t |> f_term in
     return <| mk (Tm_let {lbs=(is_rec, lbs); body=t})
 
-  | Tm_quoted (tm, qi) ->
-    let! tm = tm |> f_term in
-    // let! qi = Syntax.on_antiquoted (f_term vfs) qi in
-    // FIXME ^ no monadic variant
-    return <| mk (Tm_quoted (tm, qi))
+  | Tm_quoted (qtm, qi) ->
+    (* NB: We do not do anything on quoted terms. Usually the transformation
+    we want to apply (e.g. erasing universes, compressing, etc) should not
+    be propagated into a quoted term. We could consider a toggle to enable this. *)
+    return tm
 
   | Tm_meta {tm=t; meta=md} ->
     let! t   = t |> f_term in
