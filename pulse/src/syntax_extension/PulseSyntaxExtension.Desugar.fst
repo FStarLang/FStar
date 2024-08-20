@@ -29,6 +29,7 @@ module R = FStar.Compiler.Range
 module BU = FStar.Compiler.Util
 module P =  FStar.Syntax.Print
 module LR = PulseSyntaxExtension.TransformRValues
+
 open FStar.Class.Show
 open FStar.Class.HasRange
 open FStar.Class.Monad
@@ -36,6 +37,12 @@ open FStar.Ident
 open FStar.List.Tot
 open PulseSyntaxExtension.Err
 open PulseSyntaxExtension.Env
+
+let close_st_term_bvs (e:SW.st_term) (xs:list SW.bv) : SW.st_term = 
+  SW.close_st_term_n e (L.map SW.index_of_bv xs)
+
+let close_comp_bvs  (e:SW.comp) (xs:list SW.bv) : SW.comp = 
+  SW.close_comp_n e (L.map SW.index_of_bv xs)
 
 let rec fold_right1 (f : 'a -> 'a -> 'a) (l : list 'a) : 'a =
   match l with
@@ -753,6 +760,10 @@ and desugar_decl (env:env_t)
     let bs'' = init @ [last] in
     return (A.mk_term (A.Product (bs'', res_t)) r A.Expr)
   in
+  let close_st_term_binders qbs body =
+    let bvs = List.Tot.map (fun (_, _, b) -> b) qbs in
+    close_st_term_bvs body bvs
+  in
   match d with
   | Sugar.FnDefn { id; is_rec; binders; ascription=Inl ascription; measure; body=Inl body; range } ->
     let! env, bs, bvs = desugar_binders env binders in
@@ -781,6 +792,7 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_stmt env body in
     let! qbs = map2 faux bs bvs in
+    let body = close_st_term_binders qbs body in
     return (SW.fn_defn range id is_rec qbs comp meas body)
 
   | Sugar.FnDefn { id; is_rec=false; binders; ascription=Inr ascription; measure=None; body=Inr body; range } ->
@@ -792,12 +804,14 @@ and desugar_decl (env:env_t)
     in
     let! body = desugar_lambda env body in
     let! qbs = map2 faux bs bvs in
+    let body = close_st_term_binders qbs body in
     return (SW.fn_defn range id false qbs comp None body)
 
   | Sugar.FnDecl { id; binders; ascription=Inl ascription; range } ->
     let! env, bs, bvs = desugar_binders env binders in
     let! comp = desugar_computation_type env ascription in
     let! qbs = map2 faux bs bvs in
+    let comp = close_comp_bvs comp (List.Tot.map (fun (_,_,bv) -> bv) qbs) in
     return (SW.fn_decl range id qbs comp)
 
 let reinitialize_env (dsenv:D.env)
@@ -808,11 +822,11 @@ let reinitialize_env (dsenv:D.env)
   = let dsenv = D.set_current_module dsenv curmod in
     let dsenv =
       L.fold_right
-        (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_))
+        (fun ns env -> D.push_namespace env (Ident.lid_of_path ns r_) S.Unrestricted)
         open_namespaces
         dsenv
     in
-    let dsenv = D.push_namespace dsenv curmod in
+    let dsenv = D.push_namespace dsenv curmod S.Unrestricted in
     let dsenv =
       L.fold_left
         (fun env (m, n) -> 

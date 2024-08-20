@@ -95,7 +95,9 @@ let rec (push_bvs :
 let (push_namespace : env_t -> FStar_Ident.lident -> env_t) =
   fun env ->
     fun lid ->
-      let dsenv = FStar_Syntax_DsEnv.push_namespace env.dsenv lid in
+      let dsenv =
+        FStar_Syntax_DsEnv.push_namespace env.dsenv lid
+          FStar_Syntax_Syntax.Unrestricted in
       { dsenv; local_refs = (env.local_refs) }
 let (resolve_lid :
   env_t ->

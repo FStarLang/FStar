@@ -74,6 +74,52 @@ Phases of the Pulse checker:
 4. The F* compiler then processes this as usual
 
 
+### Notes on the #lang-pulse syntax extension mechanism
+
+See F* PR https://github.com/FStarLang/FStar/pull/3363
+
+- FStar_Parser_Parse.mly is copied into src/ocaml/plugin from the FStar repo
+
+- src/ocaml/plugin/pulseparser.mly is an extension of FStar_Parser_Parse.mly
+
+- In PulseASTBuilder.fst, this snippet registers `parse_extension_lang` as a parser
+  for #lang-pulse blocks 
+
+  ```
+  let _ = register_extension_lang_parser "pulse" {parse_decls=parse_extension_lang}
+  ```
+
+- When the F* parser encounters a #lang-pulse, it lexes the rest of the file as
+  a single token and calls `parse_extension_lang` on the contents
+
+- `parse_extension_lang` parses the content as an interleaving of standard F*
+  declarations and Pulse `fn` declarations or definitions, returning them as a
+  list of FStar.Parser.AST.decl.
+
+  - Each `fn` block is represented as an FStar.Parser.AST.DeclToBeDesugared
+    containing a parsed PulseSyntaxExtension.Sugar AST
+
+- Next, we use this to register a callback for desugaring the Sugar AST in
+  PulseSyntaxExtension.ASTBuilder 
+  
+  ```
+  let _ =
+   FStar.ToSyntax.ToSyntax.register_extension_tosyntax "pulse"
+   desugar_pulse_decl_callback
+  ```
+
+- `desugar_pulse_decl_callback` is invoked by F* during its desugaring phase
+  with the contents of each `DeclToBeDesugared`. It is is called with the
+  appropriate desugaring environment for that point in the file.
+
+  - It returns a FStar.Syntax.Syntax.Sig_Splice, with a call into
+    Pulse.Main.check_pulse_after_desugar
+
+
+
+
+
+
 ## Modifying the Pulse or PulseC extraction rules, or the syntax extension
 
 If you modify the Pulse or PulseC

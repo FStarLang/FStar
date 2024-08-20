@@ -163,7 +163,7 @@ let parse_extension_lang (contents:string) (r:FStar.Compiler.Range.range)
           | FnDecl { decorations } -> decorations
         in
         let d =
-          let open FStar.Compiler.Dyn in
+          let open FStar.Dyn in
           DeclToBeDesugared {
             lang_name="pulse";
             blob=mkdyn d;
@@ -219,14 +219,17 @@ let desugar_pulse (env:TcEnv.env)
 module S = FStar.Syntax.Syntax
 let desugar_pulse_decl_callback
       (env:DsEnv.env)
-      (blob:FStar.Compiler.Dyn.dyn)
+      (blob:FStar.Dyn.dyn)
       (lids:list lident)
       (rng:R.range)
 : list FStar.Syntax.Syntax.sigelt'
-= let d = D.desugar_decl (D.mk_env env) (FStar.Compiler.Dyn.undyn blob) 0 in
+= let d = D.desugar_decl (D.mk_env env) (FStar.Dyn.undyn blob) 0 in
   match fst d with
-  | Inr None ->
-    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse extension text") rng
+  | Inr None -> //All errors were logged via the error API
+    //Raise one final error at the start of the decl to stop further processing
+    let start = FStar.Compiler.Range.start_of_range rng in
+    let rng = FStar.Compiler.Range.mk_range (FStar.Compiler.Range.file_of_range rng) start start in
+    FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, "Failed to desugar pulse declaration") rng
   | Inr (Some (msg, rng)) ->
     FStar.Errors.raise_error (FStar.Errors.Fatal_SyntaxError, msg) rng
   | Inl d ->

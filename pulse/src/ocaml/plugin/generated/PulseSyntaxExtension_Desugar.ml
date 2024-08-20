@@ -2,6 +2,28 @@ open Prims
 type error =
   (Prims.string * FStar_Compiler_Range_Type.range)
     FStar_Pervasives_Native.option
+let (close_st_term_bvs :
+  PulseSyntaxExtension_SyntaxWrapper.st_term ->
+    PulseSyntaxExtension_SyntaxWrapper.bv Prims.list ->
+      PulseSyntaxExtension_SyntaxWrapper.st_term)
+  =
+  fun e ->
+    fun xs ->
+      let uu___ =
+        FStar_Compiler_List.map
+          PulseSyntaxExtension_SyntaxWrapper.index_of_bv xs in
+      PulseSyntaxExtension_SyntaxWrapper.close_st_term_n e uu___
+let (close_comp_bvs :
+  PulseSyntaxExtension_SyntaxWrapper.comp ->
+    PulseSyntaxExtension_SyntaxWrapper.bv Prims.list ->
+      PulseSyntaxExtension_SyntaxWrapper.comp)
+  =
+  fun e ->
+    fun xs ->
+      let uu___ =
+        FStar_Compiler_List.map
+          PulseSyntaxExtension_SyntaxWrapper.index_of_bv xs in
+      PulseSyntaxExtension_SyntaxWrapper.close_comp_n e uu___
 let rec fold_right1 : 'a . ('a -> 'a -> 'a) -> 'a Prims.list -> 'a =
   fun f ->
     fun l ->
@@ -3027,6 +3049,12 @@ and (desugar_decl :
                                                   (PulseSyntaxExtension_Err.return
                                                      uu___4)) uu___4)))
                                 uu___1))) uu___3 uu___2 uu___1 uu___ in
+           let close_st_term_binders qbs body =
+             let bvs =
+               FStar_List_Tot_Base.map
+                 (fun uu___ -> match uu___ with | (uu___1, uu___2, b) -> b)
+                 qbs in
+             close_st_term_bvs body bvs in
            match d with
            | PulseSyntaxExtension_Sugar.FnDefn
                { PulseSyntaxExtension_Sugar.id2 = id;
@@ -3259,6 +3287,10 @@ and (desugar_decl :
                                                                     let qbs =
                                                                     Obj.magic
                                                                     qbs in
+                                                                    let body3
+                                                                    =
+                                                                    close_st_term_binders
+                                                                    qbs body2 in
                                                                     let uu___12
                                                                     =
                                                                     PulseSyntaxExtension_SyntaxWrapper.fn_defn
@@ -3266,7 +3298,7 @@ and (desugar_decl :
                                                                     is_rec
                                                                     qbs comp
                                                                     meas
-                                                                    body2 in
+                                                                    body3 in
                                                                     Obj.magic
                                                                     (PulseSyntaxExtension_Err.return
                                                                     uu___12))
@@ -3358,13 +3390,16 @@ and (desugar_decl :
                                                                let qbs =
                                                                  Obj.magic
                                                                    qbs in
+                                                               let body2 =
+                                                                 close_st_term_binders
+                                                                   qbs body1 in
                                                                let uu___6 =
                                                                  PulseSyntaxExtension_SyntaxWrapper.fn_defn
                                                                    range id
                                                                    false qbs
                                                                    comp
                                                                    FStar_Pervasives_Native.None
-                                                                   body1 in
+                                                                   body2 in
                                                                Obj.magic
                                                                  (PulseSyntaxExtension_Err.return
                                                                     uu___6))
@@ -3407,9 +3442,18 @@ and (desugar_decl :
                                               (fun uu___5 ->
                                                  (fun qbs ->
                                                     let qbs = Obj.magic qbs in
+                                                    let comp1 =
+                                                      close_comp_bvs comp
+                                                        (FStar_List_Tot_Base.map
+                                                           (fun uu___5 ->
+                                                              match uu___5
+                                                              with
+                                                              | (uu___6,
+                                                                 uu___7, bv)
+                                                                  -> bv) qbs) in
                                                     let uu___5 =
                                                       PulseSyntaxExtension_SyntaxWrapper.fn_decl
-                                                        range id qbs comp in
+                                                        range id qbs comp1 in
                                                     Obj.magic
                                                       (PulseSyntaxExtension_Err.return
                                                          uu___5)) uu___5)))
@@ -3432,9 +3476,11 @@ let (reinitialize_env :
                  fun env ->
                    let uu___ =
                      FStar_Ident.lid_of_path ns PulseSyntaxExtension_Env.r_ in
-                   FStar_Syntax_DsEnv.push_namespace env uu___)
-              open_namespaces dsenv1 in
-          let dsenv3 = FStar_Syntax_DsEnv.push_namespace dsenv2 curmod in
+                   FStar_Syntax_DsEnv.push_namespace env uu___
+                     FStar_Syntax_Syntax.Unrestricted) open_namespaces dsenv1 in
+          let dsenv3 =
+            FStar_Syntax_DsEnv.push_namespace dsenv2 curmod
+              FStar_Syntax_Syntax.Unrestricted in
           let dsenv4 =
             FStar_Compiler_List.fold_left
               (fun env ->

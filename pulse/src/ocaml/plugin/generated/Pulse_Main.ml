@@ -2869,9 +2869,10 @@ let (main :
                                          uu___3))) uu___2))) uu___1)
 let (check_pulse_core :
   (unit ->
-     (Pulse_Syntax_Base.decl,
-       (Prims.string * FStar_Range.range) FStar_Pervasives_Native.option)
-       FStar_Pervasives.either)
+     ((Pulse_Syntax_Base.decl,
+        (Prims.string * FStar_Range.range) FStar_Pervasives_Native.option)
+        FStar_Pervasives.either,
+       unit) FStar_Tactics_Effect.tac_repr)
     -> FStar_Reflection_Typing.dsl_tac_t)
   =
   fun as_decl ->
@@ -2946,8 +2947,7 @@ let (check_pulse_core :
                              (FStar_Range.mk_range "Pulse.Main.fst"
                                 (Prims.of_int (296)) (Prims.of_int (6))
                                 (Prims.of_int (312)) (Prims.of_int (36)))))
-                       (FStar_Tactics_Effect.lift_div_tac
-                          (fun uu___2 -> as_decl ()))
+                       (Obj.magic (as_decl ()))
                        (fun uu___2 ->
                           (fun uu___2 ->
                              match uu___2 with
@@ -3116,9 +3116,14 @@ let (check_pulse :
                   | (env, expected_t) ->
                       check_pulse_core
                         (fun uu___1 ->
-                           PulseSyntaxExtension_ASTBuilder.parse_pulse env
-                             namespaces module_abbrevs content file_name line
-                             col) (env, expected_t)
+                           (fun uu___1 ->
+                              Obj.magic
+                                (FStar_Tactics_Effect.lift_div_tac
+                                   (fun uu___2 ->
+                                      PulseSyntaxExtension_ASTBuilder.parse_pulse
+                                        env namespaces module_abbrevs content
+                                        file_name line col))) uu___1)
+                        (env, expected_t)
 let _ =
   FStar_Tactics_Native.register_tactic "Pulse.Main.check_pulse"
     (Prims.of_int (9))
@@ -3175,9 +3180,13 @@ let check_pulse_after_desugar : 'a . 'a -> FStar_Reflection_Typing.dsl_tac_t
       | (env, expected_t) ->
           check_pulse_core
             (fun uu___1 ->
-               FStar_Pervasives.Inl
-                 (Pulse_RuntimeUtils.unembed_pulse_decl decl))
-            (env, expected_t)
+               (fun uu___1 ->
+                  Obj.magic
+                    (FStar_Tactics_Effect.lift_div_tac
+                       (fun uu___2 ->
+                          FStar_Pervasives.Inl
+                            (Pulse_RuntimeUtils.unembed_pulse_decl decl))))
+                 uu___1) (env, expected_t)
 let _ =
   FStar_Tactics_Native.register_tactic "Pulse.Main.check_pulse_after_desugar"
     (Prims.of_int (4))

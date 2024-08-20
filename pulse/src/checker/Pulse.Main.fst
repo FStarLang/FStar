@@ -288,7 +288,7 @@ let main t pre : RT.dsl_tac_t = fun (g, expected_t) ->
   res
 
 let check_pulse_core 
-        (as_decl: unit -> Dv (either Pulse.Syntax.decl (option (string & R.range))))
+        (as_decl: unit -> Tac (either Pulse.Syntax.decl (option (string & R.range))))
   : RT.dsl_tac_t
   = fun (env, expected_t) ->
       if ext_getv "pulse:dump_on_failure" <> "1" then

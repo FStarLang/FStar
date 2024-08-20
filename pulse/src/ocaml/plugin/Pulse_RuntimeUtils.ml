@@ -52,7 +52,10 @@ let bv_range (bv:FStar_Syntax_Syntax.bv) = FStar_Syntax_Syntax.range_of_bv bv
 let binder_set_range (b:FStar_Syntax_Syntax.binder) (r:FStar_Range.range) =
     { b with FStar_Syntax_Syntax.binder_bv = (bv_set_range b.FStar_Syntax_Syntax.binder_bv r) }
 let binder_range (b:FStar_Syntax_Syntax.binder) = bv_range b.FStar_Syntax_Syntax.binder_bv
-let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
+let start_of_range (r:FStar_Range.range) =
+  let open FStar_Compiler_Range in
+  mk_range (file_of_range r) (start_of_range r) (start_of_range r)
+  let set_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = { t with FStar_Syntax_Syntax.pos = r}
 let set_use_range (t:FStar_Syntax_Syntax.term) (r:FStar_Range.range) = FStar_Syntax_Subst.set_use_range r t
 let error_code_uninstantiated_variable () = FStar_Errors.errno FStar_Errors_Codes.Error_UninstantiatedUnificationVarInTactic
 let is_range_zero (r:FStar_Range.range) = r = FStar_Range.range_0
@@ -153,7 +156,7 @@ let lax_check_term_with_unknown_universes (g:TcEnv.env) (e:S.term)
           | _ ->
             let g = TcEnv.set_range g e.pos in
             let must_tot = false in
-            let g = {g with instantiate_imp=false; phase1=true; lax=true} in
+            let g = {g with instantiate_imp=false; phase1=true; admit=true} in
             let e, t, guard = g.typeof_tot_or_gtot_term g e must_tot in
             let _ = FStar_TypeChecker_Rel.resolve_implicits g guard in
             let uvs = FlatSet.union Free.ord_ctx_uvar (Free.uvars e) (Free.uvars t) in

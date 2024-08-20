@@ -57,9 +57,12 @@ extract_pulse_c:
 
 endif
 
-test: test-cbor extract_pulse_c test-dpe-c
+test: test-cbor extract_pulse_c test-dpe-c test-error-messages
 
-.PHONY: test-dpe-c
+test-error-messages:
+	+$(MAKE) -C bug-reports/error-messages
+
+.PHONY: test-dpe-c test-error-messages
 
 .PHONY: extract_pulse_c
 
