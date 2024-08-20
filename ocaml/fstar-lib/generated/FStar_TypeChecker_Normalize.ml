@@ -524,20 +524,16 @@ let (filter_out_lcomp_cflags :
 let (default_univ_uvars_to_zero :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
-    let uu___ =
-      FStar_Syntax_Visit.visit_term_univs (fun t1 -> t1)
-        (fun u ->
-           match u with
-           | FStar_Syntax_Syntax.U_unif uu___1 -> FStar_Syntax_Syntax.U_zero
-           | uu___1 -> u) in
-    uu___ t
+    FStar_Syntax_Visit.visit_term_univs false (fun t1 -> t1)
+      (fun u ->
+         match u with
+         | FStar_Syntax_Syntax.U_unif uu___ -> FStar_Syntax_Syntax.U_zero
+         | uu___ -> u) t
 let (_erase_universes : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   fun t ->
-    let uu___ =
-      FStar_Syntax_Visit.visit_term_univs (fun t1 -> t1)
-        (fun u -> FStar_Syntax_Syntax.U_unknown) in
-    uu___ t
+    FStar_Syntax_Visit.visit_term_univs false (fun t1 -> t1)
+      (fun u -> FStar_Syntax_Syntax.U_unknown) t
 let (closure_as_term :
   FStar_TypeChecker_Cfg.cfg ->
     env -> FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
@@ -1669,7 +1665,7 @@ let (is_quantified_const :
                let replace_full_applications_with bv1 arity s t =
                  let chgd = FStar_Compiler_Util.mk_ref false in
                  let t' =
-                   FStar_Syntax_Visit.visit_term
+                   FStar_Syntax_Visit.visit_term false
                      (fun t1 ->
                         let uu___ = FStar_Syntax_Util.head_and_args t1 in
                         match uu___ with
