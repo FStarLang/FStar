@@ -1383,7 +1383,7 @@ val modifies_strengthen'
   (requires ((~ (a0 `GSet.mem` addrs_of_loc_weak l r0)) /\  modifies (loc_union l (loc_addresses true r0 (Set.singleton a0))) h h'))
   (ensures (modifies (loc_union l (loc_of_aloc al0)) h h'))
 
-#push-options "--z3rlimit 15 --fuel 0 --ifuel 0"
+#push-options "--z3rlimit 25 --fuel 0 --ifuel 0"
 let modifies_strengthen' #al #c l #r0 #a0 al0 h h' alocs =
   Classical.forall_intro (addrs_of_loc_loc_union_loc_of_aloc_eq_loc_union_loc_addresses_singleton l al0);
   assert (modifies_preserves_regions (loc_union l (loc_of_aloc al0)) h h');

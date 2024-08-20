@@ -1041,14 +1041,12 @@ let rec (generalize_annotated_univs :
       let uu___1 = FStar_Compiler_Effect.op_Bang vars in
       FStar_Compiler_List.rev uu___1 in
     let uu___ =
-      let uu___1 =
-        FStar_Syntax_Visit.visit_sigelt (fun t -> t)
-          (fun u ->
-             (match u with
-              | FStar_Syntax_Syntax.U_name nm -> reg nm
-              | uu___4 -> ());
-             u) in
-      uu___1 s in
+      FStar_Syntax_Visit.visit_sigelt false (fun t -> t)
+        (fun u ->
+           (match u with
+            | FStar_Syntax_Syntax.U_name nm -> reg nm
+            | uu___3 -> ());
+           u) s in
     let unames = get () in
     match s.FStar_Syntax_Syntax.sigel with
     | FStar_Syntax_Syntax.Sig_inductive_typ uu___1 ->

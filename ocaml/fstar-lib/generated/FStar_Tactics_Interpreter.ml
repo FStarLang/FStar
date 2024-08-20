@@ -195,6 +195,7 @@ let unembed_tactic_0 :
                                         Obj.magic
                                           (FStar_Syntax_VisitM.visitM_term
                                              FStar_Class_Monad.monad_option
+                                             false
                                              (fun uu___ ->
                                                 (fun t ->
                                                    match t.FStar_Syntax_Syntax.n

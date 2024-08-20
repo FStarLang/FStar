@@ -487,10 +487,9 @@ let (extract_fundeps :
                                 (Obj.magic
                                    (FStar_Range.mk_range
                                       "FStar.Tactics.Typeclasses.fst"
-                                      (Prims.of_int (160))
-                                      (Prims.of_int (12))
-                                      (Prims.of_int (160))
-                                      (Prims.of_int (28)))))
+                                      (Prims.of_int (160)) (Prims.of_int (6))
+                                      (Prims.of_int (167))
+                                      (Prims.of_int (18)))))
                              (Obj.magic
                                 (FStar_Tactics_V2_SyntaxHelpers.collect_app
                                    attr))
