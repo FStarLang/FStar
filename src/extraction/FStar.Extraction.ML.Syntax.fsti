@@ -248,6 +248,7 @@ val mlletbinding_to_string (lb:mlletbinding) : string
 val mllb_to_string (lb:mllb) : string
 val mlpattern_to_string (p:mlpattern) : string
 
+val mlexpr_to_string (e:mlexpr) : string
 val mltybody_to_string (d:mltybody) : string
 val one_mltydecl_to_string (d:one_mltydecl) : string
 
