@@ -884,6 +884,8 @@ and (lidents_of_term' :
             FStar_Compiler_List.op_At uu___4 uu___5 in
           FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ListLiteral ts -> (concat_map ()) lidents_of_term ts
+    | FStar_Parser_AST.SeqLiteral ts -> (concat_map ()) lidents_of_term ts
 and (lidents_of_branch :
   (FStar_Parser_AST.pattern * FStar_Parser_AST.term
     FStar_Pervasives_Native.option * FStar_Parser_AST.term) ->

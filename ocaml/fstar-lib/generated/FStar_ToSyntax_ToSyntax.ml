@@ -680,6 +680,10 @@ and (free_vars :
                 FStar_Compiler_List.op_At uu___5 uu___6 in
               FStar_Compiler_List.op_At uu___3 uu___4 in
             FStar_Compiler_List.op_At uu___1 uu___2
+        | FStar_Parser_AST.ListLiteral ts ->
+            FStar_Compiler_List.collect (free_vars tvars_only env) ts
+        | FStar_Parser_AST.SeqLiteral ts ->
+            FStar_Compiler_List.collect (free_vars tvars_only env) ts
         | FStar_Parser_AST.Abs uu___1 -> []
         | FStar_Parser_AST.Let uu___1 -> []
         | FStar_Parser_AST.LetOpen uu___1 -> []
@@ -5278,6 +5282,41 @@ and (desugar_term_maybe_top :
                     FStar_Syntax_Syntax.mk_Tm_app head args
                       top.FStar_Parser_AST.range in
                   (uu___3, noaqs))
+         | FStar_Parser_AST.ListLiteral ts ->
+             let nil r =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Construct (FStar_Parser_Const.nil_lid, []))
+                 r FStar_Parser_AST.Expr in
+             let cons r hd tl =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Construct
+                    (FStar_Parser_Const.cons_lid,
+                      [(hd, FStar_Parser_AST.Nothing);
+                      (tl, FStar_Parser_AST.Nothing)])) r
+                 FStar_Parser_AST.Expr in
+             let t' =
+               let uu___2 = nil top.FStar_Parser_AST.range in
+               FStar_Compiler_List.fold_right
+                 (cons top.FStar_Parser_AST.range) ts uu___2 in
+             desugar_term_aq env t'
+         | FStar_Parser_AST.SeqLiteral ts ->
+             let nil r =
+               FStar_Parser_AST.mk_term
+                 (FStar_Parser_AST.Var FStar_Parser_Const.seq_empty_lid) r
+                 FStar_Parser_AST.Expr in
+             let cons r hd tl =
+               let uu___2 =
+                 FStar_Parser_AST.mk_term
+                   (FStar_Parser_AST.Var FStar_Parser_Const.seq_cons_lid) r
+                   FStar_Parser_AST.Expr in
+               FStar_Parser_AST.mkApp uu___2
+                 [(hd, FStar_Parser_AST.Nothing);
+                 (tl, FStar_Parser_AST.Nothing)] r in
+             let t' =
+               let uu___2 = nil top.FStar_Parser_AST.range in
+               FStar_Compiler_List.fold_right
+                 (cons top.FStar_Parser_AST.range) ts uu___2 in
+             desugar_term_aq env t'
          | uu___2 when top.FStar_Parser_AST.level = FStar_Parser_AST.Formula
              -> let uu___3 = desugar_formula env top in (uu___3, noaqs)
          | uu___2 ->
@@ -5443,40 +5482,28 @@ and (desugar_comp :
                 (match uu___2 with
                  | FStar_Parser_AST.Decreases uu___3 -> true
                  | uu___3 -> false) in
+          let is_smt_pat1 t1 =
+            let uu___ = let uu___1 = unparen t1 in uu___1.FStar_Parser_AST.tm in
+            match uu___ with
+            | FStar_Parser_AST.Construct (smtpat, uu___1) ->
+                FStar_Compiler_Util.for_some
+                  (fun s ->
+                     let uu___2 = FStar_Ident.string_of_lid smtpat in
+                     uu___2 = s) ["SMTPat"; "SMTPatT"; "SMTPatOr"]
+            | FStar_Parser_AST.Var smtpat ->
+                FStar_Compiler_Util.for_some
+                  (fun s ->
+                     let uu___1 = FStar_Ident.string_of_lid smtpat in
+                     uu___1 = s) ["smt_pat"; "smt_pat_or"]
+            | uu___1 -> false in
           let is_smt_pat uu___ =
             match uu___ with
             | (t1, uu___1) ->
                 let uu___2 =
                   let uu___3 = unparen t1 in uu___3.FStar_Parser_AST.tm in
                 (match uu___2 with
-                 | FStar_Parser_AST.Construct
-                     (cons,
-                      ({
-                         FStar_Parser_AST.tm = FStar_Parser_AST.Construct
-                           (smtpat, uu___3);
-                         FStar_Parser_AST.range = uu___4;
-                         FStar_Parser_AST.level = uu___5;_},
-                       uu___6)::uu___7::[])
-                     ->
-                     (FStar_Ident.lid_equals cons FStar_Parser_Const.cons_lid)
-                       &&
-                       (FStar_Compiler_Util.for_some
-                          (fun s ->
-                             let uu___8 = FStar_Ident.string_of_lid smtpat in
-                             uu___8 = s) ["SMTPat"; "SMTPatT"; "SMTPatOr"])
-                 | FStar_Parser_AST.Construct
-                     (cons,
-                      ({ FStar_Parser_AST.tm = FStar_Parser_AST.Var smtpat;
-                         FStar_Parser_AST.range = uu___3;
-                         FStar_Parser_AST.level = uu___4;_},
-                       uu___5)::uu___6::[])
-                     ->
-                     (FStar_Ident.lid_equals cons FStar_Parser_Const.cons_lid)
-                       &&
-                       (FStar_Compiler_Util.for_some
-                          (fun s ->
-                             let uu___7 = FStar_Ident.string_of_lid smtpat in
-                             uu___7 = s) ["smt_pat"; "smt_pat_or"])
+                 | FStar_Parser_AST.ListLiteral ts ->
+                     FStar_Compiler_Util.for_all is_smt_pat1 ts
                  | uu___3 -> false) in
           let pre_process_comp_typ t1 =
             let uu___ = head_and_args t1 in
