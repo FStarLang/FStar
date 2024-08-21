@@ -1000,6 +1000,23 @@ and (mlpattern_to_string : mlpattern -> Prims.string) =
           let uu___2 = FStar_Compiler_List.map mlpattern_to_string ps in
           FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format2 "(MLP_CTor (%s, [%s]))" uu___ uu___1
+    | MLP_Branch ps ->
+        let uu___ =
+          let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
+          FStar_Compiler_String.concat "; " uu___1 in
+        FStar_Compiler_Util.format1 "(MLP_Branch [%s])" uu___
+    | MLP_Record (path, fields) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Compiler_List.map
+              (fun uu___2 ->
+                 match uu___2 with
+                 | (x, p) ->
+                     let uu___3 = mlpattern_to_string p in
+                     FStar_Compiler_Util.format2 "(%s, %s)" x uu___3) fields in
+          FStar_Compiler_String.concat "; " uu___1 in
+        FStar_Compiler_Util.format2 "(MLP_Record (%s, [%s]))"
+          (FStar_Compiler_String.concat "." path) uu___
     | MLP_Tuple ps ->
         let uu___ =
           let uu___1 = FStar_Compiler_List.map mlpattern_to_string ps in
