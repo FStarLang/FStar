@@ -110,8 +110,12 @@ let check_bind
         //   rename x0 x; ...
         // to leverage the pure case
         if not (eq_tm ty t) then
-          fail g (Some e1.range)
-            (Printf.sprintf "Type mismatch: expected %s, got %s" (P.term_to_string ty) (P.term_to_string t))
+          let open Pulse.PP in
+          fail_doc g (Some e1.range) [
+            text "Type mismatch (NB: this is a syntactic check)";
+            prefix 2 1 (text "Expected:") (pp ty);
+            prefix 2 1 (text "Got:") (pp t);
+          ]
       end;
       r
     in
