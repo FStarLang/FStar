@@ -205,6 +205,10 @@ and mlpattern_to_string mlp =
   | MLP_Const c -> BU.format1 "(MLP_Const %s)" (mlconstant_to_string c)
   | MLP_Var x -> BU.format1 "(MLP_Var %s)" x
   | MLP_CTor (p, ps) -> BU.format2 "(MLP_CTor (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlpattern_to_string ps))
+  | MLP_Branch ps -> BU.format1 "(MLP_Branch [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
+
+  | MLP_Record (path, fields) ->
+    BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "." path) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) fields))
   | MLP_Tuple ps -> BU.format1 "(MLP_Tuple [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
 
 let mltybody_to_string (d:mltybody) : string =
