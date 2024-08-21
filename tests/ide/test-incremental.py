@@ -261,8 +261,8 @@ def test_file(filepath):
     # Check that fstar exited with code 0
     if p.returncode != 0:
         print("F* returned non-zero exit code")
-        print(p.stderr.read())
-        print(p.stdout.read())
+        print(p.stderr)
+        print(p.stdout)
         return False
     # Parse the response into a list of lines
     # lines = response.splitlines()
