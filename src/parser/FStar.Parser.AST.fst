@@ -79,16 +79,10 @@ let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
 let mkListLit r elts =
-  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
-  List.fold_right (fun e tl -> consTerm r e tl) elts nil
+  mk_term (ListLiteral elts) r Expr
 
-let seqConsTerm r hd tl =
-  let cons = mk_term (Var (C.seq_cons_lid)) r Expr in
-  mkApp cons [(hd, Nothing); (tl, Nothing)] r
-
-let mkSeqLit  r elts =
-  let nil = mk_term (Var (C.seq_empty_lid)) r Expr in
-  List.fold_right (fun e tl -> seqConsTerm r e tl) elts nil
+let mkSeqLit r elts =
+  mk_term (SeqLiteral elts) r Expr
 
 let unit_const r = mk_term(Const Const_unit) r Expr
 
@@ -620,6 +614,12 @@ let rec term_to_string (x:term) = match x.tm with
       (term_to_string q)
       (term_to_string e1)
       (term_to_string e2)
+
+  | ListLiteral ts ->
+    Util.format1 "[%s]" (to_string_l "; " term_to_string ts)
+
+  | SeqLiteral ts ->
+    Util.format1 "seq![%s]" (to_string_l "; " term_to_string ts)
     
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep

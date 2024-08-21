@@ -237,25 +237,9 @@ let matches_var t x =
 let is_tuple_constructor = C.is_tuple_data_lid'
 let is_dtuple_constructor = C.is_dtuple_data_lid'
 
-let is_list_structure cons_lid nil_lid =
-  let rec aux e = match e.tm with
-    | Construct (lid, []) -> lid_equals lid nil_lid
-    | Construct (lid, [ _ ; e2, _]) -> lid_equals lid cons_lid && aux e2
-    | _ -> false
-  in aux
-
-let is_list = is_list_structure C.cons_lid C.nil_lid
-
-(* [extract_from_list e] assumes that [is_list_structure xxx yyy e] holds *)
-(* and returns the list of terms contained in the list *)
-let rec extract_from_list e = match e.tm with
-  | Construct (_, []) -> []
-  | Construct (_, [e1,Nothing ; e2, Nothing]) -> e1 :: extract_from_list e2
-  | _ -> failwith (Util.format1 "Not a list %s" (term_to_string e))
-
 let is_array e = match e.tm with
     (* TODO check that there is no implicit parameters *)
-    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && is_list l
+    | App ({tm=Var lid}, l, Nothing) -> lid_equals lid C.array_of_list_lid && ListLiteral? l.tm
     | _ -> false
 
 let rec is_ref_set e = match e.tm with
@@ -278,7 +262,7 @@ let is_general_application e =
   not (is_array e || is_ref_set e)
 
 let is_general_construction e =
-  not (is_list e)
+  not (ListLiteral? e.tm)
 
 let is_general_prefix_op op =
   let op_starting_char =  char_at (Ident.string_of_id op) 0 in
@@ -1952,7 +1936,7 @@ and p_tmNoEqWith p_X e =
   p_tmNoEqWith' false p_X n e
 
 and p_tmNoEqWith' inside_tuple p_X curr e = match e.tm with
-  | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid && not (is_list e) ->
+  | Construct (lid, [e1, _ ; e2, _]) when lid_equals lid C.cons_lid ->
       let op = "::" in
       let left, mine, right = levels op in
       paren_if_gt curr mine (infix0 (str op) (p_tmNoEqWith' false p_X left e1) (p_tmNoEqWith' false p_X right e2))
@@ -2083,6 +2067,19 @@ and p_atomicTerm e = match e.tm with
       p_quident lid
   | Op(op, [e]) when is_general_prefix_op op ->
       str (Ident.string_of_id op) ^^ p_atomicTerm e
+
+  | ListLiteral ts ->
+    surround 2 0
+      lbracket
+      (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) ts)
+      rbracket
+
+  | SeqLiteral ts ->
+    surround 2 0
+      (doc_of_string "seq!" ^^ lbracket)
+      (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) ts)
+      rbracket
+
   | _ -> p_atomicTermNotQUident e
 
 and p_atomicTermNotQUident e = match e.tm with
@@ -2133,11 +2130,9 @@ and p_projectionLHS e = match e.tm with
       doc
     else
       comm ^^ hardline ^^ doc
-  | _ when is_array e ->
-    let es = extract_from_list e in
-    surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
-  | _ when is_list e ->
-    surround 2 0 lbracket (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) (extract_from_list e)) rbracket
+  // | _ when is_array e ->
+  //   let es = extract_from_list e in
+  //   surround 2 0 (lbracket ^^ bar) (separate_map_or_flow_last (semi ^^ break1) (fun ps -> p_noSeqTermAndComment ps false) es) (bar ^^ rbracket)
   | _ when is_ref_set e ->
     let es = extract_from_ref_set e in
     surround 2 0 (bang ^^ lbrace) (separate_map_or_flow (comma ^^ break1) p_appTerm es) rbrace
@@ -2194,6 +2189,8 @@ and p_projectionLHS e = match e.tm with
   | VQuote _    (* p_noSeqTerm *)
   | Antiquote _ (* p_noSeqTerm *)
   | CalcProof _ (* p_noSeqTerm *)
+  | ListLiteral _
+  | SeqLiteral _
   | ElimExists _
     -> soft_parens_with_nesting (p_term false false e)
   | LexList l -> group (str "%" ^^ p_term_list false false l)
