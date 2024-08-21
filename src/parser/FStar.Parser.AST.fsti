@@ -300,7 +300,9 @@ val un_function : pattern -> term -> option (pattern & term)
 
 val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
-val mkConsList : range -> list term -> term
+
+val mkListLit  : range -> list term -> term (* a list literal *)
+val mkSeqLit   : range -> list term -> term (* a sequence literal *)
 
 val unit_const : range -> term
 val ml_comp : term -> term

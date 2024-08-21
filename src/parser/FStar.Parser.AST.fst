@@ -69,12 +69,26 @@ let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
     | _ -> None
 
+let mkApp t args r = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
-let mkConsList r elts =
+let mkListLit r elts =
   let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
-    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+  List.fold_right (fun e tl -> consTerm r e tl) elts nil
+
+let seqConsTerm r hd tl =
+  let cons = mk_term (Var (C.seq_cons_lid)) r Expr in
+  mkApp cons [(hd, Nothing); (tl, Nothing)] r
+
+let mkSeqLit  r elts =
+  let nil = mk_term (Var (C.seq_empty_lid)) r Expr in
+  List.fold_right (fun e tl -> seqConsTerm r e tl) elts nil
 
 let unit_const r = mk_term(Const Const_unit) r Expr
 
@@ -88,12 +102,6 @@ let tot_comp t =
     let ml = mk_term (Name C.effect_Tot_lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
-
-let mkApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
   let empty_lid, singleton_lid, union_lid, addr_of_lid =

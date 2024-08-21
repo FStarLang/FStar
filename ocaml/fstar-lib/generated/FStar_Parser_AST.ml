@@ -1192,41 +1192,6 @@ let (un_function :
             (uu___2, body) in
           FStar_Pervasives_Native.Some uu___1
       | uu___ -> FStar_Pervasives_Native.None
-let (consPat :
-  FStar_Compiler_Range_Type.range -> pattern -> pattern -> pattern') =
-  fun r ->
-    fun hd ->
-      fun tl ->
-        let uu___ =
-          let uu___1 = mk_pattern (PatName FStar_Parser_Const.cons_lid) r in
-          (uu___1, [hd; tl]) in
-        PatApp uu___
-let (consTerm : FStar_Compiler_Range_Type.range -> term -> term -> term) =
-  fun r ->
-    fun hd ->
-      fun tl ->
-        mk_term
-          (Construct
-             (FStar_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)])) r
-          Expr
-let (mkConsList : FStar_Compiler_Range_Type.range -> term Prims.list -> term)
-  =
-  fun r ->
-    fun elts ->
-      let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
-      FStar_Compiler_List.fold_right (fun e -> fun tl -> consTerm r e tl)
-        elts nil
-let (unit_const : FStar_Compiler_Range_Type.range -> term) =
-  fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
-let (ml_comp : term -> term) =
-  fun t ->
-    let lid = FStar_Parser_Const.effect_ML_lid () in
-    let ml = mk_term (Name lid) t.range Expr in
-    let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
-let (tot_comp : term -> term) =
-  fun t ->
-    let ml = mk_term (Name FStar_Parser_Const.effect_Tot_lid) t.range Expr in
-    let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let (mkApp :
   term -> (term * imp) Prims.list -> FStar_Compiler_Range_Type.range -> term)
   =
@@ -1245,6 +1210,53 @@ let (mkApp :
                         match uu___2 with
                         | (a, imp1) -> mk_term (App (t1, a, imp1)) r Un) t
                    args)
+let (consPat :
+  FStar_Compiler_Range_Type.range -> pattern -> pattern -> pattern') =
+  fun r ->
+    fun hd ->
+      fun tl ->
+        let uu___ =
+          let uu___1 = mk_pattern (PatName FStar_Parser_Const.cons_lid) r in
+          (uu___1, [hd; tl]) in
+        PatApp uu___
+let (consTerm : FStar_Compiler_Range_Type.range -> term -> term -> term) =
+  fun r ->
+    fun hd ->
+      fun tl ->
+        mk_term
+          (Construct
+             (FStar_Parser_Const.cons_lid, [(hd, Nothing); (tl, Nothing)])) r
+          Expr
+let (mkListLit : FStar_Compiler_Range_Type.range -> term Prims.list -> term)
+  =
+  fun r ->
+    fun elts ->
+      let nil = mk_term (Construct (FStar_Parser_Const.nil_lid, [])) r Expr in
+      FStar_Compiler_List.fold_right (fun e -> fun tl -> consTerm r e tl)
+        elts nil
+let (seqConsTerm : FStar_Compiler_Range_Type.range -> term -> term -> term) =
+  fun r ->
+    fun hd ->
+      fun tl ->
+        let cons = mk_term (Var FStar_Parser_Const.seq_cons_lid) r Expr in
+        mkApp cons [(hd, Nothing); (tl, Nothing)] r
+let (mkSeqLit : FStar_Compiler_Range_Type.range -> term Prims.list -> term) =
+  fun r ->
+    fun elts ->
+      let nil = mk_term (Var FStar_Parser_Const.seq_empty_lid) r Expr in
+      FStar_Compiler_List.fold_right (fun e -> fun tl -> seqConsTerm r e tl)
+        elts nil
+let (unit_const : FStar_Compiler_Range_Type.range -> term) =
+  fun r -> mk_term (Const FStar_Const.Const_unit) r Expr
+let (ml_comp : term -> term) =
+  fun t ->
+    let lid = FStar_Parser_Const.effect_ML_lid () in
+    let ml = mk_term (Name lid) t.range Expr in
+    let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
+let (tot_comp : term -> term) =
+  fun t ->
+    let ml = mk_term (Name FStar_Parser_Const.effect_Tot_lid) t.range Expr in
+    let t1 = mk_term (App (ml, t, Nothing)) t.range Expr in t1
 let (mkRefSet : FStar_Compiler_Range_Type.range -> term Prims.list -> term) =
   fun r ->
     fun elts ->
