@@ -58,9 +58,9 @@ let encode_open_namespaces_and_abbreviations
 = let tm t = tm t r in
   let str s = str s r in
   let lid_as_term ns = lid_as_term ns r in
-  let namespaces = mkConsList r (List.map lid_as_term ctx.open_namespaces) in
+  let namespaces = tm <| ListLiteral (List.map lid_as_term ctx.open_namespaces) in
   let abbrevs =
-      mkConsList r (
+      tm <| ListLiteral (
         List.map 
             (fun (a, m) ->
               let a = str (Ident.string_of_id a) in
