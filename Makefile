@@ -134,11 +134,20 @@ bench:
 # Regenerate and accept expected output tests. Should be manually
 # reviewed before checking in.
 .PHONY: output
-output: output-error-messages output-ide-emacs output-ide-lsp output-bug-reports
+output:				\
+	output-error-messages	\
+	output-pretty-printing	\
+	output-ide-emacs	\
+	output-ide-lsp		\
+	output-bug-reports
 
 .PHONY: output-error-messages
 output-error-messages:
 	+$(Q)$(MAKE) -C tests/error-messages accept
+
+.PHONY: output-pretty-printing
+output-pretty-printing:
+	+$(Q)$(MAKE) -C tests/prettyprinting accept
 
 .PHONY: output-ide-emacs
 output-ide-emacs:
