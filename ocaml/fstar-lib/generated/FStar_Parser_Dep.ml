@@ -1821,6 +1821,16 @@ let (collect_one :
                   collect_binder y;
                   collect_term e;
                   collect_term e')
+             | FStar_Parser_AST.ListLiteral ts ->
+                 FStar_Compiler_List.iter collect_term ts
+             | FStar_Parser_AST.SeqLiteral ts ->
+                 ((let uu___3 =
+                     let uu___4 =
+                       let uu___5 = FStar_Ident.lid_of_str "FStar.Seq.Base" in
+                       (false, uu___5) in
+                     P_dep uu___4 in
+                   add_to_parsing_data uu___3);
+                  FStar_Compiler_List.iter collect_term ts)
            and collect_patterns ps =
              FStar_Compiler_List.iter collect_pattern ps
            and collect_pattern p = collect_pattern' p.FStar_Parser_AST.pat

@@ -265,6 +265,27 @@ let resugar_machine_integer fv (i:string) pos =
   | None -> failwith "Impossible: should be guarded by can_resugar_machine_integer"
   | Some (sw, _) -> A.mk_term (A.Const (Const_int(i, Some sw))) pos A.Un
 
+let rec __is_list_literal cons_lid nil_lid (t:S.term) : option (list S.term) =
+  let open FStar.Class.Monad in
+  let hd, args = U.head_and_args_full t in
+  let hd = hd |> U.un_uinst |> SS.compress in
+  let args =
+    if Options.print_implicits ()
+    then args
+    else args |> filter_imp_args
+  in
+  match hd.n, args with
+  | Tm_fvar fv, [(hd, None); (tl, None)] when fv_eq_lid fv cons_lid ->
+    let! tl = __is_list_literal cons_lid nil_lid tl in
+    return (hd :: tl)
+  | Tm_fvar fv, [] when fv_eq_lid fv nil_lid ->
+    return []
+  | _, _ ->
+    None
+
+let is_list_literal = __is_list_literal C.cons_lid C.nil_lid
+let is_seq_literal  = __is_list_literal C.seq_cons_lid C.seq_empty_lid
+
 let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
     (* Cannot resugar term back to NamedTyp or Paren *)
     let mk (a:A.term') : A.term =
@@ -550,7 +571,13 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         | Some r -> r
         | None -> resugar_as_app hd args
       in
-      begin match resugar_term_as_op e with
+      begin match is_list_literal t with
+      | Some ts -> mk (A.ListLiteral (List.map (resugar_term' env) ts))
+      | None ->
+      match is_seq_literal t with
+      | Some ts -> mk (A.SeqLiteral (List.map (resugar_term' env) ts))
+      | None ->
+      match resugar_term_as_op e with
         | None->
           resugar_as_app e args
 
@@ -818,7 +845,7 @@ let rec resugar_term' (env: DsEnv.env) (t : S.term) : A.term =
         else
           (pat, resugar_term' env term), (universe_to_string univs))
       in
-      let r = List.map (resugar_one_binding) source_lbs in
+      let r = List.map resugar_one_binding source_lbs in
       let bnds =
           let f (attrs, (pb, univs)) =
             if not (Options.print_universes ()) then attrs, pb

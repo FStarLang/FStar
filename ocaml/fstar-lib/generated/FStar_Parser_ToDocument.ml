@@ -371,36 +371,6 @@ let (is_tuple_constructor : FStar_Ident.lident -> Prims.bool) =
   FStar_Parser_Const.is_tuple_data_lid'
 let (is_dtuple_constructor : FStar_Ident.lident -> Prims.bool) =
   FStar_Parser_Const.is_dtuple_data_lid'
-let (is_list_structure :
-  FStar_Ident.lident ->
-    FStar_Ident.lident -> FStar_Parser_AST.term -> Prims.bool)
-  =
-  fun cons_lid ->
-    fun nil_lid ->
-      let rec aux e =
-        match e.FStar_Parser_AST.tm with
-        | FStar_Parser_AST.Construct (lid, []) ->
-            FStar_Ident.lid_equals lid nil_lid
-        | FStar_Parser_AST.Construct (lid, uu___::(e2, uu___1)::[]) ->
-            (FStar_Ident.lid_equals lid cons_lid) && (aux e2)
-        | uu___ -> false in
-      aux
-let (is_list : FStar_Parser_AST.term -> Prims.bool) =
-  is_list_structure FStar_Parser_Const.cons_lid FStar_Parser_Const.nil_lid
-let rec (extract_from_list :
-  FStar_Parser_AST.term -> FStar_Parser_AST.term Prims.list) =
-  fun e ->
-    match e.FStar_Parser_AST.tm with
-    | FStar_Parser_AST.Construct (uu___, []) -> []
-    | FStar_Parser_AST.Construct
-        (uu___,
-         (e1, FStar_Parser_AST.Nothing)::(e2, FStar_Parser_AST.Nothing)::[])
-        -> let uu___1 = extract_from_list e2 in e1 :: uu___1
-    | uu___ ->
-        let uu___1 =
-          let uu___2 = FStar_Parser_AST.term_to_string e in
-          FStar_Compiler_Util.format1 "Not a list %s" uu___2 in
-        FStar_Compiler_Effect.failwith uu___1
 let (is_array : FStar_Parser_AST.term -> Prims.bool) =
   fun e ->
     match e.FStar_Parser_AST.tm with
@@ -410,7 +380,7 @@ let (is_array : FStar_Parser_AST.term -> Prims.bool) =
          l, FStar_Parser_AST.Nothing)
         ->
         (FStar_Ident.lid_equals lid FStar_Parser_Const.array_of_list_lid) &&
-          (is_list l)
+          (FStar_Parser_AST.uu___is_ListLiteral l.FStar_Parser_AST.tm)
     | uu___ -> false
 let rec (is_ref_set : FStar_Parser_AST.term -> Prims.bool) =
   fun e ->
@@ -492,7 +462,9 @@ let (is_general_application : FStar_Parser_AST.term -> Prims.bool) =
   fun e ->
     let uu___ = (is_array e) || (is_ref_set e) in Prims.op_Negation uu___
 let (is_general_construction : FStar_Parser_AST.term -> Prims.bool) =
-  fun e -> let uu___ = is_list e in Prims.op_Negation uu___
+  fun e ->
+    Prims.op_Negation
+      (FStar_Parser_AST.uu___is_ListLiteral e.FStar_Parser_AST.tm)
 let (is_general_prefix_op : FStar_Ident.ident -> Prims.bool) =
   fun op ->
     let op_starting_char =
@@ -4374,10 +4346,7 @@ and (p_tmNoEqWith' :
         fun e ->
           match e.FStar_Parser_AST.tm with
           | FStar_Parser_AST.Construct (lid, (e1, uu___)::(e2, uu___1)::[])
-              when
-              (FStar_Ident.lid_equals lid FStar_Parser_Const.cons_lid) &&
-                (let uu___2 = is_list e in Prims.op_Negation uu___2)
-              ->
+              when FStar_Ident.lid_equals lid FStar_Parser_Const.cons_lid ->
               let op = "::" in
               let uu___2 = levels op in
               (match uu___2 with
@@ -4702,6 +4671,23 @@ and (p_atomicTerm : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Op (op, e1::[]) when is_general_prefix_op op ->
         let uu___ = let uu___1 = FStar_Ident.string_of_id op in str uu___1 in
         let uu___1 = p_atomicTerm e1 in FStar_Pprint.op_Hat_Hat uu___ uu___1
+    | FStar_Parser_AST.ListLiteral ts ->
+        let uu___ =
+          let uu___1 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
+          separate_map_or_flow_last uu___1
+            (fun ps -> p_noSeqTermAndComment ps false) ts in
+        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero
+          FStar_Pprint.lbracket uu___ FStar_Pprint.rbracket
+    | FStar_Parser_AST.SeqLiteral ts ->
+        let uu___ =
+          let uu___1 = FStar_Pprint.doc_of_string "seq!" in
+          FStar_Pprint.op_Hat_Hat uu___1 FStar_Pprint.lbracket in
+        let uu___1 =
+          let uu___2 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
+          separate_map_or_flow_last uu___2
+            (fun ps -> p_noSeqTermAndComment ps false) ts in
+        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero uu___ uu___1
+          FStar_Pprint.rbracket
     | uu___ -> p_atomicTermNotQUident e
 and (p_atomicTermNotQUident : FStar_Parser_AST.term -> FStar_Pprint.document)
   =
@@ -4789,26 +4775,6 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
                (let uu___2 =
                   FStar_Pprint.op_Hat_Hat FStar_Pprint.hardline doc in
                 FStar_Pprint.op_Hat_Hat comm uu___2))
-    | uu___ when is_array e ->
-        let es = extract_from_list e in
-        let uu___1 =
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.lbracket FStar_Pprint.bar in
-        let uu___2 =
-          let uu___3 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
-          separate_map_or_flow_last uu___3
-            (fun ps -> p_noSeqTermAndComment ps false) es in
-        let uu___3 =
-          FStar_Pprint.op_Hat_Hat FStar_Pprint.bar FStar_Pprint.rbracket in
-        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero uu___1 uu___2
-          uu___3
-    | uu___ when is_list e ->
-        let uu___1 =
-          let uu___2 = FStar_Pprint.op_Hat_Hat FStar_Pprint.semi break1 in
-          let uu___3 = extract_from_list e in
-          separate_map_or_flow_last uu___2
-            (fun ps -> p_noSeqTermAndComment ps false) uu___3 in
-        FStar_Pprint.surround (Prims.of_int (2)) Prims.int_zero
-          FStar_Pprint.lbracket uu___1 FStar_Pprint.rbracket
     | uu___ when is_ref_set e ->
         let es = extract_from_ref_set e in
         let uu___1 =
@@ -4912,6 +4878,10 @@ and (p_projectionLHS : FStar_Parser_AST.term -> FStar_Pprint.document) =
     | FStar_Parser_AST.Antiquote uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.CalcProof uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.ListLiteral uu___ ->
+        let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
+    | FStar_Parser_AST.SeqLiteral uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
     | FStar_Parser_AST.ElimExists uu___ ->
         let uu___1 = p_term false false e in soft_parens_with_nesting uu___1
