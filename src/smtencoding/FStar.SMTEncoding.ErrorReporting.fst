@@ -26,6 +26,7 @@ open FStar.SMTEncoding.Util
 open FStar.SMTEncoding.Z3
 open FStar.SMTEncoding
 open FStar.Compiler.Range
+open FStar.Class.Setlike
 module BU = FStar.Compiler.Util
 
 exception Not_a_wp_implication of string
@@ -341,11 +342,13 @@ let detail_errors hint_replay
     let elim labs = //assumes that all the labs are true, effectively removing them from the query
         labs
         |> List.map (fun (l, _, _) ->
+            let tm = mkEq(mkFreeV l, mkTrue) in
             let a = {
                     assumption_name="@disable_label_"^fv_name l; //the "@" is important in the name; forces it to be retained when replaying a hint
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
-                    assumption_fact_ids=[]
+                    assumption_fact_ids=[];
+                    assumption_free_names=elems (free_top_level_names tm)
                 }
             in
             Term.Assume a) in

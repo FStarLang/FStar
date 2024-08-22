@@ -826,6 +826,11 @@ let (detail_errors :
               (fun uu___ ->
                  match uu___ with
                  | (l, uu___1, uu___2) ->
+                     let tm =
+                       let uu___3 =
+                         let uu___4 = FStar_SMTEncoding_Util.mkFreeV l in
+                         (uu___4, FStar_SMTEncoding_Util.mkTrue) in
+                       FStar_SMTEncoding_Util.mkEq uu___3 in
                      let a =
                        let uu___3 =
                          let uu___4 =
@@ -835,12 +840,22 @@ let (detail_errors :
                        let uu___4 =
                          let uu___5 = FStar_SMTEncoding_Term.fv_name l in
                          Prims.strcat "@disable_label_" uu___5 in
+                       let uu___5 =
+                         let uu___6 =
+                           FStar_SMTEncoding_Term.free_top_level_names tm in
+                         FStar_Class_Setlike.elems ()
+                           (Obj.magic
+                              (FStar_Compiler_RBSet.setlike_rbset
+                                 FStar_Class_Ord.ord_string))
+                           (Obj.magic uu___6) in
                        {
                          FStar_SMTEncoding_Term.assumption_term = uu___3;
                          FStar_SMTEncoding_Term.assumption_caption =
                            (FStar_Pervasives_Native.Some "Disabling label");
                          FStar_SMTEncoding_Term.assumption_name = uu___4;
-                         FStar_SMTEncoding_Term.assumption_fact_ids = []
+                         FStar_SMTEncoding_Term.assumption_fact_ids = [];
+                         FStar_SMTEncoding_Term.assumption_free_names =
+                           uu___5
                        } in
                      FStar_SMTEncoding_Term.Assume a) labs in
           let rec linear_check eliminated errors active =

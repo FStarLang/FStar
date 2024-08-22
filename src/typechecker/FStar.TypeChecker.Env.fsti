@@ -94,7 +94,8 @@ type must_tot = bool
 
 let lemma_triggers = list (list (list lident))
 
-val pending_lemma_patterns : Type0 
+val pending_lemma_patterns : Type0
+val print_pending_lemmas : pending_lemma_patterns -> string
 val empty_pending_lemma_patterns : pending_lemma_patterns
 val remove_pending_lemma (lid:lident) (p:pending_lemma_patterns)
 : pending_lemma_patterns

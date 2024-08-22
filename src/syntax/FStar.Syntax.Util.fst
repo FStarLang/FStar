@@ -1833,14 +1833,14 @@ let destruct_lemma_with_smt_patterns (t:term)
   | _ -> None
 
 let triggers_of_smt_lemma (t:term)
-: list (list (list lident)) //for each disjunctive pattern
+:  list (list lident) //for each disjunctive pattern
                             //for each conjunct
                             //triggers in a conjunt
 = //is_smt_lemma t
   match destruct_lemma_with_smt_patterns t with
   | None -> []
   | Some (_, _, _, pats) ->
-    List.map (List.map (fun (t, _) -> elems <| FStar.Syntax.Free.fvars t)) pats
+    List.map (List.collect (fun (t, _) -> elems <| FStar.Syntax.Free.fvars t)) pats
 
 (* Takes a term of shape `fun x -> e` and returns `e` when
 `x` is not free in it. If it is free or the term

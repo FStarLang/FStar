@@ -4016,16 +4016,14 @@ let (destruct_lemma_with_smt_patterns :
               | uu___2 -> FStar_Compiler_Effect.failwith "impos"))
     | uu___1 -> FStar_Pervasives_Native.None
 let (triggers_of_smt_lemma :
-  FStar_Syntax_Syntax.term ->
-    FStar_Ident.lident Prims.list Prims.list Prims.list)
-  =
+  FStar_Syntax_Syntax.term -> FStar_Ident.lident Prims.list Prims.list) =
   fun t ->
     let uu___ = destruct_lemma_with_smt_patterns t in
     match uu___ with
     | FStar_Pervasives_Native.None -> []
     | FStar_Pervasives_Native.Some (uu___1, uu___2, uu___3, pats) ->
         FStar_Compiler_List.map
-          (FStar_Compiler_List.map
+          (FStar_Compiler_List.collect
              (fun uu___4 ->
                 match uu___4 with
                 | (t1, uu___5) ->

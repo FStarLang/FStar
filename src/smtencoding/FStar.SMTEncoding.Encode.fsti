@@ -25,6 +25,7 @@ val pop:  string -> unit
 val snapshot: string -> (Env.solver_depth_t & unit)
 val rollback: string -> option Env.solver_depth_t -> unit
 val init: Env.env -> unit
+val get_current_env: Env.env -> FStar.SMTEncoding.Env.env_t
 val encode_sig: Env.env -> S.sigelt -> unit
 val encode_modul: Env.env -> S.modul -> decls_t & list FStar.SMTEncoding.Env.fvar_binding
 //the lident is the module name
@@ -32,7 +33,8 @@ val encode_modul_from_cache: Env.env -> S.modul -> (decls_t & list FStar.SMTEnco
 val encode_query: option (unit -> string)
                 -> Env.env
                 -> S.term
-                ->  list decl  //prelude, translation of tcenv
+                -> list decl  //prelude, translation of tcenv
                   & list ErrorReporting.label //labels in the query
                   & decl        //the query itself
                   & list decl  //suffix, evaluating labels in the model, etc
+                  & option (list (Ident.lident)) //pruned context

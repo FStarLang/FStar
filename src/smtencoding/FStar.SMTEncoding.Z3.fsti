@@ -51,9 +51,16 @@ type query_log = {
 val status_string_and_errors : z3status -> string & error_labels
 val giveZ3 : list decl -> unit
 
+type filtered_theory = {
+    keep: list decl;
+    discard: list decl;
+    prune_context_would_have_discarded: option (list string);
+    used_unsat_core: bool;
+}
+
 val ask_text
        : r:Range.range
-       -> filter:(list decl -> list decl & bool)
+       -> filter:(list decl -> filtered_theory)
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
@@ -61,7 +68,7 @@ val ask_text
        -> string
 
 val ask: r:Range.range
-       -> filter:(list decl -> list decl & bool)
+       -> filter:(list decl -> filtered_theory)
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl

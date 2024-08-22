@@ -131,7 +131,7 @@ let (uu___is_DefaultUnivsToZero : step -> Prims.bool) =
   fun projectee ->
     match projectee with | DefaultUnivsToZero -> true | uu___ -> false
 type steps = step Prims.list
-type lemma_triggers = FStar_Ident.lident Prims.list Prims.list Prims.list
+type lemma_triggers = FStar_Ident.lident Prims.list Prims.list
 type pending_lemma_patterns =
   {
   pending_lemma_triggers: lemma_triggers FStar_Compiler_Util.psmap ;
@@ -151,6 +151,36 @@ let (__proj__Mkpending_lemma_patterns__item__lidents_to_pending_lemmas :
     match projectee with
     | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
         lidents_to_pending_lemmas
+let (print_pending_lemmas : pending_lemma_patterns -> Prims.string) =
+  fun p ->
+    let acc =
+      FStar_Compiler_Util.psmap_fold p.pending_lemma_triggers
+        (fun lem ->
+           fun triggers ->
+             fun acc1 ->
+               let uu___ =
+                 let uu___1 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list
+                        (FStar_Class_Show.show_list
+                           FStar_Ident.showable_lident)) triggers in
+                 FStar_Compiler_Util.format2 "%s -> %s" lem uu___1 in
+               uu___ :: acc1) [] in
+    let fwd = FStar_Compiler_String.concat "\n" acc in
+    let bk =
+      FStar_Compiler_Util.psmap_fold p.lidents_to_pending_lemmas
+        (fun lid ->
+           fun lems ->
+             fun acc1 ->
+               let uu___ =
+                 let uu___1 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list FStar_Ident.showable_lident)
+                     lems in
+                 FStar_Compiler_Util.format2 "%s -> %s" lid uu___1 in
+               uu___ :: acc1) [] in
+    FStar_Compiler_Util.format2 "Pending lemmas:\n%s\nTriggers->lemmas: %s"
+      fwd (FStar_Compiler_String.concat "\n" bk)
 let (empty_pending_lemma_patterns : pending_lemma_patterns) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   let uu___1 = FStar_Compiler_Util.psmap_empty () in
@@ -185,18 +215,13 @@ let (remove_trigger_for_lemma :
             let triggers1 =
               FStar_Compiler_List.map
                 (fun disjunct ->
-                   FStar_Compiler_List.map
-                     (fun conjunct ->
-                        FStar_Compiler_List.filter
-                          (fun x ->
-                             let uu___ = FStar_Ident.string_of_lid x in
-                             uu___ <> pat_str) conjunct) disjunct) triggers in
+                   FStar_Compiler_List.filter
+                     (fun x ->
+                        let uu___ = FStar_Ident.string_of_lid x in
+                        uu___ <> pat_str) disjunct) triggers in
             let eligible =
               FStar_Compiler_Util.for_some
-                (fun disjunct ->
-                   FStar_Compiler_List.for_all
-                     (fun conjunct -> Prims.uu___is_Nil conjunct) disjunct)
-                triggers1 in
+                (fun disjunct -> Prims.uu___is_Nil disjunct) triggers1 in
             let pending_lemma_triggers =
               FStar_Compiler_Util.psmap_add ctxt.pending_lemma_triggers
                 lem_str triggers1 in
@@ -2279,19 +2304,23 @@ let (attrtab :
   fun env1 -> env1.attrtab
 let (gamma_cache : env -> cached_elt FStar_Compiler_Util.smap) =
   fun env1 -> env1.gamma_cache
-let (maybe_add_pending_lemma :
-  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> env) =
+let (add_pending_lemma :
+  env ->
+    FStar_Ident.lident -> FStar_Ident.lident Prims.list Prims.list -> env)
+  =
   fun e ->
     fun lem ->
-      fun t ->
+      fun triggers ->
+        let lem_str = FStar_Ident.string_of_lid lem in
         let uu___ =
-          let uu___1 = FStar_Syntax_Util.is_smt_lemma t in
-          Prims.op_Negation uu___1 in
+          let uu___1 =
+            FStar_Compiler_Util.psmap_try_find
+              (e.pending_lemmas).pending_lemma_triggers lem_str in
+          FStar_Pervasives_Native.uu___is_Some uu___1 in
         if uu___
         then e
         else
-          (let triggers = FStar_Syntax_Util.triggers_of_smt_lemma t in
-           let uu___2 = e.pending_lemmas in
+          (let uu___2 = e.pending_lemmas in
            match uu___2 with
            | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
                let pending_lemma_triggers1 =
@@ -2304,27 +2333,23 @@ let (maybe_add_pending_lemma :
                       fun disjunct ->
                         FStar_Compiler_List.fold_left
                           (fun acc1 ->
-                             fun conjunct ->
-                               FStar_Compiler_List.fold_left
-                                 (fun acc2 ->
-                                    fun lident ->
-                                      let uu___3 =
-                                        let uu___4 =
-                                          FStar_Ident.string_of_lid lident in
-                                        FStar_Compiler_Util.psmap_try_find
-                                          lidents_to_pending_lemmas uu___4 in
-                                      match uu___3 with
-                                      | FStar_Pervasives_Native.None ->
-                                          let uu___4 =
-                                            FStar_Ident.string_of_lid lident in
-                                          FStar_Compiler_Util.psmap_add acc2
-                                            uu___4 [lem]
-                                      | FStar_Pervasives_Native.Some lems ->
-                                          let uu___4 =
-                                            FStar_Ident.string_of_lid lident in
-                                          FStar_Compiler_Util.psmap_add acc2
-                                            uu___4 (lem :: lems)) acc1
-                                 conjunct) acc disjunct)
+                             fun lident ->
+                               let uu___3 =
+                                 let uu___4 =
+                                   FStar_Ident.string_of_lid lident in
+                                 FStar_Compiler_Util.psmap_try_find
+                                   lidents_to_pending_lemmas uu___4 in
+                               match uu___3 with
+                               | FStar_Pervasives_Native.None ->
+                                   let uu___4 =
+                                     FStar_Ident.string_of_lid lident in
+                                   FStar_Compiler_Util.psmap_add acc1 uu___4
+                                     [lem]
+                               | FStar_Pervasives_Native.Some lems ->
+                                   let uu___4 =
+                                     FStar_Ident.string_of_lid lident in
+                                   FStar_Compiler_Util.psmap_add acc1 uu___4
+                                     (lem :: lems)) acc disjunct)
                    lidents_to_pending_lemmas triggers in
                let p =
                  {
@@ -2387,6 +2412,22 @@ let (maybe_add_pending_lemma :
                  missing_decl = (e.missing_decl);
                  pending_lemmas = p
                })
+let (maybe_add_pending_lemma :
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> env) =
+  fun e ->
+    fun lem ->
+      fun t ->
+        let uu___ =
+          let uu___1 = FStar_Syntax_Util.is_smt_lemma t in
+          Prims.op_Negation uu___1 in
+        if uu___
+        then e
+        else
+          (let uu___2 = e.pending_lemmas in
+           match uu___2 with
+           | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
+               let triggers = FStar_Syntax_Util.triggers_of_smt_lemma t in
+               add_pending_lemma e lem triggers)
 type implicit = FStar_TypeChecker_Common.implicit
 type implicits = FStar_TypeChecker_Common.implicits
 type guard_t = FStar_TypeChecker_Common.guard_t
@@ -2398,6 +2439,33 @@ type qninfo =
     FStar_Pervasives.either * FStar_Compiler_Range_Type.range)
     FStar_Pervasives_Native.option
 type env_t = env
+let (maybe_add_assumption :
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> env) =
+  fun e ->
+    fun lem ->
+      fun phi ->
+        let uu___ = FStar_Syntax_Formula.destruct_typ_as_formula phi in
+        match uu___ with
+        | FStar_Pervasives_Native.None -> e
+        | FStar_Pervasives_Native.Some c ->
+            (match c with
+             | FStar_Syntax_Formula.QEx uu___1 -> e
+             | FStar_Syntax_Formula.BaseConn uu___1 -> e
+             | FStar_Syntax_Formula.QAll (bs, qpats, t) ->
+                 let triggers =
+                   FStar_Compiler_List.map
+                     (fun args ->
+                        FStar_Compiler_List.collect
+                          (fun uu___1 ->
+                             match uu___1 with
+                             | (x, uu___2) ->
+                                 let uu___3 = FStar_Syntax_Free.fvars x in
+                                 FStar_Class_Setlike.elems ()
+                                   (Obj.magic
+                                      (FStar_Compiler_RBSet.setlike_rbset
+                                         FStar_Syntax_Syntax.ord_fv))
+                                   (Obj.magic uu___3)) args) qpats in
+                 add_pending_lemma e lem triggers)
 let (query_indices :
   (FStar_Ident.lident * Prims.int) Prims.list Prims.list
     FStar_Compiler_Effect.ref)
@@ -5564,88 +5632,105 @@ let (push_sigelt' : Prims.bool -> env -> FStar_Syntax_Syntax.sigelt -> env) =
     fun env1 ->
       fun s ->
         let sb = ((FStar_Syntax_Util.lids_of_sigelt s), s) in
-        let env2 =
-          {
-            solver = (env1.solver);
-            range = (env1.range);
-            curmodule = (env1.curmodule);
-            gamma = (env1.gamma);
-            gamma_sig = (sb :: (env1.gamma_sig));
-            gamma_cache = (env1.gamma_cache);
-            modules = (env1.modules);
-            expected_typ = (env1.expected_typ);
-            sigtab = (env1.sigtab);
-            attrtab = (env1.attrtab);
-            instantiate_imp = (env1.instantiate_imp);
-            effects = (env1.effects);
-            generalize = (env1.generalize);
-            letrecs = (env1.letrecs);
-            top_level = (env1.top_level);
-            check_uvars = (env1.check_uvars);
-            use_eq_strict = (env1.use_eq_strict);
-            is_iface = (env1.is_iface);
-            admit = (env1.admit);
-            lax_universes = (env1.lax_universes);
-            phase1 = (env1.phase1);
-            failhard = (env1.failhard);
-            flychecking = (env1.flychecking);
-            uvar_subtyping = (env1.uvar_subtyping);
-            intactics = (env1.intactics);
-            nocoerce = (env1.nocoerce);
-            tc_term = (env1.tc_term);
-            typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
-            universe_of = (env1.universe_of);
-            typeof_well_typed_tot_or_gtot_term =
-              (env1.typeof_well_typed_tot_or_gtot_term);
-            teq_nosmt_force = (env1.teq_nosmt_force);
-            subtype_nosmt_force = (env1.subtype_nosmt_force);
-            qtbl_name_and_index = (env1.qtbl_name_and_index);
-            normalized_eff_names = (env1.normalized_eff_names);
-            fv_delta_depths = (env1.fv_delta_depths);
-            proof_ns = (env1.proof_ns);
-            synth_hook = (env1.synth_hook);
-            try_solve_implicits_hook = (env1.try_solve_implicits_hook);
-            splice = (env1.splice);
-            mpreprocess = (env1.mpreprocess);
-            postprocess = (env1.postprocess);
-            identifier_info = (env1.identifier_info);
-            tc_hooks = (env1.tc_hooks);
-            dsenv = (env1.dsenv);
-            nbe = (env1.nbe);
-            strict_args_tab = (env1.strict_args_tab);
-            erasable_types_tab = (env1.erasable_types_tab);
-            enable_defer_to_tac = (env1.enable_defer_to_tac);
-            unif_allow_ref_guards = (env1.unif_allow_ref_guards);
-            erase_erasable_args = (env1.erase_erasable_args);
-            core_check = (env1.core_check);
-            missing_decl = (env1.missing_decl);
-            pending_lemmas = (env1.pending_lemmas)
-          } in
-        add_sigelt force env2 s;
-        (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
-        (let env3 = record_vals_and_defns env2 s in
-         match s.FStar_Syntax_Syntax.sigel with
-         | FStar_Syntax_Syntax.Sig_declare_typ
-             { FStar_Syntax_Syntax.lid2 = lid;
-               FStar_Syntax_Syntax.us2 = uu___2;
-               FStar_Syntax_Syntax.t2 = t;_}
-             -> maybe_add_pending_lemma env3 lid t
-         | FStar_Syntax_Syntax.Sig_let
-             { FStar_Syntax_Syntax.lbs1 = lbs;
-               FStar_Syntax_Syntax.lids1 = uu___2;_}
-             ->
-             FStar_Compiler_List.fold_left
-               (fun env4 ->
-                  fun lb ->
-                    let uu___3 =
-                      let uu___4 =
-                        FStar_Compiler_Util.right
-                          lb.FStar_Syntax_Syntax.lbname in
-                      FStar_Syntax_Syntax.lid_of_fv uu___4 in
-                    maybe_add_pending_lemma env4 uu___3
-                      lb.FStar_Syntax_Syntax.lbtyp) env3
-               (FStar_Pervasives_Native.snd lbs)
-         | uu___2 -> env3)
+        (let uu___1 =
+           let uu___2 = FStar_Options.ext_getv "context_pruning_verbose" in
+           uu___2 <> "" in
+         if uu___1
+         then
+           let uu___2 =
+             FStar_Class_Show.show
+               (FStar_Class_Show.show_list FStar_Ident.showable_lident)
+               (FStar_Pervasives_Native.fst sb) in
+           let uu___3 = FStar_Syntax_Print.sigelt_to_string_short s in
+           FStar_Compiler_Util.print2 "push_sigelt %s: %s\n" uu___2 uu___3
+         else ());
+        (let env2 =
+           {
+             solver = (env1.solver);
+             range = (env1.range);
+             curmodule = (env1.curmodule);
+             gamma = (env1.gamma);
+             gamma_sig = (sb :: (env1.gamma_sig));
+             gamma_cache = (env1.gamma_cache);
+             modules = (env1.modules);
+             expected_typ = (env1.expected_typ);
+             sigtab = (env1.sigtab);
+             attrtab = (env1.attrtab);
+             instantiate_imp = (env1.instantiate_imp);
+             effects = (env1.effects);
+             generalize = (env1.generalize);
+             letrecs = (env1.letrecs);
+             top_level = (env1.top_level);
+             check_uvars = (env1.check_uvars);
+             use_eq_strict = (env1.use_eq_strict);
+             is_iface = (env1.is_iface);
+             admit = (env1.admit);
+             lax_universes = (env1.lax_universes);
+             phase1 = (env1.phase1);
+             failhard = (env1.failhard);
+             flychecking = (env1.flychecking);
+             uvar_subtyping = (env1.uvar_subtyping);
+             intactics = (env1.intactics);
+             nocoerce = (env1.nocoerce);
+             tc_term = (env1.tc_term);
+             typeof_tot_or_gtot_term = (env1.typeof_tot_or_gtot_term);
+             universe_of = (env1.universe_of);
+             typeof_well_typed_tot_or_gtot_term =
+               (env1.typeof_well_typed_tot_or_gtot_term);
+             teq_nosmt_force = (env1.teq_nosmt_force);
+             subtype_nosmt_force = (env1.subtype_nosmt_force);
+             qtbl_name_and_index = (env1.qtbl_name_and_index);
+             normalized_eff_names = (env1.normalized_eff_names);
+             fv_delta_depths = (env1.fv_delta_depths);
+             proof_ns = (env1.proof_ns);
+             synth_hook = (env1.synth_hook);
+             try_solve_implicits_hook = (env1.try_solve_implicits_hook);
+             splice = (env1.splice);
+             mpreprocess = (env1.mpreprocess);
+             postprocess = (env1.postprocess);
+             identifier_info = (env1.identifier_info);
+             tc_hooks = (env1.tc_hooks);
+             dsenv = (env1.dsenv);
+             nbe = (env1.nbe);
+             strict_args_tab = (env1.strict_args_tab);
+             erasable_types_tab = (env1.erasable_types_tab);
+             enable_defer_to_tac = (env1.enable_defer_to_tac);
+             unif_allow_ref_guards = (env1.unif_allow_ref_guards);
+             erase_erasable_args = (env1.erase_erasable_args);
+             core_check = (env1.core_check);
+             missing_decl = (env1.missing_decl);
+             pending_lemmas = (env1.pending_lemmas)
+           } in
+         add_sigelt force env2 s;
+         (env2.tc_hooks).tc_push_in_gamma_hook env2 (FStar_Pervasives.Inr sb);
+         (let env3 = record_vals_and_defns env2 s in
+          match s.FStar_Syntax_Syntax.sigel with
+          | FStar_Syntax_Syntax.Sig_declare_typ
+              { FStar_Syntax_Syntax.lid2 = lid;
+                FStar_Syntax_Syntax.us2 = uu___3;
+                FStar_Syntax_Syntax.t2 = t;_}
+              -> maybe_add_pending_lemma env3 lid t
+          | FStar_Syntax_Syntax.Sig_let
+              { FStar_Syntax_Syntax.lbs1 = lbs;
+                FStar_Syntax_Syntax.lids1 = uu___3;_}
+              ->
+              FStar_Compiler_List.fold_left
+                (fun env4 ->
+                   fun lb ->
+                     let uu___4 =
+                       let uu___5 =
+                         FStar_Compiler_Util.right
+                           lb.FStar_Syntax_Syntax.lbname in
+                       FStar_Syntax_Syntax.lid_of_fv uu___5 in
+                     maybe_add_pending_lemma env4 uu___4
+                       lb.FStar_Syntax_Syntax.lbtyp) env3
+                (FStar_Pervasives_Native.snd lbs)
+          | FStar_Syntax_Syntax.Sig_assume
+              { FStar_Syntax_Syntax.lid3 = lid;
+                FStar_Syntax_Syntax.us3 = uu___3;
+                FStar_Syntax_Syntax.phi1 = phi;_}
+              -> maybe_add_assumption env3 lid phi
+          | uu___3 -> env3))
 let (push_sigelt : env -> FStar_Syntax_Syntax.sigelt -> env) =
   push_sigelt' false
 let (push_sigelt_force : env -> FStar_Syntax_Syntax.sigelt -> env) =

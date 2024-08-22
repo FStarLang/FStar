@@ -1192,7 +1192,9 @@ and (encode_deeply_embedded_quantifier :
             (env.FStar_SMTEncoding_Env.current_module_name);
           FStar_SMTEncoding_Env.encoding_quantifier = true;
           FStar_SMTEncoding_Env.global_cache =
-            (env.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache);
+          FStar_SMTEncoding_Env.tsym_global_cache =
+            (env.FStar_SMTEncoding_Env.tsym_global_cache)
         } in
       let uu___ = encode_term t env1 in
       match uu___ with
@@ -1384,7 +1386,9 @@ and (encode_term :
                   (env.FStar_SMTEncoding_Env.current_module_name);
                 FStar_SMTEncoding_Env.encoding_quantifier = false;
                 FStar_SMTEncoding_Env.global_cache =
-                  (env.FStar_SMTEncoding_Env.global_cache)
+                  (env.FStar_SMTEncoding_Env.global_cache);
+                FStar_SMTEncoding_Env.tsym_global_cache =
+                  (env.FStar_SMTEncoding_Env.tsym_global_cache)
               }
         | FStar_Syntax_Syntax.Tm_meta
             { FStar_Syntax_Syntax.tm2 = t2;
@@ -3360,7 +3364,9 @@ and (encode_smt_patterns :
           FStar_SMTEncoding_Env.encoding_quantifier =
             (env.FStar_SMTEncoding_Env.encoding_quantifier);
           FStar_SMTEncoding_Env.global_cache =
-            (env.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache);
+          FStar_SMTEncoding_Env.tsym_global_cache =
+            (env.FStar_SMTEncoding_Env.tsym_global_cache)
         } in
       let encode_smt_pattern t =
         let uu___ = FStar_Syntax_Util.head_and_args t in
@@ -3899,6 +3905,8 @@ let (encode_function_type_as_formula :
           FStar_SMTEncoding_Env.encoding_quantifier =
             (env.FStar_SMTEncoding_Env.encoding_quantifier);
           FStar_SMTEncoding_Env.global_cache =
-            (env.FStar_SMTEncoding_Env.global_cache)
+            (env.FStar_SMTEncoding_Env.global_cache);
+          FStar_SMTEncoding_Env.tsym_global_cache =
+            (env.FStar_SMTEncoding_Env.tsym_global_cache)
         } in
       encode_formula quant env1

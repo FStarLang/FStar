@@ -1903,7 +1903,10 @@ let (encode_free_var :
                                                       (env1.FStar_SMTEncoding_Env.encoding_quantifier);
                                                     FStar_SMTEncoding_Env.global_cache
                                                       =
-                                                      (env1.FStar_SMTEncoding_Env.global_cache)
+                                                      (env1.FStar_SMTEncoding_Env.global_cache);
+                                                    FStar_SMTEncoding_Env.tsym_global_cache
+                                                      =
+                                                      (env1.FStar_SMTEncoding_Env.tsym_global_cache)
                                                   } in
                                                 let uu___12 =
                                                   let uu___13 =
@@ -2277,7 +2280,9 @@ let (copy_env : FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Env.env_t) =
         (en.FStar_SMTEncoding_Env.current_module_name);
       FStar_SMTEncoding_Env.encoding_quantifier =
         (en.FStar_SMTEncoding_Env.encoding_quantifier);
-      FStar_SMTEncoding_Env.global_cache = uu___
+      FStar_SMTEncoding_Env.global_cache = uu___;
+      FStar_SMTEncoding_Env.tsym_global_cache =
+        (en.FStar_SMTEncoding_Env.tsym_global_cache)
     }
 let (encode_top_level_let :
   FStar_SMTEncoding_Env.env_t ->
@@ -2699,7 +2704,10 @@ let (encode_top_level_let :
                                                    (env2.FStar_SMTEncoding_Env.encoding_quantifier);
                                                  FStar_SMTEncoding_Env.global_cache
                                                    =
-                                                   (env2.FStar_SMTEncoding_Env.global_cache)
+                                                   (env2.FStar_SMTEncoding_Env.global_cache);
+                                                 FStar_SMTEncoding_Env.tsym_global_cache
+                                                   =
+                                                   (env2.FStar_SMTEncoding_Env.tsym_global_cache)
                                                }, e1, t_norm1)) in
                                    (match uu___9 with
                                     | (env', e1, t_norm1) ->
@@ -3054,7 +3062,10 @@ let (encode_top_level_let :
                                                          (env3.FStar_SMTEncoding_Env.encoding_quantifier);
                                                        FStar_SMTEncoding_Env.global_cache
                                                          =
-                                                         (env3.FStar_SMTEncoding_Env.global_cache)
+                                                         (env3.FStar_SMTEncoding_Env.global_cache);
+                                                       FStar_SMTEncoding_Env.tsym_global_cache
+                                                         =
+                                                         (env3.FStar_SMTEncoding_Env.tsym_global_cache)
                                                      }, e1, t_norm1)) in
                                          (match uu___12 with
                                           | (env', e1, t_norm1) ->
@@ -6477,7 +6488,9 @@ and (encode_sigelt' :
                     FStar_SMTEncoding_Env.encoding_quantifier =
                       (env.FStar_SMTEncoding_Env.encoding_quantifier);
                     FStar_SMTEncoding_Env.global_cache =
-                      (env.FStar_SMTEncoding_Env.global_cache)
+                      (env.FStar_SMTEncoding_Env.global_cache);
+                    FStar_SMTEncoding_Env.tsym_global_cache =
+                      (env.FStar_SMTEncoding_Env.tsym_global_cache)
                   } in
                 let f2 = norm_before_encoding env1 f1 in
                 let uu___2 =
@@ -6802,7 +6815,9 @@ and (encode_sigelt' :
                                           FStar_SMTEncoding_Term.assumption_name
                                             = uu___8;
                                           FStar_SMTEncoding_Term.assumption_fact_ids
-                                            = uu___9;_}
+                                            = uu___9;
+                                          FStar_SMTEncoding_Term.assumption_free_names
+                                            = uu___10;_}
                                         -> false
                                     | uu___7 -> true)
                                  elt.FStar_SMTEncoding_Term.decls in
@@ -7027,6 +7042,7 @@ let (init_env : FStar_TypeChecker_Env.env -> unit) =
           let uu___5 = FStar_TypeChecker_Env.current_module tcenv in
           FStar_Ident.string_of_lid uu___5 in
         let uu___5 = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
+        let uu___6 = FStar_Compiler_Util.smap_create (Prims.of_int (100)) in
         {
           FStar_SMTEncoding_Env.bvar_bindings = uu___2;
           FStar_SMTEncoding_Env.fvar_bindings = uu___3;
@@ -7038,7 +7054,8 @@ let (init_env : FStar_TypeChecker_Env.env -> unit) =
           FStar_SMTEncoding_Env.encode_non_total_function_typ = true;
           FStar_SMTEncoding_Env.current_module_name = uu___4;
           FStar_SMTEncoding_Env.encoding_quantifier = false;
-          FStar_SMTEncoding_Env.global_cache = uu___5
+          FStar_SMTEncoding_Env.global_cache = uu___5;
+          FStar_SMTEncoding_Env.tsym_global_cache = uu___6
         } in
       [uu___1] in
     FStar_Compiler_Effect.op_Colon_Equals last_env uu___
@@ -7071,7 +7088,9 @@ let (get_env :
             FStar_SMTEncoding_Env.encoding_quantifier =
               (e.FStar_SMTEncoding_Env.encoding_quantifier);
             FStar_SMTEncoding_Env.global_cache =
-              (e.FStar_SMTEncoding_Env.global_cache)
+              (e.FStar_SMTEncoding_Env.global_cache);
+            FStar_SMTEncoding_Env.tsym_global_cache =
+              (e.FStar_SMTEncoding_Env.tsym_global_cache)
           }
 let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
   fun env ->
@@ -7080,6 +7099,11 @@ let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
     | [] -> FStar_Compiler_Effect.failwith "Empty env stack"
     | uu___1::tl ->
         FStar_Compiler_Effect.op_Colon_Equals last_env (env :: tl)
+let (get_current_env :
+  FStar_TypeChecker_Env.env -> FStar_SMTEncoding_Env.env_t) =
+  fun tcenv ->
+    let uu___ = FStar_TypeChecker_Env.current_module tcenv in
+    get_env uu___ tcenv
 let (push_env : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang last_env in
@@ -7166,7 +7190,9 @@ let (place_decl_in_fact_dbs :
                   (a.FStar_SMTEncoding_Term.assumption_caption);
                 FStar_SMTEncoding_Term.assumption_name =
                   (a.FStar_SMTEncoding_Term.assumption_name);
-                FStar_SMTEncoding_Term.assumption_fact_ids = fact_db_ids
+                FStar_SMTEncoding_Term.assumption_fact_ids = fact_db_ids;
+                FStar_SMTEncoding_Term.assumption_free_names =
+                  (a.FStar_SMTEncoding_Term.assumption_free_names)
               }
         | uu___ -> d
 let (place_decl_elt_in_fact_dbs :
@@ -7246,6 +7272,13 @@ let (recover_caching_and_update_env :
                       FStar_Compiler_Util.must elt.FStar_SMTEncoding_Term.key in
                     FStar_Compiler_Util.smap_add
                       env.FStar_SMTEncoding_Env.global_cache uu___3 elt);
+                   (match elt.FStar_SMTEncoding_Term.sym_name with
+                    | FStar_Pervasives_Native.None -> ()
+                    | FStar_Pervasives_Native.Some "" -> ()
+                    | FStar_Pervasives_Native.Some name ->
+                        FStar_Compiler_Util.smap_add
+                          env.FStar_SMTEncoding_Env.tsym_global_cache name
+                          elt);
                    [elt]))) decls
 let (encode_sig :
   FStar_TypeChecker_Env.env -> FStar_Syntax_Syntax.sigelt -> unit) =
@@ -7319,7 +7352,9 @@ let (give_decls_to_z3_and_set_env :
             FStar_SMTEncoding_Env.encoding_quantifier =
               (env.FStar_SMTEncoding_Env.encoding_quantifier);
             FStar_SMTEncoding_Env.global_cache =
-              (env.FStar_SMTEncoding_Env.global_cache)
+              (env.FStar_SMTEncoding_Env.global_cache);
+            FStar_SMTEncoding_Env.tsym_global_cache =
+              (env.FStar_SMTEncoding_Env.tsym_global_cache)
           };
         (let z3_decls =
            let uu___1 =
@@ -7400,7 +7435,9 @@ let (encode_modul :
                       FStar_SMTEncoding_Env.encoding_quantifier =
                         (env.FStar_SMTEncoding_Env.encoding_quantifier);
                       FStar_SMTEncoding_Env.global_cache =
-                        (env.FStar_SMTEncoding_Env.global_cache)
+                        (env.FStar_SMTEncoding_Env.global_cache);
+                      FStar_SMTEncoding_Env.tsym_global_cache =
+                        (env.FStar_SMTEncoding_Env.tsym_global_cache)
                     } modul.FStar_Syntax_Syntax.declarations in
                 match uu___5 with
                 | (decls, env1) ->
@@ -7469,7 +7506,8 @@ let (encode_query :
         (FStar_SMTEncoding_Term.decl Prims.list *
           FStar_SMTEncoding_ErrorReporting.label Prims.list *
           FStar_SMTEncoding_Term.decl * FStar_SMTEncoding_Term.decl
-          Prims.list))
+          Prims.list * FStar_Ident.lident Prims.list
+          FStar_Pervasives_Native.option))
   =
   fun use_env_msg ->
     fun tcenv ->
@@ -7534,6 +7572,59 @@ let (encode_query :
                     (uu___4, bindings) in
               match uu___2 with
               | (q1, bindings) ->
+                  let pruned_context =
+                    let uu___3 =
+                      let uu___4 = FStar_Options.ext_getv "context_pruning" in
+                      uu___4 <> "" in
+                    if uu___3
+                    then
+                      let remaining_bindings =
+                        FStar_Compiler_List.collect
+                          (fun uu___4 ->
+                             match uu___4 with
+                             | FStar_Syntax_Syntax.Binding_var x ->
+                                 [x.FStar_Syntax_Syntax.sort]
+                             | FStar_Syntax_Syntax.Binding_lid
+                                 (lid, (uu___5, t)) ->
+                                 let uu___6 =
+                                   let uu___7 =
+                                     FStar_Syntax_Syntax.lid_as_fv lid
+                                       FStar_Pervasives_Native.None in
+                                   FStar_Syntax_Syntax.fv_to_tm uu___7 in
+                                 [uu___6; t]
+                             | uu___5 -> []) bindings in
+                      let pruned_context1 =
+                        FStar_TypeChecker_ContextPruning.context_of
+                          env.FStar_SMTEncoding_Env.tcenv (q1 ::
+                          remaining_bindings) in
+                      let qid =
+                        match (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.qtbl_name_and_index
+                        with
+                        | (FStar_Pervasives_Native.None, uu___4) ->
+                            "no query id"
+                        | (FStar_Pervasives_Native.Some (lid, uu___4, ctr),
+                           uu___5) ->
+                            let uu___6 = FStar_Syntax_Print.lid_to_string lid in
+                            FStar_Compiler_Util.format2 "%s, %s" uu___6
+                              (Prims.string_of_int ctr) in
+                      ((let uu___5 =
+                          let uu___6 =
+                            FStar_Options.ext_getv "context_pruning_verbose" in
+                          uu___6 <> "" in
+                        if uu___5
+                        then
+                          let uu___6 = FStar_Syntax_Print.term_to_string q1 in
+                          let uu___7 =
+                            let uu___8 =
+                              FStar_Compiler_List.map
+                                FStar_Ident.string_of_lid pruned_context1 in
+                            FStar_Compiler_String.concat "\n\t" uu___8 in
+                          FStar_Compiler_Util.print3
+                            "For query (%s) start{ %s,\npruned context is:\n\t%s\nend}\n"
+                            qid uu___6 uu___7
+                        else ());
+                       FStar_Pervasives_Native.Some pruned_context1)
+                    else FStar_Pervasives_Native.None in
                   let uu___3 = encode_env_bindings env bindings in
                   (match uu___3 with
                    | (env_decls, env1) ->
@@ -7667,4 +7758,5 @@ let (encode_query :
                                              "Encoding took %sms\n"
                                              (Prims.string_of_int ms)
                                          else ());
-                                        (query_prelude, labels, qry, suffix)))))))))
+                                        (query_prelude, labels, qry, suffix,
+                                          pruned_context)))))))))

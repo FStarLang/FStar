@@ -391,7 +391,7 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
+let doZ3Exe (sim_theory:option (list string)) (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -478,7 +478,30 @@ let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_mess
       | _ -> ()
       end
     | None -> ()
-    end
+    end;
+    let log_file_name =
+      match log_file with
+      | Some fname -> fname
+      | _ -> "<nofile>"
+    in
+    let _ = 
+      match sim_theory, res with
+      | Some names, UNSAT (Some core) -> (
+        let whitelist = ["BoxInt"; "BoxBool"; "BoxString"; "BoxReal"; "Tm_unit"; "FString_const"] in
+        let missing =
+          core |> List.filter (fun name ->
+            not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
+            not (BU.for_some (fun name' -> name=name') names))
+        in
+        // BU.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);
+        match missing with
+        | [] -> ()
+        | _ -> 
+          BU.print3 "Query %s (%s): Pruned theory would miss %s\n" queryid log_file_name (String.concat ", " missing)
+      )
+      | _ -> ()
+    in
+    ()
   in
   if fresh then
     let proc = new_z3proc_with_id (z3_cmd_and_args ()) in
@@ -541,7 +564,7 @@ let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
 //           When refreshing the solver, the bg_scope is set to
 //           a flattened version of fresh_scope
 let bg_scope : ref (list decl) = BU.mk_ref []
-
+let discarded_decls : ref (list decl) = BU.mk_ref []
 // fresh_scope is a mutable reference; this pushes a new list at the front;
 // then, givez3 modifies the reference so that within the new list at the front,
 // new queries are pushed
@@ -572,7 +595,8 @@ let giveZ3 decls =
 //refresh: create a new z3 process, and reset the bg_scope
 let refresh () =
     (!bg_z3_proc).refresh();
-    bg_scope := flatten_fresh_scope ()
+    bg_scope := flatten_fresh_scope (); 
+    discarded_decls := []
 
 let context_profile (theory:list decl) =
     let modules, total_decls =
@@ -679,7 +703,7 @@ let cache_hit
     else
         None
 
-let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash queryid () : z3result =
+let z3_job sim_theory (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash queryid () : z3result =
   //This code is a little ugly:
   //We insert a profiling call to accumulate total time spent in Z3
   //But, we also record the time of this particular call so that we can
@@ -691,7 +715,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
     Profiling.profile
       (fun () ->
         try
-          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
+          BU.record_time (fun () -> doZ3Exe sim_theory log_file r fresh input label_messages queryid)
         with e ->
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e)
@@ -706,7 +730,7 @@ let z3_job (log_file:_) (r:Range.range) fresh (label_messages:error_labels) inpu
 
 let ask_text
     (r:Range.range)
-    (filter_theory:list decl -> list decl & bool)
+    (filter_theory:list decl -> filtered_theory)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
@@ -716,31 +740,48 @@ let ask_text
     be sent to the solver. *)
     let theory = flatten_fresh_scope() in
     let theory = theory @[Push]@qry@[Pop] in
-    let theory, _used_unsat_core = filter_theory theory in
-    let input, qhash, log_file_name = mk_input true theory in
+    let filtered_theory = filter_theory theory in
+    let input, qhash, log_file_name = mk_input true filtered_theory.keep in
     input
 
 let ask
     (r:Range.range)
-    (filter_theory:list decl -> list decl & bool)
+    (filter_theory:list decl -> filtered_theory)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
     (queryid:string)
     (_scope : option scope_t) // GM: This was only used in ask_n_cores
     (fresh:bool) : z3result
-  = let theory =
+  = let theory, discards =
         if fresh
-        then flatten_fresh_scope()
+        then flatten_fresh_scope(), []
         else let theory = !bg_scope in
              bg_scope := [];//now consumed
-             theory
+             theory, !discarded_decls
+    in
+    let theory =
+      match theory with
+      | Caption msg :: Pop :: tl -> 
+        Caption msg :: Pop :: discards @ tl
+      | _ -> discards @ theory
     in
     let theory = theory @[Push]@qry@[Pop] in
-    let theory, _used_unsat_core = filter_theory theory in
-    let input, qhash, log_file_name = mk_input fresh theory in
+    let filtered_theory = filter_theory theory in
+    if not fresh then (
+      // BU.print2 
+      //   "Filtered theory:\nkeep\n\t%s\ndiscard\n\t%s\n" 
+      //     (filtered_theory.keep |> List.map decl_to_string_short |> String.concat "\n\t")
+      //     (filtered_theory.discard |> List.map decl_to_string_short |> String.concat "\n\t");
+      discarded_decls := filtered_theory.discard
+    );
+    let input, qhash, log_file_name = mk_input fresh filtered_theory.keep in
 
-    let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid () in
+    let just_ask () =
+      z3_job
+        filtered_theory.prune_context_would_have_discarded
+        log_file_name r fresh label_messages input qhash queryid ()
+    in
     if fresh then
         match cache_hit log_file_name cache qhash with
         | Some z3r -> z3r

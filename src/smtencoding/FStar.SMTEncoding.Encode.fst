@@ -1812,14 +1812,15 @@ let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
-                                   global_cache = BU.smap_create 100}]
+                                   global_cache = BU.smap_create 100;
+                                   tsym_global_cache = BU.smap_create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
 let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
-
+let get_current_env tcenv = get_env (Env.current_module tcenv) tcenv
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
@@ -1888,12 +1889,17 @@ let encode_top_level_facts (env:env_t) (se:sigelt) =
 let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
-    else match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
-         | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+    else (
+      match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
+      | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
-         | None ->  //no hit, update cache and retain elt
-           BU.smap_add env.global_cache (elt.key |> BU.must) elt;
-           [elt]
+      | None ->  //no hit, update cache and retain elt
+        BU.smap_add env.global_cache (elt.key |> BU.must) elt;
+        (match elt.sym_name with
+         | None | Some "" -> ()
+         | Some name -> BU.smap_add env.tsym_global_cache name elt);
+        [elt]
+    )
   )
 
 let encode_sig tcenv se =
@@ -1961,6 +1967,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   & list ErrorReporting.label //labels in the query
   & decl        //the query itself
   & list decl  //suffix, evaluating labels in the model, etc.
+  & option (list (Ident.lident)) //pruned context
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
@@ -1982,6 +1989,32 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in
         U.close_forall_no_univs (List.rev closing) q, bindings
+    in
+    let pruned_context =
+      if Options.ext_getv "context_pruning" <> ""
+      then (
+        let remaining_bindings : list S.term =
+          List.collect (function
+            | S.Binding_var x -> [x.sort]
+            | S.Binding_lid (lid, (_, t)) -> [S.lid_as_fv lid None |> S.fv_to_tm; t]
+            | _ -> []) bindings
+        in
+        let pruned_context = FStar.TypeChecker.ContextPruning.context_of env.tcenv (q::remaining_bindings) in
+        let qid =
+          match env.tcenv.qtbl_name_and_index with
+          | None, _ -> "no query id"
+          | Some (lid, _, ctr), _ -> BU.format2 "%s, %s" (Print.lid_to_string lid) (string_of_int ctr)
+        in
+        if Options.ext_getv "context_pruning_verbose" <> ""
+        then (
+          BU.print3 "For query (%s) start{ %s,\npruned context is:\n\t%s\nend}\n"
+            qid
+            (Print.term_to_string q)
+            (pruned_context |> List.map string_of_lid |> String.concat "\n\t")
+        );
+        Some pruned_context
+      )
+      else None
     in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
@@ -2009,5 +2042,5 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     then BU.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
-    query_prelude, labels, qry, suffix
+    query_prelude, labels, qry, suffix, pruned_context
   )

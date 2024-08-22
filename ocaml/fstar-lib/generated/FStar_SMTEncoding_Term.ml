@@ -314,30 +314,38 @@ type assumption =
   assumption_term: term ;
   assumption_caption: caption ;
   assumption_name: Prims.string ;
-  assumption_fact_ids: fact_db_id Prims.list }
+  assumption_fact_ids: fact_db_id Prims.list ;
+  assumption_free_names: Prims.string Prims.list }
 let (__proj__Mkassumption__item__assumption_term : assumption -> term) =
   fun projectee ->
     match projectee with
     | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_term
+        assumption_fact_ids; assumption_free_names;_} -> assumption_term
 let (__proj__Mkassumption__item__assumption_caption : assumption -> caption)
   =
   fun projectee ->
     match projectee with
     | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_caption
+        assumption_fact_ids; assumption_free_names;_} -> assumption_caption
 let (__proj__Mkassumption__item__assumption_name :
   assumption -> Prims.string) =
   fun projectee ->
     match projectee with
     | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_name
+        assumption_fact_ids; assumption_free_names;_} -> assumption_name
 let (__proj__Mkassumption__item__assumption_fact_ids :
   assumption -> fact_db_id Prims.list) =
   fun projectee ->
     match projectee with
     | { assumption_term; assumption_caption; assumption_name;
-        assumption_fact_ids;_} -> assumption_fact_ids
+        assumption_fact_ids; assumption_free_names;_} -> assumption_fact_ids
+let (__proj__Mkassumption__item__assumption_free_names :
+  assumption -> Prims.string Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { assumption_term; assumption_caption; assumption_name;
+        assumption_fact_ids; assumption_free_names;_} ->
+        assumption_free_names
 type decl =
   | DefPrelude 
   | DeclFun of (Prims.string * sort Prims.list * sort * caption) 
@@ -598,6 +606,42 @@ let (free_variables : term -> fvs) =
         (FStar_Compiler_Effect.op_Colon_Equals t.freevars
            (FStar_Pervasives_Native.Some fvs1);
          fvs1)
+let (free_top_level_names : term -> Prims.string FStar_Compiler_RBSet.t) =
+  fun t ->
+    let rec free_top_level_names1 acc t1 =
+      match t1.tm with
+      | App (Var s, args) ->
+          let uu___ =
+            Obj.magic
+              (FStar_Class_Setlike.add ()
+                 (Obj.magic
+                    (FStar_Compiler_RBSet.setlike_rbset
+                       FStar_Class_Ord.ord_string)) s (Obj.magic acc)) in
+          FStar_Compiler_List.fold_left free_top_level_names1 uu___ args
+      | App (uu___, args) ->
+          FStar_Compiler_List.fold_left free_top_level_names1 acc args
+      | Quant (uu___, pats, uu___1, uu___2, body) ->
+          let acc1 =
+            FStar_Compiler_List.fold_left
+              (fun acc2 ->
+                 fun pats1 ->
+                   FStar_Compiler_List.fold_left free_top_level_names1 acc2
+                     pats1) acc pats in
+          free_top_level_names1 acc1 body
+      | Let (tms, t2) ->
+          let acc1 =
+            FStar_Compiler_List.fold_left free_top_level_names1 acc tms in
+          free_top_level_names1 acc1 t2
+      | Labeled (t2, uu___, uu___1) -> free_top_level_names1 acc t2
+      | LblPos (t2, uu___) -> free_top_level_names1 acc t2
+      | uu___ -> acc in
+    let uu___ =
+      Obj.magic
+        (FStar_Class_Setlike.empty ()
+           (Obj.magic
+              (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+           ()) in
+    free_top_level_names1 uu___ t
 let (qop_to_string : qop -> Prims.string) =
   fun uu___ -> match uu___ with | Forall -> "forall" | Exists -> "exists"
 let (op_to_string : op -> Prims.string) =
@@ -1400,26 +1444,33 @@ let (fresh_token : (Prims.string * sort) -> Prims.int -> decl) =
       match uu___ with
       | (tok_name, sort1) ->
           let a_name = Prims.strcat "fresh_token_" tok_name in
-          let a =
+          let tm =
             let uu___1 =
-              let uu___2 =
-                let uu___3 = mkInteger' id norng in
+              let uu___2 = mkInteger' id norng in
+              let uu___3 =
                 let uu___4 =
-                  let uu___5 =
-                    let uu___6 = constr_id_of_sort sort1 in
-                    let uu___7 =
-                      let uu___8 = mkApp (tok_name, []) norng in [uu___8] in
-                    (uu___6, uu___7) in
-                  mkApp uu___5 norng in
-                (uu___3, uu___4) in
-              mkEq uu___2 norng in
-            let uu___2 = escape a_name in
+                  let uu___5 = constr_id_of_sort sort1 in
+                  let uu___6 =
+                    let uu___7 = mkApp (tok_name, []) norng in [uu___7] in
+                  (uu___5, uu___6) in
+                mkApp uu___4 norng in
+              (uu___2, uu___3) in
+            mkEq uu___1 norng in
+          let a =
+            let uu___1 = escape a_name in
+            let uu___2 =
+              let uu___3 = free_top_level_names tm in
+              FStar_Class_Setlike.elems ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
             {
-              assumption_term = uu___1;
+              assumption_term = tm;
               assumption_caption =
                 (FStar_Pervasives_Native.Some "fresh token");
-              assumption_name = uu___2;
-              assumption_fact_ids = []
+              assumption_name = uu___1;
+              assumption_fact_ids = [];
+              assumption_free_names = uu___2
             } in
           Assume a
 let (fresh_constructor :
@@ -1450,22 +1501,29 @@ let (fresh_constructor :
               let uu___2 = constr_id_of_sort sort1 in (uu___2, [capp]) in
             mkApp uu___1 norng in
           let a_name = Prims.strcat "constructor_distinct_" name in
-          let a =
+          let tm =
             let uu___1 =
               let uu___2 =
                 let uu___3 =
-                  let uu___4 =
-                    let uu___5 = mkInteger id1 norng in (uu___5, cid_app) in
-                  mkEq uu___4 norng in
-                ([[capp]], bvar_names, uu___3) in
-              mkForall rng uu___2 in
-            let uu___2 = escape a_name in
+                  let uu___4 = mkInteger id1 norng in (uu___4, cid_app) in
+                mkEq uu___3 norng in
+              ([[capp]], bvar_names, uu___2) in
+            mkForall rng uu___1 in
+          let a =
+            let uu___1 = escape a_name in
+            let uu___2 =
+              let uu___3 = free_top_level_names tm in
+              FStar_Class_Setlike.elems ()
+                (Obj.magic
+                   (FStar_Compiler_RBSet.setlike_rbset
+                      FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
             {
-              assumption_term = uu___1;
+              assumption_term = tm;
               assumption_caption =
                 (FStar_Pervasives_Native.Some "Constructor distinct");
-              assumption_name = uu___2;
-              assumption_fact_ids = []
+              assumption_name = uu___1;
+              assumption_fact_ids = [];
+              assumption_free_names = uu___2
             } in
           Assume a
 let (injective_constructor :
@@ -1507,27 +1565,35 @@ let (injective_constructor :
                            DeclFun
                              (name1, [sort1], s,
                                (FStar_Pervasives_Native.Some "Projector")) in
-                         let a =
+                         let tm =
                            let uu___3 =
                              let uu___4 =
                                let uu___5 =
                                  let uu___6 =
-                                   let uu___7 =
-                                     let uu___8 = bvar i s in uu___8 norng in
-                                   (cproj_app, uu___7) in
-                                 mkEq uu___6 norng in
-                               ([[capp]], bvar_names, uu___5) in
-                             mkForall rng uu___4 in
-                           let uu___4 =
+                                   let uu___7 = bvar i s in uu___7 norng in
+                                 (cproj_app, uu___6) in
+                               mkEq uu___5 norng in
+                             ([[capp]], bvar_names, uu___4) in
+                           mkForall rng uu___3 in
+                         let a =
+                           let uu___3 =
                              escape
                                (Prims.strcat "projection_inverse_" name1) in
+                           let uu___4 =
+                             let uu___5 = free_top_level_names tm in
+                             FStar_Class_Setlike.elems ()
+                               (Obj.magic
+                                  (FStar_Compiler_RBSet.setlike_rbset
+                                     FStar_Class_Ord.ord_string))
+                               (Obj.magic uu___5) in
                            {
-                             assumption_term = uu___3;
+                             assumption_term = tm;
                              assumption_caption =
                                (FStar_Pervasives_Native.Some
                                   "Projection inverse");
-                             assumption_name = uu___4;
-                             assumption_fact_ids = []
+                             assumption_name = uu___3;
+                             assumption_fact_ids = [];
+                             assumption_free_names = uu___4
                            } in
                          [proj_name; Assume a]
                        else []) fields in
@@ -1674,12 +1740,19 @@ let (constructor_to_decl :
            let a =
              let uu___1 =
                escape (Prims.strcat "constructor_base_" constr.constr_name) in
+             let uu___2 =
+               let uu___3 = free_top_level_names q in
+               FStar_Class_Setlike.elems ()
+                 (Obj.magic
+                    (FStar_Compiler_RBSet.setlike_rbset
+                       FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
              {
                assumption_term = q;
                assumption_caption =
                  (FStar_Pervasives_Native.Some "Constructor base");
                assumption_name = uu___1;
-               assumption_fact_ids = []
+               assumption_fact_ids = [];
+               assumption_free_names = uu___2
              } in
            [decl1; Assume a]) in
       let uu___ =
@@ -2417,3 +2490,30 @@ let (showable_smt_term : term FStar_Class_Show.showable) =
   { FStar_Class_Show.show = print_smt_term }
 let (showable_decl : decl FStar_Class_Show.showable) =
   { FStar_Class_Show.show = (declToSmt_no_caps "") }
+let rec (names_of_decl : decl -> Prims.string Prims.list) =
+  fun d ->
+    match d with
+    | Assume a -> [a.assumption_name]
+    | Module (uu___, ds) -> FStar_Compiler_List.collect names_of_decl ds
+    | uu___ -> []
+let (decl_to_string_short : decl -> Prims.string) =
+  fun d ->
+    match d with
+    | DefPrelude -> "prelude"
+    | DeclFun (s, uu___, uu___1, uu___2) -> Prims.strcat "DeclFun " s
+    | DefineFun (s, uu___, uu___1, uu___2, uu___3) ->
+        Prims.strcat "DefineFun " s
+    | Assume a -> Prims.strcat "Assumption " a.assumption_name
+    | Caption s -> Prims.strcat "Caption " s
+    | Module (s, uu___) -> Prims.strcat "Module " s
+    | Eval uu___ -> "Eval"
+    | Echo s -> Prims.strcat "Echo " s
+    | RetainAssumptions uu___ -> "RetainAssumptions"
+    | Push -> "push"
+    | Pop -> "pop"
+    | CheckSat -> "check-sat"
+    | GetUnsatCore -> "get-unsat-core"
+    | SetOption (s, v) ->
+        Prims.strcat "SetOption " (Prims.strcat s (Prims.strcat " " v))
+    | GetStatistics -> "get-statistics"
+    | GetReasonUnknown -> "get-reason-unknown"
