@@ -15,6 +15,9 @@ FSTAR_CURDIR=$(call maybe_cygwin_path,$(CURDIR))
 
 FSTAR_BUILD_PROFILE ?= release
 
+FSTAR_HOME := $(CURDIR)
+export FSTAR_HOME
+
 .PHONY: fstar
 fstar:
 	$(Q)cp version.txt $(DUNE_SNAPSHOT)/
