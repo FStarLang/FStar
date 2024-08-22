@@ -359,6 +359,10 @@ and (eq_term' :
               (eq_binder b1 b3))
              && (eq_binder b2 b4))
             && (eq_term t4 t8)
+      | (FStar_Parser_AST.ListLiteral ts1, FStar_Parser_AST.ListLiteral ts2)
+          -> eq_list eq_term ts1 ts2
+      | (FStar_Parser_AST.SeqLiteral ts1, FStar_Parser_AST.SeqLiteral ts2) ->
+          eq_list eq_term ts1 ts2
       | uu___ -> false
 and (eq_calc_step :
   FStar_Parser_AST.calc_step -> FStar_Parser_AST.calc_step -> Prims.bool) =

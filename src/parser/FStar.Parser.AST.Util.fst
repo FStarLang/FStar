@@ -360,6 +360,10 @@ and eq_term' (t1 t2:term')
       eq_binder b1 b3 &&
       eq_binder b2 b4 &&      
       eq_term t4 t8
+    | ListLiteral ts1, ListLiteral ts2 ->
+      eq_list eq_term ts1 ts2
+    | SeqLiteral ts1, SeqLiteral ts2 ->
+      eq_list eq_term ts1 ts2
     | _ -> false
 
 and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
