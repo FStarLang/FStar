@@ -45,6 +45,22 @@ fn test_write_10 (x:ref U32.t)
     x := 0ul;
 }
 
+assume val p : int -> slprop
+assume val q : int -> slprop
+
+fn test_inner_ghost_fun ()
+  requires p 1
+  ensures  q 1
+{
+  ghost
+  fn aux (i:int)
+    requires p i
+    ensures  q i
+  {
+    admit()
+  };
+  aux 1
+}
 
 #push-options "--ext 'pulse:rvalues'"
 
