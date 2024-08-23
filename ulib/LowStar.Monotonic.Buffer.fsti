@@ -410,7 +410,7 @@ val live_same_addresses_equal_types_and_preorders
 /// Moreover, ``loc_union`` is idempotent, which is useful to cut SMT
 /// matching loops with ``modifies_trans`` and ``modifies_refl`` below.
 
-
+[@@erasable]
 val loc : Type0
 
 val loc_none: loc

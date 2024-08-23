@@ -95,7 +95,6 @@ type ('a, 'rrel, 'rel, 'b, 'h1,
 type ('a, 'rrel, 'rel, 'b, 'h1, 'h2) modifies_addr_of' = unit
 type ('a, 'rrel, 'rel, 'b, 'h1, 'h2) modifies_addr_of = unit
 type loc = unit
-
 type ('s1, 's2) loc_includes = unit
 type ('s1, 's2) loc_disjoint = unit
 type buf_t =
@@ -104,11 +103,8 @@ let buf : 'a 'rrel 'rel . ('a, 'rrel, 'rel) mbuffer -> buf_t =
   fun b -> FStar_Pervasives.Mkdtuple4 ((), (), (), (Obj.magic b))
 type ('h, 'l) all_live = Obj.t
 type 'l all_disjoint = Obj.t
-
 type 'l loc_pairwise_disjoint = Obj.t
 type ('s, 'h1, 'h2) modifies = unit
-
-
 type ('h, 'ra) does_not_contain_addr = unit
 type ('l, 'h) loc_in = unit
 type ('l, 'h) loc_not_in = unit
