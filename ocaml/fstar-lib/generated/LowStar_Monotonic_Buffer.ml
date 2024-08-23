@@ -94,34 +94,26 @@ type ('a, 'rrel, 'rel, 'b, 'h1,
   'h2) modifies_addr_of_preserves_not_unused_in = unit
 type ('a, 'rrel, 'rel, 'b, 'h1, 'h2) modifies_addr_of' = unit
 type ('a, 'rrel, 'rel, 'b, 'h1, 'h2) modifies_addr_of = unit
-let (cls : (unit, unit) ubuffer FStar_ModifiesGen.cls) =
-  FStar_ModifiesGen.Cls ((), (), (), (), (), (), (), (), (), ())
-type loc = (unit, unit) FStar_ModifiesGen.loc
-let (loc_none : loc) = FStar_ModifiesGen.loc_none cls
-type ('s1, 's2) loc_includes =
-  (unit, unit, unit, unit) FStar_ModifiesGen.loc_includes
-type ('s1, 's2) loc_disjoint =
-  (unit, unit, unit, unit) FStar_ModifiesGen.loc_disjoint
+type loc = unit
+
+type ('s1, 's2) loc_includes = unit
+type ('s1, 's2) loc_disjoint = unit
 type buf_t =
   (unit, unit, unit, (Obj.t, Obj.t, Obj.t) mbuffer) FStar_Pervasives.dtuple4
 let buf : 'a 'rrel 'rel . ('a, 'rrel, 'rel) mbuffer -> buf_t =
   fun b -> FStar_Pervasives.Mkdtuple4 ((), (), (), (Obj.magic b))
 type ('h, 'l) all_live = Obj.t
 type 'l all_disjoint = Obj.t
+
 type 'l loc_pairwise_disjoint = Obj.t
-type ('s, 'h1, 'h2) modifies =
-  (unit, unit, unit, unit, unit) FStar_ModifiesGen.modifies
-let (address_liveness_insensitive_locs : loc) =
-  FStar_ModifiesGen.address_liveness_insensitive_locs cls
-let (region_liveness_insensitive_locs : loc) =
-  FStar_ModifiesGen.region_liveness_insensitive_locs cls
-type ('h, 'ra) does_not_contain_addr =
-  (unit, unit) FStar_ModifiesGen.does_not_contain_addr
-type ('l, 'h) loc_in = (unit, unit) loc_includes
-type ('l, 'h) loc_not_in = (unit, unit) loc_includes
+type ('s, 'h1, 'h2) modifies = unit
+
+
+type ('h, 'ra) does_not_contain_addr = unit
+type ('l, 'h) loc_in = unit
+type ('l, 'h) loc_not_in = unit
 type ('l, 'h, 'hu) fresh_loc = unit
-type ('a1, 'a2, 'rrel1, 'rel1, 'rrel2, 'rel2, 'b1, 'b2) disjoint =
-  (unit, unit) loc_disjoint
+type ('a1, 'a2, 'rrel1, 'rel1, 'rrel2, 'rel2, 'b1, 'b2) disjoint = unit
 type ('a1, 'a2, 'rrel1, 'rel1, 'rrel2, 'rel2, 'b1, 'b2) includes = unit
 type ('a, 'rrel, 'rel) mpointer = ('a, 'rrel, 'rel) mbuffer
 type ('a, 'rrel, 'rel) mpointer_or_null = ('a, 'rrel, 'rel) mbuffer
@@ -483,8 +475,3 @@ type ('region, 'addr) abuffer' = (unit, unit) ubuffer'
 type ('region, 'addr) abuffer = unit
 let coerce : 't2 't1 . 't1 -> 't2 =
   fun uu___ -> (fun x1 -> Obj.magic x1) uu___
-let (cloc_cls : unit FStar_ModifiesGen.cls) = coerce cls
-let (cloc_of_loc : loc -> (unit, unit) FStar_ModifiesGen.loc) =
-  fun l -> coerce l
-let (loc_of_cloc : (unit, unit) FStar_ModifiesGen.loc -> loc) =
-  fun l -> coerce l

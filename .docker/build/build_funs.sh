@@ -55,11 +55,6 @@ function make_karamel_pre() {
         (cd karamel && git clean -fdx && make -j $threads $localTarget)
 }
 
-function make_karamel_post() {
-    OTHERFLAGS='--admit_smt_queries true' make -C karamel/krmllib -j $threads
-    export PATH="$(pwd)/karamel:$PATH"
-}
-
 function fstar_docs_build () {
     # First - get fstar built
     # Second - run fstar with the --doc flag
@@ -79,6 +74,8 @@ function fstar_default_build () {
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
         fetch_karamel
         make_karamel_pre
+        export_home KRML "$(pwd)/karamel"
+        export FSTAR_CI_TEST_KARAMEL=1
     fi &
 
     # Build F*, along with fstarlib
@@ -96,17 +93,8 @@ function fstar_default_build () {
 
     wait # for fetches above
 
-    # Build the rest of karamel if enabled (i.e. verify krmllib)
-    if [[ -z "$CI_NO_KARAMEL" ]] ; then
-        # The commands above were executed in sub-shells and their EXPORTs are not
-        # propagated to the current shell. Re-do.
-        export_home KRML "$(pwd)/karamel"
-        make_karamel_post
-    fi
-    # NOTE: We cannot run this in parallel with F* regressions as some
-    # examples depend on having krmllib checked.
-
-    # Once F* is built, run its main regression suite.
+    # Once F* is built, run its main regression suite. This also runs the karamel
+    # test (unless CI_NO_KARAMEL is set).
     $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
     echo Done building FStar
 

@@ -1,19 +1,19 @@
 include ../../../Makefile.include
 
 FSTAR_FILES := $(wildcard *fst *fsti)
-FSTAR_FLAGS +=--cache_checked_modules $(OTHERFLAGS)
+OTHERFLAGS  := --cache_checked_modules $(OTHERFLAGS)
 
 all: $(addsuffix .checked, $(FSTAR_FILES))
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --already_cached '+Prims +FStar +LowStar' > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
 
 depend: .depend
 
 -include .depend
 
 %.checked:
-	$(FSTAR) $<
+	$(FSTAR) --already_cached '+Prims +FStar +LowStar' $<
 	touch -c $@
 
 wc:
