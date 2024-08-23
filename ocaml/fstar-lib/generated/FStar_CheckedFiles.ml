@@ -576,10 +576,21 @@ let (store_module_to_cache :
                   FStar_Compiler_Range_Type.mk_range fn uu___2 uu___3 in
                 let uu___2 =
                   let uu___3 =
-                    FStar_Compiler_Util.format2 "%s was not written since %s"
-                      cache_file msg in
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_Compiler_Util.format1
+                          "Checked file %s was not written." cache_file in
+                      FStar_Errors_Msg.text uu___5 in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = FStar_Pprint.doc_of_string "Reason:" in
+                        let uu___8 = FStar_Errors_Msg.text msg in
+                        FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                          uu___7 uu___8 in
+                      [uu___6] in
+                    uu___4 :: uu___5 in
                   (FStar_Errors_Codes.Warning_FileNotWritten, uu___3) in
-                FStar_Errors.log_issue uu___1 uu___2
+                FStar_Errors.log_issue_doc uu___1 uu___2
           else ()
 let (unsafe_raw_load_checked_file :
   Prims.string ->
