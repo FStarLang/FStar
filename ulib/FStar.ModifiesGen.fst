@@ -933,6 +933,7 @@ val modifies_intro_strong
 : Lemma
   (modifies l h h')
 
+#push-options "--z3rlimit 20"
 let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
   Classical.forall_intro (Classical.move_requires regions);
   assert (modifies_preserves_regions l h h');
@@ -961,6 +962,7 @@ let modifies_intro_strong #al #c l h h' regions mrefs lives unused_ins alocs =
     loc_aux_disjoint_sym (Ghost.reveal (Loc?.aux l)) (Ghost.reveal (Loc?.aux (loc_of_aloc b)));
     alocs r a b
   )
+#pop-options
 
 let modifies_intro #al #c l h h'  regions mrefs lives unused_ins alocs =
   modifies_intro_strong l h h'
@@ -2165,6 +2167,7 @@ let raise_loc_includes #al #c l1 l2 =
   assert (loc_aux_includes (Ghost.reveal (Loc?.aux l1')) (Ghost.reveal (Loc?.aux l2')) <==> loc_aux_includes (Ghost.reveal (Loc?.aux l1)) (Ghost.reveal (Loc?.aux l2)))
 #pop-options
 
+#push-options "--z3rlimit 20"
 let raise_loc_disjoint #al #c l1 l2 =
   let l1' = raise_loc l1 in
   let l2' = raise_loc l2 in
@@ -2176,6 +2179,7 @@ let raise_loc_disjoint #al #c l1 l2 =
   assert (forall r . addrs_of_loc l2' r `GSet.equal` addrs_of_loc l2 r);
   assert (forall (x1 x2: aloc (raise_cls u#x u#y c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (downgrade_aloc x1) (downgrade_aloc x2));
   assert (forall (x1 x2: aloc (c)) . aloc_disjoint x1 x2 <==> aloc_disjoint (upgrade_aloc u#x u#y x1) (upgrade_aloc x2))
+#pop-options
 
 let modifies_raise_loc #al #c l h1 h2 =
   let l' = raise_loc l in
