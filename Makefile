@@ -189,12 +189,16 @@ ci-rebootstrap:
 ci-ocaml-test:
 	+$(Q)$(MAKE) -C src ocaml-unit-tests
 
+.PHONY: ci-ulib-extra
+ci-ulib-extra:
+	+$(Q)$(MAKE) -C ulib extra
+
 .PHONY: ci-ulib-in-fsharp
-ci-ulib-in-fsharp:
+ci-ulib-in-fsharp: ci-ulib-extra
 	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
-ci-post: ci-ulib-in-fsharp ci-ocaml-test ci-uregressions
+ci-post: ci-ulib-in-fsharp ci-ocaml-test ci-uregressions ci-ulib-extra
 
 .PHONY: ci-uregressions
 ci-uregressions:
