@@ -199,6 +199,7 @@ and uvar_decoration = {
   uvar_decoration_typ:typ;
   uvar_decoration_typedness_depends_on:list ctx_uvar;
   uvar_decoration_should_check:should_check_uvar;
+  uvar_decoration_should_unrefine:bool;
 }
 
 and uvar = Unionfind.p_uvar (option term & uvar_decoration) & version & Range.range

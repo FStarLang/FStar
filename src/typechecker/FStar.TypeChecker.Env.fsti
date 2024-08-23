@@ -495,24 +495,29 @@ val too_early_in_prims : env -> bool
 
 val close_forall              : env -> binders -> term -> term
 
-val new_tac_implicit_var (reason: string)
-                         (r: Range.range)
-                         (env:env)
-                         (uvar_typ:typ)
-                         (should_check:should_check_uvar)
-                         (uvar_typedness_deps:list ctx_uvar)
-                         (meta:option ctx_uvar_meta_t)
-  : (term & list (ctx_uvar & Range.range) & guard_t)
+val new_tac_implicit_var
+  (reason: string)
+  (r: Range.range)
+  (env:env)
+  (uvar_typ:typ)
+  (should_check:should_check_uvar)
+  (uvar_typedness_deps:list ctx_uvar)
+  (meta:option ctx_uvar_meta_t)
+  (unrefine:bool)
+: term & (ctx_uvar & Range.range) & guard_t
 
-val new_implicit_var_aux : string ->
-                           Range.range ->
-                           env ->
-                           typ ->
-                           should_check_uvar ->
-                           option ctx_uvar_meta_t ->
-                           (term & list (ctx_uvar & Range.range) & guard_t)
+val new_implicit_var_aux
+  (reason: string)
+  (r: Range.range)
+  (env:env)
+  (uvar_typ:typ)
+  (should_check:should_check_uvar)
+  (meta:option ctx_uvar_meta_t)
+  (unrefine:bool)
+: term & (ctx_uvar & Range.range) & guard_t
 
-val uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t
+
+val uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t & (*should_unrefine:*)bool
 
 (* layered effect utils *)
 

@@ -102,7 +102,7 @@ let pure_wp_uvar env (t:typ) (reason:string) (r:Range.range) : term & guard_t =
       [t |> S.as_arg]
       r in
 
-  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Strict None in
+  let pure_wp_uvar, _, guard_wp = Env.new_implicit_var_aux reason r env pure_wp_t Strict None false in
   pure_wp_uvar, guard_wp
 
 let (let?) (#a #b:Type) (f:option a) (g:a -> option b) : option b =
@@ -1616,21 +1616,24 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     let check_branch env ite_f_or_g_sort attr_opt : unit =
       let subst, uvars, g_uvars = subcomp_bs |> List.fold_left
         (fun (subst, uvars, g) b ->
-         let sort = SS.subst subst b.binder_bv.sort in
-         let t, _, g_t =
-         let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
-         Env.new_implicit_var_aux
-           (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
-             (Print.binder_to_string b))
-           r
-           env
-           sort
-           Strict
-           ctx_uvar_meta in
-        subst@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t)
-        ([NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)],
-         [],
-         Env.trivial_guard) in
+          let sort = SS.subst subst b.binder_bv.sort in
+          let t, _, g_t =
+            let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
+            Env.new_implicit_var_aux
+              (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
+                (Print.binder_to_string b))
+              r
+              env
+              sort
+              Strict
+              ctx_uvar_meta
+              false
+          in
+          subst@[NT (b.binder_bv, t)], uvars@[t], conj_guard g g_t)
+          ([NT (subcomp_a_b.binder_bv, S.bv_to_name a_b.binder_bv)],
+           [],
+           Env.trivial_guard)
+      in
 
       let subcomp_f_sort = SS.subst subst subcomp_f_b.binder_bv.sort in
       let c = SS.subst_comp subst subcomp_c |> Env.unfold_effect_abbrev env in
@@ -1651,8 +1654,11 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           let _, _, g = Env.new_implicit_var_aux "tc_layered_effect_decl.g_precondition" r env
             (U.mk_squash S.U_zero fml)
             Strict
-            (Ctx_uvar_meta_attr attr |> Some) in
-          g in
+            (Ctx_uvar_meta_attr attr |> Some)
+            false
+          in
+          g
+      in
 
       Rel.force_trivial_guard env (Env.conj_guards [g_uvars; g_f_or_g; g_c; g_precondition]) in
 
@@ -1831,7 +1837,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         let t, u = U.type_u () in
         let reason = BU.format2 "implicit for return type of action %s:%s"
           (string_of_lid ed.mname) (string_of_lid act.action_name) in
-        let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t in
+        let a_tm, _, g_tm = TcUtil.new_implicit_var reason r env t false in
         let repr, g = fresh_repr r env u a_tm in
         U.arrow bs (S.mk_Total repr), Env.conj_guard g g_tm
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,

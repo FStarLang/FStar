@@ -119,7 +119,7 @@ let check_no_escape (head_opt : option term)
           SMT disabled it should not log an error. *)
           try
             let env_extended = Env.push_bvs env fvs in
-            let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) in
+            let s, _, g0 = TcUtil.new_implicit_var "no escape" (Env.get_range env) env (fst <| U.type_u()) false in
             match Rel.try_teq false env_extended t s with
             | Some g ->
               let g = Rel.solve_deferred_constraints env_extended (g ++ g0) in
@@ -1115,7 +1115,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
 
       let (expected_repr_typ, g_repr), u_a, a, g_a =
         let a, u_a = U.type_u () in
-        let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a in
+        let a_uvar, _, g_a = TcUtil.new_implicit_var "tc_term reflect" e.pos env_no_ex a false in
         TcUtil.fresh_effect_repr_en env_no_ex e.pos l u_a a_uvar, u_a, a_uvar, g_a in
 
       let g_eq = Rel.teq env_no_ex c_e.res_typ expected_repr_typ in
@@ -1428,7 +1428,7 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
          | Some _ -> env, None, g1
          | None ->
            let k, _ = U.type_u() in
-           let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k in
+           let res_t, _, g = TcUtil.new_implicit_var "match result" e1.pos env k false in
            Env.set_expected_typ env res_t,
            None,
            g1 ++ g)
@@ -1726,24 +1726,28 @@ and tc_value env (e:term) : term
   //or the program has explicit _ for missing terms
   | Tm_unknown ->
     let r = Env.get_range env in
-    let t, _, g0 =
+    let t, g0 =
         match Env.expected_typ env with
         | None ->
           let k, u = U.type_u () in
-          TcUtil.new_implicit_var "type of user-provided implicit term" r env k
-        | Some (t, use_eq) ->
-          if use_eq
-          then raise_error
-                 (Errors.Fatal_NotSupported,
-                  BU.format1 "Equality ascription as an expected type for unk (:%s) is not yet supported, \
-                              please use subtyping"
-                             (show t)) e.pos;
-          t, [], mzero in
+          let t, _, g0 = TcUtil.new_implicit_var "type of user-provided implicit term" r env k false in
+          t, g0
+
+        | Some (t, use_eq) when use_eq ->
+          raise_error_doc (Errors.Fatal_NotSupported, [
+              Errors.Msg.text <| BU.format1 "Equality ascription as an expected type for unk (:%s) is not yet supported." (show t);
+              Errors.Msg.text "Please use subtyping."
+          ]) e.pos
+
+        | Some (t, _) ->
+          t, mzero
+    in
 
     let e, _, g1 = TcUtil.new_implicit_var
-          ("user-provided implicit term at " ^ (Range.string_of_range r))
-          r env t in
-    e, S.mk_Total t |> TcComm.lcomp_of_comp, (g0 ++ g1)
+          ("user-provided implicit term at " ^ show r)
+          r env t false
+    in
+    e, S.mk_Total t |> TcComm.lcomp_of_comp, g0 ++ g1
 
   | Tm_name x ->
     let t, rng = Env.lookup_bv env x in
@@ -1971,7 +1975,9 @@ and tc_comp env c : comp                                      (* checked version
             "implicit for type of the well-founded relation in decreases clause"
             rel.pos
             env
-            t in
+            t
+            false
+          in
           //well_founded_relation<u_t,u_r> t
           let wf_t = mk_Tm_app
             (mk_Tm_uinst
@@ -2852,13 +2858,13 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let bs, guard =
                 List.fold_right
                     (fun _ (bs, guard) ->
-                         let t, _, g = TcUtil.new_implicit_var "formal parameter" tf.pos env (U.type_u () |> fst) in
+                         let t, _, g = TcUtil.new_implicit_var "formal parameter" tf.pos env (U.type_u () |> fst) false in
                          null_binder t::bs, g ++ guard)
                     args
                     ([], guard)
             in
             let cres, guard =
-                let t, _, g = TcUtil.new_implicit_var "result type" tf.pos env (U.type_u() |> fst) in
+                let t, _, g = TcUtil.new_implicit_var "result type" tf.pos env (U.type_u() |> fst) false in
                 if Options.ml_ish ()
                 then U.ml_comp t r, guard ++ g
                 else S.mk_Total t, guard ++ g

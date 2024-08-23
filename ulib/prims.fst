@@ -47,6 +47,22 @@ val cps:attribute
 assume
 val tac_opaque : attribute
 
+(** This attribute can be used on type binders to make unifier attempt
+    to unrefine them before instantiating them. This is useful in polymorphic
+    definitions where the type does not change the result type, for example
+    eq2 below. Using the attribute, an equality between two nats will happen
+    at type int, which is more canonical.
+
+    This feature is experimental and only enabled with "--ext __unrefine" *)
+assume
+val unrefine : attribute
+
+(** This attribute can be attached to a type definition to partly counter the
+    behavior of the `unrefine` attribute. It will cause the definition marked
+    `do_not_unrefine` to not be unfolded during the unrefining process. *)
+assume
+val do_not_unrefine : attribute
+
 (** A predicate to express when a type supports decidable equality
     The type-checker emits axioms for [hasEq] for each inductive type *)
 assume

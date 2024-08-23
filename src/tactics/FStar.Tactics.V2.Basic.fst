@@ -2682,11 +2682,12 @@ let refl_try_unify (g:env) (uvs:list (bv & typ)) (t0 t1:term)
     //
     let guard_uvs, ss, tbl = List.fold_left (fun (guard_uvs, ss, tbl) (bv, t) ->
       let t = SS.subst ss t in
-      let uv_t, [ctx_u, _], guard_uv =
+      let uv_t, (ctx_u, _), guard_uv =
         // the API doesn't promise well-typedness of the solutions
         let reason = BU.format1 "refl_try_unify for %s" (show bv) in
         let should_check_uvar = Allow_untyped "refl_try_unify" in
-        Env.new_implicit_var_aux reason t0.pos g t should_check_uvar None in
+        Env.new_implicit_var_aux reason t0.pos g t should_check_uvar None false
+      in
       let uv_id = Syntax.Unionfind.uvar_unique_id ctx_u.ctx_uvar_head in
       Env.conj_guard guard_uvs guard_uv,
       (NT (bv, uv_t))::ss,
