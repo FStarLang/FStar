@@ -41,7 +41,8 @@ INCLUDE_PATHS?= \
 
 include Makefile.common
 
-verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked, $(ALL_CHECKED_FILES))
+# Remove ModifiesGen since it "leaks" into this dependency analysis.
+verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked $(CACHE_DIR)/FStar.ModifiesGen.fst.checked, $(ALL_CHECKED_FILES))
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
