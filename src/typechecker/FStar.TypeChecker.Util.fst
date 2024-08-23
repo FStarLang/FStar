@@ -3705,31 +3705,19 @@ let make_record_fields_in_order env uc topt
           (string_of_id rdc.constrname)
           (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
       in
-      let print_fas fas =
-        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
-      in
       let print_topt topt =
-        match topt with
-        | None ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
-        | Some (Inl t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-        | Some (Inr t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+        BU.format2 "topt=%s; rdc=%s" (show topt) (print_rdc rdc)
       in
       BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
-          (match uc.uc_typename with None -> "none" | Some tn -> string_of_lid tn)
-          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (show uc.uc_typename)
+          (show uc.uc_fields)
           (print_topt topt)
           (print_rdc rdc)
-          (print_fas fas)
+          (show (List.map fst fas))
     in
-    let rest, as_rev =
+    let rest, as_rev, missing =
       List.fold_left
-        (fun (fields, as_rev) (field_name, _) ->
+        (fun (fields, as_rev, missing) (field_name, _) ->
            let matching, rest =
              List.partition
                (fun (fn, _) -> field_name_matches fn rdc field_name)
@@ -3737,20 +3725,15 @@ let make_record_fields_in_order env uc topt
            in
            match matching with
            | [(_, a)] ->
-             rest, a::as_rev
+             rest, a::as_rev, missing
 
            | [] -> (
              match not_found field_name with
              | None ->
 //               debug();
-               raise_error_doc
-                 (Errors.Fatal_MissingFieldInRecord, [
-                   Errors.Msg.text <| BU.format2 "Field '%s' of record type '%s' is missing."
-                     (show field_name)
-                     (show rdc.typename)])
-                 rng
+              rest, as_rev, field_name :: missing
              | Some a ->
-               rest, a::as_rev
+               rest, a::as_rev, missing
              )
 
            | _ ->
@@ -3761,19 +3744,30 @@ let make_record_fields_in_order env uc topt
                   (string_of_id field_name)
                   (string_of_lid rdc.typename))
                rng)
-        (fas, [])
+        (fas, [], [])
         rdc.fields
     in
+    let pp_missing () =
+      separate_map (comma ^^ break_ 1) (fun f -> squotes (doc_of_string (show f))) missing
+    in
     let _ =
-      match rest with
-      | [] -> ()
-      | (f, _)::_ ->
+      match rest, missing with
+      | [], [] -> ()
+      | (f, _)::_, _ ->
 //        debug();
-        raise_error
-          (Errors.Fatal_MissingFieldInRecord,
-            BU.format2 "Field %s is redundant for type %s"
-                       (string_of_lid f)
-                       (string_of_lid rdc.typename))
-          (range_of_lid f)
+        raise_error_doc (Errors.Fatal_MissingFieldInRecord, [
+            Errors.Msg.text <| BU.format2 "Field '%s' is redundant for type %s" (show f) (show rdc.typename);
+            if Cons? missing then
+              prefix 2 1 (text "Missing fields:")
+                (pp_missing ())
+            else
+              Pprint.empty;
+          ]) (range_of_lid f)
+
+      | [], _ ->
+        raise_error_doc (Errors.Fatal_MissingFieldInRecord, [
+            prefix 2 1 (text <| BU.format1 "Missing fields for record type '%s':" (show rdc.typename))
+                (pp_missing ())
+          ]) rng
     in
     List.rev as_rev
