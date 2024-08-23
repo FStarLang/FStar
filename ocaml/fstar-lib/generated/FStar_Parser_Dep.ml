@@ -1361,8 +1361,10 @@ let (collect_one :
              | FStar_Parser_AST.Tycon (uu___1, tc, ts) ->
                  (if tc
                   then
-                    add_to_parsing_data
-                      (P_lid FStar_Parser_Const.tcclass_lid)
+                    (add_to_parsing_data
+                       (P_lid FStar_Parser_Const.tcclass_lid);
+                     add_to_parsing_data
+                       (P_lid FStar_Parser_Const.mk_projs_lid))
                   else ();
                   FStar_Compiler_List.iter collect_tycon ts)
              | FStar_Parser_AST.Exception (uu___1, t) ->
@@ -1485,7 +1487,9 @@ let (collect_one :
                  collect_term t
              | FStar_Pervasives_Native.Some (FStar_Parser_AST.TypeClassArg)
                  ->
-                 add_to_parsing_data (P_lid FStar_Parser_Const.tcresolve_lid)
+                 (add_to_parsing_data
+                    (P_lid FStar_Parser_Const.tcresolve_lid);
+                  add_to_parsing_data (P_lid FStar_Parser_Const.mk_projs_lid))
              | uu___2 -> ()
            and collect_term t = collect_term' t.FStar_Parser_AST.tm
            and collect_constant uu___1 =

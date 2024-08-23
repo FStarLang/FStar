@@ -9215,38 +9215,21 @@ and (desugar_decl_core :
                      let r = FStar_Ident.range_of_lid lid in
                      let body =
                        let uu___2 =
-                         FStar_Syntax_Util.has_attribute d_attrs
-                           FStar_Parser_Const.meta_projectors_attr in
-                       if uu___2
-                       then
-                         let uu___3 =
-                           FStar_Syntax_Syntax.tabbrev
-                             FStar_Parser_Const.mk_projs_lid in
+                         FStar_Syntax_Syntax.tabbrev
+                           FStar_Parser_Const.mk_projs_lid in
+                       let uu___3 =
                          let uu___4 =
-                           let uu___5 =
-                             let uu___6 = FStar_Syntax_Util.exp_bool true in
-                             FStar_Syntax_Syntax.as_arg uu___6 in
+                           let uu___5 = FStar_Syntax_Util.exp_bool true in
+                           FStar_Syntax_Syntax.as_arg uu___5 in
+                         let uu___5 =
                            let uu___6 =
                              let uu___7 =
-                               let uu___8 =
-                                 let uu___9 = FStar_Ident.string_of_lid lid in
-                                 FStar_Syntax_Util.exp_string uu___9 in
-                               FStar_Syntax_Syntax.as_arg uu___8 in
-                             [uu___7] in
-                           uu___5 :: uu___6 in
-                         FStar_Syntax_Util.mk_app uu___3 uu___4
-                       else
-                         (let uu___4 =
-                            FStar_Syntax_Syntax.tabbrev
-                              FStar_Parser_Const.mk_class_lid in
-                          let uu___5 =
-                            let uu___6 =
-                              let uu___7 =
-                                let uu___8 = FStar_Ident.string_of_lid lid in
-                                FStar_Syntax_Util.exp_string uu___8 in
-                              FStar_Syntax_Syntax.as_arg uu___7 in
-                            [uu___6] in
-                          FStar_Syntax_Util.mk_app uu___4 uu___5) in
+                               let uu___8 = FStar_Ident.string_of_lid lid in
+                               FStar_Syntax_Util.exp_string uu___8 in
+                             FStar_Syntax_Syntax.as_arg uu___7 in
+                           [uu___6] in
+                         uu___4 :: uu___5 in
+                       FStar_Syntax_Util.mk_app uu___2 uu___3 in
                      let uu___2 =
                        let uu___3 =
                          let uu___4 =
@@ -9416,7 +9399,14 @@ and (desugar_decl_core :
                                    FStar_Syntax_Syntax.fvar_with_dd
                                      FStar_Parser_Const.tcclass_lid
                                      FStar_Pervasives_Native.None in
-                                 uu___5 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                                 let uu___6 =
+                                   let uu___7 =
+                                     FStar_Syntax_Syntax.fvar_with_dd
+                                       FStar_Parser_Const.meta_projectors_attr
+                                       FStar_Pervasives_Native.None in
+                                   uu___7 ::
+                                     (se.FStar_Syntax_Syntax.sigattrs) in
+                                 uu___5 :: uu___6 in
                                FStar_Syntax_Util.deduplicate_terms uu___4 in
                              {
                                FStar_Syntax_Syntax.sigel =
@@ -9444,7 +9434,14 @@ and (desugar_decl_core :
                                    FStar_Syntax_Syntax.fvar_with_dd
                                      FStar_Parser_Const.tcclass_lid
                                      FStar_Pervasives_Native.None in
-                                 uu___6 :: (se.FStar_Syntax_Syntax.sigattrs) in
+                                 let uu___7 =
+                                   let uu___8 =
+                                     FStar_Syntax_Syntax.fvar_with_dd
+                                       FStar_Parser_Const.meta_projectors_attr
+                                       FStar_Pervasives_Native.None in
+                                   uu___8 ::
+                                     (se.FStar_Syntax_Syntax.sigattrs) in
+                                 uu___6 :: uu___7 in
                                FStar_Syntax_Util.deduplicate_terms uu___5 in
                              {
                                FStar_Syntax_Syntax.sigel =
