@@ -172,7 +172,7 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
          we should just rename eq2 to op_Equals_Equals
 *)
 [@@ tac_opaque; smt_theory_symbol]
-type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
+type eq2 (#[@@@unrefine] a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
@@ -585,13 +585,13 @@ val op_LessThan: int -> int -> Tot bool
 
 [@@ smt_theory_symbol]
 assume
-val op_Equality: #a: eqtype -> a -> a -> Tot bool
+val op_Equality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_disEquality: #a: eqtype -> a -> a -> Tot bool
+val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** The extensible open inductive type of exceptions *)
 assume new
