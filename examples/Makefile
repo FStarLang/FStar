@@ -1,6 +1,9 @@
 OTHERFLAGS+=--warn_error -321-274
 all: prep verify special_cases
 
+# krml_tests only to be run conditionally, if we have a karamel install.
+# These tests also require that krmllib is already checked.
+
 # Note:
 #
 # * old: examples that are not maintained anymore, though may be worth recovering
@@ -52,13 +55,13 @@ SPECIAL_CASES += hello
 SPECIAL_CASES += native_tactics
 endif
 
-ifdef KRML_HOME
-SPECIAL_CASES += demos
-SPECIAL_CASES += kv_parsing
-SPECIAL_CASES += miniparse
-endif
+KRML_TESTS += demos
+KRML_TESTS += kv_parsing
+KRML_TESTS += miniparse
 
 special_cases: $(addsuffix .all, $(SPECIAL_CASES))
+
+krml_tests: $(addsuffix .all, $(KRML_TESTS))
 
 %.all: %
 	+$(MAKE) -C $^ all
