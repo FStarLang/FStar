@@ -512,8 +512,6 @@ let (meta_projectors_attr : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let (mk_projs_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "mk_projs"]
-let (mk_class_lid : FStar_Ident.lid) =
-  fstar_tactics_lid' ["Typeclasses"; "mk_class"]
 let (tcresolve_lid : FStar_Ident.lid) =
   fstar_tactics_lid' ["Typeclasses"; "tcresolve"]
 let (tcclass_lid : FStar_Ident.lid) =
