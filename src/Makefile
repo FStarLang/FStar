@@ -55,9 +55,15 @@ uregressions: tutorial utests uexamples
 uregressions-ulong: uregressions
 
 .PHONY: tutorial
-tutorial:
-	+$(MAKE) -C ../doc/old/tutorial regressions
+tutorial: book-code tutorial-old
+
+.PHONY: book-code
+book-code:
 	+$(MAKE) -C ../doc/book/code
+
+.PHONY: tutorial-old
+tutorial-old:
+	+$(MAKE) -C ../doc/old/tutorial regressions
 
 .PHONY: utests
 utests:
