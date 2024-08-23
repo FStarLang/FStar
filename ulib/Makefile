@@ -7,6 +7,9 @@ FSTAR_HOME=..
 # Makefile here is not.
 
 all: .cache
+	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-all
+
+core: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
 
 benchmark: .cache

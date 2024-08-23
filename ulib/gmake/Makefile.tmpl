@@ -82,5 +82,5 @@ depend: .depend
 include .depend
 
 # The default target is to verify all files, without extracting anything
-# It needs to be here, because it reads the variable ALL_FST_FILES in .depend
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+# It needs to be here, because it reads the variable ALL_CHECKED_FILES in .depend
+verify-all: $(ALL_CHECKED_FILES)

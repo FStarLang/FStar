@@ -28,7 +28,7 @@ dune-fstar-snapshot:
 	+$(MAKE) -C .. ocaml
 
 dune-verify-ulib:
-	+$(MAKE) -C ../../ulib
+	+$(MAKE) -C ../../ulib core
 
 dune-stdlib-snapshot: dune-verify-ulib
 	$(MAKE) -C ../../ulib -f Makefile.extract dune-snapshot
