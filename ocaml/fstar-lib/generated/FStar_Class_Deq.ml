@@ -3,12 +3,11 @@ type 'a deq = {
   op_Equals_Question: 'a -> 'a -> Prims.bool }
 let __proj__Mkdeq__item__op_Equals_Question :
   'a . 'a deq -> 'a -> 'a -> Prims.bool =
-  fun projectee ->
-    match projectee with | { op_Equals_Question;_} -> op_Equals_Question
+  fun x3 ->
+    match x3 with
+    | { op_Equals_Question = aop_Equals_Question;_} -> aop_Equals_Question
 let op_Equals_Question : 'a . 'a deq -> 'a -> 'a -> Prims.bool =
-  fun projectee ->
-    match projectee with
-    | { op_Equals_Question = op_Equals_Question1;_} -> op_Equals_Question1
+  fun x3 -> __proj__Mkdeq__item__op_Equals_Question x3
 let op_Less_Greater_Question : 'a . 'a deq -> 'a -> 'a -> Prims.bool =
   fun uu___ ->
     fun x ->

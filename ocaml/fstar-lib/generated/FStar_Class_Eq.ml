@@ -4,9 +4,9 @@ type 'a deq = {
   raw: 'a FStar_Class_Eq_Raw.deq ;
   eq_dec: unit }
 let __proj__Mkdeq__item__raw : 'a . 'a deq -> 'a FStar_Class_Eq_Raw.deq =
-  fun projectee -> match projectee with | { raw; eq_dec;_} -> raw
+  fun x4 -> match x4 with | { raw = araw; eq_dec = aeq_dec;_} -> araw
 let raw : 'a . 'a deq -> 'a FStar_Class_Eq_Raw.deq =
-  fun projectee -> match projectee with | { raw = raw1; eq_dec;_} -> raw1
+  fun x4 -> __proj__Mkdeq__item__raw x4
 let deq_raw_deq : 'a . 'a deq -> 'a FStar_Class_Eq_Raw.deq = fun d -> d.raw
 let eq : 'a . 'a deq -> 'a -> 'a -> Prims.bool =
   fun d -> fun x -> fun y -> (d.raw).FStar_Class_Eq_Raw.eq x y

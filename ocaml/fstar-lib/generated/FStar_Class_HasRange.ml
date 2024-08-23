@@ -5,13 +5,11 @@ type 'a hasRange =
   setPos: FStar_Compiler_Range_Type.range -> 'a -> 'a }
 let __proj__MkhasRange__item__pos :
   'a . 'a hasRange -> 'a -> FStar_Compiler_Range_Type.range =
-  fun projectee -> match projectee with | { pos; setPos;_} -> pos
+  fun x4 -> match x4 with | { pos = apos; setPos = asetPos;_} -> apos
+let pos : 'a . 'a hasRange -> 'a -> FStar_Compiler_Range_Type.range =
+  fun x4 -> __proj__MkhasRange__item__pos x4
 let __proj__MkhasRange__item__setPos :
   'a . 'a hasRange -> FStar_Compiler_Range_Type.range -> 'a -> 'a =
-  fun projectee -> match projectee with | { pos; setPos;_} -> setPos
-let pos : 'a . 'a hasRange -> 'a -> FStar_Compiler_Range_Type.range =
-  fun projectee -> match projectee with | { pos = pos1; setPos;_} -> pos1
+  fun x5 -> match x5 with | { pos = apos; setPos = asetPos;_} -> asetPos
 let setPos : 'a . 'a hasRange -> FStar_Compiler_Range_Type.range -> 'a -> 'a
-  =
-  fun projectee ->
-    match projectee with | { pos = pos1; setPos = setPos1;_} -> setPos1
+  = fun x5 -> __proj__MkhasRange__item__setPos x5

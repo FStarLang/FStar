@@ -6,14 +6,12 @@ let __proj__MkhasNames__item__freeNames :
   'a .
     'a hasNames ->
       'a -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.flat_set
-  = fun projectee -> match projectee with | { freeNames;_} -> freeNames
+  = fun x3 -> match x3 with | { freeNames = afreeNames;_} -> afreeNames
 let freeNames :
   'a .
     'a hasNames ->
       'a -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.flat_set
-  =
-  fun projectee ->
-    match projectee with | { freeNames = freeNames1;_} -> freeNames1
+  = fun x3 -> __proj__MkhasNames__item__freeNames x3
 type 'a hasBinders =
   {
   boundNames: 'a -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.flat_set }
@@ -21,14 +19,12 @@ let __proj__MkhasBinders__item__boundNames :
   'a .
     'a hasBinders ->
       'a -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.flat_set
-  = fun projectee -> match projectee with | { boundNames;_} -> boundNames
+  = fun x3 -> match x3 with | { boundNames = aboundNames;_} -> aboundNames
 let boundNames :
   'a .
     'a hasBinders ->
       'a -> FStar_Syntax_Syntax.bv FStar_Compiler_FlatSet.flat_set
-  =
-  fun projectee ->
-    match projectee with | { boundNames = boundNames1;_} -> boundNames1
+  = fun x3 -> __proj__MkhasBinders__item__boundNames x3
 let (hasNames_term : FStar_Syntax_Syntax.term hasNames) =
   { freeNames = FStar_Syntax_Free.names }
 let (hasNames_comp : FStar_Syntax_Syntax.comp hasNames) =

@@ -10,9 +10,9 @@ type 'a totalorder = {
   compare: 'a raw_comparator }
 let __proj__Mktotalorder__item__compare :
   'a . 'a totalorder -> 'a raw_comparator =
-  fun projectee -> match projectee with | { compare;_} -> compare
+  fun x3 -> match x3 with | { compare = acompare;_} -> acompare
 let compare : 'a . 'a totalorder -> 'a raw_comparator =
-  fun projectee -> match projectee with | { compare = compare1;_} -> compare1
+  fun x3 -> __proj__Mktotalorder__item__compare x3
 let op_Less : 't . 't totalorder -> 't -> 't -> Prims.bool =
   fun uu___ -> fun x -> fun y -> (compare uu___ x y) = FStar_Order.Lt
 let op_Greater : 't . 't totalorder -> 't -> 't -> Prims.bool =

@@ -8,14 +8,13 @@ let __proj__Mktermable__item__to_term :
     'a termable ->
       'a ->
         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
-  = fun projectee -> match projectee with | { to_term;_} -> to_term
+  = fun x3 -> match x3 with | { to_term = ato_term;_} -> ato_term
 let to_term :
   'a .
     'a termable ->
       'a ->
         (FStar_Tactics_NamedView.term, unit) FStar_Tactics_Effect.tac_repr
-  =
-  fun projectee -> match projectee with | { to_term = to_term1;_} -> to_term1
+  = fun x3 -> __proj__Mktermable__item__to_term x3
 let (termable_term : FStar_Tactics_NamedView.term termable) =
   {
     to_term =

@@ -633,203 +633,213 @@ let (embed_string : Prims.string -> FStar_Tactics_NamedView.term) =
     FStar_Reflection_V2_Builtins.pack_ln
       (FStar_Reflection_V2_Data.Tv_Const
          (FStar_Reflection_V2_Data.C_String s))
+let (substitute_attr : FStar_Tactics_NamedView.term) =
+  FStar_Reflection_V2_Builtins.pack_ln
+    (FStar_Reflection_V2_Data.Tv_FVar
+       (FStar_Reflection_V2_Builtins.pack_fv
+          ["FStar"; "Pervasives"; "Substitute"]))
 let (mk_proj_decl :
   Prims.bool ->
-    FStar_Reflection_Types.name ->
-      Prims.string Prims.list ->
-        FStar_Tactics_NamedView.univ_name Prims.list ->
-          FStar_Tactics_NamedView.binder Prims.list ->
-            Prims.nat ->
-              FStar_Tactics_NamedView.binder ->
-                FStar_Tactics_NamedView.term ->
-                  (FStar_Tactics_NamedView.namedv *
-                    FStar_Reflection_Types.fv) Prims.list ->
-                    ((FStar_Reflection_Types.sigelt Prims.list *
-                       FStar_Reflection_Types.fv),
-                      unit) FStar_Tactics_Effect.tac_repr)
+    FStar_Tactics_NamedView.term Prims.list ->
+      FStar_Reflection_V2_Data.qualifier Prims.list ->
+        FStar_Reflection_Types.name ->
+          Prims.string Prims.list ->
+            FStar_Tactics_NamedView.univ_name Prims.list ->
+              FStar_Tactics_NamedView.binder Prims.list ->
+                Prims.nat ->
+                  FStar_Tactics_NamedView.binder ->
+                    FStar_Tactics_NamedView.term ->
+                      (FStar_Tactics_NamedView.namedv *
+                        FStar_Reflection_Types.fv) Prims.list ->
+                        ((FStar_Reflection_Types.sigelt Prims.list *
+                           FStar_Reflection_Types.fv),
+                          unit) FStar_Tactics_Effect.tac_repr)
   =
   fun is_method ->
-    fun tyqn ->
-      fun ctorname ->
-        fun univs ->
-          fun params ->
-            fun idx ->
-              fun field ->
-                fun unfold_names_tm ->
-                  fun smap ->
-                    FStar_Tactics_Effect.tac_bind
-                      (FStar_Sealed.seal
-                         (Obj.magic
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.MkProjectors.fst"
-                               (Prims.of_int (107)) (Prims.of_int (2))
-                               (Prims.of_int (107)) (Prims.of_int (61)))))
-                      (FStar_Sealed.seal
-                         (Obj.magic
-                            (FStar_Range.mk_range
-                               "FStar.Tactics.MkProjectors.fst"
-                               (Prims.of_int (108)) (Prims.of_int (2))
-                               (Prims.of_int (190)) (Prims.of_int (35)))))
-                      (Obj.magic
-                         (debug
-                            (fun uu___ ->
-                               FStar_Tactics_Effect.tac_bind
-                                 (FStar_Sealed.seal
-                                    (Obj.magic
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.MkProjectors.fst"
-                                          (Prims.of_int (107))
-                                          (Prims.of_int (41))
-                                          (Prims.of_int (107))
-                                          (Prims.of_int (60)))))
-                                 (FStar_Sealed.seal
-                                    (Obj.magic
-                                       (FStar_Range.mk_range "prims.fst"
-                                          (Prims.of_int (590))
-                                          (Prims.of_int (19))
-                                          (Prims.of_int (590))
-                                          (Prims.of_int (31)))))
-                                 (Obj.magic
-                                    (FStar_Tactics_Unseal.unseal
-                                       field.FStar_Tactics_NamedView.ppname))
-                                 (fun uu___1 ->
-                                    FStar_Tactics_Effect.lift_div_tac
-                                      (fun uu___2 ->
-                                         Prims.strcat "Processing field "
-                                           uu___1)))))
-                      (fun uu___ ->
-                         (fun uu___ ->
-                            Obj.magic
-                              (FStar_Tactics_Effect.tac_bind
-                                 (FStar_Sealed.seal
-                                    (Obj.magic
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.MkProjectors.fst"
-                                          (Prims.of_int (108))
-                                          (Prims.of_int (2))
-                                          (Prims.of_int (108))
-                                          (Prims.of_int (62)))))
-                                 (FStar_Sealed.seal
-                                    (Obj.magic
-                                       (FStar_Range.mk_range
-                                          "FStar.Tactics.MkProjectors.fst"
-                                          (Prims.of_int (108))
-                                          (Prims.of_int (63))
-                                          (Prims.of_int (190))
-                                          (Prims.of_int (35)))))
-                                 (Obj.magic
-                                    (debug
-                                       (fun uu___1 ->
-                                          FStar_Tactics_Effect.tac_bind
-                                            (FStar_Sealed.seal
-                                               (Obj.magic
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.MkProjectors.fst"
-                                                     (Prims.of_int (108))
-                                                     (Prims.of_int (36))
-                                                     (Prims.of_int (108))
-                                                     (Prims.of_int (61)))))
-                                            (FStar_Sealed.seal
-                                               (Obj.magic
-                                                  (FStar_Range.mk_range
-                                                     "prims.fst"
-                                                     (Prims.of_int (590))
-                                                     (Prims.of_int (19))
-                                                     (Prims.of_int (590))
-                                                     (Prims.of_int (31)))))
-                                            (Obj.magic
-                                               (FStar_Tactics_V2_Builtins.term_to_string
-                                                  field.FStar_Tactics_NamedView.sort))
-                                            (fun uu___2 ->
-                                               FStar_Tactics_Effect.lift_div_tac
-                                                 (fun uu___3 ->
-                                                    Prims.strcat
-                                                      "Field typ = " uu___2)))))
-                                 (fun uu___1 ->
-                                    (fun uu___1 ->
-                                       Obj.magic
-                                         (FStar_Tactics_Effect.tac_bind
-                                            (FStar_Sealed.seal
-                                               (Obj.magic
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.MkProjectors.fst"
-                                                     (Prims.of_int (109))
-                                                     (Prims.of_int (11))
-                                                     (Prims.of_int (109))
-                                                     (Prims.of_int (24)))))
-                                            (FStar_Sealed.seal
-                                               (Obj.magic
-                                                  (FStar_Range.mk_range
-                                                     "FStar.Tactics.MkProjectors.fst"
-                                                     (Prims.of_int (109))
-                                                     (Prims.of_int (27))
-                                                     (Prims.of_int (190))
-                                                     (Prims.of_int (35)))))
-                                            (FStar_Tactics_Effect.lift_div_tac
-                                               (fun uu___2 ->
-                                                  FStar_List_Tot_Base.length
-                                                    params))
-                                            (fun uu___2 ->
-                                               (fun np ->
-                                                  Obj.magic
-                                                    (FStar_Tactics_Effect.tac_bind
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.MkProjectors.fst"
-                                                                (Prims.of_int (110))
-                                                                (Prims.of_int (13))
-                                                                (Prims.of_int (110))
-                                                                (Prims.of_int (25)))))
-                                                       (FStar_Sealed.seal
-                                                          (Obj.magic
-                                                             (FStar_Range.mk_range
-                                                                "FStar.Tactics.MkProjectors.fst"
-                                                                (Prims.of_int (110))
-                                                                (Prims.of_int (28))
-                                                                (Prims.of_int (190))
-                                                                (Prims.of_int (35)))))
-                                                       (FStar_Tactics_Effect.lift_div_tac
-                                                          (fun uu___2 ->
-                                                             FStar_Reflection_V2_Builtins.pack_fv
-                                                               tyqn))
-                                                       (fun uu___2 ->
-                                                          (fun tyfv ->
-                                                             Obj.magic
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+    fun attrs ->
+      fun quals ->
+        fun tyqn ->
+          fun ctorname ->
+            fun univs ->
+              fun params ->
+                fun idx ->
+                  fun field ->
+                    fun unfold_names_tm ->
+                      fun smap ->
+                        FStar_Tactics_Effect.tac_bind
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.MkProjectors.fst"
+                                   (Prims.of_int (115)) (Prims.of_int (2))
+                                   (Prims.of_int (115)) (Prims.of_int (61)))))
+                          (FStar_Sealed.seal
+                             (Obj.magic
+                                (FStar_Range.mk_range
+                                   "FStar.Tactics.MkProjectors.fst"
+                                   (Prims.of_int (116)) (Prims.of_int (2))
+                                   (Prims.of_int (205)) (Prims.of_int (35)))))
+                          (Obj.magic
+                             (debug
+                                (fun uu___ ->
+                                   FStar_Tactics_Effect.tac_bind
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.MkProjectors.fst"
+                                              (Prims.of_int (115))
+                                              (Prims.of_int (41))
+                                              (Prims.of_int (115))
+                                              (Prims.of_int (60)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range "prims.fst"
+                                              (Prims.of_int (590))
+                                              (Prims.of_int (19))
+                                              (Prims.of_int (590))
+                                              (Prims.of_int (31)))))
+                                     (Obj.magic
+                                        (FStar_Tactics_Unseal.unseal
+                                           field.FStar_Tactics_NamedView.ppname))
+                                     (fun uu___1 ->
+                                        FStar_Tactics_Effect.lift_div_tac
+                                          (fun uu___2 ->
+                                             Prims.strcat "Processing field "
+                                               uu___1)))))
+                          (fun uu___ ->
+                             (fun uu___ ->
+                                Obj.magic
+                                  (FStar_Tactics_Effect.tac_bind
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.MkProjectors.fst"
+                                              (Prims.of_int (116))
+                                              (Prims.of_int (2))
+                                              (Prims.of_int (116))
+                                              (Prims.of_int (62)))))
+                                     (FStar_Sealed.seal
+                                        (Obj.magic
+                                           (FStar_Range.mk_range
+                                              "FStar.Tactics.MkProjectors.fst"
+                                              (Prims.of_int (116))
+                                              (Prims.of_int (63))
+                                              (Prims.of_int (205))
+                                              (Prims.of_int (35)))))
+                                     (Obj.magic
+                                        (debug
+                                           (fun uu___1 ->
+                                              FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.Tactics.MkProjectors.fst"
+                                                         (Prims.of_int (116))
+                                                         (Prims.of_int (36))
+                                                         (Prims.of_int (116))
+                                                         (Prims.of_int (61)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "prims.fst"
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (19))
+                                                         (Prims.of_int (590))
+                                                         (Prims.of_int (31)))))
+                                                (Obj.magic
+                                                   (FStar_Tactics_V2_Builtins.term_to_string
+                                                      field.FStar_Tactics_NamedView.sort))
+                                                (fun uu___2 ->
+                                                   FStar_Tactics_Effect.lift_div_tac
+                                                     (fun uu___3 ->
+                                                        Prims.strcat
+                                                          "Field typ = "
+                                                          uu___2)))))
+                                     (fun uu___1 ->
+                                        (fun uu___1 ->
+                                           Obj.magic
+                                             (FStar_Tactics_Effect.tac_bind
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.Tactics.MkProjectors.fst"
+                                                         (Prims.of_int (117))
+                                                         (Prims.of_int (11))
+                                                         (Prims.of_int (117))
+                                                         (Prims.of_int (24)))))
+                                                (FStar_Sealed.seal
+                                                   (Obj.magic
+                                                      (FStar_Range.mk_range
+                                                         "FStar.Tactics.MkProjectors.fst"
+                                                         (Prims.of_int (117))
+                                                         (Prims.of_int (27))
+                                                         (Prims.of_int (205))
+                                                         (Prims.of_int (35)))))
+                                                (FStar_Tactics_Effect.lift_div_tac
+                                                   (fun uu___2 ->
+                                                      FStar_List_Tot_Base.length
+                                                        params))
+                                                (fun uu___2 ->
+                                                   (fun np ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (18))
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (102)))))
-                                                                  (FStar_Sealed.seal
-                                                                    (Obj.magic
-                                                                    (FStar_Range.mk_range
+                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (13))
+                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (25)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
-                                                                    (Prims.of_int (105))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (28))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
-                                                                  (Obj.magic
+                                                           (FStar_Tactics_Effect.lift_div_tac
+                                                              (fun uu___2 ->
+                                                                 FStar_Reflection_V2_Builtins.pack_fv
+                                                                   tyqn))
+                                                           (fun uu___2 ->
+                                                              (fun tyfv ->
+                                                                 Obj.magic
+                                                                   (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (18))
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (102)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (105))
+                                                                    (Prims.of_int (205))
+                                                                    (Prims.of_int (35)))))
+                                                                    (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (31)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (102)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.cur_module
@@ -844,17 +854,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (102)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (102)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -862,17 +872,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (34))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (102)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -880,9 +890,9 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -898,17 +908,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (66)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (48))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (101)))))
                                                                     (Obj.magic
                                                                     (list_last
@@ -923,9 +933,9 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (69))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -941,9 +951,9 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (82))
-                                                                    (Prims.of_int (111))
+                                                                    (Prims.of_int (119))
                                                                     (Prims.of_int (101)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -996,8 +1006,8 @@ let (mk_proj_decl :
                                                                     uu___2
                                                                     uu___3))))
                                                                     uu___2)))
-                                                                  (fun uu___2
-                                                                    ->
+                                                                    (fun
+                                                                    uu___2 ->
                                                                     (fun nm
                                                                     ->
                                                                     Obj.magic
@@ -1006,17 +1016,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (11))
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (21)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (112))
+                                                                    (Prims.of_int (120))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1033,17 +1043,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (113))
+                                                                    (Prims.of_int (121))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (115))
+                                                                    (Prims.of_int (123))
                                                                     (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (124))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1072,17 +1082,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (125))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (125))
                                                                     (Prims.of_int (36)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (117))
+                                                                    (Prims.of_int (125))
                                                                     (Prims.of_int (39))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.fresh_binder
@@ -1097,17 +1107,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1115,17 +1125,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (118))
+                                                                    (Prims.of_int (126))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (128))
                                                                     (Prims.of_int (73)))))
                                                                     (Obj.magic
                                                                     (subst_map
@@ -1156,17 +1166,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (57)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (debug
@@ -1177,9 +1187,9 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (35))
-                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (130))
                                                                     (Prims.of_int (56)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
@@ -1210,17 +1220,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (131))
                                                                     (Prims.of_int (16))
-                                                                    (Prims.of_int (137))
+                                                                    (Prims.of_int (145))
                                                                     (Prims.of_int (7)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (138))
+                                                                    (Prims.of_int (146))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.pack_sigelt
@@ -1302,17 +1312,58 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (140))
+                                                                    (Prims.of_int (147))
+                                                                    (Prims.of_int (21))
+                                                                    (Prims.of_int (147))
+                                                                    (Prims.of_int (90)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (147))
+                                                                    (Prims.of_int (93))
+                                                                    (Prims.of_int (205))
+                                                                    (Prims.of_int (35)))))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    FStar_List_Tot_Base.filter
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    match uu___4
+                                                                    with
+                                                                    | 
+                                                                    FStar_Reflection_V2_Data.RecordType
+                                                                    uu___5 ->
+                                                                    false
+                                                                    | 
+                                                                    FStar_Reflection_V2_Data.Noeq
+                                                                    -> false
+                                                                    | 
+                                                                    uu___5 ->
+                                                                    true)))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    (fun
+                                                                    filter_quals
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (149))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (173))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (2))
-                                                                    (Prims.of_int (190))
+                                                                    (Prims.of_int (205))
                                                                     (Prims.of_int (35)))))
                                                                     (if
                                                                     Prims.op_Negation
@@ -1351,17 +1402,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (68))
-                                                                    (Prims.of_int (173))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1369,17 +1420,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (65)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (18))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1387,17 +1438,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (27))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (40)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.cur_module
@@ -1412,17 +1463,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (64)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (26))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (65)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1430,17 +1481,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (44))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (63)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (142))
+                                                                    (Prims.of_int (151))
                                                                     (Prims.of_int (64)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Unseal.unseal
@@ -1478,17 +1529,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (152))
                                                                     (Prims.of_int (15))
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (152))
                                                                     (Prims.of_int (61)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (143))
+                                                                    (Prims.of_int (152))
                                                                     (Prims.of_int (66))
-                                                                    (Prims.of_int (173))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1527,17 +1578,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (155))
                                                                     (Prims.of_int (75)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (147))
+                                                                    (Prims.of_int (156))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (173))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1545,17 +1596,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (155))
                                                                     (Prims.of_int (28))
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (155))
                                                                     (Prims.of_int (75)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (144))
+                                                                    (Prims.of_int (153))
                                                                     (Prims.of_int (17))
-                                                                    (Prims.of_int (146))
+                                                                    (Prims.of_int (155))
                                                                     (Prims.of_int (75)))))
                                                                     (Obj.magic
                                                                     (subst_map
@@ -1587,17 +1638,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (150))
+                                                                    (Prims.of_int (159))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (152))
-                                                                    (Prims.of_int (38)))))
+                                                                    (Prims.of_int (172))
+                                                                    (Prims.of_int (41)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (166))
-                                                                    (Prims.of_int (4))
                                                                     (Prims.of_int (173))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -1658,17 +1709,17 @@ let (mk_proj_decl :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (166))
-                                                                    (Prims.of_int (5))
-                                                                    (Prims.of_int (173))
-                                                                    (Prims.of_int (7)))))
+                                                                    (Prims.of_int (176))
+                                                                    (Prims.of_int (13))
+                                                                    (Prims.of_int (183))
+                                                                    (Prims.of_int (9)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (166))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (4))
-                                                                    (Prims.of_int (173))
+                                                                    (Prims.of_int (187))
                                                                     (Prims.of_int (8)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_NamedView.pack_sigelt
@@ -1690,12 +1741,35 @@ let (mk_proj_decl :
                                                                     = lb_def
                                                                     }]
                                                                     })))
-                                                                    (fun
-                                                                    uu___5 ->
+                                                                    (fun se
+                                                                    ->
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    [uu___5]))))
+                                                                    uu___5 ->
+                                                                    [
+                                                                    FStar_Reflection_V2_Builtins.set_sigelt_quals
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    (filter_quals
+                                                                    quals)
+                                                                    (FStar_Reflection_V2_Builtins.sigelt_quals
+                                                                    (FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    (substitute_attr
+                                                                    ::
+                                                                    (field.FStar_Tactics_NamedView.attrs))
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    attrs
+                                                                    (FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                    se))) se)))
+                                                                    (FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    (substitute_attr
+                                                                    ::
+                                                                    (field.FStar_Tactics_NamedView.attrs))
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    attrs
+                                                                    (FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                    se))) se)]))))
                                                                     uu___5)))
                                                                     uu___5)))
                                                                     uu___5)))
@@ -1707,15 +1781,35 @@ let (mk_proj_decl :
                                                                     (fun
                                                                     uu___3 ->
                                                                     (((
-                                                                    FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    FStar_Reflection_V2_Builtins.set_sigelt_quals
                                                                     (FStar_List_Tot_Base.op_At
-                                                                    field.FStar_Tactics_NamedView.attrs
+                                                                    (filter_quals
+                                                                    quals)
+                                                                    (FStar_Reflection_V2_Builtins.sigelt_quals
+                                                                    (FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    (substitute_attr
+                                                                    ::
+                                                                    (field.FStar_Tactics_NamedView.attrs))
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    attrs
                                                                     (FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                    se_proj)))
+                                                                    se_proj)))
+                                                                    (FStar_Reflection_V2_Builtins.set_sigelt_attrs
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    (substitute_attr
+                                                                    ::
+                                                                    (field.FStar_Tactics_NamedView.attrs))
+                                                                    (FStar_List_Tot_Base.op_At
+                                                                    attrs
+                                                                    (FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                    se_proj)))
                                                                     se_proj))
-                                                                    se_proj)
                                                                     ::
                                                                     maybe_se_method),
                                                                     fv)))))
+                                                                    uu___3)))
                                                                     uu___3)))
                                                                     uu___2)))
                                                                     uu___2)))
@@ -1723,8 +1817,9 @@ let (mk_proj_decl :
                                                                     uu___2)))
                                                                     uu___2)))
                                                                     uu___2)))
-                                                            uu___2))) uu___2)))
-                                      uu___1))) uu___)
+                                                                uu___2)))
+                                                     uu___2))) uu___1)))
+                               uu___)
 let (mk_projs :
   Prims.bool ->
     Prims.string ->
@@ -1737,16 +1832,22 @@ let (mk_projs :
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.MkProjectors.fst"
-                 (Prims.of_int (194)) (Prims.of_int (2)) (Prims.of_int (194))
-                 (Prims.of_int (51)))))
+                 (Prims.of_int (209)) (Prims.of_int (2)) (Prims.of_int (209))
+                 (Prims.of_int (61)))))
         (FStar_Sealed.seal
            (Obj.magic
               (FStar_Range.mk_range "FStar.Tactics.MkProjectors.fst"
-                 (Prims.of_int (194)) (Prims.of_int (52))
-                 (Prims.of_int (224)) (Prims.of_int (29)))))
+                 (Prims.of_int (209)) (Prims.of_int (62))
+                 (Prims.of_int (241)) (Prims.of_int (29)))))
         (Obj.magic
-           (FStar_Tactics_V2_Builtins.print
-              (Prims.strcat "!! mk_projs tactic called on: " tyname)))
+           (debug
+              (fun uu___ ->
+                 (fun uu___ ->
+                    Obj.magic
+                      (FStar_Tactics_Effect.lift_div_tac
+                         (fun uu___1 ->
+                            Prims.strcat "!! mk_projs tactic called on: "
+                              tyname))) uu___)))
         (fun uu___ ->
            (fun uu___ ->
               Obj.magic
@@ -1755,14 +1856,14 @@ let (mk_projs :
                       (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.MkProjectors.fst"
-                            (Prims.of_int (195)) (Prims.of_int (13))
-                            (Prims.of_int (195)) (Prims.of_int (30)))))
+                            (Prims.of_int (210)) (Prims.of_int (13))
+                            (Prims.of_int (210)) (Prims.of_int (30)))))
                    (FStar_Sealed.seal
                       (Obj.magic
                          (FStar_Range.mk_range
                             "FStar.Tactics.MkProjectors.fst"
-                            (Prims.of_int (196)) (Prims.of_int (2))
-                            (Prims.of_int (224)) (Prims.of_int (29)))))
+                            (Prims.of_int (211)) (Prims.of_int (2))
+                            (Prims.of_int (241)) (Prims.of_int (29)))))
                    (FStar_Tactics_Effect.lift_div_tac
                       (fun uu___1 ->
                          FStar_Reflection_V2_Builtins.explode_qn tyname))
@@ -1774,17 +1875,17 @@ let (mk_projs :
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.MkProjectors.fst"
-                                       (Prims.of_int (196))
+                                       (Prims.of_int (211))
                                        (Prims.of_int (8))
-                                       (Prims.of_int (196))
+                                       (Prims.of_int (211))
                                        (Prims.of_int (36)))))
                               (FStar_Sealed.seal
                                  (Obj.magic
                                     (FStar_Range.mk_range
                                        "FStar.Tactics.MkProjectors.fst"
-                                       (Prims.of_int (196))
+                                       (Prims.of_int (211))
                                        (Prims.of_int (2))
-                                       (Prims.of_int (224))
+                                       (Prims.of_int (241))
                                        (Prims.of_int (29)))))
                               (Obj.magic
                                  (FStar_Tactics_Effect.tac_bind
@@ -1792,17 +1893,17 @@ let (mk_projs :
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "FStar.Tactics.MkProjectors.fst"
-                                             (Prims.of_int (196))
+                                             (Prims.of_int (211))
                                              (Prims.of_int (19))
-                                             (Prims.of_int (196))
+                                             (Prims.of_int (211))
                                              (Prims.of_int (31)))))
                                     (FStar_Sealed.seal
                                        (Obj.magic
                                           (FStar_Range.mk_range
                                              "FStar.Tactics.MkProjectors.fst"
-                                             (Prims.of_int (196))
+                                             (Prims.of_int (211))
                                              (Prims.of_int (8))
-                                             (Prims.of_int (196))
+                                             (Prims.of_int (211))
                                              (Prims.of_int (36)))))
                                     (Obj.magic
                                        (FStar_Tactics_V2_Builtins.top_env ()))
@@ -1827,70 +1928,122 @@ let (mk_projs :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Tactics.MkProjectors.fst"
-                                                         (Prims.of_int (200))
-                                                         (Prims.of_int (10))
-                                                         (Prims.of_int (200))
-                                                         (Prims.of_int (27)))))
+                                                         (Prims.of_int (215))
+                                                         (Prims.of_int (16))
+                                                         (Prims.of_int (215))
+                                                         (Prims.of_int (31)))))
                                                 (FStar_Sealed.seal
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "FStar.Tactics.MkProjectors.fst"
-                                                         (Prims.of_int (200))
-                                                         (Prims.of_int (4))
-                                                         (Prims.of_int (224))
+                                                         (Prims.of_int (215))
+                                                         (Prims.of_int (34))
+                                                         (Prims.of_int (241))
                                                          (Prims.of_int (29)))))
-                                                (Obj.magic
-                                                   (FStar_Tactics_NamedView.inspect_sigelt
-                                                      se))
-                                                (fun uu___2 ->
+                                                (FStar_Tactics_Effect.lift_div_tac
                                                    (fun uu___2 ->
-                                                      match uu___2 with
-                                                      | FStar_Tactics_NamedView.Sg_Inductive
-                                                          {
-                                                            FStar_Tactics_NamedView.nm
-                                                              = nm;
-                                                            FStar_Tactics_NamedView.univs1
-                                                              = univs;
-                                                            FStar_Tactics_NamedView.params
-                                                              = params;
-                                                            FStar_Tactics_NamedView.typ
-                                                              = typ;
-                                                            FStar_Tactics_NamedView.ctors
-                                                              = ctors;_}
-                                                          ->
-                                                          Obj.magic
-                                                            (Obj.repr
-                                                               (FStar_Tactics_Effect.tac_bind
-                                                                  (FStar_Sealed.seal
+                                                      FStar_Reflection_V2_Builtins.sigelt_quals
+                                                        se))
+                                                (fun uu___2 ->
+                                                   (fun quals ->
+                                                      Obj.magic
+                                                        (FStar_Tactics_Effect.tac_bind
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (216))
+                                                                    (Prims.of_int (31)))))
+                                                           (FStar_Sealed.seal
+                                                              (Obj.magic
+                                                                 (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (241))
+                                                                    (Prims.of_int (29)))))
+                                                           (FStar_Tactics_Effect.lift_div_tac
+                                                              (fun uu___2 ->
+                                                                 FStar_Reflection_V2_Builtins.sigelt_attrs
+                                                                   se))
+                                                           (fun uu___2 ->
+                                                              (fun attrs ->
+                                                                 Obj.magic
+                                                                   (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (202))
+                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (10))
+                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (27)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (217))
+                                                                    (Prims.of_int (4))
+                                                                    (Prims.of_int (241))
+                                                                    (Prims.of_int (29)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_NamedView.inspect_sigelt
+                                                                    se))
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    (fun
+                                                                    uu___2 ->
+                                                                    match uu___2
+                                                                    with
+                                                                    | 
+                                                                    FStar_Tactics_NamedView.Sg_Inductive
+                                                                    {
+                                                                    FStar_Tactics_NamedView.nm
+                                                                    = nm;
+                                                                    FStar_Tactics_NamedView.univs1
+                                                                    = univs;
+                                                                    FStar_Tactics_NamedView.params
+                                                                    = params;
+                                                                    FStar_Tactics_NamedView.typ
+                                                                    = typ;
+                                                                    FStar_Tactics_NamedView.ctors
+                                                                    = ctors;_}
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.MkProjectors.fst"
+                                                                    (Prims.of_int (219))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (57)))))
-                                                                  (FStar_Sealed.seal
+                                                                    (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (203))
+                                                                    (Prims.of_int (220))
                                                                     (Prims.of_int (58))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
-                                                                  (if
+                                                                    (if
                                                                     (FStar_List_Tot_Base.length
                                                                     ctors) <>
                                                                     Prims.int_one
-                                                                   then
+                                                                    then
                                                                     FStar_Tactics_V2_Derived.fail
                                                                     "Expected an inductive with one constructor"
-                                                                   else
+                                                                    else
                                                                     FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___4 ->
                                                                     ()))
-                                                                  (fun uu___3
-                                                                    ->
+                                                                    (fun
+                                                                    uu___3 ->
                                                                     (fun
                                                                     uu___3 ->
                                                                     Obj.magic
@@ -1899,17 +2052,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (205))
-                                                                    (Prims.of_int (6))
                                                                     (Prims.of_int (222))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
@@ -1917,17 +2070,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (44)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (20))
-                                                                    (Prims.of_int (204))
+                                                                    (Prims.of_int (221))
                                                                     (Prims.of_int (44)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
@@ -1950,17 +2103,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (205))
+                                                                    (Prims.of_int (222))
                                                                     (Prims.of_int (6))
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (223))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (223))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (if
                                                                     Prims.uu___is_Cons
@@ -1983,17 +2136,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (224))
                                                                     (Prims.of_int (33))
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (224))
                                                                     (Prims.of_int (38)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (206))
+                                                                    (Prims.of_int (223))
                                                                     (Prims.of_int (43))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2015,17 +2168,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (227))
                                                                     (Prims.of_int (24))
-                                                                    (Prims.of_int (210))
+                                                                    (Prims.of_int (227))
                                                                     (Prims.of_int (45)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (207))
+                                                                    (Prims.of_int (224))
                                                                     (Prims.of_int (41))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_SyntaxHelpers.collect_arr_bs
@@ -2046,17 +2199,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (28))
-                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (42)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
@@ -2085,17 +2238,17 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (8))
-                                                                    (Prims.of_int (220))
+                                                                    (Prims.of_int (237))
                                                                     (Prims.of_int (14)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (211))
+                                                                    (Prims.of_int (228))
                                                                     (Prims.of_int (45))
-                                                                    (Prims.of_int (222))
+                                                                    (Prims.of_int (239))
                                                                     (Prims.of_int (11)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Util.fold_left
@@ -2115,21 +2268,23 @@ let (mk_projs :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (214))
+                                                                    (Prims.of_int (231))
                                                                     (Prims.of_int (25))
-                                                                    (Prims.of_int (214))
-                                                                    (Prims.of_int (104)))))
+                                                                    (Prims.of_int (231))
+                                                                    (Prims.of_int (116)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.MkProjectors.fst"
-                                                                    (Prims.of_int (213))
+                                                                    (Prims.of_int (230))
                                                                     (Prims.of_int (78))
-                                                                    (Prims.of_int (218))
+                                                                    (Prims.of_int (235))
                                                                     (Prims.of_int (17)))))
                                                                     (Obj.magic
                                                                     (mk_proj_decl
                                                                     is_class
+                                                                    attrs
+                                                                    quals
                                                                     tyqn
                                                                     ctorname
                                                                     univs
@@ -2203,11 +2358,14 @@ let (mk_projs :
                                                                     uu___4)))
                                                                     uu___4)))
                                                                     uu___3)))
-                                                      | uu___3 ->
-                                                          Obj.magic
-                                                            (Obj.repr
-                                                               (FStar_Tactics_V2_Derived.fail
-                                                                  "not an inductive")))
+                                                                    | 
+                                                                    uu___3 ->
+                                                                    Obj.magic
+                                                                    (Obj.repr
+                                                                    (FStar_Tactics_V2_Derived.fail
+                                                                    "not an inductive")))
+                                                                    uu___2)))
+                                                                uu___2)))
                                                      uu___2)))) uu___1)))
                         uu___1))) uu___)
 let _ =

@@ -3,14 +3,13 @@ type 'a additive = {
   zero: 'a ;
   plus: 'a -> 'a -> 'a }
 let __proj__Mkadditive__item__zero : 'a . 'a additive -> 'a =
-  fun projectee -> match projectee with | { zero; plus;_} -> zero
-let __proj__Mkadditive__item__plus : 'a . 'a additive -> 'a -> 'a -> 'a =
-  fun projectee -> match projectee with | { zero; plus;_} -> plus
+  fun x4 -> match x4 with | { zero = azero; plus = aplus;_} -> azero
 let zero : 'a . 'a additive -> 'a =
-  fun projectee -> match projectee with | { zero = zero1; plus;_} -> zero1
+  fun x4 -> __proj__Mkadditive__item__zero x4
+let __proj__Mkadditive__item__plus : 'a . 'a additive -> 'a -> 'a -> 'a =
+  fun x5 -> match x5 with | { zero = azero; plus = aplus;_} -> aplus
 let plus : 'a . 'a additive -> 'a -> 'a -> 'a =
-  fun projectee ->
-    match projectee with | { zero = zero1; plus = plus1;_} -> plus1
+  fun x5 -> __proj__Mkadditive__item__plus x5
 let op_Plus_Plus : 'a . 'a additive -> 'a -> 'a -> 'a = plus
 let (add_int : Prims.int additive) = { zero = Prims.int_zero; plus = (+) }
 let (add_bool : Prims.bool additive) = { zero = false; plus = (||) }

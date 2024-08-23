@@ -3,9 +3,9 @@ type 'a hashable = {
   hash: 'a -> FStar_Hash.hash_code }
 let __proj__Mkhashable__item__hash :
   'a . 'a hashable -> 'a -> FStar_Hash.hash_code =
-  fun projectee -> match projectee with | { hash;_} -> hash
+  fun x3 -> match x3 with | { hash = ahash;_} -> ahash
 let hash : 'a . 'a hashable -> 'a -> FStar_Hash.hash_code =
-  fun projectee -> match projectee with | { hash = hash1;_} -> hash1
+  fun x3 -> __proj__Mkhashable__item__hash x3
 let (showable_hash_code : FStar_Hash.hash_code FStar_Class_Show.showable) =
   { FStar_Class_Show.show = FStar_Hash.string_of_hash_code }
 let (eq_hash_code : FStar_Hash.hash_code FStar_Class_Deq.deq) =

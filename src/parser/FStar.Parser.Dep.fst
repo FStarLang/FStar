@@ -837,8 +837,10 @@ let collect_one
             collect_term t1
         | Tycon (_, tc, ts) ->
             begin
-            if tc then
-                add_to_parsing_data (P_lid Const.tcclass_lid);
+            if tc then (
+              add_to_parsing_data (P_lid Const.tcclass_lid);
+              add_to_parsing_data (P_lid Const.mk_projs_lid)
+            );
             List.iter collect_tycon ts
             end
         | Exception (_, t) ->
@@ -920,7 +922,9 @@ let collect_one
 
       and collect_aqual = function
         | Some (Meta t) -> collect_term t
-        | Some TypeClassArg -> add_to_parsing_data (P_lid Const.tcresolve_lid)
+        | Some TypeClassArg ->
+          add_to_parsing_data (P_lid Const.tcresolve_lid);
+          add_to_parsing_data (P_lid Const.mk_projs_lid)
         | _ -> ()
 
       and collect_term t =
