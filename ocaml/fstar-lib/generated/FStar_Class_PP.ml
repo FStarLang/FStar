@@ -3,9 +3,9 @@ type 'a pretty = {
   pp: 'a -> FStar_Pprint.document }
 let __proj__Mkpretty__item__pp :
   'a . 'a pretty -> 'a -> FStar_Pprint.document =
-  fun projectee -> match projectee with | { pp;_} -> pp
+  fun x3 -> match x3 with | { pp = app;_} -> app
 let pp : 'a . 'a pretty -> 'a -> FStar_Pprint.document =
-  fun projectee -> match projectee with | { pp = pp1;_} -> pp1
+  fun x3 -> __proj__Mkpretty__item__pp x3
 let (pp_unit : unit pretty) =
   { pp = (fun uu___ -> FStar_Pprint.doc_of_string "()") }
 let (pp_int : Prims.int pretty) =

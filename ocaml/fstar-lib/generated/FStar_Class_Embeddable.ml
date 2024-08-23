@@ -5,15 +5,14 @@ type 'a embeddable =
   typ: FStar_Reflection_Types.term }
 let __proj__Mkembeddable__item__embed :
   'a . 'a embeddable -> 'a -> FStar_Reflection_Types.term =
-  fun projectee -> match projectee with | { embed; typ;_} -> embed
+  fun x4 -> match x4 with | { embed = aembed; typ = atyp;_} -> aembed
+let embed : 'a . 'a embeddable -> 'a -> FStar_Reflection_Types.term =
+  fun x4 -> __proj__Mkembeddable__item__embed x4
 let __proj__Mkembeddable__item__typ :
   'a . 'a embeddable -> FStar_Reflection_Types.term =
-  fun projectee -> match projectee with | { embed; typ;_} -> typ
-let embed : 'a . 'a embeddable -> 'a -> FStar_Reflection_Types.term =
-  fun projectee -> match projectee with | { embed = embed1; typ;_} -> embed1
+  fun x5 -> match x5 with | { embed = aembed; typ = atyp;_} -> atyp
 let typ : 'a . 'a embeddable -> FStar_Reflection_Types.term =
-  fun projectee ->
-    match projectee with | { embed = embed1; typ = typ1;_} -> typ1
+  fun x5 -> __proj__Mkembeddable__item__typ x5
 let (embeddable_string : Prims.string embeddable) =
   {
     embed =

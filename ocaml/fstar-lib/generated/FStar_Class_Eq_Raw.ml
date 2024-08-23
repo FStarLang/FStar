@@ -2,9 +2,9 @@ open Prims
 type 'a deq = {
   eq: 'a -> 'a -> Prims.bool }
 let __proj__Mkdeq__item__eq : 'a . 'a deq -> 'a -> 'a -> Prims.bool =
-  fun projectee -> match projectee with | { eq;_} -> eq
+  fun x3 -> match x3 with | { eq = aeq;_} -> aeq
 let eq : 'a . 'a deq -> 'a -> 'a -> Prims.bool =
-  fun projectee -> match projectee with | { eq = eq1;_} -> eq1
+  fun x3 -> __proj__Mkdeq__item__eq x3
 let eq_instance_of_eqtype : 'a . unit -> 'a deq =
   fun uu___ -> { eq = (fun x -> fun y -> x = y) }
 let (int_has_eq : Prims.int deq) = eq_instance_of_eqtype ()

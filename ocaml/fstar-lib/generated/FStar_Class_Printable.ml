@@ -3,10 +3,9 @@ type 'a printable = {
   to_string: 'a -> Prims.string }
 let __proj__Mkprintable__item__to_string :
   'a . 'a printable -> 'a -> Prims.string =
-  fun projectee -> match projectee with | { to_string;_} -> to_string
+  fun x3 -> match x3 with | { to_string = ato_string;_} -> ato_string
 let to_string : 'a . 'a printable -> 'a -> Prims.string =
-  fun projectee ->
-    match projectee with | { to_string = to_string1;_} -> to_string1
+  fun x3 -> __proj__Mkprintable__item__to_string x3
 let (printable_unit : unit printable) = { to_string = (fun uu___ -> "()") }
 let (printable_bool : Prims.bool printable) =
   { to_string = Prims.string_of_bool }

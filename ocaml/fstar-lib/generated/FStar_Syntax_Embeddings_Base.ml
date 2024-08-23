@@ -42,42 +42,43 @@ type 'a embedding =
   typ: unit -> FStar_Syntax_Syntax.typ ;
   e_typ: unit -> FStar_Syntax_Syntax.emb_typ }
 let __proj__Mkembedding__item__em : 'a . 'a embedding -> 'a -> embed_t =
-  fun projectee ->
-    match projectee with | { em; un; print; typ; e_typ;_} -> em
+  fun x7 ->
+    match x7 with
+    | { em = aem; un = aun; print = aprint; typ = atyp; e_typ = ae_typ;_} ->
+        aem
+let em : 'a . 'a embedding -> 'a -> embed_t =
+  fun x7 -> __proj__Mkembedding__item__em x7
 let __proj__Mkembedding__item__un :
   'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
-  fun projectee ->
-    match projectee with | { em; un; print; typ; e_typ;_} -> un
+  fun x8 ->
+    match x8 with
+    | { em = aem; un = aun; print = aprint; typ = atyp; e_typ = ae_typ;_} ->
+        aun
+let un : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
+  fun x8 -> __proj__Mkembedding__item__un x8
 let __proj__Mkembedding__item__print : 'a . 'a embedding -> 'a printer =
-  fun projectee ->
-    match projectee with | { em; un; print; typ; e_typ;_} -> print
+  fun x9 ->
+    match x9 with
+    | { em = aem; un = aun; print = aprint; typ = atyp; e_typ = ae_typ;_} ->
+        aprint
+let print : 'a . 'a embedding -> 'a printer =
+  fun x9 -> __proj__Mkembedding__item__print x9
 let __proj__Mkembedding__item__typ :
   'a . 'a embedding -> unit -> FStar_Syntax_Syntax.typ =
-  fun projectee ->
-    match projectee with | { em; un; print; typ; e_typ;_} -> typ
+  fun x10 ->
+    match x10 with
+    | { em = aem; un = aun; print = aprint; typ = atyp; e_typ = ae_typ;_} ->
+        atyp
+let typ : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.typ =
+  fun x10 -> __proj__Mkembedding__item__typ x10
 let __proj__Mkembedding__item__e_typ :
   'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
-  fun projectee ->
-    match projectee with | { em; un; print; typ; e_typ;_} -> e_typ
-let em : 'a . 'a embedding -> 'a -> embed_t =
-  fun projectee ->
-    match projectee with | { em = em1; un; print; typ; e_typ;_} -> em1
-let un : 'a . 'a embedding -> FStar_Syntax_Syntax.term -> 'a unembed_t =
-  fun projectee ->
-    match projectee with | { em = em1; un = un1; print; typ; e_typ;_} -> un1
-let print : 'a . 'a embedding -> 'a printer =
-  fun projectee ->
-    match projectee with
-    | { em = em1; un = un1; print = print1; typ; e_typ;_} -> print1
-let typ : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.typ =
-  fun projectee ->
-    match projectee with
-    | { em = em1; un = un1; print = print1; typ = typ1; e_typ;_} -> typ1
+  fun x11 ->
+    match x11 with
+    | { em = aem; un = aun; print = aprint; typ = atyp; e_typ = ae_typ;_} ->
+        ae_typ
 let e_typ : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
-  fun projectee ->
-    match projectee with
-    | { em = em1; un = un1; print = print1; typ = typ1; e_typ = e_typ1;_} ->
-        e_typ1
+  fun x11 -> __proj__Mkembedding__item__e_typ x11
 let emb_typ_of : 'a . 'a embedding -> unit -> FStar_Syntax_Syntax.emb_typ =
   fun e -> fun uu___ -> e.e_typ ()
 let unknown_printer : 'a . FStar_Syntax_Syntax.term -> 'a -> Prims.string =

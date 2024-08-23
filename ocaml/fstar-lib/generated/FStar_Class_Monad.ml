@@ -4,19 +4,18 @@ type 'm monad =
   return: unit -> Obj.t -> 'm ;
   op_let_Bang: unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm }
 let __proj__Mkmonad__item__return : 'm . 'm monad -> unit -> Obj.t -> 'm =
-  fun projectee -> match projectee with | { return; op_let_Bang;_} -> return
+  fun x4 ->
+    match x4 with
+    | { return = areturn; op_let_Bang = aop_let_Bang;_} -> areturn
+let return : 'm . 'm monad -> unit -> Obj.t -> 'm =
+  fun x4 -> __proj__Mkmonad__item__return x4
 let __proj__Mkmonad__item__op_let_Bang :
   'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm =
-  fun projectee ->
-    match projectee with | { return; op_let_Bang;_} -> op_let_Bang
-let return : 'm . 'm monad -> unit -> Obj.t -> 'm =
-  fun projectee ->
-    match projectee with | { return = return1; op_let_Bang;_} -> return1
+  fun x5 ->
+    match x5 with
+    | { return = areturn; op_let_Bang = aop_let_Bang;_} -> aop_let_Bang
 let op_let_Bang : 'm . 'm monad -> unit -> unit -> 'm -> (Obj.t -> 'm) -> 'm
-  =
-  fun projectee ->
-    match projectee with
-    | { return = return1; op_let_Bang = op_let_Bang1;_} -> op_let_Bang1
+  = fun x5 -> __proj__Mkmonad__item__op_let_Bang x5
 let (monad_option : unit FStar_Pervasives_Native.option monad) =
   {
     return =

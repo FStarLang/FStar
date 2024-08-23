@@ -4,15 +4,14 @@ type 'a ord =
   super: 'a FStar_Class_Deq.deq ;
   cmp: 'a -> 'a -> FStar_Compiler_Order.order }
 let __proj__Mkord__item__super : 'a . 'a ord -> 'a FStar_Class_Deq.deq =
-  fun projectee -> match projectee with | { super; cmp;_} -> super
+  fun x4 -> match x4 with | { super = asuper; cmp = acmp;_} -> asuper
+let super : 'a . 'a ord -> 'a FStar_Class_Deq.deq =
+  fun x4 -> __proj__Mkord__item__super x4
 let __proj__Mkord__item__cmp :
   'a . 'a ord -> 'a -> 'a -> FStar_Compiler_Order.order =
-  fun projectee -> match projectee with | { super; cmp;_} -> cmp
-let super : 'a . 'a ord -> 'a FStar_Class_Deq.deq =
-  fun projectee -> match projectee with | { super = super1; cmp;_} -> super1
+  fun x5 -> match x5 with | { super = asuper; cmp = acmp;_} -> acmp
 let cmp : 'a . 'a ord -> 'a -> 'a -> FStar_Compiler_Order.order =
-  fun projectee ->
-    match projectee with | { super = super1; cmp = cmp1;_} -> cmp1
+  fun x5 -> __proj__Mkord__item__cmp x5
 let op_Less_Question : 'a . 'a ord -> 'a -> 'a -> Prims.bool =
   fun uu___ ->
     fun x ->
