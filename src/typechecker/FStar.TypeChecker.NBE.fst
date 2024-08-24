@@ -1499,22 +1499,6 @@ and readback (cfg:config) (x:t) : term =
     | Lazy (_, thunk) ->
       readback cfg (Thunk.force thunk)
 
-type step =
-  | Primops
-  | UnfoldUntil of delta_depth
-  | UnfoldOnly  of list FStar.Ident.lid
-  | UnfoldAttr  of list FStar.Ident.lid
-  | UnfoldTac
-  | Reify
-
-let step_as_normalizer_step = function
-  | Primops -> Env.Primops
-  | UnfoldUntil d -> Env.UnfoldUntil d
-  | UnfoldOnly lids -> Env.UnfoldOnly lids
-  | UnfoldAttr lids -> Env.UnfoldAttr lids
-  | UnfoldTac -> Env.DontUnfoldAttr [PC.tac_opaque_attr]
-  | Reify -> Env.Reify
-
 let reduce_application cfg t args =
   iapp (new_config cfg) t args
 
