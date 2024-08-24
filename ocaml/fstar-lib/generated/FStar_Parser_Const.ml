@@ -508,6 +508,7 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (tac_opaque_attr : FStar_Ident.lident) = pconst "tac_opaque"
 let (meta_projectors_attr : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let (mk_projs_lid : FStar_Ident.lid) =

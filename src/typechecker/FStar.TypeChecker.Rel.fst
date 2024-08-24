@@ -1353,7 +1353,7 @@ let rec head_matches env t1 t2 : match_result =
 (* Does t1 head-match t2, after some delta steps? *)
 let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option (typ&typ)) =
     let base_steps =
-      (if logical then [Env.UnfoldTac] else []) @
+      (if logical then [Env.DontUnfoldAttr [PC.tac_opaque_attr]] else []) @
       [Env.Primops; Env.Weak; Env.HNF]
     in
     let maybe_inline t =
@@ -1375,7 +1375,7 @@ let head_matches_delta env (logical:bool) smt_ok t1 t2 : (match_result & option 
             None
           | Some _ ->
             let basic_steps =
-                (if logical then [Env.UnfoldTac] else []) @
+                (if logical then [Env.DontUnfoldAttr [PC.tac_opaque_attr]] else []) @
                 [Env.UnfoldUntil delta_constant;
                  Env.Weak;
                  Env.HNF;

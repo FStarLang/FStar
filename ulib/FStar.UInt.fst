@@ -325,6 +325,13 @@ let logand_mask #n a m =
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
   append_lemma #(n - m) #m (zero_vec #(n - m)) (slice (to_vec a) (n - m) n);
+  calc (==) {
+    0 * pow2 m + a % pow2 m;
+    == { }
+    0 + a % pow2 m;
+    == { }
+    a % pow2 m;
+  };
   assert (0 * pow2 m + a % pow2 m == a % pow2 m);
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;

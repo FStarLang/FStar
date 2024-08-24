@@ -912,8 +912,8 @@ let (reduce_equality :
                   (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.unfold_qual);
                 FStar_TypeChecker_Cfg.unfold_namespace =
                   (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.unfold_namespace);
-                FStar_TypeChecker_Cfg.unfold_tac =
-                  (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.unfold_tac);
+                FStar_TypeChecker_Cfg.dont_unfold_attr =
+                  (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.dont_unfold_attr);
                 FStar_TypeChecker_Cfg.pure_subterms_within_computations =
                   (FStar_TypeChecker_Cfg.default_steps.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
                 FStar_TypeChecker_Cfg.simplify =
@@ -1114,7 +1114,9 @@ let get_norm_request :
                 FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Env.Reify] in
             FStar_Pervasives_Native.Some
-              ((FStar_Compiler_List.op_At (FStar_TypeChecker_Env.UnfoldTac ::
+              ((FStar_Compiler_List.op_At
+                  ((FStar_TypeChecker_Env.DontUnfoldAttr
+                      [FStar_Parser_Const.tac_opaque_attr]) ::
                   inherited_steps) s), tm)
         | (tm, uu___)::[] ->
             let s =
@@ -1126,7 +1128,9 @@ let get_norm_request :
                 FStar_Syntax_Syntax.delta_constant;
               FStar_TypeChecker_Env.Reify] in
             FStar_Pervasives_Native.Some
-              ((FStar_Compiler_List.op_At (FStar_TypeChecker_Env.UnfoldTac ::
+              ((FStar_Compiler_List.op_At
+                  ((FStar_TypeChecker_Env.DontUnfoldAttr
+                      [FStar_Parser_Const.tac_opaque_attr]) ::
                   inherited_steps) s), tm)
         | (steps, uu___)::uu___1::(tm, uu___2)::[] ->
             let uu___3 = let uu___4 = full_norm steps in parse_steps uu___4 in
@@ -1135,8 +1139,9 @@ let get_norm_request :
              | FStar_Pervasives_Native.Some s ->
                  FStar_Pervasives_Native.Some
                    ((FStar_Compiler_List.op_At
-                       (FStar_TypeChecker_Env.UnfoldTac :: inherited_steps) s),
-                     tm))
+                       ((FStar_TypeChecker_Env.DontUnfoldAttr
+                           [FStar_Parser_Const.tac_opaque_attr]) ::
+                       inherited_steps) s), tm))
         | uu___ -> FStar_Pervasives_Native.None
 let (nbe_eval :
   FStar_TypeChecker_Cfg.cfg ->
@@ -1333,8 +1338,8 @@ let (decide_unfolding :
                          FStar_Pervasives_Native.None;
                        FStar_TypeChecker_Cfg.unfold_namespace =
                          FStar_Pervasives_Native.None;
-                       FStar_TypeChecker_Cfg.unfold_tac =
-                         (uu___.FStar_TypeChecker_Cfg.unfold_tac);
+                       FStar_TypeChecker_Cfg.dont_unfold_attr =
+                         (uu___.FStar_TypeChecker_Cfg.dont_unfold_attr);
                        FStar_TypeChecker_Cfg.pure_subterms_within_computations
                          =
                          (uu___.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
@@ -2244,8 +2249,8 @@ let rec (norm :
                             (uu___3.FStar_TypeChecker_Cfg.unfold_qual);
                           FStar_TypeChecker_Cfg.unfold_namespace =
                             (uu___3.FStar_TypeChecker_Cfg.unfold_namespace);
-                          FStar_TypeChecker_Cfg.unfold_tac =
-                            (uu___3.FStar_TypeChecker_Cfg.unfold_tac);
+                          FStar_TypeChecker_Cfg.dont_unfold_attr =
+                            (uu___3.FStar_TypeChecker_Cfg.dont_unfold_attr);
                           FStar_TypeChecker_Cfg.pure_subterms_within_computations
                             =
                             (uu___3.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
@@ -2451,8 +2456,8 @@ let rec (norm :
                                (uu___6.FStar_TypeChecker_Cfg.unfold_qual);
                              FStar_TypeChecker_Cfg.unfold_namespace =
                                (uu___6.FStar_TypeChecker_Cfg.unfold_namespace);
-                             FStar_TypeChecker_Cfg.unfold_tac =
-                               (uu___6.FStar_TypeChecker_Cfg.unfold_tac);
+                             FStar_TypeChecker_Cfg.dont_unfold_attr =
+                               (uu___6.FStar_TypeChecker_Cfg.dont_unfold_attr);
                              FStar_TypeChecker_Cfg.pure_subterms_within_computations
                                =
                                (uu___6.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
@@ -3115,8 +3120,8 @@ let rec (norm :
                             (uu___2.FStar_TypeChecker_Cfg.unfold_qual);
                           FStar_TypeChecker_Cfg.unfold_namespace =
                             (uu___2.FStar_TypeChecker_Cfg.unfold_namespace);
-                          FStar_TypeChecker_Cfg.unfold_tac =
-                            (uu___2.FStar_TypeChecker_Cfg.unfold_tac);
+                          FStar_TypeChecker_Cfg.dont_unfold_attr =
+                            (uu___2.FStar_TypeChecker_Cfg.dont_unfold_attr);
                           FStar_TypeChecker_Cfg.pure_subterms_within_computations
                             =
                             (uu___2.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
@@ -6909,7 +6914,8 @@ and (do_rebuild :
                               FStar_Pervasives_Native.None;
                             FStar_TypeChecker_Cfg.unfold_namespace =
                               FStar_Pervasives_Native.None;
-                            FStar_TypeChecker_Cfg.unfold_tac = false;
+                            FStar_TypeChecker_Cfg.dont_unfold_attr =
+                              FStar_Pervasives_Native.None;
                             FStar_TypeChecker_Cfg.pure_subterms_within_computations
                               =
                               (uu___4.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
@@ -7161,8 +7167,9 @@ and (do_rebuild :
                                       FStar_TypeChecker_Cfg.unfold_namespace
                                         =
                                         (uu___7.FStar_TypeChecker_Cfg.unfold_namespace);
-                                      FStar_TypeChecker_Cfg.unfold_tac =
-                                        (uu___7.FStar_TypeChecker_Cfg.unfold_tac);
+                                      FStar_TypeChecker_Cfg.dont_unfold_attr
+                                        =
+                                        (uu___7.FStar_TypeChecker_Cfg.dont_unfold_attr);
                                       FStar_TypeChecker_Cfg.pure_subterms_within_computations
                                         =
                                         (uu___7.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
