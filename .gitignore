@@ -101,3 +101,9 @@ nuget/
 
 # devcontainer temp files
 /.devcontainer_build.log
+
+# DkML
+/dkml-workflows/
+/msys64/
+/.ci/o/
+/.ci/sd4/
