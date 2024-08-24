@@ -30,3 +30,9 @@ let lem1 (a b c d : nat) =
     canon_monoid int_plus_monoid;
     trefl()
   )
+
+let lem2 (a b c d : nat) =
+  assert (eq2 #nat (0 + a + b + c + d) ((0 + a) + (b + c + 0) + (d + 0))) by (
+    canon_monoid int_plus_monoid;
+    trefl()
+  )
