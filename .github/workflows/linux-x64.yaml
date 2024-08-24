@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
       - name: Check out repo        
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Identify the notification channel
         run: |
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
@@ -117,7 +117,7 @@ jobs:
       - name: Save resource monitor summary as artifact
         if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
         continue-on-error: true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Resource usage information (summary)
           path: |
@@ -126,7 +126,7 @@ jobs:
       - name: Save resource monitor files as artifact
         if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
         continue-on-error: true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Resource usage information (individual)
           path: |
@@ -179,7 +179,7 @@ jobs:
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
           payload: |

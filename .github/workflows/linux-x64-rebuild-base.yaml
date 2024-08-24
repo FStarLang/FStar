@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Rebuild base image from scratch
         run: |
@@ -111,7 +111,7 @@ jobs:
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
           payload: |
