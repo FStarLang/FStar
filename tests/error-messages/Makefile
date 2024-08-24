@@ -30,6 +30,7 @@ Bug3227.fst.output: OTHERFLAGS+=--dump_module Bug3227
 Bug3292.fst.output: OTHERFLAGS+=--dump_module Bug3292
 CalcImpl.fst.output: OTHERFLAGS+=--dump_module CalcImpl
 DTuples.fst.output: OTHERFLAGS+=--dump_module DTuples
+SeqLit.fst.output: OTHERFLAGS+=--dump_module SeqLit
 
 include $(FSTAR_HOME)/examples/Makefile.common
 

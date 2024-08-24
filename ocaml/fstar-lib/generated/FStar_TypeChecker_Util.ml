@@ -8464,59 +8464,33 @@ let make_record_fields_in_order :
                     FStar_Compiler_Util.format3
                       "{typename=%s; constrname=%s; fields=[%s]}" uu___1
                       uu___2 uu___3 in
-                  let print_fas fas1 =
-                    let uu___1 =
-                      FStar_Compiler_List.map
-                        (fun uu___2 ->
-                           match uu___2 with
-                           | (i, uu___3) -> FStar_Ident.string_of_lid i) fas1 in
-                    FStar_Compiler_String.concat "; " uu___1 in
                   let print_topt topt1 =
-                    match topt1 with
-                    | FStar_Pervasives_Native.None ->
-                        let uu___1 =
-                          find_record_or_dc_from_typ env
-                            FStar_Pervasives_Native.None uc rng in
-                        (match uu___1 with
-                         | (rdc1, uu___2, uu___3) ->
-                             let uu___4 = print_rdc rdc1 in
-                             FStar_Compiler_Util.format1 "topt=None; rdc=%s"
-                               uu___4)
-                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inl t)
-                        ->
-                        let uu___1 =
-                          find_record_or_dc_from_typ env
-                            FStar_Pervasives_Native.None uc rng in
-                        (match uu___1 with
-                         | (rdc1, uu___2, uu___3) ->
-                             let uu___4 = FStar_Syntax_Print.term_to_string t in
-                             let uu___5 = print_rdc rdc1 in
-                             FStar_Compiler_Util.format2
-                               "topt=Some (Inl %s); rdc=%s" uu___4 uu___5)
-                    | FStar_Pervasives_Native.Some (FStar_Pervasives.Inr t)
-                        ->
-                        let uu___1 =
-                          find_record_or_dc_from_typ env
-                            FStar_Pervasives_Native.None uc rng in
-                        (match uu___1 with
-                         | (rdc1, uu___2, uu___3) ->
-                             let uu___4 = FStar_Syntax_Print.term_to_string t in
-                             let uu___5 = print_rdc rdc1 in
-                             FStar_Compiler_Util.format2
-                               "topt=Some (Inr %s); rdc=%s" uu___4 uu___5) in
+                    let uu___1 =
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_option
+                           (FStar_Class_Show.show_either
+                              FStar_Syntax_Print.showable_term
+                              FStar_Syntax_Print.showable_term)) topt1 in
+                    let uu___2 = print_rdc rdc in
+                    FStar_Compiler_Util.format2 "topt=%s; rdc=%s" uu___1
+                      uu___2 in
                   let uu___1 =
-                    match uc.FStar_Syntax_Syntax.uc_typename with
-                    | FStar_Pervasives_Native.None -> "none"
-                    | FStar_Pervasives_Native.Some tn ->
-                        FStar_Ident.string_of_lid tn in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_option
+                         FStar_Ident.showable_lident)
+                      uc.FStar_Syntax_Syntax.uc_typename in
                   let uu___2 =
-                    let uu___3 =
-                      FStar_Compiler_List.map FStar_Ident.string_of_lid
-                        uc.FStar_Syntax_Syntax.uc_fields in
-                    FStar_Compiler_String.concat "; " uu___3 in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_list FStar_Ident.showable_lident)
+                      uc.FStar_Syntax_Syntax.uc_fields in
                   let uu___3 = print_topt topt in
                   let uu___4 = print_rdc rdc in
-                  let uu___5 = print_fas fas in
+                  let uu___5 =
+                    let uu___6 =
+                      FStar_Compiler_List.map FStar_Pervasives_Native.fst fas in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_list FStar_Ident.showable_lident)
+                      uu___6 in
                   FStar_Compiler_Util.print5
                     "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
                     uu___1 uu___2 uu___3 uu___4 uu___5 in
@@ -8525,7 +8499,8 @@ let make_record_fields_in_order :
                     (fun uu___1 ->
                        fun uu___2 ->
                          match (uu___1, uu___2) with
-                         | ((fields, as_rev), (field_name, uu___3)) ->
+                         | ((fields, as_rev, missing), (field_name, uu___3))
+                             ->
                              let uu___4 =
                                FStar_Compiler_List.partition
                                  (fun uu___5 ->
@@ -8537,35 +8512,15 @@ let make_record_fields_in_order :
                               | (matching, rest) ->
                                   (match matching with
                                    | (uu___5, a1)::[] ->
-                                       (rest, (a1 :: as_rev))
+                                       (rest, (a1 :: as_rev), missing)
                                    | [] ->
                                        let uu___5 = not_found field_name in
                                        (match uu___5 with
                                         | FStar_Pervasives_Native.None ->
-                                            let uu___6 =
-                                              let uu___7 =
-                                                let uu___8 =
-                                                  let uu___9 =
-                                                    let uu___10 =
-                                                      FStar_Class_Show.show
-                                                        FStar_Ident.showable_ident
-                                                        field_name in
-                                                    let uu___11 =
-                                                      FStar_Class_Show.show
-                                                        FStar_Ident.showable_lident
-                                                        rdc.FStar_Syntax_DsEnv.typename in
-                                                    FStar_Compiler_Util.format2
-                                                      "Field '%s' of record type '%s' is missing."
-                                                      uu___10 uu___11 in
-                                                  FStar_Errors_Msg.text
-                                                    uu___9 in
-                                                [uu___8] in
-                                              (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
-                                                uu___7) in
-                                            FStar_Errors.raise_error_doc
-                                              uu___6 rng
+                                            (rest, as_rev, (field_name ::
+                                              missing))
                                         | FStar_Pervasives_Native.Some a1 ->
-                                            (rest, (a1 :: as_rev)))
+                                            (rest, (a1 :: as_rev), missing))
                                    | uu___5 ->
                                        let uu___6 =
                                          let uu___7 =
@@ -8581,23 +8536,74 @@ let make_record_fields_in_order :
                                          (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
                                            uu___7) in
                                        FStar_Errors.raise_error uu___6 rng)))
-                    (fas, []) rdc.FStar_Syntax_DsEnv.fields in
+                    (fas, [], []) rdc.FStar_Syntax_DsEnv.fields in
                 match uu___ with
-                | (rest, as_rev) ->
-                    ((match rest with
-                      | [] -> ()
-                      | (f, uu___2)::uu___3 ->
-                          let uu___4 =
-                            let uu___5 =
-                              let uu___6 = FStar_Ident.string_of_lid f in
+                | (rest, as_rev, missing) ->
+                    let pp_missing uu___1 =
+                      let uu___2 =
+                        let uu___3 = FStar_Pprint.break_ Prims.int_one in
+                        FStar_Pprint.op_Hat_Hat FStar_Pprint.comma uu___3 in
+                      FStar_Pprint.separate_map uu___2
+                        (fun f ->
+                           let uu___3 =
+                             let uu___4 =
+                               FStar_Class_Show.show
+                                 FStar_Ident.showable_ident f in
+                             FStar_Pprint.doc_of_string uu___4 in
+                           FStar_Pprint.squotes uu___3) missing in
+                    ((match (rest, missing) with
+                      | ([], []) -> ()
+                      | ((f, uu___2)::uu___3, uu___4) ->
+                          let uu___5 =
+                            let uu___6 =
                               let uu___7 =
-                                FStar_Ident.string_of_lid
-                                  rdc.FStar_Syntax_DsEnv.typename in
-                              FStar_Compiler_Util.format2
-                                "Field %s is redundant for type %s" uu___6
-                                uu___7 in
+                                let uu___8 =
+                                  let uu___9 =
+                                    FStar_Class_Show.show
+                                      FStar_Ident.showable_lident f in
+                                  let uu___10 =
+                                    FStar_Class_Show.show
+                                      FStar_Ident.showable_lident
+                                      rdc.FStar_Syntax_DsEnv.typename in
+                                  FStar_Compiler_Util.format2
+                                    "Field '%s' is redundant for type %s"
+                                    uu___9 uu___10 in
+                                FStar_Errors_Msg.text uu___8 in
+                              let uu___8 =
+                                let uu___9 =
+                                  if Prims.uu___is_Cons missing
+                                  then
+                                    let uu___10 =
+                                      FStar_Errors_Msg.text "Missing fields:" in
+                                    let uu___11 = pp_missing () in
+                                    FStar_Pprint.prefix (Prims.of_int (2))
+                                      Prims.int_one uu___10 uu___11
+                                  else FStar_Pprint.empty in
+                                [uu___9] in
+                              uu___7 :: uu___8 in
                             (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
-                              uu___5) in
-                          let uu___5 = FStar_Ident.range_of_lid f in
-                          FStar_Errors.raise_error uu___4 uu___5);
+                              uu___6) in
+                          let uu___6 = FStar_Ident.range_of_lid f in
+                          FStar_Errors.raise_error_doc uu___5 uu___6
+                      | ([], uu___2) ->
+                          let uu___3 =
+                            let uu___4 =
+                              let uu___5 =
+                                let uu___6 =
+                                  let uu___7 =
+                                    let uu___8 =
+                                      FStar_Class_Show.show
+                                        FStar_Ident.showable_lident
+                                        rdc.FStar_Syntax_DsEnv.typename in
+                                    FStar_Compiler_Util.format1
+                                      "Missing fields for record type '%s':"
+                                      uu___8 in
+                                  FStar_Errors_Msg.text uu___7 in
+                                let uu___7 = pp_missing () in
+                                FStar_Pprint.prefix (Prims.of_int (2))
+                                  Prims.int_one uu___6 uu___7 in
+                              [uu___5] in
+                            (FStar_Errors_Codes.Fatal_MissingFieldInRecord,
+                              uu___4) in
+                          FStar_Errors.raise_error_doc uu___3 rng);
                      FStar_Compiler_List.rev as_rev)

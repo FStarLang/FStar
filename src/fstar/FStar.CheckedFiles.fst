@@ -475,12 +475,15 @@ let store_module_to_cache env fn parsing_data tc_result =
       let stage2 = {deps_dig=hashes; tc_res=tc_result} in
       store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
-      FStar.Errors.log_issue
+      let open FStar.Errors in
+      let open FStar.Errors.Msg in
+      let open FStar.Pprint in
+      log_issue_doc
         (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
                                  (FStar.Compiler.Range.mk_pos 0 0))
-        (Errors.Warning_FileNotWritten,
-         BU.format2 "%s was not written since %s"
-                    cache_file msg)
+        (Errors.Warning_FileNotWritten, [
+          text <| BU.format1 "Checked file %s was not written." cache_file;
+          prefix 2 1 (doc_of_string "Reason:") (text msg)])
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string)

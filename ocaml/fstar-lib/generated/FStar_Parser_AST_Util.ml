@@ -359,6 +359,10 @@ and (eq_term' :
               (eq_binder b1 b3))
              && (eq_binder b2 b4))
             && (eq_term t4 t8)
+      | (FStar_Parser_AST.ListLiteral ts1, FStar_Parser_AST.ListLiteral ts2)
+          -> eq_list eq_term ts1 ts2
+      | (FStar_Parser_AST.SeqLiteral ts1, FStar_Parser_AST.SeqLiteral ts2) ->
+          eq_list eq_term ts1 ts2
       | uu___ -> false
 and (eq_calc_step :
   FStar_Parser_AST.calc_step -> FStar_Parser_AST.calc_step -> Prims.bool) =
@@ -884,6 +888,8 @@ and (lidents_of_term' :
             FStar_Compiler_List.op_At uu___4 uu___5 in
           FStar_Compiler_List.op_At uu___2 uu___3 in
         FStar_Compiler_List.op_At uu___ uu___1
+    | FStar_Parser_AST.ListLiteral ts -> (concat_map ()) lidents_of_term ts
+    | FStar_Parser_AST.SeqLiteral ts -> (concat_map ()) lidents_of_term ts
 and (lidents_of_branch :
   (FStar_Parser_AST.pattern * FStar_Parser_AST.term
     FStar_Pervasives_Native.option * FStar_Parser_AST.term) ->

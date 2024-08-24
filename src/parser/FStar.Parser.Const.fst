@@ -139,6 +139,9 @@ let list_append_lid       = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let id_lid                = psconst "id"
 
+let seq_cons_lid              = p2l ["FStar"; "Seq"; "Base"; "cons"]
+let seq_empty_lid             = p2l ["FStar"; "Seq"; "Base"; "empty"]
+
 /// Constants from FStar.Char
 let c2l s = p2l ["FStar"; "Char"; s]
 let char_u32_of_char = c2l "u32_of_char"

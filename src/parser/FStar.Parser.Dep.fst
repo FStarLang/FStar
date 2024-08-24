@@ -1147,6 +1147,13 @@ let collect_one
           collect_binder y;
           collect_term e;
           collect_term e'
+
+        | ListLiteral ts ->
+          List.iter collect_term ts
+
+        | SeqLiteral ts ->
+          add_to_parsing_data (P_dep (false, (Ident.lid_of_str "FStar.Seq.Base")));
+          List.iter collect_term ts
         
       and collect_patterns ps =
         List.iter collect_pattern ps
