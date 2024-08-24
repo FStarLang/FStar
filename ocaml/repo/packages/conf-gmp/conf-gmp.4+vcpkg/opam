@@ -1,0 +1,20 @@
+opam-version: "2.0"
+maintainer: "nbraud"
+homepage: "http://gmplib.org/"
+bug-reports: "https://github.com/ocaml/opam-repository/issues"
+license: "GPL-1.0-or-later"
+synopsis: "Virtual package relying on a GMP lib system installation"
+description:
+  "This package can only install if the GMP lib is installed on the system. Requires the VCPKG_INSTALLED environment variable."
+authors: "nbraud"
+build: [
+  ["sh" "-exc" """`ocamlc -config-var c_compiler` -c $CFLAGS -I "$VCPKG_INSTALLED/include" test.c """]
+]
+extra-source "test.c" {
+  src:
+    "https://raw.githubusercontent.com/ocaml/opam-source-archives/main/patches/conf-gmp/test.c.4"
+  checksum: [
+    "sha256=54a30735f1f271a2531526747e75716f4490dd7bc1546efd6498ccfe3cc4d6fb"
+    "md5=2fd2970c293c36222a6d299ec155823f"
+  ]
+}
