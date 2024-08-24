@@ -107,3 +107,7 @@ nuget/
 /msys64/
 /.ci/o/
 /.ci/sd4/
+
+# vcpkg
+/vcpkg/
+/vcpkg_installed/
