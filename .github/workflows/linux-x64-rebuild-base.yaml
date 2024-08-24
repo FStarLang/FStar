@@ -111,6 +111,7 @@ jobs:
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
+        continue-on-error: true
         uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
