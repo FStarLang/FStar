@@ -111,3 +111,7 @@ nuget/
 # vcpkg
 /vcpkg/
 /vcpkg_installed/
+
+# setup-z3.cmd
+/z3-4.8.5-x64-win.zip
+/z3_installed
