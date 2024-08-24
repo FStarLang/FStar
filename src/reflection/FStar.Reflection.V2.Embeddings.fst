@@ -138,6 +138,7 @@ let e_aqualv =
       match q with
       | Data.Q_Explicit -> ref_Q_Explicit.t
       | Data.Q_Implicit -> ref_Q_Implicit.t
+      | Data.Q_Equality -> ref_Q_Equality.t
       | Data.Q_Meta t ->
           S.mk_Tm_app ref_Q_Meta.t [S.as_arg (embed #_ #e_term rng t)]
                       Range.dummyRange
@@ -148,6 +149,7 @@ let e_aqualv =
       match () with
       | _ when S.fv_eq_lid fv ref_Q_Explicit.lid -> run args (pure Data.Q_Explicit)
       | _ when S.fv_eq_lid fv ref_Q_Implicit.lid -> run args (pure Data.Q_Implicit)
+      | _ when S.fv_eq_lid fv ref_Q_Equality.lid -> run args (pure Data.Q_Equality)
       | _ when S.fv_eq_lid fv ref_Q_Meta.lid -> run args (Data.Q_Meta <$$> e_term)
       | _ -> None
     in

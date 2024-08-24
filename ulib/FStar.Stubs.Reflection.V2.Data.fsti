@@ -76,6 +76,7 @@ noeq
 type aqualv =
   | Q_Implicit
   | Q_Explicit
+  | Q_Equality
   | Q_Meta of term
 
 type argv = term & aqualv
