@@ -18,7 +18,7 @@ let (inspect_bqual :
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
         FStar_Reflection_V2_Data.Q_Meta t
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality) ->
-        FStar_Reflection_V2_Data.Q_Explicit
+        FStar_Reflection_V2_Data.Q_Equality
     | FStar_Pervasives_Native.None -> FStar_Reflection_V2_Data.Q_Explicit
 let (inspect_aqual :
   FStar_Syntax_Syntax.aqual -> FStar_Reflection_V2_Data.aqualv) =
@@ -33,11 +33,13 @@ let (pack_bqual :
   FStar_Reflection_V2_Data.aqualv -> FStar_Syntax_Syntax.bqual) =
   fun aqv ->
     match aqv with
-    | FStar_Reflection_V2_Data.Q_Explicit -> FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Q_Implicit ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
     | FStar_Reflection_V2_Data.Q_Meta t ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t)
+    | FStar_Reflection_V2_Data.Q_Equality ->
+        FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Equality
+    | FStar_Reflection_V2_Data.Q_Explicit -> FStar_Pervasives_Native.None
 let (pack_aqual :
   FStar_Reflection_V2_Data.aqualv -> FStar_Syntax_Syntax.aqual) =
   fun aqv ->

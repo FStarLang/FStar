@@ -23,7 +23,7 @@ noeq type binder =
 type binders = list binder
 
 let binder_from_term (b : T.binder) : T.Tac binder =
-    let q = match b.qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Meta _ -> "Meta" in
+    let q = match b.qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Equality -> "Equality" | T.Q_Meta _ -> "Meta" in
     { name = T.unseal b.ppname; qual = q; attrs = b.attrs }
 
 let rec binders_from_arrow (ty : T.term) : T.Tac binders =
