@@ -1,0 +1,102 @@
+name: FStar Windows Package built with Dk
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'dkml'
+  workflow_dispatch:
+
+jobs:
+
+  build-windows:
+
+    runs-on: [self-hosted, Windows, X64]
+    #runs-on: windows-2022
+
+    # Use POSIX shell as default.
+    defaults:
+      run:
+        shell: ${{ github.workspace }}\msys64\usr\bin\env.exe MSYS2_ARG_CONV_EXCL=* MSYSTEM=CLANG64 CHERE_INVOKING=yes OPAMYES=1 TRIPLET=x64-windows ${{ github.workspace }}\msys64\usr\bin\sh.exe -e {0}
+
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v3
+
+    - name: Restore GMP and z3 from cache
+      uses: actions/cache/restore@v4
+      id: cache-vcpkg-z3
+      with:
+        path: |
+          vcpkg_installed
+          z3_installed
+        key: vcpkg-z3-${{ runner.os }}
+
+    - name: Install GMP library and Z3 executable
+      if: steps.cache-vcpkg-z3.outputs.cache-hit != 'true'
+      run: |
+        .github/setup-vcpkg.cmd
+        .github/setup-z3.cmd
+
+    - name: Cache GMP and z3
+      uses: actions/cache/save@v4
+      # always save cache, even on failures
+      if: steps.cache-vcpkg-z3.outputs.cache-hit != 'true'
+      with:
+        path: |
+          vcpkg_installed
+          z3_installed
+        key: ${{ steps.cache-vcpkg-z3.outputs.cache-primary-key }}
+
+    - name: Restore DkML distribution from cache
+      uses: actions/cache/restore@v4
+      id: cache-dkml-dist
+      with:
+        path: |
+          .ci/o
+          .ci/sd4
+          msys64
+        key: dkml-dist-2-${{ runner.os }}
+
+    - name: Setup DkML distribution
+      if: steps.cache-dkml-dist.outputs.cache-hit != 'true'
+      shell: pwsh -command ". '{0}'"
+      run: |
+        .github/setup-dkml.cmd
+
+    - name: Cache DkML distribution
+      uses: actions/cache/save@v4
+      # always save cache, even on failures
+      if: steps.cache-dkml-dist.outputs.cache-hit != 'true'
+      with:
+        path: |
+          .ci/o
+          .ci/sd4
+          msys64
+        key: ${{ steps.cache-dkml-dist.outputs.cache-primary-key }}
+
+    - name: Build a package
+      # Test in PowerShell with:
+      #   $env:CHERE_INVOKING = "yes"; $env:MSYSTEM = "CLANG64"; msys64\usr\bin\dash.exe -lc 'export OPAMYES=1; export TRIPLET=x64-windows; export VCPKG_INSTALLED=$(cygpath -am vcpkg_installed/$TRIPLET); PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"; opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action && opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg/opam && env "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig" opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries && opamrun exec -- make package DISABLE_FSHARP=1'
+      run: |
+          export VCPKG_INSTALLED=$(cygpath -am "vcpkg_installed/$TRIPLET")
+          PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"
+          opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action
+          opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg
+
+          export "TMP=$RUNNER_TEMP"
+          export "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig"
+          opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries
+          opamrun exec -- make -j package DISABLE_FSHARP=1 && echo "There is a CR at the end of this line"
+
+    - name: Test the package
+      run: |
+        PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"
+        export TMP=$RUNNER_TEMP
+        opamrun exec -- env CI_THREADS=24 bash -x .scripts/test_package.sh && echo "There is a CR at the end of this line"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: fstar-Windows_x86_64.zip
+        path: src\ocaml-output\fstar.zip
