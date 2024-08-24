@@ -121,13 +121,3 @@ let canon_monoid (#a:Type) (m:monoid a) : Tac unit =
                           `%FStar.List.Tot.append]]
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
-
-let lem0 (a b c d : int) =
-  assert_by_tactic (0 + a + b + c + d == (0 + a) + (b + c + 0) + (d + 0))
-  (fun _ -> canon_monoid int_plus_monoid (* string_of_int *); trefl())
-
-(* TODO: would be nice to just find all terms of monoid type in the
-         goal and replace them with their canonicalization;
-         basically use flatten_correct instead of monoid_reflect
-         - even better, the user would have control over the place(s)
-           where the canonicalization is done *)
