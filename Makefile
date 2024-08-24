@@ -194,7 +194,7 @@ ci-ulib-extra:
 	+$(Q)$(MAKE) -C ulib extra
 
 .PHONY: ci-ulib-in-fsharp
-ci-ulib-in-fsharp: ci-ulib-extra
+ci-ulib-in-fsharp:
 	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
