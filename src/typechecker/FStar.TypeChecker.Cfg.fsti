@@ -60,7 +60,7 @@ type fsteps = {
      unfold_attr  : option (list I.lid);
      unfold_qual  : option (list string);
      unfold_namespace: option (Path.forest string bool);
-     unfold_tac : bool;
+     dont_unfold_attr : option (list I.lid);
      pure_subterms_within_computations : bool;
      simplify : bool;
      erase_universes : bool;

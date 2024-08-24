@@ -1512,7 +1512,7 @@ let step_as_normalizer_step = function
   | UnfoldUntil d -> Env.UnfoldUntil d
   | UnfoldOnly lids -> Env.UnfoldOnly lids
   | UnfoldAttr lids -> Env.UnfoldAttr lids
-  | UnfoldTac -> Env.UnfoldTac
+  | UnfoldTac -> Env.DontUnfoldAttr [PC.tac_opaque_attr]
   | Reify -> Env.Reify
 
 let reduce_application cfg t args =

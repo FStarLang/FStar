@@ -58,7 +58,6 @@ let rec eq_step s1 s2 =
   | Eager_unfolding, Eager_unfolding
   | Inlining, Inlining
   | DoNotUnfoldPureLets, DoNotUnfoldPureLets
-  | UnfoldTac, UnfoldTac
   | PureSubtermsWithinComputations, PureSubtermsWithinComputations
   | Simplify, Simplify
   | EraseUniverses, EraseUniverses
@@ -78,6 +77,7 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
   | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
+  | DontUnfoldAttr lids1, DontUnfoldAttr lids2 -> lids1 =? lids2
   | _ -> false // fixme: others ?
 
 instance deq_step : deq step = {
@@ -103,7 +103,7 @@ let rec step_to_string (s:step) : string =
   | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
   | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
   | UnfoldNamespace strs1 -> "UnfoldNamespace " ^ show strs1
-  | UnfoldTac -> "UnfoldTac"
+  | DontUnfoldAttr lids1 -> "DontUnfoldAttr " ^ show lids1
   | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
   | Simplify -> "Simplify"
   | EraseUniverses -> "EraseUniverses"

@@ -525,12 +525,12 @@ let get_norm_request cfg (full_norm:term -> term) args =
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (UnfoldTac :: inherited_steps @ s, tm)
+      Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s -> Some (UnfoldTac :: inherited_steps @ s, tm)
+      | Some s -> Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -2485,7 +2485,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_attr = None;
                     unfold_qual = None;
                     unfold_namespace = None;
-                    unfold_tac = false
+                    dont_unfold_attr = None;
              }
              in
             ({cfg with delta_level=new_delta; steps=steps; strong=true})
