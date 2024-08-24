@@ -390,17 +390,3 @@ let canon_monoid (eq: term) (m: term) : Tac unit =
        )
      )
    | _ -> fail "Goal should be squash applied to a binary relation")
-
-(***** Example *)
-
-(*
-let test1 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid (equality_equiv int) int_plus_cm)
-
-open FStar.Mul
-
-let test2 =
-  assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
-  (fun _ -> ignore (forall_intros()); canon_monoid (equality_equiv int) int_multiply_cm)
-*)

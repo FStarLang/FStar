@@ -1700,9 +1700,3 @@ let int_semiring () : Tac unit =
         else canon_semiring int_cr
     | _ ->
         canon_semiring int_cr
-
-#set-options "--tactic_trace_d 0 --no_smt"
-
-let test (a:int) =
-  let open FStar.Mul in
-  assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())
