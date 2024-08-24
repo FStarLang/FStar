@@ -190,8 +190,8 @@ let (zeta_false : config -> config) =
                  (uu___.FStar_TypeChecker_Cfg.unfold_qual);
                FStar_TypeChecker_Cfg.unfold_namespace =
                  (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
-               FStar_TypeChecker_Cfg.unfold_tac =
-                 (uu___.FStar_TypeChecker_Cfg.unfold_tac);
+               FStar_TypeChecker_Cfg.dont_unfold_attr =
+                 (uu___.FStar_TypeChecker_Cfg.dont_unfold_attr);
                FStar_TypeChecker_Cfg.pure_subterms_within_computations =
                  (uu___.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
                FStar_TypeChecker_Cfg.simplify =
@@ -3228,43 +3228,6 @@ and (readback :
            mk (FStar_Syntax_Syntax.Tm_lazy li)
        | FStar_TypeChecker_NBETerm.Lazy (uu___1, thunk) ->
            let uu___2 = FStar_Thunk.force thunk in readback cfg uu___2)
-type step =
-  | Primops 
-  | UnfoldUntil of FStar_Syntax_Syntax.delta_depth 
-  | UnfoldOnly of FStar_Ident.lid Prims.list 
-  | UnfoldAttr of FStar_Ident.lid Prims.list 
-  | UnfoldTac 
-  | Reify 
-let (uu___is_Primops : step -> Prims.bool) =
-  fun projectee -> match projectee with | Primops -> true | uu___ -> false
-let (uu___is_UnfoldUntil : step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldUntil _0 -> true | uu___ -> false
-let (__proj__UnfoldUntil__item___0 : step -> FStar_Syntax_Syntax.delta_depth)
-  = fun projectee -> match projectee with | UnfoldUntil _0 -> _0
-let (uu___is_UnfoldOnly : step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldOnly _0 -> true | uu___ -> false
-let (__proj__UnfoldOnly__item___0 : step -> FStar_Ident.lid Prims.list) =
-  fun projectee -> match projectee with | UnfoldOnly _0 -> _0
-let (uu___is_UnfoldAttr : step -> Prims.bool) =
-  fun projectee ->
-    match projectee with | UnfoldAttr _0 -> true | uu___ -> false
-let (__proj__UnfoldAttr__item___0 : step -> FStar_Ident.lid Prims.list) =
-  fun projectee -> match projectee with | UnfoldAttr _0 -> _0
-let (uu___is_UnfoldTac : step -> Prims.bool) =
-  fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
-let (uu___is_Reify : step -> Prims.bool) =
-  fun projectee -> match projectee with | Reify -> true | uu___ -> false
-let (step_as_normalizer_step : step -> FStar_TypeChecker_Env.step) =
-  fun uu___ ->
-    match uu___ with
-    | Primops -> FStar_TypeChecker_Env.Primops
-    | UnfoldUntil d -> FStar_TypeChecker_Env.UnfoldUntil d
-    | UnfoldOnly lids -> FStar_TypeChecker_Env.UnfoldOnly lids
-    | UnfoldAttr lids -> FStar_TypeChecker_Env.UnfoldAttr lids
-    | UnfoldTac -> FStar_TypeChecker_Env.UnfoldTac
-    | Reify -> FStar_TypeChecker_Env.Reify
 let (reduce_application :
   FStar_TypeChecker_Cfg.cfg ->
     FStar_TypeChecker_NBETerm.t ->
@@ -3316,8 +3279,8 @@ let (normalize :
                      (uu___.FStar_TypeChecker_Cfg.unfold_qual);
                    FStar_TypeChecker_Cfg.unfold_namespace =
                      (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
-                   FStar_TypeChecker_Cfg.unfold_tac =
-                     (uu___.FStar_TypeChecker_Cfg.unfold_tac);
+                   FStar_TypeChecker_Cfg.dont_unfold_attr =
+                     (uu___.FStar_TypeChecker_Cfg.dont_unfold_attr);
                    FStar_TypeChecker_Cfg.pure_subterms_within_computations =
                      (uu___.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
                    FStar_TypeChecker_Cfg.simplify =
@@ -3428,8 +3391,8 @@ let (normalize_for_unit_test :
                    (uu___.FStar_TypeChecker_Cfg.unfold_qual);
                  FStar_TypeChecker_Cfg.unfold_namespace =
                    (uu___.FStar_TypeChecker_Cfg.unfold_namespace);
-                 FStar_TypeChecker_Cfg.unfold_tac =
-                   (uu___.FStar_TypeChecker_Cfg.unfold_tac);
+                 FStar_TypeChecker_Cfg.dont_unfold_attr =
+                   (uu___.FStar_TypeChecker_Cfg.dont_unfold_attr);
                  FStar_TypeChecker_Cfg.pure_subterms_within_computations =
                    (uu___.FStar_TypeChecker_Cfg.pure_subterms_within_computations);
                  FStar_TypeChecker_Cfg.simplify =

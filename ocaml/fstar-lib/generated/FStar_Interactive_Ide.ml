@@ -2422,7 +2422,8 @@ let run_compute :
                    FStar_Syntax_Syntax.delta_constant])
             [FStar_TypeChecker_Env.Inlining;
             FStar_TypeChecker_Env.Eager_unfolding;
-            FStar_TypeChecker_Env.UnfoldTac;
+            FStar_TypeChecker_Env.DontUnfoldAttr
+              [FStar_Parser_Const.tac_opaque_attr];
             FStar_TypeChecker_Env.Primops] in
         let normalize_term tcenv rules2 t =
           FStar_TypeChecker_Normalize.normalize rules2 tcenv t in
