@@ -115,12 +115,10 @@ val live (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel) :GTot 
 
 val live_null (a:Type0) (rrel rel:srel a) (h:HS.mem) :Lemma (live h (mnull #a #rrel #rel))
 
-let live_is_null (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel)
+val live_is_null (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel)
   :Lemma (requires (g_is_null b == true))
          (ensures (live h b))
          [SMTPat (live h b)]
-  = null_unique b;
-    live_null a rrel rel h
 
 /// A live buffer has already been allocated.
 
@@ -145,11 +143,10 @@ val lemma_live_equal_mem_domains (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rre
    context.
  *)
 
-let live_not_unused_in' (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel)
+val live_not_unused_in' (#a:Type0) (#rrel #rel:srel a) (h:HS.mem) (b:mbuffer a rrel rel)
   :Lemma (requires (live h b /\ b `unused_in` h))
          (ensures False)
          [SMTPat (live h b); SMTPat (b `unused_in` h)]
-  = live_not_unused_in h b
 
 
 /// Buffers live in the HyperStack model, which is an extension of
@@ -209,17 +206,13 @@ let length (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) :GTot nat = U32
 
 val len_null (a:Type0) (rrel rel:srel a) :Lemma (len (mnull #a #rrel #rel) == 0ul)
 
-let length_null_1 (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+val length_null_1 (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :Lemma (requires (length b =!= 0)) (ensures (g_is_null b == false))
          [SMTPat (length b)]
-  = len_null a rrel rel;
-    null_unique b
 
-let length_null_2 (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+val length_null_2 (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :Lemma (requires (g_is_null b == true)) (ensures (length b == 0))
          [SMTPat (g_is_null b)]
-  = len_null a rrel rel;
-    null_unique b
 
 
 /// For functional correctness, buffers are reflected at the proof
@@ -435,19 +428,17 @@ val loc_union_assoc
 : Lemma
   (loc_union s1 (loc_union s2 s3) == loc_union (loc_union s1 s2) s3)
 
-let loc_union_idem_1
+val loc_union_idem_1
   (s1 s2: loc)
 : Lemma
   (loc_union s1 (loc_union s1 s2) == loc_union s1 s2)
   [SMTPat (loc_union s1 (loc_union s1 s2))]
-= loc_union_assoc s1 s1 s2
 
-let loc_union_idem_2
+val loc_union_idem_2
   (s1 s2: loc)
 : Lemma
   (loc_union (loc_union s1 s2) s2 == loc_union s1 s2)
   [SMTPat (loc_union (loc_union s1 s2) s2)]
-= loc_union_assoc s1 s2 s2
 
 val loc_union_loc_none_l
   (s: loc)
@@ -612,13 +603,12 @@ val loc_includes_trans
   (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
   (ensures (loc_includes s1 s3))
 
-let loc_includes_trans_backwards
+val loc_includes_trans_backwards
   (s1 s2 s3: loc)
 : Lemma
   (requires (loc_includes s1 s2 /\ loc_includes s2 s3))
   (ensures (loc_includes s1 s3))
   [SMTPat (loc_includes s1 s3); SMTPat (loc_includes s2 s3)]
-= loc_includes_trans s1 s2 s3
 
 val loc_includes_union_r
   (s s1 s2: loc)
@@ -633,24 +623,18 @@ val loc_includes_union_l
   (ensures (loc_includes (loc_union s1 s2) s))
 
 
-let loc_includes_union_l'
+val loc_includes_union_l'
   (s1 s2 s: loc)
   : Lemma
       (requires (loc_includes s1 s \/ loc_includes s2 s))
       (ensures (loc_includes (loc_union s1 s2) s))
       [SMTPat (loc_includes (loc_union s1 s2) s)]
-  = loc_includes_union_l s1 s2 s
 
-let loc_includes_union_r'
+val loc_includes_union_r'
   (s s1 s2: loc)
 : Lemma
   (loc_includes s (loc_union s1 s2) <==> (loc_includes s s1 /\ loc_includes s s2))
   [SMTPat (loc_includes s (loc_union s1 s2))]
-= Classical.move_requires (loc_includes_union_r s s1) s2;
-  Classical.move_requires (loc_includes_union_l s1 s2) s1;
-  Classical.move_requires (loc_includes_union_l s1 s2) s2;
-  Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s1;
-  Classical.move_requires (loc_includes_trans s (loc_union s1 s2)) s2
 
 val loc_includes_none
   (s: loc)
@@ -672,12 +656,11 @@ val loc_includes_gsub_buffer_r
         (ensures  (loc_includes l (loc_buffer (mgsub sub_rel b i len))))
         [SMTPat (loc_includes l (loc_buffer (mgsub sub_rel b i len)))]
 
-let loc_includes_gsub_buffer_r' (#a:Type0) (#rrel #rel:srel a)
+val loc_includes_gsub_buffer_r' (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel) (i:UInt32.t) (len:UInt32.t) (sub_rel:srel a)
   :Lemma (requires (UInt32.v i + UInt32.v len <= (length b)))
          (ensures  (loc_includes (loc_buffer b) (loc_buffer (mgsub sub_rel b i len))))
          [SMTPat (mgsub sub_rel b i len)]
-  = ()
 
 val loc_includes_gsub_buffer_l (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   (i1:UInt32.t) (len1:UInt32.t) (sub_rel1:srel a)
@@ -728,10 +711,9 @@ val loc_includes_addresses_buffer (#a:Type0) (#rrel #rel:srel a)
          (ensures  (loc_includes (loc_addresses preserve_liveness r s) (loc_buffer p)))
          [SMTPat (loc_includes (loc_addresses preserve_liveness r s) (loc_buffer p))]
 
-let loc_includes_addresses_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+val loc_includes_addresses_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :Lemma (loc_includes (loc_addresses true (frameOf b) (Set.singleton (as_addr b))) (loc_buffer b))
          [SMTPat (loc_buffer b)]
-  = ()
 
 
 /// The set of memory locations corresponding to a buffer is included
@@ -743,10 +725,9 @@ val loc_includes_region_buffer (#a:Type0) (#rrel #rel:srel a)
          (ensures (loc_includes (loc_regions preserve_liveness s) (loc_buffer b)))
          [SMTPat (loc_includes (loc_regions preserve_liveness s) (loc_buffer b))]
 
-let loc_includes_region_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
+val loc_includes_region_buffer' (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel)
   :Lemma (loc_includes (loc_regions true (Set.singleton (frameOf b))) (loc_buffer b))
          [SMTPat (loc_buffer b)]
-  = ()
 
 
 /// If a region ``r`` is in a set of regions ``s``, then the set of memory
@@ -769,14 +750,13 @@ val loc_includes_region_addresses
   (ensures (loc_includes (loc_regions preserve_liveness1 s) (loc_addresses preserve_liveness2 r a)))
   [SMTPat (loc_includes (loc_regions preserve_liveness1 s) (loc_addresses preserve_liveness2 r a))]
 
-let loc_includes_region_addresses'
+val loc_includes_region_addresses'
   (preserve_liveness: bool)
   (r: HS.rid)
   (a: Set.set nat)
 : Lemma
   (loc_includes (loc_regions true (Set.singleton r)) (loc_addresses preserve_liveness r a))
   [SMTPat (loc_addresses preserve_liveness r a)]
-= ()
 
 /// If a set of region identifiers ``s1`` includes a set of region
 /// identifiers ``s2``, then so are their corresponding sets of memory
@@ -791,13 +771,12 @@ val loc_includes_region_region
   (ensures (loc_includes (loc_regions preserve_liveness1 s1) (loc_regions preserve_liveness2 s2)))
   [SMTPat (loc_includes (loc_regions preserve_liveness1 s1) (loc_regions preserve_liveness2 s2))]
 
-let loc_includes_region_region'
+val loc_includes_region_region'
   (preserve_liveness: bool)
   (s: Set.set HS.rid)
 : Lemma
   (loc_includes (loc_regions false s) (loc_regions preserve_liveness s))
   [SMTPat (loc_regions preserve_liveness s)]
-= ()
 
 /// The following lemma can act as a cut when reasoning with sets of
 /// memory locations corresponding to sets of regions.
@@ -822,7 +801,7 @@ val loc_includes_addresses_addresses
   (requires ((preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
   (ensures (loc_includes (loc_addresses preserve_liveness1 r s1) (loc_addresses preserve_liveness2 r s2)))
 
-let loc_includes_addresses_addresses_1
+val loc_includes_addresses_addresses_1
   (preserve_liveness1 preserve_liveness2: bool)
   (r1 r2: HS.rid)
   (s1 s2: Set.set nat)
@@ -830,29 +809,26 @@ let loc_includes_addresses_addresses_1
   (requires (r1 == r2 /\ (preserve_liveness1 ==> preserve_liveness2) /\ Set.subset s2 s1))
   (ensures (loc_includes (loc_addresses preserve_liveness1 r1 s1) (loc_addresses preserve_liveness2 r2 s2)))
   [SMTPat (loc_includes (loc_addresses preserve_liveness1 r1 s1) (loc_addresses preserve_liveness2 r2 s2))]
-= loc_includes_addresses_addresses preserve_liveness1 preserve_liveness2 r1 s1 s2
 
-let loc_includes_addresses_addresses_2
+val loc_includes_addresses_addresses_2
   (preserve_liveness: bool)
   (r: HS.rid)
   (s: Set.set nat)
 : Lemma
   (loc_includes (loc_addresses false r s) (loc_addresses preserve_liveness r s))
   [SMTPat (loc_addresses preserve_liveness r s)]
-= ()
 
 /// Patterns with loc_includes, union on the left
 
-let loc_includes_union_l_buffer
+val loc_includes_union_l_buffer
   (s1 s2:loc)
   (#a:Type0) (#rrel #rel:srel a)
   (b:mbuffer a rrel rel)
   :Lemma (requires (loc_includes s1 (loc_buffer b) \/ loc_includes s2 (loc_buffer b)))
          (ensures (loc_includes (loc_union s1 s2) (loc_buffer b)))
          [SMTPat (loc_includes (loc_union s1 s2) (loc_buffer b))]
-  = loc_includes_union_l s1 s2 (loc_buffer b)
 
-let loc_includes_union_l_addresses
+val loc_includes_union_l_addresses
   (s1 s2: loc)
   (prf: bool)
   (r: HS.rid)
@@ -861,9 +837,8 @@ let loc_includes_union_l_addresses
   (requires (loc_includes s1 (loc_addresses prf r a) \/ loc_includes s2 (loc_addresses prf r a)))
   (ensures (loc_includes (loc_union s1 s2) (loc_addresses prf r a)))
   [SMTPat (loc_includes (loc_union s1 s2) (loc_addresses prf r a))]
-= loc_includes_union_l s1 s2 (loc_addresses prf r a)
 
-let loc_includes_union_l_regions
+val loc_includes_union_l_regions
   (s1 s2: loc)
   (prf: bool)
   (r: Set.set HS.rid)
@@ -871,7 +846,6 @@ let loc_includes_union_l_regions
   (requires (loc_includes s1 (loc_regions prf r) \/ loc_includes s2 (loc_regions prf r)))
   (ensures (loc_includes (loc_union s1 s2) (loc_regions prf r)))
   [SMTPat (loc_includes (loc_union s1 s2) (loc_regions prf r))]
-= loc_includes_union_l s1 s2 (loc_regions prf r)
 
 /// Since inclusion encompasses more than just set-theoretic
 /// inclusion, we also need to specify disjointness accordingly, as a
@@ -887,13 +861,11 @@ val loc_disjoint_sym
   (requires (loc_disjoint s1 s2))
   (ensures (loc_disjoint s2 s1))
 
-let loc_disjoint_sym'
+val loc_disjoint_sym'
   (s1 s2: loc)
 : Lemma
   (loc_disjoint s1 s2 <==> loc_disjoint s2 s1)
   [SMTPat (loc_disjoint s1 s2)]
-= Classical.move_requires (loc_disjoint_sym s1) s2;
-  Classical.move_requires (loc_disjoint_sym s2) s1
 
 val loc_disjoint_none_r
   (s: loc)
@@ -917,23 +889,16 @@ val loc_disjoint_includes
   (requires (loc_includes p1 p1' /\ loc_includes p2 p2' /\ loc_disjoint p1 p2))
   (ensures (loc_disjoint p1' p2'))
 
-let loc_disjoint_union_r'
+val loc_disjoint_union_r'
   (s s1 s2: loc)
 : Lemma
   (ensures (loc_disjoint s (loc_union s1 s2) <==> (loc_disjoint s s1 /\ loc_disjoint s s2)))
   [SMTPat (loc_disjoint s (loc_union s1 s2))]
-= Classical.move_requires (loc_disjoint_union_r s s1) s2;
-  loc_includes_union_l s1 s2 s1;
-  loc_includes_union_l s1 s2 s2;
-  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s1;
-  Classical.move_requires (loc_disjoint_includes s (loc_union s1 s2) s) s2
 
-let loc_disjoint_includes_r (b1 : loc) (b2 b2': loc) : Lemma
+val loc_disjoint_includes_r (b1 : loc) (b2 b2': loc) : Lemma
   (requires (loc_includes b2 b2' /\ loc_disjoint b1 b2))
   (ensures (loc_disjoint b1 b2'))
   [SMTPat (loc_disjoint b1 b2'); SMTPat (loc_includes b2 b2')]
-= loc_disjoint_includes b1 b2 b1 b2'
-
 
 val loc_disjoint_gsub_buffer (#a:Type0) (#rrel:srel a) (#rel:srel a)
   (b:mbuffer a rrel rel)
@@ -1243,7 +1208,7 @@ val modifies_liveness_insensitive_region_buffer
              [SMTPat (modifies (loc_union l1 l2) h h'); SMTPat (HS.live_region h' (frameOf x))];
          ]]
 
-let modifies_liveness_insensitive_region_weak
+val modifies_liveness_insensitive_region_weak
   (l2 : loc)
   (h h' : HS.mem)
   (x: HS.rid)
@@ -1254,9 +1219,8 @@ let modifies_liveness_insensitive_region_weak
     [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h x)];
     [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' x)];
   ]]
-= modifies_liveness_insensitive_region loc_none l2 h h' x
 
-let modifies_liveness_insensitive_region_mreference_weak
+val modifies_liveness_insensitive_region_mreference_weak
   (l2 : loc)
   (h h' : HS.mem)
   (#t: Type)
@@ -1270,9 +1234,8 @@ let modifies_liveness_insensitive_region_mreference_weak
             [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (HS.frameOf x))];
             [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (HS.frameOf x))];
           ]]
-  = modifies_liveness_insensitive_region_mreference loc_none l2 h h' x
 
-let modifies_liveness_insensitive_region_buffer_weak
+val modifies_liveness_insensitive_region_buffer_weak
   (l2:loc)
   (h h':HS.mem)
   (#a:Type0) (#rrel #rel:srel a)
@@ -1285,7 +1248,6 @@ let modifies_liveness_insensitive_region_buffer_weak
            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h (frameOf x))];
            [SMTPat (modifies l2 h h'); SMTPat (HS.live_region h' (frameOf x))];
          ]]
-  = modifies_liveness_insensitive_region_buffer loc_none l2 h h' x
 
 /// Modifies clauses are transitive. This lemma is the most general
 /// one.
@@ -1299,11 +1261,10 @@ val modifies_trans
   (requires (modifies s12 h1 h2 /\ modifies s23 h2 h3))
   (ensures (modifies (loc_union s12 s23) h1 h3))
 
-let modifies_trans_linear (l l_goal:loc) (h1 h2 h3:HS.mem)
+val modifies_trans_linear (l l_goal:loc) (h1 h2 h3:HS.mem)
   : Lemma (requires (modifies l h1 h2 /\ modifies l_goal h2 h3 /\ l_goal `loc_includes` l))
           (ensures  (modifies l_goal h1 h3))
 	  [SMTPat (modifies l h1 h2); SMTPat (modifies l_goal h1 h3)]
-  = modifies_trans l h1 h2 l_goal h3
 
 
 /// Regions that are not live can be removed from sets of memory
@@ -1578,13 +1539,12 @@ val not_live_region_loc_not_unused_in_disjoint
   (requires (~ (HS.live_region h0 r)))
   (ensures (loc_disjoint (loc_region_only false r) (loc_not_unused_in h0)))
 
-let fresh_frame_loc_not_unused_in_disjoint
+val fresh_frame_loc_not_unused_in_disjoint
   (h0 h1: HS.mem)
 : Lemma
   (requires (HS.fresh_frame h0 h1))
   (ensures (loc_disjoint (loc_region_only false (HS.get_tip h1)) (loc_not_unused_in h0)))
   [SMTPat (HS.fresh_frame h0 h1)]
-= not_live_region_loc_not_unused_in_disjoint h0 (HS.get_tip h1)
 
 val live_loc_not_unused_in (#a:Type0) (#rrel #rel:srel a) (b:mbuffer a rrel rel) (h:HS.mem)
   :Lemma (requires (live h b))
@@ -1640,17 +1600,13 @@ val mreference_unused_in_loc_unused_in
     [SMTPat (loc_unused_in h `loc_includes` loc_freed_mreference r)];
   ]]
 
-let unused_in_not_unused_in_disjoint_2
+val unused_in_not_unused_in_disjoint_2
   (l1 l2 l1' l2': loc)
   (h: HS.mem)
 : Lemma
   (requires (loc_unused_in h `loc_includes` l1 /\ loc_not_unused_in h `loc_includes` l2 /\ l1 `loc_includes` l1' /\ l2 `loc_includes` l2' ))
   (ensures (loc_disjoint l1'  l2' ))
   [SMTPat (loc_disjoint l1' l2'); SMTPat (loc_unused_in h `loc_includes` l1); SMTPat (loc_not_unused_in h `loc_includes` l2)]
-= loc_includes_trans (loc_unused_in h) l1 l1' ;
-  loc_includes_trans (loc_not_unused_in h) l2 l2'  ;
-  loc_unused_in_not_unused_in_disjoint h ;
-  loc_disjoint_includes (loc_unused_in h) (loc_not_unused_in h) l1' l2'
 
 val modifies_loc_unused_in
   (l: loc)
@@ -1674,12 +1630,11 @@ let fresh_loc (l: loc) (h h' : HS.mem) : GTot Type0 =
   loc_unused_in h `loc_includes` l /\
   loc_not_unused_in h' `loc_includes` l
 
-let ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
+val ralloc_post_fresh_loc (#a:Type) (#rel:Preorder.preorder a) (i: HS.rid) (init:a) (m0: HS.mem)
                        (x: HST.mreference a rel{HST.is_eternal_region (HS.frameOf x)}) (m1: HS.mem) : Lemma
     (requires (HST.ralloc_post i init m0 x m1))
     (ensures (fresh_loc (loc_freed_mreference x) m0 m1))
     [SMTPat (HST.ralloc_post i init m0 x m1)]
-=  ()
 
 //AR: this is needed for liveness across fresh_frame
 val fresh_frame_modifies (h0 h1: HS.mem) : Lemma
@@ -1710,13 +1665,11 @@ val modifies_remove_new_locs (l_fresh l_aux l_goal:loc) (h1 h2 h3:HS.mem)
  *       a fresh loc
  *     so, we have a special lemma for fresh_frame
  *)
-let modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
+val modifies_remove_fresh_frame (h1 h2 h3:HS.mem) (l:loc)
   : Lemma (requires (HS.fresh_frame h1 h2 /\
                      modifies (loc_union (loc_all_regions_from false (HS.get_tip h2)) l) h2 h3))
           (ensures  (modifies l h1 h3))
 	  [SMTPat (modifies l h1 h3); SMTPat (HS.fresh_frame h1 h2)]
-  = loc_regions_unused_in h1 (HS.mod_set (Set.singleton (HS.get_tip h2)));
-    modifies_only_not_unused_in l h1 h3
 
 /// Legacy shorthands for disjointness and inclusion of buffers
 ///
@@ -2043,12 +1996,11 @@ val freeable_disjoint (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel 
   :Lemma (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
          (ensures (frameOf b1 <> frameOf b2 \/ as_addr b1 <> as_addr b2))
 
-let freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
+val freeable_disjoint' (#a1 #a2:Type0) (#rrel1 #rel1:srel a1) (#rrel2 #rel2:srel a2)
   (b1:mbuffer a1 rrel1 rel1) (b2:mbuffer a2 rrel2 rel2)
   :Lemma (requires (freeable b1 /\ length b2 > 0 /\ disjoint b1 b2))
          (ensures (loc_disjoint (loc_addr_of_buffer b1) (loc_addr_of_buffer b2)))
          [SMTPat (freeable b1); SMTPat (disjoint b1 b2)]
-  = freeable_disjoint b1 b2
 
 (***** Begin allocation functions *****)
 
