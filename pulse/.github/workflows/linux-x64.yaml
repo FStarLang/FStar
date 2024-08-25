@@ -32,7 +32,7 @@ jobs:
       - name: Build Pulse and its dependencies
         run: |
           ci_docker_image_tag=pulse:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
-          docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH . |& tee BUILDLOG
+          docker build -t $ci_docker_image_tag -f src/ci/$CI_FLAVOR.Dockerfile --build-arg FSTAR_BRANCH=$FSTAR_BRANCH --build-arg opamthread=$(nproc) . |& tee BUILDLOG
           if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
              docker tag $ci_docker_image_tag pulse:local-branch-$GITHUB_REF_NAME
           fi
