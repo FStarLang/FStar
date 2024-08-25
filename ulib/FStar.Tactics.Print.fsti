@@ -1,6 +1,7 @@
 module FStar.Tactics.Print
 
-open FStar.Reflection.V2
+open FStar.Stubs.Reflection.Types
+open FStar.Stubs.Reflection.V2.Data
 open FStar.Tactics.Effect
 
 [@@plugin]

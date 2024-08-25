@@ -31,7 +31,9 @@ open FStar.List.Tot
 open FStar.Reflection.V2
 module L = FStar.List.Tot
 module R = FStar.Reflection.V2
-module T = FStar.Tactics.V2
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.Types
+open FStar.Tactics.Effect
 module RD = FStar.Stubs.Reflection.V2.Data
 
 (* MOVE to some helper module *)
@@ -1003,7 +1005,7 @@ let mk_if (scrutinee then_ else_:R.term) : R.term =
 
 
 // effect and type
-type comp_typ = T.tot_or_ghost & typ
+type comp_typ = FStar.Stubs.Tactics.Types.tot_or_ghost & typ
 
 let close_comp_typ' (c:comp_typ) (x:var) (i:nat) =
   fst c, subst_term (snd c) [ ND x i ]
@@ -1021,8 +1023,8 @@ let freevars_comp_typ (c:comp_typ) = freevars (snd c)
 
 let mk_comp (c:comp_typ) : R.comp =
   match fst c with
-  | T.E_Total -> mk_total (snd c)
-  | T.E_Ghost -> mk_ghost (snd c)
+  | E_Total -> mk_total (snd c)
+  | E_Ghost -> mk_ghost (snd c)
 
 let mk_arrow_ct ty qual (c:comp_typ) : R.term =
   R.pack_ln (R.Tv_Arrow (binder_of_t_q ty qual) (mk_comp c))
@@ -1102,19 +1104,19 @@ type non_informative : env -> term -> Type0 =
     q:aqualv ->
     t1:term ->
     non_informative g t1 ->
-    non_informative g (mk_arrow_ct t0 q (T.E_Total, t1))
+    non_informative g (mk_arrow_ct t0 q (E_Total, t1))
   
   | Non_informative_ghost_arrow:
     g:env ->
     t0:term ->
     q:aqualv ->
     t1:term ->
-    non_informative g (mk_arrow_ct t0 q (T.E_Ghost, t1))
+    non_informative g (mk_arrow_ct t0 q (E_Ghost, t1))
 
   | Non_informative_token:
     g:env ->
     t:typ ->
-    squash (T.non_informative_token g t) ->
+    squash (non_informative_token g t) ->
     non_informative g t
 
 val bindings_ok_for_pat : env -> list R.binding -> pattern -> Type0
@@ -1167,31 +1169,31 @@ type typing : env -> term -> comp_typ -> Type0 =
     g:env ->
     e:term ->
     c:comp_typ ->
-    squash (T.typing_token g e c) ->
+    squash (typing_token g e c) ->
     typing g e c
 
   | T_Var : 
      g:env ->
      x:namedv { Some? (lookup_bvar g (namedv_uniq x)) } ->
-     typing g (pack_ln (Tv_Var x)) (T.E_Total, Some?.v (lookup_bvar g (namedv_uniq x)))
+     typing g (pack_ln (Tv_Var x)) (E_Total, Some?.v (lookup_bvar g (namedv_uniq x)))
 
   | T_FVar :
      g:env ->
      x:fv { Some? (lookup_fvar g x) } -> 
-     typing g (pack_ln (Tv_FVar x)) (T.E_Total, Some?.v (lookup_fvar g x))
+     typing g (pack_ln (Tv_FVar x)) (E_Total, Some?.v (lookup_fvar g x))
 
   | T_UInst :
      g:env ->
      x:fv ->
      us:list universe { Some? (lookup_fvar_uinst g x us) } ->
-     typing g (pack_ln (Tv_UInst x us)) (T.E_Total, Some?.v (lookup_fvar_uinst g x us))
+     typing g (pack_ln (Tv_UInst x us)) (E_Total, Some?.v (lookup_fvar_uinst g x us))
 
   | T_Const:
      g:env ->
      v:vconst ->
      t:term ->
      constant_typing v t ->
-     typing g (constant_as_term v) (T.E_Total, t)
+     typing g (constant_as_term v) (E_Total, t)
 
   | T_Abs :
      g:env ->
@@ -1202,11 +1204,11 @@ type typing : env -> term -> comp_typ -> Type0 =
      u:universe ->
      pp_name:pp_name_t ->
      q:aqualv ->
-     ty_eff:T.tot_or_ghost ->
+     ty_eff:tot_or_ghost ->
      typing g ty (ty_eff, tm_type u) ->
      typing (extend_env g x ty) (open_term body x) body_c ->
      typing g (pack_ln (Tv_Abs (mk_binder pp_name ty q) body))
-              (T.E_Total,
+              (E_Total,
                pack_ln (Tv_Arrow (mk_binder pp_name ty q)
                                  (mk_comp (close_comp_typ body_c x))))
 
@@ -1216,7 +1218,7 @@ type typing : env -> term -> comp_typ -> Type0 =
      e2:term ->
      x:binder ->
      t:term ->
-     eff:T.tot_or_ghost ->
+     eff:tot_or_ghost ->
      typing g e1 (eff, pack_ln (Tv_Arrow x (mk_comp (eff, t)))) ->
      typing g e2 (eff, binder_sort x) ->
      typing g (pack_ln (Tv_App e1 (e2, binder_qual x)))
@@ -1229,7 +1231,7 @@ type typing : env -> term -> comp_typ -> Type0 =
      t1:typ ->
      e2:term ->
      t2:typ ->
-     eff:T.tot_or_ghost ->
+     eff:tot_or_ghost ->
      pp_name:pp_name_t ->
      typing g e1 (eff, t1) ->
      typing (extend_env g x t1) (open_term e2 x) (eff, t2) ->
@@ -1244,13 +1246,13 @@ type typing : env -> term -> comp_typ -> Type0 =
      u2:universe ->
      pp_name:pp_name_t ->
      q:aqualv ->
-     eff:T.tot_or_ghost ->
-     t1_eff:T.tot_or_ghost ->
-     t2_eff:T.tot_or_ghost ->
+     eff:tot_or_ghost ->
+     t1_eff:tot_or_ghost ->
+     t2_eff:tot_or_ghost ->
      typing g t1 (t1_eff, tm_type u1) ->
      typing (extend_env g x t1) (open_term t2 x) (t2_eff, tm_type u2) ->
      typing g (pack_ln (Tv_Arrow (mk_binder pp_name t1 q) (mk_comp (eff, t2))))
-              (T.E_Total, tm_type (u_max u1 u2))
+              (E_Total, tm_type (u_max u1 u2))
 
   | T_Refine:
      g:env ->
@@ -1259,21 +1261,21 @@ type typing : env -> term -> comp_typ -> Type0 =
      e:term { ~(x `Set.mem` freevars e) } ->
      u1:universe ->
      u2:universe ->
-     t_eff:T.tot_or_ghost ->
-     e_eff:T.tot_or_ghost ->
+     t_eff:tot_or_ghost ->
+     e_eff:tot_or_ghost ->
      typing g t (t_eff, tm_type u1) ->
      typing (extend_env g x t) (open_term e x) (e_eff, tm_type u2) ->
-     typing g (pack_ln (Tv_Refine (mk_simple_binder pp_name_default t) e)) (T.E_Total, tm_type u1)
+     typing g (pack_ln (Tv_Refine (mk_simple_binder pp_name_default t) e)) (E_Total, tm_type u1)
 
   | T_PropIrrelevance:
      g:env -> 
      e:term -> 
      t:term ->
-     e_eff:T.tot_or_ghost ->
-     t_eff:T.tot_or_ghost ->
+     e_eff:tot_or_ghost ->
+     t_eff:tot_or_ghost ->
      typing g e (e_eff, t) ->
      typing g t (t_eff, tm_prop) ->
-     typing g (`()) (T.E_Total, t)
+     typing g (`()) (E_Total, t)
      
   | T_Sub:
      g:env ->
@@ -1292,8 +1294,8 @@ type typing : env -> term -> comp_typ -> Type0 =
      ty:term ->
      u_ty:universe ->
      hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) } ->
-     eff:T.tot_or_ghost ->
-     ty_eff:T.tot_or_ghost ->
+     eff:tot_or_ghost ->
+     ty_eff:tot_or_ghost ->
      typing g scrutinee (eff, bool_ty) ->
      typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty) ->
      typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty) ->
@@ -1305,9 +1307,9 @@ type typing : env -> term -> comp_typ -> Type0 =
      sc_u : universe ->
      sc_ty : typ ->
      sc : term ->
-     ty_eff:T.tot_or_ghost ->
+     ty_eff:tot_or_ghost ->
      typing g sc_ty (ty_eff, tm_type sc_u) ->
-     eff:T.tot_or_ghost ->
+     eff:tot_or_ghost ->
      typing g sc (eff, sc_ty) ->
      branches:list branch ->
      ty:comp_typ ->
@@ -1361,14 +1363,14 @@ and related : env -> term -> relation -> term -> Type0 =
     g:env ->
     t0:term ->
     t1:term ->
-    squash (T.equiv_token g t0 t1) ->
+    squash (equiv_token g t0 t1) ->
     related g t0 R_Eq t1 
 
   | Rel_subtyping_token:
     g:env ->
     t0:term ->
     t1:term ->
-    squash (T.subtyping_token g t0 t1) ->
+    squash (subtyping_token g t0 t1) ->
     related g t0 R_Sub t1
 
   | Rel_equiv:
@@ -1428,7 +1430,7 @@ and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
     g:env ->
     t0:term ->
     t1:term ->
-    eff:T.tot_or_ghost ->
+    eff:tot_or_ghost ->
     rel:relation ->
     related g t0 rel t1 ->
     related_comp g (eff, t0) rel (eff, t1)
@@ -1436,13 +1438,13 @@ and related_comp : env -> comp_typ -> relation -> comp_typ -> Type0 =
   | Relc_total_ghost:
     g:env ->
     t:term ->
-    related_comp g (T.E_Total, t) R_Sub (T.E_Ghost, t)
+    related_comp g (E_Total, t) R_Sub (E_Ghost, t)
 
   | Relc_ghost_total:
     g:env ->
     t:term ->
     non_informative g t ->
-    related_comp g (T.E_Ghost, t) R_Sub (T.E_Total, t)
+    related_comp g (E_Ghost, t) R_Sub (E_Total, t)
 
 and branches_typing (g:env) (sc_u:universe) (sc_ty:typ) (sc:term) (rty:comp_typ)
   : (brs:list branch) -> (bnds : list (list R.binding)) -> Type0
@@ -1494,7 +1496,7 @@ and match_is_complete : env -> term -> typ -> list pattern -> list (list R.bindi
     ty:_ ->
     pats:_ ->
     bnds:_ ->
-    squash (T.match_complete_token env sc ty pats bnds) -> match_is_complete env sc ty pats bnds
+    squash (match_complete_token env sc ty pats bnds) -> match_is_complete env sc ty pats bnds
 
 and sub_typing (g:env) (t1 t2:term) = related g t1 R_Sub t2
 
@@ -1502,9 +1504,9 @@ and sub_comp (g:env) (c1 c2:comp_typ) = related_comp g c1 R_Sub c2
 
 and equiv (g:env) (t1 t2:term) = related g t1 R_Eq t2
 
-type tot_typing (g:env) (e:term) (t:term) = typing g e (T.E_Total, t)
+type tot_typing (g:env) (e:term) (t:term) = typing g e (E_Total, t)
 
-type ghost_typing (g:env) (e:term) (t:term) = typing g e (T.E_Ghost, t)
+type ghost_typing (g:env) (e:term) (t:term) = typing g e (E_Ghost, t)
 
 val subtyping_token_renaming (g:env)
                              (bs0:bindings)
@@ -1513,8 +1515,8 @@ val subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:T.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
-  : T.subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
+                             (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1)
+  : subtyping_token (extend_env_l g (rename_bindings bs1 x y@(y,t)::bs0))
                       (rename t0 x y)
                       (rename t1 x y)
 
@@ -1524,12 +1526,12 @@ val subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                              (d:T.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
-  : T.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
+                              (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1)
+  : subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1
 
 let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
-                  (d:typing g t (T.E_Total, tm_type (u_max u u)))
-   : typing g t (T.E_Total, tm_type u)
+                  (d:typing g t (E_Total, tm_type (u_max u u)))
+   : typing g t (E_Total, tm_type u)
    = let ue
        : univ_eq (u_max u u) u
        = UN_MaxLeq u u (UNLEQ_Refl u)
@@ -1538,13 +1540,13 @@ let simplify_umax (#g:R.env) (#t:R.term) (#u:R.universe)
        = Rel_univ g (u_max u u) u ue in
      let du : related g (tm_type (u_max u u)) R_Sub (tm_type u)
        = Rel_equiv _ _ _ _ du in
-     T_Sub _ _ _ _ d (Relc_typ _ _ _ T.E_Total _ du)
+     T_Sub _ _ _ _ d (Relc_typ _ _ _ E_Total _ du)
 
 val well_typed_terms_are_ln (g:R.env) (e:R.term) (c:comp_typ) (_:typing g e c)
   : Lemma (ensures ln e /\ ln (snd c))
 
 val type_correctness (g:R.env) (e:R.term) (c:comp_typ) (_:typing g e c)
-  : GTot (u:R.universe & typing g (snd c) (T.E_Total, tm_type u))
+  : GTot (u:R.universe & typing g (snd c) (E_Total, tm_type u))
 
 val binder_offset_pattern_invariant (p:pattern) (ss:subst)
   : Lemma (binder_offset_pattern p == binder_offset_pattern (subst_pattern p ss))
@@ -1773,7 +1775,7 @@ type sigelt_typing : env -> sigelt -> Type0 =
     fv : R.fv ->
     ty : R.typ ->
     tm : R.term ->
-    squash (typing g tm (T.E_Total, ty)) ->
+    squash (typing g tm (E_Total, ty)) ->
     sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm })]))
 
   | ST_Let_Opaque :
@@ -1781,7 +1783,7 @@ type sigelt_typing : env -> sigelt -> Type0 =
     fv : R.fv ->
     ty : R.typ ->
     (* no tm: only a proof of existence *)
-    squash (exists (tm:R.term). typing g tm (T.E_Total, ty)) ->
+    squash (exists (tm:R.term). typing g tm (E_Total, ty)) ->
     sigelt_typing g (pack_sigelt (Sg_Let false [pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = (`_) })]))
 
 (**
@@ -1848,10 +1850,10 @@ let dsl_tac_result_t (g:env) (t:option R.typ) =
 //
 type dsl_tac_t =
   gt:(fstar_top_env & option R.typ) ->
-  T.Tac (dsl_tac_result_t (fst gt) (snd gt))
+  Tac (dsl_tac_result_t (fst gt) (snd gt))
 
 val if_complete_match (g:env) (t:term)
-  : T.match_complete_token g t bool_ty [
+  : match_complete_token g t bool_ty [
        Pat_Constant C_True;
        Pat_Constant C_False;
     ] [[]; []]
@@ -1866,8 +1868,8 @@ val mkif
     (ty:term)
     (u_ty:universe)
     (hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) })
-    (eff:T.tot_or_ghost)
-    (ty_eff:T.tot_or_ghost)
+    (eff:tot_or_ghost)
+    (ty_eff:tot_or_ghost)
     (ts : typing g scrutinee (eff, bool_ty))
     (tt : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty))
     (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
@@ -1875,7 +1877,7 @@ val mkif
 : typing g (mk_if scrutinee then_ else_) (eff, ty)
 
 (* Helper to return a single let definition in a splice_t tactic. *)
-let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (T.E_Total, ty)})
+let mk_checked_let (g:R.env) (cur_module:name) (nm:string) (tm:R.term) (ty:R.typ{typing g tm (E_Total, ty)})
   : sigelt_for g (Some ty) =
   let fv = pack_fv (cur_module @ [nm]) in
   let lb = R.pack_lb ({ lb_fv = fv; lb_us = []; lb_typ = ty; lb_def = tm }) in
@@ -1898,4 +1900,4 @@ to call primitives that require a proof of typing, like
 they even be mentioned in that module due to dependencies.
 Probably the right thing to do is refactor and avoid this, though. *)
 val typing_to_token (#g:env) (#e:term) (#c:comp_typ)
-  : typing g e c -> T.typing_token g e c
+  : typing g e c -> typing_token g e c
