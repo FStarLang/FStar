@@ -20,8 +20,16 @@ open FStar.Reflection.V1
 open FStar.Reflection.V1.Formula
 open FStar.Tactics.V1.Logic.Lemmas {} (* bring lemmas into TC scope *)
 
+(* Repeated to avoid importing FStar.Tactics.V1.Derived. *)
+private let cur_goal () : Tac typ =
+  let open FStar.Stubs.Tactics.Types in
+  let open FStar.Stubs.Tactics.V1.Builtins in
+  match goals_of (get ()) with
+  | g::_ -> goal_type g
+  | _ -> raise (TacticFailure (mkmsg "no more goals", None))
+
 (** Returns the current goal as a [formula]. *)
-let cur_formula () : Tac formula = term_as_formula (FStar.Tactics.V1.Derived.cur_goal ())
+let cur_formula () : Tac formula = term_as_formula (cur_goal ())
 
 (** Revert an introduced binder as a forall. *)
 [@@plugin]

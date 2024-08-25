@@ -15,11 +15,19 @@
 *)
 module FStar.Tactics.V2.Logic
 
-open FStar.Reflection.V2.Formula
 open FStar.Tactics.Effect
-open FStar.Tactics.V2.Derived
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
 open FStar.Tactics.NamedView
 open FStar.Tactics.V1.Logic.Lemmas {} (* bring lemmas into TC scope *)
+
+(* Repeated to avoid importing FStar.Tactics.V1.Derived. *)
+private let cur_goal () : Tac typ =
+  let open FStar.Stubs.Tactics.Types in
+  let open FStar.Stubs.Tactics.V2.Builtins in
+  match goals_of (get ()) with
+  | g::_ -> goal_type g
+  | _ -> raise (TacticFailure (mkmsg "no more goals", None))
 
 (** Returns the current goal as a [formula]. *)
 let cur_formula () : Tac formula = term_as_formula (cur_goal ())
