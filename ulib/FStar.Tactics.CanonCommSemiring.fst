@@ -44,9 +44,20 @@ module FStar.Tactics.CanonCommSemiring
 ///  - http://www.cs.ru.nl/~freek/courses/tt-2014/read/10.1.1.61.3041.pdf
 
 open FStar.List
-open FStar.Reflection.V2
-open FStar.Tactics.V2
 open FStar.Algebra.CommMonoid
+
+(* Trying to not just open FStar.Tactics.V2 to reduce deps.
+TODO: Add an interface to this module. It's non trivial due to the quoting. *)
+open FStar.Stubs.Reflection.Types
+open FStar.Reflection.V2
+open FStar.Reflection.V2.Formula
+open FStar.Stubs.Tactics.Types
+open FStar.Tactics.Effect
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Tactics.V2.Derived
+open FStar.Tactics.Util
+open FStar.Tactics.NamedView
+open FStar.Tactics.MApply
 
 private
 let term_eq = FStar.Reflection.TermEq.Simple.term_eq
@@ -360,6 +371,8 @@ let spolynomial_simplify #a r p =
 ///
 /// Interpretation of varlists, monomials and canonical sums
 ///
+
+type var = nat
 
 (**
  * The variable map:
