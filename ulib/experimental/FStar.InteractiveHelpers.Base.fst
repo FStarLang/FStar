@@ -1,6 +1,6 @@
 module FStar.InteractiveHelpers.Base
 
-open FStar.List
+open FStar.List.Tot
 open FStar.Tactics
 open FStar.Mul
 
@@ -318,7 +318,7 @@ let rec _fresh_bv binder_names basename i : Tac bv =
   let name = basename ^ string_of_int i in
   (* In worst case the performance is quadratic in the number of binders.
    * TODO: fix that, it actually probably happens for anonymous variables ('_') *)
-  if List.mem name binder_names then _fresh_bv binder_names basename (i+1)
+  if List.Tot.mem name binder_names then _fresh_bv binder_names basename (i+1)
   else fresh_bv_named name
 
 let fresh_bv (e : env) (basename : string) : Tac bv =

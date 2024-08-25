@@ -2,7 +2,7 @@ module FStar.InteractiveHelpers.Effectful
 
 module HS = FStar.HyperStack
 
-open FStar.List
+open FStar.List.Tot
 open FStar.Tactics
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
@@ -948,11 +948,11 @@ let eterm_info_to_assertions dbg with_gpre with_gpost ge t is_let is_assert info
     in
     let ret_refin_prop = opt_mk_app_norm ge2.env (get_opt_refinment einfo.ei_ret_type) ret_values in
     (* Concatenate, revert and return *)
-    let pres = opt_cons gpre_prop (List.append params_props (opt_cons pre_prop [])) in
+    let pres = opt_cons gpre_prop (List.Tot.append params_props (opt_cons pre_prop [])) in
     let pres = append gparams_props pres in
     let posts = opt_cons ret_has_type_prop
                 (opt_cons ret_refin_prop (opt_cons post_prop
-                 (List.append gcast_props (opt_cons gpost_prop [])))) in
+                 (List.Tot.append gcast_props (opt_cons gpost_prop [])))) in
     (* Debugging output *)
     print_dbg dbg "- generated pres:";
     if dbg then iter (fun x -> print (term_to_string x)) pres;
