@@ -42,7 +42,7 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
         run: |
           # NOTE: this causes the build to record hints
-          echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
+          echo "CI_RECORD_HINTS_ARG=--build-arg CI_RECORD_HINTS=1" >> $GITHUB_ENV
       - name: Populate no karamel arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_no_karamel }}
         run: |
@@ -71,8 +71,7 @@ jobs:
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
-          if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_RECORD_HINTS_ARG $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then

@@ -43,16 +43,7 @@ function fetch_karamel() {
 }
 
 function make_karamel_pre() {
-    # Default build target is minimal, unless specified otherwise
-    local localTarget
-    if [[ $1 == "" ]]; then
-        localTarget="minimal"
-    else
-        localTarget="$1"
-    fi
-
-    make -C karamel -j $threads $localTarget ||
-        (cd karamel && git clean -fdx && make -j $threads $localTarget)
+    make -C karamel -j $threads minimal
 }
 
 function fstar_docs_build () {
@@ -64,9 +55,7 @@ function fstar_docs_build () {
 }
 
 function fstar_default_build () {
-    localTarget=$1
-
-    if [[ $localTarget == "uregressions-ulong" ]]; then
+    if [[ -n "$CI_RECORD_HINTS" ]]; then
         export OTHERFLAGS="--record_hints $OTHERFLAGS"
     fi
 
@@ -95,7 +84,7 @@ function fstar_default_build () {
 
     # Once F* is built, run its main regression suite. This also runs the karamel
     # test (unless CI_NO_KARAMEL is set).
-    $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
+    $gnutime make -j $threads -k ci-post && echo true >$status_file
     echo Done building FStar
 
     if [ -z "${FSTAR_CI_NO_GITDIFF}" ]; then
@@ -143,8 +132,8 @@ function build_fstar() {
 
     if [[ $localTarget == "fstar-docs" ]]; then
         fstar_docs_build
-    else
-        fstar_default_build $target
+    elif [[ $localTarget == "ci" ]]; then
+        fstar_default_build
     fi
 
     if [[ $(cat $status_file) != "true" ]]; then
