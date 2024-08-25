@@ -25,7 +25,7 @@ module FStar.BitVector
 /// TODO: We might rename this module to FStar.Seq.Boolean?
 
 open FStar.Mul
-open FStar.Seq
+open FStar.Seq.Base
 
 (** [bv_t n] is just a sequence of booleans of length [n] *)
 type bv_t (n: nat) = vec: seq bool {length vec = n}
@@ -93,9 +93,9 @@ val lemma_xor_bounded (m: pos) (n: nat) (x y: bv_t m)
       (requires
         (forall (i: nat).
             (i < m /\ i >= n) ==>
-            (Seq.index x (m - 1 - i) = false /\ Seq.index y (m - 1 - i) = false)))
+            (index x (m - 1 - i) = false /\ index y (m - 1 - i) = false)))
       (ensures
-        (forall (i: nat). (i < m /\ i >= n) ==> (Seq.index (logxor_vec x y) (m - 1 - i) = false)))
+        (forall (i: nat). (i < m /\ i >= n) ==> (index (logxor_vec x y) (m - 1 - i) = false)))
 
 (** The property that the zero bits of b are also zero in a.
     I.e. that a is a subset of b. *)
