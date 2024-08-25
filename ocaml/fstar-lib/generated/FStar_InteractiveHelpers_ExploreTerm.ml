@@ -2189,7 +2189,7 @@ let rec (_flush_typ_or_comp_comp :
                                 (FStar_Range.mk_range
                                    "FStar.InteractiveHelpers.ExploreTerm.fst"
                                    (Prims.of_int (342)) (Prims.of_int (15))
-                                   (Prims.of_int (342)) (Prims.of_int (28)))))
+                                   (Prims.of_int (342)) (Prims.of_int (32)))))
                           (FStar_Sealed.seal
                              (Obj.magic
                                 (FStar_Range.mk_range
@@ -2747,13 +2747,13 @@ let (flush_typ_or_comp :
                                                 (Prims.of_int (367))
                                                 (Prims.of_int (14))
                                                 (Prims.of_int (367))
-                                                (Prims.of_int (26)))))
+                                                (Prims.of_int (30)))))
                                        (FStar_Sealed.seal
                                           (Obj.magic
                                              (FStar_Range.mk_range
                                                 "FStar.InteractiveHelpers.ExploreTerm.fst"
                                                 (Prims.of_int (367))
-                                                (Prims.of_int (29))
+                                                (Prims.of_int (33))
                                                 (Prims.of_int (369))
                                                 (Prims.of_int (18)))))
                                        (FStar_Tactics_Effect.lift_div_tac

@@ -1,8 +1,8 @@
 open Prims
 type ('a, 'n) llist = 'a Prims.list
 let rec rev' : 'a . 'a Prims.list -> 'a Prims.list =
-  fun uu___ ->
-    match uu___ with
+  fun xs ->
+    match xs with
     | [] -> []
     | hd::tl -> FStar_List_Tot_Base.op_At (rev' tl) [hd]
 let rev'T : 'uuuuu . unit -> 'uuuuu Prims.list -> 'uuuuu Prims.list =
