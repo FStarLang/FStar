@@ -15,8 +15,7 @@
 *)
 module FStar.Pprint
 
-(* Unfortunate *)
-open FStar.Char
+open FStar.Char.Type
 open FStar.Float
 
 (* The rest of this file is taken almost verbatim from src/prettyprint/FStar.Pprint.fsti *)

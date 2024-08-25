@@ -1302,7 +1302,7 @@ and translate_constant c: expr =
       let i = BU.int_of_char c in
       let s = BU.string_of_int i in
       let c = EConstant (CInt, s) in
-      let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
+      let char_of_int = EQualified (["FStar"; "Char"; "Type"], "char_of_int") in
       EApp(char_of_int, [c])
   | MLC_Int (s, Some (sg, wd)) ->
       EConstant (translate_width (Some (sg, wd)), s)

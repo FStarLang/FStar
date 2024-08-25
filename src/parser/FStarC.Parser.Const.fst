@@ -84,7 +84,7 @@ let real_lid  = p2l ["FStar"; "Real"; "real"]
 
 let float_lid  = p2l ["FStar"; "Float"; "float"]
 
-let char_lid  = p2l ["FStar"; "Char"; "char"]
+let char_lid  = p2l ["FStar"; "Char"; "Type"; "char"]
 
 let heap_lid   = p2l ["FStar"; "Heap"; "heap"]
 
