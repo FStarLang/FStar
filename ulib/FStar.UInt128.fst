@@ -27,8 +27,13 @@ module U64 = FStar.UInt64
 module Math = FStar.Math.Lemmas
 
 open FStar.BV
-open FStar.Tactics.V2
-module T = FStar.Tactics.V2
+
+(* We try to keep the dependencies of this module low,
+by not opening the full Tactics module. This speeds up
+checking the library by improving parallelism. *)
+module T = FStar.Stubs.Tactics.V2.Builtins
+module TD = FStar.Tactics.V2.Derived
+module TM = FStar.Tactics.MApply
 
 #set-options "--max_fuel 0 --max_ifuel 0 --split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
@@ -57,11 +62,11 @@ let carry_uint64_ok (a b:uint_t 64)
   : squash (int2bv (carry_uint64 a b) == carry_bv a b)
   = _ by (T.norm [delta_only [`%carry_uint64]; unascribe];
           let open FStar.Tactics.BV in
-          mapply (`FStar.Tactics.BV.Lemmas.trans);
+          TM.mapply (`FStar.Tactics.BV.Lemmas.trans);
           arith_to_bv_tac ();
           arith_to_bv_tac ();
           T.norm [delta_only [`%carry_bv]];
-          trefl())
+          TD.trefl())
 
 let fact1 (a b: uint_t 64) = carry_bv a b == int2bv 1
 let fact0 (a b: uint_t 64) = carry_bv a b == int2bv 0
@@ -70,14 +75,14 @@ let lem_ult_1 (a b: uint_t 64)
   : squash (bvult (int2bv a) (int2bv b) ==> fact1 a b)
   = assert (bvult (int2bv a) (int2bv b) ==> fact1 a b)
        by (T.norm [delta_only [`%fact1;`%carry_bv]];
-           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'";
-           smt())
+           T.set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'";
+           TD.smt())
 
 let lem_ult_2 (a b:uint_t 64)
   : squash (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
   = assert (not (bvult (int2bv a) (int2bv b)) ==> fact0 a b)
        by (T.norm [delta_only [`%fact0;`%carry_bv]];
-           set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'")
+           T.set_options "--smtencoding.elim_box true --using_facts_from '__Nothing__' --z3smtopt '(set-option :smt.case_split 1)'")
 
 let int2bv_ult (#n: pos) (a b: uint_t n)
   : Lemma (ensures a < b <==> bvult #n (int2bv #n a) (int2bv #n b))
