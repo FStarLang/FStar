@@ -432,7 +432,10 @@ let psmap_modify (m: 'value psmap) (k: string) (upd: 'value option -> 'value) =
 
 let psmap_merge (m1: 'value psmap) (m2: 'value psmap) : 'value psmap =
   psmap_fold m1 (fun k v m -> psmap_add m k v) m2
-let psmap_remove (m: 'value psmap) (k: string) = StringMap.remove k m
+
+let psmap_remove (m: 'value psmap)  (key:string)
+  : 'value psmap = StringMap.remove key m
+  
 module ZHashtbl = BatHashtbl.Make(Z)
 module ZMap = BatMap.Make(Z)
 
