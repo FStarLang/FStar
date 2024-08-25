@@ -13,13 +13,26 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V2
+module FStar.Tactics.Canon.Lemmas
 
-include FStar.Stubs.Reflection.Types
-include FStar.Stubs.Reflection.V2.Data
-include FStar.Stubs.Reflection.V2.Builtins
-include FStar.Reflection.V2.Derived
-include FStar.Reflection.V2.Derived.Lemmas
-include FStar.Reflection.Const
-include FStar.Reflection.V2.Compare
-include FStar.Reflection.V2.Collect
+open FStar.Mul
+
+let distr #x #y #z = ()
+let distl #x #y #z = ()
+let ass_plus_l #x #y #z = ()
+let ass_mult_l #x #y #z = ()
+let comm_plus #x #y = ()
+let sw_plus #x #y #z = ()
+let sw_mult #x #y #z = ()
+let comm_mult #x #y = ()
+let trans #a #x #z #y e1 e2 = ()
+let cong_plus #w #x #y #z p q = ()
+let cong_mult #w #x #y #z p q = ()
+let neg_minus_one #x = ()
+let x_plus_zero #x = ()
+let zero_plus_x #x = ()
+let x_mult_zero #x = ()
+let zero_mult_x #x = ()
+let x_mult_one #x = ()
+let one_mult_x #x = ()
+let minus_is_plus #x #y = ()

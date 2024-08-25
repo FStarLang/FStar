@@ -13,13 +13,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V2
+module FStar.Tactics.Canon
 
-include FStar.Stubs.Reflection.Types
-include FStar.Stubs.Reflection.V2.Data
-include FStar.Stubs.Reflection.V2.Builtins
-include FStar.Reflection.V2.Derived
-include FStar.Reflection.V2.Derived.Lemmas
-include FStar.Reflection.Const
-include FStar.Reflection.V2.Compare
-include FStar.Reflection.V2.Collect
+open FStar.Tactics.Effect
+open FStar.Tactics.Canon.Lemmas {} (* bring lemmas into tc scope *)
+
+[@@plugin]
+val canon () : Tac unit

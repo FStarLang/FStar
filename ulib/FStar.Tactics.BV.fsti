@@ -13,13 +13,19 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-module FStar.Reflection.V2
+module FStar.Tactics.BV
 
-include FStar.Stubs.Reflection.Types
-include FStar.Stubs.Reflection.V2.Data
-include FStar.Stubs.Reflection.V2.Builtins
-include FStar.Reflection.V2.Derived
-include FStar.Reflection.V2.Derived.Lemmas
-include FStar.Reflection.Const
-include FStar.Reflection.V2.Compare
-include FStar.Reflection.V2.Collect
+open FStar.Tactics.Effect
+open FStar.Tactics.BV.Lemmas {} (* bring into tc scope, since the tactic calls the lemmas *)
+
+[@@plugin]
+val arith_to_bv_tac () : Tac unit
+
+[@@plugin]
+val bv_tac () : Tac unit
+
+[@@plugin]
+val bv_tac_lt (n:int) : Tac unit
+
+[@@plugin]
+val to_bv_tac () : Tac unit

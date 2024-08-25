@@ -20,7 +20,7 @@ function export_home() {
 # By default, karamel master works against F* stable. Can also be overridden.
 function fetch_karamel() {
     if [ ! -d karamel ]; then
-        git clone https://github.com/FStarLang/karamel karamel
+        git clone --depth 1 https://github.com/FStarLang/karamel karamel
     fi
 
     cd karamel
@@ -61,11 +61,10 @@ function fstar_default_build () {
 
     # Start fetching and building karamel while we build F*
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
-        fetch_karamel
-        make_karamel_pre
-        export_home KRML "$(pwd)/karamel"
         export FSTAR_CI_TEST_KARAMEL=1
-    fi &
+        export_home KRML "$(pwd)/karamel"
+        (fetch_karamel ; make_karamel_pre) &
+    fi
 
     # Build F*, along with fstarlib
     if ! make -j $threads ci-pre; then

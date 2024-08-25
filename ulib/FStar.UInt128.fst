@@ -29,7 +29,6 @@ module Math = FStar.Math.Lemmas
 open FStar.BV
 open FStar.Tactics.V2
 module T = FStar.Tactics.V2
-module TBV = FStar.Tactics.BV
 
 #set-options "--max_fuel 0 --max_ifuel 0 --split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
@@ -58,7 +57,7 @@ let carry_uint64_ok (a b:uint_t 64)
   : squash (int2bv (carry_uint64 a b) == carry_bv a b)
   = _ by (T.norm [delta_only [`%carry_uint64]; unascribe];
           let open FStar.Tactics.BV in
-          mapply (`trans);
+          mapply (`FStar.Tactics.BV.Lemmas.trans);
           arith_to_bv_tac ();
           arith_to_bv_tac ();
           T.norm [delta_only [`%carry_bv]];
@@ -941,12 +940,13 @@ let mul32 x y =
   let x0 = u64_mod_32 x in
   let x1 = U64.shift_right x u32_32 in
   u32_product_bound (U64.v x0) (U32.v y);
-  let x0y = U64.mul x0 (FStar.Int.Cast.uint32_to_uint64 y) in
+  let y64 = U64.uint_to_t (U32.v y) in
+  let x0y = U64.mul x0 y64 in
   let x0yl = u64_mod_32 x0y in
   let x0yh = U64.shift_right x0y u32_32 in
   u32_product_bound (U64.v x1) (U32.v y);
   // not in the original C code
-  let x1y' = U64.mul x1 (FStar.Int.Cast.uint32_to_uint64 y) in
+  let x1y' = U64.mul x1 y64 in
   let x1y = U64.add x1y' x0yh in
   // correspondence with C:
   // r0 = r.low

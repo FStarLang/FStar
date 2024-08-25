@@ -1,4 +1,8 @@
 open Prims
+let (type_of_binder :
+  FStar_Reflection_Types.binder -> FStar_Reflection_Types.typ) =
+  fun b ->
+    (FStar_Reflection_V2_Builtins.inspect_binder b).FStar_Reflection_V2_Data.sort2
 let rec (inspect_ln_unascribe :
   FStar_Reflection_Types.term -> FStar_Reflection_V2_Data.term_view) =
   fun t ->
@@ -95,32 +99,12 @@ let (push_binding :
               (b.FStar_Reflection_V2_Data.ppname3)
           } in
       FStar_Reflection_V2_Builtins.push_namedv e nv
-let (type_of_binder :
-  FStar_Reflection_Types.binder -> FStar_Reflection_Types.typ) =
-  fun b ->
-    (FStar_Reflection_V2_Builtins.inspect_binder b).FStar_Reflection_V2_Data.sort2
 let rec (flatten_name : FStar_Reflection_Types.name -> Prims.string) =
   fun ns ->
     match ns with
     | [] -> ""
     | n::[] -> n
     | n::ns1 -> Prims.strcat n (Prims.strcat "." (flatten_name ns1))
-let rec (collect_app_ln' :
-  FStar_Reflection_V2_Data.argv Prims.list ->
-    FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv
-        Prims.list))
-  =
-  fun args ->
-    fun t ->
-      match inspect_ln_unascribe t with
-      | FStar_Reflection_V2_Data.Tv_App (l, r) ->
-          collect_app_ln' (r :: args) l
-      | uu___ -> (t, args)
-let (collect_app_ln :
-  FStar_Reflection_Types.term ->
-    (FStar_Reflection_Types.term * FStar_Reflection_V2_Data.argv Prims.list))
-  = collect_app_ln' []
 let rec (mk_app :
   FStar_Reflection_Types.term ->
     FStar_Reflection_V2_Data.argv Prims.list -> FStar_Reflection_Types.term)
@@ -173,57 +157,6 @@ let rec (mk_arr_ln :
                (b,
                  (FStar_Reflection_V2_Builtins.pack_comp
                     (FStar_Reflection_V2_Data.C_Total (mk_arr_ln bs1 cod)))))
-let rec (collect_arr' :
-  FStar_Reflection_Types.binder Prims.list ->
-    FStar_Reflection_Types.comp ->
-      (FStar_Reflection_Types.binder Prims.list *
-        FStar_Reflection_Types.comp))
-  =
-  fun bs ->
-    fun c ->
-      match FStar_Reflection_V2_Builtins.inspect_comp c with
-      | FStar_Reflection_V2_Data.C_Total t ->
-          (match inspect_ln_unascribe t with
-           | FStar_Reflection_V2_Data.Tv_Arrow (b, c1) ->
-               collect_arr' (b :: bs) c1
-           | uu___ -> (bs, c))
-      | uu___ -> (bs, c)
-let (collect_arr_ln_bs :
-  FStar_Reflection_Types.typ ->
-    (FStar_Reflection_Types.binder Prims.list * FStar_Reflection_Types.comp))
-  =
-  fun t ->
-    let uu___ =
-      collect_arr' []
-        (FStar_Reflection_V2_Builtins.pack_comp
-           (FStar_Reflection_V2_Data.C_Total t)) in
-    match uu___ with | (bs, c) -> ((FStar_List_Tot_Base.rev bs), c)
-let (collect_arr_ln :
-  FStar_Reflection_Types.typ ->
-    (FStar_Reflection_Types.typ Prims.list * FStar_Reflection_Types.comp))
-  =
-  fun t ->
-    let uu___ = collect_arr_ln_bs t in
-    match uu___ with
-    | (bs, c) -> ((FStar_List_Tot_Base.map type_of_binder bs), c)
-let rec (collect_abs' :
-  FStar_Reflection_Types.binder Prims.list ->
-    FStar_Reflection_Types.term ->
-      (FStar_Reflection_Types.binder Prims.list *
-        FStar_Reflection_Types.term))
-  =
-  fun bs ->
-    fun t ->
-      match inspect_ln_unascribe t with
-      | FStar_Reflection_V2_Data.Tv_Abs (b, t') -> collect_abs' (b :: bs) t'
-      | uu___ -> (bs, t)
-let (collect_abs_ln :
-  FStar_Reflection_Types.term ->
-    (FStar_Reflection_Types.binder Prims.list * FStar_Reflection_Types.term))
-  =
-  fun t ->
-    let uu___ = collect_abs' [] t in
-    match uu___ with | (bs, t') -> ((FStar_List_Tot_Base.rev bs), t')
 let (fv_to_string : FStar_Reflection_Types.fv -> Prims.string) =
   fun fv ->
     FStar_Reflection_V2_Builtins.implode_qn
@@ -316,7 +249,7 @@ let (destruct_tuple :
     FStar_Reflection_Types.term Prims.list FStar_Pervasives_Native.option)
   =
   fun t ->
-    let uu___ = collect_app_ln t in
+    let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
     match uu___ with
     | (head, args) ->
         (match FStar_Reflection_V2_Builtins.inspect_ln head with
