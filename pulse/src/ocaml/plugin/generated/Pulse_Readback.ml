@@ -42,7 +42,7 @@ let (try_readback_st_comp :
     Pulse_Syntax_Base.comp FStar_Pervasives_Native.option)
   =
   fun t ->
-    let uu___ = FStar_Reflection_V2_Derived.collect_app_ln t in
+    let uu___ = FStar_Reflection_V2_Collect.collect_app_ln t in
     match uu___ with
     | (hd, args) ->
         (match FStar_Reflection_V2_Builtins.inspect_ln hd with

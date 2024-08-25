@@ -3007,7 +3007,7 @@ let rec (is_stateful_arrow :
                                                                  (Prims.of_int (9)))))
                                                         (FStar_Tactics_Effect.lift_div_tac
                                                            (fun uu___ ->
-                                                              FStar_Reflection_V2_Derived.collect_arr_ln_bs
+                                                              FStar_Reflection_V2_Collect.collect_arr_ln_bs
                                                                 c_res))
                                                         (fun uu___ ->
                                                            (fun uu___ ->
@@ -3245,7 +3245,7 @@ let (is_stateful_application :
                  (Prims.of_int (785)) (Prims.of_int (28))
                  (Prims.of_int (806)) (Prims.of_int (15)))))
         (FStar_Tactics_Effect.lift_div_tac
-           (fun uu___ -> FStar_Reflection_V2_Derived.collect_app_ln e))
+           (fun uu___ -> FStar_Reflection_V2_Collect.collect_app_ln e))
         (fun uu___ ->
            (fun uu___ ->
               match uu___ with
