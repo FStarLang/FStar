@@ -80,7 +80,7 @@ instance printable_either #a #b {| printable a |} {| printable b |} : printable 
 
 (* Then the base types. *)
 
-instance printable_char : printable FStar.Char.char =
+instance printable_char : printable FStar.Char.Type.char =
 {
   to_string = string_of_char
 }

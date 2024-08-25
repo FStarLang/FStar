@@ -35,7 +35,6 @@ module U16 = FStar.UInt16
 module U32 = FStar.UInt32
 module U64 = FStar.UInt64
 module Str = FStar.String
-module Chr = FStar.Char
 
 unfold let u8 = U8.t
 unfold let u16 = U16.t
