@@ -271,7 +271,7 @@ let (e_bool : Prims.bool FStar_Syntax_Embeddings_Base.embedding) =
          let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.bool_lid in
          (uu___2, []) in
        FStar_Syntax_Syntax.ET_app uu___1)
-let (e_char : FStar_Char.char FStar_Syntax_Embeddings_Base.embedding) =
+let (e_char : FStar_Char_Type.char FStar_Syntax_Embeddings_Base.embedding) =
   let em c rng _shadow _norm =
     let t = FStar_Syntax_Util.exp_char c in
     {

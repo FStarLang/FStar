@@ -1525,7 +1525,7 @@ let (collect_one :
              | FStar_Const.Const_char uu___2 ->
                  let uu___3 =
                    let uu___4 =
-                     let uu___5 = FStar_Ident.lid_of_str "fstar.char" in
+                     let uu___5 = FStar_Ident.lid_of_str "fstar.char.type" in
                      (false, uu___5) in
                    P_dep uu___4 in
                  add_to_parsing_data uu___3

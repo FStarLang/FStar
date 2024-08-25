@@ -495,13 +495,13 @@ let (uu___is_Right : associativity -> Prims.bool) =
 let (uu___is_NonAssoc : associativity -> Prims.bool) =
   fun projectee -> match projectee with | NonAssoc -> true | uu___ -> false
 type token =
-  | StartsWith of FStar_Char.char 
+  | StartsWith of FStar_Char_Type.char 
   | Exact of Prims.string 
   | UnicodeOperator 
 let (uu___is_StartsWith : token -> Prims.bool) =
   fun projectee ->
     match projectee with | StartsWith _0 -> true | uu___ -> false
-let (__proj__StartsWith__item___0 : token -> FStar_Char.char) =
+let (__proj__StartsWith__item___0 : token -> FStar_Char_Type.char) =
   fun projectee -> match projectee with | StartsWith _0 -> _0
 let (uu___is_Exact : token -> Prims.bool) =
   fun projectee -> match projectee with | Exact _0 -> true | uu___ -> false
@@ -518,7 +518,7 @@ let (token_to_string : token -> Prims.string) =
         Prims.strcat (FStar_Compiler_Util.string_of_char c) ".*"
     | Exact s -> s
     | UnicodeOperator -> "<unicode-op>"
-let (is_non_latin_char : FStar_Char.char -> Prims.bool) =
+let (is_non_latin_char : FStar_Char_Type.char -> Prims.bool) =
   fun s -> (FStar_Compiler_Util.int_of_char s) > (Prims.of_int (0x024f))
 let (matches_token : Prims.string -> token -> Prims.bool) =
   fun s ->
