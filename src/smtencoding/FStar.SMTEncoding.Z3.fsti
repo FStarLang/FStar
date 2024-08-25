@@ -21,11 +21,10 @@ open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
-
-type unsat_core = option (list string)
+module U = FStar.SMTEncoding.UnsatCore
 
 type z3status =
-    | UNSAT   of unsat_core
+    | UNSAT   of option U.unsat_core
     | SAT     of error_labels & option string         //error labels & z3 reason
     | UNKNOWN of error_labels & option string         //error labels & z3 reason
     | TIMEOUT of error_labels & option string         //error labels & z3 reason
@@ -58,6 +57,7 @@ val ask_text
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
+       -> core:option U.unsat_core
        -> string
 
 val ask: r:Range.range
@@ -66,6 +66,7 @@ val ask: r:Range.range
        -> qry:list decl
        -> queryid:string
        -> fresh:bool
+       -> core:option U.unsat_core
        -> z3result
 
 val refresh: unit -> unit

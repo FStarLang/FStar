@@ -13,37 +13,37 @@ let (add_name :
 type decls_at_level =
   {
   given_decl_names: decl_name_set ;
-  all_decls_at_level: FStar_SMTEncoding_Term.decl Prims.list ;
+  all_decls_at_level_rev: FStar_SMTEncoding_Term.decl Prims.list ;
   pruning_state: FStar_SMTEncoding_Pruning.pruning_state ;
   given_decls: FStar_SMTEncoding_Term.decl Prims.list }
 let (__proj__Mkdecls_at_level__item__given_decl_names :
   decls_at_level -> decl_name_set) =
   fun projectee ->
     match projectee with
-    | { given_decl_names; all_decls_at_level; pruning_state; given_decls;_}
-        -> given_decl_names
-let (__proj__Mkdecls_at_level__item__all_decls_at_level :
+    | { given_decl_names; all_decls_at_level_rev; pruning_state;
+        given_decls;_} -> given_decl_names
+let (__proj__Mkdecls_at_level__item__all_decls_at_level_rev :
   decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee ->
     match projectee with
-    | { given_decl_names; all_decls_at_level; pruning_state; given_decls;_}
-        -> all_decls_at_level
+    | { given_decl_names; all_decls_at_level_rev; pruning_state;
+        given_decls;_} -> all_decls_at_level_rev
 let (__proj__Mkdecls_at_level__item__pruning_state :
   decls_at_level -> FStar_SMTEncoding_Pruning.pruning_state) =
   fun projectee ->
     match projectee with
-    | { given_decl_names; all_decls_at_level; pruning_state; given_decls;_}
-        -> pruning_state
+    | { given_decl_names; all_decls_at_level_rev; pruning_state;
+        given_decls;_} -> pruning_state
 let (__proj__Mkdecls_at_level__item__given_decls :
   decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee ->
     match projectee with
-    | { given_decl_names; all_decls_at_level; pruning_state; given_decls;_}
-        -> given_decls
+    | { given_decl_names; all_decls_at_level_rev; pruning_state;
+        given_decls;_} -> given_decls
 let (init_given_decls_at_level : decls_at_level) =
   {
     given_decl_names = empty_decl_names;
-    all_decls_at_level = [];
+    all_decls_at_level_rev = [];
     pruning_state = FStar_SMTEncoding_Pruning.init;
     given_decls = []
   }
@@ -74,7 +74,7 @@ let (push : solver_state -> solver_state) =
         let next =
           {
             given_decl_names = (hd.given_decl_names);
-            all_decls_at_level = [];
+            all_decls_at_level_rev = [];
             pruning_state = (hd.pruning_state);
             given_decls = []
           } in
@@ -134,9 +134,9 @@ let (give_delay_assumptions :
                      hd.pruning_state in
                  {
                    given_decl_names = (hd.given_decl_names);
-                   all_decls_at_level =
+                   all_decls_at_level_rev =
                      (FStar_List_Tot_Base.op_At (FStar_Compiler_List.rev ds)
-                        hd.all_decls_at_level);
+                        hd.all_decls_at_level_rev);
                    pruning_state = uu___2;
                    given_decls = (hd.given_decls)
                  } in
@@ -173,9 +173,9 @@ let (give_now :
                      hd.pruning_state in
                  {
                    given_decl_names = given;
-                   all_decls_at_level =
+                   all_decls_at_level_rev =
                      (FStar_List_Tot_Base.op_At (FStar_Compiler_List.rev ds)
-                        hd.all_decls_at_level);
+                        hd.all_decls_at_level_rev);
                    pruning_state = uu___2;
                    given_decls =
                      (FStar_List_Tot_Base.op_At hd.given_decls ds)
@@ -229,7 +229,7 @@ let (prune :
                let hd1 =
                  {
                    given_decl_names = decl_name_set1;
-                   all_decls_at_level = (hd.all_decls_at_level);
+                   all_decls_at_level_rev = (hd.all_decls_at_level_rev);
                    pruning_state = (hd.pruning_state);
                    given_decls = (hd.given_decls)
                  } in
@@ -239,6 +239,20 @@ let (prune :
                    to_flush = (FStar_List_Tot_Base.op_At can_give s.to_flush)
                  } in
                s1)
+let (filter_with_unsat_core :
+  FStar_SMTEncoding_UnsatCore.unsat_core ->
+    solver_state -> FStar_SMTEncoding_Term.decl Prims.list)
+  =
+  fun core ->
+    fun s ->
+      let all_decls =
+        FStar_Compiler_List.fold_right
+          (fun level ->
+             fun out ->
+               FStar_List_Tot_Base.op_At out
+                 (FStar_Compiler_List.rev level.all_decls_at_level_rev))
+          s.levels [] in
+      FStar_SMTEncoding_UnsatCore.filter core all_decls
 let (flush :
   solver_state -> (FStar_SMTEncoding_Term.decl Prims.list * solver_state)) =
   fun s ->

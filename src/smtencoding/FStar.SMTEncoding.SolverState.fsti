@@ -21,7 +21,7 @@ open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
-
+module U = FStar.SMTEncoding.UnsatCore
 val solver_state : Type0
 
 val init (_:unit) : solver_state
@@ -30,4 +30,5 @@ val pop (s:solver_state) : solver_state
 val reset (s:solver_state) : solver_state
 val give (ds:list decl) (s:solver_state) : solver_state
 val prune (roots:list decl) (s:solver_state) : solver_state
+val filter_with_unsat_core (_:U.unsat_core) (s:solver_state) : list decl
 val flush (s:solver_state) : list decl & solver_state

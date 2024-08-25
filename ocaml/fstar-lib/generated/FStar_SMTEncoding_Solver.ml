@@ -236,7 +236,8 @@ type query_settings =
   query_fuel: Prims.int ;
   query_ifuel: Prims.int ;
   query_rlimit: Prims.int ;
-  query_hint: FStar_SMTEncoding_Z3.unsat_core ;
+  query_hint:
+    FStar_SMTEncoding_UnsatCore.unsat_core FStar_Pervasives_Native.option ;
   query_errors: errors Prims.list ;
   query_all_labels: FStar_SMTEncoding_Term.error_labels ;
   query_suffix: FStar_SMTEncoding_Term.decl Prims.list ;
@@ -308,7 +309,9 @@ let (__proj__Mkquery_settings__item__query_rlimit :
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_rlimit
 let (__proj__Mkquery_settings__item__query_hint :
-  query_settings -> FStar_SMTEncoding_Z3.unsat_core) =
+  query_settings ->
+    FStar_SMTEncoding_UnsatCore.unsat_core FStar_Pervasives_Native.option)
+  =
   fun projectee ->
     match projectee with
     | { query_env; query_decl; query_name; query_index; query_range;
@@ -364,91 +367,6 @@ let (__proj__Mkquery_settings__item__query_term :
         query_fuel; query_ifuel; query_rlimit; query_hint; query_errors;
         query_all_labels; query_suffix; query_hash;
         query_can_be_split_and_retried; query_term;_} -> query_term
-let (maybe_build_core_from_hook :
-  FStar_TypeChecker_Env.env ->
-    query_settings FStar_Pervasives_Native.option ->
-      FStar_SMTEncoding_Z3.unsat_core ->
-        FStar_SMTEncoding_Term.decl Prims.list ->
-          FStar_SMTEncoding_Z3.unsat_core)
-  =
-  fun e ->
-    fun qsettings ->
-      fun core ->
-        fun theory ->
-          match qsettings with
-          | FStar_Pervasives_Native.None -> core
-          | FStar_Pervasives_Native.Some qsettings1 ->
-              (match core with
-               | FStar_Pervasives_Native.Some uu___ -> core
-               | FStar_Pervasives_Native.None ->
-                   let uu___ = FStar_Options.hint_hook () in
-                   (match uu___ with
-                    | FStar_Pervasives_Native.None -> core
-                    | FStar_Pervasives_Native.Some hint_hook_cmd ->
-                        let qryid =
-                          let uu___1 =
-                            FStar_Compiler_Util.string_of_int
-                              qsettings1.query_index in
-                          FStar_Compiler_Util.format2 "(%s, %s)"
-                            qsettings1.query_name uu___1 in
-                        let qry =
-                          FStar_SMTEncoding_Term.declToSmt_no_caps ""
-                            qsettings1.query_decl in
-                        let qry1 =
-                          FStar_Compiler_Util.replace_chars qry 10 "" in
-                        (match e.FStar_TypeChecker_Env.qtbl_name_and_index
-                         with
-                         | (FStar_Pervasives_Native.None, uu___1) ->
-                             (FStar_Errors.diag qsettings1.query_range
-                                "maybe_build_core_from_hook: qbtl name unset?";
-                              core)
-                         | (FStar_Pervasives_Native.Some (lid, typ, ctr),
-                            uu___1) ->
-                             let input =
-                               let uu___2 =
-                                 let uu___3 =
-                                   let uu___4 =
-                                     let uu___5 =
-                                       let uu___6 =
-                                         let uu___7 =
-                                           FStar_Syntax_Print.term_to_string
-                                             typ in
-                                         FStar_Json.JsonStr uu___7 in
-                                       ("type", uu___6) in
-                                     let uu___6 =
-                                       let uu___7 =
-                                         let uu___8 =
-                                           let uu___9 =
-                                             let uu___10 =
-                                               FStar_Compiler_List.map
-                                                 (fun d ->
-                                                    let uu___11 =
-                                                      FStar_SMTEncoding_Term.declToSmt_no_caps
-                                                        "" d in
-                                                    FStar_Json.JsonStr
-                                                      uu___11) theory in
-                                             FStar_Json.JsonList uu___10 in
-                                           ("theory", uu___9) in
-                                         [uu___8] in
-                                       ("query", (FStar_Json.JsonStr qry1))
-                                         :: uu___7 in
-                                     uu___5 :: uu___6 in
-                                   ("query_ctr", (FStar_Json.JsonInt ctr)) ::
-                                     uu___4 in
-                                 ("query_name",
-                                   (FStar_Json.JsonStr
-                                      (qsettings1.query_name)))
-                                   :: uu___3 in
-                               FStar_Json.JsonAssoc uu___2 in
-                             let input1 = FStar_Json.string_of_json input in
-                             let output =
-                               FStar_Compiler_Util.run_process
-                                 (Prims.strcat "hint-hook-" qryid)
-                                 hint_hook_cmd []
-                                 (FStar_Pervasives_Native.Some input1) in
-                             let facts =
-                               FStar_Compiler_String.split [44] output in
-                             FStar_Pervasives_Native.Some facts)))
 let (convert_rlimit : Prims.int -> Prims.int) =
   fun r ->
     let uu___ =
@@ -597,7 +515,7 @@ let (detail_hint_replay :
                   uu___3 in
               FStar_SMTEncoding_Z3.ask settings.query_range
                 settings.query_hash settings.query_all_labels uu___1 uu___2
-                false in
+                false FStar_Pervasives_Native.None in
             FStar_SMTEncoding_ErrorReporting.detail_errors true
               (settings.query_env).FStar_SMTEncoding_Env.tcenv
               settings.query_all_labels ask_z3
@@ -850,7 +768,8 @@ let (errors_to_report :
              FStar_Compiler_Util.format2 "(%s, %s)" settings.query_name
                uu___3 in
            FStar_SMTEncoding_Z3.ask settings.query_range settings.query_hash
-             settings.query_all_labels uu___1 uu___2 false in
+             settings.query_all_labels uu___1 uu___2 false
+             FStar_Pervasives_Native.None in
          FStar_SMTEncoding_ErrorReporting.detail_errors false
            (settings.query_env).FStar_SMTEncoding_Env.tcenv
            settings.query_all_labels ask_z3
@@ -1315,7 +1234,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___542 : answer FStar_Class_Show.showable) =
+let (uu___510 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->
@@ -1584,7 +1503,8 @@ let (__ask_solver :
          let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
          FStar_Compiler_Util.format2 "(%s, %s)" config.query_name uu___3 in
        FStar_SMTEncoding_Z3.ask config.query_range config.query_hash
-         config.query_all_labels uu___1 uu___2 (used_hint config)) in
+         config.query_all_labels uu___1 uu___2 (used_hint config)
+         config.query_hint) in
     fold_queries configs check_one_config process_result
 let (ask_solver_quake : query_settings Prims.list -> answer) =
   fun configs ->
@@ -1892,7 +1812,7 @@ let (maybe_save_failing_query :
                let uu___4 = FStar_Compiler_Util.string_of_int qs.query_index in
                FStar_Compiler_Util.format2 "(%s, %s)" qs.query_name uu___4 in
              FStar_SMTEncoding_Z3.ask_text qs.query_range qs.query_hash
-               qs.query_all_labels uu___2 uu___3 in
+               qs.query_all_labels uu___2 uu___3 qs.query_hint in
            FStar_Compiler_Util.write_file file_name query_str
          else ());
         (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTFail in

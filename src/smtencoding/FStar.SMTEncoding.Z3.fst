@@ -21,6 +21,7 @@ open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util
+open FStar.Class.Show
 module SolverState = FStar.SMTEncoding.SolverState
 module M = FStar.Compiler.Misc
 module BU = FStar.Compiler.Util
@@ -364,7 +365,13 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
          | Some (section, suffix) -> Some section, prefix @ suffix
     in
     let result_opt, lines = find_section "result" lines in
-    let result = BU.must result_opt in
+    let result = 
+      match result_opt with
+      | None ->
+        failwith
+          (BU.format1 "Unexpexted output from Z3: no result section found:\n%s" (String.concat "\n" lines))
+      | Some result -> result
+    in
     let reason_unknown, lines = find_section "reason-unknown" lines in
     let unsat_core, lines = find_section "unsat-core" lines in
     let statistics, lines = find_section "statistics" lines in
@@ -561,6 +568,9 @@ let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_st
 let with_solver_state_unit (f:SolverState.solver_state -> SolverState.solver_state)
 : unit
 = with_solver_state (fun x -> (), f x)
+let reading_solver_state (f:SolverState.solver_state -> 'a) : 'a
+= let ss = !bg_z3_proc in
+  f ss.ctxt
 let push msg = 
   with_solver_state_unit SolverState.push;
   with_solver_state_unit (SolverState.give [Caption msg])
@@ -701,7 +711,8 @@ let z3_job sim_theory
           BU.record_time (fun () -> doZ3Exe sim_theory log_file r fresh input label_messages queryid)
         with e ->
           refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
-          raise e)
+          raise e
+          )
       (Some (query_logging.get_module_name()))
       "FStar.SMTEncoding.Z3 (aggregate query time)"
   in
@@ -717,16 +728,20 @@ let ask_text
     (label_messages:error_labels)
     (qry:list decl)
     (queryid:string)
+    (core:option U.unsat_core)
   : string
   = (* Mimics a fresh ask, and just returns the string that would
     be sent to the solver. *)
-    let theory = with_solver_state SolverState.flush in
+    let theory = 
+      match core with
+      | None -> with_solver_state SolverState.flush
+      | Some core -> reading_solver_state (SolverState.filter_with_unsat_core core)
+    in
     let query_tail = Push 0 :: qry@[Pop 0] in
     let theory = theory @ query_tail in
     let input, qhash, log_file_name = mk_input true theory in
     input
 
-open FStar.Class.Show
 let ask
     (r:Range.range)
     (cache:option string)
@@ -734,10 +749,18 @@ let ask
     (qry:list decl)
     (queryid:string)
     (fresh:bool)
+    (core:option U.unsat_core)
 : z3result
 = push "query";
   giveZ3 qry;
-  let theory = with_solver_state SolverState.flush in
+  let theory = 
+    match core with 
+    | None -> with_solver_state SolverState.flush
+    | Some core ->
+      if not fresh
+      then failwith "Unexpected: unsat core must only be used with fresh solvers";
+      reading_solver_state (SolverState.filter_with_unsat_core core)
+  in
   let input, qhash, log_file_name = mk_input fresh theory in
   let just_ask () = z3_job None log_file_name r fresh label_messages input qhash queryid in
   let result =

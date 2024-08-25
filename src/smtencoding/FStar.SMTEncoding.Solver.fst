@@ -42,6 +42,7 @@ module Print    = FStar.Syntax.Print
 module Syntax   = FStar.Syntax.Syntax
 module TcUtil   = FStar.TypeChecker.Util
 module U        = FStar.Syntax.Util
+module UC       = FStar.SMTEncoding.UnsatCore
 exception SplitQueryAndRetry
 
 let dbg_SMTQuery = Debug.get_toggle "SMTQuery"
@@ -54,7 +55,7 @@ let dbg_SMTFail  = Debug.get_toggle "SMTFail"
 // The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_replay_result = either Z3.unsat_core, error_labels
+type z3_replay_result = either (option UC.unsat_core), error_labels
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
@@ -192,47 +193,6 @@ let filter_using_facts_from_aux
 //   { keep; discard; keep_sim; used_unsat_core = false }
   
 
-// let filter_assertions_with_stats
-//           (e:env_t) 
-//           (pruned_context:option (list Ident.lident))
-//           (core:Z3.unsat_core)
-//           (all_decls: option (list decl))
-//           (theory:list decl)
-// : filtered_theory & int & int
-// =  //(filtered theory, if core used, retained, pruned)
-//   match core with
-//   | None ->
-//     let ft = filter_using_facts_from e pruned_context all_decls theory in
-//     ft, 0, 0
-//   | Some core ->
-//       let rec aux theory =
-//         //so that we can use the tail-recursive fold_left
-//         let theory_rev = List.rev theory in
-//         let keep, discard, n_retained, n_pruned =
-//             List.fold_left 
-//             (fun (keep, discard, n_retained, n_pruned) d ->
-//               match d with
-//               | Assume a ->
-//                   if List.contains a.assumption_name core
-//                   then d::keep, discard, n_retained+1, n_pruned
-//                   else if BU.starts_with a.assumption_name "@"
-//                   then d::keep, discard, n_retained, n_pruned
-//                   else keep, d::discard, n_retained, n_pruned+1
-//               | Module (name, decls) ->
-//                   let ft, n, m = aux decls in
-//                   Module(name, ft.keep)::keep, Module(name, ft.discard)::discard, n_retained + n, n_pruned + m
-//               | _ -> d::keep, discard, n_retained, n_pruned)
-//             ([Caption ("UNSAT CORE USED: " ^ (core |> String.concat ", "))],//start with the unsat core caption at the end
-//             [],
-//             0,
-//             0)
-//             theory_rev
-//         in
-//         let ft = { keep; discard; keep_sim=None; used_unsat_core = true } in
-//         ft, n_retained, n_pruned
-//       in
-//       aux theory
-
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
 (***********************************************************************************)
@@ -269,7 +229,7 @@ type query_settings = {
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;
-    query_hint:Z3.unsat_core;
+    query_hint:option UC.unsat_core;
     query_errors:list errors;
     query_all_labels:error_labels;
     query_suffix:list decl;
@@ -277,51 +237,6 @@ type query_settings = {
     query_can_be_split_and_retried:bool;
     query_term: FStar.Syntax.Syntax.term;
 }
-
-let maybe_build_core_from_hook (e:env) (qsettings:option query_settings) (core:Z3.unsat_core) (theory:list decl): Z3.unsat_core =
-  match qsettings with | None -> core | Some qsettings -> // Only when we have a full query
-  match core with | Some _ -> core | None -> // No current core/hint
-  match Options.hint_hook () with | None -> core | Some hint_hook_cmd -> // And a hint_hook set
-
-  let qryid = BU.format2 "(%s, %s)" qsettings.query_name (string_of_int qsettings.query_index) in
-  let qry = Term.declToSmt_no_caps "" qsettings.query_decl in
-  let qry = BU.replace_chars qry '\n' "" in
-  match e.qtbl_name_and_index with
-  | None, _ ->
-    // Should not happen
-    Err.diag qsettings.query_range "maybe_build_core_from_hook: qbtl name unset?";
-    core
-  | Some (lid, typ, ctr), _ ->
-    (* Err.log_issue qsettings.query_range (Err.Warning_UnexpectedZ3Stderr, *)
-    (*                         BU.format3 "will construct hint for queryid=%s,  typ=%s, query=%s" *)
-    (*                                   qryid (Print.term_to_string typ) qry); *)
-    let open FStar.Json in
-    let input = JsonAssoc [
-      ("query_name", JsonStr qsettings.query_name);
-      ("query_ctr", JsonInt ctr);
-      ("type", JsonStr (Print.term_to_string typ)); // TODO: normalize print options, they will affect this output
-      ("query", JsonStr qry);
-      ("theory", JsonList (List.map (fun d -> JsonStr (Term.declToSmt_no_caps "" d)) theory));
-    ]
-    in
-    let input = string_of_json input in
-    let output = BU.run_process ("hint-hook-"^qryid) hint_hook_cmd [] (Some input) in
-    let facts = String.split [','] output in
-    Some facts
-
-// let filter_assertions
-//       (e:env_t)
-//       (qsettings:option query_settings)
-//       (core:Z3.unsat_core)
-//       (all_decls:option (list decl))
-//       (theory:list decl) =
-//   let core = maybe_build_core_from_hook e.tcenv qsettings core theory in
-//   let pruned_context = match qsettings with
-//     | None -> None
-//     | Some qsettings -> qsettings.query_pruned_context
-//   in
-//   let ft, _, _ = filter_assertions_with_stats e pruned_context core all_decls theory in
-//   ft
 
 (* Translation from F* rlimit units to Z3 rlimit units.
 
@@ -406,6 +321,8 @@ let detail_hint_replay settings z3result =
                       (with_fuel_and_diagnostics settings label_assumptions)
                       (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
                       false
+                      None
+                      // settings.query_hint
            in
            detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3
 
@@ -575,6 +492,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                       (with_fuel_and_diagnostics initial_fuel label_assumptions)
                       (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
                       false
+                      None
               in
            (* GM: This is a bit of hack, we don't return these detailed errors
             * (it implies rewriting detail_errors heavily). Returning them
@@ -611,7 +529,7 @@ let mk_unique_string_accumulator ()
   { add ; get; clear }
 
 let query_info settings z3result =
-    let process_unsat_core (core:unsat_core) =
+    let process_unsat_core (core:option UC.unsat_core) =
        (* Accumulator for module names *)
        let { add=add_module_name; get=get_module_names } =
          mk_unique_string_accumulator ()
@@ -987,12 +905,12 @@ let __ask_solver
     let check_one_config config : z3result =
           if Options.z3_refresh() then Z3.refresh();
           Z3.ask config.query_range
-                  // (filter_assertions config.query_env (Some config) config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
                   (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
-                  (used_hint config) // hint queries run in a fresh solver
+                  (used_hint config)
+                  config.query_hint
     in
 
     fold_queries configs check_one_config process_result
@@ -1215,6 +1133,7 @@ let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) 
                             qs.query_all_labels
                             (with_fuel_and_diagnostics qs [])
                             (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+                            qs.query_hint
     in
     write_file file_name query_str;
     ()
@@ -1380,7 +1299,7 @@ let maybe_refresh_solver env =
 let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
   let r =
     try f () with
-    | e -> h (); raise e
+    | e -> h(); raise e
   in
   h (); r
 

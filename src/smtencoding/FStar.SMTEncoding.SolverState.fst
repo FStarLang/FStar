@@ -23,6 +23,7 @@ open FStar.Compiler.Util
 open FStar.List.Tot
 module BU = FStar.Compiler.Util
 module Pruning = FStar.SMTEncoding.Pruning
+module U = FStar.SMTEncoding.UnsatCore
 
 let decl_name_set = BU.psmap bool
 let empty_decl_names = BU.psmap_empty #bool ()
@@ -30,14 +31,14 @@ let decl_names_contains (x:string) (s:decl_name_set) = Some? (BU.psmap_try_find 
 let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
 type decls_at_level = {
   given_decl_names: decl_name_set;
-  all_decls_at_level: list decl;
+  all_decls_at_level_rev: list decl;
   pruning_state: Pruning.pruning_state;
   given_decls: list decl
 }
 
 let init_given_decls_at_level = { 
   given_decl_names = empty_decl_names;
-  all_decls_at_level = [];
+  all_decls_at_level_rev = [];
   pruning_state=Pruning.init;
   given_decls=[]
 }
@@ -61,7 +62,7 @@ let push (s:solver_state)
 : solver_state
 = let hd, _ = peek s in
   let next = { given_decl_names = hd.given_decl_names; 
-               all_decls_at_level = [];
+               all_decls_at_level_rev = [];
                pruning_state = hd.pruning_state;
                given_decls=[] } in
   { 
@@ -77,7 +78,7 @@ let pop (s:solver_state)
     levels = tl;
     to_flush = Pop (List.length tl) :: s.to_flush
   }
-
+ 
 let reset (s:solver_state) =
   let to_flush =
     List.fold_right
@@ -99,7 +100,7 @@ let give_delay_assumptions (ds:list decl) (s:solver_state)
   let hd, tl = peek s in
   let hd = { hd with
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
-    all_decls_at_level = List.rev ds@hd.all_decls_at_level;
+    all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
   } in
   {
     levels = hd :: tl;
@@ -122,7 +123,7 @@ let give_now (ds:list decl) (s:solver_state)
   let hd = { hd with
     given_decl_names = given;
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
-    all_decls_at_level = List.rev ds@hd.all_decls_at_level;
+    all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
     given_decls = hd.given_decls @ ds
   } in
   {
@@ -161,6 +162,15 @@ let prune (roots:list decl) (s:solver_state)
   let hd = { hd with given_decl_names = decl_name_set } in
   let s = { levels = hd :: tl; to_flush=can_give@s.to_flush } in
   s
+
+let filter_with_unsat_core (core:U.unsat_core) (s:solver_state) 
+: list decl
+= let all_decls =
+    List.fold_right
+      (fun level out -> out@List.rev level.all_decls_at_level_rev)
+      s.levels []
+  in
+  U.filter core all_decls
 
 let flush (s:solver_state)
 : list decl & solver_state
