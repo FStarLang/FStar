@@ -125,7 +125,7 @@ clean-intermediate:
 .PHONY: hints
 hints:
 	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) -C ulib/
-	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions ci-ulib-extra
 
 .PHONY: bench
 bench:
@@ -208,10 +208,6 @@ ci-post:						\
 .PHONY: ci-uregressions
 ci-uregressions:
 	+$(Q)$(MAKE) -C src uregressions
-
-.PHONY: ci-uregressions-ulong
-ci-uregressions-ulong:
-	+$(Q)$(MAKE) -C src uregressions-ulong
 
 .PHONY: ci-karamel-test
 ci-karamel-test: ci-krmllib
