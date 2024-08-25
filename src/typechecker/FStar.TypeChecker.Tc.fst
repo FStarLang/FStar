@@ -899,13 +899,8 @@ let tc_decl env se: list sigelt & list sigelt & Env.env =
     else if se.sigmeta.sigmeta_admit then (
       let result = tc_decl' { env with admit = true } se in
       result
-    ) else (
-      FStar.SMTEncoding.Solver.set_current_decl (U.lids_of_sigelt se);
-      let result = tc_decl' env se in
-      if Options.ext_getv "profile_context" = "every_decl"
-      then FStar.SMTEncoding.Solver.report_context_current_decl ();
-      result
-    )
+    ) else
+      tc_decl' env se
   in
   let () =
     (* Do the post-tc attribute/qualifier check. *)
@@ -1172,23 +1167,7 @@ let tc_modul (env0:env) (m:modul) (iface_exists:bool) :(modul & env) =
   let msg = "Internals for " ^ string_of_lid m.name in
   //AR: push env, this will also push solver, and then finish_partial_modul will do the pop
   let env0 = push_context env0 msg in
-  if Options.ext_getv "profile_context" <> ""
-  then FStar.SMTEncoding.Solver.clear_profile_context();
   let modul, env = tc_partial_modul env0 m in
-  if Options.ext_getv "profile_context" <> ""
-  && not env.admit
-  then (
-    let opens = DsEnv.opens_and_abbrevs_of env.dsenv m.name in
-    let opens = opens |> List.map (function
-        | Inl (l, _, _) -> l
-        | Inr (_, l) -> l) in
-    let includes = List.collect (DsEnv.transitive_includes_of env.dsenv) opens in
-    // BU.print2 "Transitive includes of [%s] = [%s]\n"
-    //   (String.concat ", " (List.map string_of_lid opens))
-    //   (String.concat ", " (List.map string_of_lid includes));
-    let all_modules = env.modules |> List.map (fun m -> m.name) in
-    FStar.SMTEncoding.Solver.report_context_global m.name all_modules (BU.remove_dups Ident.lid_equals (opens@includes))
-  );
   // Note: all sigelts returned by tc_partial_modul must already be compressed
   // by Syntax.compress.deep_compress, so they are safe to output.
   finish_partial_modul false iface_exists env modul

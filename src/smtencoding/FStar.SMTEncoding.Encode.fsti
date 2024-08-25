@@ -20,10 +20,10 @@ module ErrorReporting = FStar.SMTEncoding.ErrorReporting
 module S = FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
 
-val push: string -> unit
-val pop:  string -> unit
-val snapshot: string -> (Env.solver_depth_t & unit)
-val rollback: string -> option Env.solver_depth_t -> unit
+val push_encoding_state: string -> unit
+val pop_encoding_state:  string -> unit
+val snapshot_encoding: string -> (Env.solver_depth_t & unit)
+val rollback_encoding: string -> option Env.solver_depth_t -> unit
 val init: Env.env -> unit
 val get_current_env: Env.env -> FStar.SMTEncoding.Env.env_t
 val encode_sig: Env.env -> S.sigelt -> unit
@@ -37,4 +37,3 @@ val encode_query: option (unit -> string)
                   & list ErrorReporting.label //labels in the query
                   & decl        //the query itself
                   & list decl  //suffix, evaluating labels in the model, etc
-                  & option (list (Ident.lident)) //pruned context

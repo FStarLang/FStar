@@ -879,8 +879,8 @@ let rec declToSmt' print_captions z3options decl =
     ""
   | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
+  | Push n -> BU.format1 "(push) ;; push{%s" (show n)
+  | Pop n -> BU.format1 "(pop) ;; %s}pop" (show n)
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
@@ -1173,8 +1173,8 @@ let decl_to_string_short d =
   | Eval _ -> "Eval"
   | Echo s -> "Echo " ^ s
   | RetainAssumptions _ -> "RetainAssumptions"
-  | Push -> "push"
-  | Pop -> "pop"
+  | Push n -> BU.format1 "push %s" (show n)
+  | Pop n -> BU.format1 "pop %s" (show n)
   | CheckSat -> "check-sat"
   | GetUnsatCore -> "get-unsat-core"
   | SetOption (s, v) -> "SetOption " ^ s ^ " " ^ v

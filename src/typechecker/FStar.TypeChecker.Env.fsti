@@ -103,6 +103,7 @@ val remove_trigger_for_lemma (pat:lident) (lem:lident) (ctxt:pending_lemma_patte
 : pending_lemma_patterns & bool //is lem eligible? i.e., all its triggers matched?
 val find_lemmas_waiting_on_trigger (lid:lident) (p:pending_lemma_patterns)
 : list lident
+val ambients (p:pending_lemma_patterns) : list lident
 (*
  * AR: The mlift record that maintains functions to lift 'source' computation types
  *     and terms to 'target' computation types and terms (terms in the case of reifiable effects)
@@ -247,8 +248,8 @@ and env = {
 and solver_depth_t = int & int & int
 and solver_t = {
     init            :env -> unit;
-    push            :string -> unit;
-    pop             :string -> unit;
+    // push            :string -> unit;
+    // pop             :string -> unit;
     snapshot        :string -> (solver_depth_t & unit);
     rollback        :string -> option solver_depth_t -> unit;
     encode_sig      :env -> sigelt -> unit;

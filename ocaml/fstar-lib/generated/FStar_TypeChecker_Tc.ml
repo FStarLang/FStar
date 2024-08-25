@@ -4357,17 +4357,7 @@ let (tc_decl :
                       (env2.FStar_TypeChecker_Env.pending_lemmas)
                   } se in
               result1)
-           else
-             (FStar_SMTEncoding_Solver.set_current_decl
-                (FStar_Syntax_Util.lids_of_sigelt se);
-              (let result1 = tc_decl' env2 se in
-               (let uu___6 =
-                  let uu___7 = FStar_Options.ext_getv "profile_context" in
-                  uu___7 = "every_decl" in
-                if uu___6
-                then FStar_SMTEncoding_Solver.report_context_current_decl ()
-                else ());
-               result1)) in
+           else tc_decl' env2 se in
        (let uu___3 = result in
         match uu___3 with
         | (ses, uu___4, uu___5) ->
@@ -5232,7 +5222,7 @@ let (tc_decls :
                ([], env) ses) in
       match uu___ with
       | (ses1, env1) -> ((FStar_Compiler_List.rev_append ses1 []), env1)
-let (uu___885 : unit) =
+let (uu___880 : unit) =
   FStar_Compiler_Effect.op_Colon_Equals tc_decls_knot
     (FStar_Pervasives_Native.Some tc_decls)
 let (snapshot_context :
@@ -5537,46 +5527,9 @@ let (tc_modul :
           let uu___ = FStar_Ident.string_of_lid m.FStar_Syntax_Syntax.name in
           Prims.strcat "Internals for " uu___ in
         let env01 = push_context env0 msg in
-        (let uu___1 =
-           let uu___2 = FStar_Options.ext_getv "profile_context" in
-           uu___2 <> "" in
-         if uu___1
-         then FStar_SMTEncoding_Solver.clear_profile_context ()
-         else ());
-        (let uu___1 = tc_partial_modul env01 m in
-         match uu___1 with
-         | (modul, env) ->
-             ((let uu___3 =
-                 (let uu___4 = FStar_Options.ext_getv "profile_context" in
-                  uu___4 <> "") &&
-                   (Prims.op_Negation env.FStar_TypeChecker_Env.admit) in
-               if uu___3
-               then
-                 let opens =
-                   FStar_Syntax_DsEnv.opens_and_abbrevs_of
-                     env.FStar_TypeChecker_Env.dsenv
-                     m.FStar_Syntax_Syntax.name in
-                 let opens1 =
-                   FStar_Compiler_List.map
-                     (fun uu___4 ->
-                        match uu___4 with
-                        | FStar_Pervasives.Inl (l, uu___5, uu___6) -> l
-                        | FStar_Pervasives.Inr (uu___5, l) -> l) opens in
-                 let includes =
-                   FStar_Compiler_List.collect
-                     (FStar_Syntax_DsEnv.transitive_includes_of
-                        env.FStar_TypeChecker_Env.dsenv) opens1 in
-                 let all_modules =
-                   FStar_Compiler_List.map
-                     (fun m1 -> m1.FStar_Syntax_Syntax.name)
-                     env.FStar_TypeChecker_Env.modules in
-                 let uu___4 =
-                   FStar_Compiler_Util.remove_dups FStar_Ident.lid_equals
-                     (FStar_Compiler_List.op_At opens1 includes) in
-                 FStar_SMTEncoding_Solver.report_context_global
-                   m.FStar_Syntax_Syntax.name all_modules uu___4
-               else ());
-              finish_partial_modul false iface_exists env modul))
+        let uu___ = tc_partial_modul env01 m in
+        match uu___ with
+        | (modul, env) -> finish_partial_modul false iface_exists env modul
 let (load_checked_module_sigelts :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.modul -> FStar_TypeChecker_Env.env)

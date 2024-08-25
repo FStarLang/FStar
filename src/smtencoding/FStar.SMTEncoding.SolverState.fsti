@@ -1,5 +1,5 @@
-﻿(*
-   Copyright 2008-2014 Nikhil Swamy and Microsoft Research
+(*
+   Copyright 2024 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,10 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 *)
-
-module FStar.SMTEncoding.Solver
+module FStar.SMTEncoding.SolverState
 open FStar.Compiler.Effect
+open FStar
+open FStar.Compiler
+open FStar.SMTEncoding.Term
+open FStar.BaseTypes
+open FStar.Compiler.Util
+module BU = FStar.Compiler.Util
 
-val with_hints_db : string -> (unit -> 'a) -> 'a
-val dummy: FStar.TypeChecker.Env.solver_t
-val solver: FStar.TypeChecker.Env.solver_t
+val solver_state : Type0
+
+val init (_:unit) : solver_state
+val push (s:solver_state) : solver_state
+val pop (s:solver_state) : solver_state
+val reset (s:solver_state) : solver_state
+val give (ds:list decl) (s:solver_state) : solver_state
+val prune (roots:list decl) (s:solver_state) : solver_state
+val flush (s:solver_state) : list decl & solver_state

@@ -7126,7 +7126,7 @@ let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     init_env tcenv;
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
-let (snapshot :
+let (snapshot_encoding :
   Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
   fun msg ->
     FStar_Compiler_Util.atomically
@@ -7138,11 +7138,8 @@ let (snapshot :
                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.snapshot () in
              (match uu___2 with
               | (varops_depth, ()) ->
-                  let uu___3 = FStar_SMTEncoding_Z3.snapshot msg in
-                  (match uu___3 with
-                   | (z3_depth, ()) ->
-                       ((env_depth, varops_depth, z3_depth), ()))))
-let (rollback :
+                  ((env_depth, varops_depth, Prims.int_zero), ())))
+let (rollback_encoding :
   Prims.string ->
     FStar_TypeChecker_Env.solver_depth_t FStar_Pervasives_Native.option ->
       unit)
@@ -7164,11 +7161,11 @@ let (rollback :
            | (env_depth, varops_depth, z3_depth) ->
                (rollback_env env_depth;
                 FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.rollback
-                  varops_depth;
-                FStar_SMTEncoding_Z3.rollback msg z3_depth))
-let (push : Prims.string -> unit) = fun msg -> let uu___ = snapshot msg in ()
-let (pop : Prims.string -> unit) =
-  fun msg -> rollback msg FStar_Pervasives_Native.None
+                  varops_depth))
+let (push_encoding_state : Prims.string -> unit) =
+  fun msg -> let uu___ = snapshot_encoding msg in ()
+let (pop_encoding_state : Prims.string -> unit) =
+  fun msg -> rollback_encoding msg FStar_Pervasives_Native.None
 let (open_fact_db_tags :
   FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Term.fact_db_id Prims.list)
   = fun env -> []
@@ -7506,8 +7503,7 @@ let (encode_query :
         (FStar_SMTEncoding_Term.decl Prims.list *
           FStar_SMTEncoding_ErrorReporting.label Prims.list *
           FStar_SMTEncoding_Term.decl * FStar_SMTEncoding_Term.decl
-          Prims.list * FStar_Ident.lident Prims.list
-          FStar_Pervasives_Native.option))
+          Prims.list))
   =
   fun use_env_msg ->
     fun tcenv ->
@@ -7572,59 +7568,6 @@ let (encode_query :
                     (uu___4, bindings) in
               match uu___2 with
               | (q1, bindings) ->
-                  let pruned_context =
-                    let uu___3 =
-                      let uu___4 = FStar_Options.ext_getv "context_pruning" in
-                      uu___4 <> "" in
-                    if uu___3
-                    then
-                      let remaining_bindings =
-                        FStar_Compiler_List.collect
-                          (fun uu___4 ->
-                             match uu___4 with
-                             | FStar_Syntax_Syntax.Binding_var x ->
-                                 [x.FStar_Syntax_Syntax.sort]
-                             | FStar_Syntax_Syntax.Binding_lid
-                                 (lid, (uu___5, t)) ->
-                                 let uu___6 =
-                                   let uu___7 =
-                                     FStar_Syntax_Syntax.lid_as_fv lid
-                                       FStar_Pervasives_Native.None in
-                                   FStar_Syntax_Syntax.fv_to_tm uu___7 in
-                                 [uu___6; t]
-                             | uu___5 -> []) bindings in
-                      let pruned_context1 =
-                        FStar_TypeChecker_ContextPruning.context_of
-                          env.FStar_SMTEncoding_Env.tcenv (q1 ::
-                          remaining_bindings) in
-                      let qid =
-                        match (env.FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.qtbl_name_and_index
-                        with
-                        | (FStar_Pervasives_Native.None, uu___4) ->
-                            "no query id"
-                        | (FStar_Pervasives_Native.Some (lid, uu___4, ctr),
-                           uu___5) ->
-                            let uu___6 = FStar_Syntax_Print.lid_to_string lid in
-                            FStar_Compiler_Util.format2 "%s, %s" uu___6
-                              (Prims.string_of_int ctr) in
-                      ((let uu___5 =
-                          let uu___6 =
-                            FStar_Options.ext_getv "context_pruning_verbose" in
-                          uu___6 <> "" in
-                        if uu___5
-                        then
-                          let uu___6 = FStar_Syntax_Print.term_to_string q1 in
-                          let uu___7 =
-                            let uu___8 =
-                              FStar_Compiler_List.map
-                                FStar_Ident.string_of_lid pruned_context1 in
-                            FStar_Compiler_String.concat "\n\t" uu___8 in
-                          FStar_Compiler_Util.print3
-                            "For query (%s) start{ %s,\npruned context is:\n\t%s\nend}\n"
-                            qid uu___6 uu___7
-                        else ());
-                       FStar_Pervasives_Native.Some pruned_context1)
-                    else FStar_Pervasives_Native.None in
                   let uu___3 = encode_env_bindings env bindings in
                   (match uu___3 with
                    | (env_decls, env1) ->
@@ -7758,5 +7701,4 @@ let (encode_query :
                                              "Encoding took %sms\n"
                                              (Prims.string_of_int ms)
                                          else ());
-                                        (query_prelude, labels, qry, suffix,
-                                          pruned_context)))))))))
+                                        (query_prelude, labels, qry, suffix)))))))))

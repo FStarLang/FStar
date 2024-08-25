@@ -218,5 +218,6 @@ let rec scan (ts:list term)
 let context_of (env:env) (ts:list term)
 : list lident
 = let init = { env; pending_lemmas=env.pending_lemmas; reached=empty() } in
-  let _, ctxt = scan ts init in
+  let ambients = List.map (fun x -> lid_as_fv x None |> fv_to_tm) (Env.ambients env.pending_lemmas) in
+  let _, ctxt = scan (ts@ambients) init in
   elems ctxt.reached

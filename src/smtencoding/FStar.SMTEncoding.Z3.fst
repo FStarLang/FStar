@@ -21,7 +21,7 @@ open FStar.Compiler
 open FStar.SMTEncoding.Term
 open FStar.BaseTypes
 open FStar.Compiler.Util
-
+module SolverState = FStar.SMTEncoding.SolverState
 module M = FStar.Compiler.Misc
 module BU = FStar.Compiler.Util
 
@@ -248,6 +248,7 @@ type bgproc = {
     refresh:  unit -> unit;
     restart:  unit -> unit;
     version:  unit -> string;
+    ctxt:     SolverState.solver_state;
 }
 
 let cmd_and_args_to_string cmd_and_args =
@@ -330,7 +331,8 @@ let bg_z3_proc =
     BU.mk_ref ({ask = BU.with_monitor x ask;
                 refresh = BU.with_monitor x refresh;
                 restart = BU.with_monitor x restart;
-                version = (fun () -> !the_z3proc_version)})
+                version = (fun () -> !the_z3proc_version);
+                ctxt = SolverState.init() })
 
 
 type smt_output_section = list string
@@ -550,54 +552,27 @@ let z3_options (ver:string) =
   in
   String.concat "\n" opts ^ "\n"
 
-// bg_scope is a global, mutable variable that keeps a list of the declarations
-// that we have given to z3 so far. In order to allow rollback of history,
-// one can enter a new "scope" by pushing a new, empty z3 list of declarations
-// on fresh_scope (a stack) -- one can then, for instance, verify these
-// declarations immediately, then call pop so that subsequent queries will not
-// reverify or use these declarations
-let fresh_scope : ref scope_t = BU.mk_ref [[]]
-let mk_fresh_scope () = !fresh_scope
-let flatten_fresh_scope () = List.flatten (List.rev !fresh_scope)
-
-// bg_scope: Is the flat sequence of declarations already given to Z3
-//           When refreshing the solver, the bg_scope is set to
-//           a flattened version of fresh_scope
-let bg_scope : ref (list decl) = BU.mk_ref []
-let discarded_decls : ref (list decl) = BU.mk_ref []
-// fresh_scope is a mutable reference; this pushes a new list at the front;
-// then, givez3 modifies the reference so that within the new list at the front,
-// new queries are pushed
-let push msg    = BU.atomically (fun () ->
-    fresh_scope := [Caption msg; Push]::!fresh_scope;
-    bg_scope := !bg_scope @ [Push; Caption msg])
-
-let pop msg      = BU.atomically (fun () ->
-    fresh_scope := List.tl !fresh_scope;
-    bg_scope := !bg_scope @ [Caption msg; Pop])
-
-let snapshot msg = Common.snapshot push fresh_scope msg
-let rollback msg depth = Common.rollback (fun () -> pop msg) fresh_scope depth
-
-//giveZ3 decls: adds decls to the stack of declarations
-//              to be actually given to Z3 only when the next
-//              query comes up
-let giveZ3 decls =
-   decls |> List.iter (function Push | Pop -> failwith "Unexpected push/pop" | _ -> ());
-   // This is where we prepend new queries to the head of the list at the head
-   // of fresh_scope
-   begin match !fresh_scope with
-    | hd::tl -> fresh_scope := (hd@decls)::tl
-    | _ -> failwith "Impossible"
-   end;
-   bg_scope := !bg_scope @ decls
-
-//refresh: create a new z3 process, and reset the bg_scope
-let refresh () =
+let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_state)
+: 'a
+= let ss = !bg_z3_proc in
+  let res, ctxt = f ss.ctxt in
+  bg_z3_proc := { ss with ctxt };
+  res
+let with_solver_state_unit (f:SolverState.solver_state -> SolverState.solver_state)
+: unit
+= with_solver_state (fun x -> (), f x)
+let push msg = 
+  with_solver_state_unit SolverState.push;
+  with_solver_state_unit (SolverState.give [Caption msg])
+let pop msg =
+  with_solver_state_unit (SolverState.give [Caption msg]);
+  with_solver_state_unit SolverState.pop
+let prune roots = with_solver_state_unit (SolverState.prune roots)
+let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
+let refresh ctxt =
     (!bg_z3_proc).refresh();
-    bg_scope := flatten_fresh_scope (); 
-    discarded_decls := []
-
+    with_solver_state_unit SolverState.reset
+ 
 let context_profile (theory:list decl) =
     let modules, total_decls =
         List.fold_left (fun (out, _total) d ->
@@ -703,8 +678,16 @@ let cache_hit
     else
         None
 
-let z3_job sim_theory (log_file:_) (r:Range.range) fresh (label_messages:error_labels) input qhash queryid () : z3result =
-  //This code is a little ugly:
+let z3_job sim_theory
+       (log_file:_)
+       (r:Range.range)
+       fresh
+       (label_messages:error_labels)
+       input
+       qhash
+       queryid
+: z3result
+= //This code is a little ugly:
   //We insert a profiling call to accumulate total time spent in Z3
   //But, we also record the time of this particular call so that we can
   //record the elapsed time in the z3result_time field.
@@ -730,7 +713,6 @@ let z3_job sim_theory (log_file:_) (r:Range.range) fresh (label_messages:error_l
 
 let ask_text
     (r:Range.range)
-    (filter_theory:list decl -> filtered_theory)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
@@ -738,53 +720,33 @@ let ask_text
   : string
   = (* Mimics a fresh ask, and just returns the string that would
     be sent to the solver. *)
-    let theory = flatten_fresh_scope() in
-    let theory = theory @[Push]@qry@[Pop] in
-    let filtered_theory = filter_theory theory in
-    let input, qhash, log_file_name = mk_input true filtered_theory.keep in
+    let theory = with_solver_state SolverState.flush in
+    let query_tail = Push 0 :: qry@[Pop 0] in
+    let theory = theory @ query_tail in
+    let input, qhash, log_file_name = mk_input true theory in
     input
 
+open FStar.Class.Show
 let ask
     (r:Range.range)
-    (filter_theory:list decl -> filtered_theory)
     (cache:option string)
     (label_messages:error_labels)
     (qry:list decl)
     (queryid:string)
-    (_scope : option scope_t) // GM: This was only used in ask_n_cores
-    (fresh:bool) : z3result
-  = let theory, discards =
-        if fresh
-        then flatten_fresh_scope(), []
-        else let theory = !bg_scope in
-             bg_scope := [];//now consumed
-             theory, !discarded_decls
-    in
-    let theory =
-      match theory with
-      | Caption msg :: Pop :: tl -> 
-        Caption msg :: Pop :: discards @ tl
-      | _ -> discards @ theory
-    in
-    let theory = theory @[Push]@qry@[Pop] in
-    let filtered_theory = filter_theory theory in
-    if not fresh then (
-      // BU.print2 
-      //   "Filtered theory:\nkeep\n\t%s\ndiscard\n\t%s\n" 
-      //     (filtered_theory.keep |> List.map decl_to_string_short |> String.concat "\n\t")
-      //     (filtered_theory.discard |> List.map decl_to_string_short |> String.concat "\n\t");
-      discarded_decls := filtered_theory.discard
-    );
-    let input, qhash, log_file_name = mk_input fresh filtered_theory.keep in
-
-    let just_ask () =
-      z3_job
-        filtered_theory.prune_context_would_have_discarded
-        log_file_name r fresh label_messages input qhash queryid ()
-    in
+    (fresh:bool)
+: z3result
+= push "query";
+  giveZ3 qry;
+  let theory = with_solver_state SolverState.flush in
+  let input, qhash, log_file_name = mk_input fresh theory in
+  let just_ask () = z3_job None log_file_name r fresh label_messages input qhash queryid in
+  let result =
     if fresh then
         match cache_hit log_file_name cache qhash with
         | Some z3r -> z3r
         | None -> just_ask ()
     else
         just_ask ()
+  in
+  pop "query";
+  result

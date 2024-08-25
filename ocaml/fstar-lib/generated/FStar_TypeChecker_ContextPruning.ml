@@ -707,7 +707,18 @@ let (context_of :
           reached = uu___;
           pending_lemmas = (env.FStar_TypeChecker_Env.pending_lemmas)
         } in
-      let uu___ = let uu___1 = scan ts in uu___1 init in
+      let ambients =
+        let uu___ =
+          FStar_TypeChecker_Env.ambients
+            env.FStar_TypeChecker_Env.pending_lemmas in
+        FStar_Compiler_List.map
+          (fun x ->
+             let uu___1 =
+               FStar_Syntax_Syntax.lid_as_fv x FStar_Pervasives_Native.None in
+             FStar_Syntax_Syntax.fv_to_tm uu___1) uu___ in
+      let uu___ =
+        let uu___1 = scan (FStar_List_Tot_Base.op_At ts ambients) in
+        uu___1 init in
       match uu___ with
       | (uu___1, ctxt1) ->
           FStar_Class_Setlike.elems ()

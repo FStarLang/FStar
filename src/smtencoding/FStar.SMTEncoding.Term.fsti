@@ -131,8 +131,8 @@ type decl =
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list string
-  | Push
-  | Pop
+  | Push       of int
+  | Pop        of int
   | CheckSat
   | GetUnsatCore
   | SetOption  of string & string

@@ -356,8 +356,8 @@ type decl =
   | Eval of term 
   | Echo of Prims.string 
   | RetainAssumptions of Prims.string Prims.list 
-  | Push 
-  | Pop 
+  | Push of Prims.int 
+  | Pop of Prims.int 
   | CheckSat 
   | GetUnsatCore 
   | SetOption of (Prims.string * Prims.string) 
@@ -402,9 +402,13 @@ let (uu___is_RetainAssumptions : decl -> Prims.bool) =
 let (__proj__RetainAssumptions__item___0 : decl -> Prims.string Prims.list) =
   fun projectee -> match projectee with | RetainAssumptions _0 -> _0
 let (uu___is_Push : decl -> Prims.bool) =
-  fun projectee -> match projectee with | Push -> true | uu___ -> false
+  fun projectee -> match projectee with | Push _0 -> true | uu___ -> false
+let (__proj__Push__item___0 : decl -> Prims.int) =
+  fun projectee -> match projectee with | Push _0 -> _0
 let (uu___is_Pop : decl -> Prims.bool) =
-  fun projectee -> match projectee with | Pop -> true | uu___ -> false
+  fun projectee -> match projectee with | Pop _0 -> true | uu___ -> false
+let (__proj__Pop__item___0 : decl -> Prims.int) =
+  fun projectee -> match projectee with | Pop _0 -> _0
 let (uu___is_CheckSat : decl -> Prims.bool) =
   fun projectee -> match projectee with | CheckSat -> true | uu___ -> false
 let (uu___is_GetUnsatCore : decl -> Prims.bool) =
@@ -2066,8 +2070,18 @@ let rec (declToSmt' : Prims.bool -> Prims.string -> decl -> Prims.string) =
             "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
         | GetUnsatCore ->
             "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-        | Push -> "(push)"
-        | Pop -> "(pop)"
+        | Push n ->
+            let uu___ =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) n in
+            FStar_Compiler_Util.format1 "(push) ;; push{%s" uu___
+        | Pop n ->
+            let uu___ =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) n in
+            FStar_Compiler_Util.format1 "(pop) ;; %s}pop" uu___
         | SetOption (s, v) ->
             FStar_Compiler_Util.format2 "(set-option :%s %s)" s v
         | GetStatistics ->
@@ -2509,8 +2523,18 @@ let (decl_to_string_short : decl -> Prims.string) =
     | Eval uu___ -> "Eval"
     | Echo s -> Prims.strcat "Echo " s
     | RetainAssumptions uu___ -> "RetainAssumptions"
-    | Push -> "push"
-    | Pop -> "pop"
+    | Push n ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) n in
+        FStar_Compiler_Util.format1 "push %s" uu___
+    | Pop n ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) n in
+        FStar_Compiler_Util.format1 "pop %s" uu___
     | CheckSat -> "check-sat"
     | GetUnsatCore -> "get-unsat-core"
     | SetOption (s, v) ->

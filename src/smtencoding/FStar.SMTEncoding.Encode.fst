@@ -1836,20 +1836,21 @@ let rollback_env depth = FStar.Common.rollback pop_env last_env depth
 let init tcenv =
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
-let snapshot msg = BU.atomically (fun () ->
+let snapshot_encoding msg = BU.atomically (fun () ->
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
-    let z3_depth, () = Z3.snapshot msg in
-    (env_depth, varops_depth, z3_depth), ())
-let rollback msg depth = BU.atomically (fun () ->
+    // let () = Z3.push msg in
+    (env_depth, varops_depth, 0), ())
+let rollback_encoding msg (depth:option (int & int & int)) = BU.atomically (fun () ->
     let env_depth, varops_depth, z3_depth = match depth with
         | Some (s1, s2, s3) -> Some s1, Some s2, Some s3
         | None -> None, None, None in
     rollback_env env_depth;
-    varops.rollback varops_depth;
-    Z3.rollback msg z3_depth)
-let push msg = snd (snapshot msg)
-let pop msg = ignore (rollback msg None)
+    varops.rollback varops_depth)
+    // ;
+    // Z3.pop msg)
+let push_encoding_state msg = snd (snapshot_encoding msg)
+let pop_encoding_state msg = ignore (rollback_encoding msg None)
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers
@@ -1967,7 +1968,6 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
   & list ErrorReporting.label //labels in the query
   & decl        //the query itself
   & list decl  //suffix, evaluating labels in the model, etc.
-  & option (list (Ident.lident)) //pruned context
   =
   Errors.with_ctx "While encoding a query" (fun () ->
     Z3.query_logging.set_module_name (string_of_lid (TypeChecker.Env.current_module tcenv));
@@ -1989,32 +1989,6 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
             | _ -> [], bindings in
         let closing, bindings = aux tcenv.gamma in
         U.close_forall_no_univs (List.rev closing) q, bindings
-    in
-    let pruned_context =
-      if Options.ext_getv "context_pruning" <> ""
-      then (
-        let remaining_bindings : list S.term =
-          List.collect (function
-            | S.Binding_var x -> [x.sort]
-            | S.Binding_lid (lid, (_, t)) -> [S.lid_as_fv lid None |> S.fv_to_tm; t]
-            | _ -> []) bindings
-        in
-        let pruned_context = FStar.TypeChecker.ContextPruning.context_of env.tcenv (q::remaining_bindings) in
-        let qid =
-          match env.tcenv.qtbl_name_and_index with
-          | None, _ -> "no query id"
-          | Some (lid, _, ctr), _ -> BU.format2 "%s, %s" (Print.lid_to_string lid) (string_of_int ctr)
-        in
-        if Options.ext_getv "context_pruning_verbose" <> ""
-        then (
-          BU.print3 "For query (%s) start{ %s,\npruned context is:\n\t%s\nend}\n"
-            qid
-            (Print.term_to_string q)
-            (pruned_context |> List.map string_of_lid |> String.concat "\n\t")
-        );
-        Some pruned_context
-      )
-      else None
     in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
@@ -2042,5 +2016,5 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     then BU.print_string "} Done encoding\n";
     if Debug.medium () || !dbg_SMTEncoding || !dbg_Time
     then BU.print1 "Encoding took %sms\n" (string_of_int ms);
-    query_prelude, labels, qry, suffix, pruned_context
+    query_prelude, labels, qry, suffix
   )

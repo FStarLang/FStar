@@ -55,6 +55,7 @@ type pending_lemma_patterns = {
   pending_lemma_triggers: BU.psmap lemma_triggers;
   //lid -> list lemma; lemmas whose patterns mention lid
   lidents_to_pending_lemmas: BU.psmap (list lident); 
+  ambients: list lident
 }
 
 let print_pending_lemmas (p:pending_lemma_patterns)
@@ -75,6 +76,7 @@ let print_pending_lemmas (p:pending_lemma_patterns)
 let empty_pending_lemma_patterns = {
   pending_lemma_triggers = BU.psmap_empty();
   lidents_to_pending_lemmas = BU.psmap_empty();
+  ambients = []
 }
 
 let remove_pending_lemma (lid:lident) (p:pending_lemma_patterns)
@@ -111,7 +113,7 @@ let find_lemmas_waiting_on_trigger (lid:lident) (ctxt:pending_lemma_patterns)
   match BU.psmap_try_find ctxt.lidents_to_pending_lemmas lid_str with
   | None -> []
   | Some lems -> lems
-
+let ambients (p:pending_lemma_patterns) = p.ambients
 let dbg_ImplicitTrace = Debug.get_toggle "ImplicitTrace"
 let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
 
@@ -344,7 +346,7 @@ let add_pending_lemma (e:env) (lem:lident) triggers =
   if Some? (BU.psmap_try_find e.pending_lemmas.pending_lemma_triggers lem_str)
   then e
   else
-    let { pending_lemma_triggers; lidents_to_pending_lemmas } = e.pending_lemmas in
+    let { pending_lemma_triggers; lidents_to_pending_lemmas; ambients } = e.pending_lemmas in
     let pending_lemma_triggers =
       BU.psmap_add pending_lemma_triggers (string_of_lid lem) triggers
     in
@@ -357,12 +359,20 @@ let add_pending_lemma (e:env) (lem:lident) triggers =
         | Some lems ->
           BU.psmap_add acc (string_of_lid lident) (lem::lems)) acc) lidents_to_pending_lemmas
     in
-    let p = { pending_lemma_triggers; lidents_to_pending_lemmas } in
+    let p = { pending_lemma_triggers; lidents_to_pending_lemmas; ambients } in
     { e with pending_lemmas = p }
+
+let maybe_add_ambient (e:env) (lem:lident) (t:typ)
+: env
+= match U.un_squash t with
+  | None -> e
+  | Some phi -> 
+    let p = e.pending_lemmas in
+    { e with pending_lemmas = { p with ambients = lem::p.ambients } }
 
 let maybe_add_pending_lemma (e:env) (lem:lident) (t:typ)
 : env
-= if not <| U.is_smt_lemma t then e else
+= if not <| U.is_smt_lemma t then maybe_add_ambient e lem t else
   let { pending_lemma_triggers; lidents_to_pending_lemmas } = e.pending_lemmas in
   let triggers = U.triggers_of_smt_lemma t in
   add_pending_lemma e lem triggers

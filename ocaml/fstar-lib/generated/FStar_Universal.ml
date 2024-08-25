@@ -249,10 +249,6 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         {
           FStar_TypeChecker_Env.init =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.init);
-          FStar_TypeChecker_Env.push =
-            (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.push);
-          FStar_TypeChecker_Env.pop =
-            (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.pop);
           FStar_TypeChecker_Env.snapshot =
             (FStar_SMTEncoding_Solver.solver.FStar_TypeChecker_Env.snapshot);
           FStar_TypeChecker_Env.rollback =

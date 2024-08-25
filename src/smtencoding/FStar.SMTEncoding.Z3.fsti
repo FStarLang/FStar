@@ -23,7 +23,7 @@ open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
 
 type unsat_core = option (list string)
-type scope_t = list (list decl)
+
 type z3status =
     | UNSAT   of unsat_core
     | SAT     of error_labels & option string         //error labels & z3 reason
@@ -49,18 +49,11 @@ type query_log = {
 }
 
 val status_string_and_errors : z3status -> string & error_labels
-val giveZ3 : list decl -> unit
 
-type filtered_theory = {
-    keep: list decl;
-    discard: list decl;
-    prune_context_would_have_discarded: option (list string);
-    used_unsat_core: bool;
-}
+val giveZ3 : list decl -> unit
 
 val ask_text
        : r:Range.range
-       -> filter:(list decl -> filtered_theory)
        -> cache:(option string) // hash
        -> label_messages:error_labels
        -> qry:list decl
@@ -68,19 +61,15 @@ val ask_text
        -> string
 
 val ask: r:Range.range
-       -> filter:(list decl -> filtered_theory)
-       -> cache:(option string) // hash
+       -> cache:option string // hash
        -> label_messages:error_labels
        -> qry:list decl
        -> queryid:string
-       -> scope:option scope_t
        -> fresh:bool
        -> z3result
 
 val refresh: unit -> unit
-val mk_fresh_scope: unit -> scope_t
 val push : msg:string -> unit
 val pop : msg:string -> unit
-val snapshot : msg:string -> (int & unit)
-val rollback : msg:string -> option int -> unit
+val prune (roots:list decl) : unit
 val query_logging : query_log

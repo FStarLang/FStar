@@ -136,12 +136,13 @@ type pending_lemma_patterns =
   {
   pending_lemma_triggers: lemma_triggers FStar_Compiler_Util.psmap ;
   lidents_to_pending_lemmas:
-    FStar_Ident.lident Prims.list FStar_Compiler_Util.psmap }
+    FStar_Ident.lident Prims.list FStar_Compiler_Util.psmap ;
+  ambients: FStar_Ident.lident Prims.list }
 let (__proj__Mkpending_lemma_patterns__item__pending_lemma_triggers :
   pending_lemma_patterns -> lemma_triggers FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
+    | { pending_lemma_triggers; lidents_to_pending_lemmas; ambients;_} ->
         pending_lemma_triggers
 let (__proj__Mkpending_lemma_patterns__item__lidents_to_pending_lemmas :
   pending_lemma_patterns ->
@@ -149,8 +150,14 @@ let (__proj__Mkpending_lemma_patterns__item__lidents_to_pending_lemmas :
   =
   fun projectee ->
     match projectee with
-    | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
+    | { pending_lemma_triggers; lidents_to_pending_lemmas; ambients;_} ->
         lidents_to_pending_lemmas
+let (__proj__Mkpending_lemma_patterns__item__ambients :
+  pending_lemma_patterns -> FStar_Ident.lident Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { pending_lemma_triggers; lidents_to_pending_lemmas; ambients;_} ->
+        ambients
 let (print_pending_lemmas : pending_lemma_patterns -> Prims.string) =
   fun p ->
     let acc =
@@ -184,7 +191,11 @@ let (print_pending_lemmas : pending_lemma_patterns -> Prims.string) =
 let (empty_pending_lemma_patterns : pending_lemma_patterns) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   let uu___1 = FStar_Compiler_Util.psmap_empty () in
-  { pending_lemma_triggers = uu___; lidents_to_pending_lemmas = uu___1 }
+  {
+    pending_lemma_triggers = uu___;
+    lidents_to_pending_lemmas = uu___1;
+    ambients = []
+  }
 let (remove_pending_lemma :
   FStar_Ident.lident -> pending_lemma_patterns -> pending_lemma_patterns) =
   fun lid ->
@@ -194,7 +205,8 @@ let (remove_pending_lemma :
         FStar_Compiler_Util.psmap_remove p.lidents_to_pending_lemmas lid_str in
       {
         pending_lemma_triggers = (p.pending_lemma_triggers);
-        lidents_to_pending_lemmas = pending_lemmas
+        lidents_to_pending_lemmas = pending_lemmas;
+        ambients = (p.ambients)
       }
 let (remove_trigger_for_lemma :
   FStar_Ident.lident ->
@@ -227,7 +239,8 @@ let (remove_trigger_for_lemma :
                 lem_str triggers1 in
             ({
                pending_lemma_triggers;
-               lidents_to_pending_lemmas = (ctxt.lidents_to_pending_lemmas)
+               lidents_to_pending_lemmas = (ctxt.lidents_to_pending_lemmas);
+               ambients = (ctxt.ambients)
              }, eligible)
 let (find_lemmas_waiting_on_trigger :
   FStar_Ident.lident ->
@@ -242,6 +255,8 @@ let (find_lemmas_waiting_on_trigger :
       match uu___ with
       | FStar_Pervasives_Native.None -> []
       | FStar_Pervasives_Native.Some lems -> lems
+let (ambients : pending_lemma_patterns -> FStar_Ident.lident Prims.list) =
+  fun p -> p.ambients
 let (dbg_ImplicitTrace : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "ImplicitTrace"
 let (dbg_LayeredEffectsEqns : Prims.bool FStar_Compiler_Effect.ref) =
@@ -594,8 +609,6 @@ and env =
 and solver_t =
   {
   init: env -> unit ;
-  push: Prims.string -> unit ;
-  pop: Prims.string -> unit ;
   snapshot: Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit) ;
   rollback:
     Prims.string ->
@@ -1599,26 +1612,14 @@ let (__proj__Mkenv__item__pending_lemmas : env -> pending_lemma_patterns) =
 let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> init
-let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
-  fun projectee ->
-    match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-        finish; refresh;_} -> push
-let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
-  fun projectee ->
-    match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-        finish; refresh;_} -> pop
 let (__proj__Mksolver_t__item__snapshot :
   solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> snapshot
 let (__proj__Mksolver_t__item__rollback :
@@ -1629,14 +1630,14 @@ let (__proj__Mksolver_t__item__rollback :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> rollback
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
@@ -1647,7 +1648,7 @@ let (__proj__Mksolver_t__item__preprocess :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> preprocess
 let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
@@ -1656,14 +1657,14 @@ let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> spinoff_strictly_positive_goals
 let (__proj__Mksolver_t__item__handle_smt_goal :
   solver_t -> env -> goal -> (env * goal) Prims.list) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> handle_smt_goal
 let (__proj__Mksolver_t__item__solve :
@@ -1673,7 +1674,7 @@ let (__proj__Mksolver_t__item__solve :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> solve
 let (__proj__Mksolver_t__item__solve_sync :
@@ -1683,19 +1684,19 @@ let (__proj__Mksolver_t__item__solve_sync :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> solve_sync
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> finish
 let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> refresh
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
@@ -2322,7 +2323,8 @@ let (add_pending_lemma :
         else
           (let uu___2 = e.pending_lemmas in
            match uu___2 with
-           | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
+           | { pending_lemma_triggers; lidents_to_pending_lemmas;
+               ambients = ambients1;_} ->
                let pending_lemma_triggers1 =
                  let uu___3 = FStar_Ident.string_of_lid lem in
                  FStar_Compiler_Util.psmap_add pending_lemma_triggers uu___3
@@ -2354,7 +2356,8 @@ let (add_pending_lemma :
                let p =
                  {
                    pending_lemma_triggers = pending_lemma_triggers1;
-                   lidents_to_pending_lemmas = lidents_to_pending_lemmas1
+                   lidents_to_pending_lemmas = lidents_to_pending_lemmas1;
+                   ambients = ambients1
                  } in
                {
                  solver = (e.solver);
@@ -2412,6 +2415,77 @@ let (add_pending_lemma :
                  missing_decl = (e.missing_decl);
                  pending_lemmas = p
                })
+let (maybe_add_ambient :
+  env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> env) =
+  fun e ->
+    fun lem ->
+      fun t ->
+        let uu___ = FStar_Syntax_Util.un_squash t in
+        match uu___ with
+        | FStar_Pervasives_Native.None -> e
+        | FStar_Pervasives_Native.Some phi ->
+            let p = e.pending_lemmas in
+            {
+              solver = (e.solver);
+              range = (e.range);
+              curmodule = (e.curmodule);
+              gamma = (e.gamma);
+              gamma_sig = (e.gamma_sig);
+              gamma_cache = (e.gamma_cache);
+              modules = (e.modules);
+              expected_typ = (e.expected_typ);
+              sigtab = (e.sigtab);
+              attrtab = (e.attrtab);
+              instantiate_imp = (e.instantiate_imp);
+              effects = (e.effects);
+              generalize = (e.generalize);
+              letrecs = (e.letrecs);
+              top_level = (e.top_level);
+              check_uvars = (e.check_uvars);
+              use_eq_strict = (e.use_eq_strict);
+              is_iface = (e.is_iface);
+              admit = (e.admit);
+              lax_universes = (e.lax_universes);
+              phase1 = (e.phase1);
+              failhard = (e.failhard);
+              flychecking = (e.flychecking);
+              uvar_subtyping = (e.uvar_subtyping);
+              intactics = (e.intactics);
+              nocoerce = (e.nocoerce);
+              tc_term = (e.tc_term);
+              typeof_tot_or_gtot_term = (e.typeof_tot_or_gtot_term);
+              universe_of = (e.universe_of);
+              typeof_well_typed_tot_or_gtot_term =
+                (e.typeof_well_typed_tot_or_gtot_term);
+              teq_nosmt_force = (e.teq_nosmt_force);
+              subtype_nosmt_force = (e.subtype_nosmt_force);
+              qtbl_name_and_index = (e.qtbl_name_and_index);
+              normalized_eff_names = (e.normalized_eff_names);
+              fv_delta_depths = (e.fv_delta_depths);
+              proof_ns = (e.proof_ns);
+              synth_hook = (e.synth_hook);
+              try_solve_implicits_hook = (e.try_solve_implicits_hook);
+              splice = (e.splice);
+              mpreprocess = (e.mpreprocess);
+              postprocess = (e.postprocess);
+              identifier_info = (e.identifier_info);
+              tc_hooks = (e.tc_hooks);
+              dsenv = (e.dsenv);
+              nbe = (e.nbe);
+              strict_args_tab = (e.strict_args_tab);
+              erasable_types_tab = (e.erasable_types_tab);
+              enable_defer_to_tac = (e.enable_defer_to_tac);
+              unif_allow_ref_guards = (e.unif_allow_ref_guards);
+              erase_erasable_args = (e.erase_erasable_args);
+              core_check = (e.core_check);
+              missing_decl = (e.missing_decl);
+              pending_lemmas =
+                {
+                  pending_lemma_triggers = (p.pending_lemma_triggers);
+                  lidents_to_pending_lemmas = (p.lidents_to_pending_lemmas);
+                  ambients = (lem :: (p.ambients))
+                }
+            }
 let (maybe_add_pending_lemma :
   env -> FStar_Ident.lident -> FStar_Syntax_Syntax.typ -> env) =
   fun e ->
@@ -2421,11 +2495,12 @@ let (maybe_add_pending_lemma :
           let uu___1 = FStar_Syntax_Util.is_smt_lemma t in
           Prims.op_Negation uu___1 in
         if uu___
-        then e
+        then maybe_add_ambient e lem t
         else
           (let uu___2 = e.pending_lemmas in
            match uu___2 with
-           | { pending_lemma_triggers; lidents_to_pending_lemmas;_} ->
+           | { pending_lemma_triggers; lidents_to_pending_lemmas;
+               ambients = uu___3;_} ->
                let triggers = FStar_Syntax_Util.triggers_of_smt_lemma t in
                add_pending_lemma e lem triggers)
 type implicit = FStar_TypeChecker_Common.implicit

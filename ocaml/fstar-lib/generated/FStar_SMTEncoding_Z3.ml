@@ -1,6 +1,5 @@
 open Prims
 type unsat_core = Prims.string Prims.list FStar_Pervasives_Native.option
-type scope_t = FStar_SMTEncoding_Term.decl Prims.list Prims.list
 type z3status =
   | UNSAT of unsat_core 
   | SAT of (FStar_SMTEncoding_Term.error_labels * Prims.string
@@ -444,19 +443,27 @@ type bgproc =
   ask: Prims.string -> Prims.string ;
   refresh: unit -> unit ;
   restart: unit -> unit ;
-  version: unit -> Prims.string }
+  version: unit -> Prims.string ;
+  ctxt: FStar_SMTEncoding_SolverState.solver_state }
 let (__proj__Mkbgproc__item__ask : bgproc -> Prims.string -> Prims.string) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart; version;_} -> ask
+    match projectee with | { ask; refresh; restart; version; ctxt;_} -> ask
 let (__proj__Mkbgproc__item__refresh : bgproc -> unit -> unit) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart; version;_} -> refresh
+    match projectee with
+    | { ask; refresh; restart; version; ctxt;_} -> refresh
 let (__proj__Mkbgproc__item__restart : bgproc -> unit -> unit) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart; version;_} -> restart
+    match projectee with
+    | { ask; refresh; restart; version; ctxt;_} -> restart
 let (__proj__Mkbgproc__item__version : bgproc -> unit -> Prims.string) =
   fun projectee ->
-    match projectee with | { ask; refresh; restart; version;_} -> version
+    match projectee with
+    | { ask; refresh; restart; version; ctxt;_} -> version
+let (__proj__Mkbgproc__item__ctxt :
+  bgproc -> FStar_SMTEncoding_SolverState.solver_state) =
+  fun projectee ->
+    match projectee with | { ask; refresh; restart; version; ctxt;_} -> ctxt
 let (cmd_and_args_to_string :
   (Prims.string * Prims.string Prims.list) -> Prims.string) =
   fun cmd_and_args ->
@@ -546,14 +553,17 @@ let (bg_z3_proc : bgproc FStar_Compiler_Effect.ref) =
      query_logging.close_log ();
      (let next_params = z3_cmd_and_args () in make_new_z3_proc next_params) in
    let x = [] in
-   FStar_Compiler_Util.mk_ref
+   let uu___1 =
+     let uu___2 = FStar_SMTEncoding_SolverState.init () in
      {
        ask = (FStar_Compiler_Util.with_monitor x ask);
        refresh = (FStar_Compiler_Util.with_monitor x refresh);
        restart = (FStar_Compiler_Util.with_monitor x restart);
        version =
-         (fun uu___1 -> FStar_Compiler_Effect.op_Bang the_z3proc_version)
-     })
+         (fun uu___3 -> FStar_Compiler_Effect.op_Bang the_z3proc_version);
+       ctxt = uu___2
+     } in
+   FStar_Compiler_Util.mk_ref uu___1)
 type smt_output_section = Prims.string Prims.list
 type smt_output =
   {
@@ -957,117 +967,54 @@ let (z3_options : Prims.string -> Prims.string) =
         else ["(set-option :smt.arith.solver 2)"] in
       FStar_Compiler_List.op_At opts uu___ in
     Prims.strcat (FStar_Compiler_String.concat "\n" opts1) "\n"
-let (fresh_scope : scope_t FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref [[]]
-let (mk_fresh_scope : unit -> scope_t) =
-  fun uu___ -> FStar_Compiler_Effect.op_Bang fresh_scope
-let (flatten_fresh_scope : unit -> FStar_SMTEncoding_Term.decl Prims.list) =
-  fun uu___ ->
-    let uu___1 =
-      let uu___2 = FStar_Compiler_Effect.op_Bang fresh_scope in
-      FStar_Compiler_List.rev uu___2 in
-    FStar_Compiler_List.flatten uu___1
-let (bg_scope :
-  FStar_SMTEncoding_Term.decl Prims.list FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref []
-let (discarded_decls :
-  FStar_SMTEncoding_Term.decl Prims.list FStar_Compiler_Effect.ref) =
-  FStar_Compiler_Util.mk_ref []
+let with_solver_state :
+  'a .
+    (FStar_SMTEncoding_SolverState.solver_state ->
+       ('a * FStar_SMTEncoding_SolverState.solver_state))
+      -> 'a
+  =
+  fun f ->
+    let ss = FStar_Compiler_Effect.op_Bang bg_z3_proc in
+    let uu___ = f ss.ctxt in
+    match uu___ with
+    | (res, ctxt) ->
+        (FStar_Compiler_Effect.op_Colon_Equals bg_z3_proc
+           {
+             ask = (ss.ask);
+             refresh = (ss.refresh);
+             restart = (ss.restart);
+             version = (ss.version);
+             ctxt
+           };
+         res)
+let (with_solver_state_unit :
+  (FStar_SMTEncoding_SolverState.solver_state ->
+     FStar_SMTEncoding_SolverState.solver_state)
+    -> unit)
+  = fun f -> with_solver_state (fun x -> let uu___ = f x in ((), uu___))
 let (push : Prims.string -> unit) =
   fun msg ->
-    FStar_Compiler_Util.atomically
-      (fun uu___ ->
-         (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang fresh_scope in
-            [FStar_SMTEncoding_Term.Caption msg; FStar_SMTEncoding_Term.Push]
-              :: uu___3 in
-          FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
-         (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-            FStar_Compiler_List.op_At uu___3
-              [FStar_SMTEncoding_Term.Push;
-              FStar_SMTEncoding_Term.Caption msg] in
-          FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
+    with_solver_state_unit FStar_SMTEncoding_SolverState.push;
+    with_solver_state_unit
+      (FStar_SMTEncoding_SolverState.give
+         [FStar_SMTEncoding_Term.Caption msg])
 let (pop : Prims.string -> unit) =
   fun msg ->
-    FStar_Compiler_Util.atomically
-      (fun uu___ ->
-         (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang fresh_scope in
-            FStar_Compiler_List.tl uu___3 in
-          FStar_Compiler_Effect.op_Colon_Equals fresh_scope uu___2);
-         (let uu___2 =
-            let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-            FStar_Compiler_List.op_At uu___3
-              [FStar_SMTEncoding_Term.Caption msg;
-              FStar_SMTEncoding_Term.Pop] in
-          FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2))
-let (snapshot : Prims.string -> (Prims.int * unit)) =
-  fun msg -> FStar_Common.snapshot push fresh_scope msg
-let (rollback :
-  Prims.string -> Prims.int FStar_Pervasives_Native.option -> unit) =
-  fun msg ->
-    fun depth ->
-      FStar_Common.rollback (fun uu___ -> pop msg) fresh_scope depth
+    with_solver_state_unit
+      (FStar_SMTEncoding_SolverState.give
+         [FStar_SMTEncoding_Term.Caption msg]);
+    with_solver_state_unit FStar_SMTEncoding_SolverState.pop
+let (prune : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
+  fun roots ->
+    with_solver_state_unit (FStar_SMTEncoding_SolverState.prune roots)
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls ->
-    FStar_Compiler_List.iter
-      (fun uu___1 ->
-         match uu___1 with
-         | FStar_SMTEncoding_Term.Push ->
-             FStar_Compiler_Effect.failwith "Unexpected push/pop"
-         | FStar_SMTEncoding_Term.Pop ->
-             FStar_Compiler_Effect.failwith "Unexpected push/pop"
-         | uu___2 -> ()) decls;
-    (let uu___2 = FStar_Compiler_Effect.op_Bang fresh_scope in
-     match uu___2 with
-     | hd::tl ->
-         FStar_Compiler_Effect.op_Colon_Equals fresh_scope
-           ((FStar_Compiler_List.op_At hd decls) :: tl)
-     | uu___3 -> FStar_Compiler_Effect.failwith "Impossible");
-    (let uu___2 =
-       let uu___3 = FStar_Compiler_Effect.op_Bang bg_scope in
-       FStar_Compiler_List.op_At uu___3 decls in
-     FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___2)
-type filtered_theory =
-  {
-  keep: FStar_SMTEncoding_Term.decl Prims.list ;
-  discard: FStar_SMTEncoding_Term.decl Prims.list ;
-  prune_context_would_have_discarded:
-    Prims.string Prims.list FStar_Pervasives_Native.option ;
-  used_unsat_core: Prims.bool }
-let (__proj__Mkfiltered_theory__item__keep :
-  filtered_theory -> FStar_SMTEncoding_Term.decl Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { keep; discard; prune_context_would_have_discarded; used_unsat_core;_}
-        -> keep
-let (__proj__Mkfiltered_theory__item__discard :
-  filtered_theory -> FStar_SMTEncoding_Term.decl Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { keep; discard; prune_context_would_have_discarded; used_unsat_core;_}
-        -> discard
-let (__proj__Mkfiltered_theory__item__prune_context_would_have_discarded :
-  filtered_theory -> Prims.string Prims.list FStar_Pervasives_Native.option)
-  =
-  fun projectee ->
-    match projectee with
-    | { keep; discard; prune_context_would_have_discarded; used_unsat_core;_}
-        -> prune_context_would_have_discarded
-let (__proj__Mkfiltered_theory__item__used_unsat_core :
-  filtered_theory -> Prims.bool) =
-  fun projectee ->
-    match projectee with
-    | { keep; discard; prune_context_would_have_discarded; used_unsat_core;_}
-        -> used_unsat_core
+    with_solver_state_unit (FStar_SMTEncoding_SolverState.give decls)
 let (refresh : unit -> unit) =
-  fun uu___ ->
-    (let uu___2 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
-     uu___2.refresh ());
-    (let uu___3 = flatten_fresh_scope () in
-     FStar_Compiler_Effect.op_Colon_Equals bg_scope uu___3);
-    FStar_Compiler_Effect.op_Colon_Equals discarded_decls []
+  fun ctxt ->
+    (let uu___1 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
+     uu___1.refresh ());
+    with_solver_state_unit FStar_SMTEncoding_SolverState.reset
 let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun theory ->
     let uu___ =
@@ -1233,7 +1180,7 @@ let (z3_job :
           FStar_SMTEncoding_Term.error_labels ->
             Prims.string ->
               Prims.string FStar_Pervasives_Native.option ->
-                Prims.string -> unit -> z3result)
+                Prims.string -> z3result)
   =
   fun sim_theory ->
     fun log_file ->
@@ -1243,120 +1190,83 @@ let (z3_job :
             fun input ->
               fun qhash ->
                 fun queryid ->
-                  fun uu___ ->
+                  let uu___ =
                     let uu___1 =
-                      let uu___2 =
-                        let uu___3 = query_logging.get_module_name () in
-                        FStar_Pervasives_Native.Some uu___3 in
-                      FStar_Profiling.profile
-                        (fun uu___3 ->
-                           try
-                             (fun uu___4 ->
-                                match () with
-                                | () ->
-                                    FStar_Compiler_Util.record_time
-                                      (fun uu___5 ->
-                                         doZ3Exe sim_theory log_file r fresh
-                                           input label_messages queryid)) ()
-                           with
-                           | uu___4 ->
-                               (refresh ();
-                                FStar_Compiler_Effect.raise uu___4)) uu___2
-                        "FStar.SMTEncoding.Z3 (aggregate query time)" in
-                    match uu___1 with
-                    | ((status, statistics), elapsed_time) ->
-                        {
-                          z3result_status = status;
-                          z3result_time = elapsed_time;
-                          z3result_statistics = statistics;
-                          z3result_query_hash = qhash;
-                          z3result_log_file = log_file
-                        }
+                      let uu___2 = query_logging.get_module_name () in
+                      FStar_Pervasives_Native.Some uu___2 in
+                    FStar_Profiling.profile
+                      (fun uu___2 ->
+                         try
+                           (fun uu___3 ->
+                              match () with
+                              | () ->
+                                  FStar_Compiler_Util.record_time
+                                    (fun uu___4 ->
+                                       doZ3Exe sim_theory log_file r fresh
+                                         input label_messages queryid)) ()
+                         with
+                         | uu___3 ->
+                             (refresh (); FStar_Compiler_Effect.raise uu___3))
+                      uu___1 "FStar.SMTEncoding.Z3 (aggregate query time)" in
+                  match uu___ with
+                  | ((status, statistics), elapsed_time) ->
+                      {
+                        z3result_status = status;
+                        z3result_time = elapsed_time;
+                        z3result_statistics = statistics;
+                        z3result_query_hash = qhash;
+                        z3result_log_file = log_file
+                      }
 let (ask_text :
   FStar_Compiler_Range_Type.range ->
-    (FStar_SMTEncoding_Term.decl Prims.list -> filtered_theory) ->
-      Prims.string FStar_Pervasives_Native.option ->
-        FStar_SMTEncoding_Term.error_labels ->
-          FStar_SMTEncoding_Term.decl Prims.list ->
-            Prims.string -> Prims.string)
+    Prims.string FStar_Pervasives_Native.option ->
+      FStar_SMTEncoding_Term.error_labels ->
+        FStar_SMTEncoding_Term.decl Prims.list ->
+          Prims.string -> Prims.string)
   =
   fun r ->
-    fun filter_theory ->
-      fun cache ->
-        fun label_messages ->
-          fun qry ->
-            fun queryid ->
-              let theory = flatten_fresh_scope () in
-              let theory1 =
-                FStar_Compiler_List.op_At theory
-                  (FStar_Compiler_List.op_At [FStar_SMTEncoding_Term.Push]
-                     (FStar_Compiler_List.op_At qry
-                        [FStar_SMTEncoding_Term.Pop])) in
-              let filtered_theory1 = filter_theory theory1 in
-              let uu___ = mk_input true filtered_theory1.keep in
-              match uu___ with | (input, qhash, log_file_name) -> input
+    fun cache ->
+      fun label_messages ->
+        fun qry ->
+          fun queryid ->
+            let theory =
+              with_solver_state FStar_SMTEncoding_SolverState.flush in
+            let query_tail =
+              FStar_Compiler_List.op_At
+                ((FStar_SMTEncoding_Term.Push Prims.int_zero) :: qry)
+                [FStar_SMTEncoding_Term.Pop Prims.int_zero] in
+            let theory1 = FStar_Compiler_List.op_At theory query_tail in
+            let uu___ = mk_input true theory1 in
+            match uu___ with | (input, qhash, log_file_name) -> input
 let (ask :
   FStar_Compiler_Range_Type.range ->
-    (FStar_SMTEncoding_Term.decl Prims.list -> filtered_theory) ->
-      Prims.string FStar_Pervasives_Native.option ->
-        FStar_SMTEncoding_Term.error_labels ->
-          FStar_SMTEncoding_Term.decl Prims.list ->
-            Prims.string ->
-              scope_t FStar_Pervasives_Native.option ->
-                Prims.bool -> z3result)
+    Prims.string FStar_Pervasives_Native.option ->
+      FStar_SMTEncoding_Term.error_labels ->
+        FStar_SMTEncoding_Term.decl Prims.list ->
+          Prims.string -> Prims.bool -> z3result)
   =
   fun r ->
-    fun filter_theory ->
-      fun cache ->
-        fun label_messages ->
-          fun qry ->
-            fun queryid ->
-              fun _scope ->
-                fun fresh ->
-                  let uu___ =
-                    if fresh
-                    then let uu___1 = flatten_fresh_scope () in (uu___1, [])
-                    else
-                      (let theory = FStar_Compiler_Effect.op_Bang bg_scope in
-                       FStar_Compiler_Effect.op_Colon_Equals bg_scope [];
-                       (let uu___3 =
-                          FStar_Compiler_Effect.op_Bang discarded_decls in
-                        (theory, uu___3))) in
-                  match uu___ with
-                  | (theory, discards) ->
-                      let theory1 =
-                        match theory with
-                        | (FStar_SMTEncoding_Term.Caption
-                            msg)::(FStar_SMTEncoding_Term.Pop)::tl ->
-                            FStar_Compiler_List.op_At
-                              ((FStar_SMTEncoding_Term.Caption msg) ::
-                              FStar_SMTEncoding_Term.Pop :: discards) tl
-                        | uu___1 -> FStar_Compiler_List.op_At discards theory in
-                      let theory2 =
-                        FStar_Compiler_List.op_At theory1
-                          (FStar_Compiler_List.op_At
-                             [FStar_SMTEncoding_Term.Push]
-                             (FStar_Compiler_List.op_At qry
-                                [FStar_SMTEncoding_Term.Pop])) in
-                      let filtered_theory1 = filter_theory theory2 in
-                      (if Prims.op_Negation fresh
-                       then
-                         FStar_Compiler_Effect.op_Colon_Equals
-                           discarded_decls filtered_theory1.discard
-                       else ();
-                       (let uu___2 = mk_input fresh filtered_theory1.keep in
-                        match uu___2 with
-                        | (input, qhash, log_file_name) ->
-                            let just_ask uu___3 =
-                              z3_job
-                                filtered_theory1.prune_context_would_have_discarded
-                                log_file_name r fresh label_messages input
-                                qhash queryid () in
-                            if fresh
-                            then
-                              let uu___3 =
-                                cache_hit log_file_name cache qhash in
-                              (match uu___3 with
-                               | FStar_Pervasives_Native.Some z3r -> z3r
-                               | FStar_Pervasives_Native.None -> just_ask ())
-                            else just_ask ()))
+    fun cache ->
+      fun label_messages ->
+        fun qry ->
+          fun queryid ->
+            fun fresh ->
+              push "query";
+              giveZ3 qry;
+              (let theory =
+                 with_solver_state FStar_SMTEncoding_SolverState.flush in
+               let uu___2 = mk_input fresh theory in
+               match uu___2 with
+               | (input, qhash, log_file_name) ->
+                   let just_ask uu___3 =
+                     z3_job FStar_Pervasives_Native.None log_file_name r
+                       fresh label_messages input qhash queryid in
+                   let result =
+                     if fresh
+                     then
+                       let uu___3 = cache_hit log_file_name cache qhash in
+                       match uu___3 with
+                       | FStar_Pervasives_Native.Some z3r -> z3r
+                       | FStar_Pervasives_Native.None -> just_ask ()
+                     else just_ask () in
+                   (pop "query"; result))
