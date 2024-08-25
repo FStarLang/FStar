@@ -747,7 +747,13 @@ let rec is_stateful_arrow (g:env) (c:option comp) (args:list T.argv) (out:list T
         )
 
         | (arg, qual)::args' -> ( //check that this arg qual matches the binder and recurse accordingly
-          match b.qual, qual with
+          let bqual =
+            (* Ignore equality qualifiers in the binder *)
+            match b.qual with
+            | Q_Equality -> Q_Explicit
+            | q -> q
+          in
+          match bqual, qual with
           | T.Q_Meta _, T.Q_Implicit
           | T.Q_Implicit, T.Q_Implicit 
           | T.Q_Explicit, T.Q_Explicit ->  //consume this argument

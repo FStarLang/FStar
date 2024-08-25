@@ -293,7 +293,7 @@ let (eligible_for_smt_equality :
                                                      (Prims.of_int (5)))))
                                             (FStar_Tactics_Effect.lift_div_tac
                                                (fun uu___2 ->
-                                                  FStar_Reflection_V2_Derived.collect_app_ln
+                                                  FStar_Reflection_V2_Collect.collect_app_ln
                                                     t0))
                                             (fun uu___2 ->
                                                (fun uu___2 ->
@@ -319,7 +319,7 @@ let (eligible_for_smt_equality :
                                                                     (Prims.of_int (16)))))
                                                            (FStar_Tactics_Effect.lift_div_tac
                                                               (fun uu___3 ->
-                                                                 FStar_Reflection_V2_Derived.collect_app_ln
+                                                                 FStar_Reflection_V2_Collect.collect_app_ln
                                                                    t1))
                                                            (fun uu___3 ->
                                                               (fun uu___3 ->
@@ -405,7 +405,7 @@ let (eligible_for_smt_equality :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___5 ->
-                                                                    FStar_Reflection_V2_Derived.collect_arr_ln_bs
+                                                                    FStar_Reflection_V2_Collect.collect_arr_ln_bs
                                                                     t))
                                                                     (fun
                                                                     uu___5 ->
@@ -696,7 +696,7 @@ let (eligible_for_smt_equality :
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___6 ->
-                                                                    FStar_Reflection_V2_Derived.collect_arr_ln_bs
+                                                                    FStar_Reflection_V2_Collect.collect_arr_ln_bs
                                                                     t))
                                                                     (fun
                                                                     uu___6 ->
@@ -1207,7 +1207,7 @@ let (try_unif_nosmt :
                    (Prims.of_int (263)) (Prims.of_int (100))
                    (Prims.of_int (286)) (Prims.of_int (3)))))
           (FStar_Tactics_Effect.lift_div_tac
-             (fun uu___ -> FStar_Reflection_V2_Derived.collect_app_ln p))
+             (fun uu___ -> FStar_Reflection_V2_Collect.collect_app_ln p))
           (fun uu___ ->
              (fun uu___ ->
                 match uu___ with
@@ -1228,7 +1228,7 @@ let (try_unif_nosmt :
                                   (Prims.of_int (286)) (Prims.of_int (3)))))
                          (FStar_Tactics_Effect.lift_div_tac
                             (fun uu___1 ->
-                               FStar_Reflection_V2_Derived.collect_app_ln q))
+                               FStar_Reflection_V2_Collect.collect_app_ln q))
                          (fun uu___1 ->
                             (fun uu___1 ->
                                match uu___1 with
