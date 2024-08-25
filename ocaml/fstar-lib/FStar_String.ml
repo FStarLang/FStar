@@ -16,7 +16,7 @@ let split seps s =
        repeat_split l seps in
   repeat_split [s] seps
 let compare x y = Z.of_int (BatString.compare x y)
-type char = FStar_Char.char
+type char = FStar_Char_Type.char
 let concat = BatString.concat
 let length s = Z.of_int (BatUTF8.length s)
 let strlen s = length s

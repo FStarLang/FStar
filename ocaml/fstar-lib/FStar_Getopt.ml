@@ -2,7 +2,7 @@ let noshort = 0
 type 'a opt_variant =
   | ZeroArgs of (unit -> 'a)
   | OneArg of (string -> 'a) * string
-type 'a opt' = FStar_Char.char * string * 'a opt_variant
+type 'a opt' = FStar_Char_Type.char * string * 'a opt_variant
 type opt = unit opt'
 type parse_cmdline_res =
   | Empty
