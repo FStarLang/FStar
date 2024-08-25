@@ -29,7 +29,6 @@ module Math = FStar.Math.Lemmas
 open FStar.BV
 open FStar.Tactics.V2
 module T = FStar.Tactics.V2
-module TBV = FStar.Tactics.BV
 
 #set-options "--max_fuel 0 --max_ifuel 0 --split_queries no"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection'"
@@ -58,7 +57,7 @@ let carry_uint64_ok (a b:uint_t 64)
   : squash (int2bv (carry_uint64 a b) == carry_bv a b)
   = _ by (T.norm [delta_only [`%carry_uint64]; unascribe];
           let open FStar.Tactics.BV in
-          mapply (`trans);
+          mapply (`FStar.Tactics.BV.Lemmas.trans);
           arith_to_bv_tac ();
           arith_to_bv_tac ();
           T.norm [delta_only [`%carry_bv]];
