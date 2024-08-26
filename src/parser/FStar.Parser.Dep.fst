@@ -639,7 +639,7 @@ let collect_one
          let mname = lowercase_module_name filename in
          if is_interface filename
          && has_implementation original_map mname
-         then [ UseImplementation mname ]
+         then [ ] //UseImplementation mname ]
          else []
        in
 
@@ -1603,7 +1603,7 @@ let collect (all_cmd_line_files: list file_name)
       (* Detect cycles via mo_files *)
       List.iter (aux []) !mo_files
   in
-  full_cycle_detection all_cmd_line_files file_system_map;
+  // full_cycle_detection all_cmd_line_files file_system_map;
 
   //only verify those files on the command line
   all_cmd_line_files |>
@@ -1724,7 +1724,7 @@ let print_full (outc : out_channel) (deps:deps) : unit =
               if should_visit lc_module_name then begin
                  let ml_file_opt = mark_visiting lc_module_name in
                  //visit all its dependences
-                 visit_file (implementation_of deps lc_module_name);
+                //  visit_file (implementation_of deps lc_module_name);
                  visit_file (interface_of deps lc_module_name);
                  //and then emit this one's ML file
                  emit_output_file_opt ml_file_opt
