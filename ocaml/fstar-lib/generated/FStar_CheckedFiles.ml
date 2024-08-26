@@ -275,6 +275,17 @@ let (load_checked_file : Prims.string -> Prims.string -> cache_t) =
                     else
                       add_and_return
                         (Unknown, (FStar_Pervasives.Inr (x.parsing_data)))))))
+let (load_tc_result :
+  Prims.string ->
+    ((Prims.string * Prims.string) Prims.list * tc_result)
+      FStar_Pervasives_Native.option)
+  =
+  fun checked_fn ->
+    let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
+    match entry with
+    | FStar_Pervasives_Native.Some (uu___, s2) ->
+        FStar_Pervasives_Native.Some ((s2.deps_dig), (s2.tc_res))
+    | uu___ -> FStar_Pervasives_Native.None
 let (load_checked_file_with_tc_result :
   FStar_Parser_Dep.deps ->
     Prims.string ->
@@ -289,12 +300,11 @@ let (load_checked_file_with_tc_result :
            FStar_Compiler_Util.print1
              "Trying to load checked file with tc result %s\n" checked_fn
          else ());
-        (let load_tc_result fn1 =
-           let entry = FStar_Compiler_Util.load_2values_from_file checked_fn in
-           match entry with
-           | FStar_Pervasives_Native.Some (uu___1, s2) ->
-               ((s2.deps_dig), (s2.tc_res))
-           | uu___1 ->
+        (let load_tc_result' fn1 =
+           let uu___1 = load_tc_result fn1 in
+           match uu___1 with
+           | FStar_Pervasives_Native.Some x -> x
+           | FStar_Pervasives_Native.None ->
                FStar_Compiler_Effect.failwith
                  "Impossible! if first phase of loading was unknown, it should have succeeded" in
          let elt = load_checked_file fn checked_fn in
@@ -302,7 +312,7 @@ let (load_checked_file_with_tc_result :
          | (Invalid msg, uu___1) -> FStar_Pervasives.Inl msg
          | (Valid uu___1, uu___2) ->
              let uu___3 =
-               let uu___4 = load_tc_result checked_fn in
+               let uu___4 = load_tc_result' checked_fn in
                FStar_Pervasives_Native.snd uu___4 in
              FStar_Pervasives.Inr uu___3
          | (Unknown, parsing_data) ->
@@ -313,7 +323,7 @@ let (load_checked_file_with_tc_result :
                   (FStar_Compiler_Util.smap_add mcache checked_fn elt1;
                    FStar_Pervasives.Inl msg)
               | FStar_Pervasives.Inr deps_dig' ->
-                  let uu___2 = load_tc_result checked_fn in
+                  let uu___2 = load_tc_result' checked_fn in
                   (match uu___2 with
                    | (deps_dig, tc_result1) ->
                        if deps_dig = deps_dig'
@@ -566,10 +576,21 @@ let (store_module_to_cache :
                   FStar_Compiler_Range_Type.mk_range fn uu___2 uu___3 in
                 let uu___2 =
                   let uu___3 =
-                    FStar_Compiler_Util.format2 "%s was not written since %s"
-                      cache_file msg in
+                    let uu___4 =
+                      let uu___5 =
+                        FStar_Compiler_Util.format1
+                          "Checked file %s was not written." cache_file in
+                      FStar_Errors_Msg.text uu___5 in
+                    let uu___5 =
+                      let uu___6 =
+                        let uu___7 = FStar_Pprint.doc_of_string "Reason:" in
+                        let uu___8 = FStar_Errors_Msg.text msg in
+                        FStar_Pprint.prefix (Prims.of_int (2)) Prims.int_one
+                          uu___7 uu___8 in
+                      [uu___6] in
+                    uu___4 :: uu___5 in
                   (FStar_Errors_Codes.Warning_FileNotWritten, uu___3) in
-                FStar_Errors.log_issue uu___1 uu___2
+                FStar_Errors.log_issue_doc uu___1 uu___2
           else ()
 let (unsafe_raw_load_checked_file :
   Prims.string ->

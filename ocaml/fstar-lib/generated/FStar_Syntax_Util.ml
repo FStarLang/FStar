@@ -305,8 +305,16 @@ let rec (univ_kernel :
     | FStar_Syntax_Syntax.U_succ u1 ->
         let uu___1 = univ_kernel u1 in
         (match uu___1 with | (k, n) -> (k, (n + Prims.int_one)))
-    | FStar_Syntax_Syntax.U_bvar uu___1 ->
-        FStar_Compiler_Effect.failwith "Imposible: univ_kernel (U_bvar _)"
+    | FStar_Syntax_Syntax.U_bvar i ->
+        let uu___1 =
+          let uu___2 =
+            let uu___3 =
+              FStar_Class_Show.show
+                (FStar_Class_Show.printableshow
+                   FStar_Class_Printable.printable_int) i in
+            Prims.strcat uu___3 ")" in
+          Prims.strcat "Imposible: univ_kernel (U_bvar " uu___2 in
+        FStar_Compiler_Effect.failwith uu___1
 let (constant_univ_as_nat : FStar_Syntax_Syntax.universe -> Prims.int) =
   fun u -> let uu___ = univ_kernel u in FStar_Pervasives_Native.snd uu___
 let rec (compare_univs :
@@ -635,22 +643,40 @@ let (head_and_args :
         { FStar_Syntax_Syntax.hd = head; FStar_Syntax_Syntax.args = args;_}
         -> (head, args)
     | uu___ -> (t1, [])
-let rec (head_and_args_full :
+let rec (__head_and_args_full :
+  Prims.bool ->
+    FStar_Syntax_Syntax.term ->
+      (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
+        FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
+        FStar_Pervasives_Native.option) Prims.list))
+  =
+  fun unmeta1 ->
+    fun t ->
+      let t1 = FStar_Syntax_Subst.compress t in
+      match t1.FStar_Syntax_Syntax.n with
+      | FStar_Syntax_Syntax.Tm_app
+          { FStar_Syntax_Syntax.hd = head; FStar_Syntax_Syntax.args = args;_}
+          ->
+          let uu___ = __head_and_args_full unmeta1 head in
+          (match uu___ with
+           | (head1, args') ->
+               (head1, (FStar_Compiler_List.op_At args' args)))
+      | FStar_Syntax_Syntax.Tm_meta
+          { FStar_Syntax_Syntax.tm2 = tm; FStar_Syntax_Syntax.meta = uu___;_}
+          when unmeta1 -> __head_and_args_full unmeta1 tm
+      | uu___ -> (t1, [])
+let (head_and_args_full :
   FStar_Syntax_Syntax.term ->
     (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
       FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
       FStar_Pervasives_Native.option) Prims.list))
-  =
-  fun t ->
-    let t1 = FStar_Syntax_Subst.compress t in
-    match t1.FStar_Syntax_Syntax.n with
-    | FStar_Syntax_Syntax.Tm_app
-        { FStar_Syntax_Syntax.hd = head; FStar_Syntax_Syntax.args = args;_}
-        ->
-        let uu___ = head_and_args_full head in
-        (match uu___ with
-         | (head1, args') -> (head1, (FStar_Compiler_List.op_At args' args)))
-    | uu___ -> (t1, [])
+  = fun t -> __head_and_args_full false t
+let (head_and_args_full_unmeta :
+  FStar_Syntax_Syntax.term ->
+    (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.term'
+      FStar_Syntax_Syntax.syntax * FStar_Syntax_Syntax.arg_qualifier
+      FStar_Pervasives_Native.option) Prims.list))
+  = fun t -> __head_and_args_full true t
 let rec (leftmost_head :
   FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->

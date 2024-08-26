@@ -17,7 +17,7 @@ type step =
   | UnfoldAttr of FStar_Ident.lid Prims.list 
   | UnfoldQual of Prims.string Prims.list 
   | UnfoldNamespace of Prims.string Prims.list 
-  | UnfoldTac 
+  | DontUnfoldAttr of FStar_Ident.lid Prims.list 
   | PureSubtermsWithinComputations 
   | Simplify 
   | EraseUniverses 
@@ -89,8 +89,11 @@ let (uu___is_UnfoldNamespace : step -> Prims.bool) =
     match projectee with | UnfoldNamespace _0 -> true | uu___ -> false
 let (__proj__UnfoldNamespace__item___0 : step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
-let (uu___is_UnfoldTac : step -> Prims.bool) =
-  fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
+let (uu___is_DontUnfoldAttr : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DontUnfoldAttr _0 -> true | uu___ -> false
+let (__proj__DontUnfoldAttr__item___0 : step -> FStar_Ident.lid Prims.list) =
+  fun projectee -> match projectee with | DontUnfoldAttr _0 -> _0
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -149,7 +152,6 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (Eager_unfolding, Eager_unfolding) -> true
       | (Inlining, Inlining) -> true
       | (DoNotUnfoldPureLets, DoNotUnfoldPureLets) -> true
-      | (UnfoldTac, UnfoldTac) -> true
       | (PureSubtermsWithinComputations, PureSubtermsWithinComputations) ->
           true
       | (Simplify, Simplify) -> true
@@ -190,6 +192,11 @@ let rec (eq_step : step -> step -> Prims.bool) =
             (FStar_Class_Ord.ord_eq
                (FStar_Class_Ord.ord_list FStar_Class_Ord.ord_string)) strs1
             strs2
+      | (DontUnfoldAttr lids1, DontUnfoldAttr lids2) ->
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Syntax_Syntax.ord_fv)) lids1
+            lids2
       | uu___ -> false
 let (deq_step : step FStar_Class_Deq.deq) =
   { FStar_Class_Deq.op_Equals_Question = eq_step }
@@ -241,7 +248,11 @@ let rec (step_to_string : step -> Prims.string) =
                (FStar_Class_Show.printableshow
                   FStar_Class_Printable.printable_string)) strs1 in
         Prims.strcat "UnfoldNamespace " uu___
-    | UnfoldTac -> "UnfoldTac"
+    | DontUnfoldAttr lids1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list FStar_Ident.showable_lident) lids1 in
+        Prims.strcat "DontUnfoldAttr " uu___
     | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
     | Simplify -> "Simplify"
     | EraseUniverses -> "EraseUniverses"
