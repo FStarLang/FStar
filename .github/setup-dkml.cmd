@@ -30,7 +30,7 @@ if %ERRORLEVEL% neq 0 (
 	exit /b 1
 )
 
-REM Install DkML compiler
+REM Install DkML compiler including MSYS2
 :HavePowershellExe
 SET OPAMYES=1
 REM     TODO: Use [dkml-workflows] not [dkml-workflows-prerelease] once 2.1.2 is merged
@@ -39,5 +39,10 @@ if NOT EXIST dkml-workflows (
 )
 IF NOT EXIST .ci\o\dkml\bin\ocamlc.exe (
     "%INTERNAL_POWERSHELLEXE%" -NoProfile -ExecutionPolicy Bypass -Command "& dkml-workflows\test\pc\setup-dkml-windows_x86_64.ps1; exit $LASTEXITCODE"
+)
+
+REM Install MSYS2's zip.exe so `make package` works
+if NOT EXIST msys64\usr\bin\zip.exe (
+    msys64\usr\bin\pacman -Sy --noconfirm --needed zip
 )
 exit /b %ERRORLEVEL%
