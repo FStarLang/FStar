@@ -54,6 +54,9 @@ depgraph-%.pdf:
 	$(call msg, "DOT", $@)
 	$(Q)dot -Tpdf -o $@ $@.graph.simpl
 
+.PHONY: all_depgraphs
+all_depgraphs: $(patsubst %,depgraph-%.pdf,$(wildcard *.fst *.fsti))
+
 depend.extract: $(DEPEND)
 
 include $(DEPEND)
