@@ -262,22 +262,21 @@ let (mul32 : FStar_UInt64.t -> FStar_UInt32.t -> t) =
           (u32_combine
              (FStar_UInt64.add
                 (FStar_UInt64.mul (FStar_UInt64.shift_right x u32_32)
-                   (FStar_UInt64.uint_to_t (FStar_UInt32.v y)))
+                   (FStar_Int_Cast.uint32_to_uint64 y))
                 (FStar_UInt64.shift_right
                    (FStar_UInt64.mul (u64_mod_32 x)
-                      (FStar_UInt64.uint_to_t (FStar_UInt32.v y))) u32_32))
+                      (FStar_Int_Cast.uint32_to_uint64 y)) u32_32))
              (u64_mod_32
                 (FStar_UInt64.mul (u64_mod_32 x)
-                   (FStar_UInt64.uint_to_t (FStar_UInt32.v y)))));
+                   (FStar_Int_Cast.uint32_to_uint64 y))));
         high =
           (FStar_UInt64.shift_right
              (FStar_UInt64.add
                 (FStar_UInt64.mul (FStar_UInt64.shift_right x u32_32)
-                   (FStar_UInt64.uint_to_t (FStar_UInt32.v y)))
+                   (FStar_Int_Cast.uint32_to_uint64 y))
                 (FStar_UInt64.shift_right
                    (FStar_UInt64.mul (u64_mod_32 x)
-                      (FStar_UInt64.uint_to_t (FStar_UInt32.v y))) u32_32))
-             u32_32)
+                      (FStar_Int_Cast.uint32_to_uint64 y)) u32_32)) u32_32)
       }
 let (l32 : unit FStar_UInt.uint_t -> unit FStar_UInt.uint_t) =
   fun x -> x mod (Prims.pow2 (Prims.of_int (32)))
