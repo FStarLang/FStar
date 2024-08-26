@@ -7044,8 +7044,11 @@ let (lidents : env -> FStar_Ident.lident Prims.list) =
            fun keys1 ->
              FStar_Compiler_List.op_At (FStar_Syntax_Util.lids_of_sigelt v)
                keys1) keys
-let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
-  fun env1 ->
+let (should_enc_path :
+  (Prims.string Prims.list * Prims.bool) Prims.list ->
+    Prims.string Prims.list -> Prims.bool)
+  =
+  fun proof_ns ->
     fun path ->
       let rec str_i_prefix xs ys =
         match (xs, ys) with
@@ -7058,15 +7061,15 @@ let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
       let uu___ =
         FStar_Compiler_List.tryFind
           (fun uu___1 ->
-             match uu___1 with | (p, uu___2) -> str_i_prefix p path)
-          env1.proof_ns in
+             match uu___1 with | (p, uu___2) -> str_i_prefix p path) proof_ns in
       match uu___ with
       | FStar_Pervasives_Native.None -> false
       | FStar_Pervasives_Native.Some (uu___1, b) -> b
-let (should_enc_lid : env -> FStar_Ident.lident -> Prims.bool) =
-  fun env1 ->
+let (should_enc_lid : proof_namespace -> FStar_Ident.lident -> Prims.bool) =
+  fun proof_ns ->
     fun lid ->
-      let uu___ = FStar_Ident.path_of_lid lid in should_enc_path env1 uu___
+      let uu___ = FStar_Ident.path_of_lid lid in
+      should_enc_path proof_ns uu___
 let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
   fun b ->
     fun e ->

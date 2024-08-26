@@ -25,6 +25,7 @@ open FStar.Class.Show
 module BU = FStar.Compiler.Util
 module Pruning = FStar.SMTEncoding.Pruning
 module U = FStar.SMTEncoding.UnsatCore
+module TcEnv = FStar.TypeChecker.Env
 
 let decl_name_set = BU.psmap bool
 let empty_decl_names = BU.psmap_empty #bool ()
@@ -36,6 +37,7 @@ type decls_at_level = {
   all_decls_at_level_rev: list decl; (* all decls at this level *)
   given_decls_rev: list decl; (* all declarations that have been flushed so far *)
   to_flush_rev: list decl; (* declarations to be given to the solver at the next flush *)
+  named_assumptions: BU.psmap assumption;
 }
 
 let init_given_decls_at_level = { 
@@ -44,12 +46,13 @@ let init_given_decls_at_level = {
   pruning_state=Pruning.init;
   given_decls_rev=[];
   to_flush_rev=[];
+  named_assumptions = BU.psmap_empty ()
 }
 
 type solver_state = {
   levels: list decls_at_level;
   pending_flushes_rev: list decl;
-  using_facts_from:option using_facts_from_setting
+  using_facts_from:option using_facts_from_setting;
 }
 
 let solver_state_to_string (s:solver_state) =
@@ -92,7 +95,8 @@ let push (s:solver_state)
                all_decls_at_level_rev = [];
                pruning_state = hd.pruning_state;
                given_decls_rev=[];
-               to_flush_rev=[Push (List.length s.levels)]
+               to_flush_rev=[Push (List.length s.levels)];
+               named_assumptions = hd.named_assumptions
               } in
   let s1 = 
     { s with
@@ -133,21 +137,56 @@ let pop (s:solver_state)
 //   let s1 = { s with using_facts_from; levels; pending_flushes_rev=List.rev to_flush } in
 //   debug "reset" s s1; s1
 
+let filter_using_facts_from
+      (using_facts_from:option using_facts_from_setting)
+      (named_assumptions:BU.psmap assumption)
+      (s:solver_state)
+      (ds:list decl) //flattened decls
+: list decl
+= match using_facts_from with
+  | None
+  | Some [[], true] -> ds
+  | Some using_facts_from ->
+    let keep_assumption (a:assumption)
+    : bool
+    = match a.assumption_fact_ids with
+      | [] -> true //retaining `a` because it is not tagged with a fact id
+      | _ ->
+        a.assumption_fact_ids 
+        |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false)
+    in
+    let already_given_map : BU.smap bool = BU.smap_create 1000 in
+    let add_assumption a = BU.smap_add already_given_map a.assumption_name true in
+    let already_given (a:assumption)
+    : bool
+    = Some? (BU.smap_try_find already_given_map a.assumption_name) ||
+      s.levels |> BU.for_some (fun level -> decl_names_contains a.assumption_name level.given_decl_names)
+    in
+    let map_decl (d:decl)
+    : list decl
+    = match d with
+      | Assume a -> (
+        if keep_assumption a && not (already_given a)
+        then (add_assumption a; [d])
+        else []
+      )
+      | RetainAssumptions names ->
+        let assumptions = 
+          names |>
+          List.collect (fun name ->
+            match BU.psmap_try_find named_assumptions name with
+            | None -> []
+            | Some a ->
+              if already_given a then [] else (add_assumption a; [Assume a]))
+        in
+        assumptions
+      | _ ->
+        [d]
+    in
+    let ds = List.collect map_decl ds in
+    ds
 
-let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
-  let levels =
-    List.map
-      (fun level -> 
-        { level with
-          given_decls_rev=[]; 
-          to_flush_rev=level.to_flush_rev@level.given_decls_rev })
-      s.levels
-  in
-  let using_facts_from = match using_facts_from with
-    | Some u -> Some u
-    | None -> s.using_facts_from in
-  let s1 = { s with using_facts_from; levels; pending_flushes_rev=[] } in
-  debug "reset" s s1; s1
+
 
 // let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
 //   let to_flush, levels =
@@ -186,25 +225,38 @@ let rec flatten (d:decl) : list decl =
 //     to_flush=List.rev rest @ s.to_flush
 //   }
 
+let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
+: BU.psmap assumption
+= List.fold_left
+    (fun named_assumptions d ->
+      match d with
+      | Assume a -> BU.psmap_add named_assumptions a.assumption_name a
+      | _ -> named_assumptions)
+    named_assumptions
+    ds
+
 let give_now (ds:list decl) (s:solver_state) 
 : solver_state
 = let decls = List.collect flatten ds in
-  let assumptions, rest = List.partition Assume? decls in
+  let assumptions, _ = List.partition Assume? decls in
   let hd, tl = peek s in
+  let named_assumptions = add_named_assumptions hd.named_assumptions assumptions in
+  let ds_to_flush = filter_using_facts_from s.using_facts_from named_assumptions s decls in
   let given =
     List.fold_left 
       (fun given d ->
         match d with
-        | Assume a -> add_name a.assumption_name given)
+        | Assume a -> add_name a.assumption_name given
+        | _ -> given)
       hd.given_decl_names
-      assumptions
+      ds_to_flush
   in
   let hd = { hd with
     given_decl_names = given;
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
-    to_flush_rev = List.rev ds @ hd.to_flush_rev;
-    // given_decls_rev = List.rev ds @ hd.given_decls_rev
+    to_flush_rev = List.rev ds_to_flush @ hd.to_flush_rev;
+    named_assumptions
   } in
   { s with
     levels = hd :: tl
@@ -218,6 +270,37 @@ let give (ds:list decl) (s:solver_state)
   // else
   let s1 = give_now ds s in
   debug "give" s s1; s1
+
+let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_setting) (s:solver_state)
+: solver_state
+= let s_new = init () in
+  let s_new = { s_new with using_facts_from } in
+  let rec rebuild levels s_new =
+    match levels with
+    | [ last ] ->
+      give (List.rev last.all_decls_at_level_rev) s_new
+    | level :: levels ->
+      let s_new = push (rebuild levels s_new) in
+      give (List.rev level.all_decls_at_level_rev) s_new
+  in
+  rebuild s.levels s_new
+      
+let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
+  if using_facts_from = s.using_facts_from
+  then (
+    let levels =
+      List.map
+        (fun level -> 
+          { level with
+            given_decls_rev=[]; 
+            to_flush_rev=level.to_flush_rev@level.given_decls_rev })
+        s.levels
+    in
+    let s1 = { s with levels; pending_flushes_rev=[] } in
+    debug "reset" s s1;
+    s1
+  )
+  else reset_with_new_using_facts_from using_facts_from s
 
 let name_of_assumption (d:decl) =
   match d with

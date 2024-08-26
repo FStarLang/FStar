@@ -1966,19 +1966,19 @@ let lidents env : list lident =
   let keys = List.collect fst env.gamma_sig in
   BU.smap_fold (sigtab env) (fun _ v keys -> U.lids_of_sigelt v@keys) keys
 
-let should_enc_path env path =
+let should_enc_path proof_ns path =
     let rec str_i_prefix xs ys =
         match xs, ys with
         | [], _ -> true
         | x::xs, y::ys -> String.lowercase x = String.lowercase y && str_i_prefix xs ys
         | _, _ -> false
     in
-    match FStar.Compiler.List.tryFind (fun (p, _) -> str_i_prefix p path) env.proof_ns with
+    match FStar.Compiler.List.tryFind (fun (p, _) -> str_i_prefix p path) proof_ns with
     | None -> false
     | Some (_, b) -> b
 
-let should_enc_lid env lid =
-    should_enc_path env (path_of_lid lid)
+let should_enc_lid proof_ns lid =
+    should_enc_path proof_ns (path_of_lid lid)
 
 let cons_proof_ns b e path =
     { e with proof_ns = (path,b) :: e.proof_ns }

@@ -110,65 +110,6 @@ let with_hints_db : 'a . Prims.string -> (unit -> 'a) -> 'a =
     fun f ->
       initialize_hints_db fname false;
       (let result = f () in finalize_hints_db fname; result)
-let (filter_using_facts_from_aux :
-  FStar_SMTEncoding_Env.env_t ->
-    FStar_SMTEncoding_Term.decl Prims.list ->
-      FStar_SMTEncoding_Term.decl Prims.list)
-  =
-  fun e ->
-    fun theory ->
-      let matches_fact_ids include_assumption_names a =
-        match a.FStar_SMTEncoding_Term.assumption_fact_ids with
-        | [] -> true
-        | uu___ ->
-            (FStar_Compiler_Util.for_some
-               (fun uu___1 ->
-                  match uu___1 with
-                  | FStar_SMTEncoding_Term.Name lid ->
-                      FStar_TypeChecker_Env.should_enc_lid
-                        e.FStar_SMTEncoding_Env.tcenv lid
-                  | uu___2 -> false)
-               a.FStar_SMTEncoding_Term.assumption_fact_ids)
-              ||
-              (let uu___1 =
-                 FStar_Compiler_Util.smap_try_find include_assumption_names
-                   a.FStar_SMTEncoding_Term.assumption_name in
-               FStar_Compiler_Option.isSome uu___1) in
-      let theory_rev = FStar_Compiler_List.rev theory in
-      let include_assumption_names =
-        FStar_Compiler_Util.smap_create (Prims.of_int (10000)) in
-      let keep_decl uu___ =
-        match uu___ with
-        | FStar_SMTEncoding_Term.Assume a ->
-            matches_fact_ids include_assumption_names a
-        | FStar_SMTEncoding_Term.RetainAssumptions names ->
-            (FStar_Compiler_List.iter
-               (fun x ->
-                  FStar_Compiler_Util.smap_add include_assumption_names x
-                    true) names;
-             true)
-        | FStar_SMTEncoding_Term.Module uu___1 ->
-            FStar_Compiler_Effect.failwith
-              "Solver.fs::keep_decl should never have been called with a Module decl"
-        | uu___1 -> true in
-      let keep =
-        FStar_Compiler_List.fold_left
-          (fun keep1 ->
-             fun d ->
-               match d with
-               | FStar_SMTEncoding_Term.Module (name, decls) ->
-                   let keep_decls_rev =
-                     FStar_Compiler_List.filter keep_decl
-                       (FStar_Compiler_List.rev decls) in
-                   let keep2 =
-                     (FStar_SMTEncoding_Term.Module
-                        (name, (FStar_Compiler_List.rev keep_decls_rev)))
-                     :: keep1 in
-                   keep2
-               | uu___ ->
-                   let uu___1 = keep_decl d in
-                   if uu___1 then d :: keep1 else keep1) [] theory_rev in
-      keep
 type errors =
   {
   error_reason: Prims.string ;
@@ -1234,7 +1175,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___510 : answer FStar_Class_Show.showable) =
+let (uu___472 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->

@@ -474,8 +474,7 @@ val is_total_effect : env -> lident -> bool
 val binders_of_bindings : list binding -> binders
 
 (* Toggling of encoding of namespaces *)
-val should_enc_path : env -> list string -> bool
-val should_enc_lid  : env -> lident -> bool
+val should_enc_lid  : proof_namespace -> lident -> bool
 val add_proof_ns    : env -> name_prefix -> env
 val rem_proof_ns    : env -> name_prefix -> env
 val get_proof_ns    : env -> proof_namespace
