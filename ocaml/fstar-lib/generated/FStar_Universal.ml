@@ -117,9 +117,7 @@ let with_dsenv_of_tcenv :
               FStar_TypeChecker_Env.core_check =
                 (tcenv.FStar_TypeChecker_Env.core_check);
               FStar_TypeChecker_Env.missing_decl =
-                (tcenv.FStar_TypeChecker_Env.missing_decl);
-              FStar_TypeChecker_Env.pending_lemmas =
-                (tcenv.FStar_TypeChecker_Env.pending_lemmas)
+                (tcenv.FStar_TypeChecker_Env.missing_decl)
             })
 let with_tcenv_of_env :
   'a .
@@ -366,9 +364,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.core_check =
           (env.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env.FStar_TypeChecker_Env.missing_decl);
-        FStar_TypeChecker_Env.pending_lemmas =
-          (env.FStar_TypeChecker_Env.pending_lemmas)
+          (env.FStar_TypeChecker_Env.missing_decl)
       } in
     let env2 =
       {
@@ -461,9 +457,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.core_check =
           (env1.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env1.FStar_TypeChecker_Env.missing_decl);
-        FStar_TypeChecker_Env.pending_lemmas =
-          (env1.FStar_TypeChecker_Env.pending_lemmas)
+          (env1.FStar_TypeChecker_Env.missing_decl)
       } in
     let env3 =
       {
@@ -556,9 +550,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.core_check =
           (env2.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env2.FStar_TypeChecker_Env.missing_decl);
-        FStar_TypeChecker_Env.pending_lemmas =
-          (env2.FStar_TypeChecker_Env.pending_lemmas)
+          (env2.FStar_TypeChecker_Env.missing_decl)
       } in
     let env4 =
       {
@@ -650,9 +642,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.core_check =
           (env3.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env3.FStar_TypeChecker_Env.missing_decl);
-        FStar_TypeChecker_Env.pending_lemmas =
-          (env3.FStar_TypeChecker_Env.pending_lemmas)
+          (env3.FStar_TypeChecker_Env.missing_decl)
       } in
     let env5 =
       {
@@ -744,9 +734,7 @@ let (init_env : FStar_Parser_Dep.deps -> FStar_TypeChecker_Env.env) =
         FStar_TypeChecker_Env.core_check =
           (env4.FStar_TypeChecker_Env.core_check);
         FStar_TypeChecker_Env.missing_decl =
-          (env4.FStar_TypeChecker_Env.missing_decl);
-        FStar_TypeChecker_Env.pending_lemmas =
-          (env4.FStar_TypeChecker_Env.pending_lemmas)
+          (env4.FStar_TypeChecker_Env.missing_decl)
       } in
     (env5.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.init env5; env5
 type lang_decls_t = FStar_Parser_AST.decl Prims.list

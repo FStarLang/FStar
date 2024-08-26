@@ -5679,10 +5679,7 @@ let (find_coercion :
                                                                     (env.FStar_TypeChecker_Env.core_check);
                                                                     FStar_TypeChecker_Env.missing_decl
                                                                     =
-                                                                    (env.FStar_TypeChecker_Env.missing_decl);
-                                                                    FStar_TypeChecker_Env.pending_lemmas
-                                                                    =
-                                                                    (env.FStar_TypeChecker_Env.pending_lemmas)
+                                                                    (env.FStar_TypeChecker_Env.missing_decl)
                                                                     } tt in
                                                                     FStar_Pervasives_Native.Some
                                                                     uu___21)))))))))
@@ -8101,9 +8098,7 @@ let (update_env_sub_eff :
               FStar_TypeChecker_Env.core_check =
                 (env.FStar_TypeChecker_Env.core_check);
               FStar_TypeChecker_Env.missing_decl =
-                (env.FStar_TypeChecker_Env.missing_decl);
-              FStar_TypeChecker_Env.pending_lemmas =
-                (env.FStar_TypeChecker_Env.pending_lemmas)
+                (env.FStar_TypeChecker_Env.missing_decl)
             } sub.FStar_Syntax_Syntax.source sub.FStar_Syntax_Syntax.target
             uu___ in
         {
@@ -8201,9 +8196,7 @@ let (update_env_sub_eff :
           FStar_TypeChecker_Env.core_check =
             (env1.FStar_TypeChecker_Env.core_check);
           FStar_TypeChecker_Env.missing_decl =
-            (env1.FStar_TypeChecker_Env.missing_decl);
-          FStar_TypeChecker_Env.pending_lemmas =
-            (env1.FStar_TypeChecker_Env.pending_lemmas)
+            (env1.FStar_TypeChecker_Env.missing_decl)
         }
 let (update_env_polymonadic_bind :
   FStar_TypeChecker_Env.env ->

@@ -954,9 +954,7 @@ let rec (traverse_for_spinoff :
                              FStar_TypeChecker_Env.core_check =
                                (env2.FStar_TypeChecker_Env.core_check);
                              FStar_TypeChecker_Env.missing_decl =
-                               (env2.FStar_TypeChecker_Env.missing_decl);
-                             FStar_TypeChecker_Env.pending_lemmas =
-                               (env2.FStar_TypeChecker_Env.pending_lemmas)
+                               (env2.FStar_TypeChecker_Env.missing_decl)
                            } e1 in
                        (match uu___4 with
                         | (e2, lc) ->
@@ -1973,10 +1971,7 @@ let (splice :
                                          FStar_TypeChecker_Env.core_check =
                                            (env.FStar_TypeChecker_Env.core_check);
                                          FStar_TypeChecker_Env.missing_decl =
-                                           (env.FStar_TypeChecker_Env.missing_decl);
-                                         FStar_TypeChecker_Env.pending_lemmas
-                                           =
-                                           (env.FStar_TypeChecker_Env.pending_lemmas)
+                                           (env.FStar_TypeChecker_Env.missing_decl)
                                        }, val_t)
                                       (FStar_Syntax_Embeddings.e_tuple3
                                          (FStar_Syntax_Embeddings.e_list

@@ -43,77 +43,6 @@ module TcComm = FStar.TypeChecker.Common
 
 open FStar.Defensive
 
-let lemma_triggers = list (list lident)
-
-type pending_lemma_patterns = {
-  //lemma ->  list (list lident)
-  //   SMTPatOr [ [SMTPat p11; SMTPat p12; ...]
-  //              [SMTPat p21; SMTPat p22; ...]]
-  //  represented as
-  //  [ fvs [p11; p12]; fvs [p21; p22...]; ...]
-  //remaining triggers for each lemma
-  pending_lemma_triggers: BU.psmap lemma_triggers;
-  //lid -> list lemma; lemmas whose patterns mention lid
-  lidents_to_pending_lemmas: BU.psmap (list lident); 
-  ambients: list lident
-}
-
-let print_pending_lemmas (p:pending_lemma_patterns)
-: string
-= let acc =
-    BU.psmap_fold p.pending_lemma_triggers
-      (fun lem triggers acc -> BU.format2 "%s -> %s" lem (show triggers) :: acc)
-      []
-  in
-  let fwd = String.concat "\n" acc in
-  let bk =
-    BU.psmap_fold p.lidents_to_pending_lemmas
-      (fun lid lems acc -> BU.format2 "%s -> %s" lid (show lems) :: acc)
-      []
-  in
-  BU.format2 "Pending lemmas:\n%s\nTriggers->lemmas: %s" fwd (String.concat "\n" bk)
-
-let empty_pending_lemma_patterns = {
-  pending_lemma_triggers = BU.psmap_empty();
-  lidents_to_pending_lemmas = BU.psmap_empty();
-  ambients = []
-}
-
-let remove_pending_lemma (lid:lident) (p:pending_lemma_patterns)
-: pending_lemma_patterns
-= let lid_str = Ident.string_of_lid lid in
-  let pending_lemmas = BU.psmap_remove p.lidents_to_pending_lemmas lid_str in
-  { p with lidents_to_pending_lemmas=pending_lemmas}
-
-let remove_trigger_for_lemma (pat:lident) (lem:lident) (ctxt:pending_lemma_patterns)
-: pending_lemma_patterns & bool
-= let pat_str = Ident.string_of_lid pat in
-  let lem_str = Ident.string_of_lid lem in
-  let pending_triggers_for_lem = BU.psmap_try_find ctxt.pending_lemma_triggers lem_str in
-  match pending_triggers_for_lem with
-  | None -> ctxt, false //should not happen
-  | Some triggers ->
-    // BU.print2 "Pending lemmas for %s: %s\n" lem_str (show triggers);
-    let triggers = 
-      triggers |> List.map (fun disjunct ->
-      disjunct |> List.filter (fun x -> Ident.string_of_lid x <> pat_str))
-    in
-    let eligible =
-      triggers |> BU.for_some (fun disjunct -> Nil? disjunct)
-    in
-    // BU.print4 "After removing pending lemmas for %s: %s\n%s is eligible? %s" 
-    //   lem_str (show triggers) 
-    //   lem_str (show eligible);
-    let pending_lemma_triggers = BU.psmap_add ctxt.pending_lemma_triggers lem_str triggers in
-    {ctxt with pending_lemma_triggers}, eligible
-
-let find_lemmas_waiting_on_trigger (lid:lident) (ctxt:pending_lemma_patterns)
-: list lident
-= let lid_str = Ident.string_of_lid lid in
-  match BU.psmap_try_find ctxt.lidents_to_pending_lemmas lid_str with
-  | None -> []
-  | Some lems -> lems
-let ambients (p:pending_lemma_patterns) = p.ambients
 let dbg_ImplicitTrace = Debug.get_toggle "ImplicitTrace"
 let dbg_LayeredEffectsEqns = Debug.get_toggle "LayeredEffectsEqns"
 
@@ -333,7 +262,6 @@ let initial_env deps
     core_check;
 
     missing_decl = empty();
-    pending_lemmas = empty_pending_lemma_patterns;
   }
 
 let dsenv env = env.dsenv
@@ -341,54 +269,6 @@ let sigtab env = env.sigtab
 let attrtab env = env.attrtab
 let gamma_cache env = env.gamma_cache
 
-let add_pending_lemma (e:env) (lem:lident) triggers =
-  let lem_str = string_of_lid lem in 
-  if Some? (BU.psmap_try_find e.pending_lemmas.pending_lemma_triggers lem_str)
-  then e
-  else
-    let { pending_lemma_triggers; lidents_to_pending_lemmas; ambients } = e.pending_lemmas in
-    let pending_lemma_triggers =
-      BU.psmap_add pending_lemma_triggers (string_of_lid lem) triggers
-    in
-    let lidents_to_pending_lemmas = 
-      triggers |> List.fold_left (fun acc disjunct ->
-      disjunct |> List.fold_left (fun acc lident ->
-        match BU.psmap_try_find lidents_to_pending_lemmas (string_of_lid lident) with
-        | None -> 
-          BU.psmap_add acc (string_of_lid lident) [lem]
-        | Some lems ->
-          BU.psmap_add acc (string_of_lid lident) (lem::lems)) acc) lidents_to_pending_lemmas
-    in
-    let p = { pending_lemma_triggers; lidents_to_pending_lemmas; ambients } in
-    { e with pending_lemmas = p }
-
-let maybe_add_ambient (e:env) (lem:lident) (t:typ)
-: env
-= match U.un_squash t with
-  | None -> e
-  | Some phi -> 
-    let p = e.pending_lemmas in
-    { e with pending_lemmas = { p with ambients = lem::p.ambients } }
-
-let maybe_add_pending_lemma (e:env) (lem:lident) (t:typ)
-: env
-= if not <| U.is_smt_lemma t then maybe_add_ambient e lem t else
-  let { pending_lemma_triggers; lidents_to_pending_lemmas } = e.pending_lemmas in
-  let triggers = U.triggers_of_smt_lemma t in
-  add_pending_lemma e lem triggers
-
-let maybe_add_assumption (e:env) (lem:lident) (phi:typ)
-: env
-= let open FStar.Syntax.Formula in
-  match destruct_typ_as_formula phi with
-  | None -> e
-  | Some c -> 
-    match c with
-    | QEx _ | BaseConn _ -> e
-    | QAll (bs, qpats, t) ->
-      let triggers = List.map (fun args -> List.collect (fun (x, _) -> elems (FStar.Syntax.Free.fvars x)) args) qpats in
-      add_pending_lemma e lem triggers
-    
 (* Marking and resetting the environment, for the interactive mode *)
 
 let query_indices: ref (list (list (lident & int))) = BU.mk_ref [[]]
@@ -1581,22 +1461,11 @@ let rec record_vals_and_defns (g:env) (se:sigelt) : env =
 // not capture any of the local bindings (duh).
 let push_sigelt' (force:bool) env s =
   let sb = (lids_of_sigelt s, s) in
-  if Options.ext_getv "context_pruning_verbose" <> ""
-  then BU.print2 "push_sigelt %s: %s\n" (show (fst sb)) (Print.sigelt_to_string_short s);
   let env = {env with gamma_sig = sb::env.gamma_sig} in
   add_sigelt force env s;
   env.tc_hooks.tc_push_in_gamma_hook env (Inr sb);
   let env = record_vals_and_defns env s in
-  match s.sigel with
-  | Sig_declare_typ { lid ; t } ->
-    maybe_add_pending_lemma env lid t
-  | Sig_let { lbs } ->
-    List.fold_left
-      (fun env lb ->maybe_add_pending_lemma env (S.lid_of_fv (right lb.lbname)) lb.lbtyp)
-      env (snd lbs)
-  | Sig_assume {lid; phi} ->
-    maybe_add_assumption env lid phi
-  | _ -> env
+  env
 
 let push_sigelt = push_sigelt' false
 let push_sigelt_force = push_sigelt' true

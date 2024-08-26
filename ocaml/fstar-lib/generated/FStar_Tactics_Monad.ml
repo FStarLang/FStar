@@ -162,9 +162,7 @@ let (register_goal : FStar_Tactics_Types.goal -> unit) =
                  FStar_TypeChecker_Env.core_check =
                    (env.FStar_TypeChecker_Env.core_check);
                  FStar_TypeChecker_Env.missing_decl =
-                   (env.FStar_TypeChecker_Env.missing_decl);
-                 FStar_TypeChecker_Env.pending_lemmas =
-                   (env.FStar_TypeChecker_Env.pending_lemmas)
+                   (env.FStar_TypeChecker_Env.missing_decl)
                } in
              (let uu___7 = FStar_Compiler_Effect.op_Bang dbg_CoreEq in
               if uu___7

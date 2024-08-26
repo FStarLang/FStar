@@ -5737,10 +5737,7 @@ let (tc_layered_eff_decl :
                                                                (uu___20.FStar_TypeChecker_Env.core_check);
                                                              FStar_TypeChecker_Env.missing_decl
                                                                =
-                                                               (uu___20.FStar_TypeChecker_Env.missing_decl);
-                                                             FStar_TypeChecker_Env.pending_lemmas
-                                                               =
-                                                               (uu___20.FStar_TypeChecker_Env.pending_lemmas)
+                                                               (uu___20.FStar_TypeChecker_Env.missing_decl)
                                                            } in
                                                          FStar_TypeChecker_TcTerm.tc_tot_or_gtot_term
                                                            uu___19
@@ -7819,10 +7816,7 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.core_check);
                                                                     FStar_TypeChecker_Env.missing_decl
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.missing_decl);
-                                                                    FStar_TypeChecker_Env.pending_lemmas
-                                                                    =
-                                                                    (env1.FStar_TypeChecker_Env.pending_lemmas)
+                                                                    (env1.FStar_TypeChecker_Env.missing_decl)
                                                                     } in
                                                                 check_and_gen'
                                                                   "bind_repr"
@@ -8105,10 +8099,7 @@ let (tc_non_layered_eff_decl :
                                                                     (uu___24.FStar_TypeChecker_Env.core_check);
                                                                    FStar_TypeChecker_Env.missing_decl
                                                                     =
-                                                                    (uu___24.FStar_TypeChecker_Env.missing_decl);
-                                                                   FStar_TypeChecker_Env.pending_lemmas
-                                                                    =
-                                                                    (uu___24.FStar_TypeChecker_Env.pending_lemmas)
+                                                                    (uu___24.FStar_TypeChecker_Env.missing_decl)
                                                                  } in
                                                                ((let uu___25
                                                                    =
@@ -8444,10 +8435,7 @@ let (tc_non_layered_eff_decl :
                                                                     (env1.FStar_TypeChecker_Env.core_check);
                                                                     FStar_TypeChecker_Env.missing_decl
                                                                     =
-                                                                    (env1.FStar_TypeChecker_Env.missing_decl);
-                                                                    FStar_TypeChecker_Env.pending_lemmas
-                                                                    =
-                                                                    (env1.FStar_TypeChecker_Env.pending_lemmas)
+                                                                    (env1.FStar_TypeChecker_Env.missing_decl)
                                                                     } uu___30);
                                                                     (let act_typ3
                                                                     =
@@ -9240,9 +9228,7 @@ let (tc_lift :
                                FStar_TypeChecker_Env.core_check =
                                  (env.FStar_TypeChecker_Env.core_check);
                                FStar_TypeChecker_Env.missing_decl =
-                                 (env.FStar_TypeChecker_Env.missing_decl);
-                               FStar_TypeChecker_Env.pending_lemmas =
-                                 (env.FStar_TypeChecker_Env.pending_lemmas)
+                                 (env.FStar_TypeChecker_Env.missing_decl)
                              } in
                            let lift1 =
                              match lift with

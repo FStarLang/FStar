@@ -119,24 +119,6 @@ let pop (s:solver_state)
   debug "pop" s s1;
   s1
   
-// let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
-//   let to_flush, levels =
-//     List.fold_right
-//       (fun level (to_flush, levels) ->
-//         let level = 
-//           { level with
-//             to_flush_rev=[];
-//             given_decls_rev=level.to_flush_rev@level.given_decls_rev} in
-//         to_flush@List.rev level.given_decls_rev,
-//         level::levels)
-//       s.levels ([], [])
-//   in
-//   let using_facts_from = match using_facts_from with
-//     | Some u -> Some u
-//     | None -> s.using_facts_from in
-//   let s1 = { s with using_facts_from; levels; pending_flushes_rev=List.rev to_flush } in
-//   debug "reset" s s1; s1
-
 let filter_using_facts_from
       (using_facts_from:option using_facts_from_setting)
       (named_assumptions:BU.psmap assumption)
@@ -211,20 +193,6 @@ let rec flatten (d:decl) : list decl =
   | Module (_, ds) -> List.collect flatten ds
   | _ -> [d]
 
-// let give_delay_assumptions (ds:list decl) (s:solver_state) 
-// : solver_state
-// = let decls = List.collect flatten ds in
-//   let assumptions, rest = List.partition Assume? decls in
-//   let hd, tl = peek s in
-//   let hd = { hd with
-//     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
-//     all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
-//   } in
-//   {
-//     levels = hd :: tl;
-//     to_flush=List.rev rest @ s.to_flush
-//   }
-
 let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
 : BU.psmap assumption
 = List.fold_left
@@ -234,6 +202,19 @@ let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
       | _ -> named_assumptions)
     named_assumptions
     ds
+
+let give_delay_assumptions (ds:list decl) (s:solver_state) 
+: solver_state
+= let decls = List.collect flatten ds in
+  let assumptions, rest = List.partition Assume? decls in
+  let hd, tl = peek s in
+  let hd = { hd with
+    pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
+    all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
+    named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
+    to_flush_rev = List.rev rest @ hd.to_flush_rev
+  } in
+  { s with levels = hd :: tl }
 
 let give_now (ds:list decl) (s:solver_state) 
 : solver_state
@@ -264,12 +245,9 @@ let give_now (ds:list decl) (s:solver_state)
 
 let give (ds:list decl) (s:solver_state)
 : solver_state
-= 
-  // if Options.ext_getv "context_pruning" <> ""
-  // then give_delay_assumptions ds s
-  // else
-  let s1 = give_now ds s in
-  debug "give" s s1; s1
+= if Options.ext_getv "context_pruning" <> ""
+  then give_delay_assumptions ds s
+  else give_now ds s
 
 let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_setting) (s:solver_state)
 : solver_state
@@ -286,21 +264,22 @@ let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_se
   rebuild s.levels s_new
       
 let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
-  if using_facts_from = s.using_facts_from
-  then (
-    let levels =
-      List.map
-        (fun level -> 
-          { level with
-            given_decls_rev=[]; 
-            to_flush_rev=level.to_flush_rev@level.given_decls_rev })
-        s.levels
-    in
-    let s1 = { s with levels; pending_flushes_rev=[] } in
-    debug "reset" s s1;
-    s1
-  )
-  else reset_with_new_using_facts_from using_facts_from s
+  // if using_facts_from = s.using_facts_from
+  // then (
+  //   let levels =
+  //     List.map
+  //       (fun level -> 
+  //         { level with
+  //           given_decls_rev=[]; 
+  //           to_flush_rev=level.to_flush_rev@level.given_decls_rev })
+  //       s.levels
+  //   in
+  //   let s1 = { s with levels; pending_flushes_rev=[] } in
+  //   debug "reset" s s1;
+  //   s1
+  // )
+  // else 
+  reset_with_new_using_facts_from using_facts_from s
 
 let name_of_assumption (d:decl) =
   match d with

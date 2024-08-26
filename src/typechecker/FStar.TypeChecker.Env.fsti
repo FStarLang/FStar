@@ -92,18 +92,6 @@ type goal = term
 
 type must_tot = bool
 
-let lemma_triggers = list (list (list lident))
-
-val pending_lemma_patterns : Type0
-val print_pending_lemmas : pending_lemma_patterns -> string
-val empty_pending_lemma_patterns : pending_lemma_patterns
-val remove_pending_lemma (lid:lident) (p:pending_lemma_patterns)
-: pending_lemma_patterns
-val remove_trigger_for_lemma (pat:lident) (lem:lident) (ctxt:pending_lemma_patterns)
-: pending_lemma_patterns & bool //is lem eligible? i.e., all its triggers matched?
-val find_lemmas_waiting_on_trigger (lid:lident) (p:pending_lemma_patterns)
-: list lident
-val ambients (p:pending_lemma_patterns) : list lident
 (*
  * AR: The mlift record that maintains functions to lift 'source' computation types
  *     and terms to 'target' computation types and terms (terms in the case of reifiable effects)
@@ -241,8 +229,6 @@ and env = {
   only when a definition for it is checked. At the of checking a module,
   if anything remains here, we fail. *)
   missing_decl : RBSet.t lident;
-  (* Lemmas with SMT Patterns; used for context pruning *)
-  pending_lemmas: pending_lemma_patterns;
 }
 
 and solver_depth_t = int & int & int
@@ -267,7 +253,6 @@ and tcenv_hooks =
 and core_check_t =
   env -> term -> typ -> bool -> either (option typ) (bool -> string)
 
-val maybe_add_pending_lemma (e:env) (l:lident) (t:typ) : env
 (* Keeping track of declarations and definitions. This operates
 over the missing_decl field. *)
 val record_val_for (e:env) (l:lident) : env
