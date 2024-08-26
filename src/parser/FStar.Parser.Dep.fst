@@ -413,7 +413,10 @@ let dependences_of (file_system_map:files_for_module_name)
       List.map (file_of_dep file_system_map all_cmd_line_files) deps
       |> List.filter (fun k -> k <> fn) (* skip current module, cf #451 *)
 
-let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
+let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph)
+    (file_system_map:files_for_module_name)
+    (cmd_line_files:list file_name)
+=
   if not (Options.silent ()) then begin
     Util.print1 "A DOT-format graph has been dumped in the current directory as `%s`\n" fn;
     Util.print1 "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
@@ -423,14 +426,13 @@ let print_graph (outc : out_channel) (fn : string) (graph:dependence_graph) =
     "digraph {\n" ^
     String.concat "\n" (List.collect
       (fun k ->
-          let deps = (must (deps_try_find graph k)).edges in
-          let r s = replace_char s '.' '_' in
+          let deps_fns = (must (deps_try_find graph k)).edges in
           let print dep =
             Util.format2 "  \"%s\" -> \"%s\""
-                (r (lowercase_module_name k))
-                (r (module_name_of_dep dep))
+                k
+                (file_of_dep file_system_map cmd_line_files dep)
           in
-          List.map print deps)
+          List.map print deps_fns)
      (List.unique (deps_keys graph))) ^
     "\n}\n"
   in
@@ -785,7 +787,7 @@ let collect_one
   if data_from_cache |> is_some then begin  //we found the parsing data in the checked file
     let deps, has_inline_for_extraction, mo_roots = from_parsing_data (data_from_cache |> must) original_map filename in
     if !dbg then
-      BU.print2 "Reading the parsing data for %s from its checked file .. found [%s]\n" filename (show deps);
+      BU.print2 "Reading the parsing data for %s from its checked file .. found %s\n" filename (show deps);
     data_from_cache |> must,
     deps, has_inline_for_extraction, mo_roots
   end
@@ -1504,12 +1506,12 @@ let collect (all_cmd_line_files: list file_name)
   profile (fun () -> List.iter discover_one all_cmd_line_files) "FStar.Parser.Dep.discover";
 
   (* At this point, dep_graph has all the (immediate) dependency graph of all the files. *)
-  let cycle_detected dep_graph cycle filename =
+  let cycle_detected (dep_graph:dependence_graph) cycle filename =
       Util.print1 "The cycle contains a subset of the modules in:\n%s \n" (String.concat "\n`used by` " cycle);
 
       (* Write the graph to a file for the user to see. *)
       let fn = "dep.graph" in
-      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph);
+      with_file_outchannel fn (fun outc -> print_graph outc fn dep_graph file_system_map all_cmd_line_files);
 
       print_string "\n";
       Errors.raise_err (Errors.Fatal_CyclicDependence,
@@ -1569,7 +1571,7 @@ let collect (all_cmd_line_files: list file_name)
             | _ -> [x]) in
         match node.color with
         | Gray ->
-           cycle_detected dep_graph cycle filename
+          cycle_detected dep_graph cycle filename
         | Black ->
             (* If the element has been visited already, then the map contains all its
              * dependencies. Otherwise, the map only contains its direct dependencies. *)
@@ -2019,7 +2021,7 @@ let do_print (outc : out_channel) (fn : string) deps : unit =
   | Some "full" ->
       profile (fun () -> print_full outc deps) "FStar.Parser.Deps.print_full_deps"
   | Some "graph" ->
-      print_graph outc fn deps.dep_graph
+      print_graph outc fn deps.dep_graph deps.file_system_map deps.cmd_line_files
   | Some "raw" ->
       print_raw outc deps
   | Some _ ->
