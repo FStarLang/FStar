@@ -25,7 +25,6 @@ open FStar.Class.Show
 module SolverState = FStar.SMTEncoding.SolverState
 module M = FStar.Compiler.Misc
 module BU = FStar.Compiler.Util
-
 (****************************************************************************)
 (* Z3 Specifics                                                             *)
 (****************************************************************************)
