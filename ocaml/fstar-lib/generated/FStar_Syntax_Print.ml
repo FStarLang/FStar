@@ -2002,6 +2002,19 @@ let (showable_letbinding :
   { FStar_Class_Show.show = lb_to_string }
 let (showable_modul : FStar_Syntax_Syntax.modul FStar_Class_Show.showable) =
   { FStar_Class_Show.show = modul_to_string }
+let (showable_ctx_uvar_meta :
+  FStar_Syntax_Syntax.ctx_uvar_meta_t FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr ->
+             let uu___1 = FStar_Class_Show.show showable_term attr in
+             Prims.strcat "Ctx_uvar_meta_attr " uu___1
+         | FStar_Syntax_Syntax.Ctx_uvar_meta_tac r ->
+             let uu___1 = FStar_Class_Show.show showable_term r in
+             Prims.strcat "Ctx_uvar_meta_tac " uu___1)
+  }
 let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = term_to_doc }
 let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =
