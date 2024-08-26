@@ -1,6 +1,6 @@
 module FStar.InteractiveHelpers.ExploreTerm
 
-open FStar.List
+open FStar.List.Tot
 open FStar.Tactics
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
@@ -339,7 +339,7 @@ val flush_typ_or_comp : bool -> env -> typ_or_comp ->
 let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst : list ((bv & typ) & term))
                                 (c:comp) : Tac comp =
   let flush c inst =
-    let inst = List.rev inst in
+    let inst = List.Tot.rev inst in
     apply_subst_in_comp e c inst
   in
   match rem with
@@ -364,7 +364,7 @@ let rec _flush_typ_or_comp_comp (dbg : bool) (e:env) (rem : list binder) (inst :
 let flush_typ_or_comp dbg e tyc =
   let flush_comp pl n c : Tac (tyc:typ_or_comp{num_unflushed_of_typ_or_comp tyc = 0})  =
     let pl', _ = List.Tot.splitAt n pl in
-    let pl' = List.rev pl' in
+    let pl' = List.Tot.rev pl' in
     let c = _flush_typ_or_comp_comp dbg e pl' [] c in
     TC_Comp c pl 0
   in
@@ -600,7 +600,7 @@ let free_in t =
 val abs_free_in : genv -> term -> Tac (list (bv & typ))
 let abs_free_in ge t =
   let fvl = free_in t in
-  let absl = List.rev (genv_abstract_bvs ge) in
+  let absl = List.Tot.rev (genv_abstract_bvs ge) in
   let is_free_in_term bv =
     Some? (List.Tot.find (bv_eq bv) fvl)
   in

@@ -9761,13 +9761,13 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (951))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (951))
-                                                                    (Prims.of_int (83)))))
+                                                                    (Prims.of_int (87)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.InteractiveHelpers.Effectful.fst"
                                                                     (Prims.of_int (951))
-                                                                    (Prims.of_int (86))
+                                                                    (Prims.of_int (90))
                                                                     (Prims.of_int (961))
                                                                     (Prims.of_int (39)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -9821,7 +9821,7 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (953))
                                                                     (Prims.of_int (16))
                                                                     (Prims.of_int (955))
-                                                                    (Prims.of_int (69)))))
+                                                                    (Prims.of_int (73)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
