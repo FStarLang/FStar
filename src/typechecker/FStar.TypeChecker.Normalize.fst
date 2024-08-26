@@ -381,9 +381,9 @@ let reduce_primops norm_cb cfg (env:env) tm : term & bool =
     if not cfg.steps.primops
     then tm, false
     else begin
-         let head, args = U.head_and_args tm in
+         let head, args = U.head_and_args_full tm in
          let head_term, universes = 
-           let head = SS.compress head in
+           let head = SS.compress (U.unmeta head) in
            match head.n with
            | Tm_uinst(fv, us) -> fv, us
            | _ -> head, []
@@ -2429,7 +2429,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            norm cfg env stack' e
 
         | Tm_app _ when cfg.steps.primops ->
-          let hd, args = U.head_and_args t in
+          let hd, args = U.head_and_args_full_unmeta t in
           (match (U.un_uinst hd).n with
            | Tm_fvar fv ->
                begin
