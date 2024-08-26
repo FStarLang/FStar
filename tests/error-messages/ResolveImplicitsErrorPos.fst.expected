@@ -1,6 +1,6 @@
 proof-state: State dump @ depth 0 (at the time of failure):
 Location: ResolveImplicitsErrorPos.fst(14,13-16,7)
-Goal 1/1 (Instantiation of meta argument):
+Goal 1/1 (Instantiating meta argument):
 (_: Prims.unit) |- _ : Prims.int
 
 >> Got issues: [

@@ -31,6 +31,7 @@ val subst_aqual:        list subst_elt -> aqual -> aqual
 val subst_ascription:   list subst_elt -> ascription -> ascription
 val subst_decreasing_order:
                         list subst_elt -> decreases_order -> decreases_order
+val subst_binder:       list subst_elt -> binder -> binder
 val subst_binders:      list subst_elt -> binders -> binders
 val subst_residual_comp:list subst_elt -> residual_comp -> residual_comp
 val compress:           term -> term
