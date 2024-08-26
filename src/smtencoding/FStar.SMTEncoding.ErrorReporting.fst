@@ -355,7 +355,7 @@ let detail_errors hint_replay
 
     //check all active labels linearly and classify as eliminated/error
     let rec linear_check eliminated errors active =
-        FStar.SMTEncoding.Z3.refresh();
+        FStar.SMTEncoding.Z3.refresh (Some env.proof_ns);
         match active with
         | [] ->
             let results =

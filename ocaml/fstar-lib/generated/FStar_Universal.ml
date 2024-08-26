@@ -1136,7 +1136,11 @@ let (tc_one_file :
                      (let uu___5 =
                         let uu___6 = FStar_Options.lax () in
                         Prims.op_Negation uu___6 in
-                      if uu___5 then FStar_SMTEncoding_Z3.refresh () else ());
+                      if uu___5
+                      then
+                        FStar_SMTEncoding_Z3.refresh
+                          FStar_Pervasives_Native.None
+                      else ());
                      with_tcenv_of_env env2
                        (fun tcenv ->
                           (match tcenv.FStar_TypeChecker_Env.gamma with
@@ -1293,7 +1297,11 @@ let (tc_one_file :
                      (let uu___4 =
                         let uu___5 = FStar_Options.lax () in
                         Prims.op_Negation uu___5 in
-                      if uu___4 then FStar_SMTEncoding_Z3.refresh () else ());
+                      if uu___4
+                      then
+                        FStar_SMTEncoding_Z3.refresh
+                          FStar_Pervasives_Native.None
+                      else ());
                      (let uu___4 =
                         let uu___5 =
                           FStar_ToSyntax_ToSyntax.add_modul_to_env tcmod1
@@ -1499,7 +1507,7 @@ let (batch_mode_tc :
                        if uu___5
                        then
                          (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-                           ()
+                           FStar_Pervasives_Native.None
                        else
                          (tcenv.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.finish
                            ());

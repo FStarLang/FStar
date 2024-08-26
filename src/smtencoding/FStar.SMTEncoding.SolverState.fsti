@@ -22,12 +22,14 @@ open FStar.BaseTypes
 open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
 module U = FStar.SMTEncoding.UnsatCore
+type using_facts_from_setting = list (list string & bool)
+
 val solver_state : Type0
 
 val init (_:unit) : solver_state
 val push (s:solver_state) : solver_state
 val pop (s:solver_state) : solver_state
-val reset (s:solver_state) : solver_state
+val reset (_:option using_facts_from_setting) (s:solver_state) : solver_state
 val give (ds:list decl) (s:solver_state) : solver_state
 val prune (roots:list decl) (s:solver_state) : solver_state
 val filter_with_unsat_core (_:U.unsat_core) (s:solver_state) : list decl

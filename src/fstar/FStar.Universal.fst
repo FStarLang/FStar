@@ -391,7 +391,7 @@ let tc_one_file
       let mii = FStar.Syntax.DsEnv.inclusion_info (tcenv_of_uenv env).dsenv fmod.name in
       let check_mod () =
           let check env =
-              if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
+              if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh None;
               with_tcenv_of_env env (fun tcenv ->
                  let _ = match tcenv.gamma with
                          | [] -> ()
@@ -479,7 +479,7 @@ let tc_one_file
         then BU.print1 "Module after type checking:\n%s\n" (FStar.Syntax.Print.modul_to_string tcmod);
 
         let extend_tcenv tcmod tcenv =
-            if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh();
+            if not (Options.lax()) then FStar.SMTEncoding.Z3.refresh None;
             let _, tcenv =
                 with_dsenv_of_tcenv tcenv <|
                     FStar.ToSyntax.ToSyntax.add_modul_to_env
@@ -604,7 +604,7 @@ let batch_mode_tc filenames dep_graph =
       with_tcenv_of_env env (fun tcenv ->
           if Options.interactive()
           && FStar.Errors.get_err_count () = 0
-          then tcenv.solver.refresh()
+          then tcenv.solver.refresh None
           else tcenv.solver.finish();
           (), tcenv)
   in

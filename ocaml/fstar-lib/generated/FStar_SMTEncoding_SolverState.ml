@@ -1,4 +1,6 @@
 open Prims
+type using_facts_from_setting =
+  (Prims.string Prims.list * Prims.bool) Prims.list
 type decl_name_set = Prims.bool FStar_Compiler_Util.psmap
 let (empty_decl_names : Prims.bool FStar_Compiler_Util.psmap) =
   FStar_Compiler_Util.psmap_empty ()
@@ -58,16 +60,24 @@ let (init_given_decls_at_level : decls_at_level) =
 type solver_state =
   {
   levels: decls_at_level Prims.list ;
-  pending_flushes_rev: FStar_SMTEncoding_Term.decl Prims.list }
+  pending_flushes_rev: FStar_SMTEncoding_Term.decl Prims.list ;
+  using_facts_from: using_facts_from_setting FStar_Pervasives_Native.option }
 let (__proj__Mksolver_state__item__levels :
   solver_state -> decls_at_level Prims.list) =
   fun projectee ->
-    match projectee with | { levels; pending_flushes_rev;_} -> levels
+    match projectee with
+    | { levels; pending_flushes_rev; using_facts_from;_} -> levels
 let (__proj__Mksolver_state__item__pending_flushes_rev :
   solver_state -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun projectee ->
     match projectee with
-    | { levels; pending_flushes_rev;_} -> pending_flushes_rev
+    | { levels; pending_flushes_rev; using_facts_from;_} ->
+        pending_flushes_rev
+let (__proj__Mksolver_state__item__using_facts_from :
+  solver_state -> using_facts_from_setting FStar_Pervasives_Native.option) =
+  fun projectee ->
+    match projectee with
+    | { levels; pending_flushes_rev; using_facts_from;_} -> using_facts_from
 let (solver_state_to_string : solver_state -> Prims.string) =
   fun s ->
     let levels =
@@ -125,7 +135,14 @@ let (peek : solver_state -> (decls_at_level * decls_at_level Prims.list)) =
     | hd::tl -> (hd, tl)
 let (init : unit -> solver_state) =
   fun uu___ ->
-    { levels = [init_given_decls_at_level]; pending_flushes_rev = [] }
+    let uu___1 =
+      let uu___2 = FStar_Options.using_facts_from () in
+      FStar_Pervasives_Native.Some uu___2 in
+    {
+      levels = [init_given_decls_at_level];
+      pending_flushes_rev = [];
+      using_facts_from = uu___1
+    }
 let (push : solver_state -> solver_state) =
   fun s ->
     let uu___ = peek s in
@@ -144,7 +161,8 @@ let (push : solver_state -> solver_state) =
         let s1 =
           {
             levels = (next :: (s.levels));
-            pending_flushes_rev = (s.pending_flushes_rev)
+            pending_flushes_rev = (s.pending_flushes_rev);
+            using_facts_from = (s.using_facts_from)
           } in
         (debug "push" s s1; s1)
 let (pop : solver_state -> solver_state) =
@@ -160,43 +178,50 @@ let (pop : solver_state -> solver_state) =
          (let s1 =
             if Prims.uu___is_Nil hd.given_decls_rev
             then
-              { levels = tl; pending_flushes_rev = (s.pending_flushes_rev) }
+              {
+                levels = tl;
+                pending_flushes_rev = (s.pending_flushes_rev);
+                using_facts_from = (s.using_facts_from)
+              }
             else
               {
                 levels = tl;
                 pending_flushes_rev =
                   ((FStar_SMTEncoding_Term.Pop
                       (FStar_Compiler_List.length s.levels)) ::
-                  (s.pending_flushes_rev))
+                  (s.pending_flushes_rev));
+                using_facts_from = (s.using_facts_from)
               } in
           debug "pop" s s1; s1))
-let (reset : solver_state -> solver_state) =
-  fun s ->
-    let uu___ =
-      FStar_Compiler_List.fold_right
-        (fun level ->
-           fun uu___1 ->
-             match uu___1 with
-             | (to_flush, levels) ->
-                 let level1 =
-                   {
-                     pruning_state = (level.pruning_state);
-                     given_decl_names = (level.given_decl_names);
-                     all_decls_at_level_rev = (level.all_decls_at_level_rev);
-                     given_decls_rev =
-                       (FStar_List_Tot_Base.op_At level.to_flush_rev
-                          level.given_decls_rev);
-                     to_flush_rev = []
-                   } in
-                 ((FStar_List_Tot_Base.op_At to_flush
-                     (FStar_Compiler_List.rev level1.given_decls_rev)),
-                   (level1 :: levels))) s.levels ([], []) in
-    match uu___ with
-    | (to_flush, levels) ->
-        let s1 =
-          { levels; pending_flushes_rev = (FStar_Compiler_List.rev to_flush)
-          } in
-        (debug "reset" s s1; s1)
+let (reset :
+  using_facts_from_setting FStar_Pervasives_Native.option ->
+    solver_state -> solver_state)
+  =
+  fun using_facts_from ->
+    fun s ->
+      let levels =
+        FStar_Compiler_List.map
+          (fun level ->
+             {
+               pruning_state = (level.pruning_state);
+               given_decl_names = (level.given_decl_names);
+               all_decls_at_level_rev = (level.all_decls_at_level_rev);
+               given_decls_rev = [];
+               to_flush_rev =
+                 (FStar_List_Tot_Base.op_At level.to_flush_rev
+                    level.given_decls_rev)
+             }) s.levels in
+      let using_facts_from1 =
+        match using_facts_from with
+        | FStar_Pervasives_Native.Some u -> FStar_Pervasives_Native.Some u
+        | FStar_Pervasives_Native.None -> s.using_facts_from in
+      let s1 =
+        {
+          levels;
+          pending_flushes_rev = [];
+          using_facts_from = using_facts_from1
+        } in
+      debug "reset" s s1; s1
 let rec (flatten :
   FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun d ->
@@ -242,7 +267,8 @@ let (give_now :
                  } in
                {
                  levels = (hd1 :: tl);
-                 pending_flushes_rev = (s.pending_flushes_rev)
+                 pending_flushes_rev = (s.pending_flushes_rev);
+                 using_facts_from = (s.using_facts_from)
                })
 let (give :
   FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state) =
@@ -291,7 +317,12 @@ let (flush :
                   level.given_decls_rev);
              to_flush_rev = []
            }) s.levels in
-    let s1 = { levels; pending_flushes_rev = [] } in
+    let s1 =
+      {
+        levels;
+        pending_flushes_rev = [];
+        using_facts_from = (s.using_facts_from)
+      } in
     debug "flush" s s1;
     (let uu___2 =
        let uu___3 = FStar_Options.ext_getv "debug_solver_state" in

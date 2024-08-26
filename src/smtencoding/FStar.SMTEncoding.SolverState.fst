@@ -33,9 +33,9 @@ let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
 type decls_at_level = {
   pruning_state: Pruning.pruning_state;
   given_decl_names: decl_name_set;
-  all_decls_at_level_rev: list decl;
-  given_decls_rev: list decl;
-  to_flush_rev: list decl;
+  all_decls_at_level_rev: list decl; (* all decls at this level *)
+  given_decls_rev: list decl; (* all declarations that have been flushed so far *)
+  to_flush_rev: list decl; (* declarations to be given to the solver at the next flush *)
 }
 
 let init_given_decls_at_level = { 
@@ -48,7 +48,8 @@ let init_given_decls_at_level = {
 
 type solver_state = {
   levels: list decls_at_level;
-  pending_flushes_rev: list decl
+  pending_flushes_rev: list decl;
+  using_facts_from:option using_facts_from_setting
 }
 
 let solver_state_to_string (s:solver_state) =
@@ -81,7 +82,8 @@ let peek (s:solver_state) =
 let init (_:unit)
 : solver_state
 = { levels = [init_given_decls_at_level];
-    pending_flushes_rev = [] }
+    pending_flushes_rev = [];
+    using_facts_from = Some (Options.using_facts_from()) }
 
 let push (s:solver_state)
 : solver_state
@@ -108,25 +110,62 @@ let pop (s:solver_state)
   let s1 =
     if Nil? hd.given_decls_rev //nothing has been given yet at this level
     then { s with levels = tl } //so we don't actually have to send a pop
-    else { levels = tl; pending_flushes_rev = Pop (List.length s.levels) :: s.pending_flushes_rev }
+    else { s with levels = tl; pending_flushes_rev = Pop (List.length s.levels) :: s.pending_flushes_rev }
   in
   debug "pop" s s1;
   s1
   
-let reset (s:solver_state) =
-  let to_flush, levels =
-    List.fold_right
-      (fun level (to_flush, levels) ->
-        let level = 
-          { level with
-            to_flush_rev=[];
-            given_decls_rev=level.to_flush_rev@level.given_decls_rev} in
-        to_flush@List.rev level.given_decls_rev,
-        level::levels)
-      s.levels ([], [])
+// let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
+//   let to_flush, levels =
+//     List.fold_right
+//       (fun level (to_flush, levels) ->
+//         let level = 
+//           { level with
+//             to_flush_rev=[];
+//             given_decls_rev=level.to_flush_rev@level.given_decls_rev} in
+//         to_flush@List.rev level.given_decls_rev,
+//         level::levels)
+//       s.levels ([], [])
+//   in
+//   let using_facts_from = match using_facts_from with
+//     | Some u -> Some u
+//     | None -> s.using_facts_from in
+//   let s1 = { s with using_facts_from; levels; pending_flushes_rev=List.rev to_flush } in
+//   debug "reset" s s1; s1
+
+
+let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
+  let levels =
+    List.map
+      (fun level -> 
+        { level with
+          given_decls_rev=[]; 
+          to_flush_rev=level.to_flush_rev@level.given_decls_rev })
+      s.levels
   in
-  let s1 = { s with levels; pending_flushes_rev=List.rev to_flush } in
+  let using_facts_from = match using_facts_from with
+    | Some u -> Some u
+    | None -> s.using_facts_from in
+  let s1 = { s with using_facts_from; levels; pending_flushes_rev=[] } in
   debug "reset" s s1; s1
+
+// let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
+//   let to_flush, levels =
+//     List.fold_right
+//       (fun level (to_flush, levels) ->
+//         let level = 
+//           { level with
+//             to_flush_rev=[];
+//             given_decls_rev=level.to_flush_rev@level.given_decls_rev} in
+//         to_flush@List.rev level.given_decls_rev,
+//         level::levels)
+//       s.levels ([], [])
+//   in
+//   let using_facts_from = match using_facts_from with
+//     | Some u -> Some u
+//     | None -> s.using_facts_from in
+//   let s1 = { s with using_facts_from; levels; pending_flushes_rev=List.rev to_flush } in
+//   debug "reset" s s1; s1
 
 let rec flatten (d:decl) : list decl = 
   match d with
@@ -165,6 +204,7 @@ let give_now (ds:list decl) (s:solver_state)
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
     to_flush_rev = List.rev ds @ hd.to_flush_rev;
+    // given_decls_rev = List.rev ds @ hd.given_decls_rev
   } in
   { s with
     levels = hd :: tl
@@ -229,7 +269,7 @@ let flush (s:solver_state)
                       to_flush_rev = [] })
       s.levels
   in
-  let s1 = { levels; pending_flushes_rev=[] } in
+  let s1 = { s with levels; pending_flushes_rev=[] } in
   debug "flush" s s1;
   if Options.ext_getv "debug_solver_state" <> ""
   then BU.print1 "Flushed %s\n" (show <| List.length to_flush);

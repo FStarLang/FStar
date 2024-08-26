@@ -1023,11 +1023,15 @@ let (prune : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls ->
     with_solver_state_unit (FStar_SMTEncoding_SolverState.give decls)
-let (refresh : unit -> unit) =
-  fun ctxt ->
+let (refresh :
+  FStar_SMTEncoding_SolverState.using_facts_from_setting
+    FStar_Pervasives_Native.option -> unit)
+  =
+  fun using_facts_from ->
     (let uu___1 = FStar_Compiler_Effect.op_Bang bg_z3_proc in
      uu___1.refresh ());
-    with_solver_state_unit FStar_SMTEncoding_SolverState.reset
+    with_solver_state_unit
+      (FStar_SMTEncoding_SolverState.reset using_facts_from)
 let (context_profile : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun theory ->
     let uu___ =
@@ -1219,8 +1223,9 @@ let (z3_job :
                                          input label_messages queryid)) ()
                          with
                          | uu___3 ->
-                             (refresh (); FStar_Compiler_Effect.raise uu___3))
-                      uu___1 "FStar.SMTEncoding.Z3 (aggregate query time)" in
+                             (refresh FStar_Pervasives_Native.None;
+                              FStar_Compiler_Effect.raise uu___3)) uu___1
+                      "FStar.SMTEncoding.Z3 (aggregate query time)" in
                   match uu___ with
                   | ((status, statistics), elapsed_time) ->
                       {

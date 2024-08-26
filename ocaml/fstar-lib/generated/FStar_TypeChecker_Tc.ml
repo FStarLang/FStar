@@ -4998,7 +4998,8 @@ let (add_sigelt_to_env :
                   then env1
                   else
                     ((env1.FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-                       ();
+                       (FStar_Pervasives_Native.Some
+                          (env1.FStar_TypeChecker_Env.proof_ns));
                      env1)
               | FStar_Syntax_Syntax.Sig_pragma
                   (FStar_Syntax_Syntax.PrintEffectsGraph) ->

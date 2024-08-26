@@ -1497,7 +1497,12 @@ let (__ask_solver :
   fun configs ->
     let check_one_config config =
       (let uu___1 = FStar_Options.z3_refresh () in
-       if uu___1 then FStar_SMTEncoding_Z3.refresh () else ());
+       if uu___1
+       then
+         FStar_SMTEncoding_Z3.refresh
+           (FStar_Pervasives_Native.Some
+              (((config.query_env).FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.proof_ns))
+       else ());
       (let uu___1 = with_fuel_and_diagnostics config [] in
        let uu___2 =
          let uu___3 = FStar_Compiler_Util.string_of_int config.query_index in
@@ -1731,7 +1736,8 @@ let (ask_solver_recover : query_settings Prims.list -> answer) =
                      [uu___5] in
                    FStar_Errors.diag_doc cfg.query_range uu___4);
                   (((cfg.query_env).FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-                    ();
+                    (FStar_Pervasives_Native.Some
+                       (((cfg.query_env).FStar_SMTEncoding_Env.tcenv).FStar_TypeChecker_Env.proof_ns));
                   try_hammer h1) in
            let rec aux hammers =
              match hammers with
@@ -1998,45 +2004,52 @@ type solver_cfg =
   facts: (Prims.string Prims.list * Prims.bool) Prims.list ;
   valid_intro: Prims.bool ;
   valid_elim: Prims.bool ;
-  z3version: Prims.string }
+  z3version: Prims.string ;
+  context_pruning: Prims.bool }
 let (__proj__Mksolver_cfg__item__seed : solver_cfg -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        seed
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> seed
 let (__proj__Mksolver_cfg__item__cliopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        cliopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> cliopt
 let (__proj__Mksolver_cfg__item__smtopt :
   solver_cfg -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        smtopt
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> smtopt
 let (__proj__Mksolver_cfg__item__facts :
   solver_cfg -> (Prims.string Prims.list * Prims.bool) Prims.list) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        facts
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> facts
 let (__proj__Mksolver_cfg__item__valid_intro : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        valid_intro
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> valid_intro
 let (__proj__Mksolver_cfg__item__valid_elim : solver_cfg -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        valid_elim
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> valid_elim
 let (__proj__Mksolver_cfg__item__z3version : solver_cfg -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;_} ->
-        z3version
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> z3version
+let (__proj__Mksolver_cfg__item__context_pruning : solver_cfg -> Prims.bool)
+  =
+  fun projectee ->
+    match projectee with
+    | { seed; cliopt; smtopt; facts; valid_intro; valid_elim; z3version;
+        context_pruning;_} -> context_pruning
 let (_last_cfg :
   solver_cfg FStar_Pervasives_Native.option FStar_Compiler_Effect.ref) =
   FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
@@ -2048,6 +2061,8 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
     let uu___3 = FStar_Options.smtencoding_valid_intro () in
     let uu___4 = FStar_Options.smtencoding_valid_elim () in
     let uu___5 = FStar_Options.z3_version () in
+    let uu___6 =
+      let uu___7 = FStar_Options.ext_getv "context_pruning" in uu___7 <> "" in
     {
       seed = uu___;
       cliopt = uu___1;
@@ -2055,7 +2070,8 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
       facts = (env.FStar_TypeChecker_Env.proof_ns);
       valid_intro = uu___3;
       valid_elim = uu___4;
-      z3version = uu___5
+      z3version = uu___5;
+      context_pruning = uu___6
     }
 let (save_cfg : FStar_TypeChecker_Env.env -> unit) =
   fun env ->
@@ -2070,7 +2086,11 @@ let (maybe_refresh_solver : FStar_TypeChecker_Env.env -> unit) =
     | FStar_Pervasives_Native.Some cfg ->
         let uu___1 = let uu___2 = get_cfg env in cfg <> uu___2 in
         if uu___1
-        then (save_cfg env; FStar_SMTEncoding_Z3.refresh ())
+        then
+          (save_cfg env;
+           FStar_SMTEncoding_Z3.refresh
+             (FStar_Pervasives_Native.Some
+                (env.FStar_TypeChecker_Env.proof_ns)))
         else ()
 let finally : 'a . (unit -> unit) -> (unit -> 'a) -> 'a =
   fun h ->

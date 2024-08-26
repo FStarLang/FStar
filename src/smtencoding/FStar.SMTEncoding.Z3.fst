@@ -578,9 +578,9 @@ let pop msg =
   with_solver_state_unit SolverState.pop
 let prune roots = with_solver_state_unit (SolverState.prune roots)
 let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
-let refresh ctxt =
+let refresh using_facts_from =
     (!bg_z3_proc).refresh();
-    with_solver_state_unit SolverState.reset
+    with_solver_state_unit (SolverState.reset using_facts_from)
  
 let context_profile (theory:list decl) =
     let modules, total_decls =
@@ -709,7 +709,7 @@ let z3_job sim_theory
         try
           BU.record_time (fun () -> doZ3Exe sim_theory log_file r fresh input label_messages queryid)
         with e ->
-          refresh(); //refresh the solver but don't handle the exception; it'll be caught upstream
+          refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e
           )
       (Some (query_logging.get_module_name()))

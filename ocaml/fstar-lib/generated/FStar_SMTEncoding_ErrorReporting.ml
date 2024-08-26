@@ -859,7 +859,9 @@ let (detail_errors :
                        } in
                      FStar_SMTEncoding_Term.Assume a) labs in
           let rec linear_check eliminated errors active =
-            FStar_SMTEncoding_Z3.refresh ();
+            FStar_SMTEncoding_Z3.refresh
+              (FStar_Pervasives_Native.Some
+                 (env.FStar_TypeChecker_Env.proof_ns));
             (match active with
              | [] ->
                  let results =

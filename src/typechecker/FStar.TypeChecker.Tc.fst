@@ -950,7 +950,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
        * advances over the pragma. *)
       if from_cache || env.flychecking then env
       else begin
-        env.solver.refresh ();
+        env.solver.refresh (Some env.proof_ns);
         env
       end
 

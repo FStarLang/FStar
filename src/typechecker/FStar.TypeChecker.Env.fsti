@@ -259,7 +259,7 @@ and solver_t = {
     solve           :option (unit -> string) -> env -> goal -> unit; //call to the smt solver
     solve_sync      :option (unit -> string) -> env -> goal -> bool; //call to the smt solver
     finish          :unit -> unit;
-    refresh         :unit -> unit;
+    refresh         :option proof_namespace -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }

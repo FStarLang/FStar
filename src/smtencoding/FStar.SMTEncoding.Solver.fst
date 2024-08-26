@@ -903,7 +903,10 @@ let __ask_solver
  : either (list errors) query_settings
  =
     let check_one_config config : z3result =
-          if Options.z3_refresh() then Z3.refresh();
+          if Options.z3_refresh()
+          then (
+            Z3.refresh (Some config.query_env.tcenv.proof_ns)
+          );
           Z3.ask config.query_range
                   config.query_hash
                   config.query_all_labels
@@ -1089,7 +1092,7 @@ let ask_solver_recover
         | IncreaseRLimit factor -> try_factor factor
         | RestartAnd h ->
           Errors.diag_doc cfg.query_range [text "Trying a solver restart"];
-          cfg.query_env.tcenv.solver.refresh();
+          cfg.query_env.tcenv.solver.refresh (Some cfg.query_env.tcenv.proof_ns);
           try_hammer h
       in
 
@@ -1268,6 +1271,7 @@ type solver_cfg = {
   valid_intro      : bool;
   valid_elim       : bool;
   z3version        : string;
+  context_pruning  : bool
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1280,6 +1284,7 @@ let get_cfg env : solver_cfg =
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
+    ; context_pruning  = Options.ext_getv "context_pruning" <> ""
     }
 
 let save_cfg env =
@@ -1293,7 +1298,7 @@ let maybe_refresh_solver env =
     | Some cfg ->
         if cfg <> get_cfg env then (
           save_cfg env;
-          Z3.refresh ()
+          Z3.refresh (Some env.proof_ns)
         )
 
 let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
@@ -1538,5 +1543,5 @@ let dummy = {
     solve=(fun _ _ _ -> ());
     solve_sync=(fun _ _ _ -> false);
     finish=(fun () -> ());
-    refresh=(fun () -> ());
+    refresh=(fun _ -> ());
 }

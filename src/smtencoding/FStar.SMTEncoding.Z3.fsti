@@ -22,6 +22,7 @@ open FStar.BaseTypes
 open FStar.Compiler.Util
 module BU = FStar.Compiler.Util
 module U = FStar.SMTEncoding.UnsatCore
+module SolverState = FStar.SMTEncoding.SolverState
 
 type z3status =
     | UNSAT   of option U.unsat_core
@@ -69,7 +70,7 @@ val ask: r:Range.range
        -> core:option U.unsat_core
        -> z3result
 
-val refresh: unit -> unit
+val refresh: option SolverState.using_facts_from_setting -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
 val prune (roots:list decl) : unit

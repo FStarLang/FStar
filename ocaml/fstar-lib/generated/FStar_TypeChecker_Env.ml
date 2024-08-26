@@ -633,7 +633,7 @@ and solver_t =
       env -> goal -> Prims.bool
     ;
   finish: unit -> unit ;
-  refresh: unit -> unit }
+  refresh: proof_namespace FStar_Pervasives_Native.option -> unit }
 and tcenv_hooks =
   {
   tc_push_in_gamma_hook:
@@ -1693,7 +1693,8 @@ let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
     | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> finish
-let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
+let (__proj__Mksolver_t__item__refresh :
+  solver_t -> proof_namespace FStar_Pervasives_Native.option -> unit) =
   fun projectee ->
     match projectee with
     | { init; snapshot; rollback; encode_sig; preprocess;

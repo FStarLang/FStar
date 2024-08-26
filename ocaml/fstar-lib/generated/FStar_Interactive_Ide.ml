@@ -2912,7 +2912,7 @@ let rec (run_query :
           let uu___ = run_format_code st code in as_json_list uu___
       | FStar_Interactive_Ide_Types.RestartSolver ->
           (((st.FStar_Interactive_Ide_Types.repl_env).FStar_TypeChecker_Env.solver).FStar_TypeChecker_Env.refresh
-             ();
+             FStar_Pervasives_Native.None;
            ((FStar_Interactive_Ide_Types.QueryOK, []),
              (FStar_Pervasives.Inl st)))
       | FStar_Interactive_Ide_Types.Cancel uu___ ->
