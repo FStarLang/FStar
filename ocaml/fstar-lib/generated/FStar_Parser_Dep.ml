@@ -732,48 +732,53 @@ let (dependences_of :
                   (file_of_dep file_system_map all_cmd_line_files) deps2 in
               FStar_Compiler_List.filter (fun k -> k <> fn) uu___2
 let (print_graph :
-  FStar_Compiler_Util.out_channel -> Prims.string -> dependence_graph -> unit)
+  FStar_Compiler_Util.out_channel ->
+    Prims.string ->
+      dependence_graph ->
+        files_for_module_name -> file_name Prims.list -> unit)
   =
   fun outc ->
     fun fn ->
       fun graph ->
-        (let uu___1 =
-           let uu___2 = FStar_Options.silent () in Prims.op_Negation uu___2 in
-         if uu___1
-         then
-           (FStar_Compiler_Util.print1
-              "A DOT-format graph has been dumped in the current directory as `%s`\n"
-              fn;
-            FStar_Compiler_Util.print1
-              "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
-            FStar_Compiler_Util.print1
-              "Hint: cat %s | grep -v _ | grep -v prims\n" fn)
-         else ());
-        (let s =
-           let uu___1 =
-             let uu___2 =
-               let uu___3 =
-                 let uu___4 =
-                   let uu___5 = deps_keys graph in
-                   FStar_Compiler_List.unique uu___5 in
-                 FStar_Compiler_List.collect
-                   (fun k ->
-                      let deps1 =
-                        let uu___5 =
-                          let uu___6 = deps_try_find graph k in
-                          FStar_Compiler_Util.must uu___6 in
-                        uu___5.edges in
-                      let r s1 = FStar_Compiler_Util.replace_char s1 46 95 in
-                      let print dep =
-                        let uu___5 =
-                          let uu___6 = lowercase_module_name k in r uu___6 in
-                        FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\""
-                          uu___5 (r (module_name_of_dep dep)) in
-                      FStar_Compiler_List.map print deps1) uu___4 in
-               FStar_Compiler_String.concat "\n" uu___3 in
-             Prims.strcat uu___2 "\n}\n" in
-           Prims.strcat "digraph {\n" uu___1 in
-         FStar_Compiler_Util.fprint outc "%s" [s])
+        fun file_system_map ->
+          fun cmd_line_files ->
+            (let uu___1 =
+               let uu___2 = FStar_Options.silent () in
+               Prims.op_Negation uu___2 in
+             if uu___1
+             then
+               (FStar_Compiler_Util.print1
+                  "A DOT-format graph has been dumped in the current directory as `%s`\n"
+                  fn;
+                FStar_Compiler_Util.print1
+                  "With GraphViz installed, try: fdp -Tpng -odep.png %s\n" fn;
+                FStar_Compiler_Util.print1
+                  "Hint: cat %s | grep -v _ | grep -v prims\n" fn)
+             else ());
+            (let s =
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 =
+                     let uu___4 =
+                       let uu___5 = deps_keys graph in
+                       FStar_Compiler_List.unique uu___5 in
+                     FStar_Compiler_List.collect
+                       (fun k ->
+                          let deps_fns =
+                            let uu___5 =
+                              let uu___6 = deps_try_find graph k in
+                              FStar_Compiler_Util.must uu___6 in
+                            uu___5.edges in
+                          let print dep =
+                            let uu___5 =
+                              file_of_dep file_system_map cmd_line_files dep in
+                            FStar_Compiler_Util.format2 "  \"%s\" -> \"%s\""
+                              k uu___5 in
+                          FStar_Compiler_List.map print deps_fns) uu___4 in
+                   FStar_Compiler_String.concat "\n" uu___3 in
+                 Prims.strcat uu___2 "\n}\n" in
+               Prims.strcat "digraph {\n" uu___1 in
+             FStar_Compiler_Util.fprint outc "%s" [s])
 let (build_inclusion_candidates_list :
   unit -> (Prims.string * Prims.string) Prims.list) =
   fun uu___ ->
@@ -1266,7 +1271,7 @@ let (collect_one :
                     FStar_Class_Show.show
                       (FStar_Class_Show.show_list showable_dependence) deps1 in
                   FStar_Compiler_Util.print2
-                    "Reading the parsing data for %s from its checked file .. found [%s]\n"
+                    "Reading the parsing data for %s from its checked file .. found %s\n"
                     filename uu___3
                 else ());
                (let uu___2 = FStar_Compiler_Util.must data_from_cache in
@@ -2211,7 +2216,9 @@ let (collect :
            (FStar_Compiler_String.concat "\n`used by` " cycle);
          (let fn = "dep.graph" in
           with_file_outchannel fn
-            (fun outc -> print_graph outc fn dep_graph1);
+            (fun outc ->
+               print_graph outc fn dep_graph1 file_system_map
+                 all_cmd_line_files2);
           FStar_Compiler_Util.print_string "\n";
           (let uu___4 =
              let uu___5 =
@@ -2863,7 +2870,8 @@ let (do_print :
             profile (fun uu___1 -> print_full outc deps1)
               "FStar.Parser.Deps.print_full_deps"
         | FStar_Pervasives_Native.Some "graph" ->
-            print_graph outc fn deps1.dep_graph
+            print_graph outc fn deps1.dep_graph deps1.file_system_map
+              deps1.cmd_line_files
         | FStar_Pervasives_Native.Some "raw" -> print_raw outc deps1
         | FStar_Pervasives_Native.Some uu___1 ->
             FStar_Errors.raise_err
