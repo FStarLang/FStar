@@ -122,7 +122,7 @@ package:
 	@# Install F* into the package
 	+PREFIX=$(package_prefix) $(MAKE) install
 	@# Make the F* ulib F# DLL (NOT the nuget package)
-	+PREFIX=$(package_prefix) $(MAKE) -C $(FSTAR_HOME)/ulib ulib-in-fsharp-dll
+	+[ "$(DISABLE_FSHARP)" = 1 ] || PREFIX=$(package_prefix) $(MAKE) -C $(FSTAR_HOME)/ulib ulib-in-fsharp-dll
 	@# Then the version file.
 	cp ../../version.txt $(package_prefix)/
 	@# Documentation and licenses
