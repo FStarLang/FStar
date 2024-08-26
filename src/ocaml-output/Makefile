@@ -130,7 +130,7 @@ package:
 	cp $(Z3_LICENSE) $(package_prefix)/LICENSE-z3.txt
 	@# Z3
 ifeq ($(OS),Windows_NT)
-	cp $(shell which libgmp-10.dll) $(package_prefix)/bin
+	GMPDLL=`command -v libgmp-10.dll || command -v gmp-10.dll`; install "$$GMPDLL" $(package_prefix)/bin
 	cp $(Z3_DIR)/*.exe $(Z3_DIR)/*.dll $(Z3_DIR)/*.lib $(package_prefix)/bin
 	chmod a+x $(package_prefix)/bin/z3.exe $(package_prefix)/bin/*.dll
 	zip -r -9 $(PACKAGE_NAME).zip fstar
