@@ -1043,11 +1043,8 @@ let ad_hoc_indexed_bind_substs env
          match (SS.compress t).n with
          | Tm_uvar (u, _ ) ->
            BU.print2 "Generated uvar %s with attribute %s\n"
-             (Print.term_to_string t)
-             (match u.ctx_uvar_meta with
-              | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
-              | _ -> "<no attr>")
-         | _ -> failwith ("Impossible, expected a uvar, got : " ^ Print.term_to_string t));
+             (show t) (show u.ctx_uvar_meta)
+         | _ -> failwith ("Impossible, expected a uvar, got : " ^ show t));
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
