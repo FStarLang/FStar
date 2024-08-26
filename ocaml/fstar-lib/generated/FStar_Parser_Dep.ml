@@ -1080,7 +1080,7 @@ let (collect_one :
             let uu___ =
               (is_interface filename1) &&
                 (has_implementation original_map1 mname) in
-            if uu___ then [UseImplementation mname] else [] in
+            if uu___ then [] else [] in
           let auto_open =
             let uu___ = hard_coded_dependencies filename1 in
             FStar_Compiler_List.map
@@ -2297,26 +2297,25 @@ let (collect :
          FStar_Compiler_List.iter (aux []) all_command_line_files;
          (let uu___2 = FStar_Compiler_Effect.op_Bang mo_files in
           FStar_Compiler_List.iter (aux []) uu___2) in
-       full_cycle_detection all_cmd_line_files2 file_system_map;
        FStar_Compiler_List.iter
          (fun f ->
             let m = lowercase_module_name f in
             FStar_Options.add_verify_module m) all_cmd_line_files2;
        (let inlining_ifaces =
           FStar_Compiler_Effect.op_Bang interfaces_needing_inlining in
-        let uu___3 =
+        let uu___2 =
           profile
-            (fun uu___4 ->
-               let uu___5 =
-                 let uu___6 = FStar_Options.codegen () in
-                 uu___6 <> FStar_Pervasives_Native.None in
+            (fun uu___3 ->
+               let uu___4 =
+                 let uu___5 = FStar_Options.codegen () in
+                 uu___5 <> FStar_Pervasives_Native.None in
                topological_dependences_of file_system_map dep_graph
-                 inlining_ifaces all_cmd_line_files2 uu___5)
+                 inlining_ifaces all_cmd_line_files2 uu___4)
             "FStar.Parser.Dep.topological_dependences_of" in
-        match uu___3 with
-        | (all_files, uu___4) ->
-            ((let uu___6 = FStar_Compiler_Effect.op_Bang dbg in
-              if uu___6
+        match uu___2 with
+        | (all_files, uu___3) ->
+            ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
+              if uu___5
               then
                 FStar_Compiler_Util.print1
                   "Interfaces needing inlining: %s\n"
@@ -2473,10 +2472,8 @@ let (print_full : FStar_Compiler_Util.out_channel -> deps -> unit) =
                 if uu___2
                 then
                   let ml_file_opt = mark_visiting lc_module_name in
-                  ((let uu___4 = implementation_of deps1 lc_module_name in
+                  ((let uu___4 = interface_of deps1 lc_module_name in
                     visit_file uu___4);
-                   (let uu___5 = interface_of deps1 lc_module_name in
-                    visit_file uu___5);
                    emit_output_file_opt ml_file_opt)
                 else ());
                aux modules_to_extract) in
