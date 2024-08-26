@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Rebuild base image from scratch
         run: |
@@ -41,8 +41,7 @@ jobs:
           ci_docker_image_tag=fstar:update-base-test-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
 
-          CI_TARGET=uregressions
-          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg CI_THREADS=$(nproc) . |& tee BUILDLOG
+          docker build --no-cache -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg FSTAR_CI_BASE=$TEMP_IMAGE_NAME --build-arg CI_THREADS=$(nproc) . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           $ci_docker_status
 
@@ -111,7 +110,8 @@ jobs:
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+        continue-on-error: true
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
           payload: |

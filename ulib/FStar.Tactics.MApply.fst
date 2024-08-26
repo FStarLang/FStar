@@ -58,7 +58,7 @@ let rec apply_squash_or_lem d t =
              apply_squash_or_lem (d-1) t
 
          | _ ->
-             fail "mapply: can't apply (1)"
+             fail "mapply: can't apply (2)"
          end
 
        (* If not, we can try to introduce the squash ourselves first *)
@@ -77,7 +77,7 @@ let rec apply_squash_or_lem d t =
              apply t
          end
        end
-    | _ -> fail "mapply: can't apply (2)"
+    | _ -> fail "mapply: can't apply (3)"
     end
 
 (* `m` is for `magic` *)

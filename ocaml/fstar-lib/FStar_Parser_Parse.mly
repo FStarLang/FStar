@@ -124,6 +124,7 @@ let parse_use_lang_blob (extension_name:string)
 %token EQUALS PERCENT_LBRACK LBRACK_AT LBRACK_AT_AT LBRACK_AT_AT_AT DOT_LBRACK
 %token DOT_LENS_PAREN_LEFT DOT_LPAREN DOT_LBRACK_BAR LBRACK LBRACK_BAR LBRACE_BAR LBRACE BANG_LBRACE
 %token BAR_RBRACK BAR_RBRACE UNDERSCORE LENS_PAREN_LEFT LENS_PAREN_RIGHT
+%token SEQ_BANG_LBRACK
 %token BAR RBRACK RBRACE DOLLAR
 %token PRIVATE REIFIABLE REFLECTABLE REIFY RANGE_OF SET_RANGE_OF LBRACE_COLON_PATTERN
 %token PIPE_LEFT PIPE_RIGHT
@@ -1474,7 +1475,9 @@ projectionLHS:
         in mk_term (Paren e1) (rr2 $loc($1) $loc($4)) (e.level)
       }
   | LBRACK es=semiColonTermList RBRACK
-      { mkConsList (rr2 $loc($1) $loc($3)) es }
+      { mkListLit (rr2 $loc($1) $loc($3)) es }
+  | SEQ_BANG_LBRACK es=semiColonTermList RBRACK
+      { mkSeqLit (rr2 $loc($1) $loc($3)) es }
   | PERCENT_LBRACK es=semiColonTermList RBRACK
       { mk_term (LexList es) (rr2 $loc($1) $loc($3)) Type_level }
   | BANG_LBRACE es=separated_list(COMMA, appTerm) RBRACE

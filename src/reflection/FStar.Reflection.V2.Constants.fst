@@ -232,6 +232,7 @@ let ref_Mk_lb =
 (* quals *)
 let ref_Q_Explicit  = fstar_refl_data_const "Q_Explicit"
 let ref_Q_Implicit  = fstar_refl_data_const "Q_Implicit"
+let ref_Q_Equality  = fstar_refl_data_const "Q_Equality"
 let ref_Q_Meta      = fstar_refl_data_const "Q_Meta"
 
 (* subst_elt *)

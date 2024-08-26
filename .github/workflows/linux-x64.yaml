@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "CI_INITIAL_TIMESTAMP=$(date '+%s')" >> $GITHUB_ENV
       - name: Check out repo        
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Identify the notification channel
         run: |
           echo "CI_SLACK_CHANNEL=$(jq -c -r '.NotificationChannel' .docker/build/config.json)" >> $GITHUB_ENV
@@ -42,7 +42,7 @@ jobs:
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_refresh_hints }}
         run: |
           # NOTE: this causes the build to record hints
-          echo "CI_TARGET=uregressions-ulong" >> $GITHUB_ENV
+          echo "CI_RECORD_HINTS_ARG=--build-arg CI_RECORD_HINTS=1" >> $GITHUB_ENV
       - name: Populate no karamel arg
         if: ${{ (github.event_name == 'workflow_dispatch') && inputs.ci_no_karamel }}
         run: |
@@ -71,8 +71,7 @@ jobs:
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
-          if [[ -z $CI_TARGET ]] ; then CI_TARGET=uregressions ; fi
-          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg CI_TARGET="$CI_TARGET" --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_RECORD_HINTS_ARG $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
@@ -117,7 +116,7 @@ jobs:
       - name: Save resource monitor summary as artifact
         if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
         continue-on-error: true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Resource usage information (summary)
           path: |
@@ -126,7 +125,7 @@ jobs:
       - name: Save resource monitor files as artifact
         if: ${{ always () && vars.FSTAR_CI_RESOURCEMONITOR == '1' }}
         continue-on-error: true
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Resource usage information (individual)
           path: |
@@ -179,7 +178,8 @@ jobs:
       - name: Post to the Slack channel
         if: ${{ always() }}
         id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+        continue-on-error: true
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           channel-id: ${{ env.CI_SLACK_CHANNEL }}
           payload: |

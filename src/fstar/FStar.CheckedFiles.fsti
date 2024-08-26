@@ -41,6 +41,14 @@ type tc_result = {
   extraction_time:int
 }
 
+val load_tc_result (checked_fn:string) : option (list (string & string) & tc_result)
+
+val load_checked_file_with_tc_result
+  (deps:Dep.deps)
+  (fn:string)
+  (checked_fn:string)
+  : either string tc_result
+
 (*
  * Read parsing data from the checked file
  * This function is passed as a callback to Parser.Dep

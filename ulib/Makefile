@@ -7,6 +7,9 @@ FSTAR_HOME=..
 # Makefile here is not.
 
 all: .cache
+	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-all
+
+core: .cache
 	+$(MAKE) FSTAR_HOME=$(FSTAR_HOME) -f Makefile.verify verify-core
 
 benchmark: .cache
@@ -28,7 +31,7 @@ include $(FSTAR_HOME)/.common.mk
 ulib-in-fsharp: ulib-in-fsharp-dll
 	+$(MAKE) -f Makefile.extract.fsharp nuget
 
-ulib-in-fsharp-dll: all
+ulib-in-fsharp-dll: core
 	+$(MAKE) -f Makefile.extract.fsharp dll
 
 .PHONY: ulib-in-fsharp-dll

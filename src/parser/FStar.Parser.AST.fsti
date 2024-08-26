@@ -96,6 +96,9 @@ type term' =
   | ElimImplies of term & term & term                             (* elim_implies P Q with e *)
   | ElimOr of term & term & term & binder & term & binder & term  (* elim_or P Q to R with x.e1 and y.e2 *)
   | ElimAnd of term & term & term & binder & binder & term        (* elim_and P Q to R with x y. e *)
+  | ListLiteral of list term
+  | SeqLiteral of list term
+
 
 and term = {tm:term'; range:range; level:level}
 
@@ -300,7 +303,6 @@ val un_function : pattern -> term -> option (pattern & term)
 
 val consPat : range -> pattern -> pattern -> pattern'
 val consTerm : range -> term -> term -> term
-val mkConsList : range -> list term -> term
 
 val unit_const : range -> term
 val ml_comp : term -> term

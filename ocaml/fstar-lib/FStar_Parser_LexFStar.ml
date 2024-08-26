@@ -462,6 +462,8 @@ match%sedlex lexbuf with
    use_lang_blob snap lang_name pos use_lang_buffer lexbuf
  )
 
+ | "seq![" -> SEQ_BANG_LBRACK
+
  | "#set-options" -> PRAGMA_SET_OPTIONS
  | "#reset-options" -> PRAGMA_RESET_OPTIONS
  | "#push-options" -> PRAGMA_PUSH_OPTIONS

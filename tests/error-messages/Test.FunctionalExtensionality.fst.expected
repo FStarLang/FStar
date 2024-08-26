@@ -21,7 +21,7 @@
   - Expected type _: Prims.int -> Prims.int got type Prims.nat ^-> Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(664,18-664,24)
 
 >>]
 >> Got issues: [

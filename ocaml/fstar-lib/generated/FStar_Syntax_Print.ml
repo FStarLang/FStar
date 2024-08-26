@@ -700,6 +700,10 @@ and (subst_elt_to_string : FStar_Syntax_Syntax.subst_elt -> Prims.string) =
         let uu___1 = FStar_Compiler_Util.string_of_int i in
         let uu___2 = bv_to_string x in
         FStar_Compiler_Util.format2 "DB (%s, %s)" uu___1 uu___2
+    | FStar_Syntax_Syntax.DT (i, t) ->
+        let uu___1 = FStar_Compiler_Util.string_of_int i in
+        let uu___2 = term_to_string t in
+        FStar_Compiler_Util.format2 "DT (%s, %s)" uu___1 uu___2
     | FStar_Syntax_Syntax.NM (x, i) ->
         let uu___1 = bv_to_string x in
         let uu___2 = FStar_Compiler_Util.string_of_int i in
@@ -1996,6 +2000,8 @@ let (showable_const : FStar_Const.sconst FStar_Class_Show.showable) =
 let (showable_letbinding :
   FStar_Syntax_Syntax.letbinding FStar_Class_Show.showable) =
   { FStar_Class_Show.show = lb_to_string }
+let (showable_modul : FStar_Syntax_Syntax.modul FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = modul_to_string }
 let (pretty_term : FStar_Syntax_Syntax.term FStar_Class_PP.pretty) =
   { FStar_Class_PP.pp = term_to_doc }
 let (pretty_univ : FStar_Syntax_Syntax.universe FStar_Class_PP.pretty) =

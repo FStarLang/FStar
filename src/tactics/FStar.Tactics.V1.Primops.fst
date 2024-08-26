@@ -45,8 +45,8 @@ module TI      = FStar.Tactics.Interpreter
 module U       = FStar.Syntax.Util
 
 (* Bring instances *)
-module X1 = FStar.Reflection.V2.Embeddings
-module X2 = FStar.Reflection.V2.NBEEmbeddings
+open FStar.Reflection.V2.Embeddings {}
+open FStar.Reflection.V2.NBEEmbeddings {}
 
 let solve (#a:Type) {| ev : a |} : Tot a = ev
 

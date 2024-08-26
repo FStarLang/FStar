@@ -23,6 +23,8 @@ class lvm (m:Type->Type) : Type = {
   f_comp          : endo m comp;
   f_residual_comp : endo m residual_comp;
   f_univ          : endo m universe;
+
+  proc_quotes     : bool;
 }
 
 instance _lvm_monad (#m:_) (_ : lvm m) : Tot (monad m) = lvm_monad
@@ -36,6 +38,8 @@ let novfs (#m:Type->Type) {| monad m |} : lvm m = {
   f_comp          = return;
   f_residual_comp = return;
   f_univ          = return;
+
+  proc_quotes     = false;
 }
 
 let f_aqual #m {|_ : lvm m|} aq : m _ =
@@ -179,11 +183,14 @@ let on_sub_term #m {|d : lvm m |} (tm : term) : m term =
     let! t = t |> f_term in
     return <| mk (Tm_let {lbs=(is_rec, lbs); body=t})
 
-  | Tm_quoted (tm, qi) ->
-    let! tm = tm |> f_term in
-    // let! qi = Syntax.on_antiquoted (f_term vfs) qi in
-    // FIXME ^ no monadic variant
-    return <| mk (Tm_quoted (tm, qi))
+  | Tm_quoted (qtm, qi) ->
+    if d.proc_quotes || qi.qkind = Quote_dynamic then
+      let! qtm = qtm |> f_term in
+      // let! qi = Syntax.on_antiquoted (f_term vfs) qi in
+      // FIXME ^ no monadic variant
+      return <| mk (Tm_quoted (qtm, qi))
+    else
+      return tm
 
   | Tm_meta {tm=t; meta=md} ->
     let! t   = t |> f_term in
@@ -491,21 +498,23 @@ let tie_bu (#m : Type -> Type) {| md : monad m |} (d : lvm m) : lvm m =
       f_comp          = (fun x -> f_comp          #_ #d <<| on_sub_comp          #_ #!r x);
       f_residual_comp = (fun x -> f_residual_comp #_ #d <<| on_sub_residual_comp #_ #!r x);
       f_univ          = (fun x -> f_univ          #_ #d <<| on_sub_univ          #_ #!r x);
+
+      proc_quotes     = d.proc_quotes;
     };
   !r
 
-let visitM_term_univs #m {| md : monad m |} vt vu (tm : term) : m term =
+let visitM_term_univs #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : term) : m term =
   let dict : lvm m =
-    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu }
+    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
   f_term #_ #dict tm
 
-let visitM_term #m {| md : monad m |} vt (tm : term) : m term =
-  visitM_term_univs vt return tm
+let visitM_term #m {| md : monad m |} (proc_quotes : bool) vt (tm : term) : m term =
+  visitM_term_univs true vt return tm
 
-let visitM_sigelt #m {| md : monad m |} vt vu (tm : sigelt) : m sigelt =
+let visitM_sigelt #m {| md : monad m |} (proc_quotes : bool) vt vu (tm : sigelt) : m sigelt =
   let dict : lvm m =
-    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu }
+    tie_bu #m #md { novfs #m #md with f_term = vt; f_univ = vu; proc_quotes = proc_quotes }
   in
   on_sub_sigelt #_ #dict tm
 

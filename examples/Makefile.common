@@ -45,6 +45,10 @@ CACHE_DIR ?= _cache
 ADMIT ?=
 MAYBE_ADMIT = $(if $(ADMIT),--admit_smt_queries true)
 
+# Set HINTS= (empty) to not use hints
+HINTS ?= 1
+MAYBE_HINTS = $(if $(HINTS),--use_hints)
+
 ################################################################################
 # YOU SHOULDN'T NEED TO TOUCH THE REST
 ################################################################################
@@ -54,7 +58,7 @@ VERBOSE_FSTAR=$(BENCHMARK_PRE) $(FSTAR)                     \
 		  --odir $(OUTPUT_DIRECTORY)                \
 		  --cache_dir $(CACHE_DIR)                  \
 		  $(addprefix --include , $(INCLUDE_PATHS)) \
-		  $(OTHERFLAGS) $(MAYBE_ADMIT)
+		  $(OTHERFLAGS) $(MAYBE_ADMIT) $(MAYBE_HINTS)
 
 # As above, but perhaps with --silent, and perhaps with a prefix (usually for monitoring)
 MY_FSTAR=$(RUNLIM) $(VERBOSE_FSTAR) $(SIL)

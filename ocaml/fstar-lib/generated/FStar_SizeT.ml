@@ -32,9 +32,9 @@ let (mul : t -> t -> t) =
 let (div : t -> t -> t) =
   fun x ->
     fun y ->
-      let res =
-        Sz (FStar_UInt64.div (__proj__Sz__item__x x) (__proj__Sz__item__x y)) in
-      res
+      let res_n =
+        FStar_UInt64.div (__proj__Sz__item__x x) (__proj__Sz__item__x y) in
+      let res = Sz res_n in res
 let (rem : t -> t -> t) =
   fun x ->
     fun y ->

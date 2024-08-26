@@ -2795,7 +2795,8 @@ let (norm :
                            FStar_TypeChecker_Cfg.translate_norm_steps s in
                          FStar_Compiler_List.op_At
                            [FStar_TypeChecker_Env.Reify;
-                           FStar_TypeChecker_Env.UnfoldTac] uu___2 in
+                           FStar_TypeChecker_Env.DontUnfoldAttr
+                             [FStar_Parser_Const.tac_opaque_attr]] uu___2 in
                        let t =
                          let uu___2 = FStar_Tactics_Types.goal_env goal in
                          let uu___3 = FStar_Tactics_Types.goal_type goal in
@@ -2849,7 +2850,8 @@ let (norm_term_env :
                                                      s in
                                                  FStar_Compiler_List.op_At
                                                    [FStar_TypeChecker_Env.Reify;
-                                                   FStar_TypeChecker_Env.UnfoldTac]
+                                                   FStar_TypeChecker_Env.DontUnfoldAttr
+                                                     [FStar_Parser_Const.tac_opaque_attr]]
                                                    uu___7 in
                                                let t2 =
                                                  normalize steps
@@ -5017,7 +5019,8 @@ let (norm_binder_type :
                         FStar_TypeChecker_Cfg.translate_norm_steps s in
                       FStar_Compiler_List.op_At
                         [FStar_TypeChecker_Env.Reify;
-                        FStar_TypeChecker_Env.UnfoldTac] uu___2 in
+                        FStar_TypeChecker_Env.DontUnfoldAttr
+                          [FStar_Parser_Const.tac_opaque_attr]] uu___2 in
                     let sort' =
                       normalize steps e0 bv1.FStar_Syntax_Syntax.sort in
                     let bv' =
@@ -5651,7 +5654,9 @@ let (_t_trefl :
                                    [FStar_TypeChecker_Env.UnfoldUntil
                                       FStar_Syntax_Syntax.delta_constant;
                                    FStar_TypeChecker_Env.Primops;
-                                   FStar_TypeChecker_Env.UnfoldTac] uu___3 in
+                                   FStar_TypeChecker_Env.DontUnfoldAttr
+                                     [FStar_Parser_Const.tac_opaque_attr]]
+                                   uu___3 in
                                let uu___3 =
                                  let uu___4 = norm1 l in
                                  let uu___5 = norm1 r in
@@ -7342,7 +7347,8 @@ let (t_destruct :
                                              let uu___5 =
                                                FStar_Tactics_Types.goal_env g in
                                              FStar_TypeChecker_Normalize.normalize
-                                               [FStar_TypeChecker_Env.UnfoldTac;
+                                               [FStar_TypeChecker_Env.DontUnfoldAttr
+                                                  [FStar_Parser_Const.tac_opaque_attr];
                                                FStar_TypeChecker_Env.Weak;
                                                FStar_TypeChecker_Env.HNF;
                                                FStar_TypeChecker_Env.UnfoldUntil

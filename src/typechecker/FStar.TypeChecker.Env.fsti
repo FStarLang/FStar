@@ -48,7 +48,7 @@ type step =
   | UnfoldAttr  of list FStar.Ident.lid
   | UnfoldQual  of list string
   | UnfoldNamespace of list string
-  | UnfoldTac
+  | DontUnfoldAttr of list lid
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses

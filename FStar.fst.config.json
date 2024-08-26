@@ -1,5 +1,5 @@
 {
-  "fstar_exe": "fstar.exe",
+  "fstar_exe": "./bin/fstar.exe",
   "options": [
     "--cache_dir", ".cache"
   ],

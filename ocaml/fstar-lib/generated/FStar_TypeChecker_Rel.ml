@@ -3214,7 +3214,11 @@ let (head_matches_delta :
           fun t2 ->
             let base_steps =
               FStar_Compiler_List.op_At
-                (if logical then [FStar_TypeChecker_Env.UnfoldTac] else [])
+                (if logical
+                 then
+                   [FStar_TypeChecker_Env.DontUnfoldAttr
+                      [FStar_Parser_Const.tac_opaque_attr]]
+                 else [])
                 [FStar_TypeChecker_Env.Primops;
                 FStar_TypeChecker_Env.Weak;
                 FStar_TypeChecker_Env.HNF] in
@@ -3260,7 +3264,9 @@ let (head_matches_delta :
                         let basic_steps =
                           FStar_Compiler_List.op_At
                             (if logical
-                             then [FStar_TypeChecker_Env.UnfoldTac]
+                             then
+                               [FStar_TypeChecker_Env.DontUnfoldAttr
+                                  [FStar_Parser_Const.tac_opaque_attr]]
                              else [])
                             [FStar_TypeChecker_Env.UnfoldUntil
                                FStar_Syntax_Syntax.delta_constant;
@@ -14245,7 +14251,10 @@ let (sub_or_eq_comp :
                       match uu___5 with
                       | (r, ms) ->
                           ((let uu___7 =
-                              FStar_Compiler_Effect.op_Bang dbg_RelBench in
+                              ((FStar_Compiler_Effect.op_Bang dbg_Rel) ||
+                                 (FStar_Compiler_Effect.op_Bang dbg_RelTop))
+                                ||
+                                (FStar_Compiler_Effect.op_Bang dbg_RelBench) in
                             if uu___7
                             then
                               let uu___8 =

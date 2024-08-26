@@ -1,15 +1,64 @@
 open Prims
+type proposition = FStar_Reflection_Types.term
 let (term_eq :
   FStar_Reflection_Types.term -> FStar_Reflection_Types.term -> Prims.bool) =
   FStar_Reflection_TermEq_Simple.term_eq
-type proposition = FStar_Reflection_Types.term
 let (proposition_to_string :
   proposition -> (Prims.string, unit) FStar_Tactics_Effect.tac_repr) =
   fun p -> FStar_Tactics_V1_Builtins.term_to_string p
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.InteractiveHelpers.Propositions.proposition_to_string"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.InteractiveHelpers.Propositions.proposition_to_string (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 proposition_to_string)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Syntax_Embeddings.e_string psc ncb us args)
 type assertions =
   {
   pres: proposition Prims.list ;
   posts: proposition Prims.list }
+let rec __knot_e_assertions _ =
+  FStar_Syntax_Embeddings_Base.mk_extracted_embedding
+    "FStar.InteractiveHelpers.Propositions.assertions"
+    (fun tm_0 ->
+       match tm_0 with
+       | ("FStar.InteractiveHelpers.Propositions.Mkassertions",
+          pres_2::posts_3::[]) ->
+           FStar_Compiler_Util.bind_opt
+             (FStar_Syntax_Embeddings_Base.extracted_unembed
+                (FStar_Syntax_Embeddings.e_list
+                   FStar_Reflection_V2_Embeddings.e_term) pres_2)
+             (fun pres_2 ->
+                FStar_Compiler_Util.bind_opt
+                  (FStar_Syntax_Embeddings_Base.extracted_unembed
+                     (FStar_Syntax_Embeddings.e_list
+                        FStar_Reflection_V2_Embeddings.e_term) posts_3)
+                  (fun posts_3 ->
+                     FStar_Pervasives_Native.Some
+                       { pres = pres_2; posts = posts_3 }))
+       | _ -> FStar_Pervasives_Native.None)
+    (fun tm_4 ->
+       match tm_4 with
+       | { pres = pres_6; posts = posts_7;_} ->
+           FStar_Syntax_Util.mk_app
+             (FStar_Syntax_Syntax.tdataconstr
+                (FStar_Ident.lid_of_str
+                   "FStar.InteractiveHelpers.Propositions.Mkassertions"))
+             [((FStar_Syntax_Embeddings_Base.extracted_embed
+                  (FStar_Syntax_Embeddings.e_list
+                     FStar_Reflection_V2_Embeddings.e_term) pres_6),
+                FStar_Pervasives_Native.None);
+             ((FStar_Syntax_Embeddings_Base.extracted_embed
+                 (FStar_Syntax_Embeddings.e_list
+                    FStar_Reflection_V2_Embeddings.e_term) posts_7),
+               FStar_Pervasives_Native.None)])
+let e_assertions = __knot_e_assertions ()
 let (__proj__Mkassertions__item__pres : assertions -> proposition Prims.list)
   = fun projectee -> match projectee with | { pres; posts;_} -> pres
 let (__proj__Mkassertions__item__posts :
@@ -34,6 +83,19 @@ let (is_trivial_proposition :
                     (FStar_Reflection_V2_Data.Tv_FVar
                        (FStar_Reflection_V2_Builtins.pack_fv
                           ["Prims"; "l_True"]))) p))) uu___
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.InteractiveHelpers.Propositions.is_trivial_proposition"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.InteractiveHelpers.Propositions.is_trivial_proposition (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 is_trivial_proposition)
+               FStar_Reflection_V2_Embeddings.e_term
+               FStar_Syntax_Embeddings.e_bool psc ncb us args)
 let (simp_filter_proposition :
   FStar_Reflection_Types.env ->
     FStar_Pervasives.norm_step Prims.list ->
@@ -48,13 +110,13 @@ let (simp_filter_proposition :
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (53)) (Prims.of_int (14))
-                   (Prims.of_int (53)) (Prims.of_int (37)))))
+                   (Prims.of_int (31)) (Prims.of_int (14))
+                   (Prims.of_int (31)) (Prims.of_int (37)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (55)) (Prims.of_int (2)) (Prims.of_int (56))
+                   (Prims.of_int (33)) (Prims.of_int (2)) (Prims.of_int (34))
                    (Prims.of_int (14)))))
           (Obj.magic (FStar_Tactics_V1_Builtins.norm_term_env e steps p))
           (fun prop1 ->
@@ -68,6 +130,23 @@ let (simp_filter_proposition :
                                ["Prims"; "l_True"]))) prop1
                   then []
                   else [prop1]))
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.InteractiveHelpers.Propositions.simp_filter_proposition"
+    (Prims.of_int (4))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_3
+               "FStar.InteractiveHelpers.Propositions.simp_filter_proposition (plugin)"
+               (FStar_Tactics_Native.from_tactic_3 simp_filter_proposition)
+               FStar_Reflection_V2_Embeddings.e_env
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_norm_step)
+               FStar_Reflection_V2_Embeddings.e_term
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Reflection_V2_Embeddings.e_term) psc ncb us args)
 let (simp_filter_propositions :
   FStar_Reflection_Types.env ->
     FStar_Pervasives.norm_step Prims.list ->
@@ -82,19 +161,37 @@ let (simp_filter_propositions :
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (60)) (Prims.of_int (15))
-                   (Prims.of_int (60)) (Prims.of_int (57)))))
+                   (Prims.of_int (38)) (Prims.of_int (19))
+                   (Prims.of_int (38)) (Prims.of_int (61)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (60)) (Prims.of_int (2)) (Prims.of_int (60))
-                   (Prims.of_int (57)))))
+                   (Prims.of_int (38)) (Prims.of_int (2)) (Prims.of_int (38))
+                   (Prims.of_int (61)))))
           (Obj.magic
              (FStar_Tactics_Util.map (simp_filter_proposition e steps) pl))
           (fun uu___ ->
              FStar_Tactics_Effect.lift_div_tac
                (fun uu___1 -> FStar_List_Tot_Base.flatten uu___))
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.InteractiveHelpers.Propositions.simp_filter_propositions"
+    (Prims.of_int (4))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_3
+               "FStar.InteractiveHelpers.Propositions.simp_filter_propositions (plugin)"
+               (FStar_Tactics_Native.from_tactic_3 simp_filter_propositions)
+               FStar_Reflection_V2_Embeddings.e_env
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_norm_step)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Reflection_V2_Embeddings.e_term)
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Reflection_V2_Embeddings.e_term) psc ncb us args)
 let (simp_filter_assertions :
   FStar_Reflection_Types.env ->
     FStar_Pervasives.norm_step Prims.list ->
@@ -108,14 +205,14 @@ let (simp_filter_assertions :
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (64)) (Prims.of_int (13))
-                   (Prims.of_int (64)) (Prims.of_int (52)))))
+                   (Prims.of_int (42)) (Prims.of_int (13))
+                   (Prims.of_int (42)) (Prims.of_int (52)))))
           (FStar_Sealed.seal
              (Obj.magic
                 (FStar_Range.mk_range
                    "FStar.InteractiveHelpers.Propositions.fst"
-                   (Prims.of_int (64)) (Prims.of_int (55))
-                   (Prims.of_int (66)) (Prims.of_int (26)))))
+                   (Prims.of_int (42)) (Prims.of_int (55))
+                   (Prims.of_int (44)) (Prims.of_int (26)))))
           (Obj.magic (simp_filter_propositions e steps a.pres))
           (fun uu___ ->
              (fun pres ->
@@ -125,15 +222,30 @@ let (simp_filter_assertions :
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.InteractiveHelpers.Propositions.fst"
-                              (Prims.of_int (65)) (Prims.of_int (14))
-                              (Prims.of_int (65)) (Prims.of_int (54)))))
+                              (Prims.of_int (43)) (Prims.of_int (14))
+                              (Prims.of_int (43)) (Prims.of_int (54)))))
                      (FStar_Sealed.seal
                         (Obj.magic
                            (FStar_Range.mk_range
                               "FStar.InteractiveHelpers.Propositions.fst"
-                              (Prims.of_int (66)) (Prims.of_int (2))
-                              (Prims.of_int (66)) (Prims.of_int (26)))))
+                              (Prims.of_int (44)) (Prims.of_int (2))
+                              (Prims.of_int (44)) (Prims.of_int (26)))))
                      (Obj.magic (simp_filter_propositions e steps a.posts))
                      (fun posts ->
                         FStar_Tactics_Effect.lift_div_tac
                           (fun uu___ -> mk_assertions pres posts)))) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic
+    "FStar.InteractiveHelpers.Propositions.simp_filter_assertions"
+    (Prims.of_int (4))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_3
+               "FStar.InteractiveHelpers.Propositions.simp_filter_assertions (plugin)"
+               (FStar_Tactics_Native.from_tactic_3 simp_filter_assertions)
+               FStar_Reflection_V2_Embeddings.e_env
+               (FStar_Syntax_Embeddings.e_list
+                  FStar_Syntax_Embeddings.e_norm_step) e_assertions
+               e_assertions psc ncb us args)

@@ -6,6 +6,10 @@ ARG CI_THREADS=24
 
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild
 
+# Needed for OPAM command below
+RUN sudo apt-get update && sudo apt-get install --yes --no-install-recommends \
+  libgmp-dev pkg-config
+
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
 RUN opam depext conf-gmp conf-m4
 

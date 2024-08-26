@@ -46,22 +46,18 @@ ulib-in-fsharp:
 	$(MAKE) -C ../ulib ulib-in-fsharp
 
 .PHONY: uregressions
-uregressions: ulib-extra tutorial utests uexamples
-
-# This is a hook for nightly builds (on Linux)
-# But, at the moment, it tests the same files as get tested on every push
-# We may add more nightly tests here in the future
-.PHONY: uregressions-ulong
-uregressions-ulong: uregressions
-
-.PHONY: ulib-extra
-ulib-extra:
-	+$(MAKE) -C ../ulib extra
+uregressions: tutorial utests uexamples
 
 .PHONY: tutorial
-tutorial:
-	+$(MAKE) -C ../doc/old/tutorial regressions
+tutorial: book-code tutorial-old
+
+.PHONY: book-code
+book-code:
 	+$(MAKE) -C ../doc/book/code
+
+.PHONY: tutorial-old
+tutorial-old:
+	+$(MAKE) -C ../doc/old/tutorial regressions
 
 .PHONY: utests
 utests:

@@ -42,7 +42,6 @@ val tag_of_term           : term -> string
 val lbname_to_string      : lbname -> string
 val pat_to_string         : pat -> string
 val branch_to_string      : Syntax.branch -> string
-val modul_to_string       : modul -> string
 val univ_names_to_string  : univ_names -> string
 val univ_to_string        : universe -> string
 val univs_to_string       : universes -> string
@@ -107,6 +106,7 @@ instance val showable_qualifier : showable qualifier
 instance val showable_pat       : showable pat
 instance val showable_const     : showable sconst
 instance val showable_letbinding : showable letbinding
+instance val showable_modul      : showable modul
 
 instance val pretty_term        : pretty term
 instance val pretty_univ        : pretty universe

@@ -98,6 +98,7 @@ and faithful_qual (q:aqualv) : Type0 =
   match q with
   | Q_Implicit -> True
   | Q_Explicit -> True
+  | Q_Equality -> True
   | Q_Meta m -> faithful m
 
 and faithful_binder (b:binder) : Type0 =

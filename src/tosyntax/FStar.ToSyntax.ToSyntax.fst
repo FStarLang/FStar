@@ -432,6 +432,12 @@ and free_vars tvars_only env t = match (unparen t).tm with
     (let env', free = free_vars_bs tvars_only env [x;y] in
      free@free_vars tvars_only env' e)
 
+  | ListLiteral ts ->
+    List.collect (free_vars tvars_only env) ts
+
+  | SeqLiteral ts ->
+    List.collect (free_vars tvars_only env) ts
+
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
   | Let _
   | LetOpen _
@@ -583,7 +589,7 @@ let rec generalize_annotated_univs (s:sigelt) :sigelt =
 
   (* Visit the sigelt and rely on side effects to capture all
   the names. This goes roughly in left-to-right order. *)
-  let _ = Visit.visit_sigelt
+  let _ = Visit.visit_sigelt false
             (fun t -> t)
             (fun u -> ignore (match u with
                               | U_name nm -> reg nm
@@ -2306,6 +2312,18 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
                   (U.abs [x;y] e None, None)] in
       mk_Tm_app head args top.range, noaqs
 
+    | ListLiteral ts ->
+      let nil r = mk_term (Construct (C.nil_lid, [])) r Expr in
+      let cons r hd tl= mk_term (Construct (C.cons_lid, [ (hd, Nothing); (tl, Nothing)])) r Expr in
+      let t' = List.fold_right (cons top.range) ts (nil top.range) in
+      desugar_term_aq env t'
+
+    | SeqLiteral ts ->
+      let nil r = mk_term (Var C.seq_empty_lid) r Expr in
+      let cons r hd tl = mkApp (mk_term (Var C.seq_cons_lid) r Expr) [ (hd, Nothing); (tl, Nothing)] r in
+      let t' = List.fold_right (cons top.range) ts (nil top.range) in
+      desugar_term_aq env t'
+
     | _ when (top.level=Formula) -> desugar_formula env top, noaqs
 
     | _ ->
@@ -2368,22 +2386,26 @@ and desugar_comp r (allow_type_promotion:bool) env t =
       | Decreases _ -> true
       | _ -> false
     in
-    let is_smt_pat (t,_) =
+    let is_smt_pat1 (t:term) : bool =
       match (unparen t).tm with
       // TODO: remove this first match once we fully migrate
-      | Construct (cons, [{tm=Construct (smtpat, _)}, _; _]) ->
-        Ident.lid_equals cons C.cons_lid &&
+      | Construct (smtpat, _) ->
         BU.for_some (fun s -> (string_of_lid smtpat) = s)
           (* the smt pattern does not seem to be disambiguated yet at this point *)
           ["SMTPat"; "SMTPatT"; "SMTPatOr"]
           (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
 
-      | Construct (cons, [{tm=Var smtpat}, _; _]) ->
-        Ident.lid_equals cons C.cons_lid &&
+      | Var smtpat ->
         BU.for_some (fun s -> (string_of_lid smtpat) = s)
           (* the smt pattern does not seem to be disambiguated yet at this point *)
           ["smt_pat" ; "smt_pat_or"]
           (* [C.smtpat_lid ; C.smtpatT_lid ; C.smtpatOr_lid] *)
+
+      | _ -> false
+    in
+    let is_smt_pat (t,_) : bool =
+      match (unparen t).tm with
+      | ListLiteral ts -> BU.for_all is_smt_pat1 ts
       | _ -> false
     in
     let pre_process_comp_typ (t:AST.term) =
@@ -4341,7 +4363,7 @@ let desugar_modul env (m:AST.modul) : env_t & Syntax.modul =
     let env, modul, pop_when_done = desugar_modul_common None env m in
     let env, modul = Env.finish_module_or_interface env modul in
     if Options.dump_module (string_of_lid modul.name)
-    then BU.print1 "Module after desugaring:\n%s\n" (Print.modul_to_string modul);
+    then BU.print1 "Module after desugaring:\n%s\n" (show modul);
     (if pop_when_done then export_interface modul.name env else env), modul
   )
 

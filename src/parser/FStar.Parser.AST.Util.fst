@@ -360,6 +360,10 @@ and eq_term' (t1 t2:term')
       eq_binder b1 b3 &&
       eq_binder b2 b4 &&      
       eq_term t4 t8
+    | ListLiteral ts1, ListLiteral ts2 ->
+      eq_list eq_term ts1 ts2
+    | SeqLiteral ts1, SeqLiteral ts2 ->
+      eq_list eq_term ts1 ts2
     | _ -> false
 
 and eq_calc_step (CalcStep (t1, t2, t3)) (CalcStep (t4, t5, t6)) =
@@ -640,6 +644,8 @@ and lidents_of_term' (t:term')
   | ElimImplies (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3
   | ElimOr (t1, t2, t3, b1, t4, b2, t5) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4 @ lidents_of_term t5
   | ElimAnd (t1, t2, t3, b1, b2, t4) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3 @ lidents_of_term t4
+  | ListLiteral ts -> concat_map lidents_of_term ts
+  | SeqLiteral ts -> concat_map lidents_of_term ts
 and lidents_of_branch (p, _, t) = lidents_of_pattern p @ lidents_of_term t
 and lidents_of_calc_step = function
   | CalcStep (t1, t2, t3) -> lidents_of_term t1 @ lidents_of_term t2 @ lidents_of_term t3

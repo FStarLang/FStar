@@ -201,6 +201,8 @@ let (e_aqualv :
           FStar_Reflection_V2_Constants.ref_Q_Explicit.FStar_Reflection_V2_Constants.t
       | FStar_Reflection_V2_Data.Q_Implicit ->
           FStar_Reflection_V2_Constants.ref_Q_Implicit.FStar_Reflection_V2_Constants.t
+      | FStar_Reflection_V2_Data.Q_Equality ->
+          FStar_Reflection_V2_Constants.ref_Q_Equality.FStar_Reflection_V2_Constants.t
       | FStar_Reflection_V2_Data.Q_Meta t ->
           let uu___ =
             let uu___1 =
@@ -242,14 +244,23 @@ let (e_aqualv :
                else
                  if
                    FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Reflection_V2_Constants.ref_Q_Meta.FStar_Reflection_V2_Constants.lid
+                     FStar_Reflection_V2_Constants.ref_Q_Equality.FStar_Reflection_V2_Constants.lid
                  then
                    (let uu___2 =
-                      FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
-                        (fun uu___3 -> FStar_Reflection_V2_Data.Q_Meta uu___3)
-                        e_term in
+                      FStar_Syntax_Embeddings_AppEmb.pure
+                        FStar_Reflection_V2_Data.Q_Equality in
                     FStar_Syntax_Embeddings_AppEmb.run args uu___2)
-                 else FStar_Pervasives_Native.None) in
+                 else
+                   if
+                     FStar_Syntax_Syntax.fv_eq_lid fv
+                       FStar_Reflection_V2_Constants.ref_Q_Meta.FStar_Reflection_V2_Constants.lid
+                   then
+                     (let uu___2 =
+                        FStar_Syntax_Embeddings_AppEmb.op_Less_Dollar_Dollar_Greater
+                          (fun uu___3 ->
+                             FStar_Reflection_V2_Data.Q_Meta uu___3) e_term in
+                      FStar_Syntax_Embeddings_AppEmb.run args uu___2)
+                   else FStar_Pervasives_Native.None) in
   mk_emb embed_aqualv unembed_aqualv
     FStar_Reflection_V2_Constants.fstar_refl_aqualv
 let (e_binders :

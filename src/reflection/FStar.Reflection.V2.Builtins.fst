@@ -84,9 +84,9 @@ let get_env () : Env.env =
 let inspect_bqual (bq : bqual) : aqualv =
     match bq with
     | Some (Implicit _) -> Data.Q_Implicit
-    | Some (Meta t) -> Data.Q_Meta t
-    | Some Equality
-    | None -> Data.Q_Explicit
+    | Some (Meta t)     -> Data.Q_Meta t
+    | Some Equality     -> Data.Q_Equality
+    | None              -> Data.Q_Explicit
 
 let inspect_aqual (aq : aqual) : aqualv =
     match aq with
@@ -96,9 +96,10 @@ let inspect_aqual (aq : aqual) : aqualv =
 (* private *)
 let pack_bqual (aqv : aqualv) : bqual =
     match aqv with
-    | Data.Q_Explicit -> None
     | Data.Q_Implicit -> Some (Implicit false)
     | Data.Q_Meta t   -> Some (Meta t)
+    | Data.Q_Equality -> Some Equality
+    | Data.Q_Explicit -> None
 
 let pack_aqual (aqv : aqualv) : aqual =
     match aqv with

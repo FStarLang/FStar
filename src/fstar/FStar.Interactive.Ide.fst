@@ -948,7 +948,7 @@ let run_compute st term rules =
                FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
     @ [FStar.TypeChecker.Env.Inlining;
        FStar.TypeChecker.Env.Eager_unfolding;
-       FStar.TypeChecker.Env.UnfoldTac;
+       FStar.TypeChecker.Env.DontUnfoldAttr [Parser.Const.tac_opaque_attr];
        FStar.TypeChecker.Env.Primops] in
 
   let normalize_term tcenv rules t =

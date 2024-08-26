@@ -18,7 +18,7 @@ module FStar.Reflection.V2.Derived.Lemmas
 open FStar.Stubs.Reflection.Types
 open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data
-open FStar.Reflection.V2.Derived
+open FStar.Reflection.V2.Collect
 open FStar.List.Tot
 
 let rec forall_list (p:'a -> Type) (l:list 'a) : Type =

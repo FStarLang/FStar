@@ -11,16 +11,16 @@ jobs:
 
     steps:
     - name: Checkout FStar
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: FStar
     - name: Checkout everest
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: project-everest/everest
         path: FStar/.github/everest
     - name: Install .NET SDK
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '6.0.x'
     - name: Setup dependencies
@@ -34,7 +34,7 @@ jobs:
         source FStar/.github/env.sh
         PACKAGE_DOCS=0 make -j -C FStar package
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fstar-Darwin_x86_64.tar.gz
         path: FStar/src/ocaml-output/fstar.tar.gz

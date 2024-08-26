@@ -60,6 +60,12 @@ let norm_before_encoding env t =
       (Some (Ident.string_of_lid (Env.current_module env.tcenv)))
       "FStar.SMTEncoding.Encode.norm_before_encoding"
 
+let norm_before_encoding_us env us (t:S.term) =
+  let env_u = {env with tcenv = Env.push_univ_vars env.tcenv us} in
+  let us, t = SS.open_univ_vars us t in
+  let t = norm_before_encoding env_u t in
+  SS.close_univ_vars us t
+
 let norm_with_steps steps env t =
   Profiling.profile
       (fun () -> N.normalize steps env t)
@@ -563,7 +569,7 @@ let declare_top_level_let env x t t_norm : fvar_binding & decls_t & env_t =
       fvb, [], env
 
 
-let encode_top_level_val uninterpreted env fv t quals =
+let encode_top_level_val uninterpreted env us fv t quals =
     let tt =
       if FStar.Ident.nsstr (lid_of_fv fv) = "FStar.Ghost"
       then norm_with_steps //no primops for FStar.Ghost, otherwise things like reveal/hide get simplified away too early
@@ -573,7 +579,7 @@ let encode_top_level_val uninterpreted env fv t quals =
                  Env.EraseUniverses;
                  Env.Exclude Env.Zeta]
                  env.tcenv t
-      else norm_before_encoding env t
+      else norm_before_encoding_us env us t
     in
     // if !dbg_SMTEncoding
     // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
@@ -587,7 +593,7 @@ let encode_top_level_val uninterpreted env fv t quals =
 
 let encode_top_level_vals env bindings quals =
     bindings |> List.fold_left (fun (decls, env) lb ->
-        let decls', env = encode_top_level_val false env (BU.right lb.lbname) lb.lbtyp quals in
+        let decls', env = encode_top_level_val false env lb.lbunivs (BU.right lb.lbname) lb.lbtyp quals in
         decls@decls', env) ([], env)
 
 exception Let_rec_unencodeable
@@ -1142,9 +1148,9 @@ let encode_sig_inductive (env:env_t) (se:sigelt)
 
 let encode_datacon (env:env_t) (se:sigelt)
 : decls_t & env_t
-= let Sig_datacon {lid=d; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
+= let Sig_datacon {lid=d; us; t; num_ty_params=n_tps; mutuals; injective_type_params } = se.sigel in
   let quals = se.sigquals in
-  let t = norm_before_encoding env t in
+  let t = norm_before_encoding_us env us t in
   let formals, t_res = U.arrow_formals t in
   let arity = List.length formals in
   let ddconstrsym, ddtok, env = new_term_constant_and_tok_from_lid env d arity in
@@ -1575,7 +1581,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
         let tname, ttok, env = new_term_constant_and_tok_from_lid env lid 4 in
         [], env
 
-     | Sig_declare_typ {lid; t} ->
+     | Sig_declare_typ {lid; us; t} ->
         let quals = se.sigquals in
         let will_encode_definition = not (quals |> BU.for_some (function
             | Assumption | Projector _ | Discriminator _ | Irreducible -> true
@@ -1586,7 +1592,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
              let decls, env =
                encode_top_level_val
                  (se.sigattrs |> BU.for_some is_uninterpreted_by_smt)
-                 env fv t quals in
+                 env us fv t quals in
              let tname = (string_of_lid lid) in
              let tsym = Option.get (try_lookup_free_var env lid) in
              decls
@@ -1673,8 +1679,8 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
       let bindings =
         List.map
           (fun lb ->
-            let def = norm_before_encoding env lb.lbdef in
-            let typ = norm_before_encoding env lb.lbtyp in
+            let def = norm_before_encoding_us env lb.lbunivs lb.lbdef in
+            let typ = norm_before_encoding_us env lb.lbunivs lb.lbtyp in
             {lb with lbdef=def; lbtyp=typ})
           bindings
       in

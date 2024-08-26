@@ -23,6 +23,8 @@ open FStar.CheckedFiles
 open FStar.Universal
 open FStar.Compiler
 
+open FStar.Class.Show
+
 module E = FStar.Errors
 module UF = FStar.Syntax.Unionfind
 module RE = FStar.Reflection.V2.Embeddings
@@ -33,8 +35,8 @@ let _ = FStar.Version.dummy ()
 and hence compile and link them in. They do not export anything,
 instead they register primitive steps in the normalizer during
 initialization. *)
-module X1 = FStar.Reflection.V1.Interpreter
-module X2 = FStar.Reflection.V2.Interpreter
+open FStar.Reflection.V1.Interpreter {}
+open FStar.Reflection.V2.Interpreter {}
 
 (* process_args:  parses command line arguments, setting FStar.Options *)
 (*                returns an error status and list of filenames        *)
@@ -115,6 +117,21 @@ let fstar_files: ref (option (list string)) = Util.mk_ref None
 (****************************************************************************)
 let go _ =
   let res, filenames = process_args () in
+  if Options.trace_error () then begin
+    let h = get_sigint_handler () in
+    let h' s =
+      let open FStar.Pprint in
+      let open FStar.Errors.Msg in
+      Debug.enable (); (* make sure diag is printed *)
+      Options.set_option "error_contexts" (Options.Bool true);
+      (* ^ Print context. Stack trace will be added since we have trace_error. *)
+      Errors.diag_doc Range.dummyRange [
+        text "GOT SIGINT! Exiting";
+      ];
+      exit 1
+    in
+    set_sigint_handler (sigint_handler_f h')
+  end;
   match res with
     | Empty ->
         Options.display_usage(); exit 1
@@ -160,6 +177,20 @@ let go _ =
           else failwith "You seem to be using the F#-generated version ofthe compiler ; \o
                          reindenting is not known to work yet with this version"
 
+        (* --read_checked: read and print a checked file *)
+        else if Some? (Options.read_checked_file ()) then
+          let path = Some?.v <| Options.read_checked_file () in
+          let env = Universal.init_env Parser.Dep.empty_deps in
+          let res = FStar.CheckedFiles.load_tc_result path in
+          match res with
+          | None ->
+            let open FStar.Pprint in
+            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+                Errors.Msg.text "Could not read checked file:" ^/^ doc_of_string path
+              ])
+
+          | Some (_, tcr) ->
+            print1 "%s\n" (show tcr.checked_module)
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()

@@ -69,12 +69,20 @@ let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
     | _ -> None
 
+let mkApp t args r = match args with
+  | [] -> t
+  | _ -> match t.tm with
+      | Name s -> mk_term (Construct(s, args)) r Un
+      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
+
 let consPat r hd tl = PatApp(mk_pattern (PatName C.cons_lid) r, [hd;tl])
 let consTerm r hd tl = mk_term (Construct(C.cons_lid, [(hd, Nothing);(tl, Nothing)])) r Expr
 
-let mkConsList r elts =
-  let nil = mk_term (Construct(C.nil_lid, [])) r Expr in
-    List.fold_right (fun e tl -> consTerm r e tl) elts nil
+let mkListLit r elts =
+  mk_term (ListLiteral elts) r Expr
+
+let mkSeqLit r elts =
+  mk_term (SeqLiteral elts) r Expr
 
 let unit_const r = mk_term(Const Const_unit) r Expr
 
@@ -88,12 +96,6 @@ let tot_comp t =
     let ml = mk_term (Name C.effect_Tot_lid) t.range Expr in
     let t = mk_term (App(ml, t, Nothing)) t.range Expr in
     t
-
-let mkApp t args r = match args with
-  | [] -> t
-  | _ -> match t.tm with
-      | Name s -> mk_term (Construct(s, args)) r Un
-      | _ -> List.fold_left (fun t (a,imp) -> mk_term (App(t, a, imp)) r Un) t args
 
 let mkRefSet r elts =
   let empty_lid, singleton_lid, union_lid, addr_of_lid =
@@ -612,6 +614,12 @@ let rec term_to_string (x:term) = match x.tm with
       (term_to_string q)
       (term_to_string e1)
       (term_to_string e2)
+
+  | ListLiteral ts ->
+    Util.format1 "[%s]" (to_string_l "; " term_to_string ts)
+
+  | SeqLiteral ts ->
+    Util.format1 "seq![%s]" (to_string_l "; " term_to_string ts)
     
 and binders_to_string sep bs =
     List.map binder_to_string bs |> String.concat sep

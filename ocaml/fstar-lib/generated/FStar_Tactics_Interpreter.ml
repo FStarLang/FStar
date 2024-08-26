@@ -140,7 +140,8 @@ let unembed_tactic_0 :
                             FStar_TypeChecker_Env.Reify;
                             FStar_TypeChecker_Env.UnfoldUntil
                               FStar_Syntax_Syntax.delta_constant;
-                            FStar_TypeChecker_Env.UnfoldTac;
+                            FStar_TypeChecker_Env.DontUnfoldAttr
+                              [FStar_Parser_Const.tac_opaque_attr];
                             FStar_TypeChecker_Env.Primops;
                             FStar_TypeChecker_Env.Unascribe] in
                           let norm_f =
@@ -195,6 +196,7 @@ let unembed_tactic_0 :
                                         Obj.magic
                                           (FStar_Syntax_VisitM.visitM_term
                                              FStar_Class_Monad.monad_option
+                                             false
                                              (fun uu___ ->
                                                 (fun t ->
                                                    match t.FStar_Syntax_Syntax.n

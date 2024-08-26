@@ -125,7 +125,7 @@ clean-intermediate:
 .PHONY: hints
 hints:
 	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) -C ulib/
-	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions ci-ulib-extra
 
 .PHONY: bench
 bench:
@@ -134,11 +134,20 @@ bench:
 # Regenerate and accept expected output tests. Should be manually
 # reviewed before checking in.
 .PHONY: output
-output: output-error-messages output-ide-emacs output-ide-lsp output-bug-reports
+output:				\
+	output-error-messages	\
+	output-pretty-printing	\
+	output-ide-emacs	\
+	output-ide-lsp		\
+	output-bug-reports
 
 .PHONY: output-error-messages
 output-error-messages:
 	+$(Q)$(MAKE) -C tests/error-messages accept
+
+.PHONY: output-pretty-printing
+output-pretty-printing:
+	+$(Q)$(MAKE) -C tests/prettyprinting accept
 
 .PHONY: output-ide-emacs
 output-ide-emacs:
@@ -157,8 +166,8 @@ output-bug-reports:
 # snapshot, nor run the build-standalone script.
 .PHONY: ci
 ci:
-	+$(Q)OTHERFLAGS="${OTHERFLAGS} --use_hints" FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
-	+$(Q)OTHERFLAGS="${OTHERFLAGS} --use_hints" FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
+	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-pre
+	+$(Q)FSTAR_HOME=$(CURDIR) $(MAKE) ci-post
 
 # This rule runs a CI job in a local container, exactly like is done for
 # CI.
@@ -180,20 +189,35 @@ ci-rebootstrap:
 ci-ocaml-test:
 	+$(Q)$(MAKE) -C src ocaml-unit-tests
 
+.PHONY: ci-ulib-extra
+ci-ulib-extra:
+	+$(Q)$(MAKE) -C ulib extra
+
 .PHONY: ci-ulib-in-fsharp
 ci-ulib-in-fsharp:
 	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
-ci-post: ci-ulib-in-fsharp ci-ocaml-test ci-uregressions
+ci-post:						\
+	ci-ulib-in-fsharp				\
+	ci-ocaml-test					\
+	ci-uregressions					\
+	$(if $(FSTAR_CI_TEST_KARAMEL),ci-karamel-test,)	\
+	ci-ulib-extra
 
 .PHONY: ci-uregressions
 ci-uregressions:
 	+$(Q)$(MAKE) -C src uregressions
 
-.PHONY: ci-uregressions-ulong
-ci-uregressions-ulong:
-	+$(Q)$(MAKE) -C src uregressions-ulong
+.PHONY: ci-karamel-test
+ci-karamel-test: ci-krmllib
+	+$(Q)$(MAKE) -C examples krml_tests
+
+# krmllib needs FStar.ModifiesGen already checked, so we add the dependency on
+# ulib-extra here. This is possibly spurious and fixable by tweaking krml's makefiles.
+.PHONY: ci-krmllib
+ci-krmllib: ci-ulib-extra
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --admit_smt_queries true" $(MAKE) -C $(KRML_HOME)/krmllib
 
 # Shortcuts:
 

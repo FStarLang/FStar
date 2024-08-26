@@ -28,51 +28,57 @@ let op_Less_Less :
     ('uuuuu -> 'uuuuu1) -> ('uuuuu2 -> 'uuuuu) -> 'uuuuu2 -> 'uuuuu1
   = fun f -> fun g -> fun x -> let uu___ = g x in f uu___
 let (visit_term :
-  (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-    FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
-  =
-  fun vt ->
-    fun t ->
-      let uu___ =
-        Obj.magic
-          (FStar_Syntax_VisitM.visitM_term uu___9
-             (fun uu___1 ->
-                (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt)) uu___1)
-             t) in
-      __proj__I__item__run uu___
-let (visit_term_univs :
-  (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-    (FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe) ->
+  Prims.bool ->
+    (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
       FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
-  fun vt ->
-    fun vu ->
+  fun pq ->
+    fun vt ->
       fun t ->
         let uu___ =
           Obj.magic
-            (FStar_Syntax_VisitM.visitM_term_univs uu___9
+            (FStar_Syntax_VisitM.visitM_term uu___9 pq
                (fun uu___1 ->
                   (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
-                    uu___1)
-               (fun uu___1 ->
-                  (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu))
                     uu___1) t) in
         __proj__I__item__run uu___
-let (visit_sigelt :
-  (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
-    (FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe) ->
-      FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
+let (visit_term_univs :
+  Prims.bool ->
+    (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
+      (FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe) ->
+        FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
-  fun vt ->
-    fun vu ->
-      fun se ->
-        let uu___ =
-          Obj.magic
-            (FStar_Syntax_VisitM.visitM_sigelt uu___9
-               (fun uu___1 ->
-                  (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
-                    uu___1)
-               (fun uu___1 ->
-                  (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu))
-                    uu___1) se) in
-        __proj__I__item__run uu___
+  fun pq ->
+    fun vt ->
+      fun vu ->
+        fun t ->
+          let uu___ =
+            Obj.magic
+              (FStar_Syntax_VisitM.visitM_term_univs uu___9 pq
+                 (fun uu___1 ->
+                    (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
+                      uu___1)
+                 (fun uu___1 ->
+                    (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu))
+                      uu___1) t) in
+          __proj__I__item__run uu___
+let (visit_sigelt :
+  Prims.bool ->
+    (FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) ->
+      (FStar_Syntax_Syntax.universe -> FStar_Syntax_Syntax.universe) ->
+        FStar_Syntax_Syntax.sigelt -> FStar_Syntax_Syntax.sigelt)
+  =
+  fun pq ->
+    fun vt ->
+      fun vu ->
+        fun se ->
+          let uu___ =
+            Obj.magic
+              (FStar_Syntax_VisitM.visitM_sigelt uu___9 pq
+                 (fun uu___1 ->
+                    (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vt))
+                      uu___1)
+                 (fun uu___1 ->
+                    (Obj.magic (op_Less_Less (fun uu___1 -> I uu___1) vu))
+                      uu___1) se) in
+          __proj__I__item__run uu___

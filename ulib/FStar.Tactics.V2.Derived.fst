@@ -26,6 +26,7 @@ open FStar.Tactics.V2.SyntaxHelpers
 open FStar.VConfig
 open FStar.Tactics.NamedView
 open FStar.Tactics.V2.SyntaxCoercions
+include FStar.Tactics.Names
 
 module L = FStar.List.Tot.Base
 module V = FStar.Tactics.Visit
@@ -870,23 +871,6 @@ let nth_var (i:int) : Tac binding =
   match List.Tot.Base.nth bs k with
   | None -> fail "not enough binders"
   | Some b -> b
-
-exception Appears
-
-(** Decides whether a top-level name [nm] syntactically
-appears in the term [t]. *)
-let name_appears_in (nm:name) (t:term) : Tac bool =
-  let ff (t : term) : Tac term =
-    match inspect t with
-    | Tv_FVar fv ->
-      if inspect_fv fv = nm then
-        raise Appears;
-      t
-    | tv -> pack tv
-  in
-  try ignore (V.visit_tm ff t); false with
-  | Appears -> true
-  | e -> raise e
 
 (** [mk_abs [x1; ...; xn] t] returns the term [fun x1 ... xn -> t] *)
 let rec mk_abs (args : list binder) (t : term) : Tac term (decreases args) =

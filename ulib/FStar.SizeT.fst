@@ -66,15 +66,16 @@ let sizet_to_uint32 x = FStar.Int.Cast.uint64_to_uint32 (Sz?.x x)
 
 let fits_lte x y = ()
 
-#push-options "--z3rlimit 20"
 let add x y = Sz <| U64.add x.x y.x
 let sub x y = Sz <| U64.sub x.x y.x
 let mul x y = Sz <| U64.mul x.x y.x
+
 let div x y =
-  let res = Sz <| U64.div x.x y.x in
-  fits_lte (U64.v res.x) (U64.v x.x);
+  let res_n = U64.div x.x y.x in
   FStar.Math.Lib.slash_decr_axiom (U64.v x.x) (U64.v y.x);
-  assert (U64.v x.x / U64.v y.x <= U64.v x.x);
+  assert (U64.v res_n < bound);
+  let res = Sz res_n in
+  fits_lte (U64.v res.x) (U64.v x.x);
   res
 
 let rem x y = Sz <| U64.rem x.x y.x

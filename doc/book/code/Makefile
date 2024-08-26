@@ -2,13 +2,13 @@ include ../../Makefile.include
 
 EXCLUDE_FILES = ContextPollution.fst
 FSTAR_FILES := $(filter-out $(EXCLUDE_FILES),$(wildcard *.fst *.fsti))
-FSTAR_FLAGS +=--cache_checked_modules $(OTHERFLAGS)
+OTHERFLAGS  := --cache_checked_modules $(OTHERFLAGS)
 
 all: $(addsuffix .checked, $(FSTAR_FILES))
 	$(MAKE) -C exercises
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) --already_cached '+Prims +FStar +LowStar' > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --output_deps_to .depend
 
 .DELETE_ON_ERROR:
 include .depend
@@ -16,7 +16,7 @@ include .depend
 depend: .depend
 
 %.checked:
-	$(FSTAR) $<
+	$(FSTAR) --already_cached '+Prims +FStar +LowStar' $<
 	touch -c $@
 
 wc:

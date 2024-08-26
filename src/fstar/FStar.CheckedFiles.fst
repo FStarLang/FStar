@@ -233,28 +233,38 @@ let load_checked_file (fn:string) (checked_fn:string) :cache_t =
                 end
                 else add_and_return (Unknown, Inr x.parsing_data)
 
+let load_tc_result (checked_fn:string) : option (list (string & string) & tc_result) =
+  let entry : option (checked_file_entry_stage1 & checked_file_entry_stage2) =
+    BU.load_2values_from_file checked_fn
+  in
+  match entry with
+  | Some ((_,s2)) -> Some (s2.deps_dig, s2.tc_res)
+  | _ -> None
+
 (*
  * Second step for loading checked files, validates the tc data
  * Either the reason why tc_result is invalid
  *   or tc_result
  *)
-let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:string)
-  :either string tc_result =
+let load_checked_file_with_tc_result
+  (deps:Dep.deps)
+  (fn:string)
+  (checked_fn:string)
+  : either string tc_result
+=
   if !dbg then
     BU.print1 "Trying to load checked file with tc result %s\n" checked_fn;
 
-  let load_tc_result (fn:string) :list (string & string) & tc_result =
-    let entry :option (checked_file_entry_stage1 & checked_file_entry_stage2) = BU.load_2values_from_file checked_fn in
-    match entry with
-     | Some ((_,s2)) -> s2.deps_dig, s2.tc_res
-     | _ ->
-       failwith "Impossible! if first phase of loading was unknown, it should have succeeded"
+  let load_tc_result' (fn:string) :list (string & string) & tc_result =
+    match load_tc_result fn with
+    | Some x -> x
+    | None -> failwith "Impossible! if first phase of loading was unknown, it should have succeeded"
   in
 
   let elt = load_checked_file fn checked_fn in  //first step, in case some client calls it directly
   match elt with
   | Invalid msg, _ -> Inl msg
-  | Valid _, _ -> checked_fn |> load_tc_result |> snd |> Inr
+  | Valid _, _ -> checked_fn |> load_tc_result' |> snd |> Inr
   | Unknown, parsing_data ->
     match hash_dependences deps fn with
     | Inl msg ->
@@ -262,7 +272,7 @@ let load_checked_file_with_tc_result (deps:Dep.deps) (fn:string) (checked_fn:str
       BU.smap_add mcache checked_fn elt;
       Inl msg
     | Inr deps_dig' ->
-      let deps_dig, tc_result = checked_fn |> load_tc_result in
+      let deps_dig, tc_result = checked_fn |> load_tc_result' in
       if deps_dig = deps_dig'
       then begin
         //mark the tc data of the file as valid
@@ -465,12 +475,15 @@ let store_module_to_cache env fn parsing_data tc_result =
       let stage2 = {deps_dig=hashes; tc_res=tc_result} in
       store_values_to_cache cache_file stage1 stage2
     | Inl msg ->
-      FStar.Errors.log_issue
+      let open FStar.Errors in
+      let open FStar.Errors.Msg in
+      let open FStar.Pprint in
+      log_issue_doc
         (FStar.Compiler.Range.mk_range fn (FStar.Compiler.Range.mk_pos 0 0)
                                  (FStar.Compiler.Range.mk_pos 0 0))
-        (Errors.Warning_FileNotWritten,
-         BU.format2 "%s was not written since %s"
-                    cache_file msg)
+        (Errors.Warning_FileNotWritten, [
+          text <| BU.format1 "Checked file %s was not written." cache_file;
+          prefix 2 1 (doc_of_string "Reason:") (text msg)])
   end
 
 let unsafe_raw_load_checked_file (checked_fn:string)

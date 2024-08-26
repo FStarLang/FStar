@@ -139,6 +139,9 @@ let list_append_lid       = p2l ["FStar"; "List"; "append"]
 let list_tot_append_lid   = p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let id_lid                = psconst "id"
 
+let seq_cons_lid              = p2l ["FStar"; "Seq"; "Base"; "cons"]
+let seq_empty_lid             = p2l ["FStar"; "Seq"; "Base"; "empty"]
+
 /// Constants from FStar.Char
 let c2l s = p2l ["FStar"; "Char"; s]
 let char_u32_of_char = c2l "u32_of_char"
@@ -490,6 +493,8 @@ let fstar_stubs_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Stubs
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+
+let tac_opaque_attr = pconst "tac_opaque"
 
 let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]

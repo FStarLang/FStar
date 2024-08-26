@@ -293,6 +293,7 @@ and aqual_cmp a1 a2 =
   match a1, a2 with
   | Q_Implicit, Q_Implicit -> Eq
   | Q_Explicit, Q_Explicit -> Eq
+  | Q_Equality, Q_Equality -> Eq
   | Q_Meta m1, Q_Meta m2 -> term_cmp m1 m2
   | _ -> Neq
 

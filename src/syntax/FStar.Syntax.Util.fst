@@ -160,7 +160,7 @@ let rec univ_kernel u = match Subst.compress_univ u with
     | U_max _
     | U_zero -> u, 0
     | U_succ u -> let k, n = univ_kernel u in k, n+1
-    | U_bvar _ -> failwith "Imposible: univ_kernel (U_bvar _)"
+    | U_bvar i -> failwith ("Imposible: univ_kernel (U_bvar " ^ show i ^ ")")
 
 //requires: kernel u = U_zero, n
 //returns: n
@@ -356,13 +356,18 @@ let head_and_args t =
     | Tm_app {hd=head; args} -> head, args
     | _ -> t, []
 
-let rec head_and_args_full t =
+let rec __head_and_args_full unmeta t =
     let t = compress t in
     match t.n with
     | Tm_app {hd=head; args} ->
-      let (head, args') = head_and_args_full head
+      let (head, args') = __head_and_args_full unmeta head
       in (head, args'@args)
+    | Tm_meta {tm} when unmeta ->
+      __head_and_args_full unmeta tm
     | _ -> t, []
+
+let head_and_args_full        t = __head_and_args_full false t
+let head_and_args_full_unmeta t = __head_and_args_full true t
 
 let rec leftmost_head t =
     let t = compress t in

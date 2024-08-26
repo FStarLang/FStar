@@ -24,7 +24,7 @@ all: verify-all
 # a.fst.checked is the binary, checked version of a.fst
 %.checked: %
 	$(FSTAR) $*
-	touch $@
+	touch -c $@
 
 # The _tags file is a directive to ocamlbuild
 # The extracted ML files are precious, because you may want to examine them,
@@ -74,6 +74,6 @@ include .depend
 
 # The default target is to verify all files, without extracting anything
 # It needs to be here, because it reads the variable ALL_FST_FILES in .depend
-verify-all: $(addsuffix .checked, $(ALL_FST_FILES))
+verify-all: $(ALL_CHECKED_FILES)
 
 extract-all: $(ALL_ML_FILES)

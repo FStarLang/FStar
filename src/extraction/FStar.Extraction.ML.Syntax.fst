@@ -26,10 +26,7 @@ open FStar.Compiler.Util
 open FStar.Const
 open FStar.BaseTypes
 
-(* -------------------------------------------------------------------- *)
-type mlsymbol = string
-type mlident  = mlsymbol
-type mlpath   = list mlsymbol & mlsymbol //Path and name of a module
+open FStar.Class.Show
 
 (* -------------------------------------------------------------------- *)
 let krml_keywords = []
@@ -73,201 +70,22 @@ let fsharpkeywords = [
 let string_of_mlpath ((p, s) : mlpath) : mlsymbol =
     String.concat "." (p @ [s])
 
-
-(* -------------------------------------------------------------------- *)
-type mlidents  = list mlident
-type mlsymbols = list mlsymbol
-
-(* -------------------------------------------------------------------- *)
-type e_tag =
-  | E_PURE
-  | E_ERASABLE
-  | E_IMPURE
-
-// Line number, file name; that's all we can emit in OCaml anyhwow
-type mlloc = int & string
 let dummy_loc: mlloc = 0, ""
-
-type mlty =
-| MLTY_Var   of mlident
-| MLTY_Fun   of mlty & e_tag & mlty
-| MLTY_Named of list mlty & mlpath
-| MLTY_Tuple of list mlty
-| MLTY_Top  (* \mathbb{T} type in the thesis, to be used when OCaml is not expressive enough for the source type *)
-| MLTY_Erased //a type that extracts to unit
-
-type mlconstant =
-| MLC_Unit
-| MLC_Bool   of bool
-| MLC_Int    of string & option (signedness & width)
-| MLC_Float  of float
-| MLC_Char   of char
-| MLC_String of string
-| MLC_Bytes  of array byte
-
-type mlpattern =
-| MLP_Wild
-| MLP_Const  of mlconstant
-| MLP_Var    of mlident
-| MLP_CTor   of mlpath & list mlpattern
-| MLP_Branch of list mlpattern
-(* SUGAR *)
-| MLP_Record of list mlsymbol & list (mlsymbol & mlpattern)
-| MLP_Tuple  of list mlpattern
-
-
-(* metadata, suitable for either the C or the OCaml backend *)
-type meta =
-  | Mutable (* deprecated *)
-  | Assumed
-  | Private
-  | NoExtract
-  | CInline
-  | Substitute
-  | GCType
-  | PpxDerivingShow
-  | PpxDerivingShowConstant of string
-  | PpxDerivingYoJson
-  | Comment of string
-  | StackInline
-  | CPrologue of string
-  | CEpilogue of string
-  | CConst of string
-  | CCConv of string
-  | Erased
-  | CAbstract
-  | CIfDef
-  | CMacro
-  | Deprecated of string
-  | RemoveUnusedTypeParameters of list int & FStar.Compiler.Range.range //positional
-  | HasValDecl of FStar.Compiler.Range.range //this symbol appears in the interface of a module
-  | CNoInline
-
-// rename
-type metadata = list meta
-
-type mlletflavor =
-  | Rec
-  | NonRec
-
-type mlbinder = {
-  mlbinder_name:mlident;
-  mlbinder_ty:mlty;
-  mlbinder_attrs:list mlattribute;
-}
-
-and mlexpr' =
-| MLE_Const  of mlconstant
-| MLE_Var    of mlident
-| MLE_Name   of mlpath
-| MLE_Let    of mlletbinding & mlexpr //tyscheme for polymorphic recursion
-| MLE_App    of mlexpr & list mlexpr //why are function types curried, but the applications not curried
-| MLE_TApp   of mlexpr & list mlty
-| MLE_Fun    of list mlbinder & mlexpr
-| MLE_Match  of mlexpr & list mlbranch
-| MLE_Coerce of mlexpr & mlty & mlty
-(* SUGAR *)
-| MLE_CTor   of mlpath & list mlexpr
-| MLE_Seq    of list mlexpr
-| MLE_Tuple  of list mlexpr
-| MLE_Record of list mlsymbol & mlsymbol & list (mlsymbol & mlexpr) // path of record type,
-                                                                    // name of record type,
-                                                                    // and fields with values
-| MLE_Proj   of mlexpr & mlpath
-| MLE_If     of mlexpr & mlexpr & option mlexpr
-| MLE_Raise  of mlpath & list mlexpr
-| MLE_Try    of mlexpr & list mlbranch
-
-and mlexpr = {
-    expr:mlexpr';
-    mlty:mlty;
-    loc: mlloc;
-}
-
-and mlbranch = mlpattern & option mlexpr & mlexpr
-
-and mllb = {
-    mllb_name:mlident;
-    mllb_tysc:option mltyscheme; // May be None for top-level bindings only
-    mllb_add_unit:bool;
-    mllb_def:mlexpr;
-    mllb_attrs:list mlattribute;
-    mllb_meta:metadata;
-    print_typ:bool;
-}
-
-and mlletbinding = mlletflavor & list mllb
-
-and mlattribute = mlexpr
-
-and ty_param = {
-  ty_param_name : mlident;
-  ty_param_attrs : list mlattribute;
-}
-
-and mltyscheme = list ty_param & mlty   //forall a1..an. t  (the list of binders can be empty)
-
-type mltybody =
-| MLTD_Abbrev of mlty
-| MLTD_Record of list (mlsymbol & mlty)
-| MLTD_DType  of list (mlsymbol & list (mlsymbol & mlty))
-    (*list of constructors? list mlty is the list of arguments of the constructors?
-        One could have instead used a mlty and tupled the argument types?
-     *)
-
-type one_mltydecl = {
-  tydecl_assumed : bool; // bool: this was assumed (C backend)
-  tydecl_name    : mlsymbol;
-  tydecl_ignored : option mlsymbol;
-  tydecl_parameters : list ty_param;
-  tydecl_meta    : metadata;
-  tydecl_defn    : option mltybody
-}
-
-type mltydecl = list one_mltydecl // each element of this list is one among a collection of mutually defined types
-
-type mlmodule1' =
-| MLM_Ty  of mltydecl
-| MLM_Let of mlletbinding
-| MLM_Exn of mlsymbol & list (mlsymbol & mlty)
-| MLM_Top of mlexpr // this seems outdated
-| MLM_Loc of mlloc // Location information; line number + file; only for the OCaml backend
-
-type mlmodule1 = {
-  mlmodule1_m : mlmodule1';
-  mlmodule1_attrs : list mlattribute;
-}
 
 let mk_mlmodule1 m = { mlmodule1_m = m; mlmodule1_attrs = [] }
 let mk_mlmodule1_with_attrs m attrs = { mlmodule1_m = m; mlmodule1_attrs = attrs }
 
-type mlmodule = list mlmodule1
-
-type mlsig1 =
-| MLS_Mod of mlsymbol & mlsig
-| MLS_Ty  of mltydecl
-    (*used for both type schemes and inductive types. Even inductives are defined in OCaml using type ....,
-        unlike data in Haskell *)
-| MLS_Val of mlsymbol & mltyscheme
-| MLS_Exn of mlsymbol & list mlty
-
-and mlsig = list mlsig1
-
 let with_ty_loc t e l = {expr=e; mlty=t; loc = l }
 let with_ty t e = with_ty_loc t e dummy_loc
 
-(* -------------------------------------------------------------------- *)
-type mllib =
-  | MLLib of list (mlpath & option (mlsig & mlmodule) & mllib) //Last field never seems to be used. Refactor?
-
-(* -------------------------------------------------------------------- *)
 // do NOT remove Prims, because all mentions of unit/bool in F* are actually Prims.unit/bool.
-let ml_unit_ty = MLTY_Erased
-let ml_bool_ty = MLTY_Named ([], (["Prims"], "bool"))
-let ml_int_ty  = MLTY_Named ([], (["Prims"], "int"))
+let ml_unit_ty    = MLTY_Erased
+let ml_bool_ty    = MLTY_Named ([], (["Prims"], "bool"))
+let ml_int_ty     = MLTY_Named ([], (["Prims"], "int"))
 let ml_string_ty  = MLTY_Named ([], (["Prims"], "string"))
-let ml_unit    = with_ty ml_unit_ty (MLE_Const MLC_Unit)
-let mlp_lalloc = (["SST"], "lalloc")
+
+let ml_unit       = with_ty ml_unit_ty (MLE_Const MLC_Unit)
+
 let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let repr_name = if Options.codegen() = Some Options.FSharp
                     then MLE_Name([], "box")
@@ -275,10 +93,8 @@ let apply_obj_repr :  mlexpr -> mlty -> mlexpr = fun x t ->
     let obj_repr = with_ty (MLTY_Fun(t, E_PURE, MLTY_Top)) repr_name in
     with_ty_loc MLTY_Top (MLE_App(obj_repr, [x])) x.loc
 
-let ty_param_names (tys:list ty_param) =
+let ty_param_names (tys:list ty_param) : list string =
   tys |> List.map (fun {ty_param_name} -> ty_param_name)
-
-open FStar.Syntax.Syntax
 
 let push_unit (ts : mltyscheme) : mltyscheme =
     let vs, ty = ts in
@@ -295,15 +111,13 @@ let pop_unit (ts : mltyscheme) : mltyscheme =
         failwith "unexpected: pop_unit: not a function type"
 module BU = FStar.Compiler.Util
 
-let mlpath_to_string mlp = String.concat "." (fst mlp) ^ "." ^ snd mlp
-
 let rec mlty_to_string (t:mlty) =
   match t with
   | MLTY_Var v -> v
   | MLTY_Fun (t1, _, t2) ->
     BU.format2 "(<MLTY_Fun> %s -> %s)" (mlty_to_string t1) (mlty_to_string t2)
   | MLTY_Named (ts, p) ->
-    BU.format2 "(<MLTY_Named> %s %s)" (String.concat " " (List.map mlty_to_string ts)) (mlpath_to_string p)
+    BU.format2 "(<MLTY_Named> %s %s)" (String.concat " " (List.map mlty_to_string ts)) (string_of_mlpath p)
   | MLTY_Tuple ts ->
     BU.format1 "(<MLTY_Tuple> %s)" (String.concat " * " (List.map mlty_to_string ts))
   | MLTY_Top -> "MLTY_Top"
@@ -337,7 +151,7 @@ let rec mlexpr_to_string (e:mlexpr) =
   | MLE_Coerce (e, t1, t2) ->
     BU.format3 "(MLE_Coerce (%s, %s, %s))" (mlexpr_to_string e) (mlty_to_string t1) (mlty_to_string t2)
   | MLE_CTor (p, es) ->
-    BU.format2 "(MLE_CTor (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlexpr_to_string es))
+    BU.format2 "(MLE_CTor (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlexpr_to_string es))
   | MLE_Seq es ->
     BU.format1 "(MLE_Seq [%s])" (String.concat "; " (List.map mlexpr_to_string es))
   | MLE_Tuple es ->
@@ -345,13 +159,13 @@ let rec mlexpr_to_string (e:mlexpr) =
   | MLE_Record (p, n, es) ->
     BU.format2 "(MLE_Record (%s, [%s]))" (String.concat "; " (p@[n])) (String.concat "; " (List.map (fun (x, e) -> BU.format2 "(%s, %s)" x (mlexpr_to_string e)) es))
   | MLE_Proj (e, p) ->
-    BU.format2 "(MLE_Proj (%s, %s))" (mlexpr_to_string e) (mlpath_to_string p)
+    BU.format2 "(MLE_Proj (%s, %s))" (mlexpr_to_string e) (string_of_mlpath p)
   | MLE_If (e1, e2, None) ->
     BU.format2 "(MLE_If (%s, %s, None))" (mlexpr_to_string e1) (mlexpr_to_string e2)
   | MLE_If (e1, e2, Some e3) ->
     BU.format3 "(MLE_If (%s, %s, %s))" (mlexpr_to_string e1) (mlexpr_to_string e2) (mlexpr_to_string e3)
   | MLE_Raise (p, es) ->
-    BU.format2 "(MLE_Raise (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlexpr_to_string es))
+    BU.format2 "(MLE_Raise (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlexpr_to_string es))
   | MLE_Try (e, bs) ->
     BU.format2 "(MLE_Try (%s, [%s]))" (mlexpr_to_string e) (String.concat "; " (List.map mlbranch_to_string bs))
 
@@ -390,9 +204,11 @@ and mlpattern_to_string mlp =
   | MLP_Wild -> "MLP_Wild"
   | MLP_Const c -> BU.format1 "(MLP_Const %s)" (mlconstant_to_string c)
   | MLP_Var x -> BU.format1 "(MLP_Var %s)" x
-  | MLP_CTor (p, ps) -> BU.format2 "(MLP_CTor (%s, [%s]))" (mlpath_to_string p) (String.concat "; " (List.map mlpattern_to_string ps))
+  | MLP_CTor (p, ps) -> BU.format2 "(MLP_CTor (%s, [%s]))" (string_of_mlpath p) (String.concat "; " (List.map mlpattern_to_string ps))
   | MLP_Branch ps -> BU.format1 "(MLP_Branch [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
-  | MLP_Record (p, ps) -> BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "; " p) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) ps))
+
+  | MLP_Record (path, fields) ->
+    BU.format2 "(MLP_Record (%s, [%s]))" (String.concat "." path) (String.concat "; " (List.map (fun (x, p) -> BU.format2 "(%s, %s)" x (mlpattern_to_string p)) fields))
   | MLP_Tuple ps -> BU.format1 "(MLP_Tuple [%s])" (String.concat "; " (List.map mlpattern_to_string ps))
 
 let mltybody_to_string (d:mltybody) : string =
@@ -426,6 +242,12 @@ let mlmodule1_to_string (m:mlmodule1) : string =
       (String.concat "; " (List.map (fun (x, t) -> BU.format2 "(%s, %s)" x (mlty_to_string t)) l))
   | MLM_Top e -> BU.format1 "MLM_Top %s" (mlexpr_to_string e)
   | MLM_Loc _mlloc -> "MLM_Loc"
-
+  
 let mlmodule_to_string (m:mlmodule) : string =
   BU.format1 "[ %s ]" (List.map mlmodule1_to_string m |> String.concat ";\n")
+
+instance showable_mlty : showable mlty = { show = mlty_to_string }
+instance showable_mlconstant : showable mlconstant = { show = mlconstant_to_string }  
+instance showable_mlexpr : showable mlexpr = { show = mlexpr_to_string }
+instance showable_mlmodule1 : showable mlmodule1 = { show = mlmodule1_to_string }
+instance showable_mlmodule : showable mlmodule = { show = mlmodule_to_string }

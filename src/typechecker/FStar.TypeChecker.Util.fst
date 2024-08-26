@@ -2833,6 +2833,54 @@ let maybe_implicit_with_meta_or_attr aq (attrs:list attribute) =
   | Some (Implicit _), _::_ -> true
   | _ -> false
 
+(* Instantiation of implicit arguments (meta or implicit)
+ *
+ * For meta arguments, we follow the exact same procedure as for instantiating an implicit,
+ * except that we keep track of the (uvar, env, metaprogram) triple in the environment
+ * so we can later come back to the implicit and, if it wasn't solved by unification,
+ * run the metaprogram on it.
+ *
+ * Why don't we run the metaprogram here? At this stage, it's very likely that `t`
+ * is full of unresolved uvars, and it wouldn't be a whole lot useful to try
+ * to find an instance for it. We might not even be able to, since instances
+ * are for concrete types.
+ *)
+let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t =
+  if Debug.high () then
+    BU.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
+  let (++) = Env.conj_guard in
+  let { binder_bv=x; binder_qual=qual; binder_attrs=attrs } = b in
+  let ctx_uvar_meta =
+      match qual, attrs with
+      | Some (Meta tau), _ ->
+        Some (Ctx_uvar_meta_tac tau)
+      | Some (Implicit _), attr::_ ->
+        Some (Ctx_uvar_meta_attr attr)
+      | _, _ ->
+        None
+  in
+  let t = x.sort in
+  let varg, _, implicits =
+    let msg =
+      let is_typeclass =
+        match ctx_uvar_meta with
+        | Some (Ctx_uvar_meta_tac tau) -> U.is_fvar C.tcresolve_lid tau
+        | _ -> false
+      in
+      if is_typeclass then "Typeclass constraint argument"
+      else if Some? ctx_uvar_meta then "Instantiating meta argument"
+      else "Instantiating implicit argument"
+    in
+    Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta
+  in
+  let aq = U.aqual_of_binder b in
+  let arg = varg, aq in
+
+  let r = varg, t, aq, implicits in
+  if Debug.high () then
+    BU.print1 "instantiate_one_binder: result = %s\n" (show (r._1, r._2));
+  r
+
 let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
   let torig = SS.compress t in
   if not env.instantiate_imp
@@ -2890,44 +2938,15 @@ let maybe_instantiate (env:Env.env) (e:term) (t:typ) : term & typ & guard_t =
               let rec aux (subst:list subst_elt) inst_n bs =
                   match inst_n, bs with
                   | Some 0, _ -> [], bs, subst, Env.trivial_guard //no more instantiations to do
-                  | _, ({binder_bv=x; binder_qual=Some (Implicit _);binder_attrs=[]})::rest ->
-                      let t = SS.subst subst x.sort in
-                      let v, _, g = new_implicit_var "Instantiation of implicit argument" e.pos env t in
-                      if Debug.high () then
-                        BU.print1 "maybe_instantiate: Instantiating implicit with %s\n" (show v);
-                      let subst = NT(x, v)::subst in
-                      let aq = U.aqual_of_binder (List.hd bs) in
+                  | _, {binder_qual = Some (Implicit _)} ::rest
+                  | _, {binder_qual = Some (Meta _)} ::rest
+                  | _, {binder_attrs = _::_} :: rest ->
+                      let b = List.hd bs in
+                      let b = SS.subst_binder subst b in
+                      let tm, ty, aq, g = instantiate_one_binder env e.pos b in
+                      let subst = NT(b.binder_bv, tm)::subst in
                       let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, aq)::args, bs, subst, Env.conj_guard g g'
-
-                  | _, ({binder_bv=x; binder_qual=qual; binder_attrs=attrs})::rest
-                    when maybe_implicit_with_meta_or_attr qual attrs ->
-                      let t = SS.subst subst x.sort in
-                      let meta_t =
-                        match qual, attrs with
-                        | Some (Meta tau), _ -> Ctx_uvar_meta_tac tau
-                        | _, attr::_ -> Ctx_uvar_meta_attr attr
-                        | _ -> failwith "Impossible, match is under a guard, did not expect this case"
-                      in
-                      let msg =
-                        let is_typeclass =
-                          match meta_t with
-                          | Ctx_uvar_meta_tac tau -> U.is_fvar C.tcresolve_lid tau
-                          | _ -> false
-                        in
-                        if is_typeclass
-                        then "Typeclass constraint argument"
-                        else "Instantiation of meta argument"
-                      in
-                      let v, _, g = Env.new_implicit_var_aux msg
-                                                             e.pos env t Strict
-                                                             (Some meta_t) in
-                      if Debug.high () then
-                        BU.print1 "maybe_instantiate: Instantiating meta argument with %s\n" (show v);
-                      let subst = NT(x, v)::subst in
-                      let aq = U.aqual_of_binder (List.hd bs) in
-                      let args, bs, subst, g' = aux subst (decr_inst inst_n) rest in
-                      (v, aq)::args, bs, subst, Env.conj_guard g g'
+                      (tm, aq)::args, bs, subst, Env.conj_guard g g'
 
                  | _, bs -> [], bs, subst, Env.trivial_guard
               in
@@ -3705,31 +3724,19 @@ let make_record_fields_in_order env uc topt
           (string_of_id rdc.constrname)
           (List.map (fun (i, _) -> string_of_id i) rdc.fields |> String.concat "; ")
       in
-      let print_fas fas =
-        List.map (fun (i, _) -> string_of_lid i) fas |> String.concat "; "
-      in
       let print_topt topt =
-        match topt with
-        | None ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format1 "topt=None; rdc=%s" (print_rdc rdc)
-        | Some (Inl t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inl %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
-        | Some (Inr t) ->
-          let rdc, _, _ = find_record_or_dc_from_typ env None uc rng in
-          BU.format2 "topt=Some (Inr %s); rdc=%s" (Print.term_to_string t) (print_rdc rdc)
+        BU.format2 "topt=%s; rdc=%s" (show topt) (print_rdc rdc)
       in
       BU.print5 "Resolved uc={typename=%s;fields=%s}\n\ttopt=%s\n\t{rdc = %s\n\tfield assignments=[%s]}\n"
-          (match uc.uc_typename with None -> "none" | Some tn -> string_of_lid tn)
-          (List.map string_of_lid uc.uc_fields |> String.concat "; ")
+          (show uc.uc_typename)
+          (show uc.uc_fields)
           (print_topt topt)
           (print_rdc rdc)
-          (print_fas fas)
+          (show (List.map fst fas))
     in
-    let rest, as_rev =
+    let rest, as_rev, missing =
       List.fold_left
-        (fun (fields, as_rev) (field_name, _) ->
+        (fun (fields, as_rev, missing) (field_name, _) ->
            let matching, rest =
              List.partition
                (fun (fn, _) -> field_name_matches fn rdc field_name)
@@ -3737,20 +3744,15 @@ let make_record_fields_in_order env uc topt
            in
            match matching with
            | [(_, a)] ->
-             rest, a::as_rev
+             rest, a::as_rev, missing
 
            | [] -> (
              match not_found field_name with
              | None ->
 //               debug();
-               raise_error_doc
-                 (Errors.Fatal_MissingFieldInRecord, [
-                   Errors.Msg.text <| BU.format2 "Field '%s' of record type '%s' is missing."
-                     (show field_name)
-                     (show rdc.typename)])
-                 rng
+              rest, as_rev, field_name :: missing
              | Some a ->
-               rest, a::as_rev
+               rest, a::as_rev, missing
              )
 
            | _ ->
@@ -3761,19 +3763,30 @@ let make_record_fields_in_order env uc topt
                   (string_of_id field_name)
                   (string_of_lid rdc.typename))
                rng)
-        (fas, [])
+        (fas, [], [])
         rdc.fields
     in
+    let pp_missing () =
+      separate_map (comma ^^ break_ 1) (fun f -> squotes (doc_of_string (show f))) missing
+    in
     let _ =
-      match rest with
-      | [] -> ()
-      | (f, _)::_ ->
+      match rest, missing with
+      | [], [] -> ()
+      | (f, _)::_, _ ->
 //        debug();
-        raise_error
-          (Errors.Fatal_MissingFieldInRecord,
-            BU.format2 "Field %s is redundant for type %s"
-                       (string_of_lid f)
-                       (string_of_lid rdc.typename))
-          (range_of_lid f)
+        raise_error_doc (Errors.Fatal_MissingFieldInRecord, [
+            Errors.Msg.text <| BU.format2 "Field '%s' is redundant for type %s" (show f) (show rdc.typename);
+            if Cons? missing then
+              prefix 2 1 (text "Missing fields:")
+                (pp_missing ())
+            else
+              Pprint.empty;
+          ]) (range_of_lid f)
+
+      | [], _ ->
+        raise_error_doc (Errors.Fatal_MissingFieldInRecord, [
+            prefix 2 1 (text <| BU.format1 "Missing fields for record type '%s':" (show rdc.typename))
+                (pp_missing ())
+          ]) rng
     in
     List.rev as_rev

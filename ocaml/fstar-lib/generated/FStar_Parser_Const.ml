@@ -105,6 +105,10 @@ let (list_append_lid : FStar_Ident.lident) = p2l ["FStar"; "List"; "append"]
 let (list_tot_append_lid : FStar_Ident.lident) =
   p2l ["FStar"; "List"; "Tot"; "Base"; "append"]
 let (id_lid : FStar_Ident.lident) = psconst "id"
+let (seq_cons_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Seq"; "Base"; "cons"]
+let (seq_empty_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Seq"; "Base"; "empty"]
 let (c2l : Prims.string -> FStar_Ident.lident) =
   fun s -> p2l ["FStar"; "Char"; s]
 let (char_u32_of_char : FStar_Ident.lident) = c2l "u32_of_char"
@@ -504,6 +508,7 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (tac_opaque_attr : FStar_Ident.lident) = pconst "tac_opaque"
 let (meta_projectors_attr : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let (mk_projs_lid : FStar_Ident.lid) =

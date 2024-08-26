@@ -22,7 +22,7 @@ open FStar.Tactics.V2
 open FStar.Classical
 open FStar.Tactics.CanonCommSwaps
 
-let term_eq = FStar.Tactics.term_eq_old
+let term_eq = FStar.Tactics.V2.term_eq_old
 
 (* A simple expression canonizer for commutative monoids.
    For a canonizer with more features see FStar.Tactics.CanonCommMonoid.fst.
@@ -272,15 +272,3 @@ let canon_monoid (#a:Type) (m:cm a) : Tac unit =
         // ;dump "done"
       else fail "Goal should be an equality at the right monoid type"
   | _ -> fail "Goal should be an equality"
-
-(***** Example *)
-
-let lem0 (a b c d : int) =
-  assert_by_tactic (0 + 1 + a + b + c + d + 2 == (b + 0) + 2 + d + (c + a + 0) + 1)
-  (fun _ -> canon_monoid int_plus_cm; trefl())
-
-open FStar.Mul
-
-let _ =
-  assert_by_tactic (forall (a b c d : int). ((b + 1) * 1) * 2 * a * (c * a) * 1 == a * (b + 1) * c * a * 2)
-  (fun _ -> ignore (forall_intros()); canon_monoid int_multiply_cm; trefl())
