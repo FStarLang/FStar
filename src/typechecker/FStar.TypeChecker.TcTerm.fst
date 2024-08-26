@@ -2741,32 +2741,15 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                      bs       (* formal parameters *)
                      args     (* remaining actual arguments *) : (term & lcomp & guard_t) =
 
-        (* We follow the exact same procedure as for instantiating an implicit,
-         * except that we keep track of the (uvar, env, metaprogram) pair in the environment
-         * so we can later come back to the implicit and, if it wasn't solved by unification,
-         * run the metaprogram on it.
-         *
-         * Why don't we run the metaprogram here? At this stage, it's very likely that `t`
-         * is full of unresolved uvars, and it wouldn't be a whole lot useful to try
-         * to find an instance for it. We might not even be able to, since instances
-         * are for concrete types.
-         *)
-        let instantiate_one_meta_and_go b rest_bs args =
-          let {binder_bv=x;binder_qual=qual;binder_attrs=attrs} = b in
-          let ctx_uvar_meta, g_tau_or_attr =
-              match qual, attrs with
-              | Some (Meta tau), _ ->
-                let tau = SS.subst subst tau in
-                let tau, _, g_tau = tc_tactic t_unit t_unit env tau in
-                Ctx_uvar_meta_tac tau, g_tau
-              | Some (Implicit _), attr::_ ->
-                let attr = SS.subst subst attr in
-                let attr, _, g_attr = tc_tot_or_gtot_term env attr in
-                Ctx_uvar_meta_attr attr, g_attr
-              | _ -> failwith "Impossible, match is under a guard"
-          in
-          let t = SS.subst subst x.sort in
-          let t, g_ex = check_no_escape (Some head) env fvs t in
+        let (++) = Env.conj_guard in
+        let instantiate_one_and_go b rest_bs args =
+          (* We compute a range by combining the range of the head
+           * and the last argument we checked (if any). This is such that
+           * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
+           * we give it the range of `f ()` instead of just the range for `f`.
+           * See issue #2021. This is only for the use range, we take
+           * the def range from the head, so the 'see also' should still
+           * point to the definition of the head. *)
           let r = match outargs with
                   | [] -> head.pos
                   | ((t, _), _, _)::_ ->
@@ -2774,60 +2757,26 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
                                         (Range.union_rng (Range.use_range head.pos)
                                                           (Range.use_range t.pos))
           in
-          let varg, _, implicits =
-            let msg =
-              let is_typeclass =
-                match ctx_uvar_meta with
-                | Ctx_uvar_meta_tac tau -> U.is_fvar Const.tcresolve_lid tau
-                | _ -> false
-              in
-              if is_typeclass
-              then "Typeclass constraint argument"
-              else "Instantiating meta argument in application"
-            in
-            Env.new_implicit_var_aux msg r env t Strict (Some ctx_uvar_meta)
-          in
-          let subst = NT(x, varg)::subst in
-          let aq = U.aqual_of_binder (List.hd bs) in
-          let arg = varg, aq in
-          let guard = List.fold_right Env.conj_guard [g_ex; g; g_tau_or_attr] implicits in
-          tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest_bs args
+          let b = SS.subst_binder subst b in
+          let tm, ty, aq, g' = TcUtil.instantiate_one_binder env r b in
+          let ty, g_ex = check_no_escape (Some head) env fvs ty in
+          let guard = g ++ g' ++ g_ex in
+          let arg = tm, aq in
+          let subst = NT(b.binder_bv, tm)::subst in
+          tc_args head_info (subst, (arg, None, S.mk_Total ty |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest_bs args
         in
 
         match bs, args with
-        | ({binder_bv=x;binder_qual=Some (Implicit _);binder_attrs=[]})::rest,
-          (_, None)::_ -> (* instantiate an implicit arg that's not associated with a tactic, i.e. no Meta or attrs *)
-            let t = SS.subst subst x.sort in
-            let t, g_ex = check_no_escape (Some head) env fvs t in
-            (* We compute a range by combining the range of the head
-             * and the last argument we checked (if any). This is such that
-             * if we instantiate an implicit for `f ()` (of type `#x:a -> ...),
-             * we give it the range of `f ()` instead of just the range for `f`.
-             * See issue #2021. This is only for the use range, we take
-             * the def range from the head, so the 'see also' should still
-             * point to the definition of the head. *)
-            let r = match outargs with
-                    | [] -> head.pos
-                    | ((t, _), _, _)::_ ->
-                        Range.range_of_rng (Range.def_range head.pos)
-                                           (Range.union_rng (Range.use_range head.pos)
-                                                            (Range.use_range t.pos))
-            in
-            let varg, _, implicits = TcUtil.new_implicit_var "Instantiating implicit argument in application" r env t in //new_uvar env t in
-            let subst = NT(x, varg)::subst in
-            let arg = varg, S.as_aqual_implicit true in
-            let guard = List.fold_right Env.conj_guard [g_ex; g] implicits in
-            tc_args head_info (subst, (arg, None, S.mk_Total t |> TcComm.lcomp_of_comp)::outargs, arg::arg_rets, guard, fvs) rest args
-
-        | ({binder_bv=x;binder_qual=qual;binder_attrs=attrs})::rest,
-          (_, None)::_
-            when (TcUtil.maybe_implicit_with_meta_or_attr qual attrs) -> (* instantiate a meta arg *)
-          instantiate_one_meta_and_go (List.hd bs) rest args
+        (* Expect an implicit but user provided a concrete argument, instantiate the implicit. *)
+        | ({binder_bv=x;binder_qual=Some (Implicit _)})::rest, (_, None)::_
+        | ({binder_bv=x;binder_qual=Some (Meta _)})::rest, (_, None)::_
+          ->
+          instantiate_one_and_go (List.hd bs) rest args
 
         (* User provided a _ for a meta arg, keep the meta for the unknown. *)
         | ({binder_bv=x;binder_qual=Some (Meta tau);binder_attrs=b_attrs})::rest,
           ({n = Tm_unknown}, Some {aqual_implicit=true})::rest' ->
-          instantiate_one_meta_and_go (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
+          instantiate_one_and_go (List.hd bs) rest rest' (* NB: rest' instead of args, we consume the _ *)
 
         | ({binder_bv=x;binder_qual=bqual;binder_attrs=b_attrs})::rest, (e, aq)::rest' -> (* a concrete argument *)
             let aq = check_expected_aqual_for_binder aq (List.hd bs) e.pos in
