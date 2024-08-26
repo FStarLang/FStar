@@ -694,11 +694,13 @@ let (reduce_primops :
               (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.primops
           then (tm, false)
           else
-            (let uu___1 = FStar_Syntax_Util.head_and_args tm in
+            (let uu___1 = FStar_Syntax_Util.head_and_args_full tm in
              match uu___1 with
              | (head, args) ->
                  let uu___2 =
-                   let head1 = FStar_Syntax_Subst.compress head in
+                   let head1 =
+                     let uu___3 = FStar_Syntax_Util.unmeta head in
+                     FStar_Syntax_Subst.compress uu___3 in
                    match head1.FStar_Syntax_Syntax.n with
                    | FStar_Syntax_Syntax.Tm_uinst (fv, us) -> (fv, us)
                    | uu___3 -> (head1, []) in
@@ -6782,7 +6784,7 @@ and (do_rebuild :
                | FStar_Syntax_Syntax.Tm_app uu___1 when
                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.primops
                    ->
-                   let uu___2 = FStar_Syntax_Util.head_and_args t in
+                   let uu___2 = FStar_Syntax_Util.head_and_args_full_unmeta t in
                    (match uu___2 with
                     | (hd, args) ->
                         let uu___3 =
