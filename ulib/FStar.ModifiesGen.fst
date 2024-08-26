@@ -1498,7 +1498,7 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
-#push-options "--z3rlimit 25"
+#push-options "--z3rlimit 50"
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert_spinoff (loc_disjoint #al #c (loc_unused_in #al c h)
