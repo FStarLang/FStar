@@ -17,7 +17,7 @@ jobs:
     # Use POSIX shell as default.
     defaults:
       run:
-        shell: ${{ github.workspace }}\msys64\usr\bin\env.exe MSYS2_ARG_CONV_EXCL=* MSYSTEM=CLANG64 CHERE_INVOKING=yes OPAMYES=1 TRIPLET=x64-windows ${{ github.workspace }}\msys64\usr\bin\sh.exe -e {0}
+        shell: ${{ github.workspace }}\msys64\usr\bin\env.exe MSYS2_ARG_CONV_EXCL=\* MSYSTEM=CLANG64 CHERE_INVOKING=yes OPAMYES=1 TRIPLET=x64-windows DOTNET_CLI_TELEMETRY_OPTOUT=1 ${{ github.workspace }}\msys64\usr\bin\sh.exe -e {0}
 
     steps:
     - name: Check out repo
@@ -75,11 +75,17 @@ jobs:
           msys64
         key: ${{ steps.cache-dkml-dist.outputs.cache-primary-key }}
 
+    - name: Setup .NET
+      shell: powershell -command ". '{0}'"
+      run: .github/setup-dotnet.cmd
+
     - name: Build a package
       # Test in PowerShell with:
-      #   $env:CHERE_INVOKING = "yes"; $env:MSYSTEM = "CLANG64"; msys64\usr\bin\dash.exe -lc 'export OPAMYES=1; export TRIPLET=x64-windows; export VCPKG_INSTALLED=$(cygpath -am vcpkg_installed/$TRIPLET); PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"; opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action && opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg/opam && env "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig" opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries && opamrun exec -- make package DISABLE_FSHARP=1'
+      #   $env:CHERE_INVOKING = "yes"; $env:MSYSTEM = "CLANG64"; msys64\usr\bin\dash.exe -lc 'export OPAMYES=1 TRIPLET=x64-windows MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL=\*; export VCPKG_INSTALLED=$(cygpath -am vcpkg_installed/$TRIPLET); export FSTAR_HOME="$PWD/src/ocaml-output/fstar"; PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"; opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action && opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg/opam && env "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig" opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries && opamrun exec -- make package DOTNET=$(cygpath -am dotnet/dotnet.exe)'
       run: |
+          env
           export VCPKG_INSTALLED=$(cygpath -am "vcpkg_installed/$TRIPLET")
+          export FSTAR_HOME=$PWD/src/ocaml-output/fstar
           PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"
           opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action
           opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg
@@ -87,7 +93,7 @@ jobs:
           export "TMP=$RUNNER_TEMP"
           export "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig"
           opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries
-          opamrun exec -- make -j package DISABLE_FSHARP=1 && echo "There is a CR at the end of this line"
+          opamrun exec -- make -j package DOTNET=$(cygpath -am dotnet/dotnet.exe) && echo "There is a CR at the end of this line"
 
     - name: Test the package
       run: |

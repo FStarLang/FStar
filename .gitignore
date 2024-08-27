@@ -102,6 +102,9 @@ nuget/
 # devcontainer temp files
 /.devcontainer_build.log
 
+# make package
+src/ocaml-output/fstar.zip
+
 # DkML
 /dkml-workflows/
 /msys64/
@@ -115,3 +118,7 @@ nuget/
 # setup-z3.cmd
 /z3-4.8.5-x64-win.zip
 /z3_installed
+
+# setup-dotnet.cmd
+/dotnet/
+/dotnet-install.ps1
