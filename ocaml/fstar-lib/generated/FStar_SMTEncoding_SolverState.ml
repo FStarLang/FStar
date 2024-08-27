@@ -164,15 +164,15 @@ let (push : solver_state -> solver_state) =
     let uu___ = peek s in
     match uu___ with
     | (hd, uu___1) ->
+        let push1 =
+          FStar_SMTEncoding_Term.Push (FStar_Compiler_List.length s.levels) in
         let next =
           {
             pruning_state = (hd.pruning_state);
             given_decl_names = (hd.given_decl_names);
-            all_decls_at_level_rev = [];
+            all_decls_at_level_rev = [push1];
             given_decls_rev = [];
-            to_flush_rev =
-              [FStar_SMTEncoding_Term.Push
-                 (FStar_Compiler_List.length s.levels)];
+            to_flush_rev = [push1];
             named_assumptions = (hd.named_assumptions)
           } in
         let s1 =

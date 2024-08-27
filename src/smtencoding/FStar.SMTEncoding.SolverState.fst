@@ -91,11 +91,12 @@ let init (_:unit)
 let push (s:solver_state)
 : solver_state
 = let hd, _ = peek s in
+  let push = Push (List.length s.levels) in
   let next = { given_decl_names = hd.given_decl_names; 
-               all_decls_at_level_rev = [];
+               all_decls_at_level_rev = [push];
                pruning_state = hd.pruning_state;
                given_decls_rev=[];
-               to_flush_rev=[Push (List.length s.levels)];
+               to_flush_rev=[push];
                named_assumptions = hd.named_assumptions
               } in
   let s1 = 
