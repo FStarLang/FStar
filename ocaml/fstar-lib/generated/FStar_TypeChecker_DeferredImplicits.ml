@@ -225,7 +225,7 @@ let (should_defer_uvar_to_user_tac :
       then false
       else
         (let uu___1 = find_user_tac_for_uvar env u in
-         FStar_Compiler_Option.isSome uu___1)
+         FStar_Pervasives_Native.uu___is_Some uu___1)
 let solve_goals_with_tac :
   'uuuuu .
     FStar_TypeChecker_Env.env ->

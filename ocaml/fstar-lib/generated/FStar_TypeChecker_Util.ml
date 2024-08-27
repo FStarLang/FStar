@@ -2025,24 +2025,22 @@ let (ad_hoc_indexed_bind_substs :
                                         | FStar_Syntax_Syntax.Tm_uvar
                                             (u, uu___5) ->
                                             let uu___6 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 t in
                                             let uu___7 =
-                                              match u.FStar_Syntax_Syntax.ctx_uvar_meta
-                                              with
-                                              | FStar_Pervasives_Native.Some
-                                                  (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                                  a) ->
-                                                  FStar_Syntax_Print.term_to_string
-                                                    a
-                                              | uu___8 -> "<no attr>" in
+                                              FStar_Class_Show.show
+                                                (FStar_Class_Show.show_option
+                                                   FStar_Syntax_Print.showable_ctx_uvar_meta)
+                                                u.FStar_Syntax_Syntax.ctx_uvar_meta in
                                             FStar_Compiler_Util.print2
                                               "Generated uvar %s with attribute %s\n"
                                               uu___6 uu___7
                                         | uu___5 ->
                                             let uu___6 =
                                               let uu___7 =
-                                                FStar_Syntax_Print.term_to_string
+                                                FStar_Class_Show.show
+                                                  FStar_Syntax_Print.showable_term
                                                   t in
                                               Prims.strcat
                                                 "Impossible, expected a uvar, got : "
@@ -6488,22 +6486,12 @@ let (instantiate_one_binder :
          let uu___1 = b in
          match uu___1 with
          | { FStar_Syntax_Syntax.binder_bv = x;
-             FStar_Syntax_Syntax.binder_qual = qual;
-             FStar_Syntax_Syntax.binder_positivity = uu___2;
-             FStar_Syntax_Syntax.binder_attrs = attrs;_} ->
-             let ctx_uvar_meta =
-               match (qual, attrs) with
-               | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta
-                  tau), uu___3) ->
-                   FStar_Pervasives_Native.Some
-                     (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau)
-               | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit
-                  uu___3), attr::uu___4) ->
-                   FStar_Pervasives_Native.Some
-                     (FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr)
-               | (uu___3, uu___4) -> FStar_Pervasives_Native.None in
+             FStar_Syntax_Syntax.binder_qual = uu___2;
+             FStar_Syntax_Syntax.binder_positivity = uu___3;
+             FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
+             let ctx_uvar_meta = FStar_TypeChecker_Env.uvar_meta_for_binder b in
              let t = x.FStar_Syntax_Syntax.sort in
-             let uu___3 =
+             let uu___5 =
                let msg =
                  let is_typeclass =
                    match ctx_uvar_meta with
@@ -6511,7 +6499,7 @@ let (instantiate_one_binder :
                        (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau) ->
                        FStar_Syntax_Util.is_fvar
                          FStar_Parser_Const.tcresolve_lid tau
-                   | uu___4 -> false in
+                   | uu___6 -> false in
                  if is_typeclass
                  then "Typeclass constraint argument"
                  else
@@ -6520,15 +6508,15 @@ let (instantiate_one_binder :
                    else "Instantiating implicit argument" in
                FStar_TypeChecker_Env.new_implicit_var_aux msg r env t
                  FStar_Syntax_Syntax.Strict ctx_uvar_meta in
-             (match uu___3 with
-              | (varg, uu___4, implicits) ->
+             (match uu___5 with
+              | (varg, uu___6, implicits) ->
                   let aq = FStar_Syntax_Util.aqual_of_binder b in
                   let arg = (varg, aq) in
                   let r1 = (varg, t, aq, implicits) in
-                  ((let uu___6 = FStar_Compiler_Debug.high () in
-                    if uu___6
+                  ((let uu___8 = FStar_Compiler_Debug.high () in
+                    if uu___8
                     then
-                      let uu___7 =
+                      let uu___9 =
                         FStar_Class_Show.show
                           (FStar_Class_Show.show_tuple2
                              FStar_Syntax_Print.showable_term
@@ -6538,7 +6526,7 @@ let (instantiate_one_binder :
                             (FStar_Pervasives_Native.__proj__Mktuple4__item___2
                                r1)) in
                       FStar_Compiler_Util.print1
-                        "instantiate_one_binder: result = %s\n" uu___7
+                        "instantiate_one_binder: result = %s\n" uu___9
                     else ());
                    r1)))
 let (maybe_instantiate :
