@@ -10,7 +10,7 @@ module BU = FStar.Compiler.Util
 type triggers = list (list string)
 
 type pruning_state = {
-  assumptions: list assumption;
+  // assumptions: list assumption;
   trigger_to_assumption: BU.psmap (list assumption);
   assumption_to_triggers: BU.psmap triggers;
   assumption_name_map: BU.psmap decl;
@@ -19,7 +19,7 @@ type pruning_state = {
 
 let init
 : pruning_state 
-= { assumptions = [];
+= { //assumptions = [];
     trigger_to_assumption = BU.psmap_empty ();
     assumption_to_triggers = BU.psmap_empty ();
     assumption_name_map = BU.psmap_empty ();
@@ -77,7 +77,7 @@ let triggers_of_assumption (a:assumption)
 let add_assumptions (ds:list decl) (p:pruning_state)
 : pruning_state
 = let assumptions = List.collect assumptions_of_decl ds in
-  let p = { p with assumptions = p.assumptions @ assumptions } in
+  //let p = { p with assumptions = p.assumptions @ assumptions } in
   let p =
     List.fold_left
       (fun p a -> 

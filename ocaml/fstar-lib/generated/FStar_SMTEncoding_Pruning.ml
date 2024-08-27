@@ -2,50 +2,42 @@ open Prims
 type triggers = Prims.string Prims.list Prims.list
 type pruning_state =
   {
-  assumptions: FStar_SMTEncoding_Term.assumption Prims.list ;
   trigger_to_assumption:
     FStar_SMTEncoding_Term.assumption Prims.list FStar_Compiler_Util.psmap ;
   assumption_to_triggers: triggers FStar_Compiler_Util.psmap ;
   assumption_name_map: FStar_SMTEncoding_Term.decl FStar_Compiler_Util.psmap ;
   ambients: Prims.string Prims.list }
-let (__proj__Mkpruning_state__item__assumptions :
-  pruning_state -> FStar_SMTEncoding_Term.assumption Prims.list) =
-  fun projectee ->
-    match projectee with
-    | { assumptions; trigger_to_assumption; assumption_to_triggers;
-        assumption_name_map; ambients;_} -> assumptions
 let (__proj__Mkpruning_state__item__trigger_to_assumption :
   pruning_state ->
     FStar_SMTEncoding_Term.assumption Prims.list FStar_Compiler_Util.psmap)
   =
   fun projectee ->
     match projectee with
-    | { assumptions; trigger_to_assumption; assumption_to_triggers;
-        assumption_name_map; ambients;_} -> trigger_to_assumption
+    | { trigger_to_assumption; assumption_to_triggers; assumption_name_map;
+        ambients;_} -> trigger_to_assumption
 let (__proj__Mkpruning_state__item__assumption_to_triggers :
   pruning_state -> triggers FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { assumptions; trigger_to_assumption; assumption_to_triggers;
-        assumption_name_map; ambients;_} -> assumption_to_triggers
+    | { trigger_to_assumption; assumption_to_triggers; assumption_name_map;
+        ambients;_} -> assumption_to_triggers
 let (__proj__Mkpruning_state__item__assumption_name_map :
   pruning_state -> FStar_SMTEncoding_Term.decl FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
-    | { assumptions; trigger_to_assumption; assumption_to_triggers;
-        assumption_name_map; ambients;_} -> assumption_name_map
+    | { trigger_to_assumption; assumption_to_triggers; assumption_name_map;
+        ambients;_} -> assumption_name_map
 let (__proj__Mkpruning_state__item__ambients :
   pruning_state -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
-    | { assumptions; trigger_to_assumption; assumption_to_triggers;
-        assumption_name_map; ambients;_} -> ambients
+    | { trigger_to_assumption; assumption_to_triggers; assumption_name_map;
+        ambients;_} -> ambients
 let (init : pruning_state) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   let uu___1 = FStar_Compiler_Util.psmap_empty () in
   let uu___2 = FStar_Compiler_Util.psmap_empty () in
   {
-    assumptions = [];
     trigger_to_assumption = uu___;
     assumption_to_triggers = uu___1;
     assumption_name_map = uu___2;
@@ -64,7 +56,6 @@ let (add_assumption_to_triggers :
               a.FStar_SMTEncoding_Term.assumption_name
               (FStar_SMTEncoding_Term.Assume a) in
           {
-            assumptions = (p.assumptions);
             trigger_to_assumption = (p.trigger_to_assumption);
             assumption_to_triggers = (p.assumption_to_triggers);
             assumption_name_map = uu___;
@@ -73,7 +64,6 @@ let (add_assumption_to_triggers :
         match trigs with
         | [] ->
             {
-              assumptions = (p1.assumptions);
               trigger_to_assumption = (p1.trigger_to_assumption);
               assumption_to_triggers = (p1.assumption_to_triggers);
               assumption_name_map = (p1.assumption_name_map);
@@ -85,7 +75,6 @@ let (add_assumption_to_triggers :
               FStar_Compiler_Util.psmap_add p1.assumption_to_triggers
                 a.FStar_SMTEncoding_Term.assumption_name trigs in
             {
-              assumptions = (p1.assumptions);
               trigger_to_assumption = (p1.trigger_to_assumption);
               assumption_to_triggers = uu___1;
               assumption_name_map = (p1.assumption_name_map);
@@ -105,7 +94,6 @@ let (add_trigger_to_assumption :
             let uu___1 =
               FStar_Compiler_Util.psmap_add p.trigger_to_assumption trig [a] in
             {
-              assumptions = (p.assumptions);
               trigger_to_assumption = uu___1;
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
@@ -116,7 +104,6 @@ let (add_trigger_to_assumption :
               FStar_Compiler_Util.psmap_add p.trigger_to_assumption trig (a
                 :: l) in
             {
-              assumptions = (p.assumptions);
               trigger_to_assumption = uu___1;
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
@@ -128,7 +115,6 @@ let (trigger_reached : pruning_state -> Prims.string -> pruning_state) =
       let uu___ =
         FStar_Compiler_Util.psmap_remove p.trigger_to_assumption trig in
       {
-        assumptions = (p.assumptions);
         trigger_to_assumption = uu___;
         assumption_to_triggers = (p.assumption_to_triggers);
         assumption_name_map = (p.assumption_name_map);
@@ -159,7 +145,6 @@ let (remove_trigger_for_assumption :
                 FStar_Compiler_Util.psmap_add p.assumption_to_triggers aname
                   remaining_triggers in
               {
-                assumptions = (p.assumptions);
                 trigger_to_assumption = (p.trigger_to_assumption);
                 assumption_to_triggers = uu___2;
                 assumption_name_map = (p.assumption_name_map);
@@ -204,24 +189,16 @@ let (add_assumptions :
     fun p ->
       let assumptions = FStar_Compiler_List.collect assumptions_of_decl ds in
       let p1 =
-        {
-          assumptions = (FStar_List_Tot_Base.op_At p.assumptions assumptions);
-          trigger_to_assumption = (p.trigger_to_assumption);
-          assumption_to_triggers = (p.assumption_to_triggers);
-          assumption_name_map = (p.assumption_name_map);
-          ambients = (p.ambients)
-        } in
-      let p2 =
         FStar_Compiler_List.fold_left
-          (fun p3 ->
+          (fun p2 ->
              fun a ->
                let triggers1 = triggers_of_assumption a in
-               let p4 =
+               let p3 =
                  FStar_Compiler_List.fold_left
                    (FStar_Compiler_List.fold_left
-                      (add_trigger_to_assumption a)) p3 triggers1 in
-               add_assumption_to_triggers a p4 triggers1) p1 assumptions in
-      p2
+                      (add_trigger_to_assumption a)) p2 triggers1 in
+               add_assumption_to_triggers a p3 triggers1) p assumptions in
+      p1
 type sym = Prims.string
 type reached_assumption_names = Prims.string FStar_Compiler_RBSet.rbset
 type ctxt = {

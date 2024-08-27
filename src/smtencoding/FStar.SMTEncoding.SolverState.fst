@@ -32,7 +32,7 @@ let empty_decl_names = BU.psmap_empty #bool ()
 let decl_names_contains (x:string) (s:decl_name_set) = Some? (BU.psmap_try_find s x)
 let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
 type decls_at_level = {
-  pruning_state: unit ;//Pruning.pruning_state;
+  pruning_state: Pruning.pruning_state;
   given_decl_names: decl_name_set;
   all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
   given_some_decls: bool; //list (list decl); (* all declarations that have been flushed so far; in reverse order *)
@@ -43,7 +43,7 @@ type decls_at_level = {
 let init_given_decls_at_level = { 
   given_decl_names = empty_decl_names;
   all_decls_at_level_rev = [];
-  pruning_state=(); //Pruning.init;
+  pruning_state=Pruning.init;
   given_some_decls=false;
   to_flush_rev=[];
   named_assumptions = BU.psmap_empty ()
@@ -210,7 +210,7 @@ let give_delay_assumptions (ds:list decl) (s:solver_state)
   let assumptions, rest = List.partition Assume? decls in
   let hd, tl = peek s in
   let hd = { hd with
-    pruning_state = (); //Pruning.add_assumptions assumptions hd.pruning_state;
+    pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
     named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
     to_flush_rev = rest :: hd.to_flush_rev
@@ -235,7 +235,7 @@ let give_now (ds:list decl) (s:solver_state)
   in
   let hd = { hd with
     given_decl_names = given;
-    pruning_state = (); //Pruning.add_assumptions assumptions hd.pruning_state;
+    pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
     to_flush_rev = ds_to_flush :: hd.to_flush_rev;
     named_assumptions
