@@ -239,6 +239,7 @@ let defaults =
       ("query_cache"                  , Bool false);
       ("query_stats"                  , Bool false);
       ("read_checked_file"            , Unset);
+      ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
       ("report_assumes"               , Unset);
@@ -427,6 +428,7 @@ let get_quake_keep              ()      = lookup_opt "quake_keep"               
 let get_query_cache             ()      = lookup_opt "query_cache"              as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
+let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -1158,6 +1160,11 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "read_checked_file",
     PathStr "path",
     text "Read a checked file and dump it to standard output.");
+
+  ( noshort,
+    "read_krml_file",
+    PathStr "path",
+    text "Read a Karamel binary file and dump it to standard output.");
 
   ( noshort,
     "record_hints",
@@ -1945,6 +1952,7 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
 let retry                        () = get_retry                       ()
