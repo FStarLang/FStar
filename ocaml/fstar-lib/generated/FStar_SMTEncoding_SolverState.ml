@@ -14,19 +14,13 @@ let (add_name :
   fun x -> fun s -> FStar_Compiler_Util.psmap_add s x true
 type decls_at_level =
   {
-  pruning_state: FStar_SMTEncoding_Pruning.pruning_state ;
+  pruning_state: unit ;
   given_decl_names: decl_name_set ;
   all_decls_at_level_rev: FStar_SMTEncoding_Term.decl Prims.list Prims.list ;
   given_some_decls: Prims.bool ;
   to_flush_rev: FStar_SMTEncoding_Term.decl Prims.list Prims.list ;
   named_assumptions:
     FStar_SMTEncoding_Term.assumption FStar_Compiler_Util.psmap }
-let (__proj__Mkdecls_at_level__item__pruning_state :
-  decls_at_level -> FStar_SMTEncoding_Pruning.pruning_state) =
-  fun projectee ->
-    match projectee with
-    | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_some_decls; to_flush_rev; named_assumptions;_} -> pruning_state
 let (__proj__Mkdecls_at_level__item__given_decl_names :
   decls_at_level -> decl_name_set) =
   fun projectee ->
@@ -66,7 +60,7 @@ let (__proj__Mkdecls_at_level__item__named_assumptions :
 let (init_given_decls_at_level : decls_at_level) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
   {
-    pruning_state = FStar_SMTEncoding_Pruning.init;
+    pruning_state = ();
     given_decl_names = empty_decl_names;
     all_decls_at_level_rev = [];
     given_some_decls = false;
@@ -168,7 +162,7 @@ let (push : solver_state -> solver_state) =
           FStar_SMTEncoding_Term.Push (FStar_Compiler_List.length s.levels) in
         let next =
           {
-            pruning_state = (hd.pruning_state);
+            pruning_state = ();
             given_decl_names = (hd.given_decl_names);
             all_decls_at_level_rev = [];
             given_some_decls = false;
@@ -316,18 +310,15 @@ let (give_delay_assumptions :
            | (hd, tl) ->
                let hd1 =
                  let uu___2 =
-                   FStar_SMTEncoding_Pruning.add_assumptions assumptions
-                     hd.pruning_state in
-                 let uu___3 =
                    add_named_assumptions hd.named_assumptions assumptions in
                  {
-                   pruning_state = uu___2;
+                   pruning_state = ();
                    given_decl_names = (hd.given_decl_names);
                    all_decls_at_level_rev = (ds ::
                      (hd.all_decls_at_level_rev));
                    given_some_decls = (hd.given_some_decls);
                    to_flush_rev = (rest :: (hd.to_flush_rev));
-                   named_assumptions = uu___3
+                   named_assumptions = uu___2
                  } in
                {
                  levels = (hd1 :: tl);
@@ -362,11 +353,8 @@ let (give_now :
                               given1
                         | uu___3 -> given1) hd.given_decl_names ds_to_flush in
                let hd1 =
-                 let uu___3 =
-                   FStar_SMTEncoding_Pruning.add_assumptions assumptions
-                     hd.pruning_state in
                  {
-                   pruning_state = uu___3;
+                   pruning_state = ();
                    given_decl_names = given;
                    all_decls_at_level_rev = (ds ::
                      (hd.all_decls_at_level_rev));
@@ -463,7 +451,7 @@ let (flush :
       FStar_Compiler_List.map
         (fun level ->
            {
-             pruning_state = (level.pruning_state);
+             pruning_state = ();
              given_decl_names = (level.given_decl_names);
              all_decls_at_level_rev = (level.all_decls_at_level_rev);
              given_some_decls =
