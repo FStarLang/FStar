@@ -2022,19 +2022,28 @@ let new_implicit_var_aux reason r env k should_check meta =
 (***************************************************)
 
 let uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t =
-  let { binder_bv=x; binder_qual=qual; binder_attrs=attrs } = b in
-  match qual, attrs with
-  | Some (Meta tau), _ ->
+  match b.binder_qual with
+  | Some (Meta tau) ->
+    (* Meta qualifier (e.g typeclass constraints) *)
     Some (Ctx_uvar_meta_tac tau)
-  | _, attr::_ ->
+  | _ ->
     (* NB: it does not have to be marked Implicit to get a
     Ctx_uvar_meta_attr. In practice most of them are (or
     the typechecker will not decide to instantiate) but the
     layered effects checking code will sometimes call this
     function on regular explicit binders. *)
-    Some (Ctx_uvar_meta_attr attr)
-  | _, _ ->
-    None
+    let is_unification_tag (t:term) : option term =
+      let hd, args = U.head_and_args t in
+      let hd = U.un_uinst hd in
+      match (SS.compress hd).n, args with
+      | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]
+        when S.fv_eq_lid fv Const.unification_tag_lid ->
+        Some a
+      | _ -> None
+    in
+    match b.binder_attrs |> List.tryPick is_unification_tag with
+    | Some tag -> Some (Ctx_uvar_meta_attr tag)
+    | None -> None
 
 //
 // Perhaps this should not return a guard,

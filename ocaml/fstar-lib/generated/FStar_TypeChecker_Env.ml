@@ -7209,21 +7209,39 @@ let (uvar_meta_for_binder :
     FStar_Syntax_Syntax.ctx_uvar_meta_t FStar_Pervasives_Native.option)
   =
   fun b ->
-    let uu___ = b in
-    match uu___ with
-    | { FStar_Syntax_Syntax.binder_bv = x;
-        FStar_Syntax_Syntax.binder_qual = qual;
-        FStar_Syntax_Syntax.binder_positivity = uu___1;
-        FStar_Syntax_Syntax.binder_attrs = attrs;_} ->
-        (match (qual, attrs) with
-         | (FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tau),
-            uu___2) ->
+    match b.FStar_Syntax_Syntax.binder_qual with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tau) ->
+        FStar_Pervasives_Native.Some
+          (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau)
+    | uu___ ->
+        let is_unification_tag t =
+          let uu___1 = FStar_Syntax_Util.head_and_args t in
+          match uu___1 with
+          | (hd, args) ->
+              let hd1 = FStar_Syntax_Util.un_uinst hd in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Syntax_Subst.compress hd1 in
+                  uu___4.FStar_Syntax_Syntax.n in
+                (uu___3, args) in
+              (match uu___2 with
+               | (FStar_Syntax_Syntax.Tm_fvar fv,
+                  (uu___3, FStar_Pervasives_Native.Some
+                   { FStar_Syntax_Syntax.aqual_implicit = true;
+                     FStar_Syntax_Syntax.aqual_attributes = uu___4;_})::
+                  (a, FStar_Pervasives_Native.None)::[]) when
+                   FStar_Syntax_Syntax.fv_eq_lid fv
+                     FStar_Parser_Const.unification_tag_lid
+                   -> FStar_Pervasives_Native.Some a
+               | uu___3 -> FStar_Pervasives_Native.None) in
+        let uu___1 =
+          FStar_Compiler_List.tryPick is_unification_tag
+            b.FStar_Syntax_Syntax.binder_attrs in
+        (match uu___1 with
+         | FStar_Pervasives_Native.Some tag ->
              FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau)
-         | (uu___2, attr::uu___3) ->
-             FStar_Pervasives_Native.Some
-               (FStar_Syntax_Syntax.Ctx_uvar_meta_attr attr)
-         | (uu___2, uu___3) -> FStar_Pervasives_Native.None)
+               (FStar_Syntax_Syntax.Ctx_uvar_meta_attr tag)
+         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (uvars_for_binders :
   env ->
     FStar_Syntax_Syntax.binders ->
