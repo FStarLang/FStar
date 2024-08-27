@@ -12,6 +12,8 @@ let mzero : 'a . 'a monoid -> 'a =
 let mplus : 'a . 'a monoid -> 'a -> 'a -> 'a =
   fun projectee ->
     match projectee with | { mzero = mzero1; mplus = mplus1;_} -> mplus1
+let op_Plus_Plus : 'a . 'a monoid -> 'a -> 'a -> 'a =
+  fun uu___ -> mplus uu___
 let msum : 'a . 'a monoid -> 'a Prims.list -> 'a =
   fun uu___ ->
     fun xs -> FStar_Compiler_List.fold_left (mplus uu___) (mzero uu___) xs
