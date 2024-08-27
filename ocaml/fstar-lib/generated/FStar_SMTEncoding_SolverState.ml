@@ -17,8 +17,8 @@ type decls_at_level =
   pruning_state: FStar_SMTEncoding_Pruning.pruning_state ;
   given_decl_names: decl_name_set ;
   all_decls_at_level_rev: FStar_SMTEncoding_Term.decl Prims.list Prims.list ;
-  given_decls_rev: FStar_SMTEncoding_Term.decl Prims.list ;
-  to_flush_rev: FStar_SMTEncoding_Term.decl Prims.list ;
+  given_some_decls: Prims.bool ;
+  to_flush_rev: FStar_SMTEncoding_Term.decl Prims.list Prims.list ;
   named_assumptions:
     FStar_SMTEncoding_Term.assumption FStar_Compiler_Util.psmap }
 let (__proj__Mkdecls_at_level__item__pruning_state :
@@ -26,34 +26,34 @@ let (__proj__Mkdecls_at_level__item__pruning_state :
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} -> pruning_state
+        given_some_decls; to_flush_rev; named_assumptions;_} -> pruning_state
 let (__proj__Mkdecls_at_level__item__given_decl_names :
   decls_at_level -> decl_name_set) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} ->
+        given_some_decls; to_flush_rev; named_assumptions;_} ->
         given_decl_names
 let (__proj__Mkdecls_at_level__item__all_decls_at_level_rev :
   decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list Prims.list) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} ->
+        given_some_decls; to_flush_rev; named_assumptions;_} ->
         all_decls_at_level_rev
-let (__proj__Mkdecls_at_level__item__given_decls_rev :
-  decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list) =
+let (__proj__Mkdecls_at_level__item__given_some_decls :
+  decls_at_level -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} ->
-        given_decls_rev
+        given_some_decls; to_flush_rev; named_assumptions;_} ->
+        given_some_decls
 let (__proj__Mkdecls_at_level__item__to_flush_rev :
-  decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list) =
+  decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list Prims.list) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} -> to_flush_rev
+        given_some_decls; to_flush_rev; named_assumptions;_} -> to_flush_rev
 let (__proj__Mkdecls_at_level__item__named_assumptions :
   decls_at_level ->
     FStar_SMTEncoding_Term.assumption FStar_Compiler_Util.psmap)
@@ -61,7 +61,7 @@ let (__proj__Mkdecls_at_level__item__named_assumptions :
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
-        given_decls_rev; to_flush_rev; named_assumptions;_} ->
+        given_some_decls; to_flush_rev; named_assumptions;_} ->
         named_assumptions
 let (init_given_decls_at_level : decls_at_level) =
   let uu___ = FStar_Compiler_Util.psmap_empty () in
@@ -69,7 +69,7 @@ let (init_given_decls_at_level : decls_at_level) =
     pruning_state = FStar_SMTEncoding_Pruning.init;
     given_decl_names = empty_decl_names;
     all_decls_at_level_rev = [];
-    given_decls_rev = [];
+    given_some_decls = false;
     to_flush_rev = [];
     named_assumptions = uu___
   }
@@ -107,8 +107,8 @@ let (solver_state_to_string : solver_state -> Prims.string) =
            let uu___1 =
              FStar_Class_Show.show
                (FStar_Class_Show.printableshow
-                  FStar_Class_Printable.printable_nat)
-               (FStar_Compiler_List.length level.given_decls_rev) in
+                  FStar_Class_Printable.printable_bool)
+               level.given_some_decls in
            let uu___2 =
              FStar_Class_Show.show
                (FStar_Class_Show.printableshow
@@ -171,8 +171,8 @@ let (push : solver_state -> solver_state) =
             pruning_state = (hd.pruning_state);
             given_decl_names = (hd.given_decl_names);
             all_decls_at_level_rev = [];
-            given_decls_rev = [];
-            to_flush_rev = [push1];
+            given_some_decls = false;
+            to_flush_rev = [[push1]];
             named_assumptions = (hd.named_assumptions)
           } in
         let s1 =
@@ -193,7 +193,7 @@ let (pop : solver_state -> solver_state) =
              "Solver state cannot have an empty stack"
          else ();
          (let s1 =
-            if Prims.uu___is_Nil hd.given_decls_rev
+            if Prims.op_Negation hd.given_some_decls
             then
               {
                 levels = tl;
@@ -325,10 +325,8 @@ let (give_delay_assumptions :
                    given_decl_names = (hd.given_decl_names);
                    all_decls_at_level_rev = (ds ::
                      (hd.all_decls_at_level_rev));
-                   given_decls_rev = (hd.given_decls_rev);
-                   to_flush_rev =
-                     (FStar_List_Tot_Base.op_At
-                        (FStar_Compiler_List.rev rest) hd.to_flush_rev);
+                   given_some_decls = (hd.given_some_decls);
+                   to_flush_rev = (rest :: (hd.to_flush_rev));
                    named_assumptions = uu___3
                  } in
                {
@@ -372,10 +370,8 @@ let (give_now :
                    given_decl_names = given;
                    all_decls_at_level_rev = (ds ::
                      (hd.all_decls_at_level_rev));
-                   given_decls_rev = (hd.given_decls_rev);
-                   to_flush_rev =
-                     (FStar_List_Tot_Base.op_At
-                        (FStar_Compiler_List.rev ds_to_flush) hd.to_flush_rev);
+                   given_some_decls = (hd.given_some_decls);
+                   to_flush_rev = (ds_to_flush :: (hd.to_flush_rev));
                    named_assumptions
                  } in
                {
@@ -457,11 +453,12 @@ let (flush :
   solver_state -> (FStar_SMTEncoding_Term.decl Prims.list * solver_state)) =
   fun s ->
     let to_flush =
-      FStar_Compiler_List.fold_right
-        (fun level ->
-           fun out ->
-             FStar_List_Tot_Base.op_At out
-               (FStar_Compiler_List.rev level.to_flush_rev)) s.levels [] in
+      let uu___ =
+        let uu___1 =
+          FStar_Compiler_List.collect (fun level -> level.to_flush_rev)
+            s.levels in
+        FStar_Compiler_List.rev uu___1 in
+      FStar_Compiler_List.flatten uu___ in
     let levels =
       FStar_Compiler_List.map
         (fun level ->
@@ -469,9 +466,9 @@ let (flush :
              pruning_state = (level.pruning_state);
              given_decl_names = (level.given_decl_names);
              all_decls_at_level_rev = (level.all_decls_at_level_rev);
-             given_decls_rev =
-               (FStar_List_Tot_Base.op_At level.to_flush_rev
-                  level.given_decls_rev);
+             given_some_decls =
+               (level.given_some_decls ||
+                  (Prims.uu___is_Cons level.to_flush_rev));
              to_flush_rev = [];
              named_assumptions = (level.named_assumptions)
            }) s.levels in

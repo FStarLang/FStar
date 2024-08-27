@@ -35,8 +35,8 @@ type decls_at_level = {
   pruning_state: Pruning.pruning_state;
   given_decl_names: decl_name_set;
   all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
-  given_decls_rev: list decl; (* all declarations that have been flushed so far *)
-  to_flush_rev: list decl; (* declarations to be given to the solver at the next flush *)
+  given_some_decls: bool; //list (list decl); (* all declarations that have been flushed so far; in reverse order *)
+  to_flush_rev: list (list decl); (* declarations to be given to the solver at the next flush, in reverse order, though each nested list is in order *)
   named_assumptions: BU.psmap assumption;
 }
 
@@ -44,7 +44,7 @@ let init_given_decls_at_level = {
   given_decl_names = empty_decl_names;
   all_decls_at_level_rev = [];
   pruning_state=Pruning.init;
-  given_decls_rev=[];
+  given_some_decls=false;
   to_flush_rev=[];
   named_assumptions = BU.psmap_empty ()
 }
@@ -61,7 +61,7 @@ let solver_state_to_string (s:solver_state) =
       (fun level ->
         BU.format3 "Level { all_decls=%s; given_decls=%s; to_flush=%s }"
           (show <| List.length level.all_decls_at_level_rev)
-          (show <| List.length level.given_decls_rev)
+          (show level.given_some_decls)
           (show <| List.length level.to_flush_rev))
       s.levels
   in
@@ -95,8 +95,8 @@ let push (s:solver_state)
   let next = { given_decl_names = hd.given_decl_names; 
                all_decls_at_level_rev = [];
                pruning_state = hd.pruning_state;
-               given_decls_rev=[];
-               to_flush_rev=[push];
+               given_some_decls=false;
+               to_flush_rev=[[push]];
                named_assumptions = hd.named_assumptions
               } in
   let s1 = 
@@ -113,7 +113,7 @@ let pop (s:solver_state)
 = let hd, tl = peek s in
   if Nil? tl then failwith "Solver state cannot have an empty stack";
   let s1 =
-    if Nil? hd.given_decls_rev //nothing has been given yet at this level
+    if not hd.given_some_decls //nothing has been given yet at this level
     then { s with levels = tl } //so we don't actually have to send a pop
     else { s with levels = tl; pending_flushes_rev = Pop (List.length s.levels) :: s.pending_flushes_rev }
   in
@@ -213,7 +213,7 @@ let give_delay_assumptions (ds:list decl) (s:solver_state)
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
     named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
-    to_flush_rev = List.rev rest @ hd.to_flush_rev
+    to_flush_rev = rest :: hd.to_flush_rev
   } in
   { s with levels = hd :: tl }
 
@@ -237,7 +237,7 @@ let give_now (ds:list decl) (s:solver_state)
     given_decl_names = given;
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
     all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
-    to_flush_rev = List.rev ds_to_flush @ hd.to_flush_rev;
+    to_flush_rev = ds_to_flush :: hd.to_flush_rev;
     named_assumptions
   } in
   { s with
@@ -331,14 +331,18 @@ let filter_with_unsat_core (core:U.unsat_core) (s:solver_state)
 let flush (s:solver_state)
 : list decl & solver_state
 = let to_flush = 
-    List.fold_right
-      (fun level out -> out @ List.rev level.to_flush_rev)
-    s.levels []
+    List.flatten <|
+    List.rev <|
+    List.collect (fun level -> level.to_flush_rev) s.levels 
   in
+  //   List.fold_right
+  //     (fun level out -> out @ List.rev level.to_flush_rev)
+  //   s.levels []
+  // in
   let levels =
     List.map
       (fun level -> { level with
-                      given_decls_rev=level.to_flush_rev@level.given_decls_rev;
+                      given_some_decls=(level.given_some_decls || Cons? level.to_flush_rev);
                       to_flush_rev = [] })
       s.levels
   in
