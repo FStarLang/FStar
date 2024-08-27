@@ -624,6 +624,897 @@ type branches = (pattern * expr) Prims.list
 type constant = (width * Prims.string)
 type var = Prims.int
 type lident = (Prims.string Prims.list * Prims.string)
+let (showable_width : width FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | UInt8 -> "UInt8"
+         | UInt16 -> "UInt16"
+         | UInt32 -> "UInt32"
+         | UInt64 -> "UInt64"
+         | Int8 -> "Int8"
+         | Int16 -> "Int16"
+         | Int32 -> "Int32"
+         | Int64 -> "Int64"
+         | Bool -> "Bool"
+         | CInt -> "CInt"
+         | SizeT -> "SizeT"
+         | PtrdiffT -> "PtrdiffT")
+  }
+let rec (typ_to_string : typ -> Prims.string) =
+  fun t ->
+    match t with
+    | TInt w ->
+        let uu___ = FStar_Class_Show.show showable_width w in
+        Prims.strcat "TInt " uu___
+    | TBuf t1 -> let uu___ = typ_to_string t1 in Prims.strcat "TBuf " uu___
+    | TUnit -> "TUnit"
+    | TQualified x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_tuple2
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_string))
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) x in
+        Prims.strcat "TQualified " uu___
+    | TBool -> "TBool"
+    | TAny -> "TAny"
+    | TArrow (t1, t2) ->
+        let uu___ =
+          let uu___1 = typ_to_string t1 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = typ_to_string t2 in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "TArrow (" uu___
+    | TBound x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) x in
+        Prims.strcat "TBound " uu___
+    | TApp (x, xs) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.show_list
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_string))
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string)) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = (FStar_Common.string_of_list ()) typ_to_string xs in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "TApp (" uu___
+    | TTuple ts ->
+        let uu___ = (FStar_Common.string_of_list ()) typ_to_string ts in
+        Prims.strcat "TTuple " uu___
+    | TConstBuf t1 ->
+        let uu___ = typ_to_string t1 in Prims.strcat "TConstBuf " uu___
+    | TArray (t1, c) ->
+        let uu___ =
+          let uu___1 = typ_to_string t1 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_tuple2 showable_width
+                     (FStar_Class_Show.printableshow
+                        FStar_Class_Printable.printable_string)) c in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "TArray (" uu___
+let (showable_typ : typ FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = typ_to_string }
+let (showable_binder : binder FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | { name; typ = typ1; mut;_} ->
+             let uu___1 =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 = typ_to_string typ1 in
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 =
+                         FStar_Class_Show.show
+                           (FStar_Class_Show.printableshow
+                              FStar_Class_Printable.printable_bool) mut in
+                       Prims.strcat uu___7 "; }" in
+                     Prims.strcat "; mut = " uu___6 in
+                   Prims.strcat uu___4 uu___5 in
+                 Prims.strcat "; typ = " uu___3 in
+               Prims.strcat name uu___2 in
+             Prims.strcat "binder{ name = " uu___1)
+  }
+let (showable_flag : flag FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Private -> "Private"
+         | WipeBody -> "WipeBody"
+         | CInline -> "CInline"
+         | Substitute -> "Substitute"
+         | GCType -> "GCType"
+         | Comment s -> Prims.strcat "Comment " s
+         | MustDisappear -> "MustDisappear"
+         | Const s -> Prims.strcat "Const " s
+         | Prologue s -> Prims.strcat "Prologue " s
+         | Epilogue s -> Prims.strcat "Epilogue " s
+         | Abstract -> "Abstract"
+         | IfDef -> "IfDef"
+         | Macro -> "Macro"
+         | Deprecated s -> Prims.strcat "Deprecated " s
+         | CNoInline -> "CNoInline")
+  }
+let (showable_lifetime : lifetime FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Eternal -> "Eternal"
+         | Stack -> "Stack"
+         | ManuallyManaged -> "ManuallyManaged")
+  }
+let (showable_op : op FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Add -> "Add"
+         | AddW -> "AddW"
+         | Sub -> "Sub"
+         | SubW -> "SubW"
+         | Div -> "Div"
+         | DivW -> "DivW"
+         | Mult -> "Mult"
+         | MultW -> "MultW"
+         | Mod -> "Mod"
+         | BOr -> "BOr"
+         | BAnd -> "BAnd"
+         | BXor -> "BXor"
+         | BShiftL -> "BShiftL"
+         | BShiftR -> "BShiftR"
+         | BNot -> "BNot"
+         | Eq -> "Eq"
+         | Neq -> "Neq"
+         | Lt -> "Lt"
+         | Lte -> "Lte"
+         | Gt -> "Gt"
+         | Gte -> "Gte"
+         | And -> "And"
+         | Or -> "Or"
+         | Xor -> "Xor"
+         | Not -> "Not")
+  }
+let (showable_cc : cc FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | StdCall -> "StdCall"
+         | CDecl -> "CDecl"
+         | FastCall -> "FastCall")
+  }
+let rec (decl_to_string : decl -> Prims.string) =
+  fun d ->
+    match d with
+    | DGlobal (fs, x, i, t, e) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show (FStar_Class_Show.show_list showable_flag)
+              fs in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_tuple2
+                     (FStar_Class_Show.show_list
+                        (FStar_Class_Show.printableshow
+                           FStar_Class_Printable.printable_string))
+                     (FStar_Class_Show.printableshow
+                        FStar_Class_Printable.printable_string)) x in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = typ_to_string t in
+                      let uu___11 =
+                        let uu___12 =
+                          let uu___13 = expr_to_string e in
+                          Prims.strcat uu___13 ")" in
+                        Prims.strcat ", " uu___12 in
+                      Prims.strcat uu___10 uu___11 in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DGlobal (" uu___
+    | DFunction (cc1, fs, i, t, x, bs, e) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show (FStar_Class_Show.show_option showable_cc)
+              cc1 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = typ_to_string t in
+                      let uu___11 =
+                        let uu___12 =
+                          let uu___13 =
+                            FStar_Class_Show.show
+                              (FStar_Class_Show.show_tuple2
+                                 (FStar_Class_Show.show_list
+                                    (FStar_Class_Show.printableshow
+                                       FStar_Class_Printable.printable_string))
+                                 (FStar_Class_Show.printableshow
+                                    FStar_Class_Printable.printable_string))
+                              x in
+                          let uu___14 =
+                            let uu___15 =
+                              let uu___16 =
+                                (FStar_Common.string_of_list ())
+                                  (FStar_Class_Show.show showable_binder) bs in
+                              let uu___17 =
+                                let uu___18 =
+                                  let uu___19 = expr_to_string e in
+                                  Prims.strcat uu___19 ")" in
+                                Prims.strcat ", " uu___18 in
+                              Prims.strcat uu___16 uu___17 in
+                            Prims.strcat ", " uu___15 in
+                          Prims.strcat uu___13 uu___14 in
+                        Prims.strcat ", " uu___12 in
+                      Prims.strcat uu___10 uu___11 in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DFunction (" uu___
+    | DTypeAlias (x, fs, i, t) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.show_list
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_string))
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string)) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = typ_to_string t in
+                      Prims.strcat uu___10 ")" in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DTypeAlias (" uu___
+    | DTypeFlat (x, fs, i, f) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.show_list
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_string))
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string)) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_list
+                             (FStar_Class_Show.show_tuple2
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_string)
+                                (FStar_Class_Show.show_tuple2 showable_typ
+                                   (FStar_Class_Show.printableshow
+                                      FStar_Class_Printable.printable_bool))))
+                          f in
+                      Prims.strcat uu___10 ")" in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DTypeFlat (" uu___
+    | DUnusedRetainedForBackwardsCompat (cc1, fs, x, t) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show (FStar_Class_Show.show_option showable_cc)
+              cc1 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_tuple2
+                         (FStar_Class_Show.show_list
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_string))
+                         (FStar_Class_Show.printableshow
+                            FStar_Class_Printable.printable_string)) x in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = typ_to_string t in
+                      Prims.strcat uu___10 ")" in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DUnusedRetainedForBackwardsCompat (" uu___
+    | DTypeVariant (x, fs, i, bs) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.show_list
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_string))
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string)) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_list
+                             (FStar_Class_Show.show_tuple2
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_string)
+                                (FStar_Class_Show.show_list
+                                   (FStar_Class_Show.show_tuple2
+                                      (FStar_Class_Show.printableshow
+                                         FStar_Class_Printable.printable_string)
+                                      (FStar_Class_Show.show_tuple2
+                                         showable_typ
+                                         (FStar_Class_Show.printableshow
+                                            FStar_Class_Printable.printable_bool))))))
+                          bs in
+                      Prims.strcat uu___10 ")" in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DTypeVariant (" uu___
+    | DTypeAbstractStruct x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_tuple2
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_string))
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) x in
+        Prims.strcat "DTypeAbstractStruct " uu___
+    | DExternal (cc1, fs, x, t, xs) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show (FStar_Class_Show.show_option showable_cc)
+              cc1 in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_tuple2
+                         (FStar_Class_Show.show_list
+                            (FStar_Class_Show.printableshow
+                               FStar_Class_Printable.printable_string))
+                         (FStar_Class_Show.printableshow
+                            FStar_Class_Printable.printable_string)) x in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = typ_to_string t in
+                      let uu___11 =
+                        let uu___12 =
+                          let uu___13 =
+                            (FStar_Common.string_of_list ())
+                              (FStar_Class_Show.show
+                                 (FStar_Class_Show.printableshow
+                                    FStar_Class_Printable.printable_string))
+                              xs in
+                          Prims.strcat uu___13 ")" in
+                        Prims.strcat ", " uu___12 in
+                      Prims.strcat uu___10 uu___11 in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DExternal (" uu___
+    | DUntaggedUnion (x, fs, i, xs) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.show_list
+                    (FStar_Class_Show.printableshow
+                       FStar_Class_Printable.printable_string))
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string)) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list showable_flag) fs in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) i in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 =
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_list
+                             (FStar_Class_Show.show_tuple2
+                                (FStar_Class_Show.printableshow
+                                   FStar_Class_Printable.printable_string)
+                                showable_typ)) xs in
+                      Prims.strcat uu___10 ")" in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "DUntaggedUnion (" uu___
+and (expr_to_string : expr -> Prims.string) =
+  fun e ->
+    match e with
+    | EBound x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) x in
+        Prims.strcat "EBound " uu___
+    | EQualified x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_tuple2
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_string))
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) x in
+        Prims.strcat "EQualified " uu___
+    | EConstant x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_tuple2 showable_width
+               (FStar_Class_Show.printableshow
+                  FStar_Class_Printable.printable_string)) x in
+        Prims.strcat "EConstant " uu___
+    | EUnit -> "EUnit"
+    | EApp (x, xs) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 = (FStar_Common.string_of_list ()) expr_to_string xs in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EApp " uu___
+    | ETypApp (x, xs) ->
+        let uu___ = expr_to_string x in Prims.strcat "ETypApp " uu___
+    | ELet (x, y, z) ->
+        let uu___ =
+          let uu___1 = FStar_Class_Show.show showable_binder x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "ELet (" uu___
+    | EIfThenElse (x, y, z) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EIfThenElse (" uu___
+    | ESequence xs ->
+        let uu___ = (FStar_Common.string_of_list ()) expr_to_string xs in
+        Prims.strcat "ESequence " uu___
+    | EAssign (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EAssign (" uu___
+    | EBufCreate (x, y, z) ->
+        let uu___ =
+          let uu___1 = FStar_Class_Show.show showable_lifetime x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufCreate (" uu___
+    | EBufRead (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufRead (" uu___
+    | EBufWrite (x, y, z) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufWrite (" uu___
+    | EBufSub (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufSub (" uu___
+    | EBufBlit (x, y, z, a, b) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in
+                  let uu___8 =
+                    let uu___9 =
+                      let uu___10 = expr_to_string a in
+                      let uu___11 =
+                        let uu___12 =
+                          let uu___13 = expr_to_string b in
+                          Prims.strcat uu___13 ")" in
+                        Prims.strcat ", " uu___12 in
+                      Prims.strcat uu___10 uu___11 in
+                    Prims.strcat ", " uu___9 in
+                  Prims.strcat uu___7 uu___8 in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufBlit (" uu___
+    | EMatch (x, bs) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                (FStar_Common.string_of_list ()) (fun uu___5 -> "iou") bs in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EMatch (" uu___
+    | EOp (x, y) ->
+        let uu___ =
+          let uu___1 = FStar_Class_Show.show showable_op x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = FStar_Class_Show.show showable_width y in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EOp (" uu___
+    | ECast (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = typ_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "ECast (" uu___
+    | EPushFrame -> "EPushFrame"
+    | EPopFrame -> "EPopFrame"
+    | EBool x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_bool) x in
+        Prims.strcat "EBool " uu___
+    | EAny -> "EAny"
+    | EAbort -> "EAbort"
+    | EReturn x ->
+        let uu___ = expr_to_string x in Prims.strcat "EReturn " uu___
+    | EFlat (x, xs) ->
+        let uu___ =
+          let uu___1 = typ_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                (FStar_Common.string_of_list ())
+                  (fun uu___5 ->
+                     match uu___5 with
+                     | (s, e1) ->
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 =
+                               let uu___9 = expr_to_string e1 in
+                               Prims.strcat uu___9 ")" in
+                             Prims.strcat ", " uu___8 in
+                           Prims.strcat s uu___7 in
+                         Prims.strcat "(" uu___6) xs in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EFlat (" uu___
+    | EField (x, y, z) ->
+        let uu___ =
+          let uu___1 = typ_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_string) z in
+                  Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EField (" uu___
+    | EWhile (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EWhile (" uu___
+    | EBufCreateL (x, xs) ->
+        let uu___ =
+          let uu___1 = FStar_Class_Show.show showable_lifetime x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = (FStar_Common.string_of_list ()) expr_to_string xs in
+              Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufCreateL (" uu___
+    | ETuple xs ->
+        let uu___ = (FStar_Common.string_of_list ()) expr_to_string xs in
+        Prims.strcat "ETuple " uu___
+    | ECons (x, y, xs) ->
+        let uu___ =
+          let uu___1 = typ_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 =
+                FStar_Class_Show.show
+                  (FStar_Class_Show.printableshow
+                     FStar_Class_Printable.printable_string) y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    (FStar_Common.string_of_list ()) expr_to_string xs in
+                  Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "ECons (" uu___
+    | EBufFill (x, y, z) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = expr_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufFill (" uu___
+    | EString x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_string) x in
+        Prims.strcat "EString " uu___
+    | EFun (xs, y, z) ->
+        let uu___ =
+          let uu___1 =
+            (FStar_Common.string_of_list ())
+              (FStar_Class_Show.show showable_binder) xs in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 = typ_to_string z in Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EFun (" uu___
+    | EAbortS x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_string) x in
+        Prims.strcat "EAbortS " uu___
+    | EBufFree x ->
+        let uu___ = expr_to_string x in Prims.strcat "EBufFree " uu___
+    | EBufCreateNoInit (x, y) ->
+        let uu___ =
+          let uu___1 = FStar_Class_Show.show showable_lifetime x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufCreateNoInit (" uu___
+    | EAbortT (x, y) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.printableshow
+                 FStar_Class_Printable.printable_string) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = typ_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EAbortT (" uu___
+    | EComment (x, y, z) ->
+        let uu___ =
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.printableshow
+                 FStar_Class_Printable.printable_string) x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in
+              let uu___5 =
+                let uu___6 =
+                  let uu___7 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_string) z in
+                  Prims.strcat uu___7 ")" in
+                Prims.strcat ", " uu___6 in
+              Prims.strcat uu___4 uu___5 in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EComment (" uu___
+    | EStandaloneComment x ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_string) x in
+        Prims.strcat "EStandaloneComment " uu___
+    | EAddrOf x ->
+        let uu___ = expr_to_string x in Prims.strcat "EAddrOf " uu___
+    | EBufNull x ->
+        let uu___ = typ_to_string x in Prims.strcat "EBufNull " uu___
+    | EBufDiff (x, y) ->
+        let uu___ =
+          let uu___1 = expr_to_string x in
+          let uu___2 =
+            let uu___3 =
+              let uu___4 = expr_to_string y in Prims.strcat uu___4 ")" in
+            Prims.strcat ", " uu___3 in
+          Prims.strcat uu___1 uu___2 in
+        Prims.strcat "EBufDiff (" uu___
+let (showable_decl : decl FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = decl_to_string }
 type program = decl Prims.list
 type file = (Prims.string * program)
 type version = Prims.int
@@ -3194,7 +4085,7 @@ let (translate :
                        "Unable to translate module: %s because:\n  %s\n"
                        m_name uu___3);
                     FStar_Pervasives_Native.None)) modules
-let (uu___1711 : unit) =
+let (uu___2016 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
