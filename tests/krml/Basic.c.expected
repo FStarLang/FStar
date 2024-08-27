@@ -1,0 +1,11 @@
+
+
+#include "Basic.h"
+
+uint32_t Basic_foo(uint32_t x)
+{
+  uint32_t y = x;
+  uint32_t z = x;
+  return y + z;
+}
+

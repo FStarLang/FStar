@@ -212,6 +212,7 @@ ci-uregressions:
 .PHONY: ci-karamel-test
 ci-karamel-test: ci-krmllib
 	+$(Q)$(MAKE) -C examples krml_tests
+	+$(Q)$(MAKE) -C tests/krml
 
 # krmllib needs FStar.ModifiesGen already checked, so we add the dependency on
 # ulib-extra here. This is possibly spurious and fixable by tweaking krml's makefiles.
