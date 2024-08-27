@@ -230,6 +230,21 @@ let conj_guard_f g1 g2 = match g1, g2 with
   | g, Trivial -> g
   | NonTrivial f1, NonTrivial f2 -> NonTrivial (U.mk_conj f1 f2)
 
+let binop_guard f g1 g2 = {
+  guard_f=f g1.guard_f g2.guard_f;
+  deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
+  deferred=g1.deferred@g2.deferred;
+  univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
+              snd g1.univ_ineqs@snd g2.univ_ineqs);
+  implicits=g1.implicits@g2.implicits
+}
+let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
+
+instance monoid_guard_t : monoid guard_t = {
+  mzero = trivial_guard;
+  mplus = conj_guard;
+}
+
 let rec check_trivial (t:term) : guard_formula =
     let hd, args = U.head_and_args (U.unmeta t) in
     match (U.un_uinst (U.unmeta hd)).n, args with
@@ -252,16 +267,8 @@ let imp_guard_f g1 g2 = match g1, g2 with
   | NonTrivial f1, NonTrivial f2 ->
     let imp = U.mk_imp f1 f2 in check_trivial imp
 
-let binop_guard f g1 g2 = {
-  guard_f=f g1.guard_f g2.guard_f;
-  deferred_to_tac=g1.deferred_to_tac@g2.deferred_to_tac;
-  deferred=g1.deferred@g2.deferred; 
-  univ_ineqs=(fst g1.univ_ineqs@fst g2.univ_ineqs,
-              snd g1.univ_ineqs@snd g2.univ_ineqs);
-  implicits=g1.implicits@g2.implicits
-}
-let conj_guard g1 g2 = binop_guard conj_guard_f g1 g2
 let imp_guard g1 g2 = binop_guard imp_guard_f g1 g2
+
 let conj_guards gs = List.fold_left conj_guard trivial_guard gs
 let split_guard g =
  {g with guard_f = Trivial},
