@@ -34,7 +34,7 @@ let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
 type decls_at_level = {
   pruning_state: Pruning.pruning_state;
   given_decl_names: decl_name_set;
-  all_decls_at_level_rev: list decl; (* all decls at this level *)
+  all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
   given_decls_rev: list decl; (* all declarations that have been flushed so far *)
   to_flush_rev: list decl; (* declarations to be given to the solver at the next flush *)
   named_assumptions: BU.psmap assumption;
@@ -93,7 +93,7 @@ let push (s:solver_state)
 = let hd, _ = peek s in
   let push = Push (List.length s.levels) in
   let next = { given_decl_names = hd.given_decl_names; 
-               all_decls_at_level_rev = [push];
+               all_decls_at_level_rev = [];
                pruning_state = hd.pruning_state;
                given_decls_rev=[];
                to_flush_rev=[push];
@@ -211,7 +211,7 @@ let give_delay_assumptions (ds:list decl) (s:solver_state)
   let hd, tl = peek s in
   let hd = { hd with
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
-    all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
+    all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
     named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
     to_flush_rev = List.rev rest @ hd.to_flush_rev
   } in
@@ -236,7 +236,7 @@ let give_now (ds:list decl) (s:solver_state)
   let hd = { hd with
     given_decl_names = given;
     pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
-    all_decls_at_level_rev = List.rev ds@hd.all_decls_at_level_rev;
+    all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
     to_flush_rev = List.rev ds_to_flush @ hd.to_flush_rev;
     named_assumptions
   } in
@@ -254,13 +254,19 @@ let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_se
 : solver_state
 = let s_new = init () in
   let s_new = { s_new with using_facts_from } in
+  let rec rebuild_one_level (all_decls_at_level_rev:list (list decl)) s_new =
+    match all_decls_at_level_rev with
+    | [ last ] -> give last s_new
+    | decls :: decls_l ->
+      give decls (rebuild_one_level decls_l s_new)
+  in
   let rec rebuild levels s_new =
     match levels with
     | [ last ] ->
-      give (List.rev last.all_decls_at_level_rev) s_new
+      List.fold_right give last.all_decls_at_level_rev s_new
     | level :: levels ->
       let s_new = push (rebuild levels s_new) in
-      give (List.rev level.all_decls_at_level_rev) s_new
+      List.fold_right give level.all_decls_at_level_rev s_new
   in
   rebuild s.levels s_new
       
@@ -311,11 +317,15 @@ let prune (roots:list decl) (s:solver_state)
 
 let filter_with_unsat_core (core:U.unsat_core) (s:solver_state) 
 : list decl
-= let all_decls =
-    List.fold_right
-      (fun level out -> out@List.rev level.all_decls_at_level_rev)
-      s.levels []
+= let rec all_decls levels = 
+    match levels with
+    | [last] -> last.all_decls_at_level_rev
+    | level :: levels -> 
+      level.all_decls_at_level_rev@[Push <| List.length levels]::all_decls levels
   in
+  let all_decls = all_decls s.levels in
+// List.collect (fun level -> level.all_decls_at_level_rev) s.levels in
+  let all_decls = List.flatten <| List.rev all_decls in
   U.filter core all_decls
 
 let flush (s:solver_state)

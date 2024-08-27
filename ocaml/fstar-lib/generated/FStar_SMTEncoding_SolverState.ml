@@ -16,7 +16,7 @@ type decls_at_level =
   {
   pruning_state: FStar_SMTEncoding_Pruning.pruning_state ;
   given_decl_names: decl_name_set ;
-  all_decls_at_level_rev: FStar_SMTEncoding_Term.decl Prims.list ;
+  all_decls_at_level_rev: FStar_SMTEncoding_Term.decl Prims.list Prims.list ;
   given_decls_rev: FStar_SMTEncoding_Term.decl Prims.list ;
   to_flush_rev: FStar_SMTEncoding_Term.decl Prims.list ;
   named_assumptions:
@@ -35,7 +35,7 @@ let (__proj__Mkdecls_at_level__item__given_decl_names :
         given_decls_rev; to_flush_rev; named_assumptions;_} ->
         given_decl_names
 let (__proj__Mkdecls_at_level__item__all_decls_at_level_rev :
-  decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list) =
+  decls_at_level -> FStar_SMTEncoding_Term.decl Prims.list Prims.list) =
   fun projectee ->
     match projectee with
     | { pruning_state; given_decl_names; all_decls_at_level_rev;
@@ -170,7 +170,7 @@ let (push : solver_state -> solver_state) =
           {
             pruning_state = (hd.pruning_state);
             given_decl_names = (hd.given_decl_names);
-            all_decls_at_level_rev = [push1];
+            all_decls_at_level_rev = [];
             given_decls_rev = [];
             to_flush_rev = [push1];
             named_assumptions = (hd.named_assumptions)
@@ -323,9 +323,8 @@ let (give_delay_assumptions :
                  {
                    pruning_state = uu___2;
                    given_decl_names = (hd.given_decl_names);
-                   all_decls_at_level_rev =
-                     (FStar_List_Tot_Base.op_At (FStar_Compiler_List.rev ds)
-                        hd.all_decls_at_level_rev);
+                   all_decls_at_level_rev = (ds ::
+                     (hd.all_decls_at_level_rev));
                    given_decls_rev = (hd.given_decls_rev);
                    to_flush_rev =
                      (FStar_List_Tot_Base.op_At
@@ -371,9 +370,8 @@ let (give_now :
                  {
                    pruning_state = uu___3;
                    given_decl_names = given;
-                   all_decls_at_level_rev =
-                     (FStar_List_Tot_Base.op_At (FStar_Compiler_List.rev ds)
-                        hd.all_decls_at_level_rev);
+                   all_decls_at_level_rev = (ds ::
+                     (hd.all_decls_at_level_rev));
                    given_decls_rev = (hd.given_decls_rev);
                    to_flush_rev =
                      (FStar_List_Tot_Base.op_At
@@ -405,13 +403,19 @@ let (reset_with_new_using_facts_from :
           pending_flushes_rev = (s_new.pending_flushes_rev);
           using_facts_from
         } in
+      let rec rebuild_one_level all_decls_at_level_rev s_new2 =
+        match all_decls_at_level_rev with
+        | last::[] -> give last s_new2
+        | decls::decls_l ->
+            let uu___ = rebuild_one_level decls_l s_new2 in give decls uu___ in
       let rec rebuild levels s_new2 =
         match levels with
         | last::[] ->
-            give (FStar_Compiler_List.rev last.all_decls_at_level_rev) s_new2
+            FStar_Compiler_List.fold_right give last.all_decls_at_level_rev
+              s_new2
         | level::levels1 ->
             let s_new3 = let uu___ = rebuild levels1 s_new2 in push uu___ in
-            give (FStar_Compiler_List.rev level.all_decls_at_level_rev)
+            FStar_Compiler_List.fold_right give level.all_decls_at_level_rev
               s_new3 in
       rebuild s.levels s_new1
 let (reset :
@@ -435,14 +439,20 @@ let (filter_with_unsat_core :
   =
   fun core ->
     fun s ->
-      let all_decls =
-        FStar_Compiler_List.fold_right
-          (fun level ->
-             fun out ->
-               FStar_List_Tot_Base.op_At out
-                 (FStar_Compiler_List.rev level.all_decls_at_level_rev))
-          s.levels [] in
-      FStar_SMTEncoding_UnsatCore.filter core all_decls
+      let rec all_decls levels =
+        match levels with
+        | last::[] -> last.all_decls_at_level_rev
+        | level::levels1 ->
+            let uu___ =
+              let uu___1 = all_decls levels1 in
+              [FStar_SMTEncoding_Term.Push
+                 (FStar_Compiler_List.length levels1)]
+                :: uu___1 in
+            FStar_List_Tot_Base.op_At level.all_decls_at_level_rev uu___ in
+      let all_decls1 = all_decls s.levels in
+      let all_decls2 =
+        FStar_Compiler_List.flatten (FStar_Compiler_List.rev all_decls1) in
+      FStar_SMTEncoding_UnsatCore.filter core all_decls2
 let (flush :
   solver_state -> (FStar_SMTEncoding_Term.decl Prims.list * solver_state)) =
   fun s ->
