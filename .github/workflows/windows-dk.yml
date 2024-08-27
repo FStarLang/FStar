@@ -3,8 +3,8 @@ name: FStar Windows Package built with Dk
 on:
   push:
     branches:
-      - 'main'
       - 'dkml'
+  pull_request:
   workflow_dispatch:
 
 jobs:
