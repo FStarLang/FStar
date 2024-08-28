@@ -4371,12 +4371,15 @@ let desugar_modul env (m:AST.modul) : env_t & Syntax.modul =
 //External API for modules
 /////////////////////////////////////////////////////////////////////////////////////////
 let with_options (f:unit -> 'a) : 'a =
-    FStar.Options.push();
-    let res = f () in
-    let light = FStar.Options.ml_ish() in
-    FStar.Options.pop();
-    if light then FStar.Options.set_ml_ish();
-    res
+  let light, r =
+    Options.with_saved_options (fun () ->
+      let r = f () in
+      let light = Options.ml_ish () in
+      light, r
+    )
+  in
+  if light then Options.set_ml_ish ();
+  r
 
 let ast_modul_to_modul modul : withenv S.modul =
     fun env ->
