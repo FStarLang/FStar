@@ -31,7 +31,7 @@ MY_FSTAR=$(FSTAR) $(OTHERFLAGS) --warn_error @241 --cache_checked_modules --odir
 # And then, in a separate invocation, from each .checked file we
 # extract an .fs file
 $(OUTPUT_DIRECTORY)/%.fs:
-	$(MY_FSTAR) --already_cached '*' $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
+	$(MY_FSTAR) --already_cached '*,' $(subst .checked,,$(notdir $<)) --codegen $(CODEGEN) --extract_module $(basename $(notdir $(subst .checked,,$<)))
 
 .depend.extract.fsharp:
 	$(call msg, "DEPEND")
