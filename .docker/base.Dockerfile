@@ -18,7 +18,7 @@ RUN apt-get update
 # see the status. Not a big deal to have them here, only installed
 # nightly and the files are shared by all subcontainers due to
 # overlayfs.
-RUN apt-get -y --no-install-recommends install vim emacs
+RUN apt-get -y --no-install-recommends install vim-nox emacs-nox && apt-get clean
 
 # Base dependencies: opam
 # CI dependencies: jq (to identify F* branch)
@@ -40,10 +40,8 @@ RUN apt-get install -y --no-install-recommends \
 # Create a new user and give them sudo rights
 # NOTE: we give them the name "opam" to keep compatibility with
 # derived hierarchical CI
-RUN useradd -d /home/opam opam
-RUN echo 'opam ALL=NOPASSWD: ALL' >> /etc/sudoers
-RUN mkdir /home/opam
-RUN chown opam:opam /home/opam
+RUN useradd -m opam && \
+    echo 'opam ALL=NOPASSWD: ALL' >> /etc/sudoers
 USER opam
 ENV HOME /home/opam
 WORKDIR $HOME
@@ -80,19 +78,19 @@ ENV OPAMYES=1
 # F* dependencies. This is the only place where we read a file from
 # the F* repo.
 ADD fstar.opam $HOME/fstar.opam
-RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean
+RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean && sudo apt-get clean
 
 # Some karamel dependencies
 RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex uucp && opam clean
 
 # Set up $HOME/bin. Note, binaries here take precedence over OPAM
-RUN mkdir $HOME/bin
-RUN echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
+RUN mkdir $HOME/bin && \
+    echo 'export PATH=$HOME/bin:$PATH' | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 
 # Install runlim
-RUN git clone --depth 1 https://github.com/mtzguido/runlim
-RUN (cd runlim && ./configure.sh --prefix=$HOME/bin && make && make install)
-RUN rm -rf runlim
+RUN git clone --depth 1 https://github.com/mtzguido/runlim && \
+    (cd runlim && ./configure.sh --prefix=$HOME/bin && make && make install) && \
+    rm -rf runlim
 
 WORKDIR $HOME
 
