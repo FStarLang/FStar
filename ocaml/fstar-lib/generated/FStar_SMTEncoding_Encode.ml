@@ -3898,7 +3898,7 @@ let (encode_sig_inductive :
                                   let uu___9 =
                                     injective_type_params ||
                                       (let uu___10 =
-                                         FStar_Options.ext_getv
+                                         FStar_Options_Ext.get
                                            "compat:injectivity" in
                                        uu___10 <> "") in
                                   if uu___9
@@ -4322,7 +4322,7 @@ let (encode_datacon :
                               let injective_type_params1 =
                                 injective_type_params ||
                                   (let uu___6 =
-                                     FStar_Options.ext_getv
+                                     FStar_Options_Ext.get
                                        "compat:injectivity" in
                                    uu___6 <> "") in
                               let fields =
@@ -4920,7 +4920,7 @@ let (encode_datacon :
                                                                     =
                                                                     let uu___44
                                                                     =
-                                                                    FStar_Options.ext_getv
+                                                                    FStar_Options_Ext.get
                                                                     "compat:2954" in
                                                                     uu___44
                                                                     <> "" in
@@ -4940,7 +4940,7 @@ let (encode_datacon :
                                                                     =
                                                                     let uu___43
                                                                     =
-                                                                    FStar_Options.ext_getv
+                                                                    FStar_Options_Ext.get
                                                                     "compat:2954" in
                                                                     uu___43
                                                                     <> "" in
@@ -5660,7 +5660,7 @@ let (encode_datacon :
                                                                     =
                                                                     let uu___40
                                                                     =
-                                                                    FStar_Options.ext_getv
+                                                                    FStar_Options_Ext.get
                                                                     "compat:2954" in
                                                                     uu___40
                                                                     <> "" in
@@ -5680,7 +5680,7 @@ let (encode_datacon :
                                                                     =
                                                                     let uu___39
                                                                     =
-                                                                    FStar_Options.ext_getv
+                                                                    FStar_Options_Ext.get
                                                                     "compat:2954" in
                                                                     uu___39
                                                                     <> "" in

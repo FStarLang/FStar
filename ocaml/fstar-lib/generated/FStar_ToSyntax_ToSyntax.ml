@@ -10425,12 +10425,12 @@ let (desugar_modul :
                       (uu___5, modul1)))))
 let with_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
-    FStar_Options.push ();
-    (let res = f () in
-     let light = FStar_Options.ml_ish () in
-     FStar_Options.pop ();
-     if light then FStar_Options.set_ml_ish () else ();
-     res)
+    let uu___ =
+      FStar_Options.with_saved_options
+        (fun uu___1 ->
+           let r = f () in let light = FStar_Options.ml_ish () in (light, r)) in
+    match uu___ with
+    | (light, r) -> (if light then FStar_Options.set_ml_ish () else (); r)
 let (ast_modul_to_modul :
   FStar_Parser_AST.modul ->
     FStar_Syntax_Syntax.modul FStar_Syntax_DsEnv.withenv)

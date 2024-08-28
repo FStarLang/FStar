@@ -15961,7 +15961,7 @@ let (resolve_implicits' :
                                                   Prims.op_Negation uu___8))
                                                 &&
                                                 (let uu___8 =
-                                                   FStar_Options.ext_getv
+                                                   FStar_Options_Ext.get
                                                      "compat:open_metas" in
                                                  uu___8 = "") in
                                             if uu___7

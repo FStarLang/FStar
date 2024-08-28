@@ -6207,9 +6207,7 @@ let (set_options : Prims.string -> unit FStar_Tactics_Monad.tac) =
            (fun g ->
               let g = Obj.magic g in
               FStar_Options.push ();
-              (let uu___3 =
-                 FStar_Compiler_Util.smap_copy g.FStar_Tactics_Types.opts in
-               FStar_Options.set uu___3);
+              FStar_Options.set g.FStar_Tactics_Types.opts;
               (let res = FStar_Options.set_options s in
                let opts' = FStar_Options.peek () in
                FStar_Options.pop ();
@@ -9291,10 +9289,7 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig FStar_Tactics_Monad.tac) =
                   let vcfg =
                     FStar_Options.with_saved_options
                       (fun uu___1 ->
-                         (let uu___3 =
-                            FStar_Compiler_Util.smap_copy
-                              g.FStar_Tactics_Types.opts in
-                          FStar_Options.set uu___3);
+                         FStar_Options.set g.FStar_Tactics_Types.opts;
                          FStar_Options.get_vconfig ()) in
                   Obj.magic (ret vcfg)) uu___1))) uu___
 let (set_vconfig : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
@@ -9307,10 +9302,7 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
             let opts' =
               FStar_Options.with_saved_options
                 (fun uu___ ->
-                   (let uu___2 =
-                      FStar_Compiler_Util.smap_copy
-                        g.FStar_Tactics_Types.opts in
-                    FStar_Options.set uu___2);
+                   FStar_Options.set g.FStar_Tactics_Types.opts;
                    FStar_Options.set_vconfig vcfg;
                    FStar_Options.peek ()) in
             let g' =
