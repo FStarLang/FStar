@@ -55,7 +55,7 @@ let (__proj__Mkpruning_state__item__ambients :
 let (debug : (unit -> unit) -> unit) =
   fun f ->
     let uu___ =
-      let uu___1 = FStar_Options.ext_getv "debug_context_pruning" in
+      let uu___1 = FStar_Options_Ext.get "debug_context_pruning" in
       uu___1 <> "" in
     if uu___ then f () else ()
 let (print_pruning_state : pruning_state -> Prims.string) =

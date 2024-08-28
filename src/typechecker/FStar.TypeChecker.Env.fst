@@ -2021,6 +2021,30 @@ let new_implicit_var_aux reason r env k should_check meta =
 
 (***************************************************)
 
+let uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t =
+  match b.binder_qual with
+  | Some (Meta tau) ->
+    (* Meta qualifier (e.g typeclass constraints) *)
+    Some (Ctx_uvar_meta_tac tau)
+  | _ ->
+    (* NB: it does not have to be marked Implicit to get a
+    Ctx_uvar_meta_attr. In practice most of them are (or
+    the typechecker will not decide to instantiate) but the
+    layered effects checking code will sometimes call this
+    function on regular explicit binders. *)
+    let is_unification_tag (t:term) : option term =
+      let hd, args = U.head_and_args t in
+      let hd = U.un_uinst hd in
+      match (SS.compress hd).n, args with
+      | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]
+        when S.fv_eq_lid fv Const.unification_tag_lid ->
+        Some a
+      | _ -> None
+    in
+    match b.binder_attrs |> List.tryPick is_unification_tag with
+    | Some tag -> Some (Ctx_uvar_meta_attr tag)
+    | None -> None
+
 //
 // Perhaps this should not return a guard,
 //   but only a list of implicits, so that callers don't have to
@@ -2030,19 +2054,15 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta_t =
-      match b.binder_qual, b.binder_attrs with
-      | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac t)
-      | _, t::_ -> Some (Ctx_uvar_meta_attr t)
-      | _ -> None in
+    let ctx_uvar_meta = uvar_meta_for_binder b in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
       (if Options.compat_pre_typed_indexed_effects ()
        then Allow_untyped "indexed effect uvar in compat mode"
        else Strict)
-      ctx_uvar_meta_t in
+      ctx_uvar_meta
+    in
 
     if !dbg_LayeredEffectsEqns
     then List.iter (fun (ctx_uvar, _) ->

@@ -5621,7 +5621,7 @@ let resolve_implicits' env is_tac is_gen (implicits:Env.implicits)
             BU.print1 "Deferring implicit due to open ctx/typ %s\n" (show ctx_u);
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl
         ) else if is_open && not (meta_tac_allowed_for_open_problem tac)
-            && Options.ext_getv "compat:open_metas" = "" then ( // i.e. compat option unset
+            && Options.Ext.get "compat:open_metas" = "" then ( // i.e. compat option unset
           (* If the tactic is not explicitly whitelisted to run with open problems,
           then defer. *)
           until_fixpoint ((hd, Implicit_unresolved)::out, changed, defer_open_metas) tl

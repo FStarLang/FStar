@@ -182,9 +182,9 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     | _ -> None
 
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
-  if not env.enable_defer_to_tac then false
-  else Option.isSome (find_user_tac_for_uvar env u)
-
+  if not env.enable_defer_to_tac
+  then false
+  else Some? (find_user_tac_for_uvar env u)
 
 let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
   Profiling.profile (fun () ->

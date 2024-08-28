@@ -511,6 +511,8 @@ val new_implicit_var_aux : string ->
                            option ctx_uvar_meta_t ->
                            (term & list (ctx_uvar & Range.range) & guard_t)
 
+val uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t
+
 (* layered effect utils *)
 
 (*

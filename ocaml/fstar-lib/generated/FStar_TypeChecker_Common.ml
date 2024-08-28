@@ -636,6 +636,35 @@ let (conj_guard_f : guard_formula -> guard_formula -> guard_formula) =
       | (g, Trivial) -> g
       | (NonTrivial f1, NonTrivial f2) ->
           let uu___ = FStar_Syntax_Util.mk_conj f1 f2 in NonTrivial uu___
+let (binop_guard :
+  (guard_formula -> guard_formula -> guard_formula) ->
+    guard_t -> guard_t -> guard_t)
+  =
+  fun f ->
+    fun g1 ->
+      fun g2 ->
+        let uu___ = f g1.guard_f g2.guard_f in
+        {
+          guard_f = uu___;
+          deferred_to_tac =
+            (FStar_Compiler_List.op_At g1.deferred_to_tac g2.deferred_to_tac);
+          deferred = (FStar_Compiler_List.op_At g1.deferred g2.deferred);
+          univ_ineqs =
+            ((FStar_Compiler_List.op_At
+                (FStar_Pervasives_Native.fst g1.univ_ineqs)
+                (FStar_Pervasives_Native.fst g2.univ_ineqs)),
+              (FStar_Compiler_List.op_At
+                 (FStar_Pervasives_Native.snd g1.univ_ineqs)
+                 (FStar_Pervasives_Native.snd g2.univ_ineqs)));
+          implicits = (FStar_Compiler_List.op_At g1.implicits g2.implicits)
+        }
+let (conj_guard : guard_t -> guard_t -> guard_t) =
+  fun g1 -> fun g2 -> binop_guard conj_guard_f g1 g2
+let (monoid_guard_t : guard_t FStar_Class_Monoid.monoid) =
+  {
+    FStar_Class_Monoid.mzero = trivial_guard;
+    FStar_Class_Monoid.mplus = conj_guard
+  }
 let rec (check_trivial : FStar_Syntax_Syntax.term -> guard_formula) =
   fun t ->
     let uu___ =
@@ -671,30 +700,6 @@ let (imp_guard_f : guard_formula -> guard_formula -> guard_formula) =
       | (g, Trivial) -> Trivial
       | (NonTrivial f1, NonTrivial f2) ->
           let imp = FStar_Syntax_Util.mk_imp f1 f2 in check_trivial imp
-let (binop_guard :
-  (guard_formula -> guard_formula -> guard_formula) ->
-    guard_t -> guard_t -> guard_t)
-  =
-  fun f ->
-    fun g1 ->
-      fun g2 ->
-        let uu___ = f g1.guard_f g2.guard_f in
-        {
-          guard_f = uu___;
-          deferred_to_tac =
-            (FStar_Compiler_List.op_At g1.deferred_to_tac g2.deferred_to_tac);
-          deferred = (FStar_Compiler_List.op_At g1.deferred g2.deferred);
-          univ_ineqs =
-            ((FStar_Compiler_List.op_At
-                (FStar_Pervasives_Native.fst g1.univ_ineqs)
-                (FStar_Pervasives_Native.fst g2.univ_ineqs)),
-              (FStar_Compiler_List.op_At
-                 (FStar_Pervasives_Native.snd g1.univ_ineqs)
-                 (FStar_Pervasives_Native.snd g2.univ_ineqs)));
-          implicits = (FStar_Compiler_List.op_At g1.implicits g2.implicits)
-        }
-let (conj_guard : guard_t -> guard_t -> guard_t) =
-  fun g1 -> fun g2 -> binop_guard conj_guard_f g1 g2
 let (imp_guard : guard_t -> guard_t -> guard_t) =
   fun g1 -> fun g2 -> binop_guard imp_guard_f g1 g2
 let (conj_guards : guard_t Prims.list -> guard_t) =

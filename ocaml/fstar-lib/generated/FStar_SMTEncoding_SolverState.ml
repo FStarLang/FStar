@@ -141,7 +141,7 @@ let (debug : Prims.string -> solver_state -> solver_state -> unit) =
     fun s0 ->
       fun s1 ->
         let uu___ =
-          let uu___1 = FStar_Options.ext_getv "debug_solver_state" in
+          let uu___1 = FStar_Options_Ext.get "debug_solver_state" in
           uu___1 <> "" in
         if uu___
         then
@@ -396,7 +396,7 @@ let (give :
   fun ds ->
     fun s ->
       let uu___ =
-        let uu___1 = FStar_Options.ext_getv "context_pruning" in uu___1 <> "" in
+        let uu___1 = FStar_Options_Ext.get "context_pruning" in uu___1 <> "" in
       if uu___ then give_delay_assumptions ds s else give_now ds s
 let (reset_with_new_using_facts_from :
   using_facts_from_setting FStar_Pervasives_Native.option ->
@@ -614,7 +614,7 @@ let (flush :
       } in
     debug "flush" s s1;
     (let uu___2 =
-       let uu___3 = FStar_Options.ext_getv "debug_solver_state" in
+       let uu___3 = FStar_Options_Ext.get "debug_solver_state" in
        uu___3 <> "" in
      if uu___2
      then

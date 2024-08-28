@@ -7194,6 +7194,44 @@ let (new_implicit_var_aux :
           fun should_check ->
             fun meta ->
               new_tac_implicit_var reason r env1 k should_check [] meta
+let (uvar_meta_for_binder :
+  FStar_Syntax_Syntax.binder ->
+    FStar_Syntax_Syntax.ctx_uvar_meta_t FStar_Pervasives_Native.option)
+  =
+  fun b ->
+    match b.FStar_Syntax_Syntax.binder_qual with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tau) ->
+        FStar_Pervasives_Native.Some
+          (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau)
+    | uu___ ->
+        let is_unification_tag t =
+          let uu___1 = FStar_Syntax_Util.head_and_args t in
+          match uu___1 with
+          | (hd, args) ->
+              let hd1 = FStar_Syntax_Util.un_uinst hd in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Syntax_Subst.compress hd1 in
+                  uu___4.FStar_Syntax_Syntax.n in
+                (uu___3, args) in
+              (match uu___2 with
+               | (FStar_Syntax_Syntax.Tm_fvar fv,
+                  (uu___3, FStar_Pervasives_Native.Some
+                   { FStar_Syntax_Syntax.aqual_implicit = true;
+                     FStar_Syntax_Syntax.aqual_attributes = uu___4;_})::
+                  (a, FStar_Pervasives_Native.None)::[]) when
+                   FStar_Syntax_Syntax.fv_eq_lid fv
+                     FStar_Parser_Const.unification_tag_lid
+                   -> FStar_Pervasives_Native.Some a
+               | uu___3 -> FStar_Pervasives_Native.None) in
+        let uu___1 =
+          FStar_Compiler_List.tryPick is_unification_tag
+            b.FStar_Syntax_Syntax.binder_attrs in
+        (match uu___1 with
+         | FStar_Pervasives_Native.Some tag ->
+             FStar_Pervasives_Native.Some
+               (FStar_Syntax_Syntax.Ctx_uvar_meta_attr tag)
+         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (uvars_for_binders :
   env ->
     FStar_Syntax_Syntax.binders ->
@@ -7216,18 +7254,7 @@ let (uvars_for_binders :
                          let sort =
                            FStar_Syntax_Subst.subst substs1
                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                         let ctx_uvar_meta_t =
-                           match ((b.FStar_Syntax_Syntax.binder_qual),
-                                   (b.FStar_Syntax_Syntax.binder_attrs))
-                           with
-                           | (FStar_Pervasives_Native.Some
-                              (FStar_Syntax_Syntax.Meta t), []) ->
-                               FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Ctx_uvar_meta_tac t)
-                           | (uu___2, t::uu___3) ->
-                               FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Ctx_uvar_meta_attr t)
-                           | uu___2 -> FStar_Pervasives_Native.None in
+                         let ctx_uvar_meta = uvar_meta_for_binder b in
                          let uu___2 =
                            let uu___3 = reason b in
                            let uu___4 =
@@ -7240,7 +7267,7 @@ let (uvars_for_binders :
                                  "indexed effect uvar in compat mode"
                              else FStar_Syntax_Syntax.Strict in
                            new_implicit_var_aux uu___3 r env1 sort uu___4
-                             ctx_uvar_meta_t in
+                             ctx_uvar_meta in
                          (match uu___2 with
                           | (t, l_ctx_uvars, g_t) ->
                               ((let uu___4 =

@@ -1621,7 +1621,7 @@ let join () : tac unit =
 let set_options (s : string) : tac unit = wrap_err "set_options" <| (
     let! g = cur_goal in
     FStar.Options.push ();
-    FStar.Options.set (Util.smap_copy g.opts); // copy the map, they are not purely functional
+    FStar.Options.set g.opts;
     let res = FStar.Options.set_options s in
     let opts' = FStar.Options.peek () in
     FStar.Options.pop ();
@@ -2087,7 +2087,7 @@ let get_vconfig () : tac vconfig =
   * This is an artifact of the options API being stateful in many places,
   * morally this is just (get_vconfig g.opts) *)
   let vcfg = Options.with_saved_options (fun () ->
-               FStar.Options.set (Util.smap_copy g.opts);
+               FStar.Options.set g.opts;
                Options.get_vconfig ())
   in
   return vcfg
@@ -2097,7 +2097,7 @@ let set_vconfig (vcfg : vconfig) : tac unit =
    * let g' = { g with opts = set_vconfig vcfg g.opts } *)
   let! g = cur_goal in
   let opts' = Options.with_saved_options (fun () ->
-                FStar.Options.set (Util.smap_copy g.opts);
+                FStar.Options.set g.opts;
                 Options.set_vconfig vcfg;
                 Options.peek ())
   in
@@ -2140,15 +2140,15 @@ let free_uvars (tm : term) : tac (list Z.t)
 
 let all_ext_options () : tac (list (string & string))
   = return () ;!
-    return (Options.all_ext_options ())
+    return (Options.Ext.all ())
 
 let ext_getv (k:string) : tac string
   = return () ;!
-    return (Options.ext_getv k)
+    return (Options.Ext.get k)
 
 let ext_getns (ns:string) : tac (list (string & string))
   = return () ;!
-    return (Options.ext_getns ns)
+    return (Options.Ext.getns ns)
 
 let alloc (x:'a) : tac (tref 'a) =
   return ();!

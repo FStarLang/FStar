@@ -71,7 +71,7 @@ let solver_state_to_string (s:solver_state) =
     (show <| List.length s.pending_flushes_rev)
 
 let debug (msg:string) (s0 s1:solver_state) =
-  if Options.ext_getv "debug_solver_state" <> ""
+  if Options.Ext.get "debug_solver_state" <> ""
   then (
     BU.print3 "Debug (%s):{\n\t before=%s\n\t after=%s\n}" msg
       (solver_state_to_string s0)
@@ -248,7 +248,7 @@ let give_now (ds:list decl) (s:solver_state)
 
 let give (ds:list decl) (s:solver_state)
 : solver_state
-= if Options.ext_getv "context_pruning" <> ""
+= if Options.Ext.get "context_pruning" <> ""
   then give_delay_assumptions ds s
   else give_now ds s
 
@@ -370,7 +370,7 @@ let flush (s:solver_state)
   in
   let s1 = { s with levels; pending_flushes_rev=[] } in
   debug "flush" s s1;
-  if Options.ext_getv "debug_solver_state" <> ""
+  if Options.Ext.get "debug_solver_state" <> ""
   then BU.print1 "Flushed %s\n" (show <| List.length to_flush);
   let flushed = List.rev s.pending_flushes_rev @ to_flush in
   flushed,

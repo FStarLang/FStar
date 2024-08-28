@@ -600,7 +600,7 @@ let query_info settings z3result =
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
             FStar.Errors.log_issue_doc range (FStar.Errors.Warning_HitReplayFailed, msg))
     end
-    else if Options.ext_getv "profile_context" <> ""
+    else if Options.Ext.get "profile_context" <> ""
     then match z3result.z3result_status with
          | UNSAT core -> process_unsat_core core
          | _ -> ()
@@ -1216,7 +1216,7 @@ let get_cfg env : solver_cfg =
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
-    ; context_pruning  = Options.ext_getv "context_pruning" <> ""
+    ; context_pruning  = Options.Ext.get "context_pruning" <> ""
     }
 
 let save_cfg env =
@@ -1247,10 +1247,10 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
     let msg =  (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    if Options.ext_getv "context_pruning" <> "" 
+    if Options.Ext.get "context_pruning" <> "" 
     then Z3.prune false prefix qry
     else (
-      if Options.ext_getv "context_pruning_sim" <> "" then Z3.prune true prefix qry;
+      if Options.Ext.get "context_pruning_sim" <> "" then Z3.prune true prefix qry;
       Z3.push msg;
       Z3.giveZ3 prefix
     );

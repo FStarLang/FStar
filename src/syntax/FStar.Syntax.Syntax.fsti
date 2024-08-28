@@ -192,7 +192,7 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of term
-  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
+  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@@ defer_to ...] notation *)
 and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
 and uvar_decoration = {

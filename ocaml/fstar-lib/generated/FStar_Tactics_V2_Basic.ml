@@ -7050,9 +7050,7 @@ let (set_options : Prims.string -> unit FStar_Tactics_Monad.tac) =
            (fun g ->
               let g = Obj.magic g in
               FStar_Options.push ();
-              (let uu___3 =
-                 FStar_Compiler_Util.smap_copy g.FStar_Tactics_Types.opts in
-               FStar_Options.set uu___3);
+              FStar_Options.set g.FStar_Tactics_Types.opts;
               (let res = FStar_Options.set_options s in
                let opts' = FStar_Options.peek () in
                FStar_Options.pop ();
@@ -9877,10 +9875,7 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig FStar_Tactics_Monad.tac) =
                   let vcfg =
                     FStar_Options.with_saved_options
                       (fun uu___1 ->
-                         (let uu___3 =
-                            FStar_Compiler_Util.smap_copy
-                              g.FStar_Tactics_Types.opts in
-                          FStar_Options.set uu___3);
+                         FStar_Options.set g.FStar_Tactics_Types.opts;
                          FStar_Options.get_vconfig ()) in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
@@ -9895,10 +9890,7 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
             let opts' =
               FStar_Options.with_saved_options
                 (fun uu___ ->
-                   (let uu___2 =
-                      FStar_Compiler_Util.smap_copy
-                        g.FStar_Tactics_Types.opts in
-                    FStar_Options.set uu___2);
+                   FStar_Options.set g.FStar_Tactics_Types.opts;
                    FStar_Options.set_vconfig vcfg;
                    FStar_Options.peek ()) in
             let g' =
@@ -9989,7 +9981,7 @@ let (all_ext_options :
             (fun uu___2 ->
                (fun uu___2 ->
                   let uu___2 = Obj.magic uu___2 in
-                  let uu___3 = FStar_Options.all_ext_options () in
+                  let uu___3 = FStar_Options_Ext.all () in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___3))) uu___2))) uu___
@@ -10005,7 +9997,7 @@ let (ext_getv : Prims.string -> Prims.string FStar_Tactics_Monad.tac) =
             (fun uu___1 ->
                (fun uu___1 ->
                   let uu___1 = Obj.magic uu___1 in
-                  let uu___2 = FStar_Options.ext_getv k in
+                  let uu___2 = FStar_Options_Ext.get k in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___2))) uu___1))) uu___
@@ -10024,7 +10016,7 @@ let (ext_getns :
             (fun uu___1 ->
                (fun uu___1 ->
                   let uu___1 = Obj.magic uu___1 in
-                  let uu___2 = FStar_Options.ext_getns ns in
+                  let uu___2 = FStar_Options_Ext.getns ns in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___2))) uu___1))) uu___

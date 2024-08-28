@@ -107,6 +107,7 @@ instance val showable_pat       : showable pat
 instance val showable_const     : showable sconst
 instance val showable_letbinding : showable letbinding
 instance val showable_modul      : showable modul
+instance val showable_ctx_uvar_meta : showable ctx_uvar_meta_t
 
 instance val pretty_term        : pretty term
 instance val pretty_univ        : pretty universe

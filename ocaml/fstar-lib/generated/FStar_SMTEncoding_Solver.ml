@@ -982,7 +982,7 @@ let (query_info : query_settings -> FStar_SMTEncoding_Z3.z3result -> unit) =
                                msg1)) errs))
       else
         (let uu___2 =
-           let uu___3 = FStar_Options.ext_getv "profile_context" in
+           let uu___3 = FStar_Options_Ext.get "profile_context" in
            uu___3 <> "" in
          if uu___2
          then
@@ -1987,7 +1987,7 @@ let (get_cfg : FStar_TypeChecker_Env.env -> solver_cfg) =
     let uu___4 = FStar_Options.smtencoding_valid_elim () in
     let uu___5 = FStar_Options.z3_version () in
     let uu___6 =
-      let uu___7 = FStar_Options.ext_getv "context_pruning" in uu___7 <> "" in
+      let uu___7 = FStar_Options_Ext.get "context_pruning" in uu___7 <> "" in
     {
       seed = uu___;
       cliopt = uu___1;
@@ -2049,14 +2049,14 @@ let (encode_and_ask :
                 match uu___3 with
                 | (prefix, labels, qry, suffix) ->
                     ((let uu___5 =
-                        let uu___6 = FStar_Options.ext_getv "context_pruning" in
+                        let uu___6 = FStar_Options_Ext.get "context_pruning" in
                         uu___6 <> "" in
                       if uu___5
                       then FStar_SMTEncoding_Z3.prune false prefix qry
                       else
                         ((let uu___8 =
                             let uu___9 =
-                              FStar_Options.ext_getv "context_pruning_sim" in
+                              FStar_Options_Ext.get "context_pruning_sim" in
                             uu___9 <> "" in
                           if uu___8
                           then FStar_SMTEncoding_Z3.prune true prefix qry

@@ -20,7 +20,7 @@ type pruning_state = {
 }
 
 let debug (f: unit -> unit) : unit =
-  if Options.ext_getv "debug_context_pruning" <> ""
+  if Options.Ext.get "debug_context_pruning" <> ""
   then f()
 
 let print_pruning_state (p:pruning_state)

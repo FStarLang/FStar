@@ -1043,11 +1043,8 @@ let ad_hoc_indexed_bind_substs env
          match (SS.compress t).n with
          | Tm_uvar (u, _ ) ->
            BU.print2 "Generated uvar %s with attribute %s\n"
-             (Print.term_to_string t)
-             (match u.ctx_uvar_meta with
-              | Some (Ctx_uvar_meta_attr a) -> Print.term_to_string a
-              | _ -> "<no attr>")
-         | _ -> failwith ("Impossible, expected a uvar, got : " ^ Print.term_to_string t));
+             (show t) (show u.ctx_uvar_meta)
+         | _ -> failwith ("Impossible, expected a uvar, got : " ^ show t));
 
   let subst = List.map2
     (fun b t -> NT (b.binder_bv, t))
@@ -2849,16 +2846,8 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
   if Debug.high () then
     BU.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
   let (++) = Env.conj_guard in
-  let { binder_bv=x; binder_qual=qual; binder_attrs=attrs } = b in
-  let ctx_uvar_meta =
-      match qual, attrs with
-      | Some (Meta tau), _ ->
-        Some (Ctx_uvar_meta_tac tau)
-      | Some (Implicit _), attr::_ ->
-        Some (Ctx_uvar_meta_attr attr)
-      | _, _ ->
-        None
-  in
+  let { binder_bv=x } = b in
+  let ctx_uvar_meta = uvar_meta_for_binder b in (* meta/attrs computed here *)
   let t = x.sort in
   let varg, _, implicits =
     let msg =

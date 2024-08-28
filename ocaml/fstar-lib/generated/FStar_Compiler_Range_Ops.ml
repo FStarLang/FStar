@@ -73,7 +73,7 @@ let (string_of_file_name : Prims.string -> Prims.string) =
     if uu___
     then
       let uu___1 =
-        let uu___2 = FStar_Options.ext_getv "fstar:no_absolute_paths" in
+        let uu___2 = FStar_Options_Ext.get "fstar:no_absolute_paths" in
         uu___2 = "1" in
       (if uu___1
        then FStar_Compiler_Util.basename f

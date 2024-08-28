@@ -16,7 +16,12 @@
 (* -------------------------------------------------------------------- *)
 module FStar.Extraction.Krml
 
+open FStar.Class.Show
+
 val decl : Type0
+
+instance val showable_decl : showable decl
+
 type program = list decl
 type file = string & program
 
