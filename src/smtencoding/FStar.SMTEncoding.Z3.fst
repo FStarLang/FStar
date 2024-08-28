@@ -399,7 +399,35 @@ let smt_output_sections (log_file:option string) (r:Range.range) (lines:list str
      smt_statistics = statistics;
      smt_labels = labels}
 
-let doZ3Exe (sim_theory:option (list string)) (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
+
+let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_state)
+: 'a
+= let ss = !bg_z3_proc in
+  let res, ctxt = f ss.ctxt in
+  bg_z3_proc := { ss with ctxt };
+  res
+let with_solver_state_unit (f:SolverState.solver_state -> SolverState.solver_state)
+: unit
+= with_solver_state (fun x -> (), f x)
+let reading_solver_state (f:SolverState.solver_state -> 'a) : 'a
+= let ss = !bg_z3_proc in
+  f ss.ctxt
+let push msg = 
+  with_solver_state_unit SolverState.push;
+  with_solver_state_unit (SolverState.give [Caption msg])
+let pop msg =
+  with_solver_state_unit (SolverState.give [Caption msg]);
+  with_solver_state_unit SolverState.pop
+let prune sim roots_to_push qry = 
+  if sim
+  then with_solver_state_unit (SolverState.prune_sim roots_to_push qry)
+  else with_solver_state_unit (SolverState.prune roots_to_push qry)
+let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
+let refresh using_facts_from =
+    (!bg_z3_proc).refresh();
+    with_solver_state_unit (SolverState.reset using_facts_from)
+
+let doZ3Exe (log_file:_) (r:Range.range) (fresh:bool) (input:string) (label_messages:error_labels) (queryid:string) : z3status & z3statistics =
   let parse (z3out:string) =
     let lines = String.split ['\n'] z3out |> List.map BU.trim_string in
     let smt_output = smt_output_sections log_file r lines in
@@ -493,12 +521,16 @@ let doZ3Exe (sim_theory:option (list string)) (log_file:_) (r:Range.range) (fres
       | _ -> "<nofile>"
     in
     let _ = 
-      match sim_theory, res with
+      match reading_solver_state SolverState.would_have_pruned, res with
       | Some names, UNSAT (Some core) -> (
         let whitelist = ["BoxInt"; "BoxBool"; "BoxString"; "BoxReal"; "Tm_unit"; "FString_const"] in
         let missing =
           core |> List.filter (fun name ->
             not (BU.for_some (fun wl -> BU.contains name wl) whitelist) &&
+            not (BU.starts_with name "binder_") &&
+            not (BU.starts_with name "@query") &&
+            not (BU.starts_with name "@MaxFuel") &&
+            not (BU.starts_with name "@MaxIFuel") &&
             not (BU.for_some (fun name' -> name=name') names))
         in
         // BU.print2 "Query %s: Pruned theory would keep %s\n" queryid (String.concat ", " names);
@@ -557,30 +589,6 @@ let z3_options (ver:string) =
     end
   in
   String.concat "\n" opts ^ "\n"
-
-let with_solver_state (f: SolverState.solver_state -> 'a & SolverState.solver_state)
-: 'a
-= let ss = !bg_z3_proc in
-  let res, ctxt = f ss.ctxt in
-  bg_z3_proc := { ss with ctxt };
-  res
-let with_solver_state_unit (f:SolverState.solver_state -> SolverState.solver_state)
-: unit
-= with_solver_state (fun x -> (), f x)
-let reading_solver_state (f:SolverState.solver_state -> 'a) : 'a
-= let ss = !bg_z3_proc in
-  f ss.ctxt
-let push msg = 
-  with_solver_state_unit SolverState.push;
-  with_solver_state_unit (SolverState.give [Caption msg])
-let pop msg =
-  with_solver_state_unit (SolverState.give [Caption msg]);
-  with_solver_state_unit SolverState.pop
-let prune roots = with_solver_state_unit (SolverState.prune roots)
-let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
-let refresh using_facts_from =
-    (!bg_z3_proc).refresh();
-    with_solver_state_unit (SolverState.reset using_facts_from)
  
 let context_profile (theory:list decl) =
     let modules, total_decls =
@@ -687,7 +695,7 @@ let cache_hit
     else
         None
 
-let z3_job sim_theory
+let z3_job
        (log_file:_)
        (r:Range.range)
        fresh
@@ -707,7 +715,7 @@ let z3_job sim_theory
     Profiling.profile
       (fun () ->
         try
-          BU.record_time (fun () -> doZ3Exe sim_theory log_file r fresh input label_messages queryid)
+          BU.record_time (fun () -> doZ3Exe log_file r fresh input label_messages queryid)
         with e ->
           refresh None; //refresh the solver but don't handle the exception; it'll be caught upstream
           raise e
@@ -734,7 +742,7 @@ let ask_text
     let theory = 
       match core with
       | None -> with_solver_state SolverState.flush
-      | Some core -> reading_solver_state (SolverState.filter_with_unsat_core core)
+      | Some core -> reading_solver_state (SolverState.filter_with_unsat_core queryid core)
     in
     let query_tail = Push 0 :: qry@[Pop 0] in
     let theory = theory @ query_tail in
@@ -750,18 +758,20 @@ let ask
     (fresh:bool)
     (core:option U.unsat_core)
 : z3result
-= push "query";
-  giveZ3 qry;
+= 
+  // push "query";
+  // giveZ3 qry;
   let theory = 
     match core with 
     | None -> with_solver_state SolverState.flush
     | Some core ->
       if not fresh
       then failwith "Unexpected: unsat core must only be used with fresh solvers";
-      reading_solver_state (SolverState.filter_with_unsat_core core)
+      reading_solver_state (SolverState.filter_with_unsat_core queryid core)
   in
+  let theory = theory @ (Push 0:: qry@[Pop 0]) in
   let input, qhash, log_file_name = mk_input fresh theory in
-  let just_ask () = z3_job None log_file_name r fresh label_messages input qhash queryid in
+  let just_ask () = z3_job log_file_name r fresh label_messages input qhash queryid in
   let result =
     if fresh then
         match cache_hit log_file_name cache qhash with
@@ -770,5 +780,5 @@ let ask
     else
         just_ask ()
   in
-  pop "query";
+  // pop "query";
   result

@@ -179,10 +179,26 @@ let free_variables t = match !t.freevars with
 open FStar.Class.Setlike
 let free_top_level_names (t:term)
 : RBSet.t string
-= let rec free_top_level_names acc t =
+= let exclude_name n =
+    match n with
+    | "SFuel"
+    | "ZFuel"
+    | "HasType"
+    | "HasTypeZ"
+    | "HasTypeFuel"
+    | "Valid"
+    | "ApplyTT"
+    | "ApplyTF"
+    | "Prims.lex_t" -> true
+    | _ -> false
+  in
+  let rec free_top_level_names acc t =
     match t.tm with
+    | FreeV (FV (nm, _, _)) ->
+      if exclude_name nm then acc else add nm acc
     | App (Var s, args) -> 
-      List.fold_left free_top_level_names (add s acc) args
+      let acc = if exclude_name s then acc else add s acc in
+      List.fold_left free_top_level_names acc args
     | App (_, args) -> List.fold_left free_top_level_names acc args
     | Quant (_, pats, _, _, body) ->
       let acc = List.fold_left (fun acc pats -> List.fold_left free_top_level_names acc pats) acc pats in

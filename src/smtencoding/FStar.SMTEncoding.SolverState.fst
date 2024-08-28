@@ -53,6 +53,7 @@ type solver_state = {
   levels: list decls_at_level;
   pending_flushes_rev: list decl;
   using_facts_from:option using_facts_from_setting;
+  prune_sim:option (list string)
 }
 
 let solver_state_to_string (s:solver_state) =
@@ -86,7 +87,8 @@ let init (_:unit)
 : solver_state
 = { levels = [init_given_decls_at_level];
     pending_flushes_rev = [];
-    using_facts_from = Some (Options.using_facts_from()) }
+    using_facts_from = Some (Options.using_facts_from());
+    prune_sim = None }
 
 let push (s:solver_state)
 : solver_state
@@ -115,7 +117,7 @@ let pop (s:solver_state)
   let s1 =
     if not hd.given_some_decls //nothing has been given yet at this level
     then { s with levels = tl } //so we don't actually have to send a pop
-    else { s with levels = tl; pending_flushes_rev = Pop (List.length s.levels) :: s.pending_flushes_rev }
+    else { s with levels = tl; pending_flushes_rev = Pop (List.length tl) :: s.pending_flushes_rev }
   in
   debug "pop" s s1;
   s1
@@ -210,7 +212,7 @@ let give_delay_assumptions (ds:list decl) (s:solver_state)
   let assumptions, rest = List.partition Assume? decls in
   let hd, tl = peek s in
   let hd = { hd with
-    pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
+    pruning_state = Pruning.add_decls decls hd.pruning_state;
     all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
     named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
     to_flush_rev = rest :: hd.to_flush_rev
@@ -235,7 +237,7 @@ let give_now (ds:list decl) (s:solver_state)
   in
   let hd = { hd with
     given_decl_names = given;
-    pruning_state = Pruning.add_assumptions assumptions hd.pruning_state;
+    pruning_state = Pruning.add_decls decls hd.pruning_state;
     all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
     to_flush_rev = ds_to_flush :: hd.to_flush_rev;
     named_assumptions
@@ -286,36 +288,56 @@ let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
   //   s1
   // )
   // else 
-  reset_with_new_using_facts_from using_facts_from s
+   { reset_with_new_using_facts_from using_facts_from s with
+     prune_sim = s.prune_sim }
 
 let name_of_assumption (d:decl) =
   match d with
   | Assume a -> a.assumption_name
   | _ -> failwith "Expected an assumption"
 
-let prune (roots:list decl) (s:solver_state)
+let prune (roots_to_push:list decl) (qry:decl) (s:solver_state)
 : solver_state
-= s
-  // let hd, tl = peek s in
-  // let to_give = Pruning.prune hd.pruning_state roots in
-  // let decl_name_set, can_give = 
-  //   List.fold_left 
-  //     (fun (decl_name_set, can_give) to_give ->
-  //       let name = name_of_assumption to_give in
-  //       if not (decl_names_contains name decl_name_set)
-  //       then (
-  //         add_name name decl_name_set,
-  //         to_give::can_give
-  //       )
-  //       else decl_name_set, can_give)
-  //     (hd.given_decl_names, [])
-  //     to_give
-  // in
-  // let hd = { hd with given_decl_names = decl_name_set } in
-  // let s = { levels = hd :: tl; to_flush=can_give@s.to_flush } in
-  // s
+= let hd, tl = peek s in
+  let to_give = Pruning.prune hd.pruning_state (qry::roots_to_push) in
+  let decl_name_set, can_give = 
+    List.fold_left 
+      (fun (decl_name_set, can_give) to_give ->
+        let name = name_of_assumption to_give in
+        if not (decl_names_contains name decl_name_set)
+        then (
+          add_name name decl_name_set,
+          to_give::can_give
+        )
+        else decl_name_set, can_give)
+      (hd.given_decl_names, [])
+      to_give
+  in
+  let hd = { hd with given_decl_names = decl_name_set;
+                     to_flush_rev = can_give::hd.to_flush_rev } in
+  let s = { s with levels = hd :: tl } in
+  give_now roots_to_push (push s)
 
-let filter_with_unsat_core (core:U.unsat_core) (s:solver_state) 
+let prune_sim (roots_to_push:list decl) (qry:decl) (s:solver_state)
+: solver_state
+= let hd, tl = peek s in
+  let to_give = Pruning.prune hd.pruning_state (qry::roots_to_push) in
+  { s with prune_sim=Some <| List.map name_of_assumption (List.filter Assume? roots_to_push@to_give) }
+
+let report_prune_sim qid (core:U.unsat_core) (prune_sim:list string)
+= let missing =
+  core |> List.filter (fun x -> 
+  not (BU.starts_with x "binder_") &&
+  not (BU.starts_with x "@query") &&
+  not (BU.starts_with x "@MaxFuel") &&
+  not (BU.starts_with x "@MaxIFuel") &&
+  not (List.contains x prune_sim)) in
+  if missing <> []
+  then BU.print2 "Missing from prune (%s): %s\n" qid (show missing)
+
+let would_have_pruned (s:solver_state) = s.prune_sim
+
+let filter_with_unsat_core queryid (core:U.unsat_core) (s:solver_state) 
 : list decl
 = let rec all_decls levels = 
     match levels with

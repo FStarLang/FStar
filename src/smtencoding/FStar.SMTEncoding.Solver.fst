@@ -745,7 +745,7 @@ let make_solver_configs
     (is_retry : bool)
     (env : env_t)
     (all_labels : error_labels)
-    (prefix : list decl)
+    // (prefix : list decl)
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
@@ -1055,7 +1055,7 @@ let ask_solver_recover
 
 let failing_query_ctr : ref int = BU.mk_ref 0
 
-let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
+let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
   if Options.log_failing_queries () then (
     let mod = show (Env.current_module env.tcenv) in
@@ -1087,7 +1087,7 @@ let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) 
 
 let ask_solver
     (env : FStar.SMTEncoding.Env.env_t)
-    (prefix : list decl)
+    // (prefix : list decl)
     (configs: list query_settings)
     (next_hint : option hint)
  : list query_settings & answer
@@ -1116,11 +1116,11 @@ let ask_solver
         // Feed the context of the query to the solver. We do this only
         // once for every VC. Every actual query will push and pop
         // whatever else they encode.
-        Z3.giveZ3 prefix;
+        // Z3.giveZ3 prefix;
         let ans = ask_solver_recover configs in
         let cfg = List.last configs in
         if not ans.ok then
-          maybe_save_failing_query env prefix cfg;
+          maybe_save_failing_query env cfg;
         ans
 
       )
@@ -1247,8 +1247,13 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
     let msg =  (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    Z3.push msg;
-    if Options.ext_getv "context_pruning" <> "" then Z3.prune (qry::prefix@suffix);
+    if Options.ext_getv "context_pruning" <> "" 
+    then Z3.prune false prefix qry
+    else (
+      if Options.ext_getv "context_pruning_sim" <> "" then Z3.prune true prefix qry;
+      Z3.push msg;
+      Z3.giveZ3 prefix
+    );
     let pop () = 
       let msg = (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
       Encode.pop_encoding_state msg;
@@ -1277,9 +1282,9 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
         );
         let env = FStar.SMTEncoding.Encode.get_current_env tcenv in
         let configs, next_hint =
-          make_solver_configs can_split is_retry env labels prefix qry q suffix
+          make_solver_configs can_split is_retry env labels qry q suffix
         in
-        ask_solver env prefix configs next_hint
+        ask_solver env configs next_hint
 
       | _ -> failwith "Impossible"
     )

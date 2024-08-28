@@ -612,33 +612,77 @@ let (free_variables : term -> fvs) =
          fvs1)
 let (free_top_level_names : term -> Prims.string FStar_Compiler_RBSet.t) =
   fun t ->
-    let rec free_top_level_names1 acc t1 =
-      match t1.tm with
-      | App (Var s, args) ->
-          let uu___ =
-            Obj.magic
-              (FStar_Class_Setlike.add ()
-                 (Obj.magic
-                    (FStar_Compiler_RBSet.setlike_rbset
-                       FStar_Class_Ord.ord_string)) s (Obj.magic acc)) in
-          FStar_Compiler_List.fold_left free_top_level_names1 uu___ args
-      | App (uu___, args) ->
-          FStar_Compiler_List.fold_left free_top_level_names1 acc args
-      | Quant (uu___, pats, uu___1, uu___2, body) ->
-          let acc1 =
-            FStar_Compiler_List.fold_left
-              (fun acc2 ->
-                 fun pats1 ->
-                   FStar_Compiler_List.fold_left free_top_level_names1 acc2
-                     pats1) acc pats in
-          free_top_level_names1 acc1 body
-      | Let (tms, t2) ->
-          let acc1 =
-            FStar_Compiler_List.fold_left free_top_level_names1 acc tms in
-          free_top_level_names1 acc1 t2
-      | Labeled (t2, uu___, uu___1) -> free_top_level_names1 acc t2
-      | LblPos (t2, uu___) -> free_top_level_names1 acc t2
-      | uu___ -> acc in
+    let exclude_name n =
+      match n with
+      | "SFuel" -> true
+      | "ZFuel" -> true
+      | "HasType" -> true
+      | "HasTypeZ" -> true
+      | "HasTypeFuel" -> true
+      | "Valid" -> true
+      | "ApplyTT" -> true
+      | "ApplyTF" -> true
+      | "Prims.lex_t" -> true
+      | uu___ -> false in
+    let rec free_top_level_names1 uu___1 uu___ =
+      (fun acc ->
+         fun t1 ->
+           match t1.tm with
+           | FreeV (FV (nm, uu___, uu___1)) ->
+               Obj.magic
+                 (Obj.repr
+                    (if exclude_name nm
+                     then Obj.repr acc
+                     else
+                       Obj.repr
+                         (FStar_Class_Setlike.add ()
+                            (Obj.magic
+                               (FStar_Compiler_RBSet.setlike_rbset
+                                  FStar_Class_Ord.ord_string)) nm
+                            (Obj.magic acc))))
+           | App (Var s, args) ->
+               Obj.magic
+                 (Obj.repr
+                    (let acc1 =
+                       if exclude_name s
+                       then Obj.magic (Obj.repr acc)
+                       else
+                         Obj.magic
+                           (Obj.repr
+                              (FStar_Class_Setlike.add ()
+                                 (Obj.magic
+                                    (FStar_Compiler_RBSet.setlike_rbset
+                                       FStar_Class_Ord.ord_string)) s
+                                 (Obj.magic acc))) in
+                     FStar_Compiler_List.fold_left free_top_level_names1 acc1
+                       args))
+           | App (uu___, args) ->
+               Obj.magic
+                 (Obj.repr
+                    (FStar_Compiler_List.fold_left free_top_level_names1 acc
+                       args))
+           | Quant (uu___, pats, uu___1, uu___2, body) ->
+               Obj.magic
+                 (Obj.repr
+                    (let acc1 =
+                       FStar_Compiler_List.fold_left
+                         (fun acc2 ->
+                            fun pats1 ->
+                              FStar_Compiler_List.fold_left
+                                free_top_level_names1 acc2 pats1) acc pats in
+                     free_top_level_names1 acc1 body))
+           | Let (tms, t2) ->
+               Obj.magic
+                 (Obj.repr
+                    (let acc1 =
+                       FStar_Compiler_List.fold_left free_top_level_names1
+                         acc tms in
+                     free_top_level_names1 acc1 t2))
+           | Labeled (t2, uu___, uu___1) ->
+               Obj.magic (Obj.repr (free_top_level_names1 acc t2))
+           | LblPos (t2, uu___) ->
+               Obj.magic (Obj.repr (free_top_level_names1 acc t2))
+           | uu___ -> Obj.magic (Obj.repr acc)) uu___1 uu___ in
     let uu___ =
       Obj.magic
         (FStar_Class_Setlike.empty ()
