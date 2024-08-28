@@ -29,6 +29,7 @@ val solver_state : Type0
 val init (_:unit) : solver_state
 val push (s:solver_state) : solver_state
 val pop (s:solver_state) : solver_state
+val depth (s:solver_state) : int
 val reset (_:option using_facts_from_setting) (s:solver_state) : solver_state
 val give (ds:list decl) (s:solver_state) : solver_state
 val prune (roots:list decl) (qry:decl) (s:solver_state) : solver_state

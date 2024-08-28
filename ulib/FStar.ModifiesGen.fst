@@ -15,7 +15,7 @@
 *)
 module FStar.ModifiesGen
 
-#set-options "--split_queries no"
+#set-options "--split_queries no --ext 'context_pruning='"
 #set-options "--using_facts_from '*,-FStar.Tactics,-FStar.Reflection,-FStar.List'"
 
 module HS = FStar.HyperStack

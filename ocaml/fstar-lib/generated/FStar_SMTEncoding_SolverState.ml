@@ -102,6 +102,8 @@ let (__proj__Mksolver_state__item__prune_sim :
     match projectee with
     | { levels; pending_flushes_rev; using_facts_from; prune_sim;_} ->
         prune_sim
+let (depth : solver_state -> Prims.int) =
+  fun s -> FStar_Compiler_List.length s.levels
 let (solver_state_to_string : solver_state -> Prims.string) =
   fun s ->
     let levels =
@@ -478,13 +480,16 @@ let (prune :
                 ((hd.given_decl_names), []) to_give in
             (match uu___1 with
              | (decl_name_set1, can_give) ->
+                 let can_give1 =
+                   filter_using_facts_from s.using_facts_from
+                     hd.named_assumptions s can_give in
                  let hd1 =
                    {
                      pruning_state = (hd.pruning_state);
                      given_decl_names = decl_name_set1;
                      all_decls_at_level_rev = (hd.all_decls_at_level_rev);
                      given_some_decls = (hd.given_some_decls);
-                     to_flush_rev = (can_give :: (hd.to_flush_rev));
+                     to_flush_rev = (can_give1 :: (hd.to_flush_rev));
                      named_assumptions = (hd.named_assumptions)
                    } in
                  let s1 =

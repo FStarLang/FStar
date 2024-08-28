@@ -2383,20 +2383,31 @@ let (solve_sync_bool :
   =
   fun use_env_msg ->
     fun tcenv -> fun q -> let ans = solve_sync use_env_msg tcenv q in ans.ok
-let (snapshot :
-  Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
+let (snapshot : Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit))
+  =
   fun msg ->
-    let v = FStar_SMTEncoding_Encode.snapshot_encoding msg in
-    FStar_SMTEncoding_Z3.push msg; v
+    let uu___ = FStar_SMTEncoding_Encode.snapshot_encoding msg in
+    match uu___ with
+    | (v0, v1) ->
+        let v2 = FStar_SMTEncoding_Z3.snapshot msg in ((v0, v1, v2), ())
 let (rollback :
   Prims.string ->
-    FStar_TypeChecker_Env.solver_depth_t FStar_Pervasives_Native.option ->
+    (Prims.int * Prims.int * Prims.int) FStar_Pervasives_Native.option ->
       unit)
   =
   fun msg ->
     fun tok ->
-      FStar_SMTEncoding_Encode.rollback_encoding msg tok;
-      FStar_SMTEncoding_Z3.pop msg
+      let uu___ =
+        match tok with
+        | FStar_Pervasives_Native.None ->
+            (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None)
+        | FStar_Pervasives_Native.Some (v0, v1, v2) ->
+            ((FStar_Pervasives_Native.Some (v0, v1)),
+              (FStar_Pervasives_Native.Some v2)) in
+      match uu___ with
+      | (tok01, tok2) ->
+          (FStar_SMTEncoding_Encode.rollback_encoding msg tok01;
+           FStar_SMTEncoding_Z3.rollback msg tok2)
 let (solver : FStar_TypeChecker_Env.solver_t) =
   {
     FStar_TypeChecker_Env.init =

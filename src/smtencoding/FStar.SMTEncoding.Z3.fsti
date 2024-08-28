@@ -73,5 +73,7 @@ val ask: r:Range.range
 val refresh: option SolverState.using_facts_from_setting -> unit
 val push : msg:string -> unit
 val pop : msg:string -> unit
+val snapshot : string -> int
+val rollback : string -> option int -> unit
 val prune (sim:bool) (prefix_to_push:list decl) (query:decl) : unit
 val query_logging : query_log

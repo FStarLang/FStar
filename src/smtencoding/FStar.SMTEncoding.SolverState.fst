@@ -56,6 +56,8 @@ type solver_state = {
   prune_sim:option (list string)
 }
 
+let depth (s:solver_state) = List.length s.levels
+
 let solver_state_to_string (s:solver_state) =
   let levels =
     List.map 
@@ -313,6 +315,7 @@ let prune (roots_to_push:list decl) (qry:decl) (s:solver_state)
       (hd.given_decl_names, [])
       to_give
   in
+  let can_give = filter_using_facts_from s.using_facts_from hd.named_assumptions s can_give in
   let hd = { hd with given_decl_names = decl_name_set;
                      to_flush_rev = can_give::hd.to_flush_rev } in
   let s = { s with levels = hd :: tl } in

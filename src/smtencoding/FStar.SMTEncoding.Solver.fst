@@ -1443,12 +1443,17 @@ let solve_sync_bool use_env_msg tcenv q : bool =
 (**********************************************************************************************)
 
 let snapshot msg =
-  let v = Encode.snapshot_encoding msg in
-  Z3.push msg;
-  v
+  let v0, v1 = Encode.snapshot_encoding msg in
+  let v2 = Z3.snapshot msg in
+  (v0, v1, v2), ()
 let rollback msg tok =
-  Encode.rollback_encoding msg tok;
-  Z3.pop msg
+  let tok01, tok2 =
+    match tok with
+    | None -> None, None
+    | Some (v0, v1, v2) -> Some (v0, v1), Some v2
+  in
+  Encode.rollback_encoding msg tok01;
+  Z3.rollback msg tok2
 
 let solver = {
     init=(fun e -> save_cfg e; Encode.init e);

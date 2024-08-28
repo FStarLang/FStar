@@ -742,6 +742,21 @@ let (pop : Prims.string -> unit) =
       (FStar_SMTEncoding_SolverState.give
          [FStar_SMTEncoding_Term.Caption msg]);
     with_solver_state_unit FStar_SMTEncoding_SolverState.pop
+let (snapshot : Prims.string -> Prims.int) =
+  fun msg ->
+    let d = reading_solver_state FStar_SMTEncoding_SolverState.depth in
+    push msg; d
+let (rollback :
+  Prims.string -> Prims.int FStar_Pervasives_Native.option -> unit) =
+  fun msg ->
+    fun depth ->
+      let rec rollback_aux msg1 depth1 =
+        let d = reading_solver_state FStar_SMTEncoding_SolverState.depth in
+        match depth1 with
+        | FStar_Pervasives_Native.None -> pop msg1
+        | FStar_Pervasives_Native.Some n ->
+            if d = n then () else (pop msg1; rollback_aux msg1 depth1) in
+      rollback_aux msg depth
 let (prune :
   Prims.bool ->
     FStar_SMTEncoding_Term.decl Prims.list ->

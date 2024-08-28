@@ -19,11 +19,11 @@ open FStar.SMTEncoding.Term
 module ErrorReporting = FStar.SMTEncoding.ErrorReporting
 module S = FStar.Syntax.Syntax
 module Env = FStar.TypeChecker.Env
-
+type encoding_depth = int & int
 val push_encoding_state: string -> unit
 val pop_encoding_state:  string -> unit
-val snapshot_encoding: string -> (Env.solver_depth_t & unit)
-val rollback_encoding: string -> option Env.solver_depth_t -> unit
+val snapshot_encoding: string -> encoding_depth
+val rollback_encoding: string -> option encoding_depth -> unit
 val init: Env.env -> unit
 val get_current_env: Env.env -> FStar.SMTEncoding.Env.env_t
 val encode_sig: Env.env -> S.sigelt -> unit

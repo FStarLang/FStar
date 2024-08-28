@@ -1,4 +1,5 @@
 open Prims
+type encoding_depth = (Prims.int * Prims.int)
 let (dbg_SMTEncoding : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "SMTEncoding"
 let (dbg_SMTQuery : Prims.bool FStar_Compiler_Effect.ref) =
@@ -7169,8 +7170,7 @@ let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     init_env tcenv;
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
-let (snapshot_encoding :
-  Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
+let (snapshot_encoding : Prims.string -> encoding_depth) =
   fun msg ->
     FStar_Compiler_Util.atomically
       (fun uu___ ->
@@ -7180,28 +7180,22 @@ let (snapshot_encoding :
              let uu___2 =
                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.snapshot () in
              (match uu___2 with
-              | (varops_depth, ()) ->
-                  ((env_depth, varops_depth, Prims.int_zero), ())))
+              | (varops_depth, ()) -> (env_depth, varops_depth)))
 let (rollback_encoding :
-  Prims.string ->
-    FStar_TypeChecker_Env.solver_depth_t FStar_Pervasives_Native.option ->
-      unit)
-  =
+  Prims.string -> encoding_depth FStar_Pervasives_Native.option -> unit) =
   fun msg ->
     fun depth ->
       FStar_Compiler_Util.atomically
         (fun uu___ ->
            let uu___1 =
              match depth with
-             | FStar_Pervasives_Native.Some (s1, s2, s3) ->
+             | FStar_Pervasives_Native.Some (s1, s2) ->
                  ((FStar_Pervasives_Native.Some s1),
-                   (FStar_Pervasives_Native.Some s2),
-                   (FStar_Pervasives_Native.Some s3))
+                   (FStar_Pervasives_Native.Some s2))
              | FStar_Pervasives_Native.None ->
-                 (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None,
-                   FStar_Pervasives_Native.None) in
+                 (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) in
            match uu___1 with
-           | (env_depth, varops_depth, z3_depth) ->
+           | (env_depth, varops_depth) ->
                (rollback_env env_depth;
                 FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.rollback
                   varops_depth))

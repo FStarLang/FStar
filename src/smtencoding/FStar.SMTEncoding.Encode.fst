@@ -1845,18 +1845,15 @@ let init tcenv =
 let snapshot_encoding msg = BU.atomically (fun () ->
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
-    // let () = Z3.push msg in
-    (env_depth, varops_depth, 0), ())
-let rollback_encoding msg (depth:option (int & int & int)) = BU.atomically (fun () ->
-    let env_depth, varops_depth, z3_depth = match depth with
-        | Some (s1, s2, s3) -> Some s1, Some s2, Some s3
-        | None -> None, None, None in
+    (env_depth, varops_depth))
+let rollback_encoding msg (depth:option encoding_depth) = BU.atomically (fun () ->
+    let env_depth, varops_depth = match depth with
+        | Some (s1, s2) -> Some s1, Some s2
+        | None -> None, None in
     rollback_env env_depth;
     varops.rollback varops_depth)
-    // ;
-    // Z3.pop msg)
-let push_encoding_state msg = snd (snapshot_encoding msg)
-let pop_encoding_state msg = ignore (rollback_encoding msg None)
+let push_encoding_state msg = let _ = snapshot_encoding msg in ()
+let pop_encoding_state msg = rollback_encoding msg None
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers

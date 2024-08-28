@@ -418,6 +418,30 @@ let push msg =
 let pop msg =
   with_solver_state_unit (SolverState.give [Caption msg]);
   with_solver_state_unit SolverState.pop
+let snapshot msg =
+  let d = reading_solver_state SolverState.depth in
+  push msg;
+  // let d' = reading_solver_state SolverState.depth in
+  // BU.print2 "Snapshot moving from %s to %s\n" (show d) (show d');
+  d
+let rollback msg depth = 
+  let rec rollback_aux msg depth =
+    let d = reading_solver_state SolverState.depth in
+    match depth with
+    | None -> pop msg
+    | Some n ->
+      if d = n then () else (
+        pop msg;
+        rollback_aux msg depth
+      )
+  in
+  // let init = reading_solver_state SolverState.depth in
+  rollback_aux msg depth
+  // let final = reading_solver_state SolverState.depth in
+  // BU.print3 "Rollback(%s) from %s to %s\n" 
+  //   (show depth)
+  //   (show init)
+  //   (show final)
 let prune sim roots_to_push qry = 
   if sim
   then with_solver_state_unit (SolverState.prune_sim roots_to_push qry)
