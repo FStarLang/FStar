@@ -3,7 +3,7 @@ name: FStar Windows Package built with Dk
 on:
   push:
     branches:
-      - 'dkml'
+      - 'dkml*'
   pull_request:
   workflow_dispatch:
 
@@ -14,10 +14,20 @@ jobs:
     # runs-on: [self-hosted, Windows, X64]
     runs-on: windows-2022
 
-    # Use POSIX shell as default.
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      TRIPLET: x64-windows
+      OPAMYES: 1
+
+      # Settings for MSYS2
+      CHERE_INVOKING: yes
+      MSYSTEM: CLANG64
+      MSYS2_ARG_CONV_EXCL: '*'
+
+    # Use bash shell as default.
     defaults:
       run:
-        shell: ${{ github.workspace }}\msys64\usr\bin\env.exe MSYS2_ARG_CONV_EXCL=\* MSYSTEM=CLANG64 CHERE_INVOKING=yes OPAMYES=1 TRIPLET=x64-windows DOTNET_CLI_TELEMETRY_OPTOUT=1 ${{ github.workspace }}\msys64\usr\bin\sh.exe -e {0}
+        shell: ${{ github.workspace }}\msys64\usr\bin\bash.exe --login --noprofile --norc -eo pipefail {0}
 
     steps:
     - name: Check out repo
@@ -49,45 +59,86 @@ jobs:
           z3_installed
         key: ${{ steps.cache-vcpkg-z3.outputs.cache-primary-key }}
 
+    - name: Cache MSYS2
+      uses: actions/cache@v4
+      id: cache-msys2
+      with:
+        path: msys64
+        key: msys2-${{ runner.os }}
+
+    - name: Get DkML cache key
+      # Because GitHub public runners have indeterminate MSVC versions (ex. 14.41.34120 or 14.40.33807), or
+      # more accurately multiple runner versions (ex. 20240825.1.0) can be active in the GitHub runner fleet,
+      # we have to cache OCaml specific to the MSVC version. For example, one on runner the libraries
+      # can be in C:\VS\VC\Tools\MSVC\14.40.33807\lib\x64 while another is at
+      # C:\VS\VC\Tools\MSVC\14.40.34120\lib\x64.
+      #
+      # Hardcoded MSVC versions are in:
+      # 1. The values in .ci/sd4/msvcenv (from setup-dkml) are specific to the MSVC minor version.
+      # 2. Worse, OCaml is not relocatable, so ocamlopt.exe is specific to the MSVC minor version.
+      #
+      # Artifacts:
+      # - msys64/ (cached in prior step)
+      # - .ci/sd4/ (.ci/sd4/msvcenv is used as a cache key 1-to-1 with MSVC version)
+      shell: powershell -command ". '{0}'"
+      run: |
+        .github/setup-dkml.cmd -SKIP_OPAM_MODIFICATIONS true
+        Get-Content .ci\sd4\msvcenv
+
     - name: Restore DkML distribution from cache
       uses: actions/cache/restore@v4
-      id: cache-dkml-dist-2
+      id: cache-dkml
       with:
         path: |
           .ci/o
           .ci/sd4
-          msys64
-        key: dkml-dist-2-${{ runner.os }}
+        key: dkml-1-${{ runner.os }}-${{ hashFiles('.ci/sd4/msvcenv') }}
 
     - name: Setup DkML distribution
-      if: steps.cache-dkml-dist-2.outputs.cache-hit != 'true'
+      if: steps.cache-dkml.outputs.cache-hit != 'true'
       shell: powershell -command ". '{0}'"
-      run: |
-        .github/setup-dkml.cmd
+      run: .github/setup-dkml.cmd
 
     - name: Cache DkML distribution
       uses: actions/cache/save@v4
       # always save cache, even on failures
-      if: steps.cache-dkml-dist-2.outputs.cache-hit != 'true'
+      if: steps.cache-dkml.outputs.cache-hit != 'true'
       with:
         path: |
           .ci/o
           .ci/sd4
-          msys64
-        key: ${{ steps.cache-dkml-dist-2.outputs.cache-primary-key }}
+        key: ${{ steps.cache-dkml.outputs.cache-primary-key }}
+
+    - name: Restore .NET
+      uses: actions/cache/restore@v4
+      id: cache-dotnet
+      with:
+        path: dotnet
+        key: dotnet-${{ runner.os }}
 
     - name: Setup .NET
+      if: steps.cache-dotnet.outputs.cache-hit != 'true'
       shell: powershell -command ". '{0}'"
       run: .github/setup-dotnet.cmd
+
+    - name: Cache .NET
+      uses: actions/cache/save@v4
+      # always save cache, even on failures
+      if: steps.cache-dotnet.outputs.cache-hit != 'true'
+      with:
+        path: dotnet
+        key: ${{ steps.cache-dotnet.outputs.cache-primary-key }}
 
     - name: Build a package
       # Test in PowerShell with:
       #   $env:CHERE_INVOKING = "yes"; $env:MSYSTEM = "CLANG64"; msys64\usr\bin\dash.exe -lc 'export OPAMYES=1 TRIPLET=x64-windows MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL=\*; export VCPKG_INSTALLED=$(cygpath -am vcpkg_installed/$TRIPLET); export FSTAR_HOME="$PWD/src/ocaml-output/fstar"; PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"; opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action && opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg/opam && env "PKG_CONFIG_PATH=$VCPKG_INSTALLED/lib/pkgconfig" opamrun install dune sedlex memtrace ppx_deriving ppx_deriving_yojson menhir process pprint stdint zarith batteries && opamrun exec -- make package DOTNET=$(cygpath -am dotnet/dotnet.exe)'
       run: |
-          env
           export VCPKG_INSTALLED=$(cygpath -am "vcpkg_installed/$TRIPLET")
           export FSTAR_HOME=$PWD/src/ocaml-output/fstar
           PATH="$PWD/.ci/sd4/opamrun:$PWD/vcpkg_installed/$TRIPLET/bin:$PWD/z3_installed/bin:$PATH"
+          opamrun exec -- sh -c 'echo $PATH'
+          opamrun exec -- sh -c 'echo $VCToolsRedistDir'
+          opamrun exec -- sh -c 'command -v cl'
           opamrun pin process git+https://github.com/tahina-pro/ocaml-process.git#taramana_dune --no-action
           opamrun install ./ocaml/repo/packages/conf-gmp/conf-gmp.4+vcpkg
 

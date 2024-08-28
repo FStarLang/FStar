@@ -23,11 +23,11 @@ SET "INTERNAL_POWERSHELLEXE=%%F"
 )
 "%INTERNAL_POWERSHELLEXE%" -NoLogo -Help >NUL 2>NUL
 if %ERRORLEVEL% neq 0 (
-	echo.
-	echo.Neither 'pwsh.exe' nor 'powershell.exe' were found. Make sure you have
-	echo.PowerShell installed.
-	echo.
-	exit /b 1
+    echo.
+    echo.Neither 'pwsh.exe' nor 'powershell.exe' were found. Make sure you have
+    echo.PowerShell installed.
+    echo.
+    exit /b 1
 )
 
 REM Install DkML compiler including MSYS2
@@ -43,13 +43,14 @@ if NOT EXIST dkml-workflows (
     rmdir dkml-workflows-2.1.2
 )
 IF NOT EXIST .ci\o\dkml\bin\ocamlc.exe (
-    "%INTERNAL_POWERSHELLEXE%" -NoProfile -ExecutionPolicy Bypass -Command "& dkml-workflows\test\pc\setup-dkml-windows_x86_64.ps1; exit $LASTEXITCODE"
+    "%INTERNAL_POWERSHELLEXE%" -NoProfile -ExecutionPolicy Bypass -Command "& dkml-workflows\test\pc\setup-dkml-windows_x86_64.ps1 %*; exit $LASTEXITCODE"
 )
-IF NOT EXIST .ci\o\dkml\bin\ocamlc.exe (
-	echo.
-	echo.Failed to build OCaml compiler from DkML distribution.
-	echo.
-	exit /b 1
+if %ERRORLEVEL% neq 0 (
+    echo.
+    echo.Failed to build OCaml compiler from DkML distribution.
+    echo.Exit code: %ERRORLEVEL%
+    echo.
+    exit /b 1
 )
 
 REM Install MSYS2's zip.exe so `make package` works
