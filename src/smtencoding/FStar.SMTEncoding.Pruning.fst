@@ -94,42 +94,56 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     in
     List.fold_left (List.fold_left (add_trigger_to_assumption a)) p triggers
   in
-  match a.assumption_term.tm with
-  | App (Var "Valid", 
-        [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
-  | App (Var "Valid", 
-        [{tm=App (Var "ApplyTT", [{tm=App(Var "__uu__PartialApp", _)}; term])}]) ->
-    let triggers =
-      match term.tm with
-      | FreeV(FV(token, _, _))
-      | App(Var token, []) ->
-        if BU.ends_with token "@tok"
-        then [[token]; [BU.substring token 0 (String.length token - 4)]]
-        else [[token]]
-      | _ -> 
-        []
-    in
-    aux triggers
-  | App (Var "Valid", [term])
-  | App (Var "HasType", [term; _])
-  | App (Var "IsTotFun", [term])
-  | App (Var "is-Tm_arrow", [term]) ->
-    aux [elems (Term.free_top_level_names term)]
-  | App (Eq, [ _; {tm=App (Var "Term_constr_id", [term])}]) ->
-    aux [elems (Term.free_top_level_names term)]
-  | App (And, tms) ->
-  // | App (And, ({tm=App (Var "IsTotFun", [term])}::tms)) ->
-  //   let t0 = elems (Term.free_top_level_names term) in
-    let t1 = List.collect triggers_of_term tms in
-    aux t1
-  | App (Iff, [t0; t1])
-  | App (Eq, [t0; t1]) ->
-    let t0 = elems (Term.free_top_level_names t0) in
-    let t1 = elems (Term.free_top_level_names t1) in
-    aux [t0; t1]
-  | App (TrueOp, _) -> p
-  | _ ->
-    { p with ambients = a.assumption_name::p.ambients }
+  begin
+    match a.assumption_term.tm with
+    | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
+      let triggers_lhs = elems (Term.free_top_level_names t0) in
+      aux [triggers_lhs]
+    )
+    | App (Var "Valid", 
+          [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
+    | App (Var "Valid", 
+          [{tm=App (Var "ApplyTT", [{tm=App(Var "__uu__PartialApp", _)}; term])}]) ->
+      let triggers =
+        match term.tm with
+        | FreeV(FV(token, _, _))
+        | App(Var token, []) ->
+          if BU.ends_with token "@tok"
+          then [[token]; [BU.substring token 0 (String.length token - 4)]]
+          else [[token]]
+        | _ -> 
+          []
+      in
+      aux triggers
+    | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+      match ty.tm with
+      | App (Var "Prims.squash", [ty]) ->
+        let triggers = List.map (fun t -> elems (Term.free_top_level_names t))  [term;ty] in
+        aux triggers
+      | _ ->
+        aux [elems (Term.free_top_level_names term)]
+    )
+    | App (Var "Valid", [term])
+    | App (Var "HasType", [term; _])
+    | App (Var "IsTotFun", [term])
+    | App (Var "is-Tm_arrow", [term]) ->
+      aux [elems (Term.free_top_level_names term)]
+    | App (Eq, [ _; {tm=App (Var "Term_constr_id", [term])}]) ->
+      aux [elems (Term.free_top_level_names term)]
+    | App (And, tms) ->
+    // | App (And, ({tm=App (Var "IsTotFun", [term])}::tms)) ->
+    //   let t0 = elems (Term.free_top_level_names term) in
+      let t1 = List.collect triggers_of_term tms in
+      aux t1
+    | App (Iff, [t0; t1])
+    | App (Eq, [t0; t1]) ->
+      let t0 = elems (Term.free_top_level_names t0) in
+      let t1 = elems (Term.free_top_level_names t1) in
+      aux [t0; t1]
+    | App (TrueOp, _) -> p
+    | _ ->
+      { p with ambients = a.assumption_name::p.ambients }
+  end
 
 let add_assumption_to_triggers (a:assumption) (p:pruning_state) (trigs:triggers)
 : pruning_state

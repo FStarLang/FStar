@@ -362,6 +362,7 @@ let sub_mod_wrap_ok (a b:t) : Lemma
     then sub_mod_wrap1_ok a b
     else sub_mod_wrap2_ok a b
 
+#restart-solver
 #push-options "--z3rlimit 40"
 let sub_mod (a b: t) : Pure t
   (requires True)
@@ -371,6 +372,7 @@ let sub_mod (a b: t) : Pure t
     else sub_mod_wrap_ok a b);
   sub_mod_impl a b
 #pop-options
+#restart-solver
 
 val shift_bound : #n:nat -> num:UInt.uint_t n -> n':nat ->
   Lemma (num * pow2 n' <= pow2 (n'+n) - pow2 n')

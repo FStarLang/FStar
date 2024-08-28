@@ -96,7 +96,8 @@ let count_head (#a:eqtype) (x:seq a{ S.length x > 0 })
   : Lemma (count (head x) x > 0)
   = reveal_opaque (`%count) (count #a)
 
-#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 2"
+#restart-solver
+#push-options "--fuel 0 --ifuel 0 --z3rlimit_factor 4"
 let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x. count x s0 == count x s1)})
   : Tot (seqperm s0 s1)
         (decreases (S.length s0))
@@ -197,6 +198,7 @@ let rec permutation_from_equal_counts (#a:eqtype) (s0:seq a) (s1:seq a{(forall x
             )
       );
       reveal_is_permutation_nopats s0 s1 f; f)
+#restart-solver
 
 module CM = FStar.Algebra.CommMonoid
 let elim_monoid_laws #a (m:CM.cm a)
@@ -214,7 +216,7 @@ let elim_monoid_laws #a (m:CM.cm a)
     introduce forall x. m.mult x m.unit == x
     with ( m.identity x )
 
-
+#restart-solver
 #push-options "--fuel 1 --ifuel 0"
 let rec foldm_back_append #a (m:CM.cm a) (s1 s2: seq a)
   : Lemma
@@ -234,7 +236,17 @@ let rec foldm_back_append #a (m:CM.cm a) (s1 s2: seq a)
         (==) { assert (S.equal (append s1 s2)
                                  (S.build (append s1 s2') last)) }
         foldm_back m (S.build (append s1 s2') last);
-        (==) { assert (S.equal (fst (un_build (append s1 s2))) (append s1 s2')) }
+        (==) {}
+        fold_back m.mult (S.build (append s1 s2') last) m.unit;
+        (==) {}
+        m.mult ((S.build (append s1 s2') last) $@ (length s1 + length s2'))
+               (fold_back m.mult (take (S.build (append s1 s2') last) (length s1 + length s2')) m.unit);
+        (==) { }
+        m.mult last
+               (fold_back m.mult (take (S.build (append s1 s2') last) (length s1 + length s2')) m.unit);
+        (==) {  
+          assert (S.equal (take (S.build (append s1 s2') last) (length s1 + length s2')) (append s1 s2'))
+        }
         m.mult last (foldm_back m (append s1 s2'));
         (==) { foldm_back_append m s1 s2' }
         m.mult last (m.mult (foldm_back m s1) (foldm_back m s2'));

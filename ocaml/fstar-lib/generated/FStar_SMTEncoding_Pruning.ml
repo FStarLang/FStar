@@ -203,6 +203,18 @@ let (maybe_add_ambient :
           triggers1 in
       match (a.FStar_SMTEncoding_Term.assumption_term).FStar_SMTEncoding_Term.tm
       with
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, t0::t1::[])
+          when
+          FStar_Compiler_Util.starts_with
+            a.FStar_SMTEncoding_Term.assumption_name "l_quant_interp"
+          ->
+          let triggers_lhs =
+            let uu___ = FStar_SMTEncoding_Term.free_top_level_names t0 in
+            FStar_Class_Setlike.elems ()
+              (Obj.magic
+                 (FStar_Compiler_RBSet.setlike_rbset
+                    FStar_Class_Ord.ord_string)) (Obj.magic uu___) in
+          aux [triggers_lhs]
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid",
            {
@@ -294,6 +306,33 @@ let (maybe_add_ambient :
                 else [[token]]
             | uu___5 -> [] in
           aux triggers1
+      | FStar_SMTEncoding_Term.App
+          (FStar_SMTEncoding_Term.Var "HasType", term::ty::[]) ->
+          (match ty.FStar_SMTEncoding_Term.tm with
+           | FStar_SMTEncoding_Term.App
+               (FStar_SMTEncoding_Term.Var "Prims.squash", ty1::[]) ->
+               let triggers1 =
+                 FStar_Compiler_List.map
+                   (fun t ->
+                      let uu___ =
+                        FStar_SMTEncoding_Term.free_top_level_names t in
+                      FStar_Class_Setlike.elems ()
+                        (Obj.magic
+                           (FStar_Compiler_RBSet.setlike_rbset
+                              FStar_Class_Ord.ord_string)) (Obj.magic uu___))
+                   [term; ty1] in
+               aux triggers1
+           | uu___ ->
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 =
+                     FStar_SMTEncoding_Term.free_top_level_names term in
+                   FStar_Class_Setlike.elems ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
+                 [uu___2] in
+               aux uu___1)
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid", term::[]) ->
           let uu___ =
