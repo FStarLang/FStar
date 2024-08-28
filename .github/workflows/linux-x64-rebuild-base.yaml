@@ -50,6 +50,16 @@ jobs:
         run: |
           docker tag ${TEMP_IMAGE_NAME} fstar_ci_base
 
+      - name: Push base image
+        if: ${{ (success () && github.ref_name == 'master') || inputs.force }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag ${TEMP_IMAGE_NAME} ghcr.io/fstarlang/fstar-ci-base:latest
+          docker push ghcr.io/fstarlang/fstar-ci-base:latest
+          docker logout ghcr.io
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Compute elapsed time and status message
         if: ${{ always() }}
         run: |
