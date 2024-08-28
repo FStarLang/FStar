@@ -49,7 +49,7 @@ let string_of_pos pos =
     format2 "%s,%s" (string_of_int pos.line) (string_of_int pos.col)
 let string_of_file_name f =
     if Options.ide () then
-      if Options.ext_getv "fstar:no_absolute_paths" = "1" then
+      if Options.Ext.get "fstar:no_absolute_paths" = "1" then
         basename f
       else begin
           try

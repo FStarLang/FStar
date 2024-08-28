@@ -2501,7 +2501,7 @@ let (config' :
             (FStar_Options.normalize_pure_terms_for_extraction ()) in
         let uu___2 =
           let uu___3 =
-            FStar_Options.ext_getv "compat:normalizer_memo_ignore_cfg" in
+            FStar_Options_Ext.get "compat:normalizer_memo_ignore_cfg" in
           uu___3 <> "" in
         {
           steps;
