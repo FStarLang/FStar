@@ -9,8 +9,7 @@
 # will NOT use this file.
 
 # We always try to build against the most current ubuntu image.
-# FIXME: Broken with 24.04, fixing it to 23.10 so we can keep working
-FROM ubuntu:23.10
+FROM ubuntu:latest
 
 RUN apt-get update
 
@@ -78,6 +77,8 @@ ENV OPAMYES=1
 # F* dependencies. This is the only place where we read a file from
 # the F* repo.
 ADD fstar.opam $HOME/fstar.opam
+# Z3 opam package has broken depexts on ubuntu
+RUN sudo apt-get install -y python3-setuptools && opam option depext-bypass='["python3-distutils"]' && sudo apt-get clean
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean && sudo apt-get clean
 
 # Some karamel dependencies
