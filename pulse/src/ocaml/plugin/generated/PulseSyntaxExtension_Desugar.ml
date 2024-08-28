@@ -2860,7 +2860,7 @@ and (desugar_lambda :
                                              let uu___5 =
                                                let uu___6 =
                                                  let uu___7 =
-                                                   FStar_Options.ext_getv
+                                                   FStar_Options_Ext.get
                                                      "pulse:rvalues" in
                                                  uu___7 <> "" in
                                                if uu___6
@@ -3110,7 +3110,7 @@ and (desugar_decl :
                                                         let uu___6 =
                                                           let uu___7 =
                                                             let uu___8 =
-                                                              FStar_Options.ext_getv
+                                                              FStar_Options_Ext.get
                                                                 "pulse:rvalues" in
                                                             uu___8 <> "" in
                                                           if uu___7

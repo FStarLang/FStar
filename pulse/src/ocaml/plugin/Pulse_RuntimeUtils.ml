@@ -29,15 +29,12 @@ let disable_admit_smt_queries (f: unit -> 'a utac) : 'a utac =
     )
 let with_extv (k:string) (v:string) (f: unit -> 'a utac) : 'a utac =
   fun ps ->
-    let open FStar_Options in
-    with_saved_options (fun _ ->
-      let v0 = get_option "ext" in
-      let v1 = match v0 with
-               | List l0 -> List (String (k^"="^v) :: l0)
-      in
-      set_option "ext" v1;
-      f () ps
-    )
+    let open FStar_Options_Ext in
+    let x = FStar_Options_Ext.save() in
+    FStar_Options_Ext.set k v;
+    let res = f () ps in
+    FStar_Options_Ext.restore x;
+    res
 let env_set_context (g:FStar_Reflection_Types.env) (c:context) = g
 let print_exn (e:exn) = Printexc.to_string e
 let debug_at_level_no_module (s:string) =
@@ -66,7 +63,7 @@ let env_set_range (e:FStar_Reflection_Types.env) (r:FStar_Range.range) =
 
 let is_pulse_option_set (x:string) : bool =
   let key = ("pulse:"^x) in
-  let value = FStar_Options.ext_getv key in
+  let value = FStar_Options_Ext.get key in
   value <> ""
 
 module U = FStar_Syntax_Util

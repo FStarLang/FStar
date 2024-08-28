@@ -719,7 +719,7 @@ and desugar_lambda (env:env_t) (l:Sugar.lambda)
         return (env, bs, bvs, Some comp)
     in
     let! body = 
-      if FStar.Options.ext_getv "pulse:rvalues" <> ""
+      if FStar.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in
@@ -773,7 +773,7 @@ and desugar_decl (env:env_t)
     let bvs = bvs@bvs' in
     let! comp = desugar_computation_type env ascription in
     let! body = 
-      if FStar.Options.ext_getv "pulse:rvalues" <> ""
+      if FStar.Options.Ext.get "pulse:rvalues" <> ""
       then LR.transform env body
       else return body
     in
