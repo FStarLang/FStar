@@ -11,8 +11,8 @@ jobs:
 
   build-windows:
 
-    runs-on: [self-hosted, Windows, X64]
-    #runs-on: windows-2022
+    # runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-2022
 
     # Use POSIX shell as default.
     defaults:
