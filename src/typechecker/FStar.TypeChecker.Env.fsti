@@ -48,7 +48,7 @@ type step =
   | UnfoldAttr  of list FStar.Ident.lid
   | UnfoldQual  of list string
   | UnfoldNamespace of list string
-  | UnfoldTac
+  | DontUnfoldAttr of list lid
   | PureSubtermsWithinComputations
   | Simplify        //Simplifies some basic logical tautologies: not part of definitional equality!
   | EraseUniverses
@@ -511,6 +511,8 @@ val new_implicit_var_aux : string ->
                            should_check_uvar ->
                            option ctx_uvar_meta_t ->
                            (term & list (ctx_uvar & Range.range) & guard_t)
+
+val uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t
 
 (* layered effect utils *)
 

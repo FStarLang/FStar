@@ -306,6 +306,7 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (unification_tag_lid : FStar_Ident.lident) = psconst "defer_to"
 let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
@@ -508,6 +509,7 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (tac_opaque_attr : FStar_Ident.lident) = pconst "tac_opaque"
 let (meta_projectors_attr : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let (mk_projs_lid : FStar_Ident.lid) =

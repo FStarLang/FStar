@@ -14,6 +14,18 @@ let (smt_sync : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          (fun uu___1 ->
             Obj.magic (FStar_Tactics_V2_Builtins.t_smt_sync uu___1)) uu___1)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.smt_sync"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.smt_sync (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 smt_sync)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (smt_sync' :
   Prims.nat -> Prims.nat -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun fuel ->
@@ -102,6 +114,18 @@ let (smt_sync' :
                          Obj.magic
                            (FStar_Tactics_V2_Builtins.t_smt_sync vcfg'))
                         uu___))) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.smt_sync'"
+    (Prims.of_int (3))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_2
+               "FStar.Tactics.SMT.smt_sync' (plugin)"
+               (FStar_Tactics_Native.from_tactic_2 smt_sync')
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_int
+               FStar_Syntax_Embeddings.e_unit psc ncb us args)
 let (get_rlimit : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
     FStar_Tactics_Effect.tac_bind
@@ -117,6 +141,18 @@ let (get_rlimit : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.z3rlimit))
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_rlimit"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.get_rlimit (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 get_rlimit)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_int
+               psc ncb us args)
 let (set_rlimit : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
@@ -196,6 +232,18 @@ let (set_rlimit : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_rlimit"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_rlimit (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_rlimit)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (get_initial_fuel :
   unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -212,6 +260,18 @@ let (get_initial_fuel :
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.initial_fuel))
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_initial_fuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.get_initial_fuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 get_initial_fuel)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_int
+               psc ncb us args)
 let (get_initial_ifuel :
   unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr) =
   fun uu___ ->
@@ -228,6 +288,18 @@ let (get_initial_ifuel :
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.initial_ifuel))
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_initial_ifuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.get_initial_ifuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 get_initial_ifuel)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_int
+               psc ncb us args)
 let (get_max_fuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -244,6 +316,18 @@ let (get_max_fuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.max_fuel))
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_max_fuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.get_max_fuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 get_max_fuel)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_int
+               psc ncb us args)
 let (get_max_ifuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun uu___ ->
@@ -260,6 +344,18 @@ let (get_max_ifuel : unit -> (Prims.int, unit) FStar_Tactics_Effect.tac_repr)
       (fun uu___1 ->
          FStar_Tactics_Effect.lift_div_tac
            (fun uu___2 -> uu___1.FStar_VConfig.max_ifuel))
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.get_max_ifuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.get_max_ifuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 get_max_ifuel)
+               FStar_Syntax_Embeddings.e_unit FStar_Syntax_Embeddings.e_int
+               psc ncb us args)
 let (set_initial_fuel :
   Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
@@ -339,6 +435,18 @@ let (set_initial_fuel :
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_initial_fuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_initial_fuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_initial_fuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (set_initial_ifuel :
   Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
@@ -418,6 +526,18 @@ let (set_initial_ifuel :
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_initial_ifuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_initial_ifuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_initial_ifuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (set_max_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun v ->
@@ -498,6 +618,18 @@ let (set_max_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_max_fuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_max_fuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_max_fuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (set_max_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
   =
   fun v ->
@@ -577,6 +709,18 @@ let (set_max_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr)
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_max_ifuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_max_ifuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_max_ifuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (set_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
@@ -655,6 +799,18 @@ let (set_fuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_fuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_fuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_fuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)
 let (set_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
   fun v ->
     FStar_Tactics_Effect.tac_bind
@@ -732,3 +888,15 @@ let (set_ifuel : Prims.int -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
       (fun uu___ ->
          (fun uu___ ->
             Obj.magic (FStar_Tactics_V2_Builtins.set_vconfig uu___)) uu___)
+let _ =
+  FStar_Tactics_Native.register_tactic "FStar.Tactics.SMT.set_ifuel"
+    (Prims.of_int (2))
+    (fun psc ->
+       fun ncb ->
+         fun us ->
+           fun args ->
+             FStar_Tactics_InterpFuns.mk_tactic_interpretation_1
+               "FStar.Tactics.SMT.set_ifuel (plugin)"
+               (FStar_Tactics_Native.from_tactic_1 set_ifuel)
+               FStar_Syntax_Embeddings.e_int FStar_Syntax_Embeddings.e_unit
+               psc ncb us args)

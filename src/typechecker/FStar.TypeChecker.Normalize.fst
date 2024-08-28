@@ -381,9 +381,9 @@ let reduce_primops norm_cb cfg (env:env) tm : term & bool =
     if not cfg.steps.primops
     then tm, false
     else begin
-         let head, args = U.head_and_args tm in
+         let head, args = U.head_and_args_full tm in
          let head_term, universes = 
-           let head = SS.compress head in
+           let head = SS.compress (U.unmeta head) in
            match head.n with
            | Tm_uinst(fv, us) -> fv, us
            | _ -> head, []
@@ -525,12 +525,12 @@ let get_norm_request cfg (full_norm:term -> term) args =
     | [_; (tm, _)]
     | [(tm, _)] ->
       let s = [Beta; Zeta; Iota; Primops; UnfoldUntil delta_constant; Reify] in
-      Some (UnfoldTac :: inherited_steps @ s, tm)
+      Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
     | [(steps, _); _; (tm, _)] ->
       begin
       match parse_steps (full_norm steps) with
       | None -> None
-      | Some s -> Some (UnfoldTac :: inherited_steps @ s, tm)
+      | Some s -> Some (DontUnfoldAttr [PC.tac_opaque_attr] :: inherited_steps @ s, tm)
       end
     | _ ->
       None
@@ -2429,7 +2429,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
            norm cfg env stack' e
 
         | Tm_app _ when cfg.steps.primops ->
-          let hd, args = U.head_and_args t in
+          let hd, args = U.head_and_args_full_unmeta t in
           (match (U.un_uinst hd).n with
            | Tm_fvar fv ->
                begin
@@ -2485,7 +2485,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
                     unfold_attr = None;
                     unfold_qual = None;
                     unfold_namespace = None;
-                    unfold_tac = false
+                    dont_unfold_attr = None;
              }
              in
             ({cfg with delta_level=new_delta; steps=steps; strong=true})

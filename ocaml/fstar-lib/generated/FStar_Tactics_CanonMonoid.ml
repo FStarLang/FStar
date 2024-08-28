@@ -487,7 +487,7 @@ let canon_monoid :
       (FStar_Sealed.seal
          (Obj.magic
             (FStar_Range.mk_range "FStar.Tactics.CanonMonoid.fst"
-               (Prims.of_int (109)) (Prims.of_int (10)) (Prims.of_int (123))
+               (Prims.of_int (109)) (Prims.of_int (10)) (Prims.of_int (127))
                (Prims.of_int (42)))))
       (Obj.magic (FStar_Tactics_V2_Builtins.norm []))
       (fun uu___ ->
@@ -503,7 +503,7 @@ let canon_monoid :
                     (Obj.magic
                        (FStar_Range.mk_range "FStar.Tactics.CanonMonoid.fst"
                           (Prims.of_int (111)) (Prims.of_int (2))
-                          (Prims.of_int (123)) (Prims.of_int (42)))))
+                          (Prims.of_int (127)) (Prims.of_int (42)))))
                  (Obj.magic (FStar_Tactics_V2_Derived.cur_goal ()))
                  (fun uu___1 ->
                     (fun g ->
@@ -520,7 +520,7 @@ let canon_monoid :
                                   (FStar_Range.mk_range
                                      "FStar.Tactics.CanonMonoid.fst"
                                      (Prims.of_int (111)) (Prims.of_int (2))
-                                     (Prims.of_int (123)) (Prims.of_int (42)))))
+                                     (Prims.of_int (127)) (Prims.of_int (42)))))
                             (Obj.magic
                                (FStar_Reflection_V2_Formula.term_as_formula g))
                             (fun uu___1 ->
@@ -538,97 +538,222 @@ let canon_monoid :
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "FStar.Tactics.CanonMonoid.fst"
-                                                       (Prims.of_int (113))
-                                                       (Prims.of_int (9))
-                                                       (Prims.of_int (113))
-                                                       (Prims.of_int (32)))))
+                                                       (Prims.of_int (116))
+                                                       (Prims.of_int (14))
+                                                       (Prims.of_int (116))
+                                                       (Prims.of_int (67)))))
                                               (FStar_Sealed.seal
                                                  (Obj.magic
                                                     (FStar_Range.mk_range
                                                        "FStar.Tactics.CanonMonoid.fst"
-                                                       (Prims.of_int (113))
+                                                       (Prims.of_int (117))
                                                        (Prims.of_int (6))
-                                                       (Prims.of_int (122))
-                                                       (Prims.of_int (69)))))
+                                                       (Prims.of_int (126))
+                                                       (Prims.of_int (49)))))
                                               (Obj.magic
                                                  (FStar_Tactics_Effect.tac_bind
                                                     (FStar_Sealed.seal
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
                                                              "FStar.Tactics.CanonMonoid.fst"
-                                                             (Prims.of_int (113))
-                                                             (Prims.of_int (23))
-                                                             (Prims.of_int (113))
-                                                             (Prims.of_int (32)))))
+                                                             (Prims.of_int (116))
+                                                             (Prims.of_int (19))
+                                                             (Prims.of_int (116))
+                                                             (Prims.of_int (67)))))
                                                     (FStar_Sealed.seal
                                                        (Obj.magic
                                                           (FStar_Range.mk_range
                                                              "FStar.Tactics.CanonMonoid.fst"
-                                                             (Prims.of_int (113))
-                                                             (Prims.of_int (9))
-                                                             (Prims.of_int (113))
-                                                             (Prims.of_int (32)))))
-                                                    (FStar_Tactics_Effect.lift_div_tac
-                                                       (fun uu___2 ->
+                                                             (Prims.of_int (116))
+                                                             (Prims.of_int (14))
+                                                             (Prims.of_int (116))
+                                                             (Prims.of_int (67)))))
+                                                    (Obj.magic
+                                                       (FStar_Tactics_Effect.tac_bind
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.CanonMonoid.fst"
+                                                                   (Prims.of_int (116))
+                                                                   (Prims.of_int (60))
+                                                                   (Prims.of_int (116))
+                                                                   (Prims.of_int (63)))))
+                                                          (FStar_Sealed.seal
+                                                             (Obj.magic
+                                                                (FStar_Range.mk_range
+                                                                   "FStar.Tactics.CanonMonoid.fst"
+                                                                   (Prims.of_int (116))
+                                                                   (Prims.of_int (19))
+                                                                   (Prims.of_int (116))
+                                                                   (Prims.of_int (67)))))
+                                                          (FStar_Tactics_Effect.lift_div_tac
+                                                             (fun uu___2 ->
+                                                                me2))
                                                           (fun uu___2 ->
-                                                             Obj.magic
-                                                               (failwith
-                                                                  "Cannot evaluate open quotation at runtime"))
-                                                            uu___2))
-                                                    (fun uu___2 ->
-                                                       (fun uu___2 ->
-                                                          Obj.magic
-                                                            (FStar_Tactics_V2_Builtins.term_eq_old
-                                                               t uu___2))
-                                                         uu___2)))
-                                              (fun uu___2 ->
-                                                 (fun uu___2 ->
-                                                    if uu___2
-                                                    then
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_Effect.tac_bind
-                                                              (FStar_Sealed.seal
-                                                                 (Obj.magic
-                                                                    (
-                                                                    FStar_Range.mk_range
+                                                             (fun uu___2 ->
+                                                                Obj.magic
+                                                                  (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (114))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (114))
-                                                                    (Prims.of_int (34)))))
-                                                              (FStar_Sealed.seal
-                                                                 (Obj.magic
-                                                                    (
-                                                                    FStar_Range.mk_range
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (52))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (55)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (114))
-                                                                    (Prims.of_int (37))
-                                                                    (Prims.of_int (121))
-                                                                    (Prims.of_int (51)))))
-                                                              (Obj.magic
-                                                                 (reification
-                                                                    m me1))
-                                                              (fun uu___3 ->
-                                                                 (fun r1 ->
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (67)))))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    me1))
+                                                                    (fun
+                                                                    uu___3 ->
+                                                                    (fun
+                                                                    uu___3 ->
                                                                     Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (115))
-                                                                    (Prims.of_int (17))
-                                                                    (Prims.of_int (115))
-                                                                    (Prims.of_int (34)))))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (38))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
                                                                     (Prims.of_int (116))
-                                                                    (Prims.of_int (8))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (116))
+                                                                    (Prims.of_int (67)))))
+                                                                    (FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    Obj.magic
+                                                                    (failwith
+                                                                    "Cannot evaluate open quotation at runtime"))
+                                                                    uu___4))
+                                                                    (fun
+                                                                    uu___4 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___5 ->
+                                                                    FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_App
+                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_FVar
+                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    ["Prims";
+                                                                    "squash"]))),
+                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_App
+                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_App
+                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_App
+                                                                    ((FStar_Reflection_V2_Builtins.pack_ln
+                                                                    (FStar_Reflection_V2_Data.Tv_FVar
+                                                                    (FStar_Reflection_V2_Builtins.pack_fv
+                                                                    ["Prims";
+                                                                    "eq2"]))),
+                                                                    (uu___4,
+                                                                    FStar_Reflection_V2_Data.Q_Implicit)))),
+                                                                    (uu___3,
+                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    (uu___2,
+                                                                    FStar_Reflection_V2_Data.Q_Explicit)))),
+                                                                    FStar_Reflection_V2_Data.Q_Explicit)))))))
+                                                                    uu___3)))
+                                                               uu___2)))
+                                                    (fun uu___2 ->
+                                                       (fun uu___2 ->
+                                                          Obj.magic
+                                                            (FStar_Tactics_V2_Derived.tcut
+                                                               uu___2))
+                                                         uu___2)))
+                                              (fun uu___2 ->
+                                                 (fun b ->
+                                                    Obj.magic
+                                                      (FStar_Tactics_Effect.tac_bind
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.CanonMonoid.fst"
+                                                                  (Prims.of_int (117))
+                                                                  (Prims.of_int (6))
+                                                                  (Prims.of_int (117))
+                                                                  (Prims.of_int (12)))))
+                                                         (FStar_Sealed.seal
+                                                            (Obj.magic
+                                                               (FStar_Range.mk_range
+                                                                  "FStar.Tactics.CanonMonoid.fst"
+                                                                  (Prims.of_int (117))
+                                                                  (Prims.of_int (13))
+                                                                  (Prims.of_int (126))
+                                                                  (Prims.of_int (49)))))
+                                                         (Obj.magic
+                                                            (FStar_Tactics_V2_Derived.smt
+                                                               ()))
+                                                         (fun uu___2 ->
+                                                            (fun uu___2 ->
+                                                               Obj.magic
+                                                                 (FStar_Tactics_Effect.tac_bind
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonMonoid.fst"
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (15))
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (32)))))
+                                                                    (
+                                                                    FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonMonoid.fst"
+                                                                    (Prims.of_int (119))
+                                                                    (Prims.of_int (35))
+                                                                    (Prims.of_int (126))
+                                                                    (Prims.of_int (49)))))
+                                                                    (
+                                                                    Obj.magic
+                                                                    (reification
+                                                                    m me1))
+                                                                    (
+                                                                    fun
+                                                                    uu___3 ->
+                                                                    (fun r1
+                                                                    ->
+                                                                    Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonMonoid.fst"
+                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (15))
+                                                                    (Prims.of_int (120))
+                                                                    (Prims.of_int (32)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.CanonMonoid.fst"
                                                                     (Prims.of_int (121))
-                                                                    (Prims.of_int (51)))))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (126))
+                                                                    (Prims.of_int (49)))))
                                                                     (Obj.magic
                                                                     (reification
                                                                     m me2))
@@ -642,36 +767,36 @@ let canon_monoid :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (62)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (117))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (121))
-                                                                    (Prims.of_int (51)))))
+                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (126))
+                                                                    (Prims.of_int (49)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (18))
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (16))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (62)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (116))
-                                                                    (Prims.of_int (56)))))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (121))
+                                                                    (Prims.of_int (62)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
                                                                     (fun
                                                                     uu___3 ->
@@ -699,18 +824,18 @@ let canon_monoid :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (117))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (117))
-                                                                    (Prims.of_int (31)))))
+                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (122))
+                                                                    (Prims.of_int (29)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.CanonMonoid.fst"
-                                                                    (Prims.of_int (118))
-                                                                    (Prims.of_int (8))
-                                                                    (Prims.of_int (121))
-                                                                    (Prims.of_int (51)))))
+                                                                    (Prims.of_int (123))
+                                                                    (Prims.of_int (6))
+                                                                    (Prims.of_int (126))
+                                                                    (Prims.of_int (49)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.apply
                                                                     (FStar_Reflection_V2_Builtins.pack_ln
@@ -735,12 +860,8 @@ let canon_monoid :
                                                                     uu___4)))
                                                                     uu___3)))
                                                                     uu___3)))
-                                                                   uu___3)))
-                                                    else
-                                                      Obj.magic
-                                                        (Obj.repr
-                                                           (FStar_Tactics_V2_Derived.fail
-                                                              "Goal should be an equality at the right monoid type")))
+                                                                    uu___3)))
+                                                              uu___2)))
                                                    uu___2)))
                                   | uu___2 ->
                                       Obj.magic

@@ -21,7 +21,7 @@ module Int32 = FStar.Int32
 open FStar.HyperStack
 open FStar.HyperStack.ST
 open FStar.Ghost
-
+module L = FStar.List.Tot.Base
 
 module HS = FStar.HyperStack
 module HST = FStar.HyperStack.ST
@@ -824,8 +824,8 @@ let create #a init len =
 #reset-options "--initial_fuel 0 --max_fuel 0"
 
 unfold let p (#a:Type0) (init:list a) : GTot Type0 =
-  normalize (0 < FStar.List.Tot.length init) /\
-  normalize (FStar.List.Tot.length init <= UInt.max_int 32)
+  normalize (0 < L.length init) /\
+  normalize (L.length init <= UInt.max_int 32)
 
 unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
   normalize (length buf == len)
@@ -834,7 +834,7 @@ unfold let q (#a:Type0) (len:nat) (buf:buffer a) : GTot Type0 =
 val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
   (requires (fun h -> p #a init))
   (ensures (fun (h0:mem) b h1 ->
-     let len = FStar.List.Tot.length init in
+     let len = L.length init in
      len > 0
      /\ b `unused_in` h0
      /\ live h1 b /\ idx b == 0 /\ length b == len
@@ -846,7 +846,7 @@ val createL: #a:Type0 -> init:list a -> StackInline (buffer a)
 #set-options "--initial_fuel 1 --max_fuel 1" //the normalize_term (length init) in the pre-condition will be unfolded
 	                                     //whereas the L.length init below will not
 let createL #a init =
-  let len = UInt32.uint_to_t (FStar.List.Tot.length init) in
+  let len = UInt32.uint_to_t (L.length init) in
   let s = Seq.seq_of_list init in
   let content: reference (lseq a (v len)) =
     salloc (Seq.seq_of_list init) in
@@ -1444,7 +1444,7 @@ let lemma_equal_domains_2 (h0 h1 h2 h3 h4:mem) : Lemma
 let rec assignL #a (l: list a) (b: buffer a): Stack unit
   (requires (fun h0 ->
     live h0 b /\
-    length b = List.Tot.length l))
+    length b = L.length l))
   (ensures (fun h0 _ h1 ->
     live h1 b /\
     modifies_1 b h0 h1 /\

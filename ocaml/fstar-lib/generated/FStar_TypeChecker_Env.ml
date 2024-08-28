@@ -17,7 +17,7 @@ type step =
   | UnfoldAttr of FStar_Ident.lid Prims.list 
   | UnfoldQual of Prims.string Prims.list 
   | UnfoldNamespace of Prims.string Prims.list 
-  | UnfoldTac 
+  | DontUnfoldAttr of FStar_Ident.lid Prims.list 
   | PureSubtermsWithinComputations 
   | Simplify 
   | EraseUniverses 
@@ -89,8 +89,11 @@ let (uu___is_UnfoldNamespace : step -> Prims.bool) =
     match projectee with | UnfoldNamespace _0 -> true | uu___ -> false
 let (__proj__UnfoldNamespace__item___0 : step -> Prims.string Prims.list) =
   fun projectee -> match projectee with | UnfoldNamespace _0 -> _0
-let (uu___is_UnfoldTac : step -> Prims.bool) =
-  fun projectee -> match projectee with | UnfoldTac -> true | uu___ -> false
+let (uu___is_DontUnfoldAttr : step -> Prims.bool) =
+  fun projectee ->
+    match projectee with | DontUnfoldAttr _0 -> true | uu___ -> false
+let (__proj__DontUnfoldAttr__item___0 : step -> FStar_Ident.lid Prims.list) =
+  fun projectee -> match projectee with | DontUnfoldAttr _0 -> _0
 let (uu___is_PureSubtermsWithinComputations : step -> Prims.bool) =
   fun projectee ->
     match projectee with
@@ -149,7 +152,6 @@ let rec (eq_step : step -> step -> Prims.bool) =
       | (Eager_unfolding, Eager_unfolding) -> true
       | (Inlining, Inlining) -> true
       | (DoNotUnfoldPureLets, DoNotUnfoldPureLets) -> true
-      | (UnfoldTac, UnfoldTac) -> true
       | (PureSubtermsWithinComputations, PureSubtermsWithinComputations) ->
           true
       | (Simplify, Simplify) -> true
@@ -190,6 +192,11 @@ let rec (eq_step : step -> step -> Prims.bool) =
             (FStar_Class_Ord.ord_eq
                (FStar_Class_Ord.ord_list FStar_Class_Ord.ord_string)) strs1
             strs2
+      | (DontUnfoldAttr lids1, DontUnfoldAttr lids2) ->
+          FStar_Class_Deq.op_Equals_Question
+            (FStar_Class_Ord.ord_eq
+               (FStar_Class_Ord.ord_list FStar_Syntax_Syntax.ord_fv)) lids1
+            lids2
       | uu___ -> false
 let (deq_step : step FStar_Class_Deq.deq) =
   { FStar_Class_Deq.op_Equals_Question = eq_step }
@@ -241,7 +248,11 @@ let rec (step_to_string : step -> Prims.string) =
                (FStar_Class_Show.printableshow
                   FStar_Class_Printable.printable_string)) strs1 in
         Prims.strcat "UnfoldNamespace " uu___
-    | UnfoldTac -> "UnfoldTac"
+    | DontUnfoldAttr lids1 ->
+        let uu___ =
+          FStar_Class_Show.show
+            (FStar_Class_Show.show_list FStar_Ident.showable_lident) lids1 in
+        Prims.strcat "DontUnfoldAttr " uu___
     | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
     | Simplify -> "Simplify"
     | EraseUniverses -> "EraseUniverses"
@@ -7193,6 +7204,44 @@ let (new_implicit_var_aux :
           fun should_check ->
             fun meta ->
               new_tac_implicit_var reason r env1 k should_check [] meta
+let (uvar_meta_for_binder :
+  FStar_Syntax_Syntax.binder ->
+    FStar_Syntax_Syntax.ctx_uvar_meta_t FStar_Pervasives_Native.option)
+  =
+  fun b ->
+    match b.FStar_Syntax_Syntax.binder_qual with
+    | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta tau) ->
+        FStar_Pervasives_Native.Some
+          (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau)
+    | uu___ ->
+        let is_unification_tag t =
+          let uu___1 = FStar_Syntax_Util.head_and_args t in
+          match uu___1 with
+          | (hd, args) ->
+              let hd1 = FStar_Syntax_Util.un_uinst hd in
+              let uu___2 =
+                let uu___3 =
+                  let uu___4 = FStar_Syntax_Subst.compress hd1 in
+                  uu___4.FStar_Syntax_Syntax.n in
+                (uu___3, args) in
+              (match uu___2 with
+               | (FStar_Syntax_Syntax.Tm_fvar fv,
+                  (uu___3, FStar_Pervasives_Native.Some
+                   { FStar_Syntax_Syntax.aqual_implicit = true;
+                     FStar_Syntax_Syntax.aqual_attributes = uu___4;_})::
+                  (a, FStar_Pervasives_Native.None)::[]) when
+                   FStar_Syntax_Syntax.fv_eq_lid fv
+                     FStar_Parser_Const.unification_tag_lid
+                   -> FStar_Pervasives_Native.Some a
+               | uu___3 -> FStar_Pervasives_Native.None) in
+        let uu___1 =
+          FStar_Compiler_List.tryPick is_unification_tag
+            b.FStar_Syntax_Syntax.binder_attrs in
+        (match uu___1 with
+         | FStar_Pervasives_Native.Some tag ->
+             FStar_Pervasives_Native.Some
+               (FStar_Syntax_Syntax.Ctx_uvar_meta_attr tag)
+         | FStar_Pervasives_Native.None -> FStar_Pervasives_Native.None)
 let (uvars_for_binders :
   env ->
     FStar_Syntax_Syntax.binders ->
@@ -7215,18 +7264,7 @@ let (uvars_for_binders :
                          let sort =
                            FStar_Syntax_Subst.subst substs1
                              (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
-                         let ctx_uvar_meta_t =
-                           match ((b.FStar_Syntax_Syntax.binder_qual),
-                                   (b.FStar_Syntax_Syntax.binder_attrs))
-                           with
-                           | (FStar_Pervasives_Native.Some
-                              (FStar_Syntax_Syntax.Meta t), []) ->
-                               FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Ctx_uvar_meta_tac t)
-                           | (uu___2, t::uu___3) ->
-                               FStar_Pervasives_Native.Some
-                                 (FStar_Syntax_Syntax.Ctx_uvar_meta_attr t)
-                           | uu___2 -> FStar_Pervasives_Native.None in
+                         let ctx_uvar_meta = uvar_meta_for_binder b in
                          let uu___2 =
                            let uu___3 = reason b in
                            let uu___4 =
@@ -7239,7 +7277,7 @@ let (uvars_for_binders :
                                  "indexed effect uvar in compat mode"
                              else FStar_Syntax_Syntax.Strict in
                            new_implicit_var_aux uu___3 r env1 sort uu___4
-                             ctx_uvar_meta_t in
+                             ctx_uvar_meta in
                          (match uu___2 with
                           | (t, l_ctx_uvars, g_t) ->
                               ((let uu___4 =

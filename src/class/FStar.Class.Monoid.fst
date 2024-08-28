@@ -4,12 +4,8 @@ open FStar.Compiler
 open FStar.Compiler.Effect
 open FStar.Compiler.List
 
-class monoid (a:Type) = {
-   mzero : a;
-   mplus : a -> a -> a;
-}
+let ( ++ ) #a {| monoid a |} = mplus #a
 
-val msum (#a:Type) {|monoid a|} (xs:list a) : a
 let msum xs = fold_left mplus mzero xs
 
 instance monoid_int : monoid int = {

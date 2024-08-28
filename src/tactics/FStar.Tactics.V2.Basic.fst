@@ -819,7 +819,7 @@ let norm (s : list Pervasives.norm_step) : tac unit =
     let! goal = cur_goal in
     if_verbose (fun () -> BU.print1 "norm: witness = %s\n" (show (goal_witness goal))) ;!
     // Translate to actual normalizer steps
-    let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
+    let steps = [Env.Reify; Env.DontUnfoldAttr [PC.tac_opaque_attr]]@(Cfg.translate_norm_steps s) in
     //let w = normalize steps (goal_env goal) (goal_witness goal) in
     let t = normalize steps (goal_env goal) (goal_type goal) in
     replace_cur (goal_with_type goal t)
@@ -836,7 +836,7 @@ let __norm_term_env
       then return t
       else let! t, _, _ = __tc_lax e t in return t
     in
-    let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
+    let steps = [Env.Reify; Env.DontUnfoldAttr [PC.tac_opaque_attr]]@(Cfg.translate_norm_steps s) in
     let t = normalize steps ps.main_context t in
     if_verbose (fun () -> BU.print1 "norm_term_env: t' = %s\n" (show t)) ;!
     return t
@@ -1310,7 +1310,7 @@ let norm_binding_type (s : list Pervasives.norm_step) (b : RD.binding) : tac uni
     match split_env bv (goal_env goal) with
     | None -> fail "binder is not present in environment"
     | Some (e0, bv, bvs) ->
-      let steps = [Env.Reify; Env.UnfoldTac]@(Cfg.translate_norm_steps s) in
+      let steps = [Env.Reify; Env.DontUnfoldAttr [PC.tac_opaque_attr]]@(Cfg.translate_norm_steps s) in
       let sort' = normalize steps e0 bv.sort in
       let bv' = { bv with sort = sort' } in
       let env' = Env.push_bvs e0 (bv'::bvs) in
@@ -1507,7 +1507,7 @@ let _t_trefl (allow_guards:bool) (l : term) (r : term) : tac unit =
   | true -> return ()
   | false ->
     (* if that didn't work, normalize and retry *)
-    let norm = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.UnfoldTac] (goal_env g) in
+    let norm = N.normalize [Env.UnfoldUntil delta_constant; Env.Primops; Env.DontUnfoldAttr [PC.tac_opaque_attr]] (goal_env g) in
     match! attempt (norm l) (norm r) with
     | true -> return ()
     | false ->
@@ -1621,7 +1621,7 @@ let join () : tac unit =
 let set_options (s : string) : tac unit = wrap_err "set_options" <| (
     let! g = cur_goal in
     FStar.Options.push ();
-    FStar.Options.set (Util.smap_copy g.opts); // copy the map, they are not purely functional
+    FStar.Options.set g.opts;
     let res = FStar.Options.set_options s in
     let opts' = FStar.Options.peek () in
     FStar.Options.pop ();
@@ -1802,7 +1802,7 @@ let t_destruct (s_tm : term) : tac (list (fv & Z.t)) = wrap_err "destruct" <| (
     let! g = cur_goal in
     let! s_tm, s_ty, guard = __tc (goal_env g) s_tm in
     proc_guard "destruct" (goal_env g) guard (Some (should_check_goal_uvar g)) (rangeof g) ;!
-    let s_ty = N.normalize [Env.UnfoldTac; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
+    let s_ty = N.normalize [Env.DontUnfoldAttr [PC.tac_opaque_attr]; Env.Weak; Env.HNF; Env.UnfoldUntil delta_constant]
                            (goal_env g) s_ty in
     let h, args = U.head_and_args_full (U.unrefine s_ty) in
     let! fv, a_us =
@@ -2087,7 +2087,7 @@ let get_vconfig () : tac vconfig =
   * This is an artifact of the options API being stateful in many places,
   * morally this is just (get_vconfig g.opts) *)
   let vcfg = Options.with_saved_options (fun () ->
-               FStar.Options.set (Util.smap_copy g.opts);
+               FStar.Options.set g.opts;
                Options.get_vconfig ())
   in
   return vcfg
@@ -2097,7 +2097,7 @@ let set_vconfig (vcfg : vconfig) : tac unit =
    * let g' = { g with opts = set_vconfig vcfg g.opts } *)
   let! g = cur_goal in
   let opts' = Options.with_saved_options (fun () ->
-                FStar.Options.set (Util.smap_copy g.opts);
+                FStar.Options.set g.opts;
                 Options.set_vconfig vcfg;
                 Options.peek ())
   in
@@ -2140,15 +2140,15 @@ let free_uvars (tm : term) : tac (list Z.t)
 
 let all_ext_options () : tac (list (string & string))
   = return () ;!
-    return (Options.all_ext_options ())
+    return (Options.Ext.all ())
 
 let ext_getv (k:string) : tac string
   = return () ;!
-    return (Options.ext_getv k)
+    return (Options.Ext.get k)
 
 let ext_getns (ns:string) : tac (list (string & string))
   = return () ;!
-    return (Options.ext_getns ns)
+    return (Options.Ext.getns ns)
 
 let alloc (x:'a) : tac (tref 'a) =
   return ();!

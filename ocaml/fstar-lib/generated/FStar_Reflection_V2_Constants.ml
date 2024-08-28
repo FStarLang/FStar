@@ -418,6 +418,7 @@ let (ref_Mk_lb : refl_constant) =
   let uu___ = FStar_Syntax_Syntax.fv_to_tm fv in { lid; fv; t = uu___ }
 let (ref_Q_Explicit : refl_constant) = fstar_refl_data_const "Q_Explicit"
 let (ref_Q_Implicit : refl_constant) = fstar_refl_data_const "Q_Implicit"
+let (ref_Q_Equality : refl_constant) = fstar_refl_data_const "Q_Equality"
 let (ref_Q_Meta : refl_constant) = fstar_refl_data_const "Q_Meta"
 let (ref_DB : refl_constant) = fstar_syntax_syntax_const ["DB"]
 let (ref_DT : refl_constant) = fstar_syntax_syntax_const ["DT"]

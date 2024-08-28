@@ -50,7 +50,7 @@ let steps_to_string f =
     unfold_attr = %s;\n\
     unfold_qual = %s;\n\
     unfold_namespace = %s;\n\
-    unfold_tac = %s;\n\
+    dont_unfold_attr = %s;\n\
     pure_subterms_within_computations = %s;\n\
     simplify = %s;\n\
     erase_universes = %s;\n\
@@ -81,7 +81,7 @@ let steps_to_string f =
     f.unfold_attr |> show;
     f.unfold_qual |> show;
     f.unfold_namespace |> show;
-    f.unfold_tac |> show;
+    f.dont_unfold_attr |> show;
     f.pure_subterms_within_computations |> show;
     f.simplify |> show;
     f.erase_universes |> show;
@@ -115,7 +115,7 @@ instance deq_fsteps : deq fsteps = {
             f1.unfold_attr =? f2.unfold_attr &&
             f1.unfold_qual =? f2.unfold_qual &&
             f1.unfold_namespace =? f2.unfold_namespace &&
-            f1.unfold_tac =? f2.unfold_tac &&
+            f1.dont_unfold_attr =? f2.dont_unfold_attr &&
             f1.pure_subterms_within_computations =? f2.pure_subterms_within_computations &&
             f1.simplify =? f2.simplify &&
             f1.erase_universes =? f2.erase_universes &&
@@ -149,7 +149,7 @@ let default_steps : fsteps = {
     unfold_attr = None;
     unfold_qual = None;
     unfold_namespace = None;
-    unfold_tac = false;
+    dont_unfold_attr = None;
     pure_subterms_within_computations = false;
     simplify = false;
     erase_universes = false;
@@ -196,7 +196,7 @@ let fstep_add_one s fs =
     | UnfoldNamespace strs ->
      { fs with unfold_namespace =
          Some (List.map (fun s -> (Ident.path_of_text s, true)) strs, false) }
-    | UnfoldTac ->  { fs with unfold_tac = true }
+    | DontUnfoldAttr lids -> { fs with dont_unfold_attr = Some lids }
     | PureSubtermsWithinComputations ->  { fs with pure_subterms_within_computations = true }
     | Simplify ->  { fs with simplify = true }
     | EraseUniverses ->  { fs with erase_universes = true }
@@ -414,7 +414,7 @@ let config' psteps s e =
       memoize_lazy = true;
       normalize_pure_lets = (not steps.pure_subterms_within_computations) || Options.normalize_pure_terms_for_extraction();
       reifying = false;
-      compat_memo_ignore_cfg = Options.ext_getv "compat:normalizer_memo_ignore_cfg" <> "";
+      compat_memo_ignore_cfg = Options.Ext.get "compat:normalizer_memo_ignore_cfg" <> "";
    }
 
 let config s e = config' [] s e

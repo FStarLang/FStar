@@ -125,7 +125,7 @@ clean-intermediate:
 .PHONY: hints
 hints:
 	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) -C ulib/
-	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions
+	+$(Q)OTHERFLAGS="${OTHERFLAGS} --record_hints" $(MAKE) ci-uregressions ci-ulib-extra
 
 .PHONY: bench
 bench:
@@ -194,7 +194,7 @@ ci-ulib-extra:
 	+$(Q)$(MAKE) -C ulib extra
 
 .PHONY: ci-ulib-in-fsharp
-ci-ulib-in-fsharp: ci-ulib-extra
+ci-ulib-in-fsharp:
 	+$(Q)$(MAKE) -C ulib ulib-in-fsharp
 
 .PHONY: ci-post
@@ -208,10 +208,6 @@ ci-post:						\
 .PHONY: ci-uregressions
 ci-uregressions:
 	+$(Q)$(MAKE) -C src uregressions
-
-.PHONY: ci-uregressions-ulong
-ci-uregressions-ulong:
-	+$(Q)$(MAKE) -C src uregressions-ulong
 
 .PHONY: ci-karamel-test
 ci-karamel-test: ci-krmllib

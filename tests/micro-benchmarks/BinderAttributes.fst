@@ -61,7 +61,7 @@ let rec binders_to_string (b : binders) : Tot string =
 let binder_from_term (b : T.binder) : T.Tac binder =
     let {ppname; attrs; qual} = b in
     let desc_opt = match attrs with | [] -> None | a :: _ -> Some (get_description a) in
-    let q = match qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Meta _ -> "Meta" in
+    let q = match qual with | T.Q_Implicit -> "Implicit" | T.Q_Explicit -> "Explicit" | T.Q_Equality -> "Equality" | T.Q_Meta _ -> "Meta" in
     { name = T.unseal ppname; qual = q; desc = desc_opt }
 
 let rec binders_from_arrow (ty : T.term) : T.Tac binders =

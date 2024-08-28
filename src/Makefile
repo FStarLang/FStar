@@ -48,12 +48,6 @@ ulib-in-fsharp:
 .PHONY: uregressions
 uregressions: tutorial utests uexamples
 
-# This is a hook for nightly builds (on Linux)
-# But, at the moment, it tests the same files as get tested on every push
-# We may add more nightly tests here in the future
-.PHONY: uregressions-ulong
-uregressions-ulong: uregressions
-
 .PHONY: tutorial
 tutorial: book-code tutorial-old
 

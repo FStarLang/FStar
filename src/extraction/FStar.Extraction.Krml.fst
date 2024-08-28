@@ -195,6 +195,158 @@ and typ =
   | TConstBuf of typ
   | TArray of typ & constant
 
+instance showable_width = { show = function
+  | UInt8 -> "UInt8"
+  | UInt16 -> "UInt16"
+  | UInt32 -> "UInt32"
+  | UInt64 -> "UInt64"
+  | Int8 -> "Int8"
+  | Int16 -> "Int16"
+  | Int32 -> "Int32"
+  | Int64 -> "Int64"
+  | Bool -> "Bool"
+  | CInt -> "CInt"
+  | SizeT -> "SizeT"
+  | PtrdiffT -> "PtrdiffT"
+}
+
+let rec typ_to_string (t:typ) : string =
+  match t with
+  | TInt w -> "TInt " ^ show w
+  | TBuf t -> "TBuf " ^ typ_to_string t
+  | TUnit -> "TUnit"
+  | TQualified x -> "TQualified " ^ show x
+  | TBool -> "TBool"
+  | TAny -> "TAny"
+  | TArrow (t1, t2) -> "TArrow (" ^ typ_to_string t1 ^ ", " ^ typ_to_string t2 ^ ")"
+  | TBound x -> "TBound " ^ show x
+  | TApp (x, xs) -> "TApp (" ^ show x ^ ", " ^ Common.string_of_list typ_to_string xs ^ ")"
+  | TTuple ts -> "TTuple " ^ Common.string_of_list typ_to_string ts
+  | TConstBuf t -> "TConstBuf " ^ typ_to_string t
+  | TArray (t, c) -> "TArray (" ^ typ_to_string t ^ ", " ^ show c ^ ")"
+  
+instance showable_typ = { show = typ_to_string }
+
+instance showable_binder = { show = fun {name; typ; mut} ->
+  "binder{ name = " ^ name ^ "; typ = " ^ typ_to_string typ ^ "; mut = " ^ show mut ^ "; }"
+}
+
+instance showable_flag = { show = function
+  | Private -> "Private"
+  | WipeBody -> "WipeBody"
+  | CInline -> "CInline"
+  | Substitute -> "Substitute"
+  | GCType -> "GCType"
+  | Comment s -> "Comment " ^ s
+  | MustDisappear -> "MustDisappear"
+  | Const s -> "Const " ^ s
+  | Prologue s -> "Prologue " ^ s
+  | Epilogue s -> "Epilogue " ^ s
+  | Abstract -> "Abstract"
+  | IfDef -> "IfDef"
+  | Macro -> "Macro"
+  | Deprecated s -> "Deprecated " ^ s
+  | CNoInline -> "CNoInline"
+}
+
+instance showable_lifetime : showable lifetime = { show = function
+  | Eternal -> "Eternal"
+  | Stack -> "Stack"
+  | ManuallyManaged -> "ManuallyManaged"
+}
+
+instance showable_op = { show = function
+  | Add -> "Add"
+  | AddW -> "AddW"
+  | Sub -> "Sub"
+  | SubW -> "SubW"
+  | Div -> "Div"
+  | DivW -> "DivW"
+  | Mult -> "Mult"
+  | MultW -> "MultW"
+  | Mod -> "Mod"
+  | BOr -> "BOr"
+  | BAnd -> "BAnd"
+  | BXor -> "BXor"
+  | BShiftL -> "BShiftL"
+  | BShiftR -> "BShiftR"
+  | BNot -> "BNot"
+  | Eq -> "Eq"
+  | Neq -> "Neq"
+  | Lt -> "Lt"
+  | Lte -> "Lte"
+  | Gt -> "Gt"
+  | Gte -> "Gte"
+  | And -> "And"
+  | Or -> "Or"
+  | Xor -> "Xor"
+  | Not -> "Not"
+}
+
+instance showable_cc = { show = function
+  | StdCall -> "StdCall"
+  | CDecl -> "CDecl"
+  | FastCall -> "FastCall"
+}
+
+let rec decl_to_string (d:decl) : string =
+  match d with
+  | DGlobal (fs, x, i, t, e) -> "DGlobal (" ^ show fs ^ ", " ^ show x ^ ", " ^ show i ^ ", " ^ typ_to_string t ^ ", " ^ expr_to_string e ^ ")"
+  | DFunction (cc, fs, i, t, x, bs, e) -> "DFunction (" ^ show cc ^ ", " ^ show fs ^ ", " ^ show i ^ ", " ^ typ_to_string t ^ ", " ^ show x ^ ", " ^ Common.string_of_list show bs ^ ", " ^ expr_to_string e ^ ")"
+  | DTypeAlias (x, fs, i, t) -> "DTypeAlias (" ^ show x ^ ", " ^ show fs ^ ", " ^ show i ^ ", " ^ typ_to_string t ^ ")"
+  | DTypeFlat (x, fs, i, f) -> "DTypeFlat (" ^ show x ^ ", " ^ show fs ^ ", " ^ show i ^ ", " ^ show f ^ ")"
+  | DUnusedRetainedForBackwardsCompat (cc, fs, x, t) -> "DUnusedRetainedForBackwardsCompat (" ^ show cc ^ ", " ^ show fs ^ ", " ^ show x ^ ", " ^ typ_to_string t ^ ")"
+  | DTypeVariant (x, fs, i, bs) -> "DTypeVariant (" ^ show x ^ ", " ^ show fs ^ ", " ^ show i ^ ", " ^ show bs ^ ")"
+  | DTypeAbstractStruct x -> "DTypeAbstractStruct " ^ show x
+  | DExternal (cc, fs, x, t, xs) -> "DExternal (" ^ show cc ^ ", " ^ show fs ^ ", " ^ show x ^ ", " ^ typ_to_string t ^ ", " ^ Common.string_of_list show xs ^ ")"
+  | DUntaggedUnion (x, fs, i, xs) -> "DUntaggedUnion (" ^ show x ^ ", " ^ show fs ^ ", " ^ show i ^ ", " ^ show xs ^ ")"
+  
+and expr_to_string (e:expr) : string =
+  match e with
+  | EBound x -> "EBound " ^ show x
+  | EQualified x -> "EQualified " ^ show x
+  | EConstant x -> "EConstant " ^ show x
+  | EUnit -> "EUnit"
+  | EApp (x, xs) -> "EApp " ^ expr_to_string x ^ Common.string_of_list expr_to_string xs
+  | ETypApp (x, xs) -> "ETypApp " ^ expr_to_string x // ^ Common.string_of_list expr_to_string xs
+  | ELet (x, y, z) -> "ELet (" ^ show x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ")"
+  | EIfThenElse (x, y, z) -> "EIfThenElse (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ")"
+  | ESequence xs -> "ESequence " ^ Common.string_of_list expr_to_string xs
+  | EAssign (x, y) -> "EAssign (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
+  | EBufCreate (x, y, z) -> "EBufCreate (" ^ show x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ")"
+  | EBufRead (x, y) -> "EBufRead (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
+  | EBufWrite (x, y, z) -> "EBufWrite (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ")"
+  | EBufSub (x, y) -> "EBufSub (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
+  | EBufBlit (x, y, z, a, b) -> "EBufBlit (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ", " ^ expr_to_string a ^ ", " ^ expr_to_string b ^ ")"
+  | EMatch (x, bs) -> "EMatch (" ^ expr_to_string x ^ ", " ^ Common.string_of_list (fun _ -> "iou") bs ^ ")"
+  | EOp (x, y) -> "EOp (" ^ show x ^ ", " ^ show y ^ ")"
+  | ECast (x, y) -> "ECast (" ^ expr_to_string x ^ ", " ^ typ_to_string y ^ ")"
+  | EPushFrame -> "EPushFrame"
+  | EPopFrame -> "EPopFrame"
+  | EBool x -> "EBool " ^ show x
+  | EAny -> "EAny"
+  | EAbort -> "EAbort"
+  | EReturn x -> "EReturn " ^ expr_to_string x
+  | EFlat (x, xs) -> "EFlat (" ^ typ_to_string x ^ ", " ^ Common.string_of_list (fun (s,e) -> "(" ^ s ^ ", " ^ expr_to_string e ^ ")") xs ^ ")"
+  | EField (x, y, z) -> "EField (" ^ typ_to_string x ^ ", " ^ expr_to_string y ^ ", " ^ show z ^ ")"
+  | EWhile (x, y) -> "EWhile (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
+  | EBufCreateL (x, xs) -> "EBufCreateL (" ^ show x ^ ", " ^ Common.string_of_list expr_to_string xs ^ ")"
+  | ETuple xs -> "ETuple " ^ Common.string_of_list expr_to_string xs
+  | ECons (x, y, xs) -> "ECons (" ^ typ_to_string x ^ ", " ^ show y ^ ", " ^ Common.string_of_list expr_to_string xs ^ ")"
+  | EBufFill (x, y, z) -> "EBufFill (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ", " ^ expr_to_string z ^ ")"
+  | EString x -> "EString " ^ show x
+  | EFun (xs, y, z) -> "EFun (" ^ Common.string_of_list show xs ^ ", " ^ expr_to_string y ^ ", " ^ typ_to_string z ^ ")"
+  | EAbortS x -> "EAbortS " ^ show x
+  | EBufFree x -> "EBufFree " ^ expr_to_string x
+  | EBufCreateNoInit (x, y) -> "EBufCreateNoInit (" ^ show x ^ ", " ^ expr_to_string y ^ ")"
+  | EAbortT (x, y) -> "EAbortT (" ^ show x ^ ", " ^ typ_to_string y ^ ")"
+  | EComment (x, y, z) -> "EComment (" ^ show x ^ ", " ^ expr_to_string y ^ ", " ^ show z ^ ")"
+  | EStandaloneComment x -> "EStandaloneComment " ^ show x
+  | EAddrOf x -> "EAddrOf " ^ expr_to_string x
+  | EBufNull x -> "EBufNull " ^ typ_to_string x
+  | EBufDiff (x, y) -> "EBufDiff (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
+
+instance showable_decl = { show = decl_to_string }
 
 let current_version: version = 28
 

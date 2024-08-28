@@ -1797,7 +1797,7 @@ let union_loc_of_loc_addresses #al c b preserve_liveness r n =
 let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
-#push-options "--z3rlimit 15"
+#push-options "--z3rlimit 25"
 let union_loc_of_loc_includes_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))

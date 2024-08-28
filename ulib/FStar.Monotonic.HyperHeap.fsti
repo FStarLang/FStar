@@ -36,7 +36,7 @@ val rid :eqtype
 val reveal (r:rid) :GTot (list (int & int))
 
 let rid_last_component (r:rid) :GTot int
-  = let open FStar.List.Tot in
+  = let open FStar.List.Tot.Base in
     let r = reveal r in
     if length r = 0 then 0
     else snd (hd r)
@@ -66,7 +66,7 @@ let disjoint (i:rid) (j:rid) :GTot bool = not (includes i j) && not (includes j 
 val lemma_disjoint_includes (i:rid) (j:rid) (k:rid)
   :Lemma (requires  (disjoint i j /\ includes j k))
          (ensures   (disjoint i k))
-         (decreases (List.Tot.length (reveal k)))
+         (decreases (List.Tot.Base.length (reveal k)))
          [SMTPat (disjoint i j); SMTPat (includes j k)]
 
 val extends (i:rid) (j:rid) :GTot bool

@@ -409,7 +409,7 @@ let rec (apply_squash_or_lem :
                                                                     Obj.magic
                                                                     (Obj.repr
                                                                     (FStar_Tactics_V2_Derived.fail
-                                                                    "mapply: can't apply (1)")))
+                                                                    "mapply: can't apply (2)")))
                                                                     uu___5)))
                                                                     uu___5)
                                                                   | FStar_Pervasives_Native.None
@@ -547,7 +547,7 @@ let rec (apply_squash_or_lem :
                                                             Obj.magic
                                                               (Obj.repr
                                                                  (FStar_Tactics_V2_Derived.fail
-                                                                    "mapply: can't apply (2)"))))
+                                                                    "mapply: can't apply (3)"))))
                                                   uu___4))) uu___4)))) uu___2)))
 let (mapply0 :
   FStar_Tactics_NamedView.term -> (unit, unit) FStar_Tactics_Effect.tac_repr)

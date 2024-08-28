@@ -1016,6 +1016,11 @@ instance showable_pat    = { show = pat_to_string; }
 instance showable_const  = { show = const_to_string; }
 instance showable_letbinding  = { show = lb_to_string; }
 instance showable_modul       = { show = modul_to_string; }
+instance showable_ctx_uvar_meta = {
+  show = (function
+          | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
+          | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
+}
 
 instance pretty_term     = { pp   = term_to_doc; }
 instance pretty_univ     = { pp   = univ_to_doc; }

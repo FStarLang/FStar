@@ -191,6 +191,23 @@ let go _ =
 
           | Some (_, tcr) ->
             print1 "%s\n" (show tcr.checked_module)
+
+        else if Some? (Options.read_krml_file ()) then
+          let path = Some?.v <| Options.read_krml_file () in
+          match load_value_from_file path <: option FStar.Extraction.Krml.binary_format with
+          | None ->
+            let open FStar.Pprint in
+            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+                Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
+              ])
+          | Some (version, files) ->
+            print1 "Karamel format version: %s\n" (show version);
+            (* Just "show decls" would print it, we just format this a bit *)
+            files |> List.iter (fun (name, decls) ->
+              print1 "%s:\n" name;
+              decls |> List.iter (fun d -> print1 "  %s\n" (show d))
+            )
+
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()

@@ -540,6 +540,10 @@ let (subst_binder' :
         FStar_Compiler_List.map (subst' s) b.FStar_Syntax_Syntax.binder_attrs in
       FStar_Syntax_Syntax.mk_binder_with_attrs uu___ uu___1
         b.FStar_Syntax_Syntax.binder_positivity uu___2
+let (subst_binder :
+  FStar_Syntax_Syntax.subst_elt Prims.list ->
+    FStar_Syntax_Syntax.binder -> FStar_Syntax_Syntax.binder)
+  = fun s -> fun b -> subst_binder' ([s], FStar_Syntax_Syntax.NoUseRange) b
 let (subst_binders' :
   (FStar_Syntax_Syntax.subst_elt Prims.list Prims.list *
     FStar_Syntax_Syntax.maybe_set_use_range) ->

@@ -22,3 +22,4 @@ include FStar.Reflection.V2.Derived
 include FStar.Reflection.V2.Derived.Lemmas
 include FStar.Reflection.Const
 include FStar.Reflection.V2.Compare
+include FStar.Reflection.V2.Collect

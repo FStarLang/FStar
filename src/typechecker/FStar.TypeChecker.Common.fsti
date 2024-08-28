@@ -25,9 +25,10 @@ open FStar.Syntax
 open FStar.Syntax.Syntax
 open FStar.Ident
 open FStar.Class.Show
+open FStar.Class.Monoid
 
-(* Bring instances in scope :-) *)
-let () = let open FStar.Syntax.Print in ()
+(* Bring instances in scope *)
+open FStar.Syntax.Print {}
 
 module S = FStar.Syntax.Syntax
 
@@ -167,8 +168,10 @@ type guard_t = {
 }
 
 val trivial_guard : guard_t
-
 val conj_guard    : guard_t -> guard_t -> guard_t
+
+instance val monoid_guard_t : monoid guard_t (* conj_guard, trivial_guard *)
+
 val check_trivial : term -> guard_formula
 val imp_guard     : guard_t -> guard_t -> guard_t
 val conj_guards   : list guard_t -> guard_t

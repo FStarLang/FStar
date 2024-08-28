@@ -822,7 +822,8 @@ let (gen_wps_for_free :
                       FStar_TypeChecker_Normalize.normalize
                         [FStar_TypeChecker_Env.Beta;
                         FStar_TypeChecker_Env.Eager_unfolding;
-                        FStar_TypeChecker_Env.UnfoldTac;
+                        FStar_TypeChecker_Env.DontUnfoldAttr
+                          [FStar_Parser_Const.tac_opaque_attr];
                         FStar_TypeChecker_Env.UnfoldUntil
                           FStar_Syntax_Syntax.delta_constant] env2 t in
                     let uu___3 =
@@ -1019,7 +1020,8 @@ let (gen_wps_for_free :
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Beta;
                           FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.UnfoldTac;
+                          FStar_TypeChecker_Env.DontUnfoldAttr
+                            [FStar_Parser_Const.tac_opaque_attr];
                           FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant] env2 t in
                       let uu___3 =
@@ -1767,7 +1769,8 @@ and (star_type' :
                          FStar_TypeChecker_Normalize.normalize
                            [FStar_TypeChecker_Env.EraseUniverses;
                            FStar_TypeChecker_Env.Inlining;
-                           FStar_TypeChecker_Env.UnfoldTac;
+                           FStar_TypeChecker_Env.DontUnfoldAttr
+                             [FStar_Parser_Const.tac_opaque_attr];
                            FStar_TypeChecker_Env.UnfoldUntil
                              FStar_Syntax_Syntax.delta_constant] env1.tcenv
                            t1 in
@@ -2291,7 +2294,8 @@ and (infer :
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Env.Beta;
           FStar_TypeChecker_Env.Eager_unfolding;
-          FStar_TypeChecker_Env.UnfoldTac;
+          FStar_TypeChecker_Env.DontUnfoldAttr
+            [FStar_Parser_Const.tac_opaque_attr];
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses] env1.tcenv in
@@ -2496,7 +2500,8 @@ and (infer :
                                  FStar_TypeChecker_Normalize.normalize
                                    [FStar_TypeChecker_Env.Beta;
                                    FStar_TypeChecker_Env.Eager_unfolding;
-                                   FStar_TypeChecker_Env.UnfoldTac;
+                                   FStar_TypeChecker_Env.DontUnfoldAttr
+                                     [FStar_Parser_Const.tac_opaque_attr];
                                    FStar_TypeChecker_Env.UnfoldUntil
                                      FStar_Syntax_Syntax.delta_constant;
                                    FStar_TypeChecker_Env.EraseUniverses]
@@ -3852,7 +3857,8 @@ let (n :
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   FStar_TypeChecker_Normalize.normalize
-    [FStar_TypeChecker_Env.UnfoldTac;
+    [FStar_TypeChecker_Env.DontUnfoldAttr
+       [FStar_Parser_Const.tac_opaque_attr];
     FStar_TypeChecker_Env.Beta;
     FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
     FStar_TypeChecker_Env.DoNotUnfoldPureLets;

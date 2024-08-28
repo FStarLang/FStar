@@ -56,8 +56,7 @@ let simple_equality_assertions_within_a_function () =
       by rewrite_all_equalities (); //identical to one of the queries above, but now inside a function, which produces a slightly different VC
   assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_boolean x)
       by rewrite_all_equalities (); //we're left with (b2t (visible_boolean 0)), since we didn't ask for it to be normalized
-  assert (forall (x:int). x==0 ==> (forall (y:int). y==0 ==> x==y) /\ (forall (z:int). z==0 ==> x==z) /\ visible_predicate x) //we're left with True, since it is explicit unfolded away
-      by (visit (fun () -> unfold_definition_and_simplify_eq (quote visible_predicate)))
+  ()
 
 let local_let_bindings =
   assert (let x = 10 in x + 0 == 10) by trivial ()
@@ -101,9 +100,6 @@ let mul_commute_ascription () : Tac unit =
         apply_lemma (quote lemma_mul_comm)
     | _ ->
         fail "Not an equality"
-
-let test_apply_ascription' (x:nat) (y:nat) =
-  assert (op_Multiply x y == op_Multiply y x) by (visit idtac)
 
 let test_apply_ascription (x:nat) (y:nat) =
   (assert (op_Multiply x y == op_Multiply y x))

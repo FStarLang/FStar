@@ -48,6 +48,8 @@ val decorated_pattern_as_term: pat -> list bv & term
 
 //instantiation of implicits
 val maybe_implicit_with_meta_or_attr: bqual -> list attribute -> bool
+
+val instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t
 val maybe_instantiate : env -> term -> typ -> (term & typ & guard_t)
 
 //operations on computation types

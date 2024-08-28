@@ -1224,3 +1224,6 @@ val coercion : unit
     type `foo__A__payload` is decorated with an attribute
     `desugar_of_variant_record ["M.A"]`. *)
 val desugar_of_variant_record (type_name: string): unit
+
+(** Tag for implicits that are to be solved by a tactic. *)
+val defer_to (#a:Type) (tag : a) : unit

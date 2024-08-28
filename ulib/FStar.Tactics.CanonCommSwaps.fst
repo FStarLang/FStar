@@ -15,7 +15,7 @@
 *)
 module FStar.Tactics.CanonCommSwaps
 
-open FStar.List.Tot
+open FStar.List.Tot.Base
 
 let swap (n:nat) :Type = x:nat{x < n-1}
 
