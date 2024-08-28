@@ -56,22 +56,11 @@ jobs:
         run: |
           echo "RESOURCEMONITOR=1" >> $GITHUB_ENV
 
-      - name: Make sure base image is present, or build it
-        run: |
-          if ! docker images | grep '^fstar_ci_base '; then
-            echo '*** REBUILDING fstar_ci_base image'
-            CI_IMAGEBUILD_INITIAL_TIMESTAMP=$(date '+%s')
-            docker build -f .docker/base.Dockerfile -t fstar_ci_base .
-            CI_IMAGEBUILD_FINAL_TIMESTAMP=$(date '+%s')
-            echo "CI_IMAGEBUILD_INITIAL_TIMESTAMP=$CI_IMAGEBUILD_INITIAL_TIMESTAMP" >> $GITHUB_ENV
-            echo "CI_IMAGEBUILD_FINAL_TIMESTAMP=$CI_IMAGEBUILD_FINAL_TIMESTAMP" >> $GITHUB_ENV
-          fi
-
       - name: Build FStar and its dependencies
         run: |
           ci_docker_image_tag=fstar:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
           echo "ci_docker_image_tag=$ci_docker_image_tag" >> $GITHUB_ENV
-          docker build -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_RECORD_HINTS_ARG $CI_DO_NO_KARAMEL . |& tee BUILDLOG
+          docker build --pull -t $ci_docker_image_tag -f .docker/standalone.Dockerfile --build-arg CI_BRANCH=$GITHUB_REF_NAME --build-arg RESOURCEMONITOR=$RESOURCEMONITOR --build-arg CI_THREADS=$(nproc) $CI_RECORD_HINTS_ARG $CI_DO_NO_KARAMEL . |& tee BUILDLOG
           ci_docker_status=$(docker run $ci_docker_image_tag /bin/bash -c 'cat $FSTAR_HOME/status.txt' || echo false)
           if $ci_docker_status && [[ -z "$CI_SKIP_IMAGE_TAG" ]] ; then
             if ! { echo $GITHUB_REF_NAME | grep '/' ; } ; then
