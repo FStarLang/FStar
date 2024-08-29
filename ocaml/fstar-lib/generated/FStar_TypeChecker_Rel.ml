@@ -329,7 +329,9 @@ let (new_uvar :
                       FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on
                         = [];
                       FStar_Syntax_Syntax.uvar_decoration_should_check =
-                        should_check
+                        should_check;
+                      FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+                        false
                     } in
                   let ctx_uvar =
                     let uu___ = FStar_Syntax_Unionfind.fresh decoration r in
@@ -1752,7 +1754,9 @@ let set_uvar :
                    FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
                      (uu___2.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
                    FStar_Syntax_Syntax.uvar_decoration_should_check =
-                     should_check
+                     should_check;
+                   FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+                     (uu___2.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
                  } in
                FStar_Syntax_Unionfind.change_decoration
                  u.FStar_Syntax_Syntax.ctx_uvar_head uu___1);
@@ -5250,48 +5254,130 @@ let rec (solve : worklist -> solution) =
                    solve_prob hd FStar_Pervasives_Native.None [] probs1 in
                  solve uu___5
                else
-                 if
-                   (rank1 = FStar_TypeChecker_Common.Rigid_rigid) ||
-                     ((tp.FStar_TypeChecker_Common.relation =
-                         FStar_TypeChecker_Common.EQ)
-                        && (rank1 <> FStar_TypeChecker_Common.Flex_flex))
-                 then solve_t' tp probs1
-                 else
-                   if probs1.defer_ok = DeferAny
-                   then
-                     maybe_defer_to_user_tac tp
-                       "deferring flex_rigid or flex_flex subtyping" probs1
-                   else
-                     if rank1 = FStar_TypeChecker_Common.Flex_flex
-                     then
-                       solve_t'
-                         {
-                           FStar_TypeChecker_Common.pid =
-                             (tp.FStar_TypeChecker_Common.pid);
-                           FStar_TypeChecker_Common.lhs =
-                             (tp.FStar_TypeChecker_Common.lhs);
-                           FStar_TypeChecker_Common.relation =
-                             FStar_TypeChecker_Common.EQ;
-                           FStar_TypeChecker_Common.rhs =
-                             (tp.FStar_TypeChecker_Common.rhs);
-                           FStar_TypeChecker_Common.element =
-                             (tp.FStar_TypeChecker_Common.element);
-                           FStar_TypeChecker_Common.logical_guard =
-                             (tp.FStar_TypeChecker_Common.logical_guard);
-                           FStar_TypeChecker_Common.logical_guard_uvar =
-                             (tp.FStar_TypeChecker_Common.logical_guard_uvar);
-                           FStar_TypeChecker_Common.reason =
-                             (tp.FStar_TypeChecker_Common.reason);
-                           FStar_TypeChecker_Common.loc =
-                             (tp.FStar_TypeChecker_Common.loc);
-                           FStar_TypeChecker_Common.rank =
-                             (tp.FStar_TypeChecker_Common.rank);
-                           FStar_TypeChecker_Common.logical =
-                             (tp.FStar_TypeChecker_Common.logical)
-                         } probs1
-                     else
-                       solve_rigid_flex_or_flex_rigid_subtyping rank1 tp
-                         probs1))
+                 (let is_expand_uvar t =
+                    let uu___6 =
+                      let uu___7 = FStar_Syntax_Subst.compress t in
+                      uu___7.FStar_Syntax_Syntax.n in
+                    match uu___6 with
+                    | FStar_Syntax_Syntax.Tm_uvar (ctx_u, uu___7) ->
+                        let uu___8 =
+                          FStar_Syntax_Unionfind.find_decoration
+                            ctx_u.FStar_Syntax_Syntax.ctx_uvar_head in
+                        uu___8.FStar_Syntax_Syntax.uvar_decoration_should_unrefine
+                    | uu___7 -> false in
+                  let maybe_expand tp1 =
+                    let uu___6 =
+                      ((let uu___7 = FStar_Options_Ext.get "__unrefine" in
+                        uu___7 <> "") &&
+                         (tp1.FStar_TypeChecker_Common.relation =
+                            FStar_TypeChecker_Common.SUB))
+                        && (is_expand_uvar tp1.FStar_TypeChecker_Common.rhs) in
+                    if uu___6
+                    then
+                      let lhs = tp1.FStar_TypeChecker_Common.lhs in
+                      let lhs_norm =
+                        FStar_TypeChecker_Normalize.unfold_whnf'
+                          [FStar_TypeChecker_Env.DontUnfoldAttr
+                             [FStar_Parser_Const.do_not_unrefine_attr]]
+                          (p_env probs1 hd) lhs in
+                      let uu___7 =
+                        let uu___8 =
+                          let uu___9 = FStar_Syntax_Subst.compress lhs_norm in
+                          uu___9.FStar_Syntax_Syntax.n in
+                        FStar_Syntax_Syntax.uu___is_Tm_refine uu___8 in
+                      (if uu___7
+                       then
+                         let lhs' =
+                           FStar_TypeChecker_Normalize.unfold_whnf'
+                             [FStar_TypeChecker_Env.DontUnfoldAttr
+                                [FStar_Parser_Const.do_not_unrefine_attr];
+                             FStar_TypeChecker_Env.Unrefine]
+                             (p_env probs1 hd) lhs_norm in
+                         ((let uu___9 = FStar_Compiler_Effect.op_Bang dbg_Rel in
+                           if uu___9
+                           then
+                             let uu___10 =
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term
+                                 tp1.FStar_TypeChecker_Common.rhs in
+                             let uu___11 =
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term lhs in
+                             let uu___12 =
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term lhs' in
+                             FStar_Compiler_Util.print3
+                               "GGG widening uvar %s! RHS %s ~> %s\n" uu___10
+                               uu___11 uu___12
+                           else ());
+                          {
+                            FStar_TypeChecker_Common.pid =
+                              (tp1.FStar_TypeChecker_Common.pid);
+                            FStar_TypeChecker_Common.lhs = lhs';
+                            FStar_TypeChecker_Common.relation =
+                              (tp1.FStar_TypeChecker_Common.relation);
+                            FStar_TypeChecker_Common.rhs =
+                              (tp1.FStar_TypeChecker_Common.rhs);
+                            FStar_TypeChecker_Common.element =
+                              (tp1.FStar_TypeChecker_Common.element);
+                            FStar_TypeChecker_Common.logical_guard =
+                              (tp1.FStar_TypeChecker_Common.logical_guard);
+                            FStar_TypeChecker_Common.logical_guard_uvar =
+                              (tp1.FStar_TypeChecker_Common.logical_guard_uvar);
+                            FStar_TypeChecker_Common.reason =
+                              (tp1.FStar_TypeChecker_Common.reason);
+                            FStar_TypeChecker_Common.loc =
+                              (tp1.FStar_TypeChecker_Common.loc);
+                            FStar_TypeChecker_Common.rank =
+                              (tp1.FStar_TypeChecker_Common.rank);
+                            FStar_TypeChecker_Common.logical =
+                              (tp1.FStar_TypeChecker_Common.logical)
+                          })
+                       else tp1)
+                    else tp1 in
+                  let tp1 = maybe_expand tp in
+                  if
+                    (rank1 = FStar_TypeChecker_Common.Rigid_rigid) ||
+                      ((tp1.FStar_TypeChecker_Common.relation =
+                          FStar_TypeChecker_Common.EQ)
+                         && (rank1 <> FStar_TypeChecker_Common.Flex_flex))
+                  then solve_t' tp1 probs1
+                  else
+                    if probs1.defer_ok = DeferAny
+                    then
+                      maybe_defer_to_user_tac tp1
+                        "deferring flex_rigid or flex_flex subtyping" probs1
+                    else
+                      if rank1 = FStar_TypeChecker_Common.Flex_flex
+                      then
+                        solve_t'
+                          {
+                            FStar_TypeChecker_Common.pid =
+                              (tp1.FStar_TypeChecker_Common.pid);
+                            FStar_TypeChecker_Common.lhs =
+                              (tp1.FStar_TypeChecker_Common.lhs);
+                            FStar_TypeChecker_Common.relation =
+                              FStar_TypeChecker_Common.EQ;
+                            FStar_TypeChecker_Common.rhs =
+                              (tp1.FStar_TypeChecker_Common.rhs);
+                            FStar_TypeChecker_Common.element =
+                              (tp1.FStar_TypeChecker_Common.element);
+                            FStar_TypeChecker_Common.logical_guard =
+                              (tp1.FStar_TypeChecker_Common.logical_guard);
+                            FStar_TypeChecker_Common.logical_guard_uvar =
+                              (tp1.FStar_TypeChecker_Common.logical_guard_uvar);
+                            FStar_TypeChecker_Common.reason =
+                              (tp1.FStar_TypeChecker_Common.reason);
+                            FStar_TypeChecker_Common.loc =
+                              (tp1.FStar_TypeChecker_Common.loc);
+                            FStar_TypeChecker_Common.rank =
+                              (tp1.FStar_TypeChecker_Common.rank);
+                            FStar_TypeChecker_Common.logical =
+                              (tp1.FStar_TypeChecker_Common.logical)
+                          } probs1
+                      else
+                        solve_rigid_flex_or_flex_rigid_subtyping rank1 tp1
+                          probs1)))
      | FStar_Pervasives_Native.None ->
          (match probs.wl_deferred with
           | [] ->
@@ -5486,9 +5572,7 @@ and (defer_to_user_tac :
              typeclass_variables = (wl1.typeclass_variables)
            } in
          solve wl2)
-and (maybe_defer_to_user_tac :
-  FStar_Syntax_Syntax.typ FStar_TypeChecker_Common.problem ->
-    Prims.string -> worklist -> solution)
+and (maybe_defer_to_user_tac : tprob -> Prims.string -> worklist -> solution)
   =
   fun prob ->
     fun reason ->
@@ -15741,30 +15825,32 @@ let (resolve_implicits' :
                                FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on
                                  = uu___3;
                                FStar_Syntax_Syntax.uvar_decoration_should_check
-                                 = uvar_decoration_should_check;_}
+                                 = uvar_decoration_should_check;
+                               FStar_Syntax_Syntax.uvar_decoration_should_unrefine
+                                 = uu___4;_}
                                ->
-                               ((let uu___5 =
+                               ((let uu___6 =
                                    FStar_Compiler_Effect.op_Bang dbg_Rel in
-                                 if uu___5
+                                 if uu___6
                                  then
-                                   let uu___6 =
-                                     FStar_Class_Show.show
-                                       FStar_Syntax_Print.showable_term tm in
                                    let uu___7 =
                                      FStar_Class_Show.show
-                                       FStar_Syntax_Print.showable_ctxu ctx_u in
+                                       FStar_Syntax_Print.showable_term tm in
                                    let uu___8 =
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_ctxu ctx_u in
+                                   let uu___9 =
                                      FStar_Class_Show.show
                                        (FStar_Class_Show.printableshow
                                           FStar_Class_Printable.printable_bool)
                                        is_tac in
-                                   let uu___9 =
+                                   let uu___10 =
                                      FStar_Class_Show.show
                                        FStar_Syntax_Syntax.showable_should_check_uvar
                                        uvar_decoration_should_check in
                                    FStar_Compiler_Util.print4
                                      "resolve_implicits' loop, imp_tm=%s and ctx_u=%s, is_tac=%s, should_check=%s\n"
-                                     uu___6 uu___7 uu___8 uu___9
+                                     uu___7 uu___8 uu___9 uu___10
                                  else ());
                                 if
                                   FStar_Syntax_Syntax.uu___is_Allow_unresolved
@@ -15777,9 +15863,9 @@ let (resolve_implicits' :
                                     (unresolved ctx_u) &&
                                       (flex_uvar_has_meta_tac ctx_u)
                                   then
-                                    (let uu___5 =
+                                    (let uu___6 =
                                        ctx_u.FStar_Syntax_Syntax.ctx_uvar_meta in
-                                     match uu___5 with
+                                     match uu___6 with
                                      | FStar_Pervasives_Native.Some
                                          (FStar_Syntax_Syntax.Ctx_uvar_meta_tac
                                          tac) ->
@@ -15932,39 +16018,39 @@ let (resolve_implicits' :
                                                 ctx_u.FStar_Syntax_Syntax.ctx_uvar_gamma) in
                                          if defer_open_metas && is_open
                                          then
-                                           ((let uu___7 =
+                                           ((let uu___8 =
                                                (FStar_Compiler_Effect.op_Bang
                                                   dbg_Rel)
                                                  ||
                                                  (FStar_Compiler_Effect.op_Bang
                                                     dbg_Imps) in
-                                             if uu___7
+                                             if uu___8
                                              then
-                                               let uu___8 =
+                                               let uu___9 =
                                                  FStar_Class_Show.show
                                                    FStar_Syntax_Print.showable_ctxu
                                                    ctx_u in
                                                FStar_Compiler_Util.print1
                                                  "Deferring implicit due to open ctx/typ %s\n"
-                                                 uu___8
+                                                 uu___9
                                              else ());
                                             until_fixpoint
                                               (((hd, Implicit_unresolved) ::
                                                 out), changed,
                                                 defer_open_metas) tl)
                                          else
-                                           (let uu___7 =
+                                           (let uu___8 =
                                               (is_open &&
-                                                 (let uu___8 =
+                                                 (let uu___9 =
                                                     meta_tac_allowed_for_open_problem
                                                       tac in
-                                                  Prims.op_Negation uu___8))
+                                                  Prims.op_Negation uu___9))
                                                 &&
-                                                (let uu___8 =
+                                                (let uu___9 =
                                                    FStar_Options_Ext.get
                                                      "compat:open_metas" in
-                                                 uu___8 = "") in
-                                            if uu___7
+                                                 uu___9 = "") in
+                                            if uu___8
                                             then
                                               until_fixpoint
                                                 (((hd, Implicit_unresolved)
@@ -15973,9 +16059,9 @@ let (resolve_implicits' :
                                             else
                                               (let solve_with t =
                                                  let extra =
-                                                   let uu___9 =
+                                                   let uu___10 =
                                                      teq_nosmt env1 t tm in
-                                                   match uu___9 with
+                                                   match uu___10 with
                                                    | FStar_Pervasives_Native.None
                                                        ->
                                                        FStar_Compiler_Effect.failwith
@@ -15988,13 +16074,13 @@ let (resolve_implicits' :
                                                      defer_open_metas)
                                                    (FStar_Compiler_List.op_At
                                                       extra tl) in
-                                               let uu___9 = cacheable tac in
-                                               if uu___9
+                                               let uu___10 = cacheable tac in
+                                               if uu___10
                                                then
-                                                 let uu___10 =
+                                                 let uu___11 =
                                                    meta_arg_cache_lookup tac
                                                      env1 typ in
-                                                 match uu___10 with
+                                                 match uu___11 with
                                                  | FStar_Pervasives_Native.Some
                                                      res -> solve_with res
                                                  | FStar_Pervasives_Native.None
@@ -16189,10 +16275,10 @@ let (resolve_implicits' :
                                            } in
                                          if is_tac
                                          then
-                                           ((let uu___6 =
+                                           ((let uu___7 =
                                                is_tac_implicit_resolved env1
                                                  hd1 in
-                                             if uu___6
+                                             if uu___7
                                              then
                                                let force_univ_constraints =
                                                  true in
@@ -16228,19 +16314,19 @@ let (resolve_implicits' :
                                                     defer_open_metas) tl
                                             | FStar_Pervasives_Native.Some
                                                 imps ->
-                                                let uu___6 =
-                                                  let uu___7 =
-                                                    let uu___8 =
+                                                let uu___7 =
+                                                  let uu___8 =
+                                                    let uu___9 =
                                                       FStar_Compiler_List.map
                                                         (fun i ->
                                                            (i,
                                                              Implicit_unresolved))
                                                         imps in
                                                     FStar_Compiler_List.op_At
-                                                      uu___8 out in
-                                                  (uu___7, true,
+                                                      uu___9 out in
+                                                  (uu___8, true,
                                                     defer_open_metas) in
-                                                until_fixpoint uu___6 tl)))))) in
+                                                until_fixpoint uu___7 tl)))))) in
           until_fixpoint ([], false, true) implicits
 let (resolve_implicits :
   FStar_TypeChecker_Env.env ->

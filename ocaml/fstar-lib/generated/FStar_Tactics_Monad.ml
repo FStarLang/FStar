@@ -843,19 +843,14 @@ let (new_uvar :
               let uu___ =
                 FStar_TypeChecker_Env.new_tac_implicit_var reason rng env typ
                   should_check uvar_typedness_deps
-                  FStar_Pervasives_Native.None in
+                  FStar_Pervasives_Native.None false in
               match uu___ with
               | (u, ctx_uvar, g_u) ->
                   let uu___1 =
                     add_implicits g_u.FStar_TypeChecker_Common.implicits in
                   bind uu___1
                     (fun uu___2 ->
-                       let uu___3 =
-                         let uu___4 =
-                           let uu___5 = FStar_Compiler_List.hd ctx_uvar in
-                           FStar_Pervasives_Native.fst uu___5 in
-                         (u, uu___4) in
-                       ret uu___3)
+                       ret (u, (FStar_Pervasives_Native.fst ctx_uvar)))
 let (mk_irrelevant_goal :
   Prims.string ->
     FStar_TypeChecker_Env.env ->
@@ -1073,7 +1068,9 @@ let (set_uvar_expected_typ :
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
           FStar_Syntax_Syntax.uvar_decoration_should_check =
-            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check)
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_with_should_check_tag :
   FStar_Syntax_Syntax.ctx_uvar ->
@@ -1091,7 +1088,9 @@ let (mark_uvar_with_should_check_tag :
             (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
-          FStar_Syntax_Syntax.uvar_decoration_should_check = sc
+          FStar_Syntax_Syntax.uvar_decoration_should_check = sc;
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->

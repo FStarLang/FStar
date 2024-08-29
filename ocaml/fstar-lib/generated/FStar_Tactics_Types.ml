@@ -235,16 +235,13 @@ let (goal_of_goal_ty :
       let uu___ =
         FStar_TypeChecker_Env.new_implicit_var_aux "proofstate_of_goal_ty"
           typ.FStar_Syntax_Syntax.pos env typ FStar_Syntax_Syntax.Strict
-          FStar_Pervasives_Native.None in
+          FStar_Pervasives_Native.None false in
       match uu___ with
-      | (u, ctx_uvars, g_u) ->
-          let uu___1 = FStar_Compiler_List.hd ctx_uvars in
-          (match uu___1 with
-           | (ctx_uvar, uu___2) ->
-               let g =
-                 let uu___3 = FStar_Options.peek () in
-                 mk_goal env ctx_uvar uu___3 false "" in
-               (g, g_u))
+      | (u, (ctx_uvar, uu___1), g_u) ->
+          let g =
+            let uu___2 = FStar_Options.peek () in
+            mk_goal env ctx_uvar uu___2 false "" in
+          (g, g_u)
 let (goal_of_implicit :
   FStar_TypeChecker_Env.env -> FStar_TypeChecker_Common.implicit -> goal) =
   fun env ->

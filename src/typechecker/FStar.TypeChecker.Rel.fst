@@ -179,7 +179,8 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar & term & w
     let decoration = {
              uvar_decoration_typ = k;
              uvar_decoration_should_check = should_check;
-             uvar_decoration_typedness_depends_on = []
+             uvar_decoration_typedness_depends_on = [];
+             uvar_decoration_should_unrefine = false;
         }
     in
     let ctx_uvar = {
@@ -2194,6 +2195,30 @@ let rec solve (probs :worklist) : solution =
 
       | TProb tp ->
         if BU.physical_equality tp.lhs tp.rhs then solve (solve_prob hd None [] probs) else
+        let is_expand_uvar (t:term) : bool =
+          match (SS.compress t).n with
+          | Tm_uvar (ctx_u, _) -> (UF.find_decoration ctx_u.ctx_uvar_head).uvar_decoration_should_unrefine
+          | _ -> false
+        in
+        let maybe_expand (tp:tprob) : tprob =
+          if Options.Ext.get "__unrefine" <> "" && tp.relation = SUB && is_expand_uvar tp.rhs
+          then
+            let lhs = tp.lhs in
+            let lhs_norm = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]] (p_env probs hd) lhs in
+            if Tm_refine? (SS.compress lhs_norm).n then
+              (* It is indeed a refinement, normalize again to remove them. *)
+              let lhs' = N.unfold_whnf' [Env.DontUnfoldAttr [PC.do_not_unrefine_attr]; Env.Unrefine] (p_env probs hd) lhs_norm in
+              if !dbg_Rel then
+                BU.print3 "GGG widening uvar %s! RHS %s ~> %s\n"
+                  (show tp.rhs) (show lhs) (show lhs');
+              { tp with lhs = lhs' }
+            else
+              tp
+          else tp
+        in
+
+        let tp = maybe_expand tp in
+
         if rank=Rigid_rigid
         || (tp.relation = EQ && rank <> Flex_flex)
         then solve_t' tp probs
@@ -4150,7 +4175,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
       | _, Tm_app {hd={n=Tm_uvar _}} when (problem.relation = EQ) ->
         solve_t' (invert problem) wl
 
-      (* flex-rigid: ?u _ <: t1 -> t2 *)
+      (* flex-rigid wrt an arrow: ?u _ <: t1 -> t2 *)
       | Tm_uvar _, Tm_arrow _
       | Tm_app {hd={n=Tm_uvar _}}, Tm_arrow _ ->
         //FIXME! This is weird; it should be handled by imitate_arrow

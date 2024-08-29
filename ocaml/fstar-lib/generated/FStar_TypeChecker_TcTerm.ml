@@ -321,7 +321,7 @@ let (check_no_escape :
                                            FStar_Syntax_Util.type_u () in
                                          FStar_Pervasives_Native.fst uu___8 in
                                        FStar_TypeChecker_Util.new_implicit_var
-                                         "no escape" uu___6 env uu___7 in
+                                         "no escape" uu___6 env uu___7 false in
                                      (match uu___5 with
                                       | (s, uu___6, g0) ->
                                           let uu___7 =
@@ -3254,7 +3254,7 @@ and (tc_maybe_toplevel_term :
                                          FStar_TypeChecker_Util.new_implicit_var
                                            "tc_term reflect"
                                            e2.FStar_Syntax_Syntax.pos
-                                           env_no_ex a in
+                                           env_no_ex a false in
                                        (match uu___15 with
                                         | (a_uvar, uu___16, g_a) ->
                                             let uu___17 =
@@ -3908,7 +3908,8 @@ and (tc_match :
                                     let uu___8 =
                                       FStar_TypeChecker_Util.new_implicit_var
                                         "match result"
-                                        e12.FStar_Syntax_Syntax.pos env k in
+                                        e12.FStar_Syntax_Syntax.pos env k
+                                        false in
                                     (match uu___8 with
                                      | (res_t, uu___9, g) ->
                                          let uu___10 =
@@ -4717,41 +4718,52 @@ and (tc_value :
                 let uu___2 = FStar_Syntax_Util.type_u () in
                 (match uu___2 with
                  | (k, u) ->
-                     FStar_TypeChecker_Util.new_implicit_var
-                       "type of user-provided implicit term" r env1 k)
-            | FStar_Pervasives_Native.Some (t, use_eq) ->
-                (if use_eq
-                 then
-                   (let uu___3 =
-                      let uu___4 =
-                        let uu___5 =
+                     let uu___3 =
+                       FStar_TypeChecker_Util.new_implicit_var
+                         "type of user-provided implicit term" r env1 k false in
+                     (match uu___3 with | (t, uu___4, g0) -> (t, g0)))
+            | FStar_Pervasives_Native.Some (t, use_eq) when use_eq ->
+                let uu___2 =
+                  let uu___3 =
+                    let uu___4 =
+                      let uu___5 =
+                        let uu___6 =
                           FStar_Class_Show.show
                             FStar_Syntax_Print.showable_term t in
                         FStar_Compiler_Util.format1
-                          "Equality ascription as an expected type for unk (:%s) is not yet supported, please use subtyping"
-                          uu___5 in
-                      (FStar_Errors_Codes.Fatal_NotSupported, uu___4) in
-                    FStar_Errors.raise_error uu___3 e.FStar_Syntax_Syntax.pos)
-                 else ();
-                 (t, [],
-                   (FStar_Class_Monoid.mzero
-                      FStar_TypeChecker_Common.monoid_guard_t))) in
-          (match uu___ with
-           | (t, uu___1, g0) ->
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = FStar_Compiler_Range_Ops.string_of_range r in
-                   Prims.strcat "user-provided implicit term at " uu___4 in
-                 FStar_TypeChecker_Util.new_implicit_var uu___3 r env1 t in
-               (match uu___2 with
-                | (e1, uu___3, g1) ->
-                    let uu___4 =
-                      let uu___5 = FStar_Syntax_Syntax.mk_Total t in
-                      FStar_TypeChecker_Common.lcomp_of_comp uu___5 in
+                          "Equality ascription as an expected type for unk (:%s) is not yet supported."
+                          uu___6 in
+                      FStar_Errors_Msg.text uu___5 in
                     let uu___5 =
+                      let uu___6 =
+                        FStar_Errors_Msg.text "Please use subtyping." in
+                      [uu___6] in
+                    uu___4 :: uu___5 in
+                  (FStar_Errors_Codes.Fatal_NotSupported, uu___3) in
+                FStar_Errors.raise_error_doc uu___2 e.FStar_Syntax_Syntax.pos
+            | FStar_Pervasives_Native.Some (t, uu___2) ->
+                (t,
+                  (FStar_Class_Monoid.mzero
+                     FStar_TypeChecker_Common.monoid_guard_t)) in
+          (match uu___ with
+           | (t, g0) ->
+               let uu___1 =
+                 let uu___2 =
+                   let uu___3 =
+                     FStar_Class_Show.show
+                       FStar_Compiler_Range_Ops.showable_range r in
+                   Prims.strcat "user-provided implicit term at " uu___3 in
+                 FStar_TypeChecker_Util.new_implicit_var uu___2 r env1 t
+                   false in
+               (match uu___1 with
+                | (e1, uu___2, g1) ->
+                    let uu___3 =
+                      let uu___4 = FStar_Syntax_Syntax.mk_Total t in
+                      FStar_TypeChecker_Common.lcomp_of_comp uu___4 in
+                    let uu___4 =
                       FStar_Class_Monoid.op_Plus_Plus
                         FStar_TypeChecker_Common.monoid_guard_t g0 g1 in
-                    (e1, uu___4, uu___5)))
+                    (e1, uu___3, uu___4)))
       | FStar_Syntax_Syntax.Tm_name x ->
           let uu___ = FStar_TypeChecker_Env.lookup_bv env1 x in
           (match uu___ with
@@ -5416,7 +5428,7 @@ and (tc_comp :
                                                        FStar_TypeChecker_Util.new_implicit_var
                                                          "implicit for type of the well-founded relation in decreases clause"
                                                          rel.FStar_Syntax_Syntax.pos
-                                                         env1 t in
+                                                         env1 t false in
                                                      (match uu___12 with
                                                       | (a, uu___13, g_a) ->
                                                           let wf_t =
@@ -7985,7 +7997,8 @@ and (check_application_args :
                                       FStar_Pervasives_Native.fst uu___8 in
                                     FStar_TypeChecker_Util.new_implicit_var
                                       "formal parameter"
-                                      tf1.FStar_Syntax_Syntax.pos env uu___7 in
+                                      tf1.FStar_Syntax_Syntax.pos env uu___7
+                                      false in
                                   (match uu___6 with
                                    | (t, uu___7, g) ->
                                        let uu___8 =
@@ -8006,7 +8019,7 @@ and (check_application_args :
                                 FStar_Pervasives_Native.fst uu___7 in
                               FStar_TypeChecker_Util.new_implicit_var
                                 "result type" tf1.FStar_Syntax_Syntax.pos env
-                                uu___6 in
+                                uu___6 false in
                             match uu___5 with
                             | (t, uu___6, g) ->
                                 let uu___7 = FStar_Options.ml_ish () in
@@ -8081,7 +8094,8 @@ and (check_application_args :
                                       FStar_Pervasives_Native.fst uu___12 in
                                     FStar_TypeChecker_Util.new_implicit_var
                                       "formal parameter"
-                                      tf1.FStar_Syntax_Syntax.pos env uu___11 in
+                                      tf1.FStar_Syntax_Syntax.pos env uu___11
+                                      false in
                                   (match uu___10 with
                                    | (t, uu___11, g) ->
                                        let uu___12 =
@@ -8102,7 +8116,7 @@ and (check_application_args :
                                 FStar_Pervasives_Native.fst uu___11 in
                               FStar_TypeChecker_Util.new_implicit_var
                                 "result type" tf1.FStar_Syntax_Syntax.pos env
-                                uu___10 in
+                                uu___10 false in
                             match uu___9 with
                             | (t, uu___10, g) ->
                                 let uu___11 = FStar_Options.ml_ish () in

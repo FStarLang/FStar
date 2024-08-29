@@ -47,6 +47,22 @@ val cps:attribute
 assume
 val tac_opaque : attribute
 
+(** This attribute can be used on type binders to make unifier attempt
+    to unrefine them before instantiating them. This is useful in polymorphic
+    definitions where the type does not change the result type, for example
+    eq2 below. Using the attribute, an equality between two nats will happen
+    at type int, which is more canonical.
+
+    This feature is experimental and only enabled with "--ext __unrefine" *)
+assume
+val unrefine : attribute
+
+(** This attribute can be attached to a type definition to partly counter the
+    behavior of the `unrefine` attribute. It will cause the definition marked
+    `do_not_unrefine` to not be unfolded during the unrefining process. *)
+assume
+val do_not_unrefine : attribute
+
 (** A predicate to express when a type supports decidable equality
     The type-checker emits axioms for [hasEq] for each inductive type *)
 assume
@@ -156,7 +172,7 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
          we should just rename eq2 to op_Equals_Equals
 *)
 [@@ tac_opaque; smt_theory_symbol]
-type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
+type eq2 (#[@@@unrefine] a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
@@ -569,13 +585,13 @@ val op_LessThan: int -> int -> Tot bool
 
 [@@ smt_theory_symbol]
 assume
-val op_Equality: #a: eqtype -> a -> a -> Tot bool
+val op_Equality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_disEquality: #a: eqtype -> a -> a -> Tot bool
+val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** The extensible open inductive type of exceptions *)
 assume new

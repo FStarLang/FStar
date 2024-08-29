@@ -28,6 +28,7 @@ open FStar.Mul
 open FStar.Seq.Base
 
 (** [bv_t n] is just a sequence of booleans of length [n] *)
+[@@do_not_unrefine]
 type bv_t (n: nat) = vec: seq bool {length vec = n}
 
 (**** Common constants *)

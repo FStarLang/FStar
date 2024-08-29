@@ -33,7 +33,7 @@ type lcomp_with_binder = option bv & lcomp
 val report: env -> list string -> unit
 
 //unification variables
-val new_implicit_var : string -> Range.range -> env -> typ -> (term & list (ctx_uvar & Range.range) & guard_t)
+val new_implicit_var : string -> Range.range -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.range) & guard_t
 val check_uvars: Range.range -> typ -> unit
 
 //caller can set the boolean to true if they want to solve the deferred constraints involving this binder now (best case)

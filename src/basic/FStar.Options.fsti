@@ -119,6 +119,7 @@ val dep                         : unit    -> option string
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
+val any_dump_module             : unit    -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool

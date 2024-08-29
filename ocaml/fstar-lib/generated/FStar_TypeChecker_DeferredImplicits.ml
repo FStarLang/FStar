@@ -630,19 +630,16 @@ let (solve_deferred_to_tactic_goals :
                                   reason
                                   (tp.FStar_TypeChecker_Common.lhs).FStar_Syntax_Syntax.pos
                                   env2 goal_ty FStar_Syntax_Syntax.Strict
-                                  FStar_Pervasives_Native.None in
+                                  FStar_Pervasives_Native.None false in
                               (match uu___8 with
                                | (goal, ctx_uvar, uu___9) ->
                                    let imp =
-                                     let uu___10 =
-                                       let uu___11 =
-                                         FStar_Compiler_List.hd ctx_uvar in
-                                       FStar_Pervasives_Native.fst uu___11 in
                                      {
                                        FStar_TypeChecker_Common.imp_reason =
                                          "";
                                        FStar_TypeChecker_Common.imp_uvar =
-                                         uu___10;
+                                         (FStar_Pervasives_Native.fst
+                                            ctx_uvar);
                                        FStar_TypeChecker_Common.imp_tm = goal;
                                        FStar_TypeChecker_Common.imp_range =
                                          ((tp.FStar_TypeChecker_Common.lhs).FStar_Syntax_Syntax.pos)

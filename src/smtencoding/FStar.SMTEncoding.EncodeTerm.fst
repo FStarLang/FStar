@@ -1250,7 +1250,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                               "SMTEncoding codomain"
                                               (Env.get_range env.tcenv)
                                               env.tcenv
-                                              U.ktype0 in
+                                              U.ktype0
+                                              false
+                                              in
                   t
                 | Some t -> t
               in

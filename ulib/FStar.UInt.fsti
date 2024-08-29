@@ -50,6 +50,7 @@ let fits (x:int) (n:nat) : Tot bool = min_int n <= x && x <= max_int n
 let size (x:int) (n:nat) : Tot Type0 = b2t(fits x n)
 
 (* Machine integer type *)
+[@@do_not_unrefine]
 type uint_t (n:nat) = x:int{size x n}
 
 /// Constants

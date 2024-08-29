@@ -208,7 +208,7 @@ let (by_tactic_interp :
                    FStar_TypeChecker_Env.new_implicit_var_aux
                      "rewrite_with_tactic RHS" tm.FStar_Syntax_Syntax.pos e
                      typ FStar_Syntax_Syntax.Strict
-                     FStar_Pervasives_Native.None in
+                     FStar_Pervasives_Native.None false in
                  (match uu___3 with
                   | (uvtm, uu___4, g_imp) ->
                       let u = e.FStar_TypeChecker_Env.universe_of e typ in
@@ -2369,7 +2369,7 @@ let (postprocess :
                     FStar_TypeChecker_Env.new_implicit_var_aux
                       "postprocess RHS" tm.FStar_Syntax_Syntax.pos env typ
                       (FStar_Syntax_Syntax.Allow_untyped "postprocess")
-                      FStar_Pervasives_Native.None in
+                      FStar_Pervasives_Native.None false in
                   match uu___2 with
                   | (uvtm, uu___3, g_imp) ->
                       let u = env.FStar_TypeChecker_Env.universe_of env typ in

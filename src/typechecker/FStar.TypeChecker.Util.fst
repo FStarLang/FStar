@@ -71,8 +71,8 @@ let report env errs =
 (************************************************************************)
 (* Unification variables *)
 (************************************************************************)
-let new_implicit_var reason r env k =
-  Env.new_implicit_var_aux reason r env k Strict None
+let new_implicit_var reason r env k unrefine =
+  Env.new_implicit_var_aux reason r env k Strict None unrefine
 
 let close_guard_implicits env solve_deferred (xs:binders) (g:guard_t) : guard_t =
   if Options.eager_subtyping ()
@@ -2847,7 +2847,7 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
     BU.print1 "instantiate_one_binder: Instantiating implicit binder %s\n" (show b);
   let (++) = Env.conj_guard in
   let { binder_bv=x } = b in
-  let ctx_uvar_meta = uvar_meta_for_binder b in (* meta/attrs computed here *)
+  let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in (* meta/attrs computed here *)
   let t = x.sort in
   let varg, _, implicits =
     let msg =
@@ -2860,7 +2860,7 @@ let instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ &
       else if Some? ctx_uvar_meta then "Instantiating meta argument"
       else "Instantiating implicit argument"
     in
-    Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta
+    Env.new_implicit_var_aux msg r env t Strict ctx_uvar_meta should_unrefine
   in
   let aq = U.aqual_of_binder b in
   let arg = varg, aq in

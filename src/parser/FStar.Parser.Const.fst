@@ -384,6 +384,8 @@ let no_auto_projectors_decls_attr = psconst "no_auto_projectors_decls"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
 let admit_termination_lid = psconst "admit_termination"
+let unrefine_binder_attr = pconst "unrefine"
+let do_not_unrefine_attr = pconst "do_not_unrefine"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
 

@@ -1987,64 +1987,77 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
-      let binders = all_binders env in
-      let gamma = env.gamma in
-      let decoration = {
-             uvar_decoration_typ = k;
-             uvar_decoration_typedness_depends_on = uvar_typedness_deps;
-             uvar_decoration_should_check = should_check;
-          }
-      in
-      let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
-          ctx_uvar_gamma=gamma;
-          ctx_uvar_binders=binders;
-          ctx_uvar_reason=reason;
-          ctx_uvar_range=r;
-          ctx_uvar_meta=meta;
-      } in
-      check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
-      let imp = { imp_reason = reason
-                ; imp_tm     = t
-                ; imp_uvar   = ctx_uvar
-                ; imp_range  = r
-                } in
-      if !dbg_ImplicitTrace then
-        BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
-      let g = {trivial_guard with implicits=[imp]} in
-      t, [(ctx_uvar, r)], g
+let new_tac_implicit_var
+  (reason: string)
+  (r: Range.range)
+  (env:env)
+  (uvar_typ:typ)
+  (should_check:should_check_uvar)
+  (uvar_typedness_deps:list ctx_uvar)
+  (meta:option ctx_uvar_meta_t)
+  (unrefine:bool)
+: term & (ctx_uvar & Range.range) & guard_t
+=
+  let binders = all_binders env in
+  let gamma = env.gamma in
+  let decoration = {
+         uvar_decoration_typ = uvar_typ;
+         uvar_decoration_typedness_depends_on = uvar_typedness_deps;
+         uvar_decoration_should_check = should_check;
+         uvar_decoration_should_unrefine = unrefine;
+  } in
+  let ctx_uvar = {
+      ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
+      ctx_uvar_gamma=gamma;
+      ctx_uvar_binders=binders;
+      ctx_uvar_reason=reason;
+      ctx_uvar_range=r;
+      ctx_uvar_meta=meta;
+  } in
+  check_uvar_ctx_invariant reason r true gamma binders;
+  let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
+  let imp = { imp_reason = reason
+            ; imp_tm     = t
+            ; imp_uvar   = ctx_uvar
+            ; imp_range  = r
+            } in
+  if !dbg_ImplicitTrace then
+    BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
+  let g = {trivial_guard with implicits=[imp]} in
+  t, (ctx_uvar, r), g
 
-let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check [] meta
+let new_implicit_var_aux reason r env k should_check meta unrefine =
+  new_tac_implicit_var reason r env k should_check [] meta unrefine
 
 (***************************************************)
 
-let uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t =
-  match b.binder_qual with
-  | Some (Meta tau) ->
-    (* Meta qualifier (e.g typeclass constraints) *)
-    Some (Ctx_uvar_meta_tac tau)
-  | _ ->
-    (* NB: it does not have to be marked Implicit to get a
-    Ctx_uvar_meta_attr. In practice most of them are (or
-    the typechecker will not decide to instantiate) but the
-    layered effects checking code will sometimes call this
-    function on regular explicit binders. *)
-    let is_unification_tag (t:term) : option term =
-      let hd, args = U.head_and_args t in
-      let hd = U.un_uinst hd in
-      match (SS.compress hd).n, args with
-      | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]
-        when S.fv_eq_lid fv Const.unification_tag_lid ->
-        Some a
-      | _ -> None
-    in
-    match b.binder_attrs |> List.tryPick is_unification_tag with
-    | Some tag -> Some (Ctx_uvar_meta_attr tag)
-    | None -> None
-
+let uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t & bool=
+  let should_unrefine = U.has_attribute b.binder_attrs Const.unrefine_binder_attr in
+  let meta =
+    match b.binder_qual with
+    | Some (Meta tau) ->
+      (* Meta qualifier (e.g typeclass constraints) *)
+      Some (Ctx_uvar_meta_tac tau)
+    | _ ->
+      (* NB: it does not have to be marked Implicit to get a
+      Ctx_uvar_meta_attr. In practice most of them are (or
+      the typechecker will not decide to instantiate) but the
+      layered effects checking code will sometimes call this
+      function on regular explicit binders. *)
+      let is_unification_tag (t:term) : option term =
+        let hd, args = U.head_and_args t in
+        let hd = U.un_uinst hd in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]
+          when S.fv_eq_lid fv Const.unification_tag_lid ->
+          Some a
+        | _ -> None
+      in
+      match b.binder_attrs |> List.tryPick is_unification_tag with
+      | Some tag -> Some (Ctx_uvar_meta_attr tag)
+      | None -> None
+  in
+  meta, should_unrefine
 //
 // Perhaps this should not return a guard,
 //   but only a list of implicits, so that callers don't have to
@@ -2054,7 +2067,7 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta = uvar_meta_for_binder b in
+    let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
@@ -2062,12 +2075,11 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
        then Allow_untyped "indexed effect uvar in compat mode"
        else Strict)
       ctx_uvar_meta
+      should_unrefine
     in
 
-    if !dbg_LayeredEffectsEqns
-    then List.iter (fun (ctx_uvar, _) ->
-                    BU.print1 "Layered Effect uvar : %s\n"
-                      (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;
+    if !dbg_LayeredEffectsEqns then
+      BU.print1 "Layered Effect uvar: %s\n" (show l_ctx_uvars);
 
     substs@[NT (b.binder_bv, t)],
     uvars@[t],

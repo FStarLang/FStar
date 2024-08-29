@@ -270,7 +270,7 @@ let (pat_as_exp :
                      FStar_TypeChecker_Env.new_implicit_var_aux
                        "pattern bv type" uu___4 env1 t
                        (FStar_Syntax_Syntax.Allow_untyped "pattern bv type")
-                       FStar_Pervasives_Native.None in
+                       FStar_Pervasives_Native.None false in
                    (match uu___3 with
                     | (t_x, uu___4, guard) ->
                         let x1 =
@@ -325,7 +325,7 @@ let (pat_as_exp :
                                env1 k
                                (FStar_Syntax_Syntax.Allow_ghost
                                   "pat dot term type")
-                               FStar_Pervasives_Native.None in
+                               FStar_Pervasives_Native.None false in
                            (match uu___3 with
                             | (t, uu___4, g) ->
                                 let uu___5 =
@@ -334,7 +334,7 @@ let (pat_as_exp :
                                     env1 t
                                     (FStar_Syntax_Syntax.Allow_ghost
                                        "pat dot term")
-                                    FStar_Pervasives_Native.None in
+                                    FStar_Pervasives_Native.None false in
                                 (match uu___5 with
                                  | (e, uu___6, g') ->
                                      let p2 =
