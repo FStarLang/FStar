@@ -2753,10 +2753,13 @@ let (encode_top_level_let :
                                                if uu___12
                                                then
                                                  let uu___13 =
-                                                   FStar_Syntax_Print.binders_to_string
-                                                     ", " binders in
+                                                   FStar_Class_Show.show
+                                                     (FStar_Class_Show.show_list
+                                                        FStar_Syntax_Print.showable_binder)
+                                                     binders in
                                                  let uu___14 =
-                                                   FStar_Syntax_Print.term_to_string
+                                                   FStar_Class_Show.show
+                                                     FStar_Syntax_Print.showable_term
                                                      body in
                                                  FStar_Compiler_Util.print2
                                                    "Encoding let : binders=[%s], body=%s\n"
@@ -3101,13 +3104,18 @@ let (encode_top_level_let :
                                                 if uu___14
                                                 then
                                                   let uu___15 =
-                                                    FStar_Syntax_Print.lbname_to_string
+                                                    FStar_Class_Show.show
+                                                      (FStar_Class_Show.show_either
+                                                         FStar_Syntax_Print.showable_bv
+                                                         FStar_Syntax_Print.showable_fv)
                                                       lbn in
                                                   let uu___16 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       t_norm1 in
                                                   let uu___17 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       e1 in
                                                   FStar_Compiler_Util.print3
                                                     "Encoding let rec %s : %s = %s\n"
@@ -3136,16 +3144,23 @@ let (encode_top_level_let :
                                                            if uu___17
                                                            then
                                                              let uu___18 =
-                                                               FStar_Syntax_Print.lbname_to_string
+                                                               FStar_Class_Show.show
+                                                                 (FStar_Class_Show.show_either
+                                                                    FStar_Syntax_Print.showable_bv
+                                                                    FStar_Syntax_Print.showable_fv)
                                                                  lbn in
                                                              let uu___19 =
-                                                               FStar_Syntax_Print.binders_to_string
-                                                                 ", " binders in
+                                                               FStar_Class_Show.show
+                                                                 (FStar_Class_Show.show_list
+                                                                    FStar_Syntax_Print.showable_binder)
+                                                                 binders in
                                                              let uu___20 =
-                                                               FStar_Syntax_Print.term_to_string
+                                                               FStar_Class_Show.show
+                                                                 FStar_Syntax_Print.showable_term
                                                                  body in
                                                              let uu___21 =
-                                                               FStar_Syntax_Print.comp_to_string
+                                                               FStar_Class_Show.show
+                                                                 FStar_Syntax_Print.showable_comp
                                                                  tres_comp in
                                                              FStar_Compiler_Util.print4
                                                                "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
@@ -3815,7 +3830,10 @@ let (encode_top_level_let :
                    let uu___2 =
                      FStar_Compiler_List.map
                        (fun lb ->
-                          FStar_Syntax_Print.lbname_to_string
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_either
+                               FStar_Syntax_Print.showable_bv
+                               FStar_Syntax_Print.showable_fv)
                             lb.FStar_Syntax_Syntax.lbname) bindings in
                    FStar_Compiler_String.concat " and " uu___2 in
                  let decl =
@@ -5947,10 +5965,12 @@ let (encode_datacon :
                                                    ((let uu___13 =
                                                        let uu___14 =
                                                          let uu___15 =
-                                                           FStar_Syntax_Print.lid_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Ident.showable_lident
                                                              d in
                                                          let uu___16 =
-                                                           FStar_Syntax_Print.term_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_term
                                                              head in
                                                          FStar_Compiler_Util.format2
                                                            "Constructor %s builds an unexpected type %s\n"
@@ -6094,7 +6114,8 @@ let (encode_datacon :
                                                                    =
                                                                    let uu___19
                                                                     =
-                                                                    FStar_Syntax_Print.lid_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Ident.showable_lident
                                                                     d in
                                                                    FStar_Compiler_Util.format1
                                                                     "data constructor proxy: %s"
@@ -6242,7 +6263,8 @@ and (encode_sigelt' :
       (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.sigelt_to_string se in
+         let uu___2 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
          FStar_Compiler_Util.print1 "@@@Encoding sigelt %s\n" uu___2
        else ());
       (let is_opaque_to_smt t =
@@ -6528,7 +6550,8 @@ and (encode_sigelt' :
                              let uu___6 =
                                let uu___7 =
                                  let uu___8 =
-                                   FStar_Syntax_Print.lid_to_string l in
+                                   FStar_Class_Show.show
+                                     FStar_Ident.showable_lident l in
                                  FStar_Compiler_Util.format1 "Assumption: %s"
                                    uu___8 in
                                FStar_Pervasives_Native.Some uu___7 in
@@ -6945,11 +6968,14 @@ let (encode_env_bindings :
                  ((let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
                    if uu___2
                    then
-                     let uu___3 = FStar_Syntax_Print.bv_to_string x in
+                     let uu___3 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
                      let uu___4 =
-                       FStar_Syntax_Print.term_to_string
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
                          x.FStar_Syntax_Syntax.sort in
-                     let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                     let uu___5 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t1 in
                      FStar_Compiler_Util.print3 "Normalized %s : %s to %s\n"
                        uu___3 uu___4 uu___5
                    else ());
@@ -6979,12 +7005,15 @@ let (encode_env_bindings :
                               then
                                 let uu___5 =
                                   let uu___6 =
-                                    FStar_Syntax_Print.bv_to_string x in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_bv x in
                                   let uu___7 =
-                                    FStar_Syntax_Print.term_to_string
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term
                                       x.FStar_Syntax_Syntax.sort in
                                   let uu___8 =
-                                    FStar_Syntax_Print.term_to_string t1 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term t1 in
                                   FStar_Compiler_Util.format3 "%s : %s (%s)"
                                     uu___6 uu___7 uu___8 in
                                 FStar_Pervasives_Native.Some uu___5
@@ -7306,7 +7335,8 @@ let (encode_sig :
       (let uu___1 = FStar_Compiler_Debug.medium () in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.sigelt_to_string se in
+         let uu___2 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt se in
          FStar_Compiler_Util.print1 "+++++++++++Encoding sigelt %s\n" uu___2
        else ());
       (let env =
@@ -7584,7 +7614,9 @@ let (encode_query :
                              || (FStar_Compiler_Effect.op_Bang dbg_SMTQuery) in
                          if uu___5
                          then
-                           let uu___6 = FStar_Syntax_Print.term_to_string q1 in
+                           let uu___6 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term q1 in
                            FStar_Compiler_Util.print1
                              "Encoding query formula {: %s\n" uu___6
                          else ());
@@ -7615,7 +7647,8 @@ let (encode_query :
                                            let uu___9 =
                                              let uu___10 =
                                                let uu___11 =
-                                                 FStar_Syntax_Print.term_to_string
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_term
                                                    q1 in
                                                Prims.strcat
                                                  "Encoding query formula : "

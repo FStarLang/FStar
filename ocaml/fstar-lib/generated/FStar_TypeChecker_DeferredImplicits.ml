@@ -205,7 +205,8 @@ let (find_user_tac_for_uvar :
            | c::[] -> FStar_Pervasives_Native.Some c
            | uu___ ->
                let candidates3 = candidate_names candidates2 in
-               let attr = FStar_Syntax_Print.term_to_string a in
+               let attr =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term a in
                ((let uu___2 =
                    let uu___3 =
                      FStar_Compiler_Util.format2

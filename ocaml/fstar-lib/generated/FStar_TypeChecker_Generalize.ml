@@ -321,9 +321,15 @@ let (gen :
                          | (lb2, uu___9, uu___10) ->
                              let msg =
                                let uu___11 =
-                                 FStar_Syntax_Print.lbname_to_string lb1 in
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.show_either
+                                      FStar_Syntax_Print.showable_bv
+                                      FStar_Syntax_Print.showable_fv) lb1 in
                                let uu___12 =
-                                 FStar_Syntax_Print.lbname_to_string lb2 in
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.show_either
+                                      FStar_Syntax_Print.showable_bv
+                                      FStar_Syntax_Print.showable_fv) lb2 in
                                FStar_Compiler_Util.format2
                                  "Generalizing the types of these mutually recursive definitions requires an incompatible set of universes for %s and %s"
                                  uu___11 uu___12 in
@@ -354,9 +360,15 @@ let (gen :
                          | (lb2, uu___9, uu___10) ->
                              let msg =
                                let uu___11 =
-                                 FStar_Syntax_Print.lbname_to_string lb1 in
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.show_either
+                                      FStar_Syntax_Print.showable_bv
+                                      FStar_Syntax_Print.showable_fv) lb1 in
                                let uu___12 =
-                                 FStar_Syntax_Print.lbname_to_string lb2 in
+                                 FStar_Class_Show.show
+                                   (FStar_Class_Show.show_either
+                                      FStar_Syntax_Print.showable_bv
+                                      FStar_Syntax_Print.showable_fv) lb2 in
                                FStar_Compiler_Util.format2
                                  "Generalizing the types of these mutually recursive definitions requires an incompatible number of types for %s and %s"
                                  uu___11 uu___12 in
@@ -582,7 +594,10 @@ let (generalize' :
                  (fun uu___5 ->
                     match uu___5 with
                     | (lb, uu___6, uu___7) ->
-                        FStar_Syntax_Print.lbname_to_string lb) lecs in
+                        FStar_Class_Show.show
+                          (FStar_Class_Show.show_either
+                             FStar_Syntax_Print.showable_bv
+                             FStar_Syntax_Print.showable_fv) lb) lecs in
              FStar_Class_Show.show
                (FStar_Class_Show.show_list
                   (FStar_Class_Show.printableshow
@@ -636,7 +651,10 @@ let (generalize' :
                                 FStar_Compiler_Range_Ops.showable_range
                                 e.FStar_Syntax_Syntax.pos in
                             let uu___7 =
-                              FStar_Syntax_Print.lbname_to_string l in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.show_either
+                                   FStar_Syntax_Print.showable_bv
+                                   FStar_Syntax_Print.showable_fv) l in
                             let uu___8 =
                               FStar_Class_Show.show
                                 FStar_Syntax_Print.showable_term
@@ -645,7 +663,9 @@ let (generalize' :
                               FStar_Class_Show.show
                                 FStar_Syntax_Print.showable_term e in
                             let uu___10 =
-                              FStar_Syntax_Print.binders_to_string ", " gvs in
+                              FStar_Class_Show.show
+                                (FStar_Class_Show.show_list
+                                   FStar_Syntax_Print.showable_binder) gvs in
                             FStar_Compiler_Util.print5
                               "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
                               uu___6 uu___7 uu___8 uu___9 uu___10) luecs

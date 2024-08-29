@@ -187,8 +187,11 @@ let (goal_to_string :
                      then goal_to_string_verbose g
                      else
                        (let uu___3 =
-                          FStar_Syntax_Print.binders_to_string ", "
-                            goal_binders1 in
+                          let uu___4 =
+                            FStar_Compiler_List.map
+                              FStar_Syntax_Print.binder_to_string_with_type
+                              goal_binders1 in
+                          FStar_Compiler_String.concat ", " uu___4 in
                         let uu___4 =
                           let uu___5 = FStar_Tactics_Types.goal_env g in
                           term_to_string uu___5 goal_ty1 in

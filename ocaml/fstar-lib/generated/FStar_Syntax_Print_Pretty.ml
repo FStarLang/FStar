@@ -159,17 +159,9 @@ let (binder_to_string' :
            | FStar_Pervasives_Native.None -> ""
            | FStar_Pervasives_Native.Some e ->
                let d = FStar_Parser_ToDocument.binder_to_document e in pp d)
-let (eff_decl_to_string' :
-  Prims.bool ->
-    FStar_Compiler_Range_Type.range ->
-      FStar_Syntax_Syntax.qualifier Prims.list ->
-        FStar_Syntax_Syntax.eff_decl -> Prims.string)
-  =
-  fun for_free ->
-    fun r ->
-      fun q ->
-        fun ed ->
-          FStar_GenSym.with_frozen_gensym
-            (fun uu___ ->
-               let d = FStar_Syntax_Resugar.resugar_eff_decl r q ed in
-               let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)
+let (eff_decl_to_string : FStar_Syntax_Syntax.eff_decl -> Prims.string) =
+  fun ed ->
+    FStar_GenSym.with_frozen_gensym
+      (fun uu___ ->
+         let d = FStar_Syntax_Resugar.resugar_eff_decl ed in
+         let d1 = FStar_Parser_ToDocument.decl_to_document d in pp d1)

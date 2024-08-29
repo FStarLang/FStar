@@ -468,7 +468,9 @@ let (print_env : env_t -> Prims.string) =
                       fun acc1 ->
                         match uu___ with
                         | (x, _term) ->
-                            let uu___1 = FStar_Syntax_Print.bv_to_string x in
+                            let uu___1 =
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_bv x in
                             uu___1 :: acc1) acc) [] in
     let allvars =
       FStar_Compiler_Util.psmap_fold
@@ -478,7 +480,7 @@ let (print_env : env_t -> Prims.string) =
       match FStar_Compiler_List.rev allvars with
       | [] -> ""
       | l::uu___ ->
-          let uu___1 = FStar_Syntax_Print.lid_to_string l in
+          let uu___1 = FStar_Class_Show.show FStar_Ident.showable_lident l in
           Prims.strcat "...," uu___1 in
     FStar_Compiler_String.concat ", " (last_fvar :: bvars)
 let (lookup_bvar_binding :
@@ -666,7 +668,8 @@ let (lookup_term_var :
       | FStar_Pervasives_Native.Some (b, t) -> t
       | FStar_Pervasives_Native.None ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.bv_to_string a in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_bv a in
             let uu___3 = print_env env in
             FStar_Compiler_Util.format2
               "Bound term variable not found  %s in environment: %s" uu___2
@@ -770,7 +773,7 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
       match q with
       | FStar_Pervasives_Native.None ->
           let uu___ =
-            let uu___1 = FStar_Syntax_Print.lid_to_string a in
+            let uu___1 = FStar_Class_Show.show FStar_Ident.showable_lident a in
             FStar_Compiler_Util.format1
               "Name %s not found in the smtencoding and typechecker env"
               uu___1 in
@@ -786,7 +789,8 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
           then
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Syntax_Print.lid_to_string a in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident a in
                 FStar_Compiler_Util.format1
                   "Name %s not found in the smtencoding env (the symbol is marked unfold, expected it to reduce)"
                   uu___4 in
@@ -795,7 +799,8 @@ let fail_fvar_lookup : 'uuuuu . env_t -> FStar_Ident.lident -> 'uuuuu =
             FStar_Errors.raise_error uu___2 uu___3
           else
             (let uu___3 =
-               let uu___4 = FStar_Syntax_Print.lid_to_string a in
+               let uu___4 =
+                 FStar_Class_Show.show FStar_Ident.showable_lident a in
                FStar_Compiler_Util.format1
                  "Name %s not found in the smtencoding env" uu___4 in
              FStar_Compiler_Effect.failwith uu___3)

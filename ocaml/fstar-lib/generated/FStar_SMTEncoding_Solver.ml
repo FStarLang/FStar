@@ -467,7 +467,8 @@ let (maybe_build_core_from_hook :
                                      let uu___5 =
                                        let uu___6 =
                                          let uu___7 =
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              typ in
                                          FStar_Json.JsonStr uu___7 in
                                        ("type", uu___6) in
@@ -2273,7 +2274,8 @@ let (encode_and_ask :
                                       FStar_TypeChecker_Env.get_range tcenv1 in
                                     let uu___9 =
                                       let uu___10 =
-                                        FStar_Syntax_Print.term_to_string q in
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term q in
                                       let uu___11 =
                                         FStar_SMTEncoding_Term.declToSmt ""
                                           qry in

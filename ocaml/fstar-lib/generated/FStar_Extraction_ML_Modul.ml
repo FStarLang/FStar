@@ -108,8 +108,10 @@ let (fail_exp :
                     let uu___9 =
                       let uu___10 =
                         let uu___11 =
-                          let uu___12 = FStar_Syntax_Print.lid_to_string lid in
-                          Prims.strcat "Not yet implemented:" uu___12 in
+                          let uu___12 =
+                            FStar_Class_Show.show FStar_Ident.showable_lident
+                              lid in
+                          Prims.strcat "Not yet implemented: " uu___12 in
                         (uu___11, FStar_Compiler_Range_Type.dummyRange) in
                       FStar_Const.Const_string uu___10 in
                     FStar_Syntax_Syntax.Tm_constant uu___9 in
@@ -416,16 +418,23 @@ let (__proj__Mkinductive_family__item__imetadata :
     | { ifv; iname; iparams; ityp; idatas; iquals; imetadata;_} -> imetadata
 let (print_ifamily : inductive_family -> unit) =
   fun i ->
-    let uu___ = FStar_Syntax_Print.lid_to_string i.iname in
-    let uu___1 = FStar_Syntax_Print.binders_to_string " " i.iparams in
-    let uu___2 = FStar_Syntax_Print.term_to_string i.ityp in
+    let uu___ = FStar_Class_Show.show FStar_Ident.showable_lident i.iname in
+    let uu___1 =
+      FStar_Class_Show.show
+        (FStar_Class_Show.show_list FStar_Syntax_Print.showable_binder)
+        i.iparams in
+    let uu___2 =
+      FStar_Class_Show.show FStar_Syntax_Print.showable_term i.ityp in
     let uu___3 =
       let uu___4 =
         FStar_Compiler_List.map
           (fun d ->
-             let uu___5 = FStar_Syntax_Print.lid_to_string d.dname in
+             let uu___5 =
+               FStar_Class_Show.show FStar_Ident.showable_lident d.dname in
              let uu___6 =
-               let uu___7 = FStar_Syntax_Print.term_to_string d.dtyp in
+               let uu___7 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                   d.dtyp in
                Prims.strcat " : " uu___7 in
              Prims.strcat uu___5 uu___6) i.idatas in
       FStar_Compiler_String.concat "\n\t\t" uu___4 in
@@ -675,7 +684,8 @@ let (print_binding :
     fun uu___ ->
       match uu___ with
       | (fv, exp_binding) ->
-          let uu___1 = FStar_Syntax_Print.fv_to_string fv in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
           let uu___2 = print_exp_binding cm exp_binding in
           FStar_Compiler_Util.format2 "(%s, %s)" uu___1 uu___2
 let print_tydef :
@@ -691,7 +701,7 @@ let print_tydef :
         | FStar_Pervasives.Inl tydef1 ->
             let uu___1 =
               let uu___2 = FStar_Extraction_ML_UEnv.tydef_fv tydef1 in
-              FStar_Syntax_Print.fv_to_string uu___2 in
+              FStar_Class_Show.show FStar_Syntax_Print.showable_fv uu___2 in
             let uu___2 =
               let uu___3 = FStar_Extraction_ML_UEnv.tydef_def tydef1 in
               tscheme_to_string cm uu___3 in
@@ -703,7 +713,9 @@ let (iface_to_string : iface -> Prims.string) =
   fun iface1 ->
     let cm = iface1.iface_module_name in
     let print_type_name uu___ =
-      match uu___ with | (tn, uu___1) -> FStar_Syntax_Print.fv_to_string tn in
+      match uu___ with
+      | (tn, uu___1) ->
+          FStar_Class_Show.show FStar_Syntax_Print.showable_fv tn in
     let uu___ =
       let uu___1 =
         FStar_Compiler_List.map (print_binding cm) iface1.iface_bindings in
@@ -1193,7 +1205,8 @@ let (extract_reifiable_effect :
         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_ExtractionReify in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.term_to_string tm in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
            FStar_Compiler_Util.print1 "extract_fv term: %s\n" uu___2
          else ());
         (let uu___1 =
@@ -1222,7 +1235,8 @@ let (extract_reifiable_effect :
                let uu___4 =
                  FStar_Compiler_Range_Ops.string_of_range
                    tm.FStar_Syntax_Syntax.pos in
-               let uu___5 = FStar_Syntax_Print.term_to_string tm in
+               let uu___5 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
                FStar_Compiler_Util.format2 "(%s) Not an fv: %s" uu___4 uu___5 in
              FStar_Compiler_Effect.failwith uu___3) in
       let extract_action g1 a =
@@ -1230,10 +1244,10 @@ let (extract_reifiable_effect :
          if uu___1
          then
            let uu___2 =
-             FStar_Syntax_Print.term_to_string
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term
                a.FStar_Syntax_Syntax.action_typ in
            let uu___3 =
-             FStar_Syntax_Print.term_to_string
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term
                a.FStar_Syntax_Syntax.action_defn in
            FStar_Compiler_Util.print2 "Action type %s and term %s\n" uu___2
              uu___3
@@ -2564,7 +2578,8 @@ and (extract_sig_let :
                           ((let uu___9 =
                               let uu___10 =
                                 let uu___11 =
-                                  FStar_Syntax_Print.term_to_string steps1 in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term steps1 in
                                 FStar_Compiler_Util.format1
                                   "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
                                   uu___11 in

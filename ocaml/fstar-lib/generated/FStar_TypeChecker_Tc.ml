@@ -50,7 +50,7 @@ let (set_hint_correlator :
           env.FStar_TypeChecker_Env.qtbl_name_and_index in
       let get_n lid =
         let n_opt =
-          let uu___ = FStar_Ident.string_of_lid lid in
+          let uu___ = FStar_Class_Show.show FStar_Ident.showable_lident lid in
           FStar_Compiler_Util.smap_try_find tbl uu___ in
         if FStar_Compiler_Util.is_some n_opt
         then FStar_Compiler_Util.must n_opt
@@ -400,8 +400,9 @@ let (tc_inductive' :
              if uu___1
              then
                let uu___2 =
-                 (FStar_Common.string_of_list ())
-                   FStar_Syntax_Print.sigelt_to_string ses in
+                 FStar_Class_Show.show
+                   (FStar_Class_Show.show_list
+                      FStar_Syntax_Print.showable_sigelt) ses in
                FStar_Compiler_Util.print1 ">>>>>>>>>>>>>>tc_inductive %s\n"
                  uu___2
              else ());
@@ -730,7 +731,9 @@ let (tc_sig_let :
                              FStar_Errors_Msg.text
                                "Inconsistent qualifier annotations on" in
                            let uu___6 =
-                             let uu___7 = FStar_Syntax_Print.lid_to_string l in
+                             let uu___7 =
+                               FStar_Class_Show.show
+                                 FStar_Ident.showable_lident l in
                              FStar_Pprint.doc_of_string uu___7 in
                            FStar_Pprint.op_Hat_Slash_Hat uu___5 uu___6 in
                          let uu___5 =
@@ -740,7 +743,10 @@ let (tc_sig_let :
                                let uu___9 =
                                  let uu___10 =
                                    let uu___11 =
-                                     FStar_Syntax_Print.quals_to_string val_q in
+                                     FStar_Class_Show.show
+                                       (FStar_Class_Show.show_list
+                                          FStar_Syntax_Print.showable_qualifier)
+                                       val_q in
                                    FStar_Pprint.arbitrary_string uu___11 in
                                  FStar_Pprint.squotes uu___10 in
                                FStar_Pprint.prefix (Prims.of_int (4))
@@ -750,7 +756,10 @@ let (tc_sig_let :
                                let uu___10 =
                                  let uu___11 =
                                    let uu___12 =
-                                     FStar_Syntax_Print.quals_to_string q' in
+                                     FStar_Class_Show.show
+                                       (FStar_Class_Show.show_list
+                                          FStar_Syntax_Print.showable_qualifier)
+                                       q' in
                                    FStar_Pprint.arbitrary_string uu___12 in
                                  FStar_Pprint.squotes uu___11 in
                                FStar_Pprint.prefix (Prims.of_int (4))
@@ -1002,7 +1011,8 @@ let (tc_sig_let :
                          if uu___4
                          then
                            let uu___5 =
-                             FStar_Syntax_Print.term_to_string lbdef in
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_term lbdef in
                            FStar_Compiler_Util.print1
                              "lb preprocessed into: %s\n" uu___5
                          else ());
@@ -1973,10 +1983,14 @@ let (tc_sig_let :
                                               if should_log
                                               then
                                                 let uu___12 =
-                                                  FStar_Syntax_Print.lbname_to_string
+                                                  FStar_Class_Show.show
+                                                    (FStar_Class_Show.show_either
+                                                       FStar_Syntax_Print.showable_bv
+                                                       FStar_Syntax_Print.showable_fv)
                                                     lb.FStar_Syntax_Syntax.lbname in
                                                 let uu___13 =
-                                                  FStar_Syntax_Print.term_to_string
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_term
                                                     lb.FStar_Syntax_Syntax.lbtyp in
                                                 FStar_Compiler_Util.format2
                                                   "let %s : %s" uu___12
@@ -2376,7 +2390,8 @@ let (tc_decl' :
                          if uu___5
                          then
                            let uu___6 =
-                             FStar_Syntax_Print.sigelt_to_string
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_sigelt
                                {
                                  FStar_Syntax_Syntax.sigel =
                                    (FStar_Syntax_Syntax.Sig_bundle
@@ -2684,7 +2699,8 @@ let (tc_decl' :
                             if uu___6
                             then
                               let uu___7 =
-                                FStar_Syntax_Print.sigelt_to_string
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_sigelt
                                   {
                                     FStar_Syntax_Syntax.sigel =
                                       (FStar_Syntax_Syntax.Sig_new_effect ne2);
@@ -3165,7 +3181,9 @@ let (tc_decl' :
                 then
                   (let uu___3 =
                      let uu___4 =
-                       let uu___5 = FStar_Syntax_Print.lid_to_string lid in
+                       let uu___5 =
+                         FStar_Class_Show.show FStar_Ident.showable_lident
+                           lid in
                        FStar_Compiler_Util.format1
                          "Admitting a top-level assumption %s" uu___5 in
                      (FStar_Errors_Codes.Warning_WarnOnUse, uu___4) in
@@ -3347,7 +3365,8 @@ let (tc_decl' :
                    let uu___4 =
                      FStar_Ident.string_of_lid
                        env.FStar_TypeChecker_Env.curmodule in
-                   let uu___5 = FStar_Syntax_Print.term_to_string t in
+                   let uu___5 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                    let uu___6 = FStar_Compiler_Util.string_of_bool is_typed in
                    FStar_Compiler_Util.print3
                      "%s: Found splice of (%s) with is_typed: %s\n" uu___4
@@ -3565,7 +3584,8 @@ let (tc_decl' :
                     let uu___5 =
                       let uu___6 =
                         FStar_Compiler_List.map
-                          FStar_Syntax_Print.sigelt_to_string ses3 in
+                          (FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_sigelt) ses3 in
                       FStar_Compiler_String.concat "\n" uu___6 in
                     FStar_Compiler_Util.print1
                       "Splice returned sigelts {\n%s\n}\n" uu___5
@@ -3765,7 +3785,8 @@ let (tc_decl' :
                               if uu___8
                               then
                                 let uu___9 =
-                                  FStar_Syntax_Print.sigelt_to_string
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_sigelt
                                     {
                                       FStar_Syntax_Syntax.sigel =
                                         (FStar_Syntax_Syntax.Sig_polymonadic_bind
@@ -4008,7 +4029,8 @@ let (tc_decl' :
                               if uu___8
                               then
                                 let uu___9 =
-                                  FStar_Syntax_Print.sigelt_to_string
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_sigelt
                                     {
                                       FStar_Syntax_Syntax.sigel =
                                         (FStar_Syntax_Syntax.Sig_polymonadic_subcomp
@@ -4467,7 +4489,9 @@ let (add_sigelt_to_env :
          | FStar_Syntax_Syntax.Sig_inductive_typ uu___1 ->
              let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Syntax_Print.sigelt_to_string se in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt
+                     se in
                  FStar_Compiler_Util.format1
                    "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                    uu___4 in
@@ -4476,7 +4500,9 @@ let (add_sigelt_to_env :
          | FStar_Syntax_Syntax.Sig_datacon uu___1 ->
              let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Syntax_Print.sigelt_to_string se in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt
+                     se in
                  FStar_Compiler_Util.format1
                    "add_sigelt_to_env: unexpected bare type/data constructor: %s"
                    uu___4 in
@@ -5044,7 +5070,9 @@ let (tc_decls :
                 ((let uu___5 = FStar_Compiler_Debug.low () in
                   if uu___5
                   then
-                    let uu___6 = FStar_Syntax_Print.tag_of_sigelt se in
+                    let uu___6 =
+                      FStar_Class_Tagged.tag_of
+                        FStar_Syntax_Syntax.tagged_sigelt se in
                     let uu___7 =
                       FStar_Class_Show.show
                         FStar_Syntax_Print.showable_sigelt se in
@@ -5082,7 +5110,8 @@ let (tc_decls :
                               if uu___9
                               then
                                 let uu___10 =
-                                  FStar_Syntax_Print.sigelt_to_string se1 in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_sigelt se1 in
                                 FStar_Compiler_Util.print1
                                   "About to elim vars from %s\n" uu___10
                               else ());
@@ -5096,7 +5125,8 @@ let (tc_decls :
                               if uu___9
                               then
                                 let uu___10 =
-                                  FStar_Syntax_Print.sigelt_to_string se1 in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_sigelt se1 in
                                 FStar_Compiler_Util.print1
                                   "About to elim vars from (elaborated) %s\n"
                                   uu___10
@@ -5547,7 +5577,8 @@ let (check_module :
          if uu___1
          then
            let uu___2 =
-             FStar_Syntax_Print.lid_to_string m.FStar_Syntax_Syntax.name in
+             FStar_Class_Show.show FStar_Ident.showable_lident
+               m.FStar_Syntax_Syntax.name in
            FStar_Compiler_Util.print2 "Checking %s: %s\n"
              (if m.FStar_Syntax_Syntax.is_interface
               then "i'face"

@@ -2201,7 +2201,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (304))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (37)))))
+                                                                    (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2219,7 +2219,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (305))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (37)))))
+                                                                    (Prims.of_int (47)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2227,7 +2227,7 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (304))
                                                                     (Prims.of_int (8))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (37)))))
+                                                                    (Prims.of_int (47)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_Effect.tac_bind
                                                                     (FStar_Sealed.seal
@@ -2235,9 +2235,9 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (FStar_Range.mk_range
                                                                     "FStar.Tactics.Typeclasses.fst"
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (23))
+                                                                    (Prims.of_int (19))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (36)))))
+                                                                    (Prims.of_int (46)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
@@ -2245,7 +2245,25 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (Prims.of_int (305))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (305))
-                                                                    (Prims.of_int (37)))))
+                                                                    (Prims.of_int (47)))))
+                                                                    (Obj.magic
+                                                                    (FStar_Tactics_Effect.tac_bind
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Typeclasses.fst"
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (32))
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (45)))))
+                                                                    (FStar_Sealed.seal
+                                                                    (Obj.magic
+                                                                    (FStar_Range.mk_range
+                                                                    "FStar.Tactics.Typeclasses.fst"
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (19))
+                                                                    (Prims.of_int (305))
+                                                                    (Prims.of_int (46)))))
                                                                     (Obj.magic
                                                                     (FStar_Tactics_V2_Derived.cur_goal
                                                                     ()))
@@ -2257,6 +2275,13 @@ let (tcresolve : unit -> (unit, unit) FStar_Tactics_Effect.tac_repr) =
                                                                     (FStar_Tactics_V2_Builtins.term_to_doc
                                                                     uu___6))
                                                                     uu___6)))
+                                                                    (fun
+                                                                    uu___6 ->
+                                                                    FStar_Tactics_Effect.lift_div_tac
+                                                                    (fun
+                                                                    uu___7 ->
+                                                                    FStar_Pprint.bquotes
+                                                                    uu___6))))
                                                                     (fun
                                                                     uu___6 ->
                                                                     FStar_Tactics_Effect.lift_div_tac

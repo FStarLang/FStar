@@ -79,7 +79,8 @@ let rec (elaborate_pat :
                                         let uu___8 =
                                           let uu___9 =
                                             let uu___10 =
-                                              FStar_Syntax_Print.pat_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_pat
                                                 p in
                                             FStar_Compiler_Util.format1
                                               "Insufficient pattern arguments (%s)"
@@ -123,7 +124,9 @@ let rec (elaborate_pat :
                                     let uu___6 =
                                       let uu___7 =
                                         let uu___8 =
-                                          FStar_Syntax_Print.pat_to_string p1 in
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_pat
+                                            p1 in
                                         FStar_Compiler_Util.format1
                                           "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
                                           uu___8 in
@@ -310,7 +313,9 @@ let (pat_as_exp :
                             Prims.op_Negation
                               env1.FStar_TypeChecker_Env.phase1
                           then
-                            let uu___2 = FStar_Syntax_Print.pat_to_string p1 in
+                            let uu___2 =
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_pat p1 in
                             FStar_Compiler_Util.print1
                               "Found a non-instantiated dot pattern in phase2 (%s)\n"
                               uu___2
@@ -441,7 +446,8 @@ let (pat_as_exp :
                   FStar_Compiler_Util.find_dup FStar_Syntax_Syntax.bv_eq b in
                 (match uu___1 with
                  | FStar_Pervasives_Native.Some x ->
-                     let m = FStar_Syntax_Print.bv_to_string x in
+                     let m =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
                      let err =
                        let uu___2 =
                          FStar_Compiler_Util.format1
