@@ -252,64 +252,71 @@ let (filter_using_facts_from :
     fun named_assumptions ->
       fun s ->
         fun ds ->
-          match using_facts_from with
-          | FStar_Pervasives_Native.None -> ds
-          | FStar_Pervasives_Native.Some (([], true)::[]) -> ds
-          | FStar_Pervasives_Native.Some using_facts_from1 ->
-              let keep_assumption a =
-                match a.FStar_SMTEncoding_Term.assumption_fact_ids with
-                | [] -> true
-                | uu___ ->
-                    FStar_Compiler_Util.for_some
-                      (fun uu___1 ->
-                         match uu___1 with
-                         | FStar_SMTEncoding_Term.Name lid ->
-                             FStar_TypeChecker_Env.should_enc_lid
-                               using_facts_from1 lid
-                         | uu___2 -> false)
-                      a.FStar_SMTEncoding_Term.assumption_fact_ids in
-              let already_given_map =
-                FStar_Compiler_Util.smap_create (Prims.of_int (1000)) in
-              let add_assumption a =
-                FStar_Compiler_Util.smap_add already_given_map
-                  a.FStar_SMTEncoding_Term.assumption_name true in
-              let already_given a =
-                (let uu___ =
-                   FStar_Compiler_Util.smap_try_find already_given_map
-                     a.FStar_SMTEncoding_Term.assumption_name in
-                 FStar_Pervasives_Native.uu___is_Some uu___) ||
-                  (FStar_Compiler_Util.for_some
-                     (fun level ->
-                        decl_names_contains
-                          a.FStar_SMTEncoding_Term.assumption_name
-                          level.given_decl_names) s.levels) in
-              let map_decl d =
-                match d with
-                | FStar_SMTEncoding_Term.Assume a ->
-                    let uu___ =
-                      (keep_assumption a) &&
-                        (let uu___1 = already_given a in
-                         Prims.op_Negation uu___1) in
-                    if uu___ then (add_assumption a; [d]) else []
-                | FStar_SMTEncoding_Term.RetainAssumptions names ->
-                    let assumptions =
-                      FStar_Compiler_List.collect
-                        (fun name ->
-                           let uu___ =
-                             FStar_Compiler_Util.psmap_try_find
-                               named_assumptions name in
-                           match uu___ with
-                           | FStar_Pervasives_Native.None -> []
-                           | FStar_Pervasives_Native.Some a ->
-                               let uu___1 = already_given a in
-                               if uu___1
-                               then []
-                               else
-                                 (add_assumption a;
-                                  [FStar_SMTEncoding_Term.Assume a])) names in
-                    assumptions
-                | uu___ -> [d] in
-              let ds1 = FStar_Compiler_List.collect map_decl ds in ds1
+          let uu___ =
+            let uu___1 = FStar_Options_Ext.get "disregard_using_facts_from" in
+            uu___1 <> "" in
+          if uu___
+          then ds
+          else
+            (match using_facts_from with
+             | FStar_Pervasives_Native.None -> ds
+             | FStar_Pervasives_Native.Some (([], true)::[]) -> ds
+             | FStar_Pervasives_Native.Some using_facts_from1 ->
+                 let keep_assumption a =
+                   match a.FStar_SMTEncoding_Term.assumption_fact_ids with
+                   | [] -> true
+                   | uu___2 ->
+                       FStar_Compiler_Util.for_some
+                         (fun uu___3 ->
+                            match uu___3 with
+                            | FStar_SMTEncoding_Term.Name lid ->
+                                FStar_TypeChecker_Env.should_enc_lid
+                                  using_facts_from1 lid
+                            | uu___4 -> false)
+                         a.FStar_SMTEncoding_Term.assumption_fact_ids in
+                 let already_given_map =
+                   FStar_Compiler_Util.smap_create (Prims.of_int (1000)) in
+                 let add_assumption a =
+                   FStar_Compiler_Util.smap_add already_given_map
+                     a.FStar_SMTEncoding_Term.assumption_name true in
+                 let already_given a =
+                   (let uu___2 =
+                      FStar_Compiler_Util.smap_try_find already_given_map
+                        a.FStar_SMTEncoding_Term.assumption_name in
+                    FStar_Pervasives_Native.uu___is_Some uu___2) ||
+                     (FStar_Compiler_Util.for_some
+                        (fun level ->
+                           decl_names_contains
+                             a.FStar_SMTEncoding_Term.assumption_name
+                             level.given_decl_names) s.levels) in
+                 let map_decl d =
+                   match d with
+                   | FStar_SMTEncoding_Term.Assume a ->
+                       let uu___2 =
+                         (keep_assumption a) &&
+                           (let uu___3 = already_given a in
+                            Prims.op_Negation uu___3) in
+                       if uu___2 then (add_assumption a; [d]) else []
+                   | FStar_SMTEncoding_Term.RetainAssumptions names ->
+                       let assumptions =
+                         FStar_Compiler_List.collect
+                           (fun name ->
+                              let uu___2 =
+                                FStar_Compiler_Util.psmap_try_find
+                                  named_assumptions name in
+                              match uu___2 with
+                              | FStar_Pervasives_Native.None -> []
+                              | FStar_Pervasives_Native.Some a ->
+                                  let uu___3 = already_given a in
+                                  if uu___3
+                                  then []
+                                  else
+                                    (add_assumption a;
+                                     [FStar_SMTEncoding_Term.Assume a]))
+                           names in
+                       assumptions
+                   | uu___2 -> [d] in
+                 let ds1 = FStar_Compiler_List.collect map_decl ds in ds1)
 let rec (flatten :
   FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun d ->
@@ -530,59 +537,6 @@ let (prune_level :
                 pruning_roots = (hd.pruning_roots)
               } in
             hd1
-let (prune :
-  FStar_SMTEncoding_Term.decl Prims.list ->
-    FStar_SMTEncoding_Term.decl -> solver_state -> solver_state)
-  =
-  fun roots_to_push ->
-    fun qry ->
-      fun s ->
-        let uu___ = peek s in
-        match uu___ with
-        | (hd, tl) ->
-            let to_give =
-              FStar_SMTEncoding_Pruning.prune hd.pruning_state (qry ::
-                roots_to_push) in
-            let uu___1 =
-              FStar_Compiler_List.fold_left
-                (fun uu___2 ->
-                   fun to_give1 ->
-                     match uu___2 with
-                     | (decl_name_set1, can_give) ->
-                         let name = name_of_assumption to_give1 in
-                         let uu___3 =
-                           let uu___4 =
-                             decl_names_contains name decl_name_set1 in
-                           Prims.op_Negation uu___4 in
-                         if uu___3
-                         then
-                           let uu___4 = add_name name decl_name_set1 in
-                           (uu___4, (to_give1 :: can_give))
-                         else (decl_name_set1, can_give))
-                ((hd.given_decl_names), []) to_give in
-            (match uu___1 with
-             | (decl_name_set1, can_give) ->
-                 let can_give1 =
-                   filter_using_facts_from s.using_facts_from
-                     hd.named_assumptions s can_give in
-                 let hd1 =
-                   {
-                     pruning_state = (hd.pruning_state);
-                     given_decl_names = decl_name_set1;
-                     all_decls_at_level_rev = (hd.all_decls_at_level_rev);
-                     given_some_decls = (hd.given_some_decls);
-                     to_flush_rev = (can_give1 :: (hd.to_flush_rev));
-                     named_assumptions = (hd.named_assumptions);
-                     pruning_roots = (hd.pruning_roots)
-                   } in
-                 let s1 =
-                   {
-                     levels = (hd1 :: tl);
-                     pending_flushes_rev = (s.pending_flushes_rev);
-                     using_facts_from = (s.using_facts_from);
-                     prune_sim = (s.prune_sim)
-                   } in
-                 let uu___2 = push s1 in give_now roots_to_push uu___2)
 let (prune_sim :
   FStar_SMTEncoding_Term.decl Prims.list ->
     solver_state -> Prims.string Prims.list)

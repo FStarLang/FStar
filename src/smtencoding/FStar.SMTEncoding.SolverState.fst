@@ -133,7 +133,8 @@ let filter_using_facts_from
       (s:solver_state)
       (ds:list decl) //flattened decls
 : list decl
-= match using_facts_from with
+= if Options.Ext.get "disregard_using_facts_from" <> "" then ds else
+  match using_facts_from with
   | None
   | Some [[], true] -> ds
   | Some using_facts_from ->
@@ -314,29 +315,6 @@ let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
   let hd = { hd with given_decl_names = decl_name_set;
                      to_flush_rev = can_give::hd.to_flush_rev } in
   hd
-
-let prune (roots_to_push:list decl) (qry:decl) (s:solver_state)
-: solver_state
-= let hd, tl = peek s in
-  let to_give = Pruning.prune hd.pruning_state (qry::roots_to_push) in
-  let decl_name_set, can_give = 
-    List.fold_left 
-      (fun (decl_name_set, can_give) to_give ->
-        let name = name_of_assumption to_give in
-        if not (decl_names_contains name decl_name_set)
-        then (
-          add_name name decl_name_set,
-          to_give::can_give
-        )
-        else decl_name_set, can_give)
-      (hd.given_decl_names, [])
-      to_give
-  in
-  let can_give = filter_using_facts_from s.using_facts_from hd.named_assumptions s can_give in
-  let hd = { hd with given_decl_names = decl_name_set;
-                     to_flush_rev = can_give::hd.to_flush_rev } in
-  let s = { s with levels = hd :: tl } in
-  give_now roots_to_push (push s)
 
 let prune_sim (roots_to_push:list decl) (s:solver_state)
 : list string

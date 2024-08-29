@@ -94,15 +94,32 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     in
     List.fold_left (List.fold_left (add_trigger_to_assumption a)) p triggers
   in
+  let add_ambient_assumption_with_empty_trigger t =
+    //add it to the context with an empty trigger, so it is always available
+    //and it contributes its free variables to trigger other assumptions 
+    let triggers = [elems (Term.free_top_level_names t)] in
+    aux ([]::triggers)
+  in
   begin
     match a.assumption_term.tm with
     | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
       let triggers_lhs = elems (Term.free_top_level_names t0) in
       aux [triggers_lhs]
     )
-    | _ when BU.starts_with a.assumption_name "assumption_" -> (
-      { p with ambients = a.assumption_name::p.ambients }
+    
+    | _ when BU.starts_with a.assumption_name "assumption_" -> 
+      add_ambient_assumption_with_empty_trigger a.assumption_term
+
+    | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+      match ty.tm with
+      | App (Var "Prims.squash", [ty]) ->
+        //top-level squashes are treated like assumption
+        add_ambient_assumption_with_empty_trigger a.assumption_term
+
+      | _ ->
+        aux [elems (Term.free_top_level_names term)]
     )
+ 
     | App (Var "Valid", 
           [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
     | App (Var "Valid", 
@@ -118,14 +135,6 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
           []
       in
       aux triggers
-    | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
-      match ty.tm with
-      | App (Var "Prims.squash", [ty]) ->
-        let triggers = List.map (fun t -> elems (Term.free_top_level_names t))  [term;ty] in
-        aux triggers
-      | _ ->
-        aux [elems (Term.free_top_level_names term)]
-    )
     | App (Var "Valid", [term])
     | App (Var "HasType", [term; _])
     | App (Var "IsTotFun", [term])
