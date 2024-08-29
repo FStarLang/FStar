@@ -21,6 +21,7 @@
     "reflection",
     "smtencoding",
     "syntax",
+    "syntax/print",
     "tactics",
     "tosyntax",
     "typechecker",
