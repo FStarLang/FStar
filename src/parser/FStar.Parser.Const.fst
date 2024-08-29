@@ -363,6 +363,7 @@ let handle_smt_goals_attr = psconst "handle_smt_goals"
 let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
+let c_inline_attr = p2l ["FStar"; "Pervasives"; "CInline"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"

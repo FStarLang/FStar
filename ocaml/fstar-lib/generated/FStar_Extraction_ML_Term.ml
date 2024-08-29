@@ -2195,13 +2195,14 @@ let (maybe_promote_effect :
             (FStar_Extraction_ML_Syntax.ml_unit,
               FStar_Extraction_ML_Syntax.E_PURE)
         | uu___ -> (ml_e, tag)
+type lb_sig =
+  (FStar_Syntax_Syntax.lbname * FStar_Extraction_ML_Syntax.e_tag *
+    (FStar_Syntax_Syntax.typ * (FStar_Syntax_Syntax.binders *
+    FStar_Extraction_ML_Syntax.mltyscheme)) * Prims.bool * Prims.bool *
+    FStar_Syntax_Syntax.term)
 let rec (extract_lb_sig :
   FStar_Extraction_ML_UEnv.uenv ->
-    FStar_Syntax_Syntax.letbindings ->
-      (FStar_Syntax_Syntax.lbname * FStar_Extraction_ML_Syntax.e_tag *
-        (FStar_Syntax_Syntax.typ * (FStar_Syntax_Syntax.binders *
-        FStar_Extraction_ML_Syntax.mltyscheme)) * Prims.bool *
-        FStar_Syntax_Syntax.term) Prims.list)
+    FStar_Syntax_Syntax.letbindings -> lb_sig Prims.list)
   =
   fun g ->
     fun lbs ->
@@ -2214,11 +2215,15 @@ let rec (extract_lb_sig :
             FStar_Syntax_Syntax.lbdef = lbdef;
             FStar_Syntax_Syntax.lbattrs = lbattrs;
             FStar_Syntax_Syntax.lbpos = uu___2;_} ->
+            let has_c_inline =
+              FStar_Syntax_Util.has_attribute lbattrs
+                FStar_Parser_Const.c_inline_attr in
             let f_e = effect_as_etag g lbeff in
             let lbtyp1 = FStar_Syntax_Subst.compress lbtyp in
             let no_gen uu___3 =
               let expected_t = term_as_mlty g lbtyp1 in
-              (lbname_, f_e, (lbtyp1, ([], ([], expected_t))), false, lbdef) in
+              (lbname_, f_e, (lbtyp1, ([], ([], expected_t))), false,
+                has_c_inline, lbdef) in
             let uu___3 =
               let uu___4 = FStar_Extraction_ML_UEnv.tcenv_of_uenv g in
               FStar_TypeChecker_Util.must_erase_for_extraction uu___4 lbtyp1 in
@@ -2226,7 +2231,7 @@ let rec (extract_lb_sig :
             then
               (lbname_, f_e,
                 (lbtyp1, ([], ([], FStar_Extraction_ML_Syntax.MLTY_Erased))),
-                false, lbdef)
+                false, has_c_inline, lbdef)
             else
               (match lbtyp1.FStar_Syntax_Syntax.n with
                | FStar_Syntax_Syntax.Tm_arrow
@@ -2401,7 +2406,8 @@ let rec (extract_lb_sig :
                                                   rest_args1 body1 copt in
                                               (lbname_, f_e,
                                                 (lbtyp1, (targs, polytype1)),
-                                                add_unit, body2))
+                                                add_unit, has_c_inline,
+                                                body2))
                                        else
                                          FStar_Compiler_Effect.failwith
                                            "Not enough type binders")
@@ -2455,7 +2461,8 @@ let rec (extract_lb_sig :
                                            FStar_Syntax_Syntax.args = args
                                          }) lbdef1.FStar_Syntax_Syntax.pos in
                                   (lbname_, f_e,
-                                    (lbtyp1, (tbinders, polytype)), false, e)
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
                               | FStar_Syntax_Syntax.Tm_fvar uu___7 ->
                                   let env =
                                     FStar_Compiler_List.fold_left
@@ -2506,7 +2513,8 @@ let rec (extract_lb_sig :
                                            FStar_Syntax_Syntax.args = args
                                          }) lbdef1.FStar_Syntax_Syntax.pos in
                                   (lbname_, f_e,
-                                    (lbtyp1, (tbinders, polytype)), false, e)
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
                               | FStar_Syntax_Syntax.Tm_name uu___7 ->
                                   let env =
                                     FStar_Compiler_List.fold_left
@@ -2557,7 +2565,8 @@ let rec (extract_lb_sig :
                                            FStar_Syntax_Syntax.args = args
                                          }) lbdef1.FStar_Syntax_Syntax.pos in
                                   (lbname_, f_e,
-                                    (lbtyp1, (tbinders, polytype)), false, e)
+                                    (lbtyp1, (tbinders, polytype)), false,
+                                    has_c_inline, e)
                               | uu___7 -> err_value_restriction lbdef1)))
                | uu___5 -> no_gen ()) in
       FStar_Compiler_List.map maybe_generalize
@@ -2580,7 +2589,7 @@ and (extract_lb_iface :
            fun uu___ ->
              match uu___ with
              | (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit,
-                _body) ->
+                _has_c_inline, _body) ->
                  let uu___1 =
                    FStar_Extraction_ML_UEnv.extend_lb env lbname typ
                      mltyscheme add_unit in
@@ -4025,10 +4034,12 @@ and (term_as_mlexpr' :
                              (lb.FStar_Syntax_Syntax.lbpos)
                          }) lbs1
                   else lbs1 in
-                let check_lb env uu___2 =
+                let check_lb env nm_sig =
+                  let uu___2 = nm_sig in
                   match uu___2 with
-                  | (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e))
-                      ->
+                  | (nm,
+                     (_lbname, f, (_t, (targs, polytype)), add_unit,
+                      has_c_inline, e)) ->
                       let env1 =
                         FStar_Compiler_List.fold_left
                           (fun env2 ->
@@ -4058,6 +4069,11 @@ and (term_as_mlexpr' :
                                      FStar_Extraction_ML_Syntax.MLTY_Erased)
                                       -> [FStar_Extraction_ML_Syntax.Erased]
                                   | uu___5 -> [] in
+                                let meta1 =
+                                  if has_c_inline
+                                  then FStar_Extraction_ML_Syntax.CInline ::
+                                    meta
+                                  else meta in
                                 (f1,
                                   {
                                     FStar_Extraction_ML_Syntax.mllb_name = nm;
@@ -4069,7 +4085,7 @@ and (term_as_mlexpr' :
                                     FStar_Extraction_ML_Syntax.mllb_attrs =
                                       [];
                                     FStar_Extraction_ML_Syntax.mllb_meta =
-                                      meta;
+                                      meta1;
                                     FStar_Extraction_ML_Syntax.print_typ =
                                       true
                                   }))) in
@@ -4083,7 +4099,7 @@ and (term_as_mlexpr' :
                              let uu___4 = lb in
                              (match uu___4 with
                               | (lbname, uu___5, (t1, (uu___6, polytype)),
-                                 add_unit, uu___7) ->
+                                 add_unit, _has_c_inline, uu___7) ->
                                   let uu___8 =
                                     FStar_Extraction_ML_UEnv.extend_lb env
                                       lbname t1 polytype add_unit in

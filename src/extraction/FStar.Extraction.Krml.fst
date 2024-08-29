@@ -41,7 +41,9 @@ module FC = FStar.Const
   TConstBuf which will expect will be used soon
 - v29: added a SizeT and PtrdiffT width to machine integers
 - v30: Added EBufDiff
+- v31: Added a `meta` field to binders. Currently only relevant to propagate `CInline`.
 *)
+let current_version: version = 31
 
 (* COPY-PASTED ****************************************************************)
 
@@ -172,7 +174,8 @@ and var = int
 and binder = {
   name: ident;
   typ: typ;
-  mut: bool
+  mut: bool;
+  meta: list flag;
 }
 
 (* for pretty-printing *)
@@ -210,6 +213,11 @@ instance showable_width = { show = function
   | PtrdiffT -> "PtrdiffT"
 }
 
+let record_string (fs : list (string & string)) : string =
+  "{" ^
+  (String.concat "; " <| List.map (fun (f, s) -> f ^ " = " ^ s) fs) ^
+  "}"
+
 let rec typ_to_string (t:typ) : string =
   match t with
   | TInt w -> "TInt " ^ show w
@@ -227,10 +235,6 @@ let rec typ_to_string (t:typ) : string =
   
 instance showable_typ = { show = typ_to_string }
 
-instance showable_binder = { show = fun {name; typ; mut} ->
-  "binder{ name = " ^ name ^ "; typ = " ^ typ_to_string typ ^ "; mut = " ^ show mut ^ "; }"
-}
-
 instance showable_flag = { show = function
   | Private -> "Private"
   | WipeBody -> "WipeBody"
@@ -247,6 +251,15 @@ instance showable_flag = { show = function
   | Macro -> "Macro"
   | Deprecated s -> "Deprecated " ^ s
   | CNoInline -> "CNoInline"
+}
+
+instance showable_binder = { show = fun b ->
+  record_string [
+    ("name", show b.name);
+    ("typ", show b.typ);
+    ("mut", show b.mut);
+    ("meta", show b.meta);
+  ]
 }
 
 instance showable_lifetime : showable lifetime = { show = function
@@ -347,8 +360,6 @@ and expr_to_string (e:expr) : string =
   | EBufDiff (x, y) -> "EBufDiff (" ^ expr_to_string x ^ ", " ^ expr_to_string y ^ ")"
 
 instance showable_decl = { show = decl_to_string }
-
-let current_version: version = 28
 
 (* Utilities *****************************************************************)
 
@@ -741,8 +752,13 @@ and translate_type' env t: typ =
 and translate_binders env bs =
   List.map (translate_binder env) bs
 
-and translate_binder env ({mlbinder_name;mlbinder_ty}) =
-  { name = mlbinder_name; typ = translate_type env mlbinder_ty; mut = false }
+and translate_binder env ({mlbinder_name; mlbinder_ty; mlbinder_attrs} ) =
+  {
+    name = mlbinder_name;
+    typ = translate_type env mlbinder_ty;
+    mut = false;
+    meta = [];
+  }
 
 and translate_expr' env e: expr =
   match e.expr with
@@ -773,7 +789,7 @@ and translate_expr' env e: expr =
       mllb_meta = flags;
       print_typ = print // ?
     }]), continuation) ->
-      let binder = { name = name; typ = translate_type env typ; mut = false } in
+      let binder = { name = name; typ = translate_type env typ; mut = false; meta = translate_flags flags; } in
       let body = translate_expr env body in
       let env = extend env name in
       let continuation = translate_expr env continuation in
@@ -1202,10 +1218,10 @@ and translate_pat env p =
       env, PConstant (translate_width sw, s)
   | MLP_Var name ->
       let env = extend env name in
-      env, PVar ({ name = name; typ = TAny; mut = false })
+      env, PVar ({ name = name; typ = TAny; mut = false; meta = [] })
   | MLP_Wild ->
       let env = extend env "_" in
-      env, PVar ({ name = "_"; typ = TAny; mut = false })
+      env, PVar ({ name = "_"; typ = TAny; mut = false; meta = [] })
   | MLP_CTor ((_, cons), ps) ->
       let env, ps = List.fold_left (fun (env, acc) p ->
         let env, p = translate_pat env p in

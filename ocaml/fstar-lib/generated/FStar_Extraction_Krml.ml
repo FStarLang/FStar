@@ -1,4 +1,6 @@
 open Prims
+type version = Prims.int
+let (current_version : version) = (Prims.of_int (31))
 type decl =
   | DGlobal of (flag Prims.list * (Prims.string Prims.list * Prims.string) *
   Prims.int * typ * expr) 
@@ -133,10 +135,12 @@ and width =
   | CInt 
   | SizeT 
   | PtrdiffT 
-and binder = {
+and binder =
+  {
   name: Prims.string ;
   typ: typ ;
-  mut: Prims.bool }
+  mut: Prims.bool ;
+  meta: flag Prims.list }
 and typ =
   | TInt of width 
   | TBuf of typ 
@@ -563,11 +567,17 @@ let (uu___is_SizeT : width -> Prims.bool) =
 let (uu___is_PtrdiffT : width -> Prims.bool) =
   fun projectee -> match projectee with | PtrdiffT -> true | uu___ -> false
 let (__proj__Mkbinder__item__name : binder -> Prims.string) =
-  fun projectee -> match projectee with | { name; typ = typ1; mut;_} -> name
+  fun projectee ->
+    match projectee with | { name; typ = typ1; mut; meta;_} -> name
 let (__proj__Mkbinder__item__typ : binder -> typ) =
-  fun projectee -> match projectee with | { name; typ = typ1; mut;_} -> typ1
+  fun projectee ->
+    match projectee with | { name; typ = typ1; mut; meta;_} -> typ1
 let (__proj__Mkbinder__item__mut : binder -> Prims.bool) =
-  fun projectee -> match projectee with | { name; typ = typ1; mut;_} -> mut
+  fun projectee ->
+    match projectee with | { name; typ = typ1; mut; meta;_} -> mut
+let (__proj__Mkbinder__item__meta : binder -> flag Prims.list) =
+  fun projectee ->
+    match projectee with | { name; typ = typ1; mut; meta;_} -> meta
 let (uu___is_TInt : typ -> Prims.bool) =
   fun projectee -> match projectee with | TInt _0 -> true | uu___ -> false
 let (__proj__TInt__item___0 : typ -> width) =
@@ -642,6 +652,19 @@ let (showable_width : width FStar_Class_Show.showable) =
          | SizeT -> "SizeT"
          | PtrdiffT -> "PtrdiffT")
   }
+let (record_string :
+  (Prims.string * Prims.string) Prims.list -> Prims.string) =
+  fun fs ->
+    let uu___ =
+      let uu___1 =
+        let uu___2 =
+          FStar_Compiler_List.map
+            (fun uu___3 ->
+               match uu___3 with
+               | (f, s) -> Prims.strcat f (Prims.strcat " = " s)) fs in
+        FStar_Compiler_String.concat "; " uu___2 in
+      Prims.strcat uu___1 "}" in
+    Prims.strcat "{" uu___
 let rec (typ_to_string : typ -> Prims.string) =
   fun t ->
     match t with
@@ -715,29 +738,6 @@ let rec (typ_to_string : typ -> Prims.string) =
         Prims.strcat "TArray (" uu___
 let (showable_typ : typ FStar_Class_Show.showable) =
   { FStar_Class_Show.show = typ_to_string }
-let (showable_binder : binder FStar_Class_Show.showable) =
-  {
-    FStar_Class_Show.show =
-      (fun uu___ ->
-         match uu___ with
-         | { name; typ = typ1; mut;_} ->
-             let uu___1 =
-               let uu___2 =
-                 let uu___3 =
-                   let uu___4 = typ_to_string typ1 in
-                   let uu___5 =
-                     let uu___6 =
-                       let uu___7 =
-                         FStar_Class_Show.show
-                           (FStar_Class_Show.printableshow
-                              FStar_Class_Printable.printable_bool) mut in
-                       Prims.strcat uu___7 "; }" in
-                     Prims.strcat "; mut = " uu___6 in
-                   Prims.strcat uu___4 uu___5 in
-                 Prims.strcat "; typ = " uu___3 in
-               Prims.strcat name uu___2 in
-             Prims.strcat "binder{ name = " uu___1)
-  }
 let (showable_flag : flag FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
@@ -758,6 +758,40 @@ let (showable_flag : flag FStar_Class_Show.showable) =
          | Macro -> "Macro"
          | Deprecated s -> Prims.strcat "Deprecated " s
          | CNoInline -> "CNoInline")
+  }
+let (showable_binder : binder FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun b ->
+         let uu___ =
+           let uu___1 =
+             let uu___2 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_string) b.name in
+             ("name", uu___2) in
+           let uu___2 =
+             let uu___3 =
+               let uu___4 = FStar_Class_Show.show showable_typ b.typ in
+               ("typ", uu___4) in
+             let uu___4 =
+               let uu___5 =
+                 let uu___6 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.printableshow
+                        FStar_Class_Printable.printable_bool) b.mut in
+                 ("mut", uu___6) in
+               let uu___6 =
+                 let uu___7 =
+                   let uu___8 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.show_list showable_flag) b.meta in
+                   ("meta", uu___8) in
+                 [uu___7] in
+               uu___5 :: uu___6 in
+             uu___3 :: uu___4 in
+           uu___1 :: uu___2 in
+         record_string uu___)
   }
 let (showable_lifetime : lifetime FStar_Class_Show.showable) =
   {
@@ -1517,9 +1551,7 @@ let (showable_decl : decl FStar_Class_Show.showable) =
   { FStar_Class_Show.show = decl_to_string }
 type program = decl Prims.list
 type file = (Prims.string * program)
-type version = Prims.int
 type binary_format = (version * file Prims.list)
-let (current_version : version) = (Prims.of_int (28))
 let fst3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu =
   fun uu___ -> match uu___ with | (x, uu___1, uu___2) -> x
 let snd3 : 'uuuuu 'uuuuu1 'uuuuu2 . ('uuuuu * 'uuuuu1 * 'uuuuu2) -> 'uuuuu1 =
@@ -2086,9 +2118,9 @@ and (translate_binder : env -> FStar_Extraction_ML_Syntax.mlbinder -> binder)
       match uu___ with
       | { FStar_Extraction_ML_Syntax.mlbinder_name = mlbinder_name;
           FStar_Extraction_ML_Syntax.mlbinder_ty = mlbinder_ty;
-          FStar_Extraction_ML_Syntax.mlbinder_attrs = uu___1;_} ->
-          let uu___2 = translate_type env1 mlbinder_ty in
-          { name = mlbinder_name; typ = uu___2; mut = false }
+          FStar_Extraction_ML_Syntax.mlbinder_attrs = mlbinder_attrs;_} ->
+          let uu___1 = translate_type env1 mlbinder_ty in
+          { name = mlbinder_name; typ = uu___1; mut = false; meta = [] }
 and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
   fun env1 ->
     fun e ->
@@ -2125,7 +2157,8 @@ and (translate_expr' : env -> FStar_Extraction_ML_Syntax.mlexpr -> expr) =
           ->
           let binder1 =
             let uu___1 = translate_type env1 typ1 in
-            { name = name1; typ = uu___1; mut = false } in
+            let uu___2 = translate_flags flags in
+            { name = name1; typ = uu___1; mut = false; meta = uu___2 } in
           let body1 = translate_expr env1 body in
           let env2 = extend env1 name1 in
           let continuation1 = translate_expr env2 continuation in
@@ -3515,10 +3548,10 @@ and (translate_pat :
           (env1, uu___)
       | FStar_Extraction_ML_Syntax.MLP_Var name1 ->
           let env2 = extend env1 name1 in
-          (env2, (PVar { name = name1; typ = TAny; mut = false }))
+          (env2, (PVar { name = name1; typ = TAny; mut = false; meta = [] }))
       | FStar_Extraction_ML_Syntax.MLP_Wild ->
           let env2 = extend env1 "_" in
-          (env2, (PVar { name = "_"; typ = TAny; mut = false }))
+          (env2, (PVar { name = "_"; typ = TAny; mut = false; meta = [] }))
       | FStar_Extraction_ML_Syntax.MLP_CTor ((uu___, cons), ps) ->
           let uu___1 =
             FStar_Compiler_List.fold_left
@@ -4085,7 +4118,7 @@ let (translate :
                        "Unable to translate module: %s because:\n  %s\n"
                        m_name uu___3);
                     FStar_Pervasives_Native.None)) modules
-let (uu___2016 : unit) =
+let (uu___2021 : unit) =
   register_post_translate_type_without_decay translate_type_without_decay';
   register_post_translate_type translate_type';
   register_post_translate_type_decl translate_type_decl';
