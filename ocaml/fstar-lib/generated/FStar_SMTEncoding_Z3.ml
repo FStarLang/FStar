@@ -757,21 +757,19 @@ let (rollback :
         | FStar_Pervasives_Native.Some n ->
             if d = n then () else (pop msg1; rollback_aux msg1 depth1) in
       rollback_aux msg depth
-let (prune :
-  Prims.bool ->
+let (start_query :
+  Prims.string ->
     FStar_SMTEncoding_Term.decl Prims.list ->
       FStar_SMTEncoding_Term.decl -> unit)
   =
-  fun sim ->
+  fun msg ->
     fun roots_to_push ->
       fun qry ->
-        if sim
-        then
-          with_solver_state_unit
-            (FStar_SMTEncoding_SolverState.prune_sim roots_to_push qry)
-        else
-          with_solver_state_unit
-            (FStar_SMTEncoding_SolverState.prune roots_to_push qry)
+        with_solver_state_unit
+          (FStar_SMTEncoding_SolverState.start_query msg roots_to_push qry)
+let (finish_query : Prims.string -> unit) =
+  fun msg ->
+    with_solver_state_unit (FStar_SMTEncoding_SolverState.finish_query msg)
 let (giveZ3 : FStar_SMTEncoding_Term.decl Prims.list -> unit) =
   fun decls ->
     with_solver_state_unit (FStar_SMTEncoding_SolverState.give decls)

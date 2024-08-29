@@ -442,10 +442,10 @@ let rollback msg depth =
   //   (show depth)
   //   (show init)
   //   (show final)
-let prune sim roots_to_push qry = 
-  if sim
-  then with_solver_state_unit (SolverState.prune_sim roots_to_push qry)
-  else with_solver_state_unit (SolverState.prune roots_to_push qry)
+let start_query msg roots_to_push qry = 
+  with_solver_state_unit (SolverState.start_query msg roots_to_push qry)
+let finish_query msg =
+  with_solver_state_unit (SolverState.finish_query msg)
 let giveZ3 decls = with_solver_state_unit (SolverState.give decls)
 let refresh using_facts_from =
     (!bg_z3_proc).refresh();

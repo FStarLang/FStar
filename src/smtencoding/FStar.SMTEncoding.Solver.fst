@@ -1247,19 +1247,13 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
     let msg =  (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
     Encode.push_encoding_state msg;
     let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
-    if Options.Ext.get "context_pruning" <> "" 
-    then Z3.prune false prefix qry
-    else (
-      if Options.Ext.get "context_pruning_sim" <> "" then Z3.prune true prefix qry;
-      Z3.push msg;
-      Z3.giveZ3 prefix
-    );
-    let pop () = 
+    Z3.start_query msg prefix qry;
+    let finish_query () = 
       let msg = (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
       Encode.pop_encoding_state msg;
-      Z3.pop msg
+      Z3.finish_query msg
     in
-    finally pop (fun () ->
+    finally finish_query (fun () ->
       let tcenv = incr_query_index tcenv in
       match qry with
       (* trivial cases *)
@@ -1457,8 +1451,6 @@ let rollback msg tok =
 
 let solver = {
     init=(fun e -> save_cfg e; Encode.init e);
-    // push=Encode.push_encoding_state;
-    // pop=Encode.pop_encoding_state;
     snapshot;
     rollback;
     encode_sig=Encode.encode_sig;

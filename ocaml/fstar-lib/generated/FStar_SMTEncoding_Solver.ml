@@ -2048,22 +2048,8 @@ let (encode_and_ask :
                   FStar_SMTEncoding_Encode.encode_query use_env_msg tcenv q in
                 match uu___3 with
                 | (prefix, labels, qry, suffix) ->
-                    ((let uu___5 =
-                        let uu___6 = FStar_Options_Ext.get "context_pruning" in
-                        uu___6 <> "" in
-                      if uu___5
-                      then FStar_SMTEncoding_Z3.prune false prefix qry
-                      else
-                        ((let uu___8 =
-                            let uu___9 =
-                              FStar_Options_Ext.get "context_pruning_sim" in
-                            uu___9 <> "" in
-                          if uu___8
-                          then FStar_SMTEncoding_Z3.prune true prefix qry
-                          else ());
-                         FStar_SMTEncoding_Z3.push msg;
-                         FStar_SMTEncoding_Z3.giveZ3 prefix));
-                     (let pop uu___5 =
+                    (FStar_SMTEncoding_Z3.start_query msg prefix qry;
+                     (let finish_query uu___5 =
                         let msg1 =
                           let uu___6 =
                             let uu___7 =
@@ -2072,8 +2058,8 @@ let (encode_and_ask :
                           FStar_Compiler_Util.format1 "Ending query at %s"
                             uu___6 in
                         FStar_SMTEncoding_Encode.pop_encoding_state msg1;
-                        FStar_SMTEncoding_Z3.pop msg1 in
-                      finally pop
+                        FStar_SMTEncoding_Z3.finish_query msg1 in
+                      finally finish_query
                         (fun uu___5 ->
                            let tcenv1 =
                              FStar_TypeChecker_Env.incr_query_index tcenv in

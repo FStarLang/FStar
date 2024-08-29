@@ -32,9 +32,8 @@ val pop (s:solver_state) : solver_state
 val depth (s:solver_state) : int
 val reset (_:option using_facts_from_setting) (s:solver_state) : solver_state
 val give (ds:list decl) (s:solver_state) : solver_state
-val prune (roots:list decl) (qry:decl) (s:solver_state) : solver_state
+val start_query (msg:string) (roots:list decl) (qry:decl) (s:solver_state) : solver_state
+val finish_query (msg:string) (s:solver_state) : solver_state
 val filter_with_unsat_core (queryid:string) (_:U.unsat_core) (s:solver_state) : list decl
 val flush (s:solver_state) : list decl & solver_state
-
-val prune_sim (roots:list decl) (qry:decl) (s:solver_state) : solver_state
 val would_have_pruned (s:solver_state) : option (list string)

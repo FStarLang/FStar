@@ -75,5 +75,6 @@ val push : msg:string -> unit
 val pop : msg:string -> unit
 val snapshot : string -> int
 val rollback : string -> option int -> unit
-val prune (sim:bool) (prefix_to_push:list decl) (query:decl) : unit
+val start_query (msg:string) (prefix_to_push:list decl) (query:decl) : unit
+val finish_query (msg:string) : unit
 val query_logging : query_log
