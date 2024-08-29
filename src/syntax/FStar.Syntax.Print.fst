@@ -424,6 +424,14 @@ and attrs_to_string = function
     | [] -> ""
     | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
 
+and binder_attrs_to_string = function
+    | _ when Options.any_dump_module () -> ""
+    (* ^ VALE HACK: Vale does not properly parse attributes on binders (yet).
+    Just don't print them. *)
+
+    | [] -> ""
+    | tms -> U.format1 "[@@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
+
 //and uvar_t_to_string (uv, k) =
 //   if false && (Options.print_real_names())
 //   then
@@ -448,7 +456,7 @@ and binder_to_string' is_arrow b =
   if not (Options.ugly()) then
     Pretty.binder_to_string' is_arrow b
   else
-    let attrs = attrs_to_string b.binder_attrs in
+    let attrs = binder_attrs_to_string b.binder_attrs in
     if is_null_binder b
     then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
     else if not is_arrow && not (Options.print_bound_var_types())
