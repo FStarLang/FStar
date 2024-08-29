@@ -35,7 +35,12 @@ REM Install DkML compiler including MSYS2
 SET OPAMYES=1
 REM     TODO: Use [dkml-workflows] not [dkml-workflows-prerelease] once 2.1.2 is merged
 if NOT EXIST dkml-workflows (
-    git clone --depth 1 --branch 2.1.2 https://github.com/diskuv/dkml-workflows-prerelease.git dkml-workflows
+    IF NOT EXIST dkml-workflows-2.1.2.zip (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "(New-Object Net.WebClient).DownloadFile('https://github.com/diskuv/dkml-workflows-prerelease/archive/refs/tags/2.1.2.zip', 'dkml-workflows-2.1.2.zip')"
+    )
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Force dkml-workflows-2.1.2.zip"
+    move dkml-workflows-2.1.2\dkml-workflows-prerelease-2.1.2 dkml-workflows
+    rmdir dkml-workflows-2.1.2
 )
 IF NOT EXIST .ci\o\dkml\bin\ocamlc.exe (
     "%INTERNAL_POWERSHELLEXE%" -NoProfile -ExecutionPolicy Bypass -Command "& dkml-workflows\test\pc\setup-dkml-windows_x86_64.ps1; exit $LASTEXITCODE"

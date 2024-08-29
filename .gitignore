@@ -105,8 +105,10 @@ nuget/
 # make package
 src/ocaml-output/fstar.zip
 
-# DkML
+# setup-dkml.cmd
 /dkml-workflows/
+/dkml-workflows-*/
+/dkml-workflows-*.zip
 /msys64/
 /.ci/o/
 /.ci/sd4/
