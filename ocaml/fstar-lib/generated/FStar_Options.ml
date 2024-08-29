@@ -4102,6 +4102,8 @@ let (dep : unit -> Prims.string FStar_Pervasives_Native.option) =
 let (detail_errors : unit -> Prims.bool) = fun uu___ -> get_detail_errors ()
 let (detail_hint_replay : unit -> Prims.bool) =
   fun uu___ -> get_detail_hint_replay ()
+let (any_dump_module : unit -> Prims.bool) =
+  fun uu___ -> let uu___1 = get_dump_module () in Prims.uu___is_Cons uu___1
 let (dump_module : Prims.string -> Prims.bool) =
   fun s ->
     let uu___ = get_dump_module () in

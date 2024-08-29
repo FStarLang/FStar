@@ -821,6 +821,21 @@ and (attrs_to_string :
               (fun t -> let uu___3 = term_to_string t in paren uu___3) tms in
           FStar_Compiler_String.concat "; " uu___2 in
         FStar_Compiler_Util.format1 "[@ %s]" uu___1
+and (binder_attrs_to_string :
+  FStar_Syntax_Syntax.term Prims.list -> Prims.string) =
+  fun uu___ ->
+    if FStar_Options.any_dump_module ()
+    then ""
+    else
+      (match uu___ with
+       | [] -> ""
+       | tms ->
+           let uu___1 =
+             let uu___2 =
+               FStar_Compiler_List.map
+                 (fun t -> let uu___3 = term_to_string t in paren uu___3) tms in
+             FStar_Compiler_String.concat "; " uu___2 in
+           FStar_Compiler_Util.format1 "[@@@ %s]" uu___1)
 and (bqual_to_string' :
   Prims.string ->
     FStar_Syntax_Syntax.binder_qualifier FStar_Pervasives_Native.option ->
@@ -866,7 +881,8 @@ and (binder_to_string' :
       if uu___
       then FStar_Syntax_Print_Pretty.binder_to_string' is_arrow b
       else
-        (let attrs = attrs_to_string b.FStar_Syntax_Syntax.binder_attrs in
+        (let attrs =
+           binder_attrs_to_string b.FStar_Syntax_Syntax.binder_attrs in
          let uu___2 = FStar_Syntax_Syntax.is_null_binder b in
          if uu___2
          then
