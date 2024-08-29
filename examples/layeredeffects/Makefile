@@ -19,7 +19,7 @@ extraction:
 endif
 
 .depend:
-	$(FSTAR) --dep full $(ROOTS) > .depend
+	$(FSTAR) --dep full $(ROOTS) --output_deps_to .depend
 
 depend: .depend
 

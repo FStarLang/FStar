@@ -49,7 +49,10 @@ verify: prep $(filter-out $(CACHE_DIR)/Launch.fst.checked $(CACHE_DIR)/FStar.Mod
 
 HAS_OCAML := $(shell which ocamlfind 2>/dev/null)
 
-SPECIAL_CASES += sample_project
+# The makefile here relies on a global fstar.exe and does not read FSTAR_HOME
+# or anything similar, disable for now.
+# SPECIAL_CASES += sample_project
+
 ifneq (,$(HAS_OCAML))
 SPECIAL_CASES += hello
 SPECIAL_CASES += native_tactics
