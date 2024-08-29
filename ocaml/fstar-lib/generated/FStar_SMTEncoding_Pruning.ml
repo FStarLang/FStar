@@ -215,6 +215,19 @@ let (maybe_add_ambient :
                  (FStar_Compiler_RBSet.setlike_rbset
                     FStar_Class_Ord.ord_string)) (Obj.magic uu___) in
           aux [triggers_lhs]
+      | uu___ when
+          FStar_Compiler_Util.starts_with
+            a.FStar_SMTEncoding_Term.assumption_name "assumption_"
+          ->
+          {
+            assumptions = (p.assumptions);
+            macro_freenames = (p.macro_freenames);
+            trigger_to_assumption = (p.trigger_to_assumption);
+            assumption_to_triggers = (p.assumption_to_triggers);
+            assumption_name_map = (p.assumption_name_map);
+            ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
+              (p.ambients))
+          }
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid",
            {

@@ -100,6 +100,9 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       let triggers_lhs = elems (Term.free_top_level_names t0) in
       aux [triggers_lhs]
     )
+    | _ when BU.starts_with a.assumption_name "assumption_" -> (
+      { p with ambients = a.assumption_name::p.ambients }
+    )
     | App (Var "Valid", 
           [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
     | App (Var "Valid", 
