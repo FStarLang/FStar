@@ -2,7 +2,8 @@ module UChar = BatUChar
 
 module U32 = FStar_UInt32
 
-type char = int[@@deriving yojson,show]
+open FStar_Char_Type
+
 type char_code = U32.t
 
 (* FIXME(adl) UChar.lowercase/uppercase removed from recent Batteries. Use Camomile? *)

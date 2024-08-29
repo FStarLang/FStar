@@ -3617,7 +3617,8 @@ and (translate_constant : FStar_Extraction_ML_Syntax.mlconstant -> expr) =
         let i = FStar_Compiler_Util.int_of_char c1 in
         let s = FStar_Compiler_Util.string_of_int i in
         let c2 = EConstant (CInt, s) in
-        let char_of_int = EQualified (["FStar"; "Char"], "char_of_int") in
+        let char_of_int =
+          EQualified (["FStar"; "Char"; "Type"], "char_of_int") in
         EApp (char_of_int, [c2])
     | FStar_Extraction_ML_Syntax.MLC_Int
         (s, FStar_Pervasives_Native.Some (sg, wd)) ->

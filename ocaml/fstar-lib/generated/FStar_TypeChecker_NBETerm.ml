@@ -7,7 +7,7 @@ type constant =
   | Bool of Prims.bool 
   | Int of FStar_BigInt.t 
   | String of (Prims.string * FStar_Compiler_Range_Type.range) 
-  | Char of FStar_Char.char 
+  | Char of FStar_Char_Type.char 
   | Range of FStar_Compiler_Range_Type.range 
   | SConst of FStar_Const.sconst 
   | Real of Prims.string 
@@ -28,7 +28,7 @@ let (__proj__String__item___0 :
   fun projectee -> match projectee with | String _0 -> _0
 let (uu___is_Char : constant -> Prims.bool) =
   fun projectee -> match projectee with | Char _0 -> true | uu___ -> false
-let (__proj__Char__item___0 : constant -> FStar_Char.char) =
+let (__proj__Char__item___0 : constant -> FStar_Char_Type.char) =
   fun projectee -> match projectee with | Char _0 -> _0
 let (uu___is_Range : constant -> Prims.bool) =
   fun projectee -> match projectee with | Range _0 -> true | uu___ -> false

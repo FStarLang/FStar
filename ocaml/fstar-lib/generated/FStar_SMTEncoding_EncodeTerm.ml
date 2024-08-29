@@ -689,7 +689,7 @@ let rec (encode_const :
                            (FStar_Compiler_Util.int_of_char c1) in
                        FStar_SMTEncoding_Term.boxInt uu___5 in
                      [uu___4] in
-                   ("FStar.Char.__char_of_int", uu___3) in
+                   ("FStar.Char.Type.char_of_int", uu___3) in
                  FStar_SMTEncoding_Util.mkApp uu___2 in
                (uu___1, [])
            | FStar_Const.Const_int (i, FStar_Pervasives_Native.None) ->

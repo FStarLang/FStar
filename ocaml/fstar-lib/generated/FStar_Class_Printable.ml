@@ -55,7 +55,7 @@ let printable_either :
              | FStar_Pervasives.Inr x ->
                  Prims.strcat "(Inr " (Prims.strcat (to_string uu___1 x) ")"))
       }
-let (printable_char : FStar_Char.char printable) =
+let (printable_char : FStar_Char_Type.char printable) =
   { to_string = FStar_String.string_of_char }
 let (printable_byte : FStar_UInt8.t printable) =
   { to_string = FStar_UInt8.to_string }

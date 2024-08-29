@@ -1,4 +1,4 @@
-type char   = FStar_Char.char[@@deriving yojson,show]
+type char   = FStar_Char_Type.char[@@deriving yojson,show]
 type float  = FStar_Float.float[@@deriving yojson,show]
 type double = FStar_Float.double[@@deriving yojson,show]
 type byte   = FStar_UInt8.byte[@@deriving yojson,show]

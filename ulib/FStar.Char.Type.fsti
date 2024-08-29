@@ -1,5 +1,5 @@
 (*
-   Copyright 2008-2023 Microsoft Research
+   Copyright 2008-2018 Microsoft Research
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,18 +14,12 @@
    limitations under the License.
 *)
 
-module FStar.Char
+module FStar.Char.Type
 
-(* This is a trimmed-down version of ulib/FStar.Char, realized by the
-same ML implementation. It is here to prevent dependencies from the
-compiler into the UInt32 module. *)
+(** [char] is a new primitive type with decidable equality *)
+new
+val char : eqtype
 
-include FStar.Char.Type
+let valid_codepoint (i:nat) : prop = i < 0xd7ff \/ (i >= 0xe000 /\ i <= 0x10ffff)
 
-type char_code
-
-val int_of_char : char -> Tot int
-val char_of_int : int -> Tot char
-
-val lowercase: char -> Tot char
-val uppercase: char -> Tot char
+val char_of_int (i: nat{valid_codepoint i}) : char
