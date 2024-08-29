@@ -18,6 +18,9 @@ module FStar.Extraction.Krml
 
 open FStar.Class.Show
 
+type version = int
+val current_version: version (* version of AST type, for binary compatibility *)
+
 val decl : Type0
 
 instance val showable_decl : showable decl
@@ -25,9 +28,8 @@ instance val showable_decl : showable decl
 type program = list decl
 type file = string & program
 
-(** Versioned binary writing/reading of ASTs *)
-type version = int
+(** Versioned binary writing/reading of ASTs.
+    Serialization/parsing is with output_value/input_value. *)
 type binary_format = version & list file
 
-val current_version: version
 val translate : Extraction.ML.UEnv.uenv -> FStar.Extraction.ML.Syntax.mllib -> list file
