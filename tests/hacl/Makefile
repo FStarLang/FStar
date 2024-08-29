@@ -1,7 +1,7 @@
 FSTAR_HOME=../..
 
 FSTAR_FILES = $(wildcard *.fst *.fsti)
-
+OTHERFLAGS += --ext disregard_using_facts_from --ext context_pruning
 all: verify-all
 
 include $(FSTAR_HOME)/examples/Makefile.common

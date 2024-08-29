@@ -514,7 +514,7 @@ let repeat_blocks_is_repeat_gen_blocks #a #b #c hi blocksize inp f l acc0 =
     repeat_gen_blocks_multi blocksize 0 hi nb blocks (Loops.fixed_a b) (Loops.fixed_i f) acc0;
     }
 
-
+#restart-solver
 let repeat_blocks_multi_split #a #b blocksize len0 inp f acc0 =
   let len = length inp in
   let len1 = len - len0 in
