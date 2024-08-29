@@ -716,6 +716,7 @@ let shift_left a s =
   if (U32.lt s u32_64) then shift_left_small a s
   else shift_left_large a s
 
+#restart-solver
 let add_u64_shift_right (hi lo: U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -740,6 +741,7 @@ let mul_pow2_diff a n1 n2 =
   mul_div_cancel (a * pow2 (n1 - n2)) (pow2 n2);
   Math.pow2_plus (n1 - n2) n2
 
+#restart-solver
 let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64.t
   (requires (U32.v s <> 0))
   (ensures (fun r -> U64.v r == U64.v lo / pow2 (U32.v s) +
@@ -776,6 +778,7 @@ let u128_div_pow2 a s =
   Math.paren_mul_right (U64.v a.high) (pow2 (64-s)) (pow2 s);
   Math.division_addition_lemma (U64.v a.low) (pow2 s) (U64.v a.high * pow2 (64 - s))
 
+#restart-solver
 let shift_right_small (a: t) (s: U32.t{U32.v s < 64}) : Pure t
   (requires True)
   (ensures (fun r -> v r == v a / pow2 (U32.v s))) =
