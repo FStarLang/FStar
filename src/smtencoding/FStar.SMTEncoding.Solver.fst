@@ -65,6 +65,7 @@ let replaying_hints: ref (option hints) = BU.mk_ref None
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
+let use_hints () = Options.use_hints () && Options.Ext.get "context_pruning" = ""
 let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     let norm_src_filename = BU.normalize_file_path src_filename in
@@ -87,7 +88,7 @@ let initialize_hints_db src_filename format_filename : unit =
                  replaying_hints := Some hints.hints
 
           | MalformedJson ->
-            if Options.use_hints () then
+            if use_hints () then
               Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Malformed JSON hints file: %s; ran without hints"
@@ -95,7 +96,7 @@ let initialize_hints_db src_filename format_filename : unit =
             ()
 
           | UnableToOpen ->
-            if Options.use_hints () then
+            if  use_hints () then
               Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Unable to open hints file: %s; ran without hints"
@@ -787,7 +788,7 @@ let make_solver_configs
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if Options.use_hints () && next_hint |> is_some
+        if  use_hints () && next_hint |> is_some
         then
             let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
             [{default_settings with query_hint=Some core;

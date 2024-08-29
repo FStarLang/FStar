@@ -25,6 +25,10 @@ let (replaying_hints :
   FStar_Compiler_Hints.hints FStar_Pervasives_Native.option
     FStar_Compiler_Effect.ref)
   = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None
+let (use_hints : unit -> Prims.bool) =
+  fun uu___ ->
+    (FStar_Options.use_hints ()) &&
+      (let uu___1 = FStar_Options_Ext.get "context_pruning" in uu___1 = "")
 let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
   fun src_filename ->
     fun format_filename ->
@@ -57,7 +61,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
               (FStar_Pervasives_Native.Some
                  (hints.FStar_Compiler_Hints.hints)))
        | FStar_Compiler_Hints.MalformedJson ->
-           let uu___3 = FStar_Options.use_hints () in
+           let uu___3 = use_hints () in
            if uu___3
            then
              let uu___4 =
@@ -70,7 +74,7 @@ let initialize_hints_db : 'uuuuu . Prims.string -> 'uuuuu -> unit =
                uu___4
            else ()
        | FStar_Compiler_Hints.UnableToOpen ->
-           let uu___3 = FStar_Options.use_hints () in
+           let uu___3 = use_hints () in
            if uu___3
            then
              let uu___4 =
@@ -1175,7 +1179,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___472 : answer FStar_Class_Show.showable) =
+let (uu___473 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->
@@ -1278,7 +1282,7 @@ let (make_solver_configs :
                 | (default_settings, next_hint) ->
                     let use_hints_setting =
                       let uu___1 =
-                        (FStar_Options.use_hints ()) &&
+                        (use_hints ()) &&
                           (FStar_Compiler_Util.is_some next_hint) in
                       if uu___1
                       then
