@@ -1206,16 +1206,19 @@ let maybe_promote_effect ml_e tag t =
     | _ -> ml_e, tag
 
 
-let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
-            : lbname //just lbname returned back
-            & e_tag  //the ML version of the effect label lbeff
-            & (typ   //just the source type lbtyp=t, after compression
-               & (S.binders //the erased type binders
-                  & mltyscheme)) //translation of the source type t as a ML type scheme
-            & bool   //whether or not to add a unit argument
-            & term   //the term e, maybe after some type binders have been erased
-            =
+type lb_sig =
+    lbname //just lbname returned back
+  & e_tag  //the ML version of the effect label lbeff
+  & (typ   //just the source type lbtyp=t, after compression
+     & (S.binders //the erased type binders
+        & mltyscheme)) //translation of the source type t as a ML type scheme
+  & bool   //whether or not to add a unit argument
+  & bool   //whether this was marked CInline
+  & term   //the term e, maybe after some type binders have been erased
+
+let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} : lb_sig =
+              let has_c_inline = U.has_attribute lbattrs PC.c_inline_attr in
               // begin match lbattrs with
               // | [] -> ()
               // | _ ->
@@ -1234,10 +1237,10 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
                   let expected_t = term_as_mlty g lbtyp in
-                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, has_c_inline, lbdef)
               in
               if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp
-              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
               else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
                 | Tm_arrow {bs; comp=c} when (List.hd bs |> is_type_binder g) ->
@@ -1278,7 +1281,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
                              let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1299,7 +1302,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app {hd=lbdef; args}) lbdef.pos in
-                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, has_c_inline, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1327,7 +1330,7 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
-                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _body) ->
+                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))
@@ -1920,7 +1923,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             else lbs
           in
 
-          let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
+          let check_lb env (nm_sig : mlident & lb_sig) =
+              let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
@@ -1931,6 +1935,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
+              let meta = if has_c_inline then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
@@ -1940,7 +1945,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
            * code that is more understandable. We only do it for OCaml,
            * to not affect Karamel naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
-              let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
+              let (lbname, _, (t, (_, polytype)), add_unit, _has_c_inline, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
               let env_burn =
                 if Options.codegen () <> Some Options.Krml
