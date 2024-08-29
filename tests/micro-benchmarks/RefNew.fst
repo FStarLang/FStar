@@ -2,4 +2,4 @@ module RefNew
 
 open FStar.Ref
 
-let _ = assert (ref int =!= int)
+let _test (x:int) = assert (ref int =!= int)

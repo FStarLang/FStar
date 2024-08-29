@@ -230,6 +230,8 @@ private let update_maintains_length_lemma () : Lemma (update_maintains_length_fa
     update_maintains_length_helper s i v
   )
 
+#restart-solver
+#push-options "--z3rlimit_factor 4"
 private let rec update_then_index_helper
   (#ty: Type)
   (s: list ty)
@@ -242,6 +244,7 @@ private let rec update_then_index_helper
   | hd :: tl ->
       if i = 0 || n = 0 then ()
       else update_then_index_helper tl (i - 1) v (n - 1)
+#pop-options
 
 private let update_then_index_lemma () : Lemma (update_then_index_fact) =
   update_maintains_length_lemma ();
