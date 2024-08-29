@@ -47,7 +47,7 @@ let doc_to_string doc = FStar.Pprint.pretty_string (float_of_string "1.0") 100 d
 let parser_term_to_string t = doc_to_string (D.term_to_document t)
 let parser_pat_to_string t = doc_to_string (D.pat_to_document t)
 
-(* A callback into FStar.Syntax.Print.term_to_string. Careful, it's mutually recursive
+(* A callback into FStar.Syntax.show. Careful, it's mutually recursive
  * with this module and could loop, so only use it for debugging. *)
 let tts (t:S.term) : string = U.tts t
 

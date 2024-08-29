@@ -38,6 +38,7 @@ module S = FStar.Syntax.Syntax
 module N = FStar.TypeChecker.Normalize
 module Env = FStar.TypeChecker.Env
 
+open FStar.Class.Show
 
 let codegen_fsharp () = Options.codegen () = Some Options.FSharp
 
@@ -73,7 +74,7 @@ let mlconst_of_const' (sctt : sconst) =
 
 let mlconst_of_const (p:Range.range) (c:sconst) =
     try mlconst_of_const' c
-    with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (Print.const_to_string c))
+    with _ -> failwith (BU.format2 "(%s) Failed to translate constant %s " (Range.string_of_range p) (show c))
 
 let mlexpr_of_range (r:Range.range) : mlexpr' =
     let cint (i : int) : mlexpr =

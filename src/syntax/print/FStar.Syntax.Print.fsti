@@ -26,59 +26,16 @@ open FStar.Class.PP
 module DsEnv = FStar.Syntax.DsEnv
 module Json = FStar.Json
 
-val db_to_string          : bv -> string
-val bv_to_string          : bv -> string
-val bvs_to_string         : string -> list bv -> string
-val fv_to_string          : fv -> string
-val nm_to_string          : bv -> string
-val lid_to_string         : lid -> string
-val term_to_string        : term -> string
 val term_to_string'       : DsEnv.env -> term -> string
-val uvar_to_string        : uvar -> string
-val comp_to_string        : comp -> string
 val comp_to_string'       : DsEnv.env -> comp -> string
-val lbs_to_string         : list qualifier -> letbindings -> string
-val tag_of_term           : term -> string
-val lbname_to_string      : lbname -> string
-val pat_to_string         : pat -> string
-val branch_to_string      : Syntax.branch -> string
-val univ_names_to_string  : univ_names -> string
-val univ_to_string        : universe -> string
-val univs_to_string       : universes -> string
-val attrs_to_string       : list attribute -> string
-val pragma_to_string      : pragma -> string
-val sigelt_to_string      : sigelt -> string
+
 val sigelt_to_string'     : DsEnv.env -> sigelt -> string
 val sigelt_to_string_short: sigelt -> string
-val tag_of_sigelt         : sigelt -> string
-val binder_to_string      : binder -> string
-val binders_to_string     : string -> binders -> string
+
 val binder_to_json        : DsEnv.env -> binder -> Json.json
 val binders_to_json       : DsEnv.env -> binders -> Json.json
-val aqual_to_string       : aqual -> string
-val bqual_to_string       : bqual -> string
-val args_to_string        : args -> string
-val indexed_effect_binder_kind_to_string
-                          : indexed_effect_binder_kind -> string
-val indexed_effect_combinator_kind_to_string
-                          : indexed_effect_combinator_kind -> string
-val eff_extraction_mode_to_string
-                          : eff_extraction_mode -> string
-val eff_decl_to_string    : bool -> eff_decl -> string
-val sub_eff_to_string     : sub_eff -> string
-val subst_to_string       : subst_t -> string
-val const_to_string       : sconst -> string
-val qual_to_string        : qualifier -> string
-val quals_to_string       : list qualifier -> string
-val tscheme_to_string     : tscheme -> string
-val cflag_to_string       : cflag -> string
-val cflags_to_string      : list cflag -> string
-val action_to_string  : action -> string
-val metadata_to_string : metadata -> string
-val ctx_uvar_to_string    : ctx_uvar -> string
-val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
-val fv_qual_to_string : fv_qual -> string
+val ctx_uvar_to_string_no_reason    : ctx_uvar -> string
 
 val term_to_doc'          : DsEnv.env -> term -> Pprint.document
 val comp_to_doc'          : DsEnv.env -> comp -> Pprint.document
@@ -87,6 +44,17 @@ val sigelt_to_doc'        : DsEnv.env -> sigelt -> Pprint.document
 val term_to_doc           : term -> Pprint.document
 val comp_to_doc           : comp -> Pprint.document
 val sigelt_to_doc         : sigelt -> Pprint.document
+
+(* Prints as <u1,..,un>ty instead of a pair *)
+val tscheme_to_string : tscheme -> string
+
+(* document *)
+val eff_decl_to_string    : bool -> eff_decl -> string
+
+(* Prints sugar, 'Implicit _' prints as '#', etc *)
+val bqual_to_string       : bqual -> string
+
+val args_to_string : args -> string
 
 instance val showable_term      : showable term
 instance val showable_univ      : showable universe
@@ -102,12 +70,18 @@ instance val showable_binding   : showable binding
 instance val showable_pragma    : showable pragma
 instance val showable_subst_elt : showable subst_elt
 instance val showable_branch    : showable branch
+instance val showable_aqual     : showable aqual
 instance val showable_qualifier : showable qualifier
 instance val showable_pat       : showable pat
 instance val showable_const     : showable sconst
 instance val showable_letbinding : showable letbinding
 instance val showable_modul      : showable modul
 instance val showable_ctx_uvar_meta : showable ctx_uvar_meta_t
+instance val showable_metadata  : showable metadata
+instance val showable_cflag     : showable cflag
+instance val showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind
+instance val showable_eff_extraction_mode : showable eff_extraction_mode
+instance val showable_sub_eff  : showable sub_eff
 
 instance val pretty_term        : pretty term
 instance val pretty_univ        : pretty universe

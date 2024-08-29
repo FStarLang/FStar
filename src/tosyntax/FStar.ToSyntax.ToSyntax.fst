@@ -723,7 +723,7 @@ let rec desugar_maybe_non_constant_universe t
           | Inr u, Inl n -> Inr (sum_to_universe u n)
           | Inr u1, Inr u2 ->
               raise_error (Errors.Fatal_UniverseMightContainSumOfTwoUnivVars, "This universe might contain a sum of two universe variables "
-                          ^ term_to_string t) t.range
+                          ^ show t) t.range
       end
   | App _ ->
       let rec aux t univargs  =
@@ -754,10 +754,10 @@ let check_no_aq (aq : antiquotations_temp) : unit =
     | [] -> ()
     | (bv, { n = Tm_quoted (e, { qkind = Quote_dynamic })})::_ ->
         raise_error (Errors.Fatal_UnexpectedAntiquotation,
-                      BU.format1 "Unexpected antiquotation: `@(%s)" (Print.term_to_string e)) e.pos
+                      BU.format1 "Unexpected antiquotation: `@(%s)" (show e)) e.pos
     | (bv, e)::_ ->
         raise_error (Errors.Fatal_UnexpectedAntiquotation,
-                      BU.format1 "Unexpected antiquotation: `#(%s)" (Print.term_to_string e)) e.pos
+                      BU.format1 "Unexpected antiquotation: `#(%s)" (show e)) e.pos
 
 let check_linear_pattern_variables pats r =
   // returns the set of pattern variables
@@ -2544,7 +2544,7 @@ and desugar_comp r (allow_type_promotion:bool) env t =
     in
     let (eff, cattributes), args = pre_process_comp_typ t in
     if List.length args = 0
-    then fail (Errors.Fatal_NotEnoughArgsToEffect, (BU.format1 "Not enough args to effect %s" (Print.lid_to_string eff)));
+    then fail (Errors.Fatal_NotEnoughArgsToEffect, (BU.format1 "Not enough args to effect %s" (show eff)));
     let is_universe (_, imp) = imp = UnivApp in
     let universes, args = BU.take is_universe args in
     let universes = List.map (fun (u, imp) -> desugar_universe u) universes in
@@ -2744,7 +2744,7 @@ and desugar_vquote env e r: string =
   let tm = desugar_term env e in
   match (Subst.compress tm).n with
   | Tm_fvar fv -> string_of_lid (lid_of_fv fv)
-  | _ -> raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ P.term_to_string tm)) r
+  | _ -> raise_error (Fatal_UnexpectedTermVQuote, ("VQuote, expected an fvar, got: " ^ show tm)) r
 
 and as_binder env imp = function
   | (None, k, attrs) ->
@@ -3044,7 +3044,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
                          else (if not (Options.ml_ish ()) then
                                  FStar.Errors.log_issue se.sigrng
                                    (Errors.Warning_AddImplicitAssumeNewQualifier, (BU.format1 "Adding an implicit 'assume new' qualifier on %s"
-                                               (Print.lid_to_string l)));
+                                               (show l)));
                                  S.Assumption :: S.New :: quals) in
              let t = match typars with
                 | [] -> k
@@ -3198,8 +3198,8 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
           then (
             BU.print3 "Adding attributes to type %s: val_attrs=[@@%s] attrs=[@@%s]\n" 
               (string_of_lid tname)
-              (String.concat ", " (List.map Print.term_to_string val_attrs))
-              (String.concat ", " (List.map Print.term_to_string d_attrs))
+              (String.concat ", " (List.map show val_attrs))
+              (String.concat ", " (List.map show d_attrs))
           );
           ([], { sigel = Sig_inductive_typ {lid=tname;
                                             us=univs;
@@ -3222,8 +3222,7 @@ let rec desugar_tycon env (d: AST.decl) (d_attrs_initial:list S.term) quals tcs 
       let bundle, abbrevs = FStar.Syntax.MutRecTy.disentangle_abbrevs_from_bundle sigelts quals (List.collect U.lids_of_sigelt sigelts) rng in
       if !dbg_attrs
       then (
-        BU.print1 "After disentangling: %s\n"
-              (Print.sigelt_to_string bundle)
+        BU.print1 "After disentangling: %s\n" (show bundle)
       );      
       let env = push_sigelt env0 bundle in
       let env = List.fold_left push_sigelt env abbrevs in
@@ -3339,7 +3338,7 @@ let lookup_effect_lid env (l:lident) r : S.eff_decl =
   | None ->
     raise_error
       (Errors.Fatal_EffectNotFound,
-       "Effect name " ^ Print.lid_to_string l ^ " not found")
+       "Effect name " ^ show l ^ " not found")
       r
   | Some l -> l
 
@@ -3790,9 +3789,7 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
     let env, ses = desugar_tycon env d d_attrs (List.map (trans_qual None) quals) tcs in
     if !dbg_attrs
     then (
-      BU.print2 "Desugared tycon from {%s} to {%s}\n"
-                (show d)
-                (String.concat "\n" (List.map FStar.Syntax.Print.sigelt_to_string ses))
+      BU.print2 "Desugared tycon from {%s} to {%s}\n" (show d) (show ses)
     );
     (* Handling typeclasses: we typecheck the tcs as usual, and then need to add
      * %splice[new_meth_lids] (mk_class type_lid)
@@ -3945,9 +3942,9 @@ and desugar_decl_core env (d_attrs:list S.term) (d:decl) : (env_t & sigelts) =
             (isrec, lbs0)
           in
           // BU.print3 "Desugaring %s, val_quals are %s, val_attrs are %s\n"
-          //   (List.map Print.fv_to_string fvs |> String.concat ", ")
-          //   (Print.quals_to_string val_quals)
-          //   (List.map Print.term_to_string val_attrs |> String.concat ", ");
+          //   (List.map show fvs |> String.concat ", ")
+          //   (show val_quals)
+          //   (List.map show val_attrs |> String.concat ", ");
           let quals =
             match quals with
             | _::_ ->

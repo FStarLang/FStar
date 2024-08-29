@@ -42,6 +42,7 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 module BU = FStar.Compiler.Util
 open FStar.Class.Show
+open FStar.Class.Tagged
 
 let dbg                  = Debug.get_toggle "ED"
 let dbg_LayeredEffectsTc = Debug.get_toggle "LayeredEffectsTc"
@@ -85,7 +86,7 @@ let check_and_gen env (eff_name:string) (comb:string) (n:int) (us, t) : (univ_na
      then ()
      else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
             (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-               eff_name comb (Print.univ_names_to_string us) (Print.univ_names_to_string g_us)))
+               eff_name comb (show us) (show g_us)))
             t.pos in
   g_us, t, ty
   )
@@ -404,7 +405,7 @@ let validate_indexed_effect_bind_shape (env:env)
      raise_error (Errors.Fatal_UnexpectedEffect,
                   BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
                     bind_name
-                    (Print.term_to_string bind_t)) r in
+                    (show bind_t)) r in
       
 
   // peel off range binders from the end, if any
@@ -415,7 +416,7 @@ let validate_indexed_effect_bind_shape (env:env)
          else raise_error (Errors.Fatal_UnexpectedEffect,
                            BU.format2 "Type of %s is not an arrow with >= 6 binders (%s)"
                              bind_name
-                             (Print.term_to_string bind_t)) r
+                             (show bind_t)) r
     else rest_bs, [] in
 
   // f binder with sort m_repr ?us
@@ -473,7 +474,7 @@ let validate_indexed_effect_bind_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Unexpected type of %s (%s)\n"
                      bind_name
-                     (Print.term_to_string bind_t)) r
+                     (show bind_t)) r
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -501,8 +502,7 @@ let validate_indexed_effect_bind_shape (env:env)
     | Some l -> Substitutive_combinator l in
 
   if Debug.medium () || !dbg_LayeredEffectsTc
-  then BU.print2 "Bind %s has %s kind\n" bind_name
-         (Print.indexed_effect_combinator_kind_to_string kind);
+  then BU.print2 "Bind %s has %s kind\n" bind_name (show kind);
 
   k, kind
 
@@ -677,7 +677,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
         BU.format2 "Type of %s is not an arrow with >= 2 binders (%s)"
           subcomp_name
-          (Print.term_to_string subcomp_t)) r in
+          (show subcomp_t)) r in
 
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr
@@ -716,7 +716,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
 
   if Debug.medium () || !dbg_LayeredEffectsTc then
     BU.print1 "Expected type of subcomp before unification: %s\n"
-      (Print.term_to_string k);
+      (show k);
 
   let guard_eq =
     match Rel.teq_nosmt env subcomp_t k with
@@ -724,7 +724,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Unexpected type of %s (%s)\n"
                      subcomp_name
-                     (Print.term_to_string subcomp_t)) r
+                     (show subcomp_t)) r
     | Some g -> g in
 
 
@@ -751,8 +751,7 @@ let validate_indexed_effect_subcomp_shape (env:env)
     | Some k -> k in
 
   if Debug.medium () || !dbg_LayeredEffectsTc
-  then BU.print2 "Subcomp %s has %s kind\n" subcomp_name
-         (Print.indexed_effect_combinator_kind_to_string kind);
+  then BU.print2 "Subcomp %s has %s kind\n" subcomp_name (show kind);
 
 
   k, kind
@@ -898,7 +897,7 @@ let validate_indexed_effect_ite_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
         BU.format2 "Type of %s is not an arrow with >= 4 binders (%s)"
           ite_name
-          (Print.term_to_string ite_ty)) r in
+          (show ite_ty)) r in
 
   let f, guard_f =
     let repr, g = TcUtil.fresh_effect_repr
@@ -941,7 +940,7 @@ let validate_indexed_effect_ite_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Unexpected term for %s (%s)\n"
                      ite_name
-                     (Print.term_to_string ite_tm)) r
+                     (show ite_tm)) r
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -963,7 +962,7 @@ let validate_indexed_effect_ite_shape (env:env)
 
   if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Ite %s has %s kind\n" ite_name
-         (Print.indexed_effect_combinator_kind_to_string kind);
+         (show kind);
 
   k, kind
 
@@ -1022,7 +1021,7 @@ let validate_indexed_effect_close_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Unexpected term for %s (%s)\n"
                      close_name
-                     (Print.term_to_string close_tm)) r
+                     (show close_tm)) r
     | Some g -> g in
   
   Rel.force_trivial_guard env (Env.conj_guard g_body g_eq);
@@ -1174,7 +1173,7 @@ let validate_indexed_effect_lift_shape (env:env)
       raise_error (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "Unexpected type of %s (%s)\n"
                      lift_name
-                     (Print.term_to_string lift_t)) r
+                     (show lift_t)) r
     | Some g -> g in
 
   Rel.force_trivial_guard env (Env.conj_guards [
@@ -1198,7 +1197,7 @@ let validate_indexed_effect_lift_shape (env:env)
 
   if Debug.medium () || !dbg_LayeredEffectsTc
   then BU.print2 "Lift %s has %s kind\n" lift_name
-         (Print.indexed_effect_combinator_kind_to_string kind);
+         (show kind);
 
 
   k, kind
@@ -1313,7 +1312,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   let not_an_arrow_error comb n t r =
     raise_error (Errors.Fatal_UnexpectedEffect,
       BU.format5 "Type of %s:%s is not an arrow with >= %s binders (%s::%s)" (string_of_lid ed.mname) comb
-        (string_of_int n) (Print.tag_of_term t) (Print.term_to_string t)
+        (string_of_int n) (tag_of t) (show t)
     ) r in
 
   (*
@@ -1621,7 +1620,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
             let ctx_uvar_meta = BU.map_option Ctx_uvar_meta_attr attr_opt in
             Env.new_implicit_var_aux
               (BU.format1 "uvar for subcomp %s binder when checking ite soundness"
-                (Print.binder_to_string b))
+                (show b))
               r
               env
               sort
@@ -1792,7 +1791,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     if List.length act.action_params <> 0
     then raise_error (Errors.Fatal_MalformedActionDeclaration,
       BU.format3 "Action %s:%s has non-empty action params (%s)"
-        (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.binders_to_string "; " act.action_params)) r;
+        (string_of_lid ed.mname) (string_of_lid act.action_name) (show act.action_params)) r;
 
     let env, act =
       let usubst, us = SS.univ_var_opening act.action_univs in
@@ -1826,7 +1825,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
     
     if Debug.medium () || !dbg_LayeredEffectsTc then
       BU.print2 "Typechecked action definition: %s and action type: %s\n"
-        (Print.term_to_string act_defn) (Print.term_to_string act_typ);
+        (show act_defn) (show act_typ);
 
     let k, g_k =
       let act_typ = N.normalize [Beta] env act_typ in
@@ -1842,21 +1841,21 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
         U.arrow bs (S.mk_Total repr), Env.conj_guard g g_tm
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType,
         BU.format3 "Unexpected non-function type for action %s:%s (%s)"
-          (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string act_typ)) r in
+          (string_of_lid ed.mname) (string_of_lid act.action_name) (show act_typ)) r in
 
     if Debug.medium () || !dbg_LayeredEffectsTc then
-      BU.print1 "Expected action type: %s\n" (Print.term_to_string k);
+      BU.print1 "Expected action type: %s\n" (show k);
 
     let g = Rel.teq env act_typ k in
     List.iter (Rel.force_trivial_guard env) [g_t; g_d; g_k; g];
 
     if Debug.medium () || !dbg_LayeredEffectsTc then
-      BU.print1 "Expected action type after unification: %s\n" (Print.term_to_string k);
+      BU.print1 "Expected action type after unification: %s\n" (show k);
     
     let act_typ =
       let err_msg t = BU.format3
         "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
-        (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.term_to_string t) in
+        (string_of_lid ed.mname) (string_of_lid act.action_name) (show t) in
       let repr_args t : universes & term & args =
         match (SS.compress t).n with
         | Tm_app {hd=head;args=a::is} ->
@@ -1880,7 +1879,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
       | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, err_msg k) r in
 
     if Debug.medium () || !dbg_LayeredEffectsTc then
-      BU.print1 "Action type after injecting it into the monad: %s\n" (Print.term_to_string act_typ);
+      BU.print1 "Action type after injecting it into the monad: %s\n" (show act_typ);
     
     let act =
       let us, act_defn = Gen.generalize_universes env act_defn in
@@ -1898,7 +1897,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
           action_typ = SS.close_univ_vars act.action_univs act_typ }
         else raise_error (Errors.Fatal_UnexpectedNumberOfUniverse,
                (BU.format4 "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
-                 (string_of_lid ed.mname) (string_of_lid act.action_name) (Print.univ_names_to_string us) (Print.univ_names_to_string act.action_univs)))
+                 (string_of_lid ed.mname) (string_of_lid act.action_name) (show us) (show act.action_univs)))
              r in
 
     act in
@@ -1949,9 +1948,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
   in
 
   if !dbg_LayeredEffectsTc
-  then BU.print2 "Effect %s has extraction mode %s\n"
-         (string_of_lid ed.mname)
-         (Print.eff_extraction_mode_to_string extraction_mode);
+  then BU.print2 "Effect %s has extraction mode %s\n" (show ed.mname) (show extraction_mode);
 
   let tschemes_of (us, t, ty) k = (us, t), (us, ty), k in
   let tschemes_of2 (us, t, ty) = (us, t), (us, ty) in
@@ -2290,8 +2287,8 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           let env' = { Env.set_expected_typ env act_typ with instantiate_imp = false } in
           if !dbg then
             BU.print3 "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
-              (string_of_lid act.action_name) (Print.term_to_string act.action_defn)
-              (Print.term_to_string act_typ);
+              (string_of_lid act.action_name) (show act.action_defn)
+              (show act_typ);
           let act_defn, _, g_a = tc_tot_or_gtot_term env' act.action_defn in
 
           Rel.force_trivial_guard env (Env.conj_guards [g_a; g_t]);
@@ -2313,7 +2310,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               k, g
             | _ -> raise_error (Errors.Fatal_ActionMustHaveFunctionType, (BU.format2
               "Actions must have function types (not: %s, a.k.a. %s)"
-                (Print.term_to_string act_typ) (Print.tag_of_term act_typ))) act_defn.pos
+                (show act_typ) (tag_of act_typ))) act_defn.pos
           in
 
           // The following Rel query is only to check that act_typ has
@@ -2324,7 +2321,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
            | NonTrivial _ ->
              raise_error (Errors.Fatal_ActionMustHaveFunctionType,
                           BU.format1 "Unexpected non trivial guard formula when checking action type shape (%s)"
-                            (Print.term_to_string act_typ)) act_defn.pos
+                            (show act_typ)) act_defn.pos
            | Trivial ->
              Rel.force_trivial_guard {env with admit=true} (Env.conj_guards [g_k; g]));
 
@@ -2345,8 +2342,8 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
               | _ -> failwith "Impossible (expected_k is an arrow)" in
 
           (* printfn "Checked action %s against type %s\n" *)
-          (*         (Print.term_to_string act_defn) *)
-          (*         (Print.term_to_string (N.normalize [Env.Beta] env act_typ)); *)
+          (*         (show act_defn) *)
+          (*         (show (N.normalize [Env.Beta] env act_typ)); *)
 
           //AR: if the action universes were already annotated, simply close, else generalize
           let univs, act_defn =
@@ -2432,7 +2429,7 @@ let monad_signature env m s =
  *)
 let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
   if !dbg_LayeredEffectsTc then
-    BU.print1 "Typechecking sub_effect: %s\n" (Print.sub_eff_to_string sub);
+    BU.print1 "Typechecking sub_effect: %s\n" (show sub);
 
   let lift_ts = sub.lift |> must in
   let r = (lift_ts |> snd).pos in
@@ -2454,7 +2451,7 @@ let tc_layered_lift env0 (sub:S.sub_eff) : S.sub_eff =
     kind = Some kind } in
 
   if !dbg_LayeredEffectsTc then
-    BU.print1 "Final sub_effect: %s\n" (Print.sub_eff_to_string sub);
+    BU.print1 "Final sub_effect: %s\n" (show sub);
 
   sub
 
@@ -2483,7 +2480,7 @@ let tc_lift env sub r =
                    r;
 
   let check_and_gen env t k =
-    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (Print.term_to_string t);
+    // BU.print1 "\x1b[01;36mcheck and gen \x1b[00m%s\n" (show t);
     Gen.generalize_universes env (tc_check_trivial_guard env t k) in
 
   check_lift_for_erasable_effects env sub.source sub.target r;
@@ -2534,7 +2531,7 @@ let tc_lift env sub r =
           else [], lift
         in
         if !dbg
-        then BU.print1 "Lift for free : %s\n" (Print.term_to_string lift);
+        then BU.print1 "Lift for free : %s\n" (show lift);
         let dmff_env = DMFF.empty env (tc_constant env Range.dummyRange) in
         let lift, comp, _ = tc_term (Env.push_univ_vars env uvs) lift in  //AR: push univs in the env
         (* TODO : Check that comp is pure ? *)
@@ -2578,11 +2575,11 @@ let tc_lift env sub r =
     //check that sub effecting is universe polymorphic in exactly one universe
     if lift_wp |> fst |> List.length <> 1 then
     raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect wp must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                                           (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                           (show sub.source) (show sub.target)
                                                            (lift_wp |> fst |> List.length |> string_of_int))) r;
     if is_some lift && lift |> must |> fst |> List.length <> 1 then
       raise_error (Errors.Fatal_TooManyUniverse, (BU.format3 "Sub effect lift must be polymorphic in exactly 1 universe; %s ~> %s has %s universes"
-                                                             (Print.lid_to_string sub.source) (Print.lid_to_string sub.target)
+                                                             (show sub.source) (show sub.target)
                                                              (lift |> must |> fst |> List.length |> string_of_int))) r;
     ({ sub with lift_wp=Some lift_wp; lift=lift })
 
@@ -2632,8 +2629,8 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
     then raise_error (Errors.Fatal_EffectAbbreviationResultTypeMismatch,
                       BU.format2 "Result type of effect abbreviation `%s` \
                                   does not match the result type of its definition `%s`"
-                                  (Print.term_to_string expected_result_typ)
-                                  (Print.term_to_string def_result_typ))
+                                  (show expected_result_typ)
+                                  (show def_result_typ))
                      r
   in
   let tps = SS.close_binders tps in
@@ -2648,9 +2645,9 @@ let tc_effect_abbrev env (lid, uvs, tps, c) r =
     let _, t = Subst.open_univ_vars uvs t in
     raise_error (Errors.Fatal_TooManyUniverse,
                  BU.format3 "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"
-                                  (Print.lid_to_string lid)
+                                  (show lid)
                                   (List.length uvs |> BU.string_of_int)
-                                  (Print.term_to_string t)) r
+                                  (show t)) r
   end;
   (lid, uvs, tps, c)
 

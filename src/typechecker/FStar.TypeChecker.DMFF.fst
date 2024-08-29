@@ -31,6 +31,18 @@ open FStar.Syntax.Subst
 open FStar.Syntax.Util
 open FStar.Const
 
+open FStar.Class.Show
+
+type env = {
+  // The type-checking environment which we abuse to store our DMFF-style types
+  // when entering a binder.
+  tcenv: FStar.TypeChecker.Env.env;
+  // The substitution from every [x: C] to its [x^w: C*].
+  subst: list subst_elt;
+  // Hack to avoid a dependency
+  tc_const: sconst -> typ;
+}
+
 module S  = FStar.Syntax.Syntax
 module SS = FStar.Syntax.Subst
 module N  = FStar.TypeChecker.Normalize
@@ -54,7 +66,7 @@ let mk_toplevel_definition (env: env_t) lident (def: term): sigelt & term =
   // Debug
   if !dbg then begin
     d (string_of_lid lident);
-    BU.print2 "Registering top-level definition: %s\n%s\n" (string_of_lid lident) (Print.term_to_string def)
+    BU.print2 "Registering top-level definition: %s\n%s\n" (show lident) (show def)
   end;
   // Allocate a new top-level name.
   let fv = S.lid_and_dd_as_fv lident None in
@@ -89,7 +101,7 @@ let gen_wps_for_free
   let d s = BU.print1 "\x1b[01;36m%s\x1b[00m\n" s in
   if !dbg then begin
     d "Elaborating extra WP combinators";
-    BU.print1 "wp_a is: %s\n" (Print.term_to_string wp_a)
+    BU.print1 "wp_a is: %s\n" (show wp_a)
   end;
 
   (* Consider the predicate transformer st_wp:
@@ -111,7 +123,7 @@ let gen_wps_for_free
         let rest = match comp.n with
           | Total t -> t
           | _ -> raise_error (Error_UnexpectedDM4FType,
-                               BU.format1 "wp_a contains non-Tot arrow: %s" (Print.comp_to_string comp))
+                               BU.format1 "wp_a contains non-Tot arrow: %s" (show comp))
                     comp.pos
         in
         bs @ (collect_binders rest)
@@ -119,14 +131,14 @@ let gen_wps_for_free
         []
     | _ ->
         raise_error (Error_UnexpectedDM4FType,
-                     BU.format1 "wp_a doesn't end in Type0, but rather in %s" (Print.term_to_string t))
+                     BU.format1 "wp_a doesn't end in Type0, but rather in %s" (show t))
                     t.pos
   in
   let mk_lid name : lident = U.dm4f_lid ed name in
 
   let gamma = collect_binders wp_a |> U.name_binders in
   if !dbg then
-    d (BU.format1 "Gamma is %s\n" (Print.binders_to_string ", " gamma));
+    d (BU.format1 "Gamma is %s\n" (show gamma));
   let unknown = S.tun in
   let mk x = mk x Range.dummyRange in
 
@@ -360,7 +372,7 @@ let gen_wps_for_free
     let t = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.DontUnfoldAttr [PC.tac_opaque_attr]; Env.UnfoldUntil S.delta_constant ] env t in
     match (SS.compress t).n with
     | Tm_type _ ->
-        (* BU.print2 "type0, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
+        (* BU.print2 "type0, x=%s, y=%s\n" (show x) (show y); *)
         rel x y
     | Tm_arrow {bs=[ binder ]; comp={ n = GTotal b }}
     | Tm_arrow {bs=[ binder ]; comp={ n = Total b }} ->
@@ -372,7 +384,7 @@ let gen_wps_for_free
                             (U.mk_app y [ S.as_arg (S.bv_to_name a1) ]) in
              mk_forall a1 body
         else
-            (* BU.print2 "arrow, a=%s, b=%s\n" (Print.term_to_string a) (Print.term_to_string b); *)
+            (* BU.print2 "arrow, a=%s, b=%s\n" (show a) (show b); *)
             let a1 = S.gen_bv "a1" None a in
             let a2 = S.gen_bv "a2" None a in
             let body = U.mk_imp
@@ -390,7 +402,7 @@ let gen_wps_for_free
         failwith "impossible: arrow with empty binders"
     | _ ->
         (* TODO: assert that this is a base type. *)
-        (* BU.print2 "base, x=%s, y=%s\n" (Print.term_to_string x) (Print.term_to_string y); *)
+        (* BU.print2 "base, x=%s, y=%s\n" (show x) (show y); *)
         U.mk_untyped_eq2 x y
   in
   let stronger =
@@ -517,11 +529,11 @@ let nm_of_comp c = match c.n with
       M c.result_typ
   | _ ->
       raise_error (Error_UnexpectedDM4FType,
-                     BU.format1 "[nm_of_comp]: unexpected computation type %s" (Print.comp_to_string c)) c.pos
+                     BU.format1 "[nm_of_comp]: unexpected computation type %s" (show c)) c.pos
 
 let string_of_nm = function
-  | N t -> BU.format1 "N[%s]" (Print.term_to_string t)
-  | M t -> BU.format1 "M[%s]" (Print.term_to_string t)
+  | N t -> BU.format1 "N[%s]" (show t)
+  | M t -> BU.format1 "M[%s]" (show t)
 
 let is_monadic_arrow n =
   match n with
@@ -554,7 +566,7 @@ let rec mk_star_to_type mk env a =
 and star_type' env t =
   let mk x = mk x t.pos in
   let mk_star_to_type = mk_star_to_type mk in
-  //BU.print1 "[debug]: star_type' %s\n" (Print.term_to_string t);
+  //BU.print1 "[debug]: star_type' %s\n" (show t);
   let t = SS.compress t in
   match t.n with
   | Tm_arrow {bs=binders} ->
@@ -585,23 +597,8 @@ and star_type' env t =
   | Tm_app {hd=head; args} ->
       // Sums and products. TODO: re-use the cache in [env] to not recompute
       // (st a)* every time.
-      let debug t s =
-        let string_of_set f s =
-            let elts = elems s in
-            match elts with
-            | [] -> "{}"
-            | x::xs ->
-                let strb = BU.new_string_builder () in
-                BU.string_builder_append strb "{" ;
-                BU.string_builder_append strb (f x) ;
-                List.iter (fun x ->
-                    BU.string_builder_append strb ", " ;
-                    BU.string_builder_append strb (f x)
-                ) xs ;
-                BU.string_builder_append strb "}" ;
-                BU.string_of_string_builder strb
-        in
-        Errors.log_issue t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (Print.term_to_string t) (string_of_set Print.bv_to_string s)))
+      let debug (t : term) (s : FlatSet.t bv) =
+        Errors.log_issue t.pos (Errors.Warning_DependencyFound, (BU.format2 "Dependency found in term %s : %s" (show t) (show s)))
       in
       let rec is_non_dependent_arrow ty n =
         match (SS.compress ty).n with
@@ -627,7 +624,7 @@ and star_type' env t =
                     with Not_found -> false
             end
         | _ ->
-            Errors.log_issue ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (Print.term_to_string ty))) ;
+            Errors.log_issue ty.pos (Errors.Warning_NotDependentArrow, (BU.format1 "Not a dependent arrow : %s" (show ty))) ;
             false
       in
       let rec is_valid_application head =
@@ -649,7 +646,7 @@ and star_type' env t =
                 begin match (SS.compress res).n with
                   | Tm_app _ -> true
                   | _ ->
-                    Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (Print.term_to_string head))) ;
+                    Errors.log_issue head.pos (Errors.Warning_NondependentUserDefinedDataType, (BU.format1 "Got a term which might be a non-dependent user-defined data-type %s\n" (show head))) ;
                     false
                 end
              else false
@@ -666,7 +663,7 @@ and star_type' env t =
       else
         raise_err (Errors.Fatal_WrongTerm, (BU.format1 "For now, only [either], [option] and [eq2] are \
           supported in the definition language (got: %s)"
-            (Print.term_to_string t)))
+            (show t)))
 
   | Tm_bvar _
   | Tm_name _
@@ -703,37 +700,37 @@ and star_type' env t =
                        asc=(Inl (star_type' env (U.comp_result c)), None, use_eq);
                        eff_opt=something})  //AR: this should effectively be the same, the effect checking for c should have done someplace else?
       (*raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_ascribed is outside of the definition language: %s"
-              (Print.term_to_string t)))*)
+              (show t)))*)
 
  | Tm_ascribed {asc=(_, Some _, _)} ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Ascriptions with tactics are outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
 
   | Tm_refine _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_refine is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
 
   | Tm_uinst _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uinst is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_quoted _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_quoted is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_constant _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_constant is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_match _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_match is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_let _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_let is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_uvar _ ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_uvar is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
   | Tm_unknown ->
       raise_err (Errors.Fatal_TermOutsideOfDefLanguage, (BU.format1 "Tm_unknown is outside of the definition language: %s"
-        (Print.term_to_string t)))
+        (show t)))
 
   | Tm_lazy i -> star_type' env (U.unfold_lazy i)
 
@@ -760,13 +757,13 @@ let rec is_C (t: typ): bool =
       if r then begin
         if not (List.for_all (fun (h, _) -> is_C h) args) then
           raise_error (Error_UnexpectedDM4FType,
-                         BU.format1 "Not a C-type (A * C): %s" (Print.term_to_string t))
+                         BU.format1 "Not a C-type (A * C): %s" (show t))
                       t.pos;
         true
       end else begin
         if not (List.for_all (fun (h, _) -> not (is_C h)) args) then
           raise_error (Error_UnexpectedDM4FType,
-                         BU.format1 "Not a C-type (C * A): %s" (Print.term_to_string t))
+                         BU.format1 "Not a C-type (C * A): %s" (show t))
                       t.pos;
         false
       end
@@ -775,7 +772,7 @@ let rec is_C (t: typ): bool =
       | M t ->
           if (is_C t) then
             raise_error (Error_UnexpectedDM4FType,
-                           BU.format1 "Not a C-type (C -> C): %s" (Print.term_to_string t))
+                           BU.format1 "Not a C-type (C -> C): %s" (show t))
                         t.pos;
           true
       | N t ->
@@ -812,13 +809,13 @@ let is_unknown = function | Tm_unknown -> true | _ -> false
 // - the first is [e*], the CPS'd version of [e]
 // - the second is [_e_], the elaborated version of [e]
 let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
-  // BU.print1 "[debug]: check %s\n" (Print.term_to_string e);
+  // BU.print1 "[debug]: check %s\n" (show e);
   // [s_e] as in "starred e"; [u_e] as in "underlined u" (per the paper)
   let return_if (rec_nm, s_e, u_e) =
     let check t1 t2 =
       if not (is_unknown t2.n) && not (Env.is_trivial (Rel.teq env.tcenv t1 t2)) then
         raise_err (Errors.Fatal_TypeMismatch, (BU.format3 "[check]: the expression [%s] has type [%s] but should have type [%s]"
-          (Print.term_to_string e) (Print.term_to_string t1) (Print.term_to_string t2)))
+          (show e) (show t1) (show t2)))
     in
     match rec_nm, context_nm with
     | N t1, N t2
@@ -832,9 +829,9 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
     | M t1,  N t2 ->
         raise_err (Errors.Fatal_EffectfulAndPureComputationMismatch, (BU.format3
           "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
-          (Print.term_to_string e)
-          (Print.term_to_string t1)
-          (Print.term_to_string t2)))
+          (show e)
+          (show t1)
+          (show t2)))
 
   in
 
@@ -845,7 +842,7 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
     in
     match context_nm with
     | N t -> raise_error (Errors.Fatal_LetBoundMonadicMismatch, "let-bound monadic body has a non-monadic continuation \
-        or a branch of a match is monadic and the others aren't : "  ^ Print.term_to_string t) e2.pos
+        or a branch of a match is monadic and the others aren't : "  ^ show t) e2.pos
     | M _ -> strip_m (check env e2 context_nm)
   in
 
@@ -883,23 +880,23 @@ let rec check (env: env) (e: term) (context_nm: nm): nm & term & term =
       check env e context_nm
 
   | Tm_let _ ->
-      failwith (BU.format1 "[check]: Tm_let %s" (Print.term_to_string e))
+      failwith (BU.format1 "[check]: Tm_let %s" (show e))
   | Tm_type _ ->
       failwith "impossible (DM stratification)"
   | Tm_arrow _ ->
       failwith "impossible (DM stratification)"
   | Tm_refine _ ->
-      failwith (BU.format1 "[check]: Tm_refine %s" (Print.term_to_string e))
+      failwith (BU.format1 "[check]: Tm_refine %s" (show e))
   | Tm_uvar _ ->
-      failwith (BU.format1 "[check]: Tm_uvar %s" (Print.term_to_string e))
+      failwith (BU.format1 "[check]: Tm_uvar %s" (show e))
   | Tm_delayed _ ->
       failwith "impossible (compressed)"
   | Tm_unknown ->
-      failwith (BU.format1 "[check]: Tm_unknown %s" (Print.term_to_string e))
+      failwith (BU.format1 "[check]: Tm_unknown %s" (show e))
 
 
 and infer (env: env) (e: term): nm & term & term =
-  // BU.print1 "[debug]: infer %s\n" (Print.term_to_string e);
+  // BU.print1 "[debug]: infer %s\n" (show e);
   let mk x = mk x e.pos in
   let normalize = N.normalize [ Env.Beta; Env.Eager_unfolding; Env.DontUnfoldAttr [PC.tac_opaque_attr]; Env.UnfoldUntil S.delta_constant; Env.EraseUniverses ] env.tcenv in
   match (SS.compress e).n with
@@ -953,7 +950,7 @@ and infer (env: env) (e: term): nm & term & term =
 
       (*
       BU.print2_warning "Term %s ::: what %s \n"
-                                (Print.term_to_string body)
+                                (show body)
                                 (Print.abs_ascription_to_string what) ;
       *)
 
@@ -1044,7 +1041,7 @@ and infer (env: env) (e: term): nm & term & term =
 
   | Tm_app {hd={n=Tm_constant Const_range_of}}
   | Tm_app {hd={n=Tm_constant Const_set_range_of}} ->
-    raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "DMFF: Ill-applied constant %s" (Print.term_to_string e)) e.pos
+    raise_error (Errors.Fatal_IllAppliedConstant, BU.format1 "DMFF: Ill-applied constant %s" (show e)) e.pos
 
   | Tm_app {hd=head; args} ->
       let t_head, s_head, u_head = check_n env head in
@@ -1059,10 +1056,10 @@ and infer (env: env) (e: term): nm & term & term =
         | Tm_ascribed {tm=e} ->
             flatten e
         | _ ->
-            raise_err (Errors.Fatal_NotFunctionType, (BU.format1 "%s: not a function type" (Print.term_to_string t_head)))
+            raise_err (Errors.Fatal_NotFunctionType, (BU.format1 "%s: not a function type" (show t_head)))
       in
       let binders, comp = flatten t_head in
-      // BU.print1 "[debug] type of [head] is %s\n" (Print.term_to_string t_head);
+      // BU.print1 "[debug] type of [head] is %s\n" (show t_head);
 
       // Making the assumption here that [Tm_arrow (..., Tm_arrow ...)]
       // implies [is_M comp]. F* should be fixed if it's not the case.
@@ -1134,19 +1131,19 @@ and infer (env: env) (e: term): nm & term & term =
       N S.t_term, e, e
 
   | Tm_let _ ->
-      failwith (BU.format1 "[infer]: Tm_let %s" (Print.term_to_string e))
+      failwith (BU.format1 "[infer]: Tm_let %s" (show e))
   | Tm_type _ ->
       failwith "impossible (DM stratification)"
   | Tm_arrow _ ->
       failwith "impossible (DM stratification)"
   | Tm_refine _ ->
-      failwith (BU.format1 "[infer]: Tm_refine %s" (Print.term_to_string e))
+      failwith (BU.format1 "[infer]: Tm_refine %s" (show e))
   | Tm_uvar _ ->
-      failwith (BU.format1 "[infer]: Tm_uvar %s" (Print.term_to_string e))
+      failwith (BU.format1 "[infer]: Tm_uvar %s" (show e))
   | Tm_delayed _ ->
       failwith "impossible (compressed)"
   | Tm_unknown ->
-      failwith (BU.format1 "[infer]: Tm_unknown %s" (Print.term_to_string e))
+      failwith (BU.format1 "[infer]: Tm_unknown %s" (show e))
 
 and mk_match env e0 branches f =
   let mk x = mk x e0.pos in
@@ -1222,7 +1219,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
   let x_binders, e2 = SS.open_term x_binders e2 in
   begin match infer env e1 with
   | N t1, s_e1, u_e1 ->
-      // BU.print1 "[debug] %s is NOT a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      // BU.print1 "[debug] %s is NOT a monadic let-binding\n" (show binding.lbname);
       // TODO : double-check  that correct env and lbeff are used
       let u_binding =
         if is_C t1
@@ -1239,7 +1236,7 @@ and mk_let (env: env_) (binding: letbinding) (e2: term)
       mk (Tm_let {lbs=(false, [ { u_binding with lbdef = u_e1 } ]); body=SS.close x_binders u_e2})
 
   | M t1, s_e1, u_e1 ->
-      // BU.print1 "[debug] %s IS a monadic let-binding\n" (Print.lbname_to_string binding.lbname);
+      // BU.print1 "[debug] %s IS a monadic let-binding\n" (show binding.lbname);
       let u_binding = { binding with lbeff = PC.effect_PURE_lid ; lbtyp = t1 } in
       let env = { env with tcenv = push_bv env.tcenv ({ x with sort = t1 }) } in
       let t2, s_e2, u_e2 = ensure_m env e2 in
@@ -1290,7 +1287,7 @@ and type_of_comp t = U.comp_result t
 // This function expects its argument [c] to be normalized and to satisfy [is_C c]
 and trans_F_ (env: env_) (c: typ) (wp: term): term =
   if not (is_C c) then
-    raise_error (Error_UnexpectedDM4FType, BU.format1 "Not a DM4F C-type: %s" (Print.term_to_string c)) c.pos;
+    raise_error (Error_UnexpectedDM4FType, BU.format1 "Not a DM4F C-type: %s" (show c)) c.pos;
   let mk x = mk x c.pos in
   match (SS.compress c).n with
   | Tm_app {hd=head; args} ->
@@ -1366,10 +1363,10 @@ let trans_F (env: env_) (c: typ) (wp: term): term =
 // A helper to check that the terms elaborated by DMFF are well-typed
 let recheck_debug (s:string) (env:FStar.TypeChecker.Env.env) (t:S.term) : S.term =
   if !dbg then
-    BU.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (Print.term_to_string t);
+    BU.print2 "Term has been %s-transformed to:\n%s\n----------\n" s (show t);
   let t', _, _ = TcTerm.tc_term env t in
   if !dbg then
-    BU.print1 "Re-checked; got:\n%s\n----------\n" (Print.term_to_string t');
+    BU.print1 "Re-checked; got:\n%s\n----------\n" (show t');
   t'
 
 
@@ -1424,7 +1421,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   // TODO: check that [_comp] is [Tot Type]
   let repr, _comp = open_and_check env [] (ed |> U.get_eff_repr |> must |> snd) in
   if !dbg then
-    BU.print1 "Representation is: %s\n" (Print.term_to_string repr);
+    BU.print1 "Representation is: %s\n" (show repr);
 
   let ed_range = Env.get_range env in
 
@@ -1453,7 +1450,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     // TODO: assert no universe polymorphism
     let item, item_comp = open_and_check env other_binders item in
     if not (TcComm.is_total_lcomp item_comp) then
-      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (Print.term_to_string item) (TcComm.lcomp_to_string item_comp)));
+      raise_err (Errors.Fatal_ComputationNotTotal, (BU.format2 "Computation for [%s] is not total : %s !" (show item) (TcComm.lcomp_to_string item_comp)));
     let item_t, item_wp, item_elab = star_expr dmff_env item in
     let _ = recheck_debug "*" env item_wp in
     let _ = recheck_debug "_" env item_elab in
@@ -1493,7 +1490,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
         let fail () =
           let error_msg =
             BU.format2 "The body of return_wp (%s) should be of type Type0 but is of type %s"
-              (Print.term_to_string body)
+              (show body)
               (match what' with
                | None -> "None"
                | Some rc -> FStar.Ident.string_of_lid rc.residual_effect)
@@ -1615,10 +1612,10 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
     in
     if !dbg
     then BU.print4 "original action_params %s, end action_params %s, type %s, term %s\n"
-        (Print.binders_to_string "," params_un)
-        (Print.binders_to_string "," action_params)
-        (Print.term_to_string action_typ_with_wp)
-        (Print.term_to_string action_elab);
+        (show params_un)
+        (show action_params)
+        (show action_typ_with_wp)
+        (show action_elab);
     let action_elab = register (name ^ "_elab") action_elab in
     let action_typ_with_wp = register (name ^ "_complete_type") action_typ_with_wp in
     (* it does not seem that dmff_env' has been modified  by elaborate_and_star so it should be okay to return the original env *)
@@ -1664,12 +1661,12 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
                 | [] ->
                   let err_msg =
                     BU.format1 "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
-                      (Print.term_to_string arrow)
+                      (show arrow)
                   in
                   raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
                 | _ ->
                   let err_msg =
-                      BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (Print.term_to_string arrow)
+                      BU.format1 "Impossible to generate DM effect: multiple post candidates %s" (show arrow)
                   in
                   raise_err (Errors.Fatal_ImpossibleToGenerateDMEffect, err_msg)
             in
@@ -1678,10 +1675,10 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
             // Post-condition does, however!
             U.abs (type_param :: effect_param) post.binder_bv.sort None
         | _ ->
-            raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (Print.term_to_string arrow)))
+            raise_error (Errors.Fatal_ImpossiblePrePostArrow, (BU.format1 "Impossible: pre/post arrow %s" (show arrow)))
         end
     | _ ->
-        raise_error (Errors.Fatal_ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (Print.term_to_string wp_type)))
+        raise_error (Errors.Fatal_ImpossiblePrePostAbs, (BU.format1 "Impossible: pre/post abs %s" (show wp_type)))
   in
   // Desugaring is aware of these names and generates references to them when
   // the user writes something such as [STINT.repr]

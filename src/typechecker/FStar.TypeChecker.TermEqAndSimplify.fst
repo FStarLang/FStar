@@ -15,6 +15,9 @@ module PC = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module BU = FStar.Compiler.Util
 
+open FStar.Class.Tagged
+open FStar.Class.Show
+
 // Functions that we specially treat as injective, to make normalization
 // (particularly of decidable equality) better. We should make sure they
 // are actually proved to be injective.
@@ -312,21 +315,21 @@ let simplify (debug:bool) (env:env_t) (tm:term) : term =
     in
     let is_applied (bs:binders) (t : term) : option bv =
         if debug then
-            BU.print2 "WPE> is_applied %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+            BU.print2 "WPE> is_applied %s -- %s\n"  (show t) (tag_of t);
         let hd, args = U.head_and_args_full t in
         match (SS.compress hd).n with
         | Tm_name bv when args_are_binders args bs ->
             if debug then
                 BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
-                            (Print.term_to_string t)
-                            (Print.bv_to_string bv)
-                            (Print.term_to_string hd);
+                            (show t)
+                            (show bv)
+                            (show hd);
             Some bv
         | _ -> None
     in
     let is_applied_maybe_squashed (bs : binders) (t : term) : option bv =
         if debug then
-            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (Print.term_to_string t) (Print.tag_of_term t);
+            BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
         match is_squash t with
 
         | Some (_, t') -> is_applied bs t'

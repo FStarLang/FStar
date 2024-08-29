@@ -1029,6 +1029,13 @@ instance showable_ctx_uvar_meta = {
           | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
           | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
 }
+instance showable_metadata = { show = metadata_to_string; }
+instance showable_cflag    = { show = cflag_to_string; }
+instance showable_aqual   = { show = aqual_to_string; }
+instance showable_eff_extraction_mode = { show = eff_extraction_mode_to_string; }
+instance showable_sub_eff = { show = sub_eff_to_string; }
+instance showable_indexed_effect_binder_kind = { show = indexed_effect_binder_kind_to_string; }
+instance showable_indexed_effect_combinator_kind = { show = indexed_effect_combinator_kind_to_string; }
 
 instance pretty_term     = { pp   = term_to_doc; }
 instance pretty_univ     = { pp   = univ_to_doc; }

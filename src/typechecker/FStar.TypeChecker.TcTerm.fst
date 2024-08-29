@@ -36,6 +36,7 @@ open FStar.Dyn
 open FStar.TypeChecker.Rel
 
 open FStar.Class.Show
+open FStar.Class.Tagged
 open FStar.Class.Setlike
 open FStar.Class.Monoid
 
@@ -522,7 +523,7 @@ let guard_letrecs env actuals expected_c : list (lbname&typ&univ_names) =
       let decreases_clause bs c =
           if Debug.low ()
           then BU.print2 "Building a decreases clause over (%s) and %s\n"
-                (Print.binders_to_string ", " bs) (show c);
+                (show bs) (show c);
 
           //exclude types and function-typed arguments from the decreases clause
           //and reveal and erased arguments
@@ -740,7 +741,7 @@ let rec tc_term env e =
           (Range.string_of_range <| Env.get_range env)
           (string_of_bool env.phase1)
           (show e)
-          (Print.tag_of_term (SS.compress e))
+          (tag_of (SS.compress e))
           (print_expected_ty_str env);
 
     let r, ms = BU.record_time (fun () ->
@@ -748,13 +749,13 @@ let rec tc_term env e =
     if Debug.medium () then begin
         BU.print4 "(%s) } tc_term of %s (%s) took %sms\n" (Range.string_of_range <| Env.get_range env)
                                                         (show e)
-                                                        (Print.tag_of_term (SS.compress e))
+                                                        (tag_of (SS.compress e))
                                                         (string_of_int ms);
         let e, lc , _ = r in
         BU.print4 "(%s) Result is: (%s:%s) (%s)\n" (Range.string_of_range <| Env.get_range env)
                                                    (show e)
                                                    (TcComm.lcomp_to_string lc)
-                                                   (Print.tag_of_term (SS.compress e))
+                                                   (tag_of (SS.compress e))
     end;
     r
 
@@ -765,7 +766,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
   def_check_scoped e.pos "tc_maybe_toplevel_term.entry" env e;
   let top = SS.compress e in
   if Debug.medium () then
-    BU.print3 "Typechecking %s (%s): %s\n"  (show <| Env.get_range env) (Print.tag_of_term top) (show top);
+    BU.print3 "Typechecking %s (%s): %s\n"  (show <| Env.get_range env) (tag_of top) (show top);
   match top.n with
   | Tm_delayed _ -> failwith "Impossible"
   | Tm_bvar _ -> failwith "Impossible: tc_maybe_toplevel_term: not LN"
@@ -1126,7 +1127,7 @@ and tc_maybe_toplevel_term env (e:term) : term                  (* type-checked 
         | _ ->
           raise_error (Errors.Fatal_UnexpectedEffect,
             BU.format3 "Expected repr type for %s is not an application node (%s:%s)"
-              (Ident.string_of_lid l) (Print.tag_of_term expected_repr_typ)
+              (Ident.string_of_lid l) (tag_of expected_repr_typ)
               (show expected_repr_typ)) top.pos in
 
       let c = S.mk_Comp ({
@@ -1620,7 +1621,7 @@ and tc_match (env : Env.env) (top : term) : term & lcomp & guard_t =
     e, cres, g_c ++ g1 ++ g_branches ++ g_expected_type
 
   | _ ->
-    failwith (BU.format1 "tc_match called on %s\n" (Print.tag_of_term top))
+    failwith (BU.format1 "tc_match called on %s\n" (tag_of top))
 
 and tc_synth head env args rng =
     let tau, atyp =
@@ -1875,7 +1876,7 @@ and tc_value env (e:term) : term
     tc_abs env top bs body
 
   | _ ->
-    failwith (BU.format2 "Unexpected value: %s (%s)" (show top) (Print.tag_of_term top))
+    failwith (BU.format2 "Unexpected value: %s (%s)" (show top) (tag_of top))
 
 and tc_constant (env:env_t) r (c:sconst) : typ =
   let res =
@@ -2295,7 +2296,7 @@ and tc_abs env (top:term) (bs:binders) (body:term) : term & lcomp & guard_t =
 
     if !dbg_NYC
     then BU.print2 "!!!!!!!!!!!!!!!Guard for function with binders %s is %s\n"
-          (Print.binders_to_string ", " bs)
+          (show bs)
           (guard_to_string env g_env);
 
     let envbody = Env.set_range envbody body.pos in
@@ -2794,7 +2795,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             let env = Env.set_expected_typ_maybe_eq env targ (is_eq bqual) in
             if Debug.high ()
             then BU.print4 "Checking arg (%s) %s at type %s with use_eq:%s\n"
-                   (Print.tag_of_term e)
+                   (tag_of e)
                    (show e)
                    (show targ)
                    (bqual |> is_eq |> string_of_bool);
@@ -2886,7 +2887,7 @@ and check_application_args env head (chead:comp) ghead args expected_topt : term
             then BU.print4 "######tc_args of head %s @ %s with formals=%s and result type=%s\n"
                                   (show head)
                                   (show tf)
-                                  (Print.binders_to_string ", " bs)
+                                  (show bs)
                                   (show c);
             tc_args head_info ([], [], [], guard, []) bs args
 
@@ -3476,7 +3477,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
 
   if Debug.extreme () then
     BU.print3 "tc_eqn: typechecked pattern %s with bvs %s and pat_bv_tms=%s\n"
-      (show pattern) (Print.bvs_to_string ";" pat_bvs)
+      (show pattern) (show pat_bvs)
       (show pat_bv_tms);
 
   (* 2. Check the when clause *)
@@ -3567,7 +3568,7 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
                 failwith (BU.format3 "tc_eqn: Impossible (%s) %s (%s)"
                                             (Range.string_of_range pat_exp.pos)
                                             (show pat_exp)
-                                            (Print.tag_of_term pat_exp))  in
+                                            (tag_of pat_exp))  in
 
             let rec head_constructor t = match t.n with
                 | Tm_fvar fv -> fv.fv_name
@@ -4194,7 +4195,7 @@ and build_let_rec_env _top_level env lbs : list letbinding & env_t & guard_t =
      if List.isEmpty formals || List.isEmpty actuals then
        raise_error (Errors.Fatal_RecursiveFunctionLiteral,
                     (BU.format3 "Only function literals with arrow types can be defined recursively; got (%s) %s : %s"
-                               (Print.tag_of_term lbdef)
+                               (tag_of lbdef)
                                (show lbdef)
                                (show lbtyp)))
                    lbtyp.pos; // TODO: GM: maybe point to the one that's actually empty?
@@ -4407,7 +4408,7 @@ and tc_binder env ({binder_bv=x;binder_qual=imp;binder_positivity=pqual;binder_a
 
 and tc_binders env bs =
     if Debug.extreme () then
-        BU.print1 "Checking binders %s\n" (Print.binders_to_string ", " bs);
+        BU.print1 "Checking binders %s\n" (show bs);
     let rec aux env bs = match bs with
         | [] -> [], env, mzero, []
         | b::bs ->
@@ -4848,7 +4849,7 @@ let rec __typeof_tot_or_gtot_term_fastpath (env:env) (t:term) (must_tot:bool) : 
   | Tm_match _ -> None //unelaborated matches
   | Tm_let _ -> None //recursive lets
   | Tm_unknown
-  | _ -> failwith ("Impossible! (" ^ (Print.tag_of_term t) ^ ")")
+  | _ -> failwith ("Impossible! (" ^ (tag_of t) ^ ")")
 
 (*
     Pre-condition: exists k. env |- t : (G)Tot k

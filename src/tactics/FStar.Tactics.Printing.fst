@@ -120,7 +120,7 @@ let goal_to_string (kind : string) (maybe_num : option (int & int)) (ps:proofsta
     let actual_goal =
         if ps.tac_verb_dbg
         then goal_to_string_verbose g
-        else BU.format3 "%s |- %s : %s\n" (Print.binders_to_string ", " goal_binders)
+        else BU.format3 "%s |- %s : %s\n" (String.concat ", " (map show goal_binders))
                                           w
                                           (term_to_string (goal_env g) goal_ty)
     in

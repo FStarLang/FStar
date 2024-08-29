@@ -31,6 +31,7 @@ include FStar.Class.HasRange
 open FStar.Class.Show
 open FStar.Class.Deq
 open FStar.Class.Ord
+open FStar.Class.Tagged
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -753,6 +754,7 @@ and sigelt = {
     sigopts:  option vconfig; (* Saving the option context where this sigelt was checked in *)
 }
 
+
 type sigelts = list sigelt
 
 type modul = {
@@ -938,3 +940,6 @@ instance val deq_delta_depth : deq delta_depth
 instance val ord_bv         : ord bv
 instance val ord_ident      : ord ident
 instance val ord_fv         : ord lident
+
+instance val tagged_term : tagged term
+instance val tagged_sigelt : tagged sigelt

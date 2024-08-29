@@ -35,6 +35,7 @@ open FStar.Ident
 open FStar.Compiler.Range
 open FStar.Tests.Util
 
+open FStar.Class.Show
 
 let b = mk_binder
 let id     = pars "fun x -> x"
@@ -378,7 +379,7 @@ let compare_times l_int l_nbe =
               ) l_int l_nbe
 
 let run_all () =
-    BU.print1 "%s" (P.term_to_string znat);
+    BU.print1 "%s" (show znat);
     let _ = run_all_whnf_with_time () in
     let l_int = run_all_interpreter_with_time () in
     let l_nbe = run_all_nbe_with_time () in

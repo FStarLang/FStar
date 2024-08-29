@@ -38,6 +38,7 @@ module SS = FStar.Syntax.Subst
 module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
+open FStar.Class.Show
 
 let is_flex t =
   let head, _args = U.head_and_args_full t in
@@ -168,7 +169,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | [ c ] -> Some c //if there is a unique candidate return it
       | _ -> //it is ambiguous; complain
         let candidates = candidate_names candidates in
-        let attr = Print.term_to_string a in
+        let attr = show a in
         FStar.Errors.log_issue u.ctx_uvar_range
                                (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
                                 BU.format2
