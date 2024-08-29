@@ -217,13 +217,13 @@ let (inst :
              let uu___2 = FStar_Tests_Pars.init () in
              FStar_TypeChecker_Util.new_implicit_var ""
                FStar_Compiler_Range_Type.dummyRange uu___2
-               FStar_Syntax_Util.ktype0 in
+               FStar_Syntax_Util.ktype0 false in
            match uu___1 with
            | (t, uu___2, uu___3) ->
                let uu___4 =
                  let uu___5 = FStar_Tests_Pars.init () in
                  FStar_TypeChecker_Util.new_implicit_var ""
-                   FStar_Compiler_Range_Type.dummyRange uu___5 t in
+                   FStar_Compiler_Range_Type.dummyRange uu___5 t false in
                (match uu___4 with
                 | (u, uu___5, uu___6) -> aux (u :: out) (n1 - Prims.int_one))) in
       let us = aux [] n in
@@ -367,7 +367,8 @@ let (run_all : unit -> Prims.bool) =
                            FStar_TypeChecker_Env.push_binders uu___20 uu___21 in
                          let uu___20 =
                            FStar_TypeChecker_Util.new_implicit_var ""
-                             FStar_Compiler_Range_Type.dummyRange env typ in
+                             FStar_Compiler_Range_Type.dummyRange env typ
+                             false in
                          match uu___20 with
                          | (u_p, uu___21, uu___22) ->
                              let tm22 =
@@ -419,7 +420,7 @@ let (run_all : unit -> Prims.bool) =
                                let uu___22 =
                                  FStar_TypeChecker_Util.new_implicit_var ""
                                    FStar_Compiler_Range_Type.dummyRange env
-                                   typ in
+                                   typ false in
                                match uu___22 with
                                | (u_p, uu___23, uu___24) ->
                                    let tm23 =

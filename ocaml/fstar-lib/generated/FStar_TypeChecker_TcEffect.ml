@@ -148,7 +148,7 @@ let (pure_wp_uvar :
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
             FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
-              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None false in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
 let op_let_Question :
@@ -4867,7 +4867,8 @@ let (tc_layered_eff_decl :
                                                                     uu___24 r
                                                                     env1 sort
                                                                     FStar_Syntax_Syntax.Strict
-                                                                    ctx_uvar_meta in
+                                                                    ctx_uvar_meta
+                                                                    false in
                                                                     (match uu___23
                                                                     with
                                                                     | 
@@ -4969,7 +4970,8 @@ let (tc_layered_eff_decl :
                                                                     FStar_Syntax_Syntax.Strict
                                                                     (FStar_Pervasives_Native.Some
                                                                     (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                                                    attr)) in
+                                                                    attr))
+                                                                    false in
                                                                     (match uu___21
                                                                     with
                                                                     | 
@@ -5819,7 +5821,8 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     FStar_TypeChecker_Util.new_implicit_var
                                                                     reason r
-                                                                    env2 t in
+                                                                    env2 t
+                                                                    false in
                                                                     (match uu___25
                                                                     with
                                                                     | 

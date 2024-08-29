@@ -2705,7 +2705,7 @@ and (encode_term :
                            FStar_TypeChecker_Util.new_implicit_var
                              "SMTEncoding codomain" uu___4
                              env.FStar_SMTEncoding_Env.tcenv
-                             FStar_Syntax_Util.ktype0 in
+                             FStar_Syntax_Util.ktype0 false in
                          (match uu___3 with | (t2, uu___4, uu___5) -> t2)
                      | FStar_Pervasives_Native.Some t2 -> t2 in
                    let uu___3 =

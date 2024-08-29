@@ -127,7 +127,9 @@ let (set_uvar_expected_typ :
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
           FStar_Syntax_Syntax.uvar_decoration_should_check =
-            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check)
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_with_should_check_tag :
   FStar_Syntax_Syntax.ctx_uvar ->
@@ -145,7 +147,9 @@ let (mark_uvar_with_should_check_tag :
             (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
-          FStar_Syntax_Syntax.uvar_decoration_should_check = sc
+          FStar_Syntax_Syntax.uvar_decoration_should_check = sc;
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->

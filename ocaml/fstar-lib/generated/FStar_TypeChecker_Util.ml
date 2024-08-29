@@ -37,16 +37,19 @@ let (new_implicit_var :
     FStar_Compiler_Range_Type.range ->
       FStar_TypeChecker_Env.env ->
         FStar_Syntax_Syntax.typ ->
-          (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.ctx_uvar *
-            FStar_Compiler_Range_Type.range) Prims.list *
-            FStar_TypeChecker_Env.guard_t))
+          Prims.bool ->
+            (FStar_Syntax_Syntax.term * (FStar_Syntax_Syntax.ctx_uvar *
+              FStar_Compiler_Range_Type.range) *
+              FStar_TypeChecker_Env.guard_t))
   =
   fun reason ->
     fun r ->
       fun env ->
         fun k ->
-          FStar_TypeChecker_Env.new_implicit_var_aux reason r env k
-            FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None
+          fun unrefine ->
+            FStar_TypeChecker_Env.new_implicit_var_aux reason r env k
+              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None
+              unrefine
 let (close_guard_implicits :
   FStar_TypeChecker_Env.env ->
     Prims.bool ->
@@ -6489,46 +6492,49 @@ let (instantiate_one_binder :
              FStar_Syntax_Syntax.binder_qual = uu___2;
              FStar_Syntax_Syntax.binder_positivity = uu___3;
              FStar_Syntax_Syntax.binder_attrs = uu___4;_} ->
-             let ctx_uvar_meta = FStar_TypeChecker_Env.uvar_meta_for_binder b in
-             let t = x.FStar_Syntax_Syntax.sort in
-             let uu___5 =
-               let msg =
-                 let is_typeclass =
-                   match ctx_uvar_meta with
-                   | FStar_Pervasives_Native.Some
-                       (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau) ->
-                       FStar_Syntax_Util.is_fvar
-                         FStar_Parser_Const.tcresolve_lid tau
-                   | uu___6 -> false in
-                 if is_typeclass
-                 then "Typeclass constraint argument"
-                 else
-                   if FStar_Pervasives_Native.uu___is_Some ctx_uvar_meta
-                   then "Instantiating meta argument"
-                   else "Instantiating implicit argument" in
-               FStar_TypeChecker_Env.new_implicit_var_aux msg r env t
-                 FStar_Syntax_Syntax.Strict ctx_uvar_meta in
+             let uu___5 = FStar_TypeChecker_Env.uvar_meta_for_binder b in
              (match uu___5 with
-              | (varg, uu___6, implicits) ->
-                  let aq = FStar_Syntax_Util.aqual_of_binder b in
-                  let arg = (varg, aq) in
-                  let r1 = (varg, t, aq, implicits) in
-                  ((let uu___8 = FStar_Compiler_Debug.high () in
-                    if uu___8
-                    then
-                      let uu___9 =
-                        FStar_Class_Show.show
-                          (FStar_Class_Show.show_tuple2
-                             FStar_Syntax_Print.showable_term
-                             FStar_Syntax_Print.showable_term)
-                          ((FStar_Pervasives_Native.__proj__Mktuple4__item___1
-                              r1),
-                            (FStar_Pervasives_Native.__proj__Mktuple4__item___2
-                               r1)) in
-                      FStar_Compiler_Util.print1
-                        "instantiate_one_binder: result = %s\n" uu___9
-                    else ());
-                   r1)))
+              | (ctx_uvar_meta, should_unrefine) ->
+                  let t = x.FStar_Syntax_Syntax.sort in
+                  let uu___6 =
+                    let msg =
+                      let is_typeclass =
+                        match ctx_uvar_meta with
+                        | FStar_Pervasives_Native.Some
+                            (FStar_Syntax_Syntax.Ctx_uvar_meta_tac tau) ->
+                            FStar_Syntax_Util.is_fvar
+                              FStar_Parser_Const.tcresolve_lid tau
+                        | uu___7 -> false in
+                      if is_typeclass
+                      then "Typeclass constraint argument"
+                      else
+                        if FStar_Pervasives_Native.uu___is_Some ctx_uvar_meta
+                        then "Instantiating meta argument"
+                        else "Instantiating implicit argument" in
+                    FStar_TypeChecker_Env.new_implicit_var_aux msg r env t
+                      FStar_Syntax_Syntax.Strict ctx_uvar_meta
+                      should_unrefine in
+                  (match uu___6 with
+                   | (varg, uu___7, implicits) ->
+                       let aq = FStar_Syntax_Util.aqual_of_binder b in
+                       let arg = (varg, aq) in
+                       let r1 = (varg, t, aq, implicits) in
+                       ((let uu___9 = FStar_Compiler_Debug.high () in
+                         if uu___9
+                         then
+                           let uu___10 =
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.show_tuple2
+                                  FStar_Syntax_Print.showable_term
+                                  FStar_Syntax_Print.showable_term)
+                               ((FStar_Pervasives_Native.__proj__Mktuple4__item___1
+                                   r1),
+                                 (FStar_Pervasives_Native.__proj__Mktuple4__item___2
+                                    r1)) in
+                           FStar_Compiler_Util.print1
+                             "instantiate_one_binder: result = %s\n" uu___10
+                         else ());
+                        r1))))
 let (maybe_instantiate :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->

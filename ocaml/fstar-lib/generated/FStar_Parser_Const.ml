@@ -348,6 +348,8 @@ let (no_auto_projectors_attr : FStar_Ident.lident) =
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
 let (admit_termination_lid : FStar_Ident.lident) =
   psconst "admit_termination"
+let (unrefine_binder_attr : FStar_Ident.lident) = pconst "unrefine"
+let (do_not_unrefine_attr : FStar_Ident.lident) = pconst "do_not_unrefine"
 let (attr_substitute_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Substitute"]
 let (desugar_of_variant_record_lid : FStar_Ident.lident) =
