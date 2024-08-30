@@ -1130,7 +1130,6 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-open FStar.Class.Show
 let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
   match q.qq with
   | Exit -> as_json_list (run_exit st)

@@ -20,15 +20,7 @@ open FStar.Compiler.Effect
 open FStar.TypeChecker
 open FStar.Syntax.Syntax
 
-type env = {
-  // The type-checking environment which we abuse to store our DMFF-style types
-  // when entering a binder.
-  tcenv: FStar.TypeChecker.Env.env;
-  // The substitution from every [x: C] to its [x^w: C*].
-  subst: list subst_elt;
-  // Hack to avoid a dependency
-  tc_const: sconst -> typ;
-}
+new val env : Type0
 
 val empty : Env.env -> (sconst -> typ) -> env
 val get_env: env -> Env.env

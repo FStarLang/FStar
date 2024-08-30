@@ -127,7 +127,9 @@ let (set_uvar_expected_typ :
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
           FStar_Syntax_Syntax.uvar_decoration_should_check =
-            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check)
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_check);
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_with_should_check_tag :
   FStar_Syntax_Syntax.ctx_uvar ->
@@ -145,7 +147,9 @@ let (mark_uvar_with_should_check_tag :
             (dec.FStar_Syntax_Syntax.uvar_decoration_typ);
           FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on =
             (dec.FStar_Syntax_Syntax.uvar_decoration_typedness_depends_on);
-          FStar_Syntax_Syntax.uvar_decoration_should_check = sc
+          FStar_Syntax_Syntax.uvar_decoration_should_check = sc;
+          FStar_Syntax_Syntax.uvar_decoration_should_unrefine =
+            (dec.FStar_Syntax_Syntax.uvar_decoration_should_unrefine)
         }
 let (mark_uvar_as_already_checked : FStar_Syntax_Syntax.ctx_uvar -> unit) =
   fun u ->
@@ -1606,7 +1610,9 @@ let (__tc :
                     let uu___5 = tts e1 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e1 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___7 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___7 in
                     let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 uu___7
@@ -1614,7 +1620,9 @@ let (__tc :
                     let uu___6 = tts e1 t in
                     let uu___7 =
                       let uu___8 = FStar_TypeChecker_Env.all_binders e1 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___8 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___8 in
                     let uu___8 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (1) %s in context (%s). Error = (%s)"
                       uu___6 uu___7 uu___8))
@@ -1864,7 +1872,9 @@ let (__tc_ghost :
                     let uu___5 = tts e2 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e2 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___7 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___7 in
                     let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 uu___7
@@ -1872,7 +1882,9 @@ let (__tc_ghost :
                     let uu___6 = tts e2 t in
                     let uu___7 =
                       let uu___8 = FStar_TypeChecker_Env.all_binders e2 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___8 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___8 in
                     let uu___8 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (2) %s in context (%s). Error = (%s)"
                       uu___6 uu___7 uu___8))
@@ -1893,7 +1905,9 @@ let (__tc_lax :
                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                 let uu___3 =
                   let uu___4 = FStar_TypeChecker_Env.all_binders e in
-                  FStar_Syntax_Print.binders_to_string ", " uu___4 in
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list
+                       FStar_Syntax_Print.showable_binder) uu___4 in
                 FStar_Compiler_Util.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                   uu___2 uu___3)
              (fun uu___1 ->
@@ -2228,7 +2242,9 @@ let (__tc_lax :
                     let uu___5 = tts e3 t in
                     let uu___6 =
                       let uu___7 = FStar_TypeChecker_Env.all_binders e3 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___7 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___7 in
                     let uu___7 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
                       uu___5 uu___6 uu___7
@@ -2236,7 +2252,9 @@ let (__tc_lax :
                     let uu___6 = tts e3 t in
                     let uu___7 =
                       let uu___8 = FStar_TypeChecker_Env.all_binders e3 in
-                      FStar_Syntax_Print.binders_to_string ", " uu___8 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___8 in
                     let uu___8 = FStar_Errors_Msg.rendermsg msg in
                     fail3 "Cannot type (3) %s in context (%s). Error = (%s)"
                       uu___6 uu___7 uu___8))
@@ -8639,7 +8657,9 @@ let rec (inspect :
                  | uu___2 ->
                      ((let uu___4 =
                          let uu___5 =
-                           let uu___6 = FStar_Syntax_Print.tag_of_term t2 in
+                           let uu___6 =
+                             FStar_Class_Tagged.tag_of
+                               FStar_Syntax_Syntax.tagged_term t2 in
                            let uu___7 =
                              FStar_Class_Show.show
                                FStar_Syntax_Print.showable_term t2 in
@@ -9241,7 +9261,8 @@ let (term_to_string :
     let s = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in ret s
 let (comp_to_string :
   FStar_Syntax_Syntax.comp -> Prims.string FStar_Tactics_Monad.tac) =
-  fun c -> let s = FStar_Syntax_Print.comp_to_string c in ret s
+  fun c ->
+    let s = FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in ret s
 let (range_to_string :
   FStar_Compiler_Range_Type.range -> Prims.string FStar_Tactics_Monad.tac) =
   fun r ->

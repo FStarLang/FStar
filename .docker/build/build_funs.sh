@@ -19,21 +19,26 @@ function export_home() {
 
 # By default, karamel master works against F* stable. Can also be overridden.
 function fetch_karamel() {
-    if [ ! -d karamel ]; then
-        git clone --depth 1 https://github.com/FStarLang/karamel karamel
-    fi
-
-    cd karamel
-    git fetch origin
     local ref=$(jq -c -r '.RepoVersions["karamel_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "null" ]]; then
         echo "Unable to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
+    if [ ! -d karamel ]; then
+        # If we just want origin/master, we can shallow clone. Otherwise no,
+        # as we'll need to switch to some other branch/commit.
+        if [ x"$ref" = x"origin/master" ]; then
+            SHALLOW="--depth 1"
+        else
+            SHALLOW=""
+        fi
+        git clone ${SHALLOW} https://github.com/FStarLang/karamel karamel
+    fi
+
     echo Switching to KaRaMeL $ref
-    git reset --hard $ref
-    cd ..
+    git -C karamel reset --hard $ref
+
     export_home KRML "$(pwd)/karamel"
 
     # Install the Karamel dependencies

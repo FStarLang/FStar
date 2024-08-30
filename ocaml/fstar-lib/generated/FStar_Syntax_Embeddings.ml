@@ -26,10 +26,10 @@ let (force_shadow :
   = fun s -> FStar_Compiler_Util.map_opt s FStar_Thunk.force
 type 'a printer = 'a -> Prims.string
 let unknown_printer :
-  'uuuuu . FStar_Syntax_Syntax.term -> 'uuuuu -> Prims.string =
+  'uuuuu . FStar_Syntax_Syntax.typ -> 'uuuuu -> Prims.string =
   fun typ ->
     fun uu___ ->
-      let uu___1 = FStar_Syntax_Print.term_to_string typ in
+      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term typ in
       FStar_Compiler_Util.format1 "unknown %s" uu___1
 let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
   fun t ->
@@ -40,7 +40,8 @@ let (term_as_fv : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.fv) =
     | FStar_Syntax_Syntax.Tm_fvar fv -> fv
     | uu___1 ->
         let uu___2 =
-          let uu___3 = FStar_Syntax_Print.term_to_string t in
+          let uu___3 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
           FStar_Compiler_Util.format1 "Embeddings not defined for type %s"
             uu___3 in
         FStar_Compiler_Effect.failwith uu___2
@@ -165,7 +166,9 @@ let lazy_unembed :
                     let uu___3 =
                       FStar_Class_Show.show
                         FStar_Syntax_Syntax.showable_emb_typ et1 in
-                    let uu___4 = FStar_Syntax_Print.term_to_string x1 in
+                    let uu___4 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        x1 in
                     let uu___5 =
                       match aopt with
                       | FStar_Pervasives_Native.None -> "None"
@@ -213,7 +216,7 @@ let (e_any : FStar_Syntax_Syntax.term FStar_Syntax_Embeddings_Base.embedding)
   let un t _n = FStar_Pervasives_Native.Some t in
   FStar_Syntax_Embeddings_Base.mk_emb_full em un
     (fun uu___ -> FStar_Syntax_Syntax.t_term)
-    FStar_Syntax_Print.term_to_string
+    (FStar_Class_Show.show FStar_Syntax_Print.showable_term)
     (fun uu___ ->
        let uu___1 =
          let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.term_lid in
@@ -2167,7 +2170,9 @@ let e_arrow :
                        FStar_Options.debug_embedding in
                    if uu___3
                    then
-                     let uu___4 = FStar_Syntax_Print.term_to_string repr_f in
+                     let uu___4 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         repr_f in
                      let uu___5 = FStar_Compiler_Util.stack_dump () in
                      FStar_Compiler_Util.print2
                        "e_arrow forced back to term using shadow %s; repr=%s\n"
@@ -2179,8 +2184,12 @@ let e_arrow :
                         FStar_Options.debug_embedding in
                     if uu___4
                     then
-                      let uu___5 = FStar_Syntax_Print.term_to_string repr_f in
-                      let uu___6 = FStar_Syntax_Print.term_to_string res in
+                      let uu___5 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term repr_f in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term res in
                       let uu___7 = FStar_Compiler_Util.stack_dump () in
                       FStar_Compiler_Util.print3
                         "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
@@ -2195,7 +2204,8 @@ let e_arrow :
                   FStar_Compiler_Effect.op_Bang FStar_Options.debug_embedding in
                 if uu___1
                 then
-                  let uu___2 = FStar_Syntax_Print.term_to_string f1 in
+                  let uu___2 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term f1 in
                   let uu___3 = FStar_Compiler_Util.stack_dump () in
                   FStar_Compiler_Util.print2
                     "Calling back into normalizer for %s\n%s\n" uu___2 uu___3

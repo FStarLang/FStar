@@ -583,9 +583,9 @@ let encode_top_level_val uninterpreted env us fv t quals =
     in
     // if !dbg_SMTEncoding
     // then BU.print3 "Encoding top-level val %s : %s\Normalized to is %s\n"
-    //        (Print.fv_to_string fv)
-    //        (Print.term_to_string t)
-    //        (Print.term_to_string tt);
+    //        (show fv)
+    //        (show t)
+    //        (show tt);
     let decls, env = encode_free_var uninterpreted env fv t tt quals in
     if U.is_smt_lemma t
     then decls@encode_smt_lemma env fv tt, env
@@ -771,8 +771,8 @@ let encode_top_level_let :
                 let t_body = U.comp_result t_body_comp in
                 if !dbg_SMTEncoding
                 then BU.print2 "Encoding let : binders=[%s], body=%s\n"
-                                (Print.binders_to_string ", " binders)
-                                (Print.term_to_string body);
+                                (show binders)
+                                (show body);
                 (* Encode binders *)
                 let vars, _guards, env', binder_decls, _ = encode_binders None binders env' in
                 let vars, app =
@@ -866,9 +866,9 @@ let encode_top_level_let :
             in
             if !dbg_SMTEncoding
             then BU.print3 "Encoding let rec %s : %s = %s\n"
-                        (Print.lbname_to_string lbn)
-                        (Print.term_to_string t_norm)
-                        (Print.term_to_string e);
+                        (show lbn)
+                        (show t_norm)
+                        (show e);
 
             (* Open binders *)
             let (binders, body, tres_comp) = destruct_bound_function t_norm e in
@@ -876,10 +876,10 @@ let encode_top_level_let :
             let pre_opt, tres = TcUtil.pure_or_ghost_pre_and_post env.tcenv tres_comp in
             if !dbg_SMTEncoding
             then BU.print4 "Encoding let rec %s: \n\tbinders=[%s], \n\tbody=%s, \n\ttres=%s\n"
-                              (Print.lbname_to_string lbn)
-                              (Print.binders_to_string ", " binders)
-                              (Print.term_to_string body)
-                              (Print.comp_to_string tres_comp);
+                              (show lbn)
+                              (show binders)
+                              (show body)
+                              (show tres_comp);
             //let _ =
             //    if curry
             //    then failwith "Unexpected type of let rec in SMT Encoding; \
@@ -1011,7 +1011,7 @@ let encode_top_level_let :
               decls, env_decls  //decls are type declarations for the lets, if there is an inner let rec, only those are encoded to the solver
 
     with Let_rec_unencodeable ->
-      let msg = bindings |> List.map (fun lb -> Print.lbname_to_string lb.lbname) |> String.concat " and " in
+      let msg = bindings |> List.map (fun lb -> show lb.lbname) |> String.concat " and " in
       let decl = Caption ("let rec unencodeable: Skipping: " ^msg) in
       [decl] |> mk_decls_trivial, env
 
@@ -1392,7 +1392,7 @@ let encode_datacon (env:env_t) (se:sigelt)
         Errors.log_issue se.sigrng
             (Errors.Warning_ConstructorBuildsUnexpectedType,
               BU.format2 "Constructor %s builds an unexpected type %s\n"
-                        (Print.lid_to_string d) (Print.term_to_string head));
+                        (show d) (show head));
         [], []
   in
   let decls2, elim = encode_elim () in
@@ -1461,7 +1461,7 @@ let encode_datacon (env:env_t) (se:sigelt)
   let g = binder_decls
           @decls2
           @decls3
-          @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (Print.lid_to_string d)))]
+          @([Term.DeclFun(ddtok, [], Term_sort, Some (BU.format1 "data constructor proxy: %s" (show d)))]
             @proxy_fresh |> mk_decls_trivial)
           @decls_pred
           @([Util.mkAssume(tok_typing, Some "typing for data constructor proxy", ("typing_tok_"^ddtok));
@@ -1495,7 +1495,7 @@ let rec encode_sigelt (env:env_t) (se:sigelt) : (decls_t & env_t) =
 
 and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
     if !dbg_SMTEncoding
-    then (BU.print1 "@@@Encoding sigelt %s\n" (Print.sigelt_to_string se));
+    then (BU.print1 "@@@Encoding sigelt %s\n" (show se));
 
     let is_opaque_to_smt (t:S.term) =
         match (SS.compress t).n with
@@ -1604,7 +1604,7 @@ and encode_sigelt' (env:env_t) (se:sigelt) : (decls_t & env_t) =
         let env = { env with tcenv = Env.push_univ_vars env.tcenv uvs } in
         let f = norm_before_encoding env f in
         let f, decls = encode_formula f env in
-        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (Print.lid_to_string l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
+        let g = [Util.mkAssume(f, Some (BU.format1 "Assumption: %s" (show l)), (varops.mk_unique ("assumption_"^(string_of_lid l))))]
                 |> mk_decls_trivial in
         decls@g, env
 
@@ -1776,7 +1776,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
         | S.Binding_var x ->
             let t1 = norm_before_encoding env x.sort in
             if !dbg_SMTEncoding
-            then (BU.print3 "Normalized %s : %s to %s\n" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1));
+            then (BU.print3 "Normalized %s : %s to %s\n" (show x) (show x.sort) (show t1));
             let t, decls' = encode_term t1 env in
             let t_hash = Term.hash_of_term t in
             let xxsym, xx, env' =
@@ -1785,7 +1785,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
             let t = mk_HasTypeWithFuel None xx t in
             let caption =
                 if Options.log_queries()
-                then Some (BU.format3 "%s : %s (%s)" (Print.bv_to_string x) (Print.term_to_string x.sort) (Print.term_to_string t1))
+                then Some (BU.format3 "%s : %s (%s)" (show x) (show x.sort) (show t1))
                 else None in
             let ax =
                 let a_name = ("binder_"^xxsym) in
@@ -1798,7 +1798,7 @@ let encode_env_bindings (env:env_t) (bindings:list S.binding) : (decls_t & env_t
         | S.Binding_lid(x, (_, t)) ->
             let t_norm = norm_before_encoding env t in
             let fv = S.lid_as_fv x None in
-//            Printf.printf "Encoding %s at type %s\n" (Print.lid_to_string x) (Print.term_to_string t);
+//            Printf.printf "Encoding %s at type %s\n" (show x) (show t);
             let g, env' = encode_free_var false env fv t t_norm [] in
             i+1, decls@g, env'
     in
@@ -1912,7 +1912,7 @@ let encode_sig tcenv se =
     then Term.Caption ("encoding sigelt " ^ Print.sigelt_to_string_short se)::decls
     else decls in
    if Debug.medium ()
-   then BU.print1 "+++++++++++Encoding sigelt %s\n" (Print.sigelt_to_string se);
+   then BU.print1 "+++++++++++Encoding sigelt %s\n" (show se);
    let env = get_env (Env.current_module tcenv) tcenv in
    let decls, env = encode_top_level_facts env se in
    set_env env;
@@ -1995,7 +1995,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
     in
     let env_decls, env = encode_env_bindings env bindings in
     if Debug.medium () || !dbg_SMTEncoding || !dbg_SMTQuery
-    then BU.print1 "Encoding query formula {: %s\n" (Print.term_to_string q);
+    then BU.print1 "Encoding query formula {: %s\n" (show q);
     let (phi, qdecls), ms = BU.record_time (fun () -> encode_formula q env) in
     let labels, phi = ErrorReporting.label_goals use_env_msg (Env.get_range tcenv) phi in
     let label_prefix, label_suffix = encode_labels labels in
@@ -2003,7 +2003,7 @@ let encode_query use_env_msg (tcenv:Env.env) (q:S.term)
       (* If these options are off, the Captions will be dropped anyway,
       but by checking here we can skip the printing. *)
       if Options.log_queries () || Options.log_failing_queries ()
-      then [Caption ("Encoding query formula : " ^ (Print.term_to_string q));
+      then [Caption ("Encoding query formula : " ^ (show q));
             Caption ("Context: " ^ String.concat "\n" (Errors.get_ctx ()))]
       else []
     in

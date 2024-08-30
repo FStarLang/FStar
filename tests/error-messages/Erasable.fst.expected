@@ -7,7 +7,7 @@
 >> Got issues: [
 * Error 34 at Erasable.fst(18,2-20,15):
   - Computed type Prims.int
-    and effect GHOST
+    and effect Prims.GHOST
     is not compatible with the annotated type Prims.int
     and effect Tot
 

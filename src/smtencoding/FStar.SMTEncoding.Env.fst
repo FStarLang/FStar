@@ -31,6 +31,8 @@ module SS = FStar.Syntax.Subst
 module BU = FStar.Compiler.Util
 module U = FStar.Syntax.Util
 
+open FStar.Class.Show
+
 let dbg_PartialApp = Debug.get_toggle "PartialApp"
 
 exception Inner_let_rec of list (string & Range.range) //name of the inner let-rec(s) and their locations
@@ -173,16 +175,16 @@ type env_t = {
     tsym_global_cache: BU.smap decls_elt;
 }
 
-let print_env e =
+let print_env (e:env_t) : string =
     let bvars = BU.psmap_fold e.bvar_bindings (fun _k pi acc ->
         BU.pimap_fold pi (fun _i (x, _term) acc ->
-            Print.bv_to_string x :: acc) acc) [] in
+            show x :: acc) acc) [] in
     let allvars = BU.psmap_fold (e.fvar_bindings |> fst) (fun _k fvb acc ->
         fvb.fvar_lid :: acc) [] in
     let last_fvar =
       match List.rev allvars with
       | [] -> ""
-      | l::_ -> "...," ^ Print.lid_to_string l
+      | l::_ -> "...," ^ show l
     in
     String.concat ", " (last_fvar :: bvars)
 
@@ -237,7 +239,7 @@ let lookup_term_var env a =
     | Some (b,t) -> t
     | None ->
       failwith (BU.format2 "Bound term variable not found  %s in environment: %s"
-                           (Print.bv_to_string a)
+                           (show a)
                            (print_env env))
 
 (* Qualified term names *)
@@ -273,15 +275,15 @@ let fail_fvar_lookup env a =
   let q = Env.lookup_qname env.tcenv a in
   match q with
   | None ->
-    failwith (BU.format1 "Name %s not found in the smtencoding and typechecker env" (Print.lid_to_string a))
+    failwith (BU.format1 "Name %s not found in the smtencoding and typechecker env" (show a))
   | _ ->
     let quals = Env.quals_of_qninfo q in
     if BU.is_some quals &&
        (quals |> BU.must |> List.contains Unfold_for_unification_and_vcgen)
     then Errors.raise_error (Errors.Fatal_IdentifierNotFound,
            BU.format1 "Name %s not found in the smtencoding env (the symbol is marked unfold, \
-             expected it to reduce)" (Print.lid_to_string a)) (Ident.range_of_lid a)
-    else failwith (BU.format1 "Name %s not found in the smtencoding env" (Print.lid_to_string a))
+             expected it to reduce)" (show a)) (Ident.range_of_lid a)
+    else failwith (BU.format1 "Name %s not found in the smtencoding env" (show a))
 let lookup_lid env a =
     match lookup_fvar_binding env a with
     | None -> fail_fvar_lookup env a

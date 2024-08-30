@@ -1,5 +1,5 @@
 {"kind": "protocol-info", "rest": "[...]"}
-{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "- Pattern uses these theory symbols or terms that should not be in an SMT\n  pattern:\n    Prims.op_Subtraction\n", "number": 271, "ranges": [{"beg": [434, 8], "end": [434, 51], "fname": "FStar.UInt.fsti"}]}], "status": "success"}
+{"kind": "response", "query-id": "1", "response": [{"level": "warning", "message": "- Pattern uses these theory symbols or terms that should not be in an SMT\n  pattern:\n    Prims.op_Subtraction\n", "number": 271, "ranges": [{"beg": [435, 8], "end": [435, 51], "fname": "FStar.UInt.fsti"}]}], "status": "success"}
 {"kind": "response", "query-id": "2", "response": [{"level": "error", "message": "- Expected expression of type int got expression \"A\" of type string\n", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "success"}
 {"kind": "response", "query-id": "3", "response": [{"level": "error", "message": "- Expected expression of type int got expression \"A\" of type string\n", "number": 189, "ranges": [{"beg": [4, 48], "end": [4, 51], "fname": "<input>"}]}], "status": "failure"}
 {"kind": "response", "query-id": "4", "response": [], "status": "success"}

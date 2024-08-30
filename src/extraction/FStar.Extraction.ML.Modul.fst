@@ -35,7 +35,6 @@ open FStar.Extraction.ML.Syntax (* Intentionally shadows part of Syntax.Syntax *
 open FStar.Class.Show
 
 module Term   = FStar.Extraction.ML.Term
-module Print  = FStar.Syntax.Print
 module MLS    = FStar.Extraction.ML.Syntax
 module BU     = FStar.Compiler.Util
 module S      = FStar.Syntax.Syntax
@@ -81,7 +80,7 @@ let fail_exp (lid:lident) (t:typ) =
                 args=[ S.iarg t
                      ; S.as_arg <|
                        mk (Tm_constant
-                             (Const_string ("Not yet implemented:"^(Print.lid_to_string lid), Range.dummyRange)))
+                             (Const_string ("Not yet implemented: " ^ show lid, Range.dummyRange)))
                           Range.dummyRange]})
         Range.dummyRange
 
@@ -209,14 +208,14 @@ type inductive_family = {
 
 let print_ifamily i =
     BU.print4 "\n\t%s %s : %s { %s }\n"
-        (Print.lid_to_string i.iname)
-        (Print.binders_to_string " " i.iparams)
-        (Print.term_to_string i.ityp)
+        (show i.iname)
+        (show i.iparams)
+        (show i.ityp)
         (i.idatas
         |> List.map (fun d ->
-            Print.lid_to_string d.dname
+            show d.dname
             ^ " : "
-            ^ Print.term_to_string d.dtyp)
+            ^ show d.dtyp)
         |> String.concat "\n\t\t")
 
 let bundle_as_inductive_families env ses quals
@@ -301,13 +300,13 @@ let print_exp_binding cm e =
         (tscheme_to_string cm e.exp_b_tscheme)
 let print_binding cm (fv, exp_binding) =
     BU.format2 "(%s, %s)"
-            (Print.fv_to_string fv)
+            (show #Syntax.fv fv)
             (print_exp_binding cm exp_binding)
 let print_tydef cm tydef =
   let name, defn =
       match tydef with
       | Inl tydef ->
-        Print.fv_to_string (tydef_fv tydef),
+        show (tydef_fv tydef),
         tscheme_to_string cm (tydef_def tydef)
       | Inr (p, _, _) ->
         p, "None"
@@ -315,7 +314,7 @@ let print_tydef cm tydef =
   BU.format2 "(%s, %s)" name defn
 let iface_to_string iface =
     let cm = iface.iface_module_name in
-    let print_type_name (tn, _) = Print.fv_to_string tn in
+    let print_type_name (tn, _) = show tn in
     BU.format4 "Interface %s = {\niface_bindings=\n%s;\n\niface_tydefs=\n%s;\n\niface_type_names=%s;\n}"
         (string_of_mlpath iface.iface_module_name)
         (List.map (print_binding cm) iface.iface_bindings |> String.concat "\n")
@@ -559,7 +558,7 @@ let extract_reifiable_effect g ed
 
     let rec extract_fv tm =
         if !dbg_ExtractionReify then
-            BU.print1 "extract_fv term: %s\n" (Print.term_to_string tm);
+            BU.print1 "extract_fv term: %s\n" (show tm);
         match (SS.compress tm).n with
         | Tm_uinst (tm, _) -> extract_fv tm
         | Tm_fvar fv ->
@@ -568,15 +567,15 @@ let extract_reifiable_effect g ed
             with_ty MLTY_Top <| MLE_Name mlp, tysc
         | _ -> failwith (BU.format2 "(%s) Not an fv: %s"
                                         (Range.string_of_range tm.pos)
-                                        (Print.term_to_string tm))
+                                        (show tm))
     in
 
     let extract_action g (a:S.action) =
         assert (match a.action_params with | [] -> true | _ -> false);
         if !dbg_ExtractionReify then
             BU.print2 "Action type %s and term %s\n"
-            (Print.term_to_string a.action_typ)
-            (Print.term_to_string a.action_defn);
+            (show a.action_typ)
+            (show a.action_defn);
         let lbname = Inl (S.new_bv (Some a.action_defn.pos) tun) in
         let lb = mk_lb (lbname, a.action_univs, PC.effect_Tot_lid, a.action_typ, a.action_defn, [], a.action_defn.pos) in
         let lbs = (false, [lb]) in
@@ -666,7 +665,7 @@ let split_let_rec_types_and_terms se (env:uenv) (lbs:list letbinding)
                                        lids=List.map (fun lb -> lb.lbname |> BU.right |> lid_of_fv) lbs} } in
     let sigs = sigs@[lb] in
     // BU.print1 "Split let recs into %s\n"
-    //   (List.map Print.sigelt_to_string sigs |> String.concat ";;\n");
+    //   (List.map show sigs |> String.concat ";;\n");
     sigs
     
 
@@ -1189,7 +1188,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                 (Errors.Warning_UnrecognizedAttribute,
                   BU.format1
                     "Ill-formed application of 'normalize_for_extraction': normalization steps '%s' could not be interpreted"
-                    (Print.term_to_string steps));
+                    (show steps));
             None
           end
         | Some _ ->
@@ -1248,7 +1247,7 @@ and extract_sig_let (g:uenv) (se:sigelt) : uenv & list mlmodule1 =
                   if ml_lb.mllb_meta |> List.contains Erased
                   then env, ml_lbs
                   else
-                      // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (Print.lbname_to_string lbname) (Print.typ_to_string t) (must (mllb.mllb_tysc)));
+                      // debug g (fun () -> printfn "Translating source lb %s at type %s to %A" (show lbname) (show t) (must (mllb.mllb_tysc)));
                       let lb_lid = (right lbname).fv_name.v in
                       let flags'' =
                           match (SS.compress t).n with

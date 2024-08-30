@@ -21,7 +21,7 @@ $(CACHE_DIR)/MustEraseForExtraction.fst.checked: OTHERFLAGS += --warn_error @318
 	$(FSTAR) $(OTHERFLAGS) --codegen OCaml --extract $(subst .ml,, $@) $^
 
 %.ml-cmp: %.ml %.ml.expected
-	diff -u --strip-trailing-cr $< $<.expected
+	diff -u --strip-trailing-cr $<.expected $<
 	touch $@
 
 clean:

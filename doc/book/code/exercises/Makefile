@@ -6,7 +6,7 @@ OTHERFLAGS  := --cache_checked_modules $(OTHERFLAGS)
 all: $(addsuffix .checked, $(FSTAR_FILES))
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --output_deps_to .depend
 
 depend: .depend
 

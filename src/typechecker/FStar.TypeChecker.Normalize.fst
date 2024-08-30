@@ -36,6 +36,7 @@ open FStar.TypeChecker.Env
 open FStar.TypeChecker.Cfg
 
 open FStar.Class.Show
+open FStar.Class.Tagged
 open FStar.Class.Deq
 
 module S  = FStar.Syntax.Syntax
@@ -179,7 +180,7 @@ let is_empty = function
 
 let lookup_bvar (env : env) x =
     try (List.nth env x.index)._2
-    with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (Print.db_to_string x) (show env))
+    with _ -> failwith (BU.format2 "Failed to find %s\nEnv is %s\n" (show x) (show env))
 
 let downgrade_ghost_effect_name l =
     if Ident.lid_equals l PC.effect_Ghost_lid
@@ -226,7 +227,7 @@ let norm_universe cfg (env:env) u =
                 try match (List.nth env x)._2 with
                       | Univ u ->
                            if !dbg_univ_norm then
-                               BU.print1 "Univ (in norm_universe): %s\n" (Print.univ_to_string u)
+                               BU.print1 "Univ (in norm_universe): %s\n" (show u)
                            else ();  aux u
                       | Dummy -> [u]
                       | _ -> failwith (BU.format1 "Impossible: universe variable u@%s bound to a term"
@@ -241,7 +242,7 @@ let norm_universe cfg (env:env) u =
           | U_unif _ when cfg.steps.check_no_uvars ->
             failwith (BU.format2 "(%s) CheckNoUvars: unexpected universes variable remains: %s"
                                        (Range.string_of_range (Env.get_range cfg.tcenv))
-                                       (Print.univ_to_string u))
+                                       (show u))
 
           | U_zero
           | U_unif _
@@ -326,7 +327,7 @@ let _erase_universes (t:term) : term =
   Visit.visit_term_univs false (fun t -> t) (fun u -> U_unknown) t
 
 let closure_as_term cfg (env:env) (t:term) : term =
-  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (Print.tag_of_term t) (show env) (show t));
+  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term %s\n" (tag_of t) (show env) (show t));
   let es = env_subst env in
   let t = SS.subst es t in
   let t =
@@ -338,7 +339,7 @@ let closure_as_term cfg (env:env) (t:term) : term =
   in
   (* Compress the top only since clients expect a compressed term *)
   let t = SS.compress t in
-  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term RESULT %s\n" (Print.tag_of_term t) (show env) (show t));
+  log cfg (fun () -> BU.print3 ">>> %s (env=%s)\nClosure_as_term RESULT %s\n" (tag_of t) (show env) (show t));
   t
 
 (* A hacky knot, set by FStar.Main *)
@@ -355,7 +356,7 @@ let mk_psc_subst cfg (env:env) =
         (fun (binder_opt, closure, _) subst ->
             match binder_opt, closure with
             | Some b, Clos(env, term, _, _) ->
-                // BU.print1 "++++++++++++Name in environment is %s" (Print.binder_to_string b);
+                // BU.print1 "++++++++++++Name in environment is %s" (show b);
                 let bv = b.binder_bv in
                 if not (U.is_constructed_typ bv.sort PC.binder_lid)
                 then subst
@@ -720,14 +721,14 @@ let rec args_are_binders args bs : bool =
 (* Is t a variable applied to exactly bs? If so return it. *)
 let is_applied cfg (bs:binders) (t : term) : option bv =
     if cfg.debug.wpe then
-        BU.print2 "WPE> is_applied %s -- %s\n"  (show t) (Print.tag_of_term t);
+        BU.print2 "WPE> is_applied %s -- %s\n"  (show t) (tag_of t);
     let hd, args = U.head_and_args_full t in
     match (SS.compress hd).n with
     | Tm_name bv when args_are_binders args bs ->
         if cfg.debug.wpe then
             BU.print3 "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
                         (show t)
-                        (Print.bv_to_string bv)
+                        (show bv)
                         (show hd);
         Some bv
     | _ -> None
@@ -735,7 +736,7 @@ let is_applied cfg (bs:binders) (t : term) : option bv =
 (* As above accounting for squashes *)
 let is_applied_maybe_squashed cfg (bs : binders) (t : term) : option bv =
   if cfg.debug.wpe then
-      BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (Print.tag_of_term t);
+      BU.print2 "WPE> is_applied_maybe_squashed %s -- %s\n"  (show t) (tag_of t);
   match is_squash t with
   | Some (_, t') -> is_applied cfg bs t'
   | _ -> begin match is_auto_squash t with
@@ -887,7 +888,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
         in
         log cfg (fun () ->
           BU.print5 ">>> %s (no_full_norm=%s)\nNorm %s with %s env elements; top of the stack = %s\n"
-                                        (Print.tag_of_term t)
+                                        (tag_of t)
                                         (show cfg.steps.no_full_norm)
                                         (show t)
                                         (show (List.length env))
@@ -1408,7 +1409,7 @@ let rec norm : cfg -> env -> stack -> term -> term =
             norm cfg body_env stack body
 
           | Tm_meta {tm=head; meta=m} ->
-            log cfg (fun () -> BU.print1 ">> metadata = %s\n" (Print.metadata_to_string m));
+            log cfg (fun () -> BU.print1 ">> metadata = %s\n" (show m));
             begin match m with
               | Meta_monadic (m_from, ty) ->
                 if cfg.steps.for_extraction
@@ -1501,7 +1502,7 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
        | None ->
          log_unfolding cfg (fun () ->
            BU.print2 " >> No definition found for %s (delta_level = %s)\n"
-             (Print.fv_to_string f) (show cfg.delta_level));
+             (show f) (show cfg.delta_level));
          rebuild cfg empty_env stack t0
 
        | Some (us, t) ->
@@ -1520,13 +1521,13 @@ and do_unfold_fv (cfg:Cfg.cfg) stack (t0:term) (qninfo : qninfo) (f:fv) : term =
          then match stack with //universe beta reduction
                 | UnivArgs(us', _)::stack ->
                   if !dbg_univ_norm then
-                      List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (Print.univ_to_string x)) us'
+                      List.iter (fun x -> BU.print1 "Univ (normalizer) %s\n" (show x)) us'
                   else ();
                   let env = us' |> List.fold_left (fun env u -> (None, Univ u, fresh_memo ())::env) empty_env in
                   norm cfg env stack t
                 | _ when cfg.steps.erase_universes || cfg.steps.allow_unbound_universes ->
                   norm cfg empty_env stack t
-                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (Print.lid_to_string f.fv_name.v))
+                | _ -> failwith (BU.format1 "Impossible: missing universe instantiation on %s" (show f.fv_name.v))
          else norm cfg empty_env stack t
          end
 
@@ -1567,7 +1568,7 @@ and do_reify_monadic fallback cfg env stack (top : term) (m : monad_name) (t : t
     end;
     let top0 = top in
     let top = U.unascribe top in
-    log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (Print.tag_of_term top) (show top));
+    log cfg (fun () -> BU.print2 "Reifying: (%s) %s\n" (tag_of top) (show top));
     let top = U.unmeta_safe top in
     match (SS.compress top).n with
     | Tm_let {lbs=(false, [lb]); body} ->
@@ -1919,7 +1920,7 @@ and norm_pattern_args cfg env args =
 and norm_comp : cfg -> env -> comp -> comp =
     fun cfg env comp ->
         log cfg (fun () -> BU.print2 ">>> %s\nNormComp with with %s env elements\n"
-                                        (Print.comp_to_string comp)
+                                        (show comp)
                                         (show (List.length env)));
         match comp.n with
             | Total t ->
@@ -2242,7 +2243,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
   (* indices *)
   log cfg (fun () ->
     BU.print4 ">>> %s\nRebuild %s with %s env elements and top of the stack %s\n"
-                                        (Print.tag_of_term t)
+                                        (tag_of t)
                                         (show t)
                                         (show (List.length env))
                                         (show (fst <| firstn 4 stack));
@@ -2251,7 +2252,7 @@ and rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
          | [] -> ()
          | bvs ->
            BU.print3 "!!! Rebuild (%s) %s, free vars=%s\n"
-                               (Print.tag_of_term t)
+                               (tag_of t)
                                (show t)
                                (show bvs);
            failwith "DIE!");
@@ -2464,7 +2465,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
           log cfg (fun () ->
               BU.print2 "match is irreducible: scrutinee=%s\nbranches=%s\n"
                     (show scrutinee)
-                    (branches |> List.map (fun (p, _, _) -> Print.pat_to_string p) |> String.concat "\n\t"));
+                    (branches |> List.map (fun (p, _, _) -> show p) |> String.concat "\n\t"));
           // If either Weak or HNF, then don't descend into branch
           let whnf = cfg.steps.weak || cfg.steps.hnf in
           let cfg_exclude_zeta =
@@ -2667,7 +2668,7 @@ and do_rebuild (cfg:cfg) (env:env) (stack:stack) (t:term) : term =
 
               | Inl s -> //definite match
                 log cfg (fun () -> BU.print2 "Matches pattern %s with subst = %s\n"
-                              (Print.pat_to_string p)
+                              (show p)
                               (List.map (fun (_, t) -> show t) s |> String.concat "; "));
                 //the elements of s are sub-terms of t
                 //the have no free de Bruijn indices; so their env=[]; see pre-condition at the top of rebuild

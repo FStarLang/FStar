@@ -334,10 +334,10 @@ let new_uvar (reason:string) (env:env) (typ:typ)
       | _ -> Strict
     in
     let u, ctx_uvar, g_u =
-        Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None
+        Env.new_tac_implicit_var reason rng env typ should_check uvar_typedness_deps None false
     in
     bind (add_implicits g_u.implicits) (fun _ ->
-    ret (u, fst (List.hd ctx_uvar)))
+    ret (u, fst ctx_uvar))
 
 let mk_irrelevant_goal (reason:string) (env:env) (phi:typ) (sc_opt:option should_check_uvar) (rng:Range.range) opts label : tac goal =
     let typ = U.mk_squash (env.universe_of env phi) phi in

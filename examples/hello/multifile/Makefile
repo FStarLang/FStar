@@ -31,7 +31,7 @@ all: $(EXECUTABLE)
 
 # generate a dependency graph
 .depend: $(wildcard *.fst *.fsti)
-	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' > .depend
+	$(FSTAR) --dep full $(ROOTS) --extract '* -Prims -FStar' --output_deps_to .depend
 
 # this defines the $(ALL_ML_FILES) variable and dependences to produce them
 include .depend

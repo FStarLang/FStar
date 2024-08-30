@@ -24,5 +24,5 @@ Harness.%.out: Harness.%.in $(FSTAR_HOME)/bin/fstar.exe Harness.fst.checked
 
 .depend:
 	$(call msg, "DEPEND")
-	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
+	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) --output_deps_to .depend
 include .depend

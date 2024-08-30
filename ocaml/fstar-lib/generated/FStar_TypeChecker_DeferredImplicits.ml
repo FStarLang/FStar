@@ -205,7 +205,8 @@ let (find_user_tac_for_uvar :
            | c::[] -> FStar_Pervasives_Native.Some c
            | uu___ ->
                let candidates3 = candidate_names candidates2 in
-               let attr = FStar_Syntax_Print.term_to_string a in
+               let attr =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term a in
                ((let uu___2 =
                    let uu___3 =
                      FStar_Compiler_Util.format2
@@ -630,19 +631,16 @@ let (solve_deferred_to_tactic_goals :
                                   reason
                                   (tp.FStar_TypeChecker_Common.lhs).FStar_Syntax_Syntax.pos
                                   env2 goal_ty FStar_Syntax_Syntax.Strict
-                                  FStar_Pervasives_Native.None in
+                                  FStar_Pervasives_Native.None false in
                               (match uu___8 with
                                | (goal, ctx_uvar, uu___9) ->
                                    let imp =
-                                     let uu___10 =
-                                       let uu___11 =
-                                         FStar_Compiler_List.hd ctx_uvar in
-                                       FStar_Pervasives_Native.fst uu___11 in
                                      {
                                        FStar_TypeChecker_Common.imp_reason =
                                          "";
                                        FStar_TypeChecker_Common.imp_uvar =
-                                         uu___10;
+                                         (FStar_Pervasives_Native.fst
+                                            ctx_uvar);
                                        FStar_TypeChecker_Common.imp_tm = goal;
                                        FStar_TypeChecker_Common.imp_range =
                                          ((tp.FStar_TypeChecker_Common.lhs).FStar_Syntax_Syntax.pos)

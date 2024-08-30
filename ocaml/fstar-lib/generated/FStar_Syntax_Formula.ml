@@ -30,7 +30,11 @@ let (connective_to_string : connective -> Prims.string) =
           FStar_Class_Show.show
             (FStar_Class_Show.show_tuple3
                (FStar_Class_Show.show_list FStar_Syntax_Print.showable_binder)
-               (FStar_Class_Show.show_list FStar_Syntax_Print.showable_args)
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.show_list
+                     (FStar_Class_Show.show_tuple2
+                        FStar_Syntax_Print.showable_term
+                        FStar_Syntax_Print.showable_aqual)))
                FStar_Syntax_Print.showable_term) p in
         Prims.strcat "QAll " uu___
     | QEx p ->
@@ -38,14 +42,21 @@ let (connective_to_string : connective -> Prims.string) =
           FStar_Class_Show.show
             (FStar_Class_Show.show_tuple3
                (FStar_Class_Show.show_list FStar_Syntax_Print.showable_binder)
-               (FStar_Class_Show.show_list FStar_Syntax_Print.showable_args)
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.show_list
+                     (FStar_Class_Show.show_tuple2
+                        FStar_Syntax_Print.showable_term
+                        FStar_Syntax_Print.showable_aqual)))
                FStar_Syntax_Print.showable_term) p in
         Prims.strcat "QEx " uu___
     | BaseConn p ->
         let uu___ =
           FStar_Class_Show.show
             (FStar_Class_Show.show_tuple2 FStar_Ident.showable_lident
-               FStar_Syntax_Print.showable_args) p in
+               (FStar_Class_Show.show_list
+                  (FStar_Class_Show.show_tuple2
+                     FStar_Syntax_Print.showable_term
+                     FStar_Syntax_Print.showable_aqual))) p in
         Prims.strcat "BaseConn" uu___
 let (showable_connective : connective FStar_Class_Show.showable) =
   { FStar_Class_Show.show = connective_to_string }

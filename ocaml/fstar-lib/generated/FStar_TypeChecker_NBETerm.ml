@@ -603,7 +603,7 @@ let (constant_to_string : constant -> Prims.string) =
     | Range r ->
         let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format1 "Range %s" uu___
-    | SConst s -> FStar_Syntax_Print.const_to_string s
+    | SConst s -> FStar_Class_Show.show FStar_Syntax_Print.showable_const s
     | Real s -> FStar_Compiler_Util.format1 "Real %s" s
 let rec (t_to_string : t -> Prims.string) =
   fun x ->
@@ -628,12 +628,14 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "Accu (" uu___
     | Construct (fv, us, l) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.fv_to_string fv in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
           let uu___2 =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_List.map FStar_Syntax_Print.univ_to_string
+                  FStar_Compiler_List.map
+                    (FStar_Class_Show.show FStar_Syntax_Print.showable_univ)
                     us in
                 FStar_Compiler_String.concat "; " uu___5 in
               let uu___5 =
@@ -652,12 +654,14 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "Construct (" uu___
     | FV (fv, us, l) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.fv_to_string fv in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
           let uu___2 =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_List.map FStar_Syntax_Print.univ_to_string
+                  FStar_Compiler_List.map
+                    (FStar_Class_Show.show FStar_Syntax_Print.showable_univ)
                     us in
                 FStar_Compiler_String.concat "; " uu___5 in
               let uu___5 =
@@ -676,10 +680,10 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "FV (" uu___
     | Constant c -> constant_to_string c
     | Univ u ->
-        let uu___ = FStar_Syntax_Print.univ_to_string u in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_univ u in
         Prims.strcat "Universe " uu___
     | Type_t u ->
-        let uu___ = FStar_Syntax_Print.univ_to_string u in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_univ u in
         Prims.strcat "Type_t " uu___
     | Arrow uu___ -> "Arrow"
     | Refinement (f, t1) ->
@@ -688,7 +692,8 @@ let rec (t_to_string : t -> Prims.string) =
             FStar_Syntax_Syntax.t_unit in
         let t2 = let uu___ = t1 () in FStar_Pervasives_Native.fst uu___ in
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.bv_to_string x1 in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_bv x1 in
           let uu___2 =
             let uu___3 =
               let uu___4 = t_to_string t2 in
@@ -710,7 +715,7 @@ let rec (t_to_string : t -> Prims.string) =
     | Lazy (FStar_Pervasives.Inl li, uu___) ->
         let uu___1 =
           let uu___2 = FStar_Syntax_Util.unfold_lazy li in
-          FStar_Syntax_Print.term_to_string uu___2 in
+          FStar_Class_Show.show FStar_Syntax_Print.showable_term uu___2 in
         FStar_Compiler_Util.format1 "Lazy (Inl {%s})" uu___1
     | Lazy (FStar_Pervasives.Inr (uu___, et), uu___1) ->
         let uu___2 =
@@ -718,7 +723,13 @@ let rec (t_to_string : t -> Prims.string) =
         FStar_Compiler_Util.format1 "Lazy (Inr (?, %s))" uu___2
     | LocalLetRec (uu___, l, uu___1, uu___2, uu___3, uu___4, uu___5) ->
         let uu___6 =
-          let uu___7 = FStar_Syntax_Print.lbs_to_string [] (true, [l]) in
+          let uu___7 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (true, [l]) in
           Prims.strcat uu___7 ")" in
         Prims.strcat "LocalLetRec (" uu___6
     | TopLevelLet (lb, uu___, uu___1) ->
@@ -726,7 +737,7 @@ let rec (t_to_string : t -> Prims.string) =
           let uu___3 =
             let uu___4 =
               FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
-            FStar_Syntax_Print.fv_to_string uu___4 in
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv uu___4 in
           Prims.strcat uu___3 ")" in
         Prims.strcat "TopLevelLet (" uu___2
     | TopLevelRec (lb, uu___, uu___1, uu___2) ->
@@ -734,7 +745,7 @@ let rec (t_to_string : t -> Prims.string) =
           let uu___4 =
             let uu___5 =
               FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
-            FStar_Syntax_Print.fv_to_string uu___5 in
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv uu___5 in
           Prims.strcat uu___4 ")" in
         Prims.strcat "TopLevelRec (" uu___3
     | Meta (t1, uu___) ->
@@ -743,18 +754,30 @@ and (atom_to_string : atom -> Prims.string) =
   fun a ->
     match a with
     | Var v ->
-        let uu___ = FStar_Syntax_Print.bv_to_string v in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_bv v in
         Prims.strcat "Var " uu___
     | Match (t1, uu___, uu___1, uu___2) ->
         let uu___3 = t_to_string t1 in Prims.strcat "Match " uu___3
     | UnreducedLet (var1, typ, def, body, lb) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.lbs_to_string [] (false, [lb]) in
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (false, [lb]) in
           Prims.strcat uu___1 " in ...)" in
         Prims.strcat "UnreducedLet(" uu___
     | UnreducedLetRec (uu___, body, lbs) ->
         let uu___1 =
-          let uu___2 = FStar_Syntax_Print.lbs_to_string [] (true, lbs) in
+          let uu___2 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (true, lbs) in
           let uu___3 =
             let uu___4 =
               let uu___5 = t_to_string body in Prims.strcat uu___5 ")" in

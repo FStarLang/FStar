@@ -59,8 +59,8 @@ let (guard_eq :
 let (unify :
   Prims.int ->
     FStar_Syntax_Syntax.bv Prims.list ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-        FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
+      FStar_Syntax_Syntax.typ ->
+        FStar_Syntax_Syntax.typ ->
           FStar_TypeChecker_Common.guard_formula -> (unit -> unit) -> unit)
   =
   fun i ->
@@ -72,8 +72,10 @@ let (unify :
               (let uu___1 = FStar_Compiler_Util.string_of_int i in
                FStar_Compiler_Util.print1 "%s ..." uu___1);
               (let uu___2 = FStar_Main.process_args () in ());
-              (let uu___3 = FStar_Syntax_Print.term_to_string x in
-               let uu___4 = FStar_Syntax_Print.term_to_string y in
+              (let uu___3 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term x in
+               let uu___4 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term y in
                FStar_Compiler_Util.print2 "Unify %s\nand %s\n" uu___3 uu___4);
               (let tcenv1 = tcenv () in
                let tcenv2 = FStar_TypeChecker_Env.push_bvs tcenv1 bvs in
@@ -87,9 +89,7 @@ let (unify :
                check ();
                FStar_Options.init ())
 let (should_fail :
-  FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax ->
-    FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax -> unit)
-  =
+  FStar_Syntax_Syntax.typ -> FStar_Syntax_Syntax.typ -> unit) =
   fun x ->
     fun y ->
       try
@@ -106,15 +106,25 @@ let (should_fail :
                (match g.FStar_TypeChecker_Common.guard_f with
                 | FStar_TypeChecker_Common.Trivial ->
                     let uu___1 =
-                      let uu___2 = FStar_Syntax_Print.term_to_string x in
-                      let uu___3 = FStar_Syntax_Print.term_to_string y in
+                      let uu___2 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term x in
+                      let uu___3 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term y in
                       FStar_Compiler_Util.format2
                         "%s and %s should not be unifiable\n" uu___2 uu___3 in
                     fail uu___1
                 | FStar_TypeChecker_Common.NonTrivial f ->
-                    let uu___1 = FStar_Syntax_Print.term_to_string x in
-                    let uu___2 = FStar_Syntax_Print.term_to_string y in
-                    let uu___3 = FStar_Syntax_Print.term_to_string f in
+                    let uu___1 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        x in
+                    let uu___2 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        y in
+                    let uu___3 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        f in
                     FStar_Compiler_Util.print3
                       "%s and %s are unifiable if %s\n" uu___1 uu___2 uu___3))
           ()
@@ -132,8 +142,8 @@ let (unify' : Prims.string -> Prims.string -> unit) =
         let uu___1 =
           let uu___2 = tcenv () in FStar_TypeChecker_Rel.teq uu___2 x1 y1 in
         FStar_TypeChecker_Rel.solve_deferred_constraints uu___ uu___1 in
-      let uu___ = FStar_Syntax_Print.term_to_string x1 in
-      let uu___1 = FStar_Syntax_Print.term_to_string y1 in
+      let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_term x1 in
+      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term y1 in
       let uu___2 = guard_to_string g.FStar_TypeChecker_Common.guard_f in
       FStar_Compiler_Util.print3 "%s and %s are unifiable with guard %s\n"
         uu___ uu___1 uu___2
@@ -166,7 +176,9 @@ let (check_core :
                   FStar_Compiler_Util.print1 "%s core check ok\n" uu___2
               | FStar_Pervasives.Inl (FStar_Pervasives_Native.Some g) ->
                   ((let uu___3 = FStar_Compiler_Util.string_of_int i in
-                    let uu___4 = FStar_Syntax_Print.term_to_string g in
+                    let uu___4 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        g in
                     FStar_Compiler_Util.print2
                       "%s core check computed guard %s ok\n" uu___3 uu___4);
                    if Prims.op_Negation guard_ok
@@ -217,13 +229,13 @@ let (inst :
              let uu___2 = FStar_Tests_Pars.init () in
              FStar_TypeChecker_Util.new_implicit_var ""
                FStar_Compiler_Range_Type.dummyRange uu___2
-               FStar_Syntax_Util.ktype0 in
+               FStar_Syntax_Util.ktype0 false in
            match uu___1 with
            | (t, uu___2, uu___3) ->
                let uu___4 =
                  let uu___5 = FStar_Tests_Pars.init () in
                  FStar_TypeChecker_Util.new_implicit_var ""
-                   FStar_Compiler_Range_Type.dummyRange uu___5 t in
+                   FStar_Compiler_Range_Type.dummyRange uu___5 t false in
                (match uu___4 with
                 | (u, uu___5, uu___6) -> aux (u :: out) (n1 - Prims.int_one))) in
       let us = aux [] n in
@@ -367,7 +379,8 @@ let (run_all : unit -> Prims.bool) =
                            FStar_TypeChecker_Env.push_binders uu___20 uu___21 in
                          let uu___20 =
                            FStar_TypeChecker_Util.new_implicit_var ""
-                             FStar_Compiler_Range_Type.dummyRange env typ in
+                             FStar_Compiler_Range_Type.dummyRange env typ
+                             false in
                          match uu___20 with
                          | (u_p, uu___21, uu___22) ->
                              let tm22 =
@@ -419,7 +432,7 @@ let (run_all : unit -> Prims.bool) =
                                let uu___22 =
                                  FStar_TypeChecker_Util.new_implicit_var ""
                                    FStar_Compiler_Range_Type.dummyRange env
-                                   typ in
+                                   typ false in
                                match uu___22 with
                                | (u_p, uu___23, uu___24) ->
                                    let tm23 =

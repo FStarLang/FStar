@@ -48,6 +48,7 @@ module TcUtil = FStar.TypeChecker.Util
 module U      = FStar.Syntax.Util
 
 open FStar.Class.Show
+open FStar.Class.Tagged
 open FStar.Class.Setlike
 
 let dbg_PartialApp       = Debug.get_toggle "PartialApp"
@@ -235,7 +236,7 @@ let check_pattern_vars env vars pats =
         let pos = List.fold_left (fun out t -> Range.union_ranges out t.pos) hd.pos tl in
         Errors.log_issue pos (Errors.Warning_SMTPatternIllFormed,
                               BU.format1 "SMT pattern misses at least one bound variable: %s"
-                                         (Print.bv_to_string x))
+                                         (show x))
 
 (*  </Utilities> *)
 
@@ -276,7 +277,7 @@ let as_function_typ env t0 =
             | Tm_refine _ -> aux true (U.unrefine t)
             | _ -> if norm
                    then aux false (whnf env t)
-                   else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (Print.term_to_string t0))
+                   else failwith (BU.format2 "(%s) Expected a function typ; got %s" (Range.string_of_range t0.pos) (show t0))
     in aux true t0
 
 let rec curried_arrow_formals_comp k =
@@ -369,7 +370,7 @@ let rec encode_const c env =
     | Const_range _ -> mk_Range_const (), []
     | Const_effect -> mk_Term_type, []
     | Const_real r -> boxReal (mkReal r), []
-    | c -> failwith (BU.format1 "Unhandled constant: %s" (Print.const_to_string c))
+    | c -> failwith (BU.format1 "Unhandled constant: %s" (show c))
   )
 and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             (list fv                       (* translated bound variables *)
@@ -378,7 +379,7 @@ and encode_binders (fuel_opt:option term) (bs:Syntax.binders) (env:env_t) :
                             & decls_t                       (* top-level decls to be emitted *)
                             & list bv)                     (* names *) =
 
-    if Debug.medium () then BU.print1 "Encoding binders %s\n" (Print.binders_to_string ", " bs);
+    if Debug.medium () then BU.print1 "Encoding binders %s\n" (show bs);
 
     let vars, guards, env, decls, names =
       bs |> List.fold_left
@@ -507,7 +508,7 @@ and encode_arith_term env head args_e =
             (S.fv_eq_lid fv Const.bv_uext_lid) ->
             (*fail if extension size is not a constant*)
             failwith (FStar.Compiler.Util.format1 "Not a constant bitvector extend size: %s"
-                            (FStar.Syntax.Print.term_to_string sz_arg))
+                            (show sz_arg))
         | _  -> (List.tail args_e, None)
     in
 
@@ -626,24 +627,24 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
     let t = SS.compress t in
     let t0 = t in
     if !dbg_SMTEncoding
-    then BU.print2 "(%s)   %s\n" (Print.tag_of_term t) (Print.term_to_string t);
+    then BU.print2 "(%s)   %s\n" (tag_of t) (show t);
     match t.n with
       | Tm_delayed  _
       | Tm_unknown    ->
         failwith (BU.format3 "(%s) Impossible: %s\n%s\n"
                              (Range.string_of_range <| t.pos)
-                             (Print.tag_of_term t)
-                             (Print.term_to_string t))
+                             (tag_of t)
+                             (show t))
 
       | Tm_lazy i ->
         let e = U.unfold_lazy i in
         if !dbg_SMTEncoding then
-            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (Print.term_to_string t)
-                                                   (Print.term_to_string e);
+            BU.print2 ">> Unfolded (%s) ~> (%s)\n" (show t)
+                                                   (show e);
         encode_term e env
 
       | Tm_bvar x ->
-        failwith (BU.format1 "Impossible: locally nameless; got %s" (Print.bv_to_string x))
+        failwith (BU.format1 "Impossible: locally nameless; got %s" (show x))
 
       | Tm_ascribed {tm=t; asc=(k,_,_)} ->
         if (match k with Inl t -> U.is_unit t | _ -> false)
@@ -658,8 +659,8 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
         // Actual encoding: `q ~> pack qv where qv is the view of q
         let tv = EMB.embed (R.inspect_ln qt) t.pos None EMB.id_norm_cb in
         if !dbg_SMTEncoding then
-            BU.print2 ">> Inspected (%s) ~> (%s)\n" (Print.term_to_string t0)
-                                                    (Print.term_to_string tv);
+            BU.print2 ">> Inspected (%s) ~> (%s)\n" (show t0)
+                                                    (show tv);
         let t = U.mk_app (RC.refl_constant_term RC.fstar_refl_pack_ln) [S.as_arg tv] in
         encode_term t env
 
@@ -937,7 +938,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
 
         if !dbg_SMTEncoding
         then BU.print3 "Encoding Tm_refine %s with tkey_hash %s and digest %s\n"
-               (Syntax.Print.term_to_string f) tkey_hash (BU.digest_of_string tkey_hash)
+               (show f) tkey_hash (BU.digest_of_string tkey_hash)
         else ();
 
         let tsym = "Tm_refine_" ^ (BU.digest_of_string tkey_hash) in
@@ -1051,7 +1052,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
             let e0 = TcUtil.norm_reify env.tcenv []
               (U.mk_reify (args_e |> List.hd |> fst) lopt) in
             if !dbg_SMTEncodingReify
-            then BU.print1 "Result of normalization %s\n" (Print.term_to_string e0);
+            then BU.print1 "Result of normalization %s\n" (show e0);
             let e = S.mk_Tm_app (TcUtil.remove_reify e0) (List.tl args_e) t0.pos in
             encode_term e env)
 
@@ -1079,17 +1080,17 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 | Some (head_type, formals, c) ->
                     if !dbg_PartialApp
                     then BU.print5 "Encoding partial application:\n\thead=%s\n\thead_type=%s\n\tformals=%s\n\tcomp=%s\n\tactual args=%s\n"
-                             (Print.term_to_string head)
-                             (Print.term_to_string head_type)
-                             (Print.binders_to_string ", " formals)
-                             (Print.comp_to_string c)
-                             (Print.args_to_string args_e);
+                             (show head)
+                             (show head_type)
+                             (show formals)
+                             (show c)
+                             (show args_e);
                     let formals, rest = BU.first_N (List.length args_e) formals in
                     let subst = List.map2 (fun ({binder_bv=bv}) (a, _) -> Syntax.NT(bv, a)) formals args_e in
                     let ty = U.arrow rest c |> SS.subst subst in
                     if !dbg_PartialApp
                     then BU.print1 "Encoding partial application, after subst:\n\tty=%s\n"
-                            (Print.term_to_string ty);
+                            (show ty);
                     let vars, pattern, has_type, decls'' =
                       let t_hyps, decls =
                         List.fold_left2 (fun (t_hyps, decls) ({binder_bv=bv}) e ->
@@ -1097,7 +1098,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                           let t_hyp, decls' = encode_term_pred None t env e in
                           if !dbg_PartialApp
                           then BU.print2 "Encoded typing hypothesis for %s ... got %s\n"
-                                         (Print.term_to_string t)
+                                         (show t)
                                          (Term.print_smt_term t_hyp);
                           t_hyp::t_hyps, decls@decls')
                         ([], [])
@@ -1128,7 +1129,7 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                             t0.pos
                             (Errors.Warning_SMTPatternIllFormed,
                              BU.format1 "No SMT pattern for partial application %s"
-                               (Print.term_to_string t0));
+                               (show t0));
                           [], cvars //no pattern!
                         end
                       in
@@ -1188,9 +1189,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                 in
                 if !dbg_PartialApp
                 then BU.print3 "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
-                            (Print.term_to_string head_type)
-                            (Print.binders_to_string ", " formals)
-                            (Print.args_to_string args_e);
+                            (show head_type)
+                            (show formals)
+                            (show args_e);
 
                 begin
                 match head.n with
@@ -1250,7 +1251,9 @@ and encode_term (t:typ) (env:env_t) : (term         (* encoding of t, expects t 
                                               "SMTEncoding codomain"
                                               (Env.get_range env.tcenv)
                                               env.tcenv
-                                              U.ktype0 in
+                                              U.ktype0
+                                              false
+                                              in
                   t
                 | Some t -> t
               in
@@ -1401,7 +1404,7 @@ and encode_match (e:S.term) (pats:list S.branch) (default_case:term) (env:env_t)
     mkLet' ([mk_fv (scrsym,Term_sort), scr], match_tm) Range.dummyRange, decls
 
 and encode_pat (env:env_t) (pat:S.pat) : (env_t & pattern) =
-    if Debug.medium () then BU.print1 "Encoding pattern %s\n" (Print.pat_to_string pat);
+    if Debug.medium () then BU.print1 "Encoding pattern %s\n" (show pat);
     let vars, pat_term = FStar.TypeChecker.Util.decorated_pattern_as_term pat in
 
     let env, vars = vars |> List.fold_left (fun (env, vars) v ->
@@ -1489,7 +1492,7 @@ and encode_smt_patterns (pats_l:list (list S.arg)) env : list (list term) & decl
                             p.pos
                             (Errors.Warning_SMTPatternIllFormed,
                              BU.format2 "Pattern %s contains illegal sub-term (%s); dropping it"
-                                        (Print.term_to_string p)
+                                        (show p)
                                         (Term.print_smt_term illegal_subterm));
                          pats, d@decls)
                 pats ([], decls)
@@ -1501,8 +1504,8 @@ and encode_formula (phi:typ) (env:env_t) : (term & decls_t)  = (* expects phi to
     let debug phi =
        if !dbg_SMTEncoding
        then BU.print2 "Formula (%s)  %s\n"
-                     (Print.tag_of_term phi)
-                     (Print.term_to_string phi) in
+                     (tag_of phi)
+                     (show phi) in
     let enc (f:list term -> term) : Range.range -> args -> (term & decls_t) = fun r l ->
         let decls, args = BU.fold_map (fun decls x -> let t, decls' = encode_term (fst x) env in decls@decls', t) [] l in
         ({f args with rng=r}, decls) in

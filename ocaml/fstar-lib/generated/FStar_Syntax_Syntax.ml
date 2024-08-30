@@ -41,6 +41,21 @@ let (uu___is_RestartSolver : pragma -> Prims.bool) =
 let (uu___is_PrintEffectsGraph : pragma -> Prims.bool) =
   fun projectee ->
     match projectee with | PrintEffectsGraph -> true | uu___ -> false
+let (pragma_to_string : pragma -> Prims.string) =
+  fun p ->
+    match p with
+    | ResetOptions (FStar_Pervasives_Native.None) -> "#reset-options"
+    | ResetOptions (FStar_Pervasives_Native.Some s) ->
+        FStar_Compiler_Util.format1 "#reset-options \"%s\"" s
+    | SetOptions s -> FStar_Compiler_Util.format1 "#set-options \"%s\"" s
+    | PushOptions (FStar_Pervasives_Native.None) -> "#push-options"
+    | PushOptions (FStar_Pervasives_Native.Some s) ->
+        FStar_Compiler_Util.format1 "#push-options \"%s\"" s
+    | RestartSolver -> "#restart-solver"
+    | PrintEffectsGraph -> "#print-effects-graph"
+    | PopOptions -> "#pop-options"
+let (showable_pragma : pragma FStar_Class_Show.showable) =
+  { FStar_Class_Show.show = pragma_to_string }
 type 'a memo =
   (('a FStar_Pervasives_Native.option FStar_Compiler_Effect.ref)[@printer
                                                                   fun fmt ->
@@ -281,7 +296,8 @@ and uvar_decoration =
   {
   uvar_decoration_typ: term' syntax ;
   uvar_decoration_typedness_depends_on: ctx_uvar Prims.list ;
-  uvar_decoration_should_check: should_check_uvar }
+  uvar_decoration_should_check: should_check_uvar ;
+  uvar_decoration_should_unrefine: Prims.bool }
 and pat' =
   | Pat_constant of sconst 
   | Pat_cons of (fv * universes FStar_Pervasives_Native.option * (pat'
@@ -653,20 +669,29 @@ let (__proj__Mkuvar_decoration__item__uvar_decoration_typ :
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
-        uvar_decoration_should_check;_} -> uvar_decoration_typ
+        uvar_decoration_should_check; uvar_decoration_should_unrefine;_} ->
+        uvar_decoration_typ
 let (__proj__Mkuvar_decoration__item__uvar_decoration_typedness_depends_on :
   uvar_decoration -> ctx_uvar Prims.list) =
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
-        uvar_decoration_should_check;_} ->
+        uvar_decoration_should_check; uvar_decoration_should_unrefine;_} ->
         uvar_decoration_typedness_depends_on
 let (__proj__Mkuvar_decoration__item__uvar_decoration_should_check :
   uvar_decoration -> should_check_uvar) =
   fun projectee ->
     match projectee with
     | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
-        uvar_decoration_should_check;_} -> uvar_decoration_should_check
+        uvar_decoration_should_check; uvar_decoration_should_unrefine;_} ->
+        uvar_decoration_should_check
+let (__proj__Mkuvar_decoration__item__uvar_decoration_should_unrefine :
+  uvar_decoration -> Prims.bool) =
+  fun projectee ->
+    match projectee with
+    | { uvar_decoration_typ; uvar_decoration_typedness_depends_on;
+        uvar_decoration_should_check; uvar_decoration_should_unrefine;_} ->
+        uvar_decoration_should_unrefine
 let (uu___is_Pat_constant : pat' -> Prims.bool) =
   fun projectee ->
     match projectee with | Pat_constant _0 -> true | uu___ -> false
@@ -1368,6 +1393,32 @@ let (uu___is_Repr_binder : indexed_effect_binder_kind -> Prims.bool) =
 let (uu___is_Ad_hoc_binder : indexed_effect_binder_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Ad_hoc_binder -> true | uu___ -> false
+let (showable_indexed_effect_binder_kind :
+  indexed_effect_binder_kind FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Type_binder -> "Type_binder"
+         | Substitutive_binder -> "Substitutive_binder"
+         | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
+         | Range_binder -> "Range_binder"
+         | Repr_binder -> "Repr_binder"
+         | Ad_hoc_binder -> "Ad_hoc_binder")
+  }
+let (tagged_indexed_effect_binder_kind :
+  indexed_effect_binder_kind FStar_Class_Tagged.tagged) =
+  {
+    FStar_Class_Tagged.tag_of =
+      (fun uu___ ->
+         match uu___ with
+         | Type_binder -> "Type_binder"
+         | Substitutive_binder -> "Substitutive_binder"
+         | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
+         | Range_binder -> "Range_binder"
+         | Repr_binder -> "Repr_binder"
+         | Ad_hoc_binder -> "Ad_hoc_binder")
+  }
 type indexed_effect_combinator_kind =
   | Substitutive_combinator of indexed_effect_binder_kind Prims.list 
   | Substitutive_invariant_combinator 
@@ -1391,6 +1442,33 @@ let (uu___is_Ad_hoc_combinator :
   indexed_effect_combinator_kind -> Prims.bool) =
   fun projectee ->
     match projectee with | Ad_hoc_combinator -> true | uu___ -> false
+let (showable_indexed_effect_combinator_kind :
+  indexed_effect_combinator_kind FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Substitutive_combinator ks ->
+             let uu___1 =
+               FStar_Class_Show.show
+                 (FStar_Class_Show.show_list
+                    showable_indexed_effect_binder_kind) ks in
+             Prims.strcat "Substitutive_combinator " uu___1
+         | Substitutive_invariant_combinator ->
+             "Substitutive_invariant_combinator"
+         | Ad_hoc_combinator -> "Ad_hoc_combinator")
+  }
+let (tagged_indexed_effect_combinator_kind :
+  indexed_effect_combinator_kind FStar_Class_Tagged.tagged) =
+  {
+    FStar_Class_Tagged.tag_of =
+      (fun uu___ ->
+         match uu___ with
+         | Substitutive_combinator uu___1 -> "Substitutive_combinator"
+         | Substitutive_invariant_combinator ->
+             "Substitutive_invariant_combinator"
+         | Ad_hoc_combinator -> "Ad_hoc_combinator")
+  }
 type sub_eff =
   {
   source: FStar_Ident.lident ;
@@ -1641,6 +1719,26 @@ let (uu___is_Extract_reify : eff_extraction_mode -> Prims.bool) =
 let (uu___is_Extract_primitive : eff_extraction_mode -> Prims.bool) =
   fun projectee ->
     match projectee with | Extract_primitive -> true | uu___ -> false
+let (showable_eff_extraction_mode :
+  eff_extraction_mode FStar_Class_Show.showable) =
+  {
+    FStar_Class_Show.show =
+      (fun uu___ ->
+         match uu___ with
+         | Extract_none s -> Prims.strcat "Extract_none " s
+         | Extract_reify -> "Extract_reify"
+         | Extract_primitive -> "Extract_primitive")
+  }
+let (tagged_eff_extraction_mode :
+  eff_extraction_mode FStar_Class_Tagged.tagged) =
+  {
+    FStar_Class_Tagged.tag_of =
+      (fun uu___ ->
+         match uu___ with
+         | Extract_none uu___1 -> "Extract_none"
+         | Extract_reify -> "Extract_reify"
+         | Extract_primitive -> "Extract_primitive")
+  }
 type eff_decl =
   {
   mname: FStar_Ident.lident ;
@@ -3072,4 +3170,91 @@ let (deq_lazy_kind : lazy_kind FStar_Class_Deq.deq) =
            | (Lazy_embedding uu___, uu___1) -> false
            | (uu___, Lazy_embedding uu___1) -> false
            | uu___ -> false)
+  }
+let (tagged_term : term FStar_Class_Tagged.tagged) =
+  {
+    FStar_Class_Tagged.tag_of =
+      (fun t ->
+         match t.n with
+         | Tm_bvar { ppname = uu___; index = uu___1; sort = uu___2;_} ->
+             "Tm_bvar"
+         | Tm_name { ppname = uu___; index = uu___1; sort = uu___2;_} ->
+             "Tm_name"
+         | Tm_fvar { fv_name = uu___; fv_qual = uu___1;_} -> "Tm_fvar"
+         | Tm_uinst (uu___, uu___1) -> "Tm_uinst"
+         | Tm_constant uu___ -> "Tm_constant"
+         | Tm_type uu___ -> "Tm_type"
+         | Tm_quoted
+             (uu___, { qkind = Quote_static; antiquotations = uu___1;_}) ->
+             "Tm_quoted(static)"
+         | Tm_quoted
+             (uu___, { qkind = Quote_dynamic; antiquotations = uu___1;_}) ->
+             "Tm_quoted(dynamic)"
+         | Tm_abs { bs = uu___; body = uu___1; rc_opt = uu___2;_} -> "Tm_abs"
+         | Tm_arrow { bs1 = uu___; comp = uu___1;_} -> "Tm_arrow"
+         | Tm_refine { b = uu___; phi = uu___1;_} -> "Tm_refine"
+         | Tm_app { hd = uu___; args = uu___1;_} -> "Tm_app"
+         | Tm_match
+             { scrutinee = uu___; ret_opt = uu___1; brs = uu___2;
+               rc_opt1 = uu___3;_}
+             -> "Tm_match"
+         | Tm_ascribed { tm = uu___; asc = uu___1; eff_opt = uu___2;_} ->
+             "Tm_ascribed"
+         | Tm_let { lbs = uu___; body1 = uu___1;_} -> "Tm_let"
+         | Tm_uvar (uu___, uu___1) -> "Tm_uvar"
+         | Tm_delayed { tm1 = uu___; substs = uu___1;_} -> "Tm_delayed"
+         | Tm_meta { tm2 = uu___; meta = uu___1;_} -> "Tm_meta"
+         | Tm_unknown -> "Tm_unknown"
+         | Tm_lazy
+             { blob = uu___; lkind = uu___1; ltyp = uu___2; rng = uu___3;_}
+             -> "Tm_lazy")
+  }
+let (tagged_sigelt : sigelt FStar_Class_Tagged.tagged) =
+  {
+    FStar_Class_Tagged.tag_of =
+      (fun se ->
+         match se.sigel with
+         | Sig_inductive_typ
+             { lid = uu___; us = uu___1; params = uu___2;
+               num_uniform_params = uu___3; t = uu___4; mutuals = uu___5;
+               ds = uu___6; injective_type_params = uu___7;_}
+             -> "Sig_inductive_typ"
+         | Sig_bundle { ses = uu___; lids = uu___1;_} -> "Sig_bundle"
+         | Sig_datacon
+             { lid1 = uu___; us1 = uu___1; t1 = uu___2; ty_lid = uu___3;
+               num_ty_params = uu___4; mutuals1 = uu___5;
+               injective_type_params1 = uu___6;_}
+             -> "Sig_datacon"
+         | Sig_declare_typ { lid2 = uu___; us2 = uu___1; t2 = uu___2;_} ->
+             "Sig_declare_typ"
+         | Sig_let { lbs1 = uu___; lids1 = uu___1;_} -> "Sig_let"
+         | Sig_assume { lid3 = uu___; us3 = uu___1; phi1 = uu___2;_} ->
+             "Sig_assume"
+         | Sig_new_effect
+             { mname = uu___; cattributes = uu___1; univs = uu___2;
+               binders = uu___3; signature = uu___4; combinators = uu___5;
+               actions = uu___6; eff_attrs = uu___7;
+               extraction_mode = uu___8;_}
+             -> "Sig_new_effect"
+         | Sig_sub_effect
+             { source = uu___; target = uu___1; lift_wp = uu___2;
+               lift = uu___3; kind = uu___4;_}
+             -> "Sig_sub_effect"
+         | Sig_effect_abbrev
+             { lid4 = uu___; us4 = uu___1; bs2 = uu___2; comp1 = uu___3;
+               cflags = uu___4;_}
+             -> "Sig_effect_abbrev"
+         | Sig_pragma uu___ -> "Sig_pragma"
+         | Sig_splice { is_typed = uu___; lids2 = uu___1; tac = uu___2;_} ->
+             "Sig_splice"
+         | Sig_polymonadic_bind
+             { m_lid = uu___; n_lid = uu___1; p_lid = uu___2; tm3 = uu___3;
+               typ = uu___4; kind1 = uu___5;_}
+             -> "Sig_polymonadic_bind"
+         | Sig_polymonadic_subcomp
+             { m_lid1 = uu___; n_lid1 = uu___1; tm4 = uu___2; typ1 = uu___3;
+               kind2 = uu___4;_}
+             -> "Sig_polymonadic_subcomp"
+         | Sig_fail { errs = uu___; fail_in_lax = uu___1; ses1 = uu___2;_} ->
+             "Sig_fail")
   }

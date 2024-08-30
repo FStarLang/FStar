@@ -801,7 +801,8 @@ type __internal_ocaml_attributes =
   | PpxDerivingYoJson (* Generate [@@@ deriving yojson ] on the resulting OCaml type *)
   | CInline
   (* KaRaMeL-only: generates a C "inline" attribute on the resulting
-     * function declaration. *)
+     * function declaration. When used on a local definition (i.e. a letbinding)
+     KaRaMeL will try to inline this binding in the extracted C code. *)
   | Substitute
   (* KaRaMeL-only: forces KaRaMeL to inline the function at call-site; this is
      * deprecated and the recommended way is now to use F*'s

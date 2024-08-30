@@ -2591,7 +2591,9 @@ let (__tc_lax :
                              let uu___3 =
                                let uu___4 =
                                  FStar_TypeChecker_Env.all_binders e in
-                               FStar_Syntax_Print.binders_to_string ", "
+                               FStar_Class_Show.show
+                                 (FStar_Class_Show.show_list
+                                    FStar_Syntax_Print.showable_binder)
                                  uu___4 in
                              FStar_Compiler_Util.print2
                                "Tac> __tc_lax(%s)(Context:%s)\n" uu___2
@@ -11925,9 +11927,10 @@ let (refl_try_unify :
                                                   reason
                                                   t0.FStar_Syntax_Syntax.pos
                                                   g1 t2 should_check_uvar
-                                                  FStar_Pervasives_Native.None in
+                                                  FStar_Pervasives_Native.None
+                                                  false in
                                               (match uu___7 with
-                                               | (uv_t, (ctx_u, uu___8)::[],
+                                               | (uv_t, (ctx_u, uu___8),
                                                   guard_uv) ->
                                                    let uv_id =
                                                      FStar_Syntax_Unionfind.uvar_unique_id

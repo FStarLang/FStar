@@ -1271,7 +1271,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
             FStar.Errors.diag
                 (Env.get_range tcenv)
                 (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
-                          (Print.term_to_string q)
+                          (show q)
                           (Term.declToSmt "" qry)
                           (BU.string_of_int n))
         );

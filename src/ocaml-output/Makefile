@@ -40,8 +40,8 @@ overlay-snapshots:
 	@# These copies MUST be done in this order to make sure
 	@# we avoid races and always end in a consistent state.
 	$(call msg, "OVERLAY SNAPSHOTS")
-	$(Q)cp -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarc/*.ml
-	$(Q)cp -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarlib/*.ml
+	$(Q)install -m0644 -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarc/*.ml
+	$(Q)install -m0644 -t $(DUNE_SNAPSHOT)/fstar-lib/generated/ fstarlib/*.ml
 
 # ------------------------------------------------------------------------------
 # Preparing a release... these targets are not optimized and the Makefile is

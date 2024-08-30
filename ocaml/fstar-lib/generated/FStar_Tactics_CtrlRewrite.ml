@@ -217,6 +217,36 @@ let (__do_rewrite :
                                FStar_TypeChecker_Rel.solve_deferred_constraints
                                  env g in
                              let typ = lcomp.FStar_TypeChecker_Common.res_typ in
+                             let typ1 =
+                               let uu___4 =
+                                 let uu___5 =
+                                   FStar_Options_Ext.get "__unrefine" in
+                                 uu___5 <> "" in
+                               if uu___4
+                               then
+                                 let typ_norm =
+                                   FStar_TypeChecker_Normalize.unfold_whnf'
+                                     [FStar_TypeChecker_Env.DontUnfoldAttr
+                                        [FStar_Parser_Const.do_not_unrefine_attr]]
+                                     env typ in
+                                 let uu___5 =
+                                   let uu___6 =
+                                     let uu___7 =
+                                       FStar_Syntax_Subst.compress typ_norm in
+                                     uu___7.FStar_Syntax_Syntax.n in
+                                   FStar_Syntax_Syntax.uu___is_Tm_refine
+                                     uu___6 in
+                                 (if uu___5
+                                  then
+                                    let typ' =
+                                      FStar_TypeChecker_Normalize.unfold_whnf'
+                                        [FStar_TypeChecker_Env.DontUnfoldAttr
+                                           [FStar_Parser_Const.do_not_unrefine_attr];
+                                        FStar_TypeChecker_Env.Unrefine] env
+                                        typ_norm in
+                                    typ'
+                                  else typ)
+                               else typ in
                              let should_check =
                                let uu___4 =
                                  FStar_TypeChecker_Common.is_total_lcomp
@@ -231,7 +261,7 @@ let (__do_rewrite :
                                let uu___5 =
                                  FStar_Tactics_Monad.goal_typedness_deps g0 in
                                FStar_Tactics_Monad.new_uvar "do_rewrite.rhs"
-                                 env typ should_check uu___5 (rangeof g0) in
+                                 env typ1 should_check uu___5 (rangeof g0) in
                              Obj.magic
                                (FStar_Class_Monad.op_let_Bang
                                   FStar_Tactics_Monad.monad_tac () ()
@@ -267,9 +297,9 @@ let (__do_rewrite :
                                                          let uu___9 =
                                                            let uu___10 =
                                                              env.FStar_TypeChecker_Env.universe_of
-                                                               env typ in
+                                                               env typ1 in
                                                            FStar_Syntax_Util.mk_eq2
-                                                             uu___10 typ tm
+                                                             uu___10 typ1 tm
                                                              ut in
                                                          FStar_Tactics_Monad.add_irrelevant_goal
                                                            g0 "do_rewrite.eq"

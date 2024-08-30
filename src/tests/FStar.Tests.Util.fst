@@ -32,6 +32,9 @@ module BU = FStar.Compiler.Util
 
 open FStar.Ident
 open FStar.Compiler.Range
+open FStar.Class.Tagged
+open FStar.Class.Show
+open FStar.Syntax.Print {}
 
 let always id b =
     if b
@@ -111,15 +114,15 @@ let rec term_eq' t1 t2 =
 
       | Tm_delayed _, _
       | _, Tm_delayed _ ->
-        failwith (BU.format2 "Impossible: %s and %s" (Print.tag_of_term t1) (Print.tag_of_term t2))
+        failwith (BU.format2 "Impossible: %s and %s" (tag_of t1) (tag_of t2))
 
       | Tm_unknown, Tm_unknown -> true
       | _ -> false
 
 let term_eq t1 t2 =
-//    BU.print2 "Comparing %s and\n\t%s\n" (Print.term_to_string t1) (Print.term_to_string t2);
+//    BU.print2 "Comparing %s and\n\t%s\n" (show t1) (show t2);
     let b = term_eq' t1 t2 in
     if not b then (
-      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (Print.term_to_string t1) (Print.term_to_string t2)
+      BU.print2 ">>>>>>>>>>>Term %s is not equal to %s\n" (show t1) (show t2)
     );
     b

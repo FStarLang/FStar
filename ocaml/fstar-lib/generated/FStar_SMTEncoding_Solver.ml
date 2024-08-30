@@ -2106,7 +2106,9 @@ let (encode_and_ask :
                                           tcenv1 in
                                       let uu___10 =
                                         let uu___11 =
-                                          FStar_Syntax_Print.term_to_string q in
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_term
+                                            q in
                                         let uu___12 =
                                           FStar_SMTEncoding_Term.declToSmt ""
                                             qry in

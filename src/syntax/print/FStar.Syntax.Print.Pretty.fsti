@@ -19,7 +19,6 @@ module FStar.Syntax.Print.Pretty
 open FStar.Compiler
 open FStar.Syntax
 open FStar.Syntax.Syntax
-open FStar.Compiler.Util
 
 (* Use the 'primed' versions if possible: they abbreviate lidents *)
 
@@ -35,7 +34,7 @@ val sigelt_to_string'   : DsEnv.env -> sigelt -> string
 
 (* If no DsEnv.env is at hand, these can be used instead. *)
 val term_to_doc         : term -> Pprint.document
-val univ_to_doc     : universe -> Pprint.document
+val univ_to_doc         : universe -> Pprint.document
 val comp_to_doc         : comp -> Pprint.document
 val sigelt_to_doc       : sigelt -> Pprint.document
 
@@ -47,4 +46,4 @@ val sigelt_to_string    : sigelt -> string
 val tscheme_to_string   : tscheme -> string
 val pat_to_string       : pat -> string
 val binder_to_string'   : bool -> binder -> string
-val eff_decl_to_string' : bool -> Range.range -> list qualifier -> eff_decl -> string
+val eff_decl_to_string  : eff_decl -> string

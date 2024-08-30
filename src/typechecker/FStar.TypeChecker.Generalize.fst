@@ -149,8 +149,8 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
              let lb2, _, _ = lec2 in
              let msg = BU.format2 "Generalizing the types of these mutually recursive definitions \
                                    requires an incompatible set of universes for %s and %s"
-                            (Print.lbname_to_string lb1)
-                            (Print.lbname_to_string lb2) in
+                            (show lb1)
+                            (show lb2) in
              raise_error (Errors.Fatal_IncompatibleSetOfUniverse, msg) (Env.get_range env)
      in
      let force_uvars_eq lec2 (u1:list ctx_uvar) (u2:list ctx_uvar) =
@@ -165,8 +165,8 @@ let gen env (is_rec:bool) (lecs:list (lbname & term & comp)) : option (list (lbn
              let lb2, _, _ = lec2 in
              let msg = BU.format2 "Generalizing the types of these mutually recursive definitions \
                                    requires an incompatible number of types for %s and %s"
-                            (Print.lbname_to_string lb1)
-                            (Print.lbname_to_string lb2) in
+                            (show lb1)
+                            (show lb2) in
              raise_error (Errors.Fatal_IncompatibleNumberOfTypes, msg) (Env.get_range env)
      in
 
@@ -266,7 +266,7 @@ let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname
   assert (List.for_all (fun (l, _, _) -> is_right l) lecs); //only generalize top-level lets
   if Debug.low () then
      BU.print1 "Generalizing: %s\n"
-       (show <| List.map (fun (lb, _, _) -> Print.lbname_to_string lb) lecs);
+       (show <| List.map (fun (lb, _, _) -> show lb) lecs);
   let univnames_lecs = 
     let empty = from_list [] in
     List.fold_left
@@ -285,10 +285,10 @@ let generalize' env (is_rec:bool) (lecs:list (lbname&term&comp)) : (list (lbname
                     (fun (l, us, e, c, gvs) ->
                          BU.print5 "(%s) Generalized %s at type %s\n%s\nVars = (%s)\n"
                                           (show e.pos)
-                                          (Print.lbname_to_string l)
+                                          (show l)
                                           (show (U.comp_result c))
                                           (show e)
-                                          (Print.binders_to_string ", " gvs));
+                                          (show gvs));
             luecs
    in
    List.map (fun (l, generalized_univs, t, c, gvs) ->
