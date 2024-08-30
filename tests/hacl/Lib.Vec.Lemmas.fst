@@ -596,6 +596,7 @@ val lemma_map_blocks_vec_equiv_pre_k_aux:
     let l_sh = l_shift blocksize (w * n) (w * n + w) nb l in
     Seq.index (l_v n rem b_v) k == Seq.index (map_blocks blocksize b_v f_sh l_sh) k)
 
+#restart-solver
 let lemma_map_blocks_vec_equiv_pre_k_aux #a w blocksize n f l l_v rem b_v pre k =
   let nb = rem / blocksize in
   let f_sh = f_shift blocksize (w * n) (w * n + w) nb f in
