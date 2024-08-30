@@ -20,6 +20,7 @@ open FStar.Compiler.Effect
 
 open FStar
 open FStar.Compiler
+open FStar.Compiler.Range
 open FStar.Syntax
 open FStar.Compiler.Util
 open FStar.Syntax.Syntax
@@ -34,19 +35,9 @@ module A          = FStar.Parser.AST
 module Unionfind  = FStar.Syntax.Unionfind
 module C          = FStar.Parser.Const
 module SU         = FStar.Syntax.Util
+
 module Pretty     = FStar.Syntax.Print.Pretty
-
-let fv_qual_to_string fvq =
-  match fvq with
-  | Data_ctor -> "Data_ctor"
-  | Record_projector _ -> "Record_projector _"
-  | Record_ctor _ -> "Record_ctor _"
-  | Unresolved_projector _ -> "Unresolved_projector _"
-  | Unresolved_constructor _ -> "Unresolved_constructor _"
-
-instance showable_fv_qual : showable fv_qual = {
-  show = fv_qual_to_string;
-}
+module Ugly       = FStar.Syntax.Print.Ugly
 
 let sli (l:lident) : string =
     if Options.print_real_names()
@@ -122,8 +113,6 @@ Errors.with_ctx "While printing universe" (fun () ->
 
 let univs_to_string us = List.map univ_to_string us |> String.concat ", "
 
-let univ_names_to_string us = List.map (fun x -> (string_of_id x)) us |> String.concat ", "
-
 let qual_to_string = function
   | Assumption            -> "assume"
   | InternalAssumption    -> "internal_assume"
@@ -184,263 +173,93 @@ let lkind_to_string = function
   | Lazy_doc -> "Lazy_doc"
   | Lazy_extension s -> "Lazy_extension:" ^ s
 
-(* This function prints the type it gets as argument verbatim.
-   For already type-checked types use the typ_norm_to_string
-   function in normalize.fs instead, since elaboration
-   (higher-order unification) produces types containing lots of
-   redexes that should first be reduced. *)
-let rec tag_of_term (t:term) = match t.n with
-  | Tm_bvar x -> "Tm_bvar: "   ^ db_to_string x
-  | Tm_name x -> "Tm_name: " ^ nm_to_string x
-  | Tm_fvar x -> "Tm_fvar: "   ^ lid_to_string x.fv_name.v
-  | Tm_uinst _ -> "Tm_uinst"
-  | Tm_constant _ -> "Tm_constant"
-  | Tm_type _ -> "Tm_type"
-  | Tm_quoted (_, {qkind=Quote_static}) -> "Tm_quoted (static)"
-  | Tm_quoted (_, {qkind=Quote_dynamic}) -> "Tm_quoted (dynamic)"
-  | Tm_abs _ -> "Tm_abs"
-  | Tm_arrow _ -> "Tm_arrow"
-  | Tm_refine _ -> "Tm_refine"
-  | Tm_app _ -> "Tm_app"
-  | Tm_match _ -> "Tm_match"
-  | Tm_ascribed _ -> "Tm_ascribed"
-  | Tm_let _ -> "Tm_let"
-  | Tm_uvar _ -> "Tm_uvar"
-  | Tm_delayed _ -> "Tm_delayed"
-  | Tm_meta {meta=m} -> "Tm_meta:" ^ metadata_to_string m
-  | Tm_unknown -> "Tm_unknown"
-  | Tm_lazy li -> "Tm_lazy(" ^ lkind_to_string li.lkind ^ ")"
+let term_to_string x =
+  if Options.ugly ()
+  then Ugly.term_to_string x
+  else Pretty.term_to_string x
 
-and term_to_string x =
-  if not (Options.ugly()) then
-    Pretty.term_to_string x
-  else begin
-    Errors.with_ctx "While ugly-printing a term" (fun () ->
-      let x = Subst.compress x in
-      let x = if Options.print_implicits() then x else SU.unmeta x in
-      match x.n with
-      | Tm_delayed _ ->   failwith "impossible"
-      | Tm_app {args=[]} ->  failwith "Empty args!"
+let term_to_string' env x =
+  if Options.ugly ()
+  then Ugly.term_to_string x
+  else Pretty.term_to_string' env x
 
-      // TODO: add an option to mark where this happens
-      | Tm_lazy ({blob=b; lkind=Lazy_embedding (_, thunk)}) ->
-        "[LAZYEMB:" ^
-        term_to_string (Thunk.force thunk) ^ "]"
-      | Tm_lazy i ->
-        "[lazy:" ^
-        term_to_string (must !lazy_chooser i.lkind i) // can't call into Syntax.Util here..
-        ^"]"
+let comp_to_string c =
+  if Options.ugly ()
+  then Ugly.comp_to_string c
+  else Pretty.comp_to_string c
 
-      | Tm_quoted (tm, qi) ->
-        begin match qi.qkind with
-        | Quote_static ->
-            U.format2 "`(%s)%s" (term_to_string tm)
-                                (FStar.Common.string_of_list term_to_string (snd qi.antiquotations))
-        | Quote_dynamic ->
-            U.format1 "quote (%s)" (term_to_string tm)
-        end
+let comp_to_string' env c =
+  if Options.ugly ()
+  then Ugly.comp_to_string c
+  else Pretty.comp_to_string' env c
 
-      | Tm_meta {tm=t; meta=Meta_pattern (_, ps)} ->
-        let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
-        U.format2 "{:pattern %s} %s" pats (term_to_string t)
+let sigelt_to_string x =
+  if Options.ugly ()
+  then Ugly.sigelt_to_string x
+  else Pretty.sigelt_to_string x
 
-      | Tm_meta {tm=t; meta=Meta_monadic (m, t')} -> U.format4 ("(MetaMonadic-{%s %s} (%s) %s)") (sli m) (term_to_string t') (tag_of_term t) (term_to_string t)
+let sigelt_to_string' env x =
+  if Options.ugly ()
+  then Ugly.sigelt_to_string x
+  else Pretty.sigelt_to_string' env x
 
-      | Tm_meta {tm=t; meta=Meta_monadic_lift(m0, m1, t')} -> U.format4 ("(MetaMonadicLift-{%s : %s -> %s} %s)") (term_to_string t') (sli m0) (sli m1) (term_to_string t)
+let pat_to_string x =
+  if Options.ugly ()
+  then Ugly.pat_to_string x
+  else Pretty.pat_to_string x
 
-      | Tm_meta {tm=t; meta=Meta_labeled(l,r,b)} ->
-        U.format3 "Meta_labeled(%s, %s){%s}" (Errors.Msg.rendermsg l) (Range.string_of_range r) (term_to_string t)
+let term_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.term_to_string t)
+  else Pretty.term_to_doc' dsenv t
 
-      | Tm_meta {tm=t; meta=Meta_named(l)} ->
-        U.format3 "Meta_named(%s, %s){%s}" (lid_to_string l) (Range.string_of_range t.pos) (term_to_string t)
+let univ_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.univ_to_string t)
+  else Pretty.univ_to_doc' dsenv t
 
-      | Tm_meta {tm=t; meta=Meta_desugared _} ->
-        U.format1 "Meta_desugared{%s}"  (term_to_string t)
+let comp_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.comp_to_string t)
+  else Pretty.comp_to_doc' dsenv t
 
-      | Tm_bvar x ->        db_to_string x ^ ":(" ^ (tag_of_term x.sort) ^  ")"
-      | Tm_name x ->        nm_to_string x // ^ "@@(" ^ term_to_string x.sort ^ ")"
-      | Tm_fvar f ->
-        // Add a prefix to unresolved constructors/projectors, otherwise
-        // we print a unqualified fvar, which looks exactly like a Tm_name
-        let pref =
-          match f.fv_qual with
-          | Some (Unresolved_projector _) -> "(Unresolved_projector)"
-          | Some (Unresolved_constructor _) -> "(Unresolved_constructor)"
-          | _ -> ""
-        in
-        pref ^ fv_to_string f
-      | Tm_uvar (u, ([], _)) ->
-        if Options.print_bound_var_types()
-        && Options.print_effect_args()
-        then ctx_uvar_to_string_aux true u
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
-      | Tm_uvar (u, s) ->
-        if Options.print_bound_var_types()
-        && Options.print_effect_args()
-        then U.format2 "(%s @ %s)" (ctx_uvar_to_string_aux true u) (List.map subst_to_string (fst s) |> String.concat "; ")
-        else "?" ^ (string_of_int <| Unionfind.uvar_id u.ctx_uvar_head)
-      | Tm_constant c ->    const_to_string c
-      | Tm_type u ->        if (Options.print_universes()) then U.format1 "Type u#(%s)" (univ_to_string u) else "Type"
-      | Tm_arrow {bs; comp=c} ->  U.format2 "(%s -> %s)"  (binders_to_string " -> " bs) (comp_to_string c)
-      | Tm_abs {bs; body=t2; rc_opt=lc} ->
-        begin match lc with
-            | Some rc when (Options.print_implicits()) ->
-              U.format4 "(fun %s -> (%s $$ (residual) %s %s))"
-                            (binders_to_string " " bs)
-                            (term_to_string t2)
-                            (string_of_lid rc.residual_effect)
-                            (if Option.isNone rc.residual_typ then "None" else term_to_string (Option.get rc.residual_typ))
-            | _ ->
-              U.format2 "(fun %s -> %s)" (binders_to_string " " bs) (term_to_string t2)
-        end
-      | Tm_refine {b=xt; phi=f} -> U.format3 "(%s:%s{%s})" (bv_to_string xt) (xt.sort |> term_to_string) (f |> formula_to_string)
-      | Tm_app {hd=t; args} ->  U.format2 "(%s %s)" (term_to_string t) (args_to_string args)
-      | Tm_let {lbs; body=e} ->   U.format2 "%s\nin\n%s" (lbs_to_string [] lbs) (term_to_string e)
-      | Tm_ascribed {tm=e;asc=(annot, topt, b);eff_opt=eff_name} ->
-        let annot = match annot with
-            | Inl t -> U.format2 "[%s] %s" (map_opt eff_name Ident.string_of_lid |> dflt "default") (term_to_string t)
-            | Inr c -> comp_to_string c in
-        let topt = match topt with
-            | None -> ""
-            | Some t -> U.format1 "by %s" (term_to_string t) in
-        let s = if b then "ascribed_eq" else "ascribed" in
-        U.format4 "(%s <%s: %s %s)" (term_to_string e) s annot topt
-      | Tm_match {scrutinee=head; ret_opt=asc_opt; brs=branches; rc_opt=lc} ->
-        let lc_str =
-          match lc with
-          | Some lc when (Options.print_implicits ()) ->
-            U.format1 " (residual_comp:%s)"
-              (if Option.isNone lc.residual_typ then "None" else term_to_string (Option.get lc.residual_typ))
-          | _ -> "" in
-        U.format4 "(match %s %swith\n\t| %s%s)"
-          (term_to_string head)
-          (match asc_opt with
-           | None -> ""
-           | Some (b, (asc, tacopt, use_eq)) ->
-             let s = if use_eq then "returns$" else "returns" in
-             U.format4 "as %s %s %s%s "
-               (binder_to_string b)
-               s
-               (match asc with
-                | Inl t -> term_to_string t
-                | Inr c -> comp_to_string c)
-               (match tacopt with
-                | None -> ""
-                | Some tac -> U.format1 " by %s" (term_to_string tac)))
-          (U.concat_l "\n\t|" (branches |> List.map branch_to_string))
-          lc_str
-      | Tm_uinst(t, us) ->
-        if (Options.print_universes())
-        then U.format2 "%s<%s>" (term_to_string t) (univs_to_string us)
-        else term_to_string t
+let sigelt_to_doc' dsenv t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.sigelt_to_string t)
+  else Pretty.sigelt_to_doc' dsenv t
 
-      | Tm_unknown -> "_"
-    )
-  end
+let term_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.term_to_string t)
+  else Pretty.term_to_doc t
 
-and branch_to_string (p, wopt, e) : string =
-    U.format3 "%s %s -> %s"
-                (p |> pat_to_string)
-                (match wopt with | None -> "" | Some w -> U.format1 "when %s" (w |> term_to_string))
-                (e |> term_to_string)
-and ctx_uvar_to_string_aux print_reason ctx_uvar =
-    let reason_string =
-      if print_reason
-      then U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason
-      else U.format2 "(%s-%s) "
-             (Range.string_of_pos (Range.start_of_range ctx_uvar.ctx_uvar_range))
-             (Range.string_of_pos (Range.end_of_range ctx_uvar.ctx_uvar_range)) in
-    format5 "%s(%s |- %s : %s) %s"
-            reason_string
-            (binders_to_string ", " ctx_uvar.ctx_uvar_binders)
-            (uvar_to_string ctx_uvar.ctx_uvar_head)
-            (term_to_string (SU.ctx_uvar_typ ctx_uvar))
-            (match SU.ctx_uvar_should_check ctx_uvar with
-             | Allow_unresolved s -> "Allow_unresolved " ^s
-             | Allow_untyped s -> "Allow_untyped " ^s
-             | Allow_ghost s -> "Allow_ghost " ^s
-             | Strict   -> "Strict"
-             | Already_checked -> "Already_checked")
+let univ_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.univ_to_string t)
+  else Pretty.univ_to_doc t
 
+let comp_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.comp_to_string t)
+  else Pretty.comp_to_doc t
 
-and subst_elt_to_string = function
-   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
-   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
-   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
-   | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
-   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
-   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
+let sigelt_to_doc t =
+  if Options.ugly ()
+  then Pprint.arbitrary_string (Ugly.sigelt_to_string t)
+  else Pretty.sigelt_to_doc t
 
-and subst_to_string s = s |> List.map subst_elt_to_string |> String.concat "; "
+let binder_to_string b =
+  if Options.ugly ()
+  then Pretty.binder_to_string' false b
+  else Ugly.binder_to_string b
 
-and pat_to_string x =
-  if not (Options.ugly()) then
-    Pretty.pat_to_string x
-  else match x.v with
-    | Pat_cons(l, us_opt, pats) ->
-      U.format3 "(%s%s%s)" 
-                (fv_to_string l)
-                (if not (Options.print_universes())
-                 then " "
-                 else 
-                   match us_opt with
-                   | None -> " "
-                   | Some us ->
-                     U.format1 " %s " (List.map univ_to_string us |> String.concat " "))
-                (List.map (fun (x, b) -> let p = pat_to_string x in if b then "#"^p else p) pats |> String.concat " ")
-    | Pat_dot_term topt ->
-      if Options.print_bound_var_types()
-      then U.format1 ".%s" (if topt = None then "_" else topt |> U.must |> term_to_string)
-      else "._"
-    | Pat_var x ->
-      if Options.print_bound_var_types()
-      then U.format2 "%s:%s" (bv_to_string x) (term_to_string x.sort)
-      else bv_to_string x
-    | Pat_constant c -> const_to_string c
+let aqual_to_string (q:aqual) : string =
+  match q with
+  | Some { aqual_implicit=true } -> "#"
+  | _ -> ""
 
-
-and lbs_to_string quals lbs =
-//    let lbs =
-//        if (Options.print_universes())
-//        then (fst lbs, snd lbs |> List.map (fun lb -> let us, td = Subst.open_univ_vars lb.lbunivs (Util.mk_conj lb.lbtyp lb.lbdef) in
-//                                        let t, d = match (Subst.compress td).n with
-//                                            | Tm_app(_, [(t, _); (d, _)]) -> t, d
-//                                            | _ -> failwith "Impossibe" in
-//                                        {lb with lbunivs=us; lbtyp=t; lbdef=d}))
-//        else lbs in
-    U.format3 "%slet %s %s"
-    (quals_to_string' quals)
-    (if fst lbs then "rec" else "")
-    (U.concat_l "\n and " (snd lbs |> List.map (fun lb ->
-                                                    U.format5 "%s%s %s : %s = %s"
-                                                            (attrs_to_string lb.lbattrs)
-                                                            (lbname_to_string lb.lbname)
-                                                            (if (Options.print_universes())
-                                                             then "<"^univ_names_to_string lb.lbunivs^">"
-                                                             else "")
-                                                            (term_to_string lb.lbtyp)
-                                                            (lb.lbdef |> term_to_string))))
-and attrs_to_string = function
-    | [] -> ""
-    | tms -> U.format1 "[@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
-
-and binder_attrs_to_string = function
-    | _ when Options.any_dump_module () -> ""
-    (* ^ VALE HACK: Vale does not properly parse attributes on binders (yet).
-    Just don't print them. *)
-
-    | [] -> ""
-    | tms -> U.format1 "[@@@ %s]" (List.map (fun t -> paren (term_to_string t)) tms |> String.concat "; ")
-
-//and uvar_t_to_string (uv, k) =
-//   if false && (Options.print_real_names())
-//   then
-//       U.format2 "(U%s : %s)"
-//       (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
-//       (kind_to_string k)
-//   else U.format1 "U%s"  (if (Options.hide_uvar_nums()) then "?" else U.string_of_int (Unionfind.uvar_id uv))
-
-and bqual_to_string' s = function
+let bqual_to_string' (s:string) (b:bqual) : string =
+  match b with
   | Some (Implicit false) -> "#" ^ s
   | Some (Implicit true) -> "#." ^ s
   | Some Equality -> "$" ^ s
@@ -448,118 +267,25 @@ and bqual_to_string' s = function
   | Some (Meta t) -> "#[" ^ term_to_string t ^ "]" ^ s
   | None -> s
 
-and aqual_to_string' s = function
-  | Some { aqual_implicit=true } -> "#" ^ s
-  | _ -> s
-  
-and binder_to_string' is_arrow b =
-  if not (Options.ugly()) then
-    Pretty.binder_to_string' is_arrow b
-  else
-    let attrs = binder_attrs_to_string b.binder_attrs in
-    if is_null_binder b
-    then (attrs ^ "_:" ^ term_to_string b.binder_bv.sort)
-    else if not is_arrow && not (Options.print_bound_var_types())
-    then bqual_to_string' (attrs ^ nm_to_string b.binder_bv) b.binder_qual
-    else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ":" ^ term_to_string b.binder_bv.sort) b.binder_qual
+let bqual_to_string (q:bqual) : string =
+  bqual_to_string' "" q
 
-and binder_to_string b =  binder_to_string' false b
+let subst_elt_to_string = function
+   | DB(i, x) -> U.format2 "DB (%s, %s)" (string_of_int i) (bv_to_string x)
+   | DT(i, t) -> U.format2 "DT (%s, %s)" (string_of_int i) (term_to_string t)
+   | NM(x, i) -> U.format2 "NM (%s, %s)" (bv_to_string x) (string_of_int i)
+   | NT(x, t) -> U.format2 "NT (%s, %s)" (bv_to_string x) (term_to_string t)
+   | UN(i, u) -> U.format2 "UN (%s, %s)" (string_of_int i) (univ_to_string u)
+   | UD(u, i) -> U.format2 "UD (%s, %s)" (string_of_id u) (string_of_int i)
 
-and arrow_binder_to_string b = binder_to_string' true b
+(*
+ * AR: 07/19: exports is redundant, keeping it here until vale is fixed to not parse it
+ *)
+let modul_to_string (m:modul) =
+  U.format2 "module %s\nDeclarations: [\n%s\n]\n"
+    (show m.name) (List.map sigelt_to_string m.declarations |> String.concat "\n")
 
-and binders_to_string sep bs =
-    let bs =
-      if (Options.print_implicits())
-      then bs
-      else filter_imp_binders bs in
-    if sep = " -> "
-    then bs |> List.map arrow_binder_to_string |> String.concat sep
-    else bs |> List.map binder_to_string |> String.concat sep
-
-and arg_to_string = function
-   | a,  imp -> aqual_to_string' (term_to_string a) imp
-
-and args_to_string args =
-    let args =
-      if (Options.print_implicits())
-      then args
-      else filter_imp_args args in
-    args |> List.map arg_to_string |> String.concat " "
-
-and comp_to_string c =
-  if not (Options.ugly()) then
-    Pretty.comp_to_string c
-  else
-    Errors.with_ctx "While ugly-printing a computation" (fun () ->
-    match c.n with
-    | Total t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> U.format1 "Tot %s" (term_to_string t)
-      end
-    | GTotal t ->
-      begin match (compress t).n with
-        | Tm_type _ when not (Options.print_implicits() || Options.print_universes()) -> term_to_string t
-        | _ -> U.format1 "GTot %s" (term_to_string t)
-      end
-    | Comp c ->
-        let basic =
-          if (Options.print_effect_args())
-          then U.format5 "%s<%s> (%s) %s (attributes %s)"
-                            (sli c.effect_name)
-                            (c.comp_univs |> List.map univ_to_string |> String.concat ", ")
-                            (term_to_string c.result_typ)
-                            (c.effect_args |> List.map arg_to_string |> String.concat ", ")
-                            (cflags_to_string c.flags)
-          else if c.flags |> U.for_some (function TOTAL -> true | _ -> false)
-          && not (Options.print_effect_args())
-          then U.format1 "Tot %s" (term_to_string c.result_typ)
-          else if not (Options.print_effect_args())
-                  && not (Options.print_implicits())
-                  && lid_equals c.effect_name (C.effect_ML_lid())
-          then term_to_string c.result_typ
-          else if not (Options.print_effect_args())
-               && c.flags |> U.for_some (function MLEFFECT -> true | _ -> false)
-          then U.format1 "ALL %s" (term_to_string c.result_typ)
-          else U.format2 "%s (%s)" (sli c.effect_name) (term_to_string c.result_typ) in
-      let dec = c.flags
-        |> List.collect (function DECREASES dec_order ->
-            (match dec_order with
-             | Decreases_lex l ->
-               [U.format1 " (decreases [%s])"
-                  (match l with
-                   | [] -> ""
-                   | hd::tl ->
-                     tl |> List.fold_left (fun s t ->
-                       s ^ ";" ^ term_to_string t) (term_to_string hd))]
-             | Decreases_wf (rel, e) ->
-               [U.format2 "(decreases {:well-founded %s %s})" (term_to_string rel) (term_to_string e)])
-             | _ -> [])
-            
-        |> String.concat " " in
-      U.format2 "%s%s" basic dec
-    )
-
-and cflag_to_string c =
-    match c with
-        | TOTAL -> "total"
-        | MLEFFECT -> "ml"
-        | RETURN -> "return"
-        | PARTIAL_RETURN -> "partial_return"
-        | SOMETRIVIAL -> "sometrivial"
-        | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
-        | SHOULD_NOT_INLINE -> "should_not_inline"
-        | LEMMA -> "lemma"
-        | CPS -> "cps"
-        | DECREASES _ -> "" (* TODO : already printed for now *)
-
-and cflags_to_string fs = FStar.Common.string_of_list cflag_to_string fs
-
-(* CH: at this point not even trying to detect if something looks like a formula,
-       only locally detecting certain patterns *)
-and formula_to_string phi = term_to_string phi
-
-and metadata_to_string = function
+let metadata_to_string = function
     | Meta_pattern (_, ps) ->
         let pats = ps |> List.map (fun args -> args |> List.map (fun (t, _) -> term_to_string t) |> String.concat "; ") |> String.concat "\/" in
         U.format1 "{Meta_pattern %s}" pats
@@ -579,169 +305,55 @@ and metadata_to_string = function
     | Meta_monadic_lift (m, m', t) ->
         U.format3 "{Meta_monadic_lift(%s -> %s @ %s)}" (sli m) (sli m') (term_to_string t)
 
-let aqual_to_string aq = aqual_to_string' "" aq
-let bqual_to_string bq = bqual_to_string' "" bq
-let lb_to_string lb = lbs_to_string [] (false, [lb])
 
-let comp_to_string' env c =
+instance showable_term   = { show = term_to_string; }
+instance showable_univ   = { show = univ_to_string; }
+instance showable_comp   = { show = comp_to_string; }
+instance showable_sigelt = { show = sigelt_to_string; }
+instance showable_bv     = { show = bv_to_string; }
+instance showable_fv     = { show = fv_to_string; }
+instance showable_binder = { show = binder_to_string; }
+instance showable_uvar   = { show = uvar_to_string; }
+let ctx_uvar_to_string ctx_uvar =
+    let reason_string = U.format1 "(* %s *)\n" ctx_uvar.ctx_uvar_reason in
+    format5 "%s(%s |- %s : %s) %s"
+            reason_string
+            (String.concat ", " <| List.map show ctx_uvar.ctx_uvar_binders)
+            (uvar_to_string ctx_uvar.ctx_uvar_head)
+            (term_to_string (SU.ctx_uvar_typ ctx_uvar))
+            (match SU.ctx_uvar_should_check ctx_uvar with
+             | Allow_unresolved s -> "Allow_unresolved " ^s
+             | Allow_untyped s -> "Allow_untyped " ^s
+             | Allow_ghost s -> "Allow_ghost " ^s
+             | Strict   -> "Strict"
+             | Already_checked -> "Already_checked")
+
+instance showable_ctxu   = { show = ctx_uvar_to_string; }
+instance showable_binding = {
+  show = (function
+          | Binding_var x -> "Binding_var " ^ show x
+          | Binding_lid x -> "Binding_lid " ^ show x
+          | Binding_univ x -> "Binding_univ " ^ show x);
+}
+instance showable_subst_elt = { show = subst_elt_to_string; }
+instance showable_branch = { show = Ugly.branch_to_string; }
+instance showable_qualifier = { show = qual_to_string; }
+instance showable_pat    = { show = pat_to_string; }
+instance showable_const  = { show = const_to_string; }
+instance showable_letbinding  = { show = Ugly.lb_to_string; }
+instance showable_modul       = { show = modul_to_string; }
+instance showable_metadata    = { show = metadata_to_string; }
+instance showable_ctx_uvar_meta = {
+  show = (function
+          | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
+          | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
+}
+instance showable_aqual   = { show = aqual_to_string; }
+
+let tscheme_to_string ts =
   if Options.ugly ()
-  then comp_to_string c
-  else Pretty.comp_to_string' env c
-
-let term_to_string' env x =
-  if Options.ugly ()
-  then term_to_string x
-  else Pretty.term_to_string' env x
-
-let binder_to_json env b =
-    let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
-    let t = JsonStr (term_to_string' env b.binder_bv.sort) in
-    JsonAssoc [("name", n); ("type", t)]
-
-let binders_to_json env bs =
-    JsonList (List.map (binder_to_json env) bs)
-
-
-//let subst_to_string subst =
-//   U.format1 "{%s}" <|
-//    (List.map (function
-//        | Inl (a, t) -> U.format2 "(%s -> %s)" (strBvd a) (typ_to_string t)
-//        | Inr (x, e) -> U.format2 "(%s -> %s)" (strBvd x) (exp_to_string e)) subst |> String.concat ", ")
-//let freevars_to_string (fvs:freevars) =
-//    let f (l:set (bvar 'a 'b)) = l |> U.set_elements |> List.map (fun t -> strBvd t.v) |> String.concat ", " in
-//    U.format2 "ftvs={%s}, fxvs={%s}" (f fvs.ftvs) (f fvs.fxvs)
-
-
-let enclose_universes s =
-    if Options.print_universes ()
-    then "<" ^ s ^ ">"
-    else ""
-
-let tscheme_to_string s =
-  if not (Options.ugly()) then
-    Pretty.tscheme_to_string s
-  else
-    let (us, t) = s in
-    U.format2 "%s%s" (enclose_universes <| univ_names_to_string us) (term_to_string t)
-
-let action_to_string a =
-    U.format5 "%s%s %s : %s = %s"
-        (sli a.action_name)
-        (binders_to_string " " a.action_params)
-        (enclose_universes <| univ_names_to_string a.action_univs)
-        (term_to_string a.action_typ)
-        (term_to_string a.action_defn)
-
-let wp_eff_combinators_to_string combs =
-  let tscheme_opt_to_string = function
-    | Some ts -> tscheme_to_string ts
-    | None -> "None" in
-
-  U.format "{\n\
-    ret_wp       = %s\n\
-  ; bind_wp      = %s\n\
-  ; stronger     = %s\n\
-  ; if_then_else = %s\n\
-  ; ite_wp       = %s\n\
-  ; close_wp     = %s\n\
-  ; trivial      = %s\n\
-  ; repr         = %s\n\
-  ; return_repr  = %s\n\
-  ; bind_repr    = %s\n\
-  }\n"
-    [ tscheme_to_string combs.ret_wp;
-      tscheme_to_string combs.bind_wp;
-      tscheme_to_string combs.stronger;
-      tscheme_to_string combs.if_then_else;
-      tscheme_to_string combs.ite_wp;
-      tscheme_to_string combs.close_wp;
-      tscheme_to_string combs.trivial;
-      tscheme_opt_to_string combs.repr;
-      tscheme_opt_to_string combs.return_repr;
-      tscheme_opt_to_string combs.bind_repr ]
-
-let indexed_effect_binder_kind_to_string = function
-  | Type_binder -> "type_binder"
-  | Substitutive_binder -> "subst_binder"
-  | BindCont_no_abstraction_binder -> "bind_g_no_abs_binder"
-  | Range_binder -> "range_binder"
-  | Repr_binder -> "repr_binder"
-  | Ad_hoc_binder -> "ad_hoc_binder"
-
-let indexed_effect_combinator_kind_to_string = function
-  | Substitutive_combinator l ->
-    U.format1 "standard_combinator (%s)"
-      (Common.string_of_list' indexed_effect_binder_kind_to_string l)
-  | Substitutive_invariant_combinator -> "substitutive_invariant"
-  | Ad_hoc_combinator -> "ad_hoc_combinator"
-
-let indexed_effect_combinator_kind_opt_to_string k =
-  match k with
-  | None -> "kind not set"
-  | Some k -> indexed_effect_combinator_kind_to_string k
-
-let layered_eff_combinators_to_string combs =
-  let to_str (ts_t, ts_ty, kopt) =
-    U.format3 "(%s) : (%s)<%s>"
-      (tscheme_to_string ts_t) (tscheme_to_string ts_ty)
-      (indexed_effect_combinator_kind_opt_to_string kopt) in
-
-  let to_str2 (ts_t, ts_ty) =
-    U.format2 "(%s) : (%s)"
-      (tscheme_to_string ts_t) (tscheme_to_string ts_ty) in
-
-  U.format "{\n\
-  ; l_repr = %s\n\
-  ; l_return = %s\n\
-  ; l_bind = %s\n\
-  ; l_subcomp = %s\n\
-  ; l_if_then_else = %s\n
-  %s
-  }\n"
-    [ to_str2 combs.l_repr;
-      to_str2 combs.l_return;
-      to_str  combs.l_bind;
-      to_str  combs.l_subcomp;
-      to_str  combs.l_if_then_else;
-
-      (if None? combs.l_close then ""
-       else U.format1 "; l_close = %s\n" (combs.l_close |> must |> to_str2));
-    ]
-
-let eff_combinators_to_string = function
-  | Primitive_eff combs
-  | DM4F_eff combs -> wp_eff_combinators_to_string combs
-  | Layered_eff combs -> layered_eff_combinators_to_string combs
-
-let eff_extraction_mode_to_string = function
-  | Extract_none s -> U.format1 "none (%s)" s
-  | Extract_reify -> "reify"
-  | Extract_primitive -> "primitive"
-
-let eff_decl_to_string' for_free r q ed =
- if not (Options.ugly()) then
-    Pretty.eff_decl_to_string' for_free r q ed
- else
-    let actions_to_string actions =
-        actions |>
-        List.map action_to_string |>
-        String.concat ",\n\t" in
-    let eff_name = if SU.is_layered ed then "layered_effect" else "new_effect" in
-    U.format "%s%s { \
-      %s%s %s : %s \n  \
-        %s\n\
-      and effect_actions\n\t%s\n}\n"
-        [eff_name;
-         (if for_free then "_for_free " else "");
-         lid_to_string ed.mname;
-         enclose_universes <| univ_names_to_string ed.univs;
-         binders_to_string " " ed.binders;
-         ed.signature |> SU.effect_sig_ts |> tscheme_to_string;
-         eff_combinators_to_string ed.combinators;
-         actions_to_string ed.actions]
-
-let eff_decl_to_string for_free ed =
-  eff_decl_to_string' for_free Range.dummyRange [] ed
+  then Ugly.tscheme_to_string ts
+  else Pretty.tscheme_to_string ts
 
 let sub_eff_to_string se =
   let tsopt_to_string ts_opt =
@@ -751,113 +363,28 @@ let sub_eff_to_string se =
     (lid_to_string se.source) (lid_to_string se.target)
     (tsopt_to_string se.lift) (tsopt_to_string se.lift_wp)
 
-let pragma_to_string (p:pragma) : string =
-  match p with
-  | ResetOptions None     -> "#reset-options"
-  | ResetOptions (Some s) -> U.format1 "#reset-options \"%s\"" s
-  | SetOptions s          -> U.format1 "#set-options \"%s\"" s
-  | PushOptions None      -> "#push-options"
-  | PushOptions (Some s)  -> U.format1 "#push-options \"%s\"" s
-  | RestartSolver         -> "#restart-solver"
-  | PrintEffectsGraph     -> "#print-effects-graph"
-  | PopOptions            -> "#pop-options"
+instance showable_sub_eff = { show = sub_eff_to_string; }
 
-let rec sigelt_to_string (x: sigelt) =
-  if not (Options.ugly()) then
-     Pretty.sigelt_to_string x
-  else
-   let basic =
-      match x.sigel with
-      | Sig_pragma p -> pragma_to_string p
-      | Sig_inductive_typ {lid; us=univs; params=tps; t=k} ->
-        let quals_str = quals_to_string' x.sigquals in
-        let binders_str = binders_to_string " " tps in
-        let term_str = term_to_string k in
-        if Options.print_universes () then U.format5 "%stype %s<%s> %s : %s" quals_str (string_of_lid lid) (univ_names_to_string univs) binders_str term_str
-        else U.format4 "%stype %s %s : %s" quals_str (string_of_lid lid) binders_str term_str
-      | Sig_datacon {lid; us=univs; t} ->
-        if (Options.print_universes())
-        then //let univs, t = Subst.open_univ_vars univs t in (* AR: don't open the universes, else it's a bit confusing *)
-             U.format3 "datacon<%s> %s : %s" (univ_names_to_string univs) (string_of_lid lid) (term_to_string t)
-        else U.format2 "datacon %s : %s" (string_of_lid lid) (term_to_string t)
-      | Sig_declare_typ {lid; us=univs; t} ->
-        //let univs, t = Subst.open_univ_vars univs t in
-        U.format4 "%sval %s %s : %s" (quals_to_string' x.sigquals) (string_of_lid lid)
-            (if (Options.print_universes())
-             then U.format1 "<%s>" (univ_names_to_string univs)
-             else "")
-            (term_to_string t)
-      | Sig_assume {lid; us; phi=f} ->
-        if Options.print_universes () then U.format3 "assume %s<%s> : %s" (string_of_lid lid) (univ_names_to_string us) (term_to_string f)
-        else U.format2 "assume %s : %s" (string_of_lid lid) (term_to_string f)
-      | Sig_let {lbs} ->
-        (* FIXME: do not print the propagated qualifiers on top-level letbindings,
-        vale fails when parsing them. *)
-        let lbs = (fst lbs, List.map (fun lb -> { lb with lbattrs = [] }) (snd lbs)) in
-        lbs_to_string x.sigquals lbs
-      | Sig_bundle {ses} -> "(* Sig_bundle *)" ^ (List.map sigelt_to_string ses |> String.concat "\n")
-      | Sig_fail {errs; fail_in_lax=lax; ses} ->
-        U.format3 "(* Sig_fail %s %s *)\n%s\n(* / Sig_fail*)\n"
-            (string_of_bool lax)
-            (FStar.Common.string_of_list string_of_int errs)
-            (List.map sigelt_to_string ses |> String.concat "\n")
+instance pretty_term     = { pp   = term_to_doc; }
+instance pretty_univ     = { pp   = univ_to_doc; }
+instance pretty_sigelt   = { pp   = sigelt_to_doc; }
+instance pretty_comp     = { pp   = comp_to_doc; }
+instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
 
-      | Sig_new_effect(ed) -> eff_decl_to_string' (SU.is_dm4f ed) x.sigrng x.sigquals ed
-      | Sig_sub_effect (se) -> sub_eff_to_string se
-      | Sig_effect_abbrev {lid=l; us=univs; bs=tps; comp=c; cflags=flags} ->
-        if (Options.print_universes())
-        then let univs, t = Subst.open_univ_vars univs (mk (Tm_arrow {bs=tps; comp=c}) Range.dummyRange) in
-             let tps, c = match (Subst.compress t).n with
-                | Tm_arrow {bs; comp=c} -> bs, c
-                | _ -> failwith "impossible" in
-             U.format4 "effect %s<%s> %s = %s" (sli l) (univ_names_to_string univs) (binders_to_string " " tps) (comp_to_string c)
-        else U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
-      | Sig_splice {is_typed; lids; tac=t} ->
-        U.format3 "splice%s[%s] (%s)"
-          (if is_typed then "_t" else "")
-          (String.concat "; " <| List.map Ident.string_of_lid lids)
-          (term_to_string t)
-      | Sig_polymonadic_bind {m_lid=m;
-                              n_lid=n;
-                              p_lid=p;
-                              tm=t;
-                              typ=ty;
-                              kind=k} ->
-        U.format6 "polymonadic_bind (%s, %s) |> %s = (%s, %s)<%s>"
-          (Ident.string_of_lid m)
-          (Ident.string_of_lid n)
-          (Ident.string_of_lid p)
-          (tscheme_to_string t)
-          (tscheme_to_string ty)
-          (indexed_effect_combinator_kind_opt_to_string k)
-      | Sig_polymonadic_subcomp {m_lid=m;
-                                 n_lid=n;
-                                 tm=t;
-                                 typ=ty;
-                                 kind=k} ->
-        U.format5 "polymonadic_subcomp %s <: %s = (%s, %s)<%s>"
-          (Ident.string_of_lid m)
-          (Ident.string_of_lid n)
-          (tscheme_to_string t)
-          (tscheme_to_string ty)
-          (indexed_effect_combinator_kind_opt_to_string k)
-      in
-      match x.sigattrs with
-      | [] -> "[@ ]" ^ "\n" ^ basic //It is important to keep this empty attribute marker since the Vale type extractor uses it as a delimiter
-      | _ -> attrs_to_string x.sigattrs ^ "\n" ^ basic
+open FStar.Pprint
 
-let sigelt_to_string' env x =
-  if Options.ugly ()
-  then sigelt_to_string x
-  else Pretty.sigelt_to_string' env x
+instance pretty_binding : pretty binding = {
+  pp = (function Binding_var bv -> pp bv
+               | Binding_lid (l, (us, t)) -> pp l ^^ colon ^^ pp t
+               | Binding_univ u -> pp u);
+}
 
-(* A "short" version of printing a sigelt. Meant to (usually) be a small string
-suitable to embed in an error message. No need to be fully faithful to
-printing universes, etc, it should just make it clear enough to which
-sigelt it refers to. *)
 let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_pragma p ->
-    pragma_to_string p
+    show p
 
   | Sig_let {lbs=(false, [{lbname=lb}])} ->
     U.format1 "let %s" (lbname_to_string lb)
@@ -900,7 +427,9 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
     U.format2 "sub_effect %s ~> %s" (lid_to_string se.source) (lid_to_string se.target)
 
   | Sig_effect_abbrev {lid=l; bs=tps; comp=c} ->
-    U.format3 "effect %s %s = %s" (sli l) (binders_to_string " " tps) (comp_to_string c)
+    U.format3 "effect %s %s = %s" (sli l)
+       (String.concat " " <| List.map show tps)
+       (show c)
 
   | Sig_splice {is_typed; lids} ->
     U.format3 "%splice%s[%s] (...)"
@@ -915,141 +444,56 @@ let rec sigelt_to_string_short (x: sigelt) = match x.sigel with
   | Sig_polymonadic_subcomp {m_lid=m; n_lid=n} ->
     U.format2 "polymonadic_subcomp %s <: %s" (Ident.string_of_lid m) (Ident.string_of_lid n)
 
-let tag_of_sigelt (se:sigelt) : string =
-  match se.sigel with
-  | Sig_inductive_typ _    -> "Sig_inductive_typ"
-  | Sig_bundle _           -> "Sig_bundle"
-  | Sig_datacon _          -> "Sig_datacon"
-  | Sig_declare_typ _      -> "Sig_declare_typ"
-  | Sig_let _              -> "Sig_let"
-  | Sig_assume _           -> "Sig_assume"
-  | Sig_new_effect _       -> "Sig_new_effect"
-  | Sig_sub_effect _       -> "Sig_sub_effect"
-  | Sig_effect_abbrev _    -> "Sig_effect_abbrev"
-  | Sig_pragma _           -> "Sig_pragma"
-  | Sig_splice _           -> "Sig_splice"
-  | Sig_polymonadic_bind _ -> "Sig_polymonadic_bind"
-  | Sig_polymonadic_subcomp _ -> "Sig_polymonadic_subcomp"
-  | Sig_fail _             -> "Sig_fail"
+let binder_to_json env b =
+    let n = JsonStr (bqual_to_string' (nm_to_string b.binder_bv) b.binder_qual) in
+    let t = JsonStr (term_to_string' env b.binder_bv.sort) in
+    JsonAssoc [("name", n); ("type", t)]
 
-(*
- * AR: 07/19: exports is redundant, keeping it here until vale is fixed to not parse it
- *)
-let modul_to_string (m:modul) =
-  U.format3 "module %s\nDeclarations: [\n%s\n]\nExports: [\n%s\n]\n" (sli m.name)
-                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
-                                                                     (List.map sigelt_to_string m.declarations |> String.concat "\n")
+let binders_to_json env bs =
+    JsonList (List.map (binder_to_json env) bs)
 
-
-//let abs_ascription_to_string ascription =
-//  let strb = U.new_string_builder () in
-//  begin match ascription with
-//      | None -> U.string_builder_append strb "None"
-//      | Some (Inl lc) ->
-//          U.string_builder_append strb "Some Inr " ;
-//          U.string_builder_append strb (Ident.string_of_lid lc.eff_name)
-//      | Some (Inr lid) ->
-//          U.string_builder_append strb "Some Inr " ;
-//          U.string_builder_append strb (Ident.string_of_lid lid)
-//  end ;
-//  U.string_of_string_builder strb
-
-let bvs_to_string sep bvs = binders_to_string sep (List.map mk_binder bvs)
-
-let ctx_uvar_to_string ctx_uvar = ctx_uvar_to_string_aux true ctx_uvar
-
-let ctx_uvar_to_string_no_reason ctx_uvar = ctx_uvar_to_string_aux false ctx_uvar
-
-let term_to_doc' dsenv t =
+let eff_decl_to_string ed =
   if Options.ugly ()
-  then Pprint.arbitrary_string (term_to_string t)
-  else Pretty.term_to_doc' dsenv t
+  then Ugly.eff_decl_to_string ed
+  else Pretty.eff_decl_to_string ed
 
-let univ_to_doc' dsenv t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (univ_to_string t)
-  else Pretty.univ_to_doc' dsenv t
+instance showable_eff_decl = { show = eff_decl_to_string; }
 
-let comp_to_doc' dsenv t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (comp_to_string t)
-  else Pretty.comp_to_doc' dsenv t
+let args_to_string (args:Syntax.args) : string =
+  String.concat " " <|
+    List.map (fun (a, q) ->
+      aqual_to_string q ^ term_to_string a) args
 
-let sigelt_to_doc' dsenv t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (sigelt_to_string t)
-  else Pretty.sigelt_to_doc' dsenv t
-
-let term_to_doc t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (term_to_string t)
-  else Pretty.term_to_doc t
-
-let univ_to_doc t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (univ_to_string t)
-  else Pretty.univ_to_doc t
-
-let comp_to_doc t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (comp_to_string t)
-  else Pretty.comp_to_doc t
-
-let sigelt_to_doc t =
-  if Options.ugly ()
-  then Pprint.arbitrary_string (sigelt_to_string t)
-  else Pretty.sigelt_to_doc t
-
-instance showable_term   = { show = term_to_string; }
-instance showable_univ   = { show = univ_to_string; }
-instance showable_comp   = { show = comp_to_string; }
-instance showable_sigelt = { show = sigelt_to_string; }
-instance showable_args   = { show = args_to_string; }
-instance showable_bv     = { show = bv_to_string; }
-instance showable_fv     = { show = fv_to_string; }
-instance showable_binder = { show = binder_to_string; }
-instance showable_uvar   = { show = uvar_to_string; }
-instance showable_ctxu   = { show = ctx_uvar_to_string; }
-instance showable_binding = {
+instance showable_decreases_order = {
   show = (function
-          | Binding_var x -> "Binding_var " ^ show x
-          | Binding_lid x -> "Binding_lid " ^ show x
-          | Binding_univ x -> "Binding_univ " ^ show x);
+          | Decreases_lex l -> "Decreases_lex " ^ show l
+          | Decreases_wf l -> "Decreases_wf " ^ show l);
 }
-instance showable_pragma = { show = pragma_to_string; }
-instance showable_subst_elt = { show = subst_elt_to_string; }
-instance showable_branch = { show = branch_to_string; }
-instance showable_qualifier = { show = qual_to_string; }
-instance showable_pat    = { show = pat_to_string; }
-instance showable_const  = { show = const_to_string; }
-instance showable_letbinding  = { show = lb_to_string; }
-instance showable_modul       = { show = modul_to_string; }
-instance showable_ctx_uvar_meta = {
-  show = (function
-          | Ctx_uvar_meta_attr attr -> "Ctx_uvar_meta_attr " ^ show attr
-          | Ctx_uvar_meta_tac r -> "Ctx_uvar_meta_tac " ^ show r);
-}
-instance showable_metadata = { show = metadata_to_string; }
-instance showable_cflag    = { show = cflag_to_string; }
-instance showable_aqual   = { show = aqual_to_string; }
-instance showable_eff_extraction_mode = { show = eff_extraction_mode_to_string; }
-instance showable_sub_eff = { show = sub_eff_to_string; }
-instance showable_indexed_effect_binder_kind = { show = indexed_effect_binder_kind_to_string; }
-instance showable_indexed_effect_combinator_kind = { show = indexed_effect_combinator_kind_to_string; }
 
-instance pretty_term     = { pp   = term_to_doc; }
-instance pretty_univ     = { pp   = univ_to_doc; }
-instance pretty_sigelt   = { pp   = sigelt_to_doc; }
-instance pretty_comp     = { pp   = comp_to_doc; }
-instance pretty_ctxu     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_uvar     = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_binder   = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
-instance pretty_bv       = { pp   = (fun x -> Pprint.doc_of_string (show x)); }
+let cflag_to_string (c:cflag) : string =
+  match c with
+  | TOTAL -> "total"
+  | MLEFFECT -> "ml"
+  | RETURN -> "return"
+  | PARTIAL_RETURN -> "partial_return"
+  | SOMETRIVIAL -> "sometrivial"
+  | TRIVIAL_POSTCONDITION -> "trivial_postcondition"
+  | SHOULD_NOT_INLINE -> "should_not_inline"
+  | LEMMA -> "lemma"
+  | CPS -> "cps"
+  | DECREASES do -> "decreases " ^ show do
 
-open FStar.Pprint
+instance showable_cflag  = { show = cflag_to_string; }
 
-instance pretty_binding : pretty binding = {
-  pp = (function Binding_var bv -> pp bv
-               | Binding_lid (l, (us, t)) -> pp l ^^ colon ^^ pp t
-               | Binding_univ u -> pp u);
-}
+let binder_to_string_with_type b =
+  if Options.ugly () then
+    let attrs =
+      match b.binder_attrs with
+      | [] -> ""
+      | ts -> "[@@@" ^ (String.concat ", " (List.map show ts)) ^ "] "
+    in
+    if is_null_binder b
+    then attrs ^ "_:" ^ term_to_string b.binder_bv.sort
+    else bqual_to_string' (attrs ^ nm_to_string b.binder_bv ^ ": " ^ term_to_string b.binder_bv.sort) b.binder_qual
+  else
+    Pretty.binder_to_string' false b

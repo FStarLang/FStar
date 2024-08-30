@@ -422,7 +422,7 @@ let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
     let msg = BU.format2
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
       (show ed.mname)
-      (String.concat "," <| List.map show ed.binders) in
+      (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
     raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =

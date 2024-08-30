@@ -40,7 +40,7 @@ val resugar_pat: S.pat -> FlatSet.t S.bv -> A.pattern
 val resugar_universe: S.universe -> Range.range -> A.term
 val resugar_binder: S.binder -> Range.range -> option A.binder
 val resugar_tscheme: S.tscheme -> A.decl
-val resugar_eff_decl: Range.range -> list S.qualifier -> eff_decl -> A.decl
+val resugar_eff_decl: eff_decl -> A.decl
 
 val resugar_term': DsEnv.env -> S.term -> A.term
 val resugar_sigelt': DsEnv.env -> S.sigelt -> option A.decl
@@ -49,4 +49,4 @@ val resugar_pat': DsEnv.env -> S.pat -> FlatSet.t S.bv -> A.pattern
 val resugar_universe': DsEnv.env -> S.universe -> Range.range -> A.term
 val resugar_binder': DsEnv.env -> S.binder -> Range.range -> option A.binder
 val resugar_tscheme': DsEnv.env -> S.tscheme -> A.decl
-val resugar_eff_decl': DsEnv.env -> Range.range -> list S.qualifier -> eff_decl -> A.decl
+val resugar_eff_decl': DsEnv.env -> eff_decl -> A.decl

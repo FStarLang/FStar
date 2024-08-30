@@ -532,7 +532,7 @@ let rec translate (cfg:config) (bs:list t) (e:term) : t =
                  args)
 
     | Tm_app {hd=head; args} ->
-      debug (fun () -> BU.print2 "Application: %s @ %s\n" (show head) (P.args_to_string args));
+      debug (fun () -> BU.print2 "Application: %s @ %s\n" (show head) (show args));
       iapp cfg (translate cfg bs head) (List.map (fun x -> (translate cfg bs (fst x), snd x)) args) // Zoe : TODO avoid translation pass for args
 
     | Tm_match {scrutinee=scrut; ret_opt; brs=branches; rc_opt=rc} ->
@@ -1108,7 +1108,7 @@ and translate_monadic (m, ty) cfg bs e : t =
 
    | Tm_app {hd=head; args} ->
      debug cfg (fun () -> BU.print2 "translate_monadic app (%s) @ (%s)\n" (show head)
-                                                                          (P.args_to_string args));
+                                                                          (show args));
      let fallback1 () =
          translate cfg bs e
      in

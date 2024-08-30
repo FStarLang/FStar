@@ -55,6 +55,7 @@ exception Un_extractable
 
 open FStar.Class.Show
 open FStar.Class.Tagged
+open FStar.Class.PP
 
 
 (*
@@ -102,12 +103,12 @@ let err_value_restriction (t:term) =
        BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
                     (tag_of t) (show t))
 
-let err_unexpected_eff env t ty f0 f1 =
+let err_unexpected_eff env (t:term) ty f0 f1 =
     let open FStar.Errors.Msg in
     let open FStar.Pprint in
     Errors.log_issue_doc t.pos
       (Warning_ExtractionUnexpectedEffect, [
-        prefix 4 1 (text "For expression") (Print.term_to_doc t) ^/^
+        prefix 4 1 (text "For expression") (pp t) ^/^
         prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
         prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
         prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))])

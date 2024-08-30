@@ -57,6 +57,8 @@ type pragma =
   | RestartSolver
   | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
 
+instance val showable_pragma : showable pragma
+
 [@@ PpxDerivingYoJson; PpxDerivingShowConstant "None" ]
 type memo 'a = ref (option 'a)
 
@@ -502,6 +504,8 @@ type indexed_effect_binder_kind =
   | Range_binder
   | Repr_binder
   | Ad_hoc_binder
+instance val showable_indexed_effect_binder_kind : showable indexed_effect_binder_kind
+instance val tagged_indexed_effect_binder_kind : tagged indexed_effect_binder_kind
 
 //
 // Kind of an indexed effect combinator
@@ -514,6 +518,8 @@ type indexed_effect_combinator_kind =
   | Substitutive_combinator of list indexed_effect_binder_kind
   | Substitutive_invariant_combinator
   | Ad_hoc_combinator
+instance val showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind
+instance val tagged_indexed_effect_combinator_kind : tagged indexed_effect_combinator_kind
 
 type sub_eff = {
   source:lident;
@@ -603,6 +609,9 @@ type eff_extraction_mode =
   | Extract_none of string  // Effect cannot be extracted
   | Extract_reify           // Effect can be extracted with reification
   | Extract_primitive       // Effect is primitive
+
+instance val showable_eff_extraction_mode : showable eff_extraction_mode
+instance val tagged_eff_extraction_mode : tagged eff_extraction_mode
 
 (*
   new_effect {

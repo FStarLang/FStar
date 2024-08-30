@@ -1426,7 +1426,9 @@ let resugar_combinators env combs =
   | DM4F_eff combs -> resugar_wp_eff_combinators env true combs
   | Layered_eff combs -> resugar_layered_eff_combinators env combs
 
-let resugar_eff_decl' env r q ed =
+let resugar_eff_decl' env ed =
+  let r = Range.dummyRange in
+  let q = [] in
   let resugar_action d for_free =
     let action_params = SS.open_binders d.action_params in
     let bs, action_defn = SS.open_term action_params d.action_defn in
@@ -1522,7 +1524,9 @@ let resugar_sigelt' env se : option A.decl =
     Some (decl'_to_decl se (Assume (ident_of_lid lid, resugar_term' env fml)))
 
   | Sig_new_effect ed ->
-    Some (resugar_eff_decl' env se.sigrng se.sigquals ed)
+    let a_decl = resugar_eff_decl' env ed in
+    let q = List.choose resugar_qualifier se.sigquals in
+    Some { a_decl with quals = q }
 
   | Sig_sub_effect e ->
     let src = e.source in
@@ -1608,5 +1612,5 @@ let resugar_binder (b:S.binder) r : option A.binder =
 let resugar_tscheme (ts:S.tscheme) =
   noenv resugar_tscheme' ts
 
-let resugar_eff_decl r q ed =
-  noenv resugar_eff_decl' r q ed
+let resugar_eff_decl ed =
+  noenv resugar_eff_decl' ed

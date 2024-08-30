@@ -1707,7 +1707,7 @@ let cps_and_elaborate (env:FStar.TypeChecker.Env.env) (ed:S.eff_decl)
   // Generate the missing combinators.
   let sigelts', ed = gen_wps_for_free env effect_binders a wp_a ed in
   if !dbg then
-    BU.print_string (Print.eff_decl_to_string true ed);
+    BU.print_string (show ed);
 
   let lift_from_pure_opt =
     if List.length effect_binders = 0 then begin

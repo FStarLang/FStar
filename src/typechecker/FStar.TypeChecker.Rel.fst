@@ -1816,10 +1816,9 @@ let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
   let (Flex (_, u, _)) = f in
   let b = DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u in
 
-  if !dbg_ResolveImplicitsHook
-  then BU.print3 "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
-         (Print.ctx_uvar_to_string_no_reason u) (string_of_bool b)
-         (string_of_bool wl.tcenv.enable_defer_to_tac);
+  if !dbg_ResolveImplicitsHook then
+    BU.print3 "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
+      (show u) (show b) (show wl.tcenv.enable_defer_to_tac);
 
   b
 

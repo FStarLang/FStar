@@ -1210,7 +1210,7 @@ let validate_indexed_effect_lift_shape (env:env)
 let tc_layered_eff_decl env0 (ed : S.eff_decl) (quals : list qualifier) (attrs : list S.attribute) =
 Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if !dbg_LayeredEffectsTc then
-    BU.print1 "Typechecking layered effect: \n\t%s\n" (Print.eff_decl_to_string false ed);
+    BU.print1 "Typechecking layered effect: \n\t%s\n" (show ed);
 
   //we don't support effect binders in layered effects yet
   if List.length ed.univs <> 0 || List.length ed.binders <> 0 then
@@ -1974,7 +1974,7 @@ Errors.with_ctx (BU.format1 "While checking layered effect definition `%s`" (str
 let tc_non_layered_eff_decl env0 (ed:S.eff_decl) (_quals : list qualifier) (_attrs : list S.attribute) : S.eff_decl =
 Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_lid ed.mname)) (fun () ->
   if !dbg then
-    BU.print1 "Typechecking eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
+    BU.print1 "Typechecking eff_decl: \n\t%s\n" (show ed);
 
   let us, bs =
     //ed.univs are free universes in the binders
@@ -2034,7 +2034,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
     } in
 
   if !dbg then
-    BU.print1 "After typechecking binders eff_decl: \n\t%s\n" (Print.eff_decl_to_string false ed);
+    BU.print1 "After typechecking binders eff_decl: \n\t%s\n" (show ed);
 
   let env = Env.push_binders (Env.push_univ_vars env0 ed_univs) ed_bs in
 
@@ -2401,7 +2401,7 @@ Errors.with_ctx (BU.format1 "While checking effect definition `%s`" (string_of_l
           action_defn = cl (a.action_univs, a.action_defn) |> snd }) actions } in
 
   if !dbg then
-    BU.print1 "Typechecked effect declaration:\n\t%s\n" (Print.eff_decl_to_string false ed);
+    BU.print1 "Typechecked effect declaration:\n\t%s\n" (show ed);
 
   ed
 )
