@@ -683,7 +683,10 @@ let (eq_tm_list : term Prims.list -> term Prims.list -> Prims.bool) =
 let (fstar_const_eq :
   FStar_Reflection_V2_Data.vconst ->
     FStar_Reflection_V2_Data.vconst -> Prims.bool)
-  = fun c1 -> fun c2 -> failwith "Not yet implemented:fstar_const_eq"
+  =
+  fun c1 ->
+    fun c2 ->
+      failwith "Not yet implemented: Pulse.Syntax.Base.fstar_const_eq"
 let rec (eq_pattern : pattern -> pattern -> Prims.bool) =
   fun p1 ->
     fun p2 ->
@@ -915,8 +918,8 @@ let (ppname_for_uvar :
                   (FStar_Sealed.seal
                      (Obj.magic
                         (FStar_Range.mk_range "prims.fst"
-                           (Prims.of_int (595)) (Prims.of_int (19))
-                           (Prims.of_int (595)) (Prims.of_int (31)))))
+                           (Prims.of_int (611)) (Prims.of_int (19))
+                           (Prims.of_int (611)) (Prims.of_int (31)))))
                   (Obj.magic (FStar_Tactics_Unseal.unseal p.name))
                   (fun uu___ ->
                      FStar_Tactics_Effect.lift_div_tac

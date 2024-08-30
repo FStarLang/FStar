@@ -19,6 +19,7 @@
     "${FSTAR_HOME}/src/reflection",
     "${FSTAR_HOME}/src/smtencoding",
     "${FSTAR_HOME}/src/syntax",
+    "${FSTAR_HOME}/src/syntax/print",
     "${FSTAR_HOME}/src/tactics",
     "${FSTAR_HOME}/src/tosyntax",
     "${FSTAR_HOME}/src/typechecker",
