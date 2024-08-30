@@ -20,6 +20,16 @@ module RT = FStar.Reflection.Typing
 module R = FStar.Reflection.V2
 module T = FStar.Tactics.V2
 
+let range_of_st_comp (st:st_comp) =
+  RU.union_ranges (RU.range_of_term st.pre) (RU.range_of_term st.post)
+
+let range_of_comp (c:comp) =
+  match c with
+  | C_Tot t -> RU.range_of_term t
+  | C_ST st -> range_of_st_comp st
+  | C_STAtomic _ _ st -> range_of_st_comp st
+  | C_STGhost _ st -> range_of_st_comp st
+
 let eq_univ (u1 u2:universe) : b:bool{b <==> u1 == u2} =
   let open FStar.Reflection.TermEq in
   assume (faithful_univ u1);

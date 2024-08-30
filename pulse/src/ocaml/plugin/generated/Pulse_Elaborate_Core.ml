@@ -170,6 +170,7 @@ let (elab_lift :
                      (Pulse_Syntax_Base.comp_post c1)) e
 let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
   fun p ->
+    let rng = FStar_Reflection_V2_Builtins.range_of_term p in
     Pulse_Typing.wtag
       (FStar_Pervasives_Native.Some Pulse_Syntax_Base.STT_Ghost)
       (Pulse_Syntax_Base.Tm_STApp
@@ -185,7 +186,7 @@ let (intro_pure_tm : Pulse_Syntax_Base.term -> Pulse_Syntax_Base.st_term) =
              (Pulse_Syntax_Pure.wr
                 (FStar_Reflection_V2_Builtins.pack_ln
                    (FStar_Reflection_V2_Data.Tv_Const
-                      FStar_Reflection_V2_Data.C_Unit)) FStar_Range.range_0)
+                      FStar_Reflection_V2_Data.C_Unit)) rng)
          })
 let (simple_arr :
   FStar_Reflection_Types.term ->

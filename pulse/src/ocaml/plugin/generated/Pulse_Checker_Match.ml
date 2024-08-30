@@ -649,13 +649,13 @@ let (check_branch :
                                                                     (Prims.of_int (249))
                                                                     (Prims.of_int (15))
                                                                     (Prims.of_int (249))
-                                                                    (Prims.of_int (67)))))
+                                                                    (Prims.of_int (48)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "Pulse.Checker.Match.fst"
                                                                     (Prims.of_int (249))
-                                                                    (Prims.of_int (70))
+                                                                    (Prims.of_int (51))
                                                                     (Prims.of_int (272))
                                                                     (Prims.of_int (58)))))
                                                                     (FStar_Tactics_Effect.lift_div_tac
@@ -664,9 +664,7 @@ let (check_branch :
                                                                     Pulse_Typing.mk_sq_eq2
                                                                     sc_u
                                                                     sc_ty sc
-                                                                    (Pulse_Syntax_Pure.wr
-                                                                    elab_p_tm
-                                                                    FStar_Range.range_0)))
+                                                                    elab_p_tm))
                                                                     (fun
                                                                     uu___2 ->
                                                                     (fun

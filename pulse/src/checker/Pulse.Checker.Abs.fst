@@ -41,16 +41,6 @@ let debug_abs g (s: unit -> T.Tac string) : T.Tac unit =
 
 (* Infers the the type of the binders from the specification alone, not the body *)
 
-let range_of_st_comp (st:st_comp) =
-  RU.union_ranges (RU.range_of_term st.pre) (RU.range_of_term st.post)
-
-let range_of_comp (c:comp) =
-  match c with
-  | C_Tot t -> RU.range_of_term t
-  | C_ST st -> range_of_st_comp st
-  | C_STAtomic _ _ st -> range_of_st_comp st
-  | C_STGhost _ st -> range_of_st_comp st
-
 let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
   : T.Tac (term & t:st_term { Tm_Abs? t.term })
   = let Tm_Abs { b; q; ascription; body } = prog.term in
@@ -69,8 +59,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         let arr, body = arrow_of_abs env body in
         let arr = close_term arr x in
         let body = close_st_term body x in
-        let ty : term = wr (tm_arrow b q (C_Tot arr))
-                           (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term arr)) in
+        let ty : term = tm_arrow b q (C_Tot arr) in
         let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body}} in
         ty, prog
 
@@ -82,8 +71,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
           //retain the original annotation, so that we check it wrt the inferred type in maybe_rewrite_body_typing
           let t = close_term t x in
           let annot = close_comp c x in
-          let ty : term = wr (tm_arrow b q (C_Tot t))
-                             (RU.union_ranges (RU.range_of_term b.binder_ty) (RU.range_of_term t)) in
+          let ty : term = tm_arrow b q (C_Tot t) in
           let ascription = { annotated = Some annot; elaborated = None } in
           let body = close_st_term body x in
           let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in
@@ -104,8 +92,7 @@ let rec arrow_of_abs (env:_) (prog:st_term { Tm_Abs? prog.term })
         Env.fail env (Some prog.range) "Unannotated function body"
       
       | Some c -> ( //we're taking the annotation as is; remove it from the abstraction to avoid rechecking it
-        let ty : term = wr (tm_arrow b q c)
-                                 (RU.union_ranges (RU.range_of_term b.binder_ty) (range_of_comp c)) in
+        let ty : term = tm_arrow b q c in
         let ascription = empty_ascription in
         let body = close_st_term body x in
         let prog : st_term = { prog with term = Tm_Abs { b; q; ascription; body} } in

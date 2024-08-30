@@ -113,6 +113,8 @@ type comp =
   | C_STAtomic : inames:term -> obs:observability -> st_comp -> comp
   | C_STGhost  : inames:term -> st_comp -> comp
 
+val range_of_st_comp (st:st_comp) : R.range
+val range_of_comp (c:comp) : R.range
 
 let comp_st = c:comp {not (C_Tot? c) }
 
