@@ -79,7 +79,7 @@ let (let_rec_arity :
          | FStar_Pervasives_Native.Some lst -> (ar, lst))
 let (debug_term : FStar_Syntax_Syntax.term -> unit) =
   fun t ->
-    let uu___ = FStar_Syntax_Print.term_to_string t in
+    let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
     FStar_Compiler_Util.print1 "%s\n" uu___
 let (debug_sigmap :
   FStar_Syntax_Syntax.sigelt FStar_Compiler_Util.smap -> unit) =
@@ -297,7 +297,8 @@ let (pickBranch :
               (fun uu___1 ->
                  let uu___2 =
                    FStar_TypeChecker_NBETerm.t_to_string scrutinee0 in
-                 let uu___3 = FStar_Syntax_Print.pat_to_string p in
+                 let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_pat p in
                  FStar_Compiler_Util.print2 "matches_pat (%s, %s)\n" uu___2
                    uu___3);
             (let scrutinee = unlazy_unmeta scrutinee0 in
@@ -313,7 +314,9 @@ let (pickBranch :
                        (fun uu___2 ->
                           let uu___3 =
                             FStar_TypeChecker_NBETerm.t_to_string c in
-                          let uu___4 = FStar_Syntax_Print.const_to_string s1 in
+                          let uu___4 =
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_const s1 in
                           FStar_Compiler_Util.print2
                             "Testing term %s against pattern %s\n" uu___3
                             uu___4);
@@ -385,7 +388,8 @@ let (pickBranch :
                (fun uu___2 ->
                   let uu___3 =
                     FStar_TypeChecker_NBETerm.t_to_string scrutinee in
-                  let uu___4 = FStar_Syntax_Print.pat_to_string p in
+                  let uu___4 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_pat p in
                   let uu___5 = res_to_string r in
                   FStar_Compiler_Util.print3 "matches_pat (%s, %s) = %s\n"
                     uu___3 uu___4 uu___5);
@@ -398,7 +402,9 @@ let (pickBranch :
                | FStar_Pervasives.Inl matches ->
                    (debug cfg
                       (fun uu___2 ->
-                         let uu___3 = FStar_Syntax_Print.pat_to_string p in
+                         let uu___3 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_pat p in
                          FStar_Compiler_Util.print1 "Pattern %s matches\n"
                            uu___3);
                     FStar_Pervasives_Native.Some (e, matches))
@@ -446,7 +452,10 @@ let (find_sigelt_in_gamma :
                    ->
                    (debug cfg
                       (fun uu___2 ->
-                         let uu___3 = FStar_Syntax_Print.univs_to_string us in
+                         let uu___3 =
+                           FStar_Class_Show.show
+                             (FStar_Class_Show.show_list
+                                FStar_Syntax_Print.showable_univ) us in
                          FStar_Compiler_Util.print1
                            "Universes in local declaration: %s\n" uu___3);
                     FStar_Pervasives_Native.Some elt)
@@ -566,10 +575,11 @@ let rec (translate :
           (fun uu___1 ->
              let uu___2 =
                let uu___3 = FStar_Syntax_Subst.compress e in
-               FStar_Syntax_Print.tag_of_term uu___3 in
+               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term
+                 uu___3 in
              let uu___3 =
                let uu___4 = FStar_Syntax_Subst.compress e in
-               FStar_Syntax_Print.term_to_string uu___4 in
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term uu___4 in
              FStar_Compiler_Util.print2 "Term: %s - %s\n" uu___2 uu___3);
         (let uu___1 =
            let uu___2 = FStar_Syntax_Subst.compress e in
@@ -607,11 +617,13 @@ let rec (translate :
          | FStar_Syntax_Syntax.Tm_uinst (t, us) ->
              (debug1
                 (fun uu___3 ->
-                   let uu___4 = FStar_Syntax_Print.term_to_string t in
+                   let uu___4 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                    let uu___5 =
                      let uu___6 =
                        FStar_Compiler_List.map
-                         FStar_Syntax_Print.univ_to_string us in
+                         (FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_univ) us in
                      FStar_Compiler_String.concat ", " uu___6 in
                    FStar_Compiler_Util.print2 "Uinst term : %s\nUnivs : %s\n"
                      uu___4 uu___5);
@@ -934,7 +946,8 @@ let rec (translate :
                       (debug1
                          (fun uu___6 ->
                             let uu___7 =
-                              FStar_Syntax_Print.term_to_string
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term
                                 (FStar_Pervasives_Native.fst x) in
                             FStar_Compiler_Util.print1 "Erasing %s\n" uu___7);
                        ((mk_t1
@@ -952,8 +965,15 @@ let rec (translate :
              ->
              (debug1
                 (fun uu___3 ->
-                   let uu___4 = FStar_Syntax_Print.term_to_string head in
-                   let uu___5 = FStar_Syntax_Print.args_to_string args in
+                   let uu___4 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       head in
+                   let uu___5 =
+                     FStar_Class_Show.show
+                       (FStar_Class_Show.show_list
+                          (FStar_Class_Show.show_tuple2
+                             FStar_Syntax_Print.showable_term
+                             FStar_Syntax_Print.showable_aqual)) args in
                    FStar_Compiler_Util.print2 "Application: %s @ %s\n" uu___4
                      uu___5);
               (let uu___3 = translate cfg bs head in
@@ -1103,7 +1123,8 @@ let rec (translate :
                    let uu___4 =
                      FStar_Compiler_Range_Ops.string_of_range
                        e.FStar_Syntax_Syntax.pos in
-                   let uu___5 = FStar_Syntax_Print.term_to_string e in
+                   let uu___5 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                    FStar_Compiler_Util.print2 "%s: Translating match %s\n"
                      uu___4 uu___5);
               (let scrut2 = unlazy_unmeta scrut1 in
@@ -1359,7 +1380,9 @@ let rec (translate :
                let t = FStar_Syntax_Util.unfold_lazy li in
                debug1
                  (fun uu___4 ->
-                    let uu___5 = FStar_Syntax_Print.term_to_string t in
+                    let uu___5 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t in
                     FStar_Compiler_Util.print1 ">> Unfolding Tm_lazy to %s\n"
                       uu___5);
                translate cfg bs t in
@@ -1488,10 +1511,19 @@ and (iapp :
             (debug cfg
                (fun uu___2 ->
                   let uu___3 =
-                    FStar_Syntax_Print.lbname_to_string
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_either
+                         FStar_Syntax_Print.showable_bv
+                         FStar_Syntax_Print.showable_fv)
                       lb.FStar_Syntax_Syntax.lbname in
-                  let uu___4 = FStar_Compiler_Util.string_of_int arity in
-                  let uu___5 = FStar_Compiler_Util.string_of_int n_args_rev in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_int) arity in
+                  let uu___5 =
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.printableshow
+                         FStar_Class_Printable.printable_nat) n_args_rev in
                   FStar_Compiler_Util.print3
                     "Reached iapp for %s with arity %s and n_args = %s\n"
                     uu___3 uu___4 uu___5);
@@ -1522,19 +1554,18 @@ and (iapp :
                            (debug cfg
                               (fun uu___5 ->
                                  let uu___6 =
-                                   FStar_Syntax_Print.lbname_to_string
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_either
+                                        FStar_Syntax_Print.showable_bv
+                                        FStar_Syntax_Print.showable_fv)
                                      lb.FStar_Syntax_Syntax.lbname in
                                  let uu___7 =
-                                   FStar_Syntax_Print.term_to_string body in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_term body in
                                  let uu___8 =
-                                   let uu___9 =
-                                     FStar_Compiler_List.map
-                                       (fun uu___10 ->
-                                          match uu___10 with
-                                          | (x, uu___11) ->
-                                              FStar_TypeChecker_NBETerm.t_to_string
-                                                x) args_rev2 in
-                                   FStar_Compiler_String.concat ", " uu___9 in
+                                   FStar_Class_Show.show
+                                     FStar_TypeChecker_NBETerm.showable_args
+                                     args_rev2 in
                                  FStar_Compiler_Util.print3
                                    "Reducing body of %s = %s,\n\twith args = %s\n"
                                    uu___6 uu___7 uu___8);
@@ -1580,7 +1611,9 @@ and (iapp :
                          lb.FStar_Syntax_Syntax.lbname in
                      (debug cfg
                         (fun uu___5 ->
-                           let uu___6 = FStar_Syntax_Print.fv_to_string fv in
+                           let uu___6 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_fv fv in
                            FStar_Compiler_Util.print1
                              "Decided to not unfold recursive definition %s\n"
                              uu___6);
@@ -1596,7 +1629,8 @@ and (iapp :
                              let uu___8 =
                                FStar_Compiler_Util.right
                                  lb.FStar_Syntax_Syntax.lbname in
-                             FStar_Syntax_Print.fv_to_string uu___8 in
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_fv uu___8 in
                            FStar_Compiler_Util.print1
                              "Yes, Decided to unfold recursive definition %s\n"
                              uu___7);
@@ -1748,7 +1782,9 @@ and (translate_fv :
            | FStar_TypeChecker_Normalize_Unfolding.Should_unfold_no ->
                (debug1
                   (fun uu___4 ->
-                     let uu___5 = FStar_Syntax_Print.fv_to_string fvar in
+                     let uu___5 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_fv
+                         fvar in
                      FStar_Compiler_Util.print1
                        "(1) Decided to not unfold %s\n" uu___5);
                 (let uu___4 =
@@ -1762,7 +1798,9 @@ and (translate_fv :
                          prim_step.FStar_TypeChecker_Primops_Base.univ_arity in
                      (debug1
                         (fun uu___6 ->
-                           let uu___7 = FStar_Syntax_Print.fv_to_string fvar in
+                           let uu___7 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_fv fvar in
                            FStar_Compiler_Util.print1 "Found a primop %s\n"
                              uu___7);
                       mk_t
@@ -1826,7 +1864,8 @@ and (translate_fv :
                                             (debug1
                                                (fun uu___10 ->
                                                   let uu___11 =
-                                                    FStar_Syntax_Print.fv_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_fv
                                                       fvar in
                                                   let uu___12 =
                                                     FStar_TypeChecker_NBETerm.t_to_string
@@ -1839,7 +1878,8 @@ and (translate_fv :
                                             (debug1
                                                (fun uu___10 ->
                                                   let uu___11 =
-                                                    FStar_Syntax_Print.fv_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_fv
                                                       fvar in
                                                   FStar_Compiler_Util.print1
                                                     "Primitive operator %s failed\n"
@@ -1856,14 +1896,18 @@ and (translate_fv :
                  | FStar_Pervasives_Native.Some uu___5 ->
                      (debug1
                         (fun uu___7 ->
-                           let uu___8 = FStar_Syntax_Print.fv_to_string fvar in
+                           let uu___8 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_fv fvar in
                            FStar_Compiler_Util.print1
                              "(2) Decided to not unfold %s\n" uu___8);
                       FStar_TypeChecker_NBETerm.mkFV fvar [] [])
                  | uu___5 ->
                      (debug1
                         (fun uu___7 ->
-                           let uu___8 = FStar_Syntax_Print.fv_to_string fvar in
+                           let uu___8 =
+                             FStar_Class_Show.show
+                               FStar_Syntax_Print.showable_fv fvar in
                            FStar_Compiler_Util.print1
                              "(3) Decided to not unfold %s\n" uu___8);
                       FStar_TypeChecker_NBETerm.mkFV fvar [] [])))
@@ -1898,7 +1942,8 @@ and (translate_fv :
                        (debug1
                           (fun uu___10 ->
                              let uu___11 =
-                               FStar_Syntax_Print.fv_to_string fvar in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_fv fvar in
                              FStar_Compiler_Util.print1
                                "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
@@ -1924,14 +1969,17 @@ and (translate_fv :
                        (debug1
                           (fun uu___5 ->
                              let uu___6 =
-                               FStar_Syntax_Print.fv_to_string fvar in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_fv fvar in
                              FStar_Compiler_Util.print1
                                "(1) qninfo is None for (%s)\n" uu___6);
                         FStar_TypeChecker_NBETerm.mkFV fvar [] [])
                  else
                    (debug1
                       (fun uu___5 ->
-                         let uu___6 = FStar_Syntax_Print.fv_to_string fvar in
+                         let uu___6 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_fv fvar in
                          FStar_Compiler_Util.print1
                            "(1) qninfo is not visible at this level (%s)\n"
                            uu___6);
@@ -1968,7 +2016,8 @@ and (translate_fv :
                        (debug1
                           (fun uu___10 ->
                              let uu___11 =
-                               FStar_Syntax_Print.fv_to_string fvar in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_fv fvar in
                              FStar_Compiler_Util.print1
                                "(1) Decided to unfold %s\n" uu___11);
                         (let lbm = find_let lbs fvar in
@@ -1994,14 +2043,17 @@ and (translate_fv :
                        (debug1
                           (fun uu___5 ->
                              let uu___6 =
-                               FStar_Syntax_Print.fv_to_string fvar in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_fv fvar in
                              FStar_Compiler_Util.print1
                                "(1) qninfo is None for (%s)\n" uu___6);
                         FStar_TypeChecker_NBETerm.mkFV fvar [] [])
                  else
                    (debug1
                       (fun uu___5 ->
-                         let uu___6 = FStar_Syntax_Print.fv_to_string fvar in
+                         let uu___6 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_fv fvar in
                          FStar_Compiler_Util.print1
                            "(1) qninfo is not visible at this level (%s)\n"
                            uu___6);
@@ -2034,9 +2086,15 @@ and (translate_letbinding :
                  (debug1
                     (fun uu___5 ->
                        let uu___6 =
-                         FStar_Syntax_Print.lbname_to_string
+                         FStar_Class_Show.show
+                           (FStar_Class_Show.show_either
+                              FStar_Syntax_Print.showable_bv
+                              FStar_Syntax_Print.showable_fv)
                            lb.FStar_Syntax_Syntax.lbname in
-                       let uu___7 = FStar_Compiler_Util.string_of_int arity in
+                       let uu___7 =
+                         FStar_Class_Show.show
+                           (FStar_Class_Show.printableshow
+                              FStar_Class_Printable.printable_int) arity in
                        FStar_Compiler_Util.print2
                          "Making TopLevelLet for %s with arity %s\n" uu___6
                          uu___7);
@@ -2452,8 +2510,15 @@ and (translate_monadic :
                    ->
                    (debug cfg
                       (fun uu___2 ->
-                         let uu___3 = FStar_Syntax_Print.term_to_string head in
-                         let uu___4 = FStar_Syntax_Print.args_to_string args in
+                         let uu___3 =
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term head in
+                         let uu___4 =
+                           FStar_Class_Show.show
+                             (FStar_Class_Show.show_list
+                                (FStar_Class_Show.show_tuple2
+                                   FStar_Syntax_Print.showable_term
+                                   FStar_Syntax_Print.showable_aqual)) args in
                          FStar_Compiler_Util.print2
                            "translate_monadic app (%s) @ (%s)\n" uu___3
                            uu___4);
@@ -2543,7 +2608,9 @@ and (translate_monadic :
                    -> translate_monadic_lift (msrc, mtgt, ty') cfg bs e1
                | uu___1 ->
                    let uu___2 =
-                     let uu___3 = FStar_Syntax_Print.tag_of_term e1 in
+                     let uu___3 =
+                       FStar_Class_Tagged.tag_of
+                         FStar_Syntax_Syntax.tagged_term e1 in
                      FStar_Compiler_Util.format1
                        "Unexpected case in translate_monadic: %s" uu___3 in
                    FStar_Compiler_Effect.failwith uu___2)
@@ -3335,7 +3402,8 @@ let (normalize :
                (FStar_Compiler_Effect.op_Bang dbg_NBE) in
            if uu___1
            then
-             let uu___2 = FStar_Syntax_Print.term_to_string e in
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
              FStar_Compiler_Util.print1 "Calling NBE with (%s) {\n" uu___2
            else ());
           (let cfg2 = new_config cfg1 in
@@ -3345,7 +3413,8 @@ let (normalize :
                 (FStar_Compiler_Effect.op_Bang dbg_NBE) in
             if uu___2
             then
-              let uu___3 = FStar_Syntax_Print.term_to_string r in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term r in
               FStar_Compiler_Util.print1 "}\nNBE returned (%s)\n" uu___3
             else ());
            r)
@@ -3444,11 +3513,13 @@ let (normalize_for_unit_test :
         let cfg2 = new_config cfg1 in
         debug cfg2
           (fun uu___1 ->
-             let uu___2 = FStar_Syntax_Print.term_to_string e in
+             let uu___2 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
              FStar_Compiler_Util.print1 "Calling NBE with (%s) {\n" uu___2);
         (let r = let uu___1 = translate cfg2 [] e in readback cfg2 uu___1 in
          debug cfg2
            (fun uu___2 ->
-              let uu___3 = FStar_Syntax_Print.term_to_string r in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term r in
               FStar_Compiler_Util.print1 "}\nNBE returned (%s)\n" uu___3);
          r)

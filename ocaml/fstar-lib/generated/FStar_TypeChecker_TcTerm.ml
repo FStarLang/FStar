@@ -1323,7 +1323,10 @@ let (guard_letrecs :
               (let uu___1 = FStar_Compiler_Debug.low () in
                if uu___1
                then
-                 let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
+                 let uu___2 =
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list
+                        FStar_Syntax_Print.showable_binder) bs in
                  let uu___3 =
                    FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
                  FStar_Compiler_Util.print2
@@ -1860,7 +1863,7 @@ let rec (tc_term :
            FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
          let uu___6 =
            let uu___7 = FStar_Syntax_Subst.compress e in
-           FStar_Syntax_Print.tag_of_term uu___7 in
+           FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term uu___7 in
          let uu___7 = print_expected_ty_str env in
          FStar_Compiler_Util.print5
            "(%s) Starting tc_term (phase1=%s) of %s (%s), %s {\n" uu___3
@@ -1986,7 +1989,8 @@ let rec (tc_term :
                    FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                  let uu___8 =
                    let uu___9 = FStar_Syntax_Subst.compress e in
-                   FStar_Syntax_Print.tag_of_term uu___9 in
+                   FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term
+                     uu___9 in
                  let uu___9 = FStar_Compiler_Util.string_of_int ms in
                  FStar_Compiler_Util.print4
                    "(%s) } tc_term of %s (%s) took %sms\n" uu___6 uu___7
@@ -2004,7 +2008,8 @@ let rec (tc_term :
                        FStar_TypeChecker_Common.lcomp_to_string lc in
                      let uu___11 =
                        let uu___12 = FStar_Syntax_Subst.compress e1 in
-                       FStar_Syntax_Print.tag_of_term uu___12 in
+                       FStar_Class_Tagged.tag_of
+                         FStar_Syntax_Syntax.tagged_term uu___12 in
                      FStar_Compiler_Util.print4
                        "(%s) Result is: (%s:%s) (%s)\n" uu___8 uu___9 uu___10
                        uu___11))
@@ -2033,7 +2038,8 @@ and (tc_maybe_toplevel_term :
             let uu___4 = FStar_TypeChecker_Env.get_range env1 in
             FStar_Class_Show.show FStar_Compiler_Range_Ops.showable_range
               uu___4 in
-          let uu___4 = FStar_Syntax_Print.tag_of_term top in
+          let uu___4 =
+            FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term top in
           let uu___5 =
             FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
           FStar_Compiler_Util.print3 "Typechecking %s (%s): %s\n" uu___3
@@ -3290,7 +3296,8 @@ and (tc_maybe_toplevel_term :
                                                 let uu___18 =
                                                   FStar_Ident.string_of_lid l in
                                                 let uu___19 =
-                                                  FStar_Syntax_Print.tag_of_term
+                                                  FStar_Class_Tagged.tag_of
+                                                    FStar_Syntax_Syntax.tagged_term
                                                     expected_repr_typ in
                                                 let uu___20 =
                                                   FStar_Class_Show.show
@@ -4393,7 +4400,8 @@ and (tc_match :
                                      (e2, cres2, uu___8))))))))
       | uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.tag_of_term top in
+            let uu___3 =
+              FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term top in
             FStar_Compiler_Util.format1 "tc_match called on %s\n" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
 and (tc_synth :
@@ -5102,7 +5110,8 @@ and (tc_value :
           let uu___1 =
             let uu___2 =
               FStar_Class_Show.show FStar_Syntax_Print.showable_term top in
-            let uu___3 = FStar_Syntax_Print.tag_of_term top in
+            let uu___3 =
+              FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term top in
             FStar_Compiler_Util.format2 "Unexpected value: %s (%s)" uu___2
               uu___3 in
           FStar_Compiler_Effect.failwith uu___1
@@ -6542,7 +6551,9 @@ and (tc_abs :
                       if uu___5
                       then
                         let uu___6 =
-                          FStar_Syntax_Print.binders_to_string ", " bs1 in
+                          FStar_Class_Show.show
+                            (FStar_Class_Show.show_list
+                               FStar_Syntax_Print.showable_binder) bs1 in
                         let uu___7 =
                           FStar_TypeChecker_Rel.guard_to_string env1 g_env in
                         FStar_Compiler_Util.print2
@@ -6986,8 +6997,11 @@ and (check_application_args :
                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
                      thead in
                  let uu___4 =
-                   FStar_Class_Show.show FStar_Syntax_Print.showable_args
-                     args in
+                   FStar_Class_Show.show
+                     (FStar_Class_Show.show_list
+                        (FStar_Class_Show.show_tuple2
+                           FStar_Syntax_Print.showable_term
+                           FStar_Syntax_Print.showable_aqual)) args in
                  FStar_Compiler_Util.print3
                    "(%s) Type of head is %s\nArgs = %s\n" uu___2 uu___3
                    uu___4
@@ -7770,7 +7784,8 @@ and (check_application_args :
                                   if uu___6
                                   then
                                     let uu___7 =
-                                      FStar_Syntax_Print.tag_of_term e in
+                                      FStar_Class_Tagged.tag_of
+                                        FStar_Syntax_Syntax.tagged_term e in
                                     let uu___8 =
                                       FStar_Class_Show.show
                                         FStar_Syntax_Print.showable_term e in
@@ -8186,7 +8201,9 @@ and (check_application_args :
                                 FStar_Class_Show.show
                                   FStar_Syntax_Print.showable_term tf1 in
                               let uu___7 =
-                                FStar_Syntax_Print.binders_to_string ", " bs1 in
+                                FStar_Class_Show.show
+                                  (FStar_Class_Show.show_list
+                                     FStar_Syntax_Print.showable_binder) bs1 in
                               let uu___8 =
                                 FStar_Class_Show.show
                                   FStar_Syntax_Print.showable_comp c1 in
@@ -9465,7 +9482,9 @@ and (tc_eqn :
                                    FStar_Class_Show.show
                                      FStar_Syntax_Print.showable_pat pattern1 in
                                  let uu___9 =
-                                   FStar_Syntax_Print.bvs_to_string ";"
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.show_list
+                                        FStar_Syntax_Print.showable_bv)
                                      pat_bvs in
                                  let uu___10 =
                                    FStar_Class_Show.show
@@ -9638,7 +9657,8 @@ and (tc_eqn :
                                                          FStar_Syntax_Print.showable_term
                                                          pat_exp1 in
                                                      let uu___16 =
-                                                       FStar_Syntax_Print.tag_of_term
+                                                       FStar_Class_Tagged.tag_of
+                                                         FStar_Syntax_Syntax.tagged_term
                                                          pat_exp1 in
                                                      FStar_Compiler_Util.format3
                                                        "tc_eqn: Impossible (%s) %s (%s)"
@@ -11494,7 +11514,8 @@ and (build_let_rec_env :
                          (let uu___5 =
                             let uu___6 =
                               let uu___7 =
-                                FStar_Syntax_Print.tag_of_term lbdef in
+                                FStar_Class_Tagged.tag_of
+                                  FStar_Syntax_Syntax.tagged_term lbdef in
                               let uu___8 =
                                 FStar_Class_Show.show
                                   FStar_Syntax_Print.showable_term lbdef in
@@ -12362,7 +12383,10 @@ and (tc_binders :
       (let uu___1 = FStar_Compiler_Debug.extreme () in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
+         let uu___2 =
+           FStar_Class_Show.show
+             (FStar_Class_Show.show_list FStar_Syntax_Print.showable_binder)
+             bs in
          FStar_Compiler_Util.print1 "Checking binders %s\n" uu___2
        else ());
       (let rec aux env1 bs1 =
@@ -13688,14 +13712,18 @@ let rec (__typeof_tot_or_gtot_term_fastpath :
         | FStar_Syntax_Syntax.Tm_unknown ->
             let uu___ =
               let uu___1 =
-                let uu___2 = FStar_Syntax_Print.tag_of_term t1 in
+                let uu___2 =
+                  FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term
+                    t1 in
                 Prims.strcat uu___2 ")" in
               Prims.strcat "Impossible! (" uu___1 in
             FStar_Compiler_Effect.failwith uu___
         | uu___ ->
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+                let uu___3 =
+                  FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term
+                    t1 in
                 Prims.strcat uu___3 ")" in
               Prims.strcat "Impossible! (" uu___2 in
             FStar_Compiler_Effect.failwith uu___1

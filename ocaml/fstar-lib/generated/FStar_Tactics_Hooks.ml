@@ -557,7 +557,9 @@ let (preprocess :
             then
               let uu___3 =
                 let uu___4 = FStar_TypeChecker_Env.all_binders env in
-                FStar_Syntax_Print.binders_to_string "," uu___4 in
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list
+                     FStar_Syntax_Print.showable_binder) uu___4 in
               let uu___4 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term goal in
               FStar_Compiler_Util.print2 "About to preprocess %s |= %s\n"
@@ -579,7 +581,9 @@ let (preprocess :
                   then
                     let uu___5 =
                       let uu___6 = FStar_TypeChecker_Env.all_binders env in
-                      FStar_Syntax_Print.binders_to_string ", " uu___6 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___6 in
                     let uu___6 =
                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
                         t' in
@@ -1431,7 +1435,9 @@ let (spinoff_strictly_positive_goals :
                            let uu___5 =
                              let uu___6 =
                                FStar_TypeChecker_Env.all_binders env in
-                             FStar_Syntax_Print.binders_to_string ", " uu___6 in
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.show_list
+                                  FStar_Syntax_Print.showable_binder) uu___6 in
                            let uu___6 =
                              FStar_Class_Show.show
                                FStar_Syntax_Print.showable_term t1 in
@@ -2308,7 +2314,8 @@ let (splice :
                                                let uu___12 =
                                                  let uu___13 =
                                                    let uu___14 =
-                                                     FStar_Syntax_Print.qual_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_qualifier
                                                        q in
                                                    let uu___15 =
                                                      FStar_Syntax_Print.sigelt_to_string_short

@@ -119,9 +119,9 @@ let print_identifier_info info =
   BU.format3 "id info { %s, %s : %s}"
     (Range.string_of_range info.identifier_range)
     (match info.identifier with
-     | Inl x -> Print.bv_to_string x
-     | Inr fv -> Print.fv_to_string fv)
-    (Print.term_to_string info.identifier_ty)
+     | Inl x -> show x
+     | Inr fv -> show fv)
+    (show info.identifier_ty)
 
 let id_info__insert ty_map db info =
     let range = info.identifier_range in
@@ -192,7 +192,7 @@ let check_uvar_ctx_invariant (reason:string) (r:range) (should_check:bool) (g:ga
                                (Range.string_of_range r)
                                (if should_check then "true" else "false")
                                (show g)
-                               (FStar.Syntax.Print.binders_to_string ", " bs))
+                               (show bs))
      in
      if not should_check then ()
      else match BU.prefix_until (function Binding_var _ -> true | _ -> false) g, bs with
@@ -212,9 +212,7 @@ instance show_implicit : showable implicit = {
 }
 
 let implicits_to_string imps =
-    let imp_to_string i =
-        Print.uvar_to_string i.imp_uvar.ctx_uvar_head
-    in
+    let imp_to_string i = show i.imp_uvar.ctx_uvar_head in
     FStar.Common.string_of_list imp_to_string imps
 
 let trivial_guard = {
@@ -304,9 +302,9 @@ let apply_lcomp fc fg lc =
 
 let lcomp_to_string lc =
     if Options.print_effect_args () then
-        Print.comp_to_string (lc |> lcomp_comp |> fst)
+        show (lc |> lcomp_comp |> fst)
     else
-        BU.format2 "%s %s" (Print.lid_to_string lc.eff_name) (Print.term_to_string lc.res_typ)
+        BU.format2 "%s %s" (show lc.eff_name) (show lc.res_typ)
 
 let lcomp_set_flags lc fs =
     let comp_typ_set_flags (c:comp) =

@@ -438,8 +438,10 @@ let (simplify :
         let is_applied bs t =
           if debug
           then
-            (let uu___1 = FStar_Syntax_Print.term_to_string t in
-             let uu___2 = FStar_Syntax_Print.tag_of_term t in
+            (let uu___1 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+             let uu___2 =
+               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t in
              FStar_Compiler_Util.print2 "WPE> is_applied %s -- %s\n" uu___1
                uu___2)
           else ();
@@ -454,9 +456,15 @@ let (simplify :
                     args_are_binders args bs ->
                     (if debug
                      then
-                       (let uu___4 = FStar_Syntax_Print.term_to_string t in
-                        let uu___5 = FStar_Syntax_Print.bv_to_string bv in
-                        let uu___6 = FStar_Syntax_Print.term_to_string hd in
+                       (let uu___4 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term t in
+                        let uu___5 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_bv bv in
+                        let uu___6 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term hd in
                         FStar_Compiler_Util.print3
                           "WPE> got it\n>>>>top = %s\n>>>>b = %s\n>>>>hd = %s\n"
                           uu___4 uu___5 uu___6)
@@ -466,8 +474,10 @@ let (simplify :
         let is_applied_maybe_squashed bs t =
           if debug
           then
-            (let uu___1 = FStar_Syntax_Print.term_to_string t in
-             let uu___2 = FStar_Syntax_Print.tag_of_term t in
+            (let uu___1 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
+             let uu___2 =
+               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t in
              FStar_Compiler_Util.print2
                "WPE> is_applied_maybe_squashed %s -- %s\n" uu___1 uu___2)
           else ();

@@ -128,13 +128,13 @@ let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 type printer 'a = 'a -> string
 
-let unknown_printer typ _ =
-    BU.format1 "unknown %s" (Print.term_to_string typ)
+let unknown_printer (typ:typ) _ =
+    BU.format1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
+    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
 
 let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
@@ -174,7 +174,7 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
       let _ = if !Options.debug_embedding
               then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                                (show et)
-                               (Print.term_to_string x)
+                               (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
@@ -204,7 +204,7 @@ let e_any =
         em
         un
         (fun () -> S.t_term) // not correct
-        Print.term_to_string
+        show
         (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
 let e_unit =
@@ -988,13 +988,13 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                 | Some repr_f ->
                   if !Options.debug_embedding then
                   BU.print2 "e_arrow forced back to term using shadow %s; repr=%s\n"
-                                   (Print.term_to_string repr_f)
+                                   (show repr_f)
                                    (BU.stack_dump());
                   let res = norm (Inr repr_f) in
                   if !Options.debug_embedding then
                   BU.print3 "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
-                                   (Print.term_to_string repr_f)
-                                   (Print.term_to_string res)
+                                   (show repr_f)
+                                   (show res)
                                    (BU.stack_dump());
                   res)
     in
@@ -1008,7 +1008,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                 let f_wrapped (a:'a) : 'b =
                     if !Options.debug_embedding then
                     BU.print2 "Calling back into normalizer for %s\n%s\n"
-                              (Print.term_to_string f)
+                              (show f)
                               (BU.stack_dump());
                     let a_tm = embed a f.pos None norm in
                     let b_tm = norm (Inr (S.mk_Tm_app f [S.as_arg a_tm] f.pos)) in

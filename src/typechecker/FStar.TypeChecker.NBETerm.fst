@@ -179,7 +179,7 @@ let constant_to_string (c: constant) =
   | Char c -> BU.format1 "'%s'" (BU.string_of_char c)
   | String (s, _) -> BU.format1 "\"%s\"" s
   | Range r -> BU.format1 "Range %s" (Range.string_of_range r)
-  | SConst s -> P.const_to_string s
+  | SConst s -> show s
   | Real s -> BU.format1 "Real %s" s
 
 let rec t_to_string (x:t) =
@@ -189,36 +189,36 @@ let rec t_to_string (x:t) =
     "Accu (" ^ (atom_to_string a) ^ ") (" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ ")"
   | Construct (fv, us, l) ->
-    "Construct (" ^ (P.fv_to_string fv) ^ ") [" ^
-    (String.concat "; "(List.map P.univ_to_string us)) ^ "] [" ^
+    "Construct (" ^ (show fv) ^ ") [" ^
+    (String.concat "; "(List.map show us)) ^ "] [" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ "]"
   | FV (fv, us, l) ->
-    "FV (" ^ (P.fv_to_string fv) ^ ") [" ^
-    (String.concat "; "(List.map P.univ_to_string us)) ^ "] [" ^
+    "FV (" ^ (show fv) ^ ") [" ^
+    (String.concat "; "(List.map show us)) ^ "] [" ^
     (String.concat "; " (List.map (fun x -> t_to_string (fst x)) l)) ^ "]"
   | Constant c -> constant_to_string c
-  | Univ u -> "Universe " ^ (P.univ_to_string u)
-  | Type_t u -> "Type_t " ^ (P.univ_to_string u)
+  | Univ u -> "Universe " ^ (show u)
+  | Type_t u -> "Type_t " ^ (show u)
   | Arrow _ -> "Arrow" // TODO : revisit
   | Refinement (f, t) ->
     let x =  S.new_bv None S.t_unit in (* bogus type *)
     let t = fst (t ()) in
-    "Refinement " ^ (P.bv_to_string x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
+    "Refinement " ^ (show x) ^ ":" ^ (t_to_string t) ^ "{" ^ (t_to_string (f (mkAccuVar x))) ^ "}"
   | Unknown -> "Unknown"
   | Reflect t -> "Reflect " ^ t_to_string t
   | Quote _ -> "Quote _"
-  | Lazy (Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (P.term_to_string (U.unfold_lazy li))
+  | Lazy (Inl li, _) -> BU.format1 "Lazy (Inl {%s})" (show (U.unfold_lazy li))
   | Lazy (Inr (_, et), _) -> BU.format1 "Lazy (Inr (?, %s))" (show et)
-  | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (FStar.Syntax.Print.lbs_to_string [] (true, [l])) ^ ")"
-  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
-  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ FStar.Syntax.Print.fv_to_string (BU.right lb.lbname) ^ ")"
+  | LocalLetRec (_, l, _, _, _, _, _) -> "LocalLetRec (" ^ (show (true, [l])) ^ ")"
+  | TopLevelLet (lb, _, _) -> "TopLevelLet (" ^ show (BU.right lb.lbname) ^ ")"
+  | TopLevelRec (lb, _, _, _) -> "TopLevelRec (" ^ show (BU.right lb.lbname) ^ ")"
   | Meta (t, _) -> "Meta " ^ t_to_string t
 and atom_to_string (a: atom) =
   match a with
-  | Var v -> "Var " ^ (P.bv_to_string v)
+  | Var v -> "Var " ^ (show v)
   | Match (t, _, _, _) -> "Match " ^ (t_to_string t)
-  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (FStar.Syntax.Print.lbs_to_string [] (false, [lb])) ^ " in ...)"
-  | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (FStar.Syntax.Print.lbs_to_string [] (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
+  | UnreducedLet (var, typ, def, body, lb) -> "UnreducedLet(" ^ (show (false, [lb])) ^ " in ...)"
+  | UnreducedLetRec (_, body, lbs) -> "UnreducedLetRec(" ^ (show (true, lbs)) ^ " in " ^ (t_to_string body) ^ ")"
   | UVar _ -> "UVar"
 
 let arg_to_string (a : arg) = a |> fst |> t_to_string

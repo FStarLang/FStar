@@ -355,9 +355,13 @@ let (print_identifier_info : identifier_info -> Prims.string) =
       FStar_Compiler_Range_Ops.string_of_range info.identifier_range in
     let uu___1 =
       match info.identifier with
-      | FStar_Pervasives.Inl x -> FStar_Syntax_Print.bv_to_string x
-      | FStar_Pervasives.Inr fv -> FStar_Syntax_Print.fv_to_string fv in
-    let uu___2 = FStar_Syntax_Print.term_to_string info.identifier_ty in
+      | FStar_Pervasives.Inl x ->
+          FStar_Class_Show.show FStar_Syntax_Print.showable_bv x
+      | FStar_Pervasives.Inr fv ->
+          FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
+    let uu___2 =
+      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+        info.identifier_ty in
     FStar_Compiler_Util.format3 "id info { %s, %s : %s}" uu___ uu___1 uu___2
 let (id_info__insert :
   (FStar_Syntax_Syntax.typ ->
@@ -515,7 +519,10 @@ let (check_uvar_ctx_invariant :
                   FStar_Class_Show.show
                     (FStar_Class_Show.show_list
                        FStar_Syntax_Print.showable_binding) g in
-                let uu___4 = FStar_Syntax_Print.binders_to_string ", " bs in
+                let uu___4 =
+                  FStar_Class_Show.show
+                    (FStar_Class_Show.show_list
+                       FStar_Syntax_Print.showable_binder) bs in
                 FStar_Compiler_Util.format5
                   "Invariant violation: gamma and binders are out of sync\n\treason=%s, range=%s, should_check=%s\n\t\n                               gamma=%s\n\tbinders=%s\n"
                   reason uu___2 (if should_check then "true" else "false")
@@ -582,7 +589,7 @@ type implicits = implicit Prims.list
 let (implicits_to_string : implicits -> Prims.string) =
   fun imps ->
     let imp_to_string i =
-      FStar_Syntax_Print.uvar_to_string
+      FStar_Class_Show.show FStar_Syntax_Print.showable_uvar
         (i.imp_uvar).FStar_Syntax_Syntax.ctx_uvar_head in
     (FStar_Common.string_of_list ()) imp_to_string imps
 type guard_t =
@@ -811,10 +818,12 @@ let (lcomp_to_string : lcomp -> Prims.string) =
     then
       let uu___1 =
         let uu___2 = lcomp_comp lc in FStar_Pervasives_Native.fst uu___2 in
-      FStar_Syntax_Print.comp_to_string uu___1
+      FStar_Class_Show.show FStar_Syntax_Print.showable_comp uu___1
     else
-      (let uu___2 = FStar_Syntax_Print.lid_to_string lc.eff_name in
-       let uu___3 = FStar_Syntax_Print.term_to_string lc.res_typ in
+      (let uu___2 =
+         FStar_Class_Show.show FStar_Ident.showable_lident lc.eff_name in
+       let uu___3 =
+         FStar_Class_Show.show FStar_Syntax_Print.showable_term lc.res_typ in
        FStar_Compiler_Util.format2 "%s %s" uu___2 uu___3)
 let (lcomp_set_flags :
   lcomp -> FStar_Syntax_Syntax.cflag Prims.list -> lcomp) =

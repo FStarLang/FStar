@@ -1465,7 +1465,7 @@ let (compare_times :
                           "Test numbers do not match...\n")) l_int l_nbe
 let (run_all : unit -> unit) =
   fun uu___ ->
-    (let uu___2 = FStar_Syntax_Print.term_to_string znat in
+    (let uu___2 = FStar_Class_Show.show FStar_Syntax_Print.showable_term znat in
      FStar_Compiler_Util.print1 "%s" uu___2);
     (let uu___2 = run_all_whnf_with_time () in
      let l_int = run_all_interpreter_with_time () in

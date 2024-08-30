@@ -2773,7 +2773,7 @@ let (variable_not_found :
   FStar_Syntax_Syntax.bv -> (FStar_Errors_Codes.raw_error * Prims.string)) =
   fun v ->
     let uu___ =
-      let uu___1 = FStar_Syntax_Print.bv_to_string v in
+      let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_bv v in
       FStar_Compiler_Util.format1 "Variable \"%s\" not found" uu___1 in
     (FStar_Errors_Codes.Fatal_VariableNotFound, uu___)
 let (new_u_univ : unit -> FStar_Syntax_Syntax.universe) =
@@ -2836,10 +2836,14 @@ let (check_effect_is_not_a_template :
       then
         let msg =
           let uu___ =
-            FStar_Syntax_Print.lid_to_string ed.FStar_Syntax_Syntax.mname in
+            FStar_Class_Show.show FStar_Ident.showable_lident
+              ed.FStar_Syntax_Syntax.mname in
           let uu___1 =
-            FStar_Syntax_Print.binders_to_string ", "
-              ed.FStar_Syntax_Syntax.binders in
+            let uu___2 =
+              FStar_Compiler_List.map
+                FStar_Syntax_Print.binder_to_string_with_type
+                ed.FStar_Syntax_Syntax.binders in
+            FStar_Compiler_String.concat "," uu___2 in
           FStar_Compiler_Util.format2
             "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
             uu___ uu___1 in
@@ -2871,9 +2875,11 @@ let (inst_effect_fun_with :
                       FStar_Compiler_Util.string_of_int
                         (FStar_Compiler_List.length insts) in
                     let uu___6 =
-                      FStar_Syntax_Print.lid_to_string
+                      FStar_Class_Show.show FStar_Ident.showable_lident
                         ed.FStar_Syntax_Syntax.mname in
-                    let uu___7 = FStar_Syntax_Print.term_to_string t in
+                    let uu___7 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t in
                     FStar_Compiler_Util.format4
                       "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                       uu___4 uu___5 uu___6 uu___7 in
@@ -3768,7 +3774,8 @@ let (typ_of_datacon : env -> FStar_Ident.lident -> FStar_Ident.lident) =
           -> l
       | uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.lid_to_string lid in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Ident.showable_lident lid in
             FStar_Compiler_Util.format1 "Not a datacon: %s" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
 let (num_datacon_non_injective_ty_params :
@@ -4269,7 +4276,9 @@ let (lookup_effect_abbrev :
                       let uu___12 =
                         let uu___13 = get_range env1 in
                         FStar_Compiler_Range_Ops.string_of_range uu___13 in
-                      let uu___13 = FStar_Syntax_Print.lid_to_string lid1 in
+                      let uu___13 =
+                        FStar_Class_Show.show FStar_Ident.showable_lident
+                          lid1 in
                       let uu___14 =
                         FStar_Compiler_Util.string_of_int
                           (FStar_Compiler_List.length univ_insts) in
@@ -4283,7 +4292,8 @@ let (lookup_effect_abbrev :
                      "Unexpected effect abbreviation with no arguments"
                | (uu___10, uu___11::uu___12::uu___13) ->
                    let uu___14 =
-                     let uu___15 = FStar_Syntax_Print.lid_to_string lid1 in
+                     let uu___15 =
+                       FStar_Class_Show.show FStar_Ident.showable_lident lid1 in
                      let uu___16 =
                        FStar_Compiler_Util.string_of_int
                          (FStar_Compiler_List.length univs) in
@@ -4399,7 +4409,9 @@ let (num_effect_indices :
             let uu___1 =
               let uu___2 =
                 let uu___3 = FStar_Ident.string_of_lid name in
-                let uu___4 = FStar_Syntax_Print.term_to_string sig_t in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                    sig_t in
                 FStar_Compiler_Util.format2
                   "Signature for %s not an arrow (%s)" uu___3 uu___4 in
               (FStar_Errors_Codes.Fatal_UnexpectedSignatureForMonad, uu___2) in
@@ -4434,7 +4446,8 @@ let (lookup_projector :
         let fail uu___ =
           let uu___1 =
             let uu___2 = FStar_Compiler_Util.string_of_int i in
-            let uu___3 = FStar_Syntax_Print.lid_to_string lid in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Ident.showable_lident lid in
             FStar_Compiler_Util.format2
               "Impossible: projecting field #%s from constructor %s is undefined"
               uu___2 uu___3 in
@@ -4757,7 +4770,8 @@ let (get_lid_valued_effect_attr :
                             let uu___6 =
                               let uu___7 = FStar_Ident.string_of_lid eff_lid in
                               let uu___8 =
-                                FStar_Syntax_Print.term_to_string t in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t in
                               FStar_Compiler_Util.format2
                                 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                                 uu___7 uu___8 in
@@ -4850,8 +4864,10 @@ let (join :
         | FStar_Pervasives_Native.None ->
             let uu___1 =
               let uu___2 =
-                let uu___3 = FStar_Syntax_Print.lid_to_string l1 in
-                let uu___4 = FStar_Syntax_Print.lid_to_string l2 in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident l1 in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Ident.showable_lident l2 in
                 FStar_Compiler_Util.format2
                   "Effects %s and %s cannot be composed" uu___3 uu___4 in
               (FStar_Errors_Codes.Fatal_EffectsCannotBeComposed, uu___2) in
@@ -5105,7 +5121,8 @@ let rec (unfold_effect_abbrev :
                                + Prims.int_one) in
                         let uu___8 =
                           let uu___9 = FStar_Syntax_Syntax.mk_Comp c in
-                          FStar_Syntax_Print.comp_to_string uu___9 in
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_comp uu___9 in
                         FStar_Compiler_Util.format3
                           "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                           uu___6 uu___7 uu___8 in
@@ -7172,7 +7189,8 @@ let (new_tac_implicit_var :
                     if uu___2
                     then
                       let uu___3 =
-                        FStar_Syntax_Print.uvar_to_string
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_uvar
                           ctx_uvar.FStar_Syntax_Syntax.ctx_uvar_head in
                       FStar_Compiler_Util.print1
                         "Just created uvar for implicit {%s}\n" uu___3

@@ -244,12 +244,12 @@ let maybe_build_core_from_hook (e:env) (qsettings:option query_settings) (core:Z
   | Some (lid, typ, ctr), _ ->
     (* Err.log_issue qsettings.query_range (Err.Warning_UnexpectedZ3Stderr, *)
     (*                         BU.format3 "will construct hint for queryid=%s,  typ=%s, query=%s" *)
-    (*                                   qryid (Print.term_to_string typ) qry); *)
+    (*                                   qryid (show typ) qry); *)
     let open FStar.Json in
     let input = JsonAssoc [
       ("query_name", JsonStr qsettings.query_name);
       ("query_ctr", JsonInt ctr);
-      ("type", JsonStr (Print.term_to_string typ)); // TODO: normalize print options, they will affect this output
+      ("type", JsonStr (show typ)); // TODO: normalize print options, they will affect this output
       ("query", JsonStr qry);
       ("theory", JsonList (List.map (fun d -> JsonStr (Term.declToSmt_no_caps "" d)) theory));
     ]
@@ -1341,7 +1341,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
             FStar.Errors.diag
                 (Env.get_range tcenv)
                 (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
-                          (Print.term_to_string q)
+                          (show q)
                           (Term.declToSmt "" qry)
                           (BU.string_of_int n))
         );

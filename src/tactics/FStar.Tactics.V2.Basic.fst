@@ -641,7 +641,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     let! ps = get in
     log (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
-                           (Env.all_binders e |> Print.binders_to_string ", "));!
+                           (Env.all_binders e |> show));!
     let e = {e with uvar_subtyping=false} in
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in

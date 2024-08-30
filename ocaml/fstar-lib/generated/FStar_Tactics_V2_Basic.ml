@@ -2591,7 +2591,9 @@ let (__tc_lax :
                              let uu___3 =
                                let uu___4 =
                                  FStar_TypeChecker_Env.all_binders e in
-                               FStar_Syntax_Print.binders_to_string ", "
+                               FStar_Class_Show.show
+                                 (FStar_Class_Show.show_list
+                                    FStar_Syntax_Print.showable_binder)
                                  uu___4 in
                              FStar_Compiler_Util.print2
                                "Tac> __tc_lax(%s)(Context:%s)\n" uu___2

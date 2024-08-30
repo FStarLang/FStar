@@ -386,8 +386,8 @@ let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (string_of_lid lid)
 let name_not_found (l:lid) =
   (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" (string_of_lid l)))
 
-let variable_not_found v =
-  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
+let variable_not_found (v:bv) =
+  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (show v)))
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
@@ -421,8 +421,8 @@ let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
   then
     let msg = BU.format2
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
-      (Print.lid_to_string ed.mname)
-      (Print.binders_to_string ", " ed.binders) in
+      (show ed.mname)
+      (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
     raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
@@ -430,7 +430,7 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
   if List.length insts <> List.length us
   then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                    (string_of_int <| List.length us) (string_of_int <| List.length insts)
-                   (Print.lid_to_string ed.mname) (Print.term_to_string t));
+                   (show ed.mname) (show t));
   snd (inst_tscheme_with (us, t) insts)
 
 type tri =
@@ -755,7 +755,7 @@ let datacons_of_typ env lid =
 let typ_of_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
-    | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
+    | _ -> failwith (BU.format1 "Not a datacon: %s" (show lid))
 
 let num_datacon_non_injective_ty_params env lid =
   match lookup_qname env lid with
@@ -991,13 +991,13 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
                        then univ_insts
                        else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
                                             (Range.string_of_range (get_range env))
-                                            (Print.lid_to_string lid)
+                                            (show lid)
                                             (List.length univ_insts |> BU.string_of_int)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (Print.lid_to_string lid) (string_of_int <| List.length univs))
+                           (show lid) (string_of_int <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
@@ -1057,7 +1057,7 @@ let num_effect_indices env name r =
   | _ ->
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
-      (Print.term_to_string sig_t)) r
+      (show sig_t)) r
 
 
 let lookup_effect_quals env l =
@@ -1068,7 +1068,7 @@ let lookup_effect_quals env l =
     | _ -> []
 
 let lookup_projector env lid i =
-    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
+    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (show lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow {bs=binders} ->
@@ -1210,7 +1210,7 @@ let get_lid_valued_effect_attr env
                   (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                      (string_of_lid eff_lid)
-                     (Print.term_to_string t)) t.pos)
+                     (show t)) t.pos)
 
 let get_default_effect env lid =
   get_lid_valued_effect_attr env lid Const.default_effect_attr None
@@ -1240,7 +1240,7 @@ let join env l1 l2 : (lident & mlift & mlift) =
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
       (BU.format2 "Effects %s and %s cannot be composed"
-        (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+        (show l1) (show l2))) env.range
   | Some t -> t
 
 let monad_leq env l1 l2 : option edge =
@@ -1333,7 +1333,7 @@ let rec unfold_effect_abbrev env comp =
       then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
+                                (show (S.mk_Comp c)))) comp.pos;
       let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -2022,7 +2022,7 @@ let new_tac_implicit_var
             ; imp_range  = r
             } in
   if !dbg_ImplicitTrace then
-    BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
+    BU.print1 "Just created uvar for implicit {%s}\n" (show ctx_uvar.ctx_uvar_head);
   let g = {trivial_guard with implicits=[imp]} in
   t, (ctx_uvar, r), g
 

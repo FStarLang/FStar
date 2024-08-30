@@ -58,7 +58,8 @@ let (mlconst_of_const :
       | uu___ ->
           let uu___1 =
             let uu___2 = FStar_Compiler_Range_Ops.string_of_range p in
-            let uu___3 = FStar_Syntax_Print.const_to_string c in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_const c in
             FStar_Compiler_Util.format2
               "(%s) Failed to translate constant %s " uu___2 uu___3 in
           FStar_Compiler_Effect.failwith uu___1

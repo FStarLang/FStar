@@ -37,6 +37,8 @@ module U = FStar.Syntax.Util
 module P = FStar.Syntax.Print
 module C = FStar.Parser.Const
 
+open FStar.Class.Show
+
 let dbg_Patterns = Debug.get_toggle "Patterns"
 
 (************************************************************************)
@@ -80,7 +82,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
                     | _ ->
                     raise_error (Errors.Fatal_InsufficientPatternArguments,
                                 BU.format1 "Insufficient pattern arguments (%s)"
-                                            (Print.pat_to_string p))
+                                            (show p))
                                 (range_of_lid fv.fv_name.v))
 
             | f::formals', (p, p_imp)::pats' ->
@@ -102,7 +104,7 @@ let rec elaborate_pat env p = //Adds missing implicit patterns to constructor pa
               | _ ->
                 raise_error (Errors.Fatal_InsufficientPatternArguments,
                              BU.format1 "This pattern (%s) binds an inaccesible argument; use a wildcard ('_') pattern"
-                                         (Print.pat_to_string p))
+                                         (show p))
                              p.p
               end
 
@@ -214,7 +216,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
                 then begin
                   if not env.phase1
                   then BU.print1 "Found a non-instantiated dot pattern in phase2 (%s)\n"
-                         (Print.pat_to_string p)
+                         (show p)
                 end;
                 let k, _ = U.type_u () in
                 let t, _, g = new_implicit_var_aux "pat_dot_term type" p.p env k (Allow_ghost "pat dot term type") None false in
@@ -266,7 +268,7 @@ let pat_as_exp (introduce_bv_uvars:bool)
         let b, a, w, env, arg, guard, p = pat_as_arg_with_env env p in
         match b |> BU.find_dup bv_eq with
             | Some x ->
-              let m = Print.bv_to_string x in
+              let m = show x in
               let err = (Errors.Fatal_NonLinearPatternVars, (format1 "The pattern variable \"%s\" was used more than once" m)) in
               raise_error err p.p
             | _ -> b, a, w, arg, guard, p

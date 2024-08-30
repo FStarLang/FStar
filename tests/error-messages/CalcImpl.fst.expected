@@ -54,60 +54,6 @@ let test5 _ =
           (fun _ -> FStar.Calc.calc_init 1)
           (fun _ -> ()))
 ]
-Exports: [
-assume
-val p:Prims.prop
-assume
-val q:Prims.prop
-assume
-val lem (_: Prims.unit) : FStar.Pervasives.Lemma (requires CalcImpl.p) (ensures CalcImpl.q)
-let test _ =
-  FStar.Calc.calc_finish (fun x3 y4 -> x3 ==> y4 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x5 y6 -> x5 ==> y6 <: Type0)
-          CalcImpl.q
-          (fun _ -> FStar.Calc.calc_init CalcImpl.p)
-          (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-let any p q = Prims.l_True
-let test3 _ =
-  FStar.Calc.calc_finish (fun x18 y19 -> CalcImpl.any x18 y19 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x24 y25 -> x24 <==> y25 <: Type0)
-          CalcImpl.q
-          (fun _ ->
-              FStar.Calc.calc_step (fun x22 y23 -> x22 ==> y23 <: Type0)
-                (CalcImpl.q /\ CalcImpl.q)
-                (fun _ ->
-                    FStar.Calc.calc_step (fun x20 y21 -> x20 <==> y21 <: Type0)
-                      CalcImpl.p
-                      (fun _ -> FStar.Calc.calc_init (CalcImpl.p /\ CalcImpl.p))
-                      (fun _ -> ()))
-                (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-          (fun _ -> ()))
-let test4 _ =
-  FStar.Calc.calc_finish (fun x43 y44 -> CalcImpl.any x43 y44 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x49 y50 -> x49 <==> y50 <: Type0)
-          CalcImpl.q
-          (fun _ ->
-              FStar.Calc.calc_step (fun x47 y48 -> x47 ==> y48 <: Type0)
-                (CalcImpl.q /\ CalcImpl.q)
-                (fun _ ->
-                    FStar.Calc.calc_step (fun x45 y46 -> x45 <==> y46 <: Type0)
-                      CalcImpl.p
-                      (fun _ -> FStar.Calc.calc_init (CalcImpl.p /\ CalcImpl.p))
-                      (fun _ -> ()))
-                (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-          (fun _ -> ()))
-let op_Equals_Equals_Greater = Prims.op_LessThan
-let test5 _ =
-  FStar.Calc.calc_finish (fun x68 y69 -> x68 ==> y69 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x70 y71 -> x70 ==> y71 <: Type0)
-          2
-          (fun _ -> FStar.Calc.calc_init 1)
-          (fun _ -> ()))
-]
 
 Module before type checking:
 module CalcImpl
@@ -165,106 +111,10 @@ let test5 _ =
           (fun _ -> FStar.Calc.calc_init 1)
           (fun _ -> ()))
 ]
-Exports: [
-assume
-val p:Prims.prop
-assume
-val q:Prims.prop
-assume
-val lem (_: Prims.unit) : FStar.Pervasives.Lemma (requires CalcImpl.p) (ensures CalcImpl.q)
-let test _ =
-  FStar.Calc.calc_finish (fun x3 y4 -> x3 ==> y4 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x5 y6 -> x5 ==> y6 <: Type0)
-          CalcImpl.q
-          (fun _ -> FStar.Calc.calc_init CalcImpl.p)
-          (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-let any p q = Prims.l_True
-let test3 _ =
-  FStar.Calc.calc_finish (fun x18 y19 -> CalcImpl.any x18 y19 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x24 y25 -> x24 <==> y25 <: Type0)
-          CalcImpl.q
-          (fun _ ->
-              FStar.Calc.calc_step (fun x22 y23 -> x22 ==> y23 <: Type0)
-                (CalcImpl.q /\ CalcImpl.q)
-                (fun _ ->
-                    FStar.Calc.calc_step (fun x20 y21 -> x20 <==> y21 <: Type0)
-                      CalcImpl.p
-                      (fun _ -> FStar.Calc.calc_init (CalcImpl.p /\ CalcImpl.p))
-                      (fun _ -> ()))
-                (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-          (fun _ -> ()))
-let test4 _ =
-  FStar.Calc.calc_finish (fun x43 y44 -> CalcImpl.any x43 y44 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x49 y50 -> x49 <==> y50 <: Type0)
-          CalcImpl.q
-          (fun _ ->
-              FStar.Calc.calc_step (fun x47 y48 -> x47 ==> y48 <: Type0)
-                (CalcImpl.q /\ CalcImpl.q)
-                (fun _ ->
-                    FStar.Calc.calc_step (fun x45 y46 -> x45 <==> y46 <: Type0)
-                      CalcImpl.p
-                      (fun _ -> FStar.Calc.calc_init (CalcImpl.p /\ CalcImpl.p))
-                      (fun _ -> ()))
-                (fun _ -> FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ())))
-          (fun _ -> ()))
-let op_Equals_Equals_Greater = Prims.op_LessThan
-let test5 _ =
-  FStar.Calc.calc_finish (fun x68 y69 -> x68 ==> y69 <: Type0)
-    (fun _ ->
-        FStar.Calc.calc_step (fun x70 y71 -> x70 ==> y71 <: Type0)
-          2
-          (fun _ -> FStar.Calc.calc_init 1)
-          (fun _ -> ()))
-]
 
 Module after type checking:
 module CalcImpl
 Declarations: [
-assume
-val p:Prims.prop
-assume
-val q:Prims.prop
-assume
-val lem (_: Prims.unit) : FStar.Pervasives.Lemma (requires CalcImpl.p) (ensures CalcImpl.q)
-let test _ =
-  calc ( ==> ) {
-    CalcImpl.p;
-    ( ==> ) { FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ()) }
-    CalcImpl.q;
-  }
-let any p q = Prims.l_True
-let test3 _ =
-  calc (CalcImpl.any) {
-    CalcImpl.p /\ CalcImpl.p;
-    ( <==> ) { () }
-    CalcImpl.p;
-    ( ==> ) { FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ()) }
-    CalcImpl.q /\ CalcImpl.q;
-    ( <==> ) { () }
-    CalcImpl.q;
-  }
-let test4 _ =
-  calc (CalcImpl.any) {
-    CalcImpl.p /\ CalcImpl.p;
-    ( <==> ) { () }
-    CalcImpl.p;
-    ( ==> ) { FStar.Calc.calc_push_impl (fun _ -> CalcImpl.lem ()) }
-    CalcImpl.q /\ CalcImpl.q;
-    ( <==> ) { () }
-    CalcImpl.q;
-  }
-let op_Equals_Equals_Greater = Prims.op_LessThan
-let test5 _ =
-  calc ( ==> ) {
-    1;
-    ( ==> ) { () }
-    2;
-  }
-]
-Exports: [
 assume
 val p:Prims.prop
 assume

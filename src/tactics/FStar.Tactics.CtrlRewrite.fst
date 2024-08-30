@@ -413,7 +413,7 @@ and on_subterms
        return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
-       (* BU.print1 "GG ignoring %s\n" (Print.tag_of_term tm); *)
+       (* BU.print1 "GG ignoring %s\n" (tag_of tm); *)
        return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in

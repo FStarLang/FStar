@@ -20,6 +20,7 @@ module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Show
 open FStar.Class.Setlike
+open FStar.Class.Tagged
 
 let dbg       = Debug.get_toggle "Core"
 let dbg_Eq    = Debug.get_toggle "CoreEq"
@@ -390,7 +391,7 @@ let rec is_arrow (g:env) (t:term)
           aux t
 
         | _ ->
-          fail (BU.format2 "Expected an arrow, got (%s) %s" (P.tag_of_term t) (show t))
+          fail (BU.format2 "Expected an arrow, got (%s) %s" (tag_of t) (show t))
     in
     with_context "is_arrow" None (fun _ ->
       handle_with
@@ -449,7 +450,7 @@ let check_aqual (a0 a1:aqual)
       return ()
     | _ ->
       fail (BU.format2 "Unequal arg qualifiers: lhs %s and rhs %s"
-              (P.aqual_to_string a0) (P.aqual_to_string a1))
+              (show a0) (show a1))
 
 let check_positivity_qual (rel:relation) (p0 p1:option positivity_qualifier)
   : result unit
@@ -783,10 +784,10 @@ let rec check_relation (g:env) (rel:relation) (t0 t1:typ)
     in
     if !dbg
     then BU.print5 "check_relation (%s) %s %s (%s) %s\n"
-                   (P.tag_of_term t0)
+                   (tag_of t0)
                    (show t0)
                    (rel_to_string rel)
-                   (P.tag_of_term t1)
+                   (tag_of t1)
                    (show t1);
     let! guard_not_ok = guard_not_allowed in
     let guard_ok = not guard_not_ok in
@@ -1559,7 +1560,7 @@ and do_check (g:env) (e:term)
     fail "Match with effect returns ascription, or tactic handler"
 
   | _ ->
-    fail (BU.format1 "Unexpected term: %s" (FStar.Syntax.Print.tag_of_term e))
+    fail (BU.format1 "Unexpected term: %s" (tag_of e))
 
 and check_binders (g_initial:env) (xs:binders)
   : result (list universe)
@@ -1708,8 +1709,8 @@ and check_scrutinee_pattern_type_compatible (g:env) (t_sc t_pat:typ)
         then return fv_head
         else err "Incompatible universe instantiations"
       | _, _ -> err (BU.format2 "Head constructors(%s and %s) not fvar"
-                      (P.tag_of_term head_sc)
-                      (P.tag_of_term head_pat)) in
+                      (tag_of head_sc)
+                      (tag_of head_pat)) in
 
     (if Env.is_type_constructor g.tcenv (lid_of_fv t_fv)
      then return t_fv

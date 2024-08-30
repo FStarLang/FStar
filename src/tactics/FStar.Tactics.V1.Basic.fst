@@ -33,6 +33,7 @@ open FStar.Tactics.Printing
 open FStar.Syntax.Syntax
 open FStar.VConfig
 open FStar.Class.Show
+open FStar.Class.Tagged
 
 friend FStar.Pervasives (* to use Delta below *)
 
@@ -610,7 +611,7 @@ let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (1) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
            end))
 
@@ -624,7 +625,7 @@ let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     with | Errors.Err (_, msg ,_)
          | Errors.Error (_, msg, _ ,_) -> begin
            fail3 "Cannot type (2) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
            end))
 
@@ -632,7 +633,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     bind get (fun ps ->
     mlog (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
-                           (Env.all_binders e |> Print.binders_to_string ", ")) (fun () ->
+                           (Env.all_binders e |> show)) (fun () ->
     let e = {e with uvar_subtyping=false} in
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
@@ -640,7 +641,7 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     with | Errors.Err (_, msg, _)
          | Errors.Error (_, msg, _, _) -> begin
            fail3 "Cannot type (3) %s in context (%s). Error = (%s)" (tts e t)
-                                                  (Env.all_binders e |> Print.binders_to_string ", ")
+                                                  (Env.all_binders e |> show)
                                                   (Errors.rendermsg msg) // FIXME
            end))
 
@@ -2063,7 +2064,7 @@ let rec inspect (t:term) : tac term_view = wrap_err "inspect" (
         ret <| Tv_Unknown
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (Print.tag_of_term t) (show t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect: outside of expected syntax (%s, %s)\n" (tag_of t) (show t));
         ret <| Tv_Unsupp
     )
 
@@ -2226,7 +2227,7 @@ let term_to_string (t:term) : tac string
     ret s
 
 let comp_to_string (c:comp) : tac string
-  = let s = Print.comp_to_string c in
+  = let s = show c in
     ret s
 
 let range_to_string (r:FStar.Compiler.Range.range) : tac string

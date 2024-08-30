@@ -39,6 +39,7 @@ open FStar.Common
 
 open FStar.Class.Deq
 open FStar.Class.Show
+open FStar.Class.Tagged
 open FStar.Class.Setlike
 
 module BU = FStar.Compiler.Util //basic util
@@ -199,7 +200,7 @@ let new_uvar reason wl r gamma binders k should_check meta : ctx_uvar & term & w
               ; imp_range  = r
               } in
     if !dbg_ImplicitTrace then
-      BU.print1 "Just created uvar (Rel) {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
+      BU.print1 "Just created uvar (Rel) {%s}\n" (show ctx_uvar.ctx_uvar_head);
     ctx_uvar, t, {wl with wl_implicits=imp::wl.wl_implicits}
 
 let copy_uvar u (bs:binders) t wl =
@@ -783,7 +784,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
                  | {n=Tm_refine {b=x; phi}} -> (x.sort, Some(x, phi))
                  | tt -> failwith (BU.format2 "impossible: Got %s ... %s\n"
                                                (show tt)
-                                               (Print.tag_of_term tt))
+                                               (tag_of tt))
                  )
 
         | Tm_lazy i -> aux norm (U.unfold_lazy i)
@@ -813,7 +814,7 @@ let base_and_refinement_maybe_delta should_delta env t1 =
         | Tm_meta _
         | Tm_ascribed _  //NS: Why are the two previous cases excluded? Because of the whnf/unmeta
         | Tm_delayed _
-        | Tm_unknown -> failwith (BU.format2 "impossible (outer): Got %s ... %s\n" (show t1) (Print.tag_of_term t1)) in
+        | Tm_unknown -> failwith (BU.format2 "impossible (outer): Got %s ... %s\n" (show t1) (tag_of t1)) in
 
    aux false (whnf env t1)
 
@@ -992,9 +993,9 @@ let ensure_no_uvar_subst env (t0:term) (wl:worklist)
       end
     | _ ->
       failwith (BU.format3 "ensure_no_uvar_subst: expected a uvar at the head (%s-%s-%s)"
-                           (Print.tag_of_term t0)
-                           (Print.tag_of_term head)
-                           (Print.tag_of_term (SS.compress head)))
+                           (tag_of t0)
+                           (tag_of head)
+                           (tag_of (SS.compress head)))
 
 let no_free_uvars t = is_empty (Free.uvars t) && is_empty (Free.univs t)
 
@@ -1184,7 +1185,7 @@ let restrict_ctx env (tgt:ctx_uvar) (bs:binders) (src:ctx_uvar) wl : worklist =
   //t is the type at which new uvar ?u should be created
   //f is a function that applied to the new uvar term should return the term that ?u_t should be solved to
   let aux (t:typ) (f:term -> term) =
-    let _, src', wl = new_uvar ("restricted " ^ (Print.uvar_to_string src.ctx_uvar_head)) wl
+    let _, src', wl = new_uvar ("restricted " ^ (show src.ctx_uvar_head)) wl
       src.ctx_uvar_range g pfx t
       (U.ctx_uvar_should_check src)
       src.ctx_uvar_meta in
@@ -1297,7 +1298,7 @@ let rec head_matches env t1 t2 : match_result =
   let t2 = U.unmeta t2 in
   if !dbg_RelDelta then (
       BU.print2 "head_matches %s %s\n" (show t1) (show t2);
-      BU.print2 "             %s  -- %s\n" (Print.tag_of_term t1) (Print.tag_of_term t2);
+      BU.print2 "             %s  -- %s\n" (tag_of t1) (tag_of t2);
       ()
   );
   match t1.n, t2.n with
@@ -1815,10 +1816,9 @@ let should_defer_flex_to_user_tac (wl:worklist) (f:flex_t) =
   let (Flex (_, u, _)) = f in
   let b = DeferredImplicits.should_defer_uvar_to_user_tac wl.tcenv u in
 
-  if !dbg_ResolveImplicitsHook
-  then BU.print3 "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
-         (Print.ctx_uvar_to_string_no_reason u) (string_of_bool b)
-         (string_of_bool wl.tcenv.enable_defer_to_tac);
+  if !dbg_ResolveImplicitsHook then
+    BU.print3 "Rel.should_defer_flex_to_user_tac for %s returning %s (env.enable_defer_to_tac: %s)\n"
+      (show u) (show b) (show wl.tcenv.enable_defer_to_tac);
 
   b
 
@@ -2022,7 +2022,7 @@ let apply_substitutive_indexed_subcomp (env:Env.env)
         (fun b ->
          if !dbg_LayeredEffectsApp
          then BU.format3 "implicit var for additional binder %s in subcomp %s at %s"
-                (Print.binder_to_string b)
+                (show b)
                 subcomp_name
                 (Range.string_of_range r1)
          else "apply_substitutive_indexed_subcomp") r1 in
@@ -2084,7 +2084,7 @@ let apply_ad_hoc_indexed_subcomp (env:Env.env)
       (fun b ->
        if !dbg_LayeredEffectsApp
        then BU.format3 "implicit for binder %s in subcomp %s at %s"
-              (Print.binder_to_string b)
+              (show b)
               subcomp_name
               (Range.string_of_range r1)
        else "apply_ad_hoc_indexed_subcomp") r1 in
@@ -2742,9 +2742,9 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
 
    if !dbg_Rel
    then BU.print3 "solve_binders\n\t%s\n%s\n\t%s\n"
-                       (Print.binders_to_string ", " bs1)
+                       (show bs1)
                        (rel_to_string (p_rel orig))
-                       (Print.binders_to_string ", " bs2);
+                       (show bs2);
 
    let eq_bqual a1 a2 =
        match a1, a2 with
@@ -2801,7 +2801,7 @@ and solve_binders (bs1:binders) (bs2:binders) (orig:prob) (wl:worklist)
                  U.mk_conj (p_guard prob)
                            (close_forall (p_env wl prob) [{x with binder_bv=hd1}] phi) in
              if !dbg_Rel
-             then BU.print2 "Formula is %s\n\thd1=%s\n" (show phi) (Print.bv_to_string hd1);
+             then BU.print2 "Formula is %s\n\thd1=%s\n" (show phi) (show hd1);
              Inl (prob::sub_probs, phi), wl
 
            | fail -> fail
@@ -3331,7 +3331,7 @@ and solve_t_flex_rigid_eq (orig:prob) (wl:worklist) (lhs:flex_t) (rhs:term)
                                 BU.format3 "free names in the RHS {%s} are out of scope for the LHS: {%s}, {%s}"
                                            (show fvs2)
                                            (show fvs1)
-                                           (Print.binders_to_string ", " (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
+                                           (show (ctx_uv.ctx_uvar_binders @ lhs_binders))) in
           giveup_or_defer orig wl Deferred_free_names_check_failed msg
         else imitate orig env wl lhs rhs
 
@@ -3479,9 +3479,9 @@ and solve_t_flex_flex env orig wl (lhs:flex_t) (rhs:flex_t) : solution =
                             [flex_t_to_string lhs;
                              flex_t_to_string rhs;
                              term_to_string w;
-                             Print.binders_to_string ", " (ctx_l@binders_lhs);
-                             Print.binders_to_string ", " (ctx_r@binders_rhs);
-                             Print.binders_to_string ", " zs]
+                             show (ctx_l@binders_lhs);
+                             show (ctx_r@binders_rhs);
+                             show zs]
                    in
                    let rc = (if is_ghost then U.residual_gtot else U.residual_tot) t_res_lhs in
                    let s1_sol = U.abs binders_lhs w_app (Some rc) in
@@ -3508,8 +3508,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         if !dbg_Rel
         then BU.print5 "Heads %s: %s (%s) and %s (%s)\n"
             (if need_unif then "need unification" else "match")
-            (show t1) (Print.tag_of_term t1)
-            (show t2) (Print.tag_of_term t2);
+            (show t1) (tag_of t1)
+            (show t2) (tag_of t2);
         let head1, args1 = U.head_and_args t1 in
         let head2, args2 = U.head_and_args t2 in
         let need_unif =
@@ -3828,7 +3828,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                     let (p, _, e) = SS.open_branch b in
                     if !dbg_Rel
                     then BU.print2 "Found head matching branch %s -> %s\n"
-                                (Print.pat_to_string p)
+                                (show p)
                                 (show e);
                     Inr <| try_solve_branch scrutinee p
 
@@ -3837,7 +3837,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
             | _ ->
               if !dbg_Rel
               then BU.print2 "Heuristic not applicable: tag lhs=%s, rhs=%s\n"
-                    (Print.tag_of_term t1) (Print.tag_of_term t2);
+                    (tag_of t1) (tag_of t2);
               Inr None
     in
 
@@ -3848,8 +3848,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
         let orig = TProb torig in
         if !dbg_RelDelta then
             BU.print4 "rigid_rigid_delta of %s-%s (%s, %s)\n"
-                        (Print.tag_of_term t1)
-                        (Print.tag_of_term t2)
+                        (tag_of t1)
+                        (tag_of t2)
                         (show t1)
                         (show t2);
         let m, o = head_matches_delta (p_env wl orig) (p_logical orig) wl.smt_ok t1 t2 in
@@ -3984,8 +3984,8 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
     let _ =
         if !dbg_Rel
         then BU.print5 "Attempting %s (%s vs %s); rel = (%s); number of problems in wl = %s\n" (string_of_int problem.pid)
-                            (Print.tag_of_term t1 ^ "::" ^ show t1)
-                            (Print.tag_of_term t2 ^ "::" ^ show t2)
+                            (tag_of t1 ^ "::" ^ show t1)
+                            (tag_of t2 ^ "::" ^ show t2)
                             (rel_to_string problem.relation)
                             (show (List.length wl.attempting))
                             in
@@ -4269,7 +4269,7 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
                 if !dbg_Rel
                 then BU.print2 "Created problem for branches %s with scope %s\n"
                                         (prob_to_string' wl prob)
-                                        (Print.binders_to_string ", " scope);
+                                        (show scope);
                 BU.bind_opt (solve_branches wl rs1 rs2) (fun (r, wl) ->
                 Some ((scope, prob)::(wprobs @ r), wl)))
 
@@ -4393,14 +4393,14 @@ and solve_t' (problem:tprob) (wl:worklist) : solution =
       | Tm_let _, _
       | _, Tm_let _ ->
          raise_error (Errors.Fatal_UnificationNotWellFormed, BU.format4 "Internal error: unexpected flex-flex of %s and %s\n>>> (%s) -- (%s)"
-                            (Print.tag_of_term t1) (Print.tag_of_term t2)
+                            (tag_of t1) (tag_of t2)
                             (show t1) (show t2)) t1.pos
 
       | Tm_lazy li1, Tm_lazy li2 when li1.lkind =? li2.lkind
                                    && lazy_complete_repr li1.lkind ->
         solve_t' ({problem with lhs = U.unfold_lazy li1; rhs = U.unfold_lazy li2}) wl
 
-      | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ Print.tag_of_term t1 ^ " vs " ^ Print.tag_of_term t2)) orig
+      | _ -> giveup wl (Thunk.mk (fun () -> "head tag mismatch: " ^ tag_of t1 ^ " vs " ^ tag_of t2)) orig
 
 and solve_c (problem:problem comp) (wl:worklist) : solution =
     let c1 = problem.lhs in
@@ -4417,8 +4417,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                             (show (mk_Comp c2_comp)) in
         if not (lid_equals c1_comp.effect_name c2_comp.effect_name)
         then giveup wl (mklstr (fun () -> BU.format2 "incompatible effects: %s <> %s"
-                                        (Print.lid_to_string c1_comp.effect_name)
-                                        (Print.lid_to_string c2_comp.effect_name))) orig
+                                        (show c1_comp.effect_name)
+                                        (show c2_comp.effect_name))) orig
         else if List.length c1_comp.effect_args <> List.length c2_comp.effect_args
         then giveup wl (mklstr (fun () -> BU.format2 "incompatible effect arguments: %s <> %s"
                                         (show c1_comp.effect_args)
@@ -4531,8 +4531,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
 
           if is_none stronger_t_opt
           then giveup wl (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
-                                          (Print.lid_to_string c1.effect_name)
-                                          (Print.lid_to_string c2.effect_name))) orig
+                                          (show c1.effect_name)
+                                          (show c2.effect_name))) orig
           else
             let stronger_t = stronger_t_opt |> must in
             // we will account for g_lift logical guard later
@@ -4650,8 +4650,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
               | (wp1, _)::_, (wp2, _)::_ -> wp1, wp2
               | _ ->
                 raise_error (Errors.Fatal_ExpectNormalizedEffect, (BU.format2 "Got effects %s and %s, expected normalized effects"
-                                          (Print.lid_to_string c1.effect_name)
-                                          (Print.lid_to_string c2.effect_name))) env.range
+                                          (show c1.effect_name)
+                                          (show c2.effect_name))) env.range
              in
 
              if BU.physical_equality wpc1 wpc2
@@ -4768,8 +4768,8 @@ and solve_c (problem:problem comp) (wl:worklist) : solution =
                       match Env.monad_leq env c1.effect_name c2.effect_name with
                       | None ->
                        giveup wl (mklstr (fun () -> BU.format2 "incompatible monad ordering: %s </: %s"
-                                              (Print.lid_to_string c1.effect_name)
-                                              (Print.lid_to_string c2.effect_name))) orig
+                                              (show c1.effect_name)
+                                              (show c2.effect_name))) orig
                       | Some edge ->
                         solve_sub c1 edge c2
                  end
@@ -5400,7 +5400,7 @@ let check_implicit_solution_and_discharge_guard env
 
   if !dbg_Rel
   then BU.print5 "Checking uvar %s resolved to %s at type %s, introduce for %s at %s\n"
-         (Print.uvar_to_string imp_uvar.ctx_uvar_head)
+         (show imp_uvar.ctx_uvar_head)
          (show imp_tm)
          (show uvar_ty)
          imp_reason
@@ -5753,7 +5753,7 @@ let force_trivial_guard env g =
       let open FStar.Pprint in
       raise_error_doc (Errors.Fatal_FailToResolveImplicitArgument, [
         prefix 4 1 (text "Failed to resolve implicit argument")
-                (arbitrary_string (Print.uvar_to_string imp.imp_uvar.ctx_uvar_head)) ^/^
+                (arbitrary_string (show imp.imp_uvar.ctx_uvar_head)) ^/^
         prefix 4 1 (text "of type")
                 (N.term_to_doc env (U.ctx_uvar_typ imp.imp_uvar)) ^/^
         prefix 4 1 (text "introduced for")

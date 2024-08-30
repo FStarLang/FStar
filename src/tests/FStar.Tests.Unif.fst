@@ -37,6 +37,8 @@ open FStar.Ident
 open FStar.Compiler.Range
 open FStar.Tests.Util
 
+open FStar.Class.Show
+
 let tcenv () = Pars.init()
 
 let guard_to_string g = match g with
@@ -67,7 +69,7 @@ let guard_eq i g g' =
 let unify i bvs x y g' check =
     BU.print1 "%s ..." (BU.string_of_int i);
     FStar.Main.process_args () |> ignore; //set options
-    BU.print2 "Unify %s\nand %s\n" (FStar.Syntax.Print.term_to_string x) (FStar.Syntax.Print.term_to_string y);
+    BU.print2 "Unify %s\nand %s\n" (show x) (show y);
     let tcenv = tcenv() in
     let tcenv = Env.push_bvs tcenv bvs in
     let g = Rel.teq tcenv x y |> Rel.solve_deferred_constraints tcenv |> Rel.simplify_guard tcenv in
@@ -79,15 +81,15 @@ let should_fail x y =
     try
         let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
         match g.guard_f with
-            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (P.term_to_string x) (P.term_to_string y))
-            | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (P.term_to_string x) (P.term_to_string y) (P.term_to_string f)
+            | Trivial -> fail (BU.format2 "%s and %s should not be unifiable\n" (show x) (show y))
+            | NonTrivial f -> BU.print3 "%s and %s are unifiable if %s\n"  (show x) (show y) (show f)
     with Error(e, msg, r, _ctx) -> BU.print1 "%s\n" (Errors.rendermsg msg) // FIXME?
 
 let unify' x y =
     let x = pars x in
     let y = pars y in
     let g = Rel.teq (tcenv()) x y |> Rel.solve_deferred_constraints (tcenv()) in
-    BU.print3 "%s and %s are unifiable with guard %s\n"  (P.term_to_string x) (P.term_to_string y) (guard_to_string g.guard_f)
+    BU.print3 "%s and %s are unifiable with guard %s\n"  (show x) (show y) (guard_to_string g.guard_f)
 
 let norm t = N.normalize [] (tcenv()) t
 
@@ -104,7 +106,7 @@ let check_core i subtyping guard_ok x y =
     | Inl None ->
       BU.print1 "%s core check ok\n" (BU.string_of_int i)
     | Inl (Some g) ->
-      BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (P.term_to_string g);
+      BU.print2 "%s core check computed guard %s ok\n" (BU.string_of_int i) (show g);
       if not guard_ok
       then success := false
     | Inr err ->

@@ -302,7 +302,7 @@ let tcresolve () : Tac unit =
       fail_doc [
         text "Typeclass resolution failed.";
         prefix 2 1 (text "Could not solve constraint")
-          (term_to_doc (cur_goal ()));
+          (bquotes (term_to_doc (cur_goal ())));
       ]
     | TacticFailure (msg,r) ->
       fail_doc_at ([text "Typeclass resolution failed."] @ msg) r

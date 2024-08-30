@@ -257,7 +257,8 @@ let go _ =
         end
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
-let lazy_chooser k i = match k with
+let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax.Syntax.term
+  = match k with
     (* TODO: explain *)
     | FStar.Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
     | FStar.Syntax.Syntax.Lazy_bv               -> RE.unfold_lazy_bv          i
@@ -287,10 +288,10 @@ let lazy_chooser k i = match k with
   
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    FStar.Syntax.DsEnv.ugly_sigelt_to_string_hook := FStar.Syntax.Print.sigelt_to_string;
+    FStar.Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
     FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
+    FStar.Syntax.Util.tts_f := Some show;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;

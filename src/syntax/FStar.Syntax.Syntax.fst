@@ -37,6 +37,21 @@ module Err  = FStar.Errors
 module GS   = FStar.GenSym
 module FlatSet  = FStar.Compiler.FlatSet
 
+let pragma_to_string (p:pragma) : string =
+  match p with
+  | ResetOptions None     -> "#reset-options"
+  | ResetOptions (Some s) -> format1 "#reset-options \"%s\"" s
+  | SetOptions s          -> format1 "#set-options \"%s\"" s
+  | PushOptions None      -> "#push-options"
+  | PushOptions (Some s)  -> format1 "#push-options \"%s\"" s
+  | RestartSolver         -> "#restart-solver"
+  | PrintEffectsGraph     -> "#print-effects-graph"
+  | PopOptions            -> "#pop-options"
+
+instance showable_pragma = {
+  show = pragma_to_string;
+}
+
 let rec emb_typ_to_string = function
     | ET_abstract -> "abstract"
     | ET_app (h, []) -> h
@@ -85,6 +100,60 @@ let is_internal_qualifier (q:qualifier) : bool =
       true
   | _ ->
       false
+
+instance showable_indexed_effect_binder_kind : showable indexed_effect_binder_kind = {
+  show = (function
+          | Type_binder -> "Type_binder"
+          | Substitutive_binder -> "Substitutive_binder"
+          | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
+          | Range_binder -> "Range_binder"
+          | Repr_binder -> "Repr_binder"
+          | Ad_hoc_binder -> "Ad_hoc_binder"
+  );
+}
+
+instance tagged_indexed_effect_binder_kind : tagged indexed_effect_binder_kind = {
+  tag_of = (function
+            | Type_binder -> "Type_binder"
+            | Substitutive_binder -> "Substitutive_binder"
+            | BindCont_no_abstraction_binder -> "BindCont_no_abstraction_binder"
+            | Range_binder -> "Range_binder"
+            | Repr_binder -> "Repr_binder"
+            | Ad_hoc_binder -> "Ad_hoc_binder"
+  );
+}
+
+instance showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind = {
+  show = (function
+          | Substitutive_combinator ks -> "Substitutive_combinator " ^ show ks
+          | Substitutive_invariant_combinator -> "Substitutive_invariant_combinator"
+          | Ad_hoc_combinator -> "Ad_hoc_combinator"
+  );
+}
+
+instance tagged_indexed_effect_combinator_kind : tagged indexed_effect_combinator_kind = {
+  tag_of = (function
+            | Substitutive_combinator _ -> "Substitutive_combinator"
+            | Substitutive_invariant_combinator -> "Substitutive_invariant_combinator"
+            | Ad_hoc_combinator -> "Ad_hoc_combinator"
+  );
+}
+
+instance showable_eff_extraction_mode : showable eff_extraction_mode = {
+  show = (function
+          | Extract_none s -> "Extract_none " ^ s
+          | Extract_reify -> "Extract_reify"	
+          | Extract_primitive -> "Extract_primitive"
+  );
+}
+
+instance tagged_eff_extraction_mode : tagged eff_extraction_mode = {
+  tag_of = (function
+            | Extract_none _ -> "Extract_none"
+            | Extract_reify -> "Extract_reify"
+            | Extract_primitive -> "Extract_primitive"
+  );
+}
 
 let mod_name (m: modul) = m.name
 
@@ -527,4 +596,48 @@ instance deq_lazy_kind : deq lazy_kind = {
           | Lazy_embedding _, _
           | _, Lazy_embedding _ -> false
           | _ -> false);
+}
+
+instance tagged_term : tagged term = {
+  tag_of = (fun t -> match t.n with
+  | Tm_bvar {} -> "Tm_bvar" 
+  | Tm_name {} -> "Tm_name"
+  | Tm_fvar {} -> "Tm_fvar"
+  | Tm_uinst {} -> "Tm_uinst"
+  | Tm_constant _ -> "Tm_constant"
+  | Tm_type _ -> "Tm_type"
+  | Tm_quoted (_, {qkind=Quote_static}) -> "Tm_quoted(static)"
+  | Tm_quoted (_, {qkind=Quote_dynamic}) -> "Tm_quoted(dynamic)"
+  | Tm_abs {} -> "Tm_abs"
+  | Tm_arrow {} -> "Tm_arrow"
+  | Tm_refine {} -> "Tm_refine"
+  | Tm_app {} -> "Tm_app"
+  | Tm_match {} -> "Tm_match"
+  | Tm_ascribed {} -> "Tm_ascribed"
+  | Tm_let {} -> "Tm_let"
+  | Tm_uvar {} -> "Tm_uvar"
+  | Tm_delayed {} -> "Tm_delayed"
+  | Tm_meta {} -> "Tm_meta"
+  | Tm_unknown -> "Tm_unknown"
+  | Tm_lazy {} -> "Tm_lazy"
+  );
+}
+
+instance tagged_sigelt : tagged sigelt = {
+  tag_of = (fun se -> match se.sigel with
+  | Sig_inductive_typ {} -> "Sig_inductive_typ"
+  | Sig_bundle {} -> "Sig_bundle"
+  | Sig_datacon {} -> "Sig_datacon"
+  | Sig_declare_typ {} -> "Sig_declare_typ"
+  | Sig_let {} -> "Sig_let"
+  | Sig_assume {} -> "Sig_assume"
+  | Sig_new_effect {} -> "Sig_new_effect"
+  | Sig_sub_effect {} -> "Sig_sub_effect"
+  | Sig_effect_abbrev {} -> "Sig_effect_abbrev"
+  | Sig_pragma _ -> "Sig_pragma"
+  | Sig_splice {} -> "Sig_splice"
+  | Sig_polymonadic_bind {} -> "Sig_polymonadic_bind"
+  | Sig_polymonadic_subcomp {} -> "Sig_polymonadic_subcomp"
+  | Sig_fail {} -> "Sig_fail"
+  );
 }

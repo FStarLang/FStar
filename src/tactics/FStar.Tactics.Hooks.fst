@@ -310,7 +310,7 @@ let preprocess (env:Env.env) (goal:term)
   Errors.with_ctx "While preprocessing VC with a tactic" (fun () ->
     if !dbg_Tac then
         BU.print2 "About to preprocess %s |= %s\n"
-                        (Env.all_binders env |> Print.binders_to_string ",")
+                        (show <| Env.all_binders env)
                         (show goal);
     let initial = (1, []) in
     // This match should never fail
@@ -322,7 +322,7 @@ let preprocess (env:Env.env) (goal:term)
     in
     if !dbg_Tac then
         BU.print2 "Main goal simplified to: %s |- %s\n"
-                (Env.all_binders env |> Print.binders_to_string ", ")
+                (show <| Env.all_binders env)
                 (show t');
     let s = initial in
     let s = List.fold_left (fun (n,gs) g ->
@@ -656,7 +656,7 @@ let spinoff_strictly_positive_goals (env:Env.env) (goal:term)
           if !dbg_SpinoffAll
           then (
             let msg = BU.format2 "Main goal simplified to: %s |- %s\n"
-                            (Env.all_binders env |> Print.binders_to_string ", ")
+                            (show <| Env.all_binders env)
                             (show t) in
             FStar.Errors.diag
               (Env.get_range env)
@@ -987,7 +987,7 @@ let splice
            * it will be reported with --report_assumes. *)
           if is_internal_qualifier q then
             Err.raise_error (Err.Error_InternalQualifier, BU.format2 "The qualifier %s is internal, it cannot be attached to spliced sigelt `%s`."
-                             (Print.qual_to_string q)
+                             (show q)
                              (Print.sigelt_to_string_short se)) rng
          ))
     in

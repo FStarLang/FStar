@@ -882,7 +882,8 @@ let rec (is_arrow :
             -> aux t2
         | uu___1 ->
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
+              let uu___3 =
+                FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
               let uu___4 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format2 "Expected an arrow, got (%s) %s"
@@ -991,8 +992,10 @@ let (check_aqual :
           (fun uu___1 -> Success ((), FStar_Pervasives_Native.None))
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.aqual_to_string a0 in
-            let uu___3 = FStar_Syntax_Print.aqual_to_string a1 in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_aqual a0 in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_aqual a1 in
             FStar_Compiler_Util.format2
               "Unequal arg qualifiers: lhs %s and rhs %s" uu___2 uu___3 in
           fail uu___1
@@ -1745,10 +1748,12 @@ let rec (check_relation :
           (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
            if uu___1
            then
-             let uu___2 = FStar_Syntax_Print.tag_of_term t0 in
+             let uu___2 =
+               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t0 in
              let uu___3 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
-             let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
+             let uu___4 =
+               FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
              let uu___5 =
                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
              FStar_Compiler_Util.print5 "check_relation (%s) %s %s (%s) %s\n"
@@ -6582,7 +6587,8 @@ and (do_check :
           fail "Match with effect returns ascription, or tactic handler"
       | uu___ ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.tag_of_term e1 in
+            let uu___2 =
+              FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term e1 in
             FStar_Compiler_Util.format1 "Unexpected term: %s" uu___2 in
           fail uu___1
 and (check_binders :
@@ -7364,8 +7370,12 @@ and (check_scrutinee_pattern_type_compatible :
                        else err "Incompatible universe instantiations"
                    | (uu___4, uu___5) ->
                        let uu___6 =
-                         let uu___7 = FStar_Syntax_Print.tag_of_term head_sc in
-                         let uu___8 = FStar_Syntax_Print.tag_of_term head_pat in
+                         let uu___7 =
+                           FStar_Class_Tagged.tag_of
+                             FStar_Syntax_Syntax.tagged_term head_sc in
+                         let uu___8 =
+                           FStar_Class_Tagged.tag_of
+                             FStar_Syntax_Syntax.tagged_term head_pat in
                          FStar_Compiler_Util.format2
                            "Head constructors(%s and %s) not fvar" uu___7
                            uu___8 in

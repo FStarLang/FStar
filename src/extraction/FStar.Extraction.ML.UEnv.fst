@@ -51,6 +51,8 @@ module U  = FStar.Syntax.Util
 module BU = FStar.Compiler.Util
 module Const = FStar.Parser.Const
 
+open FStar.Class.Show
+
 (**** Type definitions *)
 
 (** A top-level F* type definition, i.e., a type abbreviation,
@@ -167,7 +169,7 @@ let try_lookup_fv (r:Range.range) (g:uenv) (fv:fv) : option exp_binding =
     let open FStar.Errors.Msg in
     Errors.log_issue_doc r
       (Errors.Error_CallToErased, [
-       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (Print.fv_to_string fv);
+       text <| BU.format1 "Will not extract reference to variable `%s` since it has the `noextract` qualifier." (show fv);
        text <| "Either remove its qualifier or add it to this definition.";
        text <| BU.format1 "This error can be ignored with `--warn_error -%s`." (string_of_int Errors.call_to_erased_errno)]);
     None
@@ -181,7 +183,7 @@ let lookup_fv (r:Range.range) (g:uenv) (fv:fv) : exp_binding =
   | Inl b ->
     failwith (BU.format3 "Internal error: (%s) free variable %s not found during extraction (erased=%s)\n"
               (Range.string_of_range fv.fv_name.p)
-              (Print.lid_to_string fv.fv_name.v)
+              (show fv.fv_name.v)
               (string_of_bool b))
 
 (** An F* local variable (bv) can be mapped either to
@@ -197,7 +199,7 @@ let lookup_bv (g:uenv) (bv:bv) : ty_or_exp_b =
     | None ->
       failwith (BU.format2 "(%s) bound Variable %s not found\n"
                            (Range.string_of_range (range_of_id bv.ppname))
-                           (Print.bv_to_string bv))
+                           (show bv))
     | Some y -> y
 
 (** Lookup either a local variable or a top-level name *)

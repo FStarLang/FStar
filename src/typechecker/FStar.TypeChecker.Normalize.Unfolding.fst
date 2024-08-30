@@ -124,7 +124,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                BU.for_some
                  (fun q ->
                    BU.for_some
-                     (fun qual -> Print.qual_to_string qual = q) // kinda funny
+                     (fun qual -> show qual = q) // kinda funny
                      quals)
                qs)
            ;(match cfg.steps.unfold_namespace with
@@ -179,7 +179,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     then begin
       // then warn about it
       let msg = BU.format1 "Unfolding name which is marked as a plugin: %s"
-                                    (Print.fv_to_string fv) in
+                                    (show fv) in
       Errors.log_issue fv.fv_name.p
                        (Errors.Warning_UnfoldPlugin, msg);
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1

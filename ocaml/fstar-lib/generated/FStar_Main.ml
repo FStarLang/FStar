@@ -355,8 +355,7 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                      FStar_Compiler_Range_Type.dummyRange)))))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
-    FStar_Syntax_Syntax.lazyinfo ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+    FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
   =
   fun k ->
     fun i ->
@@ -407,12 +406,13 @@ let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_Syntax_DsEnv.ugly_sigelt_to_string_hook
-      FStar_Syntax_Print.sigelt_to_string;
+      (FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt);
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Util.tts_f
-      (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
+      (FStar_Pervasives_Native.Some
+         (FStar_Class_Show.show FStar_Syntax_Print.showable_term));
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
       (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder);
