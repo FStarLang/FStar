@@ -212,25 +212,32 @@ let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
     named_assumptions
     ds
 
-let give_delay_assumptions (ds:list decl) (s:solver_state) 
+let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state) 
 : solver_state
 = let decls = List.collect flatten ds in
   let assumptions, rest = List.partition Assume? decls in
   let hd, tl = peek s in
-  let hd = { hd with
-    pruning_state = Pruning.add_decls decls hd.pruning_state;
-    all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
-    named_assumptions = add_named_assumptions hd.named_assumptions assumptions;
-    to_flush_rev = rest :: hd.to_flush_rev
-  } in
+  let hd = { hd with all_decls_at_level_rev = ds::hd.all_decls_at_level_rev;
+                     to_flush_rev = rest :: hd.to_flush_rev } in
+  let hd = 
+    if resetting
+    then hd
+    else { hd with
+          pruning_state = Pruning.add_decls decls hd.pruning_state;
+          named_assumptions = add_named_assumptions hd.named_assumptions assumptions }
+  in
   { s with levels = hd :: tl }
 
-let give_now (ds:list decl) (s:solver_state) 
+let give_now (resetting:bool) (ds:list decl) (s:solver_state) 
 : solver_state
 = let decls = List.collect flatten ds in
   let assumptions, _ = List.partition Assume? decls in
   let hd, tl = peek s in
-  let named_assumptions = add_named_assumptions hd.named_assumptions assumptions in
+  let named_assumptions =
+    if resetting
+    then hd.named_assumptions
+    else add_named_assumptions hd.named_assumptions assumptions
+  in
   let ds_to_flush = filter_using_facts_from s.using_facts_from named_assumptions s decls in
   let given =
     List.fold_left 
@@ -243,20 +250,27 @@ let give_now (ds:list decl) (s:solver_state)
   in
   let hd = { hd with
     given_decl_names = given;
-    pruning_state = Pruning.add_decls decls hd.pruning_state;
     all_decls_at_level_rev = ds :: hd.all_decls_at_level_rev;
     to_flush_rev = ds_to_flush :: hd.to_flush_rev;
-    named_assumptions
   } in
+  let hd =
+    if resetting
+    then hd
+    else { hd with
+           pruning_state = Pruning.add_decls decls hd.pruning_state;
+           named_assumptions }
+  in
   { s with
     levels = hd :: tl
   }
 
-let give (ds:list decl) (s:solver_state)
+let give_aux resetting (ds:list decl) (s:solver_state)
 : solver_state
 = if Options.Ext.get "context_pruning" <> ""
-  then give_delay_assumptions ds s
-  else give_now ds s
+  then give_delay_assumptions resetting ds s
+  else give_now resetting ds s
+
+let give = give_aux false 
 
 let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_setting) (s:solver_state)
 : solver_state
@@ -268,7 +282,10 @@ let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_se
     { s with levels = hd :: tl }
   in
   let rebuild_level now level s_new =
-    let s = List.fold_right (if now then give_now else give) level.all_decls_at_level_rev s_new in
+    let hd, tl = peek s_new in
+    let hd = {hd with pruning_state=level.pruning_state; named_assumptions=level.named_assumptions} in
+    let s_new = { s_new with levels = hd :: tl } in
+    let s = List.fold_right (if now then give_now true else give_aux true) level.all_decls_at_level_rev s_new in
     set_pruning_roots level s,
     Some? level.pruning_roots
   in
@@ -328,7 +345,7 @@ let start_query (msg:string) (roots_to_push:list decl) (qry:decl) (s:solver_stat
   let s = { s with levels = { hd with pruning_roots = Some (qry::roots_to_push) } :: tl } in
   let s = push s in
   let s = give [Caption msg] s in
-  give_now roots_to_push s
+  give_now false roots_to_push s
 
 let finish_query (msg:string) (s:solver_state)
 : solver_state

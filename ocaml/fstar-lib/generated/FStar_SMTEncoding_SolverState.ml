@@ -340,92 +340,140 @@ let (add_named_assumptions :
                    a.FStar_SMTEncoding_Term.assumption_name a
              | uu___ -> named_assumptions1) named_assumptions ds
 let (give_delay_assumptions :
-  FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state) =
-  fun ds ->
-    fun s ->
-      let decls = FStar_Compiler_List.collect flatten ds in
-      let uu___ =
-        FStar_Compiler_List.partition FStar_SMTEncoding_Term.uu___is_Assume
-          decls in
-      match uu___ with
-      | (assumptions, rest) ->
-          let uu___1 = peek s in
-          (match uu___1 with
-           | (hd, tl) ->
-               let hd1 =
-                 let uu___2 =
-                   FStar_SMTEncoding_Pruning.add_decls decls hd.pruning_state in
-                 let uu___3 =
-                   add_named_assumptions hd.named_assumptions assumptions in
+  Prims.bool ->
+    FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state)
+  =
+  fun resetting ->
+    fun ds ->
+      fun s ->
+        let decls = FStar_Compiler_List.collect flatten ds in
+        let uu___ =
+          FStar_Compiler_List.partition FStar_SMTEncoding_Term.uu___is_Assume
+            decls in
+        match uu___ with
+        | (assumptions, rest) ->
+            let uu___1 = peek s in
+            (match uu___1 with
+             | (hd, tl) ->
+                 let hd1 =
+                   {
+                     pruning_state = (hd.pruning_state);
+                     given_decl_names = (hd.given_decl_names);
+                     all_decls_at_level_rev = (ds ::
+                       (hd.all_decls_at_level_rev));
+                     given_some_decls = (hd.given_some_decls);
+                     to_flush_rev = (rest :: (hd.to_flush_rev));
+                     named_assumptions = (hd.named_assumptions);
+                     pruning_roots = (hd.pruning_roots)
+                   } in
+                 let hd2 =
+                   if resetting
+                   then hd1
+                   else
+                     (let uu___3 =
+                        FStar_SMTEncoding_Pruning.add_decls decls
+                          hd1.pruning_state in
+                      let uu___4 =
+                        add_named_assumptions hd1.named_assumptions
+                          assumptions in
+                      {
+                        pruning_state = uu___3;
+                        given_decl_names = (hd1.given_decl_names);
+                        all_decls_at_level_rev = (hd1.all_decls_at_level_rev);
+                        given_some_decls = (hd1.given_some_decls);
+                        to_flush_rev = (hd1.to_flush_rev);
+                        named_assumptions = uu___4;
+                        pruning_roots = (hd1.pruning_roots)
+                      }) in
                  {
-                   pruning_state = uu___2;
-                   given_decl_names = (hd.given_decl_names);
-                   all_decls_at_level_rev = (ds ::
-                     (hd.all_decls_at_level_rev));
-                   given_some_decls = (hd.given_some_decls);
-                   to_flush_rev = (rest :: (hd.to_flush_rev));
-                   named_assumptions = uu___3;
-                   pruning_roots = (hd.pruning_roots)
-                 } in
-               {
-                 levels = (hd1 :: tl);
-                 pending_flushes_rev = (s.pending_flushes_rev);
-                 using_facts_from = (s.using_facts_from);
-                 prune_sim = (s.prune_sim)
-               })
+                   levels = (hd2 :: tl);
+                   pending_flushes_rev = (s.pending_flushes_rev);
+                   using_facts_from = (s.using_facts_from);
+                   prune_sim = (s.prune_sim)
+                 })
 let (give_now :
-  FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state) =
-  fun ds ->
-    fun s ->
-      let decls = FStar_Compiler_List.collect flatten ds in
-      let uu___ =
-        FStar_Compiler_List.partition FStar_SMTEncoding_Term.uu___is_Assume
-          decls in
-      match uu___ with
-      | (assumptions, uu___1) ->
-          let uu___2 = peek s in
-          (match uu___2 with
-           | (hd, tl) ->
-               let named_assumptions =
-                 add_named_assumptions hd.named_assumptions assumptions in
-               let ds_to_flush =
-                 filter_using_facts_from s.using_facts_from named_assumptions
-                   s decls in
-               let given =
-                 FStar_Compiler_List.fold_left
-                   (fun given1 ->
-                      fun d ->
-                        match d with
-                        | FStar_SMTEncoding_Term.Assume a ->
-                            add_name a.FStar_SMTEncoding_Term.assumption_name
-                              given1
-                        | uu___3 -> given1) hd.given_decl_names ds_to_flush in
-               let hd1 =
-                 let uu___3 =
-                   FStar_SMTEncoding_Pruning.add_decls decls hd.pruning_state in
+  Prims.bool ->
+    FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state)
+  =
+  fun resetting ->
+    fun ds ->
+      fun s ->
+        let decls = FStar_Compiler_List.collect flatten ds in
+        let uu___ =
+          FStar_Compiler_List.partition FStar_SMTEncoding_Term.uu___is_Assume
+            decls in
+        match uu___ with
+        | (assumptions, uu___1) ->
+            let uu___2 = peek s in
+            (match uu___2 with
+             | (hd, tl) ->
+                 let named_assumptions =
+                   if resetting
+                   then hd.named_assumptions
+                   else
+                     add_named_assumptions hd.named_assumptions assumptions in
+                 let ds_to_flush =
+                   filter_using_facts_from s.using_facts_from
+                     named_assumptions s decls in
+                 let given =
+                   FStar_Compiler_List.fold_left
+                     (fun given1 ->
+                        fun d ->
+                          match d with
+                          | FStar_SMTEncoding_Term.Assume a ->
+                              add_name
+                                a.FStar_SMTEncoding_Term.assumption_name
+                                given1
+                          | uu___3 -> given1) hd.given_decl_names ds_to_flush in
+                 let hd1 =
+                   {
+                     pruning_state = (hd.pruning_state);
+                     given_decl_names = given;
+                     all_decls_at_level_rev = (ds ::
+                       (hd.all_decls_at_level_rev));
+                     given_some_decls = (hd.given_some_decls);
+                     to_flush_rev = (ds_to_flush :: (hd.to_flush_rev));
+                     named_assumptions = (hd.named_assumptions);
+                     pruning_roots = (hd.pruning_roots)
+                   } in
+                 let hd2 =
+                   if resetting
+                   then hd1
+                   else
+                     (let uu___4 =
+                        FStar_SMTEncoding_Pruning.add_decls decls
+                          hd1.pruning_state in
+                      {
+                        pruning_state = uu___4;
+                        given_decl_names = (hd1.given_decl_names);
+                        all_decls_at_level_rev = (hd1.all_decls_at_level_rev);
+                        given_some_decls = (hd1.given_some_decls);
+                        to_flush_rev = (hd1.to_flush_rev);
+                        named_assumptions;
+                        pruning_roots = (hd1.pruning_roots)
+                      }) in
                  {
-                   pruning_state = uu___3;
-                   given_decl_names = given;
-                   all_decls_at_level_rev = (ds ::
-                     (hd.all_decls_at_level_rev));
-                   given_some_decls = (hd.given_some_decls);
-                   to_flush_rev = (ds_to_flush :: (hd.to_flush_rev));
-                   named_assumptions;
-                   pruning_roots = (hd.pruning_roots)
-                 } in
-               {
-                 levels = (hd1 :: tl);
-                 pending_flushes_rev = (s.pending_flushes_rev);
-                 using_facts_from = (s.using_facts_from);
-                 prune_sim = (s.prune_sim)
-               })
+                   levels = (hd2 :: tl);
+                   pending_flushes_rev = (s.pending_flushes_rev);
+                   using_facts_from = (s.using_facts_from);
+                   prune_sim = (s.prune_sim)
+                 })
+let (give_aux :
+  Prims.bool ->
+    FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state)
+  =
+  fun resetting ->
+    fun ds ->
+      fun s ->
+        let uu___ =
+          let uu___1 = FStar_Options_Ext.get "context_pruning" in
+          uu___1 <> "" in
+        if uu___
+        then give_delay_assumptions resetting ds s
+        else give_now resetting ds s
 let (give :
   FStar_SMTEncoding_Term.decl Prims.list -> solver_state -> solver_state) =
-  fun ds ->
-    fun s ->
-      let uu___ =
-        let uu___1 = FStar_Options_Ext.get "context_pruning" in uu___1 <> "" in
-      if uu___ then give_delay_assumptions ds s else give_now ds s
+  give_aux false
 let (reset_with_new_using_facts_from :
   using_facts_from_setting FStar_Pervasives_Native.option ->
     solver_state -> solver_state)
@@ -461,11 +509,33 @@ let (reset_with_new_using_facts_from :
               prune_sim = (s1.prune_sim)
             } in
       let rebuild_level now level s_new2 =
-        let s1 =
-          FStar_Compiler_List.fold_right (if now then give_now else give)
-            level.all_decls_at_level_rev s_new2 in
-        let uu___ = set_pruning_roots level s1 in
-        (uu___, (FStar_Pervasives_Native.uu___is_Some level.pruning_roots)) in
+        let uu___ = peek s_new2 in
+        match uu___ with
+        | (hd, tl) ->
+            let hd1 =
+              {
+                pruning_state = (level.pruning_state);
+                given_decl_names = (hd.given_decl_names);
+                all_decls_at_level_rev = (hd.all_decls_at_level_rev);
+                given_some_decls = (hd.given_some_decls);
+                to_flush_rev = (hd.to_flush_rev);
+                named_assumptions = (level.named_assumptions);
+                pruning_roots = (hd.pruning_roots)
+              } in
+            let s_new3 =
+              {
+                levels = (hd1 :: tl);
+                pending_flushes_rev = (s_new2.pending_flushes_rev);
+                using_facts_from = (s_new2.using_facts_from);
+                prune_sim = (s_new2.prune_sim)
+              } in
+            let s1 =
+              FStar_Compiler_List.fold_right
+                (if now then give_now true else give_aux true)
+                level.all_decls_at_level_rev s_new3 in
+            let uu___1 = set_pruning_roots level s1 in
+            (uu___1,
+              (FStar_Pervasives_Native.uu___is_Some level.pruning_roots)) in
       let rec rebuild levels s_new2 =
         match levels with
         | last::[] -> rebuild_level false last s_new2
@@ -585,7 +655,7 @@ let (start_query :
                 } in
               let s2 = push s1 in
               let s3 = give [FStar_SMTEncoding_Term.Caption msg] s2 in
-              give_now roots_to_push s3
+              give_now false roots_to_push s3
 let (finish_query : Prims.string -> solver_state -> solver_state) =
   fun msg ->
     fun s ->
