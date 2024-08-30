@@ -567,8 +567,8 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
     in
     mk_emb em un (fun () -> lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
-// Embedding range
-let e_range : embedding Range.range =
+// Embedding range (unsealed)
+let e___range : embedding Range.range =
     let em cb r = Constant (Range r) in
     let un cb t =
     match t with
@@ -577,6 +577,29 @@ let e_range : embedding Range.range =
         None
     in
     mk_emb' em un (fun () -> lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of Range.range)
+
+// Embedding a sealed term. This just calls the embedding for a but also
+// adds a `seal` marker to the result. The unembedding removes it.
+let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
+    let etyp () =
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
+    in
+    let em cb (x: Sealed.sealed 'a) : t =
+        lazy_embed etyp x (fun () ->
+          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
+                                          as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option (Sealed.sealed 'a) =
+        lazy_unembed etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
+          Class.Monad.fmap Sealed.seal <| unembed ea cb a
+        | _ -> None)
+    in
+    mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
+
+let e_range : embedding Range.range =
+  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding FStar.Errors.issue =
     let t_issue = SE.type_of SE.e_issue in
@@ -741,26 +764,6 @@ let e_norm_step =
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])
                  (SE.emb_typ_of norm_step)
-
-// Embedding a sealed term. This just calls the embedding for a but also
-// adds a `seal` marker to the result. The unembedding removes it.
-let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
-    let etyp () =
-        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
-    in
-    let em cb (x: Sealed.sealed 'a) : t =
-        lazy_embed etyp x (fun () ->
-          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
-                                          as_iarg (type_of ea)])
-    in
-    let un cb (trm:t) : option (Sealed.sealed 'a) =
-        lazy_unembed etyp trm (fun trm ->
-        match trm.nbe_t with
-        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
-          Class.Monad.fmap Sealed.seal <| unembed ea cb a
-        | _ -> None)
-    in
-    mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
 
 (* Interface for building primitive steps *)
 

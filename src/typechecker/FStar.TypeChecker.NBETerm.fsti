@@ -283,7 +283,8 @@ instance val e_real   : embedding Compiler.Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
-instance val e_range  : embedding Range.range
+val e___range  : embedding Range.range (* unsealed *)
+instance val e_range  : embedding Range.range (* sealed *)
 instance val e_issue  : embedding FStar.Errors.issue
 instance val e_document : embedding FStar.Pprint.document
 instance val e_vconfig  : embedding vconfig
