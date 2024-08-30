@@ -106,19 +106,26 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       let triggers_lhs = elems (Term.free_top_level_names t0) in
       aux [triggers_lhs]
     )
-    
-    | _ when BU.starts_with a.assumption_name "assumption_" -> 
-      add_ambient_assumption_with_empty_trigger a.assumption_term
 
-    | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
-      match ty.tm with
-      | App (Var "Prims.squash", [ty]) ->
-        //top-level squashes are treated like assumption
-        add_ambient_assumption_with_empty_trigger a.assumption_term
-
-      | _ ->
-        aux [elems (Term.free_top_level_names term)]
+    | _ when BU.starts_with a.assumption_name "assumption_" -> (
+      match triggers_of_term a.assumption_term with
+      | []
+      | [[]] ->
+        let triggers = [elems (Term.free_top_level_names a.assumption_term)] in
+        aux triggers
+      | triggers ->
+        aux triggers
     )
+
+    // | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+    //   match ty.tm with
+    //   | App (Var "Prims.squash", [ty]) ->
+    //     //top-level squashes are treated like assumption
+    //     add_ambient_assumption_with_empty_trigger a.assumption_term
+
+    //   | _ ->
+    //     aux [elems (Term.free_top_level_names term)]
+    // )
  
     | App (Var "Valid", 
           [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
@@ -135,6 +142,15 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
           []
       in
       aux triggers
+    | App (Var "HasType", [term; {tm=App(Var "Prims.squash", [ty])}]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+      match triggers_of_term a.assumption_term with
+      | []
+      | [[]] ->
+        let triggers = [elems (Term.free_top_level_names a.assumption_term)] in
+        aux triggers
+      | triggers ->
+        aux triggers
+    )
     | App (Var "Valid", [term])
     | App (Var "HasType", [term; _])
     | App (Var "IsTotFun", [term])

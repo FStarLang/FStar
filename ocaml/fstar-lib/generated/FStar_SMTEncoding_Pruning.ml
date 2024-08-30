@@ -229,26 +229,34 @@ let (maybe_add_ambient :
           FStar_Compiler_Util.starts_with
             a.FStar_SMTEncoding_Term.assumption_name "assumption_"
           ->
-          add_ambient_assumption_with_empty_trigger
-            a.FStar_SMTEncoding_Term.assumption_term
-      | FStar_SMTEncoding_Term.App
-          (FStar_SMTEncoding_Term.Var "HasType", term::ty::[]) ->
-          (match ty.FStar_SMTEncoding_Term.tm with
-           | FStar_SMTEncoding_Term.App
-               (FStar_SMTEncoding_Term.Var "Prims.squash", ty1::[]) ->
-               add_ambient_assumption_with_empty_trigger
-                 a.FStar_SMTEncoding_Term.assumption_term
-           | uu___ ->
-               let uu___1 =
+          let uu___1 =
+            triggers_of_term a.FStar_SMTEncoding_Term.assumption_term in
+          (match uu___1 with
+           | [] ->
+               let triggers1 =
                  let uu___2 =
                    let uu___3 =
-                     FStar_SMTEncoding_Term.free_top_level_names term in
+                     FStar_SMTEncoding_Term.free_top_level_names
+                       a.FStar_SMTEncoding_Term.assumption_term in
                    FStar_Class_Setlike.elems ()
                      (Obj.magic
                         (FStar_Compiler_RBSet.setlike_rbset
                            FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
                  [uu___2] in
-               aux uu___1)
+               aux triggers1
+           | []::[] ->
+               let triggers1 =
+                 let uu___2 =
+                   let uu___3 =
+                     FStar_SMTEncoding_Term.free_top_level_names
+                       a.FStar_SMTEncoding_Term.assumption_term in
+                   FStar_Class_Setlike.elems ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
+                 [uu___2] in
+               aux triggers1
+           | triggers1 -> aux triggers1)
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid",
            {
@@ -340,6 +348,42 @@ let (maybe_add_ambient :
                 else [[token]]
             | uu___5 -> [] in
           aux triggers1
+      | FStar_SMTEncoding_Term.App
+          (FStar_SMTEncoding_Term.Var "HasType",
+           term::{
+                   FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
+                     (FStar_SMTEncoding_Term.Var "Prims.squash", ty::[]);
+                   FStar_SMTEncoding_Term.freevars = uu___;
+                   FStar_SMTEncoding_Term.rng = uu___1;_}::[])
+          ->
+          let uu___2 =
+            triggers_of_term a.FStar_SMTEncoding_Term.assumption_term in
+          (match uu___2 with
+           | [] ->
+               let triggers1 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_SMTEncoding_Term.free_top_level_names
+                       a.FStar_SMTEncoding_Term.assumption_term in
+                   FStar_Class_Setlike.elems ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Class_Ord.ord_string)) (Obj.magic uu___4) in
+                 [uu___3] in
+               aux triggers1
+           | []::[] ->
+               let triggers1 =
+                 let uu___3 =
+                   let uu___4 =
+                     FStar_SMTEncoding_Term.free_top_level_names
+                       a.FStar_SMTEncoding_Term.assumption_term in
+                   FStar_Class_Setlike.elems ()
+                     (Obj.magic
+                        (FStar_Compiler_RBSet.setlike_rbset
+                           FStar_Class_Ord.ord_string)) (Obj.magic uu___4) in
+                 [uu___3] in
+               aux triggers1
+           | triggers1 -> aux triggers1)
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid", term::[]) ->
           let uu___ =
