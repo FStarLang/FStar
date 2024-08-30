@@ -584,7 +584,7 @@ let lemma_lognot_value_zero #n a =
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
-let lemma_mod_variation #n a = ()
+let lemma_mod_variation #n a = assert (pow2 n =!= 0)
 #pop-options
 
 let lemma_one_mod_pow2 #n = ()
