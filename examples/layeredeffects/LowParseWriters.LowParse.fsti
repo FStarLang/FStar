@@ -91,8 +91,7 @@ val valid_parse_empty
   ))
   [SMTPat (valid_pos parse_empty h b pos pos')]
 
-let is_zero (x:int) = x == 0
-val size_parse_empty : squash (is_zero (size parse_empty ()))
+val size_parse_empty : squash (size parse_empty () == 0)
 
 inline_for_extraction
 val parse_pair' (#t1 #t2: Type) (p1: parser' t1) (p2: parser' t2) : Tot (parser' (t1 & t2))

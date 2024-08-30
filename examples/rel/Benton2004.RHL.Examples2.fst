@@ -20,7 +20,7 @@ assume val i: var
 assume val n: var
 assume val x: var
 assume val y: var
-assume val hyp : squash (List.Tot.noRepeats [i; n; x; y])
+assume val hyp : squash (List.Tot.noRepeats [i; n; x; y] == true)
 
 let cond = eop op_LessThan (evar i) (evar n)
 let asx_e = eop op_Addition (evar y) (const 1)
