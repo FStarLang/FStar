@@ -704,7 +704,7 @@ let (prims : prims_t) =
                                                                     =
                                                                     let uu___53
                                                                     =
-                                                                    FStar_SMTEncoding_Term.unboxInt
+                                                                    FStar_SMTEncoding_Term.unboxReal
                                                                     y in
                                                                     let uu___54
                                                                     =

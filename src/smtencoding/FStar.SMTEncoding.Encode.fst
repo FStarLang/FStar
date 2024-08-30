@@ -170,7 +170,7 @@ let prims =
         (Const.real_op_Subtraction, (quant Eq xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
         (Const.real_op_Addition,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
         (Const.real_op_Multiply,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
-        (Const.real_op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
