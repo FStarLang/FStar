@@ -399,9 +399,9 @@ let (check_fndefn :
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range
                                                                     "prims.fst"
-                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (19))
-                                                                    (Prims.of_int (595))
+                                                                    (Prims.of_int (611))
                                                                     (Prims.of_int (31)))))
                                                                     (Obj.magic
                                                                     (Pulse_Syntax_Printer.st_term_to_string
@@ -1907,9 +1907,9 @@ let (main' :
                                                    (Obj.magic
                                                       (FStar_Range.mk_range
                                                          "prims.fst"
-                                                         (Prims.of_int (595))
+                                                         (Prims.of_int (611))
                                                          (Prims.of_int (19))
-                                                         (Prims.of_int (595))
+                                                         (Prims.of_int (611))
                                                          (Prims.of_int (31)))))
                                                 (Obj.magic
                                                    (Pulse_Syntax_Printer.decl_to_string
