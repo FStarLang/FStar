@@ -45,7 +45,6 @@ let reveal_is_permutation_nopats (#a:Type) (s0 s1:seq a) (f:index_fun s0)
    = reveal_is_permutation s0 s1 f
 
 
-
 let split3_index (#a:eqtype) (s0:seq a) (x:a) (s1:seq a) (j:nat)
   : Lemma
     (requires j < S.length (S.append s0 s1))
@@ -59,7 +58,6 @@ let split3_index (#a:eqtype) (s0:seq a) (x:a) (s1:seq a) (j:nat)
   = let n = S.length (S.append s0 s1) in
     if j < n then ()
     else ()
-
 
 let rec find (#a:eqtype) (x:a) (s:seq a{ count x s > 0 })
   : Tot (frags:(seq a & seq a) {

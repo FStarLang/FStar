@@ -8,21 +8,22 @@ type pruning_state =
     FStar_SMTEncoding_Term.assumption Prims.list FStar_Compiler_Util.psmap ;
   assumption_to_triggers: triggers FStar_Compiler_Util.psmap ;
   assumption_name_map: FStar_SMTEncoding_Term.decl FStar_Compiler_Util.psmap ;
-  ambients: Prims.string Prims.list }
+  ambients: Prims.string Prims.list ;
+  extra_roots: FStar_SMTEncoding_Term.assumption Prims.list }
 let (__proj__Mkpruning_state__item__assumptions :
   pruning_state -> FStar_SMTEncoding_Term.assumption Prims.list) =
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} ->
-        assumptions
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> assumptions
 let (__proj__Mkpruning_state__item__macro_freenames :
   pruning_state -> Prims.string Prims.list FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} ->
-        macro_freenames
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> macro_freenames
 let (__proj__Mkpruning_state__item__trigger_to_assumption :
   pruning_state ->
     FStar_SMTEncoding_Term.assumption Prims.list FStar_Compiler_Util.psmap)
@@ -30,28 +31,36 @@ let (__proj__Mkpruning_state__item__trigger_to_assumption :
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} ->
-        trigger_to_assumption
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> trigger_to_assumption
 let (__proj__Mkpruning_state__item__assumption_to_triggers :
   pruning_state -> triggers FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} ->
-        assumption_to_triggers
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> assumption_to_triggers
 let (__proj__Mkpruning_state__item__assumption_name_map :
   pruning_state -> FStar_SMTEncoding_Term.decl FStar_Compiler_Util.psmap) =
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} ->
-        assumption_name_map
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> assumption_name_map
 let (__proj__Mkpruning_state__item__ambients :
   pruning_state -> Prims.string Prims.list) =
   fun projectee ->
     match projectee with
     | { assumptions; macro_freenames; trigger_to_assumption;
-        assumption_to_triggers; assumption_name_map; ambients;_} -> ambients
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> ambients
+let (__proj__Mkpruning_state__item__extra_roots :
+  pruning_state -> FStar_SMTEncoding_Term.assumption Prims.list) =
+  fun projectee ->
+    match projectee with
+    | { assumptions; macro_freenames; trigger_to_assumption;
+        assumption_to_triggers; assumption_name_map; ambients; extra_roots;_}
+        -> extra_roots
 let (debug : (unit -> unit) -> unit) =
   fun f ->
     let uu___ =
@@ -124,7 +133,8 @@ let (init : pruning_state) =
     trigger_to_assumption = uu___1;
     assumption_to_triggers = uu___2;
     assumption_name_map = uu___3;
-    ambients = []
+    ambients = [];
+    extra_roots = []
   }
 let (add_trigger_to_assumption :
   FStar_SMTEncoding_Term.assumption ->
@@ -145,7 +155,8 @@ let (add_trigger_to_assumption :
               trigger_to_assumption = uu___1;
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
-              ambients = (p.ambients)
+              ambients = (p.ambients);
+              extra_roots = (p.extra_roots)
             }
         | FStar_Pervasives_Native.Some l ->
             let uu___1 =
@@ -157,7 +168,8 @@ let (add_trigger_to_assumption :
               trigger_to_assumption = uu___1;
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
-              ambients = (p.ambients)
+              ambients = (p.ambients);
+              extra_roots = (p.extra_roots)
             }
 let (triggers_of_term : FStar_SMTEncoding_Term.term -> triggers) =
   fun t ->
@@ -196,7 +208,8 @@ let (maybe_add_ambient :
             trigger_to_assumption = (p.trigger_to_assumption);
             assumption_to_triggers = uu___;
             assumption_name_map = (p.assumption_name_map);
-            ambients = (p.ambients)
+            ambients = (p.ambients);
+            extra_roots = (p.extra_roots)
           } in
         FStar_Compiler_List.fold_left
           (FStar_Compiler_List.fold_left (add_trigger_to_assumption a)) p1
@@ -257,6 +270,45 @@ let (maybe_add_ambient :
                  [uu___2] in
                aux triggers1
            | triggers1 -> aux triggers1)
+      | FStar_SMTEncoding_Term.App
+          (FStar_SMTEncoding_Term.Var "HasType",
+           term::{
+                   FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
+                     (FStar_SMTEncoding_Term.Var "Prims.squash", ty::[]);
+                   FStar_SMTEncoding_Term.freevars = uu___;
+                   FStar_SMTEncoding_Term.rng = uu___1;_}::[])
+          ->
+          (FStar_Compiler_Util.print1 "Adding ambient squash %s\n"
+             a.FStar_SMTEncoding_Term.assumption_name;
+           (let uu___3 = triggers_of_term ty in
+            match uu___3 with
+            | [] ->
+                let p1 =
+                  {
+                    assumptions = (p.assumptions);
+                    macro_freenames = (p.macro_freenames);
+                    trigger_to_assumption = (p.trigger_to_assumption);
+                    assumption_to_triggers = (p.assumption_to_triggers);
+                    assumption_name_map = (p.assumption_name_map);
+                    ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
+                      (p.ambients));
+                    extra_roots = (a :: (p.extra_roots))
+                  } in
+                p1
+            | []::[] ->
+                let p1 =
+                  {
+                    assumptions = (p.assumptions);
+                    macro_freenames = (p.macro_freenames);
+                    trigger_to_assumption = (p.trigger_to_assumption);
+                    assumption_to_triggers = (p.assumption_to_triggers);
+                    assumption_name_map = (p.assumption_name_map);
+                    ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
+                      (p.ambients));
+                    extra_roots = (a :: (p.extra_roots))
+                  } in
+                p1
+            | triggers1 -> aux triggers1))
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid",
            {
@@ -349,42 +401,6 @@ let (maybe_add_ambient :
             | uu___5 -> [] in
           aux triggers1
       | FStar_SMTEncoding_Term.App
-          (FStar_SMTEncoding_Term.Var "HasType",
-           term::{
-                   FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
-                     (FStar_SMTEncoding_Term.Var "Prims.squash", ty::[]);
-                   FStar_SMTEncoding_Term.freevars = uu___;
-                   FStar_SMTEncoding_Term.rng = uu___1;_}::[])
-          ->
-          let uu___2 =
-            triggers_of_term a.FStar_SMTEncoding_Term.assumption_term in
-          (match uu___2 with
-           | [] ->
-               let triggers1 =
-                 let uu___3 =
-                   let uu___4 =
-                     FStar_SMTEncoding_Term.free_top_level_names
-                       a.FStar_SMTEncoding_Term.assumption_term in
-                   FStar_Class_Setlike.elems ()
-                     (Obj.magic
-                        (FStar_Compiler_RBSet.setlike_rbset
-                           FStar_Class_Ord.ord_string)) (Obj.magic uu___4) in
-                 [uu___3] in
-               aux triggers1
-           | []::[] ->
-               let triggers1 =
-                 let uu___3 =
-                   let uu___4 =
-                     FStar_SMTEncoding_Term.free_top_level_names
-                       a.FStar_SMTEncoding_Term.assumption_term in
-                   FStar_Class_Setlike.elems ()
-                     (Obj.magic
-                        (FStar_Compiler_RBSet.setlike_rbset
-                           FStar_Class_Ord.ord_string)) (Obj.magic uu___4) in
-                 [uu___3] in
-               aux triggers1
-           | triggers1 -> aux triggers1)
-      | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid", term::[]) ->
           let uu___ =
             let uu___1 =
@@ -447,6 +463,18 @@ let (maybe_add_ambient :
           aux uu___3
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, tms) ->
           let t1 = FStar_Compiler_List.collect triggers_of_term tms in aux t1
+      | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Eq, t0::t1::[])
+          when
+          FStar_Compiler_Util.starts_with
+            a.FStar_SMTEncoding_Term.assumption_name "equation_"
+          ->
+          let t01 =
+            let uu___ = FStar_SMTEncoding_Term.free_top_level_names t0 in
+            FStar_Class_Setlike.elems ()
+              (Obj.magic
+                 (FStar_Compiler_RBSet.setlike_rbset
+                    FStar_Class_Ord.ord_string)) (Obj.magic uu___) in
+          aux [t01]
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, t0::t1::[])
           ->
           let t01 =
@@ -486,7 +514,8 @@ let (maybe_add_ambient :
             assumption_to_triggers = (p.assumption_to_triggers);
             assumption_name_map = (p.assumption_name_map);
             ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
-              (p.ambients))
+              (p.ambients));
+            extra_roots = (p.extra_roots)
           }
 let (add_assumption_to_triggers :
   FStar_SMTEncoding_Term.assumption ->
@@ -506,7 +535,8 @@ let (add_assumption_to_triggers :
             trigger_to_assumption = (p.trigger_to_assumption);
             assumption_to_triggers = (p.assumption_to_triggers);
             assumption_name_map = uu___;
-            ambients = (p.ambients)
+            ambients = (p.ambients);
+            extra_roots = (p.extra_roots)
           } in
         match trigs with
         | [] -> maybe_add_ambient a p1
@@ -520,7 +550,8 @@ let (add_assumption_to_triggers :
               trigger_to_assumption = (p1.trigger_to_assumption);
               assumption_to_triggers = uu___1;
               assumption_name_map = (p1.assumption_name_map);
-              ambients = (p1.ambients)
+              ambients = (p1.ambients);
+              extra_roots = (p1.extra_roots)
             }
 let (trigger_reached : pruning_state -> Prims.string -> pruning_state) =
   fun p ->
@@ -533,7 +564,8 @@ let (trigger_reached : pruning_state -> Prims.string -> pruning_state) =
         trigger_to_assumption = uu___;
         assumption_to_triggers = (p.assumption_to_triggers);
         assumption_name_map = (p.assumption_name_map);
-        ambients = (p.ambients)
+        ambients = (p.ambients);
+        extra_roots = (p.extra_roots)
       }
 let (remove_trigger_for_assumption :
   pruning_state ->
@@ -593,7 +625,8 @@ let (remove_trigger_for_assumption :
                   trigger_to_assumption = (p.trigger_to_assumption);
                   assumption_to_triggers = uu___3;
                   assumption_name_map = (p.assumption_name_map);
-                  ambients = (p.ambients)
+                  ambients = (p.ambients);
+                  extra_roots = (p.extra_roots)
                 } in
               (uu___2, eligible)))
 let rec (assumptions_of_decl :
@@ -618,7 +651,8 @@ let rec (add_decl :
               trigger_to_assumption = (p.trigger_to_assumption);
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
-              ambients = (p.ambients)
+              ambients = (p.ambients);
+              extra_roots = (p.extra_roots)
             } in
           let triggers1 =
             triggers_of_term a.FStar_SMTEncoding_Term.assumption_term in
@@ -648,7 +682,8 @@ let rec (add_decl :
               trigger_to_assumption = (p.trigger_to_assumption);
               assumption_to_triggers = (p.assumption_to_triggers);
               assumption_name_map = (p.assumption_name_map);
-              ambients = (p.ambients)
+              ambients = (p.ambients);
+              extra_roots = (p.extra_roots)
             } in
           p1
       | uu___ -> p
@@ -1041,7 +1076,9 @@ let (prune :
                    (FStar_Compiler_RBSet.setlike_rbset
                       FStar_Class_Ord.ord_string)) ()) in
          { p; reached = uu___1 } in
-       let uu___1 = let uu___2 = scan roots1 in uu___2 init1 in
+       let uu___1 =
+         let uu___2 = scan (FStar_List_Tot_Base.op_At roots1 p.extra_roots) in
+         uu___2 init1 in
        match uu___1 with
        | (uu___2, ctxt1) ->
            let reached_names =

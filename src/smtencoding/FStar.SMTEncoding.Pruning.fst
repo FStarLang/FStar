@@ -17,6 +17,7 @@ type pruning_state = {
   assumption_to_triggers: BU.psmap triggers;
   assumption_name_map: BU.psmap decl;
   ambients: list string; //assumptions with no triggers
+  extra_roots: list assumption
 }
 
 let debug (f: unit -> unit) : unit =
@@ -64,7 +65,8 @@ let init
     trigger_to_assumption = BU.psmap_empty ();
     assumption_to_triggers = BU.psmap_empty ();
     assumption_name_map = BU.psmap_empty ();
-    ambients=[] }
+    ambients=[];
+    extra_roots=[] }
 
 let add_trigger_to_assumption (a:assumption) (p:pruning_state) (trig:string)
 : pruning_state
@@ -95,8 +97,8 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     List.fold_left (List.fold_left (add_trigger_to_assumption a)) p triggers
   in
   let add_ambient_assumption_with_empty_trigger t =
-    //add it to the context with an empty trigger, so it is always available
-    //and it contributes its free variables to trigger other assumptions 
+     //add it to the context with an empty trigger, so it is always available
+     //and it contributes its free variables to trigger other assumptions 
     let triggers = [elems (Term.free_top_level_names t)] in
     aux ([]::triggers)
   in
@@ -116,16 +118,17 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       | triggers ->
         aux triggers
     )
-
-    // | App (Var "HasType", [term; ty]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
-    //   match ty.tm with
-    //   | App (Var "Prims.squash", [ty]) ->
-    //     //top-level squashes are treated like assumption
-    //     add_ambient_assumption_with_empty_trigger a.assumption_term
-
-    //   | _ ->
-    //     aux [elems (Term.free_top_level_names term)]
-    // )
+    | App (Var "HasType", [term; {tm=App(Var "Prims.squash", [ty])}]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+      BU.print1 "Adding ambient squash %s\n" a.assumption_name;
+      match triggers_of_term ty with
+      | []
+      | [[]] ->
+        let p = { p with ambients = a.assumption_name::p.ambients; 
+                         extra_roots = a::p.extra_roots } in
+        p
+      | triggers ->
+        aux triggers
+    )
  
     | App (Var "Valid", 
           [{tm=App (Var "ApplyTT", [{tm=FreeV (FV("__uu__PartialApp", _, _))}; term])}])
@@ -142,15 +145,6 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
           []
       in
       aux triggers
-    | App (Var "HasType", [term; {tm=App(Var "Prims.squash", [ty])}]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
-      match triggers_of_term a.assumption_term with
-      | []
-      | [[]] ->
-        let triggers = [elems (Term.free_top_level_names a.assumption_term)] in
-        aux triggers
-      | triggers ->
-        aux triggers
-    )
     | App (Var "Valid", [term])
     | App (Var "HasType", [term; _])
     | App (Var "IsTotFun", [term])
@@ -163,6 +157,9 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     //   let t0 = elems (Term.free_top_level_names term) in
       let t1 = List.collect triggers_of_term tms in
       aux t1
+    | App (Eq, [t0; t1]) when BU.starts_with a.assumption_name "equation_" ->
+      let t0 = elems (Term.free_top_level_names t0) in
+      aux [t0]
     | App (Iff, [t0; t1])
     | App (Eq, [t0; t1]) ->
       let t0 = elems (Term.free_top_level_names t0) in
@@ -337,7 +334,7 @@ let prune (p:pruning_state) (roots:list decl)
 = debug (fun _ -> BU.print_string (show p));
   let roots = List.collect assumptions_of_decl roots in
   let init = { p; reached = empty () } in
-  let _, ctxt = scan roots init in
+  let _, ctxt = scan (roots@p.extra_roots) init in
   let reached_names = elems ctxt.reached in
   let reached_assumptions =
     List.collect
