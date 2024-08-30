@@ -89,7 +89,7 @@ let prims =
     let asym, a = fresh_fvar module_name "a" Term_sort in
     let xsym, x = fresh_fvar module_name "x" Term_sort in
     let ysym, y = fresh_fvar module_name "y" Term_sort in
-    let quant (rel:defn_rel_type) vars body : Range.range -> string -> term & int & list decl = fun rng x ->
+    let quant_with_pre (rel:defn_rel_type) vars precondition body : Range.range -> string -> term & int & list decl = fun rng x ->
         let xname_decl = Term.DeclFun(x, vars |> List.map fv_sort, Term_sort, None) in
         let xtok = x ^ "@tok" in
         let xtok_decl = Term.DeclFun(xtok, [], Term_sort, None) in
@@ -120,7 +120,12 @@ let prims =
           axioms
         in
 
-        let rel_body = (rel_type_f rel) (xapp, body) in
+        let rel_body =
+          let rel_body = (rel_type_f rel) (xapp, body) in
+          match precondition with
+          | None -> rel_body
+          | Some pre -> mkImp(pre, rel_body)
+        in
 
         xtok,
         List.length vars,
@@ -134,6 +139,7 @@ let prims =
                         Some "Name-token correspondence",
                         "token_correspondence_"^x)])
     in
+    let quant rel vars body = quant_with_pre rel vars None body in
     let axy = List.map mk_fv [(asym, Term_sort); (xsym, Term_sort); (ysym, Term_sort)] in
     let xy = List.map mk_fv [(xsym, Term_sort); (ysym, Term_sort)] in
     let qx = List.map mk_fv [(xsym, Term_sort)] in
@@ -154,8 +160,8 @@ let prims =
         (Const.op_Minus,       (quant Eq qx  (boxInt  <| mkMinus(unboxInt x))));
         (Const.op_Addition,    (quant Eq xy  (boxInt  <| mkAdd(unboxInt x, unboxInt y))));
         (Const.op_Multiply,    (quant Eq xy  (boxInt  <| mkMul(unboxInt x, unboxInt y))));
-        (Const.op_Division,    (quant Eq xy  (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
-        (Const.op_Modulus,     (quant Eq xy  (boxInt  <| mkMod(unboxInt x, unboxInt y))));
+        (Const.op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkDiv(unboxInt x, unboxInt y))));
+        (Const.op_Modulus,     (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxInt y, mkInteger "0")))) (boxInt  <| mkMod(unboxInt x, unboxInt y))));
         //real ops
         (Const.real_op_LT,          (quant ValidIff xy  (mkLT(unboxReal x, unboxReal y))));
         (Const.real_op_LTE,         (quant ValidIff xy  (mkLTE(unboxReal x, unboxReal y))));
@@ -164,7 +170,7 @@ let prims =
         (Const.real_op_Subtraction, (quant Eq xy  (boxReal <| mkSub(unboxReal x, unboxReal y))));
         (Const.real_op_Addition,    (quant Eq xy  (boxReal <| mkAdd(unboxReal x, unboxReal y))));
         (Const.real_op_Multiply,    (quant Eq xy  (boxReal <| mkMul(unboxReal x, unboxReal y))));
-        (Const.real_op_Division,    (quant Eq xy  (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
+        (Const.real_op_Division,    (quant_with_pre Eq xy (Some (mkNot (mkEq (unboxReal y, mkReal "0")))) (boxReal <| mkRealDiv(unboxReal x, unboxReal y))));
         (Const.real_of_int,         (quant Eq qx  (boxReal <| mkRealOfInt (unboxInt x) Range.dummyRange)))
         ]
     in
