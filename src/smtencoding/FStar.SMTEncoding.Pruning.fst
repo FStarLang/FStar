@@ -96,11 +96,17 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     in
     List.fold_left (List.fold_left (add_trigger_to_assumption a)) p triggers
   in
-  let add_ambient_assumption_with_empty_trigger t =
-     //add it to the context with an empty trigger, so it is always available
-     //and it contributes its free variables to trigger other assumptions 
-    let triggers = [elems (Term.free_top_level_names t)] in
-    aux ([]::triggers)
+  let is_ambient_refinement ty =
+    match ty.tm with
+    | App(Var name, _) 
+    | FreeV(FV(name, _, _)) -> BU.starts_with name "Tm_refine_"
+    | App(Var "Prims.squash", _) -> true
+    | _ -> false
+  in
+  let ambient_refinement_payload ty =
+    match ty.tm with
+    | App(Var "Prims.squash", [t]) -> t
+    | _ -> ty
   in
   begin
     match a.assumption_term.tm with
@@ -118,10 +124,12 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       | triggers ->
         aux triggers
     )
-    | App (Var "HasType", [term; {tm=App(Var "Prims.squash", [ty])}]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
+    | App (Var "HasType", [term; ty])
+      when is_ambient_refinement ty -> (
+      //HasType term (squash ty) is an ambient that should trigger on either the term or the type
       if Options.Ext.get "debug_context_pruning_ambients" <> ""
       then  BU.print2 "Adding ambient squash %s : %s\n" a.assumption_name (show a.assumption_term);
-      match triggers_of_term ty with
+      match triggers_of_term (ambient_refinement_payload ty) with
       | []
       | [[]] ->
         let p = { p with ambients = a.assumption_name::p.ambients; 

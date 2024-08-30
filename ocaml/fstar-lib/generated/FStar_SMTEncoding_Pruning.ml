@@ -214,16 +214,21 @@ let (maybe_add_ambient :
         FStar_Compiler_List.fold_left
           (FStar_Compiler_List.fold_left (add_trigger_to_assumption a)) p1
           triggers1 in
-      let add_ambient_assumption_with_empty_trigger t =
-        let triggers1 =
-          let uu___ =
-            let uu___1 = FStar_SMTEncoding_Term.free_top_level_names t in
-            FStar_Class_Setlike.elems ()
-              (Obj.magic
-                 (FStar_Compiler_RBSet.setlike_rbset
-                    FStar_Class_Ord.ord_string)) (Obj.magic uu___1) in
-          [uu___] in
-        aux ([] :: triggers1) in
+      let is_ambient_refinement ty =
+        match ty.FStar_SMTEncoding_Term.tm with
+        | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var name, uu___)
+            -> FStar_Compiler_Util.starts_with name "Tm_refine_"
+        | FStar_SMTEncoding_Term.FreeV (FStar_SMTEncoding_Term.FV
+            (name, uu___, uu___1)) ->
+            FStar_Compiler_Util.starts_with name "Tm_refine_"
+        | FStar_SMTEncoding_Term.App
+            (FStar_SMTEncoding_Term.Var "Prims.squash", uu___) -> true
+        | uu___ -> false in
+      let ambient_refinement_payload ty =
+        match ty.FStar_SMTEncoding_Term.tm with
+        | FStar_SMTEncoding_Term.App
+            (FStar_SMTEncoding_Term.Var "Prims.squash", t::[]) -> t
+        | uu___ -> ty in
       match (a.FStar_SMTEncoding_Term.assumption_term).FStar_SMTEncoding_Term.tm
       with
       | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Iff, t0::t1::[])
@@ -271,28 +276,23 @@ let (maybe_add_ambient :
                aux triggers1
            | triggers1 -> aux triggers1)
       | FStar_SMTEncoding_Term.App
-          (FStar_SMTEncoding_Term.Var "HasType",
-           term::{
-                   FStar_SMTEncoding_Term.tm = FStar_SMTEncoding_Term.App
-                     (FStar_SMTEncoding_Term.Var "Prims.squash", ty::[]);
-                   FStar_SMTEncoding_Term.freevars = uu___;
-                   FStar_SMTEncoding_Term.rng = uu___1;_}::[])
-          ->
-          ((let uu___3 =
-              let uu___4 =
+          (FStar_SMTEncoding_Term.Var "HasType", term::ty::[]) when
+          is_ambient_refinement ty ->
+          ((let uu___1 =
+              let uu___2 =
                 FStar_Options_Ext.get "debug_context_pruning_ambients" in
-              uu___4 <> "" in
-            if uu___3
+              uu___2 <> "" in
+            if uu___1
             then
-              let uu___4 =
+              let uu___2 =
                 FStar_Class_Show.show
                   FStar_SMTEncoding_Term.showable_smt_term
                   a.FStar_SMTEncoding_Term.assumption_term in
               FStar_Compiler_Util.print2 "Adding ambient squash %s : %s\n"
-                a.FStar_SMTEncoding_Term.assumption_name uu___4
+                a.FStar_SMTEncoding_Term.assumption_name uu___2
             else ());
-           (let uu___3 = triggers_of_term ty in
-            match uu___3 with
+           (let uu___1 = triggers_of_term (ambient_refinement_payload ty) in
+            match uu___1 with
             | [] ->
                 let p1 =
                   {
