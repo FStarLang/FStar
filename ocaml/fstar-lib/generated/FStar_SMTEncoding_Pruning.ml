@@ -278,37 +278,35 @@ let (maybe_add_ambient :
                    FStar_SMTEncoding_Term.freevars = uu___;
                    FStar_SMTEncoding_Term.rng = uu___1;_}::[])
           ->
-          (FStar_Compiler_Util.print1 "Adding ambient squash %s\n"
-             a.FStar_SMTEncoding_Term.assumption_name;
-           (let uu___3 = triggers_of_term ty in
-            match uu___3 with
-            | [] ->
-                let p1 =
-                  {
-                    assumptions = (p.assumptions);
-                    macro_freenames = (p.macro_freenames);
-                    trigger_to_assumption = (p.trigger_to_assumption);
-                    assumption_to_triggers = (p.assumption_to_triggers);
-                    assumption_name_map = (p.assumption_name_map);
-                    ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
-                      (p.ambients));
-                    extra_roots = (a :: (p.extra_roots))
-                  } in
-                p1
-            | []::[] ->
-                let p1 =
-                  {
-                    assumptions = (p.assumptions);
-                    macro_freenames = (p.macro_freenames);
-                    trigger_to_assumption = (p.trigger_to_assumption);
-                    assumption_to_triggers = (p.assumption_to_triggers);
-                    assumption_name_map = (p.assumption_name_map);
-                    ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
-                      (p.ambients));
-                    extra_roots = (a :: (p.extra_roots))
-                  } in
-                p1
-            | triggers1 -> aux triggers1))
+          let uu___2 = triggers_of_term ty in
+          (match uu___2 with
+           | [] ->
+               let p1 =
+                 {
+                   assumptions = (p.assumptions);
+                   macro_freenames = (p.macro_freenames);
+                   trigger_to_assumption = (p.trigger_to_assumption);
+                   assumption_to_triggers = (p.assumption_to_triggers);
+                   assumption_name_map = (p.assumption_name_map);
+                   ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
+                     (p.ambients));
+                   extra_roots = (a :: (p.extra_roots))
+                 } in
+               p1
+           | []::[] ->
+               let p1 =
+                 {
+                   assumptions = (p.assumptions);
+                   macro_freenames = (p.macro_freenames);
+                   trigger_to_assumption = (p.trigger_to_assumption);
+                   assumption_to_triggers = (p.assumption_to_triggers);
+                   assumption_name_map = (p.assumption_name_map);
+                   ambients = ((a.FStar_SMTEncoding_Term.assumption_name) ::
+                     (p.ambients));
+                   extra_roots = (a :: (p.extra_roots))
+                 } in
+               p1
+           | triggers1 -> aux triggers1)
       | FStar_SMTEncoding_Term.App
           (FStar_SMTEncoding_Term.Var "Valid",
            {

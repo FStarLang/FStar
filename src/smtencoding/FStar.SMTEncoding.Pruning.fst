@@ -119,7 +119,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
         aux triggers
     )
     | App (Var "HasType", [term; {tm=App(Var "Prims.squash", [ty])}]) -> ( //HasType term (squash ty) is an ambient that should trigger on either the term or the type
-      BU.print1 "Adding ambient squash %s\n" a.assumption_name;
+      // BU.print1 "Adding ambient squash %s\n" a.assumption_name;
       match triggers_of_term ty with
       | []
       | [[]] ->
