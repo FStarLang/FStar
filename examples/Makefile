@@ -1,4 +1,4 @@
-OTHERFLAGS+=--warn_error -321-274
+OTHERFLAGS+=--warn_error -321-274 --ext context_pruning
 all: prep verify special_cases
 
 # krml_tests only to be run conditionally, if we have a karamel install.
