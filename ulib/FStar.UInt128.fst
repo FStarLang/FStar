@@ -751,6 +751,7 @@ let add_u64_shift_right_respec (hi lo:U64.t) (s: U32.t{U32.v s < 64}) : Pure U64
   mul_pow2_diff (U64.v hi) 64 s;
   r
 
+#restart-solver
 let mul_div_spec (n:nat) (k:pos) : Lemma (n / k * k == n - n % k) = ()
 
 let mul_distr_sub (n1 n2:nat) (k:nat) : Lemma ((n1 - n2) * k == n1 * k - n2 * k) = ()
