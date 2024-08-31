@@ -300,8 +300,7 @@ let tcresolve () : Tac unit =
     | NoInst ->
       let open FStar.Stubs.Pprint in
       fail_doc [
-        text "Typeclass resolution failed.";
-        prefix 2 1 (text "Could not solve constraint")
+        prefix 2 1 (text "Could not solve typeclass constraint")
           (bquotes (term_to_doc (cur_goal ())));
       ]
     | TacticFailure (msg,r) ->

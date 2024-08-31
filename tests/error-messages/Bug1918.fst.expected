@@ -1,8 +1,7 @@
 >> Got issues: [
 * Error 228 at Bug1918.fst(11,13-11,14):
-  - Typeclass resolution failed.
-  - Could not solve constraint `Bug1918.mon`
-  - See also FStar.Tactics.Typeclasses.fst(302,6-306,7)
+  - Could not solve typeclass constraint `Bug1918.mon`
+  - See also FStar.Tactics.Typeclasses.fst(302,6-305,7)
 
 >>]
 Verified module: Bug1918

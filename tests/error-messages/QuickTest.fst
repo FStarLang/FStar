@@ -1,4 +1,4 @@
-module QuickTestNBE
+module QuickTest
 
 open FStar.Range
 
@@ -45,7 +45,7 @@ let qPURE
   QPURE r msg pre l qcs
 
 [@va_qattr]
-let range1 = mk_range "QuickTestNBE" 1 2 3 4
+let range1 = mk_range "QuickTest" 1 2 3 4
 
 [@va_qattr]
 let rec wp (#a:Type0) (qcs:quickCodes a) (k:vale_state -> a -> Type0) (s0:vale_state) :
@@ -80,7 +80,7 @@ unfold let wp_sound_code_post (#a:Type0) (qc:quickCode a) (s0:vale_state) (k:(s0
   k s0 sN gN
 
 unfold let normal_steps : list string = [`%QProc?.wp;]
-unfold let normal (x:Type0) : Type0 = norm [nbe; iota; zeta; simplify; primops; delta_attr [`%va_qattr]; delta_only normal_steps] x
+unfold let normal (x:Type0) : Type0 = norm [ iota; zeta; simplify; primops; delta_attr [`%va_qattr]; delta_only normal_steps] x
 
 assume val wp_sound_code_norm (#a:Type0) (qc:quickCode a) (s0:vale_state) (k:(s0':vale_state{s0 == s0'}) -> vale_state -> a -> Type0) : Lemma 
   (requires normal (wp_sound_code_pre qc s0 k))
@@ -132,3 +132,4 @@ let va_lemma_Test2 (va_s0:vale_state) =
     va_qcode_Test2
     va_s0
     (fun va_s0 va_sM va_g -> True)
+

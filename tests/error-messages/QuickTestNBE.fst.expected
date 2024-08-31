@@ -1,5 +1,5 @@
 >> Got issues: [
-* Error 19 at QuickTestNBE.fst(133,2-136,34):
+* Error 19 at QuickTestNBE.fst(131,2-134,34):
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
   - Also see: QuickTestNBE(1,2-3,4)
