@@ -110,6 +110,9 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   in
   begin
     match a.assumption_term.tm with
+    | _ when a.assumption_name = "function_token_typing_Prims.__cache_version_number__" ->
+      //many UNSAT cores seems to rely on an inhabitation proof for int, with this assumption provides
+      { p with ambients = a.assumption_name::p.ambients }
     | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
       let triggers_lhs = elems (Term.free_top_level_names t0) in
       aux [triggers_lhs]

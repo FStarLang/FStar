@@ -22,6 +22,7 @@ open FStar.BaseTypes
 open FStar.Compiler.Util
 open FStar.List.Tot
 open FStar.Class.Show
+open FStar.Class.Setlike
 module BU = FStar.Compiler.Util
 module Pruning = FStar.SMTEncoding.Pruning
 module U = FStar.SMTEncoding.UnsatCore
@@ -38,7 +39,7 @@ type decls_at_level = {
   given_some_decls: bool; //list (list decl); (* all declarations that have been flushed so far; in reverse order *)
   to_flush_rev: list (list decl); (* declarations to be given to the solver at the next flush, in reverse order, though each nested list is in order *)
   named_assumptions: BU.psmap assumption;
-  pruning_roots:option (list decl)
+  pruning_roots:option (list decl);
 }
 
 let init_given_decls_at_level = { 
@@ -55,7 +56,8 @@ type solver_state = {
   levels: list decls_at_level;
   pending_flushes_rev: list decl;
   using_facts_from:option using_facts_from_setting;
-  prune_sim:option (list string)
+  prune_sim:option (list string);
+  retain_assumptions: RBSet.t string
 }
 
 let depth (s:solver_state) = List.length s.levels
@@ -94,7 +96,8 @@ let init (_:unit)
 = { levels = [init_given_decls_at_level];
     pending_flushes_rev = [];
     using_facts_from = Some (Options.using_facts_from());
-    prune_sim = None }
+    prune_sim = None;
+    retain_assumptions = empty ()}
 
 let push (s:solver_state)
 : solver_state
@@ -133,8 +136,7 @@ let filter_using_facts_from
       (s:solver_state)
       (ds:list decl) //flattened decls
 : list decl
-= if Options.Ext.get "disregard_using_facts_from" <> "" then ds else
-  match using_facts_from with
+= match using_facts_from with
   | None
   | Some [[], true] -> ds
   | Some using_facts_from ->
@@ -143,6 +145,7 @@ let filter_using_facts_from
     = match a.assumption_fact_ids with
       | [] -> true //retaining `a` because it is not tagged with a fact id
       | _ ->
+        mem a.assumption_name s.retain_assumptions ||
         a.assumption_fact_ids 
         |> BU.for_some (function Name lid -> TcEnv.should_enc_lid using_facts_from lid | _ -> false)
     in
@@ -177,26 +180,6 @@ let filter_using_facts_from
     let ds = List.collect map_decl ds in
     ds
 
-
-
-// let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
-//   let to_flush, levels =
-//     List.fold_right
-//       (fun level (to_flush, levels) ->
-//         let level = 
-//           { level with
-//             to_flush_rev=[];
-//             given_decls_rev=level.to_flush_rev@level.given_decls_rev} in
-//         to_flush@List.rev level.given_decls_rev,
-//         level::levels)
-//       s.levels ([], [])
-//   in
-//   let using_facts_from = match using_facts_from with
-//     | Some u -> Some u
-//     | None -> s.using_facts_from in
-//   let s1 = { s with using_facts_from; levels; pending_flushes_rev=List.rev to_flush } in
-//   debug "reset" s s1; s1
-
 let rec flatten (d:decl) : list decl = 
   match d with
   | Module (_, ds) -> List.collect flatten ds
@@ -212,6 +195,21 @@ let add_named_assumptions (named_assumptions:BU.psmap assumption) (ds:list decl)
     named_assumptions
     ds
 
+let add_retain_assumptions (ds:list decl) (s:solver_state)
+: solver_state
+= let ra =
+    List.fold_left (fun ra d ->
+      match d with
+      | RetainAssumptions names -> 
+        List.fold_left
+          (fun ra name -> FStar.Class.Setlike.add name ra)
+          ra names
+      | _ -> ra)
+      s.retain_assumptions
+      ds
+  in
+  { s with retain_assumptions = ra }
+
 let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state) 
 : solver_state
 = let decls = List.collect flatten ds in
@@ -226,7 +224,8 @@ let give_delay_assumptions (resetting:bool) (ds:list decl) (s:solver_state)
           pruning_state = Pruning.add_decls decls hd.pruning_state;
           named_assumptions = add_named_assumptions hd.named_assumptions assumptions }
   in
-  { s with levels = hd :: tl }
+  let s = { s with levels = hd :: tl } in
+  add_retain_assumptions decls s
 
 let give_now (resetting:bool) (ds:list decl) (s:solver_state) 
 : solver_state
@@ -260,9 +259,8 @@ let give_now (resetting:bool) (ds:list decl) (s:solver_state)
            pruning_state = Pruning.add_decls decls hd.pruning_state;
            named_assumptions }
   in
-  { s with
-    levels = hd :: tl
-  }
+  let s = { s with levels = hd :: tl } in
+  add_retain_assumptions decls s
 
 let give_aux resetting (ds:list decl) (s:solver_state)
 : solver_state
@@ -272,7 +270,7 @@ let give_aux resetting (ds:list decl) (s:solver_state)
 
 let give = give_aux false 
 
-let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_setting) (s:solver_state)
+let reset_aux (using_facts_from:option using_facts_from_setting) (s:solver_state)
 : solver_state
 = let s_new = init () in
   let s_new = { s_new with using_facts_from } in
@@ -301,11 +299,8 @@ let reset_with_new_using_facts_from (using_facts_from:option using_facts_from_se
   fst <| rebuild s.levels s_new
       
 let reset (using_facts_from:option using_facts_from_setting) (s:solver_state) =
-  let s' =
-   { reset_with_new_using_facts_from using_facts_from s with
-     prune_sim = s.prune_sim }
-  in
-  s'
+  { reset_aux using_facts_from s with
+    prune_sim = s.prune_sim }
 
 let name_of_assumption (d:decl) =
   match d with
