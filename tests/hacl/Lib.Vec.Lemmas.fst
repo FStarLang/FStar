@@ -4,7 +4,7 @@ module Lib.Vec.Lemmas
 #push-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Pervasives +FStar.Math.Lemmas +FStar.Seq -FStar.Seq.Properties.slice_slice \
     +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators +Lib.Vec.Lemmas'"
-
+#set-options "--z3refresh"
 
 let rec lemma_repeat_gen_vec w n a a_vec normalize_v f f_v acc_v0 =
   if n = 0 then begin
@@ -304,7 +304,6 @@ let lemma_repeat_blocks_multi_vec_equiv_pre #a #b #b_vec w blocksize n hi_f f f_
            (Loops.fixed_a b) (Loops.fixed_a b) (Loops.fixed_i f) (Loops.fixed_i f) (normalize_v acc_v) }
     repeat_gen_blocks_multi blocksize (w * i) hi_f w b_v (Loops.fixed_a b) (Loops.fixed_i f) (normalize_v acc_v);
     }
-
 
 let lemma_repeat_blocks_multi_vec #a #b #b_vec w blocksize inp f f_v normalize_v acc_v0 =
   let blocksize_v = w * blocksize in

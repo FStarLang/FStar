@@ -4,7 +4,7 @@ open FStar.Mul
 open Lib.IntTypes
 
 #set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence'"
-
+#set-options "--z3refresh"
 /// Variable length Sequences, derived from FStar.Seq
 
 (* This is the type of unbounded sequences.
