@@ -216,13 +216,13 @@ let (maybe_add_ambient :
           triggers1 in
       let is_ambient_refinement ty =
         match ty.FStar_SMTEncoding_Term.tm with
+        | FStar_SMTEncoding_Term.App
+            (FStar_SMTEncoding_Term.Var "Prims.squash", uu___) -> true
         | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Var name, uu___)
             -> FStar_Compiler_Util.starts_with name "Tm_refine_"
         | FStar_SMTEncoding_Term.FreeV (FStar_SMTEncoding_Term.FV
             (name, uu___, uu___1)) ->
             FStar_Compiler_Util.starts_with name "Tm_refine_"
-        | FStar_SMTEncoding_Term.App
-            (FStar_SMTEncoding_Term.Var "Prims.squash", uu___) -> true
         | uu___ -> false in
       let ambient_refinement_payload ty =
         match ty.FStar_SMTEncoding_Term.tm with

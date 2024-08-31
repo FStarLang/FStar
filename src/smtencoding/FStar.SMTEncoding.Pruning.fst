@@ -98,9 +98,9 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
   in
   let is_ambient_refinement ty =
     match ty.tm with
+    | App(Var "Prims.squash", _) -> true
     | App(Var name, _) 
     | FreeV(FV(name, _, _)) -> BU.starts_with name "Tm_refine_"
-    | App(Var "Prims.squash", _) -> true
     | _ -> false
   in
   let ambient_refinement_payload ty =
