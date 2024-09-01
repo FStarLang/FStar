@@ -1716,12 +1716,16 @@ and (iapp :
         | FStar_TypeChecker_NBETerm.Constant
             (FStar_TypeChecker_NBETerm.SConst (FStar_Const.Const_range_of))
             ->
+            let callbacks =
+              {
+                FStar_TypeChecker_NBETerm.iapp = (iapp cfg);
+                FStar_TypeChecker_NBETerm.translate = (translate cfg [])
+              } in
             (match args with
              | (a, uu___1)::[] ->
-                 mk_rt a.FStar_TypeChecker_NBETerm.nbe_r
-                   (FStar_TypeChecker_NBETerm.Constant
-                      (FStar_TypeChecker_NBETerm.Range
-                         (a.FStar_TypeChecker_NBETerm.nbe_r)))
+                 FStar_TypeChecker_NBETerm.embed
+                   FStar_TypeChecker_NBETerm.e_range callbacks
+                   a.FStar_TypeChecker_NBETerm.nbe_r
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
@@ -1731,19 +1735,24 @@ and (iapp :
         | FStar_TypeChecker_NBETerm.Constant
             (FStar_TypeChecker_NBETerm.SConst
             (FStar_Const.Const_set_range_of)) ->
+            let callbacks =
+              {
+                FStar_TypeChecker_NBETerm.iapp = (iapp cfg);
+                FStar_TypeChecker_NBETerm.translate = (translate cfg [])
+              } in
             (match args with
-             | (t, uu___1)::({
-                               FStar_TypeChecker_NBETerm.nbe_t =
-                                 FStar_TypeChecker_NBETerm.Constant
-                                 (FStar_TypeChecker_NBETerm.Range r);
-                               FStar_TypeChecker_NBETerm.nbe_r = uu___2;_},
-                             uu___3)::[]
-                 ->
-                 {
-                   FStar_TypeChecker_NBETerm.nbe_t =
-                     (t.FStar_TypeChecker_NBETerm.nbe_t);
-                   FStar_TypeChecker_NBETerm.nbe_r = r
-                 }
+             | (t, uu___1)::(r, uu___2)::[] ->
+                 let uu___3 =
+                   FStar_TypeChecker_NBETerm.unembed
+                     FStar_TypeChecker_NBETerm.e_range callbacks r in
+                 (match uu___3 with
+                  | FStar_Pervasives_Native.Some rr ->
+                      {
+                        FStar_TypeChecker_NBETerm.nbe_t =
+                          (t.FStar_TypeChecker_NBETerm.nbe_t);
+                        FStar_TypeChecker_NBETerm.nbe_r = rr
+                      }
+                  | FStar_Pervasives_Native.None -> Prims.magic ())
              | uu___1 ->
                  let uu___2 =
                    let uu___3 = FStar_TypeChecker_NBETerm.t_to_string f in
@@ -2804,7 +2813,7 @@ and (readback :
        | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Range
            r) ->
            FStar_TypeChecker_Primops_Base.embed_simple
-             FStar_Syntax_Embeddings.e_range
+             FStar_Syntax_Embeddings.e___range
              x.FStar_TypeChecker_NBETerm.nbe_r r
        | FStar_TypeChecker_NBETerm.Constant (FStar_TypeChecker_NBETerm.Real
            r) ->

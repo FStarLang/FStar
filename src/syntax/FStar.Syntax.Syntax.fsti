@@ -909,6 +909,8 @@ val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
 val t_tuple3_of     : term -> term -> term -> term
+val t_tuple4_of     : term -> term -> term -> term -> term
+val t_tuple5_of     : term -> term -> term -> term -> term -> term
 val t_either_of     : term -> term -> term
 val t_sealed_of     : term -> term
 val t_erased_of     : term -> term

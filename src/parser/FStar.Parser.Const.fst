@@ -316,6 +316,8 @@ let __range_lid    = p2l ["FStar"; "Range"; "__range"]
 let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
+let __mk_range_lid = p2l ["FStar"; "Range"; "__mk_range"]
+let __explode_range_lid = p2l ["FStar"; "Range"; "explode"]
 let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
 let guard_free     = pconst "guard_free"
@@ -432,6 +434,8 @@ let mk_tuple_lid n r =
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let lid_tuple3   = mk_tuple_lid 3 dummyRange
+let lid_tuple4   = mk_tuple_lid 4 dummyRange
+let lid_tuple5   = mk_tuple_lid 5 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -445,6 +449,8 @@ let mk_tuple_data_lid n r =
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
+let lid_Mktuple4 = mk_tuple_data_lid 4 dummyRange
+let lid_Mktuple5 = mk_tuple_data_lid 5 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"

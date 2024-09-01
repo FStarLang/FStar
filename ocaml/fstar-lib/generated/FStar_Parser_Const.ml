@@ -262,6 +262,10 @@ let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
 let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
 let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (mk_range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "mk_range"]
+let (__mk_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "__mk_range"]
+let (__explode_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "explode"]
 let (join_range_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Range"; "join_range"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
@@ -409,6 +413,10 @@ let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_tuple3 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (lid_tuple4 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (4)) FStar_Compiler_Range_Type.dummyRange
+let (lid_tuple5 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (5)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
@@ -431,6 +439,10 @@ let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_Mktuple3 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple4 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (4)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple5 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (5)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"

@@ -429,9 +429,10 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
         | Construct (fvar, us, [(b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple2 ->
-          BU.bind_opt (unembed ea cb a) (fun a ->
-          BU.bind_opt (unembed eb cb b) (fun b ->
-          Some (a, b)))
+          let open FStar.Class.Monad in
+          let! a = unembed ea cb a in
+          let! b = unembed eb cb b in
+          Some (a, b)
         | _ -> None)
     in
     mk_emb em un
@@ -456,14 +457,82 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let un cb (trm:t) : option ('a & 'b & 'c) =
         lazy_unembed etyp trm (fun trm ->
         match trm.nbe_t with
-        | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
-          BU.bind_opt (unembed ea cb a) (fun a ->
-          BU.bind_opt (unembed eb cb b) (fun b ->
-          BU.bind_opt (unembed ec cb c) (fun c ->
-          Some (a, b, c))))
+        | Construct (fvar, us, [(c, _); (b, _); (a, _); _; _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple3 ->
+          let open FStar.Class.Monad in
+          let! a = unembed ea cb a in
+          let! b = unembed eb cb b in
+          let! c = unembed ec cb c in
+          Some (a, b, c)
         | _ -> None)
     in
     mk_emb em un (fun () -> lid_as_typ PC.lid_tuple3 [U_zero;U_zero;U_zero] [as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)]) etyp
+
+let e_tuple4 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding 'd) =
+    let etyp () =
+        ET_app(PC.lid_tuple4 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ (); ec.e_typ (); ed.e_typ ()])
+    in
+    let em cb (x1, x2, x3, x4) : t =
+        lazy_embed etyp (x1, x2, x3, x4) (fun () ->
+        lid_as_constr (PC.lid_Mktuple4)
+                      [U_zero; U_zero; U_zero; U_zero]
+                      [as_arg (embed ed cb x4);
+                       as_arg (embed ec cb x3);
+                       as_arg (embed eb cb x2);
+                       as_arg (embed ea cb x1);
+                       as_iarg (type_of ed);
+                       as_iarg (type_of ec);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option ('a & 'b & 'c & 'd) =
+        lazy_unembed etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(d, _); (c, _); (b, _); (a, _); _; _; _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple4 ->
+          let open FStar.Class.Monad in
+          let! a = unembed ea cb a in
+          let! b = unembed eb cb b in
+          let! c = unembed ec cb c in
+          let! d = unembed ed cb d in
+          Some (a, b, c, d)
+        | _ -> None)
+    in
+    mk_emb em un (fun () -> lid_as_typ PC.lid_tuple4 [U_zero;U_zero;U_zero;U_zero] [as_arg (type_of ed); as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)]) etyp
+
+let e_tuple5 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding 'd) (ee:embedding 'e) =
+    let etyp () =
+        ET_app(PC.lid_tuple5 |> Ident.string_of_lid, [ea.e_typ (); eb.e_typ (); ec.e_typ (); ed.e_typ (); ee.e_typ ()])
+    in
+    let em cb (x1, x2, x3, x4, x5) : t =
+        lazy_embed etyp (x1, x2, x3, x4, x5) (fun () ->
+        lid_as_constr (PC.lid_Mktuple5)
+                      [U_zero; U_zero; U_zero; U_zero;U_zero]
+                      [as_arg (embed ee cb x5);
+                       as_arg (embed ed cb x4);
+                       as_arg (embed ec cb x3);
+                       as_arg (embed eb cb x2);
+                       as_arg (embed ea cb x1);
+                       as_iarg (type_of ee);
+                       as_iarg (type_of ed);
+                       as_iarg (type_of ec);
+                       as_iarg (type_of eb);
+                       as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option ('a & 'b & 'c & 'd & 'e) =
+        lazy_unembed etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(e, _); (d, _); (c, _); (b, _); (a, _); _; _; _; _; _]) when S.fv_eq_lid fvar PC.lid_Mktuple5 ->
+          let open FStar.Class.Monad in
+          let! a = unembed ea cb a in
+          let! b = unembed eb cb b in
+          let! c = unembed ec cb c in
+          let! d = unembed ed cb d in
+          let! e = unembed ee cb e in
+          Some (a, b, c, d, e)
+        | _ -> None)
+    in
+    mk_emb em un
+      (fun () -> lid_as_typ PC.lid_tuple5 [U_zero;U_zero;U_zero;U_zero;U_zero] [as_arg (type_of ee); as_arg (type_of ed); as_arg (type_of ec); as_arg (type_of eb); as_arg (type_of ea)])
+      etyp
 
 let e_either (ea:embedding 'a) (eb:embedding 'b) =
     let etyp () =
@@ -498,8 +567,8 @@ let e_either (ea:embedding 'a) (eb:embedding 'b) =
     in
     mk_emb em un (fun () -> lid_as_typ PC.either_lid [U_zero;U_zero] [as_arg (type_of eb); as_arg (type_of ea)]) etyp
 
-// Embedding range
-let e_range : embedding Range.range =
+// Embedding range (unsealed)
+let e___range : embedding Range.range =
     let em cb r = Constant (Range r) in
     let un cb t =
     match t with
@@ -508,6 +577,29 @@ let e_range : embedding Range.range =
         None
     in
     mk_emb' em un (fun () -> lid_as_typ PC.__range_lid [] []) (SE.emb_typ_of Range.range)
+
+// Embedding a sealed term. This just calls the embedding for a but also
+// adds a `seal` marker to the result. The unembedding removes it.
+let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
+    let etyp () =
+        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
+    in
+    let em cb (x: Sealed.sealed 'a) : t =
+        lazy_embed etyp x (fun () ->
+          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
+                                          as_iarg (type_of ea)])
+    in
+    let un cb (trm:t) : option (Sealed.sealed 'a) =
+        lazy_unembed etyp trm (fun trm ->
+        match trm.nbe_t with
+        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
+          Class.Monad.fmap Sealed.seal <| unembed ea cb a
+        | _ -> None)
+    in
+    mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
+
+let e_range : embedding Range.range =
+  embed_as (e_sealed e___range) Sealed.unseal Sealed.seal None
 
 let e_issue : embedding FStar.Errors.issue =
     let t_issue = SE.type_of SE.e_issue in
@@ -672,26 +764,6 @@ let e_norm_step =
     in
     mk_emb em un (fun () -> mkFV (lid_as_fv PC.norm_step_lid None) [] [])
                  (SE.emb_typ_of norm_step)
-
-// Embedding a sealed term. This just calls the embedding for a but also
-// adds a `seal` marker to the result. The unembedding removes it.
-let e_sealed (ea : embedding 'a) : Prims.Tot (embedding (Sealed.sealed 'a)) =
-    let etyp () =
-        ET_app(PC.sealed_lid |> Ident.string_of_lid, [ea.e_typ ()])
-    in
-    let em cb (x: Sealed.sealed 'a) : t =
-        lazy_embed etyp x (fun () ->
-          lid_as_constr PC.seal_lid [U_zero] [as_arg (embed ea cb (Sealed.unseal x));
-                                          as_iarg (type_of ea)])
-    in
-    let un cb (trm:t) : option (Sealed.sealed 'a) =
-        lazy_unembed etyp trm (fun trm ->
-        match trm.nbe_t with
-        | Construct (fvar, us, [(a, _); _]) when S.fv_eq_lid fvar PC.seal_lid ->
-          Class.Monad.fmap Sealed.seal <| unembed ea cb a
-        | _ -> None)
-    in
-    mk_emb em un (fun () -> lid_as_typ PC.sealed_lid [U_zero] [as_arg (type_of ea)]) etyp
 
 (* Interface for building primitive steps *)
 
