@@ -1,7 +1,8 @@
 {
   "fstar_exe": "fstar.exe",
   "options": [
-    "--cache_dir", ".cache"
+    "--cache_dir", ".cache",
+    "--ext", "context_pruning"
   ],
   "include_dirs": [
     "../../ulib/",
