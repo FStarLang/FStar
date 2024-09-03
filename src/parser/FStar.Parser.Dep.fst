@@ -810,7 +810,7 @@ let collect_one
         List.iter (fun x -> collect_decl x.d;
                             List.iter collect_term x.attrs;
                             match x.d with
-                            | Val _ when List.contains Inline_for_extraction x.quals ->
+                            | _ when List.contains Inline_for_extraction x.quals ->
                                 add_to_parsing_data P_inline_for_extraction
                             | _ -> ()
                             ) decls
