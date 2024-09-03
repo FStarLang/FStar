@@ -658,7 +658,7 @@ letqualifier:
  *     note that in the [@@ case, we choose the Implicit aqual
  *)
 aqual:
-  | HASH LBRACK t=thunk(tmNoEq) RBRACK { mk_meta_tac t }
+  | HASH LBRACK t=thunk(term) RBRACK { mk_meta_tac t }
   | HASH      { Implicit }
   | DOLLAR    { Equality }
 

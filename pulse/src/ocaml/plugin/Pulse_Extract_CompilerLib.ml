@@ -85,6 +85,12 @@ let mle_name (x:mlpath) : mlexpr =
     as_expr (ML.MLE_Name x)
 
 let mle_let (x:mlletbinding) (b:mlexpr) : mlexpr =
+    (* Set the CInline attribute on *every* letbinding. This makes
+       generated C code much more compact.
+       See https://github.com/FStarLang/karamel/pull/470 *)
+    let flavors, lbs = x in
+    let lbs = lbs |> List.map (fun lb -> { lb with ML.mllb_meta = CInline :: lb.ML.mllb_meta }) in
+    let x = (flavors, lbs) in
     as_expr (ML.MLE_Let (x, b))
     
 let mle_app (x:mlexpr) (args:mlexpr list) : mlexpr =
