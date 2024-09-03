@@ -792,12 +792,12 @@ let (reached_assumption : Prims.string -> unit st) =
               let uu___ = ctxt1.p in
               let uu___1 =
                 FStar_Compiler_Util.psmap_remove
-                  (ctxt1.p).assumption_name_map aname in
+                  (ctxt1.p).assumption_to_triggers aname in
               {
                 macro_freenames = (uu___.macro_freenames);
                 trigger_to_assumption = (uu___.trigger_to_assumption);
-                assumption_to_triggers = (uu___.assumption_to_triggers);
-                assumption_name_map = uu___1;
+                assumption_to_triggers = uu___1;
+                assumption_name_map = (uu___.assumption_name_map);
                 ambients = (uu___.ambients);
                 extra_roots = (uu___.extra_roots)
               } in
@@ -809,7 +809,7 @@ let (reached_assumption : Prims.string -> unit st) =
                         (FStar_Compiler_RBSet.setlike_rbset
                            FStar_Class_Ord.ord_string)) aname
                      (Obj.magic ctxt1.reached)) in
-              { p; reached = uu___1 } in
+              { p = (ctxt1.p); reached = uu___1 } in
             Obj.magic (put uu___)) uu___)
 let (remove_trigger_for :
   sym -> FStar_SMTEncoding_Term.assumption -> Prims.bool st) =

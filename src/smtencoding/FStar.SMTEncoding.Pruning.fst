@@ -350,8 +350,8 @@ let find_assumptions_waiting_on_trigger (x:sym)
 let reached_assumption (aname:string)
 : st unit
 = let! ctxt = get in
-  let p = { ctxt.p with assumption_name_map = BU.psmap_remove ctxt.p.assumption_name_map aname } in
-  put {ctxt with reached=add aname ctxt.reached; p }
+  let p = { ctxt.p with assumption_to_triggers = BU.psmap_remove ctxt.p.assumption_to_triggers aname } in
+  put {ctxt with reached=add aname ctxt.reached }
 
 // Remove trigger x from assumption a, and return true if a is now eligible
 let remove_trigger_for (trig:sym) (a:assumption)
