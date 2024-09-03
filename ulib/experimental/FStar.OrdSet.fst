@@ -420,12 +420,10 @@ let rec size_of_union_left (#a:eqtype) #f (s1 s2: ordset a f)
   | hd::tl -> size_of_union_left tl (insert' hd s2);
             precise_size_insert s2 hd
 
-#push-options "--ext context_pruning_verbose"
 let size_of_union_right (#a:eqtype) #f (s1 s2: ordset a f)
   : Lemma (ensures size (union s1 s2) >= size s1) =
   eq_lemma (union s1 s2) (union s2 s1);
   size_of_union_left s2 s1
-#pop-options
 
 let size_union #a #f s1 s2 =
   size_of_union_left s1 s2;
