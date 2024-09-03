@@ -256,7 +256,7 @@ let mk_default_handler print =
         (if e.issue_level = EError then
            err_count := 1 + !err_count);
         begin match e.issue_level with
-          | EInfo -> print_issue e
+          | EInfo when print -> print_issue e
           | _ when print && Debug.any () -> print_issue e
           | _ -> issues := e :: !issues
         end;
