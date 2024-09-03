@@ -18,6 +18,9 @@ module PulseSyntaxExtension.Sugar
 open FStar.Ident
 module A = FStar.Parser.AST
 module AU = FStar.Parser.AST.Util
+open FStar.Class.Show
+open FStar.Class.Tagged
+
 let rng = FStar.Compiler.Range.range
 let dummyRange = FStar.Compiler.Range.dummyRange
 
@@ -52,13 +55,6 @@ type computation_type = {
 
 type mut_or_ref =
   | MUT | REF
-
-type pat = 
-  | PatVar of ident
-  | PatConstructor {
-      head:lident;
-      args:list pat
-    }
 
 type hint_type =
   | ASSERT of slprop
@@ -362,12 +358,6 @@ and eq_mut_or_ref (m1 m2:mut_or_ref) =
   match m1, m2 with
   | MUT, MUT -> true
   | REF, REF -> true
-  | _, _ -> false
-and eq_pat (p1 p2:pat) =
-  match p1, p2 with
-  | PatVar i1, PatVar i2 -> eq_ident i1 i2
-  | PatConstructor { head=h1; args=a1 }, PatConstructor { head=h2; args=a2 } ->
-    eq_lident h1 h2 && forall2 eq_pat a1 a2
   | _, _ -> false
 
 let rec iter (f:'a -> unit) (l:list 'a) =
