@@ -28,7 +28,7 @@ module P = Pulse.Syntax.Printer
 module Metatheory = Pulse.Typing.Metatheory
 module PS = Pulse.Checker.Prover.Substs
 module Abs = Pulse.Checker.Abs
-
+module RU = Pulse.RuntimeUtils
 
 #push-options "--z3rlimit_factor 4 --split_queries no"
 let check_bind_fn
@@ -72,8 +72,8 @@ let check_bind
   (res_ppname:ppname)
   (t:st_term {Tm_Bind? t.term})
   (check:check_t)
-  : T.Tac (checker_result_t g ctxt post_hint) =
-
+  : T.Tac (checker_result_t g ctxt post_hint)
+=
   let g = Pulse.Typing.Env.push_context g "check_bind" t.range in
 
   debug_prover g (fun _ ->
@@ -130,7 +130,6 @@ let check_bind
     checker_result_for_st_typing d res_ppname
   )
 
-
 let check_tot_bind
   (g:env)
   (pre:term)
@@ -139,8 +138,8 @@ let check_tot_bind
   (res_ppname:ppname)
   (t:st_term { Tm_TotBind? t.term })
   (check:check_t)
-  : T.Tac (checker_result_t g pre post_hint) =
-
+  : T.Tac (checker_result_t g pre post_hint)
+=
   let g = Pulse.Typing.Env.push_context g "check_tot_bind" t.range in
 
   if None? post_hint
