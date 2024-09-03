@@ -62,6 +62,7 @@ type issue = {
 }
 
 type error_handler = {
+    eh_name: string; (* just for debugging purposes *)
     eh_add_one: issue -> unit;
     eh_count_errors: unit -> int;
     eh_report: unit -> list issue;

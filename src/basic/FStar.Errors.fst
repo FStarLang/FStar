@@ -272,7 +272,8 @@ let mk_default_handler print =
         sorted_unique_issues
     in
     let clear () = issues := []; err_count := 0 in
-    { eh_add_one = add_one;
+    { eh_name = "default handler (print=" ^ string_of_bool print ^ ")";
+      eh_add_one = add_one;
       eh_count_errors = count_errors;
       eh_report = report;
       eh_clear = clear }
