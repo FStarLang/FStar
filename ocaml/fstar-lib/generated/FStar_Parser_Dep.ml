@@ -1305,13 +1305,12 @@ let (collect_one :
                   collect_decl x.FStar_Parser_AST.d;
                   FStar_Compiler_List.iter collect_term
                     x.FStar_Parser_AST.attrs;
-                  (match x.FStar_Parser_AST.d with
-                   | FStar_Parser_AST.Val uu___3 when
-                       FStar_Compiler_List.contains
-                         FStar_Parser_AST.Inline_for_extraction
-                         x.FStar_Parser_AST.quals
-                       -> add_to_parsing_data P_inline_for_extraction
-                   | uu___3 -> ())) decls
+                  if
+                    FStar_Compiler_List.contains
+                      FStar_Parser_AST.Inline_for_extraction
+                      x.FStar_Parser_AST.quals
+                  then add_to_parsing_data P_inline_for_extraction
+                  else ()) decls
            and collect_decl d =
              match d with
              | FStar_Parser_AST.Include (lid, uu___1) ->
