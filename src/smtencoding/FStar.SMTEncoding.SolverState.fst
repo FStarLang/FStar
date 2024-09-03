@@ -35,7 +35,7 @@ let add_name (x:string) (s:decl_name_set) = BU.psmap_add s x true
 
 type decls_at_level = {
   pruning_state: Pruning.pruning_state; (* the context pruning state representing all declarations visible at this level and prior levels *)
-  given_decl_names: decl_name_set; (* all declarations that have been given to the solver at this level, and prior levels *)
+  given_decl_names: decl_name_set; (* all declarations that have been given to the solver at this level *)
   all_decls_at_level_rev: list (list decl); (* all decls at this level; in reverse order of pushes *)
   given_some_decls: bool; (* Have some declarations been flushed at this level? If not, we can pop this level without needing to flush pop to the solver *)
   to_flush_rev: list (list decl); (* declarations to be given to the solver at the next flush, in reverse order, though each nested list is in order *)
@@ -137,7 +137,7 @@ let filter_using_facts_from
       (using_facts_from:option using_facts_from_setting)
       (named_assumptions:BU.psmap assumption)
       (retain_assumptions:decl_name_set)
-      (given_decl_names:decl_name_set)
+      (already_given_decl: string -> bool)
       (ds:list decl) //flattened decls
 : list decl
 = match using_facts_from with
@@ -160,7 +160,7 @@ let filter_using_facts_from
     let already_given (a:assumption)
     : bool
     = Some? (BU.smap_try_find already_given_map a.assumption_name) ||
-      decl_names_contains a.assumption_name given_decl_names
+      already_given_decl a.assumption_name
     in
     let map_decl (d:decl)
     : list decl
@@ -186,6 +186,10 @@ let filter_using_facts_from
     in
     let ds = List.collect map_decl ds in
     ds
+
+let already_given_decl (s:solver_state) (aname:string)
+: bool
+= s.levels |> BU.for_some (fun level -> decl_names_contains aname level.given_decl_names)
 
 let rec flatten (d:decl) : list decl = 
   match d with
@@ -282,7 +286,7 @@ let give_now (resetting:bool) (ds:list decl) (s:solver_state)
       s.using_facts_from
       named_assumptions
       s.retain_assumptions
-      hd.given_decl_names
+      (already_given_decl s)
       decls
   in
   let given =
@@ -334,7 +338,7 @@ let give = give_aux false
 let reset (using_facts_from:option using_facts_from_setting) (s:solver_state)
 : solver_state
 = let s_new = init () in
-  let s_new = { s_new with using_facts_from } in
+  let s_new = { s_new with using_facts_from; retain_assumptions = s.retain_assumptions } in
   let set_pruning_roots level s = 
     let hd,tl = peek s in
     let hd = { hd with pruning_roots = level.pruning_roots } in
@@ -402,7 +406,7 @@ let prune_level (roots:list decl) (hd:decls_at_level) (s:solver_state)
       s.using_facts_from
       hd.named_assumptions
       s.retain_assumptions
-      hd.given_decl_names
+      (already_given_decl s)
       can_give
   in
   let hd = { hd with given_decl_names;
@@ -420,7 +424,7 @@ let prune_sim (roots:list decl) (s:solver_state)
       s.using_facts_from
       hd.named_assumptions
       s.retain_assumptions
-      hd.given_decl_names
+      (already_given_decl s)
       to_give
   in
   List.map name_of_assumption (List.filter Assume? roots@can_give)

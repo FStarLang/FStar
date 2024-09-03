@@ -255,14 +255,14 @@ let (filter_using_facts_from :
   using_facts_from_setting FStar_Pervasives_Native.option ->
     FStar_SMTEncoding_Term.assumption FStar_Compiler_Util.psmap ->
       decl_name_set ->
-        decl_name_set ->
+        (Prims.string -> Prims.bool) ->
           FStar_SMTEncoding_Term.decl Prims.list ->
             FStar_SMTEncoding_Term.decl Prims.list)
   =
   fun using_facts_from ->
     fun named_assumptions ->
       fun retain_assumptions ->
-        fun given_decl_names ->
+        fun already_given_decl ->
           fun ds ->
             match using_facts_from with
             | FStar_Pervasives_Native.None -> ds
@@ -294,9 +294,8 @@ let (filter_using_facts_from :
                      FStar_Compiler_Util.smap_try_find already_given_map
                        a.FStar_SMTEncoding_Term.assumption_name in
                    FStar_Pervasives_Native.uu___is_Some uu___) ||
-                    (decl_names_contains
-                       a.FStar_SMTEncoding_Term.assumption_name
-                       given_decl_names) in
+                    (already_given_decl
+                       a.FStar_SMTEncoding_Term.assumption_name) in
                 let map_decl d =
                   match d with
                   | FStar_SMTEncoding_Term.Assume a ->
@@ -324,6 +323,12 @@ let (filter_using_facts_from :
                       assumptions
                   | uu___ -> [d] in
                 let ds1 = FStar_Compiler_List.collect map_decl ds in ds1
+let (already_given_decl : solver_state -> Prims.string -> Prims.bool) =
+  fun s ->
+    fun aname ->
+      FStar_Compiler_Util.for_some
+        (fun level -> decl_names_contains aname level.given_decl_names)
+        s.levels
 let rec (flatten :
   FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.decl Prims.list) =
   fun d ->
@@ -448,7 +453,7 @@ let (give_now :
                  let ds_to_flush =
                    filter_using_facts_from s.using_facts_from
                      named_assumptions s.retain_assumptions
-                     hd.given_decl_names decls in
+                     (already_given_decl s) decls in
                  let given =
                    FStar_Compiler_List.fold_left
                      (fun given1 ->
@@ -527,7 +532,7 @@ let (reset :
           levels = (s_new.levels);
           pending_flushes_rev = (s_new.pending_flushes_rev);
           using_facts_from;
-          retain_assumptions = (s_new.retain_assumptions)
+          retain_assumptions = (s.retain_assumptions)
         } in
       let set_pruning_roots level s1 =
         let uu___ = peek s1 in
@@ -621,7 +626,7 @@ let (prune_level :
         | (given_decl_names, can_give) ->
             let can_give1 =
               filter_using_facts_from s.using_facts_from hd.named_assumptions
-                s.retain_assumptions hd.given_decl_names can_give in
+                s.retain_assumptions (already_given_decl s) can_give in
             let hd1 =
               {
                 pruning_state = (hd.pruning_state);
@@ -646,7 +651,7 @@ let (prune_sim :
             FStar_SMTEncoding_Pruning.prune hd.pruning_state roots in
           let can_give =
             filter_using_facts_from s.using_facts_from hd.named_assumptions
-              s.retain_assumptions hd.given_decl_names to_give in
+              s.retain_assumptions (already_given_decl s) to_give in
           let uu___1 =
             let uu___2 =
               FStar_Compiler_List.filter

@@ -15,7 +15,7 @@
 *)
 module FStar.SMTEncoding.SolverState
 (**
-  This modules is an abstraction of state of the SMT solver, expressed in terms of the facts
+  This module is an abstraction of state of the SMT solver, expressed in terms of the facts
   that are visible to it currently.
 
   As such, it also encapsulates the various notions of filtering the facts that
