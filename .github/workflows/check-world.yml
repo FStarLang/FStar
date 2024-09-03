@@ -1,0 +1,650 @@
+name: Check world (build F* and all projects)
+on:
+  # push:
+  workflow_dispatch:
+  workflow_call:
+
+# TODO:
+# Is there a way to set the default container?
+# Move to the regular fstar-ci-base too
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          path: FStar/
+
+      - name: Prep
+        run: |
+          # In case we edited fstar.opam, install new deps here
+          # This will most likely fail to like krml below, what's going on?
+          # opam install --confirm-level=unsafe-yes --deps-only ./FStar/fstar.opam
+      - name: Build
+        run: make -C FStar -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: FStar
+          extra: --exclude=FStar/ocaml/_build
+
+  test-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs: build-fstar
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - name: Test
+        run: make -C FStar -skj$(nproc) ci-uregressions
+
+  test-fstar-boot:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    # needs: build-fstar
+    # ^ This does not really depend on the previous job, but this can be
+    # enabled if we wanted to sequentialize them for whatever reason.
+    #   We start from scratch since we need a git repo to check the
+    # diff, and that is not contained in the artifact. We could just
+    # take the ulib checked files from the artifact, if we really wanted
+    # to, but checking ulib with ADMIT is quite fast anyway.
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: actions/checkout@master
+        with:
+          path: FStar/
+
+      - name: Bootstrap
+        run: |
+          make -C FStar -skj$(nproc) 1
+          make -C FStar -skj$(nproc) full-bootstrap ADMIT=1
+
+      - name: Check diff
+        run: |
+          cd FStar/
+          echo "git status:"
+          git status
+          FAILED=false
+          if ! git diff --exit-code ocaml/; then
+            echo "::group::DIFF"
+            git diff
+            echo "::endgroup::"
+            FAILED=true
+          fi
+          if git ls-files --others --exclude-standard -- ocaml/ | grep -q; then
+            echo "::group::EXTRA FILES"
+            git diff
+            echo "::endgroup::"
+            FAILED=true
+          fi
+          if $FAILED; then false; fi
+
+  build-krml:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs: build-fstar
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - name: Checkout karamel
+        uses: actions/checkout@master
+        with:
+          path: karamel/
+          repository: FStarLang/karamel
+
+      - name: Prep
+        run: |
+          # Fails mysteriously:
+          #
+          # Error:  Package conflict!
+          #   * No agreement on the version of ocaml:
+          #     - (invariant) -> ocaml-base-compiler = 4.14.2 -> ocaml = 4.14.2
+          # No solution found, exiting
+          #     - karamel -> fstar -> ocaml < 4.06.0
+          #     You can temporarily relax the switch invariant with `--update-invariant'
+          #   * No agreement on the version of ocaml-base-compiler:
+          #     - (invariant) -> ocaml-base-compiler = 4.14.2
+          #     - karamel -> fstar -> ocaml < 4.06.0 -> ocaml-base-compiler = 3.07+1
+          #   * Missing dependency:
+          #     - karamel -> fstar -> z3 = 4.8.5 -> conf-python-2-7
+          #     depends on the unavailable system package 'python2.7'. Use `--no-depexts' to attempt installation anyway, or it is possible that a depext package name in the opam file is incorrect.
+          #   * Missing dependency:
+          #     - karamel -> fstar -> ocaml < 4.06.0 -> ocaml-variants >= 3.11.1 -> ocaml-beta
+          #     unmet availability conditions: 'enable-ocaml-beta-repository'
+          #   * Missing dependency:
+          #     - karamel -> fstar -> ocaml < 4.06.0 -> ocaml-variants >= 3.11.1 -> system-msvc
+          #     unmet availability conditions: 'os = "win32"'
+          #
+          # opam install --confirm-level=unsafe-yes --deps-only ./karamel/karamel.opam
+
+      - name: Build krml
+        run: make -C karamel -skj$(nproc)
+
+      # krml is a symlink to _build/default/src/Karamel.exe, but we want to exclude _build.
+      # So, overwrite the link with the actual file.
+      - name: Fix for symlink
+        run: |
+          cp --remove-destination $(realpath karamel/krml) karamel/krml
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: karamel
+          extra: --exclude=karamel/_build
+
+  test-krml:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Test
+        run: make -C karamel -skj$(nproc) test
+
+  build-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Checkout steel
+        uses: actions/checkout@master
+        with:
+          path: steel/
+          repository: FStarLang/steel
+
+      - name: Build
+        run: make -C steel -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: steel
+
+  test-steel:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-steel
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: steel
+          hometag: STEEL
+
+      - name: Test
+        run: make -C steel -skj$(nproc) test
+
+  build-pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Checkout pulse
+        uses: actions/checkout@master
+        with:
+          path: pulse/
+          repository: FStarLang/pulse
+
+      - name: Build
+        run: make -C pulse -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: pulse
+
+  test-pulse:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-pulse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: pulse
+          hometag: PULSE
+
+      - name: Test
+        run: make -C pulse -skj$(nproc) test
+
+  build-hacl:
+    runs-on: [self-hosted, linux, big] # using a faster runner
+    # runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Checkout hacl-star
+        uses: actions/checkout@master
+        with:
+          path: hacl-star/
+          repository: hacl-star/hacl-star
+
+      - run: echo "HACL_HOME=$(pwd)/hacl-star" >> $GITHUB_ENV
+
+      - name: Get Vale
+        run: ./hacl-star/tools/get_vale.sh
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C hacl-star -skj${NPROC}
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: hacl-star
+
+  test-hacl:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-hacl
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+      - name: Get Vale (again)
+        run: ./hacl-star/tools/get_vale.sh
+
+      - name: Test
+        run: make -C hacl-star -skj$(nproc) test
+
+  build-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Checkout everparse
+        uses: actions/checkout@master
+        with:
+          path: everparse/
+          repository: project-everest/everparse
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C everparse -skj${NPROC}
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: everparse
+
+  test-everparse:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+      - name: Test
+        run: make -C everparse -skj$(nproc) test
+
+  build-merkle-tree:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-hacl
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+      - name: Checkout merkle-tree
+        uses: actions/checkout@master
+        with:
+          path: merkle-tree/
+          repository: hacl-star/merkle-tree
+
+      - name: Build
+        run: |
+          NPROC=$(nproc)
+          if [ $NPROC -gt 16 ]; then NPROC=16; fi
+          make -C merkle-tree -skj${NPROC} dist/libmerkletree.a
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: merkle-tree
+
+  test-merkle-tree:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-hacl
+      - build-everparse
+      - build-merkle-tree
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: merkle-tree
+
+      - name: Test
+        run: make -C merkle-tree -skj$(nproc) test
+
+  build-mitls-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-hacl
+      - build-everparse
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+      - name: Checkout mitls-fstar
+        uses: actions/checkout@master
+        with:
+          path: mitls-fstar/
+          repository: project-everest/mitls-fstar
+
+      - name: Build
+        run: make -C mitls-fstar/src/tls -skj$(nproc)
+
+      - uses: mtzguido/gci-upload@master
+        with:
+          name: mitls-fstar
+
+  test-mitls-fstar:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+      - build-hacl
+      - build-everparse
+      - build-mitls-fstar
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: everparse
+          hometag: EVERPARSE
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: hacl-star
+          hometag: HACL
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: mitls-fstar
+          hometag: MITLS
+
+      - name: Build
+        run: make -C mitls-fstar/src/tls -skj$(nproc) test
