@@ -623,7 +623,10 @@ let catch_errors (f : unit -> 'a) : list issue & option 'a =
 // Similar to catch_errors, except the warnings are not added to the old handler
 //
 let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
-  let errs, _, r = catch_errors_aux f in
+  let errs, rest, r = catch_errors_aux f in
+  List.iter (!current_handler).eh_add_one <| List.filter (fun i -> i.issue_level = EInfo) rest;
+  (* ^ We print diagnostics anyway, which are usually debugging messages to be rendered
+  in the editor. *)
   errs, r
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)
