@@ -853,17 +853,30 @@ and iapp (cfg : config) (f:t) (args:args) : t =
       end
 
   | Constant (SConst FStar.Const.Const_range_of) ->
+    let callbacks = {
+      iapp = iapp cfg;
+      translate = translate cfg [];
+    } in
     begin
     match args with
-    | [(a, _)] -> mk_rt a.nbe_r (Constant (Range a.nbe_r))
+    | [(a, _)] ->
+      embed e_range callbacks a.nbe_r
+    // mk_rt a.nbe_r (Constant (Range a.nbe_r))
     | _ ->     failwith ("NBE ill-typed application Const_range_of: " ^ t_to_string f)
     end
 
   | Constant (SConst FStar.Const.Const_set_range_of) ->
     begin
+    let callbacks = {
+      iapp = iapp cfg;
+      translate = translate cfg [];
+    } in
     match args with
-    | [(t, _); ({nbe_t=Constant (Range r)}, _)] ->
-      { t with nbe_r = r}
+    | [(t, _); (r, _)] -> (
+      match unembed e_range callbacks r with
+      | Some rr -> { t with nbe_r = rr }
+      | None -> magic()
+      )
     | _ ->      failwith ("NBE ill-typed application Const_set_range_of: " ^ t_to_string f)
     end
 
@@ -1230,7 +1243,7 @@ and readback (cfg:config) (x:t) : term =
     | Constant (Int i) -> with_range (U.exp_int (Z.string_of_big_int i))
     | Constant (String (s, r)) -> mk (S.Tm_constant (C.Const_string (s, r)))
     | Constant (Char c) -> with_range (U.exp_char c)
-    | Constant (Range r) -> PO.embed_simple x.nbe_r r
+    | Constant (Range r) -> PO.embed_simple #_ #EMB.e___range x.nbe_r r
     | Constant (Real r) ->  PO.embed_simple x.nbe_r (Compiler.Real.Real r)
     | Constant (SConst c) -> mk (S.Tm_constant c)
 

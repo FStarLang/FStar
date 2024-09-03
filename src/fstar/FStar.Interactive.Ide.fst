@@ -1225,7 +1225,8 @@ let interactive_error_handler = // No printing here — collect everything for f
     List.sortWith compare_issues (Util.remove_dups (fun i0 i1 -> i0=i1) !issues)
   in
   let clear () = issues := [] in
-  { eh_add_one = add_one;
+  { eh_name = "interactive error handler";
+    eh_add_one = add_one;
     eh_count_errors = count_errors;
     eh_report = report;
     eh_clear = clear }

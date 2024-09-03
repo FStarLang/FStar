@@ -283,7 +283,8 @@ instance val e_real   : embedding Compiler.Real.real
 instance val e_unit   : embedding unit
 val e_any    : embedding t
 val mk_any_emb : t -> embedding t
-instance val e_range  : embedding Range.range
+val e___range  : embedding Range.range (* unsealed *)
+instance val e_range  : embedding Range.range (* sealed *)
 instance val e_issue  : embedding FStar.Errors.issue
 instance val e_document : embedding FStar.Pprint.document
 instance val e_vconfig  : embedding vconfig
@@ -292,6 +293,8 @@ instance val e_list   : #a:Type -> embedding a -> Prims.Tot (embedding (list a))
 instance val e_option : embedding 'a -> Prims.Tot (embedding (option 'a))
 instance val e_tuple2 : embedding 'a -> embedding 'b -> Prims.Tot (embedding ('a & 'b))
 instance val e_tuple3 : embedding 'a -> embedding 'b -> embedding 'c -> Prims.Tot (embedding ('a & 'b & 'c))
+instance val e_tuple4 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> Prims.Tot (embedding ('a & 'b & 'c & 'd))
+instance val e_tuple5 : embedding 'a -> embedding 'b -> embedding 'c -> embedding 'd -> embedding 'e -> Prims.Tot (embedding ('a & 'b & 'c & 'd & 'e))
 instance val e_either : embedding 'a -> embedding 'b -> Prims.Tot (embedding (either 'a 'b))
 instance val e_sealed : embedding 'a -> Prims.Tot (embedding (FStar.Compiler.Sealed.sealed 'a))
 instance val e_string_list : embedding (list string)

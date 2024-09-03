@@ -2983,6 +2983,48 @@ let (t_tuple3_of : term -> term -> term -> term) =
               uu___5 in
           uu___2 :: uu___3 in
         mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
+let (t_tuple4_of : term -> term -> term -> term -> term) =
+  fun t1 ->
+    fun t2 ->
+      fun t3 ->
+        fun t4 ->
+          let uu___ =
+            let uu___1 = tabbrev FStar_Parser_Const.lid_tuple4 in
+            mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero; U_zero] in
+          let uu___1 =
+            let uu___2 = as_arg t1 in
+            let uu___3 =
+              let uu___4 = as_arg t2 in
+              let uu___5 =
+                let uu___6 = as_arg t3 in
+                let uu___7 = let uu___8 = as_arg t4 in [uu___8] in uu___6 ::
+                  uu___7 in
+              uu___4 :: uu___5 in
+            uu___2 :: uu___3 in
+          mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
+let (t_tuple5_of : term -> term -> term -> term -> term -> term) =
+  fun t1 ->
+    fun t2 ->
+      fun t3 ->
+        fun t4 ->
+          fun t5 ->
+            let uu___ =
+              let uu___1 = tabbrev FStar_Parser_Const.lid_tuple5 in
+              mk_Tm_uinst uu___1 [U_zero; U_zero; U_zero; U_zero; U_zero] in
+            let uu___1 =
+              let uu___2 = as_arg t1 in
+              let uu___3 =
+                let uu___4 = as_arg t2 in
+                let uu___5 =
+                  let uu___6 = as_arg t3 in
+                  let uu___7 =
+                    let uu___8 = as_arg t4 in
+                    let uu___9 = let uu___10 = as_arg t5 in [uu___10] in
+                    uu___8 :: uu___9 in
+                  uu___6 :: uu___7 in
+                uu___4 :: uu___5 in
+              uu___2 :: uu___3 in
+            mk_Tm_app uu___ uu___1 FStar_Compiler_Range_Type.dummyRange
 let (t_either_of : term -> term -> term) =
   fun t1 ->
     fun t2 ->

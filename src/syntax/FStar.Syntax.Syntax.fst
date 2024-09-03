@@ -487,6 +487,14 @@ let t_tuple3_of t1 t2 t3 = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.lid_tuple3) [U_zero;U_zero;U_zero])
   [as_arg t1; as_arg t2; as_arg t3]
   Range.dummyRange
+let t_tuple4_of t1 t2 t3 t4 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple4) [U_zero;U_zero;U_zero;U_zero])
+  [as_arg t1; as_arg t2; as_arg t3; as_arg t4]
+  Range.dummyRange
+let t_tuple5_of t1 t2 t3 t4 t5 = mk_Tm_app
+  (mk_Tm_uinst (tabbrev PC.lid_tuple5) [U_zero;U_zero;U_zero;U_zero;U_zero])
+  [as_arg t1; as_arg t2; as_arg t3; as_arg t4; as_arg t5]
+  Range.dummyRange
 let t_either_of t1 t2 = mk_Tm_app
   (mk_Tm_uinst (tabbrev PC.either_lid) [U_zero;U_zero])
   [as_arg t1; as_arg t2]

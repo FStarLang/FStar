@@ -3031,6 +3031,7 @@ let (interactive_error_handler : FStar_Errors.error_handler) =
     FStar_Compiler_List.sortWith FStar_Errors.compare_issues uu___1 in
   let clear uu___ = FStar_Compiler_Effect.op_Colon_Equals issues [] in
   {
+    FStar_Errors.eh_name = "interactive error handler";
     FStar_Errors.eh_add_one = add_one;
     FStar_Errors.eh_count_errors = count_errors;
     FStar_Errors.eh_report = report;

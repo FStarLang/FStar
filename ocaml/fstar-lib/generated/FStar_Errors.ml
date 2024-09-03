@@ -200,31 +200,41 @@ let (__proj__Mkissue__item__issue_ctx : issue -> Prims.string Prims.list) =
         issue_ctx;_} -> issue_ctx
 type error_handler =
   {
+  eh_name: Prims.string ;
   eh_add_one: issue -> unit ;
   eh_count_errors: unit -> Prims.int ;
   eh_report: unit -> issue Prims.list ;
   eh_clear: unit -> unit }
+let (__proj__Mkerror_handler__item__eh_name : error_handler -> Prims.string)
+  =
+  fun projectee ->
+    match projectee with
+    | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
+        eh_name
 let (__proj__Mkerror_handler__item__eh_add_one :
   error_handler -> issue -> unit) =
   fun projectee ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_add_one
+    | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
+        eh_add_one
 let (__proj__Mkerror_handler__item__eh_count_errors :
   error_handler -> unit -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
+    | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
         eh_count_errors
 let (__proj__Mkerror_handler__item__eh_report :
   error_handler -> unit -> issue Prims.list) =
   fun projectee ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_report
+    | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
+        eh_report
 let (__proj__Mkerror_handler__item__eh_clear : error_handler -> unit -> unit)
   =
   fun projectee ->
     match projectee with
-    | { eh_add_one; eh_count_errors; eh_report; eh_clear;_} -> eh_clear
+    | { eh_name; eh_add_one; eh_count_errors; eh_report; eh_clear;_} ->
+        eh_clear
 exception Error of error 
 let (uu___is_Error : Prims.exn -> Prims.bool) =
   fun projectee ->
@@ -481,7 +491,7 @@ let (mk_default_handler : Prims.bool -> error_handler) =
          FStar_Compiler_Effect.op_Colon_Equals err_count uu___1)
       else ();
       (match e.issue_level with
-       | EInfo -> print_issue e
+       | EInfo when print -> print_issue e
        | uu___2 when print && (FStar_Compiler_Debug.any ()) -> print_issue e
        | uu___2 ->
            let uu___3 =
@@ -508,7 +518,13 @@ let (mk_default_handler : Prims.bool -> error_handler) =
     let clear uu___ =
       FStar_Compiler_Effect.op_Colon_Equals issues [];
       FStar_Compiler_Effect.op_Colon_Equals err_count Prims.int_zero in
+    let uu___ =
+      let uu___1 =
+        let uu___2 = FStar_Compiler_Util.string_of_bool print in
+        Prims.strcat uu___2 ")" in
+      Prims.strcat "default handler (print=" uu___1 in
     {
+      eh_name = uu___;
       eh_add_one = add_one;
       eh_count_errors = count_errors;
       eh_report = report;
@@ -739,7 +755,7 @@ let (set_option_warning_callback_range :
   FStar_Compiler_Range_Type.range FStar_Pervasives_Native.option -> unit) =
   fun ropt ->
     FStar_Options.set_option_warning_callback (warn_unsafe_options ropt)
-let (uu___386 :
+let (uu___390 :
   (((Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) *
     (unit -> FStar_Errors_Codes.error_setting Prims.list)))
   =
@@ -785,10 +801,10 @@ let (uu___386 :
   (set_callbacks, get_error_flags)
 let (t_set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
-  match uu___386 with
+  match uu___390 with
   | (t_set_parse_warn_error1, error_flags) -> t_set_parse_warn_error1
 let (error_flags : unit -> FStar_Errors_Codes.error_setting Prims.list) =
-  match uu___386 with
+  match uu___390 with
   | (t_set_parse_warn_error1, error_flags1) -> error_flags1
 let (set_parse_warn_error :
   (Prims.string -> FStar_Errors_Codes.error_setting Prims.list) -> unit) =
@@ -1090,7 +1106,15 @@ let catch_errors_and_ignore_rest :
   =
   fun f ->
     let uu___ = catch_errors_aux f in
-    match uu___ with | (errs, uu___1, r) -> (errs, r)
+    match uu___ with
+    | (errs, rest, r) ->
+        ((let uu___2 =
+            let uu___3 = FStar_Compiler_Effect.op_Bang current_handler in
+            uu___3.eh_add_one in
+          let uu___3 =
+            FStar_Compiler_List.filter (fun i -> i.issue_level = EInfo) rest in
+          FStar_Compiler_List.iter uu___2 uu___3);
+         (errs, r))
 let (find_multiset_discrepancy :
   Prims.int Prims.list ->
     Prims.int Prims.list ->
