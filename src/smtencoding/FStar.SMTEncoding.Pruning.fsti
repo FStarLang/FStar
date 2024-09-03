@@ -40,6 +40,7 @@ module FStar.SMTEncoding.Pruning
   Enhancements to this basic idea support 
     - quantifiers with disjunctive patterns
     - top-level non-quantified facts
+    - macros
     - and some features that are specific to F*'s SMT encoding
 
   Thanks to Chris Hawblitzel and Guido Martínez for design and discussions.
