@@ -179,25 +179,11 @@ let free_variables t = match !t.freevars with
 open FStar.Class.Setlike
 let free_top_level_names (t:term)
 : RBSet.t string
-= let exclude_name n =
-    match n with
-    | "SFuel"
-    | "ZFuel"
-    | "HasType"
-    | "HasTypeZ"
-    | "HasTypeFuel"
-    | "Valid"
-    | "ApplyTT"
-    | "ApplyTF"
-    | "Prims.lex_t" -> true
-    | _ -> false
-  in
-  let rec free_top_level_names acc t =
+= let rec free_top_level_names acc t =
     match t.tm with
-    | FreeV (FV (nm, _, _)) ->
-      if exclude_name nm then acc else add nm acc
+    | FreeV (FV (nm, _, _)) -> add nm acc
     | App (Var s, args) -> 
-      let acc = if exclude_name s then acc else add s acc in
+      let acc = add s acc in
       List.fold_left free_top_level_names acc args
     | App (_, args) -> List.fold_left free_top_level_names acc args
     | Quant (_, pats, _, _, body) ->
@@ -589,7 +575,7 @@ let fresh_token (tok_name, sort) id =
              assumption_caption=Some "fresh token";
              assumption_term=tm;
              assumption_fact_ids=[];
-             assumption_free_names=elems (free_top_level_names tm)} in
+             assumption_free_names=free_top_level_names tm} in
     Assume a
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
@@ -605,7 +591,7 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
     assumption_caption=Some "Constructor distinct";
     assumption_term=tm;
     assumption_fact_ids=[];
-    assumption_free_names=elems (free_top_level_names tm)
+    assumption_free_names=free_top_level_names tm
   } in
   Assume a
 
@@ -631,7 +617,7 @@ let injective_constructor
                     assumption_caption = Some "Projection inverse";
                     assumption_term = tm;
                     assumption_fact_ids = [];
-                    assumption_free_names = elems (free_top_level_names tm)
+                    assumption_free_names = free_top_level_names tm
                  } in
               [proj_name; Assume a]
             else [])
@@ -700,7 +686,7 @@ let constructor_to_decl rng constr =
           assumption_caption=Some "Constructor base";
           assumption_term=q;
           assumption_fact_ids=[];
-          assumption_free_names=elems (free_top_level_names q)
+          assumption_free_names=free_top_level_names q
         } in
         [decl; Assume a]
     )

@@ -841,13 +841,7 @@ let (detail_errors :
                          let uu___5 = FStar_SMTEncoding_Term.fv_name l in
                          Prims.strcat "@disable_label_" uu___5 in
                        let uu___5 =
-                         let uu___6 =
-                           FStar_SMTEncoding_Term.free_top_level_names tm in
-                         FStar_Class_Setlike.elems ()
-                           (Obj.magic
-                              (FStar_Compiler_RBSet.setlike_rbset
-                                 FStar_Class_Ord.ord_string))
-                           (Obj.magic uu___6) in
+                         FStar_SMTEncoding_Term.free_top_level_names tm in
                        {
                          FStar_SMTEncoding_Term.assumption_term = uu___3;
                          FStar_SMTEncoding_Term.assumption_caption =

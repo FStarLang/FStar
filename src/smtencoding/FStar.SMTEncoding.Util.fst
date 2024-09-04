@@ -41,7 +41,7 @@ let mkAssume (tm, cap, nm) =
         assumption_caption=cap;
         assumption_term=tm;
         assumption_fact_ids=[];
-        assumption_free_names=elems (free_top_level_names tm);
+        assumption_free_names=free_top_level_names tm;
     })
 let norng f = fun x -> f x Range.dummyRange
 let mkTrue   = mkTrue Range.dummyRange

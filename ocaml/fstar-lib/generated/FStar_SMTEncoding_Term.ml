@@ -315,7 +315,7 @@ type assumption =
   assumption_caption: caption ;
   assumption_name: Prims.string ;
   assumption_fact_ids: fact_db_id Prims.list ;
-  assumption_free_names: Prims.string Prims.list }
+  assumption_free_names: Prims.string FStar_Compiler_RBSet.t }
 let (__proj__Mkassumption__item__assumption_term : assumption -> term) =
   fun projectee ->
     match projectee with
@@ -340,7 +340,7 @@ let (__proj__Mkassumption__item__assumption_fact_ids :
     | { assumption_term; assumption_caption; assumption_name;
         assumption_fact_ids; assumption_free_names;_} -> assumption_fact_ids
 let (__proj__Mkassumption__item__assumption_free_names :
-  assumption -> Prims.string Prims.list) =
+  assumption -> Prims.string FStar_Compiler_RBSet.t) =
   fun projectee ->
     match projectee with
     | { assumption_term; assumption_caption; assumption_name;
@@ -612,18 +612,6 @@ let (free_variables : term -> fvs) =
          fvs1)
 let (free_top_level_names : term -> Prims.string FStar_Compiler_RBSet.t) =
   fun t ->
-    let exclude_name n =
-      match n with
-      | "SFuel" -> true
-      | "ZFuel" -> true
-      | "HasType" -> true
-      | "HasTypeZ" -> true
-      | "HasTypeFuel" -> true
-      | "Valid" -> true
-      | "ApplyTT" -> true
-      | "ApplyTF" -> true
-      | "Prims.lex_t" -> true
-      | uu___ -> false in
     let rec free_top_level_names1 uu___1 uu___ =
       (fun acc ->
          fun t1 ->
@@ -631,29 +619,20 @@ let (free_top_level_names : term -> Prims.string FStar_Compiler_RBSet.t) =
            | FreeV (FV (nm, uu___, uu___1)) ->
                Obj.magic
                  (Obj.repr
-                    (if exclude_name nm
-                     then Obj.repr acc
-                     else
-                       Obj.repr
-                         (FStar_Class_Setlike.add ()
-                            (Obj.magic
-                               (FStar_Compiler_RBSet.setlike_rbset
-                                  FStar_Class_Ord.ord_string)) nm
-                            (Obj.magic acc))))
+                    (FStar_Class_Setlike.add ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Class_Ord.ord_string)) nm (Obj.magic acc)))
            | App (Var s, args) ->
                Obj.magic
                  (Obj.repr
                     (let acc1 =
-                       if exclude_name s
-                       then Obj.magic (Obj.repr acc)
-                       else
-                         Obj.magic
-                           (Obj.repr
-                              (FStar_Class_Setlike.add ()
-                                 (Obj.magic
-                                    (FStar_Compiler_RBSet.setlike_rbset
-                                       FStar_Class_Ord.ord_string)) s
-                                 (Obj.magic acc))) in
+                       Obj.magic
+                         (FStar_Class_Setlike.add ()
+                            (Obj.magic
+                               (FStar_Compiler_RBSet.setlike_rbset
+                                  FStar_Class_Ord.ord_string)) s
+                            (Obj.magic acc)) in
                      FStar_Compiler_List.fold_left free_top_level_names1 acc1
                        args))
            | App (uu___, args) ->
@@ -1506,12 +1485,7 @@ let (fresh_token : (Prims.string * sort) -> Prims.int -> decl) =
             mkEq uu___1 norng in
           let a =
             let uu___1 = escape a_name in
-            let uu___2 =
-              let uu___3 = free_top_level_names tm in
-              FStar_Class_Setlike.elems ()
-                (Obj.magic
-                   (FStar_Compiler_RBSet.setlike_rbset
-                      FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
+            let uu___2 = free_top_level_names tm in
             {
               assumption_term = tm;
               assumption_caption =
@@ -1559,12 +1533,7 @@ let (fresh_constructor :
             mkForall rng uu___1 in
           let a =
             let uu___1 = escape a_name in
-            let uu___2 =
-              let uu___3 = free_top_level_names tm in
-              FStar_Class_Setlike.elems ()
-                (Obj.magic
-                   (FStar_Compiler_RBSet.setlike_rbset
-                      FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
+            let uu___2 = free_top_level_names tm in
             {
               assumption_term = tm;
               assumption_caption =
@@ -1627,13 +1596,7 @@ let (injective_constructor :
                            let uu___3 =
                              escape
                                (Prims.strcat "projection_inverse_" name1) in
-                           let uu___4 =
-                             let uu___5 = free_top_level_names tm in
-                             FStar_Class_Setlike.elems ()
-                               (Obj.magic
-                                  (FStar_Compiler_RBSet.setlike_rbset
-                                     FStar_Class_Ord.ord_string))
-                               (Obj.magic uu___5) in
+                           let uu___4 = free_top_level_names tm in
                            {
                              assumption_term = tm;
                              assumption_caption =
@@ -1788,12 +1751,7 @@ let (constructor_to_decl :
            let a =
              let uu___1 =
                escape (Prims.strcat "constructor_base_" constr.constr_name) in
-             let uu___2 =
-               let uu___3 = free_top_level_names q in
-               FStar_Class_Setlike.elems ()
-                 (Obj.magic
-                    (FStar_Compiler_RBSet.setlike_rbset
-                       FStar_Class_Ord.ord_string)) (Obj.magic uu___3) in
+             let uu___2 = free_top_level_names q in
              {
                assumption_term = q;
                assumption_caption =

@@ -102,6 +102,24 @@ let add_trigger_to_assumption (a:assumption) (p:pruning_state) (trig:string)
     { p with trigger_to_assumption = BU.psmap_add p.trigger_to_assumption trig [a] }
   | Some l -> { p with trigger_to_assumption = BU.psmap_add p.trigger_to_assumption trig (a::l) }
 
+// Names that are excluded from the set of free names
+// Since they are very common and are not useful to scan as triggers
+let exclude_names : RBSet.t string =
+  from_list [
+    "SFuel";
+    "ZFuel";
+    "HasType";
+    "HasTypeZ";
+    "HasTypeFuel";
+    "Valid";
+    "ApplyTT";
+    "ApplyTF";
+    "Prims.lex_t"
+  ]
+
+let free_top_level_names t = diff (Term.free_top_level_names t) exclude_names
+let assumption_free_names a = diff a.assumption_free_names exclude_names
+
 (* Triggers of a universally quantified term *)
 let triggers_of_term (t:term)
 : triggers_set
@@ -109,7 +127,7 @@ let triggers_of_term (t:term)
     match t.tm with
     | Quant(Forall, triggers, _, _, _) ->
       triggers |> List.map (fun disjunct ->
-      disjunct |> List.fold_left (fun out t -> union out (Term.free_top_level_names t)) (empty()))
+      disjunct |> List.fold_left (fun out t -> union out (free_top_level_names t)) (empty()))
     | Labeled (t, _, _)
     | LblPos (t, _) -> aux t
     | _ -> []
@@ -165,7 +183,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     //   and have a specific shape of an Iff, where the LHS has a pattern, if the
     //   user annotated one.
     | App(Iff, [t0; t1]) when BU.starts_with a.assumption_name "l_quant_interp" -> (
-      let triggers_lhs = Term.free_top_level_names t0 in
+      let triggers_lhs = free_top_level_names t0 in
       add_assumption_with_triggers [triggers_lhs]
     )
 
@@ -175,7 +193,7 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
       let triggers = triggers_of_term a.assumption_term in
       if is_empty triggers
       then (
-        let triggers = [Term.free_top_level_names a.assumption_term] in
+        let triggers = [free_top_level_names a.assumption_term] in
         add_assumption_with_triggers triggers
       )
       else 
@@ -219,11 +237,11 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     | App (Var "HasType", [term; _])
     | App (Var "IsTotFun", [term])
     | App (Var "is-Tm_arrow", [term]) ->
-      add_assumption_with_triggers [Term.free_top_level_names term]
+      add_assumption_with_triggers [free_top_level_names term]
 
     // Term_constr_id assumptions trigger on the free names of the underlying term
     | App (Eq, [ _; {tm=App (Var "Term_constr_id", [term])}]) ->
-      add_assumption_with_triggers [Term.free_top_level_names term]
+      add_assumption_with_triggers [free_top_level_names term]
 
     // Descend into conjunctions and collect their triggers
     // Fire if any of the conjuncts have triggers that fire
@@ -234,14 +252,14 @@ let maybe_add_ambient (a:assumption) (p:pruning_state)
     // Assumptions named "equation_" are encodings of F* definitions and are
     // equations oriented from left to right
     | App (Eq, [t0; t1]) when BU.starts_with a.assumption_name "equation_" ->
-      let t0 = Term.free_top_level_names t0 in
+      let t0 = free_top_level_names t0 in
       add_assumption_with_triggers [t0]
 
     // Other equations and bi-implications are bidirectional
     | App (Iff, [t0; t1])
     | App (Eq, [t0; t1]) ->
-      let t0 = Term.free_top_level_names t0 in
-      let t1 = Term.free_top_level_names t1 in
+      let t0 = free_top_level_names t0 in
+      let t1 = free_top_level_names t1 in
       add_assumption_with_triggers [t0; t1]
 
     // we get many vacuous True facts; just drop them
@@ -273,16 +291,16 @@ let remove_trigger_for_assumption (p:pruning_state) (trig:string) (aname:string)
 : pruning_state & bool
 = match BU.psmap_try_find p.assumption_to_triggers aname with
   | None ->
-    debug (fun _ -> BU.print2 "Removing trigger %s for assumption %s---no assumption found\n" trig aname);
+    // debug (fun _ -> BU.print2 "Removing trigger %s for assumption %s---no assumption found\n" trig aname);
     p, false
   | Some l -> 
     let remaining_triggers =
       l |> List.map (fun ts -> remove trig ts)
     in
     let eligible = BU.for_some is_empty remaining_triggers in
-    debug (fun _ ->
-      BU.print5 "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
-        trig aname (show eligible) (show l) (show remaining_triggers));
+    // debug (fun _ ->
+    //   BU.print5 "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
+    //     trig aname (show eligible) (show l) (show remaining_triggers));
     { p with assumption_to_triggers = BU.psmap_add p.assumption_to_triggers aname remaining_triggers },
     eligible
 
@@ -304,7 +322,7 @@ let rec add_decl (d:decl) (p:pruning_state)
     add_assumption_to_triggers a p triggers
   | Module (_, ds) -> List.fold_left (fun p d -> add_decl d p) p ds
   | DefineFun(macro, _, _, body, _) ->
-    let free_names = elems (Term.free_top_level_names body) in
+    let free_names = elems (free_top_level_names body) in
     let p = { p with macro_freenames = BU.psmap_add p.macro_freenames macro free_names } in
     p
   | _ -> p
@@ -375,7 +393,7 @@ let trigger_pending_assumptions (lids:list sym)
       match! find_assumptions_waiting_on_trigger lid with
       | [] -> return acc
       | assumptions ->
-        debug (fun _ -> BU.print2 "Found assumptions waiting on trigger %s: %s\n" lid (show <| List.map (fun a -> a.assumption_name) assumptions));
+        // debug (fun _ -> BU.print2 "Found assumptions waiting on trigger %s: %s\n" lid (show <| List.map (fun a -> a.assumption_name) assumptions));
         mark_trigger_reached lid ;!
         foldM_left
           (fun acc assumption ->
@@ -397,10 +415,10 @@ let rec scan (ds:list assumption)
     | Some l -> s::l
   in
   // Collect the free names of all assumptions and macro expand them
-  let new_syms = List.collect (fun a -> List.collect macro_expand a.assumption_free_names) ds in
-  debug (fun _ -> 
-    BU.print1 ">>>Scanning %s\n"
-      (ds |> List.map (fun a -> BU.format2 "%s -> [%s]" a.assumption_name (a.assumption_free_names |> show)) |> String.concat "\n\t"));
+  let new_syms = List.collect (fun a -> List.collect macro_expand (elems (assumption_free_names a))) ds in
+  // debug (fun _ -> 
+  //   BU.print1 ">>>Scanning %s\n"
+  //     (ds |> List.map (fun a -> BU.format2 "%s -> [%s]" a.assumption_name (elems (assumption_free_names a) |> show)) |> String.concat "\n\t"));
 
   // Trigger all assumptions that are waiting on the new symbols
   match! trigger_pending_assumptions new_syms with
@@ -426,7 +444,7 @@ let rec scan (ds:list assumption)
 
 let prune (p:pruning_state) (roots:list decl)
 : list decl
-= debug (fun _ -> BU.print_string (show p));
+= // debug (fun _ -> BU.print_string (show p));
   // Collect all assumptions from the roots
   let roots = List.collect assumptions_of_decl roots in
   let init = { p; reached = empty () } in

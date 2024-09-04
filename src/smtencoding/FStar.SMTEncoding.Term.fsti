@@ -119,7 +119,7 @@ type assumption = {
     assumption_caption: caption;
     assumption_name: string;
     assumption_fact_ids:list fact_db_id;
-    assumption_free_names: list string;
+    assumption_free_names: RBSet.t string;
 }
 type decl =
   | DefPrelude

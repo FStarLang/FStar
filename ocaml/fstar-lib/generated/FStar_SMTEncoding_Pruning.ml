@@ -166,6 +166,40 @@ let (add_trigger_to_assumption :
               ambients = (p.ambients);
               extra_roots = (p.extra_roots)
             }
+let (exclude_names : Prims.string FStar_Compiler_RBSet.t) =
+  Obj.magic
+    (FStar_Class_Setlike.from_list ()
+       (Obj.magic
+          (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+       ["SFuel";
+       "ZFuel";
+       "HasType";
+       "HasTypeZ";
+       "HasTypeFuel";
+       "Valid";
+       "ApplyTT";
+       "ApplyTF";
+       "Prims.lex_t"])
+let (free_top_level_names :
+  FStar_SMTEncoding_Term.term -> Prims.string FStar_Compiler_RBSet.t) =
+  fun uu___ ->
+    (fun t ->
+       let uu___ = FStar_SMTEncoding_Term.free_top_level_names t in
+       Obj.magic
+         (FStar_Class_Setlike.diff ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic uu___) (Obj.magic exclude_names))) uu___
+let (assumption_free_names :
+  FStar_SMTEncoding_Term.assumption -> Prims.string FStar_Compiler_RBSet.t) =
+  fun uu___ ->
+    (fun a ->
+       Obj.magic
+         (FStar_Class_Setlike.diff ()
+            (Obj.magic
+               (FStar_Compiler_RBSet.setlike_rbset FStar_Class_Ord.ord_string))
+            (Obj.magic a.FStar_SMTEncoding_Term.assumption_free_names)
+            (Obj.magic exclude_names))) uu___
 let (triggers_of_term : FStar_SMTEncoding_Term.term -> triggers_set) =
   fun t ->
     let rec aux t1 =
@@ -186,8 +220,7 @@ let (triggers_of_term : FStar_SMTEncoding_Term.term -> triggers_set) =
                     fun uu___4 ->
                       (fun out ->
                          fun t2 ->
-                           let uu___4 =
-                             FStar_SMTEncoding_Term.free_top_level_names t2 in
+                           let uu___4 = free_top_level_names t2 in
                            Obj.magic
                              (FStar_Class_Setlike.union ()
                                 (Obj.magic
@@ -272,8 +305,7 @@ let (maybe_add_ambient :
              FStar_Compiler_Util.starts_with
                a.FStar_SMTEncoding_Term.assumption_name "l_quant_interp"
              ->
-             let triggers_lhs =
-               FStar_SMTEncoding_Term.free_top_level_names t0 in
+             let triggers_lhs = free_top_level_names t0 in
              add_assumption_with_triggers [triggers_lhs]
          | uu___ when
              FStar_Compiler_Util.starts_with
@@ -286,7 +318,7 @@ let (maybe_add_ambient :
              then
                let triggers2 =
                  let uu___2 =
-                   FStar_SMTEncoding_Term.free_top_level_names
+                   free_top_level_names
                      a.FStar_SMTEncoding_Term.assumption_term in
                  [uu___2] in
                add_assumption_with_triggers triggers2
@@ -469,27 +501,19 @@ let (maybe_add_ambient :
              add_assumption_with_triggers triggers1
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Var "Valid", term::[]) ->
-             let uu___ =
-               let uu___1 = FStar_SMTEncoding_Term.free_top_level_names term in
-               [uu___1] in
+             let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
              add_assumption_with_triggers uu___
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Var "HasType", term::uu___::[]) ->
-             let uu___1 =
-               let uu___2 = FStar_SMTEncoding_Term.free_top_level_names term in
-               [uu___2] in
+             let uu___1 = let uu___2 = free_top_level_names term in [uu___2] in
              add_assumption_with_triggers uu___1
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Var "IsTotFun", term::[]) ->
-             let uu___ =
-               let uu___1 = FStar_SMTEncoding_Term.free_top_level_names term in
-               [uu___1] in
+             let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
              add_assumption_with_triggers uu___
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Var "is-Tm_arrow", term::[]) ->
-             let uu___ =
-               let uu___1 = FStar_SMTEncoding_Term.free_top_level_names term in
-               [uu___1] in
+             let uu___ = let uu___1 = free_top_level_names term in [uu___1] in
              add_assumption_with_triggers uu___
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Eq,
@@ -500,9 +524,7 @@ let (maybe_add_ambient :
                        FStar_SMTEncoding_Term.freevars = uu___1;
                        FStar_SMTEncoding_Term.rng = uu___2;_}::[])
              ->
-             let uu___3 =
-               let uu___4 = FStar_SMTEncoding_Term.free_top_level_names term in
-               [uu___4] in
+             let uu___3 = let uu___4 = free_top_level_names term in [uu___4] in
              add_assumption_with_triggers uu___3
          | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.And, tms) ->
              let t1 = FStar_Compiler_List.collect triggers_of_term tms in
@@ -512,17 +534,17 @@ let (maybe_add_ambient :
              FStar_Compiler_Util.starts_with
                a.FStar_SMTEncoding_Term.assumption_name "equation_"
              ->
-             let t01 = FStar_SMTEncoding_Term.free_top_level_names t0 in
+             let t01 = free_top_level_names t0 in
              add_assumption_with_triggers [t01]
          | FStar_SMTEncoding_Term.App
              (FStar_SMTEncoding_Term.Iff, t0::t1::[]) ->
-             let t01 = FStar_SMTEncoding_Term.free_top_level_names t0 in
-             let t11 = FStar_SMTEncoding_Term.free_top_level_names t1 in
+             let t01 = free_top_level_names t0 in
+             let t11 = free_top_level_names t1 in
              add_assumption_with_triggers [t01; t11]
          | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.Eq, t0::t1::[])
              ->
-             let t01 = FStar_SMTEncoding_Term.free_top_level_names t0 in
-             let t11 = FStar_SMTEncoding_Term.free_top_level_names t1 in
+             let t01 = free_top_level_names t0 in
+             let t11 = free_top_level_names t1 in
              add_assumption_with_triggers [t01; t11]
          | FStar_SMTEncoding_Term.App (FStar_SMTEncoding_Term.TrueOp, uu___)
              -> p
@@ -593,13 +615,7 @@ let (remove_trigger_for_assumption :
         let uu___ =
           FStar_Compiler_Util.psmap_try_find p.assumption_to_triggers aname in
         match uu___ with
-        | FStar_Pervasives_Native.None ->
-            (debug
-               (fun uu___2 ->
-                  FStar_Compiler_Util.print2
-                    "Removing trigger %s for assumption %s---no assumption found\n"
-                    trig aname);
-             (p, false))
+        | FStar_Pervasives_Native.None -> (p, false)
         | FStar_Pervasives_Native.Some l ->
             let remaining_triggers =
               FStar_Compiler_List.map
@@ -620,41 +636,19 @@ let (remove_trigger_for_assumption :
                             (FStar_Compiler_RBSet.setlike_rbset
                                FStar_Class_Ord.ord_string)))) uu___1)
                 remaining_triggers in
-            (debug
-               (fun uu___2 ->
-                  let uu___3 =
-                    FStar_Class_Show.show
-                      (FStar_Class_Show.printableshow
-                         FStar_Class_Printable.printable_bool) eligible in
-                  let uu___4 =
-                    FStar_Class_Show.show
-                      (FStar_Class_Show.show_list
-                         (FStar_Compiler_RBSet.showable_rbset
-                            (FStar_Class_Show.printableshow
-                               FStar_Class_Printable.printable_string))) l in
-                  let uu___5 =
-                    FStar_Class_Show.show
-                      (FStar_Class_Show.show_list
-                         (FStar_Compiler_RBSet.showable_rbset
-                            (FStar_Class_Show.printableshow
-                               FStar_Class_Printable.printable_string)))
-                      remaining_triggers in
-                  FStar_Compiler_Util.print5
-                    "Removing trigger %s for assumption %s---eligible? %s, original triggers %s, remaining triggers %s\n"
-                    trig aname uu___3 uu___4 uu___5);
-             (let uu___2 =
-                let uu___3 =
-                  FStar_Compiler_Util.psmap_add p.assumption_to_triggers
-                    aname remaining_triggers in
-                {
-                  macro_freenames = (p.macro_freenames);
-                  trigger_to_assumption = (p.trigger_to_assumption);
-                  assumption_to_triggers = uu___3;
-                  assumption_name_map = (p.assumption_name_map);
-                  ambients = (p.ambients);
-                  extra_roots = (p.extra_roots)
-                } in
-              (uu___2, eligible)))
+            let uu___1 =
+              let uu___2 =
+                FStar_Compiler_Util.psmap_add p.assumption_to_triggers aname
+                  remaining_triggers in
+              {
+                macro_freenames = (p.macro_freenames);
+                trigger_to_assumption = (p.trigger_to_assumption);
+                assumption_to_triggers = uu___2;
+                assumption_name_map = (p.assumption_name_map);
+                ambients = (p.ambients);
+                extra_roots = (p.extra_roots)
+              } in
+            (uu___1, eligible)
 let rec (assumptions_of_decl :
   FStar_SMTEncoding_Term.decl -> FStar_SMTEncoding_Term.assumption Prims.list)
   =
@@ -692,7 +686,7 @@ let rec (add_decl :
       | FStar_SMTEncoding_Term.DefineFun (macro, uu___, uu___1, body, uu___2)
           ->
           let free_names =
-            let uu___3 = FStar_SMTEncoding_Term.free_top_level_names body in
+            let uu___3 = free_top_level_names body in
             FStar_Class_Setlike.elems ()
               (Obj.magic
                  (FStar_Compiler_RBSet.setlike_rbset
@@ -880,64 +874,48 @@ let (trigger_pending_assumptions :
                                        (FStar_Class_Monad.return st_monad ()
                                           (Obj.magic acc))
                                  | assumptions ->
-                                     (debug
-                                        (fun uu___3 ->
-                                           let uu___4 =
-                                             let uu___5 =
-                                               FStar_Compiler_List.map
-                                                 (fun a ->
-                                                    a.FStar_SMTEncoding_Term.assumption_name)
-                                                 assumptions in
-                                             FStar_Class_Show.show
-                                               (FStar_Class_Show.show_list
-                                                  (FStar_Class_Show.printableshow
-                                                     FStar_Class_Printable.printable_string))
-                                               uu___5 in
-                                           FStar_Compiler_Util.print2
-                                             "Found assumptions waiting on trigger %s: %s\n"
-                                             lid uu___4);
-                                      (let uu___3 = mark_trigger_reached lid in
-                                       Obj.magic
-                                         (FStar_Class_Monad.op_let_Bang
-                                            st_monad () () uu___3
-                                            (fun uu___4 ->
-                                               (fun uu___4 ->
-                                                  let uu___4 =
-                                                    Obj.magic uu___4 in
-                                                  Obj.magic
-                                                    (FStar_Class_Monad.foldM_left
-                                                       st_monad () ()
-                                                       (fun uu___6 ->
-                                                          fun uu___5 ->
-                                                            (fun acc1 ->
-                                                               let acc1 =
+                                     let uu___2 = mark_trigger_reached lid in
+                                     Obj.magic
+                                       (FStar_Class_Monad.op_let_Bang
+                                          st_monad () () uu___2
+                                          (fun uu___3 ->
+                                             (fun uu___3 ->
+                                                let uu___3 = Obj.magic uu___3 in
+                                                Obj.magic
+                                                  (FStar_Class_Monad.foldM_left
+                                                     st_monad () ()
+                                                     (fun uu___5 ->
+                                                        fun uu___4 ->
+                                                          (fun acc1 ->
+                                                             let acc1 =
+                                                               Obj.magic acc1 in
+                                                             fun assumption
+                                                               ->
+                                                               let assumption
+                                                                 =
                                                                  Obj.magic
-                                                                   acc1 in
-                                                               fun assumption
-                                                                 ->
-                                                                 let assumption
-                                                                   =
-                                                                   Obj.magic
-                                                                    assumption in
-                                                                 let uu___5 =
-                                                                   remove_trigger_for
-                                                                    lid
-                                                                    assumption in
-                                                                 Obj.magic
-                                                                   (FStar_Class_Monad.op_let_Bang
+                                                                   assumption in
+                                                               let uu___4 =
+                                                                 remove_trigger_for
+                                                                   lid
+                                                                   assumption in
+                                                               Obj.magic
+                                                                 (FStar_Class_Monad.op_let_Bang
                                                                     st_monad
                                                                     () ()
-                                                                    (Obj.magic
-                                                                    uu___5)
+                                                                    (
+                                                                    Obj.magic
+                                                                    uu___4)
+                                                                    (
+                                                                    fun
+                                                                    uu___5 ->
                                                                     (fun
-                                                                    uu___6 ->
-                                                                    (fun
-                                                                    uu___6 ->
-                                                                    let uu___6
+                                                                    uu___5 ->
+                                                                    let uu___5
                                                                     =
                                                                     Obj.magic
-                                                                    uu___6 in
-                                                                    if uu___6
+                                                                    uu___5 in
+                                                                    if uu___5
                                                                     then
                                                                     Obj.magic
                                                                     (FStar_Class_Monad.return
@@ -953,11 +931,11 @@ let (trigger_pending_assumptions :
                                                                     ()
                                                                     (Obj.magic
                                                                     acc1)))
-                                                                    uu___6)))
-                                                              uu___6 uu___5)
-                                                       (Obj.magic acc)
-                                                       (Obj.magic assumptions)))
-                                                 uu___4))))) uu___1))) uu___1
+                                                                    uu___5)))
+                                                            uu___5 uu___4)
+                                                     (Obj.magic acc)
+                                                     (Obj.magic assumptions)))
+                                               uu___3))) uu___1))) uu___1
                    uu___) (Obj.magic []) (Obj.magic lids))) uu___
 let rec (scan : FStar_SMTEncoding_Term.assumption Prims.list -> unit st) =
   fun ds ->
@@ -975,81 +953,67 @@ let rec (scan : FStar_SMTEncoding_Term.assumption Prims.list -> unit st) =
             let new_syms =
               FStar_Compiler_List.collect
                 (fun a ->
-                   FStar_Compiler_List.collect macro_expand
-                     a.FStar_SMTEncoding_Term.assumption_free_names) ds in
-            debug
-              (fun uu___1 ->
-                 let uu___2 =
-                   let uu___3 =
-                     FStar_Compiler_List.map
-                       (fun a ->
-                          let uu___4 =
-                            FStar_Class_Show.show
-                              (FStar_Class_Show.show_list
-                                 (FStar_Class_Show.printableshow
-                                    FStar_Class_Printable.printable_string))
-                              a.FStar_SMTEncoding_Term.assumption_free_names in
-                          FStar_Compiler_Util.format2 "%s -> [%s]"
-                            a.FStar_SMTEncoding_Term.assumption_name uu___4)
-                       ds in
-                   FStar_Compiler_String.concat "\n\t" uu___3 in
-                 FStar_Compiler_Util.print1 ">>>Scanning %s\n" uu___2);
-            (let uu___1 = trigger_pending_assumptions new_syms in
-             Obj.magic
-               (FStar_Class_Monad.op_let_Bang st_monad () ()
-                  (Obj.magic uu___1)
-                  (fun uu___2 ->
-                     (fun uu___2 ->
-                        let uu___2 = Obj.magic uu___2 in
-                        match uu___2 with
-                        | [] ->
-                            Obj.magic
-                              (FStar_Class_Monad.return st_monad ()
-                                 (Obj.repr ()))
-                        | triggered ->
-                            let uu___3 =
-                              Obj.magic
-                                (FStar_Class_Monad.foldM_left st_monad () ()
-                                   (fun uu___5 ->
-                                      fun uu___4 ->
-                                        (fun acc ->
-                                           let acc = Obj.magic acc in
-                                           fun assumption ->
-                                             let assumption =
-                                               Obj.magic assumption in
-                                             let uu___4 =
-                                               already_reached
-                                                 assumption.FStar_SMTEncoding_Term.assumption_name in
-                                             Obj.magic
-                                               (FStar_Class_Monad.op_let_Bang
-                                                  st_monad () ()
-                                                  (Obj.magic uu___4)
-                                                  (fun uu___5 ->
-                                                     (fun uu___5 ->
-                                                        let uu___5 =
-                                                          Obj.magic uu___5 in
-                                                        if uu___5
-                                                        then
+                   let uu___ =
+                     let uu___1 = assumption_free_names a in
+                     FStar_Class_Setlike.elems ()
+                       (Obj.magic
+                          (FStar_Compiler_RBSet.setlike_rbset
+                             FStar_Class_Ord.ord_string)) (Obj.magic uu___1) in
+                   FStar_Compiler_List.collect macro_expand uu___) ds in
+            let uu___ = trigger_pending_assumptions new_syms in
+            Obj.magic
+              (FStar_Class_Monad.op_let_Bang st_monad () () (Obj.magic uu___)
+                 (fun uu___1 ->
+                    (fun uu___1 ->
+                       let uu___1 = Obj.magic uu___1 in
+                       match uu___1 with
+                       | [] ->
+                           Obj.magic
+                             (FStar_Class_Monad.return st_monad ()
+                                (Obj.repr ()))
+                       | triggered ->
+                           let uu___2 =
+                             Obj.magic
+                               (FStar_Class_Monad.foldM_left st_monad () ()
+                                  (fun uu___4 ->
+                                     fun uu___3 ->
+                                       (fun acc ->
+                                          let acc = Obj.magic acc in
+                                          fun assumption ->
+                                            let assumption =
+                                              Obj.magic assumption in
+                                            let uu___3 =
+                                              already_reached
+                                                assumption.FStar_SMTEncoding_Term.assumption_name in
+                                            Obj.magic
+                                              (FStar_Class_Monad.op_let_Bang
+                                                 st_monad () ()
+                                                 (Obj.magic uu___3)
+                                                 (fun uu___4 ->
+                                                    (fun uu___4 ->
+                                                       let uu___4 =
+                                                         Obj.magic uu___4 in
+                                                       if uu___4
+                                                       then
+                                                         Obj.magic
+                                                           (FStar_Class_Monad.return
+                                                              st_monad ()
+                                                              (Obj.magic acc))
+                                                       else
+                                                         (let uu___6 =
+                                                            reached_assumption
+                                                              assumption.FStar_SMTEncoding_Term.assumption_name in
                                                           Obj.magic
-                                                            (FStar_Class_Monad.return
-                                                               st_monad ()
-                                                               (Obj.magic acc))
-                                                        else
-                                                          (let uu___7 =
-                                                             reached_assumption
-                                                               assumption.FStar_SMTEncoding_Term.assumption_name in
-                                                           Obj.magic
-                                                             (FStar_Class_Monad.op_let_Bang
-                                                                st_monad ()
-                                                                () uu___7
-                                                                (fun uu___8
-                                                                   ->
-                                                                   (fun
-                                                                    uu___8 ->
-                                                                    let uu___8
+                                                            (FStar_Class_Monad.op_let_Bang
+                                                               st_monad () ()
+                                                               uu___6
+                                                               (fun uu___7 ->
+                                                                  (fun uu___7
+                                                                    ->
+                                                                    let uu___7
                                                                     =
                                                                     Obj.magic
-                                                                    uu___8 in
+                                                                    uu___7 in
                                                                     Obj.magic
                                                                     (FStar_Class_Monad.return
                                                                     st_monad
@@ -1057,18 +1021,17 @@ let rec (scan : FStar_SMTEncoding_Term.assumption Prims.list -> unit st) =
                                                                     (Obj.magic
                                                                     (assumption
                                                                     :: acc))))
-                                                                    uu___8))))
-                                                       uu___5))) uu___5
-                                          uu___4) (Obj.magic [])
-                                   (Obj.magic triggered)) in
-                            Obj.magic
-                              (FStar_Class_Monad.op_let_Bang st_monad () ()
-                                 (Obj.magic uu___3)
-                                 (fun uu___4 ->
-                                    (fun to_scan ->
-                                       let to_scan = Obj.magic to_scan in
-                                       Obj.magic (scan to_scan)) uu___4)))
-                       uu___2)))) uu___)
+                                                                    uu___7))))
+                                                      uu___4))) uu___4 uu___3)
+                                  (Obj.magic []) (Obj.magic triggered)) in
+                           Obj.magic
+                             (FStar_Class_Monad.op_let_Bang st_monad () ()
+                                (Obj.magic uu___2)
+                                (fun uu___3 ->
+                                   (fun to_scan ->
+                                      let to_scan = Obj.magic to_scan in
+                                      Obj.magic (scan to_scan)) uu___3)))
+                      uu___1))) uu___)
 let (prune :
   pruning_state ->
     FStar_SMTEncoding_Term.decl Prims.list ->
@@ -1076,37 +1039,33 @@ let (prune :
   =
   fun p ->
     fun roots ->
-      debug
-        (fun uu___1 ->
-           let uu___2 = FStar_Class_Show.show show_pruning_state p in
-           FStar_Compiler_Util.print_string uu___2);
-      (let roots1 = FStar_Compiler_List.collect assumptions_of_decl roots in
-       let init1 =
-         let uu___1 =
-           Obj.magic
-             (FStar_Class_Setlike.empty ()
-                (Obj.magic
-                   (FStar_Compiler_RBSet.setlike_rbset
-                      FStar_Class_Ord.ord_string)) ()) in
-         { p; reached = uu___1 } in
-       let uu___1 =
-         let uu___2 = scan (FStar_List_Tot_Base.op_At roots1 p.extra_roots) in
-         uu___2 init1 in
-       match uu___1 with
-       | (uu___2, ctxt1) ->
-           let reached_names =
-             FStar_Class_Setlike.elems ()
+      let roots1 = FStar_Compiler_List.collect assumptions_of_decl roots in
+      let init1 =
+        let uu___ =
+          Obj.magic
+            (FStar_Class_Setlike.empty ()
                (Obj.magic
                   (FStar_Compiler_RBSet.setlike_rbset
-                     FStar_Class_Ord.ord_string)) (Obj.magic ctxt1.reached) in
-           let reached_assumptions =
-             FStar_Compiler_List.collect
-               (fun name ->
-                  let uu___3 =
-                    FStar_Compiler_Util.psmap_try_find
-                      (ctxt1.p).assumption_name_map name in
-                  match uu___3 with
-                  | FStar_Pervasives_Native.None -> []
-                  | FStar_Pervasives_Native.Some a -> [a])
-               (FStar_List_Tot_Base.op_At reached_names p.ambients) in
-           reached_assumptions)
+                     FStar_Class_Ord.ord_string)) ()) in
+        { p; reached = uu___ } in
+      let uu___ =
+        let uu___1 = scan (FStar_List_Tot_Base.op_At roots1 p.extra_roots) in
+        uu___1 init1 in
+      match uu___ with
+      | (uu___1, ctxt1) ->
+          let reached_names =
+            FStar_Class_Setlike.elems ()
+              (Obj.magic
+                 (FStar_Compiler_RBSet.setlike_rbset
+                    FStar_Class_Ord.ord_string)) (Obj.magic ctxt1.reached) in
+          let reached_assumptions =
+            FStar_Compiler_List.collect
+              (fun name ->
+                 let uu___2 =
+                   FStar_Compiler_Util.psmap_try_find
+                     (ctxt1.p).assumption_name_map name in
+                 match uu___2 with
+                 | FStar_Pervasives_Native.None -> []
+                 | FStar_Pervasives_Native.Some a -> [a])
+              (FStar_List_Tot_Base.op_At reached_names p.ambients) in
+          reached_assumptions

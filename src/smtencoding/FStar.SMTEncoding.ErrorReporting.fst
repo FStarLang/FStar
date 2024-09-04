@@ -348,7 +348,7 @@ let detail_errors hint_replay
                     assumption_caption=Some "Disabling label";
                     assumption_term=mkEq(mkFreeV l, mkTrue);
                     assumption_fact_ids=[];
-                    assumption_free_names=elems (free_top_level_names tm)
+                    assumption_free_names=free_top_level_names tm
                 }
             in
             Term.Assume a) in

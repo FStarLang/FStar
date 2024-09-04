@@ -8,12 +8,7 @@ let (mkAssume :
     | (tm, cap, nm) ->
         let uu___1 =
           let uu___2 = FStar_SMTEncoding_Term.escape nm in
-          let uu___3 =
-            let uu___4 = FStar_SMTEncoding_Term.free_top_level_names tm in
-            FStar_Class_Setlike.elems ()
-              (Obj.magic
-                 (FStar_Compiler_RBSet.setlike_rbset
-                    FStar_Class_Ord.ord_string)) (Obj.magic uu___4) in
+          let uu___3 = FStar_SMTEncoding_Term.free_top_level_names tm in
           {
             FStar_SMTEncoding_Term.assumption_term = tm;
             FStar_SMTEncoding_Term.assumption_caption = cap;
