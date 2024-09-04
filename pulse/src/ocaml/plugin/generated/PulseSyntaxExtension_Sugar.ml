@@ -85,28 +85,6 @@ let (uu___is_MUT : mut_or_ref -> Prims.bool) =
   fun projectee -> match projectee with | MUT -> true | uu___ -> false
 let (uu___is_REF : mut_or_ref -> Prims.bool) =
   fun projectee -> match projectee with | REF -> true | uu___ -> false
-type pat__PatConstructor__payload =
-  {
-  head: FStar_Ident.lident ;
-  args: pat Prims.list }
-and pat =
-  | PatVar of FStar_Ident.ident 
-  | PatConstructor of pat__PatConstructor__payload 
-let (__proj__Mkpat__PatConstructor__payload__item__head :
-  pat__PatConstructor__payload -> FStar_Ident.lident) =
-  fun projectee -> match projectee with | { head; args;_} -> head
-let (__proj__Mkpat__PatConstructor__payload__item__args :
-  pat__PatConstructor__payload -> pat Prims.list) =
-  fun projectee -> match projectee with | { head; args;_} -> args
-let (uu___is_PatVar : pat -> Prims.bool) =
-  fun projectee -> match projectee with | PatVar _0 -> true | uu___ -> false
-let (__proj__PatVar__item___0 : pat -> FStar_Ident.ident) =
-  fun projectee -> match projectee with | PatVar _0 -> _0
-let (uu___is_PatConstructor : pat -> Prims.bool) =
-  fun projectee ->
-    match projectee with | PatConstructor _0 -> true | uu___ -> false
-let (__proj__PatConstructor__item___0 : pat -> pat__PatConstructor__payload)
-  = fun projectee -> match projectee with | PatConstructor _0 -> _0
 type hint_type =
   | ASSERT of slprop 
   | UNFOLD of (FStar_Ident.lident Prims.list FStar_Pervasives_Native.option *
@@ -181,26 +159,26 @@ and stmt'__ArrayAssignment__payload =
 and stmt'__LetBinding__payload =
   {
   qualifier: mut_or_ref FStar_Pervasives_Native.option ;
-  id: FStar_Ident.ident ;
+  pat: FStar_Parser_AST.pattern ;
   typ: FStar_Parser_AST.term FStar_Pervasives_Native.option ;
   init1: let_init FStar_Pervasives_Native.option }
 and stmt'__Block__payload = {
   stmt: stmt }
 and stmt'__If__payload =
   {
-  head1: FStar_Parser_AST.term ;
+  head: FStar_Parser_AST.term ;
   join_slprop: ensures_slprop FStar_Pervasives_Native.option ;
   then_: stmt ;
   else_opt: stmt FStar_Pervasives_Native.option }
 and stmt'__Match__payload =
   {
-  head2: FStar_Parser_AST.term ;
+  head1: FStar_Parser_AST.term ;
   returns_annot: ensures_slprop FStar_Pervasives_Native.option ;
   branches: (FStar_Parser_AST.pattern * stmt) Prims.list }
 and stmt'__While__payload =
   {
   guard: stmt ;
-  id1: FStar_Ident.ident ;
+  id: FStar_Ident.ident ;
   invariant: slprop ;
   body: stmt }
 and stmt'__Introduce__payload =
@@ -253,7 +231,7 @@ and lambda =
   range2: rng }
 and fn_defn =
   {
-  id2: FStar_Ident.ident ;
+  id1: FStar_Ident.ident ;
   is_rec: Prims.bool ;
   binders2: binders ;
   ascription1:
@@ -293,74 +271,73 @@ let (__proj__Mkstmt'__ArrayAssignment__payload__item__value :
 let (__proj__Mkstmt'__LetBinding__payload__item__qualifier :
   stmt'__LetBinding__payload -> mut_or_ref FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init1 = init;_} -> qualifier
-let (__proj__Mkstmt'__LetBinding__payload__item__id :
-  stmt'__LetBinding__payload -> FStar_Ident.ident) =
+    match projectee with
+    | { qualifier; pat; typ; init1 = init;_} -> qualifier
+let (__proj__Mkstmt'__LetBinding__payload__item__pat :
+  stmt'__LetBinding__payload -> FStar_Parser_AST.pattern) =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init1 = init;_} -> id
+    match projectee with | { qualifier; pat; typ; init1 = init;_} -> pat
 let (__proj__Mkstmt'__LetBinding__payload__item__typ :
   stmt'__LetBinding__payload ->
     FStar_Parser_AST.term FStar_Pervasives_Native.option)
   =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init1 = init;_} -> typ
+    match projectee with | { qualifier; pat; typ; init1 = init;_} -> typ
 let (__proj__Mkstmt'__LetBinding__payload__item__init :
   stmt'__LetBinding__payload -> let_init FStar_Pervasives_Native.option) =
   fun projectee ->
-    match projectee with | { qualifier; id; typ; init1 = init;_} -> init
+    match projectee with | { qualifier; pat; typ; init1 = init;_} -> init
 let (__proj__Mkstmt'__Block__payload__item__stmt :
   stmt'__Block__payload -> stmt) =
   fun projectee -> match projectee with | { stmt = stmt1;_} -> stmt1
 let (__proj__Mkstmt'__If__payload__item__head :
   stmt'__If__payload -> FStar_Parser_AST.term) =
   fun projectee ->
-    match projectee with
-    | { head1 = head; join_slprop; then_; else_opt;_} -> head
+    match projectee with | { head; join_slprop; then_; else_opt;_} -> head
 let (__proj__Mkstmt'__If__payload__item__join_slprop :
   stmt'__If__payload -> ensures_slprop FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { head1 = head; join_slprop; then_; else_opt;_} -> join_slprop
+    | { head; join_slprop; then_; else_opt;_} -> join_slprop
 let (__proj__Mkstmt'__If__payload__item__then_ : stmt'__If__payload -> stmt)
   =
   fun projectee ->
-    match projectee with
-    | { head1 = head; join_slprop; then_; else_opt;_} -> then_
+    match projectee with | { head; join_slprop; then_; else_opt;_} -> then_
 let (__proj__Mkstmt'__If__payload__item__else_opt :
   stmt'__If__payload -> stmt FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { head1 = head; join_slprop; then_; else_opt;_} -> else_opt
+    | { head; join_slprop; then_; else_opt;_} -> else_opt
 let (__proj__Mkstmt'__Match__payload__item__head :
   stmt'__Match__payload -> FStar_Parser_AST.term) =
   fun projectee ->
-    match projectee with | { head2 = head; returns_annot; branches;_} -> head
+    match projectee with | { head1 = head; returns_annot; branches;_} -> head
 let (__proj__Mkstmt'__Match__payload__item__returns_annot :
   stmt'__Match__payload -> ensures_slprop FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { head2 = head; returns_annot; branches;_} -> returns_annot
+    | { head1 = head; returns_annot; branches;_} -> returns_annot
 let (__proj__Mkstmt'__Match__payload__item__branches :
   stmt'__Match__payload -> (FStar_Parser_AST.pattern * stmt) Prims.list) =
   fun projectee ->
     match projectee with
-    | { head2 = head; returns_annot; branches;_} -> branches
+    | { head1 = head; returns_annot; branches;_} -> branches
 let (__proj__Mkstmt'__While__payload__item__guard :
   stmt'__While__payload -> stmt) =
   fun projectee ->
-    match projectee with | { guard; id1 = id; invariant; body;_} -> guard
+    match projectee with | { guard; id; invariant; body;_} -> guard
 let (__proj__Mkstmt'__While__payload__item__id :
   stmt'__While__payload -> FStar_Ident.ident) =
   fun projectee ->
-    match projectee with | { guard; id1 = id; invariant; body;_} -> id
+    match projectee with | { guard; id; invariant; body;_} -> id
 let (__proj__Mkstmt'__While__payload__item__invariant :
   stmt'__While__payload -> slprop) =
   fun projectee ->
-    match projectee with | { guard; id1 = id; invariant; body;_} -> invariant
+    match projectee with | { guard; id; invariant; body;_} -> invariant
 let (__proj__Mkstmt'__While__payload__item__body :
   stmt'__While__payload -> stmt) =
   fun projectee ->
-    match projectee with | { guard; id1 = id; invariant; body;_} -> body
+    match projectee with | { guard; id; invariant; body;_} -> body
 let (__proj__Mkstmt'__Introduce__payload__item__slprop :
   stmt'__Introduce__payload -> slprop) =
   fun projectee ->
@@ -508,17 +485,17 @@ let (__proj__Mklambda__item__range : lambda -> rng) =
 let (__proj__Mkfn_defn__item__id : fn_defn -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> id
 let (__proj__Mkfn_defn__item__is_rec : fn_defn -> Prims.bool) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> is_rec
 let (__proj__Mkfn_defn__item__binders : fn_defn -> binders) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> binders1
 let (__proj__Mkfn_defn__item__ascription :
   fn_defn ->
@@ -527,30 +504,30 @@ let (__proj__Mkfn_defn__item__ascription :
   =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> ascription
 let (__proj__Mkfn_defn__item__measure :
   fn_defn -> FStar_Parser_AST.term FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> measure
 let (__proj__Mkfn_defn__item__body :
   fn_defn -> (stmt, lambda) FStar_Pervasives.either) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> body
 let (__proj__Mkfn_defn__item__decorations :
   fn_defn -> FStar_Parser_AST.decoration Prims.list) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> decorations
 let (__proj__Mkfn_defn__item__range : fn_defn -> rng) =
   fun projectee ->
     match projectee with
-    | { id2 = id; is_rec; binders2 = binders1; ascription1 = ascription;
+    | { id1 = id; is_rec; binders2 = binders1; ascription1 = ascription;
         measure; body3 = body; decorations; range3 = range;_} -> range
 let (uu___is_Array_initializer : let_init -> Prims.bool) =
   fun projectee ->
@@ -575,7 +552,7 @@ let (__proj__Stmt_initializer__item___0 : let_init -> stmt) =
   fun projectee -> match projectee with | Stmt_initializer _0 -> _0
 type fn_decl =
   {
-  id3: FStar_Ident.ident ;
+  id2: FStar_Ident.ident ;
   binders3: binders ;
   ascription2:
     (computation_type, FStar_Parser_AST.term FStar_Pervasives_Native.option)
@@ -586,12 +563,12 @@ type fn_decl =
 let (__proj__Mkfn_decl__item__id : fn_decl -> FStar_Ident.ident) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+    | { id2 = id; binders3 = binders1; ascription2 = ascription;
         decorations1 = decorations; range4 = range;_} -> id
 let (__proj__Mkfn_decl__item__binders : fn_decl -> binders) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+    | { id2 = id; binders3 = binders1; ascription2 = ascription;
         decorations1 = decorations; range4 = range;_} -> binders1
 let (__proj__Mkfn_decl__item__ascription :
   fn_decl ->
@@ -600,18 +577,18 @@ let (__proj__Mkfn_decl__item__ascription :
   =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+    | { id2 = id; binders3 = binders1; ascription2 = ascription;
         decorations1 = decorations; range4 = range;_} -> ascription
 let (__proj__Mkfn_decl__item__decorations :
   fn_decl -> FStar_Parser_AST.decoration Prims.list) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+    | { id2 = id; binders3 = binders1; ascription2 = ascription;
         decorations1 = decorations; range4 = range;_} -> decorations
 let (__proj__Mkfn_decl__item__range : fn_decl -> rng) =
   fun projectee ->
     match projectee with
-    | { id3 = id; binders3 = binders1; ascription2 = ascription;
+    | { id2 = id; binders3 = binders1; ascription2 = ascription;
         decorations1 = decorations; range4 = range;_} -> range
 let (tag_of_stmt : stmt -> Prims.string) =
   fun s ->
@@ -622,18 +599,18 @@ let (tag_of_stmt : stmt -> Prims.string) =
     | ArrayAssignment { arr = uu___; index = uu___1; value1 = uu___2;_} ->
         "ArrayAssignment"
     | LetBinding
-        { qualifier = uu___; id = uu___1; typ = uu___2; init1 = uu___3;_} ->
+        { qualifier = uu___; pat = uu___1; typ = uu___2; init1 = uu___3;_} ->
         "LetBinding"
     | Block { stmt = uu___;_} -> "Block"
     | If
-        { head1 = uu___; join_slprop = uu___1; then_ = uu___2;
+        { head = uu___; join_slprop = uu___1; then_ = uu___2;
           else_opt = uu___3;_}
         -> "If"
-    | Match { head2 = uu___; returns_annot = uu___1; branches = uu___2;_} ->
+    | Match { head1 = uu___; returns_annot = uu___1; branches = uu___2;_} ->
         "Match"
     | While
-        { guard = uu___; id1 = uu___1; invariant = uu___2; body = uu___3;_}
-        -> "While"
+        { guard = uu___; id = uu___1; invariant = uu___2; body = uu___3;_} ->
+        "While"
     | Introduce { slprop = uu___; witnesses = uu___1;_} -> "Introduce"
     | Sequence { s1 = uu___; s2 = uu___1;_} -> "Sequence"
     | Parallel
@@ -700,13 +677,13 @@ let rec (eq_decl : decl -> decl -> Prims.bool) =
 and (eq_fn_decl : fn_decl -> fn_decl -> Prims.bool) =
   fun f1 ->
     fun f2 ->
-      ((eq_ident f1.id3 f2.id3) &&
+      ((eq_ident f1.id2 f2.id2) &&
          (forall2 FStar_Parser_AST_Util.eq_binder f1.binders3 f2.binders3))
         && (eq_ascription f1.ascription2 f2.ascription2)
 and (eq_fn_defn : fn_defn -> fn_defn -> Prims.bool) =
   fun f1 ->
     fun f2 ->
-      (((((eq_ident f1.id2 f2.id2) && (f1.is_rec = f2.is_rec)) &&
+      (((((eq_ident f1.id1 f2.id1) && (f1.is_rec = f2.is_rec)) &&
            (forall2 FStar_Parser_AST_Util.eq_binder f1.binders2 f2.binders2))
           && (eq_ascription f1.ascription1 f2.ascription1))
          && (eq_opt FStar_Parser_AST_Util.eq_term f1.measure f2.measure))
@@ -768,20 +745,22 @@ and (eq_stmt' : stmt' -> stmt' -> Prims.bool) =
           ((FStar_Parser_AST_Util.eq_term a1 a2) &&
              (FStar_Parser_AST_Util.eq_term i1 i2))
             && (FStar_Parser_AST_Util.eq_term v1 v2)
-      | (LetBinding { qualifier = q1; id = i1; typ = t1; init1;_}, LetBinding
-         { qualifier = q2; id = i2; typ = t2; init1 = init2;_}) ->
-          (((eq_opt eq_mut_or_ref q1 q2) && (eq_ident i1 i2)) &&
-             (eq_opt FStar_Parser_AST_Util.eq_term t1 t2))
+      | (LetBinding { qualifier = q1; pat = pat1; typ = t1; init1;_},
+         LetBinding { qualifier = q2; pat = pat2; typ = t2; init1 = init2;_})
+          ->
+          (((eq_opt eq_mut_or_ref q1 q2) &&
+              (FStar_Parser_AST_Util.eq_pattern pat1 pat2))
+             && (eq_opt FStar_Parser_AST_Util.eq_term t1 t2))
             && (eq_opt eq_let_init init1 init2)
       | (Block { stmt = s11;_}, Block { stmt = s21;_}) -> eq_stmt s11 s21
-      | (If { head1 = h1; join_slprop = j1; then_ = t1; else_opt = e1;_}, If
-         { head1 = h2; join_slprop = j2; then_ = t2; else_opt = e2;_}) ->
+      | (If { head = h1; join_slprop = j1; then_ = t1; else_opt = e1;_}, If
+         { head = h2; join_slprop = j2; then_ = t2; else_opt = e2;_}) ->
           (((FStar_Parser_AST_Util.eq_term h1 h2) &&
               (eq_opt eq_ensures_slprop j1 j2))
              && (eq_stmt t1 t2))
             && (eq_opt eq_stmt e1 e2)
-      | (Match { head2 = h1; returns_annot = r1; branches = b1;_}, Match
-         { head2 = h2; returns_annot = r2; branches = b2;_}) ->
+      | (Match { head1 = h1; returns_annot = r1; branches = b1;_}, Match
+         { head1 = h2; returns_annot = r2; branches = b2;_}) ->
           ((FStar_Parser_AST_Util.eq_term h1 h2) &&
              (eq_opt eq_ensures_slprop r1 r2))
             &&
@@ -792,8 +771,8 @@ and (eq_stmt' : stmt' -> stmt' -> Prims.bool) =
                     | ((p1, s11), (p2, s21)) ->
                         (FStar_Parser_AST_Util.eq_pattern p1 p2) &&
                           (eq_stmt s11 s21)) b1 b2)
-      | (While { guard = g1; id1; invariant = i1; body = b1;_}, While
-         { guard = g2; id1 = id2; invariant = i2; body = b2;_}) ->
+      | (While { guard = g1; id = id1; invariant = i1; body = b1;_}, While
+         { guard = g2; id = id2; invariant = i2; body = b2;_}) ->
           (((eq_stmt g1 g2) && (eq_ident id1 id2)) && (eq_slprop i1 i2)) &&
             (eq_stmt b1 b2)
       | (Introduce { slprop = s11; witnesses = w1;_}, Introduce
@@ -888,15 +867,6 @@ and (eq_mut_or_ref : mut_or_ref -> mut_or_ref -> Prims.bool) =
       | (MUT, MUT) -> true
       | (REF, REF) -> true
       | (uu___, uu___1) -> false
-and (eq_pat : pat -> pat -> Prims.bool) =
-  fun p1 ->
-    fun p2 ->
-      match (p1, p2) with
-      | (PatVar i1, PatVar i2) -> eq_ident i1 i2
-      | (PatConstructor { head = h1; args = a1;_}, PatConstructor
-         { head = h2; args = a2;_}) ->
-          (eq_lident h1 h2) && (forall2 eq_pat a1 a2)
-      | (uu___, uu___1) -> false
 let rec iter : 'a . ('a -> unit) -> 'a Prims.list -> unit =
   fun f -> fun l -> match l with | [] -> () | x::xs -> (f x; iter f xs)
 let iopt : 'a . ('a -> unit) -> 'a FStar_Pervasives_Native.option -> unit =
@@ -975,16 +945,17 @@ and (scan_stmt : FStar_Parser_AST.dep_scan_callbacks -> stmt -> unit) =
           (cbs.FStar_Parser_AST.scan_term a;
            cbs.FStar_Parser_AST.scan_term i;
            cbs.FStar_Parser_AST.scan_term v)
-      | LetBinding { qualifier = q; id = i; typ = t; init1 = init;_} ->
+      | LetBinding { qualifier = q; pat = p; typ = t; init1 = init;_} ->
           (iopt (scan_let_init cbs) init;
+           cbs.FStar_Parser_AST.scan_pattern p;
            iopt cbs.FStar_Parser_AST.scan_term t)
       | Block { stmt = s1;_} -> scan_stmt cbs s1
-      | If { head1 = h; join_slprop = j; then_ = t; else_opt = e;_} ->
+      | If { head = h; join_slprop = j; then_ = t; else_opt = e;_} ->
           (cbs.FStar_Parser_AST.scan_term h;
            iopt (scan_ensures_slprop cbs) j;
            scan_stmt cbs t;
            iopt (scan_stmt cbs) e)
-      | Match { head2 = h; returns_annot = r; branches = b;_} ->
+      | Match { head1 = h; returns_annot = r; branches = b;_} ->
           (cbs.FStar_Parser_AST.scan_term h;
            iopt (scan_ensures_slprop cbs) r;
            iter
@@ -993,7 +964,7 @@ and (scan_stmt : FStar_Parser_AST.dep_scan_callbacks -> stmt -> unit) =
                 | (p, s1) ->
                     (cbs.FStar_Parser_AST.scan_pattern p; scan_stmt cbs s1))
              b)
-      | While { guard = g; id1 = id; invariant = i; body = b;_} ->
+      | While { guard = g; id; invariant = i; body = b;_} ->
           (scan_stmt cbs g; scan_slprop cbs i; scan_stmt cbs b)
       | Introduce { slprop = s1; witnesses = w;_} ->
           (scan_slprop cbs s1; iter cbs.FStar_Parser_AST.scan_term w)
@@ -1093,7 +1064,7 @@ let (add_decorations :
       | FnDefn f ->
           FnDefn
             {
-              id2 = (f.id2);
+              id1 = (f.id1);
               is_rec = (f.is_rec);
               binders2 = (f.binders2);
               ascription1 = (f.ascription1);
@@ -1105,7 +1076,7 @@ let (add_decorations :
       | FnDecl f ->
           FnDecl
             {
-              id3 = (f.id3);
+              id2 = (f.id2);
               binders3 = (f.binders3);
               ascription2 = (f.ascription2);
               decorations1 = (FStar_List_Tot_Base.append ds f.decorations1);
@@ -1122,13 +1093,13 @@ let (mk_array_assignment :
     fun index -> fun value -> ArrayAssignment { arr; index; value1 = value }
 let (mk_let_binding :
   mut_or_ref FStar_Pervasives_Native.option ->
-    FStar_Ident.ident ->
+    FStar_Parser_AST.pattern ->
       FStar_Parser_AST.term FStar_Pervasives_Native.option ->
         let_init FStar_Pervasives_Native.option -> stmt')
   =
   fun qualifier ->
-    fun id ->
-      fun typ -> fun init -> LetBinding { qualifier; id; typ; init1 = init }
+    fun pat ->
+      fun typ -> fun init -> LetBinding { qualifier; pat; typ; init1 = init }
 let (mk_block : stmt -> stmt') = fun stmt1 -> Block { stmt = stmt1 }
 let (mk_if :
   FStar_Parser_AST.term ->
@@ -1137,8 +1108,7 @@ let (mk_if :
   =
   fun head ->
     fun join_slprop ->
-      fun then_ ->
-        fun else_opt -> If { head1 = head; join_slprop; then_; else_opt }
+      fun then_ -> fun else_opt -> If { head; join_slprop; then_; else_opt }
 let (mk_match :
   FStar_Parser_AST.term ->
     ensures_slprop FStar_Pervasives_Native.option ->
@@ -1146,11 +1116,11 @@ let (mk_match :
   =
   fun head ->
     fun returns_annot ->
-      fun branches -> Match { head2 = head; returns_annot; branches }
+      fun branches -> Match { head1 = head; returns_annot; branches }
 let (mk_while : stmt -> FStar_Ident.ident -> slprop -> stmt -> stmt') =
   fun guard ->
     fun id ->
-      fun invariant -> fun body -> While { guard; id1 = id; invariant; body }
+      fun invariant -> fun body -> While { guard; id; invariant; body }
 let (mk_intro : slprop -> FStar_Parser_AST.term Prims.list -> stmt') =
   fun slprop1 -> fun witnesses -> Introduce { slprop = slprop1; witnesses }
 let (mk_sequence : stmt -> stmt -> stmt') =
@@ -1177,7 +1147,7 @@ let (mk_fn_defn :
               fun decorations ->
                 fun range ->
                   {
-                    id2 = id;
+                    id1 = id;
                     is_rec;
                     binders2 = binders1;
                     ascription1 = ascription;
@@ -1200,7 +1170,7 @@ let (mk_fn_decl :
         fun decorations ->
           fun range ->
             {
-              id3 = id;
+              id2 = id;
               binders3 = binders1;
               ascription2 = ascription;
               decorations1 = decorations;

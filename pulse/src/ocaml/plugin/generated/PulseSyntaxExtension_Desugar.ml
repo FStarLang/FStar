@@ -1287,8 +1287,90 @@ let rec (desugar_stmt :
                ->
                Obj.magic
                  (Obj.repr
-                    (desugar_bind env lb s2
-                       s.PulseSyntaxExtension_Sugar.range1))
+                    (match (lb.PulseSyntaxExtension_Sugar.pat).FStar_Parser_AST.pat
+                     with
+                     | FStar_Parser_AST.PatVar uu___1 ->
+                         Obj.repr
+                           (desugar_bind env lb s2
+                              s.PulseSyntaxExtension_Sugar.range1)
+                     | FStar_Parser_AST.PatWild uu___1 ->
+                         Obj.repr
+                           (desugar_bind env lb s2
+                              s.PulseSyntaxExtension_Sugar.range1)
+                     | uu___1 ->
+                         Obj.repr
+                           (let id = FStar_Ident.id_of_text "_letpattern" in
+                            let pat = lb.PulseSyntaxExtension_Sugar.pat in
+                            let uu___2 =
+                              if
+                                FStar_Pervasives_Native.uu___is_Some
+                                  lb.PulseSyntaxExtension_Sugar.qualifier
+                              then
+                                PulseSyntaxExtension_Err.fail
+                                  "Qualifiers are not allowed for pattern bindings"
+                                  (lb.PulseSyntaxExtension_Sugar.pat).FStar_Parser_AST.prange
+                              else PulseSyntaxExtension_Err.return () in
+                            FStar_Class_Monad.op_let_Bang
+                              PulseSyntaxExtension_Err.err_monad () () uu___2
+                              (fun uu___3 ->
+                                 (fun uu___3 ->
+                                    let uu___3 = Obj.magic uu___3 in
+                                    let lb' =
+                                      let uu___4 =
+                                        FStar_Parser_AST.mk_pattern
+                                          (FStar_Parser_AST.PatVar
+                                             (id,
+                                               FStar_Pervasives_Native.None,
+                                               []))
+                                          (lb.PulseSyntaxExtension_Sugar.pat).FStar_Parser_AST.prange in
+                                      {
+                                        PulseSyntaxExtension_Sugar.qualifier
+                                          =
+                                          (lb.PulseSyntaxExtension_Sugar.qualifier);
+                                        PulseSyntaxExtension_Sugar.pat =
+                                          uu___4;
+                                        PulseSyntaxExtension_Sugar.typ =
+                                          (lb.PulseSyntaxExtension_Sugar.typ);
+                                        PulseSyntaxExtension_Sugar.init1 =
+                                          (lb.PulseSyntaxExtension_Sugar.init1)
+                                      } in
+                                    let t_let =
+                                      PulseSyntaxExtension_Sugar.mk_stmt
+                                        (PulseSyntaxExtension_Sugar.LetBinding
+                                           lb')
+                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                    let t_match =
+                                      let uu___4 =
+                                        let uu___5 =
+                                          let uu___6 =
+                                            FStar_Parser_AST.mk_term
+                                              (FStar_Parser_AST.Tvar id)
+                                              (lb.PulseSyntaxExtension_Sugar.pat).FStar_Parser_AST.prange
+                                              FStar_Parser_AST.Expr in
+                                          {
+                                            PulseSyntaxExtension_Sugar.head1
+                                              = uu___6;
+                                            PulseSyntaxExtension_Sugar.returns_annot
+                                              = FStar_Pervasives_Native.None;
+                                            PulseSyntaxExtension_Sugar.branches
+                                              = [(pat, s2)]
+                                          } in
+                                        PulseSyntaxExtension_Sugar.Match
+                                          uu___5 in
+                                      PulseSyntaxExtension_Sugar.mk_stmt
+                                        uu___4
+                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                    let s'' =
+                                      PulseSyntaxExtension_Sugar.mk_stmt
+                                        (PulseSyntaxExtension_Sugar.Sequence
+                                           {
+                                             PulseSyntaxExtension_Sugar.s1 =
+                                               t_let;
+                                             PulseSyntaxExtension_Sugar.s2 =
+                                               t_match
+                                           })
+                                        s.PulseSyntaxExtension_Sugar.range1 in
+                                    Obj.magic (desugar_stmt env s'')) uu___3))))
            | PulseSyntaxExtension_Sugar.ProofHintWithBinders uu___ ->
                Obj.magic
                  (Obj.repr
@@ -1319,7 +1401,7 @@ let rec (desugar_stmt :
                { PulseSyntaxExtension_Sugar.stmt = stmt;_} ->
                Obj.magic (Obj.repr (desugar_stmt env stmt))
            | PulseSyntaxExtension_Sugar.If
-               { PulseSyntaxExtension_Sugar.head1 = head;
+               { PulseSyntaxExtension_Sugar.head = head;
                  PulseSyntaxExtension_Sugar.join_slprop = join_slprop;
                  PulseSyntaxExtension_Sugar.then_ = then_;
                  PulseSyntaxExtension_Sugar.else_opt = else_opt;_}
@@ -1413,7 +1495,7 @@ let rec (desugar_stmt :
                                                              uu___4))) uu___3)))
                                        uu___2))) uu___1)))
            | PulseSyntaxExtension_Sugar.Match
-               { PulseSyntaxExtension_Sugar.head2 = head;
+               { PulseSyntaxExtension_Sugar.head1 = head;
                  PulseSyntaxExtension_Sugar.returns_annot = returns_annot;
                  PulseSyntaxExtension_Sugar.branches = branches;_}
                ->
@@ -1469,7 +1551,7 @@ let rec (desugar_stmt :
                                        uu___2))) uu___1)))
            | PulseSyntaxExtension_Sugar.While
                { PulseSyntaxExtension_Sugar.guard = guard;
-                 PulseSyntaxExtension_Sugar.id1 = id;
+                 PulseSyntaxExtension_Sugar.id = id;
                  PulseSyntaxExtension_Sugar.invariant = invariant;
                  PulseSyntaxExtension_Sugar.body = body;_}
                ->
@@ -2124,13 +2206,19 @@ and (desugar_bind :
                         (fun uu___1 ->
                            (fun annot ->
                               let annot = Obj.magic annot in
+                              let id =
+                                match (lb.PulseSyntaxExtension_Sugar.pat).FStar_Parser_AST.pat
+                                with
+                                | FStar_Parser_AST.PatWild uu___1 ->
+                                    FStar_Ident.mk_ident ("_", r)
+                                | FStar_Parser_AST.PatVar
+                                    (id1, uu___1, uu___2) -> id1 in
                               let b =
                                 PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                  lb.PulseSyntaxExtension_Sugar.id annot in
+                                  id annot in
                               let uu___1 =
                                 let uu___2 =
-                                  PulseSyntaxExtension_Env.push_bv env
-                                    lb.PulseSyntaxExtension_Sugar.id in
+                                  PulseSyntaxExtension_Env.push_bv env id in
                                 match uu___2 with
                                 | (env1, bv) ->
                                     let uu___3 = desugar_stmt env1 s2 in
@@ -2180,8 +2268,8 @@ and (desugar_bind :
                                                                    r)
                                                           | PulseSyntaxExtension_Sugar.Lambda_initializer
                                                               {
-                                                                PulseSyntaxExtension_Sugar.id2
-                                                                  = id;
+                                                                PulseSyntaxExtension_Sugar.id1
+                                                                  = id1;
                                                                 PulseSyntaxExtension_Sugar.is_rec
                                                                   = false;
                                                                 PulseSyntaxExtension_Sugar.binders2
@@ -2322,8 +2410,7 @@ and (desugar_bind :
                                                        Obj.repr
                                                          (let b1 =
                                                             PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                              lb.PulseSyntaxExtension_Sugar.id
-                                                              annot in
+                                                              id annot in
                                                           match e1 with
                                                           | PulseSyntaxExtension_Sugar.Array_initializer
                                                               {
@@ -2409,8 +2496,7 @@ and (desugar_bind :
                                                        Obj.repr
                                                          (let b1 =
                                                             PulseSyntaxExtension_SyntaxWrapper.mk_binder
-                                                              lb.PulseSyntaxExtension_Sugar.id
-                                                              annot in
+                                                              id annot in
                                                           match e1 with
                                                           | PulseSyntaxExtension_Sugar.Array_initializer
                                                               {
@@ -3057,7 +3143,7 @@ and (desugar_decl :
              close_st_term_bvs body bvs in
            match d with
            | PulseSyntaxExtension_Sugar.FnDefn
-               { PulseSyntaxExtension_Sugar.id2 = id;
+               { PulseSyntaxExtension_Sugar.id1 = id;
                  PulseSyntaxExtension_Sugar.is_rec = is_rec;
                  PulseSyntaxExtension_Sugar.binders2 = binders;
                  PulseSyntaxExtension_Sugar.ascription1 =
@@ -3310,7 +3396,7 @@ and (desugar_decl :
                                                        uu___6))) uu___4)))
                          uu___2))
            | PulseSyntaxExtension_Sugar.FnDefn
-               { PulseSyntaxExtension_Sugar.id2 = id;
+               { PulseSyntaxExtension_Sugar.id1 = id;
                  PulseSyntaxExtension_Sugar.is_rec = false;
                  PulseSyntaxExtension_Sugar.binders2 = binders;
                  PulseSyntaxExtension_Sugar.ascription1 =
@@ -3406,7 +3492,7 @@ and (desugar_decl :
                                                               uu___6)))
                                                    uu___5))) uu___4))) uu___2))
            | PulseSyntaxExtension_Sugar.FnDecl
-               { PulseSyntaxExtension_Sugar.id3 = id;
+               { PulseSyntaxExtension_Sugar.id2 = id;
                  PulseSyntaxExtension_Sugar.binders3 = binders;
                  PulseSyntaxExtension_Sugar.ascription2 =
                    FStar_Pervasives.Inl ascription;

@@ -18,6 +18,9 @@ module PulseSyntaxExtension.Sugar
 open FStar.Ident
 module A = FStar.Parser.AST
 module AU = FStar.Parser.AST.Util
+open FStar.Class.Show
+open FStar.Class.Tagged
+
 let rng = FStar.Compiler.Range.range
 let dummyRange = FStar.Compiler.Range.dummyRange
 
@@ -52,13 +55,6 @@ type computation_type = {
 
 type mut_or_ref =
   | MUT | REF
-
-type pat = 
-  | PatVar of ident
-  | PatConstructor {
-      head:lident;
-      args:list pat
-    }
 
 type hint_type =
   | ASSERT of slprop
@@ -102,7 +98,7 @@ type stmt' =
 
   | LetBinding {
       qualifier: option mut_or_ref;
-      id:ident;
+      pat:A.pattern;
       typ:option A.term;
       init:option let_init
     }
@@ -279,9 +275,9 @@ and eq_stmt' (s1 s2:stmt') =
     AU.eq_term l1 l2 && AU.eq_term v1 v2
   | ArrayAssignment { arr=a1; index=i1; value=v1 }, ArrayAssignment { arr=a2; index=i2; value=v2 } ->
     AU.eq_term a1 a2 && AU.eq_term i1 i2 && AU.eq_term v1 v2
-  | LetBinding { qualifier=q1; id=i1; typ=t1; init=init1 }, LetBinding { qualifier=q2; id=i2; typ=t2; init=init2 } ->
+  | LetBinding { qualifier=q1; pat=pat1; typ=t1; init=init1 }, LetBinding { qualifier=q2; pat=pat2; typ=t2; init=init2 } ->
     eq_opt eq_mut_or_ref q1 q2 &&
-    eq_ident i1 i2 &&
+    AU.eq_pattern pat1 pat2 &&
     eq_opt AU.eq_term t1 t2 &&
     eq_opt eq_let_init init1 init2
   | Block { stmt=s1 }, Block { stmt=s2 } -> eq_stmt s1 s2
@@ -363,12 +359,6 @@ and eq_mut_or_ref (m1 m2:mut_or_ref) =
   | MUT, MUT -> true
   | REF, REF -> true
   | _, _ -> false
-and eq_pat (p1 p2:pat) =
-  match p1, p2 with
-  | PatVar i1, PatVar i2 -> eq_ident i1 i2
-  | PatConstructor { head=h1; args=a1 }, PatConstructor { head=h2; args=a2 } ->
-    eq_lident h1 h2 && forall2 eq_pat a1 a2
-  | _, _ -> false
 
 let rec iter (f:'a -> unit) (l:list 'a) =
   match l with
@@ -382,7 +372,7 @@ let ieither (f:'a -> unit) (g:'b -> unit) (e:either 'a 'b) =
   match e with
   | Inl x -> f x
   | Inr x -> g x
-let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) =
+let rec scan_decl (cbs:A.dep_scan_callbacks) (d:decl) : unit =
   match d with
   | FnDefn f -> scan_fn_defn cbs f
   | FnDecl d -> scan_fn_decl cbs d
@@ -416,8 +406,9 @@ and scan_stmt (cbs:A.dep_scan_callbacks) (s:stmt) =
   | Expr e -> cbs.scan_term e.e
   | Assignment { lhs=l; value=v } -> cbs.scan_term l; cbs.scan_term v
   | ArrayAssignment { arr=a; index=i; value=v } -> cbs.scan_term a; cbs.scan_term i; cbs.scan_term v
-  | LetBinding { qualifier=q; id=i; typ=t; init=init } ->
+  | LetBinding { qualifier=q; pat=p; typ=t; init=init } ->
     iopt (scan_let_init cbs) init;
+    cbs.scan_pattern p;
     iopt cbs.scan_term t
   | Block { stmt=s } -> scan_stmt cbs s
   | If { head=h; join_slprop=j; then_=t; else_opt=e } ->
@@ -496,7 +487,7 @@ let add_decorations d ds =
 let mk_expr e = Expr { e }
 let mk_assignment id value = Assignment { lhs=id; value }
 let mk_array_assignment arr index value = ArrayAssignment { arr; index; value }
-let mk_let_binding qualifier id typ init = LetBinding { qualifier; id; typ; init }
+let mk_let_binding qualifier pat typ init = LetBinding { qualifier; pat; typ; init }
 let mk_block stmt = Block { stmt }
 let mk_if head join_slprop then_ else_opt = If { head; join_slprop; then_; else_opt }
 let mk_match head returns_annot branches = Match { head; returns_annot; branches }
