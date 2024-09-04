@@ -15,6 +15,8 @@ RUN . "$HOME/.cargo/env" && rustup component add rustfmt && cargo install bindge
 ADD --chown=opam:opam ./ $HOME/pulse
 WORKDIR $HOME/pulse
 
+ARG opamthreads=24
+
 # Install Karamel
 ENV KRML_HOME $HOME/pulse_tools/karamel
 RUN mkdir -p $HOME/pulse_tools && \
