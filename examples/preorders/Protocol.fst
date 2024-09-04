@@ -14,7 +14,7 @@
    limitations under the License.
 *)
 module Protocol
-
+#set-options "--ext context_pruning="
 open FStar.Seq
 
 open FStar.Preorder
