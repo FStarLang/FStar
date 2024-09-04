@@ -17,7 +17,7 @@ let pp_list : 'a . 'a pretty -> 'a Prims.list pretty =
       pp =
         (fun l ->
            let uu___1 =
-             FStar_Pprint.separate_map FStar_Pprint.colon (pp uu___) l in
+             FStar_Pprint.separate_map FStar_Pprint.semi (pp uu___) l in
            FStar_Pprint.brackets uu___1)
     }
 let pp_option : 'a . 'a pretty -> 'a FStar_Pervasives_Native.option pretty =

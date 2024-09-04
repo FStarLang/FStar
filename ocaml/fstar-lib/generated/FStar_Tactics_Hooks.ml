@@ -1781,7 +1781,8 @@ let (splice :
                       if is_typed
                       then
                         FStar_TypeChecker_TcTerm.tc_check_tot_or_gtot_term
-                          env tau FStar_Syntax_Util.t_dsl_tac_typ ""
+                          env tau FStar_Syntax_Util.t_dsl_tac_typ
+                          FStar_Pervasives_Native.None
                       else
                         FStar_TypeChecker_TcTerm.tc_tactic
                           FStar_Syntax_Syntax.t_unit

@@ -9068,25 +9068,68 @@ and (desugar_decl_maybe_fail_attr :
                                (let uu___8 =
                                   let uu___9 =
                                     let uu___10 =
-                                      (FStar_Common.string_of_list ())
-                                        FStar_Compiler_Util.string_of_int
-                                        expected_errs in
+                                      let uu___11 =
+                                        let uu___12 =
+                                          FStar_Errors_Msg.text
+                                            "This top-level definition was expected to raise error codes" in
+                                        let uu___13 =
+                                          FStar_Class_PP.pp
+                                            (FStar_Class_PP.pp_list
+                                               FStar_Class_PP.pp_int)
+                                            expected_errs in
+                                        FStar_Pprint.prefix
+                                          (Prims.of_int (2)) Prims.int_one
+                                          uu___12 uu___13 in
+                                      let uu___12 =
+                                        let uu___13 =
+                                          let uu___14 =
+                                            FStar_Errors_Msg.text
+                                              "but it raised" in
+                                          let uu___15 =
+                                            FStar_Class_PP.pp
+                                              (FStar_Class_PP.pp_list
+                                                 FStar_Class_PP.pp_int)
+                                              errnos in
+                                          FStar_Pprint.prefix
+                                            (Prims.of_int (2)) Prims.int_one
+                                            uu___14 uu___15 in
+                                        let uu___14 =
+                                          let uu___15 =
+                                            FStar_Errors_Msg.text
+                                              "(at desugaring time)" in
+                                          FStar_Pprint.op_Hat_Hat uu___15
+                                            FStar_Pprint.dot in
+                                        FStar_Pprint.op_Hat_Hat uu___13
+                                          uu___14 in
+                                      FStar_Pprint.op_Hat_Slash_Hat uu___11
+                                        uu___12 in
                                     let uu___11 =
-                                      (FStar_Common.string_of_list ())
-                                        FStar_Compiler_Util.string_of_int
-                                        errnos in
-                                    let uu___12 =
-                                      FStar_Compiler_Util.string_of_int e in
-                                    let uu___13 =
-                                      FStar_Compiler_Util.string_of_int n2 in
-                                    let uu___14 =
-                                      FStar_Compiler_Util.string_of_int n1 in
-                                    FStar_Compiler_Util.format5
-                                      "This top-level definition was expected to raise error codes %s, but it raised %s (at desugaring time). Error #%s was raised %s times, instead of %s."
-                                      uu___10 uu___11 uu___12 uu___13 uu___14 in
+                                      let uu___12 =
+                                        let uu___13 =
+                                          let uu___14 =
+                                            FStar_Class_Show.show
+                                              (FStar_Class_Show.printableshow
+                                                 FStar_Class_Printable.printable_int)
+                                              e in
+                                          let uu___15 =
+                                            FStar_Class_Show.show
+                                              (FStar_Class_Show.printableshow
+                                                 FStar_Class_Printable.printable_int)
+                                              n2 in
+                                          let uu___16 =
+                                            FStar_Class_Show.show
+                                              (FStar_Class_Show.printableshow
+                                                 FStar_Class_Printable.printable_int)
+                                              n1 in
+                                          FStar_Compiler_Util.format3
+                                            "Error #%s was raised %s times, instead of %s."
+                                            uu___14 uu___15 uu___16 in
+                                        FStar_Errors_Msg.text uu___13 in
+                                      [uu___12] in
+                                    uu___10 :: uu___11 in
                                   (FStar_Errors_Codes.Error_DidNotFail,
                                     uu___9) in
-                                FStar_Errors.log_issue
+                                FStar_Errors.log_issue_doc
                                   d1.FStar_Parser_AST.drange uu___8);
                                (env0, []))))))
         | FStar_Pervasives_Native.None -> desugar_decl_core env attrs d in
