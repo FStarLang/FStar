@@ -16,7 +16,7 @@ instance pp_bool = {
 }
 
 instance pp_list (a:Type) (_ : pretty a) : Tot (pretty (list a)) = {
-  pp = (fun l -> brackets (separate_map colon pp l));
+  pp = (fun l -> brackets (separate_map semi pp l));
 }
 
 instance pp_option (a:Type) (_ : pretty a) : Tot (pretty (option a)) = {
