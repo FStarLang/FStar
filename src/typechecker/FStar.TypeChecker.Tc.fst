@@ -607,21 +607,27 @@ let tc_decl' env0 se: list sigelt & list sigelt & Env.env =
     begin match errs with
     | [] ->
         List.iter Errors.print_issue errs;
-        Errors.log_issue se.sigrng (Errors.Error_DidNotFail, "This top-level definition was expected to fail, but it succeeded")
+        Errors.log_issue_doc se.sigrng (Errors.Error_DidNotFail, [
+            text "This top-level definition was expected to fail, but it succeeded";
+          ])
     | _ ->
         if expected_errors <> [] then
           match Errors.find_multiset_discrepancy expected_errors actual_errors with
           | None -> ()
           | Some (e, n1, n2) ->
+            let open FStar.Pprint in
+            let open FStar.Errors.Msg in
             List.iter Errors.print_issue errs;
-            Errors.log_issue
-                     se.sigrng
-                     (Errors.Error_DidNotFail,
-                      BU.format5 "This top-level definition was expected to raise error codes %s, \
-                                  but it raised %s. Error #%s was raised %s times, instead of %s."
-                                    (FStar.Common.string_of_list string_of_int expected_errors)
-                                    (FStar.Common.string_of_list string_of_int actual_errors)
-                                    (string_of_int e) (string_of_int n2) (string_of_int n1))
+            Errors.log_issue_doc se.sigrng (Errors.Error_DidNotFail, [
+                prefix 2 1
+                  (text "This top-level definition was expected to raise error codes")
+                  (pp expected_errors) ^/^
+                prefix 2 1 (text "but it raised")
+                  (pp actual_errors) ^^
+                dot;
+                text (BU.format3 "Error #%s was raised %s times, instead of %s."
+                                      (show e) (show n2) (show n1));
+              ])
     end;
     [], [], env
 
