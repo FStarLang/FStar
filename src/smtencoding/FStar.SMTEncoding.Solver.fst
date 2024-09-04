@@ -153,7 +153,7 @@ let filter_using_facts_from (e:env) (theory:list decl) =
         in
         List.fold_left (fun out d ->
           match d with
-          | Module (name, decls) -> decls |> List.filter keep_decl |> (fun decls -> Module (name, decls)::out)
+          | Module (name, decls) -> decls |> List.rev |> List.filter keep_decl |> (fun decls -> Module (name, List.rev decls)::out)
           | _ -> if keep_decl d then d::out else out) [] theory_rev
     in
     pruned_theory

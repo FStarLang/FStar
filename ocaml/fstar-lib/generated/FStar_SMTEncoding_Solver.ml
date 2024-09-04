@@ -156,8 +156,12 @@ let (filter_using_facts_from :
              fun d ->
                match d with
                | FStar_SMTEncoding_Term.Module (name, decls) ->
-                   let uu___ = FStar_Compiler_List.filter keep_decl decls in
-                   (FStar_SMTEncoding_Term.Module (name, uu___)) :: out
+                   let uu___ =
+                     FStar_Compiler_List.filter keep_decl
+                       (FStar_Compiler_List.rev decls) in
+                   (FStar_SMTEncoding_Term.Module
+                      (name, (FStar_Compiler_List.rev uu___)))
+                     :: out
                | uu___ ->
                    let uu___1 = keep_decl d in
                    if uu___1 then d :: out else out) [] theory_rev in
