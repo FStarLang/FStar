@@ -95,7 +95,7 @@ check-for-changes:
 	git status ..
 	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
 	# Test if nothing has changed
-	if ! git diff-index --exit-code HEAD .. ; then git diff .. ; false ; fi
+	if ! git diff-index --exit-code HEAD .. ; then git --no-pager diff .. ; false ; fi
 
 pulse2rust:
 	+$(MAKE) -C $(PULSE_HOME) pulse2rust
