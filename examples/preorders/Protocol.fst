@@ -14,7 +14,6 @@
    limitations under the License.
 *)
 module Protocol
-#set-options "--ext context_pruning="
 open FStar.Seq
 
 open FStar.Preorder
@@ -427,7 +426,7 @@ val send_aux
                       from <= ctr c h1 /\
                       (forall (k:nat). k < n ==> Some? (Seq.index (as_seq file h0) k)) /\
                       sent_bytes (as_initialized_seq file h0) c from (ctr c h1) h1))
-#push-options "--z3rlimit 500"
+#restart-solver
 let rec send_aux #n file c from pos
       = if pos = n then ()
         else
