@@ -58,7 +58,6 @@ let rec eq_step s1 s2 =
   | Eager_unfolding, Eager_unfolding
   | Inlining, Inlining
   | DoNotUnfoldPureLets, DoNotUnfoldPureLets
-  | UnfoldTac, UnfoldTac
   | PureSubtermsWithinComputations, PureSubtermsWithinComputations
   | Simplify, Simplify
   | EraseUniverses, EraseUniverses
@@ -78,6 +77,7 @@ let rec eq_step s1 s2 =
   | UnfoldAttr lids1, UnfoldAttr lids2 -> lids1 =? lids2
   | UnfoldQual strs1, UnfoldQual strs2 -> strs1 =? strs2
   | UnfoldNamespace strs1, UnfoldNamespace strs2 -> strs1 =? strs2
+  | DontUnfoldAttr lids1, DontUnfoldAttr lids2 -> lids1 =? lids2
   | _ -> false // fixme: others ?
 
 instance deq_step : deq step = {
@@ -103,7 +103,7 @@ let rec step_to_string (s:step) : string =
   | UnfoldAttr lids1 -> "UnfoldAttr " ^ show lids1
   | UnfoldQual strs1 -> "UnfoldQual " ^ show strs1
   | UnfoldNamespace strs1 -> "UnfoldNamespace " ^ show strs1
-  | UnfoldTac -> "UnfoldTac"
+  | DontUnfoldAttr lids1 -> "DontUnfoldAttr " ^ show lids1
   | PureSubtermsWithinComputations -> "PureSubtermsWithinComputations"
   | Simplify -> "Simplify"
   | EraseUniverses -> "EraseUniverses"
@@ -386,8 +386,8 @@ let find_in_sigtab env lid = BU.smap_try_find (sigtab env) (string_of_lid lid)
 let name_not_found (l:lid) =
   (Errors.Fatal_NameNotFound, (format1 "Name \"%s\" not found" (string_of_lid l)))
 
-let variable_not_found v =
-  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (Print.bv_to_string v)))
+let variable_not_found (v:bv) =
+  (Errors.Fatal_VariableNotFound, (format1 "Variable \"%s\" not found" (show v)))
 
 //Construct a new universe unification variable
 let new_u_univ () = U_unif (UF.univ_fresh Range.dummyRange)
@@ -421,8 +421,8 @@ let check_effect_is_not_a_template (ed:eff_decl) rng : unit =
   then
     let msg = BU.format2
       "Effect template %s should be applied to arguments for its binders (%s) before it can be used at an effect position"
-      (Print.lid_to_string ed.mname)
-      (Print.binders_to_string ", " ed.binders) in
+      (show ed.mname)
+      (String.concat "," <| List.map Print.binder_to_string_with_type ed.binders) in
     raise_error (Errors.Fatal_NotEnoughArgumentsForEffect, msg) rng
 
 let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
@@ -430,7 +430,7 @@ let inst_effect_fun_with (insts:universes) (env:env) (ed:eff_decl) (us, t)  =
   if List.length insts <> List.length us
   then failwith (BU.format4 "Expected %s instantiations; got %s; failed universe instantiation in effect %s\n\t%s\n"
                    (string_of_int <| List.length us) (string_of_int <| List.length insts)
-                   (Print.lid_to_string ed.mname) (Print.term_to_string t));
+                   (show ed.mname) (show t));
   snd (inst_tscheme_with (us, t) insts)
 
 type tri =
@@ -755,7 +755,7 @@ let datacons_of_typ env lid =
 let typ_of_datacon env lid =
   match lookup_qname env lid with
     | Some (Inr ({ sigel = Sig_datacon {ty_lid=l} }, _), _) -> l
-    | _ -> failwith (BU.format1 "Not a datacon: %s" (Print.lid_to_string lid))
+    | _ -> failwith (BU.format1 "Not a datacon: %s" (show lid))
 
 let num_datacon_non_injective_ty_params env lid =
   match lookup_qname env lid with
@@ -991,13 +991,13 @@ let lookup_effect_abbrev env (univ_insts:universes) lid0 =
                        then univ_insts
                        else failwith (BU.format3 "(%s) Unexpected instantiation of effect %s with %s universes"
                                             (Range.string_of_range (get_range env))
-                                            (Print.lid_to_string lid)
+                                            (show lid)
                                             (List.length univ_insts |> BU.string_of_int)) in
            begin match binders, univs with
              | [], _ -> failwith "Unexpected effect abbreviation with no arguments"
              | _, _::_::_ ->
                 failwith (BU.format2 "Unexpected effect abbreviation %s; polymorphic in %s universes"
-                           (Print.lid_to_string lid) (string_of_int <| List.length univs))
+                           (show lid) (string_of_int <| List.length univs))
              | _ -> let _, t = inst_tscheme_with (univs, U.arrow binders c) insts in
                     let t = Subst.set_use_range (range_of_lid lid) t in
                     begin match (Subst.compress t).n with
@@ -1057,7 +1057,7 @@ let num_effect_indices env name r =
   | _ ->
     raise_error (Errors.Fatal_UnexpectedSignatureForMonad,
       BU.format2 "Signature for %s not an arrow (%s)" (Ident.string_of_lid name)
-      (Print.term_to_string sig_t)) r
+      (show sig_t)) r
 
 
 let lookup_effect_quals env l =
@@ -1068,7 +1068,7 @@ let lookup_effect_quals env l =
     | _ -> []
 
 let lookup_projector env lid i =
-    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (Print.lid_to_string lid)) in
+    let fail () = failwith (BU.format2 "Impossible: projecting field #%s from constructor %s is undefined" (BU.string_of_int i) (show lid)) in
     let _, t = lookup_datacon env lid in
     match (compress t).n with
         | Tm_arrow {bs=binders} ->
@@ -1210,7 +1210,7 @@ let get_lid_valued_effect_attr env
                   (Errors.Fatal_UnexpectedEffect,
                    BU.format2 "The argument for the effect attribute for %s is not a constant string, it is %s\n"
                      (string_of_lid eff_lid)
-                     (Print.term_to_string t)) t.pos)
+                     (show t)) t.pos)
 
 let get_default_effect env lid =
   get_lid_valued_effect_attr env lid Const.default_effect_attr None
@@ -1240,7 +1240,7 @@ let join env l1 l2 : (lident & mlift & mlift) =
   | None ->
     raise_error (Errors.Fatal_EffectsCannotBeComposed,
       (BU.format2 "Effects %s and %s cannot be composed"
-        (Print.lid_to_string l1) (Print.lid_to_string l2))) env.range
+        (show l1) (show l2))) env.range
   | Some t -> t
 
 let monad_leq env l1 l2 : option edge =
@@ -1333,7 +1333,7 @@ let rec unfold_effect_abbrev env comp =
       then raise_error (Errors.Fatal_ConstructorArgLengthMismatch, (BU.format3 "Effect constructor is not fully applied; expected %s args, got %s args, i.e., %s"
                                 (BU.string_of_int (List.length binders))
                                 (BU.string_of_int (List.length c.effect_args + 1))
-                                (Print.comp_to_string (S.mk_Comp c)))) comp.pos;
+                                (show (S.mk_Comp c)))) comp.pos;
       let inst = List.map2 (fun b (t, _) -> NT(b.binder_bv, t)) binders (as_arg c.result_typ::c.effect_args) in
       let c1 = Subst.subst_comp inst cdef in
       let c = {comp_to_comp_typ env c1 with flags=c.flags} |> mk_Comp in
@@ -1987,40 +1987,77 @@ let close_guard env binders g =
 (* ------------------------------------------------*)
 
 (* Generating new implicit variables *)
-let new_tac_implicit_var reason r env k should_check uvar_typedness_deps meta =
-      let binders = all_binders env in
-      let gamma = env.gamma in
-      let decoration = {
-             uvar_decoration_typ = k;
-             uvar_decoration_typedness_depends_on = uvar_typedness_deps;
-             uvar_decoration_should_check = should_check;
-          }
-      in
-      let ctx_uvar = {
-          ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
-          ctx_uvar_gamma=gamma;
-          ctx_uvar_binders=binders;
-          ctx_uvar_reason=reason;
-          ctx_uvar_range=r;
-          ctx_uvar_meta=meta;
-      } in
-      check_uvar_ctx_invariant reason r true gamma binders;
-      let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
-      let imp = { imp_reason = reason
-                ; imp_tm     = t
-                ; imp_uvar   = ctx_uvar
-                ; imp_range  = r
-                } in
-      if !dbg_ImplicitTrace then
-        BU.print1 "Just created uvar for implicit {%s}\n" (Print.uvar_to_string ctx_uvar.ctx_uvar_head);
-      let g = {trivial_guard with implicits=[imp]} in
-      t, [(ctx_uvar, r)], g
+let new_tac_implicit_var
+  (reason: string)
+  (r: Range.range)
+  (env:env)
+  (uvar_typ:typ)
+  (should_check:should_check_uvar)
+  (uvar_typedness_deps:list ctx_uvar)
+  (meta:option ctx_uvar_meta_t)
+  (unrefine:bool)
+: term & (ctx_uvar & Range.range) & guard_t
+=
+  let binders = all_binders env in
+  let gamma = env.gamma in
+  let decoration = {
+         uvar_decoration_typ = uvar_typ;
+         uvar_decoration_typedness_depends_on = uvar_typedness_deps;
+         uvar_decoration_should_check = should_check;
+         uvar_decoration_should_unrefine = unrefine;
+  } in
+  let ctx_uvar = {
+      ctx_uvar_head=FStar.Syntax.Unionfind.fresh decoration r;
+      ctx_uvar_gamma=gamma;
+      ctx_uvar_binders=binders;
+      ctx_uvar_reason=reason;
+      ctx_uvar_range=r;
+      ctx_uvar_meta=meta;
+  } in
+  check_uvar_ctx_invariant reason r true gamma binders;
+  let t = mk (Tm_uvar (ctx_uvar, ([], NoUseRange))) r in
+  let imp = { imp_reason = reason
+            ; imp_tm     = t
+            ; imp_uvar   = ctx_uvar
+            ; imp_range  = r
+            } in
+  if !dbg_ImplicitTrace then
+    BU.print1 "Just created uvar for implicit {%s}\n" (show ctx_uvar.ctx_uvar_head);
+  let g = {trivial_guard with implicits=[imp]} in
+  t, (ctx_uvar, r), g
 
-let new_implicit_var_aux reason r env k should_check meta =
-  new_tac_implicit_var reason r env k should_check [] meta
+let new_implicit_var_aux reason r env k should_check meta unrefine =
+  new_tac_implicit_var reason r env k should_check [] meta unrefine
 
 (***************************************************)
 
+let uvar_meta_for_binder (b:binder) : option ctx_uvar_meta_t & bool=
+  let should_unrefine = U.has_attribute b.binder_attrs Const.unrefine_binder_attr in
+  let meta =
+    match b.binder_qual with
+    | Some (Meta tau) ->
+      (* Meta qualifier (e.g typeclass constraints) *)
+      Some (Ctx_uvar_meta_tac tau)
+    | _ ->
+      (* NB: it does not have to be marked Implicit to get a
+      Ctx_uvar_meta_attr. In practice most of them are (or
+      the typechecker will not decide to instantiate) but the
+      layered effects checking code will sometimes call this
+      function on regular explicit binders. *)
+      let is_unification_tag (t:term) : option term =
+        let hd, args = U.head_and_args t in
+        let hd = U.un_uinst hd in
+        match (SS.compress hd).n, args with
+        | Tm_fvar fv, [(_, Some ({aqual_implicit = true})); (a, None)]
+          when S.fv_eq_lid fv Const.unification_tag_lid ->
+          Some a
+        | _ -> None
+      in
+      match b.binder_attrs |> List.tryPick is_unification_tag with
+      | Some tag -> Some (Ctx_uvar_meta_attr tag)
+      | None -> None
+  in
+  meta, should_unrefine
 //
 // Perhaps this should not return a guard,
 //   but only a list of implicits, so that callers don't have to
@@ -2030,24 +2067,19 @@ let uvars_for_binders env (bs:S.binders) substs reason r =
   bs |> List.fold_left (fun (substs, uvars, g) b ->
     let sort = SS.subst substs b.binder_bv.sort in
 
-    let ctx_uvar_meta_t =
-      match b.binder_qual, b.binder_attrs with
-      | Some (Meta t), [] ->
-        Some (Ctx_uvar_meta_tac t)
-      | _, t::_ -> Some (Ctx_uvar_meta_attr t)
-      | _ -> None in
+    let ctx_uvar_meta, should_unrefine = uvar_meta_for_binder b in
 
     let t, l_ctx_uvars, g_t = new_implicit_var_aux
       (reason b) r env sort
       (if Options.compat_pre_typed_indexed_effects ()
        then Allow_untyped "indexed effect uvar in compat mode"
        else Strict)
-      ctx_uvar_meta_t in
+      ctx_uvar_meta
+      should_unrefine
+    in
 
-    if !dbg_LayeredEffectsEqns
-    then List.iter (fun (ctx_uvar, _) ->
-                    BU.print1 "Layered Effect uvar : %s\n"
-                      (Print.ctx_uvar_to_string ctx_uvar)) l_ctx_uvars;
+    if !dbg_LayeredEffectsEqns then
+      BU.print1 "Layered Effect uvar: %s\n" (show l_ctx_uvars);
 
     substs@[NT (b.binder_bv, t)],
     uvars@[t],

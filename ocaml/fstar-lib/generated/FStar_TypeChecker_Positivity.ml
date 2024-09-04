@@ -74,8 +74,10 @@ let (apply_constr_arrow :
               let uu___2 =
                 let uu___3 =
                   let uu___4 = FStar_Syntax_Print.args_to_string all_params in
-                  let uu___5 = FStar_Ident.string_of_lid dlid in
-                  let uu___6 = FStar_Syntax_Print.term_to_string dt in
+                  let uu___5 =
+                    FStar_Class_Show.show FStar_Ident.showable_lident dlid in
+                  let uu___6 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term dt in
                   FStar_Compiler_Util.format3
                     "Unexpected application of type parameters %s to a data constructor %s : %s"
                     uu___4 uu___5 uu___6 in
@@ -212,19 +214,23 @@ let (max_uniformly_recursive_parameters :
           let min_l1 f l = min_l n_params f l in
           let params_to_string uu___ =
             let uu___1 =
-              FStar_Compiler_List.map FStar_Syntax_Print.bv_to_string params in
+              FStar_Compiler_List.map
+                (FStar_Class_Show.show FStar_Syntax_Print.showable_bv) params in
             FStar_Compiler_String.concat ", " uu___1 in
           debug_positivity env
             (fun uu___1 ->
                let uu___2 = params_to_string () in
-               let uu___3 = FStar_Syntax_Print.term_to_string ty1 in
+               let uu___3 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term ty1 in
                FStar_Compiler_Util.format2
                  "max_uniformly_recursive_parameters? params=%s in %s" uu___2
                  uu___3);
           (let rec aux ty2 =
              debug_positivity env
                (fun uu___2 ->
-                  let uu___3 = FStar_Syntax_Print.term_to_string ty2 in
+                  let uu___3 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                      ty2 in
                   FStar_Compiler_Util.format1
                     "max_uniformly_recursive_parameters.aux? %s" uu___3);
              (let uu___2 =
@@ -354,7 +360,8 @@ let (max_uniformly_recursive_parameters :
            debug_positivity env
              (fun uu___2 ->
                 let uu___3 = params_to_string () in
-                let uu___4 = FStar_Syntax_Print.term_to_string ty1 in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term ty1 in
                 FStar_Compiler_Util.format3
                   "result: max_uniformly_recursive_parameters(params=%s in %s) = %s"
                   uu___3 uu___4 (Prims.string_of_int res));
@@ -455,7 +462,8 @@ let (mark_uniform_type_parameters :
                                      let uu___8 =
                                        let uu___9 =
                                          let uu___10 =
-                                           FStar_Syntax_Print.binder_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_binder
                                              param in
                                          FStar_Compiler_Util.format1
                                            "Binder %s is marked strictly positive, but it is not uniformly recursive"
@@ -656,7 +664,8 @@ let (check_no_index_occurrences_in_arities :
         debug_positivity env
           (fun uu___1 ->
              let uu___2 = string_of_lids mutuals in
-             let uu___3 = FStar_Syntax_Print.term_to_string t in
+             let uu___3 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
              FStar_Compiler_Util.format2
                "check_no_index_occurrences of (mutuals %s) in arities of %s"
                uu___2 uu___3);
@@ -695,7 +704,8 @@ let (check_no_index_occurrences_in_arities :
                         let uu___5 =
                           let uu___6 = FStar_Ident.string_of_lid mutual in
                           let uu___7 =
-                            FStar_Syntax_Print.term_to_string index1 in
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_term index1 in
                           let uu___8 = FStar_Ident.string_of_lid fv in
                           FStar_Compiler_Util.format3
                             "Type %s is not strictly positive since it instantiates a non-uniformly recursive parameter or index %s of %s"
@@ -738,7 +748,8 @@ let (check_no_index_occurrences_in_arities :
                               (debug_positivity env
                                  (fun uu___8 ->
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string t in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term t in
                                     FStar_Compiler_Util.format2
                                       "Checking arity indexes of %s (num uniform params = %s)"
                                       uu___9 (Prims.string_of_int n));
@@ -771,11 +782,13 @@ let (check_no_index_occurrences_in_arities :
                                                    (debug_positivity env
                                                       (fun uu___13 ->
                                                          let uu___14 =
-                                                           FStar_Syntax_Print.term_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_term
                                                              (FStar_Pervasives_Native.fst
                                                                 i) in
                                                          let uu___15 =
-                                                           FStar_Syntax_Print.term_to_string
+                                                           FStar_Class_Show.show
+                                                             FStar_Syntax_Print.showable_term
                                                              f_t in
                                                          FStar_Compiler_Util.format2
                                                            "Checking %s : %s (arity)"
@@ -787,11 +800,13 @@ let (check_no_index_occurrences_in_arities :
                                                    debug_positivity env
                                                      (fun uu___13 ->
                                                         let uu___14 =
-                                                          FStar_Syntax_Print.term_to_string
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
                                                             (FStar_Pervasives_Native.fst
                                                                i) in
                                                         let uu___15 =
-                                                          FStar_Syntax_Print.term_to_string
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
                                                             f_t in
                                                         FStar_Compiler_Util.format2
                                                           "Skipping %s : %s (non-arity)"
@@ -953,7 +968,9 @@ let rec (ty_strictly_positive_in_type :
           debug_positivity env
             (fun uu___1 ->
                let uu___2 = string_of_lids mutuals in
-               let uu___3 = FStar_Syntax_Print.term_to_string in_type1 in
+               let uu___3 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                   in_type1 in
                FStar_Compiler_Util.format2
                  "Checking strict positivity of {%s} in type, after normalization %s "
                  uu___2 uu___3);
@@ -1006,7 +1023,8 @@ let rec (ty_strictly_positive_in_type :
                            (fun uu___6 ->
                               let uu___7 = string_of_lids mutuals in
                               let uu___8 =
-                                FStar_Syntax_Print.term_to_string t in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term t in
                               FStar_Compiler_Util.format2
                                 "Failed to check positivity of %s in a term with head %s"
                                 uu___7 uu___8);
@@ -1019,12 +1037,15 @@ let rec (ty_strictly_positive_in_type :
                              (debug_positivity env
                                 (fun uu___7 ->
                                    let uu___8 =
-                                     FStar_Syntax_Print.term_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term
                                        in_type1 in
                                    let uu___9 =
-                                     FStar_Syntax_Print.nm_to_string x in
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_bv x in
                                    let uu___10 =
-                                     FStar_Syntax_Print.term_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Syntax_Print.showable_term
                                        head_ty in
                                    FStar_Compiler_Util.format3
                                      "Tm_app, head bv, in_type=%s, head_bv=%s, head_ty=%s"
@@ -1228,9 +1249,12 @@ let rec (ty_strictly_positive_in_type :
                | uu___5 ->
                    (debug_positivity env
                       (fun uu___7 ->
-                         let uu___8 = FStar_Syntax_Print.tag_of_term in_type1 in
+                         let uu___8 =
+                           FStar_Class_Tagged.tag_of
+                             FStar_Syntax_Syntax.tagged_term in_type1 in
                          let uu___9 =
-                           FStar_Syntax_Print.term_to_string in_type1 in
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term in_type1 in
                          FStar_Compiler_Util.format2
                            "Checking strict positivity, unexpected tag: %s and term %s"
                            uu___8 uu___9);
@@ -1263,9 +1287,11 @@ and (ty_strictly_positive_in_args :
                          (fun uu___4 ->
                             let uu___5 = string_of_lids mutuals in
                             let uu___6 =
-                              FStar_Syntax_Print.term_to_string arg in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_term arg in
                             let uu___7 =
-                              FStar_Syntax_Print.binder_to_string b in
+                              FStar_Class_Show.show
+                                FStar_Syntax_Print.showable_binder b in
                             FStar_Compiler_Util.format3
                               "Checking positivity of %s in argument %s and binder %s"
                               uu___5 uu___6 uu___7);
@@ -1283,9 +1309,11 @@ and (ty_strictly_positive_in_args :
                              (fun uu___5 ->
                                 let uu___6 = string_of_lids mutuals in
                                 let uu___7 =
-                                  FStar_Syntax_Print.term_to_string arg in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_term arg in
                                 let uu___8 =
-                                  FStar_Syntax_Print.binder_to_string b in
+                                  FStar_Class_Show.show
+                                    FStar_Syntax_Print.showable_binder b in
                                 FStar_Compiler_Util.format3
                                   "Failed checking positivity of %s in argument %s and binder %s"
                                   uu___6 uu___7 uu___8);
@@ -1312,7 +1340,9 @@ and (ty_strictly_positive_in_arguments_to_fvar :
                      let uu___2 = string_of_lids mutuals in
                      let uu___3 = FStar_Ident.string_of_lid fv in
                      let uu___4 = FStar_Syntax_Print.args_to_string args in
-                     let uu___5 = FStar_Syntax_Print.term_to_string t in
+                     let uu___5 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t in
                      FStar_Compiler_Util.format4
                        "Checking positivity of %s in application of fv %s to %s (t=%s)"
                        uu___2 uu___3 uu___4 uu___5);
@@ -1446,7 +1476,9 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                          FStar_Errors.raise_error uu___2 uu___3 in
                    debug_positivity env
                      (fun uu___2 ->
-                        let uu___3 = FStar_Syntax_Print.term_to_string dt in
+                        let uu___3 =
+                          FStar_Class_Show.show
+                            FStar_Syntax_Print.showable_term dt in
                         let uu___4 = FStar_Syntax_Print.args_to_string args in
                         FStar_Compiler_Util.format3
                           "Checking positivity in the data constructor type: %s\n\tnum_ibs=%s, args=%s,"
@@ -1461,7 +1493,8 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                               let uu___6 =
                                 FStar_Syntax_Print.args_to_string args1 in
                               let uu___7 =
-                                FStar_Syntax_Print.term_to_string applied_dt in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term applied_dt in
                               FStar_Compiler_Util.format3
                                 "Applied data constructor type: %s %s : %s"
                                 uu___5 uu___6 uu___7);
@@ -1479,10 +1512,12 @@ and (ty_strictly_positive_in_datacon_of_applied_inductive :
                                       (debug_positivity env1
                                          (fun uu___7 ->
                                             let uu___8 =
-                                              FStar_Syntax_Print.bv_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_bv
                                                 f.FStar_Syntax_Syntax.binder_bv in
                                             let uu___9 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 (f.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort in
                                             FStar_Compiler_Util.format2
                                               "Checking field %s : %s for indexes and positivity"
@@ -1561,7 +1596,9 @@ let (ty_strictly_positive_in_datacon_decl :
                     FStar_Errors.raise_error uu___1 uu___2 in
               debug_positivity env
                 (fun uu___1 ->
-                   let uu___2 = FStar_Syntax_Print.term_to_string dt in
+                   let uu___2 =
+                     FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                       dt in
                    Prims.strcat "Checking data constructor type: " uu___2);
               (let uu___1 = FStar_Syntax_Util.args_of_binders ty_bs in
                match uu___1 with
@@ -1598,7 +1635,8 @@ let (ty_strictly_positive_in_datacon_decl :
                                 let uu___4 =
                                   let uu___5 =
                                     let uu___6 =
-                                      FStar_Syntax_Print.binder_to_string b in
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_binder b in
                                     FStar_Compiler_Util.format2
                                       "Binder %s is marked %s, but its use in the definition is not"
                                       uu___6

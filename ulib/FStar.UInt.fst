@@ -325,6 +325,13 @@ let logand_mask #n a m =
     (logand_vec (to_vec a) (to_vec (pow2 m - 1)))
     (append (zero_vec #(n - m)) (slice (to_vec a) (n - m) n));
   append_lemma #(n - m) #m (zero_vec #(n - m)) (slice (to_vec a) (n - m) n);
+  calc (==) {
+    0 * pow2 m + a % pow2 m;
+    == { }
+    0 + a % pow2 m;
+    == { }
+    a % pow2 m;
+  };
   assert (0 * pow2 m + a % pow2 m == a % pow2 m);
   assert (from_vec #(n - m) (zero_vec #(n - m)) == 0);
   slice_right_lemma #n (to_vec a) m;
@@ -577,7 +584,7 @@ let lemma_lognot_value_zero #n a =
 private
 val lemma_mod_variation: #n:pos -> a:uint_t n ->
   Lemma (a <> 0 ==> ((-a) % pow2 n) - 1 % pow2 n = (((-a) % pow2 n) - 1) % pow2 n)
-let lemma_mod_variation #n a = ()
+let lemma_mod_variation #n a = assert (pow2 n =!= 0)
 #pop-options
 
 let lemma_one_mod_pow2 #n = ()

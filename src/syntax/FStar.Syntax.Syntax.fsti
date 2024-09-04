@@ -31,6 +31,7 @@ include FStar.Class.HasRange
 open FStar.Class.Show
 open FStar.Class.Deq
 open FStar.Class.Ord
+open FStar.Class.Tagged
 
 (* Objects with metadata *)
 [@@ PpxDerivingYoJson; PpxDerivingShow ]
@@ -55,6 +56,8 @@ type pragma =
   | PopOptions
   | RestartSolver
   | PrintEffectsGraph  //#print-effects-graph dumps the current effects graph in a dot file named "effects.graph"
+
+instance val showable_pragma : showable pragma
 
 [@@ PpxDerivingYoJson; PpxDerivingShowConstant "None" ]
 type memo 'a = ref (option 'a)
@@ -192,13 +195,14 @@ and ctx_uvar = {                                                 (* (G |- ?u : t
 }
 and ctx_uvar_meta_t =
   | Ctx_uvar_meta_tac of term
-  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@...] notation *)
+  | Ctx_uvar_meta_attr of term (* An attribute associated with an implicit argument using the #[@@@ defer_to ...] notation *)
 and ctx_uvar_and_subst = ctx_uvar & subst_ts
 
 and uvar_decoration = {
   uvar_decoration_typ:typ;
   uvar_decoration_typedness_depends_on:list ctx_uvar;
   uvar_decoration_should_check:should_check_uvar;
+  uvar_decoration_should_unrefine:bool;
 }
 
 and uvar = Unionfind.p_uvar (option term & uvar_decoration) & version & Range.range
@@ -500,6 +504,8 @@ type indexed_effect_binder_kind =
   | Range_binder
   | Repr_binder
   | Ad_hoc_binder
+instance val showable_indexed_effect_binder_kind : showable indexed_effect_binder_kind
+instance val tagged_indexed_effect_binder_kind : tagged indexed_effect_binder_kind
 
 //
 // Kind of an indexed effect combinator
@@ -512,6 +518,8 @@ type indexed_effect_combinator_kind =
   | Substitutive_combinator of list indexed_effect_binder_kind
   | Substitutive_invariant_combinator
   | Ad_hoc_combinator
+instance val showable_indexed_effect_combinator_kind : showable indexed_effect_combinator_kind
+instance val tagged_indexed_effect_combinator_kind : tagged indexed_effect_combinator_kind
 
 type sub_eff = {
   source:lident;
@@ -601,6 +609,9 @@ type eff_extraction_mode =
   | Extract_none of string  // Effect cannot be extracted
   | Extract_reify           // Effect can be extracted with reification
   | Extract_primitive       // Effect is primitive
+
+instance val showable_eff_extraction_mode : showable eff_extraction_mode
+instance val tagged_eff_extraction_mode : tagged eff_extraction_mode
 
 (*
   new_effect {
@@ -752,6 +763,7 @@ and sigelt = {
     sigopts:  option vconfig; (* Saving the option context where this sigelt was checked in *)
 }
 
+
 type sigelts = list sigelt
 
 type modul = {
@@ -897,6 +909,8 @@ val t_list_of       : term -> term
 val t_option_of     : term -> term
 val t_tuple2_of     : term -> term -> term
 val t_tuple3_of     : term -> term -> term -> term
+val t_tuple4_of     : term -> term -> term -> term -> term
+val t_tuple5_of     : term -> term -> term -> term -> term -> term
 val t_either_of     : term -> term -> term
 val t_sealed_of     : term -> term
 val t_erased_of     : term -> term
@@ -937,3 +951,6 @@ instance val deq_delta_depth : deq delta_depth
 instance val ord_bv         : ord bv
 instance val ord_ident      : ord ident
 instance val ord_fv         : ord lident
+
+instance val tagged_term : tagged term
+instance val tagged_sigelt : tagged sigelt

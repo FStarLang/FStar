@@ -21,6 +21,10 @@ open FStar.Stubs.Reflection.V2.Builtins
 open FStar.Stubs.Reflection.V2.Data
 open FStar.Order
 open FStar.VConfig
+open FStar.Reflection.V2.Collect
+
+let type_of_binder (b : binder) : typ =
+    (inspect_binder b).sort
 
 let rec inspect_ln_unascribe (t:term) : tv:term_view{tv << t /\ notAscription tv} =
     match inspect_ln t with
@@ -77,25 +81,12 @@ let push_binding (e:env) (b:binding) : env =
   in
   push_namedv e nv
 
-let type_of_binder (b : binder) : typ =
-    (inspect_binder b).sort
-
 val flatten_name : name -> Tot string
 let rec flatten_name ns =
     match ns with
     | [] -> ""
     | [n] -> n
     | n::ns -> n ^ "." ^ flatten_name ns
-
-(* Helpers for dealing with nested applications and arrows *)
-let rec collect_app_ln' (args : list argv) (t : term) : Tot (term & list argv) (decreases t) =
-    match inspect_ln_unascribe t with
-    | Tv_App l r ->
-        collect_app_ln' (r::args) l
-    | _ -> (t, args)
-
-val collect_app_ln : term -> term & list argv
-let collect_app_ln = collect_app_ln' []
 
 let rec mk_app (t : term) (args : list argv) : Tot term (decreases args) =
     match args with
@@ -118,39 +109,6 @@ let rec mk_arr_ln (bs: list binder{~(Nil? bs)}) (cod : comp) : Tot term (decreas
     match bs with
     | [b] -> pack_ln (Tv_Arrow b cod)
     | (b::bs) -> pack_ln (Tv_Arrow b (pack_comp (C_Total (mk_arr_ln bs cod))))
-
-let rec collect_arr' (bs : list binder) (c : comp) : Tot (list binder & comp) (decreases c) =
-    begin match inspect_comp c with
-    | C_Total t ->
-        begin match inspect_ln_unascribe t with
-        | Tv_Arrow b c ->
-            collect_arr' (b::bs) c
-        | _ ->
-            (bs, c)
-        end
-    | _ -> (bs, c)
-    end
-
-val collect_arr_ln_bs : typ -> list binder & comp
-let collect_arr_ln_bs t =
-    let (bs, c) = collect_arr' [] (pack_comp (C_Total t)) in
-    (List.Tot.Base.rev bs, c)
-
-val collect_arr_ln : typ -> list typ & comp
-let collect_arr_ln t =
-    let bs, c = collect_arr_ln_bs t in
-    List.Tot.Base.map type_of_binder bs, c
-
-let rec collect_abs' (bs : list binder) (t : term) : Tot (list binder & term) (decreases t) =
-    match inspect_ln_unascribe t with
-    | Tv_Abs b t' ->
-        collect_abs' (b::bs) t'
-    | _ -> (bs, t)
-
-val collect_abs_ln : term -> list binder & term
-let collect_abs_ln t =
-    let (bs, t') = collect_abs' [] t in
-    (List.Tot.Base.rev bs, t')
 
 let fv_to_string (fv:fv) : string = implode_qn (inspect_fv fv)
 

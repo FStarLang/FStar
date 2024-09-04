@@ -1457,7 +1457,8 @@ let rec (desugar_maybe_non_constant_universe :
          | (FStar_Pervasives.Inr u11, FStar_Pervasives.Inr u21) ->
              let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Parser_AST.term_to_string t in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Parser_AST.showable_term t in
                  Prims.strcat
                    "This universe might contain a sum of two universe variables "
                    uu___4 in
@@ -1544,7 +1545,8 @@ let (check_no_aq : antiquotations_temp -> unit) =
         ->
         let uu___5 =
           let uu___6 =
-            let uu___7 = FStar_Syntax_Print.term_to_string e in
+            let uu___7 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "Unexpected antiquotation: `@(%s)"
               uu___7 in
           (FStar_Errors_Codes.Fatal_UnexpectedAntiquotation, uu___6) in
@@ -1552,7 +1554,8 @@ let (check_no_aq : antiquotations_temp -> unit) =
     | (bv, e)::uu___ ->
         let uu___1 =
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "Unexpected antiquotation: `#(%s)"
               uu___3 in
           (FStar_Errors_Codes.Fatal_UnexpectedAntiquotation, uu___2) in
@@ -5765,7 +5768,8 @@ and (desugar_comp :
                then
                  (let uu___2 =
                     let uu___3 =
-                      let uu___4 = FStar_Syntax_Print.lid_to_string eff in
+                      let uu___4 =
+                        FStar_Class_Show.show FStar_Ident.showable_lident eff in
                       FStar_Compiler_Util.format1
                         "Not enough args to effect %s" uu___4 in
                     (FStar_Errors_Codes.Fatal_NotEnoughArgsToEffect, uu___3) in
@@ -6243,7 +6247,8 @@ and (desugar_vquote :
         | uu___1 ->
             let uu___2 =
               let uu___3 =
-                let uu___4 = FStar_Syntax_Print.term_to_string tm in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term tm in
                 Prims.strcat "VQuote, expected an fvar, got: " uu___4 in
               (FStar_Errors_Codes.Fatal_UnexpectedTermVQuote, uu___3) in
             FStar_Errors.raise_error uu___2 r
@@ -7129,7 +7134,8 @@ let rec (desugar_tycon :
                                    let uu___10 =
                                      let uu___11 =
                                        let uu___12 =
-                                         FStar_Syntax_Print.lid_to_string l in
+                                         FStar_Class_Show.show
+                                           FStar_Ident.showable_lident l in
                                        FStar_Compiler_Util.format1
                                          "Adding an implicit 'assume new' qualifier on %s"
                                          uu___12 in
@@ -7687,14 +7693,16 @@ let rec (desugar_tycon :
                                                    let uu___15 =
                                                      let uu___16 =
                                                        FStar_Compiler_List.map
-                                                         FStar_Syntax_Print.term_to_string
+                                                         (FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term)
                                                          val_attrs in
                                                      FStar_Compiler_String.concat
                                                        ", " uu___16 in
                                                    let uu___16 =
                                                      let uu___17 =
                                                        FStar_Compiler_List.map
-                                                         FStar_Syntax_Print.term_to_string
+                                                         (FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term)
                                                          d_attrs in
                                                      FStar_Compiler_String.concat
                                                        ", " uu___17 in
@@ -7775,7 +7783,8 @@ let rec (desugar_tycon :
                             if uu___5
                             then
                               let uu___6 =
-                                FStar_Syntax_Print.sigelt_to_string bundle in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_sigelt bundle in
                               FStar_Compiler_Util.print1
                                 "After disentangling: %s\n" uu___6
                             else ());
@@ -8049,7 +8058,8 @@ let (lookup_effect_lid :
             let uu___1 =
               let uu___2 =
                 let uu___3 =
-                  let uu___4 = FStar_Syntax_Print.lid_to_string l in
+                  let uu___4 =
+                    FStar_Class_Show.show FStar_Ident.showable_lident l in
                   Prims.strcat uu___4 " not found" in
                 Prims.strcat "Effect name " uu___3 in
               (FStar_Errors_Codes.Fatal_EffectNotFound, uu___2) in
@@ -9204,10 +9214,9 @@ and (desugar_decl_core :
                      let uu___3 =
                        FStar_Class_Show.show FStar_Parser_AST.showable_decl d in
                      let uu___4 =
-                       let uu___5 =
-                         FStar_Compiler_List.map
-                           FStar_Syntax_Print.sigelt_to_string ses in
-                       FStar_Compiler_String.concat "\n" uu___5 in
+                       FStar_Class_Show.show
+                         (FStar_Class_Show.show_list
+                            FStar_Syntax_Print.showable_sigelt) ses in
                      FStar_Compiler_Util.print2
                        "Desugared tycon from {%s} to {%s}\n" uu___3 uu___4
                    else ());
@@ -10425,12 +10434,12 @@ let (desugar_modul :
                       (uu___5, modul1)))))
 let with_options : 'a . (unit -> 'a) -> 'a =
   fun f ->
-    FStar_Options.push ();
-    (let res = f () in
-     let light = FStar_Options.ml_ish () in
-     FStar_Options.pop ();
-     if light then FStar_Options.set_ml_ish () else ();
-     res)
+    let uu___ =
+      FStar_Options.with_saved_options
+        (fun uu___1 ->
+           let r = f () in let light = FStar_Options.ml_ish () in (light, r)) in
+    match uu___ with
+    | (light, r) -> (if light then FStar_Options.set_ml_ish () else (); r)
 let (ast_modul_to_modul :
   FStar_Parser_AST.modul ->
     FStar_Syntax_Syntax.modul FStar_Syntax_DsEnv.withenv)

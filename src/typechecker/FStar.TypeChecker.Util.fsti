@@ -33,7 +33,7 @@ type lcomp_with_binder = option bv & lcomp
 val report: env -> list string -> unit
 
 //unification variables
-val new_implicit_var : string -> Range.range -> env -> typ -> (term & list (ctx_uvar & Range.range) & guard_t)
+val new_implicit_var : string -> Range.range -> env -> typ -> unrefine:bool -> term & (ctx_uvar & Range.range) & guard_t
 val check_uvars: Range.range -> typ -> unit
 
 //caller can set the boolean to true if they want to solve the deferred constraints involving this binder now (best case)
@@ -48,6 +48,8 @@ val decorated_pattern_as_term: pat -> list bv & term
 
 //instantiation of implicits
 val maybe_implicit_with_meta_or_attr: bqual -> list attribute -> bool
+
+val instantiate_one_binder (env:env_t) (r:Range.range) (b:binder) : term & typ & aqual & guard_t
 val maybe_instantiate : env -> term -> typ -> (term & typ & guard_t)
 
 //operations on computation types

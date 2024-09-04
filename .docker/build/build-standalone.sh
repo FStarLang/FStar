@@ -4,9 +4,8 @@ set -x
 
 set -e # abort on errors
 
-target=$1
-threads=$2
-branchname=$3
+threads=$1
+branchname=$2
 
 build_home="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . "$build_home"/build_funs.sh
@@ -15,7 +14,7 @@ rootPath=$(pwd)
 result_file="result.txt"
 status_file="status.txt"
 ORANGE_FILE="orange_file.txt"
-build_fstar $target
+build_fstar ci
 
 # If RESOURCEMONITOR is defined, then make an rmon/ directory with
 # resource usage information

@@ -948,7 +948,7 @@ let run_compute st term rules =
                FStar.TypeChecker.Env.UnfoldUntil SS.delta_constant])
     @ [FStar.TypeChecker.Env.Inlining;
        FStar.TypeChecker.Env.Eager_unfolding;
-       FStar.TypeChecker.Env.UnfoldTac;
+       FStar.TypeChecker.Env.DontUnfoldAttr [Parser.Const.tac_opaque_attr];
        FStar.TypeChecker.Env.Primops] in
 
   let normalize_term tcenv rules t =
@@ -1130,7 +1130,6 @@ let validate_query st (q: query) : query =
           { qid = q.qid; qq = GenericError "Current module unset" }
         | _ -> q
 
-open FStar.Class.Show
 let rec run_query st (q: query) : (query_status & list json) & either repl_state int =
   match q.qq with
   | Exit -> as_json_list (run_exit st)
@@ -1226,7 +1225,8 @@ let interactive_error_handler = // No printing here — collect everything for f
     List.sortWith compare_issues (Util.remove_dups (fun i0 i1 -> i0=i1) !issues)
   in
   let clear () = issues := [] in
-  { eh_add_one = add_one;
+  { eh_name = "interactive error handler";
+    eh_add_one = add_one;
     eh_count_errors = count_errors;
     eh_report = report;
     eh_clear = clear }

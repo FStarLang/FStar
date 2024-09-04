@@ -1627,46 +1627,50 @@ let canon_semiring_aux
   let g = cur_goal () in
   match term_as_formula g with
   | Comp (Eq (Some t)) t1 t2 ->
+    (* First, make sure we have an equality at type ta, since otherwise
+    we will fail to apply the reflection Lemma. We can just cut by the equality
+    we want, since they should be equiprovable (though not equal). *)
+    let b = tcut (`(squash (eq2 #(`#ta) (`#t1) (`#t2)))) in
+    (* Try solving it trivially if type was exactly the same, or give to smt.
+    It should really be trivial. *)
     begin
-      //ddump ("t1 = " ^ term_to_string t1 ^ "\nt2 = " ^ term_to_string t2);
-      if term_eq t ta then
-      begin
-      match reification unquotea quotea tadd topp tmone tmult munit [t1; t2] with
-      | ([e1; e2], vm) ->
-        (*
-        ddump (term_to_string t1);
-        ddump (term_to_string t2);
-        let r : cr a = unquote tr in
-        ddump ("vm = " ^ term_to_string (quote vm));
-        ddump ("before = " ^ term_to_string (norm_term [delta; primops]
-            (quote (interp_sp r vm e1 == interp_sp r vm e2))));
-        ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
-            (quote (
-              interp_cs r vm (spolynomial_simplify r e1) ==
-              interp_cs r vm (spolynomial_simplify r e2)))));
-        *)
-        let tvm = quote_vm ta quotea vm in
-        let te1 = quote_polynomial ta quotea e1 in
-        //ddump ("te1 = " ^ term_to_string te1);
-        let te2 = quote_polynomial ta quotea e2 in
-        //ddump ("te2 = " ^ term_to_string te2);
-        mapply (`(semiring_reflect
-          #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
-        //ddump "Before canonization";
-        canon_norm ();
-        //ddump "After canonization";
-        later ();
-        //ddump "Before normalizing left-hand side";
-        canon_norm ();
-        //ddump "After normalizing left-hand side";
-        trefl ();
-        //ddump "Before normalizing right-hand side";
-        canon_norm ();
-        //ddump "After normalizing right-hand side";
-        trefl ()
-      | _ -> fail "Unexpected"
-      end
-      else fail "Found equality, but terms do not have the expected type"
+      try exact b with | _ -> smt ()
+    end;
+
+    begin match reification unquotea quotea tadd topp tmone tmult munit [t1; t2] with
+    | ([e1; e2], vm) ->
+      (*
+      ddump (term_to_string t1);
+      ddump (term_to_string t2);
+      let r : cr a = unquote tr in
+      ddump ("vm = " ^ term_to_string (quote vm));
+      ddump ("before = " ^ term_to_string (norm_term [delta; primops]
+          (quote (interp_sp r vm e1 == interp_sp r vm e2))));
+      ddump ("expected after = " ^ term_to_string (norm_term [delta; primops]
+          (quote (
+            interp_cs r vm (spolynomial_simplify r e1) ==
+            interp_cs r vm (spolynomial_simplify r e2)))));
+      *)
+      let tvm = quote_vm ta quotea vm in
+      let te1 = quote_polynomial ta quotea e1 in
+      //ddump ("te1 = " ^ term_to_string te1);
+      let te2 = quote_polynomial ta quotea e2 in
+      //ddump ("te2 = " ^ term_to_string te2);
+      mapply (`(semiring_reflect
+        #(`#ta) (`#tr) (`#tvm) (`#te1) (`#te2) (`#t1) (`#t2)));
+      //ddump "Before canonization";
+      canon_norm ();
+      //ddump "After canonization";
+      later ();
+      //ddump "Before normalizing left-hand side";
+      canon_norm ();
+      //ddump "After normalizing left-hand side";
+      trefl ();
+      //ddump "Before normalizing right-hand side";
+      canon_norm ();
+      //ddump "After normalizing right-hand side";
+      trefl ()
+    | _ -> fail "Unexpected"
     end
   | _ -> fail "Goal should be an equality")
 
@@ -1686,9 +1690,3 @@ let int_cr : cr int =
   CR int_plus_cm int_multiply_cm op_Minus (fun x -> ()) (fun x y z -> ()) (fun x -> ())
 
 let int_semiring () : Tac unit = canon_semiring int_cr
-
-#set-options "--tactic_trace_d 0 --no_smt"
-
-let test (a:int) =
-  let open FStar.Mul in
-  assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())

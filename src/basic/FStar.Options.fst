@@ -31,6 +31,8 @@ module FC = FStar.Common
 module Util = FStar.Compiler.Util
 module List = FStar.Compiler.List
 
+module Ext = FStar.Options.Ext
+
 let debug_embedding = mk_ref false
 let eager_embedding = mk_ref false
 
@@ -92,58 +94,78 @@ let copy_optionstate m = Util.smap_copy m
  *
  * We also keep a snapshot of the Debug module's state.
  *)
-let fstar_options : ref (list (list (Debug.saved_state & optionstate))) = Util.mk_ref []
+let history1 = Debug.saved_state & Ext.ext_state & optionstate
 
-let internal_peek () = snd <| List.hd (List.hd !fstar_options)
-let peek () = copy_optionstate (internal_peek())
-let pop  () = // already signal-atomic
-  match !fstar_options with
-  | []
-  | [_] -> failwith "TOO MANY POPS!"
-  | _::tl ->
-    fstar_options := tl
+let fstar_options : ref optionstate = Util.mk_ref (Util.psmap_empty ())
 
-let push () = // already signal-atomic
-  let new_st =
-    List.hd !fstar_options |>
-    List.map (fun (dbg, opts) -> (dbg, copy_optionstate opts))
-  in
-  fstar_options := new_st :: !fstar_options
+let history : ref (list (list history1)) =
+  Util.mk_ref [] // IRRELEVANT: see clear() below
 
-let internal_pop () =
-  let curstack = List.hd !fstar_options in
-  match curstack with
-  | [] -> failwith "impossible: empty current option stack"
-  | [_] -> false
-  | _::tl ->
-    fstar_options := tl :: List.tl !fstar_options;
-    Debug.restore (fst (List.hd tl));
-    true
+let peek () = !fstar_options
 
 let internal_push () =
-  let curstack = List.hd !fstar_options in
-  let stack' = (Debug.snapshot (), copy_optionstate (snd <| List.hd curstack)) :: curstack in
-  fstar_options := stack' :: List.tl !fstar_options
+  let lev1::rest = !history in
+  let newhd = (Debug.snapshot (), Ext.save (), !fstar_options) in
+  history := (newhd :: lev1) :: rest
+
+let internal_pop () =
+  let lev1::rest = !history in
+  match lev1 with
+  | [] -> false
+  | (dbg, ext, opts)::lev1' ->
+    Debug.restore dbg;
+    Ext.restore ext;
+    fstar_options := opts;
+    history := lev1' :: rest;
+    true
+
+let push () = // already signal-atomic
+  (* This turns a stack like
+
+        4
+        3
+        2 1      current:5
+  into:
+        5
+      4 4
+      3 3
+      2 2 1      current:5
+
+  i.e.  current state does not change, and
+  current minor stack does not change. The
+  "next" previous stack (now with 2,3,4,5)
+  has a copy of 5 at the top so we can restore regardless
+  of what we do in the current stack or the current state. *)
+
+  internal_push ();
+  let lev1::_ = !history in
+  history := lev1 :: !history;
+  ignore (internal_pop());
+  ()
+
+let pop () = // already signal-atomic
+  match !history with
+  | [] -> failwith "TOO MANY POPS!"
+  | _::levs ->
+    history := levs;
+    if not (internal_pop ()) then
+      failwith "aaa!!!"
 
 let set o =
- match !fstar_options with
- | [] -> failwith "set on empty option stack"
- | []::_ -> failwith "set on empty current option stack"
- | ((dbg, _)::tl)::os ->
-   fstar_options := (((dbg, o)::tl)::os)
+  fstar_options := o
 
-let snapshot () = Common.snapshot push fstar_options ()
-let rollback depth = Common.rollback pop fstar_options depth
+let snapshot ()    = Common.snapshot push history ()
+let rollback depth = Common.rollback pop  history depth
 
 let set_option k v =
-  let map : optionstate = internal_peek() in
+  let map : optionstate = peek() in
   if k = "report_assumes"
-  then match Util.smap_try_find map k with
+  then match Util.psmap_try_find map k with
        | Some (String "error") ->
          //It's already set to error; ignore any attempt to change it
          ()
-       | _ -> Util.smap_add map k v
-  else Util.smap_add map k v
+       | _ -> fstar_options := Util.psmap_add map k v
+  else fstar_options := Util.psmap_add map k v
 
 let set_option' (k,v) =  set_option k v
 let set_admit_smt_queries (b:bool) = set_option "admit_smt_queries" (Bool b)
@@ -153,7 +175,7 @@ let defaults =
       ("abort_on"                     , Int 0);
       ("admit_smt_queries"            , Bool false);
       ("admit_except"                 , Unset);
-      ("disallow_unification_guards"  , Bool false);      
+      ("disallow_unification_guards"  , Bool false);
       ("already_cached"               , Unset);
       ("cache_checked_modules"        , Bool false);
       ("cache_dir"                    , Unset);
@@ -176,7 +198,7 @@ let defaults =
       ("eager_subtyping"              , Bool false);
       ("error_contexts"               , Bool false);
       ("expose_interfaces"            , Bool false);
-      ("ext"                          , List []);
+      ("ext"                          , Unset);
       ("extract"                      , Unset);
       ("extract_all"                  , Bool false);
       ("extract_module"               , List []);
@@ -239,6 +261,7 @@ let defaults =
       ("query_cache"                  , Bool false);
       ("query_stats"                  , Bool false);
       ("read_checked_file"            , Unset);
+      ("read_krml_file"               , Unset);
       ("record_hints"                 , Bool false);
       ("record_options"               , Bool false);
       ("report_assumes"               , Unset);
@@ -291,19 +314,20 @@ let defaults =
       ]
 
 let init () =
-   let o = internal_peek () in
-   Util.smap_clear o;
-   defaults |> List.iter set_option'                          //initialize it with the default values
+  Debug.disable_all ();
+  Ext.reset ();
+  fstar_options := Util.psmap_empty ();
+  defaults |> List.iter set_option'                          //initialize it with the default values
 
 let clear () =
-   let o = Util.smap_create 50 in
-   fstar_options := [[(Debug.snapshot (), o)]];                               //clear and reset the options stack
-   init()
+  history := [[]];
+  init()
 
-let _run = clear()
+(* Run it now. *)
+let _ = clear ()
 
 let get_option s =
-  match Util.smap_try_find (internal_peek()) s with
+  match Util.psmap_try_find (peek ()) s with
   | None -> failwith ("Impossible: option " ^s^ " not found")
   | Some s -> s
 
@@ -334,7 +358,7 @@ let set_verification_options o =
     "no_plugins";
     "no_tactics";
     "z3cliopt";
-    "z3smtopt";    
+    "z3smtopt";
     "z3refresh";
     "z3rlimit";
     "z3rlimit_factor";
@@ -342,7 +366,7 @@ let set_verification_options o =
     "z3version";
     "trivial_pre_for_unannotated_effectful_fns";
   ] in
-  List.iter (fun k -> set_option k (Util.smap_try_find o k |> Util.must)) verifopts
+  List.iter (fun k -> set_option k (Util.psmap_try_find o k |> Util.must)) verifopts
 
 let lookup_opt s c =
   c (get_option s)
@@ -371,7 +395,6 @@ let get_dump_module             ()      = lookup_opt "dump_module"              
 let get_eager_subtyping         ()      = lookup_opt "eager_subtyping"          as_bool
 let get_error_contexts          ()      = lookup_opt "error_contexts"           as_bool
 let get_expose_interfaces       ()      = lookup_opt "expose_interfaces"        as_bool
-let get_ext                     ()      = lookup_opt "ext"                      (as_option (as_list as_string))
 let get_extract                 ()      = lookup_opt "extract"                  (as_option (as_list as_string))
 let get_extract_module          ()      = lookup_opt "extract_module"           (as_list as_string)
 let get_extract_namespace       ()      = lookup_opt "extract_namespace"        (as_list as_string)
@@ -427,6 +450,7 @@ let get_quake_keep              ()      = lookup_opt "quake_keep"               
 let get_query_cache             ()      = lookup_opt "query_cache"              as_bool
 let get_query_stats             ()      = lookup_opt "query_stats"              as_bool
 let get_read_checked_file       ()      = lookup_opt "read_checked_file"        (as_option as_string)
+let get_read_krml_file          ()      = lookup_opt "read_krml_file"           (as_option as_string)
 let get_record_hints            ()      = lookup_opt "record_hints"             as_bool
 let get_record_options          ()      = lookup_opt "record_options"           as_bool
 let get_retry                   ()      = lookup_opt "retry"                    as_bool
@@ -669,7 +693,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
   let open FStar.Errors.Msg in
   let text (s:string) : document = flow (break_ 1) (words s) in
   [
-  ( noshort, "abort_on", 
+  ( noshort, "abort_on",
     PostProcessed ((function Int x -> abort_counter := x; Int x
                            | x -> failwith "?"), IntStr "non-negative integer"),
     text "Abort on the n-th error or warning raised. Useful in combination with --trace_error. Count starts at 1, use 0 to disable. (default 0)");
@@ -820,7 +844,17 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
 
   ( noshort,
     "ext",
-    ReverseAccumulated (SimpleStr "One or more semicolon separated occurrences of key-value pairs"),
+    PostProcessed (
+      (fun o ->
+        let parse_ext (s:string) : list (string & string) =
+          let exts = Util.split s ";" in
+          List.collect (fun s ->
+            match Util.split s "=" with
+            | [k;v] -> [(k,v)]
+            | _ -> [s, "1"]) exts
+        in
+        as_comma_string_list o |> List.collect parse_ext |> List.iter (fun (k, v) -> Ext.set k v);
+        o), ReverseAccumulated (SimpleStr "extension knobs")),
     text "These options are set in extensions option map. Keys are usually namespaces separated by \":\". \
           E.g., 'pulse:verbose=1;my:extension:option=xyz;foo:bar=baz'. \
           These options are typically interpreted by extensions. \
@@ -1158,6 +1192,11 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
     "read_checked_file",
     PathStr "path",
     text "Read a checked file and dump it to standard output.");
+
+  ( noshort,
+    "read_krml_file",
+    PathStr "path",
+    text "Read a Karamel binary file and dump it to standard output.");
 
   ( noshort,
     "record_hints",
@@ -1570,7 +1609,7 @@ let settable = function
     | "using_facts_from"
     | "warn_error"
     | "z3cliopt"
-    | "z3smtopt"    
+    | "z3smtopt"
     | "z3refresh"
     | "z3rlimit"
     | "z3rlimit_factor"
@@ -1812,15 +1851,15 @@ let parse_settings ns : list (list string & bool) =
 
 let admit_smt_queries            () = get_admit_smt_queries           ()
 let admit_except                 () = get_admit_except                ()
-let compat_pre_core_should_register () = 
+let compat_pre_core_should_register () =
   match get_compat_pre_core() with
   | Some 0 -> false
   | _ -> true
-let compat_pre_core_should_check () = 
+let compat_pre_core_should_check () =
   match get_compat_pre_core() with
-  | Some 0 
+  | Some 0
   | Some 1 -> false
-  | _ -> true  
+  | _ -> true
 let compat_pre_core_set () =
   match get_compat_pre_core() with
   | None -> false
@@ -1864,6 +1903,7 @@ let defensive_abort              () = get_defensive () = "abort"
 let dep                          () = get_dep                         ()
 let detail_errors                () = get_detail_errors               ()
 let detail_hint_replay           () = get_detail_hint_replay          ()
+let any_dump_module              () = Cons? (get_dump_module())
 let dump_module                  s  = get_dump_module() |> List.existsb (module_name_eq s)
 let eager_subtyping              () = get_eager_subtyping()
 let error_contexts               () = get_error_contexts              ()
@@ -1891,7 +1931,7 @@ let ide                          () = get_ide                         ()
 let ide_id_info_off              () = get_ide_id_info_off             ()
 let ide_file_name_st =
   let v = Util.mk_ref (None #string) in
-  let set f = 
+  let set f =
     match !v with
     | None -> v := Some f
     | Some _ -> failwith "ide_file_name_st already set" in
@@ -1945,6 +1985,7 @@ let quake_keep                   () = get_quake_keep                  ()
 let query_cache                  () = get_query_cache                 ()
 let query_stats                  () = get_query_stats                 ()
 let read_checked_file            () = get_read_checked_file           ()
+let read_krml_file               () = get_read_krml_file              ()
 let record_hints                 () = get_record_hints                ()
 let record_options               () = get_record_options              ()
 let retry                        () = get_retry                       ()
@@ -2266,7 +2307,7 @@ let get_vconfig () =
     no_plugins                                = get_no_plugins ();
     no_tactics                                = get_no_tactics ();
     z3cliopt                                  = get_z3cliopt ();
-    z3smtopt                                  = get_z3smtopt ();    
+    z3smtopt                                  = get_z3smtopt ();
     z3refresh                                 = get_z3refresh ();
     z3rlimit                                  = get_z3rlimit ();
     z3rlimit_factor                           = get_z3rlimit_factor ();
@@ -2304,7 +2345,7 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "no_plugins"                                (Bool vcfg.no_plugins);
   set_option "no_tactics"                                (Bool vcfg.no_tactics);
   set_option "z3cliopt"                                  (List (List.map String vcfg.z3cliopt));
-  set_option "z3smtopt"                                  (List (List.map String vcfg.z3smtopt));  
+  set_option "z3smtopt"                                  (List (List.map String vcfg.z3smtopt));
   set_option "z3refresh"                                 (Bool vcfg.z3refresh);
   set_option "z3rlimit"                                  (Int vcfg.z3rlimit);
   set_option "z3rlimit_factor"                           (Int vcfg.z3rlimit_factor);
@@ -2313,54 +2354,3 @@ let set_vconfig (vcfg:vconfig) : unit =
   set_option "trivial_pre_for_unannotated_effectful_fns" (Bool vcfg.trivial_pre_for_unannotated_effectful_fns);
   set_option "reuse_hint_for"                            (option_as String vcfg.reuse_hint_for);
   ()
-
-// --ext "ext1:opt1;ext2:opt2;ext3:opt3"
-// An entry e that is not of the form a:b
-// is treated as e:"1". We morally reserve the empty
-// string for "disabling" an option.
-//
-// This could all be much more efficient by just storing
-// a hash table in the optionstate.
-
-let parse_ext (s:string) : list (string & string) =
-  let exts = Util.split s ";" in
-  List.collect (fun s -> 
-    match Util.split s "=" with
-    | [k;v] -> [(k,v)]
-    | _ -> [s, "1"]) exts
-
-(* Deduplicates according to keys, favors the last occurrence (consistent
-with "ext" begin ReverseAccumulated *)
-let ext_dedup #a (l : list (string & a)) : list (string & a) =
-  //fold_right (fun (k,v) rest -> (k,v) :: List.filter (fun (k', _) -> k<>k') rest) l []
-  fold_right (fun (k,v) rest -> if List.existsb (fun (k', _) -> k=k') rest
-                                then rest
-                                else (k,v) :: rest) l []
-
-let all_ext_options () : list (string & string) =
-  let ext = get_ext () in
-  match ext with
-  | None -> []
-  | Some strs ->
-    strs |> List.collect parse_ext
-    |> ext_dedup
-
-let ext_getv (k:string) : string =
-  let ext = all_ext_options () in
-  (* Get the value from the map, or return "" if not there *)
-  Util.dflt "" (
-    Util.find_map ext (fun (k',v) -> if k = k' then Some v else None))
-
-(* Get a list of all KV pairs that "begin" with k, considered
-as a namespace. *)
-let ext_getns (ns:string) : list (string & string) =
-  let is_prefix s1 s2 : ML bool =
-    let l1 = length s1 in
-    let l2 = length s2 in
-    l2 >= l1 &&
-    substring s2 0 l1 = s1
-  in
-  let exts = all_ext_options () in
-  exts |>
-  List.filter_map (fun (k',v) ->
-    if k' = ns || is_prefix (ns^":") k' then Some (k',v) else None)

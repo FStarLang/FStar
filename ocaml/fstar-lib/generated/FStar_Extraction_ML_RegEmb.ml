@@ -1276,7 +1276,9 @@ let rec (embedding_for :
             | FStar_Syntax_Syntax.Tm_fvar fv ->
                 let uu___ =
                   let uu___1 =
-                    let uu___2 = FStar_Syntax_Print.term_to_string t3 in
+                    let uu___2 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t3 in
                     FStar_Compiler_Util.format1
                       "Embedding not defined for name `%s'" uu___2 in
                   NoEmbedding uu___1 in
@@ -1284,8 +1286,12 @@ let rec (embedding_for :
             | uu___ ->
                 let uu___1 =
                   let uu___2 =
-                    let uu___3 = FStar_Syntax_Print.term_to_string t3 in
-                    let uu___4 = FStar_Syntax_Print.tag_of_term t3 in
+                    let uu___3 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        t3 in
+                    let uu___4 =
+                      FStar_Class_Tagged.tag_of
+                        FStar_Syntax_Syntax.tagged_term t3 in
                     FStar_Compiler_Util.format2 "Cannot embed type `%s' (%s)"
                       uu___3 uu___4 in
                   NoEmbedding uu___2 in
@@ -1680,7 +1686,8 @@ let (interpret_plugin_as_term_fun :
                                      (let uu___7 =
                                         let uu___8 =
                                           let uu___9 =
-                                            FStar_Syntax_Print.term_to_string
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_term
                                               t1 in
                                           Prims.strcat
                                             "Plugins not defined for type "
@@ -1717,7 +1724,8 @@ let (interpret_plugin_as_term_fun :
                                    FStar_Ident.range_of_lid
                                      (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
                                  let uu___6 =
-                                   FStar_Syntax_Print.fv_to_string fv in
+                                   FStar_Class_Show.show
+                                     FStar_Syntax_Print.showable_fv fv in
                                  not_implemented_warning uu___5 uu___6 msg);
                                 FStar_Pervasives_Native.None))))
 let (mk_unembed :

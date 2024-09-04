@@ -310,7 +310,9 @@ let (try_lookup_fv :
                 let uu___3 =
                   let uu___4 =
                     let uu___5 =
-                      let uu___6 = FStar_Syntax_Print.fv_to_string fv in
+                      let uu___6 =
+                        FStar_Class_Show.show FStar_Syntax_Print.showable_fv
+                          fv in
                       FStar_Compiler_Util.format1
                         "Will not extract reference to variable `%s` since it has the `noextract` qualifier."
                         uu___6 in
@@ -352,7 +354,7 @@ let (lookup_fv :
                 FStar_Compiler_Range_Ops.string_of_range
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.p in
               let uu___3 =
-                FStar_Syntax_Print.lid_to_string
+                FStar_Class_Show.show FStar_Ident.showable_lident
                   (fv.FStar_Syntax_Syntax.fv_name).FStar_Syntax_Syntax.v in
               let uu___4 = FStar_Compiler_Util.string_of_bool b in
               FStar_Compiler_Util.format3
@@ -376,7 +378,8 @@ let (lookup_bv : uenv -> FStar_Syntax_Syntax.bv -> ty_or_exp_b) =
               let uu___2 =
                 FStar_Ident.range_of_id bv.FStar_Syntax_Syntax.ppname in
               FStar_Compiler_Range_Ops.string_of_range uu___2 in
-            let uu___2 = FStar_Syntax_Print.bv_to_string bv in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_bv bv in
             FStar_Compiler_Util.format2 "(%s) bound Variable %s not found\n"
               uu___1 uu___2 in
           FStar_Compiler_Effect.failwith uu___

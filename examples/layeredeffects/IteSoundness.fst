@@ -133,8 +133,8 @@ let mbind (a:Type) (b:Type) (f:mrepr a) (g:a -> mrepr b) : mrepr b = g f
  *)
 
 let mif_then_else (a:Type)
-  ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi) 
+  (phi:Type0)
+  (bb:squash phi)
   (f:mrepr a)
   (g:mrepr a)
   (b:bool)
@@ -142,8 +142,8 @@ let mif_then_else (a:Type)
   = mrepr a
 
 let msubcomp (a:Type)
-  ([@@@ an_attr] phi:Type0)
-  ([@@@ an_attr] bb:squash phi)  (f:mrepr a)
+  (phi:Type0)
+  (bb:squash phi)  (f:mrepr a)
   : mrepr a = f
 
 let an_attr1 = ()

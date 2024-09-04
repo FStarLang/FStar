@@ -256,7 +256,7 @@ let mk_default_handler print =
         (if e.issue_level = EError then
            err_count := 1 + !err_count);
         begin match e.issue_level with
-          | EInfo -> print_issue e
+          | EInfo when print -> print_issue e
           | _ when print && Debug.any () -> print_issue e
           | _ -> issues := e :: !issues
         end;
@@ -272,7 +272,8 @@ let mk_default_handler print =
         sorted_unique_issues
     in
     let clear () = issues := []; err_count := 0 in
-    { eh_add_one = add_one;
+    { eh_name = "default handler (print=" ^ string_of_bool print ^ ")";
+      eh_add_one = add_one;
       eh_count_errors = count_errors;
       eh_report = report;
       eh_clear = clear }
@@ -622,7 +623,10 @@ let catch_errors (f : unit -> 'a) : list issue & option 'a =
 // Similar to catch_errors, except the warnings are not added to the old handler
 //
 let catch_errors_and_ignore_rest (f:unit -> 'a) : list issue & option 'a =
-  let errs, _, r = catch_errors_aux f in
+  let errs, rest, r = catch_errors_aux f in
+  List.iter (!current_handler).eh_add_one <| List.filter (fun i -> i.issue_level = EInfo) rest;
+  (* ^ We print diagnostics anyway, which are usually debugging messages to be rendered
+  in the editor. *)
   errs, r
 
 (* Finds a discrepancy between two multisets of ints. Result is (elem, amount1, amount2)

@@ -106,6 +106,21 @@ let __do_rewrite
     else
     let g = FStar.TypeChecker.Rel.solve_deferred_constraints env g in
     let typ = lcomp.res_typ in
+
+    (* unrefine typ as is done for the type arg of eq2 *)
+    let typ =
+      if Options.Ext.get "__unrefine" <> "" then
+        let typ_norm = N.unfold_whnf' [Env.DontUnfoldAttr [Parser.Const.do_not_unrefine_attr]] env typ in
+        if Tm_refine? (SS.compress typ_norm).n then
+          (* It is indeed a refinement, normalize again to remove them. *)
+          let typ' = N.unfold_whnf' [Env.DontUnfoldAttr [Parser.Const.do_not_unrefine_attr]; Env.Unrefine] env typ_norm in
+          typ'
+        else
+          typ
+      else
+        typ
+    in
+
     let should_check =
       if FStar.TypeChecker.Common.is_total_lcomp lcomp 
       then None
@@ -398,7 +413,7 @@ and on_subterms
        return (Tm_meta {tm=t; meta=m}, flag)
 
      | _ ->
-       (* BU.print1 "GG ignoring %s\n" (Print.tag_of_term tm); *)
+       (* BU.print1 "GG ignoring %s\n" (tag_of tm); *)
        return (tm.n, Continue)
     in
     let! (tmn', flag) = go () in

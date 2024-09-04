@@ -237,72 +237,125 @@ let go : 'uuuuu . 'uuuuu -> unit =
                                 tcr.FStar_CheckedFiles.checked_module in
                             FStar_Compiler_Util.print1 "%s\n" uu___12
                       else
-                        (let uu___12 = FStar_Options.lsp_server () in
+                        (let uu___12 =
+                           let uu___13 = FStar_Options.read_krml_file () in
+                           FStar_Pervasives_Native.uu___is_Some uu___13 in
                          if uu___12
-                         then FStar_Interactive_Lsp.start_server ()
-                         else
-                           (let uu___14 = FStar_Options.interactive () in
-                            if uu___14
-                            then
-                              (FStar_Syntax_Unionfind.set_rw ();
-                               (match filenames with
-                                | [] ->
-                                    (FStar_Errors.log_issue
-                                       FStar_Compiler_Range_Type.dummyRange
-                                       (FStar_Errors_Codes.Error_MissingFileName,
-                                         "--ide: Name of current file missing in command line invocation\n");
-                                     FStar_Compiler_Effect.exit Prims.int_one)
-                                | uu___16::uu___17::uu___18 ->
-                                    (FStar_Errors.log_issue
-                                       FStar_Compiler_Range_Type.dummyRange
-                                       (FStar_Errors_Codes.Error_TooManyFiles,
-                                         "--ide: Too many files in command line invocation\n");
-                                     FStar_Compiler_Effect.exit Prims.int_one)
-                                | filename::[] ->
-                                    let uu___16 =
-                                      FStar_Options.legacy_interactive () in
-                                    if uu___16
-                                    then
-                                      FStar_Interactive_Legacy.interactive_mode
-                                        filename
-                                    else
-                                      FStar_Interactive_Ide.interactive_mode
-                                        filename))
-                            else
-                              if
-                                (FStar_Compiler_List.length filenames) >=
-                                  Prims.int_one
-                              then
-                                (let uu___16 =
-                                   FStar_Dependencies.find_deps_if_needed
-                                     filenames
-                                     FStar_CheckedFiles.load_parsing_data_from_cache in
-                                 match uu___16 with
-                                 | (filenames1, dep_graph) ->
+                         then
+                           let path =
+                             let uu___13 = FStar_Options.read_krml_file () in
+                             FStar_Pervasives_Native.__proj__Some__item__v
+                               uu___13 in
+                           let uu___13 =
+                             FStar_Compiler_Util.load_value_from_file path in
+                           match uu___13 with
+                           | FStar_Pervasives_Native.None ->
+                               let uu___14 =
+                                 let uu___15 =
+                                   let uu___16 =
                                      let uu___17 =
-                                       FStar_Universal.batch_mode_tc
-                                         filenames1 dep_graph in
-                                     (match uu___17 with
-                                      | (tcrs, env, cleanup1) ->
-                                          ((let uu___19 = cleanup1 env in ());
-                                           (let module_names =
-                                              FStar_Compiler_List.map
-                                                (fun tcr ->
-                                                   FStar_Universal.module_or_interface_name
-                                                     tcr.FStar_CheckedFiles.checked_module)
-                                                tcrs in
-                                            report_errors module_names;
-                                            finished_message module_names
-                                              Prims.int_zero))))
-                              else
-                                FStar_Errors.raise_error
-                                  (FStar_Errors_Codes.Error_MissingFileName,
-                                    "No file provided")
-                                  FStar_Compiler_Range_Type.dummyRange))))))))
+                                       FStar_Errors_Msg.text
+                                         "Could not read krml file:" in
+                                     let uu___18 =
+                                       FStar_Pprint.doc_of_string path in
+                                     FStar_Pprint.op_Hat_Slash_Hat uu___17
+                                       uu___18 in
+                                   [uu___16] in
+                                 (FStar_Errors_Codes.Fatal_ModuleOrFileNotFound,
+                                   uu___15) in
+                               FStar_Errors.raise_err_doc uu___14
+                           | FStar_Pervasives_Native.Some (version, files) ->
+                               ((let uu___15 =
+                                   FStar_Class_Show.show
+                                     (FStar_Class_Show.printableshow
+                                        FStar_Class_Printable.printable_int)
+                                     version in
+                                 FStar_Compiler_Util.print1
+                                   "Karamel format version: %s\n" uu___15);
+                                FStar_Compiler_List.iter
+                                  (fun uu___15 ->
+                                     match uu___15 with
+                                     | (name, decls) ->
+                                         (FStar_Compiler_Util.print1 "%s:\n"
+                                            name;
+                                          FStar_Compiler_List.iter
+                                            (fun d ->
+                                               let uu___17 =
+                                                 FStar_Class_Show.show
+                                                   FStar_Extraction_Krml.showable_decl
+                                                   d in
+                                               FStar_Compiler_Util.print1
+                                                 "  %s\n" uu___17) decls))
+                                  files)
+                         else
+                           (let uu___14 = FStar_Options.lsp_server () in
+                            if uu___14
+                            then FStar_Interactive_Lsp.start_server ()
+                            else
+                              (let uu___16 = FStar_Options.interactive () in
+                               if uu___16
+                               then
+                                 (FStar_Syntax_Unionfind.set_rw ();
+                                  (match filenames with
+                                   | [] ->
+                                       (FStar_Errors.log_issue
+                                          FStar_Compiler_Range_Type.dummyRange
+                                          (FStar_Errors_Codes.Error_MissingFileName,
+                                            "--ide: Name of current file missing in command line invocation\n");
+                                        FStar_Compiler_Effect.exit
+                                          Prims.int_one)
+                                   | uu___18::uu___19::uu___20 ->
+                                       (FStar_Errors.log_issue
+                                          FStar_Compiler_Range_Type.dummyRange
+                                          (FStar_Errors_Codes.Error_TooManyFiles,
+                                            "--ide: Too many files in command line invocation\n");
+                                        FStar_Compiler_Effect.exit
+                                          Prims.int_one)
+                                   | filename::[] ->
+                                       let uu___18 =
+                                         FStar_Options.legacy_interactive () in
+                                       if uu___18
+                                       then
+                                         FStar_Interactive_Legacy.interactive_mode
+                                           filename
+                                       else
+                                         FStar_Interactive_Ide.interactive_mode
+                                           filename))
+                               else
+                                 if
+                                   (FStar_Compiler_List.length filenames) >=
+                                     Prims.int_one
+                                 then
+                                   (let uu___18 =
+                                      FStar_Dependencies.find_deps_if_needed
+                                        filenames
+                                        FStar_CheckedFiles.load_parsing_data_from_cache in
+                                    match uu___18 with
+                                    | (filenames1, dep_graph) ->
+                                        let uu___19 =
+                                          FStar_Universal.batch_mode_tc
+                                            filenames1 dep_graph in
+                                        (match uu___19 with
+                                         | (tcrs, env, cleanup1) ->
+                                             ((let uu___21 = cleanup1 env in
+                                               ());
+                                              (let module_names =
+                                                 FStar_Compiler_List.map
+                                                   (fun tcr ->
+                                                      FStar_Universal.module_or_interface_name
+                                                        tcr.FStar_CheckedFiles.checked_module)
+                                                   tcrs in
+                                               report_errors module_names;
+                                               finished_message module_names
+                                                 Prims.int_zero))))
+                                 else
+                                   FStar_Errors.raise_error
+                                     (FStar_Errors_Codes.Error_MissingFileName,
+                                       "No file provided")
+                                     FStar_Compiler_Range_Type.dummyRange)))))))))
 let (lazy_chooser :
   FStar_Syntax_Syntax.lazy_kind ->
-    FStar_Syntax_Syntax.lazyinfo ->
-      FStar_Syntax_Syntax.term' FStar_Syntax_Syntax.syntax)
+    FStar_Syntax_Syntax.lazyinfo -> FStar_Syntax_Syntax.term)
   =
   fun k ->
     fun i ->
@@ -353,12 +406,13 @@ let (setup_hooks : unit -> unit) =
   fun uu___ ->
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_Syntax_DsEnv.ugly_sigelt_to_string_hook
-      FStar_Syntax_Print.sigelt_to_string;
+      (FStar_Class_Show.show FStar_Syntax_Print.showable_sigelt);
     FStar_Errors.set_parse_warn_error FStar_Parser_ParseIt.parse_warn_error;
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Syntax.lazy_chooser
       (FStar_Pervasives_Native.Some lazy_chooser);
     FStar_Compiler_Effect.op_Colon_Equals FStar_Syntax_Util.tts_f
-      (FStar_Pervasives_Native.Some FStar_Syntax_Print.term_to_string);
+      (FStar_Pervasives_Native.Some
+         (FStar_Class_Show.show FStar_Syntax_Print.showable_term));
     FStar_Compiler_Effect.op_Colon_Equals
       FStar_TypeChecker_Normalize.unembed_binder_knot
       (FStar_Pervasives_Native.Some FStar_Reflection_V2_Embeddings.e_binder);

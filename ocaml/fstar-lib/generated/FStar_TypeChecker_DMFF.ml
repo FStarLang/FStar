@@ -32,8 +32,10 @@ let (mk_toplevel_definition :
          if uu___1
          then
            ((let uu___3 = FStar_Ident.string_of_lid lident in d uu___3);
-            (let uu___3 = FStar_Ident.string_of_lid lident in
-             let uu___4 = FStar_Syntax_Print.term_to_string def in
+            (let uu___3 =
+               FStar_Class_Show.show FStar_Ident.showable_lident lident in
+             let uu___4 =
+               FStar_Class_Show.show FStar_Syntax_Print.showable_term def in
              FStar_Compiler_Util.print2
                "Registering top-level definition: %s\n%s\n" uu___3 uu___4))
          else ());
@@ -106,7 +108,9 @@ let (gen_wps_for_free :
              if uu___1
              then
                (d1 "Elaborating extra WP combinators";
-                (let uu___3 = FStar_Syntax_Print.term_to_string wp_a1 in
+                (let uu___3 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                     wp_a1 in
                  FStar_Compiler_Util.print1 "wp_a is: %s\n" uu___3))
              else ());
             (let rec collect_binders t =
@@ -126,7 +130,8 @@ let (gen_wps_for_free :
                          let uu___3 =
                            let uu___4 =
                              let uu___5 =
-                               FStar_Syntax_Print.comp_to_string comp in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_comp comp in
                              FStar_Compiler_Util.format1
                                "wp_a contains non-Tot arrow: %s" uu___5 in
                            (FStar_Errors_Codes.Error_UnexpectedDM4FType,
@@ -139,7 +144,9 @@ let (gen_wps_for_free :
                | uu___2 ->
                    let uu___3 =
                      let uu___4 =
-                       let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                       let uu___5 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term t1 in
                        FStar_Compiler_Util.format1
                          "wp_a doesn't end in Type0, but rather in %s" uu___5 in
                      (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___4) in
@@ -153,7 +160,9 @@ let (gen_wps_for_free :
               then
                 let uu___3 =
                   let uu___4 =
-                    FStar_Syntax_Print.binders_to_string ", " gamma in
+                    FStar_Class_Show.show
+                      (FStar_Class_Show.show_list
+                         FStar_Syntax_Print.showable_binder) gamma in
                   FStar_Compiler_Util.format1 "Gamma is %s\n" uu___4 in
                 d1 uu___3
               else ());
@@ -822,7 +831,8 @@ let (gen_wps_for_free :
                       FStar_TypeChecker_Normalize.normalize
                         [FStar_TypeChecker_Env.Beta;
                         FStar_TypeChecker_Env.Eager_unfolding;
-                        FStar_TypeChecker_Env.UnfoldTac;
+                        FStar_TypeChecker_Env.DontUnfoldAttr
+                          [FStar_Parser_Const.tac_opaque_attr];
                         FStar_TypeChecker_Env.UnfoldUntil
                           FStar_Syntax_Syntax.delta_constant] env2 t in
                     let uu___3 =
@@ -1019,7 +1029,8 @@ let (gen_wps_for_free :
                         FStar_TypeChecker_Normalize.normalize
                           [FStar_TypeChecker_Env.Beta;
                           FStar_TypeChecker_Env.Eager_unfolding;
-                          FStar_TypeChecker_Env.UnfoldTac;
+                          FStar_TypeChecker_Env.DontUnfoldAttr
+                            [FStar_Parser_Const.tac_opaque_attr];
                           FStar_TypeChecker_Env.UnfoldUntil
                             FStar_Syntax_Syntax.delta_constant] env2 t in
                       let uu___3 =
@@ -1433,7 +1444,8 @@ let (nm_of_comp : FStar_Syntax_Syntax.comp' FStar_Syntax_Syntax.syntax -> nm)
     | uu___ ->
         let uu___1 =
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.comp_to_string c in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
             FStar_Compiler_Util.format1
               "[nm_of_comp]: unexpected computation type %s" uu___3 in
           (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___2) in
@@ -1442,10 +1454,10 @@ let (string_of_nm : nm -> Prims.string) =
   fun uu___ ->
     match uu___ with
     | N t ->
-        let uu___1 = FStar_Syntax_Print.term_to_string t in
+        let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
         FStar_Compiler_Util.format1 "N[%s]" uu___1
     | M t ->
-        let uu___1 = FStar_Syntax_Print.term_to_string t in
+        let uu___1 = FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
         FStar_Compiler_Util.format1 "M[%s]" uu___1
 let (is_monadic_arrow : FStar_Syntax_Syntax.term' -> nm) =
   fun n ->
@@ -1608,31 +1620,15 @@ and (star_type' :
           { FStar_Syntax_Syntax.hd = head; FStar_Syntax_Syntax.args = args;_}
           ->
           let debug t2 s =
-            let string_of_set f s1 =
-              let elts =
-                FStar_Class_Setlike.elems ()
-                  (Obj.magic
-                     (FStar_Compiler_FlatSet.setlike_flat_set
-                        FStar_Syntax_Syntax.ord_bv)) (Obj.magic s1) in
-              match elts with
-              | [] -> "{}"
-              | x::xs ->
-                  let strb = FStar_Compiler_Util.new_string_builder () in
-                  (FStar_Compiler_Util.string_builder_append strb "{";
-                   (let uu___2 = f x in
-                    FStar_Compiler_Util.string_builder_append strb uu___2);
-                   FStar_Compiler_List.iter
-                     (fun x1 ->
-                        FStar_Compiler_Util.string_builder_append strb ", ";
-                        (let uu___4 = f x1 in
-                         FStar_Compiler_Util.string_builder_append strb
-                           uu___4)) xs;
-                   FStar_Compiler_Util.string_builder_append strb "}";
-                   FStar_Compiler_Util.string_of_string_builder strb) in
             let uu___ =
               let uu___1 =
-                let uu___2 = FStar_Syntax_Print.term_to_string t2 in
-                let uu___3 = string_of_set FStar_Syntax_Print.bv_to_string s in
+                let uu___2 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t2 in
+                let uu___3 =
+                  FStar_Class_Show.show
+                    (FStar_Compiler_FlatSet.showable_set
+                       FStar_Syntax_Syntax.ord_bv
+                       FStar_Syntax_Print.showable_bv) s in
                 FStar_Compiler_Util.format2
                   "Dependency found in term %s : %s" uu___2 uu___3 in
               (FStar_Errors_Codes.Warning_DependencyFound, uu___1) in
@@ -1728,7 +1724,9 @@ and (star_type' :
             | uu___1 ->
                 ((let uu___3 =
                     let uu___4 =
-                      let uu___5 = FStar_Syntax_Print.term_to_string ty in
+                      let uu___5 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term ty in
                       FStar_Compiler_Util.format1
                         "Not a dependent arrow : %s" uu___5 in
                     (FStar_Errors_Codes.Warning_NotDependentArrow, uu___4) in
@@ -1767,7 +1765,8 @@ and (star_type' :
                          FStar_TypeChecker_Normalize.normalize
                            [FStar_TypeChecker_Env.EraseUniverses;
                            FStar_TypeChecker_Env.Inlining;
-                           FStar_TypeChecker_Env.UnfoldTac;
+                           FStar_TypeChecker_Env.DontUnfoldAttr
+                             [FStar_Parser_Const.tac_opaque_attr];
                            FStar_TypeChecker_Env.UnfoldUntil
                              FStar_Syntax_Syntax.delta_constant] env1.tcenv
                            t1 in
@@ -1780,7 +1779,8 @@ and (star_type' :
                             ((let uu___8 =
                                 let uu___9 =
                                   let uu___10 =
-                                    FStar_Syntax_Print.term_to_string head1 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term head1 in
                                   FStar_Compiler_Util.format1
                                     "Got a term which might be a non-dependent user-defined data-type %s\n"
                                     uu___10 in
@@ -1816,7 +1816,8 @@ and (star_type' :
           else
             (let uu___2 =
                let uu___3 =
-                 let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
                  FStar_Compiler_Util.format1
                    "For now, only [either], [option] and [eq2] are supported in the definition language (got: %s)"
                    uu___4 in
@@ -1929,7 +1930,8 @@ and (star_type' :
           ->
           let uu___5 =
             let uu___6 =
-              let uu___7 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___7 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Ascriptions with tactics are outside of the definition language: %s"
                 uu___7 in
@@ -1938,7 +1940,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_refine uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_refine is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1946,7 +1949,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_uinst uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_uinst is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1954,7 +1958,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_quoted uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_quoted is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1962,7 +1967,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_constant uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_constant is outside of the definition language: %s"
                 uu___3 in
@@ -1971,7 +1977,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_match uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_match is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1979,7 +1986,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_let uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_let is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1987,7 +1995,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_uvar uu___ ->
           let uu___1 =
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_uvar is outside of the definition language: %s" uu___3 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___2) in
@@ -1995,7 +2004,8 @@ and (star_type' :
       | FStar_Syntax_Syntax.Tm_unknown ->
           let uu___ =
             let uu___1 =
-              let uu___2 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___2 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format1
                 "Tm_unknown is outside of the definition language: %s" uu___2 in
             (FStar_Errors_Codes.Fatal_TermOutsideOfDefLanguage, uu___1) in
@@ -2045,7 +2055,8 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
             then
               let uu___3 =
                 let uu___4 =
-                  let uu___5 = FStar_Syntax_Print.term_to_string t in
+                  let uu___5 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                   FStar_Compiler_Util.format1 "Not a C-type (A * C): %s"
                     uu___5 in
                 (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___4) in
@@ -2066,7 +2077,8 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
             then
               let uu___4 =
                 let uu___5 =
-                  let uu___6 = FStar_Syntax_Print.term_to_string t in
+                  let uu___6 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                   FStar_Compiler_Util.format1 "Not a C-type (C * A): %s"
                     uu___6 in
                 (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___5) in
@@ -2085,7 +2097,9 @@ let rec (is_C : FStar_Syntax_Syntax.typ -> Prims.bool) =
                then
                  let uu___4 =
                    let uu___5 =
-                     let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+                     let uu___6 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                         t1 in
                      FStar_Compiler_Util.format1 "Not a C-type (C -> C): %s"
                        uu___6 in
                    (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___5) in
@@ -2163,9 +2177,15 @@ let rec (check :
                 then
                   let uu___2 =
                     let uu___3 =
-                      let uu___4 = FStar_Syntax_Print.term_to_string e in
-                      let uu___5 = FStar_Syntax_Print.term_to_string t1 in
-                      let uu___6 = FStar_Syntax_Print.term_to_string t2 in
+                      let uu___4 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term e in
+                      let uu___5 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term t1 in
+                      let uu___6 =
+                        FStar_Class_Show.show
+                          FStar_Syntax_Print.showable_term t2 in
                       FStar_Compiler_Util.format3
                         "[check]: the expression [%s] has type [%s] but should have type [%s]"
                         uu___4 uu___5 uu___6 in
@@ -2182,9 +2202,15 @@ let rec (check :
                | (M t1, N t2) ->
                    let uu___1 =
                      let uu___2 =
-                       let uu___3 = FStar_Syntax_Print.term_to_string e in
-                       let uu___4 = FStar_Syntax_Print.term_to_string t1 in
-                       let uu___5 = FStar_Syntax_Print.term_to_string t2 in
+                       let uu___3 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term e in
+                       let uu___4 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term t1 in
+                       let uu___5 =
+                         FStar_Class_Show.show
+                           FStar_Syntax_Print.showable_term t2 in
                        FStar_Compiler_Util.format3
                          "[check %s]: got an effectful computation [%s] in lieu of a pure computation [%s]"
                          uu___3 uu___4 uu___5 in
@@ -2200,7 +2226,8 @@ let rec (check :
           | N t ->
               let uu___ =
                 let uu___1 =
-                  let uu___2 = FStar_Syntax_Print.term_to_string t in
+                  let uu___2 =
+                    FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
                   Prims.strcat
                     "let-bound monadic body has a non-monadic continuation or a branch of a match is monadic and the others aren't : "
                     uu___2 in
@@ -2255,7 +2282,8 @@ let rec (check :
             -> check env1 e1 context_nm
         | FStar_Syntax_Syntax.Tm_let uu___1 ->
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string e in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_let %s" uu___3 in
             FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_type uu___1 ->
@@ -2264,19 +2292,22 @@ let rec (check :
             FStar_Compiler_Effect.failwith "impossible (DM stratification)"
         | FStar_Syntax_Syntax.Tm_refine uu___1 ->
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string e in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_refine %s" uu___3 in
             FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_uvar uu___1 ->
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.term_to_string e in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_uvar %s" uu___3 in
             FStar_Compiler_Effect.failwith uu___2
         | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
             FStar_Compiler_Effect.failwith "impossible (compressed)"
         | FStar_Syntax_Syntax.Tm_unknown ->
             let uu___1 =
-              let uu___2 = FStar_Syntax_Print.term_to_string e in
+              let uu___2 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "[check]: Tm_unknown %s" uu___2 in
             FStar_Compiler_Effect.failwith uu___1
 and (infer :
@@ -2291,7 +2322,8 @@ and (infer :
         FStar_TypeChecker_Normalize.normalize
           [FStar_TypeChecker_Env.Beta;
           FStar_TypeChecker_Env.Eager_unfolding;
-          FStar_TypeChecker_Env.UnfoldTac;
+          FStar_TypeChecker_Env.DontUnfoldAttr
+            [FStar_Parser_Const.tac_opaque_attr];
           FStar_TypeChecker_Env.UnfoldUntil
             FStar_Syntax_Syntax.delta_constant;
           FStar_TypeChecker_Env.EraseUniverses] env1.tcenv in
@@ -2496,7 +2528,8 @@ and (infer :
                                  FStar_TypeChecker_Normalize.normalize
                                    [FStar_TypeChecker_Env.Beta;
                                    FStar_TypeChecker_Env.Eager_unfolding;
-                                   FStar_TypeChecker_Env.UnfoldTac;
+                                   FStar_TypeChecker_Env.DontUnfoldAttr
+                                     [FStar_Parser_Const.tac_opaque_attr];
                                    FStar_TypeChecker_Env.UnfoldUntil
                                      FStar_Syntax_Syntax.delta_constant;
                                    FStar_TypeChecker_Env.EraseUniverses]
@@ -2772,7 +2805,8 @@ and (infer :
           ->
           let uu___5 =
             let uu___6 =
-              let uu___7 = FStar_Syntax_Print.term_to_string e in
+              let uu___7 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "DMFF: Ill-applied constant %s"
                 uu___7 in
             (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___6) in
@@ -2790,7 +2824,8 @@ and (infer :
           ->
           let uu___5 =
             let uu___6 =
-              let uu___7 = FStar_Syntax_Print.term_to_string e in
+              let uu___7 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
               FStar_Compiler_Util.format1 "DMFF: Ill-applied constant %s"
                 uu___7 in
             (FStar_Errors_Codes.Fatal_IllAppliedConstant, uu___6) in
@@ -2841,7 +2876,8 @@ and (infer :
                      let uu___4 =
                        let uu___5 =
                          let uu___6 =
-                           FStar_Syntax_Print.term_to_string t_head in
+                           FStar_Class_Show.show
+                             FStar_Syntax_Print.showable_term t_head in
                          FStar_Compiler_Util.format1
                            "%s: not a function type" uu___6 in
                        (FStar_Errors_Codes.Fatal_NotFunctionType, uu___5) in
@@ -3043,7 +3079,8 @@ and (infer :
           ((N FStar_Syntax_Syntax.t_term), e, e)
       | FStar_Syntax_Syntax.Tm_let uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_let %s" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
       | FStar_Syntax_Syntax.Tm_type uu___1 ->
@@ -3052,19 +3089,22 @@ and (infer :
           FStar_Compiler_Effect.failwith "impossible (DM stratification)"
       | FStar_Syntax_Syntax.Tm_refine uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_refine %s" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
       | FStar_Syntax_Syntax.Tm_uvar uu___1 ->
           let uu___2 =
-            let uu___3 = FStar_Syntax_Print.term_to_string e in
+            let uu___3 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_uvar %s" uu___3 in
           FStar_Compiler_Effect.failwith uu___2
       | FStar_Syntax_Syntax.Tm_delayed uu___1 ->
           FStar_Compiler_Effect.failwith "impossible (compressed)"
       | FStar_Syntax_Syntax.Tm_unknown ->
           let uu___1 =
-            let uu___2 = FStar_Syntax_Print.term_to_string e in
+            let uu___2 =
+              FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
             FStar_Compiler_Util.format1 "[infer]: Tm_unknown %s" uu___2 in
           FStar_Compiler_Effect.failwith uu___1
 and (mk_match :
@@ -3620,7 +3660,8 @@ and (trans_F_ :
          then
            let uu___2 =
              let uu___3 =
-               let uu___4 = FStar_Syntax_Print.term_to_string c in
+               let uu___4 =
+                 FStar_Class_Show.show FStar_Syntax_Print.showable_term c in
                FStar_Compiler_Util.format1 "Not a DM4F C-type: %s" uu___4 in
              (FStar_Errors_Codes.Error_UnexpectedDM4FType, uu___3) in
            FStar_Errors.raise_error uu___2 c.FStar_Syntax_Syntax.pos
@@ -3852,7 +3893,8 @@ let (n :
     FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term)
   =
   FStar_TypeChecker_Normalize.normalize
-    [FStar_TypeChecker_Env.UnfoldTac;
+    [FStar_TypeChecker_Env.DontUnfoldAttr
+       [FStar_Parser_Const.tac_opaque_attr];
     FStar_TypeChecker_Env.Beta;
     FStar_TypeChecker_Env.UnfoldUntil FStar_Syntax_Syntax.delta_constant;
     FStar_TypeChecker_Env.DoNotUnfoldPureLets;
@@ -3887,7 +3929,8 @@ let (recheck_debug :
         (let uu___1 = FStar_Compiler_Effect.op_Bang dbg in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.term_to_string t in
+           let uu___2 =
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term t in
            FStar_Compiler_Util.print2
              "Term has been %s-transformed to:\n%s\n----------\n" s uu___2
          else ());
@@ -3897,7 +3940,8 @@ let (recheck_debug :
              ((let uu___5 = FStar_Compiler_Effect.op_Bang dbg in
                if uu___5
                then
-                 let uu___6 = FStar_Syntax_Print.term_to_string t' in
+                 let uu___6 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t' in
                  FStar_Compiler_Util.print1
                    "Re-checked; got:\n%s\n----------\n" uu___6
                else ());
@@ -4014,7 +4058,8 @@ let (cps_and_elaborate :
                                 if uu___8
                                 then
                                   let uu___9 =
-                                    FStar_Syntax_Print.term_to_string repr in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term repr in
                                   FStar_Compiler_Util.print1
                                     "Representation is: %s\n" uu___9
                                 else ());
@@ -4104,7 +4149,8 @@ let (cps_and_elaborate :
                                                let uu___14 =
                                                  let uu___15 =
                                                    let uu___16 =
-                                                     FStar_Syntax_Print.term_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_term
                                                        item2 in
                                                    let uu___17 =
                                                      FStar_TypeChecker_Common.lcomp_to_string
@@ -4235,7 +4281,8 @@ let (cps_and_elaborate :
                                                          let fail uu___17 =
                                                            let error_msg =
                                                              let uu___18 =
-                                                               FStar_Syntax_Print.term_to_string
+                                                               FStar_Class_Show.show
+                                                                 FStar_Syntax_Print.showable_term
                                                                  body2 in
                                                              let uu___19 =
                                                                match what'
@@ -4696,21 +4743,25 @@ let (cps_and_elaborate :
                                                                   then
                                                                     let uu___21
                                                                     =
-                                                                    FStar_Syntax_Print.binders_to_string
-                                                                    ","
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Syntax_Print.showable_binder)
                                                                     params_un in
                                                                     let uu___22
                                                                     =
-                                                                    FStar_Syntax_Print.binders_to_string
-                                                                    ","
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Syntax_Print.showable_binder)
                                                                     action_params2 in
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     action_typ_with_wp2 in
                                                                     let uu___24
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     action_elab2 in
                                                                     FStar_Compiler_Util.print4
                                                                     "original action_params %s, end action_params %s, type %s, term %s\n"
@@ -4941,7 +4992,8 @@ let (cps_and_elaborate :
                                                                     =
                                                                     let uu___23
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     arrow1 in
                                                                     FStar_Compiler_Util.format1
                                                                     "Impossible to generate DM effect: no post candidate %s (Type variable does not appear)"
@@ -4956,7 +5008,8 @@ let (cps_and_elaborate :
                                                                     =
                                                                     let uu___24
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     arrow1 in
                                                                     FStar_Compiler_Util.format1
                                                                     "Impossible to generate DM effect: multiple post candidates %s"
@@ -4984,7 +5037,8 @@ let (cps_and_elaborate :
                                                                 let uu___23 =
                                                                   let uu___24
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     arrow1 in
                                                                   FStar_Compiler_Util.format1
                                                                     "Impossible: pre/post arrow %s"
@@ -4997,7 +5051,8 @@ let (cps_and_elaborate :
                                                     let uu___19 =
                                                       let uu___20 =
                                                         let uu___21 =
-                                                          FStar_Syntax_Print.term_to_string
+                                                          FStar_Class_Show.show
+                                                            FStar_Syntax_Print.showable_term
                                                             wp_type in
                                                         FStar_Compiler_Util.format1
                                                           "Impossible: pre/post abs %s"
@@ -5144,8 +5199,9 @@ let (cps_and_elaborate :
                                                            if uu___22
                                                            then
                                                              let uu___23 =
-                                                               FStar_Syntax_Print.eff_decl_to_string
-                                                                 true ed2 in
+                                                               FStar_Class_Show.show
+                                                                 FStar_Syntax_Print.showable_eff_decl
+                                                                 ed2 in
                                                              FStar_Compiler_Util.print_string
                                                                uu___23
                                                            else ());

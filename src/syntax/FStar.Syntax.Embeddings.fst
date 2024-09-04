@@ -128,13 +128,13 @@ let force_shadow (s:shadow_term) = BU.map_opt s Thunk.force
 
 type printer 'a = 'a -> string
 
-let unknown_printer typ _ =
-    BU.format1 "unknown %s" (Print.term_to_string typ)
+let unknown_printer (typ:typ) _ =
+    BU.format1 "unknown %s" (show typ)
 
 let term_as_fv t =
     match (SS.compress t).n with
     | Tm_fvar fv -> fv
-    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (Print.term_to_string t))
+    | _ -> failwith (BU.format1 "Embeddings not defined for type %s" (show t))
 
 let lazy_embed (pa:printer 'a) (et:unit -> emb_typ) rng (ta: unit -> term) (x:'a) (f:unit -> term) =
     if !Options.debug_embedding
@@ -174,7 +174,7 @@ let lazy_unembed (pa:printer 'a) (et: unit -> emb_typ) (x:term) (ta: unit -> ter
       let _ = if !Options.debug_embedding
               then BU.print3 "Unembedding:\n\temb_typ=%s\n\tterm is %s\n\tvalue is %s\n"
                                (show et)
-                               (Print.term_to_string x)
+                               (show x)
                                (match aopt with None -> "None" | Some a -> "Some " ^ pa a) in
       aopt
 
@@ -204,7 +204,7 @@ let e_any =
         em
         un
         (fun () -> S.t_term) // not correct
-        Print.term_to_string
+        show
         (fun () -> ET_app (PC.term_lid |> Ident.string_of_lid, []))
 
 let e_unit =
@@ -381,7 +381,7 @@ let e_option (ea : embedding 'a) : Tot _ =
 
 let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let typ () = S.t_tuple2_of (type_of ea) (type_of eb) in
-    let emb_t_pair_a_b () =
+    let emb_t_pair () =
         ET_app(PC.lid_tuple2 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b ()])
     in
     let printer (x, y) =
@@ -390,7 +390,7 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let em (x:('a & 'b)) (rng:range) shadow norm : term =
         lazy_embed
             printer
-            emb_t_pair_a_b
+            emb_t_pair
             rng
             typ
             x
@@ -416,16 +416,17 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
     let un (t:term)  norm : option ('a & 'b) =
         lazy_unembed
             printer
-            emb_t_pair_a_b
+            emb_t_pair
             t
             typ
             (fun t ->
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; (a, _); (b, _)] when S.fv_eq_lid fv PC.lid_Mktuple2 ->
-                    BU.bind_opt (try_unembed a norm) (fun a ->
-                    BU.bind_opt (try_unembed b norm) (fun b ->
-                    Some (a, b)))
+                    let open FStar.Class.Monad in
+                    let! a = try_unembed a norm in
+                    let! b = try_unembed b norm in
+                    Some (a, b)
                 | _ -> None)
     in
     mk_emb_full
@@ -433,11 +434,11 @@ let e_tuple2 (ea:embedding 'a) (eb:embedding 'b) =
         un
         typ
         printer
-        emb_t_pair_a_b
+        emb_t_pair
 
 let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let typ () = S.t_tuple3_of (type_of ea) (type_of eb) (type_of ec) in
-    let emb_t_pair_a_b_c () =
+    let emb_t_pair () =
         ET_app(PC.lid_tuple3 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c ()])
     in
     let printer (x, y, z) =
@@ -446,7 +447,7 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let em ((x1, x2, x3):('a & 'b & 'c)) (rng:range) shadow norm : term =
         lazy_embed
             printer
-            emb_t_pair_a_b_c
+            emb_t_pair
             rng
             typ
             (x1, x2, x3)
@@ -476,17 +477,18 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
     let un (t:term) norm : option ('a & 'b & 'c) =
         lazy_unembed
             printer
-            emb_t_pair_a_b_c
+            emb_t_pair
             t
             typ
             (fun t ->
                 let hd, args = U.head_and_args_full t in
                 match (U.un_uinst hd).n, args with
                 | Tm_fvar fv, [_; _; _; (a, _); (b, _); (c, _)] when S.fv_eq_lid fv PC.lid_Mktuple3 ->
-                    BU.bind_opt (try_unembed a norm) (fun a ->
-                    BU.bind_opt (try_unembed b norm) (fun b ->
-                    BU.bind_opt (try_unembed c norm) (fun c ->
-                    Some (a, b, c))))
+                    let open FStar.Class.Monad in
+                    let! a = try_unembed a norm in
+                    let! b = try_unembed b norm in
+                    let! c = try_unembed c norm in
+                    Some (a, b, c)
                 | _ -> None)
     in
     mk_emb_full
@@ -494,7 +496,146 @@ let e_tuple3 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) =
         un
         typ
         printer
-        emb_t_pair_a_b_c
+        emb_t_pair
+
+let e_tuple4 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding 'd) =
+    let typ () = S.t_tuple4_of (type_of ea) (type_of eb) (type_of ec) (type_of ed) in
+    let emb_t_pair () =
+        ET_app(PC.lid_tuple4 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c (); emb_typ_of 'd ()])
+    in
+    let printer (x, y, z, w) =
+        BU.format4 "(%s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w)
+    in
+    let em (x1, x2, x3, x4) (rng:range) shadow norm : term =
+        lazy_embed
+            printer
+            emb_t_pair
+            rng
+            typ
+            (x1, x2, x3, x4)
+            (fun () ->
+                let proj i abcd =
+                    let proj_i = U.mk_field_projector_name (PC.mk_tuple_data_lid 4 rng) (S.null_bv S.tun) i in
+                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i None) in
+                    S.mk_Tm_app (S.mk_Tm_uinst proj_i_tm [U_zero])
+                                [S.iarg (type_of ea);
+                                 S.iarg (type_of eb);
+                                 S.iarg (type_of ec);
+                                 S.iarg (type_of ed);
+                                 S.as_arg abcd] // abc == shadow
+                                rng
+                in
+                let shadow_a = map_shadow shadow (proj 1) in
+                let shadow_b = map_shadow shadow (proj 2) in
+                let shadow_c = map_shadow shadow (proj 3) in
+                let shadow_d = map_shadow shadow (proj 4) in
+                S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple4) [U_zero;U_zero;U_zero;U_zero])
+                            [S.iarg (type_of ea);
+                             S.iarg (type_of eb);
+                             S.iarg (type_of ec);
+                             S.iarg (type_of ed);
+                             S.as_arg (embed x1 rng shadow_a norm);
+                             S.as_arg (embed x2 rng shadow_b norm);
+                             S.as_arg (embed x3 rng shadow_c norm);
+                             S.as_arg (embed x4 rng shadow_d norm)]
+                            rng)
+    in
+    let un (t:term) norm : option ('a & 'b & 'c & 'd) =
+        lazy_unembed
+            printer
+            emb_t_pair
+            t
+            typ
+            (fun t ->
+                let hd, args = U.head_and_args_full t in
+                match (U.un_uinst hd).n, args with
+                | Tm_fvar fv, [_; _; _; _; (a, _); (b, _); (c, _); (d, _)] when S.fv_eq_lid fv PC.lid_Mktuple4 ->
+                    let open FStar.Class.Monad in
+                    let! a = try_unembed a norm in
+                    let! b = try_unembed b norm in
+                    let! c = try_unembed c norm in
+                    let! d = try_unembed d norm in
+                    Some (a, b, c, d)
+                | _ -> None)
+    in
+    mk_emb_full
+        em
+        un
+        typ
+        printer
+        emb_t_pair
+
+let e_tuple5 (ea:embedding 'a) (eb:embedding 'b) (ec:embedding 'c) (ed:embedding 'd) (ee:embedding 'e) =
+    let typ () = S.t_tuple5_of (type_of ea) (type_of eb) (type_of ec) (type_of ed) (type_of ee) in
+    let emb_t_pair () =
+        ET_app(PC.lid_tuple5 |> Ident.string_of_lid, [emb_typ_of 'a (); emb_typ_of 'b (); emb_typ_of 'c (); emb_typ_of 'd (); emb_typ_of 'e ()])
+    in
+    let printer (x, y, z, w, v) =
+        BU.format5 "(%s, %s, %s, %s, %s)" (printer_of ea x) (printer_of eb y) (printer_of ec z) (printer_of ed w) (printer_of ee v)
+    in
+    let em (x1, x2, x3, x4, x5) (rng:range) shadow norm : term =
+        lazy_embed
+            printer
+            emb_t_pair
+            rng
+            typ
+            (x1, x2, x3, x4, x5)
+            (fun () ->
+                let proj i abcde =
+                    let proj_i = U.mk_field_projector_name (PC.mk_tuple_data_lid 5 rng) (S.null_bv S.tun) i in
+                    let proj_i_tm = S.fv_to_tm (lid_as_fv proj_i None) in
+                    S.mk_Tm_app (S.mk_Tm_uinst proj_i_tm [U_zero])
+                                [S.iarg (type_of ea);
+                                 S.iarg (type_of eb);
+                                 S.iarg (type_of ec);
+                                 S.iarg (type_of ed);
+                                 S.iarg (type_of ee);
+                                 S.as_arg abcde] // abc == shadow
+                                rng
+                in
+                let shadow_a = map_shadow shadow (proj 1) in
+                let shadow_b = map_shadow shadow (proj 2) in
+                let shadow_c = map_shadow shadow (proj 3) in
+                let shadow_d = map_shadow shadow (proj 4) in
+                let shadow_e = map_shadow shadow (proj 5) in
+                S.mk_Tm_app (S.mk_Tm_uinst (S.tdataconstr PC.lid_Mktuple5) [U_zero;U_zero;U_zero;U_zero;U_zero])
+                            [S.iarg (type_of ea);
+                             S.iarg (type_of eb);
+                             S.iarg (type_of ec);
+                             S.iarg (type_of ed);
+                             S.iarg (type_of ee);
+                             S.as_arg (embed x1 rng shadow_a norm);
+                             S.as_arg (embed x2 rng shadow_b norm);
+                             S.as_arg (embed x3 rng shadow_c norm);
+                             S.as_arg (embed x4 rng shadow_d norm);
+                             S.as_arg (embed x5 rng shadow_e norm)]
+                            rng)
+    in
+    let un (t:term) norm : option ('a & 'b & 'c & 'd & 'e) =
+        lazy_unembed
+            printer
+            emb_t_pair
+            t
+            typ
+            (fun t ->
+                let hd, args = U.head_and_args_full t in
+                match (U.un_uinst hd).n, args with
+                | Tm_fvar fv, [_; _; _; _; _; (a, _); (b, _); (c, _); (d, _); (e, _)] when S.fv_eq_lid fv PC.lid_Mktuple5 ->
+                    let open FStar.Class.Monad in
+                    let! a = try_unembed a norm in
+                    let! b = try_unembed b norm in
+                    let! c = try_unembed c norm in
+                    let! d = try_unembed d norm in
+                    let! e = try_unembed e norm in
+                    Some (a, b, c, d, e)
+                | _ -> None)
+    in
+    mk_emb_full
+        em
+        un
+        typ
+        printer
+        emb_t_pair
 
 let e_either (ea:embedding 'a) (eb:embedding 'b) =
     let typ () = S.t_either_of (type_of ea) (type_of eb) in
@@ -988,13 +1129,13 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                 | Some repr_f ->
                   if !Options.debug_embedding then
                   BU.print2 "e_arrow forced back to term using shadow %s; repr=%s\n"
-                                   (Print.term_to_string repr_f)
+                                   (show repr_f)
                                    (BU.stack_dump());
                   let res = norm (Inr repr_f) in
                   if !Options.debug_embedding then
                   BU.print3 "e_arrow forced back to term using shadow %s; repr=%s\n\t%s\n"
-                                   (Print.term_to_string repr_f)
-                                   (Print.term_to_string res)
+                                   (show repr_f)
+                                   (show res)
                                    (BU.stack_dump());
                   res)
     in
@@ -1008,7 +1149,7 @@ let e_arrow (ea:embedding 'a) (eb:embedding 'b) : Tot (embedding ('a -> 'b)) =
                 let f_wrapped (a:'a) : 'b =
                     if !Options.debug_embedding then
                     BU.print2 "Calling back into normalizer for %s\n%s\n"
-                              (Print.term_to_string f)
+                              (show f)
                               (BU.stack_dump());
                     let a_tm = embed a f.pos None norm in
                     let b_tm = norm (Inr (S.mk_Tm_app f [S.as_arg a_tm] f.pos)) in

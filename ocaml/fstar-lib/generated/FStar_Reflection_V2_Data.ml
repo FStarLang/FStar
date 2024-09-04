@@ -95,11 +95,14 @@ type branch = (pattern * FStar_Syntax_Syntax.term)
 type aqualv =
   | Q_Implicit 
   | Q_Explicit 
+  | Q_Equality 
   | Q_Meta of FStar_Syntax_Syntax.term 
 let (uu___is_Q_Implicit : aqualv -> Prims.bool) =
   fun projectee -> match projectee with | Q_Implicit -> true | uu___ -> false
 let (uu___is_Q_Explicit : aqualv -> Prims.bool) =
   fun projectee -> match projectee with | Q_Explicit -> true | uu___ -> false
+let (uu___is_Q_Equality : aqualv -> Prims.bool) =
+  fun projectee -> match projectee with | Q_Equality -> true | uu___ -> false
 let (uu___is_Q_Meta : aqualv -> Prims.bool) =
   fun projectee -> match projectee with | Q_Meta _0 -> true | uu___ -> false
 let (__proj__Q_Meta__item___0 : aqualv -> FStar_Syntax_Syntax.term) =

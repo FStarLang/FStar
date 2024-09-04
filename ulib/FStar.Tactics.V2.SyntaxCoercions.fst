@@ -1,6 +1,6 @@
 module FStar.Tactics.V2.SyntaxCoercions
 
-open FStar.Tactics.Builtins
+open FStar.Stubs.Tactics.V2.Builtins
 open FStar.Tactics.NamedView
 open FStar.Sealed
 

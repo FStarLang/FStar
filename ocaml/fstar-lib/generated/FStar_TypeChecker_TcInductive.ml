@@ -112,13 +112,16 @@ let (check_sig_inductive_injectivity_on_params :
                                                 uu___14) ->
                                                  let uu___15 =
                                                    let uu___16 =
-                                                     FStar_Ident.string_of_lid
+                                                     FStar_Class_Show.show
+                                                       FStar_Ident.showable_lident
                                                        t in
                                                    let uu___17 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        u in
                                                    let uu___18 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        v in
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
@@ -130,13 +133,16 @@ let (check_sig_inductive_injectivity_on_params :
                                                  ->
                                                  let uu___15 =
                                                    let uu___16 =
-                                                     FStar_Ident.string_of_lid
+                                                     FStar_Class_Show.show
+                                                       FStar_Ident.showable_lident
                                                        t in
                                                    let uu___17 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        u in
                                                    let uu___18 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        v in
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
@@ -147,13 +153,16 @@ let (check_sig_inductive_injectivity_on_params :
                                                 uu___14, uu___15) ->
                                                  let uu___16 =
                                                    let uu___17 =
-                                                     FStar_Ident.string_of_lid
+                                                     FStar_Class_Show.show
+                                                       FStar_Ident.showable_lident
                                                        t in
                                                    let uu___18 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        u in
                                                    let uu___19 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        v in
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
@@ -165,13 +174,16 @@ let (check_sig_inductive_injectivity_on_params :
                                                 uu___15) ->
                                                  let uu___16 =
                                                    let uu___17 =
-                                                     FStar_Ident.string_of_lid
+                                                     FStar_Class_Show.show
+                                                       FStar_Ident.showable_lident
                                                        t in
                                                    let uu___18 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        u in
                                                    let uu___19 =
-                                                     FStar_Syntax_Print.univ_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_univ
                                                        v in
                                                    FStar_Compiler_Util.format3
                                                      "Impossible: Unresolved or unknown universe in inductive type %s (%s, %s)"
@@ -386,7 +398,8 @@ let (tc_tycon :
                                            (let uu___8 =
                                               let uu___9 =
                                                 let uu___10 =
-                                                  FStar_Syntax_Print.term_to_string
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_term
                                                     t in
                                                 let uu___11 =
                                                   FStar_Ident.string_of_lid
@@ -704,12 +717,16 @@ let (tc_data :
                                   if uu___6
                                   then
                                     let uu___7 =
-                                      FStar_Syntax_Print.lid_to_string c in
+                                      FStar_Class_Show.show
+                                        FStar_Ident.showable_lident c in
                                     let uu___8 =
-                                      FStar_Syntax_Print.binders_to_string
-                                        "->" arguments in
+                                      FStar_Class_Show.show
+                                        (FStar_Class_Show.show_list
+                                           FStar_Syntax_Print.showable_binder)
+                                        arguments in
                                     let uu___9 =
-                                      FStar_Syntax_Print.term_to_string
+                                      FStar_Class_Show.show
+                                        FStar_Syntax_Print.showable_term
                                         result in
                                     FStar_Compiler_Util.print3
                                       "Checking datacon  %s : %s -> %s \n"
@@ -810,10 +827,12 @@ let (tc_data :
                                                       let uu___11 =
                                                         let uu___12 =
                                                           let uu___13 =
-                                                            FStar_Syntax_Print.lid_to_string
+                                                            FStar_Class_Show.show
+                                                              FStar_Ident.showable_lident
                                                               tc_lid in
                                                           let uu___14 =
-                                                            FStar_Syntax_Print.term_to_string
+                                                            FStar_Class_Show.show
+                                                              FStar_Syntax_Print.showable_term
                                                               head in
                                                           FStar_Compiler_Util.format2
                                                             "Expected a constructor of type %s; got %s"
@@ -888,11 +907,13 @@ let (tc_data :
                                                                     =
                                                                     let uu___21
                                                                     =
-                                                                    FStar_Syntax_Print.bv_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_bv
                                                                     bv in
                                                                     let uu___22
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     t2 in
                                                                     FStar_Compiler_Util.format2
                                                                     "This parameter is not constant: expected %s, got %s"
@@ -922,10 +943,12 @@ let (tc_data :
                                                         let uu___14 =
                                                           let uu___15 =
                                                             let uu___16 =
-                                                              FStar_Syntax_Print.term_to_string
+                                                              FStar_Class_Show.show
+                                                                FStar_Syntax_Print.showable_term
                                                                 result1 in
                                                             let uu___17 =
-                                                              FStar_Syntax_Print.term_to_string
+                                                              FStar_Class_Show.show
+                                                                FStar_Syntax_Print.showable_term
                                                                 ty in
                                                             FStar_Compiler_Util.format2
                                                               "The type of %s is %s, but since this is the result type of a constructor its type should be Type"
@@ -1074,7 +1097,8 @@ let (generalize_and_inst_within :
                      FStar_Compiler_List.map
                        (fun u -> FStar_Ident.string_of_id u) uvs in
                    FStar_Compiler_String.concat ", " uu___5 in
-                 let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+                 let uu___5 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
                  FStar_Compiler_Util.print2 "@@@@@@Generalized to (%s, %s)\n"
                    uu___4 uu___5
                else ());
@@ -2285,7 +2309,8 @@ let (check_inductive_well_typedness :
                                     if uu___6
                                     then
                                       let uu___7 =
-                                        FStar_Syntax_Print.sigelt_to_string
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_sigelt
                                           tc1 in
                                       FStar_Compiler_Util.print1
                                         "Checked inductive: %s\n" uu___7
@@ -2431,7 +2456,8 @@ let (check_inductive_well_typedness :
                                                      (FStar_Compiler_List.length
                                                         binders1) in
                                                  let uu___9 =
-                                                   FStar_Syntax_Print.term_to_string
+                                                   FStar_Class_Show.show
+                                                     FStar_Syntax_Print.showable_term
                                                      expected in
                                                  FStar_Compiler_Util.format2
                                                    "Could not get %s type parameters from val type %s"
@@ -2923,7 +2949,8 @@ let (mk_discriminator_and_indexed_projectors :
                                 if uu___2
                                 then
                                   let uu___3 =
-                                    FStar_Syntax_Print.sigelt_to_string decl in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_sigelt decl in
                                   FStar_Compiler_Util.print1
                                     "Declaration of a discriminator %s\n"
                                     uu___3
@@ -3089,7 +3116,8 @@ let (mk_discriminator_and_indexed_projectors :
                                    if uu___4
                                    then
                                      let uu___5 =
-                                       FStar_Syntax_Print.sigelt_to_string
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_sigelt
                                          impl in
                                      FStar_Compiler_Util.print1
                                        "Implementation of a discriminator %s\n"
@@ -3255,7 +3283,8 @@ let (mk_discriminator_and_indexed_projectors :
                                               if uu___8
                                               then
                                                 let uu___9 =
-                                                  FStar_Syntax_Print.sigelt_to_string
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_sigelt
                                                     decl in
                                                 FStar_Compiler_Util.print1
                                                   "Declaration of a projector %s\n"
@@ -3509,7 +3538,8 @@ let (mk_discriminator_and_indexed_projectors :
                                                  if uu___10
                                                  then
                                                    let uu___11 =
-                                                     FStar_Syntax_Print.sigelt_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_sigelt
                                                        impl in
                                                    FStar_Compiler_Util.print1
                                                      "Implementation of a projector %s\n"

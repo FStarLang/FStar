@@ -124,7 +124,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
                BU.for_some
                  (fun q ->
                    BU.for_some
-                     (fun qual -> Print.qual_to_string qual = q) // kinda funny
+                     (fun qual -> show qual = q) // kinda funny
                      quals)
                qs)
            ;(match cfg.steps.unfold_namespace with
@@ -143,10 +143,15 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
         in
         meets_some_criterion
 
-    // UnfoldTac means never unfold FVs marked [@"tac_opaque"]
-    | _, _, _, _, _, _ when cfg.steps.unfold_tac && BU.for_some (TEQ.eq_tm_bool cfg.tcenv U.tac_opaque_attr) attrs ->
-        log_unfolding cfg (fun () -> BU.print_string " >> tac_opaque, not unfolding\n");
+    // Check for DontUnfoldAttribute: if any attribute of the definitions is blacklisted,
+    // do not unfold.
+    // NB: Using specific attributes like UnfoldOnly will override this. This gives more
+    // control to the user if they *really* want to unfold one of these.
+    | _, _, _, _, _, _ when Some? cfg.steps.dont_unfold_attr
+      && List.existsb (fun fa -> U.has_attribute attrs fa) (Some?.v cfg.steps.dont_unfold_attr) ->
+        log_unfolding cfg (fun () -> BU.print_string " >> forbidden by attribute, not unfolding\n");
         no
+
 
     // Nothing special, just check the depth
     | _ ->
@@ -166,7 +171,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
       | _ ->
         failwith <| BU.format1 "Unexpected unfolding result: %s" (show res)
     in
-    if cfg.steps.unfold_tac                             // If running a tactic,
+    if Some? cfg.steps.dont_unfold_attr                 // If we are running a tactic (probably..),
        && not (Options.no_plugins ())                   // haven't explicitly disabled plugins
        && (r <> Should_unfold_no)                       // actually unfolding this fvar
        && BU.for_some (U.is_fvar PC.plugin_attr) attrs  // it is a plugin
@@ -174,7 +179,7 @@ let should_unfold cfg should_reify fv qninfo : should_unfold_res =
     then begin
       // then warn about it
       let msg = BU.format1 "Unfolding name which is marked as a plugin: %s"
-                                    (Print.fv_to_string fv) in
+                                    (show fv) in
       Errors.log_issue fv.fv_name.p
                        (Errors.Warning_UnfoldPlugin, msg);
       plugin_unfold_warn_ctr := !plugin_unfold_warn_ctr - 1

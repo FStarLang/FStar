@@ -6,7 +6,7 @@ FSTAR := $(FSTAR) $(FSTAR_FLAGS)
 all: $(addsuffix .checked, $(FSTAR_FILES))
 
 .depend:
-	$(FSTAR) --dep full $(FSTAR_FILES) > .depend
+	$(FSTAR) --dep full $(FSTAR_FILES) --output_deps_to .depend
 
 depend: .depend
 

@@ -29,7 +29,9 @@ open FStar.List.Tot
 open FStar.Reflection.V2
 
 module R = FStar.Reflection.V2
-module T = FStar.Tactics.V2
+open FStar.Stubs.Tactics.V2.Builtins
+open FStar.Stubs.Tactics.Types
+open FStar.Tactics.Effect
 module RTB = FStar.Reflection.Typing.Builtins
 
 let inspect_pack = R.inspect_pack_inv
@@ -99,7 +101,7 @@ let subtyping_token_renaming (g:env)
                              (y:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) y) })
                              (t:term)
                              (t0 t1:term)
-                             (d:T.subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
+                             (d:subtyping_token (extend_env_l g (bs1@(x,t)::bs0)) t0 t1) = magic ()
 
 let subtyping_token_weakening (g:env)
                               (bs0:bindings)
@@ -107,7 +109,7 @@ let subtyping_token_weakening (g:env)
                               (x:var { None? (lookup_bvar (extend_env_l g (bs1@bs0)) x) })
                               (t:term)
                               (t0 t1:term)
-                              (d:T.subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
+                              (d:subtyping_token (extend_env_l g (bs1@bs0)) t0 t1) = magic ()
 
 let well_typed_terms_are_ln _ _ _ _ = admit ()
 
@@ -753,8 +755,8 @@ and close_args_with_not_free_var (l:list R.argv) (x:var) (i:nat)
 
 let equiv_arrow #g #e1 #e2 ty q x eq =
   assume (~ (x `Set.mem` (freevars e1 `Set.union` freevars e2)));
-  let c1 = T.E_Total, e1 in
-  let c2 = T.E_Total, e2 in
+  let c1 = E_Total, e1 in
+  let c2 = E_Total, e2 in
   Rel_arrow _ _ _ _ c1 c2 _ _ (Rel_refl _ _ _) (Relc_typ _ _ _ _ _ eq)
 
 let equiv_abs_close #g #e1 #e2 ty q x eq =
@@ -950,8 +952,8 @@ let mkif
     (ty:term)
     (u_ty:universe)
     (hyp:var { None? (lookup_bvar g hyp) /\ ~(hyp `Set.mem` (freevars then_ `Set.union` freevars else_)) })
-    (eff:T.tot_or_ghost)
-    (ty_eff:T.tot_or_ghost)
+    (eff:tot_or_ghost)
+    (ty_eff:tot_or_ghost)
     (ts : typing g scrutinee (eff, bool_ty))
     (tt : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee true_bool)) then_ (eff, ty))
     (te : typing (extend_env g hyp (eq2 (pack_universe Uv_Zero) bool_ty scrutinee false_bool)) else_ (eff, ty))
@@ -970,7 +972,7 @@ let mkif
            _ _
         BT_Nil)
   in
-  T_Match g u_zero bool_ty scrutinee T.E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
+  T_Match g u_zero bool_ty scrutinee E_Total (T_FVar g bool_fv) eff ts [brt; bre] (eff, ty)
     [[]; []]
     (MC_Tok g scrutinee bool_ty _ _ (Squash.return_squash (if_complete_match g scrutinee)))
     (brty ())

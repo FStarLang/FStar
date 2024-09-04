@@ -1,6 +1,10 @@
 FSTAR_HOME?=../..
 FSTAR=$(FSTAR_HOME)/bin/fstar.exe $(OTHERFLAGS)
 
+# This tests that the semiring tactic can be made into a plugin.
+# We should make it so in the library and just remove this, along
+# with its hacks.
+
 OCAMLOPT=OCAMLPATH="$(FSTAR_HOME)/lib" ocamlfind opt
 
 .PHONY: %.native %.interpreted

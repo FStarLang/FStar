@@ -33,7 +33,7 @@ module FStar.BigOps
 /// a list is cumbersome for proof. So, we provide variants [big_and']
 /// etc., that do not reduce implicitly.
 
-module L = FStar.List.Tot
+module L = FStar.List.Tot.Base
 
 (** We control reduction using the [delta_attr] feature of the
     normalizer. See FStar.Pervasives for how that works. Every term

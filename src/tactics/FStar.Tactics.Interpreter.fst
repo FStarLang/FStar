@@ -134,7 +134,7 @@ let unembed_tactic_0 (eb:embedding 'b) (embedded_tac_b:term) (ncb:norm_cb) : tac
     // at this moment at least, the normalizer will not call into any step of arity > 1.
     let steps = [Env.Weak;
                  Env.Reify;
-                 Env.UnfoldUntil delta_constant; Env.UnfoldTac;
+                 Env.UnfoldUntil delta_constant; Env.DontUnfoldAttr [PC.tac_opaque_attr];
                  Env.Primops; Env.Unascribe] in
 
     // Maybe use NBE if the user asked for it

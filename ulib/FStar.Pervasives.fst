@@ -202,3 +202,5 @@ let singleton #_ x = x
 let coercion = ()
 
 let desugar_of_variant_record _ = ()
+
+let defer_to #a (_:a) = ()

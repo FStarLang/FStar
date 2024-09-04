@@ -6,12 +6,6 @@ let t2 = (Prims.int & Prims.int) & Prims.int
 let t3 = Prims.int & (Prims.int & Prims.int)
 let t4 = Prims.int & Prims.int & Prims.int
 ]
-Exports: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
 
 Module before type checking:
 module Bug3145
@@ -21,22 +15,10 @@ let t2 = (Prims.int & Prims.int) & Prims.int
 let t3 = Prims.int & (Prims.int & Prims.int)
 let t4 = Prims.int & Prims.int & Prims.int
 ]
-Exports: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
 
 Module after type checking:
 module Bug3145
 Declarations: [
-let t1 = Prims.int & Prims.int & Prims.int
-let t2 = (Prims.int & Prims.int) & Prims.int
-let t3 = Prims.int & (Prims.int & Prims.int)
-let t4 = Prims.int & Prims.int & Prims.int
-]
-Exports: [
 let t1 = Prims.int & Prims.int & Prims.int
 let t2 = (Prims.int & Prims.int) & Prims.int
 let t3 = Prims.int & (Prims.int & Prims.int)

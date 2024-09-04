@@ -316,6 +316,8 @@ let __range_lid    = p2l ["FStar"; "Range"; "__range"]
 let range_lid      = p2l ["FStar"; "Range"; "range"] (* this is a sealed version of the above *)
 let range_0        = p2l ["FStar"; "Range"; "range_0"]
 let mk_range_lid   = p2l ["FStar"; "Range"; "mk_range"]
+let __mk_range_lid = p2l ["FStar"; "Range"; "__mk_range"]
+let __explode_range_lid = p2l ["FStar"; "Range"; "explode"]
 let join_range_lid   = p2l ["FStar"; "Range"; "join_range"]
 
 let guard_free     = pconst "guard_free"
@@ -357,11 +359,13 @@ let dm4f_bind_range_attr = p2l ["FStar"; "Pervasives"; "dm4f_bind_range"]
 let must_erase_for_extraction_attr = psconst "must_erase_for_extraction"
 let strict_on_arguments_attr = p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let resolve_implicits_attr_string = "FStar.Pervasives.resolve_implicits"
+let unification_tag_lid = psconst "defer_to"
 let override_resolve_implicits_handler_lid = p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let handle_smt_goals_attr = psconst "handle_smt_goals"
 let handle_smt_goals_attr_string = "FStar.Pervasives.handle_smt_goals"
 let erasable_attr = p2l ["FStar"; "Pervasives"; "erasable"]
 let comment_attr = p2l ["FStar"; "Pervasives"; "Comment"]
+let c_inline_attr = p2l ["FStar"; "Pervasives"; "CInline"]
 let fail_attr      = psconst "expect_failure"
 let fail_lax_attr  = psconst "expect_lax_failure"
 let tcdecltime_attr = psconst "tcdecltime"
@@ -382,6 +386,8 @@ let no_auto_projectors_decls_attr = psconst "no_auto_projectors_decls"
 let no_auto_projectors_attr = psconst "no_auto_projectors"
 let no_subtping_attr_lid = psconst "no_subtyping"
 let admit_termination_lid = psconst "admit_termination"
+let unrefine_binder_attr = pconst "unrefine"
+let do_not_unrefine_attr = pconst "do_not_unrefine"
 let attr_substitute_lid = p2l ["FStar"; "Pervasives"; "Substitute"]
 let desugar_of_variant_record_lid = psconst "desugar_of_variant_record"
 
@@ -428,6 +434,8 @@ let mk_tuple_lid n r =
 
 let lid_tuple2   = mk_tuple_lid 2 dummyRange
 let lid_tuple3   = mk_tuple_lid 3 dummyRange
+let lid_tuple4   = mk_tuple_lid 4 dummyRange
+let lid_tuple5   = mk_tuple_lid 5 dummyRange
 
 let is_tuple_constructor_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.tuple"
@@ -441,6 +449,8 @@ let mk_tuple_data_lid n r =
 
 let lid_Mktuple2 = mk_tuple_data_lid 2 dummyRange
 let lid_Mktuple3 = mk_tuple_data_lid 3 dummyRange
+let lid_Mktuple4 = mk_tuple_data_lid 4 dummyRange
+let lid_Mktuple5 = mk_tuple_data_lid 5 dummyRange
 
 let is_tuple_datacon_string (s:string) :bool =
   U.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -493,6 +503,8 @@ let fstar_stubs_tactics_lid' s : lid = FStar.Ident.lid_of_path (["FStar"; "Stubs
 let fstar_tactics_lid  s = fstar_tactics_lid' [s]
 let tac_lid = fstar_tactics_lid' ["Effect"; "tac"]
 let tactic_lid = fstar_tactics_lid' ["Effect"; "tactic"]
+
+let tac_opaque_attr = pconst "tac_opaque"
 
 let meta_projectors_attr = fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let mk_projs_lid   = fstar_tactics_lid' ["MkProjectors"; "mk_projs"]

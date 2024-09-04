@@ -369,6 +369,8 @@ and (aqual_cmp : FStar_Reflection_V2_Data.aqualv comparator_for) =
          FStar_Reflection_V2_Data.Q_Implicit) -> Eq
       | (FStar_Reflection_V2_Data.Q_Explicit,
          FStar_Reflection_V2_Data.Q_Explicit) -> Eq
+      | (FStar_Reflection_V2_Data.Q_Equality,
+         FStar_Reflection_V2_Data.Q_Equality) -> Eq
       | (FStar_Reflection_V2_Data.Q_Meta m1, FStar_Reflection_V2_Data.Q_Meta
          m2) -> term_cmp m1 m2
       | uu___ -> Neq

@@ -106,10 +106,14 @@ let (check_and_gen :
                                               (let uu___10 =
                                                  let uu___11 =
                                                    let uu___12 =
-                                                     FStar_Syntax_Print.univ_names_to_string
+                                                     FStar_Class_Show.show
+                                                       (FStar_Class_Show.show_list
+                                                          FStar_Ident.showable_ident)
                                                        us1 in
                                                    let uu___13 =
-                                                     FStar_Syntax_Print.univ_names_to_string
+                                                     FStar_Class_Show.show
+                                                       (FStar_Class_Show.show_list
+                                                          FStar_Ident.showable_ident)
                                                        g_us in
                                                    FStar_Compiler_Util.format4
                                                      "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
@@ -148,7 +152,7 @@ let (pure_wp_uvar :
                 FStar_Syntax_Syntax.mk_Tm_app pure_wp_t1 uu___2 r in
           let uu___ =
             FStar_TypeChecker_Env.new_implicit_var_aux reason r env pure_wp_t
-              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None in
+              FStar_Syntax_Syntax.Strict FStar_Pervasives_Native.None false in
           match uu___ with
           | (pure_wp_uvar1, uu___1, guard_wp) -> (pure_wp_uvar1, guard_wp)
 let op_let_Question :
@@ -1382,7 +1386,8 @@ let (validate_indexed_effect_bind_shape :
                                           let uu___3 =
                                             let uu___4 =
                                               let uu___5 =
-                                                FStar_Syntax_Print.term_to_string
+                                                FStar_Class_Show.show
+                                                  FStar_Syntax_Print.showable_term
                                                   bind_t in
                                               FStar_Compiler_Util.format2
                                                 "Type of %s is not an arrow with >= 4 binders (%s)"
@@ -1406,7 +1411,8 @@ let (validate_indexed_effect_bind_shape :
                                            (let uu___3 =
                                               let uu___4 =
                                                 let uu___5 =
-                                                  FStar_Syntax_Print.term_to_string
+                                                  FStar_Class_Show.show
+                                                    FStar_Syntax_Print.showable_term
                                                     bind_t in
                                                 FStar_Compiler_Util.format2
                                                   "Type of %s is not an arrow with >= 6 binders (%s)"
@@ -1579,7 +1585,8 @@ let (validate_indexed_effect_bind_shape :
                                                                     =
                                                                     let uu___9
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     bind_t in
                                                                     FStar_Compiler_Util.format2
                                                                     "Unexpected type of %s (%s)\n"
@@ -1644,7 +1651,8 @@ let (validate_indexed_effect_bind_shape :
                                                                 then
                                                                   let uu___9
                                                                     =
-                                                                    FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Syntax.showable_indexed_effect_combinator_kind
                                                                     kind in
                                                                   FStar_Compiler_Util.print2
                                                                     "Bind %s has %s kind\n"
@@ -2329,7 +2337,8 @@ let (validate_indexed_effect_subcomp_shape :
                               let uu___2 =
                                 let uu___3 =
                                   let uu___4 =
-                                    FStar_Syntax_Print.term_to_string
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_term
                                       subcomp_t in
                                   FStar_Compiler_Util.format2
                                     "Type of %s is not an arrow with >= 2 binders (%s)"
@@ -2416,7 +2425,8 @@ let (validate_indexed_effect_subcomp_shape :
                                         if uu___4
                                         then
                                           let uu___5 =
-                                            FStar_Syntax_Print.term_to_string
+                                            FStar_Class_Show.show
+                                              FStar_Syntax_Print.showable_term
                                               k in
                                           FStar_Compiler_Util.print1
                                             "Expected type of subcomp before unification: %s\n"
@@ -2431,7 +2441,8 @@ let (validate_indexed_effect_subcomp_shape :
                                               let uu___5 =
                                                 let uu___6 =
                                                   let uu___7 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       subcomp_t in
                                                   FStar_Compiler_Util.format2
                                                     "Unexpected type of %s (%s)\n"
@@ -2476,7 +2487,8 @@ let (validate_indexed_effect_subcomp_shape :
                                           if uu___6
                                           then
                                             let uu___7 =
-                                              FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Syntax.showable_indexed_effect_combinator_kind
                                                 kind in
                                             FStar_Compiler_Util.print2
                                               "Subcomp %s has %s kind\n"
@@ -2992,7 +3004,8 @@ let (validate_indexed_effect_ite_shape :
                           let uu___2 =
                             let uu___3 =
                               let uu___4 =
-                                FStar_Syntax_Print.term_to_string ite_ty in
+                                FStar_Class_Show.show
+                                  FStar_Syntax_Print.showable_term ite_ty in
                               FStar_Compiler_Util.format2
                                 "Type of %s is not an arrow with >= 4 binders (%s)"
                                 ite_name uu___4 in
@@ -3077,7 +3090,8 @@ let (validate_indexed_effect_ite_shape :
                                         let uu___4 =
                                           let uu___5 =
                                             let uu___6 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 ite_tm in
                                             FStar_Compiler_Util.format2
                                               "Unexpected term for %s (%s)\n"
@@ -3116,7 +3130,8 @@ let (validate_indexed_effect_ite_shape :
                                      if uu___5
                                      then
                                        let uu___6 =
-                                         FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
+                                         FStar_Class_Show.show
+                                           FStar_Syntax_Syntax.showable_indexed_effect_combinator_kind
                                            kind in
                                        FStar_Compiler_Util.print2
                                          "Ite %s has %s kind\n" ite_name
@@ -3298,7 +3313,8 @@ let (validate_indexed_effect_close_shape :
                                         let uu___4 =
                                           let uu___5 =
                                             let uu___6 =
-                                              FStar_Syntax_Print.term_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Print.showable_term
                                                 close_tm in
                                             FStar_Compiler_Util.format2
                                               "Unexpected term for %s (%s)\n"
@@ -3702,7 +3718,8 @@ let (validate_indexed_effect_lift_shape :
                                              let uu___7 =
                                                let uu___8 =
                                                  let uu___9 =
-                                                   FStar_Syntax_Print.term_to_string
+                                                   FStar_Class_Show.show
+                                                     FStar_Syntax_Print.showable_term
                                                      lift_t in
                                                  FStar_Compiler_Util.format2
                                                    "Unexpected type of %s (%s)\n"
@@ -3753,7 +3770,8 @@ let (validate_indexed_effect_lift_shape :
                                           if uu___8
                                           then
                                             let uu___9 =
-                                              FStar_Syntax_Print.indexed_effect_combinator_kind_to_string
+                                              FStar_Class_Show.show
+                                                FStar_Syntax_Syntax.showable_indexed_effect_combinator_kind
                                                 kind in
                                             FStar_Compiler_Util.print2
                                               "Lift %s has %s kind\n"
@@ -3782,7 +3800,9 @@ let (tc_layered_eff_decl :
                   FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
                 if uu___3
                 then
-                  let uu___4 = FStar_Syntax_Print.eff_decl_to_string false ed in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Print.showable_eff_decl ed in
                   FStar_Compiler_Util.print1
                     "Typechecking layered effect: \n\t%s\n" uu___4
                 else ());
@@ -3987,9 +4007,12 @@ let (tc_layered_eff_decl :
                                  ed.FStar_Syntax_Syntax.mname in
                              let uu___10 =
                                FStar_Compiler_Util.string_of_int n in
-                             let uu___11 = FStar_Syntax_Print.tag_of_term t in
+                             let uu___11 =
+                               FStar_Class_Tagged.tag_of
+                                 FStar_Syntax_Syntax.tagged_term t in
                              let uu___12 =
-                               FStar_Syntax_Print.term_to_string t in
+                               FStar_Class_Show.show
+                                 FStar_Syntax_Print.showable_term t in
                              FStar_Compiler_Util.format5
                                "Type of %s:%s is not an arrow with >= %s binders (%s::%s)"
                                uu___9 comb uu___10 uu___11 uu___12 in
@@ -4858,7 +4881,8 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     let uu___25
                                                                     =
-                                                                    FStar_Syntax_Print.binder_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_binder
                                                                     b in
                                                                     FStar_Compiler_Util.format1
                                                                     "uvar for subcomp %s binder when checking ite soundness"
@@ -4867,7 +4891,8 @@ let (tc_layered_eff_decl :
                                                                     uu___24 r
                                                                     env1 sort
                                                                     FStar_Syntax_Syntax.Strict
-                                                                    ctx_uvar_meta in
+                                                                    ctx_uvar_meta
+                                                                    false in
                                                                     (match uu___23
                                                                     with
                                                                     | 
@@ -4969,7 +4994,8 @@ let (tc_layered_eff_decl :
                                                                     FStar_Syntax_Syntax.Strict
                                                                     (FStar_Pervasives_Native.Some
                                                                     (FStar_Syntax_Syntax.Ctx_uvar_meta_attr
-                                                                    attr)) in
+                                                                    attr))
+                                                                    false in
                                                                     (match uu___21
                                                                     with
                                                                     | 
@@ -5466,8 +5492,9 @@ let (tc_layered_eff_decl :
                                                       FStar_Ident.string_of_lid
                                                         act.FStar_Syntax_Syntax.action_name in
                                                     let uu___19 =
-                                                      FStar_Syntax_Print.binders_to_string
-                                                        "; "
+                                                      FStar_Class_Show.show
+                                                        (FStar_Class_Show.show_list
+                                                           FStar_Syntax_Print.showable_binder)
                                                         act.FStar_Syntax_Syntax.action_params in
                                                     FStar_Compiler_Util.format3
                                                       "Action %s:%s has non-empty action params (%s)"
@@ -5754,10 +5781,12 @@ let (tc_layered_eff_decl :
                                                               if uu___21
                                                               then
                                                                 let uu___22 =
-                                                                  FStar_Syntax_Print.term_to_string
+                                                                  FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_defn in
                                                                 let uu___23 =
-                                                                  FStar_Syntax_Print.term_to_string
+                                                                  FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ1 in
                                                                 FStar_Compiler_Util.print2
                                                                   "Typechecked action definition: %s and action type: %s\n"
@@ -5819,7 +5848,8 @@ let (tc_layered_eff_decl :
                                                                     =
                                                                     FStar_TypeChecker_Util.new_implicit_var
                                                                     reason r
-                                                                    env2 t in
+                                                                    env2 t
+                                                                    false in
                                                                     (match uu___25
                                                                     with
                                                                     | 
@@ -5866,7 +5896,8 @@ let (tc_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_name in
                                                                     let uu___28
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ2 in
                                                                     FStar_Compiler_Util.format3
                                                                     "Unexpected non-function type for action %s:%s (%s)"
@@ -5891,7 +5922,8 @@ let (tc_layered_eff_decl :
                                                                     then
                                                                     let uu___24
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     k in
                                                                     FStar_Compiler_Util.print1
                                                                     "Expected action type: %s\n"
@@ -5921,7 +5953,8 @@ let (tc_layered_eff_decl :
                                                                     then
                                                                     let uu___26
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     k in
                                                                     FStar_Compiler_Util.print1
                                                                     "Expected action type after unification: %s\n"
@@ -5942,7 +5975,8 @@ let (tc_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_name in
                                                                     let uu___27
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     t in
                                                                     FStar_Compiler_Util.format3
                                                                     "Unexpected (k-)type of action %s:%s, expected bs -> repr<u> i_1 ... i_n, found: %s"
@@ -6093,7 +6127,8 @@ let (tc_layered_eff_decl :
                                                                     then
                                                                     let uu___27
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ2 in
                                                                     FStar_Compiler_Util.print1
                                                                     "Action type after injecting it into the monad: %s\n"
@@ -6202,11 +6237,15 @@ let (tc_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_name in
                                                                     let uu___34
                                                                     =
-                                                                    FStar_Syntax_Print.univ_names_to_string
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Ident.showable_ident)
                                                                     us in
                                                                     let uu___35
                                                                     =
-                                                                    FStar_Syntax_Print.univ_names_to_string
+                                                                    FStar_Class_Show.show
+                                                                    (FStar_Class_Show.show_list
+                                                                    FStar_Ident.showable_ident)
                                                                     act1.FStar_Syntax_Syntax.action_univs in
                                                                     FStar_Compiler_Util.format4
                                                                     "Expected and generalized universes in the declaration for %s:%s are different, input: %s, but after gen: %s"
@@ -6364,10 +6403,12 @@ let (tc_layered_eff_decl :
                                             if uu___15
                                             then
                                               let uu___16 =
-                                                FStar_Ident.string_of_lid
+                                                FStar_Class_Show.show
+                                                  FStar_Ident.showable_lident
                                                   ed.FStar_Syntax_Syntax.mname in
                                               let uu___17 =
-                                                FStar_Syntax_Print.eff_extraction_mode_to_string
+                                                FStar_Class_Show.show
+                                                  FStar_Syntax_Syntax.showable_eff_extraction_mode
                                                   extraction_mode in
                                               FStar_Compiler_Util.print2
                                                 "Effect %s has extraction mode %s\n"
@@ -6468,7 +6509,9 @@ let (tc_non_layered_eff_decl :
                (let uu___3 = FStar_Compiler_Effect.op_Bang dbg in
                 if uu___3
                 then
-                  let uu___4 = FStar_Syntax_Print.eff_decl_to_string false ed in
+                  let uu___4 =
+                    FStar_Class_Show.show
+                      FStar_Syntax_Print.showable_eff_decl ed in
                   FStar_Compiler_Util.print1
                     "Typechecking eff_decl: \n\t%s\n" uu___4
                 else ());
@@ -6691,8 +6734,9 @@ let (tc_non_layered_eff_decl :
                                 if uu___7
                                 then
                                   let uu___8 =
-                                    FStar_Syntax_Print.eff_decl_to_string
-                                      false ed2 in
+                                    FStar_Class_Show.show
+                                      FStar_Syntax_Print.showable_eff_decl
+                                      ed2 in
                                   FStar_Compiler_Util.print1
                                     "After typechecking binders eff_decl: \n\t%s\n"
                                     uu___8
@@ -8113,11 +8157,13 @@ let (tc_non_layered_eff_decl :
                                                                     act1.FStar_Syntax_Syntax.action_name in
                                                                    let uu___27
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act1.FStar_Syntax_Syntax.action_defn in
                                                                    let uu___28
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ1 in
                                                                    FStar_Compiler_Util.print3
                                                                     "Checking action %s:\n[definition]: %s\n[cps'd type]: %s\n"
@@ -8220,11 +8266,13 @@ let (tc_non_layered_eff_decl :
                                                                     =
                                                                     let uu___32
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ3 in
                                                                     let uu___33
                                                                     =
-                                                                    FStar_Syntax_Print.tag_of_term
+                                                                    FStar_Class_Tagged.tag_of
+                                                                    FStar_Syntax_Syntax.tagged_term
                                                                     act_typ3 in
                                                                     FStar_Compiler_Util.format2
                                                                     "Actions must have function types (not: %s, a.k.a. %s)"
@@ -8262,7 +8310,8 @@ let (tc_non_layered_eff_decl :
                                                                     =
                                                                     let uu___33
                                                                     =
-                                                                    FStar_Syntax_Print.term_to_string
+                                                                    FStar_Class_Show.show
+                                                                    FStar_Syntax_Print.showable_term
                                                                     act_typ2 in
                                                                     FStar_Compiler_Util.format1
                                                                     "Unexpected non trivial guard formula when checking action type shape (%s)"
@@ -8705,8 +8754,9 @@ let (tc_non_layered_eff_decl :
                                              if uu___16
                                              then
                                                let uu___17 =
-                                                 FStar_Syntax_Print.eff_decl_to_string
-                                                   false ed3 in
+                                                 FStar_Class_Show.show
+                                                   FStar_Syntax_Print.showable_eff_decl
+                                                   ed3 in
                                                FStar_Compiler_Util.print1
                                                  "Typechecked effect declaration:\n\t%s\n"
                                                  uu___17
@@ -8773,7 +8823,8 @@ let (tc_layered_lift :
       (let uu___1 = FStar_Compiler_Effect.op_Bang dbg_LayeredEffectsTc in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.sub_eff_to_string sub in
+         let uu___2 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_sub_eff sub in
          FStar_Compiler_Util.print1 "Typechecking sub_effect: %s\n" uu___2
        else ());
       (let lift_ts = FStar_Compiler_Util.must sub.FStar_Syntax_Syntax.lift in
@@ -8824,7 +8875,8 @@ let (tc_layered_lift :
                         if uu___6
                         then
                           let uu___7 =
-                            FStar_Syntax_Print.sub_eff_to_string sub1 in
+                            FStar_Class_Show.show
+                              FStar_Syntax_Print.showable_sub_eff sub1 in
                           FStar_Compiler_Util.print1 "Final sub_effect: %s\n"
                             uu___7
                         else ());
@@ -9061,7 +9113,8 @@ let (tc_lift :
                                    if uu___9
                                    then
                                      let uu___10 =
-                                       FStar_Syntax_Print.term_to_string
+                                       FStar_Class_Show.show
+                                         FStar_Syntax_Print.showable_term
                                          lift1 in
                                      FStar_Compiler_Util.print1
                                        "Lift for free : %s\n" uu___10
@@ -9364,10 +9417,12 @@ let (tc_lift :
                               (let uu___8 =
                                  let uu___9 =
                                    let uu___10 =
-                                     FStar_Syntax_Print.lid_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Ident.showable_lident
                                        sub.FStar_Syntax_Syntax.source in
                                    let uu___11 =
-                                     FStar_Syntax_Print.lid_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Ident.showable_lident
                                        sub.FStar_Syntax_Syntax.target in
                                    let uu___12 =
                                      FStar_Compiler_Util.string_of_int
@@ -9395,10 +9450,12 @@ let (tc_lift :
                                let uu___10 =
                                  let uu___11 =
                                    let uu___12 =
-                                     FStar_Syntax_Print.lid_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Ident.showable_lident
                                        sub.FStar_Syntax_Syntax.source in
                                    let uu___13 =
-                                     FStar_Syntax_Print.lid_to_string
+                                     FStar_Class_Show.show
+                                       FStar_Ident.showable_lident
                                        sub.FStar_Syntax_Syntax.target in
                                    let uu___14 =
                                      let uu___15 =
@@ -9532,10 +9589,12 @@ let (tc_effect_abbrev :
                                     let uu___8 =
                                       let uu___9 =
                                         let uu___10 =
-                                          FStar_Syntax_Print.term_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_term
                                             expected_result_typ in
                                         let uu___11 =
-                                          FStar_Syntax_Print.term_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_term
                                             def_result_typ in
                                         FStar_Compiler_Util.format2
                                           "Result type of effect abbreviation `%s` does not match the result type of its definition `%s`"
@@ -9597,14 +9656,16 @@ let (tc_effect_abbrev :
                                                    let uu___12 =
                                                      let uu___13 =
                                                        let uu___14 =
-                                                         FStar_Syntax_Print.lid_to_string
+                                                         FStar_Class_Show.show
+                                                           FStar_Ident.showable_lident
                                                            lid in
                                                        let uu___15 =
                                                          FStar_Compiler_Util.string_of_int
                                                            (FStar_Compiler_List.length
                                                               uvs2) in
                                                        let uu___16 =
-                                                         FStar_Syntax_Print.term_to_string
+                                                         FStar_Class_Show.show
+                                                           FStar_Syntax_Print.showable_term
                                                            t1 in
                                                        FStar_Compiler_Util.format3
                                                          "Effect abbreviations must be polymorphic in exactly 1 universe; %s has %s universes (%s)"

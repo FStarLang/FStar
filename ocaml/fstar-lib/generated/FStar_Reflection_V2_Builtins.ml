@@ -18,7 +18,7 @@ let (inspect_bqual :
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t) ->
         FStar_Reflection_V2_Data.Q_Meta t
     | FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Equality) ->
-        FStar_Reflection_V2_Data.Q_Explicit
+        FStar_Reflection_V2_Data.Q_Equality
     | FStar_Pervasives_Native.None -> FStar_Reflection_V2_Data.Q_Explicit
 let (inspect_aqual :
   FStar_Syntax_Syntax.aqual -> FStar_Reflection_V2_Data.aqualv) =
@@ -33,11 +33,13 @@ let (pack_bqual :
   FStar_Reflection_V2_Data.aqualv -> FStar_Syntax_Syntax.bqual) =
   fun aqv ->
     match aqv with
-    | FStar_Reflection_V2_Data.Q_Explicit -> FStar_Pervasives_Native.None
     | FStar_Reflection_V2_Data.Q_Implicit ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Implicit false)
     | FStar_Reflection_V2_Data.Q_Meta t ->
         FStar_Pervasives_Native.Some (FStar_Syntax_Syntax.Meta t)
+    | FStar_Reflection_V2_Data.Q_Equality ->
+        FStar_Pervasives_Native.Some FStar_Syntax_Syntax.Equality
+    | FStar_Reflection_V2_Data.Q_Explicit -> FStar_Pervasives_Native.None
 let (pack_aqual :
   FStar_Reflection_V2_Data.aqualv -> FStar_Syntax_Syntax.aqual) =
   fun aqv ->
@@ -121,7 +123,8 @@ let (inspect_const :
     | FStar_Const.Const_real s -> FStar_Reflection_V2_Data.C_Real s
     | uu___ ->
         let uu___1 =
-          let uu___2 = FStar_Syntax_Print.const_to_string c in
+          let uu___2 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_const c in
           FStar_Compiler_Util.format1 "unknown constant: %s" uu___2 in
         FStar_Compiler_Effect.failwith uu___1
 let (inspect_universe :
@@ -301,8 +304,10 @@ let rec (inspect_ln :
     | uu___ ->
         ((let uu___2 =
             let uu___3 =
-              let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
-              let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___4 =
+                FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
+              let uu___5 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format2
                 "inspect_ln: outside of expected syntax (%s, %s)" uu___4
                 uu___5 in
@@ -327,7 +332,8 @@ let (inspect_comp :
           (FStar_Syntax_Syntax.Decreases_wf uu___1)) ->
           ((let uu___3 =
               let uu___4 =
-                let uu___5 = FStar_Syntax_Print.comp_to_string c in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_comp c in
                 FStar_Compiler_Util.format1
                   "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s skipping the decreases clause"
                   uu___5 in
@@ -1041,7 +1047,8 @@ let (inspect_namedv :
          let uu___2 =
            let uu___3 = FStar_Ident.string_of_id v.FStar_Syntax_Syntax.ppname in
            let uu___4 =
-             FStar_Syntax_Print.term_to_string v.FStar_Syntax_Syntax.sort in
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term
+               v.FStar_Syntax_Syntax.sort in
            FStar_Compiler_Util.format3
              "inspect_namedv: uniq is negative (%s : %s), uniq = %s" uu___3
              uu___4 (Prims.string_of_int v.FStar_Syntax_Syntax.index) in
@@ -1100,7 +1107,8 @@ let (inspect_bv : FStar_Syntax_Syntax.bv -> FStar_Reflection_V2_Data.bv_view)
            let uu___3 =
              FStar_Ident.string_of_id bv.FStar_Syntax_Syntax.ppname in
            let uu___4 =
-             FStar_Syntax_Print.term_to_string bv.FStar_Syntax_Syntax.sort in
+             FStar_Class_Show.show FStar_Syntax_Print.showable_term
+               bv.FStar_Syntax_Syntax.sort in
            FStar_Compiler_Util.format3
              "inspect_bv: index is negative (%s : %s), index = %s" uu___3
              uu___4 (Prims.string_of_int bv.FStar_Syntax_Syntax.index) in

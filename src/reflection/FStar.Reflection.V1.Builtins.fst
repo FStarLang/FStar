@@ -26,6 +26,9 @@ open FStar.Errors
 
 module S = FStar.Syntax.Syntax // TODO: remove, it's open
 
+open FStar.Class.Show
+open FStar.Class.Tagged
+
 module C     = FStar.Const
 module PC    = FStar.Parser.Const
 module SS    = FStar.Syntax.Subst
@@ -154,7 +157,7 @@ let inspect_const (c:sconst) : vconst =
     | FStar.Const.Const_range r -> C_Range r
     | FStar.Const.Const_reify _ -> C_Reify
     | FStar.Const.Const_reflect l -> C_Reflect (Ident.path_of_lid l)
-    | _ -> failwith (BU.format1 "unknown constant: %s" (Print.const_to_string c))
+    | _ -> failwith (BU.format1 "unknown constant: %s" (show c))
 
 let inspect_universe u =
   match u with
@@ -287,7 +290,7 @@ let rec inspect_ln (t:term) : term_view =
         i |> U.unfold_lazy |> inspect_ln
 
     | _ ->
-        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (Print.tag_of_term t) (Print.term_to_string t));
+        Err.log_issue t.pos (Err.Warning_CantInspect, BU.format2 "inspect_ln: outside of expected syntax (%s, %s)" (tag_of t) (show t));
         Tv_Unsupp
 
 let inspect_comp (c : comp) : comp_view =
@@ -299,7 +302,7 @@ let inspect_comp (c : comp) : comp_view =
           Err.log_issue c.pos (Err.Warning_CantInspect,
             BU.format1 "inspect_comp: inspecting comp with wf decreases clause is not yet supported: %s \
               skipping the decreases clause"
-              (Print.comp_to_string c));
+              (show c));
           []
         | _ -> failwith "Impossible!"
     in
@@ -707,7 +710,7 @@ let inspect_bv (bv:bv) : bv_view =
         Err.log_issue Range.dummyRange
             (Err.Warning_CantInspect, BU.format3 "inspect_bv: index is negative (%s : %s), index = %s"
                                          (Ident.string_of_id bv.ppname)
-                                         (Print.term_to_string bv.sort)
+                                         (show bv.sort)
                                          (string_of_int bv.index))
     );
     {

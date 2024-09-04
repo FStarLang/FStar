@@ -1498,7 +1498,7 @@ let loc_addresses_unused_in #al c r a h = ()
 
 let loc_addresses_not_unused_in #al c r a h = ()
 
-#push-options "--z3rlimit 25"
+#push-options "--z3rlimit 35"
 let loc_unused_in_not_unused_in_disjoint #al c h =
   assert (Ghost.reveal (Loc?.aux (loc_unused_in c h)) `loc_aux_disjoint` Ghost.reveal (Loc?.aux (loc_not_unused_in c h)));
   assert_spinoff (loc_disjoint #al #c (loc_unused_in #al c h)
@@ -1797,7 +1797,7 @@ let union_loc_of_loc_addresses #al c b preserve_liveness r n =
 let union_loc_of_loc_regions #al c b preserve_liveness r =
   assert (loc_equal #_ #(cls_union c) (union_loc_of_loc c b (loc_regions #_ #(c b) preserve_liveness r)) (loc_regions #_ #(cls_union c) preserve_liveness r))
 
-#push-options "--z3rlimit 15"
+#push-options "--z3rlimit 25"
 let union_loc_of_loc_includes_intro
   (#al: (bool -> HS.rid -> nat -> Tot Type))
   (c: ((b: bool) -> Tot (cls (al b))))

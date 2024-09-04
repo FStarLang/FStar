@@ -9,7 +9,7 @@ verify-all: $(ALL_CHECKED_FILES)
 
 .depend:
 	$(call msg, "DEPEND", $(patsubst $(shell realpath $(FSTAR_HOME))/%,%/,$(shell pwd)))
-	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) > .depend
+	$(Q)$(FSTAR) --dep full $(wildcard *.fst *.fsti) --output_deps_to .depend
 
 %.checked:
 	$(call msg, "CHECK", $<)

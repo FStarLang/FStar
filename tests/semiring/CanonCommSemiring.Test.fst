@@ -13,6 +13,10 @@ open FStar.Mul
 
 #push-options "--no_smt --tactic_trace_d 0" // Look, no SMT!
 
+let test (a:int) =
+  let open FStar.Mul in
+  assert (a + - a + 2 * a + - a == -a + 2 * a) by (int_semiring ())
+
 [@@tcdecltime]
 let test1 (a:int) =
   assert (a + a + a == 3 * a) by (int_semiring ())
@@ -174,7 +178,7 @@ let ring_cr : cr ring = CR ring_add_cm ring_mul_cm ( ~% ) add_opp mul_add_distr 
 
 let poly_semiring () : Tac unit = canon_semiring ring_cr; trefl()
 
-let test (x y:ring) =
+let test_poly0 (x y:ring) =
   assert (4 *% x +% 2 *% x == 3 *% x +% 3 *% x) by (poly_semiring ())
 
 let test_poly1 (a b:ring) =

@@ -208,7 +208,7 @@ let (by_tactic_interp :
                    FStar_TypeChecker_Env.new_implicit_var_aux
                      "rewrite_with_tactic RHS" tm.FStar_Syntax_Syntax.pos e
                      typ FStar_Syntax_Syntax.Strict
-                     FStar_Pervasives_Native.None in
+                     FStar_Pervasives_Native.None false in
                  (match uu___3 with
                   | (uvtm, uu___4, g_imp) ->
                       let u = e.FStar_TypeChecker_Env.universe_of e typ in
@@ -557,7 +557,9 @@ let (preprocess :
             then
               let uu___3 =
                 let uu___4 = FStar_TypeChecker_Env.all_binders env in
-                FStar_Syntax_Print.binders_to_string "," uu___4 in
+                FStar_Class_Show.show
+                  (FStar_Class_Show.show_list
+                     FStar_Syntax_Print.showable_binder) uu___4 in
               let uu___4 =
                 FStar_Class_Show.show FStar_Syntax_Print.showable_term goal in
               FStar_Compiler_Util.print2 "About to preprocess %s |= %s\n"
@@ -579,7 +581,9 @@ let (preprocess :
                   then
                     let uu___5 =
                       let uu___6 = FStar_TypeChecker_Env.all_binders env in
-                      FStar_Syntax_Print.binders_to_string ", " uu___6 in
+                      FStar_Class_Show.show
+                        (FStar_Class_Show.show_list
+                           FStar_Syntax_Print.showable_binder) uu___6 in
                     let uu___6 =
                       FStar_Class_Show.show FStar_Syntax_Print.showable_term
                         t' in
@@ -1431,7 +1435,9 @@ let (spinoff_strictly_positive_goals :
                            let uu___5 =
                              let uu___6 =
                                FStar_TypeChecker_Env.all_binders env in
-                             FStar_Syntax_Print.binders_to_string ", " uu___6 in
+                             FStar_Class_Show.show
+                               (FStar_Class_Show.show_list
+                                  FStar_Syntax_Print.showable_binder) uu___6 in
                            let uu___6 =
                              FStar_Class_Show.show
                                FStar_Syntax_Print.showable_term t1 in
@@ -2308,7 +2314,8 @@ let (splice :
                                                let uu___12 =
                                                  let uu___13 =
                                                    let uu___14 =
-                                                     FStar_Syntax_Print.qual_to_string
+                                                     FStar_Class_Show.show
+                                                       FStar_Syntax_Print.showable_qualifier
                                                        q in
                                                    let uu___15 =
                                                      FStar_Syntax_Print.sigelt_to_string_short
@@ -2369,7 +2376,7 @@ let (postprocess :
                     FStar_TypeChecker_Env.new_implicit_var_aux
                       "postprocess RHS" tm.FStar_Syntax_Syntax.pos env typ
                       (FStar_Syntax_Syntax.Allow_untyped "postprocess")
-                      FStar_Pervasives_Native.None in
+                      FStar_Pervasives_Native.None false in
                   match uu___2 with
                   | (uvtm, uu___3, g_imp) ->
                       let u = env.FStar_TypeChecker_Env.universe_of env typ in

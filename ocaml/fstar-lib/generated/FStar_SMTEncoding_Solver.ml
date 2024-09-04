@@ -228,6 +228,7 @@ let (filter_facts_without_core :
 type errors =
   {
   error_reason: Prims.string ;
+  error_rlimit: Prims.int ;
   error_fuel: Prims.int ;
   error_ifuel: Prims.int ;
   error_hint: Prims.string Prims.list FStar_Pervasives_Native.option ;
@@ -235,36 +236,51 @@ type errors =
 let (__proj__Mkerrors__item__error_reason : errors -> Prims.string) =
   fun projectee ->
     match projectee with
-    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
-        -> error_reason
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_reason
+let (__proj__Mkerrors__item__error_rlimit : errors -> Prims.int) =
+  fun projectee ->
+    match projectee with
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_rlimit
 let (__proj__Mkerrors__item__error_fuel : errors -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
-        -> error_fuel
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_fuel
 let (__proj__Mkerrors__item__error_ifuel : errors -> Prims.int) =
   fun projectee ->
     match projectee with
-    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
-        -> error_ifuel
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_ifuel
 let (__proj__Mkerrors__item__error_hint :
   errors -> Prims.string Prims.list FStar_Pervasives_Native.option) =
   fun projectee ->
     match projectee with
-    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
-        -> error_hint
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_hint
 let (__proj__Mkerrors__item__error_messages :
   errors -> FStar_Errors.error Prims.list) =
   fun projectee ->
     match projectee with
-    | { error_reason; error_fuel; error_ifuel; error_hint; error_messages;_}
-        -> error_messages
+    | { error_reason; error_rlimit; error_fuel; error_ifuel; error_hint;
+        error_messages;_} -> error_messages
 let (error_to_short_string : errors -> Prims.string) =
   fun err ->
-    let uu___ = FStar_Compiler_Util.string_of_int err.error_fuel in
-    let uu___1 = FStar_Compiler_Util.string_of_int err.error_ifuel in
-    FStar_Compiler_Util.format4 "%s (fuel=%s; ifuel=%s%s)" err.error_reason
-      uu___ uu___1
+    let uu___ =
+      FStar_Class_Show.show
+        (FStar_Class_Show.printableshow FStar_Class_Printable.printable_int)
+        err.error_rlimit in
+    let uu___1 =
+      FStar_Class_Show.show
+        (FStar_Class_Show.printableshow FStar_Class_Printable.printable_int)
+        err.error_fuel in
+    let uu___2 =
+      FStar_Class_Show.show
+        (FStar_Class_Show.printableshow FStar_Class_Printable.printable_int)
+        err.error_ifuel in
+    FStar_Compiler_Util.format5 "%s (rlimit=%s; fuel=%s; ifuel=%s%s)"
+      err.error_reason uu___ uu___1 uu___2
       (if FStar_Compiler_Option.isSome err.error_hint
        then "; with hint"
        else "")
@@ -273,10 +289,21 @@ let (error_to_is_timeout : errors -> Prims.string Prims.list) =
     if FStar_Compiler_Util.ends_with err.error_reason "canceled"
     then
       let uu___ =
-        let uu___1 = FStar_Compiler_Util.string_of_int err.error_fuel in
-        let uu___2 = FStar_Compiler_Util.string_of_int err.error_ifuel in
-        FStar_Compiler_Util.format4 "timeout (fuel=%s; ifuel=%s; %s)"
-          err.error_reason uu___1 uu___2
+        let uu___1 =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) err.error_rlimit in
+        let uu___2 =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) err.error_fuel in
+        let uu___3 =
+          FStar_Class_Show.show
+            (FStar_Class_Show.printableshow
+               FStar_Class_Printable.printable_int) err.error_ifuel in
+        FStar_Compiler_Util.format5
+          "timeout (rlimit=%s; fuel=%s; ifuel=%s; %s)" err.error_reason
+          uu___1 uu___2 uu___3
           (if FStar_Compiler_Option.isSome err.error_hint
            then "with hint"
            else "") in
@@ -467,7 +494,8 @@ let (maybe_build_core_from_hook :
                                      let uu___5 =
                                        let uu___6 =
                                          let uu___7 =
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              typ in
                                          FStar_Json.JsonStr uu___7 in
                                        ("type", uu___6) in
@@ -640,6 +668,7 @@ let (query_errors :
                               uu___5)) error_labels in
                  {
                    error_reason = msg;
+                   error_rlimit = (settings.query_rlimit);
                    error_fuel = (settings.query_fuel);
                    error_ifuel = (settings.query_ifuel);
                    error_hint = (settings.query_hint);
@@ -1342,7 +1371,7 @@ let (ans_fail : answer) =
     tried_recovery = (ans_ok.tried_recovery);
     errs = (ans_ok.errs)
   }
-let (uu___552 : answer FStar_Class_Show.showable) =
+let (uu___556 : answer FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun ans ->
@@ -2273,7 +2302,8 @@ let (encode_and_ask :
                                       FStar_TypeChecker_Env.get_range tcenv1 in
                                     let uu___9 =
                                       let uu___10 =
-                                        FStar_Syntax_Print.term_to_string q in
+                                        FStar_Class_Show.show
+                                          FStar_Syntax_Print.showable_term q in
                                       let uu___11 =
                                         FStar_SMTEncoding_Term.declToSmt ""
                                           qry in

@@ -4,14 +4,14 @@
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(52,23-52,30)
+  - See also prims.fst(73,23-73,30)
 
 * Error 19 at Inference.fst(20,14-20,15):
   - Subtyping check failed
   - Expected type Prims.eqtype got type Type0
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(52,23-52,30)
+  - See also prims.fst(73,23-73,30)
 
 >>]
 Verified module: Inference

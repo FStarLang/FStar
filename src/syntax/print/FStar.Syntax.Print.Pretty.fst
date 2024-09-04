@@ -138,8 +138,8 @@ let binder_to_string' is_arrow (b:binder) : string = GenSym.with_frozen_gensym (
     pp d
 )
 
-let eff_decl_to_string' for_free r q ed = GenSym.with_frozen_gensym (fun () ->
-  let d = Resugar.resugar_eff_decl r q ed in
+let eff_decl_to_string ed = GenSym.with_frozen_gensym (fun () ->
+  let d = Resugar.resugar_eff_decl ed in
   let d = ToDocument.decl_to_document d in
   pp d
 )

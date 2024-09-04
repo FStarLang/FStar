@@ -38,6 +38,7 @@ module SS = FStar.Syntax.Subst
 module TEQ = FStar.TypeChecker.TermEqAndSimplify
 
 open FStar.Class.Setlike
+open FStar.Class.Show
 
 let is_flex t =
   let head, _args = U.head_and_args_full t in
@@ -168,7 +169,7 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
       | [ c ] -> Some c //if there is a unique candidate return it
       | _ -> //it is ambiguous; complain
         let candidates = candidate_names candidates in
-        let attr = Print.term_to_string a in
+        let attr = show a in
         FStar.Errors.log_issue u.ctx_uvar_range
                                (FStar.Errors.Warning_AmbiguousResolveImplicitsHook,
                                 BU.format2
@@ -182,9 +183,9 @@ let find_user_tac_for_uvar env (u:ctx_uvar) : option sigelt =
     | _ -> None
 
 let should_defer_uvar_to_user_tac env (u:ctx_uvar) =
-  if not env.enable_defer_to_tac then false
-  else Option.isSome (find_user_tac_for_uvar env u)
-
+  if not env.enable_defer_to_tac
+  then false
+  else Some? (find_user_tac_for_uvar env u)
 
 let solve_goals_with_tac env g (deferred_goals:implicits) (tac:sigelt) =
   Profiling.profile (fun () ->
@@ -227,11 +228,11 @@ let solve_deferred_to_tactic_goals env g =
         in
         let goal_ty = U.mk_eq2 (env.universe_of env_lax t_eq) t_eq tp.lhs tp.rhs in
         let goal, ctx_uvar, _ =
-            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None
+            Env.new_implicit_var_aux reason tp.lhs.pos env goal_ty Strict None false
         in
         let imp =
             { imp_reason = "";
-              imp_uvar = fst (List.hd ctx_uvar);
+              imp_uvar = fst ctx_uvar;
               imp_tm = goal;
               imp_range = tp.lhs.pos
             }

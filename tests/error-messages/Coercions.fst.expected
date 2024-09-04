@@ -20,7 +20,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(680,18-680,24)
 
 >>]
 >> Got issues: [
@@ -29,7 +29,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(680,18-680,24)
 
 >>]
 >> Got issues: [
@@ -38,7 +38,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(680,18-680,24)
 
 >>]
 >> Got issues: [
@@ -47,7 +47,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(680,18-680,24)
 
 >>]
 >> Got issues: [
@@ -56,7 +56,7 @@
   - Expected type Prims.nat got type Prims.int
   - The SMT solver could not prove the query. Use --query_stats for more
     details.
-  - See also prims.fst(659,18-659,24)
+  - See also prims.fst(680,18-680,24)
 
 >>]
 Verified module: Coercions

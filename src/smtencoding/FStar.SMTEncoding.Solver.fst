@@ -188,6 +188,7 @@ let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 (***********************************************************************************)
 type errors = {
     error_reason:string;
+    error_rlimit: int;
     error_fuel: int;
     error_ifuel: int;
     error_hint: option (list string);
@@ -195,18 +196,20 @@ type errors = {
 }
 
 let error_to_short_string err =
-    BU.format4 "%s (fuel=%s; ifuel=%s%s)"
+    BU.format5 "%s (rlimit=%s; fuel=%s; ifuel=%s%s)"
             err.error_reason
-            (string_of_int err.error_fuel)
-            (string_of_int err.error_ifuel)
+            (show err.error_rlimit)
+            (show err.error_fuel)
+            (show err.error_ifuel)
             (if Option.isSome err.error_hint then "; with hint" else "")
 
 let error_to_is_timeout err =
     if BU.ends_with err.error_reason "canceled"
-    then [BU.format4 "timeout (fuel=%s; ifuel=%s; %s)"
+    then [BU.format5 "timeout (rlimit=%s; fuel=%s; ifuel=%s; %s)"
             err.error_reason
-            (string_of_int err.error_fuel)
-            (string_of_int err.error_ifuel)
+            (show err.error_rlimit)
+            (show err.error_fuel)
+            (show err.error_ifuel)
             (if Option.isSome err.error_hint then "with hint" else "")]
     else []
 
@@ -244,12 +247,12 @@ let maybe_build_core_from_hook (e:env) (qsettings:option query_settings) (core:Z
   | Some (lid, typ, ctr), _ ->
     (* Err.log_issue qsettings.query_range (Err.Warning_UnexpectedZ3Stderr, *)
     (*                         BU.format3 "will construct hint for queryid=%s,  typ=%s, query=%s" *)
-    (*                                   qryid (Print.term_to_string typ) qry); *)
+    (*                                   qryid (show typ) qry); *)
     let open FStar.Json in
     let input = JsonAssoc [
       ("query_name", JsonStr qsettings.query_name);
       ("query_ctr", JsonInt ctr);
-      ("type", JsonStr (Print.term_to_string typ)); // TODO: normalize print options, they will affect this output
+      ("type", JsonStr (show typ)); // TODO: normalize print options, they will affect this output
       ("query", JsonStr qry);
       ("theory", JsonList (List.map (fun d -> JsonStr (Term.declToSmt_no_caps "" d)) theory));
     ]
@@ -320,6 +323,7 @@ let query_errors settings z3result =
      let msg, error_labels = Z3.status_string_and_errors z3result.z3result_status in
      let err =  {
             error_reason = msg;
+            error_rlimit = settings.query_rlimit;
             error_fuel = settings.query_fuel;
             error_ifuel = settings.query_ifuel;
             error_hint = settings.query_hint;
@@ -1341,7 +1345,7 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
             FStar.Errors.diag
                 (Env.get_range tcenv)
                 (BU.format3 "Encoded split query %s\nto %s\nwith %s labels"
-                          (Print.term_to_string q)
+                          (show q)
                           (Term.declToSmt "" qry)
                           (BU.string_of_int n))
         );

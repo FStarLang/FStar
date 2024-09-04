@@ -244,7 +244,8 @@ let (should_unfold :
                                                 FStar_Compiler_Util.for_some
                                                   (fun qual ->
                                                      let uu___18 =
-                                                       FStar_Syntax_Print.qual_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
                                                          qual in
                                                      uu___18 = q) quals) qs in
                                          yesno uu___17 in
@@ -348,7 +349,8 @@ let (should_unfold :
                                                 FStar_Compiler_Util.for_some
                                                   (fun qual ->
                                                      let uu___18 =
-                                                       FStar_Syntax_Print.qual_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
                                                          qual in
                                                      uu___18 = q) quals) qs in
                                          yesno uu___17 in
@@ -452,7 +454,8 @@ let (should_unfold :
                                                 FStar_Compiler_Util.for_some
                                                   (fun qual ->
                                                      let uu___18 =
-                                                       FStar_Syntax_Print.qual_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
                                                          qual in
                                                      uu___18 = q) quals) qs in
                                          yesno uu___17 in
@@ -556,7 +559,8 @@ let (should_unfold :
                                                 FStar_Compiler_Util.for_some
                                                   (fun qual ->
                                                      let uu___18 =
-                                                       FStar_Syntax_Print.qual_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
                                                          qual in
                                                      uu___18 = q) quals) qs in
                                          yesno uu___17 in
@@ -660,7 +664,8 @@ let (should_unfold :
                                                 FStar_Compiler_Util.for_some
                                                   (fun qual ->
                                                      let uu___18 =
-                                                       FStar_Syntax_Print.qual_to_string
+                                                       FStar_Class_Show.show
+                                                         FStar_Syntax_Print.showable_qualifier
                                                          qual in
                                                      uu___18 = q) quals) qs in
                                          yesno uu___17 in
@@ -691,17 +696,18 @@ let (should_unfold :
                          comb_or uu___7 in
                        meets_some_criterion))
                  | (uu___, uu___1, uu___2, uu___3, uu___4, uu___5) when
-                     (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+                     (FStar_Pervasives_Native.uu___is_Some
+                        (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.dont_unfold_attr)
                        &&
-                       (FStar_Compiler_Util.for_some
-                          (FStar_TypeChecker_TermEqAndSimplify.eq_tm_bool
-                             cfg.FStar_TypeChecker_Cfg.tcenv
-                             FStar_Syntax_Util.tac_opaque_attr) attrs)
+                       (FStar_Compiler_List.existsb
+                          (fun fa -> FStar_Syntax_Util.has_attribute attrs fa)
+                          (FStar_Pervasives_Native.__proj__Some__item__v
+                             (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.dont_unfold_attr))
                      ->
                      (FStar_TypeChecker_Cfg.log_unfolding cfg
                         (fun uu___7 ->
                            FStar_Compiler_Util.print_string
-                             " >> tac_opaque, not unfolding\n");
+                             " >> forbidden by attribute, not unfolding\n");
                       no)
                  | uu___ -> default_unfolding ()) in
           FStar_TypeChecker_Cfg.log_unfolding cfg
@@ -745,7 +751,8 @@ let (should_unfold :
                      "Unexpected unfolding result: %s" uu___3 in
                  FStar_Compiler_Effect.failwith uu___2 in
            (let uu___2 =
-              ((((cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.unfold_tac
+              ((((FStar_Pervasives_Native.uu___is_Some
+                    (cfg.FStar_TypeChecker_Cfg.steps).FStar_TypeChecker_Cfg.dont_unfold_attr)
                    &&
                    (let uu___3 = FStar_Options.no_plugins () in
                     Prims.op_Negation uu___3))
@@ -761,7 +768,8 @@ let (should_unfold :
             if uu___2
             then
               let msg =
-                let uu___3 = FStar_Syntax_Print.fv_to_string fv in
+                let uu___3 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
                 FStar_Compiler_Util.format1
                   "Unfolding name which is marked as a plugin: %s" uu___3 in
               (FStar_Errors.log_issue

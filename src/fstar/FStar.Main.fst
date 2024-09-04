@@ -191,6 +191,23 @@ let go _ =
 
           | Some (_, tcr) ->
             print1 "%s\n" (show tcr.checked_module)
+
+        else if Some? (Options.read_krml_file ()) then
+          let path = Some?.v <| Options.read_krml_file () in
+          match load_value_from_file path <: option FStar.Extraction.Krml.binary_format with
+          | None ->
+            let open FStar.Pprint in
+            Errors.raise_err_doc (Errors.Fatal_ModuleOrFileNotFound, [
+                Errors.Msg.text "Could not read krml file:" ^/^ doc_of_string path
+              ])
+          | Some (version, files) ->
+            print1 "Karamel format version: %s\n" (show version);
+            (* Just "show decls" would print it, we just format this a bit *)
+            files |> List.iter (fun (name, decls) ->
+              print1 "%s:\n" name;
+              decls |> List.iter (fun d -> print1 "  %s\n" (show d))
+            )
+
         (* --lsp *)
         else if Options.lsp_server () then
           FStar.Interactive.Lsp.start_server ()
@@ -240,7 +257,8 @@ let go _ =
         end
 
 (* This is pretty awful. Now that we have Lazy_embedding, we can get rid of this table. *)
-let lazy_chooser k i = match k with
+let lazy_chooser (k:Syntax.Syntax.lazy_kind) (i:Syntax.Syntax.lazyinfo) : Syntax.Syntax.term
+  = match k with
     (* TODO: explain *)
     | FStar.Syntax.Syntax.BadLazy               -> failwith "lazy chooser: got a BadLazy"
     | FStar.Syntax.Syntax.Lazy_bv               -> RE.unfold_lazy_bv          i
@@ -270,10 +288,10 @@ let lazy_chooser k i = match k with
   
 // This is called directly by the Javascript port (it doesn't call Main)
 let setup_hooks () =
-    FStar.Syntax.DsEnv.ugly_sigelt_to_string_hook := FStar.Syntax.Print.sigelt_to_string;
+    FStar.Syntax.DsEnv.ugly_sigelt_to_string_hook := show;
     FStar.Errors.set_parse_warn_error FStar.Parser.ParseIt.parse_warn_error;
     FStar.Syntax.Syntax.lazy_chooser := Some lazy_chooser;
-    FStar.Syntax.Util.tts_f := Some FStar.Syntax.Print.term_to_string;
+    FStar.Syntax.Util.tts_f := Some show;
     FStar.TypeChecker.Normalize.unembed_binder_knot := Some RE.e_binder;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V1.Primops.ops;
     List.iter Tactics.Interpreter.register_tactic_primitive_step Tactics.V2.Primops.ops;

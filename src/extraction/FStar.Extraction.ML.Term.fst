@@ -53,6 +53,10 @@ let dbg_ExtractionNorm = Debug.get_toggle "ExtractionNorm"
 
 exception Un_extractable
 
+open FStar.Class.Show
+open FStar.Class.Tagged
+open FStar.Class.PP
+
 
 (*
   Below, "the thesis" refers to:
@@ -78,14 +82,14 @@ module Print = FStar.Syntax.Print
 let fail r err =
     Errors.raise_error err r
 
-let err_ill_typed_application env (t : term) mlhead args (ty : mlty) =
+let err_ill_typed_application env (t : term) mlhead (args : args) (ty : mlty) =
     fail t.pos
       (Fatal_IllTyped,
        BU.format4 "Ill-typed application: source application is %s \n translated prefix to %s at type %s\n remaining args are %s\n"
-                (Print.term_to_string t)
+                (show t)
                 (Code.string_of_mlexpr (current_module_of_uenv env) mlhead)
                 (Code.string_of_mlty (current_module_of_uenv env) ty)
-                (args |> List.map (fun (x, _) -> Print.term_to_string x) |> String.concat " "))
+                (show args))
 
 let err_ill_typed_erasure env pos (ty : mlty) =
     fail pos
@@ -93,18 +97,18 @@ let err_ill_typed_erasure env pos (ty : mlty) =
        BU.format1 "Erased value found where a value of type %s was expected"
                   (Code.string_of_mlty (current_module_of_uenv env) ty))
 
-let err_value_restriction t =
+let err_value_restriction (t:term) =
     fail t.pos
       (Fatal_ValueRestriction,
        BU.format2 "Refusing to generalize because of the value restriction: (%s) %s"
-                    (Print.tag_of_term t) (Print.term_to_string t))
+                    (tag_of t) (show t))
 
-let err_unexpected_eff env t ty f0 f1 =
+let err_unexpected_eff env (t:term) ty f0 f1 =
     let open FStar.Errors.Msg in
     let open FStar.Pprint in
     Errors.log_issue_doc t.pos
       (Warning_ExtractionUnexpectedEffect, [
-        prefix 4 1 (text "For expression") (Print.term_to_doc t) ^/^
+        prefix 4 1 (text "For expression") (pp t) ^/^
         prefix 4 1 (text "of type") (arbitrary_string (Code.string_of_mlty (current_module_of_uenv env) ty));
         prefix 4 1 (text "Expected effect") (arbitrary_string (eff_to_string f0)) ^/^
         prefix 4 1 (text "got effect") (arbitrary_string (eff_to_string f1))])
@@ -164,7 +168,7 @@ let rec is_arity_aux tcenv t =
     | Tm_unknown
     | Tm_delayed _
     | Tm_ascribed _
-    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (Print.tag_of_term t))
+    | Tm_meta _ -> failwith (BU.format1 "Impossible: is_arity (%s)" (tag_of t))
     | Tm_lazy i -> is_arity_aux tcenv (U.unfold_lazy i)
     | Tm_uvar _
     | Tm_constant _
@@ -217,7 +221,7 @@ let rec is_type_aux env t =
     match t.n with
     | Tm_delayed _
     | Tm_unknown ->
-        failwith (BU.format1 "Impossible: %s" (Print.tag_of_term t))
+        failwith (BU.format1 "Impossible: %s" (tag_of t))
 
     | Tm_lazy i -> is_type_aux env (U.unfold_lazy i)
 
@@ -248,7 +252,7 @@ let rec is_type_aux env t =
       | Some (t, _) ->
         is_arity env t
       | _ -> (
-        failwith (BU.format1 "Extraction: variable not found: %s" (Print.tag_of_term t))
+        failwith (BU.format1 "Extraction: variable not found: %s" (tag_of t))
       )
     )
 
@@ -298,14 +302,14 @@ let rec is_type_aux env t =
 
 let is_type env t =
     debug env (fun () -> BU.print2 "checking is_type (%s) %s\n"
-                                (Print.tag_of_term t)
-                                (Print.term_to_string t)
+                                (tag_of t)
+                                (show t)
                                 );
     let b = is_type_aux env t in
     debug env (fun _ ->
         if b
-        then BU.print2 "yes, is_type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t)
-        else BU.print2 "not a type %s (%s)\n" (Print.term_to_string t) (Print.tag_of_term t));
+        then BU.print2 "yes, is_type %s (%s)\n" (show t) (tag_of t)
+        else BU.print2 "not a type %s (%s)\n" (show t) (tag_of t));
     b
 
 let is_steel_with_invariant_g t =
@@ -698,7 +702,7 @@ let maybe_reify_comp g (env:TcEnv.env) (c:S.comp) : S.term =
     |> N.normalize extraction_norm_steps env
   | S.Extract_primitive -> U.comp_result c
   | S.Extract_none s ->
-    err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (Print.comp_to_string c)
+    err_cannot_extract_effect (c |> U.comp_effect_name) c.pos s (show c)
 
 let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
   match TcUtil.effect_extraction_mode env l with
@@ -708,7 +712,7 @@ let maybe_reify_term (env:TcEnv.env) (t:S.term) (l:lident) : S.term  =
       (U.mk_reify t (Some l))
   | S.Extract_primitive -> t
   | S.Extract_none s ->
-    err_cannot_extract_effect l t.pos s (Print.term_to_string t)
+    err_cannot_extract_effect l t.pos s (show t)
 
 let has_extract_as_impure_effect (g:uenv) (fv:S.fv) =
   TcEnv.fv_has_attr (tcenv_of_uenv g) fv FStar.Parser.Const.extract_as_impure_effect_lid
@@ -756,7 +760,7 @@ let rec translate_term_to_mlty (g:uenv) (t0:term) : mlty =
 
           | Tm_bvar _
           | Tm_delayed _
-          | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (Print.term_to_string t))
+          | Tm_unknown -> failwith (BU.format1 "Impossible: Unexpected term %s" (show t))
 
           | Tm_lazy i -> translate_term_to_mlty env (U.unfold_lazy i)
 
@@ -1021,7 +1025,7 @@ let rec extract_one_pat (imp : bool)
           | None ->
             Errors.raise_error (Errors.Error_ErasedCtor,
                                 BU.format1 "Cannot extract this pattern, the %s constructor was erased"
-                                            (Print.fv_to_string f))
+                                            (show f))
                                f.fv_name.p
         in
         // The prefix of the pattern are dot patterns matching the type parameters
@@ -1054,7 +1058,7 @@ let rec extract_one_pat (imp : bool)
             Util.uncurry_mlty_fun f_ty
         in
         debug g (fun () -> BU.print2 "@@@Expected type of pattern with head = %s is %s\n"
-                          (Print.fv_to_string f)
+                          (show f)
                           (let args, t = f_ty in
                            let args =
                                List.map
@@ -1206,16 +1210,19 @@ let maybe_promote_effect ml_e tag t =
     | _ -> ml_e, tag
 
 
-let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
-    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs}
-            : lbname //just lbname returned back
-            & e_tag  //the ML version of the effect label lbeff
-            & (typ   //just the source type lbtyp=t, after compression
-               & (S.binders //the erased type binders
-                  & mltyscheme)) //translation of the source type t as a ML type scheme
-            & bool   //whether or not to add a unit argument
-            & term   //the term e, maybe after some type binders have been erased
-            =
+type lb_sig =
+    lbname //just lbname returned back
+  & e_tag  //the ML version of the effect label lbeff
+  & (typ   //just the source type lbtyp=t, after compression
+     & (S.binders //the erased type binders
+        & mltyscheme)) //translation of the source type t as a ML type scheme
+  & bool   //whether or not to add a unit argument
+  & bool   //whether this was marked CInline
+  & term   //the term e, maybe after some type binders have been erased
+
+let rec extract_lb_sig (g:uenv) (lbs:letbindings) : list lb_sig =
+    let maybe_generalize {lbname=lbname_; lbeff=lbeff; lbtyp=lbtyp; lbdef=lbdef; lbattrs=lbattrs} : lb_sig =
+              let has_c_inline = U.has_attribute lbattrs PC.c_inline_attr in
               // begin match lbattrs with
               // | [] -> ()
               // | _ ->
@@ -1234,11 +1241,11 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
               let lbtyp = SS.compress lbtyp in
               let no_gen () =
                   let expected_t = term_as_mlty g lbtyp in
-                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, lbdef)
+                  (lbname_, f_e, (lbtyp, ([], ([],expected_t))), false, has_c_inline, lbdef)
               in
               if TcUtil.must_erase_for_extraction (tcenv_of_uenv g) lbtyp
-              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, lbdef)
-              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (Print.lbname_to_string lbname) (Print.typ_to_string t) f_e);
+              then (lbname_, f_e, (lbtyp, ([], ([], MLTY_Erased))), false, has_c_inline, lbdef)
+              else  //              debug g (fun () -> printfn "Let %s at type %s; expected effect is %A\n" (show lbname) (Print.typ_to_string t) f_e);
                 match lbtyp.n with
                 | Tm_arrow {bs; comp=c} when (List.hd bs |> is_type_binder g) ->
                    let bs, c = SS.open_comp bs c in
@@ -1278,7 +1285,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
                              let rest_args = if add_unit then (unit_binder()::rest_args) else rest_args in
                              let polytype = if add_unit then push_unit polytype else polytype in
                              let body = U.abs rest_args body copt in
-                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, body)
+                             (lbname_, f_e, (lbtyp, (targs, polytype)), add_unit, has_c_inline, body)
 
                         else (* fails to handle:
                                 let f : a:Type -> b:Type -> a -> b -> Tot (nat * a * b) =
@@ -1299,7 +1306,7 @@ let rec extract_lb_sig (g:uenv) (lbs:letbindings) =
                        //In this case, an eta expansion is safe
                        let args = tbinders |> List.map (fun ({binder_bv=bv}) -> S.bv_to_name bv |> as_arg) in
                        let e = mk (Tm_app {hd=lbdef; args}) lbdef.pos in
-                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, e)
+                       (lbname_, f_e, (lbtyp, (tbinders, polytype)), false, has_c_inline, e)
 
                      | _ ->
                         //ETA-EXPANSION?
@@ -1327,7 +1334,7 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
     let is_rec = not is_top && fst lbs in
     let lbs = extract_lb_sig g lbs in
     BU.fold_map (fun env
-                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _body) ->
+                     (lbname, _e_tag, (typ, (_binders, mltyscheme)), add_unit, _has_c_inline, _body) ->
                   let env, _, exp_binding =
                       UEnv.extend_lb env lbname typ mltyscheme add_unit in
                   env, (BU.right lbname, exp_binding))
@@ -1338,7 +1345,7 @@ and extract_lb_iface (g:uenv) (lbs:letbindings)
 and check_term_as_mlexpr (g:uenv) (e:term) (f:e_tag) (ty:mlty) :  (mlexpr & mlty) =
     debug g
       (fun () -> BU.print3 "Checking %s at type %s and eff %s\n"
-                        (Print.term_to_string e)
+                        (show e)
                         (Code.string_of_mlty (current_module_of_uenv g) ty)
                         (Util.eff_to_string f));
     match f, ty with
@@ -1365,8 +1372,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
     let top = SS.compress top in
     (debug g (fun u -> BU.print_string (BU.format3 "%s: term_as_mlexpr' (%s) :  %s \n"
         (Range.string_of_range top.pos)
-        (Print.tag_of_term top)
-        (Print.term_to_string top))));
+        (tag_of top)
+        (show top))));
 
     (*
      * AR: Following util functions are to implement the following rule:
@@ -1406,7 +1413,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
         | Tm_unknown
         | Tm_delayed _
         | Tm_uvar _
-        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (Print.tag_of_term t))
+        | Tm_bvar _ -> failwith (BU.format1 "Impossible: Unexpected term: %s" (tag_of t))
 
         | Tm_lazy i -> term_as_mlexpr g (U.unfold_lazy i)
 
@@ -1537,13 +1544,13 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                match try_lookup_fv t.pos g fv with
                | None -> //it's been erased
                  // Errors.log_issue t.pos (Errors.Error_CallToErased,
-                 //                         BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
+                 //                         BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                  ml_unit, E_PURE, MLTY_Erased
 
                | Some {exp_b_expr=x; exp_b_tscheme=mltys} ->
                  let _ = debug g (fun () ->
                           BU.print3 "looked up %s: got %s at %s \n"
-                              (Print.fv_to_string fv)
+                              (show fv)
                               (Code.string_of_mlexpr (current_module_of_uenv g) x)
                               (Code.string_of_mlty (current_module_of_uenv g) (snd mltys))) in
                  begin match mltys with
@@ -1565,7 +1572,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             match rcopt with
             | Some rc ->
               maybe_reify_term (tcenv_of_uenv env) body rc.residual_effect
-            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (Print.term_to_string body)); body in
+            | None -> debug g (fun () -> BU.print1 "No computation type for: %s\n" (show body)); body in
           let ml_body, f, t = term_as_mlexpr env body in
           let f, tfun = List.fold_right
             (fun {mlbinder_ty=targ} (f, t) -> E_PURE, MLTY_Fun (targ, f, t))
@@ -1628,7 +1635,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                | None ->
                  raise_error (Errors.Fatal_ExtractionUnsupported,
                               BU.format1 "Cannot extract %s (reify effect is not set)"
-                                (Print.term_to_string top)) top.pos)
+                                (show top)) top.pos)
 
             | _ ->
 
@@ -1640,7 +1647,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                 debug g (fun () -> BU.print3 "extract_app ml_head=%s type of head = %s, next arg = %s\n"
                                 (Code.string_of_mlexpr (current_module_of_uenv g) (mk_head()))
                                 (Code.string_of_mlty (current_module_of_uenv g) t)
-                                (match restArgs with [] -> "none" | (hd, _)::_ -> Print.term_to_string hd));
+                                (match restArgs with [] -> "none" | (hd, _)::_ -> show hd));
                                         //            Printf.printf "synth_app restArgs=%d, t=%A\n" (List.length restArgs) t;
                 match restArgs, t with
                     | [], _ ->
@@ -1722,7 +1729,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                         | Inr exp_b, q ->
                           debug g (fun () ->
                               BU.print3 "@@@looked up %s: got %s at %s\n"
-                                  (Print.term_to_string head)
+                                  (show head)
                                   (Code.string_of_mlexpr (current_module_of_uenv g) exp_b.exp_b_expr)
                                   (Code.string_of_mlty (current_module_of_uenv g) (snd exp_b.exp_b_tscheme)));
                           (exp_b.exp_b_expr, exp_b.exp_b_tscheme), q
@@ -1799,7 +1806,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                       | None -> //erased head
                         // Errors.log_issue t.pos
                         //   (Errors.Error_CallToErased,
-                        //    BU.format1 "Attempting to extract a call into erased function %s" (Print.fv_to_string fv));
+                        //    BU.format1 "Attempting to extract a call into erased function %s" (show fv));
                         ml_unit, E_PURE, MLTY_Erased
                       | _ ->
                         extract_app_with_instantiations ())
@@ -1896,7 +1903,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                     // let tcenv = TcEnv.set_current_module (tcenv_of_uenv g)
                     //             (Ident.lid_of_path ((fst (current_module_of_uenv g)) @ [snd (current_module_of_uenv g)]) Range.dummyRange) in
                     // debug g (fun () ->
-                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (Print.term_to_string lb.lbdef);
+                    //            BU.print1 "!!!!!!!About to normalize: %s\n" (show lb.lbdef);
                     //            Options.set_option "debug" (Options.List [Options.String "Norm"; Options.String "Extraction"]));
                     let lbdef =
                         let norm_call () =
@@ -1908,11 +1915,11 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                         in
                         if !dbg_Extraction || !dbg_ExtractionNorm
                         then let _ = BU.print2 "Starting to normalize top-level let %s = %s\n"
-                                       (Print.lbname_to_string lb.lbname)
-                                       (Print.term_to_string lb.lbdef)
+                                       (show lb.lbname)
+                                       (show lb.lbdef)
                              in
                              let a = norm_call() in
-                             BU.print1 "Normalized to %s\n" (Print.term_to_string a);
+                             BU.print1 "Normalized to %s\n" (show a);
                              a
                         else norm_call ()
                     in
@@ -1920,7 +1927,8 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
             else lbs
           in
 
-          let check_lb env (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, e)) =
+          let check_lb env (nm_sig : mlident & lb_sig) =
+              let (nm, (_lbname, f, (_t, (targs, polytype)), add_unit, has_c_inline, e)) = nm_sig in
               let env = List.fold_left (fun env ({binder_bv=a}) -> UEnv.extend_ty env a false) env targs in
               let expected_t = snd polytype in
               let e, ty = check_term_as_mlexpr env e f expected_t in
@@ -1931,6 +1939,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
                   | E_ERASABLE, MLTY_Erased -> [Erased]
                   | _ -> []
               in
+              let meta = if has_c_inline then CInline :: meta else meta in
               f, {mllb_meta = meta; mllb_attrs = []; mllb_name=nm; mllb_tysc=Some polytype; mllb_add_unit=add_unit; mllb_def=e; print_typ=true}
           in
           let lbs = extract_lb_sig g (is_rec, lbs) in
@@ -1940,7 +1949,7 @@ and term_as_mlexpr' (g:uenv) (top:term) : (mlexpr & e_tag & mlty) =
            * code that is more understandable. We only do it for OCaml,
            * to not affect Karamel naming. *)
           let env_body, lbs, env_burn = List.fold_right (fun lb (env, lbs, env_burn) ->
-              let (lbname, _, (t, (_, polytype)), add_unit, _) = lb in
+              let (lbname, _, (t, (_, polytype)), add_unit, _has_c_inline, _) = lb in
               let env, nm, _ = UEnv.extend_lb env lbname t polytype add_unit in
               let env_burn =
                 if Options.codegen () <> Some Options.Krml

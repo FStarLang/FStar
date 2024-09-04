@@ -35,13 +35,14 @@ open FStar.TypeChecker.Common
 
 open FStar.Errors.Msg
 open FStar.Class.PP
+open FStar.Class.Show
 
-let info_at_pos env file row col =
+let info_at_pos env file row col : option (either string lident & typ & Range.range) =
     match TypeChecker.Common.id_info_at_pos !env.identifier_info file row col with
     | None -> None
     | Some info ->
       match info.identifier with
-      | Inl bv -> Some (Inl (Print.nm_to_string bv), info.identifier_ty,
+      | Inl bv -> Some (Inl (show bv.ppname), info.identifier_ty,
                        FStar.Syntax.Syntax.range_of_bv bv)
       | Inr fv -> Some (Inr (FStar.Syntax.Syntax.lid_of_fv fv), info.identifier_ty,
                        FStar.Syntax.Syntax.range_of_fv fv)
@@ -195,9 +196,9 @@ let unexpected_signature_for_monad env m k =
   (Errors.Fatal_UnexpectedSignatureForMonad, (format2 "Unexpected signature for monad \"%s\". Expected a signature of the form (a:Type -> WP a -> Effect); got %s"
     (string_of_lid m) (N.term_to_string env k)))
 
-let expected_a_term_of_type_t_got_a_function env msg t e =
+let expected_a_term_of_type_t_got_a_function env msg (t:typ) (e:term) =
   (Errors.Fatal_ExpectTermGotFunction, (format3 "Expected a term of type \"%s\"; got a function \"%s\" (%s)"
-    (N.term_to_string env t) (Print.term_to_string e) msg))
+    (N.term_to_string env t) (show e) msg))
 
 let unexpected_implicit_argument =
   (Errors.Fatal_UnexpectedImplicitArgument, ("Unexpected instantiation of an implicit argument to a function that only expects explicit arguments"))
@@ -215,10 +216,10 @@ let expected_expression_of_type env t1 e t2 =
     prefix 4 1 (text "of type") d2
   ])
 
-let expected_pattern_of_type env t1 e t2 =
+let expected_pattern_of_type env (t1 e t2 : term) =
   let s1, s2 = err_msg_type_strings env t1 t2 in
   (Errors.Fatal_UnexpectedPattern, (format3 "Expected pattern of type \"%s\"; got pattern \"%s\" of type \"%s\""
-    s1 (Print.term_to_string e) s2))
+    s1 (show e) s2))
 
 let basic_type_error env eopt t1 t2 =
   let s1, s2 = err_msg_type_strings env t1 t2 in
@@ -239,17 +240,17 @@ let basic_type_error env eopt t1 t2 =
 let occurs_check =
   (Errors.Fatal_PossibleInfiniteTyp, "Possibly infinite typ (occurs check failed)")
 
-let constructor_fails_the_positivity_check env d l =
+let constructor_fails_the_positivity_check env (d:term) (l:lid) =
   (Errors.Fatal_ConstructorFailedCheck, (format2 "Constructor \"%s\" fails the strict positivity check; the constructed type \"%s\" occurs to the left of a pure function type"
-    (Print.term_to_string d) (Print.lid_to_string l)))
+    (show d) (show l)))
 
-let inline_type_annotation_and_val_decl l =
-  (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (Print.lid_to_string l)))
+let inline_type_annotation_and_val_decl (l:lid) =
+  (Errors.Fatal_DuplicateTypeAnnotationAndValDecl, (format1 "\"%s\" has a val declaration as well as an inlined type annotation; remove one" (show l)))
 
 (* CH: unsure if the env is good enough for normalizing t here *)
-let inferred_type_causes_variable_to_escape env t x =
+let inferred_type_causes_variable_to_escape env t (x:bv) =
   (Errors.Fatal_InferredTypeCauseVarEscape, (format2 "Inferred type \"%s\" causes variable \"%s\" to escape its scope"
-    (N.term_to_string env t) (Print.bv_to_string x)))
+    (N.term_to_string env t) (show x)))
 
 let expected_function_typ env t =
   (Errors.Fatal_FunctionTypeExpected, [
@@ -258,13 +259,13 @@ let expected_function_typ env t =
         (N.term_to_doc env t);
     ])
 
-let expected_poly_typ env f t targ =
+let expected_poly_typ env (f:term) t targ =
   (Errors.Fatal_PolyTypeExpected, (format3 "Expected a polymorphic function; got an expression \"%s\" of type \"%s\" applied to a type \"%s\""
-    (Print.term_to_string f) (N.term_to_string env t) (N.term_to_string env targ)))
+    (show f) (N.term_to_string env t) (N.term_to_string env targ)))
 
-let disjunctive_pattern_vars v1 v2 =
+let disjunctive_pattern_vars (v1 v2 : list bv) =
   let vars v =
-    v |> List.map Print.bv_to_string |> String.concat ", " in
+    v |> List.map show |> String.concat ", " in
   (Errors.Fatal_DisjuctivePatternVarsMismatch, (format2
     "Every alternative of an 'or' pattern must bind the same variables; here one branch binds (\"%s\") and another (\"%s\")"
     (vars v1) (vars v2)))
@@ -272,7 +273,8 @@ let disjunctive_pattern_vars v1 v2 =
 let name_and_result c = match c.n with
   | Total t -> "Tot", t
   | GTotal t -> "GTot", t
-  | Comp ct -> Print.lid_to_string ct.effect_name, ct.result_typ
+  | Comp ct -> show ct.effect_name, ct.result_typ
+  // TODO: ^ Use the resugaring environment to possibly shorten the effect name
 
 let computed_computation_type_does_not_match_annotation env e c c' =
   let ppt = N.term_to_doc env in
@@ -313,10 +315,10 @@ let expected_ghost_expression (e:term) (c:comp) (reason:string) =
   __expected_eff_expression "ghost" e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =
-  (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (Print.lid_to_string c1) (Print.lid_to_string c2)))
+  (Errors.Fatal_UnexpectedEffect, (format2 "Expected a computation with effect %s; but it has effect %s" (show c1) (show c2)))
 
-let failed_to_prove_specification_of l lbls =
-  (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (Print.lbname_to_string l) (lbls |> String.concat ", ")))
+let failed_to_prove_specification_of (l : lbname) (lbls : list string) =
+  (Errors.Error_TypeCheckerFailToProve, (format2 "Failed to prove specification of %s; assertions at [%s] may fail" (show l) (lbls |> String.concat ", ")))
 
 let failed_to_prove_specification lbls =
   let msg = match lbls with
@@ -325,6 +327,3 @@ let failed_to_prove_specification lbls =
   (Errors.Error_TypeCheckerFailToProve, msg)
 
 let top_level_effect = (Errors.Warning_TopLevelEffect, "Top-level let-bindings must be total; this term may have effects")
-
-let cardinality_constraint_violated l a =
-    (Errors.Fatal_CardinalityConstraintViolated, (format2 "Constructor %s violates the cardinality of Type at parameter '%s'; type arguments are not allowed" (Print.lid_to_string l) (Print.bv_to_string a.v)))

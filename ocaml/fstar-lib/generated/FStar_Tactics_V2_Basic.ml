@@ -2591,7 +2591,9 @@ let (__tc_lax :
                              let uu___3 =
                                let uu___4 =
                                  FStar_TypeChecker_Env.all_binders e in
-                               FStar_Syntax_Print.binders_to_string ", "
+                               FStar_Class_Show.show
+                                 (FStar_Class_Show.show_list
+                                    FStar_Syntax_Print.showable_binder)
                                  uu___4 in
                              FStar_Compiler_Util.print2
                                "Tac> __tc_lax(%s)(Context:%s)\n" uu___2
@@ -3523,7 +3525,8 @@ let (norm :
                            FStar_TypeChecker_Cfg.translate_norm_steps s in
                          FStar_Compiler_List.op_At
                            [FStar_TypeChecker_Env.Reify;
-                           FStar_TypeChecker_Env.UnfoldTac] uu___2 in
+                           FStar_TypeChecker_Env.DontUnfoldAttr
+                             [FStar_Parser_Const.tac_opaque_attr]] uu___2 in
                        let t =
                          let uu___2 = FStar_Tactics_Types.goal_env goal in
                          let uu___3 = FStar_Tactics_Types.goal_type goal in
@@ -3600,7 +3603,8 @@ let (__norm_term_env :
                                                    s in
                                                FStar_Compiler_List.op_At
                                                  [FStar_TypeChecker_Env.Reify;
-                                                 FStar_TypeChecker_Env.UnfoldTac]
+                                                 FStar_TypeChecker_Env.DontUnfoldAttr
+                                                   [FStar_Parser_Const.tac_opaque_attr]]
                                                  uu___4 in
                                              let t2 =
                                                normalize steps
@@ -5899,7 +5903,8 @@ let (norm_binding_type :
                         FStar_TypeChecker_Cfg.translate_norm_steps s in
                       FStar_Compiler_List.op_At
                         [FStar_TypeChecker_Env.Reify;
-                        FStar_TypeChecker_Env.UnfoldTac] uu___2 in
+                        FStar_TypeChecker_Env.DontUnfoldAttr
+                          [FStar_Parser_Const.tac_opaque_attr]] uu___2 in
                     let sort' =
                       normalize steps e0 bv1.FStar_Syntax_Syntax.sort in
                     let bv' =
@@ -6548,7 +6553,9 @@ let (_t_trefl :
                                    [FStar_TypeChecker_Env.UnfoldUntil
                                       FStar_Syntax_Syntax.delta_constant;
                                    FStar_TypeChecker_Env.Primops;
-                                   FStar_TypeChecker_Env.UnfoldTac] uu___3 in
+                                   FStar_TypeChecker_Env.DontUnfoldAttr
+                                     [FStar_Parser_Const.tac_opaque_attr]]
+                                   uu___3 in
                                let uu___3 =
                                  let uu___4 = norm1 l in
                                  let uu___5 = norm1 r in
@@ -7045,9 +7052,7 @@ let (set_options : Prims.string -> unit FStar_Tactics_Monad.tac) =
            (fun g ->
               let g = Obj.magic g in
               FStar_Options.push ();
-              (let uu___3 =
-                 FStar_Compiler_Util.smap_copy g.FStar_Tactics_Types.opts in
-               FStar_Options.set uu___3);
+              FStar_Options.set g.FStar_Tactics_Types.opts;
               (let res = FStar_Options.set_options s in
                let opts' = FStar_Options.peek () in
                FStar_Options.pop ();
@@ -8242,7 +8247,8 @@ let (t_destruct :
                                              let uu___5 =
                                                FStar_Tactics_Types.goal_env g in
                                              FStar_TypeChecker_Normalize.normalize
-                                               [FStar_TypeChecker_Env.UnfoldTac;
+                                               [FStar_TypeChecker_Env.DontUnfoldAttr
+                                                  [FStar_Parser_Const.tac_opaque_attr];
                                                FStar_TypeChecker_Env.Weak;
                                                FStar_TypeChecker_Env.HNF;
                                                FStar_TypeChecker_Env.UnfoldUntil
@@ -9871,10 +9877,7 @@ let (get_vconfig : unit -> FStar_VConfig.vconfig FStar_Tactics_Monad.tac) =
                   let vcfg =
                     FStar_Options.with_saved_options
                       (fun uu___1 ->
-                         (let uu___3 =
-                            FStar_Compiler_Util.smap_copy
-                              g.FStar_Tactics_Types.opts in
-                          FStar_Options.set uu___3);
+                         FStar_Options.set g.FStar_Tactics_Types.opts;
                          FStar_Options.get_vconfig ()) in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
@@ -9889,10 +9892,7 @@ let (set_vconfig : FStar_VConfig.vconfig -> unit FStar_Tactics_Monad.tac) =
             let opts' =
               FStar_Options.with_saved_options
                 (fun uu___ ->
-                   (let uu___2 =
-                      FStar_Compiler_Util.smap_copy
-                        g.FStar_Tactics_Types.opts in
-                    FStar_Options.set uu___2);
+                   FStar_Options.set g.FStar_Tactics_Types.opts;
                    FStar_Options.set_vconfig vcfg;
                    FStar_Options.peek ()) in
             let g' =
@@ -9983,7 +9983,7 @@ let (all_ext_options :
             (fun uu___2 ->
                (fun uu___2 ->
                   let uu___2 = Obj.magic uu___2 in
-                  let uu___3 = FStar_Options.all_ext_options () in
+                  let uu___3 = FStar_Options_Ext.all () in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___3))) uu___2))) uu___
@@ -9999,7 +9999,7 @@ let (ext_getv : Prims.string -> Prims.string FStar_Tactics_Monad.tac) =
             (fun uu___1 ->
                (fun uu___1 ->
                   let uu___1 = Obj.magic uu___1 in
-                  let uu___2 = FStar_Options.ext_getv k in
+                  let uu___2 = FStar_Options_Ext.get k in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___2))) uu___1))) uu___
@@ -10018,7 +10018,7 @@ let (ext_getns :
             (fun uu___1 ->
                (fun uu___1 ->
                   let uu___1 = Obj.magic uu___1 in
-                  let uu___2 = FStar_Options.ext_getns ns in
+                  let uu___2 = FStar_Options_Ext.getns ns in
                   Obj.magic
                     (FStar_Class_Monad.return FStar_Tactics_Monad.monad_tac
                        () (Obj.magic uu___2))) uu___1))) uu___
@@ -11927,9 +11927,10 @@ let (refl_try_unify :
                                                   reason
                                                   t0.FStar_Syntax_Syntax.pos
                                                   g1 t2 should_check_uvar
-                                                  FStar_Pervasives_Native.None in
+                                                  FStar_Pervasives_Native.None
+                                                  false in
                                               (match uu___7 with
-                                               | (uv_t, (ctx_u, uu___8)::[],
+                                               | (uv_t, (ctx_u, uu___8),
                                                   guard_uv) ->
                                                    let uv_id =
                                                      FStar_Syntax_Unionfind.uvar_unique_id

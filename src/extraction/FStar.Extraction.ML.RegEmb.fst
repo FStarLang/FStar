@@ -42,6 +42,9 @@ module Term  = FStar.Extraction.ML.Term
 module U     = FStar.Syntax.Util
 module Util  = FStar.Extraction.ML.Util
 
+open FStar.Class.Show
+open FStar.Class.Tagged
+
 exception NoEmbedding of string
 exception Unsupported of string
 
@@ -335,10 +338,10 @@ let rec embedding_for
 
   (* An fv which we do not have registered, and did not unfold *)
   | Tm_fvar fv ->
-    raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (Print.term_to_string t)))
+    raise (NoEmbedding (BU.format1 "Embedding not defined for name `%s'" (show t)))
 
   | _ ->
-    raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (Print.term_to_string t) (Print.tag_of_term t)))
+    raise (NoEmbedding (BU.format2 "Cannot embed type `%s' (%s)" (show t) (tag_of t)))
 
 type wrapped_term = mlexpr & mlexpr & int & bool
 
@@ -555,7 +558,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
              arity + 1,
              false)
           end
-          else raise (NoEmbedding("Plugins not defined for type " ^ Print.term_to_string t))
+          else raise (NoEmbedding("Plugins not defined for type " ^ show t))
 
         | ({binder_bv=b})::bs ->
           aux loc (embedding_for tcenv [] loc tvar_context b.sort::accum_embeddings) bs
@@ -567,7 +570,7 @@ let interpret_plugin_as_term_fun (env:UEnv.uenv) (fv:fv) (t:typ) (arity_opt:opti
     with
     | NoEmbedding msg ->
       not_implemented_warning (Ident.range_of_lid fv.fv_name.v)
-                              (FStar.Syntax.Print.fv_to_string fv)
+                              (show fv)
                               msg;
       None
 
@@ -676,7 +679,7 @@ let mk_embed
 
 let __do_handle_plugin (g: uenv) (arity_opt: option int) (se: sigelt) : list mlmodule1 =
   // BU.print2 "Got plugin with attrs = %s; arity_opt=%s"
-  //          (List.map Print.term_to_string se.sigattrs |> String.concat " ")
+  //          (List.map show se.sigattrs |> String.concat " ")
   //          (match arity_opt with None -> "None" | Some x -> "Some " ^ string_of_int x);
   let r = se.sigrng in
   match se.sigel with

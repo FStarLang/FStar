@@ -603,7 +603,7 @@ let (constant_to_string : constant -> Prims.string) =
     | Range r ->
         let uu___ = FStar_Compiler_Range_Ops.string_of_range r in
         FStar_Compiler_Util.format1 "Range %s" uu___
-    | SConst s -> FStar_Syntax_Print.const_to_string s
+    | SConst s -> FStar_Class_Show.show FStar_Syntax_Print.showable_const s
     | Real s -> FStar_Compiler_Util.format1 "Real %s" s
 let rec (t_to_string : t -> Prims.string) =
   fun x ->
@@ -628,12 +628,14 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "Accu (" uu___
     | Construct (fv, us, l) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.fv_to_string fv in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
           let uu___2 =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_List.map FStar_Syntax_Print.univ_to_string
+                  FStar_Compiler_List.map
+                    (FStar_Class_Show.show FStar_Syntax_Print.showable_univ)
                     us in
                 FStar_Compiler_String.concat "; " uu___5 in
               let uu___5 =
@@ -652,12 +654,14 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "Construct (" uu___
     | FV (fv, us, l) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.fv_to_string fv in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv fv in
           let uu___2 =
             let uu___3 =
               let uu___4 =
                 let uu___5 =
-                  FStar_Compiler_List.map FStar_Syntax_Print.univ_to_string
+                  FStar_Compiler_List.map
+                    (FStar_Class_Show.show FStar_Syntax_Print.showable_univ)
                     us in
                 FStar_Compiler_String.concat "; " uu___5 in
               let uu___5 =
@@ -676,10 +680,10 @@ let rec (t_to_string : t -> Prims.string) =
         Prims.strcat "FV (" uu___
     | Constant c -> constant_to_string c
     | Univ u ->
-        let uu___ = FStar_Syntax_Print.univ_to_string u in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_univ u in
         Prims.strcat "Universe " uu___
     | Type_t u ->
-        let uu___ = FStar_Syntax_Print.univ_to_string u in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_univ u in
         Prims.strcat "Type_t " uu___
     | Arrow uu___ -> "Arrow"
     | Refinement (f, t1) ->
@@ -688,7 +692,8 @@ let rec (t_to_string : t -> Prims.string) =
             FStar_Syntax_Syntax.t_unit in
         let t2 = let uu___ = t1 () in FStar_Pervasives_Native.fst uu___ in
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.bv_to_string x1 in
+          let uu___1 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_bv x1 in
           let uu___2 =
             let uu___3 =
               let uu___4 = t_to_string t2 in
@@ -710,7 +715,7 @@ let rec (t_to_string : t -> Prims.string) =
     | Lazy (FStar_Pervasives.Inl li, uu___) ->
         let uu___1 =
           let uu___2 = FStar_Syntax_Util.unfold_lazy li in
-          FStar_Syntax_Print.term_to_string uu___2 in
+          FStar_Class_Show.show FStar_Syntax_Print.showable_term uu___2 in
         FStar_Compiler_Util.format1 "Lazy (Inl {%s})" uu___1
     | Lazy (FStar_Pervasives.Inr (uu___, et), uu___1) ->
         let uu___2 =
@@ -718,7 +723,13 @@ let rec (t_to_string : t -> Prims.string) =
         FStar_Compiler_Util.format1 "Lazy (Inr (?, %s))" uu___2
     | LocalLetRec (uu___, l, uu___1, uu___2, uu___3, uu___4, uu___5) ->
         let uu___6 =
-          let uu___7 = FStar_Syntax_Print.lbs_to_string [] (true, [l]) in
+          let uu___7 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (true, [l]) in
           Prims.strcat uu___7 ")" in
         Prims.strcat "LocalLetRec (" uu___6
     | TopLevelLet (lb, uu___, uu___1) ->
@@ -726,7 +737,7 @@ let rec (t_to_string : t -> Prims.string) =
           let uu___3 =
             let uu___4 =
               FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
-            FStar_Syntax_Print.fv_to_string uu___4 in
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv uu___4 in
           Prims.strcat uu___3 ")" in
         Prims.strcat "TopLevelLet (" uu___2
     | TopLevelRec (lb, uu___, uu___1, uu___2) ->
@@ -734,7 +745,7 @@ let rec (t_to_string : t -> Prims.string) =
           let uu___4 =
             let uu___5 =
               FStar_Compiler_Util.right lb.FStar_Syntax_Syntax.lbname in
-            FStar_Syntax_Print.fv_to_string uu___5 in
+            FStar_Class_Show.show FStar_Syntax_Print.showable_fv uu___5 in
           Prims.strcat uu___4 ")" in
         Prims.strcat "TopLevelRec (" uu___3
     | Meta (t1, uu___) ->
@@ -743,18 +754,30 @@ and (atom_to_string : atom -> Prims.string) =
   fun a ->
     match a with
     | Var v ->
-        let uu___ = FStar_Syntax_Print.bv_to_string v in
+        let uu___ = FStar_Class_Show.show FStar_Syntax_Print.showable_bv v in
         Prims.strcat "Var " uu___
     | Match (t1, uu___, uu___1, uu___2) ->
         let uu___3 = t_to_string t1 in Prims.strcat "Match " uu___3
     | UnreducedLet (var1, typ, def, body, lb) ->
         let uu___ =
-          let uu___1 = FStar_Syntax_Print.lbs_to_string [] (false, [lb]) in
+          let uu___1 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (false, [lb]) in
           Prims.strcat uu___1 " in ...)" in
         Prims.strcat "UnreducedLet(" uu___
     | UnreducedLetRec (uu___, body, lbs) ->
         let uu___1 =
-          let uu___2 = FStar_Syntax_Print.lbs_to_string [] (true, lbs) in
+          let uu___2 =
+            FStar_Class_Show.show
+              (FStar_Class_Show.show_tuple2
+                 (FStar_Class_Show.printableshow
+                    FStar_Class_Printable.printable_bool)
+                 (FStar_Class_Show.show_list
+                    FStar_Syntax_Print.showable_letbinding)) (true, lbs) in
           let uu___3 =
             let uu___4 =
               let uu___5 = t_to_string body in Prims.strcat uu___5 ")" in
@@ -1146,21 +1169,37 @@ let e_tuple2 : 'a 'b . 'a embedding -> 'b embedding -> ('a * 'b) embedding =
                uu___1) in
       let un1 cb trm =
         lazy_unembed etyp trm
-          (fun trm1 ->
-             match trm1.nbe_t with
-             | Construct
-                 (fvar, us, (b1, uu___)::(a1, uu___1)::uu___2::uu___3::[])
-                 when
-                 FStar_Syntax_Syntax.fv_eq_lid fvar
-                   FStar_Parser_Const.lid_Mktuple2
-                 ->
-                 let uu___4 = unembed ea cb a1 in
-                 FStar_Compiler_Util.bind_opt uu___4
-                   (fun a2 ->
-                      let uu___5 = unembed eb cb b1 in
-                      FStar_Compiler_Util.bind_opt uu___5
-                        (fun b2 -> FStar_Pervasives_Native.Some (a2, b2)))
-             | uu___ -> FStar_Pervasives_Native.None) in
+          (fun uu___ ->
+             (fun trm1 ->
+                match trm1.nbe_t with
+                | Construct
+                    (fvar, us, (b1, uu___)::(a1, uu___1)::uu___2::uu___3::[])
+                    when
+                    FStar_Syntax_Syntax.fv_eq_lid fvar
+                      FStar_Parser_Const.lid_Mktuple2
+                    ->
+                    Obj.magic
+                      (Obj.repr
+                         (let uu___4 = unembed ea cb a1 in
+                          FStar_Class_Monad.op_let_Bang
+                            FStar_Class_Monad.monad_option () ()
+                            (Obj.magic uu___4)
+                            (fun uu___5 ->
+                               (fun a2 ->
+                                  let a2 = Obj.magic a2 in
+                                  let uu___5 = unembed eb cb b1 in
+                                  Obj.magic
+                                    (FStar_Class_Monad.op_let_Bang
+                                       FStar_Class_Monad.monad_option () ()
+                                       (Obj.magic uu___5)
+                                       (fun uu___6 ->
+                                          (fun b2 ->
+                                             let b2 = Obj.magic b2 in
+                                             Obj.magic
+                                               (FStar_Pervasives_Native.Some
+                                                  (a2, b2))) uu___6))) uu___5)))
+                | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+               uu___) in
       mk_emb em1 un1
         (fun uu___ ->
            let uu___1 =
@@ -1227,26 +1266,50 @@ let e_tuple3 :
                      FStar_Syntax_Syntax.U_zero] uu___2) in
         let un1 cb trm =
           lazy_unembed etyp trm
-            (fun trm1 ->
-               match trm1.nbe_t with
-               | Construct
-                   (fvar, us,
-                    (c1, uu___)::(b1, uu___1)::(a1, uu___2)::uu___3::uu___4::[])
-                   when
-                   FStar_Syntax_Syntax.fv_eq_lid fvar
-                     FStar_Parser_Const.lid_Mktuple3
-                   ->
-                   let uu___5 = unembed ea cb a1 in
-                   FStar_Compiler_Util.bind_opt uu___5
-                     (fun a2 ->
-                        let uu___6 = unembed eb cb b1 in
-                        FStar_Compiler_Util.bind_opt uu___6
-                          (fun b2 ->
-                             let uu___7 = unembed ec cb c1 in
-                             FStar_Compiler_Util.bind_opt uu___7
-                               (fun c2 ->
-                                  FStar_Pervasives_Native.Some (a2, b2, c2))))
-               | uu___ -> FStar_Pervasives_Native.None) in
+            (fun uu___ ->
+               (fun trm1 ->
+                  match trm1.nbe_t with
+                  | Construct
+                      (fvar, us,
+                       (c1, uu___)::(b1, uu___1)::(a1, uu___2)::uu___3::uu___4::uu___5::[])
+                      when
+                      FStar_Syntax_Syntax.fv_eq_lid fvar
+                        FStar_Parser_Const.lid_Mktuple3
+                      ->
+                      Obj.magic
+                        (Obj.repr
+                           (let uu___6 = unembed ea cb a1 in
+                            FStar_Class_Monad.op_let_Bang
+                              FStar_Class_Monad.monad_option () ()
+                              (Obj.magic uu___6)
+                              (fun uu___7 ->
+                                 (fun a2 ->
+                                    let a2 = Obj.magic a2 in
+                                    let uu___7 = unembed eb cb b1 in
+                                    Obj.magic
+                                      (FStar_Class_Monad.op_let_Bang
+                                         FStar_Class_Monad.monad_option () ()
+                                         (Obj.magic uu___7)
+                                         (fun uu___8 ->
+                                            (fun b2 ->
+                                               let b2 = Obj.magic b2 in
+                                               let uu___8 = unembed ec cb c1 in
+                                               Obj.magic
+                                                 (FStar_Class_Monad.op_let_Bang
+                                                    FStar_Class_Monad.monad_option
+                                                    () () (Obj.magic uu___8)
+                                                    (fun uu___9 ->
+                                                       (fun c2 ->
+                                                          let c2 =
+                                                            Obj.magic c2 in
+                                                          Obj.magic
+                                                            (FStar_Pervasives_Native.Some
+                                                               (a2, b2, c2)))
+                                                         uu___9))) uu___8)))
+                                   uu___7)))
+                  | uu___ ->
+                      Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+                 uu___) in
         mk_emb em1 un1
           (fun uu___ ->
              let uu___1 =
@@ -1262,6 +1325,366 @@ let e_tuple3 :
                [FStar_Syntax_Syntax.U_zero;
                FStar_Syntax_Syntax.U_zero;
                FStar_Syntax_Syntax.U_zero] uu___1) etyp
+let e_tuple4 :
+  'a 'b 'c 'd .
+    'a embedding ->
+      'b embedding ->
+        'c embedding -> 'd embedding -> ('a * 'b * 'c * 'd) embedding
+  =
+  fun ea ->
+    fun eb ->
+      fun ec ->
+        fun ed ->
+          let etyp uu___ =
+            let uu___1 =
+              let uu___2 =
+                FStar_Ident.string_of_lid FStar_Parser_Const.lid_tuple4 in
+              let uu___3 =
+                let uu___4 = ea.e_typ () in
+                let uu___5 =
+                  let uu___6 = eb.e_typ () in
+                  let uu___7 =
+                    let uu___8 = ec.e_typ () in
+                    let uu___9 = let uu___10 = ed.e_typ () in [uu___10] in
+                    uu___8 :: uu___9 in
+                  uu___6 :: uu___7 in
+                uu___4 :: uu___5 in
+              (uu___2, uu___3) in
+            FStar_Syntax_Syntax.ET_app uu___1 in
+          let em1 cb uu___ =
+            match uu___ with
+            | (x1, x2, x3, x4) ->
+                lazy_embed etyp (x1, x2, x3, x4)
+                  (fun uu___1 ->
+                     let uu___2 =
+                       let uu___3 =
+                         let uu___4 = embed ed cb x4 in as_arg uu___4 in
+                       let uu___4 =
+                         let uu___5 =
+                           let uu___6 = embed ec cb x3 in as_arg uu___6 in
+                         let uu___6 =
+                           let uu___7 =
+                             let uu___8 = embed eb cb x2 in as_arg uu___8 in
+                           let uu___8 =
+                             let uu___9 =
+                               let uu___10 = embed ea cb x1 in as_arg uu___10 in
+                             let uu___10 =
+                               let uu___11 =
+                                 let uu___12 = type_of ed in as_iarg uu___12 in
+                               let uu___12 =
+                                 let uu___13 =
+                                   let uu___14 = type_of ec in
+                                   as_iarg uu___14 in
+                                 let uu___14 =
+                                   let uu___15 =
+                                     let uu___16 = type_of eb in
+                                     as_iarg uu___16 in
+                                   let uu___16 =
+                                     let uu___17 =
+                                       let uu___18 = type_of ea in
+                                       as_iarg uu___18 in
+                                     [uu___17] in
+                                   uu___15 :: uu___16 in
+                                 uu___13 :: uu___14 in
+                               uu___11 :: uu___12 in
+                             uu___9 :: uu___10 in
+                           uu___7 :: uu___8 in
+                         uu___5 :: uu___6 in
+                       uu___3 :: uu___4 in
+                     lid_as_constr FStar_Parser_Const.lid_Mktuple4
+                       [FStar_Syntax_Syntax.U_zero;
+                       FStar_Syntax_Syntax.U_zero;
+                       FStar_Syntax_Syntax.U_zero;
+                       FStar_Syntax_Syntax.U_zero] uu___2) in
+          let un1 cb trm =
+            lazy_unembed etyp trm
+              (fun uu___ ->
+                 (fun trm1 ->
+                    match trm1.nbe_t with
+                    | Construct
+                        (fvar, us,
+                         (d1, uu___)::(c1, uu___1)::(b1, uu___2)::(a1,
+                                                                   uu___3)::uu___4::uu___5::uu___6::uu___7::[])
+                        when
+                        FStar_Syntax_Syntax.fv_eq_lid fvar
+                          FStar_Parser_Const.lid_Mktuple4
+                        ->
+                        Obj.magic
+                          (Obj.repr
+                             (let uu___8 = unembed ea cb a1 in
+                              FStar_Class_Monad.op_let_Bang
+                                FStar_Class_Monad.monad_option () ()
+                                (Obj.magic uu___8)
+                                (fun uu___9 ->
+                                   (fun a2 ->
+                                      let a2 = Obj.magic a2 in
+                                      let uu___9 = unembed eb cb b1 in
+                                      Obj.magic
+                                        (FStar_Class_Monad.op_let_Bang
+                                           FStar_Class_Monad.monad_option ()
+                                           () (Obj.magic uu___9)
+                                           (fun uu___10 ->
+                                              (fun b2 ->
+                                                 let b2 = Obj.magic b2 in
+                                                 let uu___10 =
+                                                   unembed ec cb c1 in
+                                                 Obj.magic
+                                                   (FStar_Class_Monad.op_let_Bang
+                                                      FStar_Class_Monad.monad_option
+                                                      () ()
+                                                      (Obj.magic uu___10)
+                                                      (fun uu___11 ->
+                                                         (fun c2 ->
+                                                            let c2 =
+                                                              Obj.magic c2 in
+                                                            let uu___11 =
+                                                              unembed ed cb
+                                                                d1 in
+                                                            Obj.magic
+                                                              (FStar_Class_Monad.op_let_Bang
+                                                                 FStar_Class_Monad.monad_option
+                                                                 () ()
+                                                                 (Obj.magic
+                                                                    uu___11)
+                                                                 (fun uu___12
+                                                                    ->
+                                                                    (fun d2
+                                                                    ->
+                                                                    let d2 =
+                                                                    Obj.magic
+                                                                    d2 in
+                                                                    Obj.magic
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (a2, b2,
+                                                                    c2, d2)))
+                                                                    uu___12)))
+                                                           uu___11))) uu___10)))
+                                     uu___9)))
+                    | uu___ ->
+                        Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+                   uu___) in
+          mk_emb em1 un1
+            (fun uu___ ->
+               let uu___1 =
+                 let uu___2 = let uu___3 = type_of ed in as_arg uu___3 in
+                 let uu___3 =
+                   let uu___4 = let uu___5 = type_of ec in as_arg uu___5 in
+                   let uu___5 =
+                     let uu___6 = let uu___7 = type_of eb in as_arg uu___7 in
+                     let uu___7 =
+                       let uu___8 = let uu___9 = type_of ea in as_arg uu___9 in
+                       [uu___8] in
+                     uu___6 :: uu___7 in
+                   uu___4 :: uu___5 in
+                 uu___2 :: uu___3 in
+               lid_as_typ FStar_Parser_Const.lid_tuple4
+                 [FStar_Syntax_Syntax.U_zero;
+                 FStar_Syntax_Syntax.U_zero;
+                 FStar_Syntax_Syntax.U_zero;
+                 FStar_Syntax_Syntax.U_zero] uu___1) etyp
+let e_tuple5 :
+  'a 'b 'c 'd 'e .
+    'a embedding ->
+      'b embedding ->
+        'c embedding ->
+          'd embedding -> 'e embedding -> ('a * 'b * 'c * 'd * 'e) embedding
+  =
+  fun ea ->
+    fun eb ->
+      fun ec ->
+        fun ed ->
+          fun ee ->
+            let etyp uu___ =
+              let uu___1 =
+                let uu___2 =
+                  FStar_Ident.string_of_lid FStar_Parser_Const.lid_tuple5 in
+                let uu___3 =
+                  let uu___4 = ea.e_typ () in
+                  let uu___5 =
+                    let uu___6 = eb.e_typ () in
+                    let uu___7 =
+                      let uu___8 = ec.e_typ () in
+                      let uu___9 =
+                        let uu___10 = ed.e_typ () in
+                        let uu___11 = let uu___12 = ee.e_typ () in [uu___12] in
+                        uu___10 :: uu___11 in
+                      uu___8 :: uu___9 in
+                    uu___6 :: uu___7 in
+                  uu___4 :: uu___5 in
+                (uu___2, uu___3) in
+              FStar_Syntax_Syntax.ET_app uu___1 in
+            let em1 cb uu___ =
+              match uu___ with
+              | (x1, x2, x3, x4, x5) ->
+                  lazy_embed etyp (x1, x2, x3, x4, x5)
+                    (fun uu___1 ->
+                       let uu___2 =
+                         let uu___3 =
+                           let uu___4 = embed ee cb x5 in as_arg uu___4 in
+                         let uu___4 =
+                           let uu___5 =
+                             let uu___6 = embed ed cb x4 in as_arg uu___6 in
+                           let uu___6 =
+                             let uu___7 =
+                               let uu___8 = embed ec cb x3 in as_arg uu___8 in
+                             let uu___8 =
+                               let uu___9 =
+                                 let uu___10 = embed eb cb x2 in
+                                 as_arg uu___10 in
+                               let uu___10 =
+                                 let uu___11 =
+                                   let uu___12 = embed ea cb x1 in
+                                   as_arg uu___12 in
+                                 let uu___12 =
+                                   let uu___13 =
+                                     let uu___14 = type_of ee in
+                                     as_iarg uu___14 in
+                                   let uu___14 =
+                                     let uu___15 =
+                                       let uu___16 = type_of ed in
+                                       as_iarg uu___16 in
+                                     let uu___16 =
+                                       let uu___17 =
+                                         let uu___18 = type_of ec in
+                                         as_iarg uu___18 in
+                                       let uu___18 =
+                                         let uu___19 =
+                                           let uu___20 = type_of eb in
+                                           as_iarg uu___20 in
+                                         let uu___20 =
+                                           let uu___21 =
+                                             let uu___22 = type_of ea in
+                                             as_iarg uu___22 in
+                                           [uu___21] in
+                                         uu___19 :: uu___20 in
+                                       uu___17 :: uu___18 in
+                                     uu___15 :: uu___16 in
+                                   uu___13 :: uu___14 in
+                                 uu___11 :: uu___12 in
+                               uu___9 :: uu___10 in
+                             uu___7 :: uu___8 in
+                           uu___5 :: uu___6 in
+                         uu___3 :: uu___4 in
+                       lid_as_constr FStar_Parser_Const.lid_Mktuple5
+                         [FStar_Syntax_Syntax.U_zero;
+                         FStar_Syntax_Syntax.U_zero;
+                         FStar_Syntax_Syntax.U_zero;
+                         FStar_Syntax_Syntax.U_zero;
+                         FStar_Syntax_Syntax.U_zero] uu___2) in
+            let un1 cb trm =
+              lazy_unembed etyp trm
+                (fun uu___ ->
+                   (fun trm1 ->
+                      match trm1.nbe_t with
+                      | Construct
+                          (fvar, us,
+                           (e1, uu___)::(d1, uu___1)::(c1, uu___2)::(b1,
+                                                                    uu___3)::
+                           (a1, uu___4)::uu___5::uu___6::uu___7::uu___8::uu___9::[])
+                          when
+                          FStar_Syntax_Syntax.fv_eq_lid fvar
+                            FStar_Parser_Const.lid_Mktuple5
+                          ->
+                          Obj.magic
+                            (Obj.repr
+                               (let uu___10 = unembed ea cb a1 in
+                                FStar_Class_Monad.op_let_Bang
+                                  FStar_Class_Monad.monad_option () ()
+                                  (Obj.magic uu___10)
+                                  (fun uu___11 ->
+                                     (fun a2 ->
+                                        let a2 = Obj.magic a2 in
+                                        let uu___11 = unembed eb cb b1 in
+                                        Obj.magic
+                                          (FStar_Class_Monad.op_let_Bang
+                                             FStar_Class_Monad.monad_option
+                                             () () (Obj.magic uu___11)
+                                             (fun uu___12 ->
+                                                (fun b2 ->
+                                                   let b2 = Obj.magic b2 in
+                                                   let uu___12 =
+                                                     unembed ec cb c1 in
+                                                   Obj.magic
+                                                     (FStar_Class_Monad.op_let_Bang
+                                                        FStar_Class_Monad.monad_option
+                                                        () ()
+                                                        (Obj.magic uu___12)
+                                                        (fun uu___13 ->
+                                                           (fun c2 ->
+                                                              let c2 =
+                                                                Obj.magic c2 in
+                                                              let uu___13 =
+                                                                unembed ed cb
+                                                                  d1 in
+                                                              Obj.magic
+                                                                (FStar_Class_Monad.op_let_Bang
+                                                                   FStar_Class_Monad.monad_option
+                                                                   () ()
+                                                                   (Obj.magic
+                                                                    uu___13)
+                                                                   (fun
+                                                                    uu___14
+                                                                    ->
+                                                                    (fun d2
+                                                                    ->
+                                                                    let d2 =
+                                                                    Obj.magic
+                                                                    d2 in
+                                                                    let uu___14
+                                                                    =
+                                                                    unembed
+                                                                    ee cb e1 in
+                                                                    Obj.magic
+                                                                    (FStar_Class_Monad.op_let_Bang
+                                                                    FStar_Class_Monad.monad_option
+                                                                    () ()
+                                                                    (Obj.magic
+                                                                    uu___14)
+                                                                    (fun
+                                                                    uu___15
+                                                                    ->
+                                                                    (fun e2
+                                                                    ->
+                                                                    let e2 =
+                                                                    Obj.magic
+                                                                    e2 in
+                                                                    Obj.magic
+                                                                    (FStar_Pervasives_Native.Some
+                                                                    (a2, b2,
+                                                                    c2, d2,
+                                                                    e2)))
+                                                                    uu___15)))
+                                                                    uu___14)))
+                                                             uu___13)))
+                                                  uu___12))) uu___11)))
+                      | uu___ ->
+                          Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+                     uu___) in
+            mk_emb em1 un1
+              (fun uu___ ->
+                 let uu___1 =
+                   let uu___2 = let uu___3 = type_of ee in as_arg uu___3 in
+                   let uu___3 =
+                     let uu___4 = let uu___5 = type_of ed in as_arg uu___5 in
+                     let uu___5 =
+                       let uu___6 = let uu___7 = type_of ec in as_arg uu___7 in
+                       let uu___7 =
+                         let uu___8 =
+                           let uu___9 = type_of eb in as_arg uu___9 in
+                         let uu___9 =
+                           let uu___10 =
+                             let uu___11 = type_of ea in as_arg uu___11 in
+                           [uu___10] in
+                         uu___8 :: uu___9 in
+                       uu___6 :: uu___7 in
+                     uu___4 :: uu___5 in
+                   uu___2 :: uu___3 in
+                 lid_as_typ FStar_Parser_Const.lid_tuple5
+                   [FStar_Syntax_Syntax.U_zero;
+                   FStar_Syntax_Syntax.U_zero;
+                   FStar_Syntax_Syntax.U_zero;
+                   FStar_Syntax_Syntax.U_zero;
+                   FStar_Syntax_Syntax.U_zero] uu___1) etyp
 let e_either :
   'a 'b .
     'a embedding ->
@@ -1341,7 +1764,7 @@ let e_either :
            lid_as_typ FStar_Parser_Const.either_lid
              [FStar_Syntax_Syntax.U_zero; FStar_Syntax_Syntax.U_zero] uu___1)
         etyp
-let (e_range : FStar_Compiler_Range_Type.range embedding) =
+let (e___range : FStar_Compiler_Range_Type.range embedding) =
   let em1 cb r = Constant (Range r) in
   let un1 cb t1 =
     match t1 with
@@ -1350,6 +1773,55 @@ let (e_range : FStar_Compiler_Range_Type.range embedding) =
   mk_emb' em1 un1
     (fun uu___ -> lid_as_typ FStar_Parser_Const.__range_lid [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of FStar_Syntax_Embeddings.e_range)
+let e_sealed : 'a . 'a embedding -> 'a FStar_Compiler_Sealed.sealed embedding
+  =
+  fun ea ->
+    let etyp uu___ =
+      let uu___1 =
+        let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.sealed_lid in
+        let uu___3 = let uu___4 = ea.e_typ () in [uu___4] in (uu___2, uu___3) in
+      FStar_Syntax_Syntax.ET_app uu___1 in
+    let em1 cb x =
+      lazy_embed etyp x
+        (fun uu___ ->
+           let uu___1 =
+             let uu___2 =
+               let uu___3 = embed ea cb (FStar_Compiler_Sealed.unseal x) in
+               as_arg uu___3 in
+             let uu___3 =
+               let uu___4 = let uu___5 = type_of ea in as_iarg uu___5 in
+               [uu___4] in
+             uu___2 :: uu___3 in
+           lid_as_constr FStar_Parser_Const.seal_lid
+             [FStar_Syntax_Syntax.U_zero] uu___1) in
+    let un1 cb trm =
+      lazy_unembed etyp trm
+        (fun uu___ ->
+           (fun trm1 ->
+              match trm1.nbe_t with
+              | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
+                  FStar_Syntax_Syntax.fv_eq_lid fvar
+                    FStar_Parser_Const.seal_lid
+                  ->
+                  Obj.magic
+                    (Obj.repr
+                       (let uu___2 = unembed ea cb a1 in
+                        FStar_Class_Monad.fmap FStar_Class_Monad.monad_option
+                          () ()
+                          (fun uu___3 ->
+                             (Obj.magic FStar_Compiler_Sealed.seal) uu___3)
+                          (Obj.magic uu___2)))
+              | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
+             uu___) in
+    mk_emb em1 un1
+      (fun uu___ ->
+         let uu___1 =
+           let uu___2 = let uu___3 = type_of ea in as_arg uu___3 in [uu___2] in
+         lid_as_typ FStar_Parser_Const.sealed_lid
+           [FStar_Syntax_Syntax.U_zero] uu___1) etyp
+let (e_range : FStar_Compiler_Range_Type.range embedding) =
+  embed_as (e_sealed e___range) FStar_Compiler_Sealed.unseal
+    FStar_Compiler_Sealed.seal FStar_Pervasives_Native.None
 let (e_issue : FStar_Errors.issue embedding) =
   let t_issue =
     FStar_Syntax_Embeddings_Base.type_of FStar_Syntax_Embeddings.e_issue in
@@ -1757,52 +2229,6 @@ let (e_norm_step : FStar_Pervasives.norm_step embedding) =
        mkFV uu___1 [] [])
     (FStar_Syntax_Embeddings_Base.emb_typ_of
        FStar_Syntax_Embeddings.e_norm_step)
-let e_sealed : 'a . 'a embedding -> 'a FStar_Compiler_Sealed.sealed embedding
-  =
-  fun ea ->
-    let etyp uu___ =
-      let uu___1 =
-        let uu___2 = FStar_Ident.string_of_lid FStar_Parser_Const.sealed_lid in
-        let uu___3 = let uu___4 = ea.e_typ () in [uu___4] in (uu___2, uu___3) in
-      FStar_Syntax_Syntax.ET_app uu___1 in
-    let em1 cb x =
-      lazy_embed etyp x
-        (fun uu___ ->
-           let uu___1 =
-             let uu___2 =
-               let uu___3 = embed ea cb (FStar_Compiler_Sealed.unseal x) in
-               as_arg uu___3 in
-             let uu___3 =
-               let uu___4 = let uu___5 = type_of ea in as_iarg uu___5 in
-               [uu___4] in
-             uu___2 :: uu___3 in
-           lid_as_constr FStar_Parser_Const.seal_lid
-             [FStar_Syntax_Syntax.U_zero] uu___1) in
-    let un1 cb trm =
-      lazy_unembed etyp trm
-        (fun uu___ ->
-           (fun trm1 ->
-              match trm1.nbe_t with
-              | Construct (fvar, us, (a1, uu___)::uu___1::[]) when
-                  FStar_Syntax_Syntax.fv_eq_lid fvar
-                    FStar_Parser_Const.seal_lid
-                  ->
-                  Obj.magic
-                    (Obj.repr
-                       (let uu___2 = unembed ea cb a1 in
-                        FStar_Class_Monad.fmap FStar_Class_Monad.monad_option
-                          () ()
-                          (fun uu___3 ->
-                             (Obj.magic FStar_Compiler_Sealed.seal) uu___3)
-                          (Obj.magic uu___2)))
-              | uu___ -> Obj.magic (Obj.repr FStar_Pervasives_Native.None))
-             uu___) in
-    mk_emb em1 un1
-      (fun uu___ ->
-         let uu___1 =
-           let uu___2 = let uu___3 = type_of ea in as_arg uu___3 in [uu___2] in
-         lid_as_typ FStar_Parser_Const.sealed_lid
-           [FStar_Syntax_Syntax.U_zero] uu___1) etyp
 let (bogus_cbs : nbe_cbs) =
   {
     iapp = (fun h -> fun _args -> h);

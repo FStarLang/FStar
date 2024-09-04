@@ -1,6 +1,6 @@
 module FStar.InteractiveHelpers.PostProcess
 
-open FStar.List
+open FStar.List.Tot
 open FStar.Tactics
 open FStar.Mul
 open FStar.InteractiveHelpers.Base
@@ -333,7 +333,7 @@ let split_assert_conjs dbg res =
    * [> let Construct x1 .. xn = x in A1 /\ ... /\ Am
    *)
   let conjs =
-    if List.length conjs = 1 then split_conjunctions_under_match dbg t
+    if List.Tot.length conjs = 1 then split_conjunctions_under_match dbg t
     else conjs
   in
   let asserts = mk_assertions conjs [] in

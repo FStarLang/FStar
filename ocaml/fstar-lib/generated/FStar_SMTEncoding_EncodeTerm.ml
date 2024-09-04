@@ -435,7 +435,8 @@ let check_pattern_vars :
                      hd.FStar_Syntax_Syntax.pos tl in
                  let uu___4 =
                    let uu___5 =
-                     let uu___6 = FStar_Syntax_Print.bv_to_string x in
+                     let uu___6 =
+                       FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
                      FStar_Compiler_Util.format1
                        "SMT pattern misses at least one bound variable: %s"
                        uu___6 in
@@ -502,7 +503,8 @@ let (as_function_typ :
                  let uu___3 =
                    FStar_Compiler_Range_Ops.string_of_range
                      t0.FStar_Syntax_Syntax.pos in
-                 let uu___4 = FStar_Syntax_Print.term_to_string t0 in
+                 let uu___4 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
                  FStar_Compiler_Util.format2
                    "(%s) Expected a function typ; got %s" uu___3 uu___4 in
                FStar_Compiler_Effect.failwith uu___2) in
@@ -661,7 +663,8 @@ let is_BitVector_primitive :
 let rec (encode_const :
   FStar_Const.sconst ->
     FStar_SMTEncoding_Env.env_t ->
-      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_t))
+      (FStar_SMTEncoding_Term.term * FStar_SMTEncoding_Term.decls_elt
+        Prims.list))
   =
   fun c ->
     fun env ->
@@ -720,7 +723,8 @@ let rec (encode_const :
                (uu___1, [])
            | c1 ->
                let uu___1 =
-                 let uu___2 = FStar_Syntax_Print.const_to_string c1 in
+                 let uu___2 =
+                   FStar_Class_Show.show FStar_Syntax_Print.showable_const c1 in
                  FStar_Compiler_Util.format1 "Unhandled constant: %s" uu___2 in
                FStar_Compiler_Effect.failwith uu___1)
 and (encode_binders :
@@ -737,7 +741,10 @@ and (encode_binders :
         (let uu___1 = FStar_Compiler_Debug.medium () in
          if uu___1
          then
-           let uu___2 = FStar_Syntax_Print.binders_to_string ", " bs in
+           let uu___2 =
+             FStar_Class_Show.show
+               (FStar_Class_Show.show_list FStar_Syntax_Print.showable_binder)
+               bs in
            FStar_Compiler_Util.print1 "Encoding binders %s\n" uu___2
          else ());
         (let uu___1 =
@@ -1013,7 +1020,9 @@ and (encode_BitVector_term :
                     FStar_Parser_Const.bv_uext_lid
                   ->
                   let uu___7 =
-                    let uu___8 = FStar_Syntax_Print.term_to_string sz_arg in
+                    let uu___8 =
+                      FStar_Class_Show.show FStar_Syntax_Print.showable_term
+                        sz_arg in
                     FStar_Compiler_Util.format1
                       "Not a constant bitvector extend size: %s" uu___8 in
                   FStar_Compiler_Effect.failwith uu___7
@@ -1281,8 +1290,10 @@ and (encode_term :
        (let uu___2 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
         if uu___2
         then
-          let uu___3 = FStar_Syntax_Print.tag_of_term t1 in
-          let uu___4 = FStar_Syntax_Print.term_to_string t1 in
+          let uu___3 =
+            FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
+          let uu___4 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
           FStar_Compiler_Util.print2 "(%s)   %s\n" uu___3 uu___4
         else ());
        (match t1.FStar_Syntax_Syntax.n with
@@ -1291,8 +1302,10 @@ and (encode_term :
               let uu___4 =
                 FStar_Compiler_Range_Ops.string_of_range
                   t1.FStar_Syntax_Syntax.pos in
-              let uu___5 = FStar_Syntax_Print.tag_of_term t1 in
-              let uu___6 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___5 =
+                FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
+              let uu___6 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format3 "(%s) Impossible: %s\n%s\n" uu___4
                 uu___5 uu___6 in
             FStar_Compiler_Effect.failwith uu___3
@@ -1301,8 +1314,10 @@ and (encode_term :
               let uu___3 =
                 FStar_Compiler_Range_Ops.string_of_range
                   t1.FStar_Syntax_Syntax.pos in
-              let uu___4 = FStar_Syntax_Print.tag_of_term t1 in
-              let uu___5 = FStar_Syntax_Print.term_to_string t1 in
+              let uu___4 =
+                FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term t1 in
+              let uu___5 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
               FStar_Compiler_Util.format3 "(%s) Impossible: %s\n%s\n" uu___3
                 uu___4 uu___5 in
             FStar_Compiler_Effect.failwith uu___2
@@ -1311,15 +1326,18 @@ and (encode_term :
             ((let uu___3 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
               if uu___3
               then
-                let uu___4 = FStar_Syntax_Print.term_to_string t1 in
-                let uu___5 = FStar_Syntax_Print.term_to_string e in
+                let uu___4 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t1 in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term e in
                 FStar_Compiler_Util.print2 ">> Unfolded (%s) ~> (%s)\n"
                   uu___4 uu___5
               else ());
              encode_term e env)
         | FStar_Syntax_Syntax.Tm_bvar x ->
             let uu___2 =
-              let uu___3 = FStar_Syntax_Print.bv_to_string x in
+              let uu___3 =
+                FStar_Class_Show.show FStar_Syntax_Print.showable_bv x in
               FStar_Compiler_Util.format1
                 "Impossible: locally nameless; got %s" uu___3 in
             FStar_Compiler_Effect.failwith uu___2
@@ -1346,8 +1364,10 @@ and (encode_term :
             ((let uu___4 = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
               if uu___4
               then
-                let uu___5 = FStar_Syntax_Print.term_to_string t0 in
-                let uu___6 = FStar_Syntax_Print.term_to_string tv in
+                let uu___5 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term t0 in
+                let uu___6 =
+                  FStar_Class_Show.show FStar_Syntax_Print.showable_term tv in
                 FStar_Compiler_Util.print2 ">> Inspected (%s) ~> (%s)\n"
                   uu___5 uu___6
               else ());
@@ -2067,7 +2087,8 @@ and (encode_term :
                                        if uu___9
                                        then
                                          let uu___10 =
-                                           FStar_Syntax_Print.term_to_string
+                                           FStar_Class_Show.show
+                                             FStar_Syntax_Print.showable_term
                                              f in
                                          let uu___11 =
                                            FStar_Compiler_Util.digest_of_string
@@ -2374,7 +2395,8 @@ and (encode_term :
                                       if uu___9
                                       then
                                         let uu___10 =
-                                          FStar_Syntax_Print.term_to_string
+                                          FStar_Class_Show.show
+                                            FStar_Syntax_Print.showable_term
                                             e0 in
                                         FStar_Compiler_Util.print1
                                           "Result of normalization %s\n"
@@ -2584,13 +2606,20 @@ and (encode_term :
                                                 if uu___10
                                                 then
                                                   let uu___11 =
-                                                    FStar_Syntax_Print.term_to_string
+                                                    FStar_Class_Show.show
+                                                      FStar_Syntax_Print.showable_term
                                                       head_type2 in
                                                   let uu___12 =
-                                                    FStar_Syntax_Print.binders_to_string
-                                                      ", " formals in
+                                                    FStar_Class_Show.show
+                                                      (FStar_Class_Show.show_list
+                                                         FStar_Syntax_Print.showable_binder)
+                                                      formals in
                                                   let uu___13 =
-                                                    FStar_Syntax_Print.args_to_string
+                                                    FStar_Class_Show.show
+                                                      (FStar_Class_Show.show_list
+                                                         (FStar_Class_Show.show_tuple2
+                                                            FStar_Syntax_Print.showable_term
+                                                            FStar_Syntax_Print.showable_aqual))
                                                       args_e1 in
                                                   FStar_Compiler_Util.print3
                                                     "Encoding partial application, head_type = %s, formals = %s, args = %s\n"
@@ -2705,7 +2734,7 @@ and (encode_term :
                            FStar_TypeChecker_Util.new_implicit_var
                              "SMTEncoding codomain" uu___4
                              env.FStar_SMTEncoding_Env.tcenv
-                             FStar_Syntax_Util.ktype0 in
+                             FStar_Syntax_Util.ktype0 false in
                          (match uu___3 with | (t2, uu___4, uu___5) -> t2)
                      | FStar_Pervasives_Native.Some t2 -> t2 in
                    let uu___3 =
@@ -3204,7 +3233,8 @@ and (encode_pat :
       (let uu___1 = FStar_Compiler_Debug.medium () in
        if uu___1
        then
-         let uu___2 = FStar_Syntax_Print.pat_to_string pat in
+         let uu___2 =
+           FStar_Class_Show.show FStar_Syntax_Print.showable_pat pat in
          FStar_Compiler_Util.print1 "Encoding pattern %s\n" uu___2
        else ());
       (let uu___1 = FStar_TypeChecker_Util.decorated_pattern_as_term pat in
@@ -3407,7 +3437,8 @@ and (encode_smt_patterns :
                                         ((let uu___8 =
                                             let uu___9 =
                                               let uu___10 =
-                                                FStar_Syntax_Print.term_to_string
+                                                FStar_Class_Show.show
+                                                  FStar_Syntax_Print.showable_term
                                                   p in
                                               let uu___11 =
                                                 FStar_SMTEncoding_Term.print_smt_term
@@ -3436,8 +3467,10 @@ and (encode_formula :
         let uu___ = FStar_Compiler_Effect.op_Bang dbg_SMTEncoding in
         if uu___
         then
-          let uu___1 = FStar_Syntax_Print.tag_of_term phi1 in
-          let uu___2 = FStar_Syntax_Print.term_to_string phi1 in
+          let uu___1 =
+            FStar_Class_Tagged.tag_of FStar_Syntax_Syntax.tagged_term phi1 in
+          let uu___2 =
+            FStar_Class_Show.show FStar_Syntax_Print.showable_term phi1 in
           FStar_Compiler_Util.print2 "Formula (%s)  %s\n" uu___1 uu___2
         else () in
       let enc f r l =

@@ -19,21 +19,26 @@ function export_home() {
 
 # By default, karamel master works against F* stable. Can also be overridden.
 function fetch_karamel() {
-    if [ ! -d karamel ]; then
-        git clone https://github.com/FStarLang/karamel karamel
-    fi
-
-    cd karamel
-    git fetch origin
     local ref=$(jq -c -r '.RepoVersions["karamel_version"]' "$rootPath/.docker/build/config.json" )
     if [[ $ref == "null" ]]; then
         echo "Unable to find RepoVersions.karamel_version on $rootPath/.docker/build/config.json"
         return -1
     fi
 
+    if [ ! -d karamel ]; then
+        # If we just want origin/master, we can shallow clone. Otherwise no,
+        # as we'll need to switch to some other branch/commit.
+        if [ x"$ref" = x"origin/master" ]; then
+            SHALLOW="--depth 1"
+        else
+            SHALLOW=""
+        fi
+        git clone ${SHALLOW} https://github.com/FStarLang/karamel karamel
+    fi
+
     echo Switching to KaRaMeL $ref
-    git reset --hard $ref
-    cd ..
+    git -C karamel reset --hard $ref
+
     export_home KRML "$(pwd)/karamel"
 
     # Install the Karamel dependencies
@@ -43,16 +48,7 @@ function fetch_karamel() {
 }
 
 function make_karamel_pre() {
-    # Default build target is minimal, unless specified otherwise
-    local localTarget
-    if [[ $1 == "" ]]; then
-        localTarget="minimal"
-    else
-        localTarget="$1"
-    fi
-
-    make -C karamel -j $threads $localTarget ||
-        (cd karamel && git clean -fdx && make -j $threads $localTarget)
+    make -C karamel -j $threads minimal
 }
 
 function fstar_docs_build () {
@@ -64,19 +60,16 @@ function fstar_docs_build () {
 }
 
 function fstar_default_build () {
-    localTarget=$1
-
-    if [[ $localTarget == "uregressions-ulong" ]]; then
+    if [[ -n "$CI_RECORD_HINTS" ]]; then
         export OTHERFLAGS="--record_hints $OTHERFLAGS"
     fi
 
     # Start fetching and building karamel while we build F*
     if [[ -z "$CI_NO_KARAMEL" ]] ; then
-        fetch_karamel
-        make_karamel_pre
-        export_home KRML "$(pwd)/karamel"
         export FSTAR_CI_TEST_KARAMEL=1
-    fi &
+        export_home KRML "$(pwd)/karamel"
+        (fetch_karamel ; make_karamel_pre) &
+    fi
 
     # Build F*, along with fstarlib
     if ! make -j $threads ci-pre; then
@@ -95,7 +88,7 @@ function fstar_default_build () {
 
     # Once F* is built, run its main regression suite. This also runs the karamel
     # test (unless CI_NO_KARAMEL is set).
-    $gnutime make -j $threads -k ci-$localTarget && echo true >$status_file
+    $gnutime make -j $threads -k ci-post && echo true >$status_file
     echo Done building FStar
 
     if [ -z "${FSTAR_CI_NO_GITDIFF}" ]; then
@@ -143,8 +136,8 @@ function build_fstar() {
 
     if [[ $localTarget == "fstar-docs" ]]; then
         fstar_docs_build
-    else
-        fstar_default_build $target
+    elif [[ $localTarget == "ci" ]]; then
+        fstar_default_build
     fi
 
     if [[ $(cat $status_file) != "true" ]]; then

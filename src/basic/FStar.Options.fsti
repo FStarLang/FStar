@@ -21,6 +21,9 @@ open FStar.BaseTypes
 open FStar.VConfig
 open FStar.Compiler
 
+type codegen_t =
+    | OCaml | FSharp | Krml | Plugin | Extension
+
 //let __test_norm_all = Util.mk_ref false
 
 type split_queries_t = | No | OnFailure | Always
@@ -33,7 +36,7 @@ type option_val =
   | List of list option_val
   | Unset
 
-type optionstate = FStar.Compiler.Util.smap option_val
+type optionstate = FStar.Compiler.Util.psmap option_val
 
 type opt_type =
 | Const of option_val
@@ -104,8 +107,6 @@ val cache_checked_modules       : unit    -> bool
 val cache_off                   : unit    -> bool
 val print_cache_version         : unit    -> bool
 val cmi                         : unit    -> bool
-type codegen_t =
-    | OCaml | FSharp | Krml | Plugin | Extension
 val codegen                     : unit    -> option codegen_t
 val parse_codegen               : string  -> option codegen_t
 val codegen_libs                : unit    -> list (list string)
@@ -118,6 +119,7 @@ val dep                         : unit    -> option string
 val detail_errors               : unit    -> bool
 val detail_hint_replay          : unit    -> bool
 val display_usage               : unit    -> unit
+val any_dump_module             : unit    -> bool
 val dump_module                 : string  -> bool
 val eager_subtyping             : unit    -> bool
 val error_contexts              : unit    -> bool
@@ -186,6 +188,7 @@ val quake_keep                  : unit    -> bool
 val query_cache                 : unit    -> bool
 val query_stats                 : unit    -> bool
 val read_checked_file           : unit    -> option string
+val read_krml_file              : unit    -> option string
 val record_hints                : unit    -> bool
 val record_options              : unit    -> bool
 val retry                       : unit    -> bool
@@ -268,7 +271,3 @@ val eager_embedding: ref bool
 
 val get_vconfig : unit -> vconfig
 val set_vconfig : vconfig -> unit
-
-val all_ext_options : unit -> list (string & string)
-val ext_getv (k:string) : string
-val ext_getns (ns:string) : list (string & string)

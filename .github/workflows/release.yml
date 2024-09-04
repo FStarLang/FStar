@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Check out repo        
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Package and release FStar
       run: |
           ci_docker_image_tag=fstar-release:local-run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
@@ -33,16 +33,16 @@ jobs:
 
     steps:
     - name: Checkout FStar
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: FStar
     - name: Checkout everest
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: project-everest/everest
         path: FStar/.github/everest
     - name: Install .NET SDK
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '6.0.x'
     - name: Setup dependencies
@@ -62,7 +62,7 @@ jobs:
 
     steps:
     - name: Check out repo        
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Package and release FStar
       shell: C:\cygwin64\bin\bash.exe --login '{0}'

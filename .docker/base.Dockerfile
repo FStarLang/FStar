@@ -72,7 +72,7 @@ RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a
     rm -f dotnet-sdk*.tar.gz
 
 # Install OCaml
-ARG OCAML_VERSION=4.12.0
+ARG OCAML_VERSION=4.14.2
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing 
 RUN opam env --set-switch | tee --append $HOME/.profile $HOME/.bashrc $HOME/.bash_profile
 RUN opam option depext-run-installs=true
@@ -84,7 +84,7 @@ ADD fstar.opam $HOME/fstar.opam
 RUN opam install --confirm-level=unsafe-yes --deps-only $HOME/fstar.opam && opam clean
 
 # Some karamel dependencies
-RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex && opam clean
+RUN opam install --confirm-level=unsafe-yes fix fileutils visitors camlp4 wasm ulex uucp && opam clean
 
 # Set up $HOME/bin. Note, binaries here take precedence over OPAM
 RUN mkdir $HOME/bin

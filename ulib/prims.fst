@@ -42,6 +42,27 @@ type attribute : Type0
 assume
 val cps:attribute
 
+(** This attribute marks definitions for logical connectives that should
+    not be unfolded during tactics. *)
+assume
+val tac_opaque : attribute
+
+(** This attribute can be used on type binders to make unifier attempt
+    to unrefine them before instantiating them. This is useful in polymorphic
+    definitions where the type does not change the result type, for example
+    eq2 below. Using the attribute, an equality between two nats will happen
+    at type int, which is more canonical.
+
+    This feature is experimental and only enabled with "--ext __unrefine" *)
+assume
+val unrefine : attribute
+
+(** This attribute can be attached to a type definition to partly counter the
+    behavior of the `unrefine` attribute. It will cause the definition marked
+    `do_not_unrefine` to not be unfolded during the unrefining process. *)
+assume
+val do_not_unrefine : attribute
+
 (** A predicate to express when a type supports decidable equality
     The type-checker emits axioms for [hasEq] for each inductive type *)
 assume
@@ -92,7 +113,7 @@ type unit : eqtype
 
     See FStar.Squash for various ways of manipulating squashed
     types. *)
-[@@ "tac_opaque"]
+[@@ tac_opaque]
 type squash (p: Type) : Type0 = x: unit{p}
 
 (** [auto_squash] is equivalent to [squash]. However, F* will
@@ -128,13 +149,13 @@ val smt_theory_symbol:attribute
 (** [l_True] has a special bit of syntactic sugar. It is written just
     as "True" and rendered in the ide as [True]. It is a squashed version
     of constructive truth, [trivial]. *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 let l_True:logical = squash trivial
 
 (** [l_False] has a special bit of syntactic sugar. It is written just
     as "False" and rendered in the ide as [Falsee]. It is a squashed version
     of constructive falsehood, the empty type. *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 let l_False:logical = squash empty
 
 (** The type of provable equalities, defined as the usual inductive
@@ -150,8 +171,8 @@ type equals (#a: Type) (x: a) : a -> Type = | Refl : equals x x
    TODO: instead of hard-wiring the == syntax,
          we should just rename eq2 to op_Equals_Equals
 *)
-[@@ "tac_opaque"; smt_theory_symbol]
-type eq2 (#a: Type) (x: a) (y: a) : logical = squash (equals x y)
+[@@ tac_opaque; smt_theory_symbol]
+type eq2 (#[@@@unrefine] a: Type) (x: a) (y: a) : logical = squash (equals x y)
 
 (** bool-to-type coercion: This is often automatically inserted type,
     when using a boolean in context expecting a type. But,
@@ -163,7 +184,7 @@ type pair (p: Type) (q: Type) = | Pair : _1:p -> _2:q -> pair p q
 
 (** squashed conjunction, specialized to [Type0], written with an
     infix binary [/\] *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 type l_and (p: logical) (q: logical) : logical = squash (pair p q)
 
 (** constructive disjunction *)
@@ -173,13 +194,13 @@ type sum (p: Type) (q: Type) =
 
 (** squashed disjunction, specialized to [Type0], written with an
     infix binary [\/] *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 type l_or (p: logical) (q: logical) : logical = squash (sum p q)
 
 (** squashed (non-dependent) implication, specialized to [Type0],
     written with an infix binary [==>]. Note, [==>] binds weaker than
     [/\] and [\/] *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 type l_imp (p: logical) (q: logical) : logical = squash (p -> GTot q)
 (* ^^^ NB: The GTot effect is primitive;            *)
 (*         elaborated using GHOST a few lines below *)
@@ -261,7 +282,7 @@ type has_type : #a: Type -> a -> Type -> Type0
 
 (** Squashed universal quantification, or dependent products, written
     [forall (x:a). p x], specialized to Type0 *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 type l_Forall (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a -> GTot (p x))
 
 #push-options "--warn_error -288" 
@@ -484,7 +505,7 @@ type dtuple2 (a: Type) (b: (a -> GTot Type)) =
 
 (** Squashed existential quantification, or dependent sums,
     are written [exists (x:a). p x] : specialized to Type0 *)
-[@@ "tac_opaque"; smt_theory_symbol]
+[@@ tac_opaque; smt_theory_symbol]
 type l_Exists (#a: Type) (p: (a -> GTot Type0)) : logical = squash (x: a & p x)
 
 (** Primitive type of mathematical integers, mapped to zarith in OCaml
@@ -564,13 +585,13 @@ val op_LessThan: int -> int -> Tot bool
 
 [@@ smt_theory_symbol]
 assume
-val op_Equality: #a: eqtype -> a -> a -> Tot bool
+val op_Equality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** [<>] decidable dis-equality on [eqtype] *)
 
 [@@ smt_theory_symbol]
 assume
-val op_disEquality: #a: eqtype -> a -> a -> Tot bool
+val op_disEquality: #[@@@unrefine]a: eqtype -> a -> a -> Tot bool
 
 (** The extensible open inductive type of exceptions *)
 assume new
@@ -708,4 +729,4 @@ val string_of_int: int -> Tot string
 (** THIS IS MEANT TO BE KEPT IN SYNC WITH FStar.CheckedFiles.fs
     Incrementing this forces all .checked files to be invalidated *)
 irreducible
-let __cache_version_number__ = 68
+let __cache_version_number__ = 69

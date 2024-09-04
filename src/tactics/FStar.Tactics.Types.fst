@@ -52,12 +52,11 @@ let mk_goal env u o b l = {
 }
 
 let goal_of_goal_ty env typ : goal & guard_t =
-    let u, ctx_uvars, g_u =
-        Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None
-    in
-    let ctx_uvar, _ = List.hd ctx_uvars in
-    let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
-    g, g_u
+  let u, (ctx_uvar, _) , g_u =
+    Env.new_implicit_var_aux "proofstate_of_goal_ty" typ.pos env typ Strict None false
+  in
+  let g = mk_goal env ctx_uvar (FStar.Options.peek()) false "" in
+  g, g_u
 
 let goal_of_implicit env (i:Env.implicit) : goal =
   mk_goal ({env with gamma=i.imp_uvar.ctx_uvar_gamma}) i.imp_uvar (FStar.Options.peek()) false i.imp_reason

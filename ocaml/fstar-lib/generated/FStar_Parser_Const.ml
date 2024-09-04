@@ -262,6 +262,10 @@ let (__range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "__range"]
 let (range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range"]
 let (range_0 : FStar_Ident.lident) = p2l ["FStar"; "Range"; "range_0"]
 let (mk_range_lid : FStar_Ident.lident) = p2l ["FStar"; "Range"; "mk_range"]
+let (__mk_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "__mk_range"]
+let (__explode_range_lid : FStar_Ident.lident) =
+  p2l ["FStar"; "Range"; "explode"]
 let (join_range_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Range"; "join_range"]
 let (guard_free : FStar_Ident.lident) = pconst "guard_free"
@@ -306,6 +310,7 @@ let (strict_on_arguments_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "strict_on_arguments"]
 let (resolve_implicits_attr_string : Prims.string) =
   "FStar.Pervasives.resolve_implicits"
+let (unification_tag_lid : FStar_Ident.lident) = psconst "defer_to"
 let (override_resolve_implicits_handler_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "override_resolve_implicits_handler"]
 let (handle_smt_goals_attr : FStar_Ident.lident) = psconst "handle_smt_goals"
@@ -315,6 +320,8 @@ let (erasable_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "erasable"]
 let (comment_attr : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Comment"]
+let (c_inline_attr : FStar_Ident.lident) =
+  p2l ["FStar"; "Pervasives"; "CInline"]
 let (fail_attr : FStar_Ident.lident) = psconst "expect_failure"
 let (fail_lax_attr : FStar_Ident.lident) = psconst "expect_lax_failure"
 let (tcdecltime_attr : FStar_Ident.lident) = psconst "tcdecltime"
@@ -345,6 +352,8 @@ let (no_auto_projectors_attr : FStar_Ident.lident) =
 let (no_subtping_attr_lid : FStar_Ident.lident) = psconst "no_subtyping"
 let (admit_termination_lid : FStar_Ident.lident) =
   psconst "admit_termination"
+let (unrefine_binder_attr : FStar_Ident.lident) = pconst "unrefine"
+let (do_not_unrefine_attr : FStar_Ident.lident) = pconst "do_not_unrefine"
 let (attr_substitute_lid : FStar_Ident.lident) =
   p2l ["FStar"; "Pervasives"; "Substitute"]
 let (desugar_of_variant_record_lid : FStar_Ident.lident) =
@@ -404,6 +413,10 @@ let (lid_tuple2 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_tuple3 : FStar_Ident.lident) =
   mk_tuple_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (lid_tuple4 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (4)) FStar_Compiler_Range_Type.dummyRange
+let (lid_tuple5 : FStar_Ident.lident) =
+  mk_tuple_lid (Prims.of_int (5)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_constructor_string : Prims.string -> Prims.bool) =
   fun s -> FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.tuple"
 let (is_tuple_constructor_id : FStar_Ident.ident -> Prims.bool) =
@@ -426,6 +439,10 @@ let (lid_Mktuple2 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (2)) FStar_Compiler_Range_Type.dummyRange
 let (lid_Mktuple3 : FStar_Ident.lident) =
   mk_tuple_data_lid (Prims.of_int (3)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple4 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (4)) FStar_Compiler_Range_Type.dummyRange
+let (lid_Mktuple5 : FStar_Ident.lident) =
+  mk_tuple_data_lid (Prims.of_int (5)) FStar_Compiler_Range_Type.dummyRange
 let (is_tuple_datacon_string : Prims.string -> Prims.bool) =
   fun s ->
     FStar_Compiler_Util.starts_with s "FStar.Pervasives.Native.Mktuple"
@@ -508,6 +525,7 @@ let (fstar_tactics_lid : Prims.string -> FStar_Ident.lid) =
   fun s -> fstar_tactics_lid' [s]
 let (tac_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tac"]
 let (tactic_lid : FStar_Ident.lid) = fstar_tactics_lid' ["Effect"; "tactic"]
+let (tac_opaque_attr : FStar_Ident.lident) = pconst "tac_opaque"
 let (meta_projectors_attr : FStar_Ident.lid) =
   fstar_tactics_lid' ["MkProjectors"; "meta_projectors"]
 let (mk_projs_lid : FStar_Ident.lid) =

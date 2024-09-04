@@ -294,6 +294,7 @@ let subst_binder' s b =
     b.binder_positivity
     (b.binder_attrs |> List.map (subst' s))
 
+let subst_binder s (b:binder) = subst_binder' ([s], NoUseRange) b
 
 let subst_binders' s bs =
     bs |> List.mapi (fun i b ->
