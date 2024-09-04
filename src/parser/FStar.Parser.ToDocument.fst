@@ -1466,9 +1466,6 @@ and p_noSeqTerm' ps pb e = match e.tm with
     let lbs_doc = group (separate break1 lbs_docs) in
     paren_if ps (group (lbs_doc ^^ hardline ^^ p_term false pb e))
 
-  | Abs([{pat=PatVar(x, typ_opt, _)}], {tm=Match(maybe_x, None, None, branches)}) when matches_var maybe_x x ->
-    paren_if (ps || pb) (
-      group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
   | Quote (e, Dynamic) ->
     group (str "quote" ^/^ p_noSeqTermAndComment ps pb e)
   | Quote (e, Static) ->
@@ -1696,6 +1693,10 @@ and p_conjunctivePats pats =
     group (separate_map (semi ^^ break1) p_appTerm pats)
 
 and p_simpleTerm ps pb e = match e.tm with
+    | Function(branches, _) ->
+      paren_if (ps || pb) (
+        group (str "function" ^/^ separate_map_last hardline p_patternBranch branches))
+
     | Abs(pats, e) ->
         let comm, doc = p_term_sep false pb e in
         let prefix = str "fun" ^/+^ separate_map break1 p_atomicPattern pats ^/^ rarrow in

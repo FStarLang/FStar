@@ -961,6 +961,8 @@ let collect_one
         | Construct (lid, termimps) ->
             add_to_parsing_data (P_lid lid);
             List.iter (fun (t, _) -> collect_term t) termimps
+        | Function (branches, _) ->
+          collect_branches branches
         | Abs (pats, t) ->
             collect_patterns pats;
             collect_term t

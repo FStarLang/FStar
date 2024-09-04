@@ -439,6 +439,7 @@ and free_vars tvars_only env t = match (unparen t).tm with
     List.collect (free_vars tvars_only env) ts
 
   | Abs _  (* not closing implicitly over free vars in all these forms: TODO: Fixme! *)
+  | Function _
   | Let _
   | LetOpen _
   | If _
@@ -1401,6 +1402,15 @@ and desugar_term_maybe_top (top_level:bool) (env:env_t) (top:term) : S.term & an
           let f = desugar_formula env f in
           setpos <| U.refine b.binder_bv f, noaqs
       end
+
+    | Function (branches, r1) ->
+      let x = Ident.gen r1 in
+      let t' =
+        mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
+                   mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) top.range Expr))
+        top.range Expr
+      in
+      desugar_term_maybe_top top_level env t'
 
     | Abs(binders, body) ->
       (* First of all, forbid definitions such as `f x x = ...` *)
