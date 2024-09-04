@@ -526,7 +526,7 @@ let tc_sig_let env r se lbs lids : list sigelt & list sigelt & Env.env =
                     (Env.push_univ_vars env' uvs)
                     lbtyp
                     t
-                    "checking no_subtype annotation" in
+                    (Some "checking no_subtype annotation") in
                     Rel.force_trivial_guard env' g)
     end;
 
