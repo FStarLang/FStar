@@ -39,6 +39,7 @@ jobs:
         with:
           name: FStar
           extra: --exclude=FStar/ocaml/_build
+          hometag: FSTAR
 
   test-fstar:
     runs-on: ubuntu-latest
@@ -53,7 +54,6 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - name: Test
         run: make -C FStar -skj$(nproc) ci-uregressions
@@ -101,7 +101,6 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - name: Checkout karamel
         uses: actions/checkout@master
@@ -147,6 +146,7 @@ jobs:
         with:
           name: karamel
           extra: --exclude=karamel/_build
+          hometag: KRML
 
   test-krml:
     runs-on: ubuntu-latest
@@ -163,12 +163,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Test
         run: make -C karamel -skj$(nproc) test
@@ -188,12 +186,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -207,6 +203,7 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: steel
+          hometag: STEEL
 
   test-steel:
     runs-on: ubuntu-latest
@@ -224,17 +221,14 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: steel
-          hometag: STEEL
 
       - name: Test
         run: make -C steel -skj$(nproc) test
@@ -254,12 +248,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Checkout pulse
         uses: actions/checkout@master
@@ -273,6 +265,7 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: pulse
+          hometag: PULSE
 
   test-pulse-boot:
     runs-on: ubuntu-latest
@@ -289,12 +282,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Checkout pulse
         uses: actions/checkout@master
@@ -331,17 +322,14 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: pulse
-          hometag: PULSE
 
       - name: Test
         run: make -C pulse -skj$(nproc) test
@@ -362,12 +350,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Checkout hacl-star
         uses: actions/checkout@master
@@ -389,6 +375,7 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: hacl-star
+          hometag: HACL
 
   test-hacl:
     runs-on: ubuntu-latest
@@ -406,17 +393,14 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: hacl-star
-          hometag: HACL
 
       - name: Get Vale (again)
         run: ./hacl-star/tools/get_vale.sh
@@ -439,12 +423,10 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - name: Checkout everparse
         uses: actions/checkout@master
@@ -461,6 +443,7 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: everparse
+          hometag: EVERPARSE
 
   test-everparse:
     runs-on: ubuntu-latest
@@ -478,17 +461,14 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: everparse
-          hometag: EVERPARSE
 
       - name: Test
         run: make -C everparse -skj$(nproc) test
@@ -510,22 +490,18 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: everparse
-          hometag: EVERPARSE
 
       - uses: mtzguido/gci-download@master
         with:
           name: hacl-star
-          hometag: HACL
 
       - name: Checkout merkle-tree
         uses: actions/checkout@master
@@ -561,22 +537,18 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: everparse
-          hometag: EVERPARSE
 
       - uses: mtzguido/gci-download@master
         with:
           name: hacl-star
-          hometag: HACL
 
       - uses: mtzguido/gci-download@master
         with:
@@ -602,22 +574,18 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: everparse
-          hometag: EVERPARSE
 
       - uses: mtzguido/gci-download@master
         with:
           name: hacl-star
-          hometag: HACL
 
       - name: Checkout mitls-fstar
         uses: actions/checkout@master
@@ -631,6 +599,7 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: mitls-fstar
+          hometag: MITLS
 
   test-mitls-fstar:
     runs-on: ubuntu-latest
@@ -650,27 +619,22 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-          hometag: FSTAR
 
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-          hometag: KRML
 
       - uses: mtzguido/gci-download@master
         with:
           name: everparse
-          hometag: EVERPARSE
 
       - uses: mtzguido/gci-download@master
         with:
           name: hacl-star
-          hometag: HACL
 
       - uses: mtzguido/gci-download@master
         with:
           name: mitls-fstar
-          hometag: MITLS
 
       - name: Build
         run: make -C mitls-fstar/src/tls -skj$(nproc) test
