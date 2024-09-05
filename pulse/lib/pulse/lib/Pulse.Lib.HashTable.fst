@@ -25,8 +25,6 @@ module PHT = Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Spec
 open Pulse.Lib.HashTable.Type
 
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-
 let mk_used_cell
   (#[@@@ Rust_generics_bounds ["Copy"; "PartialEq"; "Clone"]] a:eqtype)
   (#[@@@ Rust_generics_bounds ["Clone"]] b:Type)

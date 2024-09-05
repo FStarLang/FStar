@@ -18,7 +18,7 @@ module Example.RValues
 #lang-pulse
 
 open Pulse.Lib.Pervasives
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection' --ext 'pulse:rvalues'"
+#push-options "--ext 'pulse:rvalues'"
 
 
 fn test ()

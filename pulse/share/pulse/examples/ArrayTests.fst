@@ -22,8 +22,6 @@ module A = Pulse.Lib.Array
 module US = FStar.SizeT
 module R = Pulse.Lib.Reference
 
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-
 let some_f (x:'a) : GTot _ = ()
 
 

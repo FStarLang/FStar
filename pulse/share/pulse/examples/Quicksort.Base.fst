@@ -21,7 +21,6 @@ open Pulse.Lib.Pervasives
 module A = Pulse.Lib.Array
 module R = Pulse.Lib.Reference
 module SZ = FStar.SizeT
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 (* Base module with proof of correctness of Quicksort, partition, etc.
 #lang-pulse
 Actual implementations are Quicksort.Sequential, Quicksort.Parallel and

@@ -18,7 +18,6 @@ module Demo.MultiplyByRepeatedAddition
 #lang-pulse
 open Pulse.Lib.Pervasives
 open FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
 #set-options "--ext 'pulse:rvalues' --split_queries always"
 #set-options "--z3rlimit 40"
 

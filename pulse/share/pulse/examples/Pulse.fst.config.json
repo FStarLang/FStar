@@ -6,8 +6,6 @@
     "pulse",
     "--cache_dir",
     "_output/cache",
-    "--using_facts_from",
-    "* -FStar.Tactics -FStar.Reflection",
     "--warn_error", 
     "-249"
   ],

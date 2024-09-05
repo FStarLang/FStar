@@ -18,8 +18,6 @@ module CustomSyntax
 #lang-pulse
 open Pulse.Lib.Pervasives
 module U32 = FStar.UInt32
-#push-options "--using_facts_from '* -FStar.Tactics -FStar.Reflection'"
-#push-options "--ide_id_info_off"
 
 assume val p : slprop
 assume val g : unit -> stt unit emp (fun _ -> p)
