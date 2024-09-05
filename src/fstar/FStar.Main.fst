@@ -150,6 +150,9 @@ let go _ =
     | Success ->
         fstar_files := Some filenames;
 
+        if Debug.any () then
+          Util.print1 "Full include path = %s\n" (show (Options.include_path ()));
+
         load_native_tactics ();
 
         (* Set the unionfind graph to read-only mode.
