@@ -1,6 +1,6 @@
 # This Dockerfile should be run from the root FStar directory
 
-ARG ocaml_version=4.12
+ARG ocaml_version=4.14
 FROM ocaml/opam:ubuntu-ocaml-$ocaml_version
 
 # FIXME: the `opam depext` command should be unnecessary with opam 2.1
