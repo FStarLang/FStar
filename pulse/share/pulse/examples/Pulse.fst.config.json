@@ -7,7 +7,9 @@
     "--cache_dir",
     "_output/cache",
     "--warn_error", 
-    "-249"
+    "-249",
+    "--ext",
+    "context_pruning"
   ],
   "include_dirs": [
     "../../../lib/pulse",

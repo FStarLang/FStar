@@ -1,7 +1,9 @@
 {
 	"fstar_exe": "fstar.exe",
 	"options": [
-		"--query_cache"
+		"--query_cache",
+		"--ext",
+		"context_pruning"
 	],
 	"include_dirs": [
 	]

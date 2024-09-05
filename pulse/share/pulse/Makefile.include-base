@@ -19,7 +19,7 @@ else
 USE_HINTS:=
 endif
 
-FSTAR_OPTIONS += $(USE_HINTS)
+FSTAR_OPTIONS += $(USE_HINTS) --ext context_pruning
 
 # A place to put all build artifacts
 ifneq (,$(OUTPUT_DIRECTORY))
