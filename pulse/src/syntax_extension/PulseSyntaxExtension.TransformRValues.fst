@@ -125,7 +125,8 @@ let add_derefs_in_scope (n:needs_derefs) (p:Sugar.stmt)
   = L.fold_right
        (fun (x, y) (p:Sugar.stmt) ->
          let lb : Sugar.stmt =
-           { s=Sugar.LetBinding { qualifier=None; id=y; typ=None;
+           let pat = A.mk_pattern (A.PatVar (y, None, [])) (range_of_id y) in
+           { s=Sugar.LetBinding { qualifier=None; pat=pat; typ=None;
                                   init=Some (Sugar.Default_initializer (read x)) };
              range=p.range } in
          { s=Sugar.Sequence { s1=lb; s2=p }; range=p.range})
@@ -226,7 +227,7 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
       let p = { p with s=ArrayAssignment {arr;index;value} } in
       return (p, arr_needs@index_needs@value_needs, m)
 
-    | LetBinding { qualifier; id; typ; init } -> (
+    | LetBinding { qualifier; pat; typ; init } -> (
       let! init, needs, m =
           match init with
           | None -> return (None, [], m)
@@ -262,8 +263,11 @@ let rec transform_stmt_with_reads (m:menv) (p:Sugar.stmt)
         match init with
         | Some (Array_initializer _) -> false
         | _ -> true in
-      let m = menv_push_bv m id qualifier auto_deref_applicable in
-      let p = { p with s=LetBinding { qualifier; id; typ; init } } in
+
+      let! vs = pat_vars pat in
+      let m = Compiler.List.fold_left (fun m v -> menv_push_bv m v qualifier auto_deref_applicable) m vs in
+
+      let p = { p with s=LetBinding { qualifier; pat; typ; init } } in
       return (p, needs, m)
       )
 

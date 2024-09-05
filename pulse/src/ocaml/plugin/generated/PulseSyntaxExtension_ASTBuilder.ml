@@ -241,7 +241,7 @@ let (parse_extension_lang :
                let id_and_range_of_decl d =
                  match d with
                  | PulseSyntaxExtension_Sugar.FnDefn
-                     { PulseSyntaxExtension_Sugar.id2 = id;
+                     { PulseSyntaxExtension_Sugar.id1 = id;
                        PulseSyntaxExtension_Sugar.is_rec = uu___2;
                        PulseSyntaxExtension_Sugar.binders2 = uu___3;
                        PulseSyntaxExtension_Sugar.ascription1 = uu___4;
@@ -251,7 +251,7 @@ let (parse_extension_lang :
                        PulseSyntaxExtension_Sugar.range3 = range;_}
                      -> (id, range)
                  | PulseSyntaxExtension_Sugar.FnDecl
-                     { PulseSyntaxExtension_Sugar.id3 = id;
+                     { PulseSyntaxExtension_Sugar.id2 = id;
                        PulseSyntaxExtension_Sugar.binders3 = uu___2;
                        PulseSyntaxExtension_Sugar.ascription2 = uu___3;
                        PulseSyntaxExtension_Sugar.decorations1 = uu___4;
@@ -265,7 +265,7 @@ let (parse_extension_lang :
                      let decors =
                        match d with
                        | PulseSyntaxExtension_Sugar.FnDefn
-                           { PulseSyntaxExtension_Sugar.id2 = uu___3;
+                           { PulseSyntaxExtension_Sugar.id1 = uu___3;
                              PulseSyntaxExtension_Sugar.is_rec = uu___4;
                              PulseSyntaxExtension_Sugar.binders2 = uu___5;
                              PulseSyntaxExtension_Sugar.ascription1 = uu___6;
@@ -276,7 +276,7 @@ let (parse_extension_lang :
                              PulseSyntaxExtension_Sugar.range3 = uu___9;_}
                            -> decorations
                        | PulseSyntaxExtension_Sugar.FnDecl
-                           { PulseSyntaxExtension_Sugar.id3 = uu___3;
+                           { PulseSyntaxExtension_Sugar.id2 = uu___3;
                              PulseSyntaxExtension_Sugar.binders3 = uu___4;
                              PulseSyntaxExtension_Sugar.ascription2 = uu___5;
                              PulseSyntaxExtension_Sugar.decorations1 =

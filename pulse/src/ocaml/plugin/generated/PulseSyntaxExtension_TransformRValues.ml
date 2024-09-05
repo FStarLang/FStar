@@ -205,6 +205,11 @@ let (add_derefs_in_scope :
              match uu___ with
              | (x, y) ->
                  let lb =
+                   let pat =
+                     let uu___1 = FStar_Ident.range_of_id y in
+                     FStar_Parser_AST.mk_pattern
+                       (FStar_Parser_AST.PatVar
+                          (y, FStar_Pervasives_Native.None, [])) uu___1 in
                    let uu___1 =
                      let uu___2 =
                        let uu___3 =
@@ -216,7 +221,7 @@ let (add_derefs_in_scope :
                        {
                          PulseSyntaxExtension_Sugar.qualifier =
                            FStar_Pervasives_Native.None;
-                         PulseSyntaxExtension_Sugar.id = y;
+                         PulseSyntaxExtension_Sugar.pat = pat;
                          PulseSyntaxExtension_Sugar.typ =
                            FStar_Pervasives_Native.None;
                          PulseSyntaxExtension_Sugar.init1 = uu___3
@@ -715,7 +720,7 @@ let rec (transform_stmt_with_reads :
                             uu___1)))
            | PulseSyntaxExtension_Sugar.LetBinding
                { PulseSyntaxExtension_Sugar.qualifier = qualifier;
-                 PulseSyntaxExtension_Sugar.id = id;
+                 PulseSyntaxExtension_Sugar.pat = pat;
                  PulseSyntaxExtension_Sugar.typ = typ;
                  PulseSyntaxExtension_Sugar.init1 = init;_}
                ->
@@ -873,7 +878,7 @@ let rec (transform_stmt_with_reads :
                                                        uu___4))) uu___2)))
                        | FStar_Pervasives_Native.Some
                            (PulseSyntaxExtension_Sugar.Lambda_initializer
-                           { PulseSyntaxExtension_Sugar.id2 = uu___1;
+                           { PulseSyntaxExtension_Sugar.id1 = uu___1;
                              PulseSyntaxExtension_Sugar.is_rec = uu___2;
                              PulseSyntaxExtension_Sugar.binders2 = uu___3;
                              PulseSyntaxExtension_Sugar.ascription1 = uu___4;
@@ -900,29 +905,46 @@ let rec (transform_stmt_with_reads :
                                        (PulseSyntaxExtension_Sugar.Array_initializer
                                        uu___2) -> false
                                    | uu___2 -> true in
-                                 let m2 =
-                                   menv_push_bv m1 id qualifier
-                                     auto_deref_applicable in
-                                 let p1 =
-                                   {
-                                     PulseSyntaxExtension_Sugar.s =
-                                       (PulseSyntaxExtension_Sugar.LetBinding
-                                          {
-                                            PulseSyntaxExtension_Sugar.qualifier
-                                              = qualifier;
-                                            PulseSyntaxExtension_Sugar.id =
-                                              id;
-                                            PulseSyntaxExtension_Sugar.typ =
-                                              typ;
-                                            PulseSyntaxExtension_Sugar.init1
-                                              = init1
-                                          });
-                                     PulseSyntaxExtension_Sugar.range1 =
-                                       (p.PulseSyntaxExtension_Sugar.range1)
-                                   } in
+                                 let uu___2 =
+                                   PulseSyntaxExtension_Env.pat_vars pat in
                                  Obj.magic
-                                   (PulseSyntaxExtension_Err.return
-                                      (p1, needs, m2))) uu___1)))
+                                   (FStar_Class_Monad.op_let_Bang
+                                      PulseSyntaxExtension_Err.err_monad ()
+                                      () (Obj.magic uu___2)
+                                      (fun uu___3 ->
+                                         (fun vs ->
+                                            let vs = Obj.magic vs in
+                                            let m2 =
+                                              FStar_Compiler_List.fold_left
+                                                (fun m3 ->
+                                                   fun v ->
+                                                     menv_push_bv m3 v
+                                                       qualifier
+                                                       auto_deref_applicable)
+                                                m1 vs in
+                                            let p1 =
+                                              {
+                                                PulseSyntaxExtension_Sugar.s
+                                                  =
+                                                  (PulseSyntaxExtension_Sugar.LetBinding
+                                                     {
+                                                       PulseSyntaxExtension_Sugar.qualifier
+                                                         = qualifier;
+                                                       PulseSyntaxExtension_Sugar.pat
+                                                         = pat;
+                                                       PulseSyntaxExtension_Sugar.typ
+                                                         = typ;
+                                                       PulseSyntaxExtension_Sugar.init1
+                                                         = init1
+                                                     });
+                                                PulseSyntaxExtension_Sugar.range1
+                                                  =
+                                                  (p.PulseSyntaxExtension_Sugar.range1)
+                                              } in
+                                            Obj.magic
+                                              (PulseSyntaxExtension_Err.return
+                                                 (p1, needs, m2))) uu___3)))
+                            uu___1)))
            | PulseSyntaxExtension_Sugar.Block
                { PulseSyntaxExtension_Sugar.stmt = stmt;_} ->
                Obj.magic
@@ -949,7 +971,7 @@ let rec (transform_stmt_with_reads :
                                (PulseSyntaxExtension_Err.return (p1, [], m)))
                             uu___1)))
            | PulseSyntaxExtension_Sugar.If
-               { PulseSyntaxExtension_Sugar.head1 = head;
+               { PulseSyntaxExtension_Sugar.head = head;
                  PulseSyntaxExtension_Sugar.join_slprop = join_slprop;
                  PulseSyntaxExtension_Sugar.then_ = then_;
                  PulseSyntaxExtension_Sugar.else_opt = else_opt;_}
@@ -1016,7 +1038,7 @@ let rec (transform_stmt_with_reads :
                                                              =
                                                              (PulseSyntaxExtension_Sugar.If
                                                                 {
-                                                                  PulseSyntaxExtension_Sugar.head1
+                                                                  PulseSyntaxExtension_Sugar.head
                                                                     = head1;
                                                                   PulseSyntaxExtension_Sugar.join_slprop
                                                                     =
@@ -1037,7 +1059,7 @@ let rec (transform_stmt_with_reads :
                                                       uu___4))) uu___3)))
                             uu___1)))
            | PulseSyntaxExtension_Sugar.Match
-               { PulseSyntaxExtension_Sugar.head2 = head;
+               { PulseSyntaxExtension_Sugar.head1 = head;
                  PulseSyntaxExtension_Sugar.returns_annot = returns_annot;
                  PulseSyntaxExtension_Sugar.branches = branches;_}
                ->
@@ -1113,7 +1135,7 @@ let rec (transform_stmt_with_reads :
                                                   =
                                                   (PulseSyntaxExtension_Sugar.Match
                                                      {
-                                                       PulseSyntaxExtension_Sugar.head2
+                                                       PulseSyntaxExtension_Sugar.head1
                                                          = head1;
                                                        PulseSyntaxExtension_Sugar.returns_annot
                                                          = returns_annot;
@@ -1130,7 +1152,7 @@ let rec (transform_stmt_with_reads :
                             uu___1)))
            | PulseSyntaxExtension_Sugar.While
                { PulseSyntaxExtension_Sugar.guard = guard;
-                 PulseSyntaxExtension_Sugar.id1 = id;
+                 PulseSyntaxExtension_Sugar.id = id;
                  PulseSyntaxExtension_Sugar.invariant = invariant;
                  PulseSyntaxExtension_Sugar.body = body;_}
                ->
@@ -1158,7 +1180,7 @@ let rec (transform_stmt_with_reads :
                                                  {
                                                    PulseSyntaxExtension_Sugar.guard
                                                      = guard1;
-                                                   PulseSyntaxExtension_Sugar.id1
+                                                   PulseSyntaxExtension_Sugar.id
                                                      = id;
                                                    PulseSyntaxExtension_Sugar.invariant
                                                      = invariant;

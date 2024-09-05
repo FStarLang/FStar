@@ -234,10 +234,10 @@ pulseStmtNoSeq:
     }
   | lhs=appTermNoRecordExp COLON_EQUALS a=noSeqTerm
     { PulseSyntaxExtension_Sugar.mk_assignment lhs a }
-  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
-    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some (Array_initializer { init=v; len=n })) }
-  | LET q=option(mutOrRefQualifier) i=lidentOrUnderscore typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
-    { PulseSyntaxExtension_Sugar.mk_let_binding q i typOpt (Some init) }
+  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS LBRACK_BAR v=noSeqTerm SEMICOLON n=noSeqTerm BAR_RBRACK
+    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some (Array_initializer { init=v; len=n })) }
+  | LET q=option(mutOrRefQualifier) p=pulsePattern typOpt=option(preceded(COLON, appTerm)) EQUALS init=bindableTerm
+    { PulseSyntaxExtension_Sugar.mk_let_binding q p typOpt (Some init) }
   | s=pulseBindableTerm
     { s }
   | WHILE LPAREN tm=pulseStmt RPAREN INVARIANT i=lident DOT v=pulseSLProp LBRACE body=pulseStmt RBRACE
@@ -266,7 +266,8 @@ pulseStmtNoSeq:
   | f=localFnDefn
     {
       let id, fndefn = f in
-      PulseSyntaxExtension_Sugar.mk_let_binding None id None (Some (Lambda_initializer fndefn))
+      let pat = mk_pattern (PatVar (id, None, [])) (rr $loc) in
+      PulseSyntaxExtension_Sugar.mk_let_binding None pat None (Some (Lambda_initializer fndefn))
     }
   | p=ifStmt { p }
   | p=matchStmt { p }
@@ -323,6 +324,7 @@ pulseMatchBranch:
 
 pulsePattern:
   | p=tuplePattern { p }
+  // TODO: extend with sugar for tuples, lists, etc
 
 pulseStmt:
   | s=pulseStmtNoSeq
@@ -348,6 +350,19 @@ elseBlock:
 mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
+
+typX(X,Y):
+  | t=Y { t }
+
+  | q=quantifier bs=binders DOT trigger=trigger e=X
+      {
+        match bs with
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
+        | _ ->
+          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
+          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+      }
 
 pulseSLProp:
   | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))

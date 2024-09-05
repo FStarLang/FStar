@@ -213,3 +213,24 @@ val pts_to_range_upd
         pure(
           Seq.length s0 == r - l /\ s == Seq.upd s0 (SZ.v i - l) v
         ))
+
+val pts_to_range_share
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s:Seq.seq a)
+  (#p:perm)
+: stt_ghost unit emp_inames
+      (requires pts_to_range arr l r #p s)
+      (ensures fun _ -> pts_to_range arr l r #(p /. 2.0R) s ** pts_to_range arr l r #(p /. 2.0R) s)
+
+[@@allow_ambiguous]
+val pts_to_range_gather
+  (#a:Type)
+  (arr:array a)
+  (#l #r: nat)
+  (#s0 #s1: Seq.seq a)
+  (#p0 #p1:perm)
+: stt_ghost unit emp_inames
+      (requires pts_to_range arr l r #p0 s0 ** pts_to_range arr l r #p1 s1)
+      (ensures fun _ -> pts_to_range arr l r #(p0 +. p1) s0 ** pure (s0 == s1))
