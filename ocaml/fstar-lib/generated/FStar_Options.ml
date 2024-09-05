@@ -406,7 +406,7 @@ let (init : unit -> unit) =
     FStar_Compiler_List.iter set_option' defaults
 let (clear : unit -> unit) =
   fun uu___ -> FStar_Compiler_Effect.op_Colon_Equals history [[]]; init ()
-let (uu___154 : unit) = clear ()
+let (uu___145 : unit) = clear ()
 let (get_option : Prims.string -> option_val) =
   fun s ->
     let uu___ =
@@ -995,7 +995,7 @@ let (interp_quake_arg : Prims.string -> (Prims.int * Prims.int * Prims.bool))
           let uu___ = ios f1 in let uu___1 = ios f2 in (uu___, uu___1, true)
         else FStar_Compiler_Effect.failwith "unexpected value for --quake"
     | uu___ -> FStar_Compiler_Effect.failwith "unexpected value for --quake"
-let (uu___450 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
+let (uu___441 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
   =
   let cb = FStar_Compiler_Util.mk_ref FStar_Pervasives_Native.None in
   let set1 f =
@@ -1007,11 +1007,11 @@ let (uu___450 : (((Prims.string -> unit) -> unit) * (Prims.string -> unit)))
     | FStar_Pervasives_Native.Some f -> f msg in
   (set1, call)
 let (set_option_warning_callback_aux : (Prims.string -> unit) -> unit) =
-  match uu___450 with
+  match uu___441 with
   | (set_option_warning_callback_aux1, option_warning_callback) ->
       set_option_warning_callback_aux1
 let (option_warning_callback : Prims.string -> unit) =
-  match uu___450 with
+  match uu___441 with
   | (set_option_warning_callback_aux1, option_warning_callback1) ->
       option_warning_callback1
 let (set_option_warning_callback : (Prims.string -> unit) -> unit) =
@@ -2112,7 +2112,7 @@ let rec (specs_with_types :
                                                                     =
                                                                     let uu___144
                                                                     =
-                                                                    let uu___145
+                                                                    let uu___146
                                                                     =
                                                                     text
                                                                     "Proof recovery mode: before failing an SMT query, retry 3 times, increasing rlimits. If the query goes through after retrying, verification will succeed, but a warning will be emitted. This feature is useful to restore a project after some change to its libraries or F* upgrade. Importantly, then, this option cannot be used in a pragma (#set-options, etc)." in
@@ -2121,28 +2121,28 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___145) in
-                                                                    let uu___145
-                                                                    =
+                                                                    uu___146) in
                                                                     let uu___146
                                                                     =
                                                                     let uu___147
                                                                     =
                                                                     let uu___148
                                                                     =
-                                                                    text
-                                                                    "Repeats SMT queries to check for robustness" in
                                                                     let uu___149
                                                                     =
+                                                                    text
+                                                                    "Repeats SMT queries to check for robustness" in
                                                                     let uu___150
                                                                     =
                                                                     let uu___151
                                                                     =
                                                                     let uu___152
                                                                     =
+                                                                    let uu___153
+                                                                    =
                                                                     text
                                                                     "--quake N/M repeats each query checks that it succeeds at least N out of M times, aborting early if possible" in
-                                                                    let uu___153
+                                                                    let uu___154
                                                                     =
                                                                     let uu___155
                                                                     =
@@ -2167,37 +2167,37 @@ let rec (specs_with_types :
                                                                     uu___155
                                                                     ::
                                                                     uu___156 in
-                                                                    uu___152
+                                                                    uu___153
                                                                     ::
-                                                                    uu___153 in
+                                                                    uu___154 in
                                                                     FStar_Errors_Msg.bulleted
-                                                                    uu___151 in
-                                                                    let uu___151
+                                                                    uu___152 in
+                                                                    let uu___152
                                                                     =
                                                                     text
                                                                     "Using --quake disables --retry. When quake testing, queries are not splitted for error reporting unless '--split_queries always' is given. Queries from the smt_sync tactic are not quake-tested." in
                                                                     FStar_Pprint.op_Hat_Hat
-                                                                    uu___150
-                                                                    uu___151 in
+                                                                    uu___151
+                                                                    uu___152 in
                                                                     FStar_Pprint.op_Hat_Hat
-                                                                    uu___148
-                                                                    uu___149 in
+                                                                    uu___149
+                                                                    uu___150 in
                                                                     (FStar_Getopt.noshort,
                                                                     "quake",
                                                                     (PostProcessed
                                                                     ((fun
-                                                                    uu___148
+                                                                    uu___149
                                                                     ->
-                                                                    match uu___148
+                                                                    match uu___149
                                                                     with
                                                                     | 
                                                                     String s
                                                                     ->
-                                                                    let uu___149
+                                                                    let uu___150
                                                                     =
                                                                     interp_quake_arg
                                                                     s in
-                                                                    (match uu___149
+                                                                    (match uu___150
                                                                     with
                                                                     | 
                                                                     (min,
@@ -2218,18 +2218,18 @@ let rec (specs_with_types :
                                                                     false);
                                                                     String s))
                                                                     | 
-                                                                    uu___149
+                                                                    uu___150
                                                                     ->
                                                                     FStar_Compiler_Effect.failwith
                                                                     "impos"),
                                                                     (SimpleStr
                                                                     "positive integer or pair of positive integers"))),
-                                                                    uu___147) in
-                                                                    let uu___147
-                                                                    =
+                                                                    uu___148) in
                                                                     let uu___148
                                                                     =
                                                                     let uu___149
+                                                                    =
+                                                                    let uu___150
                                                                     =
                                                                     text
                                                                     "Keep a running cache of SMT queries to make verification faster. Only available in the interactive mode. NOTE: This feature is experimental and potentially unsound! Hence why\n          it is not allowed in batch mode (where it is also less useful). If you\n          find a query that is mistakenly accepted with the cache, please\n          report a bug to the F* issue tracker on GitHub." in
@@ -2238,12 +2238,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___149) in
-                                                                    let uu___149
-                                                                    =
+                                                                    uu___150) in
                                                                     let uu___150
                                                                     =
                                                                     let uu___151
+                                                                    =
+                                                                    let uu___152
                                                                     =
                                                                     text
                                                                     "Print SMT query statistics" in
@@ -2252,12 +2252,12 @@ let rec (specs_with_types :
                                                                     (Const
                                                                     (Bool
                                                                     true)),
-                                                                    uu___151) in
-                                                                    let uu___151
-                                                                    =
+                                                                    uu___152) in
                                                                     let uu___152
                                                                     =
                                                                     let uu___153
+                                                                    =
+                                                                    let uu___154
                                                                     =
                                                                     text
                                                                     "Read a checked file and dump it to standard output." in
@@ -2265,8 +2265,8 @@ let rec (specs_with_types :
                                                                     "read_checked_file",
                                                                     (PathStr
                                                                     "path"),
-                                                                    uu___153) in
-                                                                    let uu___153
+                                                                    uu___154) in
+                                                                    let uu___154
                                                                     =
                                                                     let uu___155
                                                                     =
@@ -3413,21 +3413,21 @@ let rec (specs_with_types :
                                                                     uu___155
                                                                     ::
                                                                     uu___156 in
-                                                                    uu___152
+                                                                    uu___153
                                                                     ::
-                                                                    uu___153 in
-                                                                    uu___150
+                                                                    uu___154 in
+                                                                    uu___151
                                                                     ::
-                                                                    uu___151 in
-                                                                    uu___148
+                                                                    uu___152 in
+                                                                    uu___149
                                                                     ::
-                                                                    uu___149 in
-                                                                    uu___146
+                                                                    uu___150 in
+                                                                    uu___147
                                                                     ::
-                                                                    uu___147 in
+                                                                    uu___148 in
                                                                     uu___144
                                                                     ::
-                                                                    uu___145 in
+                                                                    uu___146 in
                                                                     uu___142
                                                                     ::
                                                                     uu___143 in
@@ -3706,7 +3706,7 @@ let (settable_specs :
     (fun uu___ ->
        match uu___ with | ((uu___1, x, uu___2), uu___3) -> settable x)
     all_specs
-let (uu___671 :
+let (uu___668 :
   (((unit -> FStar_Getopt.parse_cmdline_res) -> unit) *
     (unit -> FStar_Getopt.parse_cmdline_res)))
   =
@@ -3723,11 +3723,11 @@ let (uu___671 :
   (set1, call)
 let (set_error_flags_callback_aux :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
-  match uu___671 with
+  match uu___668 with
   | (set_error_flags_callback_aux1, set_error_flags) ->
       set_error_flags_callback_aux1
 let (set_error_flags : unit -> FStar_Getopt.parse_cmdline_res) =
-  match uu___671 with
+  match uu___668 with
   | (set_error_flags_callback_aux1, set_error_flags1) -> set_error_flags1
 let (set_error_flags_callback :
   (unit -> FStar_Getopt.parse_cmdline_res) -> unit) =
