@@ -303,7 +303,12 @@ jobs:
           repository: FStarLang/pulse
 
       - name: Build
-        run: make -C pulse -skj$(nproc) full-boot
+        run: |
+          # This is similar for 'make full-boot', but does not
+          # check the library.
+          make -C pulse/src -skj$(nproc) clean-snapshot
+          make -C pulse/src -skj$(nproc) extract
+          make -C pulse/src -skj$(nproc) build
 
       - name: Check diff
         run: |
