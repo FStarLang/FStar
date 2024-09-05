@@ -85,11 +85,7 @@ test:
 
 .PHONY: check-for-changes
 check-for-changes:
-	# Test if no new files appeared
-	git status ..
-	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
-	# Test if nothing has changed
-	if ! git diff-index --exit-code HEAD .. ; then git --no-pager diff .. ; false ; fi
+	cd ../ && .scripts/check-snapshot-diff.sh
 
 pulse2rust:
 	+$(MAKE) -C $(PULSE_HOME) pulse2rust
