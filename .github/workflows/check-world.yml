@@ -86,22 +86,7 @@ jobs:
       - name: Check diff
         run: |
           cd FStar/
-          echo "git status:"
-          git status
-          FAILED=false
-          if ! git diff --exit-code ocaml/; then
-            echo "::group::DIFF"
-            git diff
-            echo "::endgroup::"
-            FAILED=true
-          fi
-          if git ls-files --others --exclude-standard -- ocaml/ | grep -q; then
-            echo "::group::EXTRA FILES"
-            git diff
-            echo "::endgroup::"
-            FAILED=true
-          fi
-          if $FAILED; then false; fi
+          ./.scripts/check-snapshot-diff.sh
 
   build-krml:
     runs-on: ubuntu-latest
