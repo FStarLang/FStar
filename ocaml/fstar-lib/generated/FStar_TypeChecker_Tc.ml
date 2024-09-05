@@ -1942,7 +1942,8 @@ let (tc_sig_let :
                                                                env'2 uvs in
                                                            FStar_TypeChecker_TcTerm.tc_check_tot_or_gtot_term
                                                              uu___15 lbtyp t
-                                                             "checking no_subtype annotation" in
+                                                             (FStar_Pervasives_Native.Some
+                                                                "checking no_subtype annotation") in
                                                          (match uu___14 with
                                                           | (uu___15,
                                                              uu___16, g) ->
@@ -2205,10 +2206,16 @@ let (tc_decl' :
                         | [] ->
                             (FStar_Compiler_List.iter
                                FStar_Errors.print_issue errs;
-                             FStar_Errors.log_issue
-                               se2.FStar_Syntax_Syntax.sigrng
-                               (FStar_Errors_Codes.Error_DidNotFail,
-                                 "This top-level definition was expected to fail, but it succeeded"))
+                             (let uu___9 =
+                                let uu___10 =
+                                  let uu___11 =
+                                    FStar_Errors_Msg.text
+                                      "This top-level definition was expected to fail, but it succeeded" in
+                                  [uu___11] in
+                                (FStar_Errors_Codes.Error_DidNotFail,
+                                  uu___10) in
+                              FStar_Errors.log_issue_doc
+                                se2.FStar_Syntax_Syntax.sigrng uu___9))
                         | uu___8 ->
                             if expected_errors <> []
                             then
@@ -2223,29 +2230,63 @@ let (tc_decl' :
                                     (let uu___11 =
                                        let uu___12 =
                                          let uu___13 =
-                                           (FStar_Common.string_of_list ())
-                                             FStar_Compiler_Util.string_of_int
-                                             expected_errors in
+                                           let uu___14 =
+                                             let uu___15 =
+                                               FStar_Errors_Msg.text
+                                                 "This top-level definition was expected to raise error codes" in
+                                             let uu___16 =
+                                               FStar_Class_PP.pp
+                                                 (FStar_Class_PP.pp_list
+                                                    FStar_Class_PP.pp_int)
+                                                 expected_errors in
+                                             FStar_Pprint.prefix
+                                               (Prims.of_int (2))
+                                               Prims.int_one uu___15 uu___16 in
+                                           let uu___15 =
+                                             let uu___16 =
+                                               let uu___17 =
+                                                 FStar_Errors_Msg.text
+                                                   "but it raised" in
+                                               let uu___18 =
+                                                 FStar_Class_PP.pp
+                                                   (FStar_Class_PP.pp_list
+                                                      FStar_Class_PP.pp_int)
+                                                   actual_errors in
+                                               FStar_Pprint.prefix
+                                                 (Prims.of_int (2))
+                                                 Prims.int_one uu___17
+                                                 uu___18 in
+                                             FStar_Pprint.op_Hat_Hat uu___16
+                                               FStar_Pprint.dot in
+                                           FStar_Pprint.op_Hat_Slash_Hat
+                                             uu___14 uu___15 in
                                          let uu___14 =
-                                           (FStar_Common.string_of_list ())
-                                             FStar_Compiler_Util.string_of_int
-                                             actual_errors in
-                                         let uu___15 =
-                                           FStar_Compiler_Util.string_of_int
-                                             e in
-                                         let uu___16 =
-                                           FStar_Compiler_Util.string_of_int
-                                             n2 in
-                                         let uu___17 =
-                                           FStar_Compiler_Util.string_of_int
-                                             n1 in
-                                         FStar_Compiler_Util.format5
-                                           "This top-level definition was expected to raise error codes %s, but it raised %s. Error #%s was raised %s times, instead of %s."
-                                           uu___13 uu___14 uu___15 uu___16
-                                           uu___17 in
+                                           let uu___15 =
+                                             let uu___16 =
+                                               let uu___17 =
+                                                 FStar_Class_Show.show
+                                                   (FStar_Class_Show.printableshow
+                                                      FStar_Class_Printable.printable_int)
+                                                   e in
+                                               let uu___18 =
+                                                 FStar_Class_Show.show
+                                                   (FStar_Class_Show.printableshow
+                                                      FStar_Class_Printable.printable_int)
+                                                   n2 in
+                                               let uu___19 =
+                                                 FStar_Class_Show.show
+                                                   (FStar_Class_Show.printableshow
+                                                      FStar_Class_Printable.printable_int)
+                                                   n1 in
+                                               FStar_Compiler_Util.format3
+                                                 "Error #%s was raised %s times, instead of %s."
+                                                 uu___17 uu___18 uu___19 in
+                                             FStar_Errors_Msg.text uu___16 in
+                                           [uu___15] in
+                                         uu___13 :: uu___14 in
                                        (FStar_Errors_Codes.Error_DidNotFail,
                                          uu___12) in
-                                     FStar_Errors.log_issue
+                                     FStar_Errors.log_issue_doc
                                        se2.FStar_Syntax_Syntax.sigrng uu___11)))
                             else ());
                        ([], [], env)))))

@@ -3710,16 +3710,18 @@ and desugar_decl_maybe_fail_attr env (d: decl): (env_t & sigelts) =
           match Errors.find_multiset_discrepancy expected_errs errnos with
           | None -> env0, []
           | Some (e, n1, n2) ->
+            let open FStar.Class.PP in
+            let open FStar.Pprint in
             List.iter Errors.print_issue errs;
-            Errors.log_issue
-                     d.drange
-                     (Errors.Error_DidNotFail,
-                      BU.format5 "This top-level definition was expected to raise error codes %s, \
-                                  but it raised %s (at desugaring time). Error #%s was raised %s \
-                                  times, instead of %s."
-                                    (FStar.Common.string_of_list string_of_int expected_errs)
-                                    (FStar.Common.string_of_list string_of_int errnos)
-                                    (string_of_int e) (string_of_int n2) (string_of_int n1));
+            Errors.log_issue_doc d.drange (Errors.Error_DidNotFail, [
+                prefix 2 1
+                  (text "This top-level definition was expected to raise error codes")
+                  (pp expected_errs) ^/^
+                prefix 2 1 (text "but it raised")
+                  (pp errnos) ^^ text "(at desugaring time)" ^^ dot;
+                text (BU.format3 "Error #%s was raised %s times, instead of %s."
+                                      (show e) (show n2) (show n1));
+              ]);
             env0, []
         end
       end

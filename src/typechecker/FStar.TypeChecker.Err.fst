@@ -298,20 +298,22 @@ let computed_computation_type_does_not_match_annotation_eq env e c c' =
 let unexpected_non_trivial_precondition_on_term env f =
  (Errors.Fatal_UnExpectedPreCondition, (format1 "Term has an unexpected non-trivial pre-condition: %s" (N.term_to_string env f)))
 
-let __expected_eff_expression (effname:string) (e:term) (c:comp) (reason:string) =
+let __expected_eff_expression (effname:string) (e:term) (c:comp) (reason:option string) =
   let open FStar.Class.PP in
   let open FStar.Pprint in
   (Errors.Fatal_ExpectedGhostExpression, [
     text ("Expected a " ^ effname ^ " expression.");
-    (if reason = "" then empty else flow (break_ 1) (doc_of_string "Because:" :: words (reason ^ ".")));
+    (match reason with
+     | None -> empty
+     | Some msg -> flow (break_ 1) (doc_of_string "Because:" :: words (msg ^ ".")));
     prefix 2 1 (text "Got an expression") (pp e) ^/^
     prefix 2 1 (text "with effect") (squotes (doc_of_string (fst <| name_and_result c))) ^^ dot;
   ])
 
-let expected_pure_expression (e:term) (c:comp) (reason:string) =
+let expected_pure_expression (e:term) (c:comp) (reason:option string) =
   __expected_eff_expression "pure" e c reason
 
-let expected_ghost_expression (e:term) (c:comp) (reason:string) =
+let expected_ghost_expression (e:term) (c:comp) (reason:option string) =
   __expected_eff_expression "ghost" e c reason
 
 let expected_effect_1_got_effect_2 (c1:lident) (c2:lident) =

@@ -7741,7 +7741,7 @@ let (eterm_info_to_assertions :
                                                                     (Prims.of_int (822))
                                                                     (Prims.of_int (10))
                                                                     (Prims.of_int (864))
-                                                                    (Prims.of_int (13)))))
+                                                                    (Prims.of_int (32)))))
                                                                     (FStar_Sealed.seal
                                                                     (Obj.magic
                                                                     (FStar_Range.mk_range

@@ -2407,7 +2407,9 @@ and (tc_maybe_toplevel_term :
             let uu___2 = FStar_Syntax_Util.type_u () in
             (match uu___2 with
              | (t, u) ->
-                 let uu___3 = tc_check_tot_or_gtot_term env1 e1 t "" in
+                 let uu___3 =
+                   tc_check_tot_or_gtot_term env1 e1 t
+                     FStar_Pervasives_Native.None in
                  (match uu___3 with
                   | (e2, c, g) ->
                       let uu___4 =
@@ -2787,7 +2789,9 @@ and (tc_maybe_toplevel_term :
             let uu___3 = FStar_Syntax_Util.type_u () in
             (match uu___3 with
              | (k, u) ->
-                 let uu___4 = tc_check_tot_or_gtot_term env1 t k "" in
+                 let uu___4 =
+                   tc_check_tot_or_gtot_term env1 t k
+                     FStar_Pervasives_Native.None in
                  (match uu___4 with
                   | (t1, uu___5, f) ->
                       let uu___6 =
@@ -3710,13 +3714,13 @@ and (tc_maybe_toplevel_term :
                    | (chead1, g_head1) ->
                        let uu___5 =
                          let uu___6 =
-                           ((Prims.op_Negation
-                               env2.FStar_TypeChecker_Env.admit)
+                           ((FStar_TypeChecker_Util.short_circuit_head head1)
                               &&
-                              (let uu___7 = FStar_Options.lax () in
+                              (let uu___7 = FStar_Options.ml_ish () in
                                Prims.op_Negation uu___7))
                              &&
-                             (FStar_TypeChecker_Util.short_circuit_head head1) in
+                             (Prims.op_Negation
+                                env2.FStar_TypeChecker_Env.phase1) in
                          if uu___6
                          then
                            let uu___7 =
@@ -4000,7 +4004,8 @@ and (tc_match :
                                             | (k, uu___11) ->
                                                 let uu___12 =
                                                   tc_check_tot_or_gtot_term
-                                                    env_asc t k "" in
+                                                    env_asc t k
+                                                    FStar_Pervasives_Native.None in
                                                 (match uu___12 with
                                                  | (t1, uu___13, g) ->
                                                      (((FStar_Pervasives.Inl
@@ -4634,7 +4639,8 @@ and (tc_tactic :
                 (env.FStar_TypeChecker_Env.missing_decl)
             } in
           let uu___ = FStar_Syntax_Syntax.t_tac_of a b in
-          tc_check_tot_or_gtot_term env1 tau uu___ ""
+          tc_check_tot_or_gtot_term env1 tau uu___
+            FStar_Pervasives_Native.None
 and (check_instantiated_fvar :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.var ->
@@ -5044,7 +5050,8 @@ and (tc_value :
                            | (t_phi, uu___6) ->
                                let uu___7 =
                                  tc_check_tot_or_gtot_term env3 phi1 t_phi
-                                   "refinement formula must be pure or ghost" in
+                                   (FStar_Pervasives_Native.Some
+                                      "refinement formula must be pure or ghost") in
                                (match uu___7 with
                                 | (phi2, uu___8, f2) ->
                                     let e1 =
@@ -5215,7 +5222,9 @@ and (tc_comp :
           let uu___ = FStar_Syntax_Util.type_u () in
           (match uu___ with
            | (k, u) ->
-               let uu___1 = tc_check_tot_or_gtot_term env t k "" in
+               let uu___1 =
+                 tc_check_tot_or_gtot_term env t k
+                   FStar_Pervasives_Native.None in
                (match uu___1 with
                 | (t1, uu___2, g) ->
                     let uu___3 = FStar_Syntax_Syntax.mk_Total t1 in
@@ -5224,7 +5233,9 @@ and (tc_comp :
           let uu___ = FStar_Syntax_Util.type_u () in
           (match uu___ with
            | (k, u) ->
-               let uu___1 = tc_check_tot_or_gtot_term env t k "" in
+               let uu___1 =
+                 tc_check_tot_or_gtot_term env t k
+                   FStar_Pervasives_Native.None in
                (match uu___1 with
                 | (t1, uu___2, g) ->
                     let uu___3 = FStar_Syntax_Syntax.mk_GTotal t1 in
@@ -5352,7 +5363,7 @@ and (tc_comp :
                   (env.FStar_TypeChecker_Env.core_check);
                 FStar_TypeChecker_Env.missing_decl =
                   (env.FStar_TypeChecker_Env.missing_decl)
-              } tc FStar_Syntax_Syntax.teff "" in
+              } tc FStar_Syntax_Syntax.teff FStar_Pervasives_Native.None in
           (match uu___ with
            | (tc1, uu___1, f) ->
                let uu___2 = FStar_Syntax_Util.head_and_args tc1 in
@@ -8275,7 +8286,8 @@ and (check_short_circuit_args :
                                  let uu___3 =
                                    tc_check_tot_or_gtot_term env e
                                      (b.FStar_Syntax_Syntax.binder_bv).FStar_Syntax_Syntax.sort
-                                     "arguments to short circuiting operators must be pure or ghost" in
+                                     (FStar_Pervasives_Native.Some
+                                        "arguments to short circuiting operators must be pure or ghost") in
                                  (match uu___3 with
                                   | (e1, c1, g) ->
                                       let short =
@@ -8694,7 +8706,9 @@ and (tc_pat :
                                                     env1 t_f1 use_eq in
                                                 let uu___16 =
                                                   tc_tot_or_gtot_term_maybe_solve_deferred
-                                                    env2 a "" false in
+                                                    env2 a
+                                                    FStar_Pervasives_Native.None
+                                                    false in
                                                 (match uu___16 with
                                                  | (a1, uu___17, g) ->
                                                      let subst1 =
@@ -8850,7 +8864,9 @@ and (tc_pat :
                                                     env1 t_f1 use_eq in
                                                 let uu___12 =
                                                   tc_tot_or_gtot_term_maybe_solve_deferred
-                                                    env2 a "" false in
+                                                    env2 a
+                                                    FStar_Pervasives_Native.None
+                                                    false in
                                                 (match uu___12 with
                                                  | (a1, uu___13, g) ->
                                                      let subst1 =
@@ -9957,7 +9973,7 @@ and (tc_eqn :
                                                       tc_check_tot_or_gtot_term
                                                         scrutinee_env t
                                                         FStar_Syntax_Util.t_bool
-                                                        "" in
+                                                        FStar_Pervasives_Native.None in
                                                     match uu___14 with
                                                     | (t1, uu___15, uu___16)
                                                         -> t1) in
@@ -11674,7 +11690,7 @@ and (build_let_rec_env :
                   (env01.FStar_TypeChecker_Env.core_check);
                 FStar_TypeChecker_Env.missing_decl =
                   (env01.FStar_TypeChecker_Env.missing_decl)
-              } t uu___1 "" in
+              } t uu___1 FStar_Pervasives_Native.None in
           match uu___ with
           | (t1, uu___1, g) ->
               let uu___2 =
@@ -12260,7 +12276,8 @@ and (check_lbtyp :
                          match uu___4 with
                          | (k, uu___5) ->
                              let uu___6 =
-                               tc_check_tot_or_gtot_term env1 t1 k "" in
+                               tc_check_tot_or_gtot_term env1 t1 k
+                                 FStar_Pervasives_Native.None in
                              (match uu___6 with
                               | (t2, uu___7, g) ->
                                   ((let uu___9 =
@@ -12319,7 +12336,7 @@ and (tc_binder :
                  else ());
                 (let uu___3 =
                    tc_check_tot_or_gtot_term env x.FStar_Syntax_Syntax.sort
-                     tu "" in
+                     tu FStar_Pervasives_Native.None in
                  match uu___3 with
                  | (t, uu___4, g) ->
                      let uu___5 =
@@ -12454,7 +12471,7 @@ and (tc_smt_pats :
 and (tc_tot_or_gtot_term_maybe_solve_deferred :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      Prims.string ->
+      Prims.string FStar_Pervasives_Native.option ->
         Prims.bool ->
           (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
             FStar_TypeChecker_Env.guard_t))
@@ -12529,7 +12546,7 @@ and (tc_tot_or_gtot_term_maybe_solve_deferred :
 and (tc_tot_or_gtot_term' :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
-      Prims.string ->
+      Prims.string FStar_Pervasives_Native.option ->
         (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
           FStar_TypeChecker_Env.guard_t))
   =
@@ -12541,12 +12558,13 @@ and (tc_tot_or_gtot_term :
     FStar_Syntax_Syntax.term ->
       (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
         FStar_TypeChecker_Env.guard_t))
-  = fun env -> fun e -> tc_tot_or_gtot_term' env e ""
+  =
+  fun env -> fun e -> tc_tot_or_gtot_term' env e FStar_Pervasives_Native.None
 and (tc_check_tot_or_gtot_term :
   FStar_TypeChecker_Env.env ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.typ ->
-        Prims.string ->
+        Prims.string FStar_Pervasives_Native.option ->
           (FStar_Syntax_Syntax.term * FStar_TypeChecker_Common.lcomp *
             FStar_TypeChecker_Env.guard_t))
   =
@@ -12596,7 +12614,8 @@ let (tc_check_trivial_guard :
   fun env ->
     fun t ->
       fun k ->
-        let uu___ = tc_check_tot_or_gtot_term env t k "" in
+        let uu___ =
+          tc_check_tot_or_gtot_term env t k FStar_Pervasives_Native.None in
         match uu___ with
         | (t1, uu___1, g) ->
             (FStar_TypeChecker_Rel.force_trivial_guard env g; t1)

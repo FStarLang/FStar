@@ -86,22 +86,7 @@ jobs:
       - name: Check diff
         run: |
           cd FStar/
-          echo "git status:"
-          git status
-          FAILED=false
-          if ! git diff --exit-code ocaml/; then
-            echo "::group::DIFF"
-            git diff
-            echo "::endgroup::"
-            FAILED=true
-          fi
-          if git ls-files --others --exclude-standard -- ocaml/ | grep -q; then
-            echo "::group::EXTRA FILES"
-            git diff
-            echo "::endgroup::"
-            FAILED=true
-          fi
-          if $FAILED; then false; fi
+          ./.scripts/check-snapshot-diff.sh
 
   build-krml:
     runs-on: ubuntu-latest
@@ -288,6 +273,47 @@ jobs:
       - uses: mtzguido/gci-upload@master
         with:
           name: pulse
+
+  test-pulse-boot:
+    runs-on: ubuntu-latest
+    container: mtzguido/fstar-base-testing
+    needs:
+      - build-fstar
+      - build-krml
+    steps:
+      - name: Cleanup
+        run: find . -delete
+      - run: echo "HOME=/home/opam" >> $GITHUB_ENV
+      - uses: mtzguido/set-opam-env@master
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: FStar
+          hometag: FSTAR
+
+      - uses: mtzguido/gci-download@master
+        with:
+          name: karamel
+          hometag: KRML
+
+      - name: Checkout pulse
+        uses: actions/checkout@master
+        with:
+          path: pulse/
+          repository: FStarLang/pulse
+
+      - name: Build
+        run: |
+          # This is similar for 'make full-boot', but does not
+          # check the library.
+          make -C pulse/src -skj$(nproc) clean-snapshot
+          make -C pulse/src -skj$(nproc) extract
+          make -C pulse/src -skj$(nproc) build
+
+      - name: Check diff
+        run: |
+          cd pulse/
+          ./.scripts/check-snapshot-diff.sh
 
   test-pulse:
     runs-on: ubuntu-latest

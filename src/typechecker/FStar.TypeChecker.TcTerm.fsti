@@ -45,7 +45,7 @@ val typeof_tot_or_gtot_term_fastpath: env -> term -> Env.must_tot -> option typ
 val tc_tot_or_gtot_term: env -> term -> term & lcomp & guard_t
 //the last string argument is the reason to be printed in the error message
 //pass "" if NA
-val tc_check_tot_or_gtot_term: env -> term -> typ -> string -> term & lcomp & guard_t
+val tc_check_tot_or_gtot_term: env -> term -> typ -> option string -> term & lcomp & guard_t
 val tc_tactic : typ -> typ -> env -> term -> term & lcomp & guard_t
 val tc_trivial_guard: env -> term -> term & lcomp
 val tc_attributes: env -> list term -> guard_t & list term
