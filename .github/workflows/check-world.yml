@@ -183,7 +183,6 @@ jobs:
     container: mtzguido/fstar-base-testing
     needs:
       - build-fstar
-      - build-krml
     steps:
       - name: Cleanup
         run: find . -delete
@@ -193,10 +192,6 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: FStar
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: karamel
 
       - name: Checkout steel
         uses: actions/checkout@master
@@ -477,7 +472,6 @@ jobs:
       - build-fstar
       - build-krml
       - build-hacl
-      - build-everparse
     steps:
       - name: Cleanup
         run: find . -delete
@@ -491,10 +485,6 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everparse
 
       - uses: mtzguido/gci-download@master
         with:
@@ -523,7 +513,6 @@ jobs:
       - build-fstar
       - build-krml
       - build-hacl
-      - build-everparse
       - build-merkle-tree
     steps:
       - name: Cleanup
@@ -538,10 +527,6 @@ jobs:
       - uses: mtzguido/gci-download@master
         with:
           name: karamel
-
-      - uses: mtzguido/gci-download@master
-        with:
-          name: everparse
 
       - uses: mtzguido/gci-download@master
         with:
