@@ -810,6 +810,7 @@ multiBinder:
 
   | b=binder { [b] }
 
+%public
 binders: bss=list(bs=multiBinder {bs}) { flatten bss }
 
 aqualifiedWithAttrs(X):
@@ -1144,6 +1145,7 @@ calcStep:
 typ:
   | t=simpleTerm { t }
 
+%public
 %inline quantifier:
   | FORALL { fun x -> QForall x }
   | EXISTS { fun x -> QExists x}
@@ -1158,6 +1160,7 @@ typ:
       fun (x,y,z) -> QuantOp (op, x, y, z)
     }
 
+%public
 trigger:
   |   { [] }
   | LBRACE_COLON_PATTERN pats=disjunctivePats RBRACE { pats }
