@@ -1781,6 +1781,72 @@ let rec list_elements (e:term) : option (list term) =
   | _ ->
       None
 
+let destruct_lemma_with_smt_patterns (t:term)
+: option (binders & term & term & list (list arg))
+//binders, pre, post, patterns
+= let lemma_pats p =
+    let smt_pat_or t =
+      let head, args = unmeta t |> head_and_args in
+      match (un_uinst head).n, args with
+      | Tm_fvar fv, [(e, _)]
+          when fv_eq_lid fv PC.smtpatOr_lid ->
+        Some e
+      | _ -> None
+    in
+    let one_pat p =
+      let head, args = unmeta p |> head_and_args in
+      match (un_uinst head).n, args with
+      | Tm_fvar fv, [(_, _); arg] when fv_eq_lid fv PC.smtpat_lid ->
+        arg
+      | _ ->
+          Errors.raise_error (Errors.Error_IllSMTPat,
+                              U.format1 "Not an atomic SMT pattern: %s; \
+                                          patterns on lemmas must be a list of simple SMTPat's \
+                                          or a single SMTPatOr containing a list \
+                                          of lists of patterns" (tts p))
+                              p.pos
+    in
+    let list_literal_elements (e:term) : list term =
+      match list_elements e with
+      | Some l -> l
+      | None ->
+        Errors.log_issue e.pos
+          (Errors.Warning_NonListLiteralSMTPattern,
+            "SMT pattern is not a list literal; ignoring the pattern");
+        []
+    in
+    let elts = list_literal_elements p in
+    match elts with
+    | [t] -> (
+      match smt_pat_or t with
+      | Some e ->
+        list_literal_elements e |> 
+        List.map (fun branch -> (list_literal_elements branch) |> List.map one_pat)
+      | _ -> [elts |> List.map one_pat]
+    )
+    | _ -> [elts |> List.map one_pat]
+  in
+  match (Subst.compress t).n with
+  | Tm_arrow {bs=binders; comp=c} ->
+    let binders, c = Subst.open_comp binders c in
+    begin match c.n with
+    | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
+      Some (binders, pre, post, lemma_pats pats)
+    | _ -> failwith "impos"
+    end
+
+  | _ -> None
+
+let triggers_of_smt_lemma (t:term)
+:  list (list lident) //for each disjunctive pattern
+                            //for each conjunct
+                            //triggers in a conjunt
+= //is_smt_lemma t
+  match destruct_lemma_with_smt_patterns t with
+  | None -> []
+  | Some (_, _, _, pats) ->
+    List.map (List.collect (fun (t, _) -> elems <| FStar.Syntax.Free.fvars t)) pats
+
 (* Takes a term of shape `fun x -> e` and returns `e` when
 `x` is not free in it. If it is free or the term
 has some other shape just apply it to `()`. *)
@@ -1799,76 +1865,24 @@ let unthunk_lemma_post t =
     unthunk t
 
 let smt_lemma_as_forall (t:term) (universe_of_binders: binders -> list universe)
-   : term
-   =
-    let list_elements (e:term) : list term =
-      match list_elements e with
-      | Some l -> l
-      | None ->
-        Errors.log_issue e.pos
-          (Errors.Warning_NonListLiteralSMTPattern,
-            "SMT pattern is not a list literal; ignoring the pattern");
-        []
-    in
-
-    let one_pat p =
-        let head, args = unmeta p |> head_and_args in
-        match (un_uinst head).n, args with
-        | Tm_fvar fv, [(_, _); arg]
-            when fv_eq_lid fv PC.smtpat_lid ->
-          arg
-        | _ ->
-            Errors.raise_error (Errors.Error_IllSMTPat,
-                                U.format1 "Not an atomic SMT pattern: %s; \
-                                           patterns on lemmas must be a list of simple SMTPat's \
-                                           or a single SMTPatOr containing a list \
-                                           of lists of patterns" (tts p))
-                               p.pos
-    in
-
-    let lemma_pats p =
-        let elts = list_elements p in
-        let smt_pat_or t =
-            let head, args = unmeta t |> head_and_args in
-            match (un_uinst head).n, args with
-                | Tm_fvar fv, [(e, _)]
-                    when fv_eq_lid fv PC.smtpatOr_lid ->
-                  Some e
-                | _ -> None in
-        match elts with
-            | [t] ->
-             begin match smt_pat_or t with
-                | Some e ->
-                  list_elements e |>  List.map (fun branch -> (list_elements branch) |> List.map one_pat)
-                | _ -> [elts |> List.map one_pat]
-              end
-            | _ -> [elts |> List.map one_pat]
-    in
-
-    let binders, pre, post, patterns =
-        match (Subst.compress t).n with
-        | Tm_arrow {bs=binders; comp=c} ->
-          let binders, c = Subst.open_comp binders c in
-          begin match c.n with
-            | Comp ({effect_args=[(pre, _); (post, _); (pats, _)]}) ->
-              binders, pre, post, lemma_pats pats
-            | _ -> failwith "impos"
-          end
-
-        | _ -> failwith "Impos"
-    in
-    (* Postcondition is thunked, c.f. #57 *)
-    let post = unthunk_lemma_post post in
-    let body = mk (Tm_meta {tm=mk_imp pre post;
-                            meta=Meta_pattern (binders_to_names binders, patterns)}) t.pos in
-    let quant =
-      List.fold_right2
-        (fun b u out -> mk_forall u b.binder_bv out)
-        binders
-        (universe_of_binders binders)
-        body
-    in
-    quant
+: term
+= let binders, pre, post, patterns =
+    match destruct_lemma_with_smt_patterns t with
+    | None -> failwith "impos"
+    | Some res -> res
+  in
+  (* Postcondition is thunked, c.f. #57 *)
+  let post = unthunk_lemma_post post in
+  let body = mk (Tm_meta {tm=mk_imp pre post;
+                          meta=Meta_pattern (binders_to_names binders, patterns)}) t.pos in
+  let quant =
+    List.fold_right2
+      (fun b u out -> mk_forall u b.binder_bv out)
+      binders
+      (universe_of_binders binders)
+      body
+  in
+  quant
 
 (* End SMT Lemma utilities *)
 

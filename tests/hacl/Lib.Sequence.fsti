@@ -4,7 +4,7 @@ open FStar.Mul
 open Lib.IntTypes
 
 #set-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence'"
-
+#set-options "--z3refresh"
 /// Variable length Sequences, derived from FStar.Seq
 
 (* This is the type of unbounded sequences.
@@ -479,6 +479,7 @@ let get_block
 
 
 (* Computes the last block of (map_blocks blocksize input f g) *)
+#push-options "--z3rlimit_factor 2"
 let get_last
   (#a:Type)
   (#len:nat)
@@ -492,7 +493,7 @@ let get_last
   let rem = len % blocksize in
   let b: lseq a rem = Seq.slice inp (len - rem) len in
   g (len / blocksize) rem b
-
+#pop-options
 
 val index_map_blocks:
     #a:Type

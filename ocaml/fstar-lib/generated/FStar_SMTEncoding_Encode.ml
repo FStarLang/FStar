@@ -1,4 +1,5 @@
 open Prims
+type encoding_depth = (Prims.int * Prims.int)
 let (dbg_SMTEncoding : Prims.bool FStar_Compiler_Effect.ref) =
   FStar_Compiler_Debug.get_toggle "SMTEncoding"
 let (dbg_SMTQuery : Prims.bool FStar_Compiler_Effect.ref) =
@@ -6935,7 +6936,9 @@ and (encode_sigelt' :
                                           FStar_SMTEncoding_Term.assumption_name
                                             = uu___8;
                                           FStar_SMTEncoding_Term.assumption_fact_ids
-                                            = uu___9;_}
+                                            = uu___9;
+                                          FStar_SMTEncoding_Term.assumption_free_names
+                                            = uu___10;_}
                                         -> false
                                     | uu___7 -> true)
                                  elt.FStar_SMTEncoding_Term.decls in
@@ -7219,6 +7222,11 @@ let (set_env : FStar_SMTEncoding_Env.env_t -> unit) =
     | [] -> FStar_Compiler_Effect.failwith "Empty env stack"
     | uu___1::tl ->
         FStar_Compiler_Effect.op_Colon_Equals last_env (env :: tl)
+let (get_current_env :
+  FStar_TypeChecker_Env.env -> FStar_SMTEncoding_Env.env_t) =
+  fun tcenv ->
+    let uu___ = FStar_TypeChecker_Env.current_module tcenv in
+    get_env uu___ tcenv
 let (push_env : unit -> unit) =
   fun uu___ ->
     let uu___1 = FStar_Compiler_Effect.op_Bang last_env in
@@ -7241,8 +7249,7 @@ let (init : FStar_TypeChecker_Env.env -> unit) =
   fun tcenv ->
     init_env tcenv;
     FStar_SMTEncoding_Z3.giveZ3 [FStar_SMTEncoding_Term.DefPrelude]
-let (snapshot :
-  Prims.string -> (FStar_TypeChecker_Env.solver_depth_t * unit)) =
+let (snapshot_encoding : Prims.string -> encoding_depth) =
   fun msg ->
     FStar_Compiler_Util.atomically
       (fun uu___ ->
@@ -7252,38 +7259,29 @@ let (snapshot :
              let uu___2 =
                FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.snapshot () in
              (match uu___2 with
-              | (varops_depth, ()) ->
-                  let uu___3 = FStar_SMTEncoding_Z3.snapshot msg in
-                  (match uu___3 with
-                   | (z3_depth, ()) ->
-                       ((env_depth, varops_depth, z3_depth), ()))))
-let (rollback :
-  Prims.string ->
-    FStar_TypeChecker_Env.solver_depth_t FStar_Pervasives_Native.option ->
-      unit)
-  =
+              | (varops_depth, ()) -> (env_depth, varops_depth)))
+let (rollback_encoding :
+  Prims.string -> encoding_depth FStar_Pervasives_Native.option -> unit) =
   fun msg ->
     fun depth ->
       FStar_Compiler_Util.atomically
         (fun uu___ ->
            let uu___1 =
              match depth with
-             | FStar_Pervasives_Native.Some (s1, s2, s3) ->
+             | FStar_Pervasives_Native.Some (s1, s2) ->
                  ((FStar_Pervasives_Native.Some s1),
-                   (FStar_Pervasives_Native.Some s2),
-                   (FStar_Pervasives_Native.Some s3))
+                   (FStar_Pervasives_Native.Some s2))
              | FStar_Pervasives_Native.None ->
-                 (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None,
-                   FStar_Pervasives_Native.None) in
+                 (FStar_Pervasives_Native.None, FStar_Pervasives_Native.None) in
            match uu___1 with
-           | (env_depth, varops_depth, z3_depth) ->
+           | (env_depth, varops_depth) ->
                (rollback_env env_depth;
                 FStar_SMTEncoding_Env.varops.FStar_SMTEncoding_Env.rollback
-                  varops_depth;
-                FStar_SMTEncoding_Z3.rollback msg z3_depth))
-let (push : Prims.string -> unit) = fun msg -> let uu___ = snapshot msg in ()
-let (pop : Prims.string -> unit) =
-  fun msg -> rollback msg FStar_Pervasives_Native.None
+                  varops_depth))
+let (push_encoding_state : Prims.string -> unit) =
+  fun msg -> let uu___ = snapshot_encoding msg in ()
+let (pop_encoding_state : Prims.string -> unit) =
+  fun msg -> rollback_encoding msg FStar_Pervasives_Native.None
 let (open_fact_db_tags :
   FStar_SMTEncoding_Env.env_t -> FStar_SMTEncoding_Term.fact_db_id Prims.list)
   = fun env -> []
@@ -7305,7 +7303,9 @@ let (place_decl_in_fact_dbs :
                   (a.FStar_SMTEncoding_Term.assumption_caption);
                 FStar_SMTEncoding_Term.assumption_name =
                   (a.FStar_SMTEncoding_Term.assumption_name);
-                FStar_SMTEncoding_Term.assumption_fact_ids = fact_db_ids
+                FStar_SMTEncoding_Term.assumption_fact_ids = fact_db_ids;
+                FStar_SMTEncoding_Term.assumption_free_names =
+                  (a.FStar_SMTEncoding_Term.assumption_free_names)
               }
         | uu___ -> d
 let (place_decl_elt_in_fact_dbs :

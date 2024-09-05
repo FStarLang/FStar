@@ -234,8 +234,8 @@ and env = {
 and solver_depth_t = int & int & int
 and solver_t = {
     init            :env -> unit;
-    push            :string -> unit;
-    pop             :string -> unit;
+    // push            :string -> unit;
+    // pop             :string -> unit;
     snapshot        :string -> (solver_depth_t & unit);
     rollback        :string -> option solver_depth_t -> unit;
     encode_sig      :env -> sigelt -> unit;
@@ -245,7 +245,7 @@ and solver_t = {
     solve           :option (unit -> string) -> env -> goal -> unit; //call to the smt solver
     solve_sync      :option (unit -> string) -> env -> goal -> bool; //call to the smt solver
     finish          :unit -> unit;
-    refresh         :unit -> unit;
+    refresh         :option proof_namespace -> unit;
 }
 and tcenv_hooks =
   { tc_push_in_gamma_hook : (env -> either binding sig_binding -> unit) }
@@ -459,8 +459,7 @@ val is_total_effect : env -> lident -> bool
 val binders_of_bindings : list binding -> binders
 
 (* Toggling of encoding of namespaces *)
-val should_enc_path : env -> list string -> bool
-val should_enc_lid  : env -> lident -> bool
+val should_enc_lid  : proof_namespace -> lident -> bool
 val add_proof_ns    : env -> name_prefix -> env
 val rem_proof_ns    : env -> name_prefix -> env
 val get_proof_ns    : env -> proof_namespace

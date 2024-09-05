@@ -1165,7 +1165,7 @@ let rec run_query st (q: query) : (query_status & list json) & either repl_state
   | Format code ->
     as_json_list (run_format_code st code)
   | RestartSolver ->
-    st.repl_env.solver.refresh();
+    st.repl_env.solver.refresh None;
     (QueryOK, []), Inl st
   | Cancel _ ->
     //This should be handled in the fold_query loop above

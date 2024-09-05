@@ -15,7 +15,7 @@
 *)
 
 module Z3EncodingIssue
-
+#set-options "--ext 'context_pruning='" // working around a quirk with unfoldings in FStar.Integers.uint_8, which gets pruned away but apparently is needed
 
 /// This module illustrates a z3 encoding issue when a layered effect is written in a particular style
 

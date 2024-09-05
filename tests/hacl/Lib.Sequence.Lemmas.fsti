@@ -8,7 +8,7 @@ module Loops = Lib.LoopCombinators
 
 #set-options "--z3rlimit 50 --max_fuel 0 --max_ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Math.Lemmas +FStar.Seq +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas'"
-
+#set-options "--z3refresh"
 
 let get_block_s
   (#a:Type)

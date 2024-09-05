@@ -176,6 +176,28 @@ let free_variables t = match !t.freevars with
     t.freevars := Some fvs;
     fvs
 
+open FStar.Class.Setlike
+let free_top_level_names (t:term)
+: RBSet.t string
+= let rec free_top_level_names acc t =
+    match t.tm with
+    | FreeV (FV (nm, _, _)) -> add nm acc
+    | App (Var s, args) -> 
+      let acc = add s acc in
+      List.fold_left free_top_level_names acc args
+    | App (_, args) -> List.fold_left free_top_level_names acc args
+    | Quant (_, pats, _, _, body) ->
+      let acc = List.fold_left (fun acc pats -> List.fold_left free_top_level_names acc pats) acc pats in
+      free_top_level_names acc body
+    | Let(tms, t) ->
+      let acc = List.fold_left free_top_level_names acc tms in
+      free_top_level_names acc t
+    | Labeled(t, _, _)
+    | LblPos(t, _) -> free_top_level_names acc t
+    | _ -> acc
+  in
+  free_top_level_names (empty()) t
+
 (*****************************************************)
 (* Pretty printing terms and decls in SMT Lib format *)
 (*****************************************************)
@@ -546,12 +568,14 @@ let mkDefineFun (nm, vars, s, tm, c) = DefineFun(nm, List.map fv_sort vars, s, a
 let constr_id_of_sort sort = format1 "%s_constr_id" (strSort sort)
 let fresh_token (tok_name, sort) id =
     let a_name = "fresh_token_" ^tok_name in
+    let tm = mkEq(mkInteger' id norng,
+                                  mkApp(constr_id_of_sort sort,
+                                        [mkApp (tok_name,[]) norng]) norng) norng in
     let a = {assumption_name=escape a_name;
              assumption_caption=Some "fresh token";
-             assumption_term=mkEq(mkInteger' id norng,
-                                  mkApp(constr_id_of_sort sort,
-                                        [mkApp (tok_name,[]) norng]) norng) norng;
-             assumption_fact_ids=[]} in
+             assumption_term=tm;
+             assumption_fact_ids=[];
+             assumption_free_names=free_top_level_names tm} in
     Assume a
 
 let fresh_constructor rng (name, arg_sorts, sort, id) =
@@ -561,11 +585,13 @@ let fresh_constructor rng (name, arg_sorts, sort, id) =
   let capp = mkApp(name, bvars) norng in
   let cid_app = mkApp(constr_id_of_sort sort, [capp]) norng in
   let a_name = "constructor_distinct_" ^name in
+  let tm = mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng) in
   let a = {
     assumption_name=escape a_name;
     assumption_caption=Some "Constructor distinct";
-    assumption_term=mkForall rng ([[capp]], bvar_names, mkEq(mkInteger id norng, cid_app) norng);
-    assumption_fact_ids=[]
+    assumption_term=tm;
+    assumption_fact_ids=[];
+    assumption_free_names=free_top_level_names tm
   } in
   Assume a
 
@@ -585,11 +611,13 @@ let injective_constructor
             then
               let cproj_app = mkApp(name, [capp]) norng in
               let proj_name = DeclFun(name, [sort], s, Some "Projector") in
+              let tm = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng) in
               let a = {
                     assumption_name = escape ("projection_inverse_"^name);
                     assumption_caption = Some "Projection inverse";
-                    assumption_term = mkForall rng ([[capp]], bvar_names, mkEq(cproj_app, bvar i s norng) norng);
-                    assumption_fact_ids = []
+                    assumption_term = tm;
+                    assumption_fact_ids = [];
+                    assumption_free_names = free_top_level_names tm
                  } in
               [proj_name; Assume a]
             else [])
@@ -657,7 +685,8 @@ let constructor_to_decl rng constr =
           assumption_name=escape ("constructor_base_" ^ constr.constr_name);
           assumption_caption=Some "Constructor base";
           assumption_term=q;
-          assumption_fact_ids=[]
+          assumption_fact_ids=[];
+          assumption_free_names=free_top_level_names q
         } in
         [decl; Assume a]
     )
@@ -852,8 +881,8 @@ let rec declToSmt' print_captions z3options decl =
     ""
   | CheckSat -> "(echo \"<result>\")\n(check-sat)\n(echo \"</result>\")"
   | GetUnsatCore -> "(echo \"<unsat-core>\")\n(get-unsat-core)\n(echo \"</unsat-core>\")"
-  | Push -> "(push)"
-  | Pop -> "(pop)"
+  | Push n -> BU.format1 "(push) ;; push{%s" (show n)
+  | Pop n -> BU.format1 "(pop) ;; %s}pop" (show n)
   | SetOption (s, v) -> format2 "(set-option :%s %s)" s v
   | GetStatistics -> "(echo \"<statistics>\")\n(get-info :all-statistics)\n(echo \"</statistics>\")"
   | GetReasonUnknown-> "(echo \"<reason-unknown>\")\n(get-info :reason-unknown)\n(echo \"</reason-unknown>\")"
@@ -1128,3 +1157,28 @@ instance showable_smt_term = {
 instance showable_decl = {
   show = declToSmt_no_caps "";
 }
+
+let rec names_of_decl d =
+  match d with
+  | Assume a -> [a.assumption_name]
+  | Module (_, ds) -> List.collect names_of_decl ds
+  | _ -> []
+
+let decl_to_string_short d =
+  match d with
+  | DefPrelude -> "prelude"
+  | DeclFun (s, _, _, _) -> "DeclFun " ^ s
+  | DefineFun (s, _, _, _, _) -> "DefineFun " ^ s
+  | Assume a -> "Assumption " ^ a.assumption_name
+  | Caption s -> "Caption " ^s
+  | Module (s, _) -> "Module " ^ s
+  | Eval _ -> "Eval"
+  | Echo s -> "Echo " ^ s
+  | RetainAssumptions _ -> "RetainAssumptions"
+  | Push n -> BU.format1 "push %s" (show n)
+  | Pop n -> BU.format1 "pop %s" (show n)
+  | CheckSat -> "check-sat"
+  | GetUnsatCore -> "get-unsat-core"
+  | SetOption (s, v) -> "SetOption " ^ s ^ " " ^ v
+  | GetStatistics -> "get-statistics"
+  | GetReasonUnknown -> "get-reason-unknown"

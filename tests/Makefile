@@ -1,4 +1,5 @@
 FSTAR_HOME=..
+export OTHERFLAGS += --ext context_pruning
 include ../examples/Makefile.include
 
 ALL_TEST_DIRS += bug-reports

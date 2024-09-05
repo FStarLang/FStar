@@ -27,6 +27,7 @@ open FStar.TypeChecker
 open FStar.SMTEncoding.Term
 open FStar.Ident
 open FStar.Const
+open FStar.Class.Setlike
 module C = FStar.Parser.Const
 module S = FStar.Syntax.Syntax
 module U = FStar.Syntax.Util
@@ -39,7 +40,8 @@ let mkAssume (tm, cap, nm) =
         assumption_name=escape nm;
         assumption_caption=cap;
         assumption_term=tm;
-        assumption_fact_ids=[]
+        assumption_fact_ids=[];
+        assumption_free_names=free_top_level_names tm;
     })
 let norng f = fun x -> f x Range.dummyRange
 let mkTrue   = mkTrue Range.dummyRange

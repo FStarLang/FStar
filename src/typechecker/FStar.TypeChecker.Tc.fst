@@ -955,7 +955,7 @@ let add_sigelt_to_env (env:Env.env) (se:sigelt) (from_cache:bool) : Env.env =
        * advances over the pragma. *)
       if from_cache || env.flychecking then env
       else begin
-        env.solver.refresh ();
+        env.solver.refresh (Some env.proof_ns);
         env
       end
 
@@ -1158,6 +1158,7 @@ let finish_partial_modul (loading_from_cache:bool) (iface_exists:bool) (en:env) 
   env.qtbl_name_and_index |> snd |> BU.smap_clear;
 
   //pop BUT ignore the old env
+
   pop_context env ("Ending modul " ^ string_of_lid m.name) |> ignore;
 
   //moved the code for encoding the module to smt to Universal

@@ -493,8 +493,6 @@ and env =
 and solver_t =
   {
   init: env -> unit ;
-  push: Prims.string -> unit ;
-  pop: Prims.string -> unit ;
   snapshot: Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit) ;
   rollback:
     Prims.string ->
@@ -519,7 +517,7 @@ and solver_t =
       env -> goal -> Prims.bool
     ;
   finish: unit -> unit ;
-  refresh: unit -> unit }
+  refresh: proof_namespace FStar_Pervasives_Native.option -> unit }
 and tcenv_hooks =
   {
   tc_push_in_gamma_hook:
@@ -1483,26 +1481,14 @@ let (__proj__Mkenv__item__missing_decl :
 let (__proj__Mksolver_t__item__init : solver_t -> env -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> init
-let (__proj__Mksolver_t__item__push : solver_t -> Prims.string -> unit) =
-  fun projectee ->
-    match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-        finish; refresh;_} -> push
-let (__proj__Mksolver_t__item__pop : solver_t -> Prims.string -> unit) =
-  fun projectee ->
-    match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
-        spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
-        finish; refresh;_} -> pop
 let (__proj__Mksolver_t__item__snapshot :
   solver_t -> Prims.string -> ((Prims.int * Prims.int * Prims.int) * unit)) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> snapshot
 let (__proj__Mksolver_t__item__rollback :
@@ -1513,14 +1499,14 @@ let (__proj__Mksolver_t__item__rollback :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> rollback
 let (__proj__Mksolver_t__item__encode_sig :
   solver_t -> env -> FStar_Syntax_Syntax.sigelt -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> encode_sig
 let (__proj__Mksolver_t__item__preprocess :
@@ -1531,7 +1517,7 @@ let (__proj__Mksolver_t__item__preprocess :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> preprocess
 let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
@@ -1540,14 +1526,14 @@ let (__proj__Mksolver_t__item__spinoff_strictly_positive_goals :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> spinoff_strictly_positive_goals
 let (__proj__Mksolver_t__item__handle_smt_goal :
   solver_t -> env -> goal -> (env * goal) Prims.list) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> handle_smt_goal
 let (__proj__Mksolver_t__item__solve :
@@ -1557,7 +1543,7 @@ let (__proj__Mksolver_t__item__solve :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> solve
 let (__proj__Mksolver_t__item__solve_sync :
@@ -1567,19 +1553,20 @@ let (__proj__Mksolver_t__item__solve_sync :
   =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> solve_sync
 let (__proj__Mksolver_t__item__finish : solver_t -> unit -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> finish
-let (__proj__Mksolver_t__item__refresh : solver_t -> unit -> unit) =
+let (__proj__Mksolver_t__item__refresh :
+  solver_t -> proof_namespace FStar_Pervasives_Native.option -> unit) =
   fun projectee ->
     match projectee with
-    | { init; push; pop; snapshot; rollback; encode_sig; preprocess;
+    | { init; snapshot; rollback; encode_sig; preprocess;
         spinoff_strictly_positive_goals; handle_smt_goal; solve; solve_sync;
         finish; refresh;_} -> refresh
 let (__proj__Mktcenv_hooks__item__tc_push_in_gamma_hook :
@@ -6655,8 +6642,11 @@ let (lidents : env -> FStar_Ident.lident Prims.list) =
            fun keys1 ->
              FStar_Compiler_List.op_At (FStar_Syntax_Util.lids_of_sigelt v)
                keys1) keys
-let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
-  fun env1 ->
+let (should_enc_path :
+  (Prims.string Prims.list * Prims.bool) Prims.list ->
+    Prims.string Prims.list -> Prims.bool)
+  =
+  fun proof_ns ->
     fun path ->
       let rec str_i_prefix xs ys =
         match (xs, ys) with
@@ -6669,15 +6659,15 @@ let (should_enc_path : env -> Prims.string Prims.list -> Prims.bool) =
       let uu___ =
         FStar_Compiler_List.tryFind
           (fun uu___1 ->
-             match uu___1 with | (p, uu___2) -> str_i_prefix p path)
-          env1.proof_ns in
+             match uu___1 with | (p, uu___2) -> str_i_prefix p path) proof_ns in
       match uu___ with
       | FStar_Pervasives_Native.None -> false
       | FStar_Pervasives_Native.Some (uu___1, b) -> b
-let (should_enc_lid : env -> FStar_Ident.lident -> Prims.bool) =
-  fun env1 ->
+let (should_enc_lid : proof_namespace -> FStar_Ident.lident -> Prims.bool) =
+  fun proof_ns ->
     fun lid ->
-      let uu___ = FStar_Ident.path_of_lid lid in should_enc_path env1 uu___
+      let uu___ = FStar_Ident.path_of_lid lid in
+      should_enc_path proof_ns uu___
 let (cons_proof_ns : Prims.bool -> env -> name_prefix -> env) =
   fun b ->
     fun e ->

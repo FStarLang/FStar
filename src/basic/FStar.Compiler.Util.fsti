@@ -60,7 +60,7 @@ val psmap_fold: psmap 'value -> (string -> 'value -> 'a -> 'a) -> 'a -> 'a
 val psmap_find_map: psmap 'value -> (string -> 'value -> option 'a) -> option 'a
 val psmap_modify: psmap 'value -> string -> (option 'value -> 'value) -> psmap 'value
 val psmap_merge: psmap 'value -> psmap 'value -> psmap 'value
-
+val psmap_remove: psmap 'value -> string -> psmap 'value
 type imap 'value
 val imap_create: int -> imap 'value
 val imap_clear:imap 'value -> unit

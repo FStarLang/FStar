@@ -3947,6 +3947,118 @@ let rec (list_elements :
                hd :: uu___6 in
              FStar_Pervasives_Native.Some uu___5
          | uu___2 -> FStar_Pervasives_Native.None)
+let (destruct_lemma_with_smt_patterns :
+  FStar_Syntax_Syntax.term ->
+    (FStar_Syntax_Syntax.binders * FStar_Syntax_Syntax.term *
+      FStar_Syntax_Syntax.term * FStar_Syntax_Syntax.arg Prims.list
+      Prims.list) FStar_Pervasives_Native.option)
+  =
+  fun t ->
+    let lemma_pats p =
+      let smt_pat_or t1 =
+        let uu___ = let uu___1 = unmeta t1 in head_and_args uu___1 in
+        match uu___ with
+        | (head, args) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
+              (uu___2, args) in
+            (match uu___1 with
+             | (FStar_Syntax_Syntax.Tm_fvar fv, (e, uu___2)::[]) when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.smtpatOr_lid
+                 -> FStar_Pervasives_Native.Some e
+             | uu___2 -> FStar_Pervasives_Native.None) in
+      let one_pat p1 =
+        let uu___ = let uu___1 = unmeta p1 in head_and_args uu___1 in
+        match uu___ with
+        | (head, args) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
+              (uu___2, args) in
+            (match uu___1 with
+             | (FStar_Syntax_Syntax.Tm_fvar fv, (uu___2, uu___3)::arg::[])
+                 when
+                 FStar_Syntax_Syntax.fv_eq_lid fv
+                   FStar_Parser_Const.smtpat_lid
+                 -> arg
+             | uu___2 ->
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 = tts p1 in
+                     FStar_Compiler_Util.format1
+                       "Not an atomic SMT pattern: %s; patterns on lemmas must be a list of simple SMTPat's or a single SMTPatOr containing a list of lists of patterns"
+                       uu___5 in
+                   (FStar_Errors_Codes.Error_IllSMTPat, uu___4) in
+                 FStar_Errors.raise_error uu___3 p1.FStar_Syntax_Syntax.pos) in
+      let list_literal_elements e =
+        let uu___ = list_elements e in
+        match uu___ with
+        | FStar_Pervasives_Native.Some l -> l
+        | FStar_Pervasives_Native.None ->
+            (FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
+               (FStar_Errors_Codes.Warning_NonListLiteralSMTPattern,
+                 "SMT pattern is not a list literal; ignoring the pattern");
+             []) in
+      let elts = list_literal_elements p in
+      match elts with
+      | t1::[] ->
+          let uu___ = smt_pat_or t1 in
+          (match uu___ with
+           | FStar_Pervasives_Native.Some e ->
+               let uu___1 = list_literal_elements e in
+               FStar_Compiler_List.map
+                 (fun branch1 ->
+                    let uu___2 = list_literal_elements branch1 in
+                    FStar_Compiler_List.map one_pat uu___2) uu___1
+           | uu___1 ->
+               let uu___2 = FStar_Compiler_List.map one_pat elts in [uu___2])
+      | uu___ ->
+          let uu___1 = FStar_Compiler_List.map one_pat elts in [uu___1] in
+    let uu___ =
+      let uu___1 = FStar_Syntax_Subst.compress t in
+      uu___1.FStar_Syntax_Syntax.n in
+    match uu___ with
+    | FStar_Syntax_Syntax.Tm_arrow
+        { FStar_Syntax_Syntax.bs1 = binders; FStar_Syntax_Syntax.comp = c;_}
+        ->
+        let uu___1 = FStar_Syntax_Subst.open_comp binders c in
+        (match uu___1 with
+         | (binders1, c1) ->
+             (match c1.FStar_Syntax_Syntax.n with
+              | FStar_Syntax_Syntax.Comp
+                  { FStar_Syntax_Syntax.comp_univs = uu___2;
+                    FStar_Syntax_Syntax.effect_name = uu___3;
+                    FStar_Syntax_Syntax.result_typ = uu___4;
+                    FStar_Syntax_Syntax.effect_args =
+                      (pre, uu___5)::(post, uu___6)::(pats, uu___7)::[];
+                    FStar_Syntax_Syntax.flags = uu___8;_}
+                  ->
+                  let uu___9 =
+                    let uu___10 = lemma_pats pats in
+                    (binders1, pre, post, uu___10) in
+                  FStar_Pervasives_Native.Some uu___9
+              | uu___2 -> FStar_Compiler_Effect.failwith "impos"))
+    | uu___1 -> FStar_Pervasives_Native.None
+let (triggers_of_smt_lemma :
+  FStar_Syntax_Syntax.term -> FStar_Ident.lident Prims.list Prims.list) =
+  fun t ->
+    let uu___ = destruct_lemma_with_smt_patterns t in
+    match uu___ with
+    | FStar_Pervasives_Native.None -> []
+    | FStar_Pervasives_Native.Some (uu___1, uu___2, uu___3, pats) ->
+        FStar_Compiler_List.map
+          (FStar_Compiler_List.collect
+             (fun uu___4 ->
+                match uu___4 with
+                | (t1, uu___5) ->
+                    let uu___6 = FStar_Syntax_Free.fvars t1 in
+                    FStar_Class_Setlike.elems ()
+                      (Obj.magic
+                         (FStar_Compiler_RBSet.setlike_rbset
+                            FStar_Syntax_Syntax.ord_fv)) (Obj.magic uu___6)))
+          pats
 let (unthunk : FStar_Syntax_Syntax.term -> FStar_Syntax_Syntax.term) =
   fun t ->
     let uu___ =
@@ -3981,94 +4093,12 @@ let (smt_lemma_as_forall :
   =
   fun t ->
     fun universe_of_binders ->
-      let list_elements1 e =
-        let uu___ = list_elements e in
-        match uu___ with
-        | FStar_Pervasives_Native.Some l -> l
-        | FStar_Pervasives_Native.None ->
-            (FStar_Errors.log_issue e.FStar_Syntax_Syntax.pos
-               (FStar_Errors_Codes.Warning_NonListLiteralSMTPattern,
-                 "SMT pattern is not a list literal; ignoring the pattern");
-             []) in
-      let one_pat p =
-        let uu___ = let uu___1 = unmeta p in head_and_args uu___1 in
-        match uu___ with
-        | (head, args) ->
-            let uu___1 =
-              let uu___2 =
-                let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
-              (uu___2, args) in
-            (match uu___1 with
-             | (FStar_Syntax_Syntax.Tm_fvar fv, (uu___2, uu___3)::arg::[])
-                 when
-                 FStar_Syntax_Syntax.fv_eq_lid fv
-                   FStar_Parser_Const.smtpat_lid
-                 -> arg
-             | uu___2 ->
-                 let uu___3 =
-                   let uu___4 =
-                     let uu___5 = tts p in
-                     FStar_Compiler_Util.format1
-                       "Not an atomic SMT pattern: %s; patterns on lemmas must be a list of simple SMTPat's or a single SMTPatOr containing a list of lists of patterns"
-                       uu___5 in
-                   (FStar_Errors_Codes.Error_IllSMTPat, uu___4) in
-                 FStar_Errors.raise_error uu___3 p.FStar_Syntax_Syntax.pos) in
-      let lemma_pats p =
-        let elts = list_elements1 p in
-        let smt_pat_or t1 =
-          let uu___ = let uu___1 = unmeta t1 in head_and_args uu___1 in
-          match uu___ with
-          | (head, args) ->
-              let uu___1 =
-                let uu___2 =
-                  let uu___3 = un_uinst head in uu___3.FStar_Syntax_Syntax.n in
-                (uu___2, args) in
-              (match uu___1 with
-               | (FStar_Syntax_Syntax.Tm_fvar fv, (e, uu___2)::[]) when
-                   FStar_Syntax_Syntax.fv_eq_lid fv
-                     FStar_Parser_Const.smtpatOr_lid
-                   -> FStar_Pervasives_Native.Some e
-               | uu___2 -> FStar_Pervasives_Native.None) in
-        match elts with
-        | t1::[] ->
-            let uu___ = smt_pat_or t1 in
-            (match uu___ with
-             | FStar_Pervasives_Native.Some e ->
-                 let uu___1 = list_elements1 e in
-                 FStar_Compiler_List.map
-                   (fun branch1 ->
-                      let uu___2 = list_elements1 branch1 in
-                      FStar_Compiler_List.map one_pat uu___2) uu___1
-             | uu___1 ->
-                 let uu___2 = FStar_Compiler_List.map one_pat elts in
-                 [uu___2])
-        | uu___ ->
-            let uu___1 = FStar_Compiler_List.map one_pat elts in [uu___1] in
       let uu___ =
-        let uu___1 =
-          let uu___2 = FStar_Syntax_Subst.compress t in
-          uu___2.FStar_Syntax_Syntax.n in
+        let uu___1 = destruct_lemma_with_smt_patterns t in
         match uu___1 with
-        | FStar_Syntax_Syntax.Tm_arrow
-            { FStar_Syntax_Syntax.bs1 = binders;
-              FStar_Syntax_Syntax.comp = c;_}
-            ->
-            let uu___2 = FStar_Syntax_Subst.open_comp binders c in
-            (match uu___2 with
-             | (binders1, c1) ->
-                 (match c1.FStar_Syntax_Syntax.n with
-                  | FStar_Syntax_Syntax.Comp
-                      { FStar_Syntax_Syntax.comp_univs = uu___3;
-                        FStar_Syntax_Syntax.effect_name = uu___4;
-                        FStar_Syntax_Syntax.result_typ = uu___5;
-                        FStar_Syntax_Syntax.effect_args =
-                          (pre, uu___6)::(post, uu___7)::(pats, uu___8)::[];
-                        FStar_Syntax_Syntax.flags = uu___9;_}
-                      ->
-                      let uu___10 = lemma_pats pats in
-                      (binders1, pre, post, uu___10)
-                  | uu___3 -> FStar_Compiler_Effect.failwith "impos"))
-        | uu___2 -> FStar_Compiler_Effect.failwith "Impos" in
+        | FStar_Pervasives_Native.None ->
+            FStar_Compiler_Effect.failwith "impos"
+        | FStar_Pervasives_Native.Some res -> res in
       match uu___ with
       | (binders, pre, post, patterns) ->
           let post1 = unthunk_lemma_post post in

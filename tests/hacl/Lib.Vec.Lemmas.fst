@@ -4,7 +4,7 @@ module Lib.Vec.Lemmas
 #push-options "--z3rlimit 30 --max_fuel 0 --max_ifuel 0 \
   --using_facts_from '-* +Prims +FStar.Pervasives +FStar.Math.Lemmas +FStar.Seq -FStar.Seq.Properties.slice_slice \
     +Lib.IntTypes +Lib.Sequence +Lib.Sequence.Lemmas +Lib.LoopCombinators +Lib.Vec.Lemmas'"
-
+#set-options "--z3refresh"
 
 let rec lemma_repeat_gen_vec w n a a_vec normalize_v f f_v acc_v0 =
   if n = 0 then begin
@@ -305,7 +305,6 @@ let lemma_repeat_blocks_multi_vec_equiv_pre #a #b #b_vec w blocksize n hi_f f f_
     repeat_gen_blocks_multi blocksize (w * i) hi_f w b_v (Loops.fixed_a b) (Loops.fixed_i f) (normalize_v acc_v);
     }
 
-
 let lemma_repeat_blocks_multi_vec #a #b #b_vec w blocksize inp f f_v normalize_v acc_v0 =
   let blocksize_v = w * blocksize in
   let len = length inp in
@@ -596,6 +595,7 @@ val lemma_map_blocks_vec_equiv_pre_k_aux:
     let l_sh = l_shift blocksize (w * n) (w * n + w) nb l in
     Seq.index (l_v n rem b_v) k == Seq.index (map_blocks blocksize b_v f_sh l_sh) k)
 
+#restart-solver
 let lemma_map_blocks_vec_equiv_pre_k_aux #a w blocksize n f l l_v rem b_v pre k =
   let nb = rem / blocksize in
   let f_sh = f_shift blocksize (w * n) (w * n + w) nb f in

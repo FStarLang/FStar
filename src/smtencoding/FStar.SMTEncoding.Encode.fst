@@ -1831,7 +1831,7 @@ let get_env cmn tcenv = match !last_env with
 let set_env env = match !last_env with
     | [] -> failwith "Empty env stack"
     | _::tl -> last_env := env::tl
-
+let get_current_env tcenv = get_env (Env.current_module tcenv) tcenv
 let push_env () = match !last_env with
     | [] -> failwith "Empty env stack"
     | hd::tl ->
@@ -1847,20 +1847,18 @@ let rollback_env depth = FStar.Common.rollback pop_env last_env depth
 let init tcenv =
     init_env tcenv;
     Z3.giveZ3 [DefPrelude]
-let snapshot msg = BU.atomically (fun () ->
+let snapshot_encoding msg = BU.atomically (fun () ->
     let env_depth, () = snapshot_env () in
     let varops_depth, () = varops.snapshot () in
-    let z3_depth, () = Z3.snapshot msg in
-    (env_depth, varops_depth, z3_depth), ())
-let rollback msg depth = BU.atomically (fun () ->
-    let env_depth, varops_depth, z3_depth = match depth with
-        | Some (s1, s2, s3) -> Some s1, Some s2, Some s3
-        | None -> None, None, None in
+    (env_depth, varops_depth))
+let rollback_encoding msg (depth:option encoding_depth) = BU.atomically (fun () ->
+    let env_depth, varops_depth = match depth with
+        | Some (s1, s2) -> Some s1, Some s2
+        | None -> None, None in
     rollback_env env_depth;
-    varops.rollback varops_depth;
-    Z3.rollback msg z3_depth)
-let push msg = snd (snapshot msg)
-let pop msg = ignore (rollback msg None)
+    varops.rollback varops_depth)
+let push_encoding_state msg = let _ = snapshot_encoding msg in ()
+let pop_encoding_state msg = rollback_encoding msg None
 
 //////////////////////////////////////////////////////////////////////////
 //guarding top-level terms with fact database triggers
@@ -1900,12 +1898,14 @@ let encode_top_level_facts (env:env_t) (se:sigelt) =
 let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
   decls |> List.collect (fun elt ->
     if elt.key = None then [elt]  //not meant to be hashconsed, keep it
-    else match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
-         | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
+    else (
+      match BU.smap_try_find env.global_cache (elt.key |> BU.must) with
+      | Some cache_elt -> [Term.RetainAssumptions cache_elt.a_names] |> mk_decls_trivial  //hit, retain a_names from the hit entry
                                                                                              //AND drop elt
-         | None ->  //no hit, update cache and retain elt
-           BU.smap_add env.global_cache (elt.key |> BU.must) elt;
-           [elt]
+      | None ->  //no hit, update cache and retain elt
+        BU.smap_add env.global_cache (elt.key |> BU.must) elt;
+        [elt]
+    )
   )
 
 let encode_sig tcenv se =

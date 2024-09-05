@@ -29,6 +29,7 @@ open FStar.TypeChecker.Env
 open FStar.SMTEncoding
 open FStar.SMTEncoding.ErrorReporting
 open FStar.SMTEncoding.Util
+open FStar.SMTEncoding.Env
 open FStar.Class.Show
 open FStar.Class.PP
 open FStar.Class.Hashable
@@ -41,6 +42,7 @@ module Print    = FStar.Syntax.Print
 module Syntax   = FStar.Syntax.Syntax
 module TcUtil   = FStar.TypeChecker.Util
 module U        = FStar.Syntax.Util
+module UC       = FStar.SMTEncoding.UnsatCore
 exception SplitQueryAndRetry
 
 let dbg_SMTQuery = Debug.get_toggle "SMTQuery"
@@ -53,7 +55,7 @@ let dbg_SMTFail  = Debug.get_toggle "SMTFail"
 // The type definition is now in [FStar.Compiler.Util], since it needs to be visible to
 // both the F# and OCaml implementations.
 
-type z3_replay_result = either Z3.unsat_core, error_labels
+type z3_replay_result = either (option UC.unsat_core), error_labels
 let z3_result_as_replay_result = function
     | Inl l -> Inl l
     | Inr (r, _) -> Inr r
@@ -63,6 +65,7 @@ let replaying_hints: ref (option hints) = BU.mk_ref None
 (****************************************************************************)
 (* Hint databases (public)                                                  *)
 (****************************************************************************)
+let use_hints () = Options.use_hints () && Options.Ext.get "context_pruning" = ""
 let initialize_hints_db src_filename format_filename : unit =
     if Options.record_hints() then recorded_hints := Some [];
     let norm_src_filename = BU.normalize_file_path src_filename in
@@ -85,7 +88,7 @@ let initialize_hints_db src_filename format_filename : unit =
                  replaying_hints := Some hints.hints
 
           | MalformedJson ->
-            if Options.use_hints () then
+            if use_hints () then
               Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Malformed JSON hints file: %s; ran without hints"
@@ -93,7 +96,7 @@ let initialize_hints_db src_filename format_filename : unit =
             ()
 
           | UnableToOpen ->
-            if Options.use_hints () then
+            if  use_hints () then
               Err.log_issue_text Range.dummyRange
                             (Err.Warning_CouldNotReadHints,
                              BU.format1 "Unable to open hints file: %s; ran without hints"
@@ -122,66 +125,6 @@ let with_hints_db fname f =
     // no cleanup needs to occur if an error occurs.
     finalize_hints_db fname;
     result
-
-let filter_using_facts_from (e:env) (theory:list decl) =
-    let matches_fact_ids (include_assumption_names:BU.smap bool) (a:Term.assumption) =
-      match a.assumption_fact_ids with
-      | [] -> true //retaining `a` because it is not tagged with a fact id
-      | _ ->
-        a.assumption_fact_ids |> BU.for_some (function | Name lid -> Env.should_enc_lid e lid | _ -> false)
-        || Option.isSome (BU.smap_try_find include_assumption_names a.assumption_name)
-    in
-    //theory can have ~10k elements; fold_right on it is dangerous, since it's not tail recursive
-    //AR: reversing the list is also crucial for correctness because of RetainAssumption
-    //    specifically (RetainAssumption a) comes after (a) in the theory list
-    //    as a result, it is crucial that we consider the (RetainAssumption a) before we encounter (a)
-    let theory_rev = List.rev theory in  //List.rev is already the tail recursive version of rev
-    let pruned_theory =
-        let include_assumption_names =
-            //this map typically grows to 10k+ elements
-            //using a map for it is important, otherwise the list scanning
-            //becomes near quadratic in the # of facts
-            BU.smap_create 10000
-        in
-        let keep_decl :decl -> bool = function  //effectful function, adds decls to the include_assumption_names map
-          | Assume a -> matches_fact_ids include_assumption_names a
-          | RetainAssumptions names ->
-            List.iter (fun x -> BU.smap_add include_assumption_names x true) names;
-            true
-          | Module _ -> failwith "Solver.fs::keep_decl should never have been called with a Module decl"
-          | _ -> true
-        in
-        List.fold_left (fun out d ->
-          match d with
-          | Module (name, decls) -> decls |> List.filter keep_decl |> (fun decls -> Module (name, decls)::out)
-          | _ -> if keep_decl d then d::out else out) [] theory_rev
-    in
-    pruned_theory
-
-let rec filter_assertions_with_stats (e:env) (core:Z3.unsat_core) (theory:list decl)
-  :(list decl & bool & int & int) =  //(filtered theory, if core used, retained, pruned)
-    match core with
-    | None ->
-      filter_using_facts_from e theory, false, 0, 0  //no stats if no core
-    | Some core ->
-        //so that we can use the tail-recursive fold_left
-        let theory_rev = List.rev theory in
-        let theory', n_retained, n_pruned =
-            List.fold_left (fun (theory, n_retained, n_pruned) d -> match d with
-            | Assume a ->
-                if List.contains a.assumption_name core
-                then d::theory, n_retained+1, n_pruned
-                else if BU.starts_with a.assumption_name "@"
-                then d::theory, n_retained, n_pruned
-                else theory, n_retained, n_pruned+1
-            | Module (name, decls) ->
-              decls |> filter_assertions_with_stats e (Some core)
-                    |> (fun (decls, _, r, p) -> Module (name, decls)::theory, n_retained + r, n_pruned + p)
-            | _ -> d::theory, n_retained, n_pruned)
-            ([Caption ("UNSAT CORE USED: " ^ (core |> String.concat ", "))], 0, 0) theory_rev in  //start with the unsat core caption at the end
-        theory', true, n_retained, n_pruned
-
-let filter_facts_without_core (e:env) x = filter_using_facts_from e x, false
 
 (***********************************************************************************)
 (* Invoking the SMT solver and extracting an error report from the model, if any   *)
@@ -214,7 +157,7 @@ let error_to_is_timeout err =
     else []
 
 type query_settings = {
-    query_env:env;
+    query_env:env_t;
     query_decl:decl;
     query_name:string;
     query_index:int;
@@ -222,7 +165,7 @@ type query_settings = {
     query_fuel:int;
     query_ifuel:int;
     query_rlimit:int;
-    query_hint:Z3.unsat_core;
+    query_hint:option UC.unsat_core;
     query_errors:list errors;
     query_all_labels:error_labels;
     query_suffix:list decl;
@@ -230,42 +173,6 @@ type query_settings = {
     query_can_be_split_and_retried:bool;
     query_term: FStar.Syntax.Syntax.term;
 }
-
-let maybe_build_core_from_hook (e:env) (qsettings:option query_settings) (core:Z3.unsat_core) (theory:list decl): Z3.unsat_core =
-  match qsettings with | None -> core | Some qsettings -> // Only when we have a full query
-  match core with | Some _ -> core | None -> // No current core/hint
-  match Options.hint_hook () with | None -> core | Some hint_hook_cmd -> // And a hint_hook set
-
-  let qryid = BU.format2 "(%s, %s)" qsettings.query_name (string_of_int qsettings.query_index) in
-  let qry = Term.declToSmt_no_caps "" qsettings.query_decl in
-  let qry = BU.replace_chars qry '\n' "" in
-  match e.qtbl_name_and_index with
-  | None, _ ->
-    // Should not happen
-    Err.diag qsettings.query_range "maybe_build_core_from_hook: qbtl name unset?";
-    core
-  | Some (lid, typ, ctr), _ ->
-    (* Err.log_issue qsettings.query_range (Err.Warning_UnexpectedZ3Stderr, *)
-    (*                         BU.format3 "will construct hint for queryid=%s,  typ=%s, query=%s" *)
-    (*                                   qryid (show typ) qry); *)
-    let open FStar.Json in
-    let input = JsonAssoc [
-      ("query_name", JsonStr qsettings.query_name);
-      ("query_ctr", JsonInt ctr);
-      ("type", JsonStr (show typ)); // TODO: normalize print options, they will affect this output
-      ("query", JsonStr qry);
-      ("theory", JsonList (List.map (fun d -> JsonStr (Term.declToSmt_no_caps "" d)) theory));
-    ]
-    in
-    let input = string_of_json input in
-    let output = BU.run_process ("hint-hook-"^qryid) hint_hook_cmd [] (Some input) in
-    let facts = String.split [','] output in
-    Some facts
-
-let filter_assertions (e:env) (qsettings:option query_settings) (core:Z3.unsat_core) (theory:list decl) =
-  let core = maybe_build_core_from_hook e qsettings core theory in
-  let (theory, b, _, _) = filter_assertions_with_stats e core theory in
-  theory, b
 
 (* Translation from F* rlimit units to Z3 rlimit units.
 
@@ -345,15 +252,16 @@ let detail_hint_replay settings z3result =
          | _failed ->
            let ask_z3 label_assumptions =
                Z3.ask settings.query_range
-                      (filter_assertions settings.query_env None settings.query_hint)
+                      // (filter_assertions settings.query_env (Some settings) settings.query_hint)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics settings label_assumptions)
                       (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
-                      None
                       false
+                      None
+                      // settings.query_hint
            in
-           detail_errors true settings.query_env settings.query_all_labels ask_z3
+           detail_errors true settings.query_env.tcenv settings.query_all_labels ask_z3
 
 let find_localized_errors (errs : list errors) : option errors =
     errs |> List.tryFind (fun err -> match err.error_messages with [] -> false | _ -> true)
@@ -445,12 +353,12 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
         match find_localized_errors settings.query_errors, settings.query_all_labels with
         | Some err, _ ->
           // FStar.Errors.log_issue settings.query_range (FStar.Errors.Warning_SMTErrorReason, smt_error);
-          FStar.TypeChecker.Err.errors_smt_detail settings.query_env err.error_messages smt_error
+          FStar.TypeChecker.Err.errors_smt_detail settings.query_env.tcenv err.error_messages smt_error
 
         | None, [(_, msg, rng)] ->
           //we have a unique label already; just report it
           FStar.TypeChecker.Err.errors_smt_detail
-                     settings.query_env
+                     settings.query_env.tcenv
                      [(Error_Z3SolverError, msg, rng, get_ctx())]
                      recovery_failed_msg
 
@@ -475,7 +383,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                       ^/^ pp settings.query_term;
                   ]
                   in
-                  let range = Env.get_range settings.query_env in
+                  let range = Env.get_range settings.query_env.tcenv in
                   [dummy_fv, msg, range]
                 )
                 else if l > 1
@@ -487,8 +395,8 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
                   //use opted into --split_queries no.
                   if Options.split_queries () <> Options.No then
                     FStar.TypeChecker.Err.log_issue_text
-                         settings.query_env
-                         (Env.get_range settings.query_env)
+                         settings.query_env.tcenv
+                         (Env.get_range settings.query_env.tcenv)
                          (Warning_SplitAndRetryQueries,
                            "The verification condition was to be split into several atomic sub-goals, \
                             but this query has multiple sub-goals---the error report may be inaccurate");
@@ -499,7 +407,7 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
               labels |>
                  List.collect (fun (_, msg, rng) ->
                    FStar.TypeChecker.Err.errors_smt_detail
-                     settings.query_env
+                     settings.query_env.tcenv
                      [(Error_Z3SolverError, msg, rng, get_ctx())]
                      recovery_failed_msg
                      )
@@ -515,49 +423,60 @@ let errors_to_report (tried_recovery : bool) (settings : query_settings) : list 
            in
            let ask_z3 label_assumptions =
               Z3.ask  settings.query_range
-                      (filter_facts_without_core settings.query_env)
+                      // (filter_using_facts_from settings.query_env settings.query_pruned_context)
                       settings.query_hash
                       settings.query_all_labels
                       (with_fuel_and_diagnostics initial_fuel label_assumptions)
                       (BU.format2 "(%s, %s)" settings.query_name (string_of_int settings.query_index))
-                      None
                       false
+                      None
               in
            (* GM: This is a bit of hack, we don't return these detailed errors
             * (it implies rewriting detail_errors heavily). Returning them
             * is only relevant for summarizing errors on --quake, where I don't
             * think we care about these. *)
-           detail_errors false settings.query_env settings.query_all_labels ask_z3
+           detail_errors false settings.query_env.tcenv settings.query_all_labels ask_z3
     in
     basic_errors
 
 let report_errors tried_recovery qry_settings =
     FStar.Errors.add_errors (errors_to_report tried_recovery qry_settings)
 
+
+type unique_string_accumulator = {
+  add: string -> unit;
+  get: unit -> list string;
+  clear: unit -> unit
+}
+
+(* A generic accumulator of unique strings,
+   extracted in sorted order *)
+let mk_unique_string_accumulator ()
+: unique_string_accumulator
+= let strings = BU.mk_ref [] in
+  let add m =
+    let ms = !strings in
+    if List.contains m ms then ()
+    else strings := m :: ms
+  in
+  let get () = 
+    !strings |> BU.sort_with String.compare
+  in
+  let clear () = strings := [] in
+  { add ; get; clear }
+
 let query_info settings z3result =
-    let process_unsat_core (core:unsat_core) =
-        (* A generic accumulator of unique strings,
-           extracted in sorted order *)
-        let accumulator () =
-            let r : ref (list string) = BU.mk_ref [] in
-            let add, get =
-                let module_names = BU.mk_ref [] in
-                (fun m ->
-                    let ms = !module_names in
-                    if List.contains m ms then ()
-                    else module_names := m :: ms),
-                (fun () ->
-                    !module_names |> BU.sort_with String.compare)
-            in
-            add, get
-       in
+    let process_unsat_core (core:option UC.unsat_core) =
        (* Accumulator for module names *)
-       let add_module_name, get_module_names =
-           accumulator()
+       let { add=add_module_name; get=get_module_names } =
+         mk_unique_string_accumulator ()
        in
+       let add_module_name s =
+         add_module_name s
+      in
        (* Accumulator for discarded names *)
-       let add_discarded_name, get_discarded_names =
-           accumulator()
+       let { add=add_discarded_name; get=get_discarded_names } =
+         mk_unique_string_accumulator ()
        in
        (* SMT Axioms are named using an ad hoc naming convention
           that includes the F* source name within it.
@@ -577,6 +496,7 @@ let query_info settings z3result =
           into a module name + a top-level identifier
        *)
        let parse_axiom_name (s:string) =
+            // BU.print1 "Parsing axiom name <%s>\n" s;
             let chars = String.list_of_string s in
             let first_upper_index =
                 BU.try_find_index BU.is_upper chars
@@ -618,14 +538,13 @@ let query_info settings z3result =
                     match components with
                     | [] -> []
                     | _ ->
-                      let module_name, last = BU.prefix components in
-                      let components = module_name @ exclude_suffix last in
+                      let lident, last = BU.prefix components in
+                      let components = lident @ exclude_suffix last in
+                      let module_name = components |> BU.prefix_until (fun s -> not <| BU.is_upper (BU.char_at s 0)) in
                       let _ =
-                          match components with
-                          | []
-                          | [_] -> () //no module name
-                          | _ ->
-                            add_module_name (String.concat "." module_name)
+                          match module_name with
+                          | None -> ()
+                          | Some (m, _, _) -> add_module_name (String.concat "." m)
                       in
                       components
                 in
@@ -633,17 +552,20 @@ let query_info settings z3result =
                 then (add_discarded_name s; [])
                 else [ components |> String.concat "."]
         in
+        let should_log = Options.hint_info () || Options.query_stats () in
+        let maybe_log (f:unit -> unit) = if should_log then f () in
         match core with
         | None ->
-           BU.print_string "no unsat core\n"
+           maybe_log <| (fun _ -> BU.print_string "no unsat core\n")
         | Some core ->
            let core = List.collect parse_axiom_name core in
-           BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
-                     (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
-           BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
-                     (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
-           BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
-                     (get_discarded_names() |> String.concat ", ")
+           maybe_log <| (fun _ ->
+            BU.print1 "Z3 Proof Stats: Modules relevant to this proof:\nZ3 Proof Stats:\t%s\n"
+                      (get_module_names() |> String.concat "\nZ3 Proof Stats:\t");
+            BU.print1 "Z3 Proof Stats (Detail 1): Specifically:\nZ3 Proof Stats (Detail 1):\t%s\n"
+                      (String.concat "\nZ3 Proof Stats (Detail 1):\t" core);
+            BU.print1 "Z3 Proof Stats (Detail 2): Note, this report ignored the following names in the context: %s\n"
+                      (get_discarded_names() |> String.concat ", "))
     in
     if Options.hint_info()
     || Options.query_stats()
@@ -666,7 +588,7 @@ let query_info settings z3result =
                 let str = smap_fold z3result.z3result_statistics f "statistics={" in
                     (substring str 0 ((String.length str) - 1)) ^ "}"
             else "" in
-        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s %s\n"
+        BU.print "%s\tQuery-stats (%s, %s)\t%s%s in %s milliseconds with fuel %s and ifuel %s and rlimit %s\n"
              [  range;
                 settings.query_name;
                 show settings.query_index;
@@ -676,13 +598,17 @@ let query_info settings z3result =
                 show settings.query_fuel;
                 show settings.query_ifuel;
                 show (settings.query_rlimit);
-                stats
+                // stats
              ];
         if Options.print_z3_statistics () then process_unsat_core core;
         errs |> List.iter (fun (_, msg, range) ->
             let msg = if used_hint settings then Pprint.doc_of_string "Hint-replay failed" :: msg else msg in
             FStar.Errors.log_issue_doc range (FStar.Errors.Warning_HitReplayFailed, msg))
     end
+    else if Options.Ext.get "profile_context" <> ""
+    then match z3result.z3result_status with
+         | UNSAT core -> process_unsat_core core
+         | _ -> ()
 
 //caller must ensure that the recorded_hints is already initiailized
 let store_hint hint =
@@ -822,9 +748,9 @@ instance _ : showable answer = {
 let make_solver_configs
     (can_split : bool)
     (is_retry : bool)
-    (env : Env.env)
+    (env : env_t)
     (all_labels : error_labels)
-    (prefix : list decl)
+    // (prefix : list decl)
     (query : decl)
     (query_term : Syntax.term)
     (suffix : list decl)
@@ -833,7 +759,7 @@ let make_solver_configs
     (* Fetch the settings. *)
     let default_settings, next_hint =
         let qname, index =
-            match env.qtbl_name_and_index with
+            match env.tcenv.qtbl_name_and_index with
             | None, _ -> failwith "No query name set!"
             | Some (q, _typ, n), _ -> Ident.string_of_lid q, n
         in
@@ -847,7 +773,7 @@ let make_solver_configs
             query_decl=query;
             query_name=qname;
             query_index=index;
-            query_range=Env.get_range env;
+            query_range=Env.get_range env.tcenv;
             query_fuel=Options.initial_fuel();
             query_ifuel=Options.initial_ifuel();
             query_rlimit=rlimit;
@@ -859,14 +785,14 @@ let make_solver_configs
                         | None -> None
                         | Some {hash=h} -> h);
             query_can_be_split_and_retried=can_split;
-            query_term=query_term
+            query_term=query_term;
         } in
         default_settings, next_hint
     in
 
     (* Fetch hints, if any. *)
     let use_hints_setting =
-        if Options.use_hints () && next_hint |> is_some
+        if  use_hints () && next_hint |> is_some
         then
             let ({unsat_core=Some core; fuel=i; ifuel=j; hash=h}) = next_hint |> must in
             [{default_settings with query_hint=Some core;
@@ -914,15 +840,17 @@ let __ask_solver
  : either (list errors) query_settings
  =
     let check_one_config config : z3result =
-          if Options.z3_refresh() then Z3.refresh();
+          if Options.z3_refresh()
+          then (
+            Z3.refresh (Some config.query_env.tcenv.proof_ns)
+          );
           Z3.ask config.query_range
-                  (filter_assertions config.query_env (Some config) config.query_hint)
                   config.query_hash
                   config.query_all_labels
                   (with_fuel_and_diagnostics config [])
                   (BU.format2 "(%s, %s)" config.query_name (string_of_int config.query_index))
-                  (Some (Z3.mk_fresh_scope()))
-                  (used_hint config) // hint queries run in a fresh solver
+                  (used_hint config)
+                  config.query_hint
     in
 
     fold_queries configs check_one_config process_result
@@ -1101,7 +1029,7 @@ let ask_solver_recover
         | IncreaseRLimit factor -> try_factor factor
         | RestartAnd h ->
           Errors.diag_doc cfg.query_range [text "Trying a solver restart"];
-          cfg.query_env.solver.refresh();
+          cfg.query_env.tcenv.solver.refresh (Some cfg.query_env.tcenv.proof_ns);
           try_hammer h
       in
 
@@ -1132,19 +1060,20 @@ let ask_solver_recover
 
 let failing_query_ctr : ref int = BU.mk_ref 0
 
-let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) : unit =
+let maybe_save_failing_query (env:env_t) (qs:query_settings) : unit =
   (* Save failing query to a clean file if --log_failing_queries. *)
   if Options.log_failing_queries () then (
-    let mod = show (Env.current_module env) in
+    let mod = show (Env.current_module env.tcenv) in
     let n = (failing_query_ctr := !failing_query_ctr + 1; !failing_query_ctr) in
     let file_name = BU.format2 "failedQueries-%s-%s.smt2" mod (show n) in
     let query_str = Z3.ask_text
                             qs.query_range
-                            (filter_assertions qs.query_env None qs.query_hint)
+                            // (filter_assertions qs.query_env None qs.query_hint)
                             qs.query_hash
                             qs.query_all_labels
                             (with_fuel_and_diagnostics qs [])
                             (BU.format2 "(%s, %s)" qs.query_name (string_of_int qs.query_index))
+                            qs.query_hint
     in
     write_file file_name query_str;
     ()
@@ -1162,25 +1091,18 @@ let maybe_save_failing_query (env:env_t) (prefix:list decl) (qs:query_settings) 
   ()
 
 let ask_solver
-    (can_split : bool)
-    (is_retry : bool)
-    (env : Env.env)
-    (all_labels : error_labels)
-    (prefix : list decl)
-    (query : decl)
-    (query_term : Syntax.term)
-    (suffix : list decl)
+    (env : FStar.SMTEncoding.Env.env_t)
+    // (prefix : list decl)
+    (configs: list query_settings)
+    (next_hint : option hint)
  : list query_settings & answer
- =
-    (* Prepare the configurations to be used. *)
-    let configs, next_hint = make_solver_configs can_split is_retry env all_labels prefix query query_term suffix in
-    (* The default config is at the head. We distinguish this one since
+ =  (* The default config is at the head. We distinguish this one since
     it includes some metadata that we need, such as the query name, etc.
     (Though all other configs also contain it.) *)
     let default_settings = List.hd configs in
     let skip : bool =
-        env.admit ||
-        Env.too_early_in_prims env   ||
+        env.tcenv.admit ||
+        Env.too_early_in_prims env.tcenv   ||
         (match Options.admit_except () with
          | Some id ->
            if BU.starts_with id "("
@@ -1199,11 +1121,11 @@ let ask_solver
         // Feed the context of the query to the solver. We do this only
         // once for every VC. Every actual query will push and pop
         // whatever else they encode.
-        Z3.giveZ3 prefix;
+        // Z3.giveZ3 prefix;
         let ans = ask_solver_recover configs in
         let cfg = List.last configs in
         if not ans.ok then
-          maybe_save_failing_query env prefix cfg;
+          maybe_save_failing_query env cfg;
         ans
 
       )
@@ -1286,6 +1208,7 @@ type solver_cfg = {
   valid_intro      : bool;
   valid_elim       : bool;
   z3version        : string;
+  context_pruning  : bool
 }
 
 let _last_cfg : ref (option solver_cfg) = BU.mk_ref None
@@ -1298,6 +1221,7 @@ let get_cfg env : solver_cfg =
     ; valid_intro      = Options.smtencoding_valid_intro ()
     ; valid_elim       = Options.smtencoding_valid_elim ()
     ; z3version        = Options.z3_version ()
+    ; context_pruning  = Options.Ext.get "context_pruning" <> ""
     }
 
 let save_cfg env =
@@ -1311,13 +1235,13 @@ let maybe_refresh_solver env =
     | Some cfg ->
         if cfg <> get_cfg env then (
           save_cfg env;
-          Z3.refresh ()
+          Z3.refresh (Some env.proof_ns)
         )
 
 let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
   let r =
     try f () with
-    | e -> h (); raise e
+    | e -> h(); raise e
   in
   h (); r
 
@@ -1325,10 +1249,16 @@ let finally (h : unit -> unit) (f : unit -> 'a) : 'a =
 let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list query_settings & answer) =
   let do () : list query_settings & answer =
     maybe_refresh_solver tcenv;
-    Encode.push (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv));
-    let pop () = Encode.pop (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
-    finally pop (fun () ->
-      let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+    let msg =  (BU.format1 "Starting query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+    Encode.push_encoding_state msg;
+    let prefix, labels, qry, suffix = Encode.encode_query use_env_msg tcenv q in
+    Z3.start_query msg prefix qry;
+    let finish_query () = 
+      let msg = (BU.format1 "Ending query at %s" (Range.string_of_range <| Env.get_range tcenv)) in
+      Encode.pop_encoding_state msg;
+      Z3.finish_query msg
+    in
+    finally finish_query (fun () ->
       let tcenv = incr_query_index tcenv in
       match qry with
       (* trivial cases *)
@@ -1349,7 +1279,11 @@ let encode_and_ask (can_split:bool) (is_retry:bool) use_env_msg tcenv q : (list 
                           (Term.declToSmt "" qry)
                           (BU.string_of_int n))
         );
-        ask_solver can_split is_retry tcenv labels prefix qry q suffix
+        let env = FStar.SMTEncoding.Encode.get_current_env tcenv in
+        let configs, next_hint =
+          make_solver_configs can_split is_retry env labels qry q suffix
+        in
+        ask_solver env configs next_hint
 
       | _ -> failwith "Impossible"
     )
@@ -1507,12 +1441,23 @@ let solve_sync_bool use_env_msg tcenv q : bool =
 (* Top-level interface *)
 (**********************************************************************************************)
 
+let snapshot msg =
+  let v0, v1 = Encode.snapshot_encoding msg in
+  let v2 = Z3.snapshot msg in
+  (v0, v1, v2), ()
+let rollback msg tok =
+  let tok01, tok2 =
+    match tok with
+    | None -> None, None
+    | Some (v0, v1, v2) -> Some (v0, v1), Some v2
+  in
+  Encode.rollback_encoding msg tok01;
+  Z3.rollback msg tok2
+
 let solver = {
     init=(fun e -> save_cfg e; Encode.init e);
-    push=Encode.push;
-    pop=Encode.pop;
-    snapshot=Encode.snapshot;
-    rollback=Encode.rollback;
+    snapshot;
+    rollback;
     encode_sig=Encode.encode_sig;
 
     (* These three to be overriden by FStar.Universal.init_env *)
@@ -1528,8 +1473,6 @@ let solver = {
 
 let dummy = {
     init=(fun _ -> ());
-    push=(fun _ -> ());
-    pop=(fun _ -> ());
     snapshot=(fun _ -> (0, 0, 0), ());
     rollback=(fun _ _ -> ());
     encode_sig=(fun _ _ -> ());
@@ -1539,5 +1482,5 @@ let dummy = {
     solve=(fun _ _ _ -> ());
     solve_sync=(fun _ _ _ -> false);
     finish=(fun () -> ());
-    refresh=(fun () -> ());
+    refresh=(fun _ -> ());
 }

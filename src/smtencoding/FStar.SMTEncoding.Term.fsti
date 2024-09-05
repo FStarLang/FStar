@@ -118,7 +118,8 @@ type assumption = {
     assumption_term: term;
     assumption_caption: caption;
     assumption_name: string;
-    assumption_fact_ids:list fact_db_id
+    assumption_fact_ids:list fact_db_id;
+    assumption_free_names: RBSet.t string;
 }
 type decl =
   | DefPrelude
@@ -130,8 +131,8 @@ type decl =
   | Eval       of term
   | Echo       of string
   | RetainAssumptions of list string
-  | Push
-  | Pop
+  | Push       of int
+  | Pop        of int
   | CheckSat
   | GetUnsatCore
   | SetOption  of string & string
@@ -211,6 +212,7 @@ val fv_eq : fv -> fv -> bool
 val fv_of_term : term -> fv
 val fvs_subset_of: fvs -> fvs -> bool
 val free_variables: term -> fvs
+val free_top_level_names : term -> RBSet.t string
 val mkTrue :  (Range.range -> term)
 val mkFalse : (Range.range -> term)
 val mkUnreachable : term
@@ -326,3 +328,5 @@ val dummy_sort : sort
 
 instance val showable_smt_term : Class.Show.showable term
 instance val showable_decl : showable decl
+val names_of_decl (d:decl) : list string
+val decl_to_string_short (d:decl) : string
