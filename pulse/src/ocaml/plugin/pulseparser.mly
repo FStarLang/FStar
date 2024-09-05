@@ -351,6 +351,19 @@ mutOrRefQualifier:
   | MUT { MUT }
   | REF { REF }
 
+typX(X,Y):
+  | t=Y { t }
+
+  | q=quantifier bs=binders DOT trigger=trigger e=X
+      {
+        match bs with
+        | [] ->
+          raise_error (Fatal_MissingQuantifierBinder, "Missing binders for a quantifier") (rr2 $loc(q) $loc($3))
+        | _ ->
+          let idents = idents_of_binders bs (rr2 $loc(q) $loc($3)) in
+          mk_term (q (bs, (idents, trigger), e)) (rr2 $loc(q) $loc(e)) Formula
+      }
+
 pulseSLProp:
   | p=typX(tmEqWith(appTermNoRecordExp), tmEqWith(appTermNoRecordExp))
     { PulseSyntaxExtension_Sugar.(as_slprop (SLPropTerm p) (rr $loc)) }
