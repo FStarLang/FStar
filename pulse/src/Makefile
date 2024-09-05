@@ -17,13 +17,7 @@ endif
 
 include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
 
-.PHONY: all build-lib-core build-lib-main
-
-build-lib-core:
-	+$(MAKE) -C $(PULSE_HOME)/lib/pulse/core
-
-build-lib-main:
-	+$(MAKE) -C $(PULSE_HOME)/lib/pulse main
+.PHONY: all
 
 .PHONY: build
 build:
