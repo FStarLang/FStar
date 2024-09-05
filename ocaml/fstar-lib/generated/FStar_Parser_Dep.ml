@@ -1570,6 +1570,8 @@ let (collect_one :
                     (fun uu___3 ->
                        match uu___3 with | (t, uu___4) -> collect_term t)
                     termimps)
+             | FStar_Parser_AST.Function (branches, uu___2) ->
+                 collect_branches branches
              | FStar_Parser_AST.Abs (pats, t) ->
                  (collect_patterns pats; collect_term t)
              | FStar_Parser_AST.App (t1, t2, uu___2) ->

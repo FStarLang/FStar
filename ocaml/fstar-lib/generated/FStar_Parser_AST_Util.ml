@@ -169,6 +169,8 @@ and (eq_term' :
       | (FStar_Parser_AST.Construct (l1, args1), FStar_Parser_AST.Construct
          (l2, args2)) ->
           (FStar_Ident.lid_equals l1 l2) && (eq_args args1 args2)
+      | (FStar_Parser_AST.Function (brs1, _r1), FStar_Parser_AST.Function
+         (brs2, _r2)) -> eq_list eq_branch brs1 brs2
       | (FStar_Parser_AST.Abs (ps1, t11), FStar_Parser_AST.Abs (ps2, t21)) ->
           (eq_list eq_pattern ps1 ps2) && (eq_term t11 t21)
       | (FStar_Parser_AST.App (h1, t11, i1), FStar_Parser_AST.App
@@ -692,6 +694,8 @@ and (lidents_of_term' :
             (fun uu___1 ->
                match uu___1 with | (t1, uu___2) -> lidents_of_term t1) ts in
         lid :: uu___
+    | FStar_Parser_AST.Function (brs, uu___) ->
+        (concat_map ()) lidents_of_branch brs
     | FStar_Parser_AST.Abs (ps, t1) ->
         let uu___ = (concat_map ()) lidents_of_pattern ps in
         let uu___1 = lidents_of_term t1 in

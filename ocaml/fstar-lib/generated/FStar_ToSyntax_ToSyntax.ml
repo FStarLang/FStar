@@ -685,6 +685,7 @@ and (free_vars :
         | FStar_Parser_AST.SeqLiteral ts ->
             FStar_Compiler_List.collect (free_vars tvars_only env) ts
         | FStar_Parser_AST.Abs uu___1 -> []
+        | FStar_Parser_AST.Function uu___1 -> []
         | FStar_Parser_AST.Let uu___1 -> []
         | FStar_Parser_AST.LetOpen uu___1 -> []
         | FStar_Parser_AST.If uu___1 -> []
@@ -3099,6 +3100,36 @@ and (desugar_term_maybe_top :
                              b2.FStar_Syntax_Syntax.binder_bv f1 in
                          setpos uu___5 in
                        (uu___4, noaqs)))
+         | FStar_Parser_AST.Function (branches, r1) ->
+             let x = FStar_Ident.gen r1 in
+             let t' =
+               let uu___2 =
+                 let uu___3 =
+                   let uu___4 =
+                     let uu___5 =
+                       FStar_Parser_AST.mk_pattern
+                         (FStar_Parser_AST.PatVar
+                            (x, FStar_Pervasives_Native.None, [])) r1 in
+                     [uu___5] in
+                   let uu___5 =
+                     let uu___6 =
+                       let uu___7 =
+                         let uu___8 =
+                           let uu___9 =
+                             let uu___10 = FStar_Ident.lid_of_ids [x] in
+                             FStar_Parser_AST.Var uu___10 in
+                           FStar_Parser_AST.mk_term uu___9 r1
+                             FStar_Parser_AST.Expr in
+                         (uu___8, FStar_Pervasives_Native.None,
+                           FStar_Pervasives_Native.None, branches) in
+                       FStar_Parser_AST.Match uu___7 in
+                     FStar_Parser_AST.mk_term uu___6
+                       top.FStar_Parser_AST.range FStar_Parser_AST.Expr in
+                   (uu___4, uu___5) in
+                 FStar_Parser_AST.Abs uu___3 in
+               FStar_Parser_AST.mk_term uu___2 top.FStar_Parser_AST.range
+                 FStar_Parser_AST.Expr in
+             desugar_term_maybe_top top_level env t'
          | FStar_Parser_AST.Abs (binders, body) ->
              let bvss =
                FStar_Compiler_List.map gather_pattern_bound_vars binders in
