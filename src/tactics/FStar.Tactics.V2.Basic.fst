@@ -610,7 +610,6 @@ let curms () : tac Z.t =
 let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> BU.print1 "Tac> __tc(%s)\n" (show t));!
-    let e = {e with uvar_subtyping=false} in
     try return (TcTerm.typeof_tot_or_gtot_term e t true)
     with | Errors.Error (_, msg, _, _) ->
            fail_doc ([
@@ -621,7 +620,6 @@ let __tc (e : env) (t : term) : tac (term & typ & guard_t) =
 let __tc_ghost (e : env) (t : term) : tac (term & typ & guard_t) =
     let! ps = get in
     log (fun () -> BU.print1 "Tac> __tc_ghost(%s)\n" (show t));!
-    let e = {e with uvar_subtyping=false} in
     let e = {e with letrecs=[]} in
     try let t, lc, g = TcTerm.tc_tot_or_gtot_term e t in
         return (t, lc.res_typ, g)
@@ -636,7 +634,6 @@ let __tc_lax (e : env) (t : term) : tac (term & lcomp & guard_t) =
     log (fun () -> BU.print2 "Tac> __tc_lax(%s)(Context:%s)\n"
                            (show t)
                            (Env.all_binders e |> show));!
-    let e = {e with uvar_subtyping=false} in
     let e = {e with admit = true} in
     let e = {e with letrecs=[]} in
     try return (TcTerm.tc_term e t)
@@ -866,6 +863,7 @@ let __exact_now set_expected_typ (t:term) : tac unit =
               then Env.set_expected_typ (goal_env goal) (goal_type goal)
               else (goal_env goal)
     in
+    let env = {env with uvar_subtyping=false} in
     let! t, typ, guard = __tc env t in
     if_verbose (fun () -> BU.print2 "__exact_now: got type %s\n__exact_now: and guard %s\n"
                                                      (show typ)
@@ -1071,7 +1069,10 @@ let t_apply_lemma (noinst:bool) (noinst_lhs:bool)
     let! goal = cur_goal in
     let env = goal_env goal in
     Tactics.Monad.register_goal goal;
-    let! tm, t, guard = __tc env tm in
+    let! tm, t, guard =
+      let env = {env with uvar_subtyping=false} in
+      __tc env tm
+    in
     let bs, comp = U.arrow_formals_comp t in
     match lemma_or_sq comp with
     | None -> fail "not a lemma or squashed function"
