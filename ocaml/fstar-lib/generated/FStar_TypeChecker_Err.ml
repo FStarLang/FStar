@@ -615,7 +615,7 @@ let (__expected_eff_expression :
   Prims.string ->
     FStar_Syntax_Syntax.term ->
       FStar_Syntax_Syntax.comp ->
-        Prims.string ->
+        Prims.string FStar_Pervasives_Native.option ->
           (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun effname ->
@@ -629,16 +629,15 @@ let (__expected_eff_expression :
                    (Prims.strcat effname " expression.")) in
             let uu___2 =
               let uu___3 =
-                if reason = ""
-                then FStar_Pprint.empty
-                else
-                  (let uu___5 = FStar_Pprint.break_ Prims.int_one in
-                   let uu___6 =
-                     let uu___7 = FStar_Pprint.doc_of_string "Because:" in
-                     let uu___8 =
-                       FStar_Pprint.words (Prims.strcat reason ".") in
-                     uu___7 :: uu___8 in
-                   FStar_Pprint.flow uu___5 uu___6) in
+                match reason with
+                | FStar_Pervasives_Native.None -> FStar_Pprint.empty
+                | FStar_Pervasives_Native.Some msg ->
+                    let uu___4 = FStar_Pprint.break_ Prims.int_one in
+                    let uu___5 =
+                      let uu___6 = FStar_Pprint.doc_of_string "Because:" in
+                      let uu___7 = FStar_Pprint.words (Prims.strcat msg ".") in
+                      uu___6 :: uu___7 in
+                    FStar_Pprint.flow uu___4 uu___5 in
               let uu___4 =
                 let uu___5 =
                   let uu___6 =
@@ -668,14 +667,14 @@ let (__expected_eff_expression :
 let (expected_pure_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp ->
-      Prims.string ->
+      Prims.string FStar_Pervasives_Native.option ->
         (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun e -> fun c -> fun reason -> __expected_eff_expression "pure" e c reason
 let (expected_ghost_expression :
   FStar_Syntax_Syntax.term ->
     FStar_Syntax_Syntax.comp ->
-      Prims.string ->
+      Prims.string FStar_Pervasives_Native.option ->
         (FStar_Errors_Codes.raw_error * FStar_Pprint.document Prims.list))
   =
   fun e ->

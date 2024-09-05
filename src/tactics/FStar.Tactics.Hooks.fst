@@ -841,7 +841,7 @@ let splice
 
     let tau, _, g =
       if is_typed
-      then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ ""
+      then TcTerm.tc_check_tot_or_gtot_term env tau U.t_dsl_tac_typ None
       else TcTerm.tc_tactic t_unit S.t_decls env tau
     in
 
