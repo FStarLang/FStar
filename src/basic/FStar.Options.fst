@@ -773,7 +773,7 @@ let rec specs_with_types warn_unsafe : list (char & string & opt_type & Pprint.d
       (fun o ->
         let keys = as_comma_string_list o in
         Debug.enable_toggles keys;
-        o), Accumulated (SimpleStr "debug toggles")),
+        o), ReverseAccumulated (SimpleStr "debug toggles")),
     text "Debug toggles (comma-separated list of debug keys)");
 
   ( noshort,
