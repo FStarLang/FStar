@@ -1147,7 +1147,11 @@ let rec elaborate_pat (p : pattern) (bs : list R.binding) : Tot (option (term & 
   match p, bs with
   | Pat_Constant c, _ -> Some (pack_ln (Tv_Const c), bs)
   | Pat_Cons fv univs subpats, bs ->
-    let head = pack_ln (Tv_FVar fv) in
+    let head =
+      match univs with
+      | Some univs -> pack_ln (Tv_UInst fv univs)
+      | None -> pack_ln (Tv_FVar fv)
+    in
     fold_left_dec
       (Some (head, bs))
       subpats
