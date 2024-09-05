@@ -17,13 +17,7 @@ endif
 
 include $(PULSE_HOME)/share/pulse/Makefile.locate-fstar
 
-.PHONY: all build-lib-core build-lib-main
-
-build-lib-core:
-	+$(MAKE) -C $(PULSE_HOME)/lib/pulse/core
-
-build-lib-main:
-	+$(MAKE) -C $(PULSE_HOME)/lib/pulse main
+.PHONY: all
 
 .PHONY: build
 build:
@@ -91,11 +85,7 @@ test:
 
 .PHONY: check-for-changes
 check-for-changes:
-	# Test if no new files appeared
-	git status ..
-	test "" = "$$(git ls-files --others --exclude-standard -- ..)"
-	# Test if nothing has changed
-	if ! git diff-index --exit-code HEAD .. ; then git --no-pager diff .. ; false ; fi
+	cd ../ && .scripts/check-snapshot-diff.sh
 
 pulse2rust:
 	+$(MAKE) -C $(PULSE_HOME) pulse2rust
