@@ -164,6 +164,8 @@ and eq_term' (t1 t2:term')
     | Construct (l1, args1), Construct (l2, args2) ->
       Ident.lid_equals l1 l2 &&
       eq_args args1 args2
+    | Function (brs1, _r1), Function (brs2, _r2) ->
+      eq_list eq_branch brs1 brs2
     | Abs (ps1, t1), Abs (ps2, t2) ->
       eq_list eq_pattern ps1 ps2 &&
       eq_term t1 t2
@@ -600,6 +602,7 @@ and lidents_of_term' (t:term')
   | Name lid -> [lid]
   | Projector (lid, _) -> [lid]
   | Construct (lid, ts) -> lid :: concat_map (fun (t, _) -> lidents_of_term t) ts
+  | Function (brs, _) -> concat_map lidents_of_branch brs
   | Abs (ps, t) -> concat_map lidents_of_pattern ps @ lidents_of_term t
   | App (t1, t2, _) -> lidents_of_term t1 @ lidents_of_term t2
   | Let (_, lbs, t) -> concat_map (fun (_, (p, t)) -> lidents_of_pattern p @ lidents_of_term t) lbs @ lidents_of_term t

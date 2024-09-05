@@ -2989,27 +2989,6 @@ and (p_noSeqTerm' :
                 FStar_Pprint.op_Hat_Hat lbs_doc uu___2 in
               FStar_Pprint.group uu___1 in
             let uu___1 = paren_if ps in uu___1 uu___
-        | FStar_Parser_AST.Abs
-            ({
-               FStar_Parser_AST.pat = FStar_Parser_AST.PatVar
-                 (x, typ_opt, uu___);
-               FStar_Parser_AST.prange = uu___1;_}::[],
-             {
-               FStar_Parser_AST.tm = FStar_Parser_AST.Match
-                 (maybe_x, FStar_Pervasives_Native.None,
-                  FStar_Pervasives_Native.None, branches);
-               FStar_Parser_AST.range = uu___2;
-               FStar_Parser_AST.level = uu___3;_})
-            when matches_var maybe_x x ->
-            let uu___4 =
-              let uu___5 =
-                let uu___6 = str "function" in
-                let uu___7 =
-                  separate_map_last FStar_Pprint.hardline p_patternBranch
-                    branches in
-                FStar_Pprint.op_Hat_Slash_Hat uu___6 uu___7 in
-              FStar_Pprint.group uu___5 in
-            let uu___5 = paren_if (ps || pb) in uu___5 uu___4
         | FStar_Parser_AST.Quote (e1, FStar_Parser_AST.Dynamic) ->
             let uu___ =
               let uu___1 = str "quote" in
@@ -3852,6 +3831,16 @@ and (p_simpleTerm :
     fun pb ->
       fun e ->
         match e.FStar_Parser_AST.tm with
+        | FStar_Parser_AST.Function (branches, uu___) ->
+            let uu___1 =
+              let uu___2 =
+                let uu___3 = str "function" in
+                let uu___4 =
+                  separate_map_last FStar_Pprint.hardline p_patternBranch
+                    branches in
+                FStar_Pprint.op_Hat_Slash_Hat uu___3 uu___4 in
+              FStar_Pprint.group uu___2 in
+            let uu___2 = paren_if (ps || pb) in uu___2 uu___1
         | FStar_Parser_AST.Abs (pats, e1) ->
             let uu___ = p_term_sep false pb e1 in
             (match uu___ with

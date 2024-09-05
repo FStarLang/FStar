@@ -170,7 +170,7 @@ let (uu___is_DeferAny : defer_ok_t -> Prims.bool) =
 let (uu___is_DeferFlexFlexOnly : defer_ok_t -> Prims.bool) =
   fun projectee ->
     match projectee with | DeferFlexFlexOnly -> true | uu___ -> false
-let (uu___85 : defer_ok_t FStar_Class_Show.showable) =
+let (uu___52 : defer_ok_t FStar_Class_Show.showable) =
   {
     FStar_Class_Show.show =
       (fun uu___ ->
@@ -8163,7 +8163,7 @@ and (solve_t_flex_flex :
                                                       let uu___23 =
                                                         let uu___24 =
                                                           FStar_Class_Show.show
-                                                            uu___85
+                                                            uu___52
                                                             wl.defer_ok in
                                                         FStar_Compiler_Util.format1
                                                           "flex-flex: occurs\n defer_ok=%s\n"
@@ -14752,7 +14752,7 @@ let (try_solve_deferred_constraints :
                       (let uu___4 = FStar_Compiler_Effect.op_Bang dbg_Rel in
                        if uu___4
                        then
-                         let uu___5 = FStar_Class_Show.show uu___85 defer_ok in
+                         let uu___5 = FStar_Class_Show.show uu___52 defer_ok in
                          let uu___6 =
                            FStar_Class_Show.show
                              (FStar_Class_Show.printableshow
