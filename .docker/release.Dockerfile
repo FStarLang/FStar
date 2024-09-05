@@ -1,7 +1,7 @@
 # This Dockerfile should be run from the root FStar directory
 
 # Build the package
-ARG ocaml_version=4.12
+ARG ocaml_version=4.14
 ARG CI_THREADS=24
 
 FROM ocaml/opam:ubuntu-20.04-ocaml-$ocaml_version AS fstarbuild

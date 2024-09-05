@@ -50,7 +50,8 @@ type term' =
                                 followed by one  of its actions or
                                 "fields" *)
   | Construct of lid & list (term&imp)               (* data, type: bool in each arg records an implicit *)
-  | Abs       of list pattern & term
+  | Abs       of list pattern & term                 (* fun p1 p2 .. pn -> body *)
+  | Function  of list branch & range                 (* function | p1 -> e1 | ... | pn -> en; range is for binder *)
   | App       of term & term & imp                    (* aqual marks an explicitly provided implicit parameter *)
   | Let       of let_qualifier & list (option attributes_ & (pattern & term)) & term
   | LetOperator   of list (ident & pattern & term) & term

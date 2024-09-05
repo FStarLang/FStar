@@ -42,7 +42,7 @@ RUN wget -nv https://download.visualstudio.microsoft.com/download/pr/cd0d0a4d-2a
     rm -f dotnet-sdk*.tar.gz
 
 # Install OCaml
-ARG OCAML_VERSION=4.12.0
+ARG OCAML_VERSION=4.14.0
 RUN opam init --compiler=$OCAML_VERSION --disable-sandboxing
 RUN opam option depext-run-installs=true
 ENV OPAMYES=1

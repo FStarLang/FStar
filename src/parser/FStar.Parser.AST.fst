@@ -61,10 +61,8 @@ let un_curry_abs ps body = match body.tm with
     | Abs(p', body') -> Abs(ps@p', body')
     | _ -> Abs(ps, body)
 let mk_function branches r1 r2 =
-  let x = Ident.gen r1 in
-  mk_term (Abs([mk_pattern (PatVar(x,None,[])) r1],
-               mk_term (Match(mk_term (Var(lid_of_ids [x])) r1 Expr, None, None, branches)) r2 Expr))
-    r2 Expr
+  mk_term (Function (branches, r1)) r2 Expr
+
 let un_function p tm = match p.pat, tm.tm with
     | PatVar _, Abs(pats, body) -> Some (mk_pattern (PatApp(p, pats)) p.prange, body)
     | _ -> None
@@ -409,6 +407,12 @@ let rec term_to_string (x:term) = match x.tm with
 
   | Construct (l, args) ->
     Util.format2 "(%s %s)" (string_of_lid l) (to_string_l " " (fun (a,imp) -> Util.format2 "%s%s" (imp_to_string imp) (term_to_string a)) args)
+  | Function (branches, r) ->
+    Util.format1 "(function %s)"
+      (to_string_l " | " (fun (p,w,e) -> Util.format2 "%s -> %s"
+        (p |> pat_to_string)
+        (e |> term_to_string)) branches)
+
   | Abs(pats, t) ->
     Util.format2 "(fun %s -> %s)" (to_string_l " " pat_to_string pats) (t|> term_to_string)
   | App(t1, t2, imp) -> Util.format3 "%s %s%s" (t1|> term_to_string) (imp_to_string imp) (t2|> term_to_string)

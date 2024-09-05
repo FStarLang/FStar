@@ -41,6 +41,8 @@ type term' =
   | Projector of (FStar_Ident.lid * FStar_Ident.ident) 
   | Construct of (FStar_Ident.lid * (term * imp) Prims.list) 
   | Abs of (pattern Prims.list * term) 
+  | Function of ((pattern * term FStar_Pervasives_Native.option * term)
+  Prims.list * FStar_Compiler_Range_Type.range) 
   | App of (term * term * imp) 
   | Let of (let_qualifier * (term Prims.list FStar_Pervasives_Native.option *
   (pattern * term)) Prims.list * term) 
@@ -191,6 +193,14 @@ let (uu___is_Abs : term' -> Prims.bool) =
   fun projectee -> match projectee with | Abs _0 -> true | uu___ -> false
 let (__proj__Abs__item___0 : term' -> (pattern Prims.list * term)) =
   fun projectee -> match projectee with | Abs _0 -> _0
+let (uu___is_Function : term' -> Prims.bool) =
+  fun projectee ->
+    match projectee with | Function _0 -> true | uu___ -> false
+let (__proj__Function__item___0 :
+  term' ->
+    ((pattern * term FStar_Pervasives_Native.option * term) Prims.list *
+      FStar_Compiler_Range_Type.range))
+  = fun projectee -> match projectee with | Function _0 -> _0
 let (uu___is_App : term' -> Prims.bool) =
   fun projectee -> match projectee with | App _0 -> true | uu___ -> false
 let (__proj__App__item___0 : term' -> (term * term * imp)) =
@@ -1170,29 +1180,7 @@ let (mk_function :
       FStar_Compiler_Range_Type.range -> term)
   =
   fun branches ->
-    fun r1 ->
-      fun r2 ->
-        let x = FStar_Ident.gen r1 in
-        let uu___ =
-          let uu___1 =
-            let uu___2 =
-              let uu___3 =
-                mk_pattern (PatVar (x, FStar_Pervasives_Native.None, [])) r1 in
-              [uu___3] in
-            let uu___3 =
-              let uu___4 =
-                let uu___5 =
-                  let uu___6 =
-                    let uu___7 =
-                      let uu___8 = FStar_Ident.lid_of_ids [x] in Var uu___8 in
-                    mk_term uu___7 r1 Expr in
-                  (uu___6, FStar_Pervasives_Native.None,
-                    FStar_Pervasives_Native.None, branches) in
-                Match uu___5 in
-              mk_term uu___4 r2 Expr in
-            (uu___2, uu___3) in
-          Abs uu___1 in
-        mk_term uu___ r2 Expr
+    fun r1 -> fun r2 -> mk_term (Function (branches, r1)) r2 Expr
 let (un_function :
   pattern -> term -> (pattern * term) FStar_Pervasives_Native.option) =
   fun p ->
@@ -1935,6 +1923,17 @@ let rec (term_to_string : term -> Prims.string) =
                    FStar_Compiler_Util.format2 "%s%s" (imp_to_string imp1)
                      uu___3) args in
         FStar_Compiler_Util.format2 "(%s %s)" uu___ uu___1
+    | Function (branches, r) ->
+        let uu___ =
+          to_string_l " | "
+            (fun uu___1 ->
+               match uu___1 with
+               | (p, w, e) ->
+                   let uu___2 = pat_to_string p in
+                   let uu___3 = term_to_string e in
+                   FStar_Compiler_Util.format2 "%s -> %s" uu___2 uu___3)
+            branches in
+        FStar_Compiler_Util.format1 "(function %s)" uu___
     | Abs (pats, t) ->
         let uu___ = to_string_l " " pat_to_string pats in
         let uu___1 = term_to_string t in
