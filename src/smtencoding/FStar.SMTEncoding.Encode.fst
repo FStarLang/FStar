@@ -1824,8 +1824,7 @@ let init_env tcenv = last_env := [{bvar_bindings=BU.psmap_empty ();
                                    nolabels=false; use_zfuel_name=false;
                                    encode_non_total_function_typ=true; encoding_quantifier=false;
                                    current_module_name=Env.current_module tcenv |> Ident.string_of_lid;
-                                   global_cache = BU.smap_create 100;
-                                   tsym_global_cache = BU.smap_create 100}]
+                                   global_cache = BU.smap_create 100}]
 let get_env cmn tcenv = match !last_env with
     | [] -> failwith "No env; call init first!"
     | e::_ -> {e with tcenv=tcenv; current_module_name=Ident.string_of_lid cmn}
@@ -1905,9 +1904,6 @@ let recover_caching_and_update_env (env:env_t) (decls:decls_t) :decls_t =
                                                                                              //AND drop elt
       | None ->  //no hit, update cache and retain elt
         BU.smap_add env.global_cache (elt.key |> BU.must) elt;
-        (match elt.sym_name with
-         | None | Some "" -> ()
-         | Some name -> BU.smap_add env.tsym_global_cache name elt);
         [elt]
     )
   )

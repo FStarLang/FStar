@@ -380,9 +380,7 @@ type env_t =
   encode_non_total_function_typ: Prims.bool ;
   current_module_name: Prims.string ;
   encoding_quantifier: Prims.bool ;
-  global_cache: FStar_SMTEncoding_Term.decls_elt FStar_Compiler_Util.smap ;
-  tsym_global_cache:
-    FStar_SMTEncoding_Term.decls_elt FStar_Compiler_Util.smap }
+  global_cache: FStar_SMTEncoding_Term.decls_elt FStar_Compiler_Util.smap }
 let (__proj__Mkenv_t__item__bvar_bindings :
   env_t ->
     (FStar_Syntax_Syntax.bv * FStar_SMTEncoding_Term.term)
@@ -392,8 +390,7 @@ let (__proj__Mkenv_t__item__bvar_bindings :
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        bvar_bindings
+        encoding_quantifier; global_cache;_} -> bvar_bindings
 let (__proj__Mkenv_t__item__fvar_bindings :
   env_t -> (fvar_binding FStar_Compiler_Util.psmap * fvar_binding Prims.list))
   =
@@ -401,77 +398,63 @@ let (__proj__Mkenv_t__item__fvar_bindings :
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        fvar_bindings
+        encoding_quantifier; global_cache;_} -> fvar_bindings
 let (__proj__Mkenv_t__item__depth : env_t -> Prims.int) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} -> depth
+        encoding_quantifier; global_cache;_} -> depth
 let (__proj__Mkenv_t__item__tcenv : env_t -> FStar_TypeChecker_Env.env) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} -> tcenv
+        encoding_quantifier; global_cache;_} -> tcenv
 let (__proj__Mkenv_t__item__warn : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} -> warn
+        encoding_quantifier; global_cache;_} -> warn
 let (__proj__Mkenv_t__item__nolabels : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} -> nolabels
+        encoding_quantifier; global_cache;_} -> nolabels
 let (__proj__Mkenv_t__item__use_zfuel_name : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        use_zfuel_name
+        encoding_quantifier; global_cache;_} -> use_zfuel_name
 let (__proj__Mkenv_t__item__encode_non_total_function_typ :
   env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        encode_non_total_function_typ
+        encoding_quantifier; global_cache;_} -> encode_non_total_function_typ
 let (__proj__Mkenv_t__item__current_module_name : env_t -> Prims.string) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        current_module_name
+        encoding_quantifier; global_cache;_} -> current_module_name
 let (__proj__Mkenv_t__item__encoding_quantifier : env_t -> Prims.bool) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        encoding_quantifier
+        encoding_quantifier; global_cache;_} -> encoding_quantifier
 let (__proj__Mkenv_t__item__global_cache :
   env_t -> FStar_SMTEncoding_Term.decls_elt FStar_Compiler_Util.smap) =
   fun projectee ->
     match projectee with
     | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
         use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        global_cache
-let (__proj__Mkenv_t__item__tsym_global_cache :
-  env_t -> FStar_SMTEncoding_Term.decls_elt FStar_Compiler_Util.smap) =
-  fun projectee ->
-    match projectee with
-    | { bvar_bindings; fvar_bindings; depth; tcenv; warn; nolabels;
-        use_zfuel_name; encode_non_total_function_typ; current_module_name;
-        encoding_quantifier; global_cache; tsym_global_cache;_} ->
-        tsym_global_cache
+        encoding_quantifier; global_cache;_} -> global_cache
 let (print_env : env_t -> Prims.string) =
   fun e ->
     let bvars =
@@ -597,8 +580,7 @@ let (gen_term_var :
           encode_non_total_function_typ = (env.encode_non_total_function_typ);
           current_module_name = (env.current_module_name);
           encoding_quantifier = (env.encoding_quantifier);
-          global_cache = (env.global_cache);
-          tsym_global_cache = (env.tsym_global_cache)
+          global_cache = (env.global_cache)
         } in
       (ysym, y, uu___)
 let (new_term_constant :
@@ -626,8 +608,7 @@ let (new_term_constant :
           encode_non_total_function_typ = (env.encode_non_total_function_typ);
           current_module_name = (env.current_module_name);
           encoding_quantifier = (env.encoding_quantifier);
-          global_cache = (env.global_cache);
-          tsym_global_cache = (env.tsym_global_cache)
+          global_cache = (env.global_cache)
         } in
       (ysym, y, uu___)
 let (new_term_constant_from_string :
@@ -655,8 +636,7 @@ let (new_term_constant_from_string :
               (env.encode_non_total_function_typ);
             current_module_name = (env.current_module_name);
             encoding_quantifier = (env.encoding_quantifier);
-            global_cache = (env.global_cache);
-            tsym_global_cache = (env.tsym_global_cache)
+            global_cache = (env.global_cache)
           } in
         (ysym, y, uu___)
 let (push_term_var :
@@ -677,8 +657,7 @@ let (push_term_var :
           encode_non_total_function_typ = (env.encode_non_total_function_typ);
           current_module_name = (env.current_module_name);
           encoding_quantifier = (env.encoding_quantifier);
-          global_cache = (env.global_cache);
-          tsym_global_cache = (env.tsym_global_cache)
+          global_cache = (env.global_cache)
         }
 let (lookup_term_var :
   env_t -> FStar_Syntax_Syntax.bv -> FStar_SMTEncoding_Term.term) =
@@ -760,8 +739,7 @@ let (new_term_constant_and_tok_from_lid_aux :
                     (env.encode_non_total_function_typ);
                   current_module_name = (env.current_module_name);
                   encoding_quantifier = (env.encoding_quantifier);
-                  global_cache = (env.global_cache);
-                  tsym_global_cache = (env.tsym_global_cache)
+                  global_cache = (env.global_cache)
                 } in
               (fname, ftok_name, uu___1)
 let (new_term_constant_and_tok_from_lid :
@@ -863,8 +841,7 @@ let (push_free_var_maybe_thunked :
                   (env.encode_non_total_function_typ);
                 current_module_name = (env.current_module_name);
                 encoding_quantifier = (env.encoding_quantifier);
-                global_cache = (env.global_cache);
-                tsym_global_cache = (env.tsym_global_cache)
+                global_cache = (env.global_cache)
               }
 let (push_free_var :
   env_t ->
@@ -927,8 +904,7 @@ let (push_zfuel_name :
               (env.encode_non_total_function_typ);
             current_module_name = (env.current_module_name);
             encoding_quantifier = (env.encoding_quantifier);
-            global_cache = (env.global_cache);
-            tsym_global_cache = (env.tsym_global_cache)
+            global_cache = (env.global_cache)
           }
 let (force_thunk : fvar_binding -> FStar_SMTEncoding_Term.term) =
   fun fvb ->
@@ -1101,8 +1077,7 @@ let (reset_current_module_fvbs : env_t -> env_t) =
       encode_non_total_function_typ = (env.encode_non_total_function_typ);
       current_module_name = (env.current_module_name);
       encoding_quantifier = (env.encoding_quantifier);
-      global_cache = (env.global_cache);
-      tsym_global_cache = (env.tsym_global_cache)
+      global_cache = (env.global_cache)
     }
 let (get_current_module_fvbs : env_t -> fvar_binding Prims.list) =
   fun env -> FStar_Pervasives_Native.snd env.fvar_bindings
@@ -1121,6 +1096,5 @@ let (add_fvar_binding_to_env : fvar_binding -> env_t -> env_t) =
         encode_non_total_function_typ = (env.encode_non_total_function_typ);
         current_module_name = (env.current_module_name);
         encoding_quantifier = (env.encoding_quantifier);
-        global_cache = (env.global_cache);
-        tsym_global_cache = (env.tsym_global_cache)
+        global_cache = (env.global_cache)
       }
