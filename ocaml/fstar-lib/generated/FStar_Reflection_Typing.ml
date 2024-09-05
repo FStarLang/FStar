@@ -1246,8 +1246,13 @@ let rec (elaborate_pat :
                 (FStar_Reflection_V2_Data.Tv_Const c)), bs)
       | (FStar_Reflection_V2_Data.Pat_Cons (fv, univs, subpats), bs1) ->
           let head =
-            FStar_Reflection_V2_Builtins.pack_ln
-              (FStar_Reflection_V2_Data.Tv_FVar fv) in
+            match univs with
+            | FStar_Pervasives_Native.Some univs1 ->
+                FStar_Reflection_V2_Builtins.pack_ln
+                  (FStar_Reflection_V2_Data.Tv_UInst (fv, univs1))
+            | FStar_Pervasives_Native.None ->
+                FStar_Reflection_V2_Builtins.pack_ln
+                  (FStar_Reflection_V2_Data.Tv_FVar fv) in
           fold_left_dec (FStar_Pervasives_Native.Some (head, bs1)) subpats
             (fun st ->
                fun pi ->
