@@ -85,8 +85,7 @@ type env = {
   remaining_iface_decls:list (lident&list Parser.AST.decl);  (* A map from interface names to their stil-to-be-processed top-level decls *)
   syntax_only:          bool;                             (* Whether next push should skip type-checking *)
   ds_hooks:             dsenv_hooks;                       (* hooks that the interactive more relies onto for symbol tracking *)
-  dep_graph:            FStar.Parser.Dep.deps;
-  opens_and_abbrevs_of: BU.smap (list (either open_module_or_namespace module_abbrev));
+  dep_graph:            FStar.Parser.Dep.deps
 }
 and dsenv_hooks =
   { ds_push_open_hook : env -> open_module_or_namespace -> unit;
@@ -122,10 +121,7 @@ let opens_and_abbrevs env : list (either open_module_or_namespace module_abbrev)
         | Module_abbrev (id, lid) -> [Inr (id, lid)]
         | _ -> [])
     env.scope_mods
-let opens_and_abbrevs_of env lid =
-  match BU.smap_try_find env.opens_and_abbrevs_of (Ident.string_of_lid lid) with
-  | None -> []
-  | Some l -> l
+
 let open_modules e = e.modules
 let open_modules_and_namespaces env =
   List.filter_map (function
@@ -177,8 +173,7 @@ let empty_env deps = {curmodule=None;
                     remaining_iface_decls=[];
                     syntax_only=false;
                     ds_hooks=default_ds_hooks;
-                    dep_graph=deps;
-                    opens_and_abbrevs_of=new_sigmap()}
+                    dep_graph=deps}
 let dep_graph env = env.dep_graph
 let set_dep_graph env ds = {env with dep_graph=ds}
 let sigmap env = env.sigmap
@@ -1323,8 +1318,6 @@ let finish env modul =
   in
   (* remove abstract/private records *)
   let () = filter_record_cache () in
-  let opens_and_abbrevs = opens_and_abbrevs env in
-  BU.smap_add env.opens_and_abbrevs_of curmod opens_and_abbrevs;
   {env with
     curmodule=None;
     modules=(modul.name, modul)::env.modules;
@@ -1428,23 +1421,6 @@ let inclusion_info env (l:lident) =
       mii_trans_exported_ids = as_ids_opt env.trans_exported_ids;
       mii_includes = BU.map_opt (BU.smap_try_find env.includes mname) (fun r -> !r)
    }
-let includes_of (m:module_inclusion_info) =
-  match m.mii_includes with
-  | None -> []
-  | Some l -> List.map fst l
-let transitive_includes_of (env:env) (modul:lident)
-: list lident
-= let rec transitive_includes_of (acc: list lident) (modul:lident)
-  : list lident
-  = let mii = inclusion_info env modul in
-    let includes = includes_of mii in
-    List.fold_left
-        (fun acc i ->
-          if BU.for_some (Ident.lid_equals i) acc
-          then acc
-          else i::transitive_includes_of acc i)
-        acc includes
-  in transitive_includes_of [] modul
 
 let prepare_module_or_interface intf admitted env mname (mii:module_inclusion_info) = (* AR: open the pervasives namespace *)
   let prep env =

@@ -63,7 +63,6 @@ val fail_or:  env -> (lident -> option 'a) -> lident -> 'a
 val fail_or2: (ident -> option 'a) -> ident -> 'a
 
 val opens_and_abbrevs :env -> list (either open_module_or_namespace module_abbrev)
-val opens_and_abbrevs_of : env -> lident -> list (either open_module_or_namespace module_abbrev)
 val dep_graph: env -> FStar.Parser.Dep.deps
 val set_dep_graph: env -> FStar.Parser.Dep.deps -> env
 val ds_hooks : env -> dsenv_hooks
@@ -138,7 +137,6 @@ val transitive_exported_ids: env -> lident -> list string
 val module_inclusion_info : Type0
 val default_mii : module_inclusion_info
 val inclusion_info: env -> lident -> module_inclusion_info
-val transitive_includes_of (_:env) (modul:lident) : list lident
 val prepare_module_or_interface: bool -> bool -> env -> lident -> module_inclusion_info -> env & bool //pop the context when done desugaring
 
 (* private *) val try_lookup_lid': bool -> bool -> env -> lident -> option (term & list attribute)
