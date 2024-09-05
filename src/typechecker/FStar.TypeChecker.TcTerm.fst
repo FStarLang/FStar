@@ -3652,7 +3652,11 @@ and tc_eqn (scrutinee:bv) (env:Env.env) (ret_opt : option match_returns_ascripti
              if not (Env.should_verify env)
              then U.exp_true_bool //if we're not verifying, then don't even bother building it
              else let t = U.mk_and_l <| build_branch_guard scrutinee_tm pattern pat in
+                  if Debug.high () then
+                    BU.print1 "tc_eqn: branch guard before typechecking: %s\n" (show t);
                   let t, _, _ = tc_check_tot_or_gtot_term scrutinee_env t U.t_bool None in
+                  if Debug.high () then
+                    BU.print1 "tc_eqn: branch guard after typechecking: %s\n" (show t);
                   //NS: discarding the guard here means that the VC is not fully type-checked
                   //    and may contain unresolved unification variables, e.g. FIXME!
                   t in
