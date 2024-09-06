@@ -4086,11 +4086,32 @@ let (try_unify_by_application :
                                           match uu___2 with
                                           | FStar_Pervasives_Native.None ->
                                               Obj.repr
-                                                (let uu___3 = tts e ty11 in
-                                                 let uu___4 = tts e ty2 in
-                                                 fail2
-                                                   "Could not instantiate, %s to %s"
-                                                   uu___3 uu___4)
+                                                (let uu___3 =
+                                                   let uu___4 =
+                                                     let uu___5 =
+                                                       let uu___6 =
+                                                         FStar_Errors_Msg.text
+                                                           "Could not instantiate" in
+                                                       let uu___7 =
+                                                         ttd e ty11 in
+                                                       FStar_Pprint.prefix
+                                                         (Prims.of_int (2))
+                                                         Prims.int_one uu___6
+                                                         uu___7 in
+                                                     let uu___6 =
+                                                       let uu___7 =
+                                                         FStar_Errors_Msg.text
+                                                           "to" in
+                                                       let uu___8 = ttd e ty2 in
+                                                       FStar_Pprint.prefix
+                                                         (Prims.of_int (2))
+                                                         Prims.int_one uu___7
+                                                         uu___8 in
+                                                     FStar_Pprint.op_Hat_Slash_Hat
+                                                       uu___5 uu___6 in
+                                                   [uu___4] in
+                                                 FStar_Tactics_Monad.fail_doc
+                                                   uu___3)
                                           | FStar_Pervasives_Native.Some
                                               (b, c) ->
                                               Obj.repr

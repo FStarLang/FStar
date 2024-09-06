@@ -9969,14 +9969,41 @@ and (tc_eqn :
                                                           pattern2 pat in
                                                       FStar_Syntax_Util.mk_and_l
                                                         uu___14 in
-                                                    let uu___14 =
-                                                      tc_check_tot_or_gtot_term
-                                                        scrutinee_env t
-                                                        FStar_Syntax_Util.t_bool
-                                                        FStar_Pervasives_Native.None in
-                                                    match uu___14 with
-                                                    | (t1, uu___15, uu___16)
-                                                        -> t1) in
+                                                    (let uu___15 =
+                                                       FStar_Compiler_Debug.high
+                                                         () in
+                                                     if uu___15
+                                                     then
+                                                       let uu___16 =
+                                                         FStar_Class_Show.show
+                                                           FStar_Syntax_Print.showable_term
+                                                           t in
+                                                       FStar_Compiler_Util.print1
+                                                         "tc_eqn: branch guard before typechecking: %s\n"
+                                                         uu___16
+                                                     else ());
+                                                    (let uu___15 =
+                                                       tc_check_tot_or_gtot_term
+                                                         scrutinee_env t
+                                                         FStar_Syntax_Util.t_bool
+                                                         FStar_Pervasives_Native.None in
+                                                     match uu___15 with
+                                                     | (t1, uu___16, uu___17)
+                                                         ->
+                                                         ((let uu___19 =
+                                                             FStar_Compiler_Debug.high
+                                                               () in
+                                                           if uu___19
+                                                           then
+                                                             let uu___20 =
+                                                               FStar_Class_Show.show
+                                                                 FStar_Syntax_Print.showable_term
+                                                                 t1 in
+                                                             FStar_Compiler_Util.print1
+                                                               "tc_eqn: branch guard after typechecking: %s\n"
+                                                               uu___20
+                                                           else ());
+                                                          t1))) in
                                                let branch_guard1 =
                                                  build_and_check_branch_guard
                                                    (FStar_Pervasives_Native.Some

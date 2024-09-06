@@ -1154,7 +1154,7 @@ let rec (specs_with_types :
                                            FStar_Compiler_Debug.enable_toggles
                                              keys;
                                            o),
-                                         (Accumulated
+                                         (ReverseAccumulated
                                             (SimpleStr "debug toggles")))),
                                     uu___29) in
                                 let uu___29 =
