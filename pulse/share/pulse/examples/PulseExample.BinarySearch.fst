@@ -45,7 +45,7 @@ requires
 returns k:SZ.t
 ensures
   A.pts_to a s **
-  pure (k < len /\ eq (compare (Seq.index s (SZ.v k)) key))
+  pure (k < len /\ Seq.index s (SZ.v k) == key)
 {
   let mut i1 : SZ.t = 0sz;
   let mut i2 : SZ.t = len - 1sz;
