@@ -930,7 +930,12 @@ let try_unify_by_application (should_check:option should_check_uvar)
             (* Not a match, try instantiating the first type by application *)
             match U.arrow_one ty1 with
             | None ->
-              fail2 "Could not instantiate, %s to %s" (tts e ty1) (tts e ty2)
+              fail_doc [
+                prefix 2 1 (text "Could not instantiate")
+                  (ttd e ty1) ^/^
+                prefix 2 1 (text "to")
+                  (ttd e ty2)
+              ]
 
             | Some (b, c) ->
               if not (U.is_total_comp c) then fail "Codomain is effectful" else
