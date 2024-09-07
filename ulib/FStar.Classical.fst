@@ -65,6 +65,8 @@ let move_requires_2 #a #b #p #q f x y = move_requires (f x) y
 
 let move_requires_3 #a #b #c #p #q f x y z = move_requires (f x y) z
 
+let move_requires_4 #a #b #c #d #p #q f x y z w = move_requires (f x y z) w
+
 // Thanks KM, CH and SZ
 let impl_intro_gen #p #q f =
   let g () : Lemma (requires p) (ensures (p ==> q ())) = give_proof #(q ()) (f (get_proof p)) in

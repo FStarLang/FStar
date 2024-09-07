@@ -84,22 +84,39 @@ val move_requires
 
 (** The arity 2 version of [move_requires] *)
 val move_requires_2
-      (#a #b: Type)
-      (#p #q: (a -> b -> Type))
-      ($_: (x: a -> y: b -> Lemma (requires (p x y)) (ensures (q x y))))
+      (#a: Type)
+      (#b: (a -> Type))
+      (#p #q: (x: a -> b x -> Type))
+      ($_: (x: a -> y: b x -> Lemma (requires (p x y)) (ensures (q x y))))
       (x: a)
-      (y: b)
+      (y: b x)
     : Lemma (p x y ==> q x y)
 
 (** The arity 3 version of [move_requires] *)
 val move_requires_3
-      (#a #b #c: Type)
-      (#p #q: (a -> b -> c -> Type))
-      ($_: (x: a -> y: b -> z: c -> Lemma (requires (p x y z)) (ensures (q x y z))))
+      (#a: Type)
+      (#b: (a -> Type))
+      (#c: (x: a -> y: b x -> Type))
+      (#p #q: (x: a -> y: b x -> c x y -> Type))
+      ($_: (x: a -> y: b x -> z: c x y -> Lemma (requires (p x y z)) (ensures (q x y z))))
       (x: a)
-      (y: b)
-      (z: c)
+      (y: b x)
+      (z: c x y)
     : Lemma (p x y z ==> q x y z)
+
+(** The arity 4 version of [move_requires] *)
+val move_requires_4
+      (#a: Type)
+      (#b: (a -> Type))
+      (#c: (x: a -> y: b x -> Type))
+      (#d: (x: a -> y: b x -> z: c x y -> Type))
+      (#p #q: (x: a -> y: b x -> z: c x y -> w: d x y z -> Type))
+      ($_: (x: a -> y: b x -> z: c x y -> w: d x y z -> Lemma (requires (p x y z w)) (ensures (q x y z w))))
+      (x: a)
+      (y: b x)
+      (z: c x y)
+      (w: d x y z)
+    : Lemma (p x y z w ==> q x y z w)
 
 (** When proving predicate [q] whose well-formedness depends on the
     predicate [p], it is convenient to have [q] appear only under a
