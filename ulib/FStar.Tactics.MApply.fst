@@ -81,6 +81,5 @@ let rec apply_squash_or_lem d t =
     end
 
 (* `m` is for `magic` *)
-[@@plugin]
 let mapply0 (t : term) : Tac unit =
   apply_squash_or_lem 10 t
