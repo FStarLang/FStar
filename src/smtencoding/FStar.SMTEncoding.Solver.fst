@@ -1327,7 +1327,7 @@ let do_solve (can_split:bool) (is_retry:bool) use_env_msg tcenv q : unit =
   | None -> () (* already logged an error *)
 
 let split_and_solve (retrying:bool) use_env_msg tcenv q : unit =
-  if Options.query_stats () then begin
+  if Debug.any () || Options.query_stats () then begin
     let range = "(" ^ (Range.string_of_range (Env.get_range tcenv)) ^ ")" in
     BU.print2 "%s\tQuery-stats splitting query because %s\n"
                 range
