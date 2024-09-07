@@ -44,9 +44,6 @@ include gmake/Makefile.tmpl
 %.fst-in:
 	@echo --use_hints --hint_info
 
-# bumping the rlimit for these files
-%LowStar.Monotonic.Buffer.fst.checked: OTHERFLAGS+=--z3rlimit_factor 4
-
 #turn off 271 (pattern uses theory symbols warning), to be fixed soon
 %FStar.UInt.fsti.checked: OTHERFLAGS+=--warn_error -271
 %FStar.UInt.fst.checked: OTHERFLAGS+=--warn_error -271
