@@ -2245,7 +2245,8 @@ let (split_and_solve :
     fun use_env_msg ->
       fun tcenv ->
         fun q ->
-          (let uu___1 = FStar_Options.query_stats () in
+          (let uu___1 =
+             (FStar_Compiler_Debug.any ()) || (FStar_Options.query_stats ()) in
            if uu___1
            then
              let range =
