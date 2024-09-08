@@ -304,16 +304,17 @@ let cache_file_name =
         && not (Options.should_be_already_cached mname) //and checked file is in the
         && (not (BU.file_exists expected_cache_file) //wrong spot ... complain
             || not (BU.paths_to_same_file path expected_cache_file))
-        then
-            FStar.Errors.log_issue_doc
-                Range.dummyRange
-                (FStar.Errors.Warning_UnexpectedCheckedFile, [
-                    Errors.Msg.text <| BU.format3 "Did not expect %s to be already checked, \
-                                but found it in an unexpected location %s \
-                                instead of %s"
-                                mname
-                                path
-                                (Options.prepend_cache_dir cache_fn)]);
+        then (
+          let open FStar.Pprint in
+          let open FStar.Errors.Msg in
+          FStar.Errors.log_issue_doc Range.dummyRange (FStar.Errors.Warning_UnexpectedCheckedFile, [
+              text "Did not expect module" ^/^ doc_of_string mname ^/^ text "to be already checked.";
+              prefix 2 1 (text "Found it in an unexpected location:")
+                (doc_of_string path) ^/^
+              prefix 2 1 (text "instead of")
+                (doc_of_string expected_cache_file);
+            ])
+        );
 
         (* This expression morally just returns [path], but prefers
          * the path in [expected_cache_file] is possible to give
